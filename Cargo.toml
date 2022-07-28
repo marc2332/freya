@@ -8,7 +8,12 @@ edition = "2021"
 [dependencies]
 dioxus = { git = "https://github.com/DioxusLabs/dioxus" }
 dioxus-html = { git = "https://github.com/DioxusLabs/dioxus" }
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus" }
+dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus" }
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus" }
 gl = "*"
+anymap = "0.12.1"
 glutin = "*"
 skia-safe = { version = "*", features = ["gl"] }
 tokio = { version = "1.17.0", features = ["full"] }
+fxhash = "0.2.1"

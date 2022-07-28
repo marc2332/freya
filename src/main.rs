@@ -1,44 +1,61 @@
 use dioxus::prelude::*;
+use dioxus_native_core::real_dom::{self, RealDom};
+use dioxus_native_core::state::State;
+use dioxus_native_core_macro::State;
+use gl::*;
+use glutin::*;
+use skia_safe::*;
+use std::cell::RefCell;
+use std::rc::Rc;
+use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
+use std::sync::Mutex;
+mod run;
 
 fn main() {
     launch(app);
 }
 
+#[derive(Debug, Clone, State, Default)]
+pub struct Lala {}
+
 pub fn launch(app: Component<()>) {
-    let mut dom = VirtualDom::new(app);
+    let rdom = Arc::new(Mutex::new(RealDom::<Lala>::new()));
 
-    let _inital_edits = dom.rebuild();
+    {
+        let rdom = rdom.clone();
+        std::thread::spawn(move || {
+            let mut dom = VirtualDom::new(app);
 
-    tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .unwrap()
-        .block_on(async move {
-            loop {
-                thread::sleep(Duration::from_millis(100));
-                println!("render loop");
-                let mutations = dom.work_with_deadline(|| false);
-                println!("{:?}", mutations);
-                dom.wait_for_work().await;
-            }
+            let muts = dom.rebuild();
+            rdom.lock().unwrap().apply_mutations(vec![muts]);
+            tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .unwrap()
+                .block_on(async move {
+                    
+                    loop {
+                        thread::sleep(Duration::from_millis(100));
+                        println!("render loop");
+                        let mutations = dom.work_with_deadline(|| false);
+                        println!("{:?}", mutations);
+                        rdom.lock().unwrap().apply_mutations(mutations);
+                        dom.wait_for_work().await;
+                    }
+                });
         });
+    }
+
+    run::run(rdom.clone());
 }
 
 fn app(cx: Scope) -> Element {
-    let v = use_state(&cx, || 0);
-
-    use_effect(&cx, (v,), |v| async move {
-        v.0.modify(|v| v + 1);
-    });
 
     cx.render(rsx! {
         div {
-            h1 {
-                "-> {v}"
-            },
-            "{v}"
+
         }
     })
 }

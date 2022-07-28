@@ -33,6 +33,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "000444226fcff248f2bc4c7625be32c63caccfecc2723a2b9f78a7487a49c407"
 
 [[package]]
+name = "anymap"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "33954243bd79057c2de7338850b85983a44588021f8a5fee574a8888c6de4344"
+
+[[package]]
+name = "arrayvec"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8da52d66c7071e2e3fa2a1e5c6d088fec47b593032b254f5e980de8ea54454d6"
+
+[[package]]
 name = "atty"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -376,7 +388,7 @@ dependencies = [
 [[package]]
 name = "dioxus"
 version = "0.2.4"
-source = "git+https://github.com/DioxusLabs/dioxus#15e9aa1958d45438a537a4bb01da0b79c5a3d54d"
+source = "git+https://github.com/DioxusLabs/dioxus#4a8a7dd5f4c71dca9ec15e5309abddd79de2d167"
 dependencies = [
  "dioxus-core",
  "dioxus-core-macro",
@@ -388,7 +400,7 @@ dependencies = [
 [[package]]
 name = "dioxus-core"
 version = "0.2.1"
-source = "git+https://github.com/DioxusLabs/dioxus#15e9aa1958d45438a537a4bb01da0b79c5a3d54d"
+source = "git+https://github.com/DioxusLabs/dioxus#4a8a7dd5f4c71dca9ec15e5309abddd79de2d167"
 dependencies = [
  "backtrace",
  "bumpalo",
@@ -406,7 +418,7 @@ dependencies = [
 [[package]]
 name = "dioxus-core-macro"
 version = "0.2.1"
-source = "git+https://github.com/DioxusLabs/dioxus#15e9aa1958d45438a537a4bb01da0b79c5a3d54d"
+source = "git+https://github.com/DioxusLabs/dioxus#4a8a7dd5f4c71dca9ec15e5309abddd79de2d167"
 dependencies = [
  "dioxus-rsx",
  "proc-macro2",
@@ -417,7 +429,7 @@ dependencies = [
 [[package]]
 name = "dioxus-hooks"
 version = "0.2.1"
-source = "git+https://github.com/DioxusLabs/dioxus#15e9aa1958d45438a537a4bb01da0b79c5a3d54d"
+source = "git+https://github.com/DioxusLabs/dioxus#4a8a7dd5f4c71dca9ec15e5309abddd79de2d167"
 dependencies = [
  "dioxus-core",
  "futures-channel",
@@ -427,7 +439,7 @@ dependencies = [
 [[package]]
 name = "dioxus-html"
 version = "0.2.1"
-source = "git+https://github.com/DioxusLabs/dioxus#15e9aa1958d45438a537a4bb01da0b79c5a3d54d"
+source = "git+https://github.com/DioxusLabs/dioxus#4a8a7dd5f4c71dca9ec15e5309abddd79de2d167"
 dependencies = [
  "dioxus-core",
  "enumset",
@@ -436,9 +448,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "dioxus-native-core"
+version = "0.2.0"
+source = "git+https://github.com/DioxusLabs/dioxus#4a8a7dd5f4c71dca9ec15e5309abddd79de2d167"
+dependencies = [
+ "anymap",
+ "dioxus-core",
+ "dioxus-core-macro",
+ "dioxus-html",
+ "fxhash",
+ "smallvec",
+ "taffy",
+]
+
+[[package]]
+name = "dioxus-native-core-macro"
+version = "0.2.0"
+source = "git+https://github.com/DioxusLabs/dioxus#4a8a7dd5f4c71dca9ec15e5309abddd79de2d167"
+dependencies = [
+ "dioxus-native-core",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "dioxus-rsx"
 version = "0.0.0"
-source = "git+https://github.com/DioxusLabs/dioxus#15e9aa1958d45438a537a4bb01da0b79c5a3d54d"
+source = "git+https://github.com/DioxusLabs/dioxus#4a8a7dd5f4c71dca9ec15e5309abddd79de2d167"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -712,6 +748,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3da5951a1569dbab865c6f2a863efafff193a93caf05538d193e9e3816d21696"
 dependencies = [
  "gl_generator",
+]
+
+[[package]]
+name = "hash32"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b0c35f58762feb77d74ebe43bdbc3210f09be9fe6742234d573bacc26ed92b67"
+dependencies = [
+ "byteorder",
+]
+
+[[package]]
+name = "hash32-derive"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "59d2aba832b60be25c1b169146b27c64115470981b128ed84c8db18c1b03c6ff"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -1453,6 +1509,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "taffy"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ec27dea659b100d489dffa57cf0efc6d7bfefb119af817b92cc14006c0b214e3"
+dependencies = [
+ "arrayvec",
+ "hash32",
+ "hash32-derive",
+ "num-traits",
+ "typenum",
+]
+
+[[package]]
 name = "tar"
 version = "0.4.38"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1558,13 +1627,24 @@ dependencies = [
 name = "trev"
 version = "0.1.0"
 dependencies = [
+ "anymap",
  "dioxus",
+ "dioxus-core",
  "dioxus-html",
+ "dioxus-native-core",
+ "dioxus-native-core-macro",
+ "fxhash",
  "gl",
  "glutin",
  "skia-safe",
  "tokio",
 ]
+
+[[package]]
+name = "typenum"
+version = "1.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dcf81ac59edc17cc8697ff311e8f5ef2d99fcbd9817b34cec66f90b6c3dfd987"
 
 [[package]]
 name = "unicode-bidi"
