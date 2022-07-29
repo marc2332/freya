@@ -9,7 +9,7 @@ use glutin::{
 };
 use skia_safe::{Canvas, Paint, PaintStyle, Path};
 use std::{
-    cell::{RefCell, Ref},
+    cell::{Ref, RefCell},
     rc::Rc,
     sync::{Arc, Mutex},
 };
@@ -30,9 +30,9 @@ use skia_safe::{
     ColorType, Surface,
 };
 
-use crate::Lala;
+use crate::NodeState;
 
-type SkiaDom = Arc<Mutex<RealDom<Lala>>>;
+type SkiaDom = Arc<Mutex<RealDom<NodeState>>>;
 
 pub fn run(skia_dom: SkiaDom) {
     type WindowedContext = glutin::ContextWrapper<glutin::PossiblyCurrent, glutin::window::Window>;
@@ -222,7 +222,7 @@ pub fn run(skia_dom: SkiaDom) {
 
 use std::ops::Index;
 
-fn render_element(node: Node<Lala>, dom: &SkiaDom, canvas: &mut Canvas) {
+fn render_element(node: Node<NodeState>, dom: &SkiaDom, canvas: &mut Canvas) {
     match &node.node_type {
         NodeType::Element {
             tag,
@@ -232,7 +232,6 @@ fn render_element(node: Node<Lala>, dom: &SkiaDom, canvas: &mut Canvas) {
             "Root" => {
                 println!("{}", children.len());
                 for child_id in children {
-                   
                     let child = {
                         let dom = dom.lock().unwrap();
                         dom.index(child_id.clone()).clone()
@@ -242,6 +241,7 @@ fn render_element(node: Node<Lala>, dom: &SkiaDom, canvas: &mut Canvas) {
             }
             "div" => {
                 println!("div");
+
                 let mut path = Path::new();
                 let mut paint = Paint::default();
 
@@ -272,7 +272,7 @@ fn render_element(node: Node<Lala>, dom: &SkiaDom, canvas: &mut Canvas) {
 
 fn render(dom: &SkiaDom, canvas: &mut Canvas) {
     println!("render");
-    let root: Node<Lala> = {
+    let root: Node<NodeState> = {
         let dom = dom.lock().unwrap();
         dom.index(ElementId(0)).clone()
     };

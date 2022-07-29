@@ -1,16 +1,17 @@
 use dioxus::prelude::*;
+use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
 use dioxus_native_core::real_dom::{self, RealDom};
-use dioxus_native_core::state::State;
-use dioxus_native_core_macro::State;
+use dioxus_native_core::state::{ChildDepState, NodeDepState, State};
+use dioxus_native_core_macro::{sorted_str_slice, State};
 use gl::*;
 use glutin::*;
 use skia_safe::*;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::Arc;
+use std::sync::Mutex;
 use std::thread;
 use std::time::Duration;
-use std::sync::Mutex;
 mod run;
 
 fn main() {
@@ -18,10 +19,32 @@ fn main() {
 }
 
 #[derive(Debug, Clone, State, Default)]
-pub struct Lala {}
+pub struct NodeState {
+    #[node_dep_state()]
+    test: Size,
+}
+
+#[derive(Debug, Clone, Default)]
+struct Size;
+
+impl NodeDepState<()> for Size {
+    type Ctx = ();
+
+    const NODE_MASK: dioxus_native_core::node_ref::NodeMask = NodeMask::ALL;
+
+    fn reduce(
+        &mut self,
+        node: dioxus_native_core::node_ref::NodeView,
+        _sibling: (),
+        _ctx: &Self::Ctx,
+    ) -> bool {
+        println!("okiiiiii");
+        false
+    }
+}
 
 pub fn launch(app: Component<()>) {
-    let rdom = Arc::new(Mutex::new(RealDom::<Lala>::new()));
+    let rdom = Arc::new(Mutex::new(RealDom::<NodeState>::new()));
 
     {
         let rdom = rdom.clone();
@@ -35,7 +58,6 @@ pub fn launch(app: Component<()>) {
                 .build()
                 .unwrap()
                 .block_on(async move {
-                    
                     loop {
                         thread::sleep(Duration::from_millis(100));
                         println!("render loop");
@@ -52,10 +74,12 @@ pub fn launch(app: Component<()>) {
 }
 
 fn app(cx: Scope) -> Element {
-
     cx.render(rsx! {
         div {
-
+            width: "500",
+            h1 {
+                "ok"
+            }
         }
     })
 }
