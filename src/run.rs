@@ -1,17 +1,10 @@
 use dioxus_core::ElementId;
-use dioxus_native_core::{
-    real_dom::{Node, NodeType, RealDom},
-    state::State,
-};
-use glutin::{
-    event::{MouseButton, WindowEvent},
-    event_loop::EventLoopProxy,
-};
+use dioxus_native_core::real_dom::{Node, NodeType, RealDom};
+use glutin::event::WindowEvent;
 use skia_safe::{Canvas, Paint, PaintStyle, Path};
 use std::{
-    cell::{Ref, RefCell},
-    rc::Rc,
-    sync::{Arc, Mutex},
+    sync::{mpsc::Receiver, Arc, Mutex},
+    thread,
 };
 
 use gl::types::*;
@@ -30,11 +23,11 @@ use skia_safe::{
     ColorType, Surface,
 };
 
-use crate::NodeState;
+use crate::node::NodeState;
 
 type SkiaDom = Arc<Mutex<RealDom<NodeState>>>;
 
-pub fn run(skia_dom: SkiaDom) {
+pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>) {
     type WindowedContext = glutin::ContextWrapper<glutin::PossiblyCurrent, glutin::window::Window>;
 
     let el = EventLoop::new();
@@ -53,7 +46,6 @@ pub fn run(skia_dom: SkiaDom) {
 
     impl Env {
         pub fn redraw(&mut self) {
-            let win_size = self.windowed_context.window().inner_size();
             let canvas = self.surface.canvas();
             canvas.clear(Color::WHITE);
             render(&self.skia_dom, canvas);
@@ -78,6 +70,7 @@ pub fn run(skia_dom: SkiaDom) {
     let windowed_context = cb.build_windowed(wb, &el).unwrap();
 
     let windowed_context = unsafe { windowed_context.make_current().unwrap() };
+    let window_id = windowed_context.window().id();
 
     gl::load_with(|s| windowed_context.get_proc_address(s));
 
@@ -149,7 +142,16 @@ pub fn run(skia_dom: SkiaDom) {
         win
     };
 
-    let mut cursor_pos = (0.0, 0.0);
+    {
+        let proxy = el.create_proxy();
+        thread::spawn(move || {
+            while let Ok(msg) = rev_render.recv() {
+                proxy.send_event(msg).unwrap();
+            }
+        });
+    }
+
+    // let mut cursor_pos = (0.0, 0.0);
 
     el.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Wait;
@@ -158,10 +160,10 @@ pub fn run(skia_dom: SkiaDom) {
         match event {
             Event::LoopDestroyed => {}
             Event::WindowEvent { event, window_id } => match event {
-                WindowEvent::CursorMoved { position, .. } => {
-                    cursor_pos = (position.x, position.y);
+                WindowEvent::CursorMoved { .. } => {
+                    // _cursor_pos = (position.x, position.y);
                 }
-                WindowEvent::MouseInput { button, state, .. } => {
+                WindowEvent::MouseInput { state, .. } => {
                     if ElementState::Pressed == state {
                         let result = get_window_context(window_id);
                         if let Some(env) = result {
@@ -215,6 +217,13 @@ pub fn run(skia_dom: SkiaDom) {
                     env.redraw();
                 }
             }
+            Event::UserEvent(_) => {
+                let result = get_window_context(window_id);
+                if let Some(env) = result {
+                    let mut env = env.lock().unwrap();
+                    env.redraw();
+                }
+            }
             _ => (),
         }
     });
@@ -224,13 +233,8 @@ use std::ops::Index;
 
 fn render_element(node: Node<NodeState>, dom: &SkiaDom, canvas: &mut Canvas) {
     match &node.node_type {
-        NodeType::Element {
-            tag,
-            namespace,
-            children,
-        } => match tag.to_string().as_str() {
+        NodeType::Element { tag, children, .. } => match tag.to_string().as_str() {
             "Root" => {
-                println!("{}", children.len());
                 for child_id in children {
                     let child = {
                         let dom = dom.lock().unwrap();
@@ -240,38 +244,40 @@ fn render_element(node: Node<NodeState>, dom: &SkiaDom, canvas: &mut Canvas) {
                 }
             }
             "div" => {
-                println!("div");
-
                 let mut path = Path::new();
                 let mut paint = Paint::default();
 
                 paint.set_anti_alias(true);
                 paint.set_style(PaintStyle::Fill);
-                paint.set_color(Color::RED);
+                paint.set_color(node.state.style.background);
 
                 let x = 0;
                 let y = 0;
-                let mut width = 50;
-                let mut height = 50;
+                let width = node.state.size.0;
+                let height = node.state.size.1;
 
                 path.move_to((x, y));
-                path.line_to((width, y));
+                path.line_to((width as i32, y));
                 path.line_to((width, height));
-                path.line_to((x, height));
+                path.line_to((x, height as i32));
                 path.close();
                 canvas.draw_path(&path, &paint);
+                for child_id in children {
+                    let child = {
+                        let dom = dom.lock().unwrap();
+                        dom.index(child_id.clone()).clone()
+                    };
+                    render_element(child, dom, canvas);
+                }
             }
-            _ => {
-                println!("{}", tag.to_string().as_str());
-            }
+            _ => {}
         },
-        NodeType::Text { text } => {}
+        NodeType::Text { .. } => {}
         NodeType::Placeholder => {}
     }
 }
 
 fn render(dom: &SkiaDom, canvas: &mut Canvas) {
-    println!("render");
     let root: Node<NodeState> = {
         let dom = dom.lock().unwrap();
         dom.index(ElementId(0)).clone()
