@@ -23,7 +23,7 @@ use skia_safe::{
     ColorType, Surface,
 };
 
-use crate::node::NodeState;
+use crate::node::{NodeState, SizeMode};
 
 type SkiaDom = Arc<Mutex<RealDom<NodeState>>>;
 
@@ -48,12 +48,13 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>) {
         pub fn redraw(&mut self) {
             let canvas = self.surface.canvas();
             canvas.clear(Color::WHITE);
+            let window_size = self.windowed_context.window().inner_size();
             render(
                 &self.skia_dom,
                 canvas,
                 &RenderContext {
-                    width: 300,
-                    height: 300,
+                    width: window_size.width as i32,
+                    height: window_size.height as i32,
                     x: 0,
                     y: 0,
                 },
@@ -274,15 +275,20 @@ fn render_element(
 
                 let mut x = context.x;
                 let mut y = context.y;
-                let mut width = node.state.size.width;
-                let mut height = node.state.size.height;
+                let mut width = match node.state.size.width {
+                    SizeMode::AUTO => 0.0,
+                    SizeMode::STRETCH => context.width as f32,
+                    SizeMode::Manual(w) => w,
+                };
+                let mut height = match node.state.size.height {
+                    SizeMode::AUTO => 0.0,
+                    SizeMode::STRETCH => context.height as f32,
+                    SizeMode::Manual(h) => h,
+                };
 
                 let padding = node.state.size.padding;
                 let horizontal_padding = padding.1 + padding.3;
                 let vertical_padding = padding.0 + padding.2;
-
-                width += horizontal_padding;
-                height += vertical_padding;
 
                 path.move_to((x, y));
                 path.line_to((width as i32, y));
@@ -294,8 +300,8 @@ fn render_element(
                 let inner_context = RenderContext {
                     x: x + (horizontal_padding as i32),
                     y: y + (vertical_padding as i32),
-                    width: width as i32,
-                    height: height as i32,
+                    width: (width - horizontal_padding) as i32,
+                    height: (height - vertical_padding) as i32,
                     ..*context
                 };
 

@@ -25,17 +25,18 @@ fn app(cx: Scope) -> Element {
     cx.render(rsx! {
         div {
             background: "{big}",
-            height: "200.0",
-            width: "200.0",
+            height: "stretch",
+            width: "stretch",
+            padding: "50.0",
             div {
                 background: "{mid}",
-                height: "150.0",
-                width: "75.0",
-                padding: "10.0",
+                height: "stretch",
+                width: "stretch",
+                padding: "60.0",
                 div {
                     background: "{small}",
-                    height: "75.0",
-                    width: "40.0",
+                    height: "stretch",
+                    width: "stretch",
                 }
             }
         }

@@ -18,11 +18,19 @@ pub struct NodeState {
     pub style: Style,
 }
 
+#[derive(Default, Copy, Clone, Debug, PartialEq)]
+pub enum SizeMode {
+    #[default]
+    AUTO,
+    STRETCH,
+    Manual(f32),
+}
+
 #[derive(Default, Copy, Clone, Debug)]
 pub struct Size {
     // Support AUTO mode
-    pub width: f32,
-    pub height: f32,
+    pub width: SizeMode,
+    pub height: SizeMode,
     pub padding: (f32, f32, f32, f32),
 }
 
@@ -50,21 +58,55 @@ impl ChildDepState for Size {
         let mut height;
         let mut padding = (0.0, 0.0, 0.0, 0.0);
 
-        width = children
-            .by_ref()
-            .map(|item| item.width)
-            .reduce(|accum, item| if accum >= item { accum } else { item })
-            .unwrap_or(0.0);
+        width = SizeMode::Manual(
+            children
+                .by_ref()
+                .map(|item| {
+                    if let SizeMode::Manual(width) = item.width {
+                        width
+                    } else {
+                        0.0
+                    }
+                })
+                .reduce(|accum, item| if accum >= item { accum } else { item })
+                .unwrap_or(0.0),
+        );
 
-        height = children
-            .map(|item| item.height)
-            .reduce(|accum, item| if accum >= item { accum } else { item })
-            .unwrap_or(0.0);
+        height = SizeMode::Manual(
+            children
+                .map(|item| {
+                    if let SizeMode::Manual(height) = item.height {
+                        height
+                    } else {
+                        0.0
+                    }
+                })
+                .reduce(|accum, item| if accum >= item { accum } else { item })
+                .unwrap_or(0.0),
+        );
         // if the node contains a width or height attribute it overrides the other size
         for a in node.attributes() {
             match a.name {
-                "width" => width = a.value.to_string().parse().unwrap(),
-                "height" => height = a.value.to_string().parse().unwrap(),
+                "width" => {
+                    let attr = a.value.to_string();
+                    if &attr == "stretch" {
+                        width = SizeMode::STRETCH;
+                    } else if &attr == "auto" {
+                        width = SizeMode::AUTO;
+                    } else {
+                        width = SizeMode::Manual(attr.parse().unwrap());
+                    }
+                }
+                "height" => {
+                    let attr = a.value.to_string();
+                    if &attr == "stretch" {
+                        height = SizeMode::STRETCH;
+                    } else if &attr == "auto" {
+                        height = SizeMode::AUTO;
+                    } else {
+                        height = SizeMode::Manual(attr.parse().unwrap());
+                    }
+                }
                 "padding" => {
                     let total_padding: f32 = a.value.to_string().parse().unwrap();
                     let padding_for_side = total_padding / 2.0;
