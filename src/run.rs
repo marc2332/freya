@@ -1,7 +1,7 @@
 use dioxus_core::ElementId;
 use dioxus_native_core::real_dom::{Node, NodeType, RealDom};
 use glutin::event::WindowEvent;
-use skia_safe::{Canvas, Paint, PaintStyle, Path};
+use skia_safe::{utils::text_utils::Align, Canvas, Font, Paint, PaintStyle};
 use std::{
     sync::{mpsc::Receiver, Arc, Mutex},
     thread,
@@ -23,7 +23,7 @@ use skia_safe::{
     ColorType, Surface,
 };
 
-use crate::node::{NodeState, SizeMode};
+use crate::{elements::div::container, node::NodeState};
 
 type SkiaDom = Arc<Mutex<RealDom<NodeState>>>;
 
@@ -242,10 +242,10 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>) {
 use std::ops::Index;
 
 pub struct RenderContext {
-    width: i32,
-    height: i32,
-    x: i32,
-    y: i32,
+    pub width: i32,
+    pub height: i32,
+    pub x: i32,
+    pub y: i32,
 }
 
 fn render_element(
@@ -266,34 +266,12 @@ fn render_element(
                 }
             }
             "div" => {
-                let mut path = Path::new();
-                let mut paint = Paint::default();
-
-                paint.set_anti_alias(true);
-                paint.set_style(PaintStyle::Fill);
-                paint.set_color(node.state.style.background);
-
-                let mut x = context.x;
-                let mut y = context.y;
-                let mut width = match node.state.size.width {
-                    SizeMode::AUTO => 0.0,
-                    SizeMode::STRETCH => context.width as f32,
-                    SizeMode::Manual(w) => w,
-                };
-                let mut height = match node.state.size.height {
-                    SizeMode::AUTO => 0.0,
-                    SizeMode::STRETCH => context.height as f32,
-                    SizeMode::Manual(h) => h,
-                };
-
-                let padding = node.state.size.padding;
-                let horizontal_padding = padding.1 + padding.3;
-                let vertical_padding = padding.0 + padding.2;
-
-                path.move_to((x, y));
-                path.line_to((width as i32, y));
-                path.line_to((width, height));
-                path.line_to((x, height as i32));
+                let (
+                    (mut path, paint),
+                    (horizontal_padding, vertical_padding),
+                    (x, y),
+                    (width, height),
+                ) = container(&node, &context);
                 path.close();
                 canvas.draw_path(&path, &paint);
 
@@ -312,6 +290,37 @@ fn render_element(
                     };
                     render_element(child, dom, canvas, &inner_context);
                 }
+            }
+            "p" => {
+                let font = Font::default();
+
+                let mut paint = Paint::default();
+
+                paint.set_anti_alias(true);
+                paint.set_style(PaintStyle::StrokeAndFill);
+                paint.set_color(Color::BLACK);
+
+                let child_id = children.get(0);
+
+                let text = if let Some(child_id) = child_id {
+                    let child: Node<NodeState> = {
+                        let dom = dom.lock().unwrap();
+                        dom.index(child_id.clone()).clone()
+                    };
+
+                    if let NodeType::Text { text } = child.node_type {
+                        text
+                    } else {
+                        String::new()
+                    }
+                } else {
+                    String::new()
+                };
+
+                let x = context.x;
+                let y = context.y + 10 /* Line height, wip */;
+
+                canvas.draw_str_align(text, (x, y), &font, &paint, Align::Left);
             }
             _ => {}
         },
