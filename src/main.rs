@@ -1,4 +1,8 @@
-use std::time::Duration;
+use std::{
+    cell::RefCell,
+    sync::{atomic::AtomicI32, Arc},
+    time::Duration,
+};
 
 use dioxus::prelude::*;
 use node::launch;
@@ -12,10 +16,18 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     let colors = use_state(&cx, || vec!["green", "blue", "red"]);
+    let padding = use_state(&cx, || 60.0);
 
-    use_effect(&cx, colors, |colors| async move {
+    use_effect(&cx, (colors, padding), |(colors, padding)| async move {
         sleep(Duration::from_millis(50)).await;
         colors.with_mut(|colors| colors.reverse());
+        padding.with_mut(|padding| {
+            if *padding < 60.0 {
+                *padding += 5.0;
+            } else {
+                *padding = 20.0;
+            }
+        });
     });
 
     let big = colors[0];
@@ -32,7 +44,7 @@ fn app(cx: Scope) -> Element {
                 background: "{mid}",
                 height: "stretch",
                 width: "stretch",
-                padding: "60.0",
+                padding: "{padding}",
                 div {
                     background: "{small}",
                     height: "stretch",

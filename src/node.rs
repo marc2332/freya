@@ -12,7 +12,7 @@ use crate::run;
 
 #[derive(Debug, Clone, State, Default)]
 pub struct NodeState {
-    #[child_dep_state(size, f32)]
+    #[child_dep_state(size)]
     pub size: Size,
     #[node_dep_state()]
     pub style: Style,
@@ -36,7 +36,7 @@ pub struct Size {
 
 impl ChildDepState for Size {
     // Size accepts a font size context
-    type Ctx = f32;
+    type Ctx = ();
     // Size depends on the Size part of each child
     type DepState = Self;
     // Size only cares about the width, height, and text parts of the current node
