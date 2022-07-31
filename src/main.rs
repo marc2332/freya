@@ -31,6 +31,7 @@ fn app(cx: Scope) -> Element {
                 background: "{mid}",
                 height: "150.0",
                 width: "75.0",
+                padding: "10.0",
                 div {
                     background: "{small}",
                     height: "75.0",

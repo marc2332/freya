@@ -19,7 +19,12 @@ pub struct NodeState {
 }
 
 #[derive(Default, Copy, Clone, Debug)]
-pub struct Size(pub f32, pub f32);
+pub struct Size {
+    // Support AUTO mode
+    pub width: f32,
+    pub height: f32,
+    pub padding: (f32, f32, f32, f32),
+}
 
 impl ChildDepState for Size {
     // Size accepts a font size context
@@ -29,7 +34,7 @@ impl ChildDepState for Size {
     // Size only cares about the width, height, and text parts of the current node
     const NODE_MASK: NodeMask =
         NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
-            "width", "height"
+            "width", "height", "padding"
         ])))
         .with_text();
     fn reduce<'a>(
@@ -43,15 +48,16 @@ impl ChildDepState for Size {
     {
         let mut width;
         let mut height;
+        let mut padding = (0.0, 0.0, 0.0, 0.0);
 
         width = children
             .by_ref()
-            .map(|item| item.0)
+            .map(|item| item.width)
             .reduce(|accum, item| if accum >= item { accum } else { item })
             .unwrap_or(0.0);
 
         height = children
-            .map(|item| item.1)
+            .map(|item| item.height)
             .reduce(|accum, item| if accum >= item { accum } else { item })
             .unwrap_or(0.0);
         // if the node contains a width or height attribute it overrides the other size
@@ -59,13 +65,25 @@ impl ChildDepState for Size {
             match a.name {
                 "width" => width = a.value.to_string().parse().unwrap(),
                 "height" => height = a.value.to_string().parse().unwrap(),
+                "padding" => {
+                    let total_padding: f32 = a.value.to_string().parse().unwrap();
+                    let padding_for_side = total_padding / 2.0;
+                    padding.0 = padding_for_side;
+                    padding.1 = padding_for_side;
+                    padding.2 = padding_for_side;
+                    padding.3 = padding_for_side;
+                }
                 // because Size only depends on the width and height, no other attributes will be passed to the member
                 _ => panic!(),
             }
         }
         // to determine what other parts of the dom need to be updated we return a boolean that marks if this member changed
-        let changed = (width != self.0) || (height != self.1);
-        *self = Self(width, height);
+        let changed = (width != self.width) || (height != self.height) || (padding != self.padding);
+        *self = Self {
+            width,
+            height,
+            padding,
+        };
         changed
     }
 }

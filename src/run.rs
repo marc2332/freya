@@ -48,7 +48,16 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>) {
         pub fn redraw(&mut self) {
             let canvas = self.surface.canvas();
             canvas.clear(Color::WHITE);
-            render(&self.skia_dom, canvas);
+            render(
+                &self.skia_dom,
+                canvas,
+                &RenderContext {
+                    width: 300,
+                    height: 300,
+                    x: 0,
+                    y: 0,
+                },
+            );
             self.gr_context.flush(None);
             self.windowed_context.swap_buffers().unwrap();
         }
@@ -231,7 +240,19 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>) {
 
 use std::ops::Index;
 
-fn render_element(node: Node<NodeState>, dom: &SkiaDom, canvas: &mut Canvas) {
+pub struct RenderContext {
+    width: i32,
+    height: i32,
+    x: i32,
+    y: i32,
+}
+
+fn render_element(
+    node: Node<NodeState>,
+    dom: &SkiaDom,
+    canvas: &mut Canvas,
+    context: &RenderContext,
+) {
     match &node.node_type {
         NodeType::Element { tag, children, .. } => match tag.to_string().as_str() {
             "Root" => {
@@ -240,7 +261,7 @@ fn render_element(node: Node<NodeState>, dom: &SkiaDom, canvas: &mut Canvas) {
                         let dom = dom.lock().unwrap();
                         dom.index(child_id.clone()).clone()
                     };
-                    render_element(child, dom, canvas);
+                    render_element(child, dom, canvas, &context);
                 }
             }
             "div" => {
@@ -251,10 +272,17 @@ fn render_element(node: Node<NodeState>, dom: &SkiaDom, canvas: &mut Canvas) {
                 paint.set_style(PaintStyle::Fill);
                 paint.set_color(node.state.style.background);
 
-                let x = 0;
-                let y = 0;
-                let width = node.state.size.0;
-                let height = node.state.size.1;
+                let mut x = context.x;
+                let mut y = context.y;
+                let mut width = node.state.size.width;
+                let mut height = node.state.size.height;
+
+                let padding = node.state.size.padding;
+                let horizontal_padding = padding.1 + padding.3;
+                let vertical_padding = padding.0 + padding.2;
+
+                width += horizontal_padding;
+                height += vertical_padding;
 
                 path.move_to((x, y));
                 path.line_to((width as i32, y));
@@ -262,12 +290,21 @@ fn render_element(node: Node<NodeState>, dom: &SkiaDom, canvas: &mut Canvas) {
                 path.line_to((x, height as i32));
                 path.close();
                 canvas.draw_path(&path, &paint);
+
+                let inner_context = RenderContext {
+                    x: x + (horizontal_padding as i32),
+                    y: y + (vertical_padding as i32),
+                    width: width as i32,
+                    height: height as i32,
+                    ..*context
+                };
+
                 for child_id in children {
                     let child = {
                         let dom = dom.lock().unwrap();
                         dom.index(child_id.clone()).clone()
                     };
-                    render_element(child, dom, canvas);
+                    render_element(child, dom, canvas, &inner_context);
                 }
             }
             _ => {}
@@ -277,10 +314,10 @@ fn render_element(node: Node<NodeState>, dom: &SkiaDom, canvas: &mut Canvas) {
     }
 }
 
-fn render(dom: &SkiaDom, canvas: &mut Canvas) {
+fn render(dom: &SkiaDom, canvas: &mut Canvas, context: &RenderContext) {
     let root: Node<NodeState> = {
         let dom = dom.lock().unwrap();
         dom.index(ElementId(0)).clone()
     };
-    render_element(root, dom, canvas);
+    render_element(root, dom, canvas, &context);
 }
