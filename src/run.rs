@@ -1,7 +1,11 @@
 use dioxus_core::ElementId;
 use dioxus_native_core::real_dom::{Node, NodeType, RealDom};
 use glutin::event::WindowEvent;
-use skia_safe::{utils::text_utils::Align, Canvas, Font, Paint, PaintStyle};
+use skia_safe::{
+    font_style::{Slant, Weight, Width},
+    utils::text_utils::Align,
+    Canvas, Font, FontStyle, Paint, PaintStyle, Typeface,
+};
 use std::{
     sync::{mpsc::Receiver, Arc, Mutex},
     thread,
@@ -23,7 +27,10 @@ use skia_safe::{
     ColorType, Surface,
 };
 
-use crate::{elements::div::container, node::NodeState};
+use crate::{
+    elements::div::container,
+    node::{NodeState, SizeMode},
+};
 
 type SkiaDom = Arc<Mutex<RealDom<NodeState>>>;
 
@@ -253,7 +260,7 @@ fn render_element(
     dom: &SkiaDom,
     canvas: &mut Canvas,
     context: &RenderContext,
-) {
+) -> Option<RenderContext> {
     match &node.node_type {
         NodeType::Element { tag, children, .. } => match tag.to_string().as_str() {
             "Root" => {
@@ -264,23 +271,36 @@ fn render_element(
                     };
                     render_element(child, dom, canvas, &context);
                 }
+                None
             }
             "div" => {
-                let (
-                    (mut path, paint),
-                    (horizontal_padding, vertical_padding),
-                    (x, y),
-                    (width, height),
-                ) = container(&node, &context);
+                let width = match node.state.size.width {
+                    SizeMode::AUTO => 0.0,
+                    SizeMode::STRETCH => context.width as f32,
+                    SizeMode::Manual(w) => w,
+                };
+                let height = match node.state.size.height {
+                    SizeMode::AUTO => 0.0,
+                    SizeMode::STRETCH => context.height as f32,
+                    SizeMode::Manual(h) => h,
+                };
+
+                let ((mut path, paint), (x, y)) = container(&node, &context, (width, height));
+
+                let padding = node.state.size.padding;
+                let horizontal_padding = padding.1 + padding.3;
+                let vertical_padding = padding.0 + padding.2;
+
+                let padding = node.state.size.padding;
+
                 path.close();
                 canvas.draw_path(&path, &paint);
 
-                let inner_context = RenderContext {
-                    x: x + (horizontal_padding as i32),
-                    y: y + (vertical_padding as i32),
+                let mut inner_context = RenderContext {
+                    x: x + (padding.3 as i32),
+                    y: y + (padding.0 as i32),
                     width: (width - horizontal_padding) as i32,
                     height: (height - vertical_padding) as i32,
-                    ..*context
                 };
 
                 for child_id in children {
@@ -288,17 +308,29 @@ fn render_element(
                         let dom = dom.lock().unwrap();
                         dom.index(child_id.clone()).clone()
                     };
-                    render_element(child, dom, canvas, &inner_context);
+                    let child_context = render_element(child, dom, canvas, &inner_context);
+                    if let Some(child_context) = child_context {
+                        inner_context.y = child_context.y + child_context.height;
+                        inner_context.height -= child_context.height;
+                    }
                 }
+                Some(RenderContext {
+                    x,
+                    y,
+                    width: width as i32,
+                    height: height as i32,
+                })
             }
             "p" => {
-                let font = Font::default();
+                let style = FontStyle::new(Weight::NORMAL, Width::NORMAL, Slant::Upright);
+                let type_face = Typeface::new("inherit", style).unwrap();
+                let font = Font::new(type_face, 15.0);
 
                 let mut paint = Paint::default();
 
                 paint.set_anti_alias(true);
                 paint.set_style(PaintStyle::StrokeAndFill);
-                paint.set_color(Color::BLACK);
+                paint.set_color(Color::WHITE);
 
                 let child_id = children.get(0);
 
@@ -321,11 +353,62 @@ fn render_element(
                 let y = context.y + 10 /* Line height, wip */;
 
                 canvas.draw_str_align(text, (x, y), &font, &paint, Align::Left);
+
+                Some(RenderContext {
+                    x,
+                    y,
+                    width: context.width,
+                    height: 10,
+                })
             }
-            _ => {}
+            "button" => {
+                /*let width = match node.state.size.width {
+                    SizeMode::AUTO => 100.0,
+                    SizeMode::STRETCH => context.width as f32,
+                    SizeMode::Manual(w) => w,
+                };
+                let height = match node.state.size.height {
+                    SizeMode::AUTO => 40.0,
+                    SizeMode::STRETCH => context.height as f32,
+                    SizeMode::Manual(h) => h,
+                };
+
+                let ((mut path, paint), (x, y)) =
+                    container(&node, &context, (width, height));
+                path.close();
+                canvas.draw_path(&path, &paint);
+
+                let mut inner_context = RenderContext {
+                    x: x + (horizontal_padding as i32),
+                    y: y + (vertical_padding as i32),
+                    width: (width - horizontal_padding) as i32,
+                    height: (height - vertical_padding) as i32,
+                };
+
+                for child_id in children {
+                    let child = {
+                        let dom = dom.lock().unwrap();
+                        dom.index(child_id.clone()).clone()
+                    };
+                    let child_context = render_element(child, dom, canvas, &inner_context);
+                    if let Some(child_context) = child_context {
+                        inner_context.y = child_context.y + child_context.height;
+                        inner_context.height -= child_context.height;
+                    }
+                }
+
+                Some(RenderContext {
+                    x,
+                    y,
+                    width: width as i32,
+                    height: height as i32,
+                }) */
+                None
+            }
+            _ => None,
         },
-        NodeType::Text { .. } => {}
-        NodeType::Placeholder => {}
+        NodeType::Text { .. } => None,
+        NodeType::Placeholder => None,
     }
 }
 

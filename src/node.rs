@@ -54,36 +54,39 @@ impl ChildDepState for Size {
     where
         Self::DepState: 'a,
     {
-        let mut width;
-        let mut height;
+        let mut width = SizeMode::default();
+        let mut height = SizeMode::default();
         let mut padding = (0.0, 0.0, 0.0, 0.0);
 
-        width = SizeMode::Manual(
-            children
-                .by_ref()
-                .map(|item| {
-                    if let SizeMode::Manual(width) = item.width {
-                        width
-                    } else {
-                        0.0
-                    }
-                })
-                .reduce(|accum, item| if accum >= item { accum } else { item })
-                .unwrap_or(0.0),
-        );
+        if children.size_hint().0 > 0 {
+            width = SizeMode::Manual(
+                children
+                    .by_ref()
+                    .map(|item| {
+                        if let SizeMode::Manual(width) = item.width {
+                            width
+                        } else {
+                            0.0
+                        }
+                    })
+                    .reduce(|accum, item| if accum >= item { accum } else { item })
+                    .unwrap_or(0.0),
+            );
 
-        height = SizeMode::Manual(
-            children
-                .map(|item| {
-                    if let SizeMode::Manual(height) = item.height {
-                        height
-                    } else {
-                        0.0
-                    }
-                })
-                .reduce(|accum, item| if accum >= item { accum } else { item })
-                .unwrap_or(0.0),
-        );
+            height = SizeMode::Manual(
+                children
+                    .map(|item| {
+                        if let SizeMode::Manual(height) = item.height {
+                            height
+                        } else {
+                            0.0
+                        }
+                    })
+                    .reduce(|accum, item| if accum >= item { accum } else { item })
+                    .unwrap_or(0.0),
+            );
+        }
+
         // if the node contains a width or height attribute it overrides the other size
         for a in node.attributes() {
             match a.name {
@@ -168,6 +171,9 @@ fn color_str(color: &str) -> Option<Color> {
         "red" => Some(Color::RED),
         "green" => Some(Color::GREEN),
         "blue" => Some(Color::BLUE),
+        "yellow" => Some(Color::YELLOW),
+        "black" => Some(Color::BLACK),
+        "gray" => Some(Color::GRAY),
         _ => None,
     }
 }
