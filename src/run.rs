@@ -297,10 +297,10 @@ fn render_element(
                 canvas.draw_path(&path, &paint);
 
                 let mut inner_context = RenderContext {
-                    x: x + (padding.3 as i32),
-                    y: y + (padding.0 as i32),
-                    width: (width - horizontal_padding) as i32,
-                    height: (height - vertical_padding) as i32,
+                    x: x + padding.3,
+                    y: y + padding.0,
+                    width: width - horizontal_padding,
+                    height: height - vertical_padding,
                 };
 
                 for child_id in children {
@@ -317,8 +317,8 @@ fn render_element(
                 Some(RenderContext {
                     x,
                     y,
-                    width: width as i32,
-                    height: height as i32,
+                    width,
+                    height,
                 })
             }
             "p" => {
@@ -355,10 +355,8 @@ fn render_element(
                 canvas.draw_str_align(text, (x, y), &font, &paint, Align::Left);
 
                 Some(RenderContext {
-                    x,
-                    y,
-                    width: context.width,
-                    height: 10,
+                    height: 12, // Add 2 px of padding
+                    ..*context
                 })
             }
             "button" => {
