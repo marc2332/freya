@@ -1,15 +1,12 @@
 use dioxus_native_core::real_dom::Node;
 use skia_safe::{Paint, PaintStyle, Path};
 
-use crate::{
-    node::{NodeState, SizeMode},
-    run::RenderContext,
-};
+use crate::{node::NodeState, run::RenderContext};
 
 pub fn container(
     node: &Node<NodeState>,
     context: &RenderContext,
-    (width, height): (f32, f32),
+    (width, height): (i32, i32),
 ) -> ((Path, Paint), (i32, i32)) {
     let mut path = Path::new();
     let mut paint = Paint::default();
@@ -21,8 +18,6 @@ pub fn container(
     let x = context.x;
     let y = context.y;
 
-    let width = width as i32;
-    let height = height as i32;
     let x2 = x + width;
     let y2 = y + height;
 

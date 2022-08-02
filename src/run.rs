@@ -116,7 +116,7 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>) {
         gr_context,
         windowed_context,
         fb_info,
-        skia_dom: skia_dom,
+        skia_dom,
     };
 
     wins.lock().unwrap().push(Arc::new(Mutex::new(env)));
@@ -267,25 +267,25 @@ fn render_element(
                 for child_id in children {
                     let child = {
                         let dom = dom.lock().unwrap();
-                        dom.index(child_id.clone()).clone()
+                        dom.index(*child_id).clone()
                     };
-                    render_element(child, dom, canvas, &context);
+                    render_element(child, dom, canvas, context);
                 }
                 None
             }
             "div" => {
                 let width = match node.state.size.width {
-                    SizeMode::AUTO => 0.0,
-                    SizeMode::STRETCH => context.width as f32,
+                    SizeMode::Auto => 0,
+                    SizeMode::Stretch => context.width,
                     SizeMode::Manual(w) => w,
                 };
                 let height = match node.state.size.height {
-                    SizeMode::AUTO => 0.0,
-                    SizeMode::STRETCH => context.height as f32,
+                    SizeMode::Auto => 0,
+                    SizeMode::Stretch => context.height,
                     SizeMode::Manual(h) => h,
                 };
 
-                let ((mut path, paint), (x, y)) = container(&node, &context, (width, height));
+                let ((mut path, paint), (x, y)) = container(&node, context, (width, height));
 
                 let padding = node.state.size.padding;
                 let horizontal_padding = padding.1 + padding.3;
@@ -306,7 +306,7 @@ fn render_element(
                 for child_id in children {
                     let child = {
                         let dom = dom.lock().unwrap();
-                        dom.index(child_id.clone()).clone()
+                        dom.index(*child_id).clone()
                     };
                     let child_context = render_element(child, dom, canvas, &inner_context);
                     if let Some(child_context) = child_context {
@@ -337,7 +337,7 @@ fn render_element(
                 let text = if let Some(child_id) = child_id {
                     let child: Node<NodeState> = {
                         let dom = dom.lock().unwrap();
-                        dom.index(child_id.clone()).clone()
+                        dom.index(*child_id).clone()
                     };
 
                     if let NodeType::Text { text } = child.node_type {
@@ -417,5 +417,5 @@ fn render(dom: &SkiaDom, canvas: &mut Canvas, context: &RenderContext) {
         let dom = dom.lock().unwrap();
         dom.index(ElementId(0)).clone()
     };
-    render_element(root, dom, canvas, &context);
+    render_element(root, dom, canvas, context);
 }

@@ -10,7 +10,7 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     let colors = use_state(&cx, || vec!["green", "blue", "red"]);
-    let padding = use_state(&cx, || 10.0);
+    let padding = use_state(&cx, || 10);
 
     use_effect(&cx, colors, |colors| async move {
         sleep(Duration::from_millis(200)).await;
@@ -20,10 +20,10 @@ fn app(cx: Scope) -> Element {
     use_effect(&cx, padding, |padding| async move {
         sleep(Duration::from_millis(1)).await;
         padding.with_mut(|padding| {
-            if *padding < 65.0 {
-                *padding += 1.0;
+            if *padding < 65 {
+                *padding += 1;
             } else {
-                *padding = 5.0;
+                *padding = 5;
             }
         });
     });
@@ -37,7 +37,7 @@ fn app(cx: Scope) -> Element {
             background: "{big}",
             height: "stretch",
             width: "stretch",
-            padding: "50.0",
+            padding: "50",
             p {
                 "hello",
             }
@@ -53,7 +53,7 @@ fn app(cx: Scope) -> Element {
                     background: "{small}",
                     height: "stretch",
                     width: "stretch",
-                    padding: "20.0",
+                    padding: "20",
                     p {
                         ":D !",
                     }

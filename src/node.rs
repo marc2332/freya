@@ -18,12 +18,12 @@ pub struct NodeState {
     pub style: Style,
 }
 
-#[derive(Default, Copy, Clone, Debug, PartialEq)]
+#[derive(Default, Copy, Clone, Debug, PartialEq, Eq)]
 pub enum SizeMode {
     #[default]
-    AUTO,
-    STRETCH,
-    Manual(f32),
+    Auto,
+    Stretch,
+    Manual(i32),
 }
 
 #[derive(Default, Copy, Clone, Debug)]
@@ -31,7 +31,7 @@ pub struct Size {
     // Support AUTO mode
     pub width: SizeMode,
     pub height: SizeMode,
-    pub padding: (f32, f32, f32, f32),
+    pub padding: (i32, i32, i32, i32),
 }
 
 impl ChildDepState for Size {
@@ -56,7 +56,7 @@ impl ChildDepState for Size {
     {
         let mut width = SizeMode::default();
         let mut height = SizeMode::default();
-        let mut padding = (0.0, 0.0, 0.0, 0.0);
+        let mut padding = (0, 0, 0, 0);
 
         if children.size_hint().0 > 0 {
             width = SizeMode::Manual(
@@ -66,11 +66,11 @@ impl ChildDepState for Size {
                         if let SizeMode::Manual(width) = item.width {
                             width
                         } else {
-                            0.0
+                            0
                         }
                     })
                     .reduce(|accum, item| if accum >= item { accum } else { item })
-                    .unwrap_or(0.0),
+                    .unwrap_or(0),
             );
 
             height = SizeMode::Manual(
@@ -79,11 +79,11 @@ impl ChildDepState for Size {
                         if let SizeMode::Manual(height) = item.height {
                             height
                         } else {
-                            0.0
+                            0
                         }
                     })
                     .reduce(|accum, item| if accum >= item { accum } else { item })
-                    .unwrap_or(0.0),
+                    .unwrap_or(0),
             );
         }
 
@@ -93,9 +93,9 @@ impl ChildDepState for Size {
                 "width" => {
                     let attr = a.value.to_string();
                     if &attr == "stretch" {
-                        width = SizeMode::STRETCH;
+                        width = SizeMode::Stretch;
                     } else if &attr == "auto" {
-                        width = SizeMode::AUTO;
+                        width = SizeMode::Auto;
                     } else {
                         width = SizeMode::Manual(attr.parse().unwrap());
                     }
@@ -103,16 +103,16 @@ impl ChildDepState for Size {
                 "height" => {
                     let attr = a.value.to_string();
                     if &attr == "stretch" {
-                        height = SizeMode::STRETCH;
+                        height = SizeMode::Stretch;
                     } else if &attr == "auto" {
-                        height = SizeMode::AUTO;
+                        height = SizeMode::Auto;
                     } else {
                         height = SizeMode::Manual(attr.parse().unwrap());
                     }
                 }
                 "padding" => {
-                    let total_padding: f32 = a.value.to_string().parse().unwrap();
-                    let padding_for_side = total_padding / 2.0;
+                    let total_padding: i32 = a.value.to_string().parse().unwrap();
+                    let padding_for_side = total_padding / 2;
                     padding.0 = padding_for_side;
                     padding.1 = padding_for_side;
                     padding.2 = padding_for_side;
@@ -211,5 +211,5 @@ pub fn launch(app: Component<()>) {
         });
     }
 
-    run::run(rdom.clone(), rev_render);
+    run::run(rdom, rev_render);
 }

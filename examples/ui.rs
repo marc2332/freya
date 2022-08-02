@@ -43,10 +43,10 @@ struct NavbarProps<'a> {
 fn Navbar<'a>(cx: Scope<'a, NavbarProps<'a>>) -> Element {
     cx.render(rsx!(
         div {
-            height: "40.0",
+            height: "40",
             width: "stretch",
             background: "black",
-            padding: "10.0",
+            padding: "10",
             p {
                "{&cx.props.title}"
             }
@@ -86,14 +86,14 @@ fn Card<'a>(cx: Scope<'a, CardProps<'a>>) -> Element {
     cx.render(rsx!(
         div {
             width: "stretch",
-            height: "100.0",
-            padding: "10.0",
+            height: "100",
+            padding: "10",
             background: "yellow",
             div {
                 width: "stretch",
                 height: "stretch",
                 background: "gray",
-                padding: "20.0",
+                padding: "20",
                 p {
                     "{&cx.props.title}"
                 }
