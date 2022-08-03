@@ -17,3 +17,8 @@ glutin = "*"
 skia-safe = { version = "*", features = ["gl"] }
 tokio = { version = "1.17.0", features = ["full"] }
 fxhash = "0.2.1"
+
+[workspace]
+members = [
+    "layout-engine"
+]
