@@ -1,11 +1,13 @@
 use dioxus_core::ElementId;
 use dioxus_native_core::real_dom::{Node, NodeType, RealDom};
 use glutin::event::WindowEvent;
+use layout_engine::{calculate_node, NodeData, Viewport};
 use skia_safe::{
     font_style::{Slant, Weight, Width},
     utils::text_utils::Align,
-    Canvas, Font, FontStyle, Paint, PaintStyle, Typeface,
+    Canvas, Font, FontStyle, Paint, PaintStyle, Path, Typeface,
 };
+use state::node::{NodeState, SizeMode};
 use std::{
     sync::{mpsc::Receiver, Arc, Mutex},
     thread,
@@ -26,11 +28,7 @@ use skia_safe::{
     gpu::{gl::FramebufferInfo, BackendRenderTarget, SurfaceOrigin},
     ColorType, Surface,
 };
-
-use crate::{
-    elements::div::container,
-    node::{NodeState, SizeMode},
-};
+use std::ops::Index;
 
 type SkiaDom = Arc<Mutex<RealDom<NodeState>>>;
 
@@ -59,7 +57,7 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>) {
             render(
                 &self.skia_dom,
                 canvas,
-                &RenderContext {
+                Viewport {
                     width: window_size.width as i32,
                     height: window_size.height as i32,
                     x: 0,
@@ -246,174 +244,108 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>) {
     });
 }
 
-use std::ops::Index;
-
-pub struct RenderContext {
-    pub width: i32,
-    pub height: i32,
-    pub x: i32,
-    pub y: i32,
-}
-
-fn render_element(
-    node: Node<NodeState>,
-    dom: &SkiaDom,
-    canvas: &mut Canvas,
-    context: &RenderContext,
-) -> Option<RenderContext> {
+fn render_skia(
+    dom: &mut &SkiaDom,
+    canvas: &mut &mut Canvas,
+    node: &NodeData<NodeState>,
+    viewport: &Viewport,
+) {
+    let node = node.node.as_ref().unwrap();
     match &node.node_type {
-        NodeType::Element { tag, children, .. } => match tag.to_string().as_str() {
-            "Root" => {
-                for child_id in children {
-                    let child = {
-                        let dom = dom.lock().unwrap();
-                        dom.index(*child_id).clone()
-                    };
-                    render_element(child, dom, canvas, context);
+        NodeType::Element { tag, children, .. } => {
+            match tag.as_str() {
+                "div" => {
+                    let mut path = Path::new();
+                    let mut paint = Paint::default();
+
+                    paint.set_anti_alias(true);
+                    paint.set_style(PaintStyle::Fill);
+                    paint.set_color(node.state.style.background);
+
+                    let x = viewport.x;
+                    let y = viewport.y;
+
+                    let x2 = x + viewport.width;
+                    let y2 = y + viewport.height;
+
+                    path.move_to((x, y));
+                    path.line_to((x2, y));
+                    path.line_to((x2, y2));
+                    path.line_to((x, y2));
+
+                    path.close();
+                    canvas.draw_path(&path, &paint);
                 }
-                None
-            }
-            "div" => {
-                let width = match node.state.size.width {
-                    SizeMode::Auto => 0,
-                    SizeMode::Stretch => context.width,
-                    SizeMode::Manual(w) => w,
-                };
-                let height = match node.state.size.height {
-                    SizeMode::Auto => 0,
-                    SizeMode::Stretch => context.height,
-                    SizeMode::Manual(h) => h,
-                };
+                "p" => {
+                    let style = FontStyle::new(Weight::NORMAL, Width::NORMAL, Slant::Upright);
+                    let type_face = Typeface::new("inherit", style).unwrap();
+                    let font = Font::new(type_face, 15.0);
 
-                let ((mut path, paint), (x, y)) = container(&node, context, (width, height));
+                    let mut paint = Paint::default();
 
-                let padding = node.state.size.padding;
-                let horizontal_padding = padding.1 + padding.3;
-                let vertical_padding = padding.0 + padding.2;
+                    paint.set_anti_alias(true);
+                    paint.set_style(PaintStyle::StrokeAndFill);
+                    paint.set_color(Color::WHITE);
 
-                let padding = node.state.size.padding;
+                    let child_id = children.get(0);
 
-                path.close();
-                canvas.draw_path(&path, &paint);
+                    let text = if let Some(child_id) = child_id {
+                        let child: Node<NodeState> = {
+                            let dom = dom.lock().unwrap();
+                            dom.index(*child_id).clone()
+                        };
 
-                let mut inner_context = RenderContext {
-                    x: x + padding.3,
-                    y: y + padding.0,
-                    width: width - horizontal_padding,
-                    height: height - vertical_padding,
-                };
-
-                for child_id in children {
-                    let child = {
-                        let dom = dom.lock().unwrap();
-                        dom.index(*child_id).clone()
-                    };
-                    let child_context = render_element(child, dom, canvas, &inner_context);
-                    if let Some(child_context) = child_context {
-                        inner_context.y = child_context.y + child_context.height;
-                        inner_context.height -= child_context.height;
-                    }
-                }
-                Some(RenderContext {
-                    x,
-                    y,
-                    width,
-                    height,
-                })
-            }
-            "p" => {
-                let style = FontStyle::new(Weight::NORMAL, Width::NORMAL, Slant::Upright);
-                let type_face = Typeface::new("inherit", style).unwrap();
-                let font = Font::new(type_face, 15.0);
-
-                let mut paint = Paint::default();
-
-                paint.set_anti_alias(true);
-                paint.set_style(PaintStyle::StrokeAndFill);
-                paint.set_color(Color::WHITE);
-
-                let child_id = children.get(0);
-
-                let text = if let Some(child_id) = child_id {
-                    let child: Node<NodeState> = {
-                        let dom = dom.lock().unwrap();
-                        dom.index(*child_id).clone()
-                    };
-
-                    if let NodeType::Text { text } = child.node_type {
-                        text
+                        if let NodeType::Text { text } = child.node_type {
+                            text
+                        } else {
+                            String::new()
+                        }
                     } else {
                         String::new()
-                    }
-                } else {
-                    String::new()
-                };
-
-                let x = context.x;
-                let y = context.y + 10 /* Line height, wip */;
-
-                canvas.draw_str_align(text, (x, y), &font, &paint, Align::Left);
-
-                Some(RenderContext {
-                    height: 12, // Add 2 px of padding
-                    ..*context
-                })
-            }
-            "button" => {
-                /*let width = match node.state.size.width {
-                    SizeMode::AUTO => 100.0,
-                    SizeMode::STRETCH => context.width as f32,
-                    SizeMode::Manual(w) => w,
-                };
-                let height = match node.state.size.height {
-                    SizeMode::AUTO => 40.0,
-                    SizeMode::STRETCH => context.height as f32,
-                    SizeMode::Manual(h) => h,
-                };
-
-                let ((mut path, paint), (x, y)) =
-                    container(&node, &context, (width, height));
-                path.close();
-                canvas.draw_path(&path, &paint);
-
-                let mut inner_context = RenderContext {
-                    x: x + (horizontal_padding as i32),
-                    y: y + (vertical_padding as i32),
-                    width: (width - horizontal_padding) as i32,
-                    height: (height - vertical_padding) as i32,
-                };
-
-                for child_id in children {
-                    let child = {
-                        let dom = dom.lock().unwrap();
-                        dom.index(child_id.clone()).clone()
                     };
-                    let child_context = render_element(child, dom, canvas, &inner_context);
-                    if let Some(child_context) = child_context {
-                        inner_context.y = child_context.y + child_context.height;
-                        inner_context.height -= child_context.height;
-                    }
-                }
 
-                Some(RenderContext {
-                    x,
-                    y,
-                    width: width as i32,
-                    height: height as i32,
-                }) */
-                None
+                    let x = viewport.x;
+                    let y = viewport.y + 10 /* Line height, wip */;
+
+                    canvas.draw_str_align(text, (x, y), &font, &paint, Align::Left);
+                }
+                _ => {}
             }
-            _ => None,
-        },
-        NodeType::Text { .. } => None,
-        NodeType::Placeholder => None,
+        }
+        NodeType::Text { .. } => {}
+        NodeType::Placeholder => {}
     }
 }
 
-fn render(dom: &SkiaDom, canvas: &mut Canvas, context: &RenderContext) {
+fn render(dom: &SkiaDom, canvas: &mut Canvas, viewport: Viewport) {
     let root: Node<NodeState> = {
         let dom = dom.lock().unwrap();
         dom.index(ElementId(0)).clone()
     };
-    render_element(root, dom, canvas, context);
+    calculate_node::<(&SkiaDom, &mut Canvas), NodeState>(
+        &NodeData::<NodeState> {
+            width: SizeMode::Percentage(100),
+            height: SizeMode::Percentage(100),
+            padding: (0, 0, 0, 0),
+            node: Some(root),
+        },
+        viewport,
+        &mut (dom, canvas),
+        |node_id, (dom, _)| {
+            let child = {
+                let dom = dom.lock().unwrap();
+                dom.index(*node_id).clone()
+            };
+
+            Some(NodeData::<NodeState> {
+                width: child.state.size.width,
+                height: child.state.size.height,
+                padding: child.state.size.padding,
+                node: Some(child),
+            })
+        },
+        |node, viewport, (dom, canvas)| {
+            render_skia(dom, canvas, node, viewport);
+        },
+    );
 }

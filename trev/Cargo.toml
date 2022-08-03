@@ -1,0 +1,16 @@
+[package]
+name = "trev"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+state = { path = "../state"}
+layout-engine = { path = "../layout-engine"}
+renderer = { path = "../renderer"}
+dioxus = { git = "https://github.com/DioxusLabs/dioxus" }
+dioxus-html = { git = "https://github.com/DioxusLabs/dioxus" }
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus" }
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus" }
+tokio = { version = "1.17.0", features = ["full"] }
+anymap = "0.12.1"
+fxhash = "0.2.1"

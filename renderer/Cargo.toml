@@ -1,0 +1,13 @@
+[package]
+name = "renderer"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+gl = "*"
+glutin = "*"
+skia-safe = { version = "*", features = ["gl"] }
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus" }
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus" }
+layout-engine = { path = "../layout-engine"}
+state = { path = "../state"}

@@ -1,24 +1,12 @@
 [package]
-name = "trev"
+name = "examples"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-dioxus = { git = "https://github.com/DioxusLabs/dioxus" }
-dioxus-html = { git = "https://github.com/DioxusLabs/dioxus" }
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus" }
-dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus" }
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus" }
-gl = "*"
-anymap = "0.12.1"
-glutin = "*"
-skia-safe = { version = "*", features = ["gl"] }
-tokio = { version = "1.17.0", features = ["full"] }
-fxhash = "0.2.1"
-
 [workspace]
-members = [
-    "layout-engine"
-]
+members = ["layout-engine", "renderer", "state", "trev"]
+
+[dev-dependencies]
+trev = { path = "./trev"}
+dioxus = { git = "https://github.com/DioxusLabs/dioxus" }
+tokio = "1.17.0"

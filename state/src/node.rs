@@ -1,14 +1,15 @@
-use anymap::AnyMap;
-use dioxus::prelude::*;
 use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
-use dioxus_native_core::real_dom::RealDom;
 use dioxus_native_core::state::{ChildDepState, NodeDepState, State};
 use dioxus_native_core_macro::{sorted_str_slice, State};
-use skia_safe::*;
-use std::sync::Mutex;
-use std::sync::{mpsc, Arc};
+use skia_safe::Color;
 
-use crate::run;
+#[derive(Default, Copy, Clone, Debug, PartialEq, Eq)]
+pub enum SizeMode {
+    #[default]
+    Auto,
+    Percentage(i32),
+    Manual(i32),
+}
 
 #[derive(Debug, Clone, State, Default)]
 pub struct NodeState {
@@ -19,14 +20,6 @@ pub struct NodeState {
 }
 
 #[derive(Default, Copy, Clone, Debug, PartialEq, Eq)]
-pub enum SizeMode {
-    #[default]
-    Auto,
-    Stretch,
-    Manual(i32),
-}
-
-#[derive(Default, Copy, Clone, Debug)]
 pub struct Size {
     // Support AUTO mode
     pub width: SizeMode,
@@ -44,7 +37,8 @@ impl ChildDepState for Size {
         NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
             "width", "height", "padding"
         ])))
-        .with_text();
+        .with_text()
+        .with_tag();
     fn reduce<'a>(
         &mut self,
         node: NodeView,
@@ -58,7 +52,9 @@ impl ChildDepState for Size {
         let mut height = SizeMode::default();
         let mut padding = (0, 0, 0, 0);
 
-        if children.size_hint().0 > 0 {
+        // Text elements shouldn't be define by their children size but
+        // by their text content if not specified otherwise
+        if children.size_hint().0 > 0 && node.tag() != Some("p") {
             width = SizeMode::Manual(
                 children
                     .by_ref()
@@ -93,7 +89,7 @@ impl ChildDepState for Size {
                 "width" => {
                     let attr = a.value.to_string();
                     if &attr == "stretch" {
-                        width = SizeMode::Stretch;
+                        width = SizeMode::Percentage(100);
                     } else if &attr == "auto" {
                         width = SizeMode::Auto;
                     } else {
@@ -103,7 +99,7 @@ impl ChildDepState for Size {
                 "height" => {
                     let attr = a.value.to_string();
                     if &attr == "stretch" {
-                        height = SizeMode::Stretch;
+                        height = SizeMode::Percentage(100);
                     } else if &attr == "auto" {
                         height = SizeMode::Auto;
                     } else {
@@ -176,40 +172,4 @@ fn color_str(color: &str) -> Option<Color> {
         "gray" => Some(Color::GRAY),
         _ => None,
     }
-}
-
-pub fn launch(app: Component<()>) {
-    let rdom = Arc::new(Mutex::new(RealDom::<NodeState>::new()));
-    let (trig_render, rev_render) = mpsc::channel::<()>();
-
-    {
-        let rdom = rdom.clone();
-        std::thread::spawn(move || {
-            let mut dom = VirtualDom::new(app);
-
-            let muts = dom.rebuild();
-            let to_update = rdom.lock().unwrap().apply_mutations(vec![muts]);
-            let mut ctx = AnyMap::new();
-            ctx.insert(0.0f32);
-            rdom.lock().unwrap().update_state(&dom, to_update, ctx);
-            tokio::runtime::Builder::new_current_thread()
-                .enable_all()
-                .build()
-                .unwrap()
-                .block_on(async move {
-                    loop {
-                        dom.wait_for_work().await;
-                        let mutations = dom.work_with_deadline(|| false);
-                        let to_update = rdom.lock().unwrap().apply_mutations(mutations);
-                        let ctx = AnyMap::new();
-                        if !to_update.is_empty() {
-                            trig_render.send(()).unwrap();
-                        }
-                        rdom.lock().unwrap().update_state(&dom, to_update, ctx);
-                    }
-                });
-        });
-    }
-
-    run::run(rdom, rev_render);
 }

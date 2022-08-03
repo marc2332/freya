@@ -1,15 +1,14 @@
 [package]
-name = "layout-engine"
+name = "state"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus" }
 dioxus = { git = "https://github.com/DioxusLabs/dioxus" }
-state = { path = "../state"}
-
-[dev-dependencies]
+dioxus-html = { git = "https://github.com/DioxusLabs/dioxus" }
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus" }
 dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus" }
 dioxus-core = { git = "https://github.com/DioxusLabs/dioxus" }
-fxhash = "0.2.1"
 anymap = "0.12.1"
+fxhash = "0.2.1"
+skia-safe = { version = "*", features = ["gl"] }

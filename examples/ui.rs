@@ -1,7 +1,4 @@
-use std::time::Duration;
-
 use dioxus::prelude::*;
-use tokio::time::sleep;
 use trev::launch;
 
 fn main() {
@@ -40,6 +37,7 @@ struct NavbarProps<'a> {
     title: &'a str,
 }
 
+#[allow(non_snake_case)]
 fn Navbar<'a>(cx: Scope<'a, NavbarProps<'a>>) -> Element {
     cx.render(rsx!(
         div {
@@ -48,12 +46,14 @@ fn Navbar<'a>(cx: Scope<'a, NavbarProps<'a>>) -> Element {
             background: "black",
             padding: "10",
             p {
+                height: "auto",
                "{&cx.props.title}"
             }
         }
     ))
 }
 
+#[allow(dead_code)]
 #[derive(Props)]
 struct AppProps<'a> {
     title: &'a str,
@@ -61,6 +61,7 @@ struct AppProps<'a> {
     navbar: Element<'a>,
 }
 
+#[allow(non_snake_case)]
 fn App<'a>(cx: Scope<'a, AppProps<'a>>) -> Element {
     cx.render(rsx!(
         div {
@@ -82,6 +83,7 @@ struct CardProps<'a> {
     content: &'a str,
 }
 
+#[allow(non_snake_case)]
 fn Card<'a>(cx: Scope<'a, CardProps<'a>>) -> Element {
     cx.render(rsx!(
         div {
@@ -95,12 +97,12 @@ fn Card<'a>(cx: Scope<'a, CardProps<'a>>) -> Element {
                 background: "gray",
                 padding: "20",
                 p {
+                    height: "auto",
                     "{&cx.props.title}"
                 }
-                div {
-                    p {
-                        "{&cx.props.content}"
-                    }
+                p {
+                    height: "auto",
+                    "{&cx.props.content}"
                 }
             }
         }
