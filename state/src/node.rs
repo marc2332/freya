@@ -92,6 +92,8 @@ impl ChildDepState for Size {
                         width = SizeMode::Percentage(100);
                     } else if &attr == "auto" {
                         width = SizeMode::Auto;
+                    } else if attr.contains("%") {
+                        width = SizeMode::Percentage(attr.replace("%", "").parse().unwrap());
                     } else {
                         width = SizeMode::Manual(attr.parse().unwrap());
                     }
@@ -102,6 +104,8 @@ impl ChildDepState for Size {
                         height = SizeMode::Percentage(100);
                     } else if &attr == "auto" {
                         height = SizeMode::Auto;
+                    } else if attr.contains("%") {
+                        height = SizeMode::Percentage(attr.replace("%", "").parse().unwrap());
                     } else {
                         height = SizeMode::Manual(attr.parse().unwrap());
                     }

@@ -1,5 +1,5 @@
-use std::time::Duration;
 use dioxus::prelude::*;
+use std::time::Duration;
 use tokio::time::sleep;
 use trev::launch;
 
