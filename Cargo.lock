@@ -1414,7 +1414,9 @@ name = "renderer"
 version = "0.1.0"
 dependencies = [
  "dioxus-core",
+ "dioxus-html",
  "dioxus-native-core",
+ "enumset",
  "gl",
  "glutin",
  "layout-engine",

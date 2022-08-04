@@ -5,6 +5,7 @@ use dioxus_native_core::{
 };
 use state::node::SizeMode;
 
+#[derive(Default, Clone, Debug)]
 pub struct NodeData<T: State> {
     pub width: SizeMode,
     pub height: SizeMode,
@@ -20,13 +21,17 @@ pub struct Viewport {
     pub height: i32,
 }
 
-fn calculate_viewport<B: State>(node: &NodeData<B>, mut viewport: Viewport) -> Viewport {
+fn calculate_viewport<B: State>(
+    node: &NodeData<B>,
+    mut viewport: Viewport,
+    parent_viewport: Viewport,
+) -> Viewport {
     match node.width {
         SizeMode::Manual(w) => {
             viewport.width = w;
         }
         SizeMode::Percentage(per) => {
-            viewport.width = ((viewport.width as f32) / 100.0 * (per as f32)) as i32;
+            viewport.width = ((parent_viewport.width as f32) / 100.0 * (per as f32)) as i32;
         }
         SizeMode::Auto => {}
     }
@@ -36,7 +41,7 @@ fn calculate_viewport<B: State>(node: &NodeData<B>, mut viewport: Viewport) -> V
             viewport.height = h;
         }
         SizeMode::Percentage(per) => {
-            viewport.height = ((viewport.height as f32) / 100.0 * (per as f32)) as i32;
+            viewport.height = ((parent_viewport.height as f32) / 100.0 * (per as f32)) as i32;
         }
         SizeMode::Auto => {
             if let Some(node) = &node.node {
@@ -54,12 +59,13 @@ fn calculate_viewport<B: State>(node: &NodeData<B>, mut viewport: Viewport) -> V
 
 pub fn calculate_node<T, B: State>(
     node: &NodeData<B>,
-    viewport: Viewport,
+    left_viewport: Viewport,
+    parent_viewport: Viewport,
     render_options: &mut T,
     node_resolver: fn(&ElementId, &mut T) -> Option<NodeData<B>>,
     render_hook: fn(&NodeData<B>, &Viewport, &mut T) -> (),
 ) -> Viewport {
-    let mut node_viewport = calculate_viewport(node, viewport);
+    let mut node_viewport = calculate_viewport(node, left_viewport, parent_viewport);
     let mut is_text = false;
 
     render_hook(node, &node_viewport, render_options);
@@ -74,6 +80,7 @@ pub fn calculate_node<T, B: State>(
         width: node_viewport.width - horizontal_padding,
         height: node_viewport.height - vertical_padding,
     };
+    let out_viewport = inner_viewport.clone();
 
     if let Some(dom_node) = &node.node {
         match &dom_node.node_type {
@@ -85,6 +92,7 @@ pub fn calculate_node<T, B: State>(
                         let child_result = calculate_node::<T, B>(
                             &child_node,
                             inner_viewport,
+                            out_viewport,
                             render_options,
                             node_resolver,
                             render_hook,

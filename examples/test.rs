@@ -42,7 +42,7 @@ fn app(cx: Scope) -> Element {
             }
             div {
                 background: "{mid}",
-                height: "stretch",
+                height: "auto",
                 width: "stretch",
                 padding: "{padding}",
                 p {
@@ -50,7 +50,7 @@ fn app(cx: Scope) -> Element {
                 }
                 div {
                     background: "{small}",
-                    height: "stretch",
+                    height: "auto",
                     width: "stretch",
                     padding: "20",
                     p {

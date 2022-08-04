@@ -1,5 +1,17 @@
-use dioxus_core::ElementId;
+use dioxus_core::{
+    exports::futures_channel::mpsc::UnboundedSender, ElementId, EventPriority, SchedulerMsg,
+    UserEvent,
+};
+use dioxus_html::{
+    geometry::{
+        euclid::{Length, Point2D},
+        Coordinates,
+    },
+    input_data::{keyboard_types::Modifiers, MouseButton},
+    on::MouseData,
+};
 use dioxus_native_core::real_dom::{Node, NodeType, RealDom};
+use enumset::enum_set;
 use glutin::event::WindowEvent;
 use layout_engine::{calculate_node, NodeData, Viewport};
 use skia_safe::{
@@ -31,16 +43,13 @@ use skia_safe::{
 use std::ops::Index;
 
 type SkiaDom = Arc<Mutex<RealDom<NodeState>>>;
+type EventEmitter = Arc<Mutex<Option<UnboundedSender<SchedulerMsg>>>>;
 
-pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>) {
+pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmitter) {
     type WindowedContext = glutin::ContextWrapper<glutin::PossiblyCurrent, glutin::window::Window>;
 
     let el = EventLoop::new();
 
-    // Guarantee the drop order inside the FnMut closure. `WindowedContext` _must_ be dropped after
-    // `DirectContext`.
-    //
-    // https://github.com/rust-skia/rust-skia/issues/476
     struct Env {
         surface: Surface,
         gr_context: skia_safe::gpu::DirectContext,
@@ -105,9 +114,9 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>) {
         .window()
         .set_inner_size(PhysicalSize::<u32>::new(300, 300));
 
-    let surface = create_surface(&windowed_context, &fb_info, &mut gr_context);
-    // let sf = windowed_context.window().scale_factor() as f32;
-    // surface.canvas().scale((sf, sf));
+    let mut surface = create_surface(&windowed_context, &fb_info, &mut gr_context);
+    let sf = windowed_context.window().scale_factor() as f32;
+    surface.canvas().scale((sf, sf));
 
     let env = Env {
         surface,
@@ -146,6 +155,139 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>) {
         .unwrap()
     }
 
+    {
+        let proxy = el.create_proxy();
+        thread::spawn(move || {
+            while let Ok(msg) = rev_render.recv() {
+                proxy.send_event(msg).unwrap();
+            }
+        });
+    }
+
+    let cursor_pos = Arc::new(Mutex::new((0.0, 0.0)));
+
+    // This will calculate the whole layout from the root component and
+    // find the first element that matches the cursor position
+    // WIP
+    let send_mouse_event = {
+        let cursor_pos = cursor_pos.clone();
+        let wins = wins.clone();
+        move |event_name: &'static str| {
+            let result = {
+                let mut win = None;
+                for env in &*wins.lock().unwrap() {
+                    if env.lock().unwrap().windowed_context.window().id() == window_id {
+                        win = Some(env.clone())
+                    }
+                }
+
+                win
+            };
+            if let Some(env) = result {
+                let mut env = env.lock().unwrap();
+                let event_emitter = event_emitter.lock().unwrap();
+                let event_emitter = event_emitter.as_ref().unwrap();
+
+                {
+                    let root: Node<NodeState> = {
+                        let dom = env.skia_dom.lock().unwrap();
+                        dom.index(ElementId(0)).clone()
+                    };
+                    let window_size = env.windowed_context.window().inner_size();
+                    let dom = &env.skia_dom.clone();
+                    let mut node_candidates: Vec<ElementId> = Vec::new();
+                    calculate_node::<
+                        (&SkiaDom, Arc<Mutex<(f64, f64)>>, &mut Vec<ElementId>),
+                        NodeState,
+                    >(
+                        &NodeData::<NodeState> {
+                            width: SizeMode::Percentage(100),
+                            height: SizeMode::Percentage(100),
+                            padding: (0, 0, 0, 0),
+                            node: Some(root),
+                        },
+                        Viewport {
+                            x: 0,
+                            y: 0,
+                            width: window_size.width as i32,
+                            height: window_size.height as i32,
+                        },
+                        Viewport {
+                            x: 0,
+                            y: 0,
+                            width: window_size.width as i32,
+                            height: window_size.height as i32,
+                        },
+                        &mut (dom, cursor_pos.clone(), &mut node_candidates),
+                        |node_id, (dom, _, _)| {
+                            let child = {
+                                let dom = dom.lock().unwrap();
+                                dom.index(*node_id).clone()
+                            };
+
+                            Some(NodeData::<NodeState> {
+                                width: child.state.size.width,
+                                height: child.state.size.height,
+                                padding: child.state.size.padding,
+                                node: Some(child),
+                            })
+                        },
+                        |node, viewport, (_, cursor_pos, node_candidates)| {
+                            let x = viewport.x as f64;
+                            let y = viewport.y as f64;
+                            let width = (viewport.x + viewport.width) as f64;
+                            let height = (viewport.y + viewport.height) as f64;
+                            let cursor_pos = *cursor_pos.lock().unwrap();
+
+                            // Check if the cursor is inside the 4 points
+                            if cursor_pos.0 > x
+                                && cursor_pos.0 < width
+                                && cursor_pos.1 > y
+                                && cursor_pos.1 < height
+                            {
+                                node_candidates.push(node.node.as_ref().unwrap().id);
+                            }
+                        },
+                    );
+
+                    let dom = dom.lock().unwrap();
+                    let listeners = dom.get_listening_sorted(event_name);
+                    let cursor_pos = *cursor_pos.lock().unwrap();
+                    for listener in listeners {
+                        if node_candidates.contains(&listener.id) {
+                            // Propagate the Mouse event
+                            event_emitter
+                                .unbounded_send(SchedulerMsg::Event(UserEvent {
+                                    scope_id: None,
+                                    priority: EventPriority::Medium,
+                                    element: Some(listener.id),
+                                    name: event_name,
+                                    bubbles: true,
+                                    data: Arc::new(MouseData::new(
+                                        Coordinates::new(
+                                            Point2D::default(),
+                                            Point2D::from_lengths(
+                                                Length::new(cursor_pos.0),
+                                                Length::new(cursor_pos.1),
+                                            ),
+                                            Point2D::default(),
+                                            Point2D::default(),
+                                        ),
+                                        Some(MouseButton::Primary),
+                                        enum_set! {MouseButton::Primary},
+                                        Modifiers::empty(),
+                                    )),
+                                }))
+                                .unwrap();
+                        }
+                    }
+                }
+
+                env.redraw();
+            }
+        }
+    };
+
     let get_window_context = move |window_id: WindowId| -> Option<Arc<Mutex<Env>>> {
         let mut win = None;
         for env in &*wins.lock().unwrap() {
@@ -157,17 +299,6 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>) {
         win
     };
 
-    {
-        let proxy = el.create_proxy();
-        thread::spawn(move || {
-            while let Ok(msg) = rev_render.recv() {
-                proxy.send_event(msg).unwrap();
-            }
-        });
-    }
-
-    // let mut cursor_pos = (0.0, 0.0);
-
     el.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Wait;
 
@@ -175,18 +306,17 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>) {
         match event {
             Event::LoopDestroyed => {}
             Event::WindowEvent { event, window_id } => match event {
-                WindowEvent::CursorMoved { .. } => {
-                    // _cursor_pos = (position.x, position.y);
+                WindowEvent::CursorMoved { position, .. } => {
+                    {
+                        let mut cursor_pos = cursor_pos.lock().unwrap();
+                        cursor_pos.0 = position.x;
+                        cursor_pos.1 = position.y;
+                    }
+                    send_mouse_event("mouseover")
                 }
                 WindowEvent::MouseInput { state, .. } => {
-                    if ElementState::Pressed == state {
-                        let result = get_window_context(window_id);
-                        if let Some(env) = result {
-                            let mut env = env.lock().unwrap();
-
-                            env.redraw();
-                        }
-                    }
+                    if ElementState::Pressed == state {}
+                    send_mouse_event("click")
                 }
                 WindowEvent::Resized(physical_size) => {
                     let result = get_window_context(window_id);
@@ -329,6 +459,7 @@ fn render(dom: &SkiaDom, canvas: &mut Canvas, viewport: Viewport) {
             padding: (0, 0, 0, 0),
             node: Some(root),
         },
+        viewport.clone(),
         viewport,
         &mut (dom, canvas),
         |node_id, (dom, _)| {

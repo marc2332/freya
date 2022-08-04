@@ -21,18 +21,16 @@ pub struct NodeState {
 
 #[derive(Default, Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Size {
-    // Support AUTO mode
     pub width: SizeMode,
     pub height: SizeMode,
     pub padding: (i32, i32, i32, i32),
 }
 
 impl ChildDepState for Size {
-    // Size accepts a font size context
     type Ctx = ();
-    // Size depends on the Size part of each child
+
     type DepState = Self;
-    // Size only cares about the width, height, and text parts of the current node
+
     const NODE_MASK: NodeMask =
         NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
             "width", "height", "padding"
@@ -118,11 +116,12 @@ impl ChildDepState for Size {
                     padding.2 = padding_for_side;
                     padding.3 = padding_for_side;
                 }
-                // because Size only depends on the width and height, no other attributes will be passed to the member
-                _ => panic!(),
+                _ => {
+                    println!("Unsupported attribute <{}>", a.name);
+                }
             }
         }
-        // to determine what other parts of the dom need to be updated we return a boolean that marks if this member changed
+
         let changed = (width != self.width) || (height != self.height) || (padding != self.padding);
         *self = Self {
             width,
@@ -147,7 +146,6 @@ impl NodeDepState<()> for Style {
     fn reduce<'a>(&mut self, node: NodeView, _sibling: (), _ctx: &Self::Ctx) -> bool {
         let mut background = Color::TRANSPARENT;
 
-        // if the node contains a width or height attribute it overrides the other size
         for attr in node.attributes() {
             match attr.name {
                 "background" => {
@@ -159,7 +157,7 @@ impl NodeDepState<()> for Style {
                 _ => panic!(),
             }
         }
-        // to determine what other parts of the dom need to be updated we return a boolean that marks if this member changed
+
         let changed = background != self.background;
         *self = Self { background };
         changed
