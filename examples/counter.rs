@@ -1,9 +1,9 @@
-trev 🧩
----
+use dioxus::prelude::*;
+use trev::launch;
 
-A Skia-based desktop renderer for [Dioxus](https://dioxuslabs.com).
-
-```rust
+fn main() {
+    launch(app);
+}
 
 fn app(cx: Scope) -> Element {
     let mut count = use_state(&cx, || 0);
@@ -24,14 +24,13 @@ fn app(cx: Scope) -> Element {
             onclick: move |_| count += 1,
             p { "Increase!" }
         }
+        div {
+            height: "40%",
+            width: "100%",
+            background: "red",
+            padding: "25",
+            onclick: move |_| count -= 1,
+            p { "Decrease!" }
+        }
     ))
 }
-```
-
-## To-Do
-- [ ] Make padding use SizeMode
-- [ ] Add window params to the launch function
-- [ ] Support mouse, keyboard, etc, events.
-- [ ] Support for multiple windows
-- [ ] Move from dioxus-html and go custom element tags
-- [ ] Use [taffy](https://github.com/dioxusLabs/taffy) for Flex layouts.
