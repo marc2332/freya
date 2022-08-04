@@ -10,7 +10,6 @@ fn app(cx: Scope) -> Element {
         div {
             height: "100%",
             width: "100%",
-            background: "red",
             Area {
 
             }
