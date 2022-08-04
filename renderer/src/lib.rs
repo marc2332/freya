@@ -315,8 +315,9 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
                     send_mouse_event("mouseover")
                 }
                 WindowEvent::MouseInput { state, .. } => {
-                    if ElementState::Pressed == state {}
-                    send_mouse_event("click")
+                    if ElementState::Released == state {
+                        send_mouse_event("click")
+                    }
                 }
                 WindowEvent::Resized(physical_size) => {
                     let result = get_window_context(window_id);
