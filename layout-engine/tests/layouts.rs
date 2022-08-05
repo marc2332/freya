@@ -1,16 +1,10 @@
-use dioxus_native_core::state::State;
-use dioxus_native_core_macro::State;
-
 use layout_engine::{calculate_node, NodeData, Viewport};
 use state::node::SizeMode;
-
-#[derive(Clone, Default, Debug, State)]
-struct DummyState {}
 
 #[test]
 fn percentage() {
     let result = calculate_node(
-        &NodeData::<DummyState> {
+        &NodeData {
             width: SizeMode::Percentage(100),
             height: SizeMode::Percentage(100),
             padding: (0, 0, 0, 0),
@@ -30,7 +24,7 @@ fn percentage() {
         },
         &mut (),
         |_, _| None,
-        |_, _, _| {},
+        |_, _, _, _| {},
     );
 
     assert_eq!(result.height, 300);
@@ -40,7 +34,7 @@ fn percentage() {
 #[test]
 fn manual() {
     let result = calculate_node(
-        &NodeData::<DummyState> {
+        &NodeData {
             width: SizeMode::Manual(250),
             height: SizeMode::Manual(150),
             padding: (0, 0, 0, 0),
@@ -60,7 +54,7 @@ fn manual() {
         },
         &mut (),
         |_, _| None,
-        |_, _, _| {},
+        |_, _, _, _| {},
     );
 
     assert_eq!(result.height, 150);
@@ -70,7 +64,7 @@ fn manual() {
 #[test]
 fn auto() {
     let result = calculate_node(
-        &NodeData::<DummyState> {
+        &NodeData {
             width: SizeMode::Auto,
             height: SizeMode::Auto,
             padding: (0, 0, 0, 0),
@@ -97,7 +91,7 @@ fn auto() {
                 node: None,
             })
         },
-        |_, _, _| {},
+        |_, _, _, _| {},
     );
 
     assert_eq!(result.height, 300);
@@ -107,7 +101,7 @@ fn auto() {
 #[test]
 fn x_y() {
     let result = calculate_node(
-        &NodeData::<DummyState> {
+        &NodeData {
             width: SizeMode::Auto,
             height: SizeMode::Auto,
             padding: (0, 0, 0, 0),
@@ -134,7 +128,7 @@ fn x_y() {
                 node: None,
             })
         },
-        |_, _, _| {},
+        |_, _, _, _| {},
     );
 
     assert_eq!(result.x, 15);

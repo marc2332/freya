@@ -12,7 +12,7 @@ use dioxus_html::{
 };
 use dioxus_native_core::real_dom::{Node, NodeType, RealDom};
 use enumset::enum_set;
-use glutin::event::WindowEvent;
+use glutin::event::{MouseScrollDelta, WindowEvent};
 use layout_engine::{calculate_node, NodeData, Viewport};
 use skia_safe::{
     font_style::{Slant, Weight, Width},
@@ -172,7 +172,7 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
     let send_mouse_event = {
         let cursor_pos = cursor_pos.clone();
         let wins = wins.clone();
-        move |event_name: &'static str| {
+        move |event_name: &'static str, scroll: (f32, f32)| {
             let result = {
                 let mut win = None;
                 for env in &*wins.lock().unwrap() {
@@ -196,11 +196,8 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
                     let window_size = env.windowed_context.window().inner_size();
                     let dom = &env.skia_dom.clone();
                     let mut node_candidates: Vec<ElementId> = Vec::new();
-                    calculate_node::<
-                        (&SkiaDom, Arc<Mutex<(f64, f64)>>, &mut Vec<ElementId>),
-                        NodeState,
-                    >(
-                        &NodeData::<NodeState> {
+                    calculate_node::<(&SkiaDom, Arc<Mutex<(f64, f64)>>, &mut Vec<ElementId>)>(
+                        &NodeData {
                             width: SizeMode::Percentage(100),
                             height: SizeMode::Percentage(100),
                             padding: (0, 0, 0, 0),
@@ -225,14 +222,14 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
                                 dom.index(*node_id).clone()
                             };
 
-                            Some(NodeData::<NodeState> {
+                            Some(NodeData {
                                 width: child.state.size.width,
                                 height: child.state.size.height,
                                 padding: child.state.size.padding,
                                 node: Some(child),
                             })
                         },
-                        |node, viewport, (_, cursor_pos, node_candidates)| {
+                        |node, viewport, _, (_, cursor_pos, node_candidates)| {
                             let x = viewport.x as f64;
                             let y = viewport.y as f64;
                             let width = (viewport.x + viewport.width) as f64;
@@ -271,7 +268,10 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
                                                 Length::new(cursor_pos.1),
                                             ),
                                             Point2D::default(),
-                                            Point2D::default(),
+                                            Point2D::from_lengths(
+                                                Length::new(scroll.0 as f64),
+                                                Length::new(scroll.1 as f64),
+                                            ),
                                         ),
                                         Some(MouseButton::Primary),
                                         enum_set! {MouseButton::Primary},
@@ -306,17 +306,26 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
         match event {
             Event::LoopDestroyed => {}
             Event::WindowEvent { event, window_id } => match event {
+                WindowEvent::MouseWheel { delta, .. } => {
+                    let data = {
+                        match delta {
+                            MouseScrollDelta::LineDelta(x, y) => (x, y),
+                            MouseScrollDelta::PixelDelta(_) => (0.0, 0.0),
+                        }
+                    };
+                    send_mouse_event("scroll", (data.0, data.1))
+                }
                 WindowEvent::CursorMoved { position, .. } => {
                     {
                         let mut cursor_pos = cursor_pos.lock().unwrap();
                         cursor_pos.0 = position.x;
                         cursor_pos.1 = position.y;
                     }
-                    send_mouse_event("mouseover")
+                    send_mouse_event("mouseover", (0.0, 0.0))
                 }
                 WindowEvent::MouseInput { state, .. } => {
                     if ElementState::Released == state {
-                        send_mouse_event("click")
+                        send_mouse_event("click", (0.0, 0.0))
                     }
                 }
                 WindowEvent::Resized(physical_size) => {
@@ -329,10 +338,7 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
                         env.windowed_context.resize(physical_size)
                     }
                 }
-                WindowEvent::CloseRequested => {
-                    // should only remove one window
-                    *control_flow = ControlFlow::Exit
-                }
+                WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
                 WindowEvent::KeyboardInput {
                     input:
                         KeyboardInput {
@@ -378,8 +384,9 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
 fn render_skia(
     dom: &mut &SkiaDom,
     canvas: &mut &mut Canvas,
-    node: &NodeData<NodeState>,
+    node: &NodeData,
     viewport: &Viewport,
+    parent_viewport: &Viewport,
 ) {
     let node = node.node.as_ref().unwrap();
     match &node.node_type {
@@ -397,7 +404,16 @@ fn render_skia(
                     let y = viewport.y;
 
                     let x2 = x + viewport.width;
-                    let y2 = y + viewport.height;
+                    let y2 = if viewport.height < 0 {
+                        y
+                    } else {
+                        y + viewport.height
+                    };
+
+                    // Avoid rendering some complete off-view elements
+                    if y > (parent_viewport.y + parent_viewport.height) {
+                        return;
+                    }
 
                     path.move_to((x, y));
                     path.line_to((x2, y));
@@ -436,15 +452,14 @@ fn render_skia(
                     };
 
                     let x = viewport.x;
-                    let y = viewport.y + 10 /* Line height, wip */;
+                    let y = viewport.y; /* Line height, wip */
 
                     canvas.draw_str_align(text, (x, y), &font, &paint, Align::Left);
                 }
                 _ => {}
             }
         }
-        NodeType::Text { .. } => {}
-        NodeType::Placeholder => {}
+        _ => {}
     }
 }
 
@@ -453,8 +468,8 @@ fn render(dom: &SkiaDom, canvas: &mut Canvas, viewport: Viewport) {
         let dom = dom.lock().unwrap();
         dom.index(ElementId(0)).clone()
     };
-    calculate_node::<(&SkiaDom, &mut Canvas), NodeState>(
-        &NodeData::<NodeState> {
+    calculate_node::<(&SkiaDom, &mut Canvas)>(
+        &NodeData {
             width: SizeMode::Percentage(100),
             height: SizeMode::Percentage(100),
             padding: (0, 0, 0, 0),
@@ -469,15 +484,15 @@ fn render(dom: &SkiaDom, canvas: &mut Canvas, viewport: Viewport) {
                 dom.index(*node_id).clone()
             };
 
-            Some(NodeData::<NodeState> {
+            Some(NodeData {
                 width: child.state.size.width,
                 height: child.state.size.height,
                 padding: child.state.size.padding,
                 node: Some(child),
             })
         },
-        |node, viewport, (dom, canvas)| {
-            render_skia(dom, canvas, node, viewport);
+        |node, viewport, parent_viewport, (dom, canvas)| {
+            render_skia(dom, canvas, node, viewport, parent_viewport);
         },
     );
 }

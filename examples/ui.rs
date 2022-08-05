@@ -1,5 +1,7 @@
-use dioxus::prelude::*;
+use dioxus::{core::UiEvent, events::MouseData, prelude::*};
 use trev::launch;
+mod mouse;
+use mouse::Area;
 
 fn main() {
     launch(app);
@@ -11,21 +13,46 @@ fn app(cx: Scope) -> Element {
             title: "My App",
             navbar:  cx.render(rsx!(
                 Navbar {
-                    title: "A navbar"
+                    title: "Top navbar"
                 }
             ))
             body: cx.render(rsx!(
-                Card {
-                    title: "Another title",
-                    content: "Some content"
+                ScrollView {
+                    body:  cx.render(rsx!(
+                        Card {
+                            title: "Another title",
+                            content: "Some content",
+                            background: "yellow"
+                        }
+                        Card {
+                            title: "Lalala",
+                            content: "Wooow",
+                            background: "green"
+                        }
+                        Card {
+                            title: "Another title",
+                            content: "Some content",
+                            background: "red"
+                        }
+                        Card {
+                            title: "Another title",
+                            content: "Some content",
+                            background: "yellow"
+                        }
+                        Card {
+                            title: "Lalala",
+                            content: "Wooow",
+                            background: "blue"
+                        }
+                        Card {
+                            title: "Another title",
+                            content: "Some content",
+                            background: "yellow"
+                        }
+                     ))
                 }
-                Card {
-                    title: "Lalala",
-                    content: "Wooow"
-                }
-                Card {
-                    title: "Another title",
-                    content: "Some content"
+                Navbar {
+                    title: "Bottom bar"
                 }
             ))
         }
@@ -41,13 +68,12 @@ struct NavbarProps<'a> {
 fn Navbar<'a>(cx: Scope<'a, NavbarProps<'a>>) -> Element {
     cx.render(rsx!(
         div {
-            height: "40",
+            height: "15%",
             width: "stretch",
             background: "black",
-            padding: "10",
+            padding: "30",
             p {
-                height: "auto",
-               "{&cx.props.title}"
+                "{&cx.props.title}"
             }
         }
     ))
@@ -81,6 +107,7 @@ fn App<'a>(cx: Scope<'a, AppProps<'a>>) -> Element {
 struct CardProps<'a> {
     title: &'a str,
     content: &'a str,
+    background: &'a str,
 }
 
 #[allow(non_snake_case)]
@@ -88,12 +115,12 @@ fn Card<'a>(cx: Scope<'a, CardProps<'a>>) -> Element {
     cx.render(rsx!(
         div {
             width: "stretch",
-            height: "100",
+            height: "200",
             padding: "10",
-            background: "yellow",
+            background: "{cx.props.background}",
             div {
                 width: "stretch",
-                height: "stretch",
+                height: "50%",
                 background: "gray",
                 padding: "20",
                 p {
@@ -105,6 +132,34 @@ fn Card<'a>(cx: Scope<'a, CardProps<'a>>) -> Element {
                     "{&cx.props.content}"
                 }
             }
+            Area {
+
+            }
+        }
+    ))
+}
+
+#[derive(Props)]
+struct ScrollViewProps<'a> {
+    body: Element<'a>,
+}
+
+#[allow(non_snake_case)]
+fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
+    let mut height = use_state(&cx, || 0);
+
+    let onscroll = move |e: UiEvent<MouseData>| {
+        let page = e.coordinates().page();
+        height += (page.y as i32) * 10;
+    };
+
+    cx.render(rsx!(
+        div {
+            width: "100%",
+            height: "70%",
+            overflow: "{height}",
+            onscroll: onscroll,
+            &cx.props.body
         }
     ))
 }
