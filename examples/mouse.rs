@@ -49,10 +49,13 @@ pub fn Area<'a>(cx: Scope<'a>) -> Element {
             padding: "10",
             onmouseover: cursor_moved,
             onclick: cursor_clicked,
+            tabindex: "1",
             p {
+                tabindex: "1",
                 "Mouse is at [x: {cursor_pos_over.0}, y: {cursor_pos_over.1}] ",
             },
             p {
+                tabindex: "1",
                 "Mouse clicked at [x: {cursor_pos_click.0}, y: {cursor_pos_click.1}]"
             }
         }

@@ -13,3 +13,4 @@ dioxus-html = { git = "https://github.com/DioxusLabs/dioxus" }
 layout-engine = { path = "../layout-engine"}
 state = { path = "../state"}
 enumset = "1.0.11"
+layers-engine = { path = "../layers-engine"}

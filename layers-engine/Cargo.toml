@@ -1,0 +1,9 @@
+[package]
+name = "layers-engine"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+state = { path = "../state"}
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus" }
+dioxus = { git = "https://github.com/DioxusLabs/dioxus" }

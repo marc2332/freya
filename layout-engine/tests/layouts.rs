@@ -1,4 +1,5 @@
-use layout_engine::{calculate_node, NodeData, Viewport};
+use layers_engine::{Layers, NodeData, Viewport};
+use layout_engine::calculate_node;
 use state::node::SizeMode;
 
 #[test]
@@ -23,8 +24,10 @@ fn percentage() {
             width: 200,
         },
         &mut (),
+        &mut Layers::default(),
         |_, _| None,
-        |_, _, _, _| {},
+        None,
+        0,
     );
 
     assert_eq!(result.height, 300);
@@ -53,8 +56,10 @@ fn manual() {
             width: 200,
         },
         &mut (),
+        &mut Layers::default(),
         |_, _| None,
-        |_, _, _, _| {},
+        None,
+        0,
     );
 
     assert_eq!(result.height, 150);
@@ -83,6 +88,7 @@ fn auto() {
             width: 200,
         },
         &mut (),
+        &mut Layers::default(),
         |_, _| {
             Some(NodeData {
                 width: SizeMode::Manual(170),
@@ -91,7 +97,8 @@ fn auto() {
                 node: None,
             })
         },
-        |_, _, _, _| {},
+        None,
+        0,
     );
 
     assert_eq!(result.height, 300);
@@ -120,6 +127,7 @@ fn x_y() {
             width: 200,
         },
         &mut (),
+        &mut Layers::default(),
         |_, _| {
             Some(NodeData {
                 width: SizeMode::Manual(170),
@@ -128,7 +136,8 @@ fn x_y() {
                 node: None,
             })
         },
-        |_, _, _, _| {},
+        None,
+        0,
     );
 
     assert_eq!(result.x, 15);

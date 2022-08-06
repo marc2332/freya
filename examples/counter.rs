@@ -14,7 +14,10 @@ fn app(cx: Scope) -> Element {
             width: "100%",
             background: "black",
             padding: "25",
-            p { "Number is: {count}" }
+            p {
+                tabindex: "1",
+                "Number is: {count}"
+            }
         }
         div {
             height: "40%",
@@ -22,7 +25,10 @@ fn app(cx: Scope) -> Element {
             background: "blue",
             padding: "25",
             onclick: move |_| count += 1,
-            p { "Increase!" }
+            p {
+                tabindex: "1",
+                "Increase!"
+             }
         }
         div {
             height: "40%",
@@ -30,7 +36,10 @@ fn app(cx: Scope) -> Element {
             background: "red",
             padding: "25",
             onclick: move |_| count -= 1,
-            p { "Decrease!" }
+            p {
+                tabindex: "1",
+                "Decrease!"
+             }
         }
     ))
 }

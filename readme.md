@@ -35,4 +35,4 @@ fn app(cx: Scope) -> Element {
 - [ ] Support for multiple windows
 - [ ] Move from dioxus-html and go custom element tags
 - [ ] Use [taffy](https://github.com/dioxusLabs/taffy) for Flex layouts.
-- [ ] Improve the scroll (maybe that needs some kind of layer rendering priorization system? )
+- [x] Improve the scroll (maybe that needs some kind of layer rendering priorization system? )

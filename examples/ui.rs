@@ -73,6 +73,7 @@ fn Navbar<'a>(cx: Scope<'a, NavbarProps<'a>>) -> Element {
             background: "black",
             padding: "30",
             p {
+                tabindex: "1",
                 "{&cx.props.title}"
             }
         }
@@ -122,13 +123,16 @@ fn Card<'a>(cx: Scope<'a, CardProps<'a>>) -> Element {
                 width: "stretch",
                 height: "50%",
                 background: "gray",
+                tabindex: "1",
                 padding: "20",
                 p {
                     height: "auto",
+                    tabindex: "1",
                     "{&cx.props.title}"
                 }
                 p {
                     height: "auto",
+                    tabindex: "1",
                     "{&cx.props.content}"
                 }
             }
@@ -150,7 +154,7 @@ fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
 
     let onscroll = move |e: UiEvent<MouseData>| {
         let page = e.coordinates().page();
-        height += (page.y as i32) * 10;
+        height += (page.y as i32) * 20;
     };
 
     cx.render(rsx!(

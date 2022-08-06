@@ -13,7 +13,9 @@ use dioxus_html::{
 use dioxus_native_core::real_dom::{Node, NodeType, RealDom};
 use enumset::enum_set;
 use glutin::event::{MouseScrollDelta, WindowEvent};
-use layout_engine::{calculate_node, NodeData, Viewport};
+use layers_engine::Layers;
+use layers_engine::{NodeData, Viewport};
+use layout_engine::calculate_node;
 use skia_safe::{
     font_style::{Slant, Weight, Width},
     utils::text_utils::Align,
@@ -216,6 +218,7 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
                             height: window_size.height as i32,
                         },
                         &mut (dom, cursor_pos.clone(), &mut node_candidates),
+                        &mut Layers::default(),
                         |node_id, (dom, _, _)| {
                             let child = {
                                 let dom = dom.lock().unwrap();
@@ -229,7 +232,7 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
                                 node: Some(child),
                             })
                         },
-                        |node, viewport, _, (_, cursor_pos, node_candidates)| {
+                        Some(|node, viewport, _, (_, cursor_pos, node_candidates)| {
                             let x = viewport.x as f64;
                             let y = viewport.y as f64;
                             let width = (viewport.x + viewport.width) as f64;
@@ -244,7 +247,8 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
                             {
                                 node_candidates.push(node.node.as_ref().unwrap().id);
                             }
-                        },
+                        }),
+                        0,
                     );
 
                     let dom = dom.lock().unwrap();
@@ -389,6 +393,7 @@ fn render_skia(
     parent_viewport: &Viewport,
 ) {
     let node = node.node.as_ref().unwrap();
+
     match &node.node_type {
         NodeType::Element { tag, children, .. } => {
             match tag.as_str() {
@@ -452,7 +457,7 @@ fn render_skia(
                     };
 
                     let x = viewport.x;
-                    let y = viewport.y; /* Line height, wip */
+                    let y = viewport.y + 10; /* Line height, wip */
 
                     canvas.draw_str_align(text, (x, y), &font, &paint, Align::Left);
                 }
@@ -463,11 +468,12 @@ fn render_skia(
     }
 }
 
-fn render(dom: &SkiaDom, canvas: &mut Canvas, viewport: Viewport) {
+fn render(mut dom: &SkiaDom, mut canvas: &mut Canvas, viewport: Viewport) {
     let root: Node<NodeState> = {
         let dom = dom.lock().unwrap();
         dom.index(ElementId(0)).clone()
     };
+    let layers = &mut Layers::default();
     calculate_node::<(&SkiaDom, &mut Canvas)>(
         &NodeData {
             width: SizeMode::Percentage(100),
@@ -478,6 +484,7 @@ fn render(dom: &SkiaDom, canvas: &mut Canvas, viewport: Viewport) {
         viewport.clone(),
         viewport,
         &mut (dom, canvas),
+        layers,
         |node_id, (dom, _)| {
             let child = {
                 let dom = dom.lock().unwrap();
@@ -491,8 +498,23 @@ fn render(dom: &SkiaDom, canvas: &mut Canvas, viewport: Viewport) {
                 node: Some(child),
             })
         },
-        |node, viewport, parent_viewport, (dom, canvas)| {
-            render_skia(dom, canvas, node, viewport, parent_viewport);
-        },
+        None,
+        0,
     );
+
+    let mut layers_nums: Vec<&u16> = layers.layers.keys().collect();
+    layers_nums.sort_by(|a, b| b.cmp(a));
+
+    for layer_num in layers_nums {
+        let layer = layers.layers.get(layer_num).unwrap();
+        for element in layer {
+            render_skia(
+                &mut dom,
+                &mut canvas,
+                &element.node,
+                &element.viewport,
+                &element.parent_viewport,
+            );
+        }
+    }
 }

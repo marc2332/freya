@@ -1,22 +1,7 @@
 use dioxus::core::ElementId;
-use dioxus_native_core::real_dom::{Node, NodeType};
-use state::node::{NodeState, SizeMode};
-
-#[derive(Default, Clone, Debug)]
-pub struct NodeData {
-    pub width: SizeMode,
-    pub height: SizeMode,
-    pub padding: (i32, i32, i32, i32),
-    pub node: Option<Node<NodeState>>,
-}
-
-#[derive(Default, Copy, Clone, Debug, PartialEq, Eq)]
-pub struct Viewport {
-    pub x: i32,
-    pub y: i32,
-    pub width: i32,
-    pub height: i32,
-}
+use dioxus_native_core::real_dom::NodeType;
+use layers_engine::{Layers, NodeData, Viewport};
+use state::node::SizeMode;
 
 fn calculate_viewport(
     node: &NodeData,
@@ -28,7 +13,7 @@ fn calculate_viewport(
             viewport.width = w;
         }
         SizeMode::Percentage(per) => {
-            viewport.width = ((parent_viewport.width as f32) / 100.0 * (per as f32)) as i32;
+            viewport.width = ((parent_viewport.width as f32) / 100.0 * (per as f32)).round() as i32;
         }
         SizeMode::Auto => {}
     }
@@ -38,13 +23,13 @@ fn calculate_viewport(
             viewport.height = h;
         }
         SizeMode::Percentage(per) => {
-            viewport.height = ((parent_viewport.height as f32) / 100.0 * (per as f32)) as i32;
+            viewport.height =
+                ((parent_viewport.height as f32) / 100.0 * (per as f32)).round() as i32;
         }
         SizeMode::Auto => {
             if let Some(node) = &node.node {
                 if let NodeType::Element { tag, .. } = &node.node_type {
                     if tag == "p" {
-                        viewport.y += 10;
                         viewport.height = 5;
                     }
                 }
@@ -52,35 +37,7 @@ fn calculate_viewport(
         }
     }
 
-    let x = {
-        if viewport.x < parent_viewport.x {
-            parent_viewport.x
-        } else {
-            viewport.x
-        }
-    };
-    let y = {
-        if viewport.y < parent_viewport.y {
-            parent_viewport.y
-        } else {
-            viewport.y
-        }
-    };
-
-    let height = {
-        if viewport.y < parent_viewport.y {
-            viewport.height - (parent_viewport.y - viewport.y)
-        } else {
-            viewport.height
-        }
-    };
-
-    Viewport {
-        x,
-        y,
-        height,
-        ..viewport
-    }
+    viewport
 }
 
 pub fn calculate_node<T>(
@@ -88,13 +45,19 @@ pub fn calculate_node<T>(
     left_viewport: Viewport,
     parent_viewport: Viewport,
     render_options: &mut T,
+    layers: &mut Layers,
     node_resolver: fn(&ElementId, &mut T) -> Option<NodeData>,
-    render_hook: fn(&NodeData, &Viewport, &Viewport, &mut T),
+    node_prepared: Option<fn(&NodeData, &Viewport, &Viewport, &mut T)>,
+    layer_num: i16,
 ) -> Viewport {
     let mut node_viewport = calculate_viewport(node, left_viewport, parent_viewport);
     let mut is_text = false;
 
-    render_hook(node, &node_viewport, &parent_viewport, render_options);
+    if let Some(node_prepared) = node_prepared {
+        node_prepared(node, &node_viewport, &parent_viewport, render_options);
+    }
+
+    let layer_num = layers.add_element(node, &node_viewport, &parent_viewport, layer_num);
 
     let padding = node.padding;
     let horizontal_padding = padding.1 + padding.3;
@@ -122,8 +85,10 @@ pub fn calculate_node<T>(
                             inner_viewport,
                             out_viewport,
                             render_options,
+                            layers,
                             node_resolver,
-                            render_hook,
+                            node_prepared,
+                            layer_num,
                         );
 
                         inner_viewport.y = box_viewport.y + box_viewport.height;

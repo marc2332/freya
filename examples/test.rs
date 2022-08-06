@@ -38,6 +38,7 @@ fn app(cx: Scope) -> Element {
             width: "stretch",
             padding: "50",
             p {
+                tabindex: "1",
                 "hello",
             }
             div {
@@ -45,16 +46,20 @@ fn app(cx: Scope) -> Element {
                 height: "auto",
                 width: "stretch",
                 padding: "{padding}",
+                tabindex: "2",
                 p {
+                    tabindex: "1",
                     "World",
                 }
                 div {
-                    background: "{small}",
-                    height: "auto",
-                    width: "stretch",
+                    background: "yellow",
+                    height: "100",
+                    width: "100",
                     padding: "20",
+                    tabindex: "1",
                     p {
-                        ":D !",
+                        tabindex: "1",
+                        "ddddddd",
                     }
                 }
             },

@@ -145,16 +145,21 @@ impl ChildDepState for Size {
 #[derive(Default, Copy, Clone, Debug)]
 pub struct Style {
     pub background: Color,
+    pub z_index: i16,
 }
 
 impl NodeDepState<()> for Style {
     type Ctx = ();
 
     const NODE_MASK: NodeMask =
-        NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!(["background"])))
-            .with_text();
+        NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
+            "background",
+            "tabindex"
+        ])))
+        .with_text();
     fn reduce<'a>(&mut self, node: NodeView, _sibling: (), _ctx: &Self::Ctx) -> bool {
         let mut background = Color::TRANSPARENT;
+        let mut z_index = 0;
 
         for attr in node.attributes() {
             match attr.name {
@@ -164,12 +169,22 @@ impl NodeDepState<()> for Style {
                         background = new_back;
                     }
                 }
+                // this should be z-index xD
+                "tabindex" => {
+                    let new_z_index: Option<i16> = attr.value.to_string().parse().ok();
+                    if let Some(new_z_index) = new_z_index {
+                        z_index = new_z_index;
+                    }
+                }
                 _ => panic!(),
             }
         }
 
-        let changed = background != self.background;
-        *self = Self { background };
+        let changed = (background != self.background) || (z_index != self.z_index);
+        *self = Self {
+            background,
+            z_index,
+        };
         changed
     }
 }
