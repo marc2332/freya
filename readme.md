@@ -31,7 +31,7 @@ fn app(cx: Scope) -> Element {
 ## To-Do
 - [ ] Make padding use SizeMode
 - [ ] Add window params to the launch function
-- [ ] Support more mouse, keyboard, etc, events.
+- [ ] Improve and support more mouse, keyboard, etc, events.
 - [ ] Support for multiple windows
 - [ ] Move from dioxus-html and go custom element tags
 - [ ] Use [taffy](https://github.com/dioxusLabs/taffy) for Flex layouts.
