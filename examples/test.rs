@@ -52,9 +52,9 @@ fn app(cx: Scope) -> Element {
                     "World",
                 }
                 div {
-                    background: "yellow",
-                    height: "100",
-                    width: "100",
+                    background: "{small}",
+                    height: "auto",
+                    width: "stretch",
                     padding: "20",
                     tabindex: "1",
                     p {

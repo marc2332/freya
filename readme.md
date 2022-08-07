@@ -14,15 +14,15 @@ fn app(cx: Scope) -> Element {
             width: "100%",
             background: "black",
             padding: "25",
-            p { "Number is: {count}" }
+            p { tabindex: "1", "Number is: {count}" }
         }
         div {
-            height: "40%",
+            height: "80%",
             width: "100%",
             background: "blue",
             padding: "25",
             onclick: move |_| count += 1,
-            p { "Increase!" }
+            p { tabindex: "1", "Increase!" }
         }
     ))
 }
@@ -31,7 +31,7 @@ fn app(cx: Scope) -> Element {
 ## To-Do
 - [ ] Make padding use SizeMode
 - [ ] Add window params to the launch function
-- [ ] Support More mouse, keyboard, etc, events.
+- [ ] Support more mouse, keyboard, etc, events.
 - [ ] Support for multiple windows
 - [ ] Move from dioxus-html and go custom element tags
 - [ ] Use [taffy](https://github.com/dioxusLabs/taffy) for Flex layouts.

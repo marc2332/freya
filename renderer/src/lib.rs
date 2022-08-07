@@ -8,7 +8,7 @@ use dioxus_html::{
         Coordinates,
     },
     input_data::{keyboard_types::Modifiers, MouseButton},
-    on::MouseData,
+    on::{KeyboardData, MouseData},
 };
 use dioxus_native_core::real_dom::{Node, NodeType, RealDom};
 use enumset::enum_set;
@@ -23,6 +23,7 @@ use skia_safe::{
 };
 use state::node::{NodeState, SizeMode};
 use std::{
+    collections::HashMap,
     sync::{mpsc::Receiver, Arc, Mutex},
     thread,
 };
@@ -46,9 +47,25 @@ use std::ops::Index;
 
 type SkiaDom = Arc<Mutex<RealDom<NodeState>>>;
 type EventEmitter = Arc<Mutex<Option<UnboundedSender<SchedulerMsg>>>>;
+type WindowedContext = glutin::ContextWrapper<glutin::PossiblyCurrent, glutin::window::Window>;
+type RendererRequests = Arc<Mutex<Vec<RendererRequest>>>;
+
+#[derive(Clone)]
+enum RendererRequest {
+    MouseEvent {
+        name: &'static str,
+        event: MouseData,
+    },
+    #[allow(dead_code)]
+    KeyboardEvent {
+        name: &'static str,
+        event: KeyboardData,
+    },
+}
 
 pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmitter) {
-    type WindowedContext = glutin::ContextWrapper<glutin::PossiblyCurrent, glutin::window::Window>;
+    let renderer_requests: RendererRequests = Arc::new(Mutex::new(Vec::new()));
+    let cursor_pos = Arc::new(Mutex::new((0.0, 0.0)));
 
     let el = EventLoop::new();
 
@@ -58,6 +75,8 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
         windowed_context: WindowedContext,
         skia_dom: SkiaDom,
         fb_info: FramebufferInfo,
+        renderer_requests: RendererRequests,
+        event_emitter: EventEmitter,
     }
 
     impl Env {
@@ -74,6 +93,8 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
                     x: 0,
                     y: 0,
                 },
+                self.renderer_requests.clone(),
+                &self.event_emitter,
             );
             self.gr_context.flush(None);
             self.windowed_context.swap_buffers().unwrap();
@@ -126,6 +147,8 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
         windowed_context,
         fb_info,
         skia_dom,
+        renderer_requests: renderer_requests.clone(),
+        event_emitter,
     };
 
     wins.lock().unwrap().push(Arc::new(Mutex::new(env)));
@@ -166,132 +189,6 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
         });
     }
 
-    let cursor_pos = Arc::new(Mutex::new((0.0, 0.0)));
-
-    // This will calculate the whole layout from the root component and
-    // find the first element that matches the cursor position
-    // WIP
-    let send_mouse_event = {
-        let cursor_pos = cursor_pos.clone();
-        let wins = wins.clone();
-        move |event_name: &'static str, scroll: (f32, f32)| {
-            let result = {
-                let mut win = None;
-                for env in &*wins.lock().unwrap() {
-                    if env.lock().unwrap().windowed_context.window().id() == window_id {
-                        win = Some(env.clone())
-                    }
-                }
-
-                win
-            };
-            if let Some(env) = result {
-                let mut env = env.lock().unwrap();
-                let event_emitter = event_emitter.lock().unwrap();
-                let event_emitter = event_emitter.as_ref().unwrap();
-
-                {
-                    let root: Node<NodeState> = {
-                        let dom = env.skia_dom.lock().unwrap();
-                        dom.index(ElementId(0)).clone()
-                    };
-                    let window_size = env.windowed_context.window().inner_size();
-                    let dom = &env.skia_dom.clone();
-                    let mut node_candidates: Vec<ElementId> = Vec::new();
-                    calculate_node::<(&SkiaDom, Arc<Mutex<(f64, f64)>>, &mut Vec<ElementId>)>(
-                        &NodeData {
-                            width: SizeMode::Percentage(100),
-                            height: SizeMode::Percentage(100),
-                            padding: (0, 0, 0, 0),
-                            node: Some(root),
-                        },
-                        Viewport {
-                            x: 0,
-                            y: 0,
-                            width: window_size.width as i32,
-                            height: window_size.height as i32,
-                        },
-                        Viewport {
-                            x: 0,
-                            y: 0,
-                            width: window_size.width as i32,
-                            height: window_size.height as i32,
-                        },
-                        &mut (dom, cursor_pos.clone(), &mut node_candidates),
-                        &mut Layers::default(),
-                        |node_id, (dom, _, _)| {
-                            let child = {
-                                let dom = dom.lock().unwrap();
-                                dom.index(*node_id).clone()
-                            };
-
-                            Some(NodeData {
-                                width: child.state.size.width,
-                                height: child.state.size.height,
-                                padding: child.state.size.padding,
-                                node: Some(child),
-                            })
-                        },
-                        Some(|node, viewport, _, (_, cursor_pos, node_candidates)| {
-                            let x = viewport.x as f64;
-                            let y = viewport.y as f64;
-                            let width = (viewport.x + viewport.width) as f64;
-                            let height = (viewport.y + viewport.height) as f64;
-                            let cursor_pos = *cursor_pos.lock().unwrap();
-
-                            // Check if the cursor is inside the 4 points
-                            if cursor_pos.0 > x
-                                && cursor_pos.0 < width
-                                && cursor_pos.1 > y
-                                && cursor_pos.1 < height
-                            {
-                                node_candidates.push(node.node.as_ref().unwrap().id);
-                            }
-                        }),
-                        0,
-                    );
-
-                    let dom = dom.lock().unwrap();
-                    let listeners = dom.get_listening_sorted(event_name);
-                    let cursor_pos = *cursor_pos.lock().unwrap();
-                    for listener in listeners {
-                        if node_candidates.contains(&listener.id) {
-                            // Propagate the Mouse event
-                            event_emitter
-                                .unbounded_send(SchedulerMsg::Event(UserEvent {
-                                    scope_id: None,
-                                    priority: EventPriority::Medium,
-                                    element: Some(listener.id),
-                                    name: event_name,
-                                    bubbles: true,
-                                    data: Arc::new(MouseData::new(
-                                        Coordinates::new(
-                                            Point2D::default(),
-                                            Point2D::from_lengths(
-                                                Length::new(cursor_pos.0),
-                                                Length::new(cursor_pos.1),
-                                            ),
-                                            Point2D::default(),
-                                            Point2D::from_lengths(
-                                                Length::new(scroll.0 as f64),
-                                                Length::new(scroll.1 as f64),
-                                            ),
-                                        ),
-                                        Some(MouseButton::Primary),
-                                        enum_set! {MouseButton::Primary},
-                                        Modifiers::empty(),
-                                    )),
-                                }))
-                                .unwrap();
-                        }
-                    }
-                }
-
-                env.redraw();
-            }
-        }
-    };
-
     let get_window_context = move |window_id: WindowId| -> Option<Arc<Mutex<Env>>> {
         let mut win = None;
         for env in &*wins.lock().unwrap() {
@@ -309,63 +206,128 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
         #[allow(deprecated)]
         match event {
             Event::LoopDestroyed => {}
-            Event::WindowEvent { event, window_id } => match event {
-                WindowEvent::MouseWheel { delta, .. } => {
-                    let data = {
-                        match delta {
-                            MouseScrollDelta::LineDelta(x, y) => (x, y),
-                            MouseScrollDelta::PixelDelta(_) => (0.0, 0.0),
-                        }
-                    };
-                    send_mouse_event("scroll", (data.0, data.1))
+            Event::WindowEvent { event, window_id } => {
+                let result = get_window_context(window_id);
+                if let Some(env) = result {
+                    let env = env.lock().unwrap();
+                    env.windowed_context.window().request_redraw();
                 }
-                WindowEvent::CursorMoved { position, .. } => {
-                    {
-                        let mut cursor_pos = cursor_pos.lock().unwrap();
-                        cursor_pos.0 = position.x;
-                        cursor_pos.1 = position.y;
+                match event {
+                    WindowEvent::MouseWheel { delta, .. } => {
+                        let cursor_pos = cursor_pos.lock().unwrap();
+                        let scroll_data = {
+                            match delta {
+                                MouseScrollDelta::LineDelta(x, y) => (x, y),
+                                MouseScrollDelta::PixelDelta(_) => (0.0, 0.0),
+                            }
+                        };
+                        renderer_requests
+                            .lock()
+                            .unwrap()
+                            .push(RendererRequest::MouseEvent {
+                                name: "scroll",
+                                event: MouseData::new(
+                                    Coordinates::new(
+                                        Point2D::default(),
+                                        Point2D::from_lengths(
+                                            Length::new(cursor_pos.0),
+                                            Length::new(cursor_pos.1),
+                                        ),
+                                        Point2D::default(),
+                                        Point2D::from_lengths(
+                                            Length::new(scroll_data.0 as f64),
+                                            Length::new(scroll_data.1 as f64),
+                                        ),
+                                    ),
+                                    Some(MouseButton::Primary),
+                                    enum_set! {MouseButton::Primary},
+                                    Modifiers::empty(),
+                                ),
+                            });
                     }
-                    send_mouse_event("mouseover", (0.0, 0.0))
-                }
-                WindowEvent::MouseInput { state, .. } => {
-                    if ElementState::Released == state {
-                        send_mouse_event("click", (0.0, 0.0))
-                    }
-                }
-                WindowEvent::Resized(physical_size) => {
-                    let result = get_window_context(window_id);
-                    if let Some(env) = result {
-                        let mut env = env.lock().unwrap();
-                        let mut context = env.gr_context.clone();
-                        env.surface =
-                            create_surface(&env.windowed_context, &env.fb_info, &mut context);
-                        env.windowed_context.resize(physical_size)
-                    }
-                }
-                WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            virtual_keycode,
-                            modifiers,
-                            ..
-                        },
-                    ..
-                } => {
-                    if modifiers.logo() {
-                        if let Some(VirtualKeyCode::Q) = virtual_keycode {
-                            *control_flow = ControlFlow::Exit;
-                        }
-                    }
+                    WindowEvent::CursorMoved { position, .. } => {
+                        let cursor_pos = {
+                            let mut cursor_pos = cursor_pos.lock().unwrap();
+                            cursor_pos.0 = position.x;
+                            cursor_pos.1 = position.y;
 
-                    let result = get_window_context(window_id);
-                    if let Some(env) = result {
-                        let env = env.lock().unwrap();
-                        env.windowed_context.window().request_redraw();
+                            *cursor_pos
+                        };
+                        renderer_requests
+                            .lock()
+                            .unwrap()
+                            .push(RendererRequest::MouseEvent {
+                                name: "mouseover",
+                                event: MouseData::new(
+                                    Coordinates::new(
+                                        Point2D::default(),
+                                        Point2D::from_lengths(
+                                            Length::new(cursor_pos.0),
+                                            Length::new(cursor_pos.1),
+                                        ),
+                                        Point2D::default(),
+                                        Point2D::default(),
+                                    ),
+                                    Some(MouseButton::Primary),
+                                    enum_set! {MouseButton::Primary},
+                                    Modifiers::empty(),
+                                ),
+                            });
                     }
+                    WindowEvent::MouseInput { state, .. } => {
+                        if ElementState::Released == state {
+                            let cursor_pos = cursor_pos.lock().unwrap();
+                            renderer_requests
+                                .lock()
+                                .unwrap()
+                                .push(RendererRequest::MouseEvent {
+                                    name: "click",
+                                    event: MouseData::new(
+                                        Coordinates::new(
+                                            Point2D::default(),
+                                            Point2D::from_lengths(
+                                                Length::new(cursor_pos.0),
+                                                Length::new(cursor_pos.1),
+                                            ),
+                                            Point2D::default(),
+                                            Point2D::default(),
+                                        ),
+                                        Some(MouseButton::Primary),
+                                        enum_set! {MouseButton::Primary},
+                                        Modifiers::empty(),
+                                    ),
+                                });
+                        }
+                    }
+                    WindowEvent::Resized(physical_size) => {
+                        let result = get_window_context(window_id);
+                        if let Some(env) = result {
+                            let mut env = env.lock().unwrap();
+                            let mut context = env.gr_context.clone();
+                            env.surface =
+                                create_surface(&env.windowed_context, &env.fb_info, &mut context);
+                            env.windowed_context.resize(physical_size)
+                        }
+                    }
+                    WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
+                    WindowEvent::KeyboardInput {
+                        input:
+                            KeyboardInput {
+                                virtual_keycode,
+                                modifiers,
+                                ..
+                            },
+                        ..
+                    } => {
+                        if modifiers.logo() {
+                            if let Some(VirtualKeyCode::Q) = virtual_keycode {
+                                *control_flow = ControlFlow::Exit;
+                            }
+                        }
+                    }
+                    _ => (),
                 }
-                _ => (),
-            },
+            }
             Event::RedrawRequested(window_id) => {
                 let result = get_window_context(window_id);
                 if let Some(env) = result {
@@ -468,13 +430,21 @@ fn render_skia(
     }
 }
 
-fn render(mut dom: &SkiaDom, mut canvas: &mut Canvas, viewport: Viewport) {
+fn render(
+    mut dom: &SkiaDom,
+    mut canvas: &mut Canvas,
+    viewport: Viewport,
+    renderer_requests: RendererRequests,
+    event_emitter: &EventEmitter,
+) {
     let root: Node<NodeState> = {
         let dom = dom.lock().unwrap();
         dom.index(ElementId(0)).clone()
     };
     let layers = &mut Layers::default();
-    calculate_node::<(&SkiaDom, &mut Canvas)>(
+    let mut events_filtered: HashMap<&'static str, Vec<(ElementId, RendererRequest)>> =
+        HashMap::new();
+    calculate_node(
         &NodeData {
             width: SizeMode::Percentage(100),
             height: SizeMode::Percentage(100),
@@ -483,9 +453,9 @@ fn render(mut dom: &SkiaDom, mut canvas: &mut Canvas, viewport: Viewport) {
         },
         viewport.clone(),
         viewport,
-        &mut (dom, canvas),
+        &mut (dom, &mut events_filtered, &renderer_requests),
         layers,
-        |node_id, (dom, _)| {
+        |node_id, (dom, _, _)| {
             let child = {
                 let dom = dom.lock().unwrap();
                 dom.index(*node_id).clone()
@@ -498,13 +468,46 @@ fn render(mut dom: &SkiaDom, mut canvas: &mut Canvas, viewport: Viewport) {
                 node: Some(child),
             })
         },
-        None,
+        Some(
+            |node, viewport, _, (_, events_filtered, renderer_requests)| {
+                let requests = renderer_requests.lock().unwrap();
+                for request in requests.iter() {
+                    match request {
+                        RendererRequest::MouseEvent { name, event } => {
+                            let x = viewport.x as f64;
+                            let y = viewport.y as f64;
+                            let width = (viewport.x + viewport.width) as f64;
+                            let height = (viewport.y + viewport.height) as f64;
+                            let cursor = event.client_coordinates();
+
+                            // Make sure the cursor is inside the node area
+                            if cursor.x > x && cursor.x < width && cursor.y > y && cursor.y < height
+                            {
+                                if !events_filtered.contains_key(name) {
+                                    events_filtered.insert(
+                                        name,
+                                        vec![(node.node.as_ref().unwrap().id, request.clone())],
+                                    );
+                                } else {
+                                    events_filtered
+                                        .get_mut(name)
+                                        .unwrap()
+                                        .push((node.node.as_ref().unwrap().id, request.clone()));
+                                }
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            },
+        ),
         0,
     );
 
     let mut layers_nums: Vec<&u16> = layers.layers.keys().collect();
     layers_nums.sort_by(|a, b| b.cmp(a));
 
+    // Render all the layers from the bottom to the top
     for layer_num in layers_nums {
         let layer = layers.layers.get(layer_num).unwrap();
         for element in layer {
@@ -516,5 +519,38 @@ fn render(mut dom: &SkiaDom, mut canvas: &mut Canvas, viewport: Viewport) {
                 &element.parent_viewport,
             );
         }
+    }
+
+    for (event_name, event_nodes) in events_filtered.iter() {
+        let dom = dom.lock().unwrap();
+        let listeners = dom.get_listening_sorted(event_name);
+
+        for listener in listeners {
+            for node in event_nodes.iter() {
+                if listener.id == node.0 {
+                    match &node.1 {
+                        RendererRequest::MouseEvent { event, .. } => {
+                            event_emitter
+                                .lock()
+                                .unwrap()
+                                .as_ref()
+                                .unwrap()
+                                .unbounded_send(SchedulerMsg::Event(UserEvent {
+                                    scope_id: None,
+                                    priority: EventPriority::Medium,
+                                    element: Some(listener.id.clone()),
+                                    name: event_name,
+                                    bubbles: true,
+                                    data: Arc::new(event.clone()),
+                                }))
+                                .unwrap();
+                        }
+                        _ => {}
+                    }
+                }
+            }
+        }
+
+        renderer_requests.lock().unwrap().clear();
     }
 }
