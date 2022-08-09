@@ -50,7 +50,7 @@ type EventEmitter = Arc<Mutex<Option<UnboundedSender<SchedulerMsg>>>>;
 type WindowedContext = glutin::ContextWrapper<glutin::PossiblyCurrent, glutin::window::Window>;
 type RendererRequests = Arc<Mutex<Vec<RendererRequest>>>;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 enum RendererRequest {
     MouseEvent {
         name: &'static str,
@@ -442,7 +442,7 @@ fn render(
         dom.index(ElementId(0)).clone()
     };
     let layers = &mut Layers::default();
-    let mut events_filtered: HashMap<&'static str, Vec<(ElementId, RendererRequest)>> =
+    let mut events_filtered: HashMap<&'static str, Vec<(NodeData, RendererRequest)>> =
         HashMap::new();
     calculate_node(
         &NodeData {
@@ -468,39 +468,7 @@ fn render(
                 node: Some(child),
             })
         },
-        Some(
-            |node, viewport, _, (_, events_filtered, renderer_requests)| {
-                let requests = renderer_requests.lock().unwrap();
-                for request in requests.iter() {
-                    match request {
-                        RendererRequest::MouseEvent { name, event } => {
-                            let x = viewport.x as f64;
-                            let y = viewport.y as f64;
-                            let width = (viewport.x + viewport.width) as f64;
-                            let height = (viewport.y + viewport.height) as f64;
-                            let cursor = event.client_coordinates();
-
-                            // Make sure the cursor is inside the node area
-                            if cursor.x > x && cursor.x < width && cursor.y > y && cursor.y < height
-                            {
-                                if !events_filtered.contains_key(name) {
-                                    events_filtered.insert(
-                                        name,
-                                        vec![(node.node.as_ref().unwrap().id, request.clone())],
-                                    );
-                                } else {
-                                    events_filtered
-                                        .get_mut(name)
-                                        .unwrap()
-                                        .push((node.node.as_ref().unwrap().id, request.clone()));
-                                }
-                            }
-                        }
-                        _ => {}
-                    }
-                }
-            },
-        ),
+        None,
         0,
     );
 
@@ -508,7 +476,7 @@ fn render(
     layers_nums.sort_by(|a, b| b.cmp(a));
 
     // Render all the layers from the bottom to the top
-    for layer_num in layers_nums {
+    for layer_num in &layers_nums {
         let layer = layers.layers.get(layer_num).unwrap();
         for element in layer {
             render_skia(
@@ -521,15 +489,53 @@ fn render(
         }
     }
 
+    layers_nums.sort_by(|a, b| b.cmp(a));
+
+    // Propagate events from the top to the bottom
+    for layer_num in &layers_nums {
+        let layer = layers.layers.get(layer_num).unwrap();
+        for element in layer.iter() {
+            let requests = renderer_requests.lock().unwrap();
+
+            for request in requests.iter() {
+                let node = &element.node;
+                let viewport = &element.viewport;
+                match request {
+                    RendererRequest::MouseEvent { name, event } => {
+                        let x = viewport.x as f64;
+                        let y = viewport.y as f64;
+                        let width = (viewport.x + viewport.width) as f64;
+                        let height = (viewport.y + viewport.height) as f64;
+                        let cursor = event.client_coordinates();
+
+                        // Make sure the cursor is inside the node area
+                        if cursor.x > x && cursor.x < width && cursor.y > y && cursor.y < height {
+                            if !events_filtered.contains_key(name) {
+                                events_filtered.insert(name, vec![(node.clone(), request.clone())]);
+                            } else {
+                                events_filtered
+                                    .get_mut(name)
+                                    .unwrap()
+                                    .push((node.clone(), request.clone()));
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+
     for (event_name, event_nodes) in events_filtered.iter() {
         let dom = dom.lock().unwrap();
         let listeners = dom.get_listening_sorted(event_name);
 
-        for listener in listeners {
-            for node in event_nodes.iter() {
-                if listener.id == node.0 {
-                    match &node.1 {
-                        RendererRequest::MouseEvent { event, .. } => {
+        'node_search: for (node_data, request) in event_nodes.iter() {
+            let node = node_data.node.as_ref().unwrap();
+            for listener in &listeners {
+                if listener.id == node.id {
+                    match &request {
+                        RendererRequest::MouseEvent { name, event } => {
                             event_emitter
                                 .lock()
                                 .unwrap()
@@ -544,6 +550,12 @@ fn render(
                                     data: Arc::new(event.clone()),
                                 }))
                                 .unwrap();
+
+                            if name == &"click" {
+                                if node.state.style.background != Color::TRANSPARENT {
+                                    break 'node_search;
+                                }
+                            }
                         }
                         _ => {}
                     }
