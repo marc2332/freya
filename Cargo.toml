@@ -6,6 +6,9 @@ edition = "2021"
 [workspace]
 members = ["layout-engine", "renderer", "state", "trev"]
 
+[features]
+x11 = ["trev/x11"]
+
 [dev-dependencies]
 trev = { path = "./trev"}
 dioxus = { git = "https://github.com/DioxusLabs/dioxus" }

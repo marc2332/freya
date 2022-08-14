@@ -3,6 +3,9 @@ name = "renderer"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+x11 = ["skia-safe/x11"]
+
 [dependencies]
 gl = "*"
 glutin = "*"

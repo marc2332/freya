@@ -3,6 +3,9 @@ name = "trev"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+x11 = ["renderer/x11"]
+
 [dependencies]
 state = { path = "../state"}
 layout-engine = { path = "../layout-engine"}

@@ -77,6 +77,7 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
         fb_info: FramebufferInfo,
         renderer_requests: RendererRequests,
         event_emitter: EventEmitter,
+        font: Font,
     }
 
     impl Env {
@@ -95,6 +96,7 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
                 },
                 self.renderer_requests.clone(),
                 &self.event_emitter,
+                &self.font,
             );
             self.gr_context.flush(None);
             self.windowed_context.swap_buffers().unwrap();
@@ -141,6 +143,10 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
     let sf = windowed_context.window().scale_factor() as f32;
     surface.canvas().scale((sf, sf));
 
+    let style = FontStyle::new(Weight::NORMAL, Width::NORMAL, Slant::Upright);
+    let type_face = Typeface::new("inherit", style).unwrap();
+    let font = Font::new(type_face, 15.0);
+
     let env = Env {
         surface,
         gr_context,
@@ -149,6 +155,7 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
         skia_dom,
         renderer_requests: renderer_requests.clone(),
         event_emitter,
+        font,
     };
 
     wins.lock().unwrap().push(Arc::new(Mutex::new(env)));
@@ -253,6 +260,7 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
 
                             *cursor_pos
                         };
+
                         renderer_requests
                             .lock()
                             .unwrap()
@@ -353,6 +361,7 @@ fn render_skia(
     node: &NodeData,
     viewport: &Viewport,
     parent_viewport: &Viewport,
+    font: &Font,
 ) {
     let node = node.node.as_ref().unwrap();
 
@@ -391,10 +400,6 @@ fn render_skia(
                     canvas.draw_path(&path, &paint);
                 }
                 "p" => {
-                    let style = FontStyle::new(Weight::NORMAL, Width::NORMAL, Slant::Upright);
-                    let type_face = Typeface::new("inherit", style).unwrap();
-                    let font = Font::new(type_face, 15.0);
-
                     let mut paint = Paint::default();
 
                     paint.set_anti_alias(true);
@@ -436,6 +441,7 @@ fn render(
     viewport: Viewport,
     renderer_requests: RendererRequests,
     event_emitter: &EventEmitter,
+    font: &Font,
 ) {
     let root: Node<NodeState> = {
         let dom = dom.lock().unwrap();
@@ -485,6 +491,7 @@ fn render(
                 &element.node,
                 &element.viewport,
                 &element.parent_viewport,
+                font,
             );
         }
     }
@@ -562,7 +569,6 @@ fn render(
                 }
             }
         }
-
-        renderer_requests.lock().unwrap().clear();
     }
+    renderer_requests.lock().unwrap().clear();
 }
