@@ -537,12 +537,12 @@ fn render(
         let dom = dom.lock().unwrap();
         let listeners = dom.get_listening_sorted(event_name);
 
-        'node_search: for (node_data, request) in event_nodes.iter() {
+        'event_nodes: for (node_data, request) in event_nodes.iter().rev() {
             let node = node_data.node.as_ref().unwrap();
-            for listener in &listeners {
-                if listener.id == node.id {
-                    match &request {
-                        RendererRequest::MouseEvent { name, event } => {
+            match &request {
+                RendererRequest::MouseEvent { event, .. } => {
+                    for listener in &listeners {
+                        if listener.id == node.id {
                             event_emitter
                                 .lock()
                                 .unwrap()
@@ -557,16 +557,16 @@ fn render(
                                     data: Arc::new(event.clone()),
                                 }))
                                 .unwrap();
-
-                            if name == &"click" {
-                                if node.state.style.background != Color::TRANSPARENT {
-                                    break 'node_search;
-                                }
-                            }
+                            break 'event_nodes;
                         }
-                        _ => {}
+                    }
+
+                    // Only let pass the event if the path (from top layer to bottom is transparent)
+                    if node.state.style.background != Color::TRANSPARENT {
+                        break;
                     }
                 }
+                _ => {}
             }
         }
     }
