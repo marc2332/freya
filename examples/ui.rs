@@ -22,10 +22,14 @@ fn app(cx: Scope) -> Element {
                             content: "Some content",
                             background: "yellow"
                         }
-                        Card {
-                            title: "Lalala",
-                            content: "Wooow",
-                            background: "green"
+                        CardScrollView {
+                            body: cx.render(rsx! {
+                                Card {
+                                    title: "Lalala",
+                                    content: "Wooow",
+                                    background: "green"
+                                }
+                            })
                         }
                         Card {
                             title: "Another title",
@@ -141,10 +145,6 @@ fn Card<'a>(cx: Scope<'a, CardProps<'a>>) -> Element {
     ))
 }
 
-#[derive(Props)]
-struct ScrollViewProps<'a> {
-    body: Element<'a>,
-}
 
 #[allow(non_snake_case)]
 fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
@@ -159,6 +159,31 @@ fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
         div {
             width: "100%",
             height: "70%",
+            overflow: "{height}",
+            onscroll: onscroll,
+            &cx.props.body
+        }
+    ))
+}
+
+#[derive(Props)]
+struct ScrollViewProps<'a> {
+    body: Element<'a>,
+}
+
+#[allow(non_snake_case)]
+fn CardScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
+    let mut height = use_state(&cx, || 0);
+
+    let onscroll = move |e: UiEvent<MouseData>| {
+        let page = e.coordinates().page();
+        height += (page.y as i32) * 50;
+    };
+
+    cx.render(rsx!(
+        div {
+            width: "100%",
+            height: "50%",
             overflow: "{height}",
             onscroll: onscroll,
             &cx.props.body
