@@ -11,6 +11,13 @@ pub enum SizeMode {
     Manual(i32),
 }
 
+#[derive(Default, Copy, Clone, Debug, PartialEq, Eq)]
+pub enum DirectionMode {
+    #[default]
+    Vertical,
+    Horizontal,
+}
+
 #[derive(Debug, Clone, State, Default)]
 pub struct NodeState {
     #[child_dep_state(size)]
@@ -25,6 +32,7 @@ pub struct Size {
     pub height: SizeMode,
     pub padding: (i32, i32, i32, i32),
     pub scroll_y: i32,
+    pub direction: DirectionMode,
 }
 
 impl ChildDepState for Size {
@@ -34,7 +42,11 @@ impl ChildDepState for Size {
 
     const NODE_MASK: NodeMask =
         NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
-            "width", "height", "padding", "scroll_y"
+            "width",
+            "height",
+            "padding",
+            "scroll_y",
+            "direction"
         ])))
         .with_text()
         .with_tag();
@@ -51,6 +63,7 @@ impl ChildDepState for Size {
         let mut height = SizeMode::default();
         let mut padding = (0, 0, 0, 0);
         let mut scroll_y = 0;
+        let mut direction = DirectionMode::Vertical;
 
         // Text elements shouldn't be define by their children size but
         // by their text content if not specified otherwise
@@ -122,6 +135,13 @@ impl ChildDepState for Size {
                     let scroll: i32 = a.value.to_string().parse().unwrap();
                     scroll_y = scroll;
                 }
+                "direction" => {
+                    direction = if a.value.to_string() == "horizontal" {
+                        DirectionMode::Horizontal
+                    } else {
+                        DirectionMode::Vertical
+                    };
+                }
                 _ => {
                     println!("Unsupported attribute <{}>", a.name);
                 }
@@ -137,6 +157,7 @@ impl ChildDepState for Size {
             height,
             padding,
             scroll_y,
+            direction,
         };
         changed
     }

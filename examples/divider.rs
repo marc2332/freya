@@ -7,40 +7,91 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    let heights = use_state(&cx, || (50, 50));
+    let sizes = use_state(&cx, || (50, 50, 50, 50));
 
     cx.render(rsx! {
         view {
             height: "stretch",
             width: "stretch",
+            direction: "horizontal",
             view {
-                background: "red",
-                height: "{heights.0}%",
-                width: "stretch",
+                width: "{sizes.0}%",
+                height: "stretch",
                 padding: "20",
                 layer: "1",
-                onclick: |_| heights.with_mut(|v| {
-                    v.1 -= 5;
-                    v.0 += 5;
-                }),
-                text {
+                view {
+                    background: "red",
+                    height: "{sizes.2}%",
+                    width: "stretch",
+                    padding: "20",
                     layer: "1",
-                    "Click to increase",
+                    onclick: |_| sizes.with_mut(|v| {
+                        v.0 += 5;
+                        v.1 -= 5;
+                        v.2 += 5;
+                        v.3 -= 5;
+                    }),
+                    text {
+                        layer: "1",
+                        "Click to increase",
+                    }
+                }
+                view {
+                    background: "red",
+                    height: "{sizes.3}%",
+                    width: "stretch",
+                    padding: "20",
+                    layer: "1",
+                    onclick: |_| sizes.with_mut(|v| {
+                        v.0 += 5;
+                        v.1 -= 5;
+                        v.2 -= 5;
+                        v.3 += 5;
+                    }),
+                    text {
+                        layer: "1",
+                        "Click to increase",
+                    }
                 }
             }
             view {
-                background: "blue",
-                height: "{heights.1}%",
-                width: "stretch",
+                width: "{sizes.1}%",
+                height: "stretch",
                 padding: "20",
                 layer: "1",
-                onclick: |_| heights.with_mut(|v| {
-                    v.0 -= 5;
-                    v.1 += 5;
-                }),
-                text {
+                view {
+                    background: "blue",
+                    height: "{sizes.2}%",
+                    width: "stretch",
+                    padding: "20",
                     layer: "1",
-                    "Click to increase",
+                    onclick: |_| sizes.with_mut(|v| {
+                        v.0 -= 5;
+                        v.1 += 5;
+                        v.2 += 5;
+                        v.3 -= 5;
+                    }),
+                    text {
+                        layer: "1",
+                        "Click to increase",
+                    }
+                }
+                view {
+                    background: "blue",
+                    height: "{sizes.3}%",
+                    width: "stretch",
+                    padding: "20",
+                    layer: "1",
+                    onclick: |_| sizes.with_mut(|v| {
+                        v.0 -= 5;
+                        v.1 += 5;
+                        v.2 -= 5;
+                        v.3 += 5;
+                    }),
+                    text {
+                        layer: "1",
+                        "Click to increase",
+                    }
                 }
             }
         }

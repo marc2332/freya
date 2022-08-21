@@ -1,7 +1,7 @@
 use dioxus::core::ElementId;
 use dioxus_native_core::real_dom::NodeType;
 use layers_engine::{Layers, NodeData, Viewport};
-use state::node::SizeMode;
+use state::node::{DirectionMode, SizeMode};
 
 fn calculate_viewport(
     node: &NodeData,
@@ -85,8 +85,15 @@ pub fn calculate_node<T>(
                             layer_num,
                         );
 
-                        inner_viewport.y = box_viewport.y + box_viewport.height;
-                        inner_viewport.height -= box_viewport.height;
+                        let state = &node.node.as_ref().unwrap().state;
+
+                        if state.size.direction == DirectionMode::Vertical {
+                            inner_viewport.y = box_viewport.y + box_viewport.height;
+                            inner_viewport.height -= box_viewport.height;
+                        } else {
+                            inner_viewport.x = box_viewport.x + box_viewport.width;
+                            inner_viewport.width -= box_viewport.width;
+                        }
 
                         if box_viewport.width > inner_viewport.width || inner_viewport.width == 0 {
                             inner_viewport.width = box_viewport.width;
