@@ -474,7 +474,6 @@ fn render(
                 node: Some(child),
             })
         },
-        None,
         0,
     );
 

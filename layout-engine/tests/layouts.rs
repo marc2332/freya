@@ -26,7 +26,6 @@ fn percentage() {
         &mut (),
         &mut Layers::default(),
         |_, _| None,
-        None,
         0,
     );
 
@@ -58,7 +57,6 @@ fn manual() {
         &mut (),
         &mut Layers::default(),
         |_, _| None,
-        None,
         0,
     );
 
@@ -97,7 +95,6 @@ fn auto() {
                 node: None,
             })
         },
-        None,
         0,
     );
 
@@ -136,7 +133,6 @@ fn x_y() {
                 node: None,
             })
         },
-        None,
         0,
     );
 

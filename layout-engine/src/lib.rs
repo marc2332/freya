@@ -44,18 +44,13 @@ pub fn calculate_node<T>(
     node: &NodeData,
     left_viewport: Viewport,
     parent_viewport: Viewport,
-    render_options: &mut T,
+    resolver_options: &mut T,
     layers: &mut Layers,
     node_resolver: fn(&ElementId, &mut T) -> Option<NodeData>,
-    node_prepared: Option<fn(&NodeData, &Viewport, &Viewport, &mut T)>,
     layer_num: i16,
 ) -> Viewport {
     let mut node_viewport = calculate_viewport(node, left_viewport, parent_viewport);
     let mut is_text = false;
-
-    if let Some(node_prepared) = node_prepared {
-        node_prepared(node, &node_viewport, &parent_viewport, render_options);
-    }
 
     let layer_num = layers.add_element(node, &node_viewport, &parent_viewport, layer_num);
 
@@ -77,17 +72,16 @@ pub fn calculate_node<T>(
         match &dom_node.node_type {
             NodeType::Element { children, .. } => {
                 for child in children {
-                    let child_node = node_resolver(child, render_options);
+                    let child_node = node_resolver(child, resolver_options);
 
                     if let Some(child_node) = child_node {
                         let box_viewport = calculate_node::<T>(
                             &child_node,
                             inner_viewport,
                             out_viewport,
-                            render_options,
+                            resolver_options,
                             layers,
                             node_resolver,
-                            node_prepared,
                             layer_num,
                         );
 
