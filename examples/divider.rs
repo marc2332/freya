@@ -14,16 +14,16 @@ fn app(cx: Scope) -> Element {
             height: "stretch",
             width: "stretch",
             direction: "horizontal",
+            padding: "30",
             view {
                 width: "{sizes.0}%",
                 height: "stretch",
-                padding: "20",
                 layer: "1",
                 view {
                     background: "red",
                     height: "{sizes.2}%",
                     width: "stretch",
-                    padding: "20",
+                    padding: "30",
                     layer: "1",
                     onclick: |_| sizes.with_mut(|v| {
                         v.0 += 5;
@@ -37,10 +37,10 @@ fn app(cx: Scope) -> Element {
                     }
                 }
                 view {
-                    background: "red",
+                    background: "green",
                     height: "{sizes.3}%",
                     width: "stretch",
-                    padding: "20",
+                    padding: "30",
                     layer: "1",
                     onclick: |_| sizes.with_mut(|v| {
                         v.0 += 5;
@@ -57,13 +57,12 @@ fn app(cx: Scope) -> Element {
             view {
                 width: "{sizes.1}%",
                 height: "stretch",
-                padding: "20",
                 layer: "1",
                 view {
                     background: "blue",
                     height: "{sizes.2}%",
                     width: "stretch",
-                    padding: "20",
+                    padding: "30",
                     layer: "1",
                     onclick: |_| sizes.with_mut(|v| {
                         v.0 -= 5;
@@ -77,10 +76,10 @@ fn app(cx: Scope) -> Element {
                     }
                 }
                 view {
-                    background: "blue",
+                    background: "black",
                     height: "{sizes.3}%",
                     width: "stretch",
-                    padding: "20",
+                    padding: "30",
                     layer: "1",
                     onclick: |_| sizes.with_mut(|v| {
                         v.0 -= 5;

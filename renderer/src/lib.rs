@@ -144,8 +144,8 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
     surface.canvas().scale((sf, sf));
 
     let style = FontStyle::new(Weight::NORMAL, Width::NORMAL, Slant::Upright);
-    let type_face = Typeface::new("inherit", style).unwrap();
-    let font = Font::new(type_face, 15.0);
+    let type_face = Typeface::new("Fira Sans", style).unwrap();
+    let font = Font::new(type_face, 16.0);
 
     let env = Env {
         surface,

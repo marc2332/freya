@@ -195,6 +195,7 @@ fn CardScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
             width: "100%",
             height: "200",
             scroll_y: "{height}",
+            padding: "50",
             onscroll: onscroll,
             &cx.props.body
         }
