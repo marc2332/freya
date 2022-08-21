@@ -14,7 +14,7 @@ fn app(cx: Scope) -> Element {
             width: "100%",
             background: "black",
             padding: "25",
-            p { tabindex: "1", "Number is: {count}" }
+            text { layer: "1", "Number is: {count}" }
         }
         view {
             height: "80%",
@@ -22,7 +22,7 @@ fn app(cx: Scope) -> Element {
             background: "blue",
             padding: "25",
             onclick: move |_| count += 1,
-            p { tabindex: "1", "Increase!" }
+            text { layer: "1", "Increase!" }
         }
     ))
 }
