@@ -533,11 +533,15 @@ fn render(
         }
     }
 
-    for (event_name, event_nodes) in events_filtered.iter() {
+    for (event_name, event_nodes) in events_filtered.iter_mut() {
         let dom = dom.lock().unwrap();
         let listeners = dom.get_listening_sorted(event_name);
 
-        'event_nodes: for (node_data, request) in event_nodes.iter().rev() {
+        if event_name == &"click" {
+            event_nodes.reverse();
+        }
+
+        'event_nodes: for (node_data, request) in event_nodes.iter() {
             let node = node_data.node.as_ref().unwrap();
             match &request {
                 RendererRequest::MouseEvent { event, .. } => {
@@ -553,7 +557,7 @@ fn render(
                                     priority: EventPriority::Medium,
                                     element: Some(listener.id.clone()),
                                     name: event_name,
-                                    bubbles: true,
+                                    bubbles: false,
                                     data: Arc::new(event.clone()),
                                 }))
                                 .unwrap();
@@ -562,7 +566,7 @@ fn render(
                     }
 
                     // Only let pass the event if the path (from top layer to bottom is transparent)
-                    if node.state.style.background != Color::TRANSPARENT {
+                    if event_name == &"click" && node.state.style.background != Color::TRANSPARENT {
                         break;
                     }
                 }

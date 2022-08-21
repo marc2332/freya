@@ -29,6 +29,16 @@ fn app(cx: Scope) -> Element {
                                     content: "Wooow",
                                     background: "green"
                                 }
+                                Card {
+                                    title: "Lalala",
+                                    content: "Wooow",
+                                    background: "red"
+                                }
+                                Card {
+                                    title: "Lalala",
+                                    content: "Wooow",
+                                    background: "blue"
+                                }
                             })
                         }
                         Card {
@@ -145,7 +155,6 @@ fn Card<'a>(cx: Scope<'a, CardProps<'a>>) -> Element {
     ))
 }
 
-
 #[allow(non_snake_case)]
 fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     let mut height = use_state(&cx, || 0);
@@ -183,7 +192,7 @@ fn CardScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     cx.render(rsx!(
         div {
             width: "100%",
-            height: "50%",
+            height: "200",
             overflow: "{height}",
             onscroll: onscroll,
             &cx.props.body

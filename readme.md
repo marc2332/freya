@@ -35,4 +35,4 @@ fn app(cx: Scope) -> Element {
 - [ ] Support for multiple windows
 - [ ] Move from dioxus-html and go custom element tags
 - [ ] Use [taffy](https://github.com/dioxusLabs/taffy) for Flex layouts.
-- [ ] Priorize inner scroll views inside scroll views.
+- [x] Priorize inner scroll views inside scroll views.
