@@ -169,7 +169,7 @@ fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
         view {
             width: "100%",
             height: "70%",
-            overflow: "{height}",
+            scroll_y: "{height}",
             onscroll: onscroll,
             &cx.props.body
         }
@@ -194,7 +194,7 @@ fn CardScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
         view {
             width: "100%",
             height: "200",
-            overflow: "{height}",
+            scroll_y: "{height}",
             onscroll: onscroll,
             &cx.props.body
         }

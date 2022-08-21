@@ -71,7 +71,7 @@ pub fn calculate_node<T>(
     };
     let out_viewport = inner_viewport.clone();
 
-    inner_viewport.y += node.node.as_ref().unwrap().state.size.overflow;
+    inner_viewport.y += node.node.as_ref().unwrap().state.size.scroll_y;
 
     if let Some(dom_node) = &node.node {
         match &dom_node.node_type {

@@ -69,7 +69,7 @@ builder_constructors! {
         width: String,
         background: String,
         layer: String,
-        overflow: String,
+        scroll_y: String,
      };
     text {
         layer: String,

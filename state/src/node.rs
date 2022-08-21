@@ -24,7 +24,7 @@ pub struct Size {
     pub width: SizeMode,
     pub height: SizeMode,
     pub padding: (i32, i32, i32, i32),
-    pub overflow: i32,
+    pub scroll_y: i32,
 }
 
 impl ChildDepState for Size {
@@ -34,7 +34,7 @@ impl ChildDepState for Size {
 
     const NODE_MASK: NodeMask =
         NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
-            "width", "height", "padding", "overflow"
+            "width", "height", "padding", "scroll_y"
         ])))
         .with_text()
         .with_tag();
@@ -50,7 +50,7 @@ impl ChildDepState for Size {
         let mut width = SizeMode::default();
         let mut height = SizeMode::default();
         let mut padding = (0, 0, 0, 0);
-        let mut overflow = 0;
+        let mut scroll_y = 0;
 
         // Text elements shouldn't be define by their children size but
         // by their text content if not specified otherwise
@@ -118,9 +118,9 @@ impl ChildDepState for Size {
                     padding.2 = padding_for_side;
                     padding.3 = padding_for_side;
                 }
-                "overflow" => {
+                "scroll_y" => {
                     let scroll: i32 = a.value.to_string().parse().unwrap();
-                    overflow = scroll;
+                    scroll_y = scroll;
                 }
                 _ => {
                     println!("Unsupported attribute <{}>", a.name);
@@ -131,12 +131,12 @@ impl ChildDepState for Size {
         let changed = (width != self.width)
             || (height != self.height)
             || (padding != self.padding)
-            || (overflow != self.overflow);
+            || (scroll_y != self.scroll_y);
         *self = Self {
             width,
             height,
             padding,
-            overflow,
+            scroll_y,
         };
         changed
     }
