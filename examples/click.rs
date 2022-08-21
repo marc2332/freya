@@ -1,4 +1,6 @@
 use dioxus::prelude::*;
+use elements_namespace as dioxus_elements;
+
 use trev::launch;
 
 fn main() {
@@ -9,27 +11,26 @@ fn app(cx: Scope) -> Element {
     let mut count = use_state(&cx, || 0);
 
     cx.render(rsx!(
-        div {
-            height: "40%",
+        view {
+            height: "100%",
             width: "100%",
             background: "red",
             padding: "25",
-            p {
-                tabindex: "1",
+            text {
+                layer: "1",
                 "{count}"
             }
-            div {
-                height: "40%",
+            view {
+                height: "30%",
                 width: "100%",
                 background: "blue",
                 padding: "25",
                 onclick: move |_| count += 10,
-                tabindex: "1",
-                p {
-                    tabindex: "1",
-                    "Decrease!"
-                 }
-
+                layer: "1",
+                text {
+                    layer: "1",
+                    "Increase!"
+                }
             }
         }
     ))

@@ -1,5 +1,7 @@
-use dioxus::prelude::*;
 use std::time::Duration;
+
+use dioxus::prelude::*;
+use elements_namespace as dioxus_elements;
 use tokio::time::sleep;
 use trev::launch;
 
@@ -32,33 +34,33 @@ fn app(cx: Scope) -> Element {
     let small = colors[2];
 
     cx.render(rsx! {
-        div {
+        view {
             background: "{big}",
             height: "stretch",
             width: "stretch",
             padding: "50",
-            p {
-                tabindex: "1",
+            text {
+                layer: "1",
                 "hello",
             }
-            div {
+            view {
                 background: "{mid}",
                 height: "auto",
                 width: "stretch",
                 padding: "{padding}",
-                tabindex: "2",
-                p {
-                    tabindex: "1",
+                layer: "2",
+                text {
+                    layer: "1",
                     "World",
                 }
-                div {
+                view {
                     background: "{small}",
                     height: "auto",
                     width: "stretch",
                     padding: "20",
-                    tabindex: "1",
-                    p {
-                        tabindex: "1",
+                    layer: "1",
+                    text {
+                        layer: "1",
                         "ddddddd",
                     }
                 }

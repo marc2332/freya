@@ -1,6 +1,6 @@
-use std::time::Duration;
-
 use dioxus::prelude::*;
+use elements_namespace as dioxus_elements;
+use std::time::Duration;
 use tokio::time::sleep;
 use trev::launch;
 
@@ -67,12 +67,12 @@ struct LoadingBarProps {
 #[allow(non_snake_case)]
 fn LoadingBar<'a>(cx: Scope<'a, LoadingBarProps>) -> Element {
     cx.render(rsx!(
-        div {
+        view {
             width: "auto",
             height: "30",
             padding: "15",
             background: "white",
-            div {
+            view {
                 width: "{&cx.props.progress}%",
                 height: "stretch",
                 background: "blue",

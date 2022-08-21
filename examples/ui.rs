@@ -1,4 +1,5 @@
 use dioxus::{core::UiEvent, events::MouseData, prelude::*};
+use elements_namespace as dioxus_elements;
 use trev::launch;
 
 fn main() {
@@ -79,13 +80,13 @@ struct NavbarProps<'a> {
 #[allow(non_snake_case)]
 fn Navbar<'a>(cx: Scope<'a, NavbarProps<'a>>) -> Element {
     cx.render(rsx!(
-        div {
+        view {
             height: "15%",
             width: "stretch",
             background: "black",
             padding: "30",
-            p {
-                tabindex: "1",
+            text {
+                layer: "1",
                 "{&cx.props.title}"
             }
         }
@@ -103,11 +104,11 @@ struct AppProps<'a> {
 #[allow(non_snake_case)]
 fn App<'a>(cx: Scope<'a, AppProps<'a>>) -> Element {
     cx.render(rsx!(
-        div {
+        view {
             width: "stretch",
             height: "stretch",
             &cx.props.navbar,
-            div {
+            view {
                 width: "stretch",
                 height: "stretch",
                 &cx.props.body
@@ -126,25 +127,25 @@ struct CardProps<'a> {
 #[allow(non_snake_case)]
 fn Card<'a>(cx: Scope<'a, CardProps<'a>>) -> Element {
     cx.render(rsx!(
-        div {
+        view {
             width: "stretch",
             height: "200",
             padding: "10",
             background: "{cx.props.background}",
-            div {
+            view {
                 width: "stretch",
                 height: "50%",
                 background: "gray",
-                tabindex: "1",
+                layer: "1",
                 padding: "20",
-                p {
+                text {
                     height: "auto",
-                    tabindex: "1",
+                    layer: "1",
                     "{&cx.props.title}"
                 }
-                p {
+                text {
                     height: "auto",
-                    tabindex: "1",
+                    layer: "1",
                     "{&cx.props.content}"
                 }
             }
@@ -165,7 +166,7 @@ fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     };
 
     cx.render(rsx!(
-        div {
+        view {
             width: "100%",
             height: "70%",
             overflow: "{height}",
@@ -190,7 +191,7 @@ fn CardScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     };
 
     cx.render(rsx!(
-        div {
+        view {
             width: "100%",
             height: "200",
             overflow: "{height}",
@@ -222,20 +223,20 @@ fn Area<'a>(cx: Scope<'a>) -> Element {
     };
 
     cx.render(rsx! {
-        div {
+        view {
             height: "50%",
             width: "100%",
             background: "blue",
             padding: "10",
             onmouseover: cursor_moved,
             onclick: cursor_clicked,
-            tabindex: "1",
-            p {
-                tabindex: "1",
+            layer: "1",
+            text {
+                layer: "1",
                 "Mouse is at [x: {cursor_pos_over.0}, y: {cursor_pos_over.1}] ",
             },
-            p {
-                tabindex: "1",
+            text {
+                layer: "1",
                 "Mouse clicked at [x: {cursor_pos_click.0}, y: {cursor_pos_click.1}]"
             }
         }

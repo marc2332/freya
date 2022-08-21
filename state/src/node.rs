@@ -54,7 +54,7 @@ impl ChildDepState for Size {
 
         // Text elements shouldn't be define by their children size but
         // by their text content if not specified otherwise
-        if children.size_hint().0 > 0 && node.tag() != Some("p") {
+        if children.size_hint().0 > 0 && node.tag() != Some("text") {
             width = SizeMode::Manual(
                 children
                     .by_ref()
@@ -154,7 +154,7 @@ impl NodeDepState<()> for Style {
     const NODE_MASK: NodeMask =
         NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
             "background",
-            "tabindex"
+            "layer"
         ])))
         .with_text();
     fn reduce<'a>(&mut self, node: NodeView, _sibling: (), _ctx: &Self::Ctx) -> bool {
@@ -170,7 +170,7 @@ impl NodeDepState<()> for Style {
                     }
                 }
                 // this should be z-index xD
-                "tabindex" => {
+                "layer" => {
                     let new_z_index: Option<i16> = attr.value.to_string().parse().ok();
                     if let Some(new_z_index) = new_z_index {
                         z_index = new_z_index;

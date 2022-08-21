@@ -9,14 +9,14 @@ fn app(cx: Scope) -> Element {
     let mut count = use_state(&cx, || 0);
 
     cx.render(rsx!(
-        div {
+        view {
             height: "20%",
             width: "100%",
             background: "black",
             padding: "25",
             p { tabindex: "1", "Number is: {count}" }
         }
-        div {
+        view {
             height: "80%",
             width: "100%",
             background: "blue",

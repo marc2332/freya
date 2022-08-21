@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use elements_namespace as dioxus_elements;
 use trev::launch;
 
 fn main() {
@@ -9,36 +10,36 @@ fn app(cx: Scope) -> Element {
     let heights = use_state(&cx, || (50, 50));
 
     cx.render(rsx! {
-        div {
+        view {
             height: "stretch",
             width: "stretch",
-            div {
+            view {
                 background: "red",
                 height: "{heights.0}%",
                 width: "stretch",
                 padding: "20",
-                tabindex: "1",
+                layer: "1",
                 onclick: |_| heights.with_mut(|v| {
                     v.1 -= 5;
                     v.0 += 5;
                 }),
-                p {
-                    tabindex: "1",
+                text {
+                    layer: "1",
                     "Click to increase",
                 }
             }
-            div {
+            view {
                 background: "blue",
                 height: "{heights.1}%",
                 width: "stretch",
                 padding: "20",
-                tabindex: "1",
+                layer: "1",
                 onclick: |_| heights.with_mut(|v| {
                     v.0 -= 5;
                     v.1 += 5;
                 }),
-                p {
-                    tabindex: "1",
+                text {
+                    layer: "1",
                     "Click to increase",
                 }
             }

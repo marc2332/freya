@@ -1,4 +1,5 @@
 use dioxus::{core::UiEvent, events::MouseData, prelude::*};
+use elements_namespace as dioxus_elements;
 use trev::launch;
 
 fn main() {
@@ -7,7 +8,7 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     cx.render(rsx! {
-        div {
+        view {
             height: "100%",
             width: "100%",
             Area {
@@ -42,20 +43,20 @@ fn Area<'a>(cx: Scope<'a>) -> Element {
     };
 
     cx.render(rsx! {
-        div {
+        view {
             height: "50%",
             width: "100%",
             background: "blue",
             padding: "10",
             onmouseover: cursor_moved,
             onclick: cursor_clicked,
-            tabindex: "1",
-            p {
-                tabindex: "1",
+            layer: "1",
+            text {
+                layer: "1",
                 "Mouse is at [x: {cursor_pos_over.0}, y: {cursor_pos_over.1}] ",
             },
-            p {
-                tabindex: "1",
+            text {
+                layer: "1",
                 "Mouse clicked at [x: {cursor_pos_click.0}, y: {cursor_pos_click.1}]"
             }
         }

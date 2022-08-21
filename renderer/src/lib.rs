@@ -368,7 +368,7 @@ fn render_skia(
     match &node.node_type {
         NodeType::Element { tag, children, .. } => {
             match tag.as_str() {
-                "div" => {
+                "view" => {
                     let mut path = Path::new();
                     let mut paint = Paint::default();
 
@@ -399,7 +399,7 @@ fn render_skia(
                     path.close();
                     canvas.draw_path(&path, &paint);
                 }
-                "p" => {
+                "text" => {
                     let mut paint = Paint::default();
 
                     paint.set_anti_alias(true);

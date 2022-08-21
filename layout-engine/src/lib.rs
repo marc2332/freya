@@ -29,7 +29,7 @@ fn calculate_viewport(
         SizeMode::Auto => {
             if let Some(node) = &node.node {
                 if let NodeType::Element { tag, .. } = &node.node_type {
-                    if tag == "p" {
+                    if tag == "text" {
                         viewport.height = 5;
                     }
                 }
