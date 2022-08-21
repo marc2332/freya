@@ -536,7 +536,7 @@ fn render(
         let dom = dom.lock().unwrap();
         let listeners = dom.get_listening_sorted(event_name);
 
-        if event_name == &"click" {
+        if event_name != &"scroll" {
             event_nodes.reverse();
         }
 
@@ -565,7 +565,7 @@ fn render(
                     }
 
                     // Only let pass the event if the path (from top layer to bottom is transparent)
-                    if event_name == &"click" && node.state.style.background != Color::TRANSPARENT {
+                    if event_name != &"scroll" && node.state.style.background != Color::TRANSPARENT {
                         break;
                     }
                 }
