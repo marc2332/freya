@@ -19,7 +19,7 @@ use layout_engine::calculate_node;
 use skia_safe::{
     font_style::{Slant, Weight, Width},
     utils::text_utils::Align,
-    Canvas, Font, FontStyle, Paint, PaintStyle, Path, Typeface,
+    BlurStyle, Canvas, Font, FontStyle, MaskFilter, Paint, PaintStyle, Path, Typeface,
 };
 use state::node::{NodeState, SizeMode};
 use std::{
@@ -397,6 +397,25 @@ fn render_skia(
                     path.line_to((x, y2));
 
                     path.close();
+
+                    // Shadow effect
+                    {
+                        let shadow = &node.state.style.shadow;
+
+                        if shadow.intensity > 0 {
+                            let mut blur_paint = paint.clone();
+
+                            blur_paint.set_color(shadow.color);
+                            blur_paint.set_alpha(shadow.intensity);
+                            blur_paint.set_mask_filter(MaskFilter::blur(
+                                BlurStyle::Normal,
+                                shadow.size,
+                                false,
+                            ));
+                            canvas.draw_path(&path, &blur_paint);
+                        }
+                    }
+
                     canvas.draw_path(&path, &paint);
                 }
                 "text" => {
@@ -565,7 +584,8 @@ fn render(
                     }
 
                     // Only let pass the event if the path (from top layer to bottom is transparent)
-                    if event_name != &"scroll" && node.state.style.background != Color::TRANSPARENT {
+                    if event_name != &"scroll" && node.state.style.background != Color::TRANSPARENT
+                    {
                         break;
                     }
                 }
