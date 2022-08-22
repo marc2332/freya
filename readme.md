@@ -1,5 +1,4 @@
-trev 🧩
----
+# trev 🧩
 
 A Skia-based desktop renderer for [Dioxus](https://dioxuslabs.com).
 
@@ -28,14 +27,14 @@ fn app(cx: Scope) -> Element {
 }
 ```
 
-# Concepts / Ideas
-## Headless running
+## Concepts / Ideas
+### Headless running
 Ability to run the app without actually rendering, this is useful for testing.
 
-## Elements and components
+### Elements and components
 The idea is so have primitive elements such as text and view, and then have components that can be used to build more complex elements such scroll views, buttons, input fields, etc.
 
-# To-Do
+## To-Do
 - [ ] Make padding use SizeMode
 - [ ] Add window params to the launch function
 - [ ] Improve and support more mouse, keyboard, etc, events.
@@ -43,3 +42,6 @@ The idea is so have primitive elements such as text and view, and then have comp
 - [x] Move from dioxus-html and go custom element tags
 - [ ] Use [taffy](https://github.com/dioxusLabs/taffy) for Flex layouts.
 - [x] Priorize inner scroll views inside scroll views.
+
+
+MIT License
