@@ -177,6 +177,7 @@ pub struct Style {
     pub background: Color,
     pub z_index: i16,
     pub shadow: ShadowSettings,
+    pub radius: i32,
 }
 
 impl NodeDepState<()> for Style {
@@ -186,13 +187,15 @@ impl NodeDepState<()> for Style {
         NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
             "background",
             "layer",
-            "shadow"
+            "shadow",
+            "radius"
         ])))
         .with_text();
     fn reduce<'a>(&mut self, node: NodeView, _sibling: (), _ctx: &Self::Ctx) -> bool {
         let mut background = Color::TRANSPARENT;
         let mut z_index = 0;
         let mut shadow = ShadowSettings::default();
+        let mut radius = 0;
 
         for attr in node.attributes() {
             match attr.name {
@@ -215,6 +218,13 @@ impl NodeDepState<()> for Style {
                         shadow = new_shadow;
                     }
                 }
+                "radius" => {
+                    let new_radius: Option<i32> = attr.value.to_string().parse().ok();
+
+                    if let Some(new_radius) = new_radius {
+                        radius = new_radius;
+                    }
+                }
                 _ => {
                     println!("Unsupported attribute <{}>", attr.name);
                 }
@@ -226,6 +236,7 @@ impl NodeDepState<()> for Style {
             background,
             z_index,
             shadow,
+            radius,
         };
         changed
     }

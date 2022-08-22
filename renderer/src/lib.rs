@@ -19,7 +19,8 @@ use layout_engine::calculate_node;
 use skia_safe::{
     font_style::{Slant, Weight, Width},
     utils::text_utils::Align,
-    BlurStyle, Canvas, Font, FontStyle, MaskFilter, Paint, PaintStyle, Path, Typeface,
+    BlurStyle, Canvas, Font, FontStyle, MaskFilter, Paint, PaintStyle, Path, PathDirection, Rect,
+    Typeface,
 };
 use state::node::{NodeState, SizeMode};
 use std::{
@@ -391,10 +392,14 @@ fn render_skia(
                         return;
                     }
 
-                    path.move_to((x, y));
-                    path.line_to((x2, y));
-                    path.line_to((x2, y2));
-                    path.line_to((x, y2));
+                    let radius = node.state.style.radius;
+                    let radius = if radius < 0 { 0 } else { radius };
+
+                    path.add_round_rect(
+                        Rect::new(x as f32, y as f32, x2 as f32, y2 as f32),
+                        (radius as f32, radius as f32),
+                        PathDirection::CCW,
+                    );
 
                     path.close();
 

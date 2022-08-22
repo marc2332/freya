@@ -8,11 +8,11 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    let mut shadow_size = use_state(&cx, || 30f32);
+    let mut radius = use_state(&cx, || 30f32);
 
     let onscroll = move |ev: UiEvent<MouseData>| {
         let page = ev.coordinates().page();
-        shadow_size += (page.y as f32) * 7.0;
+        radius += (page.y as f32) * 20.0;
     };
 
     cx.render(rsx!(
@@ -22,15 +22,11 @@ fn app(cx: Scope) -> Element {
             padding: "125",
             onscroll: onscroll,
             view {
-                shadow: "0 10 210 {shadow_size} red",
+                shadow: "0 0 150 30.0 black",
+                radius: "{radius}",
                 height: "100%",
                 width: "100%",
                 background: "black",
-                padding: "50",
-                text {
-                    layer: "1",
-                    "Scroll!"
-                }
             }
         }
     ))

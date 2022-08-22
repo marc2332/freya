@@ -162,7 +162,7 @@ fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
 
     let onscroll = move |e: UiEvent<MouseData>| {
         let page = e.coordinates().page();
-        if *height.get() >= 0 && page.y > 0.0  {
+        if *height.get() >= 0 && page.y > 0.0 {
             return;
         }
         height += (page.y as i32) * 20;
@@ -190,7 +190,7 @@ fn CardScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
 
     let onscroll = move |e: UiEvent<MouseData>| {
         let page = e.coordinates().page();
-        if *height.get() >= 0 && page.y > 0.0  {
+        if *height.get() >= 0 && page.y > 0.0 {
             return;
         }
         height += (page.y as i32) * 50;
