@@ -71,6 +71,7 @@ builder_constructors! {
         layer: String,
         scroll_y: String,
         direction: String,
+        shadow: String,
      };
     text {
         layer: String,

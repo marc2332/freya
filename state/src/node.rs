@@ -164,9 +164,19 @@ impl ChildDepState for Size {
 }
 
 #[derive(Default, Copy, Clone, Debug)]
+pub struct ShadowSettings {
+    pub x: i32,
+    pub y: i32,
+    pub intensity: u8,
+    pub size: f32,
+    pub color: Color,
+}
+
+#[derive(Default, Copy, Clone, Debug)]
 pub struct Style {
     pub background: Color,
     pub z_index: i16,
+    pub shadow: ShadowSettings,
 }
 
 impl NodeDepState<()> for Style {
@@ -175,29 +185,39 @@ impl NodeDepState<()> for Style {
     const NODE_MASK: NodeMask =
         NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
             "background",
-            "layer"
+            "layer",
+            "shadow"
         ])))
         .with_text();
     fn reduce<'a>(&mut self, node: NodeView, _sibling: (), _ctx: &Self::Ctx) -> bool {
         let mut background = Color::TRANSPARENT;
         let mut z_index = 0;
+        let mut shadow = ShadowSettings::default();
 
         for attr in node.attributes() {
             match attr.name {
                 "background" => {
-                    let new_back = color_str(&attr.value.to_string());
+                    let new_back = parse_color(&attr.value.to_string());
                     if let Some(new_back) = new_back {
                         background = new_back;
                     }
                 }
-                // this should be z-index xD
                 "layer" => {
                     let new_z_index: Option<i16> = attr.value.to_string().parse().ok();
                     if let Some(new_z_index) = new_z_index {
                         z_index = new_z_index;
                     }
                 }
-                _ => panic!(),
+                "shadow" => {
+                    let new_shadow = parse_shadow(&attr.value.to_string());
+
+                    if let Some(new_shadow) = new_shadow {
+                        shadow = new_shadow;
+                    }
+                }
+                _ => {
+                    println!("Unsupported attribute <{}>", attr.name);
+                }
             }
         }
 
@@ -205,12 +225,25 @@ impl NodeDepState<()> for Style {
         *self = Self {
             background,
             z_index,
+            shadow,
         };
         changed
     }
 }
 
-fn color_str(color: &str) -> Option<Color> {
+fn parse_shadow(value: &str) -> Option<ShadowSettings> {
+    let value = value.to_string();
+    let mut shadow_values = value.split_ascii_whitespace();
+    Some(ShadowSettings {
+        x: shadow_values.nth(0)?.parse().ok()?,
+        y: shadow_values.nth(0)?.parse().ok()?,
+        intensity: shadow_values.nth(0)?.parse().ok()?,
+        size: shadow_values.nth(0)?.parse().ok()?,
+        color: parse_color(shadow_values.nth(0)?)?,
+    })
+}
+
+fn parse_color(color: &str) -> Option<Color> {
     match color {
         "red" => Some(Color::RED),
         "green" => Some(Color::GREEN),
