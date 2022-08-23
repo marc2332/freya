@@ -70,6 +70,7 @@ builder_constructors! {
         background: String,
         layer: String,
         scroll_y: String,
+        scroll_x: String,
         direction: String,
         shadow: String,
         radius: String,

@@ -32,6 +32,7 @@ pub struct Size {
     pub height: SizeMode,
     pub padding: (i32, i32, i32, i32),
     pub scroll_y: i32,
+    pub scroll_x: i32,
     pub direction: DirectionMode,
 }
 
@@ -46,6 +47,7 @@ impl ChildDepState for Size {
             "height",
             "padding",
             "scroll_y",
+            "scroll_x",
             "direction"
         ])))
         .with_text()
@@ -63,6 +65,7 @@ impl ChildDepState for Size {
         let mut height = SizeMode::default();
         let mut padding = (0, 0, 0, 0);
         let mut scroll_y = 0;
+        let mut scroll_x = 0;
         let mut direction = DirectionMode::Vertical;
 
         // Text elements shouldn't be define by their children size but
@@ -135,6 +138,10 @@ impl ChildDepState for Size {
                     let scroll: i32 = a.value.to_string().parse().unwrap();
                     scroll_y = scroll;
                 }
+                "scroll_x" => {
+                    let scroll: i32 = a.value.to_string().parse().unwrap();
+                    scroll_x = scroll;
+                }
                 "direction" => {
                     direction = if a.value.to_string() == "horizontal" {
                         DirectionMode::Horizontal
@@ -157,6 +164,7 @@ impl ChildDepState for Size {
             height,
             padding,
             scroll_y,
+            scroll_x,
             direction,
         };
         changed
