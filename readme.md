@@ -13,7 +13,7 @@ fn app(cx: Scope) -> Element {
             width: "100%",
             background: "black",
             padding: "25",
-            text { layer: "1", "Number is: {count}" }
+            text { "Number is: {count}" }
         }
         view {
             height: "80%",
@@ -21,7 +21,7 @@ fn app(cx: Scope) -> Element {
             background: "blue",
             padding: "25",
             onclick: move |_| count += 1,
-            text { layer: "1", "Increase!" }
+            text { "Increase!" }
         }
     ))
 }
@@ -33,6 +33,9 @@ Ability to run the app without actually rendering, this is useful for testing.
 
 ### Elements and components
 The idea is so have primitive elements such as text and view, and then have components that can be used to build more complex elements such scroll views, buttons, input fields, etc.
+
+### Tauri integration
+Inspired by [tauri-egui](https://github.com/tauri-apps/tauri-egui).
 
 ## To-Do
 - [ ] Make padding use SizeMode
