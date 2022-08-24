@@ -74,11 +74,23 @@ builder_constructors! {
         direction: String,
         shadow: String,
         radius: String,
-     };
+    };
+    container {
+        padding: String,
+        height: String,
+        width: String,
+        background: String,
+        layer: String,
+        scroll_y: String,
+        scroll_x: String,
+        direction: String,
+        shadow: String,
+        radius: String,
+    };
     text {
         layer: String,
         height: String,
-     };
+    };
 }
 
 pub trait GlobalAttributes {

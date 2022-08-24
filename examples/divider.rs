@@ -18,13 +18,11 @@ fn app(cx: Scope) -> Element {
             view {
                 width: "{sizes.0}%",
                 height: "stretch",
-                layer: "1",
                 view {
                     background: "red",
                     height: "{sizes.2}%",
                     width: "stretch",
                     padding: "30",
-                    layer: "1",
                     onclick: |_| sizes.with_mut(|v| {
                         v.0 += 5;
                         v.1 -= 5;
@@ -32,7 +30,6 @@ fn app(cx: Scope) -> Element {
                         v.3 -= 5;
                     }),
                     text {
-                        layer: "1",
                         "Click to increase",
                     }
                 }
@@ -41,7 +38,6 @@ fn app(cx: Scope) -> Element {
                     height: "{sizes.3}%",
                     width: "stretch",
                     padding: "30",
-                    layer: "1",
                     onclick: |_| sizes.with_mut(|v| {
                         v.0 += 5;
                         v.1 -= 5;
@@ -49,7 +45,6 @@ fn app(cx: Scope) -> Element {
                         v.3 += 5;
                     }),
                     text {
-                        layer: "1",
                         "Click to increase",
                     }
                 }
@@ -57,13 +52,11 @@ fn app(cx: Scope) -> Element {
             view {
                 width: "{sizes.1}%",
                 height: "stretch",
-                layer: "1",
                 view {
                     background: "blue",
                     height: "{sizes.2}%",
                     width: "stretch",
                     padding: "30",
-                    layer: "1",
                     onclick: |_| sizes.with_mut(|v| {
                         v.0 -= 5;
                         v.1 += 5;
@@ -71,7 +64,6 @@ fn app(cx: Scope) -> Element {
                         v.3 -= 5;
                     }),
                     text {
-                        layer: "1",
                         "Click to increase",
                     }
                 }
@@ -80,7 +72,6 @@ fn app(cx: Scope) -> Element {
                     height: "{sizes.3}%",
                     width: "stretch",
                     padding: "30",
-                    layer: "1",
                     onclick: |_| sizes.with_mut(|v| {
                         v.0 -= 5;
                         v.1 += 5;
@@ -88,7 +79,6 @@ fn app(cx: Scope) -> Element {
                         v.3 += 5;
                     }),
                     text {
-                        layer: "1",
                         "Click to increase",
                     }
                 }

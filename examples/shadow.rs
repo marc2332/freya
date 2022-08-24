@@ -28,7 +28,6 @@ fn app(cx: Scope) -> Element {
                 background: "black",
                 padding: "50",
                 text {
-                    layer: "1",
                     "Scroll!"
                 }
             }

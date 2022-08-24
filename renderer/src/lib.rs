@@ -369,7 +369,7 @@ fn render_skia(
     match &node.node_type {
         NodeType::Element { tag, children, .. } => {
             match tag.as_str() {
-                "view" => {
+                "view" | "container" => {
                     let mut path = Path::new();
                     let mut paint = Paint::default();
 
@@ -501,8 +501,8 @@ fn render(
         0,
     );
 
-    let mut layers_nums: Vec<&u16> = layers.layers.keys().collect();
-    layers_nums.sort_by(|a, b| b.cmp(a));
+    let mut layers_nums: Vec<&i16> = layers.layers.keys().collect();
+    layers_nums.sort_by(|a, b| a.cmp(b));
 
     // Render all the layers from the bottom to the top
     for layer_num in &layers_nums {
@@ -524,6 +524,7 @@ fn render(
     // Propagate events from the top to the bottom
     for layer_num in &layers_nums {
         let layer = layers.layers.get(layer_num).unwrap();
+
         for element in layer.iter() {
             let requests = renderer_requests.lock().unwrap();
 
@@ -560,39 +561,52 @@ fn render(
         let dom = dom.lock().unwrap();
         let listeners = dom.get_listening_sorted(event_name);
 
-        if event_name != &"scroll" {
-            event_nodes.reverse();
-        }
+        let mut found_node: Option<(&Node<NodeState>, &RendererRequest)> = None;
 
         'event_nodes: for (node_data, request) in event_nodes.iter() {
             let node = node_data.node.as_ref().unwrap();
-            match &request {
-                RendererRequest::MouseEvent { event, .. } => {
-                    for listener in &listeners {
-                        if listener.id == node.id {
-                            event_emitter
-                                .lock()
-                                .unwrap()
-                                .as_ref()
-                                .unwrap()
-                                .unbounded_send(SchedulerMsg::Event(UserEvent {
-                                    scope_id: None,
-                                    priority: EventPriority::Medium,
-                                    element: Some(listener.id.clone()),
-                                    name: event_name,
-                                    bubbles: false,
-                                    data: Arc::new(event.clone()),
-                                }))
-                                .unwrap();
-                            break 'event_nodes;
-                        }
+            if event_name == &"scroll" {
+                if node.state.style.background != Color::TRANSPARENT {
+                    break 'event_nodes;
+                }
+                for listener in &listeners {
+                    if listener.id == node.id {
+                        found_node = Some((node, request));
                     }
+                }
+            } else {
+                for listener in &listeners {
+                    if listener.id == node.id {
+                        found_node = Some((node, request));
 
-                    // Only let pass the event if the path (from top layer to bottom is transparent)
-                    if event_name != &"scroll" && node.state.style.background != Color::TRANSPARENT
-                    {
-                        break;
+                        break 'event_nodes;
                     }
+                }
+
+                // Only let pass the event if the path (from top layer to bottom is transparent)
+                if node.state.style.background != Color::TRANSPARENT {
+                    break 'event_nodes;
+                }
+            }
+        }
+
+        if let Some((node, request)) = found_node {
+            match &request {
+                &RendererRequest::MouseEvent { event, .. } => {
+                    event_emitter
+                        .lock()
+                        .unwrap()
+                        .as_ref()
+                        .unwrap()
+                        .unbounded_send(SchedulerMsg::Event(UserEvent {
+                            scope_id: None,
+                            priority: EventPriority::Medium,
+                            element: Some(node.id.clone()),
+                            name: event_name,
+                            bubbles: false,
+                            data: Arc::new(event.clone()),
+                        }))
+                        .unwrap();
                 }
                 _ => {}
             }

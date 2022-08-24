@@ -23,13 +23,13 @@ fn Drawer<'a>(cx: Scope<'a, DrawerOptions<'a>>) -> Element<'a> {
         &cx,
         (&cx.props.opened, pos),
         move |(opened, mut pos)| async move {
-            if *pos == -150 && opened == false {
+            if *pos == -200 && opened == false {
                 pos -= 100;
             }
             if *pos == -250 && opened == true {
                 pos += 100;
             }
-            if (*pos >= 0 && opened == true) || (*pos <= -150 && opened == false) {
+            if (*pos >= 0 && opened == true) || (*pos <= -200 && opened == false) {
                 return;
             }
 
@@ -48,11 +48,11 @@ fn Drawer<'a>(cx: Scope<'a, DrawerOptions<'a>>) -> Element<'a> {
             height: "100%",
             width: "0",
             scroll_x: "{pos}",
-            layer: "1",
             view {
                 height: "100%",
                 width: "200",
                 background: "blue",
+                layer: "-1",
                 shadow: "5 0 200 25.0 black",
                 &cx.props.body
             }
@@ -73,10 +73,9 @@ fn app(cx: Scope) -> Element {
                     height: "45",
                     width: "100%",
                     background: "black",
-                    layer: "1",
                     onclick: move |_| { opened.set(false) },
                     padding: "10",
-                    text { layer:"1", "CLOSE"}
+                    text { "CLOSE"}
                 } ))
             }
             view {
@@ -87,7 +86,7 @@ fn app(cx: Scope) -> Element {
                     width: "80",
                     background: "black",
                     onclick: move |_| { opened.set(true) },
-                    text { layer:"1", "open"}
+                    text { "open"}
                 }
             }
         }

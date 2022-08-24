@@ -40,7 +40,6 @@ fn app(cx: Scope) -> Element {
             width: "stretch",
             padding: "50",
             text {
-                layer: "1",
                 "hello",
             }
             view {
@@ -48,9 +47,7 @@ fn app(cx: Scope) -> Element {
                 height: "auto",
                 width: "stretch",
                 padding: "{padding}",
-                layer: "2",
                 text {
-                    layer: "1",
                     "World",
                 }
                 view {
@@ -58,9 +55,7 @@ fn app(cx: Scope) -> Element {
                     height: "auto",
                     width: "stretch",
                     padding: "20",
-                    layer: "1",
                     text {
-                        layer: "1",
                         "ddddddd",
                     }
                 }

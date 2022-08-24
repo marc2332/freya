@@ -17,7 +17,6 @@ fn app(cx: Scope) -> Element {
             background: "red",
             padding: "25",
             text {
-                layer: "1",
                 "{count}"
             }
             view {
@@ -26,9 +25,7 @@ fn app(cx: Scope) -> Element {
                 background: "blue",
                 padding: "25",
                 onclick: move |_| count += 10,
-                layer: "1",
                 text {
-                    layer: "1",
                     "Increase!"
                 }
             }

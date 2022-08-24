@@ -35,10 +35,38 @@ fn app(cx: Scope) -> Element {
                                     content: "Wooow",
                                     background: "red"
                                 }
-                                Card {
-                                    title: "Lalala",
-                                    content: "Wooow",
-                                    background: "blue"
+                                CardScrollView {
+                                    body: cx.render(rsx! {
+                                        Card {
+                                            title: "Lalala",
+                                            content: "Wooow",
+                                            background: "green"
+                                        }
+                                        Card {
+                                            title: "Lalala",
+                                            content: "Wooow",
+                                            background: "red"
+                                        }
+                                        CardScrollView {
+                                            body: cx.render(rsx! {
+                                                Card {
+                                                    title: "Lalala",
+                                                    content: "Wooow",
+                                                    background: "green"
+                                                }
+                                                Card {
+                                                    title: "Lalala",
+                                                    content: "Wooow",
+                                                    background: "red"
+                                                }
+                                                Card {
+                                                    title: "Lalala",
+                                                    content: "Wooow",
+                                                    background: "blue"
+                                                }
+                                            })
+                                        }
+                                    })
                                 }
                             })
                         }
@@ -55,7 +83,7 @@ fn app(cx: Scope) -> Element {
                         Card {
                             title: "Lalala",
                             content: "Wooow",
-                            background: "blue"
+                            background: "green"
                         }
                         Card {
                             title: "Another title",
@@ -85,8 +113,9 @@ fn Navbar<'a>(cx: Scope<'a, NavbarProps<'a>>) -> Element {
             width: "stretch",
             background: "black",
             padding: "30",
+            shadow: "0 10 200 55.0 black",
             text {
-                layer: "1",
+
                 "{&cx.props.title}"
             }
         }
@@ -130,22 +159,20 @@ fn Card<'a>(cx: Scope<'a, CardProps<'a>>) -> Element {
         view {
             width: "stretch",
             height: "200",
-            padding: "10",
+            padding: "20",
             background: "{cx.props.background}",
             view {
                 width: "stretch",
                 height: "50%",
                 background: "gray",
-                layer: "1",
                 padding: "20",
+                radius: "10",
                 text {
                     height: "auto",
-                    layer: "1",
                     "{&cx.props.title}"
                 }
                 text {
                     height: "auto",
-                    layer: "1",
                     "{&cx.props.content}"
                 }
             }
@@ -169,7 +196,7 @@ fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     };
 
     cx.render(rsx!(
-        view {
+        container {
             width: "100%",
             height: "70%",
             scroll_y: "{height}",
@@ -197,7 +224,7 @@ fn CardScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     };
 
     cx.render(rsx!(
-        view {
+        container {
             width: "100%",
             height: "200",
             scroll_y: "{height}",
@@ -235,15 +262,16 @@ fn Area<'a>(cx: Scope<'a>) -> Element {
             width: "100%",
             background: "blue",
             padding: "10",
+            radius: "10",
             onmouseover: cursor_moved,
             onclick: cursor_clicked,
-            layer: "1",
+
             text {
-                layer: "1",
+
                 "Mouse is at [x: {cursor_pos_over.0}, y: {cursor_pos_over.1}] ",
             },
             text {
-                layer: "1",
+
                 "Mouse clicked at [x: {cursor_pos_click.0}, y: {cursor_pos_click.1}]"
             }
         }
