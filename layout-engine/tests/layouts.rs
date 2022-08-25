@@ -1,4 +1,4 @@
-use layers_engine::{Layers, NodeData, Viewport};
+use layers_engine::{Layers, NodeArea, NodeData};
 use layout_engine::calculate_node;
 use state::node::SizeMode;
 
@@ -11,13 +11,13 @@ fn percentage() {
             padding: (0, 0, 0, 0),
             node: None,
         },
-        Viewport {
+        NodeArea {
             x: 0,
             y: 0,
             height: 300,
             width: 200,
         },
-        Viewport {
+        NodeArea {
             x: 0,
             y: 0,
             height: 300,
@@ -42,13 +42,13 @@ fn manual() {
             padding: (0, 0, 0, 0),
             node: None,
         },
-        Viewport {
+        NodeArea {
             x: 0,
             y: 0,
             height: 300,
             width: 200,
         },
-        Viewport {
+        NodeArea {
             x: 0,
             y: 0,
             height: 300,
@@ -73,13 +73,13 @@ fn auto() {
             padding: (0, 0, 0, 0),
             node: None,
         },
-        Viewport {
+        NodeArea {
             x: 0,
             y: 0,
             height: 300,
             width: 200,
         },
-        Viewport {
+        NodeArea {
             x: 0,
             y: 0,
             height: 300,
@@ -111,13 +111,13 @@ fn x_y() {
             padding: (0, 0, 0, 0),
             node: None,
         },
-        Viewport {
+        NodeArea {
             x: 15,
             y: 25,
             height: 300,
             width: 200,
         },
-        Viewport {
+        NodeArea {
             x: 15,
             y: 25,
             height: 300,

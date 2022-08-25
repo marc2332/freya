@@ -11,7 +11,7 @@ pub struct NodeData {
 }
 
 #[derive(Default, Copy, Clone, Debug, PartialEq, Eq)]
-pub struct Viewport {
+pub struct NodeArea {
     pub x: i32,
     pub y: i32,
     pub width: i32,
@@ -26,16 +26,16 @@ pub struct Layers {
 #[derive(Default, Clone, Debug)]
 pub struct RenderData {
     pub node: NodeData,
-    pub viewport: Viewport,
-    pub parent_viewport: Viewport,
+    pub area: NodeArea,
+    pub parent_area: NodeArea,
 }
 
 impl Layers {
     pub fn add_element(
         &mut self,
         node: &NodeData,
-        viewport: &Viewport,
-        parent_viewport: &Viewport,
+        area: &NodeArea,
+        parent_area: &NodeArea,
         mut layer_num: i16,
     ) -> i16 {
         let node_data = node.node.as_ref().unwrap();
@@ -50,11 +50,11 @@ impl Layers {
 
         layer.push(RenderData {
             node: node.clone(),
-            viewport: viewport.clone(),
-            parent_viewport: parent_viewport.clone(),
+            area: area.clone(),
+            parent_area: parent_area.clone(),
         });
 
-        // Elements inside container are moved down in order to make that if they scroll it will be under the container
+        // Elements inside container are moved down so they are under their parent when it's scrolled
         if let NodeType::Element { tag, .. } = &node_data.node_type {
             if tag == "container" {
                 layer_num += node_data.height as i16 + 2;

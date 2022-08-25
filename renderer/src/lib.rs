@@ -14,7 +14,7 @@ use dioxus_native_core::real_dom::{Node, NodeType, RealDom};
 use enumset::enum_set;
 use glutin::event::{MouseScrollDelta, WindowEvent};
 use layers_engine::Layers;
-use layers_engine::{NodeData, Viewport};
+use layers_engine::{NodeArea, NodeData};
 use layout_engine::calculate_node;
 use skia_safe::{
     font_style::{Slant, Weight, Width},
@@ -89,7 +89,7 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
             render(
                 &self.skia_dom,
                 canvas,
-                Viewport {
+                NodeArea {
                     width: window_size.width as i32,
                     height: window_size.height as i32,
                     x: 0,
@@ -360,8 +360,8 @@ fn render_skia(
     dom: &mut &SkiaDom,
     canvas: &mut &mut Canvas,
     node: &NodeData,
-    viewport: &Viewport,
-    parent_viewport: &Viewport,
+    area: &NodeArea,
+    parent_area: &NodeArea,
     font: &Font,
 ) {
     let node = node.node.as_ref().unwrap();
@@ -377,18 +377,14 @@ fn render_skia(
                     paint.set_style(PaintStyle::Fill);
                     paint.set_color(node.state.style.background);
 
-                    let x = viewport.x;
-                    let y = viewport.y;
+                    let x = area.x;
+                    let y = area.y;
 
-                    let x2 = x + viewport.width;
-                    let y2 = if viewport.height < 0 {
-                        y
-                    } else {
-                        y + viewport.height
-                    };
+                    let x2 = x + area.width;
+                    let y2 = if area.height < 0 { y } else { y + area.height };
 
                     // Avoid rendering some complete off-view elements
-                    if y > (parent_viewport.y + parent_viewport.height) {
+                    if y > (parent_area.y + parent_area.height) {
                         return;
                     }
 
@@ -447,8 +443,8 @@ fn render_skia(
                         String::new()
                     };
 
-                    let x = viewport.x;
-                    let y = viewport.y + 10; /* Line height, wip */
+                    let x = area.x;
+                    let y = area.y + 10; /* Line height, wip */
 
                     canvas.draw_str_align(text, (x, y), &font, &paint, Align::Left);
                 }
@@ -462,7 +458,7 @@ fn render_skia(
 fn render(
     mut dom: &SkiaDom,
     mut canvas: &mut Canvas,
-    viewport: Viewport,
+    area: NodeArea,
     renderer_requests: RendererRequests,
     event_emitter: &EventEmitter,
     font: &Font,
@@ -481,8 +477,8 @@ fn render(
             padding: (0, 0, 0, 0),
             node: Some(root),
         },
-        viewport.clone(),
-        viewport,
+        area.clone(),
+        area,
         &mut (dom, &mut events_filtered, &renderer_requests),
         layers,
         |node_id, (dom, _, _)| {
@@ -512,8 +508,8 @@ fn render(
                 &mut dom,
                 &mut canvas,
                 &element.node,
-                &element.viewport,
-                &element.parent_viewport,
+                &element.area,
+                &element.parent_area,
                 font,
             );
         }
@@ -530,13 +526,13 @@ fn render(
 
             for request in requests.iter() {
                 let node = &element.node;
-                let viewport = &element.viewport;
+                let area = &element.area;
                 match request {
                     RendererRequest::MouseEvent { name, event } => {
-                        let x = viewport.x as f64;
-                        let y = viewport.y as f64;
-                        let width = (viewport.x + viewport.width) as f64;
-                        let height = (viewport.y + viewport.height) as f64;
+                        let x = area.x as f64;
+                        let y = area.y as f64;
+                        let width = (area.x + area.width) as f64;
+                        let height = (area.y + area.height) as f64;
                         let cursor = event.client_coordinates();
 
                         // Make sure the cursor is inside the node area
