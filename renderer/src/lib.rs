@@ -444,12 +444,35 @@ fn render_skia(
                     };
 
                     let x = area.x;
-                    let y = area.y + 10; /* Line height, wip */
+                    let y = area.y + 12; /* Line height, wip */
 
                     canvas.draw_str_align(text, (x, y), &font, &paint, Align::Left);
                 }
                 _ => {}
             }
+
+            #[cfg(feature = "wireframe")]
+            {
+                let mut path = Path::new();
+                let mut paint = Paint::default();
+
+                paint.set_anti_alias(true);
+                paint.set_style(PaintStyle::Fill);
+                paint.set_color(Color::MAGENTA);
+
+                let x = area.x;
+                let y = area.y;
+
+                let x2 = x + area.width;
+                let y2 = if area.height < 0 { y } else { y + area.height };
+
+                canvas.draw_line((x as f32, y as f32), (x2 as f32, y as f32), &paint);
+                canvas.draw_line((x2 as f32, y as f32), (x2 as f32, y2 as f32), &paint);
+                canvas.draw_line((x2 as f32, y2 as f32), (x as f32, y2 as f32), &paint);
+                canvas.draw_line((x as f32, y2 as f32), (x as f32, y as f32), &paint);
+
+                path.close();
+            }  
         }
         _ => {}
     }

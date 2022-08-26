@@ -25,7 +25,7 @@ fn calculate_area(node: &NodeData, mut area: NodeArea, parent_area: NodeArea) ->
             if let Some(node) = &node.node {
                 if let NodeType::Element { tag, .. } = &node.node_type {
                     if tag == "text" {
-                        area.height = 5;
+                        area.height = 17;
                     }
                 }
             }
@@ -98,7 +98,7 @@ pub fn calculate_node<T>(
                 }
             }
             NodeType::Text { .. } => {
-                node_area.height += 10;
+                node_area.height += 1;
                 is_text = true;
             }
             NodeType::Placeholder => {}

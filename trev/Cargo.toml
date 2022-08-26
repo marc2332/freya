@@ -5,6 +5,7 @@ edition = "2021"
 
 [features]
 x11 = ["renderer/x11"]
+wireframe = ["renderer/wireframe"]
 
 [dependencies]
 state = { path = "../state"}

@@ -8,6 +8,7 @@ members = ["layout-engine", "renderer", "state", "trev", "elements-namespace"]
 
 [features]
 x11 = ["trev/x11"]
+wireframe = ["trev/wireframe"]
 
 [dev-dependencies]
 trev = { path = "./trev"}

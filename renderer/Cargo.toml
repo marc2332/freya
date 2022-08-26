@@ -5,6 +5,7 @@ edition = "2021"
 
 [features]
 x11 = ["skia-safe/x11"]
+wireframe = []
 
 [dependencies]
 gl = "*"
