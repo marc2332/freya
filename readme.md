@@ -1,6 +1,6 @@
 # trev 🧩
 
-A Skia-based desktop renderer for [Dioxus](https://dioxuslabs.com).
+A GUI library based on [Skia](https://skia.org/) and [Dioxus](https://dioxuslabs.com).
 
 ```rust
 
@@ -26,25 +26,29 @@ fn app(cx: Scope) -> Element {
     ))
 }
 ```
+### Features ✨
+- Text
+- Containers and views
+- Nested scroll views
+- Click, mouse move, mouse scrolled events
+- Background, text color, padding, width, height, shadow, border radius, custom layer (like z-index)
+- Windows & Linux (MacOS not tested yet)
 
-## Concepts / Ideas
-### Headless running
-Ability to run the app without actually rendering, this is useful for testing.
+### Goals 😁
+- Fast, lightweight and secure apps
+- Full cross platform
 
-### Elements and components
-The idea is so have primitive elements such as text and view, and then have components that can be used to build more complex elements such scroll views, buttons, input fields, etc.
+### Ideas 💭
+- Tauri integration
+- Browser-like devtools
 
-### Tauri integration
-Inspired by [tauri-egui](https://github.com/tauri-apps/tauri-egui).
-
-## To-Do
-- [ ] Make padding use SizeMode
-- [ ] Add window params to the launch function
-- [ ] Improve and support more mouse, keyboard, etc, events.
+## TO-DO 🚧
+- [ ] Support for percentages in padding
+- [ ] rgb(r,g,b) syntax support
+- [ ] Add window parameters
+- [ ] Support for more events
 - [ ] Support for multiple windows
-- [x] Move from dioxus-html and go custom element tags
 - [ ] Use [taffy](https://github.com/dioxusLabs/taffy) for Flex layouts.
-- [x] Priorize inner scroll views inside scroll views.
 
 
 MIT License
