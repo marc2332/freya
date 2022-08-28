@@ -136,10 +136,10 @@ fn App<'a>(cx: Scope<'a, AppProps<'a>>) -> Element {
         view {
             width: "stretch",
             height: "stretch",
-            &cx.props.navbar,
             view {
                 width: "stretch",
                 height: "stretch",
+                &cx.props.navbar,
                 &cx.props.body
             }
         }

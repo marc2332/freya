@@ -19,8 +19,8 @@ use layout_engine::calculate_node;
 use skia_safe::{
     font_style::{Slant, Weight, Width},
     utils::text_utils::Align,
-    BlurStyle, Canvas, Font, FontStyle, MaskFilter, Paint, PaintStyle, Path, PathDirection, Rect,
-    Typeface,
+    BlurStyle, Canvas, ClipOp, Font, FontStyle, MaskFilter, Paint, PaintStyle, Path, PathDirection,
+    Rect, Typeface,
 };
 use state::node::{NodeState, SizeMode};
 use std::{
@@ -361,8 +361,8 @@ fn render_skia(
     canvas: &mut &mut Canvas,
     node: &NodeData,
     area: &NodeArea,
-    parent_area: &NodeArea,
     font: &Font,
+    viewports: &Vec<NodeArea>,
 ) {
     let node = node.node.as_ref().unwrap();
 
@@ -370,7 +370,6 @@ fn render_skia(
         NodeType::Element { tag, children, .. } => {
             match tag.as_str() {
                 "view" | "container" => {
-                    let mut path = Path::new();
                     let mut paint = Paint::default();
 
                     paint.set_anti_alias(true);
@@ -381,20 +380,33 @@ fn render_skia(
                     let y = area.y;
 
                     let x2 = x + area.width;
-                    let y2 = if area.height < 0 { y } else { y + area.height };
+                    let y2 = y + area.height;
 
-                    // Avoid rendering some complete off-view elements
-                    if y > (parent_area.y + parent_area.height) {
-                        return;
-                    }
+                    //
 
                     let radius = node.state.style.radius;
                     let radius = if radius < 0 { 0 } else { radius };
 
+                    canvas.save();
+                    for viewport in viewports {
+                        canvas.clip_rect(
+                            Rect::new(
+                                viewport.x as f32,
+                                viewport.y as f32,
+                                (viewport.x + viewport.width) as f32,
+                                (viewport.y + viewport.height) as f32,
+                            ),
+                            ClipOp::Intersect,
+                            true,
+                        );
+                    }
+
+                    let mut path = Path::new();
+
                     path.add_round_rect(
                         Rect::new(x as f32, y as f32, x2 as f32, y2 as f32),
                         (radius as f32, radius as f32),
-                        PathDirection::CCW,
+                        PathDirection::CW,
                     );
 
                     path.close();
@@ -418,6 +430,8 @@ fn render_skia(
                     }
 
                     canvas.draw_path(&path, &paint);
+
+                    canvas.restore();
                 }
                 "text" => {
                     let mut paint = Paint::default();
@@ -472,7 +486,7 @@ fn render_skia(
                 canvas.draw_line((x as f32, y2 as f32), (x as f32, y as f32), &paint);
 
                 path.close();
-            }  
+            }
         }
         _ => {}
     }
@@ -521,6 +535,30 @@ fn render(
     );
 
     let mut layers_nums: Vec<&i16> = layers.layers.keys().collect();
+
+    // From top to bottom
+    layers_nums.sort_by(|a, b| b.cmp(a));
+
+    // Save all the viewports for each layer
+    let mut viewports: HashMap<i16, Vec<NodeArea>> = HashMap::new();
+    viewports.insert(0, Vec::new());
+    let mut viewports_acumulated = Vec::new();
+
+    for layer_num in &layers_nums {
+        let layer = layers.layers.get(layer_num).unwrap();
+
+        for element in layer {
+            if let NodeType::Element { tag, .. } = &element.node.node.as_ref().unwrap().node_type {
+                if tag == "container" {
+                    viewports_acumulated.push(element.area.clone());
+                }
+            }
+        }
+        // Save all the container's viewports in the next (to bottom) layer
+        viewports.insert(**layer_num - 1, viewports_acumulated.clone());
+    }
+
+    // From bottom to top
     layers_nums.sort_by(|a, b| a.cmp(b));
 
     // Render all the layers from the bottom to the top
@@ -532,8 +570,8 @@ fn render(
                 &mut canvas,
                 &element.node,
                 &element.area,
-                &element.parent_area,
                 font,
+                viewports.get(layer_num).unwrap_or(&Vec::new()),
             );
         }
     }

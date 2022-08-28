@@ -8,51 +8,43 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-
     cx.render(rsx!(
-        ScrollView {
-            body: cx.render(rsx! {
-                view {
-                    height: "200",
-                    width: "100%",
-                    background: "red",
-                    padding: "20",
+        view {
+            height: "100%",
+            width: "100%",
+            padding: "100",
+            background: "black",
+            ScrollView {
+                body: cx.render(rsx! {
                     view {
-                        height: "100%",
+                        height: "200",
                         width: "100%",
-                        background: "blue",
+                        background: "red",
+                        padding: "20",
+                        view {
+                            height: "100%",
+                            width: "100%",
+                            background: "blue",
+                            text { "hi" }
+                        }
+                    }
+                    view {
+                        height: "200",
+                        width: "100%",
+                        background: "red",
                         text { "hi" }
                     }
-                }
-                view {
-                    height: "200",
-                    width: "100%",
-                    background: "red",
-                    text { "hi" }
-                }
-                view {
-                    height: "200",
-                    width: "100%",
-                    background: "red",
-                    text { "hi" }
-                }
-                view {
-                    height: "200",
-                    width: "100%",
-                    background: "red",
-                    text { "hi" }
-                }
-                view {
-                    height: "200",
-                    width: "100%",
-                    background: "red",
-                    text { "hi" }
-                }
-            })
+                    view {
+                        height: "200",
+                        width: "100%",
+                        background: "red",
+                        text { "hi" }
+                    }
+                })
+            }
         }
     ))
 }
-
 
 #[allow(non_snake_case)]
 fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
@@ -70,9 +62,7 @@ fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
         container {
             width: "100%",
             height: "70%",
-            padding: "100",
             scroll_y: "{height}",
-            padding: "125",
             onscroll: onscroll,
             &cx.props.body
         }
