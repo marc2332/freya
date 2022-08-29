@@ -85,7 +85,7 @@ fn app(cx: Scope) -> Element {
                     height: "30",
                     width: "80",
                     background: "black",
-                    onclick: move |_| { opened.set(true); println!("open") },
+                    onclick: move |_| { opened.set(true) },
                     text { "open"}
                 }
             }
