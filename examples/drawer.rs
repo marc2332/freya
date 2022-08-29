@@ -52,7 +52,7 @@ fn Drawer<'a>(cx: Scope<'a, DrawerOptions<'a>>) -> Element<'a> {
                 height: "100%",
                 width: "200",
                 background: "blue",
-                layer: "-1",
+                layer: "-10",
                 shadow: "5 0 200 25.0 black",
                 &cx.props.body
             }
@@ -85,7 +85,7 @@ fn app(cx: Scope) -> Element {
                     height: "30",
                     width: "80",
                     background: "black",
-                    onclick: move |_| { opened.set(true) },
+                    onclick: move |_| { opened.set(true); println!("open") },
                     text { "open"}
                 }
             }

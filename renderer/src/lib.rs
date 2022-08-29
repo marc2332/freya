@@ -649,22 +649,13 @@ fn render(
 
         'event_nodes: for (node_data, request) in event_nodes.iter() {
             let node = node_data.node.as_ref().unwrap();
-            if event_name == &"scroll" {
-                for listener in &listeners {
-                    if listener.id == node.id {
-                        if node.state.style.background != Color::TRANSPARENT {
-                            break 'event_nodes;
-                        }
-                        found_node = Some((node, request));
-                    }
-                }
-            } else {
-                for listener in &listeners {
-                    if listener.id == node.id {
-                        found_node = Some((node, request));
-
+            for listener in &listeners {
+                if listener.id == node.id {
+                    if node.state.style.background != Color::TRANSPARENT && event_name == &"scroll"
+                    {
                         break 'event_nodes;
                     }
+                    found_node = Some((node, request));
                 }
             }
         }

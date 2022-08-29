@@ -114,7 +114,6 @@ fn Navbar<'a>(cx: Scope<'a, NavbarProps<'a>>) -> Element {
             background: "black",
             padding: "30",
             text {
-
                 "{&cx.props.title}"
             }
         }
