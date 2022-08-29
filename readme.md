@@ -49,7 +49,8 @@ fn app(cx: Scope) -> Element {
 - [ ] Support for more events
 - [ ] Support for multiple windows
 - [ ] Use [taffy](https://github.com/dioxusLabs/taffy) for Flex layouts.
-- [ ] Renderer-based bounds clipping
+- [x] Renderer-based bounds clipping
+- [ ] Improve code and documentation
 
 
 MIT License
