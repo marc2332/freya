@@ -366,6 +366,19 @@ fn render_skia(
 ) {
     let node = node.node.as_ref().unwrap();
 
+    for viewport in viewports {
+        canvas.clip_rect(
+            Rect::new(
+                viewport.x as f32,
+                viewport.y as f32,
+                (viewport.x + viewport.width) as f32,
+                (viewport.y + viewport.height) as f32,
+            ),
+            ClipOp::Intersect,
+            true,
+        );
+    }
+
     match &node.node_type {
         NodeType::Element { tag, children, .. } => {
             match tag.as_str() {
@@ -386,20 +399,6 @@ fn render_skia(
 
                     let radius = node.state.style.radius;
                     let radius = if radius < 0 { 0 } else { radius };
-
-                    canvas.save();
-                    for viewport in viewports {
-                        canvas.clip_rect(
-                            Rect::new(
-                                viewport.x as f32,
-                                viewport.y as f32,
-                                (viewport.x + viewport.width) as f32,
-                                (viewport.y + viewport.height) as f32,
-                            ),
-                            ClipOp::Intersect,
-                            true,
-                        );
-                    }
 
                     let mut path = Path::new();
 
@@ -430,8 +429,6 @@ fn render_skia(
                     }
 
                     canvas.draw_path(&path, &paint);
-
-                    canvas.restore();
                 }
                 "text" => {
                     let mut paint = Paint::default();
@@ -537,25 +534,35 @@ fn render(
     let mut layers_nums: Vec<&i16> = layers.layers.keys().collect();
 
     // From top to bottom
-    layers_nums.sort_by(|a, b| b.cmp(a));
+    layers_nums.sort_by(|a, b| a.cmp(b));
 
     // Save all the viewports for each layer
-    let mut viewports: HashMap<i16, Vec<NodeArea>> = HashMap::new();
-    viewports.insert(0, Vec::new());
-    let mut viewports_acumulated = Vec::new();
+    let mut viewports: HashMap<ElementId, Vec<NodeArea>> = HashMap::new();
 
     for layer_num in &layers_nums {
         let layer = layers.layers.get(layer_num).unwrap();
-
-        for element in layer {
-            if let NodeType::Element { tag, .. } = &element.node.node.as_ref().unwrap().node_type {
-                if tag == "container" {
-                    viewports_acumulated.push(element.area.clone());
+        for (id, element) in layer {
+            match &element.node.node.as_ref().unwrap().node_type {
+                NodeType::Element { tag, .. } => {
+                    for child in &element.children {
+                        if !viewports.contains_key(&child) {
+                            viewports.insert(*child, Vec::new());
+                        }
+                        if viewports.contains_key(&id) {
+                            viewports.insert(*child, viewports.get(&id).unwrap().clone());
+                        }
+                        if tag == "container" {
+                            viewports
+                                .get_mut(&child)
+                                .unwrap()
+                                .push(element.area.clone());
+                        }
+                    }
                 }
+                NodeType::Text { .. } => {}
+                _ => {}
             }
         }
-        // Save all the container's viewports in the next (to bottom) layer
-        viewports.insert(**layer_num - 1, viewports_acumulated.clone());
     }
 
     // From bottom to top
@@ -564,25 +571,28 @@ fn render(
     // Render all the layers from the bottom to the top
     for layer_num in &layers_nums {
         let layer = layers.layers.get(layer_num).unwrap();
-        for element in layer {
+
+        for (id, element) in layer {
+            canvas.save();
             render_skia(
                 &mut dom,
                 &mut canvas,
                 &element.node,
                 &element.area,
                 font,
-                viewports.get(layer_num).unwrap_or(&Vec::new()),
+                &viewports.get(id).unwrap_or(&Vec::new()),
             );
+            canvas.restore();
         }
     }
 
-    layers_nums.sort_by(|a, b| b.cmp(a));
+    layers_nums.sort_by(|a, b| a.cmp(b));
 
     // Propagate events from the top to the bottom
     for layer_num in &layers_nums {
         let layer = layers.layers.get(layer_num).unwrap();
 
-        for element in layer.iter() {
+        for (id, element) in layer.iter() {
             let requests = renderer_requests.lock().unwrap();
 
             for request in requests.iter() {
@@ -596,8 +606,25 @@ fn render(
                         let height = (area.y + area.height) as f64;
                         let cursor = event.client_coordinates();
 
+                        let mut visible = true;
+
+                        for viewport in viewports.get(&id).unwrap_or(&Vec::new()) {
+                            if cursor.x < viewport.x as f64
+                                || cursor.x > (viewport.x + viewport.width) as f64
+                                || cursor.y < viewport.y as f64
+                                || cursor.y > (viewport.y + viewport.height) as f64
+                            {
+                                visible = false;
+                            }
+                        }
+
                         // Make sure the cursor is inside the node area
-                        if cursor.x > x && cursor.x < width && cursor.y > y && cursor.y < height {
+                        if visible
+                            && cursor.x > x
+                            && cursor.x < width
+                            && cursor.y > y
+                            && cursor.y < height
+                        {
                             if !events_filtered.contains_key(name) {
                                 events_filtered.insert(name, vec![(node.clone(), request.clone())]);
                             } else {
@@ -623,11 +650,11 @@ fn render(
         'event_nodes: for (node_data, request) in event_nodes.iter() {
             let node = node_data.node.as_ref().unwrap();
             if event_name == &"scroll" {
-                if node.state.style.background != Color::TRANSPARENT {
-                    break 'event_nodes;
-                }
                 for listener in &listeners {
                     if listener.id == node.id {
+                        if node.state.style.background != Color::TRANSPARENT {
+                            break 'event_nodes;
+                        }
                         found_node = Some((node, request));
                     }
                 }
@@ -638,11 +665,6 @@ fn render(
 
                         break 'event_nodes;
                     }
-                }
-
-                // Only let pass the event if the path (from top layer to bottom is transparent)
-                if node.state.style.background != Color::TRANSPARENT {
-                    break 'event_nodes;
                 }
             }
         }

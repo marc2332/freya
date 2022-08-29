@@ -1,3 +1,4 @@
+use dioxus::core::ElementId;
 use dioxus_native_core::real_dom::{Node, NodeType};
 use state::node::{NodeState, SizeMode};
 use std::collections::HashMap;
@@ -20,7 +21,7 @@ pub struct NodeArea {
 
 #[derive(Default, Clone, Debug)]
 pub struct Layers {
-    pub layers: HashMap<i16, Vec<RenderData>>,
+    pub layers: HashMap<i16, HashMap<ElementId, RenderData>>,
 }
 
 #[derive(Default, Clone, Debug)]
@@ -28,6 +29,7 @@ pub struct RenderData {
     pub node: NodeData,
     pub area: NodeArea,
     pub parent_area: NodeArea,
+    pub children: Vec<ElementId>,
 }
 
 impl Layers {
@@ -36,30 +38,33 @@ impl Layers {
         node: &NodeData,
         area: &NodeArea,
         parent_area: &NodeArea,
-        mut layer_num: i16,
+        layer_num: i16,
     ) -> i16 {
         let node_data = node.node.as_ref().unwrap();
         let n_layer =
             (-node_data.state.style.z_index + (node_data.height as i16) - layer_num) as i16;
 
         if !self.layers.contains_key(&n_layer) {
-            self.layers.insert(n_layer, vec![]);
+            self.layers.insert(n_layer, HashMap::default());
         }
 
         let layer = self.layers.get_mut(&n_layer).unwrap();
 
-        layer.push(RenderData {
-            node: node.clone(),
-            area: area.clone(),
-            parent_area: parent_area.clone(),
-        });
+        let mut children_s = Vec::new();
 
-        // Elements inside container are moved down so they are under their parent when it's scrolled
-        if let NodeType::Element { tag, .. } = &node_data.node_type {
-            if tag == "container" {
-                layer_num += node_data.height as i16 + 2;
-            }
+        if let NodeType::Element { children, .. } = &node_data.node_type {
+            children_s = children.clone();
         }
+
+        layer.insert(
+            node_data.id,
+            RenderData {
+                node: node.clone(),
+                area: area.clone(),
+                parent_area: parent_area.clone(),
+                children: children_s,
+            },
+        );
 
         node_data.state.style.z_index + layer_num
     }

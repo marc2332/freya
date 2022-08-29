@@ -245,7 +245,7 @@ fn Area<'a>(cx: Scope<'a>) -> Element {
             let pos = ev.data.client_coordinates();
             cursor_pos.0 = pos.x;
             cursor_pos.1 = pos.y;
-        })
+        });
     };
 
     let cursor_clicked = |ev: UiEvent<MouseData>| {
