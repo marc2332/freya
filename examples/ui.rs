@@ -113,7 +113,6 @@ fn Navbar<'a>(cx: Scope<'a, NavbarProps<'a>>) -> Element {
             width: "stretch",
             background: "black",
             padding: "30",
-            shadow: "0 10 200 55.0 black",
             text {
 
                 "{&cx.props.title}"
