@@ -270,6 +270,7 @@ fn parse_color(color: &str) -> Option<Color> {
         "yellow" => Some(Color::YELLOW),
         "black" => Some(Color::BLACK),
         "gray" => Some(Color::GRAY),
+        "white" => Some(Color::WHITE),
         _ => None,
     }
 }
