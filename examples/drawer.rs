@@ -1,9 +1,7 @@
-use std::time::Duration;
-
 use components::ScrollView;
 use dioxus::{events::MouseEvent, prelude::*};
 use elements_namespace as dioxus_elements;
-use tokio::time::sleep;
+use tokio::time::{sleep, Instant};
 use trev::launch;
 
 fn main() {
@@ -19,11 +17,18 @@ struct DrawerOptions<'a> {
 #[allow(non_snake_case)]
 fn Drawer<'a>(cx: Scope<'a, DrawerOptions<'a>>) -> Element<'a> {
     let pos = use_state(&cx, || 0);
+    let timer = use_state(&cx, || Instant::now());
 
     use_effect(
         &cx,
-        (&cx.props.opened, pos),
-        move |(opened, mut pos)| async move {
+        (&cx.props.opened, pos, timer),
+        move |(opened, mut pos, timer)| async move {
+            async {
+                loop {
+                    if timer.elapsed().as_nanos() > 500000 { break; }
+                }
+            }.await;
+
             if *pos == -200 && opened == false {
                 pos -= 100;
             }
@@ -40,7 +45,9 @@ fn Drawer<'a>(cx: Scope<'a, DrawerOptions<'a>>) -> Element<'a> {
                 pos -= 1;
             }
 
-            sleep(Duration::from_millis(5)).await;
+            timer.with_mut(|timer| {
+                *timer = Instant::now();
+            });
         },
     );
 
