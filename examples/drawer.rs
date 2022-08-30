@@ -140,10 +140,17 @@ fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
             view {
                 width: "100%",
                 height: "100%",
-                background: "black",
-                padding: "25",
+                padding: "2",
                 radius: "7",
-                &cx.props.body
+                background: "green",
+                view {
+                    width: "100%",
+                    height: "100%",
+                    background: "black",
+                    padding: "25",
+                    radius: "6",
+                    &cx.props.body
+                }
             }
         }
     ))
