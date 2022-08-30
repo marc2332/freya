@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [workspace]
-members = ["layout-engine", "renderer", "state", "trev", "elements-namespace"]
+members = ["layout-engine", "renderer", "state", "trev", "elements-namespace", "components"]
 
 [features]
 x11 = ["trev/x11"]
@@ -15,3 +15,4 @@ trev = { path = "./trev"}
 dioxus = { git = "https://github.com/DioxusLabs/dioxus", features = ["macro", "hooks"]}
 tokio = "1.17.0"
 elements-namespace = { path = "./elements-namespace"}
+components = { path = "./components"}

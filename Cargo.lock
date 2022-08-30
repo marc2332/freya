@@ -278,6 +278,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "components"
+version = "0.1.0"
+dependencies = [
+ "dioxus",
+ "elements-namespace",
+]
+
+[[package]]
 name = "core-foundation"
 version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -605,6 +613,7 @@ dependencies = [
 name = "examples"
 version = "0.1.0"
 dependencies = [
+ "components",
  "dioxus",
  "elements-namespace",
  "tokio",
