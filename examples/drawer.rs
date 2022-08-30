@@ -1,6 +1,10 @@
 use std::time::Duration;
 
-use dioxus::{prelude::*, core::UiEvent, events::{MouseData, MouseEvent}};
+use dioxus::{
+    core::UiEvent,
+    events::{MouseData, MouseEvent},
+    prelude::*,
+};
 use elements_namespace as dioxus_elements;
 use tokio::time::sleep;
 use trev::launch;
@@ -69,13 +73,13 @@ fn app(cx: Scope) -> Element {
             direction: "horizontal",
             Drawer {
                 opened: *opened.get(),
-                body: cx.render(rsx!( 
+                body: cx.render(rsx!(
                     Button {
                         onclick: move |_| { opened.set(false) },
                         body: cx.render(rsx!(  text { "CLOSE"} ))
                     }
                     ScrollView {
-                        body: cx.render(rsx!( 
+                        body: cx.render(rsx!(
                             Button {
                                 onclick: move |_| {  },
                                 body: cx.render(rsx!(  text { "Hi"} ))
@@ -108,7 +112,7 @@ fn app(cx: Scope) -> Element {
                                 onclick: move |_| {  },
                                 body: cx.render(rsx!(  text { "Hi"} ))
                             }
-                            
+
                         ))
                     }
                  ))
@@ -130,7 +134,6 @@ fn app(cx: Scope) -> Element {
 
 #[allow(non_snake_case)]
 fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
-
     cx.render(rsx!(
         view {
             width: "100%",
@@ -159,7 +162,7 @@ fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
 #[derive(Props)]
 struct ButtonProps<'a> {
     body: Element<'a>,
-    onclick: EventHandler<'a, MouseEvent>
+    onclick: EventHandler<'a, MouseEvent>,
 }
 
 #[allow(non_snake_case)]
