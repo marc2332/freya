@@ -37,10 +37,13 @@ use skia_safe::{
     ColorType, Surface,
 };
 
+mod events_processor;
 mod renderer;
 mod work_loop;
 
 use work_loop::work_loop;
+
+use crate::events_processor::EventsProcessor;
 
 type SkiaDom = Arc<Mutex<RealDom<NodeState>>>;
 type EventEmitter = Arc<Mutex<Option<UnboundedSender<SchedulerMsg>>>>;
@@ -63,6 +66,7 @@ pub enum RendererRequest {
 pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmitter) {
     let renderer_requests: RendererRequests = Arc::new(Mutex::new(Vec::new()));
     let cursor_pos = Arc::new(Mutex::new((0.0, 0.0)));
+    let events_processor = EventsProcessor::default();
 
     let el = EventLoop::new();
 
@@ -75,6 +79,7 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
         renderer_requests: RendererRequests,
         event_emitter: EventEmitter,
         font: Font,
+        events_processor: EventsProcessor,
     }
 
     impl Env {
@@ -94,6 +99,7 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
                 self.renderer_requests.clone(),
                 &self.event_emitter,
                 &self.font,
+                &mut self.events_processor,
             );
             self.gr_context.flush(None);
             self.windowed_context.swap_buffers().unwrap();
@@ -153,6 +159,7 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
         renderer_requests: renderer_requests.clone(),
         event_emitter,
         font,
+        events_processor,
     };
 
     wins.lock().unwrap().push(Arc::new(Mutex::new(env)));

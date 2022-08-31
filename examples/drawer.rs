@@ -1,7 +1,7 @@
 use components::ScrollView;
 use dioxus::{events::MouseEvent, prelude::*};
 use elements_namespace as dioxus_elements;
-use tokio::time::{sleep, Instant};
+use tokio::time::Instant;
 use trev::launch;
 
 fn main() {
@@ -25,9 +25,12 @@ fn Drawer<'a>(cx: Scope<'a, DrawerOptions<'a>>) -> Element<'a> {
         move |(opened, mut pos, timer)| async move {
             async {
                 loop {
-                    if timer.elapsed().as_nanos() > 500000 { break; }
+                    if timer.elapsed().as_nanos() > 500000 {
+                        break;
+                    }
                 }
-            }.await;
+            }
+            .await;
 
             if *pos == -200 && opened == false {
                 pos -= 100;
@@ -138,11 +141,19 @@ fn app(cx: Scope) -> Element {
 
 #[allow(non_snake_case)]
 fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
+    let background = use_state(&cx, || "black");
+
     cx.render(rsx!(
         view {
             width: "100%",
             height: "60",
             padding: "10",
+            onmouseover: move |_| {
+                background.set("gray");
+            },
+            onmouseleave: move |_| {
+                background.set("black");
+            },
             onclick: move |evt| cx.props.onclick.call(evt),
             view {
                 width: "100%",
@@ -153,7 +164,7 @@ fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
                 view {
                     width: "100%",
                     height: "100%",
-                    background: "black",
+                    background: "{background}",
                     padding: "25",
                     radius: "6",
                     &cx.props.body

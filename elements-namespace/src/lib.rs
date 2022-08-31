@@ -162,6 +162,7 @@ pub mod on {
         MouseEvent(MouseData): [
             onclick
             onmouseover
+            onmouseleave
             onscroll
         ];
     }

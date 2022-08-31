@@ -6,7 +6,10 @@ use skia_safe::{Canvas, Color, Font};
 use state::node::{NodeState, SizeMode};
 use std::{collections::HashMap, ops::Index, sync::Arc};
 
-use crate::{renderer::render_skia, EventEmitter, RendererRequest, RendererRequests, SkiaDom};
+use crate::{
+    events_processor::EventsProcessor, renderer::render_skia, EventEmitter, RendererRequest,
+    RendererRequests, SkiaDom,
+};
 
 pub fn work_loop(
     mut dom: &SkiaDom,
@@ -15,6 +18,7 @@ pub fn work_loop(
     renderer_requests: RendererRequests,
     event_emitter: &EventEmitter,
     font: &Font,
+    events_processor: &mut EventsProcessor,
 ) {
     let root: Node<NodeState> = {
         let dom = dom.lock().unwrap();
@@ -160,6 +164,8 @@ pub fn work_loop(
         }
     }
 
+    let mut events: Vec<UserEvent> = Vec::new();
+
     for (event_name, event_nodes) in events_filtered.iter_mut() {
         let dom = dom.lock().unwrap();
         let listeners = dom.get_listening_sorted(event_name);
@@ -182,24 +188,41 @@ pub fn work_loop(
         if let Some((node, request)) = found_node {
             match &request {
                 &RendererRequest::MouseEvent { event, .. } => {
+                    let event = UserEvent {
+                        scope_id: None,
+                        priority: EventPriority::Medium,
+                        element: Some(node.id.clone()),
+                        name: event_name,
+                        bubbles: false,
+                        data: Arc::new(event.clone()),
+                    };
+
+                    events.push(event.clone());
+
                     event_emitter
                         .lock()
                         .unwrap()
                         .as_ref()
                         .unwrap()
-                        .unbounded_send(SchedulerMsg::Event(UserEvent {
-                            scope_id: None,
-                            priority: EventPriority::Medium,
-                            element: Some(node.id.clone()),
-                            name: event_name,
-                            bubbles: false,
-                            data: Arc::new(event.clone()),
-                        }))
+                        .unbounded_send(SchedulerMsg::Event(event))
                         .unwrap();
                 }
                 _ => {}
             }
         }
     }
+
+    let new_events = events_processor.process_events_batch(events, events_filtered);
+
+    for new_event in new_events {
+        event_emitter
+            .lock()
+            .unwrap()
+            .as_ref()
+            .unwrap()
+            .unbounded_send(SchedulerMsg::Event(new_event))
+            .unwrap();
+    }
+
     renderer_requests.lock().unwrap().clear();
 }
