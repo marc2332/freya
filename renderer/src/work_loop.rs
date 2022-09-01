@@ -24,9 +24,9 @@ pub fn work_loop(
         let dom = dom.lock().unwrap();
         dom.index(ElementId(0)).clone()
     };
+
     let layers = &mut Layers::default();
-    let mut events_filtered: HashMap<&'static str, Vec<(NodeData, RendererRequest)>> =
-        HashMap::new();
+
     calculate_node(
         &NodeData {
             width: SizeMode::Percentage(100),
@@ -36,9 +36,9 @@ pub fn work_loop(
         },
         area.clone(),
         area,
-        &mut (dom, &mut events_filtered, &renderer_requests),
+        &mut dom,
         layers,
-        |node_id, (dom, _, _)| {
+        |node_id, dom| {
             let child = {
                 let dom = dom.lock().unwrap();
                 dom.index(*node_id).clone()
@@ -59,8 +59,8 @@ pub fn work_loop(
     // From top to bottom
     layers_nums.sort_by(|a, b| a.cmp(b));
 
-    // Save all the viewports for each layer
-    let mut viewports: HashMap<ElementId, Vec<NodeArea>> = HashMap::new();
+    // Calculate all the applicable viewports for the given elements
+    let mut calculated_viewports: HashMap<ElementId, Vec<NodeArea>> = HashMap::new();
 
     for layer_num in &layers_nums {
         let layer = layers.layers.get(layer_num).unwrap();
@@ -68,14 +68,15 @@ pub fn work_loop(
             match &element.node.node.as_ref().unwrap().node_type {
                 NodeType::Element { tag, .. } => {
                     for child in &element.children {
-                        if !viewports.contains_key(&child) {
-                            viewports.insert(*child, Vec::new());
+                        if !calculated_viewports.contains_key(&child) {
+                            calculated_viewports.insert(*child, Vec::new());
                         }
-                        if viewports.contains_key(&id) {
-                            viewports.insert(*child, viewports.get(&id).unwrap().clone());
+                        if calculated_viewports.contains_key(&id) {
+                            calculated_viewports
+                                .insert(*child, calculated_viewports.get(&id).unwrap().clone());
                         }
                         if tag == "container" {
-                            viewports
+                            calculated_viewports
                                 .get_mut(&child)
                                 .unwrap()
                                 .push(element.area.clone());
@@ -88,13 +89,9 @@ pub fn work_loop(
         }
     }
 
-    // From bottom to top
-    layers_nums.sort_by(|a, b| a.cmp(b));
-
     // Render all the layers from the bottom to the top
     for layer_num in &layers_nums {
         let layer = layers.layers.get(layer_num).unwrap();
-
         for (id, element) in layer {
             canvas.save();
             render_skia(
@@ -103,13 +100,15 @@ pub fn work_loop(
                 &element.node,
                 &element.area,
                 font,
-                &viewports.get(id).unwrap_or(&Vec::new()),
+                &calculated_viewports.get(id).unwrap_or(&Vec::new()),
             );
             canvas.restore();
         }
     }
 
-    layers_nums.sort_by(|a, b| a.cmp(b));
+    // Calculated events are those that match considering their viewports
+    let mut calculated_events: HashMap<&'static str, Vec<(NodeData, RendererRequest)>> =
+        HashMap::new();
 
     // Propagate events from the top to the bottom
     for layer_num in &layers_nums {
@@ -131,7 +130,8 @@ pub fn work_loop(
 
                         let mut visible = true;
 
-                        for viewport in viewports.get(&id).unwrap_or(&Vec::new()) {
+                        // Make sure the cursor is inside all the applicable viewports from the element
+                        for viewport in calculated_viewports.get(&id).unwrap_or(&Vec::new()) {
                             if cursor.x < viewport.x as f64
                                 || cursor.x > (viewport.x + viewport.width) as f64
                                 || cursor.y < viewport.y as f64
@@ -148,10 +148,11 @@ pub fn work_loop(
                             && cursor.y > y
                             && cursor.y < height
                         {
-                            if !events_filtered.contains_key(name) {
-                                events_filtered.insert(name, vec![(node.clone(), request.clone())]);
+                            if !calculated_events.contains_key(name) {
+                                calculated_events
+                                    .insert(name, vec![(node.clone(), request.clone())]);
                             } else {
-                                events_filtered
+                                calculated_events
                                     .get_mut(name)
                                     .unwrap()
                                     .push((node.clone(), request.clone()));
@@ -164,9 +165,12 @@ pub fn work_loop(
         }
     }
 
-    let mut events: Vec<UserEvent> = Vec::new();
+    // The new events are the events from `calculated_events` but actually are listening
+    // and fit considering the current state of the app
 
-    for (event_name, event_nodes) in events_filtered.iter_mut() {
+    let mut new_events: Vec<UserEvent> = Vec::new();
+
+    for (event_name, event_nodes) in calculated_events.iter_mut() {
         let dom = dom.lock().unwrap();
         let listeners = dom.get_listening_sorted(event_name);
 
@@ -197,7 +201,7 @@ pub fn work_loop(
                         data: Arc::new(event.clone()),
                     };
 
-                    events.push(event.clone());
+                    new_events.push(event.clone());
 
                     event_emitter
                         .lock()
@@ -212,15 +216,16 @@ pub fn work_loop(
         }
     }
 
-    let new_events = events_processor.process_events_batch(events, events_filtered);
+    // Calculate new events by processing the old and new
+    let new_processed_events = events_processor.process_events_batch(new_events, calculated_events);
 
-    for new_event in new_events {
+    for event in new_processed_events {
         event_emitter
             .lock()
             .unwrap()
             .as_ref()
             .unwrap()
-            .unbounded_send(SchedulerMsg::Event(new_event))
+            .unbounded_send(SchedulerMsg::Event(event))
             .unwrap();
     }
 
