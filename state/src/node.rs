@@ -201,7 +201,7 @@ impl NodeDepState<()> for Style {
         .with_text();
     fn reduce<'a>(&mut self, node: NodeView, _sibling: (), _ctx: &Self::Ctx) -> bool {
         let mut background = Color::TRANSPARENT;
-        let mut z_index = 0;
+        let mut relative_layer = 0;
         let mut shadow = ShadowSettings::default();
         let mut radius = 0;
 
@@ -214,9 +214,9 @@ impl NodeDepState<()> for Style {
                     }
                 }
                 "layer" => {
-                    let new_z_index: Option<i16> = attr.value.to_string().parse().ok();
-                    if let Some(new_z_index) = new_z_index {
-                        z_index = new_z_index;
+                    let new_relative_layer: Option<i16> = attr.value.to_string().parse().ok();
+                    if let Some(new_relative_layer) = new_relative_layer {
+                        relative_layer = new_relative_layer;
                     }
                 }
                 "shadow" => {
@@ -239,10 +239,10 @@ impl NodeDepState<()> for Style {
             }
         }
 
-        let changed = (background != self.background) || (z_index != self.relative_layer);
+        let changed = (background != self.background) || (relative_layer != self.relative_layer);
         *self = Self {
             background,
-            relative_layer: z_index,
+            relative_layer,
             shadow,
             radius,
         };
