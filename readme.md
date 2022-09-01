@@ -1,5 +1,7 @@
 # trev 🧩
 
+[![Discord Server](https://img.shields.io/discord/1015005816094478347?logo=discord&style=social)](https://discord.gg/sYejxCdewG)
+
 A GUI library based on [Skia](https://skia.org/) and [Dioxus](https://dioxuslabs.com).
 
 > trev is like react-dom, where react is dioxus and the dom is skia.
@@ -46,7 +48,7 @@ fn app(cx: Scope) -> Element {
 
 ## TO-DO 🚧
 - [ ] Support for percentages in padding
-- [ ] rgb(r,g,b) syntax support
+- [x] rgb(r,g,b) syntax support
 - [ ] Add window parameters
 - [ ] Support for more events
 - [ ] Support for multiple windows
