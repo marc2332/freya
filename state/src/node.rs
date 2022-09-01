@@ -183,7 +183,7 @@ pub struct ShadowSettings {
 #[derive(Default, Copy, Clone, Debug)]
 pub struct Style {
     pub background: Color,
-    pub z_index: i16,
+    pub relative_layer: i16,
     pub shadow: ShadowSettings,
     pub radius: i32,
 }
@@ -239,10 +239,10 @@ impl NodeDepState<()> for Style {
             }
         }
 
-        let changed = (background != self.background) || (z_index != self.z_index);
+        let changed = (background != self.background) || (z_index != self.relative_layer);
         *self = Self {
             background,
-            z_index,
+            relative_layer: z_index,
             shadow,
             radius,
         };

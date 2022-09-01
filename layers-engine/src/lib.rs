@@ -28,7 +28,6 @@ pub struct Layers {
 pub struct RenderData {
     pub node: NodeData,
     pub area: NodeArea,
-    pub parent_area: NodeArea,
     pub children: Vec<ElementId>,
 }
 
@@ -37,18 +36,19 @@ impl Layers {
         &mut self,
         node: &NodeData,
         area: &NodeArea,
-        parent_area: &NodeArea,
-        layer_num: i16,
+        inherited_relative_layer: i16,
     ) -> i16 {
         let node_data = node.node.as_ref().unwrap();
-        let n_layer =
-            (-node_data.state.style.z_index + (node_data.height as i16) - layer_num) as i16;
 
-        if !self.layers.contains_key(&n_layer) {
-            self.layers.insert(n_layer, HashMap::default());
+        // Relative layer (optionally define by the user) + height of the element in the VDOM - inherited relative_layer by parent
+        let element_layer = (-node_data.state.style.relative_layer + (node_data.height as i16)
+            - inherited_relative_layer) as i16;
+
+        if !self.layers.contains_key(&element_layer) {
+            self.layers.insert(element_layer, HashMap::default());
         }
 
-        let layer = self.layers.get_mut(&n_layer).unwrap();
+        let layer = self.layers.get_mut(&element_layer).unwrap();
 
         let mut children_s = Vec::new();
 
@@ -61,11 +61,10 @@ impl Layers {
             RenderData {
                 node: node.clone(),
                 area: area.clone(),
-                parent_area: parent_area.clone(),
                 children: children_s,
             },
         );
 
-        node_data.state.style.z_index + layer_num
+        node_data.state.style.relative_layer + inherited_relative_layer
     }
 }
