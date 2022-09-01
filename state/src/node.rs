@@ -262,6 +262,16 @@ fn parse_shadow(value: &str) -> Option<ShadowSettings> {
     })
 }
 
+fn parse_rgb(color: &str) -> Option<Color> {
+    let color = color.replace("rgb(", "").replace(")", "");
+    let mut colors = color.split(",");
+
+    let r = colors.nth(0)?.trim().parse().ok()?;
+    let g = colors.nth(0)?.trim().parse().ok()?;
+    let b = colors.nth(0)?.trim().parse().ok()?;
+    Some(Color::from_rgb(r, g, b))
+}
+
 fn parse_color(color: &str) -> Option<Color> {
     match color {
         "red" => Some(Color::RED),
@@ -271,6 +281,6 @@ fn parse_color(color: &str) -> Option<Color> {
         "black" => Some(Color::BLACK),
         "gray" => Some(Color::GRAY),
         "white" => Some(Color::WHITE),
-        _ => None,
+        _ => parse_rgb(color),
     }
 }

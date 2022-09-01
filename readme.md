@@ -2,6 +2,8 @@
 
 A GUI library based on [Skia](https://skia.org/) and [Dioxus](https://dioxuslabs.com).
 
+> trev is like react-dom, where react is dioxus and the dom is skia.
+
 ```rust
 
 fn app(cx: Scope) -> Element {
