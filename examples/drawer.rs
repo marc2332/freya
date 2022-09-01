@@ -148,12 +148,6 @@ fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
             width: "100%",
             height: "60",
             padding: "10",
-            onmouseover: move |_| {
-                background.set("gray");
-            },
-            onmouseleave: move |_| {
-                background.set("black");
-            },
             onclick: move |evt| cx.props.onclick.call(evt),
             view {
                 width: "100%",
@@ -162,6 +156,12 @@ fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
                 radius: "7",
                 background: "green",
                 view {
+                    onmouseover: move |_| {
+                        background.set("gray");
+                    },
+                    onmouseleave: move |_| {
+                        background.set("black");
+                    },
                     width: "100%",
                     height: "100%",
                     background: "{background}",

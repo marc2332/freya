@@ -1,6 +1,6 @@
 use std::{collections::HashMap, sync::Arc};
 
-use dioxus_core::{EventPriority, UserEvent};
+use dioxus_core::{ElementId, EventPriority, UserEvent};
 use dioxus_html::{
     geometry::{euclid::Point2D, Coordinates},
     input_data::{keyboard_types::Modifiers, MouseButton},
@@ -12,39 +12,59 @@ use layers_engine::NodeData;
 use crate::RendererRequest;
 
 #[derive(Default)]
+struct ElementState {
+    mouseover: bool,
+}
+
+/// Some events are not produced directly by the user.
+/// The EventsProcessor calculates by comparing previous and current events
+/// if new events must be produced.
+///
+/// For example, mouseleave indicates the the user has left the hovering area of
+/// a particular element, which previously had to enter that area.
+/// At the moment, whether if it has entered or not is defined by the mouseover event.
+
+#[derive(Default)]
 pub struct EventsProcessor {
-    events: Vec<UserEvent>,
+    states: HashMap<ElementId, ElementState>,
 }
 
 impl EventsProcessor {
     pub fn process_events_batch(
         &mut self,
-        events: Vec<UserEvent>,
+        events_to_emit: Vec<UserEvent>,
         events_filtered: HashMap<&str, Vec<(NodeData, RendererRequest)>>,
     ) -> Vec<UserEvent> {
         let mut new_events = Vec::new();
 
-        for saved_event in &self.events {
-            if saved_event.name == "mouseover" {
-                let mut found = false;
-                for event in &events {
-                    if event.name == "mouseover"
-                        && event.element.unwrap() == saved_event.element.unwrap()
-                    {
-                        found = true;
+        for (element, state) in self.states.iter_mut() {
+            // Process mouseover events
+            {
+                let mut no_recent_mouseover = true;
+
+                // Check any mouse event at all
+                for event in &events_to_emit {
+                    if event.name == "mouseover" && &event.element.unwrap() == element {
+                        no_recent_mouseover = false;
+                        break;
                     }
                 }
 
                 let mouseover_events = events_filtered.get("mouseover");
 
-                let at_least_cursor_was_moved = mouseover_events.is_some();
+                let cursor_was_moved = mouseover_events.is_some();
 
-                if !found && at_least_cursor_was_moved {
+                // `no_recent_mouseover` means that the element was not hovered in the latest check
+                // and `cursor_was_moved` indicates the mouse was moved in the latest check
+                // therefore proving the mouse has moved outside the element area, therefore
+                // the `mouseleave` event must be thrown
+
+                if no_recent_mouseover && cursor_was_moved {
                     // And also at least one mouseover event ocurred
                     new_events.push(UserEvent {
                         scope_id: None,
                         priority: EventPriority::Medium,
-                        element: Some(saved_event.element.unwrap()),
+                        element: Some(*element),
                         name: "mouseleave",
                         bubbles: false,
                         data: Arc::new(MouseData::new(
@@ -59,34 +79,22 @@ impl EventsProcessor {
                             Modifiers::empty(),
                         )),
                     });
+
+                    // Indicate the element is no longer being hovered
+                    state.mouseover = false;
                 }
             }
         }
 
-        self.events.retain(|event| {
-            let mut keep = true;
-            for ev in &new_events {
-                if ev.name == "mouseleave"
-                    && ev.element == event.element
-                    && event.name == "mouseover"
-                {
-                    keep = false;
-                }
-            }
-            for ev in &events {
-                if ev.name == "mouseover"
-                    && ev.element == event.element
-                    && event.name == "mouseover"
-                {
-                    keep = false;
-                }
-            }
-            keep
-        });
-
-        for event in &events {
+        for event in &events_to_emit {
             if event.name == "mouseover" {
-                self.events.push(event.clone());
+                let id = &event.element.unwrap();
+                if !self.states.contains_key(id) {
+                    self.states.insert(*id, ElementState::default());
+                }
+
+                let state = self.states.get_mut(&event.element.unwrap()).unwrap();
+                state.mouseover = true;
             }
         }
 
