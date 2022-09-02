@@ -55,7 +55,7 @@ impl ChildDepState for Size {
     fn reduce<'a>(
         &mut self,
         node: NodeView,
-        mut children: impl Iterator<Item = &'a Self::DepState>,
+        children: impl Iterator<Item = &'a Self::DepState>,
         _ctx: &Self::Ctx,
     ) -> bool
     where
@@ -70,10 +70,13 @@ impl ChildDepState for Size {
 
         // Text elements shouldn't be define by their children size but
         // by their text content if not specified otherwise
-        if children.size_hint().0 > 0 && node.tag() != Some("text") {
+        let l = children.size_hint().0;
+        if l > 0 && node.tag() != Some("text") {
+            let children: Vec<&Size> = children.into_iter().collect();
+
             width = SizeMode::Manual(
                 children
-                    .by_ref()
+                    .iter()
                     .map(|item| {
                         if let SizeMode::Manual(width) = item.width {
                             width
@@ -87,6 +90,7 @@ impl ChildDepState for Size {
 
             height = SizeMode::Manual(
                 children
+                    .iter()
                     .map(|item| {
                         if let SizeMode::Manual(height) = item.height {
                             height
@@ -158,6 +162,8 @@ impl ChildDepState for Size {
         let changed = (width != self.width)
             || (height != self.height)
             || (padding != self.padding)
+            || (direction != self.direction)
+            || (scroll_x != self.scroll_x)
             || (scroll_y != self.scroll_y);
         *self = Self {
             width,

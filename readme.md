@@ -55,6 +55,7 @@ fn app(cx: Scope) -> Element {
 - [ ] Use [taffy](https://github.com/dioxusLabs/taffy) for Flex layouts.
 - [x] Renderer-based bounds clipping
 - [ ] Improve code and documentation
+- [ ] Improve Auto calculation for width and height
 
 
 MIT License

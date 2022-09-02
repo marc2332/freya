@@ -25,7 +25,7 @@ fn calculate_area(node: &NodeData, mut area: NodeArea, parent_area: NodeArea) ->
             if let Some(node) = &node.node {
                 if let NodeType::Element { tag, .. } = &node.node_type {
                     if tag == "text" {
-                        area.height = 17;
+                        area.height = 18;
                     }
                 }
             }
@@ -47,8 +47,10 @@ pub fn calculate_node<T>(
     let mut node_area = calculate_area(node, remaining_area, parent_area);
     let mut is_text = false;
 
-    // Registers the element in the Layers handler
-    let inherited_relative_layer = layers.add_element(node, &node_area, inherited_relative_layer);
+    // Returns a tuple, the first element is the layer in which the current node must be added
+    // and the second indicates the layer that it's children must inherit
+    let (node_layer, inherited_relative_layer) =
+        layers.calculate_layer(node, inherited_relative_layer);
 
     let padding = node.padding;
     let horizontal_padding = padding.1 + padding.3;
@@ -103,7 +105,6 @@ pub fn calculate_node<T>(
                 }
             }
             NodeType::Text { .. } => {
-                node_area.height += 1;
                 is_text = true;
             }
             NodeType::Placeholder => {}
@@ -119,6 +120,9 @@ pub fn calculate_node<T>(
             }
         }
     }
+
+    // Registers the element in the Layers handler
+    layers.add_element(node, &node_area, node_layer);
 
     node_area
 }

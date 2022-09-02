@@ -32,23 +32,31 @@ pub struct RenderData {
 }
 
 impl Layers {
-    pub fn add_element(
+    pub fn calculate_layer(
         &mut self,
         node: &NodeData,
-        area: &NodeArea,
         inherited_relative_layer: i16,
-    ) -> i16 {
+    ) -> (i16, i16) {
         let node_data = node.node.as_ref().unwrap();
 
         // Relative layer (optionally define by the user) + height of the element in the VDOM - inherited relative_layer by parent
         let element_layer = (-node_data.state.style.relative_layer + (node_data.height as i16)
             - inherited_relative_layer) as i16;
 
-        if !self.layers.contains_key(&element_layer) {
-            self.layers.insert(element_layer, HashMap::default());
+        (
+            element_layer,
+            node_data.state.style.relative_layer + inherited_relative_layer,
+        )
+    }
+
+    pub fn add_element(&mut self, node: &NodeData, area: &NodeArea, node_layer: i16) {
+        let node_data = node.node.as_ref().unwrap();
+
+        if !self.layers.contains_key(&node_layer) {
+            self.layers.insert(node_layer, HashMap::default());
         }
 
-        let layer = self.layers.get_mut(&element_layer).unwrap();
+        let layer = self.layers.get_mut(&node_layer).unwrap();
 
         let mut children_s = Vec::new();
 
@@ -64,7 +72,5 @@ impl Layers {
                 children: children_s,
             },
         );
-
-        node_data.state.style.relative_layer + inherited_relative_layer
     }
 }

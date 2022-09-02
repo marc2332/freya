@@ -44,7 +44,7 @@ fn app(cx: Scope) -> Element {
             }
             view {
                 background: "{mid}",
-                height: "auto",
+                height: "stretch",
                 width: "stretch",
                 padding: "{padding}",
                 text {
@@ -52,7 +52,7 @@ fn app(cx: Scope) -> Element {
                 }
                 view {
                     background: "{small}",
-                    height: "auto",
+                    height: "50",
                     width: "stretch",
                     padding: "20",
                     text {
