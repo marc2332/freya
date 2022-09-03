@@ -29,9 +29,9 @@ pub fn work_loop(
 
     calculate_node(
         &NodeData {
-            width: SizeMode::Percentage(100),
-            height: SizeMode::Percentage(100),
-            padding: (0, 0, 0, 0),
+            width: SizeMode::Percentage(100.0),
+            height: SizeMode::Percentage(100.0),
+            padding: (0.0, 0.0, 0.0, 0.0),
             node: Some(root),
         },
         area.clone(),

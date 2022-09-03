@@ -48,10 +48,8 @@ pub fn render_skia(
                     let x2 = x + area.width;
                     let y2 = y + area.height;
 
-                    //
-
                     let radius = node.state.style.radius;
-                    let radius = if radius < 0 { 0 } else { radius };
+                    let radius = if radius < 0.0 { 0.0 } else { radius };
 
                     let mut path = Path::new();
 
@@ -108,7 +106,7 @@ pub fn render_skia(
                     };
 
                     let x = area.x;
-                    let y = area.y + 12; /* Line height, wip */
+                    let y = area.y + 12.0; /* Line height, wip */
 
                     canvas.draw_str_align(text, (x, y), &font, &paint, Align::Left);
                 }

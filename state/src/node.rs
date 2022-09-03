@@ -3,12 +3,12 @@ use dioxus_native_core::state::{ChildDepState, NodeDepState, State};
 use dioxus_native_core_macro::{sorted_str_slice, State};
 use skia_safe::Color;
 
-#[derive(Default, Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Default, Copy, Clone, Debug, PartialEq)]
 pub enum SizeMode {
     #[default]
     Auto,
-    Percentage(i32),
-    Manual(i32),
+    Percentage(f32),
+    Manual(f32),
 }
 
 #[derive(Default, Copy, Clone, Debug, PartialEq, Eq)]
@@ -27,13 +27,13 @@ pub struct NodeState {
     pub style: Style,
 }
 
-#[derive(Default, Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Default, Copy, Clone, Debug, PartialEq)]
 pub struct Size {
     pub width: SizeMode,
     pub height: SizeMode,
-    pub padding: (i32, i32, i32, i32),
-    pub scroll_y: i32,
-    pub scroll_x: i32,
+    pub padding: (f32, f32, f32, f32),
+    pub scroll_y: f32,
+    pub scroll_x: f32,
     pub direction: DirectionMode,
 }
 
@@ -64,9 +64,9 @@ impl ChildDepState for Size {
     {
         let mut width = SizeMode::default();
         let mut height = SizeMode::default();
-        let mut padding = (0, 0, 0, 0);
-        let mut scroll_y = 0;
-        let mut scroll_x = 0;
+        let mut padding = (0.0, 0.0, 0.0, 0.0);
+        let mut scroll_y = 0.0;
+        let mut scroll_x = 0.0;
         let mut direction = DirectionMode::Vertical;
 
         // if the node contains a width or height attribute it overrides the other size
@@ -75,7 +75,7 @@ impl ChildDepState for Size {
                 "width" => {
                     let attr = a.value.to_string();
                     if &attr == "stretch" {
-                        width = SizeMode::Percentage(100);
+                        width = SizeMode::Percentage(100.0);
                     } else if &attr == "auto" {
                         width = SizeMode::Auto;
                     } else if attr.contains("%") {
@@ -87,7 +87,7 @@ impl ChildDepState for Size {
                 "height" => {
                     let attr = a.value.to_string();
                     if &attr == "stretch" {
-                        height = SizeMode::Percentage(100);
+                        height = SizeMode::Percentage(100.0);
                     } else if &attr == "auto" {
                         height = SizeMode::Auto;
                     } else if attr.contains("%") {
@@ -97,19 +97,19 @@ impl ChildDepState for Size {
                     }
                 }
                 "padding" => {
-                    let total_padding: i32 = a.value.to_string().parse().unwrap();
-                    let padding_for_side = total_padding / 2;
+                    let total_padding: f32 = a.value.to_string().parse().unwrap();
+                    let padding_for_side = total_padding / 2.0;
                     padding.0 = padding_for_side;
                     padding.1 = padding_for_side;
                     padding.2 = padding_for_side;
                     padding.3 = padding_for_side;
                 }
                 "scroll_y" => {
-                    let scroll: i32 = a.value.to_string().parse().unwrap();
+                    let scroll: f32 = a.value.to_string().parse().unwrap();
                     scroll_y = scroll;
                 }
                 "scroll_x" => {
-                    let scroll: i32 = a.value.to_string().parse().unwrap();
+                    let scroll: f32 = a.value.to_string().parse().unwrap();
                     scroll_x = scroll;
                 }
                 "direction" => {
@@ -147,8 +147,8 @@ impl ChildDepState for Size {
 
 #[derive(Default, Copy, Clone, Debug)]
 pub struct ShadowSettings {
-    pub x: i32,
-    pub y: i32,
+    pub x: f32,
+    pub y: f32,
     pub intensity: u8,
     pub size: f32,
     pub color: Color,
@@ -159,7 +159,7 @@ pub struct Style {
     pub background: Color,
     pub relative_layer: i16,
     pub shadow: ShadowSettings,
-    pub radius: i32,
+    pub radius: f32,
 }
 
 impl NodeDepState<()> for Style {
@@ -177,7 +177,7 @@ impl NodeDepState<()> for Style {
         let mut background = Color::TRANSPARENT;
         let mut relative_layer = 0;
         let mut shadow = ShadowSettings::default();
-        let mut radius = 0;
+        let mut radius = 0.0;
 
         for attr in node.attributes() {
             match attr.name {
@@ -201,7 +201,7 @@ impl NodeDepState<()> for Style {
                     }
                 }
                 "radius" => {
-                    let new_radius: Option<i32> = attr.value.to_string().parse().ok();
+                    let new_radius: Option<f32> = attr.value.to_string().parse().ok();
 
                     if let Some(new_radius) = new_radius {
                         radius = new_radius;

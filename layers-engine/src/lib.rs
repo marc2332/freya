@@ -7,16 +7,16 @@ use std::collections::HashMap;
 pub struct NodeData {
     pub width: SizeMode,
     pub height: SizeMode,
-    pub padding: (i32, i32, i32, i32),
+    pub padding: (f32, f32, f32, f32),
     pub node: Option<Node<NodeState>>,
 }
 
-#[derive(Default, Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Default, Copy, Clone, Debug, PartialEq)]
 pub struct NodeArea {
-    pub x: i32,
-    pub y: i32,
-    pub width: i32,
-    pub height: i32,
+    pub x: f32,
+    pub y: f32,
+    pub width: f32,
+    pub height: f32,
 }
 
 #[derive(Default, Clone, Debug)]

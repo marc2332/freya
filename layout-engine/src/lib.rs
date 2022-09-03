@@ -9,7 +9,7 @@ fn calculate_area(node: &NodeData, mut area: NodeArea, parent_area: NodeArea) ->
             area.width = w;
         }
         SizeMode::Percentage(per) => {
-            area.width = ((parent_area.width as f32) / 100.0 * (per as f32)).round() as i32;
+            area.width = (parent_area.width / 100.0 * per).round();
         }
         SizeMode::Auto => {}
     }
@@ -19,13 +19,13 @@ fn calculate_area(node: &NodeData, mut area: NodeArea, parent_area: NodeArea) ->
             area.height = h;
         }
         SizeMode::Percentage(per) => {
-            area.height = ((parent_area.height as f32) / 100.0 * (per as f32)).round() as i32;
+            area.height = (parent_area.height / 100.0 * per).round();
         }
         SizeMode::Auto => {
             if let Some(node) = &node.node {
                 if let NodeType::Element { tag, .. } = &node.node_type {
                     if tag == "text" {
-                        area.height = 18;
+                        area.height = 18.0;
                     }
                 }
             }
@@ -105,13 +105,13 @@ pub fn calculate_node<T>(
                         remaining_inner_area.width -= child_node_area.width;
 
                         if child_node_area.width > remaining_inner_area.width
-                            || remaining_inner_area.width == 0
+                            || remaining_inner_area.width == 0.0
                         {
                             remaining_inner_area.width = child_node_area.width;
                         }
 
                         if child_node_area.height > remaining_inner_area.height
-                            || remaining_inner_area.height == 0
+                            || remaining_inner_area.height == 0.0
                         {
                             remaining_inner_area.height = child_node_area.height;
                         }
