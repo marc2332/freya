@@ -90,6 +90,7 @@ builder_constructors! {
     text {
         layer: String,
         height: String,
+        width: String,
     };
 }
 
