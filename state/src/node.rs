@@ -16,6 +16,7 @@ pub enum DirectionMode {
     #[default]
     Vertical,
     Horizontal,
+    Both,
 }
 
 #[derive(Debug, Clone, State, Default)]
@@ -55,7 +56,7 @@ impl ChildDepState for Size {
     fn reduce<'a>(
         &mut self,
         node: NodeView,
-        children: impl Iterator<Item = &'a Self::DepState>,
+        _children: impl Iterator<Item = &'a Self::DepState>,
         _ctx: &Self::Ctx,
     ) -> bool
     where
@@ -67,41 +68,6 @@ impl ChildDepState for Size {
         let mut scroll_y = 0;
         let mut scroll_x = 0;
         let mut direction = DirectionMode::Vertical;
-
-        // Text elements shouldn't be define by their children size but
-        // by their text content if not specified otherwise
-        let l = children.size_hint().0;
-        if l > 0 && node.tag() != Some("text") {
-            let children: Vec<&Size> = children.into_iter().collect();
-
-            width = SizeMode::Manual(
-                children
-                    .iter()
-                    .map(|item| {
-                        if let SizeMode::Manual(width) = item.width {
-                            width
-                        } else {
-                            0
-                        }
-                    })
-                    .reduce(|accum, item| if accum >= item { accum } else { item })
-                    .unwrap_or(0),
-            );
-
-            height = SizeMode::Manual(
-                children
-                    .iter()
-                    .map(|item| {
-                        if let SizeMode::Manual(height) = item.height {
-                            height
-                        } else {
-                            0
-                        }
-                    })
-                    .reduce(|accum, item| if accum >= item { accum } else { item })
-                    .unwrap_or(0),
-            );
-        }
 
         // if the node contains a width or height attribute it overrides the other size
         for a in node.attributes() {
@@ -149,6 +115,8 @@ impl ChildDepState for Size {
                 "direction" => {
                     direction = if a.value.to_string() == "horizontal" {
                         DirectionMode::Horizontal
+                    } else if a.value.to_string() == "both" {
+                        DirectionMode::Both
                     } else {
                         DirectionMode::Vertical
                     };

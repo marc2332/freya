@@ -76,7 +76,7 @@ pub fn calculate_node<T>(
                     let child_node = node_resolver(child, resolver_options);
 
                     if let Some(child_node) = child_node {
-                        let box_area = calculate_node::<T>(
+                        let child_node_area = calculate_node::<T>(
                             &child_node,
                             remaining_inner_area,
                             inner_area,
@@ -88,18 +88,32 @@ pub fn calculate_node<T>(
 
                         let state = &node.node.as_ref().unwrap().state;
 
-                        if state.size.direction == DirectionMode::Vertical {
-                            remaining_inner_area.y = box_area.y + box_area.height;
-                            remaining_inner_area.height -= box_area.height;
-                        } else {
-                            remaining_inner_area.x = box_area.x + box_area.width;
-                            remaining_inner_area.width -= box_area.width;
+                        match state.size.direction {
+                            DirectionMode::Vertical => {
+                                remaining_inner_area.y = child_node_area.y + child_node_area.height;
+                            }
+                            DirectionMode::Horizontal => {
+                                remaining_inner_area.x = child_node_area.x + child_node_area.width;
+                            }
+                            DirectionMode::Both => {
+                                remaining_inner_area.y = child_node_area.y + child_node_area.height;
+                                remaining_inner_area.x = child_node_area.x + child_node_area.width;
+                            }
                         }
 
-                        if box_area.width > remaining_inner_area.width
+                        remaining_inner_area.height -= child_node_area.height;
+                        remaining_inner_area.width -= child_node_area.width;
+
+                        if child_node_area.width > remaining_inner_area.width
                             || remaining_inner_area.width == 0
                         {
-                            remaining_inner_area.width = box_area.width;
+                            remaining_inner_area.width = child_node_area.width;
+                        }
+
+                        if child_node_area.height > remaining_inner_area.height
+                            || remaining_inner_area.height == 0
+                        {
+                            remaining_inner_area.height = child_node_area.height;
                         }
                     }
                 }
@@ -112,11 +126,11 @@ pub fn calculate_node<T>(
 
         if !is_text {
             if let SizeMode::Auto = node.width {
-                node_area.width = remaining_inner_area.x - node_area.x;
+                node_area.width = remaining_inner_area.x - node_area.x + padding.1;
             }
 
             if let SizeMode::Auto = node.height {
-                node_area.height = remaining_inner_area.y - node_area.y;
+                node_area.height = remaining_inner_area.y - node_area.y + padding.0;
             }
         }
     }

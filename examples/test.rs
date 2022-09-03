@@ -44,15 +44,15 @@ fn app(cx: Scope) -> Element {
             }
             view {
                 background: "{mid}",
-                height: "stretch",
+                height: "auto",
                 width: "stretch",
                 padding: "{padding}",
                 text {
                     "World",
                 }
-                view {
+                container {
                     background: "{small}",
-                    height: "50",
+                    height: "auto",
                     width: "stretch",
                     padding: "20",
                     text {

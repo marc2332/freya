@@ -13,17 +13,21 @@ fn app(cx: Scope) -> Element {
     cx.render(rsx!(
         view {
             background: "red",
-            padding: "15",
-            text {
-                "{count}"
-            }
+            padding: "50",
+            direction: "both",
+            width: "auto",
+            height: "auto",
             view {
-                height: "300",
-                width: "300",
+                padding: "25",
+                height: "100%",
+                width: "100%",
                 background: "blue",
                 onclick: move |_| count += 10,
                 text {
                     "Increase!"
+                }
+                text {
+                    "{count}"
                 }
             }
         }
