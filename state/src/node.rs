@@ -145,7 +145,7 @@ impl ChildDepState for Size {
     }
 }
 
-#[derive(Default, Copy, Clone, Debug)]
+#[derive(Default, Clone, Debug)]
 pub struct ShadowSettings {
     pub x: f32,
     pub y: f32,
@@ -154,12 +154,13 @@ pub struct ShadowSettings {
     pub color: Color,
 }
 
-#[derive(Default, Copy, Clone, Debug)]
+#[derive(Default, Clone, Debug)]
 pub struct Style {
     pub background: Color,
     pub relative_layer: i16,
     pub shadow: ShadowSettings,
     pub radius: f32,
+    pub image_data: Option<Vec<u8>>,
 }
 
 impl NodeDepState<()> for Style {
@@ -170,7 +171,8 @@ impl NodeDepState<()> for Style {
             "background",
             "layer",
             "shadow",
-            "radius"
+            "radius",
+            "data"
         ])))
         .with_text();
     fn reduce<'a>(&mut self, node: NodeView, _sibling: (), _ctx: &Self::Ctx) -> bool {
@@ -178,6 +180,7 @@ impl NodeDepState<()> for Style {
         let mut relative_layer = 0;
         let mut shadow = ShadowSettings::default();
         let mut radius = 0.0;
+        let mut image_data = None;
 
         for attr in node.attributes() {
             match attr.name {
@@ -207,6 +210,14 @@ impl NodeDepState<()> for Style {
                         radius = new_radius;
                     }
                 }
+                "data" => {
+                    let bytes = attr.value.to_string();
+                    let bytes = bytes
+                        .split(",")
+                        .map(|b| b.parse::<u8>().unwrap())
+                        .collect::<Vec<u8>>();
+                    image_data = Some(bytes);
+                }
                 _ => {
                     println!("Unsupported attribute <{}>", attr.name);
                 }
@@ -219,6 +230,7 @@ impl NodeDepState<()> for Style {
             relative_layer,
             shadow,
             radius,
+            image_data,
         };
         changed
     }

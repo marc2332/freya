@@ -12,3 +12,4 @@ dioxus-core = { git = "https://github.com/DioxusLabs/dioxus" }
 anymap = "0.12.1"
 fxhash = "0.2.1"
 skia-safe = { version = "*", features = ["gl"] }
+elements-namespace = { path = "../elements-namespace"}

@@ -62,6 +62,8 @@ macro_rules! builder_constructors {
     };
 }
 
+pub type ImgData<'a> = &'a [u8];
+
 builder_constructors! {
     view {
         padding: String,
@@ -89,6 +91,11 @@ builder_constructors! {
     };
     text {
         layer: String,
+        height: String,
+        width: String,
+    };
+    image {
+        data: String,
         height: String,
         width: String,
     };
@@ -133,8 +140,6 @@ pub mod on {
                 {
                     let bump = &factory.bump();
 
-
-                    use dioxus_core::{AnyEvent};
                     // we can't allocate unsized in bumpalo's box, so we need to craft the box manually
                     // safety: this is essentially the same as calling Box::new() but manually
                     // The box is attached to the lifetime of the bumpalo allocator

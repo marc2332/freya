@@ -5,5 +5,5 @@ edition = "2021"
 
 [dependencies]
 bumpalo = "3.11.0"
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus" }
-dioxus-html = { git = "https://github.com/DioxusLabs/dioxus" }
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus"  }
+dioxus-html = { git = "https://github.com/DioxusLabs/dioxus"  }
