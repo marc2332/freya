@@ -423,7 +423,7 @@ dependencies = [
 [[package]]
 name = "dioxus"
 version = "0.2.4"
-source = "git+https://github.com/DioxusLabs/dioxus#8347de59565d39a275959accd441c27bc460c8d1"
+source = "git+https://github.com/marc2332/dioxus?branch=patch-3#8db6719bca202857fb332b6ff429bd89be76f44a"
 dependencies = [
  "dioxus-core",
  "dioxus-core-macro",
@@ -435,7 +435,7 @@ dependencies = [
 [[package]]
 name = "dioxus-core"
 version = "0.2.1"
-source = "git+https://github.com/DioxusLabs/dioxus#8347de59565d39a275959accd441c27bc460c8d1"
+source = "git+https://github.com/marc2332/dioxus?branch=patch-3#8db6719bca202857fb332b6ff429bd89be76f44a"
 dependencies = [
  "backtrace",
  "bumpalo",
@@ -453,7 +453,7 @@ dependencies = [
 [[package]]
 name = "dioxus-core-macro"
 version = "0.2.1"
-source = "git+https://github.com/DioxusLabs/dioxus#8347de59565d39a275959accd441c27bc460c8d1"
+source = "git+https://github.com/marc2332/dioxus?branch=patch-3#8db6719bca202857fb332b6ff429bd89be76f44a"
 dependencies = [
  "dioxus-rsx",
  "proc-macro2",
@@ -464,7 +464,7 @@ dependencies = [
 [[package]]
 name = "dioxus-hooks"
 version = "0.2.1"
-source = "git+https://github.com/DioxusLabs/dioxus#8347de59565d39a275959accd441c27bc460c8d1"
+source = "git+https://github.com/marc2332/dioxus?branch=patch-3#8db6719bca202857fb332b6ff429bd89be76f44a"
 dependencies = [
  "dioxus-core",
  "futures-channel",
@@ -474,7 +474,7 @@ dependencies = [
 [[package]]
 name = "dioxus-html"
 version = "0.2.1"
-source = "git+https://github.com/DioxusLabs/dioxus#8347de59565d39a275959accd441c27bc460c8d1"
+source = "git+https://github.com/marc2332/dioxus?branch=patch-3#8db6719bca202857fb332b6ff429bd89be76f44a"
 dependencies = [
  "dioxus-core",
  "enumset",
@@ -485,7 +485,7 @@ dependencies = [
 [[package]]
 name = "dioxus-native-core"
 version = "0.2.0"
-source = "git+https://github.com/DioxusLabs/dioxus#8347de59565d39a275959accd441c27bc460c8d1"
+source = "git+https://github.com/marc2332/dioxus?branch=patch-3#8db6719bca202857fb332b6ff429bd89be76f44a"
 dependencies = [
  "anymap",
  "dioxus-core",
@@ -499,7 +499,7 @@ dependencies = [
 [[package]]
 name = "dioxus-native-core-macro"
 version = "0.2.0"
-source = "git+https://github.com/DioxusLabs/dioxus#8347de59565d39a275959accd441c27bc460c8d1"
+source = "git+https://github.com/marc2332/dioxus?branch=patch-3#8db6719bca202857fb332b6ff429bd89be76f44a"
 dependencies = [
  "dioxus-native-core",
  "quote",
@@ -509,7 +509,7 @@ dependencies = [
 [[package]]
 name = "dioxus-rsx"
 version = "0.0.0"
-source = "git+https://github.com/DioxusLabs/dioxus#8347de59565d39a275959accd441c27bc460c8d1"
+source = "git+https://github.com/marc2332/dioxus?branch=patch-3#8db6719bca202857fb332b6ff429bd89be76f44a"
 dependencies = [
  "proc-macro2",
  "quote",

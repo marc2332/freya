@@ -11,10 +11,10 @@ wireframe = ["renderer/wireframe"]
 state = { path = "../state"}
 layout-engine = { path = "../layout-engine"}
 renderer = { path = "../renderer"}
-dioxus = { git = "https://github.com/DioxusLabs/dioxus" }
-dioxus-html = { git = "https://github.com/DioxusLabs/dioxus" }
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus" }
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus" }
+dioxus = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
+dioxus-html = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
+dioxus-native-core = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
+dioxus-core = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
 tokio = { version = "1.17.0", features = ["full"] }
 anymap = "0.12.1"
 fxhash = "0.2.1"

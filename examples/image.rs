@@ -1,5 +1,8 @@
+use dioxus::core::UiEvent;
+use dioxus::events::MouseData;
 use dioxus::prelude::*;
 use elements_namespace as dioxus_elements;
+use elements_namespace::AttributeValue;
 use trev::launch;
 
 fn main() {
@@ -9,11 +12,25 @@ fn main() {
 static RUST_LOGO: &[u8] = include_bytes!("./rust_logo.png");
 
 fn app(cx: Scope) -> Element {
-    // TODO(marc2332): Make the image element accept bytes
-    let image_data: Vec<String> = RUST_LOGO.to_vec().iter().map(|b| format!("{b}")).collect();
-    let image_data = image_data.join(",");
+    let mut size = use_state(&cx, || 150);
 
-    cx.render(rsx!(image {
-        data: "{image_data}"
+    let onscroll = move |e: UiEvent<MouseData>| {
+        let page = e.coordinates().page();
+        if *size.get() >= 15 && page.y > 15.0 {
+            return;
+        }
+        size += (page.y as i32) * 20;
+    };
+
+    cx.render(rsx!(view {
+        width: "100%",
+        height: "100%",
+        padding: "100",
+        onscroll: onscroll,
+        image {
+            image_data: AttributeValue::Bytes(RUST_LOGO),
+            width: "{size}",
+            height: "{size}",
+        }
     }))
 }

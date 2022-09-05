@@ -1,3 +1,4 @@
+pub use dioxus_core::AttributeValue;
 use dioxus_core::*;
 use std::fmt::Arguments;
 
@@ -33,36 +34,7 @@ macro_rules! builder_constructors {
             }
         )*
     };
-
-    ( $(
-        $(#[$attr:meta])*
-        $name:ident <> $namespace:tt {
-            $($fil:ident: $vil:ident,)*
-        };
-    )* ) => {
-        $(
-            #[allow(non_camel_case_types)]
-            $(#[$attr])*
-            pub struct $name;
-
-            impl DioxusElement for $name {
-                const TAG_NAME: &'static str = stringify!($name);
-                const NAME_SPACE: Option<&'static str> = Some($namespace);
-            }
-
-
-            impl $name {
-                $(
-                    pub fn $fil<'a>(&self, cx: NodeFactory<'a>, val: Arguments) -> Attribute<'a> {
-                        cx.attr(stringify!($fil), val, Some(stringify!($namespace)), false)
-                    }
-                )*
-            }
-        )*
-    };
 }
-
-pub type ImgData<'a> = &'a [u8];
 
 builder_constructors! {
     view {
@@ -94,11 +66,28 @@ builder_constructors! {
         height: String,
         width: String,
     };
-    image {
-        data: String,
-        height: String,
-        width: String,
-    };
+}
+
+#[allow(non_camel_case_types)]
+pub struct image;
+
+impl DioxusElement for image {
+    const TAG_NAME: &'static str = "image";
+    const NAME_SPACE: Option<&'static str> = None;
+}
+
+impl image {
+    pub fn image_data<'a>(&self, cx: NodeFactory<'a>, val: AttributeValue<'a>) -> Attribute<'a> {
+        cx.custom_attr("image_data", val, None, false, false)
+    }
+
+    pub fn width<'a>(&self, cx: NodeFactory<'a>, val: Arguments) -> Attribute<'a> {
+        cx.attr("width", val, None, false)
+    }
+
+    pub fn height<'a>(&self, cx: NodeFactory<'a>, val: Arguments) -> Attribute<'a> {
+        cx.attr("height", val, None, false)
+    }
 }
 
 pub trait GlobalAttributes {

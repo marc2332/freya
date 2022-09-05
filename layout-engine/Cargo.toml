@@ -4,13 +4,13 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus" }
-dioxus = { git = "https://github.com/DioxusLabs/dioxus" }
+dioxus-native-core = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
+dioxus = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
 state = { path = "../state"}
 layers-engine = { path = "../layers-engine"}
 
 [dev-dependencies]
-dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus" }
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus" }
+dioxus-native-core-macro = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
+dioxus-core = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
 fxhash = "0.2.1"
 anymap = "0.12.1"

@@ -5,5 +5,5 @@ edition = "2021"
 
 [dependencies]
 state = { path = "../state"}
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus" }
-dioxus = { git = "https://github.com/DioxusLabs/dioxus" }
+dioxus-native-core = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
+dioxus = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }

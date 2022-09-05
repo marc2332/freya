@@ -12,7 +12,7 @@ wireframe = ["trev/wireframe"]
 
 [dev-dependencies]
 trev = { path = "./trev"}
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", features = ["macro", "hooks"]}
+dioxus = { git = "https://github.com/marc2332/dioxus", branch = "patch-3", features = ["macro", "hooks"]}
 tokio = "1.17.0"
 elements-namespace = { path = "./elements-namespace"}
 components = { path = "./components"}

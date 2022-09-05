@@ -1,8 +1,8 @@
 use dioxus_native_core::real_dom::{Node, NodeType};
 use layers_engine::{NodeArea, NodeData};
 use skia_safe::{
-    utils::text_utils::Align, BlurStyle, Canvas, ClipOp, Color, Data, Font, Image, MaskFilter,
-    Paint, PaintStyle, Path, PathDirection, Rect,
+    utils::text_utils::Align, BlurStyle, Canvas, ClipOp, Color, Data, Font, IRect, Image,
+    MaskFilter, Paint, PaintStyle, Path, PathDirection, Rect,
 };
 use state::node::NodeState;
 use std::ops::Index;
@@ -114,7 +114,15 @@ pub fn render_skia(
                     if let Some(image_data) = &node.state.style.image_data {
                         let pic = Image::from_encoded(unsafe { Data::new_bytes(image_data) });
                         if let Some(pic) = pic {
-                            canvas.draw_image(pic, (0.0, 0.0), None);
+                            let mut paint = Paint::default();
+                            paint.set_anti_alias(true);
+                            canvas.draw_image_nine(
+                                pic,
+                                &IRect::new(0, 0, 0, 0),
+                                Rect::new(area.x, area.y, area.width, area.height),
+                                skia_safe::FilterMode::Last,
+                                Some(&paint),
+                            );
                         }
                     }
                 }

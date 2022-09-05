@@ -4,11 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dioxus = { git = "https://github.com/DioxusLabs/dioxus" }
-dioxus-html = { git = "https://github.com/DioxusLabs/dioxus" }
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus" }
-dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus" }
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus" }
+dioxus = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
+dioxus-html = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
+dioxus-native-core = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
+dioxus-native-core-macro = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
+dioxus-core = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
 anymap = "0.12.1"
 fxhash = "0.2.1"
 skia-safe = { version = "*", features = ["gl"] }

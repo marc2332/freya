@@ -11,9 +11,9 @@ wireframe = []
 gl = "*"
 glutin = "*"
 skia-safe = { version = "*", features = ["gl"] }
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus" }
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus" }
-dioxus-html = { git = "https://github.com/DioxusLabs/dioxus" }
+dioxus-core = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
+dioxus-native-core = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
+dioxus-html = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
 layout-engine = { path = "../layout-engine"}
 state = { path = "../state"}
 enumset = "1.0.11"

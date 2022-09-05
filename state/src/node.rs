@@ -172,7 +172,7 @@ impl NodeDepState<()> for Style {
             "layer",
             "shadow",
             "radius",
-            "data"
+            "image_data"
         ])))
         .with_text();
     fn reduce<'a>(&mut self, node: NodeView, _sibling: (), _ctx: &Self::Ctx) -> bool {
@@ -210,13 +210,9 @@ impl NodeDepState<()> for Style {
                         radius = new_radius;
                     }
                 }
-                "data" => {
-                    let bytes = attr.value.to_string();
-                    let bytes = bytes
-                        .split(",")
-                        .map(|b| b.parse::<u8>().unwrap())
-                        .collect::<Vec<u8>>();
-                    image_data = Some(bytes);
+                "image_data" => {
+                    let bytes = attr.value.as_bytes();
+                    image_data = bytes.map(|v| v.to_vec());
                 }
                 _ => {
                     println!("Unsupported attribute <{}>", attr.name);
