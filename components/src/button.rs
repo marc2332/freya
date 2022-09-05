@@ -8,10 +8,10 @@ const HOVER_BACKGROUND_COLOR: &str = "gray";
 
 #[allow(non_snake_case)]
 pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
-    let theme = use_context::<Theme>(&cx);
+    let theme = cx.consume_context::<Theme>();
 
-    let button_theme = if let Some(theme) = theme {
-        theme.read().button.clone()
+    let button_theme = if let Some(ref theme) = theme {
+        theme.button.clone()
     } else {
         ButtonTheme {
             background: BACKGROUND_COLOR,
@@ -20,6 +20,13 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
     };
 
     let background = use_state(&cx, || button_theme.background);
+    let set_background = background.setter();
+
+    use_effect(&cx, &theme, move |theme| async move {
+        if let Some(ref theme) = theme {
+            set_background(theme.button.background);
+        }
+    });
 
     cx.render(rsx!(
         container {
