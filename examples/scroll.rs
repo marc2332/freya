@@ -16,32 +16,30 @@ fn app(cx: Scope) -> Element {
             padding: "100",
             background: "black",
             ScrollView {
-                body: cx.render(rsx! {
+                view {
+                    height: "200",
+                    width: "100%",
+                    background: "red",
+                    padding: "20",
                     view {
-                        height: "200",
+                        height: "100%",
                         width: "100%",
-                        background: "red",
-                        padding: "20",
-                        view {
-                            height: "100%",
-                            width: "100%",
-                            background: "blue",
-                            text { "hi" }
-                        }
-                    }
-                    view {
-                        height: "200",
-                        width: "100%",
-                        background: "red",
+                        background: "blue",
                         text { "hi" }
                     }
-                    view {
-                        height: "200",
-                        width: "100%",
-                        background: "red",
-                        text { "hi" }
-                    }
-                })
+                }
+                view {
+                    height: "200",
+                    width: "100%",
+                    background: "red",
+                    text { "hi" }
+                }
+                view {
+                    height: "200",
+                    width: "100%",
+                    background: "red",
+                    text { "hi" }
+                }
             }
         }
     ))

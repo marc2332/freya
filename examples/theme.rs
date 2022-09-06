@@ -19,23 +19,19 @@ fn app(cx: Scope) -> Element {
             on_click: |_| {
                 *theme.write() = LIGHT_THEME;
             },
-            child: cx.render(rsx!(
-                text {
-                    width: "100",
-                    "Light"
-                }
-            ))
+            text {
+                width: "100",
+                "Light"
+            }
         }
         Button {
             on_click: |_| {
                 *theme.write() = DARK_THEME;
             },
-            child: cx.render(rsx!(
-                text {
-                    width: "100",
-                    "Dark"
-                }
-            ))
+            text {
+                width: "100",
+                "Dark"
+            }
         }
     }))
 }

@@ -24,14 +24,14 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
             height: "{height}",
             scroll_y: "{y}",
             onscroll: onscroll,
-            &cx.props.body
+            &cx.props.children
         }
     ))
 }
 
 #[derive(Props)]
 pub struct ScrollViewProps<'a> {
-    body: Element<'a>,
+    children: Element<'a>,
     #[props(optional)]
     height: Option<&'a str>,
     #[props(optional)]

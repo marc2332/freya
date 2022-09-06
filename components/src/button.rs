@@ -34,14 +34,14 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
             padding: "20",
             radius: "5",
             direction: "both",
-            &cx.props.child
+            &cx.props.children
         }
     ))
 }
 
 #[derive(Props)]
 pub struct ButtonProps<'a> {
-    child: Element<'a>,
+    children: Element<'a>,
     #[props(optional)]
     on_click: Option<EventHandler<'a, MouseEvent>>,
 }

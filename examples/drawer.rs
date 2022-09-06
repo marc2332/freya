@@ -86,41 +86,38 @@ fn app(cx: Scope) -> Element {
                         body: cx.render(rsx!(  text { "CLOSE"} ))
                     }
                     ScrollView {
-                        body: cx.render(rsx!(
-                            Button {
-                                onclick: move |_| {  },
-                                body: cx.render(rsx!(  text { "Hi"} ))
-                            }
-                            Button {
-                                onclick: move |_| {  },
-                                body: cx.render(rsx!(  text { "Hi"} ))
-                            }
-                            Button {
-                                onclick: move |_| {  },
-                                body: cx.render(rsx!(  text { "Hi"} ))
-                            }
-                            Button {
-                                onclick: move |_| {  },
-                                body: cx.render(rsx!(  text { "Hi"} ))
-                            }
-                            Button {
-                                onclick: move |_| {  },
-                                body: cx.render(rsx!(  text { "Hi"} ))
-                            }
-                            Button {
-                                onclick: move |_| {  },
-                                body: cx.render(rsx!(  text { "Hi"} ))
-                            }
-                            Button {
-                                onclick: move |_| {  },
-                                body: cx.render(rsx!(  text { "Hi"} ))
-                            }
-                            Button {
-                                onclick: move |_| {  },
-                                body: cx.render(rsx!(  text { "Hi"} ))
-                            }
-
-                        ))
+                        Button {
+                            onclick: move |_| {  },
+                            body: cx.render(rsx!(  text { "Hi"} ))
+                        }
+                        Button {
+                            onclick: move |_| {  },
+                            body: cx.render(rsx!(  text { "Hi"} ))
+                        }
+                        Button {
+                            onclick: move |_| {  },
+                            body: cx.render(rsx!(  text { "Hi"} ))
+                        }
+                        Button {
+                            onclick: move |_| {  },
+                            body: cx.render(rsx!(  text { "Hi"} ))
+                        }
+                        Button {
+                            onclick: move |_| {  },
+                            body: cx.render(rsx!(  text { "Hi"} ))
+                        }
+                        Button {
+                            onclick: move |_| {  },
+                            body: cx.render(rsx!(  text { "Hi"} ))
+                        }
+                        Button {
+                            onclick: move |_| {  },
+                            body: cx.render(rsx!(  text { "Hi"} ))
+                        }
+                        Button {
+                            onclick: move |_| {  },
+                            body: cx.render(rsx!(  text { "Hi"} ))
+                        }
                     }
                  ))
             }

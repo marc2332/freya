@@ -19,16 +19,40 @@ fn app(cx: Scope) -> Element {
             body: cx.render(rsx!(
                 ScrollView {
                     height: "70%",
-                    body:  cx.render(rsx!(
+                    Card {
+                        title: "Another title",
+                        content: "Some content",
+                        background: "yellow"
+                    }
+                    ScrollView {
+                        height: "200",
+                        padding: "40",
                         Card {
-                            title: "Another title",
-                            content: "Some content",
-                            background: "yellow"
+                            title: "Lalala",
+                            content: "Wooow",
+                            background: "green"
+                        }
+                        Card {
+                            title: "Lalala",
+                            content: "Wooow",
+                            background: "red"
                         }
                         ScrollView {
                             height: "200",
                             padding: "40",
-                            body: cx.render(rsx! {
+                            Card {
+                                title: "Lalala",
+                                content: "Wooow",
+                                background: "green"
+                            }
+                            Card {
+                                title: "Lalala",
+                                content: "Wooow",
+                                background: "red"
+                            }
+                            ScrollView {
+                                height: "200",
+                                padding: "40",
                                 Card {
                                     title: "Lalala",
                                     content: "Wooow",
@@ -39,66 +63,34 @@ fn app(cx: Scope) -> Element {
                                     content: "Wooow",
                                     background: "red"
                                 }
-                                ScrollView {
-                                    height: "200",
-                                    padding: "40",
-                                    body: cx.render(rsx! {
-                                        Card {
-                                            title: "Lalala",
-                                            content: "Wooow",
-                                            background: "green"
-                                        }
-                                        Card {
-                                            title: "Lalala",
-                                            content: "Wooow",
-                                            background: "red"
-                                        }
-                                        ScrollView {
-                                            height: "200",
-                                            padding: "40",
-                                            body: cx.render(rsx! {
-                                                Card {
-                                                    title: "Lalala",
-                                                    content: "Wooow",
-                                                    background: "green"
-                                                }
-                                                Card {
-                                                    title: "Lalala",
-                                                    content: "Wooow",
-                                                    background: "red"
-                                                }
-                                                Card {
-                                                    title: "Lalala",
-                                                    content: "Wooow",
-                                                    background: "blue"
-                                                }
-                                            })
-                                        }
-                                    })
+                                Card {
+                                    title: "Lalala",
+                                    content: "Wooow",
+                                    background: "blue"
                                 }
-                            })
+                            }
                         }
-                        Card {
-                            title: "Another title",
-                            content: "Some content",
-                            background: "red"
-                        }
-                        Card {
-                            title: "Another title",
-                            content: "Some content",
-                            background: "yellow"
-                        }
-                        Card {
-                            title: "Lalala",
-                            content: "Wooow",
-                            background: "green"
-                        }
-                        Card {
-                            title: "Another title",
-                            content: "Some content",
-                            background: "yellow"
-                        }
-                     ))
+                    }
+                    Card {
+                        title: "Another title",
+                        content: "Some content",
+                        background: "red"
+                    }
+                    Card {
+                        title: "Another title",
+                        content: "Some content",
+                        background: "yellow"
+                    }
+                    Card {
+                        title: "Lalala",
+                        content: "Wooow",
+                        background: "green"
+                    }
+                    Card {
+                        title: "Another title",
+                        content: "Some content",
+                        background: "yellow"
+                    }
                 }
                 Navbar {
                     title: "Bottom bar"
@@ -219,13 +211,10 @@ fn Area<'a>(cx: Scope<'a>) -> Element {
             radius: "10",
             onmouseover: cursor_moved,
             onclick: cursor_clicked,
-
             text {
-
                 "Mouse is at [x: {cursor_pos_over.0}, y: {cursor_pos_over.1}] ",
             },
             text {
-
                 "Mouse clicked at [x: {cursor_pos_click.0}, y: {cursor_pos_click.1}]"
             }
         }
