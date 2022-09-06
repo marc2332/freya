@@ -10,35 +10,35 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     cx.render(rsx!(
-        view {
+        rect {
             height: "100%",
             width: "100%",
             padding: "100",
             background: "black",
             ScrollView {
-                view {
+                rect {
                     height: "200",
                     width: "100%",
                     background: "red",
                     padding: "20",
-                    view {
+                    rect {
                         height: "100%",
                         width: "100%",
                         background: "blue",
-                        text { "hi" }
+                        label { "hi" }
                     }
                 }
-                view {
+                rect {
                     height: "200",
                     width: "100%",
                     background: "red",
-                    text { "hi" }
+                    label { "hi" }
                 }
-                view {
+                rect {
                     height: "200",
                     width: "100%",
                     background: "red",
-                    text { "hi" }
+                    label { "hi" }
                 }
             }
         }

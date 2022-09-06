@@ -55,11 +55,11 @@ fn Drawer<'a>(cx: Scope<'a, DrawerOptions<'a>>) -> Element<'a> {
     );
 
     cx.render(rsx! {
-        view {
+        rect {
             height: "100%",
             width: "0",
             scroll_x: "{pos}",
-            view {
+            rect {
                 height: "100%",
                 width: "200",
                 background: "gray",
@@ -74,7 +74,7 @@ fn app(cx: Scope) -> Element {
     let opened = use_state(&cx, || false);
 
     cx.render(rsx!(
-        view {
+        rect {
             height: "100%",
             width: "100%",
             direction: "horizontal",
@@ -83,53 +83,53 @@ fn app(cx: Scope) -> Element {
                 body: cx.render(rsx!(
                     Button {
                         onclick: move |_| { opened.set(false) },
-                        body: cx.render(rsx!(  text { "CLOSE"} ))
+                        body: cx.render(rsx!(  label { "CLOSE"} ))
                     }
                     ScrollView {
                         Button {
                             onclick: move |_| {  },
-                            body: cx.render(rsx!(  text { "Hi"} ))
+                            body: cx.render(rsx!(  label { "Hi"} ))
                         }
                         Button {
                             onclick: move |_| {  },
-                            body: cx.render(rsx!(  text { "Hi"} ))
+                            body: cx.render(rsx!(  label { "Hi"} ))
                         }
                         Button {
                             onclick: move |_| {  },
-                            body: cx.render(rsx!(  text { "Hi"} ))
+                            body: cx.render(rsx!(  label { "Hi"} ))
                         }
                         Button {
                             onclick: move |_| {  },
-                            body: cx.render(rsx!(  text { "Hi"} ))
+                            body: cx.render(rsx!(  label { "Hi"} ))
                         }
                         Button {
                             onclick: move |_| {  },
-                            body: cx.render(rsx!(  text { "Hi"} ))
+                            body: cx.render(rsx!(  label { "Hi"} ))
                         }
                         Button {
                             onclick: move |_| {  },
-                            body: cx.render(rsx!(  text { "Hi"} ))
+                            body: cx.render(rsx!(  label { "Hi"} ))
                         }
                         Button {
                             onclick: move |_| {  },
-                            body: cx.render(rsx!(  text { "Hi"} ))
+                            body: cx.render(rsx!(  label { "Hi"} ))
                         }
                         Button {
                             onclick: move |_| {  },
-                            body: cx.render(rsx!(  text { "Hi"} ))
+                            body: cx.render(rsx!(  label { "Hi"} ))
                         }
                     }
                  ))
             }
-            view {
+            rect {
                 height: "100%",
                 width: "100%",
-                view {
+                rect {
                     height: "30",
                     width: "80",
                     background: "black",
                     onclick: move |_| { opened.set(true) },
-                    text { "open"}
+                    label { "open"}
                 }
             }
         }
@@ -141,18 +141,18 @@ fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
     let background = use_state(&cx, || "black");
 
     cx.render(rsx!(
-        view {
+        rect {
             width: "100%",
             height: "60",
             padding: "10",
             onclick: move |evt| cx.props.onclick.call(evt),
-            view {
+            rect {
                 width: "100%",
                 height: "100%",
                 padding: "2",
                 radius: "7",
                 background: "green",
-                view {
+                rect {
                     onmouseover: move |_| {
                         background.set("gray");
                     },

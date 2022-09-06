@@ -10,15 +10,15 @@ fn app(cx: Scope) -> Element {
     let sizes = use_state(&cx, || (50, 50, 50, 50));
 
     cx.render(rsx! {
-        view {
+        rect {
             height: "stretch",
             width: "stretch",
             direction: "horizontal",
             padding: "30",
-            view {
+            rect {
                 width: "{sizes.0}%",
                 height: "stretch",
-                view {
+                rect {
                     background: "red",
                     height: "{sizes.2}%",
                     width: "stretch",
@@ -29,11 +29,11 @@ fn app(cx: Scope) -> Element {
                         v.2 += 5;
                         v.3 -= 5;
                     }),
-                    text {
+                    label {
                         "Click to increase",
                     }
                 }
-                view {
+                rect {
                     background: "green",
                     height: "{sizes.3}%",
                     width: "stretch",
@@ -44,15 +44,15 @@ fn app(cx: Scope) -> Element {
                         v.2 -= 5;
                         v.3 += 5;
                     }),
-                    text {
+                    label {
                         "Click to increase",
                     }
                 }
             }
-            view {
+            rect {
                 width: "{sizes.1}%",
                 height: "stretch",
-                view {
+                rect {
                     background: "blue",
                     height: "{sizes.2}%",
                     width: "stretch",
@@ -63,11 +63,11 @@ fn app(cx: Scope) -> Element {
                         v.2 += 5;
                         v.3 -= 5;
                     }),
-                    text {
+                    label {
                         "Click to increase",
                     }
                 }
-                view {
+                rect {
                     background: "black",
                     height: "{sizes.3}%",
                     width: "stretch",
@@ -78,7 +78,7 @@ fn app(cx: Scope) -> Element {
                         v.2 -= 5;
                         v.3 += 5;
                     }),
-                    text {
+                    label {
                         "Click to increase",
                     }
                 }

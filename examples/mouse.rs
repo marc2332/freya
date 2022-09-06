@@ -8,7 +8,7 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     cx.render(rsx! {
-        view {
+        rect {
             height: "100%",
             width: "100%",
             Area {
@@ -43,17 +43,17 @@ fn Area<'a>(cx: Scope<'a>) -> Element {
     };
 
     cx.render(rsx! {
-        view {
+        rect {
             height: "50%",
             width: "100%",
             background: "blue",
             padding: "10",
             onmouseover: cursor_moved,
             onclick: cursor_clicked,
-            text {
+            label {
                 "Mouse is at [x: {cursor_pos_over.0}, y: {cursor_pos_over.1}] ",
             },
-            text {
+            label {
                 "Mouse clicked at [x: {cursor_pos_click.0}, y: {cursor_pos_click.1}]"
             }
         }

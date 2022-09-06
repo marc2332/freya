@@ -9,56 +9,56 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     cx.render(rsx!(
-        view {
+        rect {
             height: "100%",
             width: "100%",
             direction: "horizontal",
-            view {
+            rect {
                 height: "100%",
                 width: "10%",
                 background: "rgb(66, 75, 84)",
             }
-            view {
+            rect {
                 height: "100%",
                 width: "10%",
                 background: "rgb(179, 141, 151)",
             }
-            view {
+            rect {
                 height: "100%",
                 width: "10%",
                 background: "rgb(213, 172, 169)",
             }
-            view {
+            rect {
                 height: "100%",
                 width: "10%",
                 background: "rgb(235, 207, 178)",
             }
-            view {
+            rect {
                 height: "100%",
                 width: "10%",
                 background: "rgb(197, 186, 175)",
             }
-            view {
+            rect {
                 height: "100%",
                 width: "10%",
                 background: "rgb(237, 238, 201)",
             }
-            view {
+            rect {
                 height: "100%",
                 width: "10%",
                 background: "rgb(221, 231, 199)",
             }
-            view {
+            rect {
                 height: "100%",
                 width: "10%",
                 background: "rgb(191, 216, 189)",
             }
-            view {
+            rect {
                 height: "100%",
                 width: "10%",
                 background: "rgb(152, 201, 163)",
             }
-            view {
+            rect {
                 height: "100%",
                 width: "10%",
                 background: "rgb(119, 191, 163)",

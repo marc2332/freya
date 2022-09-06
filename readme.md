@@ -12,20 +12,20 @@ fn app(cx: Scope) -> Element {
     let mut count = use_state(&cx, || 0);
 
     cx.render(rsx!(
-        view {
+        rect {
             height: "20%",
             width: "100%",
             background: "black",
             padding: "25",
-            text { "Number is: {count}" }
+            label { "Number is: {count}" }
         }
-        view {
+        rect {
             height: "80%",
             width: "100%",
             background: "blue",
             padding: "25",
             onclick: move |_| count += 1,
-            text { "Increase!" }
+            label { "Increase!" }
         }
     ))
 }
@@ -62,8 +62,8 @@ fn app(cx: Scope) -> Element {
 - [ ] Investigate if `image` diffing can be speeded up (reference: https://github.com/DioxusLabs/dioxus/pull/543#issuecomment-1238393539)
 - [ ] `FilesystemImage` and `NetworkImage` components
 - [ ] Add `paragraph` element
-- [ ] Rename `view` element to `rect`
-- [ ] Rename `text` element to `label`
+- [x] Rename `view` element to `rect`
+- [x] Rename `text` element to `label`
 
 
 MIT License

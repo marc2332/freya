@@ -24,7 +24,7 @@ fn calculate_area(node: &NodeData, mut area: NodeArea, parent_area: NodeArea) ->
         SizeMode::Auto => {
             if let Some(node) = &node.node {
                 if let NodeType::Element { tag, .. } = &node.node_type {
-                    if tag == "text" {
+                    if tag == "label" {
                         area.height = 18.0;
                     }
                 }

@@ -12,14 +12,14 @@ fn main() {
 fn app(cx: Scope) -> Element {
     let theme = use_atom_ref(&cx, THEME);
 
-    cx.render(rsx!(view {
+    cx.render(rsx!(rect {
         height: "100%",
         width: "100%",
         Button {
             on_click: |_| {
                 *theme.write() = LIGHT_THEME;
             },
-            text {
+            label {
                 width: "100",
                 "Light"
             }
@@ -28,7 +28,7 @@ fn app(cx: Scope) -> Element {
             on_click: |_| {
                 *theme.write() = DARK_THEME;
             },
-            text {
+            label {
                 width: "100",
                 "Dark"
             }

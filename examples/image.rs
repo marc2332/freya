@@ -22,7 +22,7 @@ fn app(cx: Scope) -> Element {
         size += (page.y as i32) * 20;
     };
 
-    cx.render(rsx!(view {
+    cx.render(rsx!(rect {
         width: "100%",
         height: "100%",
         padding: "100",

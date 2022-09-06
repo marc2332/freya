@@ -35,7 +35,7 @@ pub fn render_skia(
     match &node.node_type {
         NodeType::Element { tag, children, .. } => {
             match tag.as_str() {
-                "view" | "container" => {
+                "rect" | "container" => {
                     let mut paint = Paint::default();
 
                     paint.set_anti_alias(true);
@@ -81,7 +81,7 @@ pub fn render_skia(
 
                     canvas.draw_path(&path, &paint);
                 }
-                "text" => {
+                "label" => {
                     let mut paint = Paint::default();
 
                     paint.set_anti_alias(true);

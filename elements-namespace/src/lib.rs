@@ -37,7 +37,7 @@ macro_rules! builder_constructors {
 }
 
 builder_constructors! {
-    view {
+    rect {
         padding: String,
         height: String,
         width: String,
@@ -61,7 +61,7 @@ builder_constructors! {
         shadow: String,
         radius: String,
     };
-    text {
+    label {
         layer: String,
         height: String,
         width: String,

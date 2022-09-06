@@ -34,20 +34,20 @@ fn app(cx: Scope) -> Element {
     let small = colors[2];
 
     cx.render(rsx! {
-        view {
+        rect {
             background: "{big}",
             height: "stretch",
             width: "stretch",
             padding: "50",
-            text {
+            label {
                 "hello",
             }
-            view {
+            rect {
                 background: "{mid}",
                 height: "auto",
                 width: "stretch",
                 padding: "{padding}",
-                text {
+                label {
                     "World",
                 }
                 container {
@@ -55,7 +55,7 @@ fn app(cx: Scope) -> Element {
                     height: "auto",
                     width: "stretch",
                     padding: "20",
-                    text {
+                    label {
                         "ddddddd",
                     }
                 }

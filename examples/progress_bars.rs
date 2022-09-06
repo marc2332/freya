@@ -67,12 +67,12 @@ struct LoadingBarProps {
 #[allow(non_snake_case)]
 fn LoadingBar<'a>(cx: Scope<'a, LoadingBarProps>) -> Element {
     cx.render(rsx!(
-        view {
+        rect {
             width: "auto",
             height: "30",
             padding: "15",
             background: "white",
-            view {
+            rect {
                 width: "{&cx.props.progress}%",
                 height: "stretch",
                 background: "blue",

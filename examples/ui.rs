@@ -108,12 +108,12 @@ struct NavbarProps<'a> {
 #[allow(non_snake_case)]
 fn Navbar<'a>(cx: Scope<'a, NavbarProps<'a>>) -> Element {
     cx.render(rsx!(
-        view {
+        rect {
             height: "15%",
             width: "stretch",
             background: "black",
             padding: "30",
-            text {
+            label {
                 "{&cx.props.title}"
             }
         }
@@ -131,10 +131,10 @@ struct AppProps<'a> {
 #[allow(non_snake_case)]
 fn App<'a>(cx: Scope<'a, AppProps<'a>>) -> Element {
     cx.render(rsx!(
-        view {
+        rect {
             width: "stretch",
             height: "stretch",
-            view {
+            rect {
                 width: "stretch",
                 height: "stretch",
                 &cx.props.navbar,
@@ -154,22 +154,22 @@ struct CardProps<'a> {
 #[allow(non_snake_case)]
 fn Card<'a>(cx: Scope<'a, CardProps<'a>>) -> Element {
     cx.render(rsx!(
-        view {
+        rect {
             width: "stretch",
             height: "200",
             padding: "20",
             background: "{cx.props.background}",
-            view {
+            rect {
                 width: "stretch",
                 height: "50%",
                 background: "gray",
                 padding: "20",
                 radius: "10",
-                text {
+                label {
                     height: "auto",
                     "{&cx.props.title}"
                 }
-                text {
+                label {
                     height: "auto",
                     "{&cx.props.content}"
                 }
@@ -203,7 +203,7 @@ fn Area<'a>(cx: Scope<'a>) -> Element {
     };
 
     cx.render(rsx! {
-        view {
+        rect {
             height: "50%",
             width: "100%",
             background: "blue",
@@ -211,10 +211,10 @@ fn Area<'a>(cx: Scope<'a>) -> Element {
             radius: "10",
             onmouseover: cursor_moved,
             onclick: cursor_clicked,
-            text {
+            label {
                 "Mouse is at [x: {cursor_pos_over.0}, y: {cursor_pos_over.1}] ",
             },
-            text {
+            label {
                 "Mouse clicked at [x: {cursor_pos_click.0}, y: {cursor_pos_click.1}]"
             }
         }

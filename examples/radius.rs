@@ -21,7 +21,7 @@ fn app(cx: Scope) -> Element {
             width: "100%",
             padding: "125",
             onscroll: onscroll,
-            view {
+            rect {
                 shadow: "0 0 150 30.0 black",
                 radius: "{radius}",
                 height: "100%",
