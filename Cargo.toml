@@ -16,3 +16,4 @@ dioxus = { git = "https://github.com/marc2332/dioxus", branch = "patch-3", featu
 tokio = "1.17.0"
 elements-namespace = { path = "./elements-namespace"}
 components = { path = "./components"}
+fermi = { git = "https://github.com/marc2332/dioxus", branch = "patch-3" }

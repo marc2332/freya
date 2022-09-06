@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 dioxus = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
 elements-namespace = { path = "../elements-namespace"}
+fermi = { git = "https://github.com/marc2332/dioxus", branch = "patch-3" }
