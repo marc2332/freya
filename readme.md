@@ -4,7 +4,7 @@
 
 A GUI library based on [Skia](https://skia.org/) and [Dioxus](https://dioxuslabs.com).
 
-> trev is like react-dom, where react is dioxus and the dom is skia.
+> trev is like react-dom, where react is dioxus and the dom is skia. But it also comes with an optional but handy components library. 
 
 ```rust
 
@@ -36,10 +36,13 @@ fn app(cx: Scope) -> Element {
 - Nested scroll views
 - Click, mouse move, mouse scrolled events
 - Background, text color, padding, width, height, shadow, border radius, custom layer (like z-index)
-- Windows & Linux (MacOS not tested yet)
+- Windows, Linux and MacOS support
 
 ### Goals 😁
-- Fast, lightweight and secure apps
+- Fast
+- Lightweight
+- Predictable
+- Secure
 - Full cross platform
 
 ### Ideas 💭
@@ -52,10 +55,15 @@ fn app(cx: Scope) -> Element {
 - [ ] Add window parameters
 - [ ] Support for more events
 - [ ] Support for multiple windows
-- [ ] Use [taffy](https://github.com/dioxusLabs/taffy) for Flex layouts.
+- [ ] Add `Flex` component (using [taffy](https://github.com/dioxusLabs/taffy)).
 - [x] Renderer-based bounds clipping
-- [ ] Improve code and documentation
+- [ ] Documentation
 - [ ] Improve Auto calculation for width and height
+- [ ] Investigate if `image` diffing can be speeded up (reference: https://github.com/DioxusLabs/dioxus/pull/543#issuecomment-1238393539)
+- [ ] `FilesystemImage` and `NetworkImage` components
+- [ ] Add `paragraph` element
+- [ ] Rename `view` element to `rect`
+- [ ] Rename `text` element to `label`
 
 
 MIT License
