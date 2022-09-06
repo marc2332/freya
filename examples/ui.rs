@@ -22,7 +22,6 @@ fn app(cx: Scope) -> Element {
                     Card {
                         title: "Another title",
                         content: "Some content",
-                        background: "yellow"
                     }
                     ScrollView {
                         height: "200",
@@ -30,12 +29,10 @@ fn app(cx: Scope) -> Element {
                         Card {
                             title: "Lalala",
                             content: "Wooow",
-                            background: "green"
                         }
                         Card {
                             title: "Lalala",
                             content: "Wooow",
-                            background: "red"
                         }
                         ScrollView {
                             height: "200",
@@ -43,12 +40,10 @@ fn app(cx: Scope) -> Element {
                             Card {
                                 title: "Lalala",
                                 content: "Wooow",
-                                background: "green"
                             }
                             Card {
                                 title: "Lalala",
                                 content: "Wooow",
-                                background: "red"
                             }
                             ScrollView {
                                 height: "200",
@@ -56,17 +51,14 @@ fn app(cx: Scope) -> Element {
                                 Card {
                                     title: "Lalala",
                                     content: "Wooow",
-                                    background: "green"
                                 }
                                 Card {
                                     title: "Lalala",
                                     content: "Wooow",
-                                    background: "red"
                                 }
                                 Card {
                                     title: "Lalala",
                                     content: "Wooow",
-                                    background: "blue"
                                 }
                             }
                         }
@@ -74,22 +66,18 @@ fn app(cx: Scope) -> Element {
                     Card {
                         title: "Another title",
                         content: "Some content",
-                        background: "red"
                     }
                     Card {
                         title: "Another title",
                         content: "Some content",
-                        background: "yellow"
                     }
                     Card {
                         title: "Lalala",
                         content: "Wooow",
-                        background: "green"
                     }
                     Card {
                         title: "Another title",
                         content: "Some content",
-                        background: "yellow"
                     }
                 }
                 Navbar {
@@ -111,7 +99,7 @@ fn Navbar<'a>(cx: Scope<'a, NavbarProps<'a>>) -> Element {
         rect {
             height: "15%",
             width: "stretch",
-            background: "black",
+            background: "rgb(20, 20, 20)",
             padding: "30",
             label {
                 "{&cx.props.title}"
@@ -148,7 +136,6 @@ fn App<'a>(cx: Scope<'a, AppProps<'a>>) -> Element {
 struct CardProps<'a> {
     title: &'a str,
     content: &'a str,
-    background: &'a str,
 }
 
 #[allow(non_snake_case)]
@@ -158,12 +145,11 @@ fn Card<'a>(cx: Scope<'a, CardProps<'a>>) -> Element {
             width: "stretch",
             height: "200",
             padding: "20",
-            background: "{cx.props.background}",
+            background: "rgb(45, 45, 45)",
             rect {
                 width: "stretch",
                 height: "50%",
-                background: "gray",
-                padding: "20",
+                padding: "10",
                 radius: "10",
                 label {
                     height: "auto",
@@ -207,7 +193,7 @@ fn Area<'a>(cx: Scope<'a>) -> Element {
             height: "50%",
             width: "100%",
             background: "blue",
-            padding: "10",
+            padding: "20",
             radius: "10",
             onmouseover: cursor_moved,
             onclick: cursor_clicked,
