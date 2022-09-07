@@ -145,7 +145,7 @@ impl ChildDepState for Size {
     }
 }
 
-#[derive(Default, Clone, Debug)]
+#[derive(Default, Clone, Debug, PartialEq)]
 pub struct ShadowSettings {
     pub x: f32,
     pub y: f32,
@@ -220,7 +220,11 @@ impl NodeDepState<()> for Style {
             }
         }
 
-        let changed = (background != self.background) || (relative_layer != self.relative_layer);
+        let changed = (background != self.background)
+            || (relative_layer != self.relative_layer)
+            || (shadow != self.shadow)
+            || (radius != self.radius)
+            || (image_data != self.image_data);
         *self = Self {
             background,
             relative_layer,
