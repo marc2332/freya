@@ -1,6 +1,8 @@
+use dioxus_core::ElementId;
+use dioxus_native_core::real_dom::{Node, NodeType};
 use layers_engine::{Layers, NodeArea, NodeData};
 use layout_engine::calculate_node;
-use state::node::SizeMode;
+use state::node::{SizeMode, NodeState};
 
 #[test]
 fn percentage() {
@@ -9,7 +11,13 @@ fn percentage() {
             width: SizeMode::Percentage(100.0),
             height: SizeMode::Percentage(100.0),
             padding: (0.0, 0.0, 0.0, 0.0),
-            node: None,
+            node: Some(Node {
+                id: ElementId(0),
+                parent: None,
+                state: NodeState::default(),
+                node_type: NodeType::Element { tag: "rect".to_string(), namespace: None, children: Vec::new() },
+                height: 0,
+            }),
         },
         NodeArea {
             x: 0.0,
@@ -40,7 +48,13 @@ fn manual() {
             width: SizeMode::Manual(250.0),
             height: SizeMode::Manual(150.0),
             padding: (0.0, 0.0, 0.0, 0.0),
-            node: None,
+            node: Some(Node {
+                id: ElementId(0),
+                parent: None,
+                state: NodeState::default(),
+                node_type: NodeType::Element { tag: "rect".to_string(), namespace: None, children: Vec::new() },
+                height: 0,
+            }),
         },
         NodeArea {
             x: 0.0,
@@ -68,10 +82,16 @@ fn manual() {
 fn auto() {
     let result = calculate_node(
         &NodeData {
-            width: SizeMode::Auto,
-            height: SizeMode::Auto,
+            width: SizeMode::Percentage(100.0),
+            height: SizeMode::Percentage(100.0),
             padding: (0.0, 0.0, 0.0, 0.0),
-            node: None,
+            node: Some(Node {
+                id: ElementId(0),
+                parent: None,
+                state: NodeState::default(),
+                node_type: NodeType::Element { tag: "rect".to_string(), namespace: None, children: Vec::new() },
+                height: 0,
+            }),
         },
         NodeArea {
             x: 0.0,
@@ -109,7 +129,13 @@ fn x_y() {
             width: SizeMode::Auto,
             height: SizeMode::Auto,
             padding: (0.0, 0.0, 0.0, 0.0),
-            node: None,
+            node: Some(Node {
+                id: ElementId(0),
+                parent: None,
+                state: NodeState::default(),
+                node_type: NodeType::Element { tag: "rect".to_string(), namespace: None, children: Vec::new() },
+                height: 0,
+            }),
         },
         NodeArea {
             x: 15.0,
