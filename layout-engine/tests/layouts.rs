@@ -2,7 +2,22 @@ use dioxus_core::ElementId;
 use dioxus_native_core::real_dom::{Node, NodeType};
 use layers_engine::{Layers, NodeArea, NodeData};
 use layout_engine::calculate_node;
-use state::node::{SizeMode, NodeState};
+use lazy_static::lazy_static;
+use state::node::{NodeState, SizeMode};
+
+lazy_static! {
+    static ref TEST_NODE: Node<NodeState> = Node {
+        id: ElementId(0),
+        parent: None,
+        state: NodeState::default(),
+        node_type: NodeType::Element {
+            tag: "rect".to_string(),
+            namespace: None,
+            children: Vec::new()
+        },
+        height: 0,
+    };
+}
 
 #[test]
 fn percentage() {
@@ -11,13 +26,7 @@ fn percentage() {
             width: SizeMode::Percentage(100.0),
             height: SizeMode::Percentage(100.0),
             padding: (0.0, 0.0, 0.0, 0.0),
-            node: Some(Node {
-                id: ElementId(0),
-                parent: None,
-                state: NodeState::default(),
-                node_type: NodeType::Element { tag: "rect".to_string(), namespace: None, children: Vec::new() },
-                height: 0,
-            }),
+            node: TEST_NODE.clone(),
         },
         NodeArea {
             x: 0.0,
@@ -48,13 +57,7 @@ fn manual() {
             width: SizeMode::Manual(250.0),
             height: SizeMode::Manual(150.0),
             padding: (0.0, 0.0, 0.0, 0.0),
-            node: Some(Node {
-                id: ElementId(0),
-                parent: None,
-                state: NodeState::default(),
-                node_type: NodeType::Element { tag: "rect".to_string(), namespace: None, children: Vec::new() },
-                height: 0,
-            }),
+            node: TEST_NODE.clone(),
         },
         NodeArea {
             x: 0.0,
@@ -85,13 +88,7 @@ fn auto() {
             width: SizeMode::Percentage(100.0),
             height: SizeMode::Percentage(100.0),
             padding: (0.0, 0.0, 0.0, 0.0),
-            node: Some(Node {
-                id: ElementId(0),
-                parent: None,
-                state: NodeState::default(),
-                node_type: NodeType::Element { tag: "rect".to_string(), namespace: None, children: Vec::new() },
-                height: 0,
-            }),
+            node: TEST_NODE.clone(),
         },
         NodeArea {
             x: 0.0,
@@ -112,7 +109,17 @@ fn auto() {
                 width: SizeMode::Manual(170.0),
                 height: SizeMode::Percentage(25.0),
                 padding: (0.0, 0.0, 0.0, 0.0),
-                node: None,
+                node: Node {
+                    id: ElementId(1),
+                    parent: None,
+                    state: NodeState::default(),
+                    node_type: NodeType::Element {
+                        tag: "rect".to_string(),
+                        namespace: None,
+                        children: Vec::new(),
+                    },
+                    height: 0,
+                },
             })
         },
         0,
@@ -129,13 +136,7 @@ fn x_y() {
             width: SizeMode::Auto,
             height: SizeMode::Auto,
             padding: (0.0, 0.0, 0.0, 0.0),
-            node: Some(Node {
-                id: ElementId(0),
-                parent: None,
-                state: NodeState::default(),
-                node_type: NodeType::Element { tag: "rect".to_string(), namespace: None, children: Vec::new() },
-                height: 0,
-            }),
+            node: TEST_NODE.clone(),
         },
         NodeArea {
             x: 15.0,
@@ -156,7 +157,17 @@ fn x_y() {
                 width: SizeMode::Manual(170.0),
                 height: SizeMode::Percentage(25.0),
                 padding: (0.0, 0.0, 0.0, 0.0),
-                node: None,
+                node: Node {
+                    id: ElementId(1),
+                    parent: None,
+                    state: NodeState::default(),
+                    node_type: NodeType::Element {
+                        tag: "rect".to_string(),
+                        namespace: None,
+                        children: Vec::new(),
+                    },
+                    height: 0,
+                },
             })
         },
         0,

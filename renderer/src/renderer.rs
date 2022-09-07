@@ -12,12 +12,12 @@ use crate::SkiaDom;
 pub fn render_skia(
     dom: &mut &SkiaDom,
     canvas: &mut &mut Canvas,
-    node: &NodeData,
+    node_data: &NodeData,
     area: &NodeArea,
     font: &Font,
     viewports: &Vec<NodeArea>,
 ) {
-    let node = node.node.as_ref().unwrap();
+    let node = &node_data.node;
 
     for viewport in viewports {
         canvas.clip_rect(

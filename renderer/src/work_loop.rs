@@ -32,7 +32,7 @@ pub fn work_loop(
             width: SizeMode::Percentage(100.0),
             height: SizeMode::Percentage(100.0),
             padding: (0.0, 0.0, 0.0, 0.0),
-            node: Some(root),
+            node: root,
         },
         area.clone(),
         area,
@@ -48,7 +48,7 @@ pub fn work_loop(
                 width: child.state.size.width,
                 height: child.state.size.height,
                 padding: child.state.size.padding,
-                node: Some(child),
+                node: child,
             })
         },
         0,
@@ -65,9 +65,9 @@ pub fn work_loop(
     for layer_num in &layers_nums {
         let layer = layers.layers.get(layer_num).unwrap();
         for (id, element) in layer {
-            match &element.node.node.as_ref().unwrap().node_type {
+            match &element.node_data.node.node_type {
                 NodeType::Element { tag, .. } => {
-                    for child in &element.children {
+                    for child in &element.node_children {
                         if !calculated_viewports.contains_key(&child) {
                             calculated_viewports.insert(*child, Vec::new());
                         }
@@ -79,7 +79,7 @@ pub fn work_loop(
                             calculated_viewports
                                 .get_mut(&child)
                                 .unwrap()
-                                .push(element.area.clone());
+                                .push(element.node_area.clone());
                         }
                     }
                 }
@@ -97,8 +97,8 @@ pub fn work_loop(
             render_skia(
                 &mut dom,
                 &mut canvas,
-                &element.node,
-                &element.area,
+                &element.node_data,
+                &element.node_area,
                 font,
                 &calculated_viewports.get(id).unwrap_or(&Vec::new()),
             );
@@ -118,8 +118,8 @@ pub fn work_loop(
             let requests = renderer_requests.lock().unwrap();
 
             for request in requests.iter() {
-                let node = &element.node;
-                let area = &element.area;
+                let node = &element.node_data;
+                let area = &element.node_area;
                 match request {
                     RendererRequest::MouseEvent { name, event } => {
                         let x = area.x as f64;
@@ -177,7 +177,7 @@ pub fn work_loop(
         let mut found_node: Option<(&Node<NodeState>, &RendererRequest)> = None;
 
         'event_nodes: for (node_data, request) in event_nodes.iter() {
-            let node = node_data.node.as_ref().unwrap();
+            let node = &node_data.node;
             for listener in &listeners {
                 if listener.id == node.id {
                     if node.state.style.background != Color::TRANSPARENT && event_name == &"scroll"

@@ -3,8 +3,8 @@ use dioxus_native_core::real_dom::NodeType;
 use layers_engine::{Layers, NodeArea, NodeData};
 use state::node::{DirectionMode, SizeMode};
 
-fn calculate_area(node: &NodeData, mut area: NodeArea, parent_area: NodeArea) -> NodeArea {
-    match node.width {
+fn calculate_area(node_data: &NodeData, mut area: NodeArea, parent_area: NodeArea) -> NodeArea {
+    match node_data.width {
         SizeMode::Manual(w) => {
             area.width = w;
         }
@@ -14,7 +14,7 @@ fn calculate_area(node: &NodeData, mut area: NodeArea, parent_area: NodeArea) ->
         SizeMode::Auto => {}
     }
 
-    match node.height {
+    match node_data.height {
         SizeMode::Manual(h) => {
             area.height = h;
         }
@@ -22,11 +22,9 @@ fn calculate_area(node: &NodeData, mut area: NodeArea, parent_area: NodeArea) ->
             area.height = (parent_area.height / 100.0 * per).round();
         }
         SizeMode::Auto => {
-            if let Some(node) = &node.node {
-                if let NodeType::Element { tag, .. } = &node.node_type {
-                    if tag == "label" {
-                        area.height = 18.0;
-                    }
+            if let NodeType::Element { tag, .. } = &node_data.node.node_type {
+                if tag == "label" {
+                    area.height = 18.0;
                 }
             }
         }
@@ -36,7 +34,7 @@ fn calculate_area(node: &NodeData, mut area: NodeArea, parent_area: NodeArea) ->
 }
 
 pub fn calculate_node<T>(
-    node: &NodeData,
+    node_data: &NodeData,
     remaining_area: NodeArea,
     parent_area: NodeArea,
     resolver_options: &mut T,
@@ -44,15 +42,15 @@ pub fn calculate_node<T>(
     node_resolver: fn(&ElementId, &mut T) -> Option<NodeData>,
     inherited_relative_layer: i16,
 ) -> NodeArea {
-    let mut node_area = calculate_area(node, remaining_area, parent_area);
+    let mut node_area = calculate_area(node_data, remaining_area, parent_area);
     let mut is_text = false;
 
     // Returns a tuple, the first element is the layer in which the current node must be added
     // and the second indicates the layer that it's children must inherit
     let (node_layer, inherited_relative_layer) =
-        layers.calculate_layer(node, inherited_relative_layer);
+        layers.calculate_layer(node_data, inherited_relative_layer);
 
-    let padding = node.padding;
+    let padding = node_data.padding;
     let horizontal_padding = padding.1 + padding.3;
     let vertical_padding = padding.0 + padding.2;
 
@@ -66,77 +64,73 @@ pub fn calculate_node<T>(
     // Visible area occupied by the child elements
     let inner_area = remaining_inner_area.clone();
 
-    remaining_inner_area.y += node.node.as_ref().unwrap().state.size.scroll_y;
-    remaining_inner_area.x += node.node.as_ref().unwrap().state.size.scroll_x;
+    remaining_inner_area.y += node_data.node.state.size.scroll_y;
+    remaining_inner_area.x += node_data.node.state.size.scroll_x;
 
-    if let Some(dom_node) = &node.node {
-        match &dom_node.node_type {
-            NodeType::Element { children, .. } => {
-                for child in children {
-                    let child_node = node_resolver(child, resolver_options);
+    match &node_data.node.node_type {
+        NodeType::Element { children, .. } => {
+            for child in children {
+                let child_node = node_resolver(child, resolver_options);
 
-                    if let Some(child_node) = child_node {
-                        let child_node_area = calculate_node::<T>(
-                            &child_node,
-                            remaining_inner_area,
-                            inner_area,
-                            resolver_options,
-                            layers,
-                            node_resolver,
-                            inherited_relative_layer,
-                        );
+                if let Some(child_node) = child_node {
+                    let child_node_area = calculate_node::<T>(
+                        &child_node,
+                        remaining_inner_area,
+                        inner_area,
+                        resolver_options,
+                        layers,
+                        node_resolver,
+                        inherited_relative_layer,
+                    );
 
-                        let state = &node.node.as_ref().unwrap().state;
-
-                        match state.size.direction {
-                            DirectionMode::Vertical => {
-                                remaining_inner_area.y = child_node_area.y + child_node_area.height;
-                            }
-                            DirectionMode::Horizontal => {
-                                remaining_inner_area.x = child_node_area.x + child_node_area.width;
-                            }
-                            DirectionMode::Both => {
-                                remaining_inner_area.y = child_node_area.y + child_node_area.height;
-                                remaining_inner_area.x = child_node_area.x + child_node_area.width;
-                            }
+                    match node_data.node.state.size.direction {
+                        DirectionMode::Vertical => {
+                            remaining_inner_area.y = child_node_area.y + child_node_area.height;
                         }
-
-                        remaining_inner_area.height -= child_node_area.height;
-                        remaining_inner_area.width -= child_node_area.width;
-
-                        if child_node_area.width > remaining_inner_area.width
-                            || remaining_inner_area.width == 0.0
-                        {
-                            remaining_inner_area.width = child_node_area.width;
+                        DirectionMode::Horizontal => {
+                            remaining_inner_area.x = child_node_area.x + child_node_area.width;
                         }
-
-                        if child_node_area.height > remaining_inner_area.height
-                            || remaining_inner_area.height == 0.0
-                        {
-                            remaining_inner_area.height = child_node_area.height;
+                        DirectionMode::Both => {
+                            remaining_inner_area.y = child_node_area.y + child_node_area.height;
+                            remaining_inner_area.x = child_node_area.x + child_node_area.width;
                         }
+                    }
+
+                    remaining_inner_area.height -= child_node_area.height;
+                    remaining_inner_area.width -= child_node_area.width;
+
+                    if child_node_area.width > remaining_inner_area.width
+                        || remaining_inner_area.width == 0.0
+                    {
+                        remaining_inner_area.width = child_node_area.width;
+                    }
+
+                    if child_node_area.height > remaining_inner_area.height
+                        || remaining_inner_area.height == 0.0
+                    {
+                        remaining_inner_area.height = child_node_area.height;
                     }
                 }
             }
-            NodeType::Text { .. } => {
-                is_text = true;
-            }
-            NodeType::Placeholder => {}
+        }
+        NodeType::Text { .. } => {
+            is_text = true;
+        }
+        NodeType::Placeholder => {}
+    }
+
+    if !is_text {
+        if let SizeMode::Auto = node_data.width {
+            node_area.width = remaining_inner_area.x - node_area.x + padding.1;
         }
 
-        if !is_text {
-            if let SizeMode::Auto = node.width {
-                node_area.width = remaining_inner_area.x - node_area.x + padding.1;
-            }
-
-            if let SizeMode::Auto = node.height {
-                node_area.height = remaining_inner_area.y - node_area.y + padding.0;
-            }
+        if let SizeMode::Auto = node_data.height {
+            node_area.height = remaining_inner_area.y - node_area.y + padding.0;
         }
     }
 
     // Registers the element in the Layers handler
-    layers.add_element(node, &node_area, node_layer);
+    layers.add_element(node_data, &node_area, node_layer);
 
     node_area
 }

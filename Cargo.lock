@@ -1051,6 +1051,7 @@ dependencies = [
  "dioxus-native-core-macro",
  "fxhash",
  "layers-engine",
+ "lazy_static",
  "state",
 ]
 

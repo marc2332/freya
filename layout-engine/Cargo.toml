@@ -14,3 +14,4 @@ dioxus-native-core-macro = { git = "https://github.com/marc2332/dioxus" , branch
 dioxus-core = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
 fxhash = "0.2.1"
 anymap = "0.12.1"
+lazy_static = "1.4.0"
