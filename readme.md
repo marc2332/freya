@@ -34,7 +34,7 @@ fn app(cx: Scope) -> Element {
 - Text
 - Containers and views
 - Nested scroll views
-- Click, mouse move, mouse scrolled events
+- Click, mouse move, scroll events
 - Background, text color, padding, width, height, shadow, border radius, custom layer (like z-index)
 - Windows, Linux and MacOS support
 
@@ -64,6 +64,6 @@ fn app(cx: Scope) -> Element {
 - [ ] Add `paragraph` element
 - [x] Rename `view` element to `rect`
 - [x] Rename `text` element to `label`
-
+- [ ] Better touchpad support
 
 MIT License
