@@ -37,6 +37,7 @@ fn app(cx: Scope) -> Element {
 - Click, mouse move, scroll events
 - Background, text color, padding, width, height, shadow, border radius, custom layer (like z-index)
 - Windows, Linux and MacOS support
+- Optional components library
 
 ### Goals 😁
 - Fast
@@ -64,5 +65,6 @@ fn app(cx: Scope) -> Element {
 - [x] Rename `view` element to `rect`
 - [x] Rename `text` element to `label`
 - [ ] Better touchpad support
+- [ ] SVG support
 
 MIT License
