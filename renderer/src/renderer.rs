@@ -2,7 +2,7 @@ use dioxus_native_core::real_dom::{Node, NodeType};
 use layers_engine::{NodeArea, NodeData};
 use skia_safe::{
     utils::text_utils::Align, BlurStyle, Canvas, ClipOp, Color, Data, Font, IRect, Image,
-    MaskFilter, Paint, PaintStyle, Path, PathDirection, Rect,
+    MaskFilter, Paint, PaintStyle, Path, PathDirection, Rect, textlayout::{ParagraphBuilder, ParagraphStyle, FontCollection, TextStyle}, FontMgr,
 };
 use state::node::NodeState;
 use std::ops::Index;
@@ -110,6 +110,47 @@ pub fn render_skia(
 
                     canvas.draw_str_align(text, (x, y), &font, &paint, Align::Left);
                 }
+                "paragraph" => {
+                    let mut paint = Paint::default();
+
+                    paint.set_anti_alias(true);
+                    paint.set_style(PaintStyle::StrokeAndFill);
+                    paint.set_color(Color::WHITE);
+
+                    let child_id = children.get(0);
+
+                    let text = if let Some(child_id) = child_id {
+                        let child: Node<NodeState> = {
+                            let dom = dom.lock().unwrap();
+                            dom.index(*child_id).clone()
+                        };
+
+                        if let NodeType::Text { text } = child.node_type {
+                            text
+                        } else {
+                            String::new()
+                        }
+                    } else {
+                        String::new()
+                    };
+
+                    let x = area.x;
+                    let y = area.y + 12.0; /* Line height, wip */
+
+                    let mut font_collection = FontCollection::new();
+                    font_collection.set_default_font_manager(FontMgr::default(), "Fira Sans");
+
+                    let mut paragraph_builder = ParagraphBuilder::new(&ParagraphStyle::default(), &font_collection);
+
+                    paragraph_builder.add_text(text);
+                    paragraph_builder.push_style(TextStyle::new().set_color(Color::WHITE).set_font_families(&["Fira Sans"]));
+
+                    let mut paragraph = paragraph_builder.build();
+
+                    paragraph.layout(area.width);
+                
+                    paragraph.paint(canvas, (x, y));
+                }
                 "image" => {
                     if let Some(image_data) = &node.state.style.image_data {
                         let pic = Image::from_encoded(unsafe { Data::new_bytes(image_data) });
@@ -142,12 +183,12 @@ pub fn render_skia(
                 let y = area.y;
 
                 let x2 = x + area.width;
-                let y2 = if area.height < 0 { y } else { y + area.height };
+                let y2 = if area.height < 0.0 { y } else { y + area.height };
 
-                canvas.draw_line((x as f32, y as f32), (x2 as f32, y as f32), &paint);
-                canvas.draw_line((x2 as f32, y as f32), (x2 as f32, y2 as f32), &paint);
-                canvas.draw_line((x2 as f32, y2 as f32), (x as f32, y2 as f32), &paint);
-                canvas.draw_line((x as f32, y2 as f32), (x as f32, y as f32), &paint);
+                canvas.draw_line((x, y ), (x2 , y ), &paint);
+                canvas.draw_line((x2 , y ), (x2 , y2 ), &paint);
+                canvas.draw_line((x2 , y2 ), (x , y2 ), &paint);
+                canvas.draw_line((x , y2 ), (x , y ), &paint);
 
                 path.close();
             }

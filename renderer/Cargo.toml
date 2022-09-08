@@ -10,7 +10,7 @@ wireframe = []
 [dependencies]
 gl = "*"
 glutin = "*"
-skia-safe = { version = "*", features = ["gl"] }
+skia-safe = { version = "*", features = ["gl", "textlayout"] }
 dioxus-core = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
 dioxus-native-core = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
 dioxus-html = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }

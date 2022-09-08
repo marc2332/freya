@@ -66,6 +66,10 @@ builder_constructors! {
         height: String,
         width: String,
     };
+    paragraph {
+        layer: String,
+        width: String,
+    };
 }
 
 #[allow(non_camel_case_types)]
