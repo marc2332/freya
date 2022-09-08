@@ -35,7 +35,7 @@ fn app(cx: Scope) -> Element {
 - Containers and views
 - Nested scroll views
 - Click, mouse move, scroll events
-- Background, text color, padding, width, height, shadow, border radius, custom layer (like z-index)
+- Background, text color, padding, width, height, min_width, min_height, shadow, border radius, custom layer (like z-index)
 - Windows, Linux and MacOS support
 - Optional components library
 
