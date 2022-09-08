@@ -41,7 +41,6 @@ fn app(cx: Scope) -> Element {
 ### Goals 😁
 - Fast
 - Lightweight
-- Predictable
 - Secure
 - Full cross platform
 
@@ -61,7 +60,7 @@ fn app(cx: Scope) -> Element {
 - [ ] Improve Auto calculation for width and height
 - [ ] Investigate if `image` diffing can be speeded up (reference: https://github.com/DioxusLabs/dioxus/pull/543#issuecomment-1238393539)
 - [ ] `FilesystemImage` and `NetworkImage` components
-- [ ] Add `paragraph` element
+- [x] Add `paragraph` element
 - [x] Rename `view` element to `rect`
 - [x] Rename `text` element to `label`
 - [ ] Better touchpad support
