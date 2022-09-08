@@ -1,8 +1,10 @@
 use dioxus_native_core::real_dom::{Node, NodeType};
 use layers_engine::{NodeArea, NodeData};
 use skia_safe::{
-    utils::text_utils::Align, BlurStyle, Canvas, ClipOp, Color, Data, Font, IRect, Image,
-    MaskFilter, Paint, PaintStyle, Path, PathDirection, Rect, textlayout::{ParagraphBuilder, ParagraphStyle, FontCollection, TextStyle}, FontMgr,
+    textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle},
+    utils::text_utils::Align,
+    BlurStyle, Canvas, ClipOp, Color, Data, Font, FontMgr, IRect, Image, MaskFilter, Paint,
+    PaintStyle, Path, PathDirection, Rect,
 };
 use state::node::NodeState;
 use std::ops::Index;
@@ -140,15 +142,20 @@ pub fn render_skia(
                     let mut font_collection = FontCollection::new();
                     font_collection.set_default_font_manager(FontMgr::default(), "Fira Sans");
 
-                    let mut paragraph_builder = ParagraphBuilder::new(&ParagraphStyle::default(), &font_collection);
+                    let mut paragraph_builder =
+                        ParagraphBuilder::new(&ParagraphStyle::default(), &font_collection);
 
                     paragraph_builder.add_text(text);
-                    paragraph_builder.push_style(TextStyle::new().set_color(Color::WHITE).set_font_families(&["Fira Sans"]));
+                    paragraph_builder.push_style(
+                        TextStyle::new()
+                            .set_color(Color::WHITE)
+                            .set_font_families(&["Fira Sans"]),
+                    );
 
                     let mut paragraph = paragraph_builder.build();
 
                     paragraph.layout(area.width);
-                
+
                     paragraph.paint(canvas, (x, y));
                 }
                 "image" => {
@@ -183,12 +190,16 @@ pub fn render_skia(
                 let y = area.y;
 
                 let x2 = x + area.width;
-                let y2 = if area.height < 0.0 { y } else { y + area.height };
+                let y2 = if area.height < 0.0 {
+                    y
+                } else {
+                    y + area.height
+                };
 
-                canvas.draw_line((x, y ), (x2 , y ), &paint);
-                canvas.draw_line((x2 , y ), (x2 , y2 ), &paint);
-                canvas.draw_line((x2 , y2 ), (x , y2 ), &paint);
-                canvas.draw_line((x , y2 ), (x , y ), &paint);
+                canvas.draw_line((x, y), (x2, y), &paint);
+                canvas.draw_line((x2, y), (x2, y2), &paint);
+                canvas.draw_line((x2, y2), (x, y2), &paint);
+                canvas.draw_line((x, y2), (x, y), &paint);
 
                 path.close();
             }

@@ -31,10 +31,27 @@ pub struct NodeState {
 pub struct Size {
     pub width: SizeMode,
     pub height: SizeMode,
+    pub min_height: SizeMode,
+    pub min_width: SizeMode,
     pub padding: (f32, f32, f32, f32),
     pub scroll_y: f32,
     pub scroll_x: f32,
     pub direction: DirectionMode,
+}
+
+impl Size {
+    pub fn expanded() -> Self {
+        Self {
+            width: SizeMode::Percentage(100.0),
+            height: SizeMode::Percentage(100.0),
+            min_height: SizeMode::Manual(0.0),
+            min_width: SizeMode::Manual(0.0),
+            padding: (0.0, 0.0, 0.0, 0.0),
+            scroll_y: 0.0,
+            scroll_x: 0.0,
+            direction: DirectionMode::Both,
+        }
+    }
 }
 
 impl ChildDepState for Size {
@@ -46,6 +63,8 @@ impl ChildDepState for Size {
         NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
             "width",
             "height",
+            "min_height",
+            "min_width",
             "padding",
             "scroll_y",
             "scroll_x",
@@ -64,6 +83,8 @@ impl ChildDepState for Size {
     {
         let mut width = SizeMode::default();
         let mut height = SizeMode::default();
+        let mut min_height = SizeMode::default();
+        let mut min_width = SizeMode::default();
         let mut padding = (0.0, 0.0, 0.0, 0.0);
         let mut scroll_y = 0.0;
         let mut scroll_x = 0.0;
@@ -94,6 +115,30 @@ impl ChildDepState for Size {
                         height = SizeMode::Percentage(attr.replace("%", "").parse().unwrap());
                     } else {
                         height = SizeMode::Manual(attr.parse().unwrap());
+                    }
+                }
+                "min_height" => {
+                    let attr = a.value.to_string();
+                    if &attr == "stretch" {
+                        min_height = SizeMode::Percentage(100.0);
+                    } else if &attr == "auto" {
+                        min_height = SizeMode::Auto;
+                    } else if attr.contains("%") {
+                        min_height = SizeMode::Percentage(attr.replace("%", "").parse().unwrap());
+                    } else {
+                        min_height = SizeMode::Manual(attr.parse().unwrap());
+                    }
+                }
+                "min_width" => {
+                    let attr = a.value.to_string();
+                    if &attr == "stretch" {
+                        min_width = SizeMode::Percentage(100.0);
+                    } else if &attr == "auto" {
+                        min_width = SizeMode::Auto;
+                    } else if attr.contains("%") {
+                        min_width = SizeMode::Percentage(attr.replace("%", "").parse().unwrap());
+                    } else {
+                        min_width = SizeMode::Manual(attr.parse().unwrap());
                     }
                 }
                 "padding" => {
@@ -129,6 +174,8 @@ impl ChildDepState for Size {
 
         let changed = (width != self.width)
             || (height != self.height)
+            || (min_height != self.min_height)
+            || (min_width != self.min_width)
             || (padding != self.padding)
             || (direction != self.direction)
             || (scroll_x != self.scroll_x)
@@ -136,6 +183,8 @@ impl ChildDepState for Size {
         *self = Self {
             width,
             height,
+            min_height,
+            min_width,
             padding,
             scroll_y,
             scroll_x,

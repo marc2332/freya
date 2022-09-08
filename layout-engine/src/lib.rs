@@ -4,31 +4,48 @@ use layers_engine::{Layers, NodeArea, NodeData};
 use state::node::{DirectionMode, SizeMode};
 
 fn calculate_area(node_data: &NodeData, mut area: NodeArea, parent_area: NodeArea) -> NodeArea {
-    match node_data.width {
-        SizeMode::Manual(w) => {
-            area.width = w;
+    let calculate = |value: SizeMode, area_value: f32, parent_area_value: f32| -> f32 {
+        match value {
+            SizeMode::Manual(v) => v,
+            SizeMode::Percentage(per) => (parent_area_value / 100.0 * per).round(),
+            SizeMode::Auto => area_value,
         }
-        SizeMode::Percentage(per) => {
-            area.width = (parent_area.width / 100.0 * per).round();
-        }
-        SizeMode::Auto => {}
-    }
+    };
 
-    match node_data.height {
-        SizeMode::Manual(h) => {
-            area.height = h;
-        }
-        SizeMode::Percentage(per) => {
-            area.height = (parent_area.height / 100.0 * per).round();
-        }
-        SizeMode::Auto => {
-            if let NodeType::Element { tag, .. } = &node_data.node.node_type {
-                if tag == "label" {
-                    area.height = 18.0;
+    let calculate_min = |value: SizeMode, area_value: f32, parent_area_value: f32| -> f32 {
+        match value {
+            SizeMode::Manual(v) => {
+                if v > area_value {
+                    v
+                } else {
+                    area_value
                 }
+            }
+            SizeMode::Percentage(per) => {
+                let by_per = (parent_area_value / 100.0 * per).round();
+                if by_per > area_value {
+                    by_per
+                } else {
+                    area_value
+                }
+            }
+            SizeMode::Auto => area_value,
+        }
+    };
+
+    area.width = calculate(node_data.size.width, area.width, parent_area.width);
+    area.height = calculate(node_data.size.height, area.height, parent_area.height);
+
+    if SizeMode::Auto == node_data.size.height {
+        if let NodeType::Element { tag, .. } = &node_data.node.node_type {
+            if tag == "label" {
+                area.height = 18.0;
             }
         }
     }
+
+    area.height = calculate_min(node_data.size.min_height, area.height, parent_area.height);
+    area.width = calculate_min(node_data.size.min_width, area.width, parent_area.width);
 
     area
 }
@@ -50,7 +67,7 @@ pub fn calculate_node<T>(
     let (node_layer, inherited_relative_layer) =
         layers.calculate_layer(node_data, inherited_relative_layer);
 
-    let padding = node_data.padding;
+    let padding = node_data.size.padding;
     let horizontal_padding = padding.1 + padding.3;
     let vertical_padding = padding.0 + padding.2;
 
@@ -64,8 +81,8 @@ pub fn calculate_node<T>(
     // Visible area occupied by the child elements
     let inner_area = remaining_inner_area.clone();
 
-    remaining_inner_area.y += node_data.node.state.size.scroll_y;
-    remaining_inner_area.x += node_data.node.state.size.scroll_x;
+    remaining_inner_area.y += node_data.size.scroll_y;
+    remaining_inner_area.x += node_data.size.scroll_x;
 
     match &node_data.node.node_type {
         NodeType::Element { children, .. } => {
@@ -83,7 +100,7 @@ pub fn calculate_node<T>(
                         inherited_relative_layer,
                     );
 
-                    match node_data.node.state.size.direction {
+                    match node_data.size.direction {
                         DirectionMode::Vertical => {
                             remaining_inner_area.y = child_node_area.y + child_node_area.height;
                         }
@@ -120,11 +137,11 @@ pub fn calculate_node<T>(
     }
 
     if !is_text {
-        if let SizeMode::Auto = node_data.width {
+        if let SizeMode::Auto = node_data.size.width {
             node_area.width = remaining_inner_area.x - node_area.x + padding.1;
         }
 
-        if let SizeMode::Auto = node_data.height {
+        if let SizeMode::Auto = node_data.size.height {
             node_area.height = remaining_inner_area.y - node_area.y + padding.0;
         }
     }

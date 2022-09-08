@@ -3,7 +3,7 @@ use dioxus_native_core::real_dom::{Node, NodeType};
 use layers_engine::{Layers, NodeArea, NodeData};
 use layout_engine::calculate_node;
 use skia_safe::{Canvas, Color, Font};
-use state::node::{NodeState, SizeMode};
+use state::node::{NodeState, Size};
 use std::{collections::HashMap, ops::Index, sync::Arc};
 
 use crate::{
@@ -29,9 +29,7 @@ pub fn work_loop(
 
     calculate_node(
         &NodeData {
-            width: SizeMode::Percentage(100.0),
-            height: SizeMode::Percentage(100.0),
-            padding: (0.0, 0.0, 0.0, 0.0),
+            size: Size::default(),
             node: root,
         },
         area.clone(),
@@ -45,9 +43,7 @@ pub fn work_loop(
             };
 
             Some(NodeData {
-                width: child.state.size.width,
-                height: child.state.size.height,
-                padding: child.state.size.padding,
+                size: child.state.size,
                 node: child,
             })
         },

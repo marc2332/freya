@@ -1,13 +1,11 @@
 use dioxus::core::ElementId;
 use dioxus_native_core::real_dom::{Node, NodeType};
-use state::node::{NodeState, SizeMode};
+use state::node::{NodeState, Size};
 use std::collections::HashMap;
 
 #[derive(Clone, Debug)]
 pub struct NodeData {
-    pub width: SizeMode,
-    pub height: SizeMode,
-    pub padding: (f32, f32, f32, f32),
+    pub size: Size,
     pub node: Node<NodeState>,
 }
 
