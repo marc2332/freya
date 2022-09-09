@@ -1,6 +1,6 @@
 use dioxus::{core::UiEvent, events::MouseData, prelude::*};
 use elements_namespace as dioxus_elements;
-use trev::launch;
+use freya::launch;
 
 fn main() {
     launch(app);

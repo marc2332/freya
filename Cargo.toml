@@ -4,14 +4,14 @@ version = "0.1.0"
 edition = "2021"
 
 [workspace]
-members = ["layout-engine", "renderer", "state", "trev", "elements-namespace", "components"]
+members = ["layout-engine", "renderer", "state", "freya", "elements-namespace", "components"]
 
 [features]
-x11 = ["trev/x11"]
-wireframe = ["trev/wireframe"]
+x11 = ["freya/x11"]
+wireframe = ["freya/wireframe"]
 
 [dev-dependencies]
-trev = { path = "./trev"}
+freya = { path = "./freya"}
 dioxus = { git = "https://github.com/marc2332/dioxus", branch = "patch-3", features = ["macro", "hooks"]}
 tokio = "1.17.0"
 elements-namespace = { path = "./elements-namespace"}

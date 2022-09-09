@@ -627,8 +627,8 @@ dependencies = [
  "dioxus",
  "elements-namespace",
  "fermi",
+ "freya",
  "tokio",
- "trev",
 ]
 
 [[package]]
@@ -751,6 +751,22 @@ dependencies = [
  "cmake",
  "libc",
  "pkg-config",
+]
+
+[[package]]
+name = "freya"
+version = "0.1.0"
+dependencies = [
+ "anymap",
+ "dioxus",
+ "dioxus-core",
+ "dioxus-html",
+ "dioxus-native-core",
+ "fxhash",
+ "layout-engine",
+ "renderer",
+ "state",
+ "tokio",
 ]
 
 [[package]]
@@ -1935,22 +1951,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8d82e1a7758622a465f8cee077614c73484dac5b836c02ff6a40d5d1010324d7"
 dependencies = [
  "serde",
-]
-
-[[package]]
-name = "trev"
-version = "0.1.0"
-dependencies = [
- "anymap",
- "dioxus",
- "dioxus-core",
- "dioxus-html",
- "dioxus-native-core",
- "fxhash",
- "layout-engine",
- "renderer",
- "state",
- "tokio",
 ]
 
 [[package]]

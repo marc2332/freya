@@ -1,10 +1,9 @@
-# trev 🧩
+# Freya 
 
 [![Discord Server](https://img.shields.io/discord/1015005816094478347?logo=discord&style=social)](https://discord.gg/sYejxCdewG)
 
-A GUI library based on [Skia](https://skia.org/) and [Dioxus](https://dioxuslabs.com).
+A GUI Toolkit for Rust powered by [Skia](https://skia.org/) and [Dioxus](https://dioxuslabs.com).
 
-> trev is like react-dom, where react is dioxus and the dom is skia. But it also comes with an optional but handy components library. 
 
 ```rust
 
@@ -31,8 +30,8 @@ fn app(cx: Scope) -> Element {
 }
 ```
 ### Features ✨
-- Text
-- Containers and views
+- Text, Paragraph
+- Containers and rectangles
 - Nested scroll views
 - Click, mouse move, scroll events
 - Background, text color, padding, width, height, min_width, min_height, shadow, border radius, custom layer (like z-index)
@@ -66,5 +65,6 @@ fn app(cx: Scope) -> Element {
 - [x] Rename `text` element to `label`
 - [ ] Better touchpad support
 - [ ] SVG support
+- [ ] Move layout calculation from the layout engine into the node's state? Not sure.
 
 MIT License

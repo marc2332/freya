@@ -3,7 +3,7 @@ use dioxus::prelude::*;
 use elements_namespace as dioxus_elements;
 use fermi::*;
 
-use trev::launch;
+use freya::launch;
 
 fn main() {
     launch(app);

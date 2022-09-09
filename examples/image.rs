@@ -3,7 +3,7 @@ use dioxus::events::MouseData;
 use dioxus::prelude::*;
 use elements_namespace as dioxus_elements;
 use elements_namespace::AttributeValue;
-use trev::launch;
+use freya::launch;
 
 fn main() {
     launch(app);
