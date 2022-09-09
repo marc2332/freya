@@ -131,7 +131,7 @@ pub fn render_skia(
                     };
 
                     let x = area.x;
-                    let y = area.y + 12.0; /* Line height, wip */
+                    let y = area.y;
 
                     let mut font_collection = FontCollection::new();
                     font_collection.set_default_font_manager(FontMgr::default(), "Fira Sans");

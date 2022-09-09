@@ -66,5 +66,6 @@ fn app(cx: Scope) -> Element {
 - [ ] Better touchpad support
 - [ ] SVG support
 - [ ] Move layout calculation from the layout engine into the node's state? Not sure.
+- [ ] Render shadows one layer below it's element to avoid overlapping with it's siblings
 
 MIT License

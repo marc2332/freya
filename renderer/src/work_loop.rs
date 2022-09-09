@@ -161,11 +161,9 @@ pub fn work_loop(
         }
     }
 
-    // The new events are the events from `calculated_events` but actually are listening
-    // and fit considering the current state of the app
-
     let mut new_events: Vec<UserEvent> = Vec::new();
 
+    // Calculate what process can actually be triggered
     for (event_name, event_nodes) in calculated_events.iter_mut() {
         let dom = dom.lock().unwrap();
         let listeners = dom.get_listening_sorted(event_name);
