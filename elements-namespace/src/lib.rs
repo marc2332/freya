@@ -66,6 +66,7 @@ builder_constructors! {
         radius: String,
     };
     label {
+        color: String,
         layer: String,
         height: String,
         width: String,
@@ -164,6 +165,7 @@ pub mod on {
     event_directory! {
         MouseEvent(MouseData): [
             onclick
+            onmousedown
             onmouseover
             onmouseleave
             onscroll

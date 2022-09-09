@@ -287,29 +287,31 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
                             });
                     }
                     WindowEvent::MouseInput { state, .. } => {
-                        if ElementState::Released == state {
-                            let cursor_pos = cursor_pos.lock().unwrap();
-                            renderer_requests
-                                .lock()
-                                .unwrap()
-                                .push(RendererRequest::MouseEvent {
-                                    name: "click",
-                                    event: MouseData::new(
-                                        Coordinates::new(
-                                            Point2D::default(),
-                                            Point2D::from_lengths(
-                                                Length::new(cursor_pos.0),
-                                                Length::new(cursor_pos.1),
-                                            ),
-                                            Point2D::default(),
-                                            Point2D::default(),
+                        let event_name = match state {
+                            ElementState::Pressed => "mousedown",
+                            ElementState::Released => "click",
+                        };
+                        let cursor_pos = cursor_pos.lock().unwrap();
+                        renderer_requests
+                            .lock()
+                            .unwrap()
+                            .push(RendererRequest::MouseEvent {
+                                name: event_name,
+                                event: MouseData::new(
+                                    Coordinates::new(
+                                        Point2D::default(),
+                                        Point2D::from_lengths(
+                                            Length::new(cursor_pos.0),
+                                            Length::new(cursor_pos.1),
                                         ),
-                                        Some(MouseButton::Primary),
-                                        enum_set! {MouseButton::Primary},
-                                        Modifiers::empty(),
+                                        Point2D::default(),
+                                        Point2D::default(),
                                     ),
-                                });
-                        }
+                                    Some(MouseButton::Primary),
+                                    enum_set! {MouseButton::Primary},
+                                    Modifiers::empty(),
+                                ),
+                            });
                     }
                     WindowEvent::Resized(physical_size) => {
                         let result = get_window_context(window_id);

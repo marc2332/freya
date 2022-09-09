@@ -210,6 +210,7 @@ pub struct Style {
     pub shadow: ShadowSettings,
     pub radius: f32,
     pub image_data: Option<Vec<u8>>,
+    pub color: Color,
 }
 
 impl NodeDepState<()> for Style {
@@ -221,7 +222,8 @@ impl NodeDepState<()> for Style {
             "layer",
             "shadow",
             "radius",
-            "image_data"
+            "image_data",
+            "color"
         ])))
         .with_text();
     fn reduce<'a>(&mut self, node: NodeView, _sibling: (), _ctx: &Self::Ctx) -> bool {
@@ -230,9 +232,16 @@ impl NodeDepState<()> for Style {
         let mut shadow = ShadowSettings::default();
         let mut radius = 0.0;
         let mut image_data = None;
+        let mut color = Color::WHITE;
 
         for attr in node.attributes() {
             match attr.name {
+                "color" => {
+                    let new_color = parse_color(&attr.value.to_string());
+                    if let Some(new_color) = new_color {
+                        color = new_color;
+                    }
+                }
                 "background" => {
                     let new_back = parse_color(&attr.value.to_string());
                     if let Some(new_back) = new_back {
@@ -273,6 +282,7 @@ impl NodeDepState<()> for Style {
             || (relative_layer != self.relative_layer)
             || (shadow != self.shadow)
             || (radius != self.radius)
+            || (color != self.color)
             || (image_data != self.image_data);
         *self = Self {
             background,
@@ -280,6 +290,7 @@ impl NodeDepState<()> for Style {
             shadow,
             radius,
             image_data,
+            color,
         };
         changed
     }

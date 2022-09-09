@@ -88,7 +88,7 @@ pub fn render_skia(
 
                     paint.set_anti_alias(true);
                     paint.set_style(PaintStyle::StrokeAndFill);
-                    paint.set_color(Color::WHITE);
+                    paint.set_color(node.state.style.color);
 
                     let child_id = children.get(0);
 
