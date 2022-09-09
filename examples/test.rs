@@ -2,8 +2,8 @@ use std::time::Duration;
 
 use dioxus::prelude::*;
 use elements_namespace as dioxus_elements;
-use tokio::time::sleep;
 use freya::launch;
+use tokio::time::sleep;
 
 fn main() {
     launch(app);

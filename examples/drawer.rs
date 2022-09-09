@@ -1,8 +1,8 @@
 use components::ScrollView;
 use dioxus::{events::MouseEvent, prelude::*};
 use elements_namespace as dioxus_elements;
-use tokio::time::Instant;
 use freya::launch;
+use tokio::time::Instant;
 
 fn main() {
     launch(app);

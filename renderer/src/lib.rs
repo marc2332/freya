@@ -228,8 +228,8 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
                         let cursor_pos = cursor_pos.lock().unwrap();
                         let scroll_data = {
                             match delta {
-                                MouseScrollDelta::LineDelta(x, y) => (x, y),
-                                MouseScrollDelta::PixelDelta(_) => (0.0, 0.0),
+                                MouseScrollDelta::LineDelta(x, y) => (x as f64, y as f64),
+                                MouseScrollDelta::PixelDelta(pos) => (pos.x, pos.y),
                             }
                         };
                         renderer_requests
@@ -246,8 +246,8 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
                                         ),
                                         Point2D::default(),
                                         Point2D::from_lengths(
-                                            Length::new(scroll_data.0 as f64),
-                                            Length::new(scroll_data.1 as f64),
+                                            Length::new(scroll_data.0),
+                                            Length::new(scroll_data.1),
                                         ),
                                     ),
                                     Some(MouseButton::Primary),

@@ -24,10 +24,10 @@ pub fn render_skia(
     for viewport in viewports {
         canvas.clip_rect(
             Rect::new(
-                viewport.x as f32,
-                viewport.y as f32,
-                (viewport.x + viewport.width) as f32,
-                (viewport.y + viewport.height) as f32,
+                viewport.x,
+                viewport.y,
+                viewport.x + viewport.width,
+                viewport.y + viewport.height,
             ),
             ClipOp::Intersect,
             true,
@@ -113,12 +113,6 @@ pub fn render_skia(
                     canvas.draw_str_align(text, (x, y), &font, &paint, Align::Left);
                 }
                 "paragraph" => {
-                    let mut paint = Paint::default();
-
-                    paint.set_anti_alias(true);
-                    paint.set_style(PaintStyle::StrokeAndFill);
-                    paint.set_color(Color::WHITE);
-
                     let child_id = children.get(0);
 
                     let text = if let Some(child_id) = child_id {
