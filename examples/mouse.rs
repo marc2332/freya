@@ -1,3 +1,8 @@
+#![cfg_attr(
+    all(not(debug_assertions), target_os = "windows"),
+    windows_subsystem = "windows"
+)]
+
 use dioxus::{core::UiEvent, events::MouseData, prelude::*};
 use elements_namespace as dioxus_elements;
 use freya::launch;

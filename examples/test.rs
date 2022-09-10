@@ -1,5 +1,9 @@
-use std::time::Duration;
+#![cfg_attr(
+    all(not(debug_assertions), target_os = "windows"),
+    windows_subsystem = "windows"
+)]
 
+use std::time::Duration;
 use dioxus::prelude::*;
 use elements_namespace as dioxus_elements;
 use freya::launch;
