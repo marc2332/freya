@@ -11,10 +11,7 @@ use dioxus_native_core::real_dom::RealDom;
 use enumset::enum_set;
 use glutin::event::{MouseScrollDelta, WindowEvent};
 use layers_engine::NodeArea;
-use skia_safe::{
-    font_style::{Slant, Weight, Width},
-    Font, FontStyle, Typeface,
-};
+use skia_safe::{textlayout::FontCollection, FontMgr};
 use state::node::NodeState;
 use std::{
     sync::{mpsc::Receiver, Arc, Mutex},
@@ -78,7 +75,7 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
         fb_info: FramebufferInfo,
         renderer_requests: RendererRequests,
         event_emitter: EventEmitter,
-        font: Font,
+        font_collection: FontCollection,
         events_processor: EventsProcessor,
     }
 
@@ -98,7 +95,7 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
                 },
                 self.renderer_requests.clone(),
                 &self.event_emitter,
-                &self.font,
+                &mut self.font_collection,
                 &mut self.events_processor,
             );
             self.gr_context.flush(None);
@@ -146,9 +143,8 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
     let sf = windowed_context.window().scale_factor() as f32;
     surface.canvas().scale((sf, sf));
 
-    let style = FontStyle::new(Weight::NORMAL, Width::NORMAL, Slant::Upright);
-    let type_face = Typeface::new("Fira Sans", style).unwrap();
-    let font = Font::new(type_face, 16.0);
+    let mut font_collection = FontCollection::new();
+    font_collection.set_default_font_manager(FontMgr::default(), "Fira Sans");
 
     let env = Env {
         surface,
@@ -158,7 +154,7 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
         skia_dom,
         renderer_requests: renderer_requests.clone(),
         event_emitter,
-        font,
+        font_collection,
         events_processor,
     };
 

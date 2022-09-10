@@ -201,6 +201,8 @@ pub struct Style {
     pub radius: f32,
     pub image_data: Option<Vec<u8>>,
     pub color: Color,
+    pub font_family: String,
+    pub font_size: f32,
 }
 
 impl NodeDepState<()> for Style {
@@ -213,7 +215,9 @@ impl NodeDepState<()> for Style {
             "shadow",
             "radius",
             "image_data",
-            "color"
+            "color",
+            "font_family",
+            "font_size"
         ])))
         .with_text();
     fn reduce<'a>(&mut self, node: NodeView, _sibling: (), _ctx: &Self::Ctx) -> bool {
@@ -223,9 +227,17 @@ impl NodeDepState<()> for Style {
         let mut radius = 0.0;
         let mut image_data = None;
         let mut color = Color::WHITE;
+        let mut font_family = "Fira Sans".to_string();
+        let mut font_size = 16.0;
 
         for attr in node.attributes() {
             match attr.name {
+                "font_family" => {
+                    font_family = attr.value.to_string();
+                }
+                "font_size" => {
+                    font_size = attr.value.to_string().parse().unwrap_or(font_size);
+                }
                 "color" => {
                     let new_color = parse_color(&attr.value.to_string());
                     if let Some(new_color) = new_color {
@@ -273,7 +285,9 @@ impl NodeDepState<()> for Style {
             || (shadow != self.shadow)
             || (radius != self.radius)
             || (color != self.color)
-            || (image_data != self.image_data);
+            || (image_data != self.image_data)
+            || (font_family != self.font_family)
+            || (font_size != self.font_size);
         *self = Self {
             background,
             relative_layer,
@@ -281,6 +295,8 @@ impl NodeDepState<()> for Style {
             radius,
             image_data,
             color,
+            font_family,
+            font_size,
         };
         changed
     }

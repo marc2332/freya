@@ -70,6 +70,8 @@ builder_constructors! {
         layer: String,
         height: String,
         width: String,
+        font_size: String,
+        font_family: String,
     };
     paragraph {
         layer: String,
@@ -80,6 +82,8 @@ builder_constructors! {
         layer: String,
         height: String,
         width: String,
+        font_size: String,
+        font_family: String,
     };
 }
 

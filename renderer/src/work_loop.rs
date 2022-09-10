@@ -2,7 +2,7 @@ use dioxus_core::{ElementId, EventPriority, SchedulerMsg, UserEvent};
 use dioxus_native_core::real_dom::{Node, NodeType};
 use layers_engine::{Layers, NodeArea, NodeData};
 use layout_engine::calculate_node;
-use skia_safe::{Canvas, Color, Font};
+use skia_safe::{textlayout::FontCollection, Canvas, Color};
 use state::node::{NodeState, Size};
 use std::{collections::HashMap, ops::Index, sync::Arc};
 
@@ -17,7 +17,7 @@ pub fn work_loop(
     area: NodeArea,
     renderer_requests: RendererRequests,
     event_emitter: &EventEmitter,
-    font: &Font,
+    font_collection: &mut FontCollection,
     events_processor: &mut EventsProcessor,
 ) {
     let root: Node<NodeState> = {
@@ -95,7 +95,7 @@ pub fn work_loop(
                 &mut canvas,
                 &element.node_data,
                 &element.node_area,
-                font,
+                font_collection,
                 &calculated_viewports.get(id).unwrap_or(&Vec::new()),
             );
             canvas.restore();

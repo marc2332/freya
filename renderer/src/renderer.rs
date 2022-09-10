@@ -3,7 +3,7 @@ use layers_engine::{NodeArea, NodeData};
 use skia_safe::{
     textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle},
     utils::text_utils::Align,
-    BlurStyle, Canvas, ClipOp, Data, Font, FontMgr, IRect, Image, MaskFilter, Paint, PaintStyle,
+    BlurStyle, Canvas, ClipOp, Data, Font, FontStyle, IRect, Image, MaskFilter, Paint, PaintStyle,
     Path, PathDirection, Rect,
 };
 use state::node::{NodeState, Style};
@@ -16,7 +16,7 @@ pub fn render_skia(
     canvas: &mut &mut Canvas,
     node_data: &NodeData,
     area: &NodeArea,
-    font: &Font,
+    font_collection: &mut FontCollection,
     viewports: &Vec<NodeArea>,
 ) {
     let node = &node_data.node;
@@ -108,7 +108,20 @@ pub fn render_skia(
                     };
 
                     let x = area.x;
-                    let y = area.y + 12.0; /* Line height, wip */
+                    let y = area.y + node.state.style.font_size - 4.0; // TODO: Fix this, it's TOO MAGIC
+
+                    let type_faces = font_collection
+                        .find_typefaces(&[&node.state.style.font_family], FontStyle::default());
+
+                    let type_face = type_faces.get(0);
+
+                    let font = if let Some(type_face) = type_face {
+                        Font::new(type_face, node.state.style.font_size)
+                    } else {
+                        let mut font = Font::default();
+                        font.set_size(node.state.style.font_size);
+                        font
+                    };
 
                     canvas.draw_str_align(text, (x, y), &font, &paint, Align::Left);
                 }
@@ -147,19 +160,17 @@ pub fn render_skia(
                     let x = area.x;
                     let y = area.y;
 
-                    let mut font_collection = FontCollection::new();
-                    font_collection.set_default_font_manager(FontMgr::default(), "Fira Sans");
-
                     let paragraph_style = ParagraphStyle::default();
 
                     let mut paragraph_builder =
-                        ParagraphBuilder::new(&paragraph_style, &font_collection);
+                        ParagraphBuilder::new(&paragraph_style, font_collection.clone());
 
                     for node_text in texts {
                         paragraph_builder.push_style(
                             TextStyle::new()
                                 .set_color(node_text.0.color)
-                                .set_font_families(&["Fira Sans"]),
+                                .set_font_size(node_text.0.font_size)
+                                .set_font_families(&[node_text.0.font_family]),
                         );
                         paragraph_builder.add_text(node_text.1);
                     }
