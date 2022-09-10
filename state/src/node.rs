@@ -1,5 +1,5 @@
 use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
-use dioxus_native_core::state::{ChildDepState, NodeDepState, State};
+use dioxus_native_core::state::{NodeDepState, State};
 use dioxus_native_core_macro::{sorted_str_slice, State};
 use skia_safe::Color;
 
@@ -21,7 +21,7 @@ pub enum DirectionMode {
 
 #[derive(Debug, Clone, State, Default)]
 pub struct NodeState {
-    #[child_dep_state(size)]
+    #[node_dep_state()]
     pub size: Size,
     #[node_dep_state()]
     pub style: Style,
@@ -54,10 +54,8 @@ impl Size {
     }
 }
 
-impl ChildDepState for Size {
+impl NodeDepState<()> for Size {
     type Ctx = ();
-
-    type DepState = Self;
 
     const NODE_MASK: NodeMask =
         NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
@@ -72,15 +70,7 @@ impl ChildDepState for Size {
         ])))
         .with_text()
         .with_tag();
-    fn reduce<'a>(
-        &mut self,
-        node: NodeView,
-        _children: impl Iterator<Item = &'a Self::DepState>,
-        _ctx: &Self::Ctx,
-    ) -> bool
-    where
-        Self::DepState: 'a,
-    {
+    fn reduce<'a>(&mut self, node: NodeView, _sibling: (), _ctx: &Self::Ctx) -> bool {
         let mut width = SizeMode::default();
         let mut height = SizeMode::default();
         let mut min_height = SizeMode::default();
