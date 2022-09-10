@@ -49,22 +49,13 @@ fn app(cx: Scope) -> Element {
 - Browser-like devtools
 
 ## TO-DO 🚧
+Besides all the [tracking](https://github.com/marc2332/freya/issues?q=is%3Aopen+is%3Aissue+label%3Atracking) feautures:
 - [ ] Support for percentages in padding
-- [x] rgb(r,g,b) syntax support
-- [ ] Add window parameters
-- [ ] Support for more events
-- [ ] Support for multiple windows
 - [ ] Add `Flex` component (using [taffy](https://github.com/dioxusLabs/taffy)).
-- [x] Renderer-based bounds clipping
 - [ ] Documentation
 - [ ] Improve Auto calculation for width and height
 - [ ] Investigate if `image` diffing can be speeded up (reference: https://github.com/DioxusLabs/dioxus/pull/543#issuecomment-1238393539)
-- [ ] `FilesystemImage` and `NetworkImage` components
-- [x] Add `paragraph` element
-- [x] Rename `view` element to `rect`
-- [x] Rename `text` element to `label`
 - [ ] Better touchpad support
-- [ ] SVG support
 - [ ] Move layout calculation from the layout engine into the node's state? Not sure.
 - [ ] Render shadows one layer below it's element to avoid overlapping with it's siblings
 
