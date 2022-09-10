@@ -75,6 +75,12 @@ builder_constructors! {
         layer: String,
         width: String,
     };
+    text {
+        color: String,
+        layer: String,
+        height: String,
+        width: String,
+    };
 }
 
 #[allow(non_camel_case_types)]

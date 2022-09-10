@@ -3,10 +3,10 @@ use layers_engine::{NodeArea, NodeData};
 use skia_safe::{
     textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle},
     utils::text_utils::Align,
-    BlurStyle, Canvas, ClipOp, Color, Data, Font, FontMgr, IRect, Image, MaskFilter, Paint,
-    PaintStyle, Path, PathDirection, Rect,
+    BlurStyle, Canvas, ClipOp, Data, Font, FontMgr, IRect, Image, MaskFilter, Paint, PaintStyle,
+    Path, PathDirection, Rect,
 };
-use state::node::NodeState;
+use state::node::{NodeState, Style};
 use std::ops::Index;
 
 use crate::SkiaDom;
@@ -113,22 +113,36 @@ pub fn render_skia(
                     canvas.draw_str_align(text, (x, y), &font, &paint, Align::Left);
                 }
                 "paragraph" => {
-                    let child_id = children.get(0);
+                    let texts = children
+                        .iter()
+                        .filter_map(|child_id| {
+                            let child: Node<NodeState> = {
+                                let dom = dom.lock().unwrap();
+                                dom.index(*child_id).clone()
+                            };
 
-                    let text = if let Some(child_id) = child_id {
-                        let child: Node<NodeState> = {
-                            let dom = dom.lock().unwrap();
-                            dom.index(*child_id).clone()
-                        };
-
-                        if let NodeType::Text { text } = child.node_type {
-                            text
-                        } else {
-                            String::new()
-                        }
-                    } else {
-                        String::new()
-                    };
+                            if let NodeType::Element { tag, children, .. } = child.node_type {
+                                if tag != "text" {
+                                    return None;
+                                }
+                                if let Some(child_text_id) = children.get(0) {
+                                    let child_text: Node<NodeState> = {
+                                        let dom = dom.lock().unwrap();
+                                        dom.index(*child_text_id).clone()
+                                    };
+                                    if let NodeType::Text { text } = child_text.node_type {
+                                        Some((child.state.style, text))
+                                    } else {
+                                        None
+                                    }
+                                } else {
+                                    None
+                                }
+                            } else {
+                                None
+                            }
+                        })
+                        .collect::<Vec<(Style, String)>>();
 
                     let x = area.x;
                     let y = area.y;
@@ -136,15 +150,19 @@ pub fn render_skia(
                     let mut font_collection = FontCollection::new();
                     font_collection.set_default_font_manager(FontMgr::default(), "Fira Sans");
 
-                    let mut paragraph_builder =
-                        ParagraphBuilder::new(&ParagraphStyle::default(), &font_collection);
+                    let paragraph_style = ParagraphStyle::default();
 
-                    paragraph_builder.add_text(text);
-                    paragraph_builder.push_style(
-                        TextStyle::new()
-                            .set_color(Color::WHITE)
-                            .set_font_families(&["Fira Sans"]),
-                    );
+                    let mut paragraph_builder =
+                        ParagraphBuilder::new(&paragraph_style, &font_collection);
+
+                    for node_text in texts {
+                        paragraph_builder.push_style(
+                            TextStyle::new()
+                                .set_color(node_text.0.color)
+                                .set_font_families(&["Fira Sans"]),
+                        );
+                        paragraph_builder.add_text(node_text.1);
+                    }
 
                     let mut paragraph = paragraph_builder.build();
 
@@ -173,6 +191,8 @@ pub fn render_skia(
 
             #[cfg(feature = "wireframe")]
             {
+                use skia_safe::Color;
+
                 let mut path = Path::new();
                 let mut paint = Paint::default();
 

@@ -3,10 +3,10 @@
     windows_subsystem = "windows"
 )]
 
-use std::time::Duration;
 use dioxus::prelude::*;
 use elements_namespace as dioxus_elements;
 use freya::launch;
+use std::time::Duration;
 use tokio::time::sleep;
 
 fn main() {

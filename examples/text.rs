@@ -25,7 +25,14 @@ fn app(cx: Scope) -> Element {
                 height: "75%",
                 paragraph {
                     width: "100%",
-                    "{loremipsum.repeat(5)}"
+                    text {
+                        color: "rgb(240, 50, 100)",
+                        "{loremipsum.repeat(2)}"
+                    }
+                    text {
+                        color: "rgb(25, 160, 200)",
+                        "{loremipsum.repeat(1)}"
+                    }
                 }
             }
         }
