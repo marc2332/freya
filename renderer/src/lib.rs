@@ -1,14 +1,5 @@
 use dioxus_core::{exports::futures_channel::mpsc::UnboundedSender, SchedulerMsg};
-use dioxus_html::{
-    geometry::{
-        euclid::{Length, Point2D},
-        Coordinates,
-    },
-    input_data::{keyboard_types::Modifiers, MouseButton},
-    on::{KeyboardData, MouseData},
-};
 use dioxus_native_core::real_dom::RealDom;
-use enumset::enum_set;
 use glutin::event::{MouseScrollDelta, WindowEvent};
 use layers_engine::NodeArea;
 use skia_safe::{textlayout::FontCollection, FontMgr};
@@ -51,13 +42,15 @@ pub type RendererRequests = Arc<Mutex<Vec<RendererRequest>>>;
 pub enum RendererRequest {
     MouseEvent {
         name: &'static str,
-        event: MouseData,
+        cursor: (f64, f64),
+    },
+    WheelEvent {
+        name: &'static str,
+        scroll: (f64, f64),
+        cursor: (f64, f64),
     },
     #[allow(dead_code)]
-    KeyboardEvent {
-        name: &'static str,
-        event: KeyboardData,
-    },
+    KeyboardEvent { name: &'static str },
 }
 
 pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmitter) {
@@ -231,25 +224,10 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
                         renderer_requests
                             .lock()
                             .unwrap()
-                            .push(RendererRequest::MouseEvent {
-                                name: "scroll",
-                                event: MouseData::new(
-                                    Coordinates::new(
-                                        Point2D::default(),
-                                        Point2D::from_lengths(
-                                            Length::new(cursor_pos.0),
-                                            Length::new(cursor_pos.1),
-                                        ),
-                                        Point2D::default(),
-                                        Point2D::from_lengths(
-                                            Length::new(scroll_data.0),
-                                            Length::new(scroll_data.1),
-                                        ),
-                                    ),
-                                    Some(MouseButton::Primary),
-                                    enum_set! {MouseButton::Primary},
-                                    Modifiers::empty(),
-                                ),
+                            .push(RendererRequest::WheelEvent {
+                                name: "wheel",
+                                scroll: scroll_data,
+                                cursor: *cursor_pos,
                             });
                     }
                     WindowEvent::CursorMoved { position, .. } => {
@@ -266,20 +244,7 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
                             .unwrap()
                             .push(RendererRequest::MouseEvent {
                                 name: "mouseover",
-                                event: MouseData::new(
-                                    Coordinates::new(
-                                        Point2D::default(),
-                                        Point2D::from_lengths(
-                                            Length::new(cursor_pos.0),
-                                            Length::new(cursor_pos.1),
-                                        ),
-                                        Point2D::default(),
-                                        Point2D::default(),
-                                    ),
-                                    Some(MouseButton::Primary),
-                                    enum_set! {MouseButton::Primary},
-                                    Modifiers::empty(),
-                                ),
+                                cursor: cursor_pos,
                             });
                     }
                     WindowEvent::MouseInput { state, .. } => {
@@ -293,20 +258,7 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
                             .unwrap()
                             .push(RendererRequest::MouseEvent {
                                 name: event_name,
-                                event: MouseData::new(
-                                    Coordinates::new(
-                                        Point2D::default(),
-                                        Point2D::from_lengths(
-                                            Length::new(cursor_pos.0),
-                                            Length::new(cursor_pos.1),
-                                        ),
-                                        Point2D::default(),
-                                        Point2D::default(),
-                                    ),
-                                    Some(MouseButton::Primary),
-                                    enum_set! {MouseButton::Primary},
-                                    Modifiers::empty(),
-                                ),
+                                cursor: *cursor_pos,
                             });
                     }
                     WindowEvent::Resized(physical_size) => {

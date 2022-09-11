@@ -179,7 +179,7 @@ fn Area<'a>(cx: Scope<'a>) -> Element {
 
     let cursor_moved = |ev: UiEvent<MouseData>| {
         cursor_pos_over.with_mut(|cursor_pos| {
-            let pos = ev.data.client_coordinates();
+            let pos = ev.data.element_coordinates();
             cursor_pos.0 = pos.x;
             cursor_pos.1 = pos.y;
         });
@@ -187,7 +187,7 @@ fn Area<'a>(cx: Scope<'a>) -> Element {
 
     let cursor_clicked = |ev: UiEvent<MouseData>| {
         cursor_pos_click.with_mut(|cursor_pos| {
-            let pos = ev.data.client_coordinates();
+            let pos = ev.data.element_coordinates();
             cursor_pos.0 = pos.x;
             cursor_pos.1 = pos.y;
         })

@@ -26,7 +26,7 @@ fn app(cx: Scope) -> Element {
     let onmouseover = |e: UiEvent<MouseData>| {
         hovering.set(true);
         if *clicking.get() {
-            let coordinates = e.coordinates().client();
+            let coordinates = e.coordinates().screen();
             positions.set((coordinates.x - 50.0, coordinates.y - 50.0));
         }
     };

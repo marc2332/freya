@@ -7,7 +7,7 @@ use dioxus_html::{
     on::MouseData,
 };
 use enumset::enum_set;
-use layers_engine::NodeData;
+use layers_engine::RenderData;
 
 use crate::RendererRequest;
 
@@ -33,7 +33,7 @@ impl EventsProcessor {
     pub fn process_events_batch(
         &mut self,
         events_to_emit: Vec<UserEvent>,
-        events_filtered: HashMap<&str, Vec<(NodeData, RendererRequest)>>,
+        events_filtered: HashMap<&str, Vec<(RenderData, RendererRequest)>>,
     ) -> Vec<UserEvent> {
         let mut new_events = Vec::new();
 

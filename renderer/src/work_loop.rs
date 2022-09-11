@@ -1,6 +1,15 @@
 use dioxus_core::{ElementId, EventPriority, SchedulerMsg, UserEvent};
+use dioxus_html::{
+    geometry::{
+        euclid::{Length, Point2D},
+        Coordinates, PixelsVector, WheelDelta,
+    },
+    input_data::{keyboard_types::Modifiers, MouseButton},
+    on::{MouseData, WheelData},
+};
 use dioxus_native_core::real_dom::{Node, NodeType};
-use layers_engine::{Layers, NodeArea, NodeData};
+use enumset::enum_set;
+use layers_engine::{Layers, NodeArea, NodeData, RenderData};
 use layout_engine::calculate_node;
 use skia_safe::{textlayout::FontCollection, Canvas, Color};
 use state::node::{NodeState, Size};
@@ -103,7 +112,7 @@ pub fn work_loop(
     }
 
     // Calculated events are those that match considering their viewports
-    let mut calculated_events: HashMap<&'static str, Vec<(NodeData, RendererRequest)>> =
+    let mut calculated_events: HashMap<&'static str, Vec<(RenderData, RendererRequest)>> =
         HashMap::new();
 
     // Propagate events from the top to the bottom
@@ -114,48 +123,48 @@ pub fn work_loop(
             let requests = renderer_requests.lock().unwrap();
 
             for request in requests.iter() {
-                let node = &element.node_data;
                 let area = &element.node_area;
-                match request {
-                    RendererRequest::MouseEvent { name, event } => {
-                        let x = area.x as f64;
-                        let y = area.y as f64;
-                        let width = (area.x + area.width) as f64;
-                        let height = (area.y + area.height) as f64;
-                        let cursor = event.client_coordinates();
+                let data = match request {
+                    RendererRequest::MouseEvent { name, cursor, .. } => Some((name, cursor)),
+                    RendererRequest::WheelEvent { name, cursor, .. } => Some((name, cursor)),
+                    _ => None,
+                };
+                if let Some((name, cursor)) = data {
+                    let x = area.x as f64;
+                    let y = area.y as f64;
+                    let width = (area.x + area.width) as f64;
+                    let height = (area.y + area.height) as f64;
 
-                        let mut visible = true;
+                    let mut visible = true;
 
-                        // Make sure the cursor is inside all the applicable viewports from the element
-                        for viewport in calculated_viewports.get(&id).unwrap_or(&Vec::new()) {
-                            if cursor.x < viewport.x as f64
-                                || cursor.x > (viewport.x + viewport.width) as f64
-                                || cursor.y < viewport.y as f64
-                                || cursor.y > (viewport.y + viewport.height) as f64
-                            {
-                                visible = false;
-                            }
-                        }
-
-                        // Make sure the cursor is inside the node area
-                        if visible
-                            && cursor.x > x
-                            && cursor.x < width
-                            && cursor.y > y
-                            && cursor.y < height
+                    // Make sure the cursor is inside all the applicable viewports from the element
+                    for viewport in calculated_viewports.get(&id).unwrap_or(&Vec::new()) {
+                        if cursor.0 < viewport.x as f64
+                            || cursor.0 > (viewport.x + viewport.width) as f64
+                            || cursor.1 < viewport.y as f64
+                            || cursor.1 > (viewport.y + viewport.height) as f64
                         {
-                            if !calculated_events.contains_key(name) {
-                                calculated_events
-                                    .insert(name, vec![(node.clone(), request.clone())]);
-                            } else {
-                                calculated_events
-                                    .get_mut(name)
-                                    .unwrap()
-                                    .push((node.clone(), request.clone()));
-                            }
+                            visible = false;
                         }
                     }
-                    _ => {}
+
+                    // Make sure the cursor is inside the node area
+                    if visible
+                        && cursor.0 > x
+                        && cursor.0 < width
+                        && cursor.1 > y
+                        && cursor.1 < height
+                    {
+                        if !calculated_events.contains_key(name) {
+                            calculated_events
+                                .insert(name, vec![(element.clone(), request.clone())]);
+                        } else {
+                            calculated_events
+                                .get_mut(name)
+                                .unwrap()
+                                .push((element.clone(), request.clone()));
+                        }
+                    }
                 }
             }
         }
@@ -168,13 +177,14 @@ pub fn work_loop(
         let dom = dom.lock().unwrap();
         let listeners = dom.get_listening_sorted(event_name);
 
-        let mut found_node: Option<(&Node<NodeState>, &RendererRequest)> = None;
+        let mut found_node: Option<(&RenderData, &RendererRequest)> = None;
 
-        'event_nodes: for (node_data, request) in event_nodes.iter() {
-            let node = &node_data.node;
+        'event_nodes: for (node, request) in event_nodes.iter() {
+            let node_state = &node.node_data.node;
             for listener in &listeners {
-                if listener.id == node.id {
-                    if node.state.style.background != Color::TRANSPARENT && event_name == &"scroll"
+                if listener.id == node_state.id {
+                    if node_state.state.style.background != Color::TRANSPARENT
+                        && event_name == &"wheel"
                     {
                         break 'event_nodes;
                     }
@@ -184,28 +194,51 @@ pub fn work_loop(
         }
 
         if let Some((node, request)) = found_node {
-            match &request {
-                &RendererRequest::MouseEvent { event, .. } => {
-                    let event = UserEvent {
-                        scope_id: None,
-                        priority: EventPriority::Medium,
-                        element: Some(node.id.clone()),
-                        name: event_name,
-                        bubbles: false,
-                        data: Arc::new(event.clone()),
-                    };
+            let event = match &request {
+                &RendererRequest::MouseEvent { cursor, .. } => Some(UserEvent {
+                    scope_id: None,
+                    priority: EventPriority::Medium,
+                    element: Some(node.node_data.node.id.clone()),
+                    name: event_name,
+                    bubbles: false,
+                    data: Arc::new(MouseData::new(
+                        Coordinates::new(
+                            Point2D::from_lengths(Length::new(cursor.0), Length::new(cursor.1)),
+                            Point2D::default(),
+                            Point2D::from_lengths(
+                                Length::new(cursor.0 - node.node_area.x as f64),
+                                Length::new(cursor.1 - node.node_area.y as f64),
+                            ),
+                            Point2D::default(),
+                        ),
+                        Some(MouseButton::Primary),
+                        enum_set! {MouseButton::Primary},
+                        Modifiers::empty(),
+                    )),
+                }),
+                &RendererRequest::WheelEvent { scroll, .. } => Some(UserEvent {
+                    scope_id: None,
+                    priority: EventPriority::Medium,
+                    element: Some(node.node_data.node.id.clone()),
+                    name: event_name,
+                    bubbles: false,
+                    data: Arc::new(WheelData::new(WheelDelta::Pixels(PixelsVector::new(
+                        scroll.0, scroll.1, 0.0,
+                    )))),
+                }),
+                _ => None,
+            };
 
-                    new_events.push(event.clone());
+            if let Some(event) = event {
+                new_events.push(event.clone());
 
-                    event_emitter
-                        .lock()
-                        .unwrap()
-                        .as_ref()
-                        .unwrap()
-                        .unbounded_send(SchedulerMsg::Event(event))
-                        .unwrap();
-                }
-                _ => {}
+                event_emitter
+                    .lock()
+                    .unwrap()
+                    .as_ref()
+                    .unwrap()
+                    .unbounded_send(SchedulerMsg::Event(event))
+                    .unwrap();
             }
         }
     }

@@ -3,7 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus::{core::UiEvent, events::MouseData, prelude::*};
+use dioxus::{core::UiEvent, events::WheelData, prelude::*};
 use elements_namespace as dioxus_elements;
 
 use freya::launch;
@@ -15,9 +15,9 @@ fn main() {
 fn app(cx: Scope) -> Element {
     let mut radius = use_state(&cx, || 30f32);
 
-    let onscroll = move |ev: UiEvent<MouseData>| {
-        let page = ev.coordinates().page();
-        radius += (page.y as f32) * 20.0;
+    let onwheel = move |e: UiEvent<WheelData>| {
+        let y = e.delta().strip_units().y;
+        radius += (y as f32) * 20.0;
     };
 
     cx.render(rsx!(
@@ -25,7 +25,7 @@ fn app(cx: Scope) -> Element {
             height: "100%",
             width: "100%",
             padding: "125",
-            onscroll: onscroll,
+            onwheel: onwheel,
             rect {
                 shadow: "0 0 150 30.0 black",
                 radius: "{radius}",

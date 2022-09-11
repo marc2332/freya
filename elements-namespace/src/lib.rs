@@ -123,7 +123,7 @@ pub trait SvgAttributes {
 
 pub mod on {
     use dioxus_core::*;
-    use dioxus_html::on::{MouseData, MouseEvent};
+    use dioxus_html::on::{MouseData, MouseEvent, WheelData, WheelEvent};
 
     use bumpalo::boxed::Box as BumpBox;
 
@@ -178,7 +178,9 @@ pub mod on {
             onmousedown
             onmouseover
             onmouseleave
-            onscroll
+        ];
+        WheelEvent(WheelData): [
+            onwheel
         ];
     }
 }
