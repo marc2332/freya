@@ -23,7 +23,7 @@ fn app(cx: Scope) -> Element {
         width: "100%",
         Button {
             on_click: |_| {
-                *theme.write() = LIGHT_THEME;
+                *theme.write() = LIGHT_THEME.clone();
             },
             label {
                 width: "100",
@@ -32,7 +32,7 @@ fn app(cx: Scope) -> Element {
         }
         Button {
             on_click: |_| {
-                *theme.write() = DARK_THEME;
+                *theme.write() = DARK_THEME.clone();
             },
             label {
                 width: "100",

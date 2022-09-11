@@ -11,5 +11,5 @@ dioxus-native-core-macro = { git = "https://github.com/marc2332/dioxus" , branch
 dioxus-core = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
 anymap = "0.12.1"
 fxhash = "0.2.1"
-skia-safe = { version = "*", features = ["gl"] }
+skia-safe = "*"
 elements-namespace = { path = "../elements-namespace"}

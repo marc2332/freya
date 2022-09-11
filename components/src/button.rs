@@ -7,12 +7,13 @@ use crate::THEME;
 #[allow(non_snake_case)]
 pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
     let theme = use_atom_ref(&cx, THEME);
+    let button_theme = &theme.read().button;
 
-    let background = use_state(&cx, || theme.read().button.background.clone());
+    let background = use_state(&cx, || button_theme.background.clone());
     let set_background = background.setter();
 
-    use_effect(&cx, &theme.read().clone(), move |theme| async move {
-        set_background(theme.button.background);
+    use_effect(&cx, &button_theme.clone(), move |button_theme| async move {
+        set_background(button_theme.background);
     });
 
     cx.render(rsx!(
@@ -34,6 +35,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
             padding: "20",
             radius: "5",
             direction: "both",
+            color: "{button_theme.font_theme.color}",
             &cx.props.children
         }
     ))

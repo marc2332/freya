@@ -6,7 +6,7 @@ use skia_safe::{
     BlurStyle, Canvas, ClipOp, Data, Font, FontStyle, IRect, Image, MaskFilter, Paint, PaintStyle,
     Path, PathDirection, Rect,
 };
-use state::node::{NodeState, Style};
+use state::node::NodeState;
 use std::ops::Index;
 
 use crate::SkiaDom;
@@ -88,7 +88,7 @@ pub fn render_skia(
 
                     paint.set_anti_alias(true);
                     paint.set_style(PaintStyle::StrokeAndFill);
-                    paint.set_color(node.state.style.color);
+                    paint.set_color(node.state.font_style.color);
 
                     let child_id = children.get(0);
 
@@ -108,18 +108,20 @@ pub fn render_skia(
                     };
 
                     let x = area.x;
-                    let y = area.y + node.state.style.font_size - 4.0; // TODO: Fix this, it's TOO MAGIC
+                    let y = area.y + node.state.font_style.font_size - 4.0; // TODO: Fix this, it's TOO MAGIC
 
-                    let type_faces = font_collection
-                        .find_typefaces(&[&node.state.style.font_family], FontStyle::default());
+                    let type_faces = font_collection.find_typefaces(
+                        &[&node.state.font_style.font_family],
+                        FontStyle::default(),
+                    );
 
                     let type_face = type_faces.get(0);
 
                     let font = if let Some(type_face) = type_face {
-                        Font::new(type_face, node.state.style.font_size)
+                        Font::new(type_face, node.state.font_style.font_size)
                     } else {
                         let mut font = Font::default();
-                        font.set_size(node.state.style.font_size);
+                        font.set_size(node.state.font_style.font_size);
                         font
                     };
 
@@ -144,7 +146,7 @@ pub fn render_skia(
                                         dom.index(*child_text_id).clone()
                                     };
                                     if let NodeType::Text { text } = child_text.node_type {
-                                        Some((child.state.style, text))
+                                        Some((child.state, text))
                                     } else {
                                         None
                                     }
@@ -155,7 +157,7 @@ pub fn render_skia(
                                 None
                             }
                         })
-                        .collect::<Vec<(Style, String)>>();
+                        .collect::<Vec<(NodeState, String)>>();
 
                     let x = area.x;
                     let y = area.y;
@@ -168,9 +170,9 @@ pub fn render_skia(
                     for node_text in texts {
                         paragraph_builder.push_style(
                             TextStyle::new()
-                                .set_color(node_text.0.color)
-                                .set_font_size(node_text.0.font_size)
-                                .set_font_families(&[node_text.0.font_family]),
+                                .set_color(node_text.0.font_style.color)
+                                .set_font_size(node_text.0.font_style.font_size)
+                                .set_font_families(&[node_text.0.font_style.font_family]),
                         );
                         paragraph_builder.add_text(node_text.1);
                     }

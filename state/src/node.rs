@@ -1,5 +1,5 @@
 use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
-use dioxus_native_core::state::{NodeDepState, State};
+use dioxus_native_core::state::{NodeDepState, ParentDepState, State};
 use dioxus_native_core_macro::{sorted_str_slice, State};
 use skia_safe::Color;
 
@@ -19,12 +19,31 @@ pub enum DirectionMode {
     Both,
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct FontStyle {
+    pub color: Color,
+    pub font_family: String,
+    pub font_size: f32,
+}
+
+impl Default for FontStyle {
+    fn default() -> Self {
+        Self {
+            color: Color::WHITE,
+            font_family: "Fira Sans".to_string(),
+            font_size: 16.0,
+        }
+    }
+}
+
 #[derive(Debug, Clone, State, Default)]
 pub struct NodeState {
     #[node_dep_state()]
     pub size: Size,
     #[node_dep_state()]
     pub style: Style,
+    #[parent_dep_state(font_style)]
+    pub font_style: FontStyle,
 }
 
 #[derive(Default, Copy, Clone, Debug, PartialEq)]
@@ -54,6 +73,47 @@ impl Size {
     }
 }
 
+/// Font style are inherited by default if not specified otherwise by some of the supported attributes.
+impl ParentDepState for FontStyle {
+    type Ctx = ();
+    type DepState = Self;
+
+    const NODE_MASK: NodeMask =
+        NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!(["color"])));
+
+    fn reduce<'a>(
+        &mut self,
+        node: NodeView,
+        parent: Option<&'a Self::DepState>,
+        _ctx: &Self::Ctx,
+    ) -> bool {
+        let mut font_style = parent.map(|c| c.clone()).unwrap_or_default();
+
+        for attr in node.attributes() {
+            match attr.name {
+                "color" => {
+                    let new_color = parse_color(&attr.value.to_string());
+                    if let Some(new_color) = new_color {
+                        font_style.color = new_color;
+                    }
+                }
+                "font_family" => {
+                    font_style.font_family = attr.value.to_string();
+                }
+                "font_size" => {
+                    if let Ok(font_size) = attr.value.to_string().parse() {
+                        font_style.font_size = font_size;
+                    }
+                }
+                _ => {}
+            }
+        }
+        let changed = &font_style != self;
+        *self = font_style;
+        changed
+    }
+}
+
 impl NodeDepState<()> for Size {
     type Ctx = ();
 
@@ -67,9 +127,8 @@ impl NodeDepState<()> for Size {
             "scroll_y",
             "scroll_x",
             "direction"
-        ])))
-        .with_text()
-        .with_tag();
+        ])));
+
     fn reduce<'a>(&mut self, node: NodeView, _sibling: (), _ctx: &Self::Ctx) -> bool {
         let mut width = SizeMode::default();
         let mut height = SizeMode::default();
@@ -200,9 +259,6 @@ pub struct Style {
     pub shadow: ShadowSettings,
     pub radius: f32,
     pub image_data: Option<Vec<u8>>,
-    pub color: Color,
-    pub font_family: String,
-    pub font_size: f32,
 }
 
 impl NodeDepState<()> for Style {
@@ -214,36 +270,18 @@ impl NodeDepState<()> for Style {
             "layer",
             "shadow",
             "radius",
-            "image_data",
-            "color",
-            "font_family",
-            "font_size"
-        ])))
-        .with_text();
+            "image_data"
+        ])));
+
     fn reduce<'a>(&mut self, node: NodeView, _sibling: (), _ctx: &Self::Ctx) -> bool {
         let mut background = Color::TRANSPARENT;
         let mut relative_layer = 0;
         let mut shadow = ShadowSettings::default();
         let mut radius = 0.0;
         let mut image_data = None;
-        let mut color = Color::WHITE;
-        let mut font_family = "Fira Sans".to_string();
-        let mut font_size = 16.0;
 
         for attr in node.attributes() {
             match attr.name {
-                "font_family" => {
-                    font_family = attr.value.to_string();
-                }
-                "font_size" => {
-                    font_size = attr.value.to_string().parse().unwrap_or(font_size);
-                }
-                "color" => {
-                    let new_color = parse_color(&attr.value.to_string());
-                    if let Some(new_color) = new_color {
-                        color = new_color;
-                    }
-                }
                 "background" => {
                     let new_back = parse_color(&attr.value.to_string());
                     if let Some(new_back) = new_back {
@@ -284,19 +322,14 @@ impl NodeDepState<()> for Style {
             || (relative_layer != self.relative_layer)
             || (shadow != self.shadow)
             || (radius != self.radius)
-            || (color != self.color)
-            || (image_data != self.image_data)
-            || (font_family != self.font_family)
-            || (font_size != self.font_size);
+            || (image_data != self.image_data);
+
         *self = Self {
             background,
             relative_layer,
             shadow,
             radius,
             image_data,
-            color,
-            font_family,
-            font_size,
         };
         changed
     }
