@@ -139,7 +139,6 @@ impl NodeDepState<()> for Size {
         let mut scroll_x = 0.0;
         let mut direction = DirectionMode::Vertical;
 
-        // if the node contains a width or height attribute it overrides the other size
         for a in node.attributes() {
             match a.name {
                 "width" => {
