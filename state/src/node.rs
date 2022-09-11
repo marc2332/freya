@@ -143,50 +143,26 @@ impl NodeDepState<()> for Size {
             match a.name {
                 "width" => {
                     let attr = a.value.to_string();
-                    if &attr == "stretch" {
-                        width = SizeMode::Percentage(100.0);
-                    } else if &attr == "auto" {
-                        width = SizeMode::Auto;
-                    } else if attr.contains("%") {
-                        width = SizeMode::Percentage(attr.replace("%", "").parse().unwrap());
-                    } else {
-                        width = SizeMode::Manual(attr.parse().unwrap());
+                    if let Some(new_width) = parse_size(&attr) {
+                        width = new_width;
                     }
                 }
                 "height" => {
                     let attr = a.value.to_string();
-                    if &attr == "stretch" {
-                        height = SizeMode::Percentage(100.0);
-                    } else if &attr == "auto" {
-                        height = SizeMode::Auto;
-                    } else if attr.contains("%") {
-                        height = SizeMode::Percentage(attr.replace("%", "").parse().unwrap());
-                    } else {
-                        height = SizeMode::Manual(attr.parse().unwrap());
+                    if let Some(new_height) = parse_size(&attr) {
+                        height = new_height;
                     }
                 }
                 "min_height" => {
                     let attr = a.value.to_string();
-                    if &attr == "stretch" {
-                        min_height = SizeMode::Percentage(100.0);
-                    } else if &attr == "auto" {
-                        min_height = SizeMode::Auto;
-                    } else if attr.contains("%") {
-                        min_height = SizeMode::Percentage(attr.replace("%", "").parse().unwrap());
-                    } else {
-                        min_height = SizeMode::Manual(attr.parse().unwrap());
+                    if let Some(new_min_height) = parse_size(&attr) {
+                        min_height = new_min_height;
                     }
                 }
                 "min_width" => {
                     let attr = a.value.to_string();
-                    if &attr == "stretch" {
-                        min_width = SizeMode::Percentage(100.0);
-                    } else if &attr == "auto" {
-                        min_width = SizeMode::Auto;
-                    } else if attr.contains("%") {
-                        min_width = SizeMode::Percentage(attr.replace("%", "").parse().unwrap());
-                    } else {
-                        min_width = SizeMode::Manual(attr.parse().unwrap());
+                    if let Some(new_min_width) = parse_size(&attr) {
+                        min_width = new_min_width;
                     }
                 }
                 "padding" => {
@@ -366,5 +342,17 @@ fn parse_color(color: &str) -> Option<Color> {
         "gray" => Some(Color::GRAY),
         "white" => Some(Color::WHITE),
         _ => parse_rgb(color),
+    }
+}
+
+fn parse_size(size: &str) -> Option<SizeMode> {
+    if size == "stretch" {
+        Some(SizeMode::Percentage(100.0))
+    } else if size == "auto" {
+        Some(SizeMode::Auto)
+    } else if size.contains("%") {
+        Some(SizeMode::Percentage(size.replace("%", "").parse().ok()?))
+    } else {
+        Some(SizeMode::Manual(size.parse().ok()?))
     }
 }
