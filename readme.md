@@ -2,7 +2,7 @@
 
 [![Discord Server](https://img.shields.io/discord/1015005816094478347?logo=discord&style=social)](https://discord.gg/sYejxCdewG)
 
-A GUI Toolkit for Rust powered by [Skia](https://skia.org/) and [Dioxus](https://dioxuslabs.com).
+A GUI library for Rust powered by [Skia](https://skia.org/) and [Dioxus](https://dioxuslabs.com).
 
 
 ```rust
@@ -49,7 +49,7 @@ fn app(cx: Scope) -> Element {
 - Browser-like devtools
 
 ## TO-DO 🚧
-Besides all the [tracking](https://github.com/marc2332/freya/issues?q=is%3Aopen+is%3Aissue+label%3Atracking) feautures:
+Besides all the [tracking](https://github.com/marc2332/freya/issues?q=is%3Aopen+is%3Aissue+label%3Atracking) issues, here are some of the things to do:
 - [ ] Support for percentages in padding
 - [ ] Add `Flex` component (using [taffy](https://github.com/dioxusLabs/taffy)).
 - [ ] Documentation
@@ -59,4 +59,4 @@ Besides all the [tracking](https://github.com/marc2332/freya/issues?q=is%3Aopen+
 - [ ] Move layout calculation from the layout engine into the node's state? Not sure.
 - [ ] Render shadows one layer below it's element to avoid overlapping with it's siblings
 
-MIT License
+[MIT License](./LICENSE.md)
