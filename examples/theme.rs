@@ -16,6 +16,7 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     let theme = use_atom_ref(&cx, THEME);
+    let enabled = use_state(&cx, || false);
 
     cx.render(rsx!(rect {
         height: "100%",
@@ -36,6 +37,12 @@ fn app(cx: Scope) -> Element {
             label {
                 width: "100",
                 "Dark"
+            }
+        }
+        Switch {
+            enabled: enabled,
+            ontoggled: |_| {
+                enabled.set(!enabled.get());
             }
         }
     }))
