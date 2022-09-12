@@ -1,7 +1,7 @@
 use dioxus_core::ElementId;
 use dioxus_native_core::real_dom::{Node, NodeType};
-use layers_engine::{Layers, NodeArea, NodeData};
-use layout_engine::calculate_node;
+use layers::{Layers, NodeArea, NodeData};
+use layout::calculate_node;
 use lazy_static::lazy_static;
 use state::node::{DirectionMode, NodeState, Size, SizeMode};
 

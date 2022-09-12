@@ -1,5 +1,5 @@
 [package]
-name = "layout-engine"
+name = "layout"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,7 +7,7 @@ edition = "2021"
 dioxus-native-core = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
 dioxus = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
 state = { path = "../state"}
-layers-engine = { path = "../layers-engine"}
+layers = { path = "../layers"}
 
 [dev-dependencies]
 dioxus-native-core-macro = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }

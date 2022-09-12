@@ -750,7 +750,7 @@ dependencies = [
  "dioxus-html",
  "dioxus-native-core",
  "fxhash",
- "layout-engine",
+ "layout",
  "renderer",
  "state",
  "tokio",
@@ -1043,7 +1043,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e2db585e1d738fc771bf08a151420d3ed193d9d895a36df7f6f8a9456b911ddc"
 
 [[package]]
-name = "layers-engine"
+name = "layers"
 version = "0.1.0"
 dependencies = [
  "dioxus",
@@ -1052,7 +1052,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "layout-engine"
+name = "layout"
 version = "0.1.0"
 dependencies = [
  "anymap",
@@ -1061,7 +1061,7 @@ dependencies = [
  "dioxus-native-core",
  "dioxus-native-core-macro",
  "fxhash",
- "layers-engine",
+ "layers",
  "lazy_static",
  "state",
 ]
@@ -1501,8 +1501,8 @@ dependencies = [
  "enumset",
  "gl",
  "glutin",
- "layers-engine",
- "layout-engine",
+ "layers",
+ "layout",
  "skia-safe",
  "state",
 ]

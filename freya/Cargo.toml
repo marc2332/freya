@@ -9,7 +9,7 @@ wireframe = ["renderer/wireframe"]
 
 [dependencies]
 state = { path = "../state"}
-layout-engine = { path = "../layout-engine"}
+layout = { path = "../layout"}
 renderer = { path = "../renderer"}
 dioxus = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
 dioxus-html = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }

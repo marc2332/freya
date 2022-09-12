@@ -1,7 +1,7 @@
 use dioxus_core::{exports::futures_channel::mpsc::UnboundedSender, SchedulerMsg};
 use dioxus_native_core::real_dom::RealDom;
 use glutin::event::{MouseScrollDelta, WindowEvent};
-use layers_engine::NodeArea;
+use layers::NodeArea;
 use skia_safe::{textlayout::FontCollection, FontMgr};
 use state::node::NodeState;
 use std::{

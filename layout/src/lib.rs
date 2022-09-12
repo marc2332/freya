@@ -1,6 +1,6 @@
 use dioxus::core::ElementId;
 use dioxus_native_core::real_dom::NodeType;
-use layers_engine::{Layers, NodeArea, NodeData};
+use layers::{Layers, NodeArea, NodeData};
 use state::node::{DirectionMode, SizeMode};
 
 fn calculate_area(node_data: &NodeData, mut area: NodeArea, parent_area: NodeArea) -> NodeArea {

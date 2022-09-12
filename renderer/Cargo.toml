@@ -14,7 +14,7 @@ skia-safe = { version = "*", features = ["gl", "textlayout"] }
 dioxus-core = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
 dioxus-native-core = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
 dioxus-html = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
-layout-engine = { path = "../layout-engine"}
+layout = { path = "../layout"}
 state = { path = "../state"}
 enumset = "1.0.11"
-layers-engine = { path = "../layers-engine"}
+layers = { path = "../layers"}

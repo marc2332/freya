@@ -1,5 +1,5 @@
 use dioxus_native_core::real_dom::{Node, NodeType};
-use layers_engine::{NodeArea, NodeData};
+use layers::{NodeArea, NodeData};
 use skia_safe::{
     textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle},
     utils::text_utils::Align,
