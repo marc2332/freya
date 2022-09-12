@@ -6,7 +6,7 @@ A GUI library for Rust powered by [Skia](https://skia.org/) and [Dioxus](https:/
 
 <table>
 <tr>
-<td>
+<td style="border:hidden;">
 
 ```rust
 fn app(cx: Scope) -> Element {
@@ -36,7 +36,7 @@ fn app(cx: Scope) -> Element {
     ))
 ```
 </td>
-<td>
+<td style="border:hidden;">
 
 ![Freya](./demo.png)
 
