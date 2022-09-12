@@ -52,7 +52,7 @@ fn app(cx: Scope) -> Element {
 - Containers and rectangles
 - Scroll views (nested too)
 - Click, wheel, mouse /down/leave/over events
-- Windows, Linux and MacOS support
+- Windows, Linux (needs `x11` feature) and MacOS support
 - Components library
 - Animation hook
 
