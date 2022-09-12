@@ -2,7 +2,9 @@
 
 [![Discord Server](https://img.shields.io/discord/1015005816094478347?logo=discord&style=social)](https://discord.gg/sYejxCdewG)
 
-A GUI library for Rust powered by [Skia](https://skia.org/) and [Dioxus](https://dioxuslabs.com).
+A GUI library for Rust powered by [Skia](https://skia.org/) and [Dioxus](https://dioxuslabs.com). 
+
+It's currently work in progress and not usable for production, but you can already play with it! You can join the [Discord](https://discord.gg/sYejxCdewG) server if you have any question. 
 
 <table>
 <tr>
