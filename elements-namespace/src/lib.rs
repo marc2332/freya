@@ -89,6 +89,7 @@ builder_constructors! {
     };
 }
 
+// I am still bad at Macros so I created this element directly
 #[allow(non_camel_case_types)]
 pub struct image;
 
@@ -111,18 +112,6 @@ impl image {
     }
 }
 
-pub trait GlobalAttributes {
-    fn prevent_default<'a>(&self, cx: NodeFactory<'a>, val: Arguments) -> Attribute<'a> {
-        cx.attr("dioxus-prevent-default", val, None, false)
-    }
-}
-
-pub trait SvgAttributes {
-    fn prevent_default<'a>(&self, cx: NodeFactory<'a>, val: Arguments) -> Attribute<'a> {
-        cx.attr("dioxus-prevent-default", val, None, false)
-    }
-}
-
 pub mod on {
     use dioxus_core::*;
     use dioxus_html::on::{MouseData, MouseEvent, WheelData, WheelEvent};
@@ -130,49 +119,49 @@ pub mod on {
     use bumpalo::boxed::Box as BumpBox;
 
     macro_rules! event_directory {
-    ( $(
-        $( #[$attr:meta] )*
-        $wrapper:ident($data:ident): [
+        ( $(
+            $( #[$attr:meta] )*
+            $wrapper:ident($data:ident): [
+                $(
+                    $( #[$method_attr:meta] )*
+                    $name:ident
+                )*
+            ];
+        )* ) => {
             $(
-                $( #[$method_attr:meta] )*
-                $name:ident
+                $(
+                    $(#[$method_attr])*
+                    pub fn $name<'a>(
+                        factory: NodeFactory<'a>,
+                        mut callback: impl FnMut($wrapper) + 'a,
+                        // mut callback: impl FnMut(UiEvent<$data>) + 'a,
+                    ) -> Listener<'a>
+                    {
+                        let bump = &factory.bump();
+
+                        // we can't allocate unsized in bumpalo's box, so we need to craft the box manually
+                        // safety: this is essentially the same as calling Box::new() but manually
+                        // The box is attached to the lifetime of the bumpalo allocator
+                        let cb: &mut dyn FnMut(AnyEvent) = bump.alloc(move |evt: AnyEvent| {
+                            let event = evt.downcast::<$data>().unwrap();
+                            callback(event)
+                        });
+
+                        let callback: BumpBox<dyn FnMut(AnyEvent) + 'a> = unsafe { BumpBox::from_raw(cb) };
+
+                        // ie oncopy
+                        let event_name = stringify!($name);
+
+                        // ie copy
+                        let shortname: &'static str = &event_name[2..];
+
+                        let handler = bump.alloc(std::cell::RefCell::new(Some(callback)));
+                        factory.listener(shortname, handler)
+                    }
+                )*
             )*
-        ];
-    )* ) => {
-        $(
-            $(
-                $(#[$method_attr])*
-                pub fn $name<'a>(
-                    factory: NodeFactory<'a>,
-                    mut callback: impl FnMut($wrapper) + 'a,
-                    // mut callback: impl FnMut(UiEvent<$data>) + 'a,
-                ) -> Listener<'a>
-                {
-                    let bump = &factory.bump();
-
-                    // we can't allocate unsized in bumpalo's box, so we need to craft the box manually
-                    // safety: this is essentially the same as calling Box::new() but manually
-                    // The box is attached to the lifetime of the bumpalo allocator
-                    let cb: &mut dyn FnMut(AnyEvent) = bump.alloc(move |evt: AnyEvent| {
-                        let event = evt.downcast::<$data>().unwrap();
-                        callback(event)
-                    });
-
-                    let callback: BumpBox<dyn FnMut(AnyEvent) + 'a> = unsafe { BumpBox::from_raw(cb) };
-
-                    // ie oncopy
-                    let event_name = stringify!($name);
-
-                    // ie copy
-                    let shortname: &'static str = &event_name[2..];
-
-                    let handler = bump.alloc(std::cell::RefCell::new(Some(callback)));
-                    factory.listener(shortname, handler)
-                }
-            )*
-        )*
-    };
-}
+        };
+    }
 
     event_directory! {
         MouseEvent(MouseData): [
@@ -186,3 +175,7 @@ pub mod on {
         ];
     }
 }
+
+pub trait GlobalAttributes {}
+
+pub trait SvgAttributes {}
