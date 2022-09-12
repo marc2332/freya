@@ -37,6 +37,7 @@ fn app(cx: Scope) -> Element {
 - Background, text color, padding, width, height, min_width, min_height, shadow, border radius, custom layer (like z-index)
 - Windows, Linux and MacOS support
 - Optional components library
+- Animation hooks
 
 ### Goals 😁
 - Fast

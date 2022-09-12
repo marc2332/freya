@@ -5,8 +5,9 @@ use layers_engine::NodeArea;
 use skia_safe::{textlayout::FontCollection, FontMgr};
 use state::node::NodeState;
 use std::{
-    sync::{mpsc::Receiver, Arc, Mutex},
+    sync::{Arc, Mutex},
     thread,
+    time::{Duration, Instant},
 };
 
 use gl::types::*;
@@ -53,7 +54,7 @@ pub enum RendererRequest {
     KeyboardEvent { name: &'static str },
 }
 
-pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmitter) {
+pub fn run(skia_dom: SkiaDom, event_emitter: EventEmitter) {
     let renderer_requests: RendererRequests = Arc::new(Mutex::new(Vec::new()));
     let cursor_pos = Arc::new(Mutex::new((0.0, 0.0)));
     let events_processor = EventsProcessor::default();
@@ -180,11 +181,26 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
         .unwrap()
     }
 
+    let is_resizing = Arc::new(Mutex::new(false));
+    let resize_timer = Arc::new(Mutex::new(Instant::now()));
+
     {
         let proxy = el.create_proxy();
+        let is_resizing = is_resizing.clone();
+        let resize_timer = resize_timer.clone();
         thread::spawn(move || {
-            while let Ok(msg) = rev_render.recv() {
-                proxy.send_event(msg).unwrap();
+            let time = 1000;
+            let fps = 60;
+            let step = time / fps;
+            loop {
+                if *is_resizing.lock().unwrap() == false {
+                    // Trigger redraw
+                    proxy.send_event(()).unwrap();
+                    thread::sleep(Duration::from_millis(step));
+                }
+                if resize_timer.lock().unwrap().elapsed().as_millis() > 200 {
+                    *is_resizing.lock().unwrap() = false;
+                }
             }
         });
     }
@@ -206,90 +222,85 @@ pub fn run(skia_dom: SkiaDom, rev_render: Receiver<()>, event_emitter: EventEmit
         #[allow(deprecated)]
         match event {
             Event::LoopDestroyed => {}
-            Event::WindowEvent { event, window_id } => {
-                let result = get_window_context(window_id);
-                if let Some(env) = result {
-                    let env = env.lock().unwrap();
-                    env.windowed_context.window().request_redraw();
+            Event::WindowEvent { event, window_id } => match event {
+                WindowEvent::MouseWheel { delta, .. } => {
+                    let cursor_pos = cursor_pos.lock().unwrap();
+                    let scroll_data = {
+                        match delta {
+                            MouseScrollDelta::LineDelta(x, y) => (x as f64, y as f64),
+                            MouseScrollDelta::PixelDelta(pos) => (pos.x, pos.y),
+                        }
+                    };
+                    renderer_requests
+                        .lock()
+                        .unwrap()
+                        .push(RendererRequest::WheelEvent {
+                            name: "wheel",
+                            scroll: scroll_data,
+                            cursor: *cursor_pos,
+                        });
                 }
-                match event {
-                    WindowEvent::MouseWheel { delta, .. } => {
-                        let cursor_pos = cursor_pos.lock().unwrap();
-                        let scroll_data = {
-                            match delta {
-                                MouseScrollDelta::LineDelta(x, y) => (x as f64, y as f64),
-                                MouseScrollDelta::PixelDelta(pos) => (pos.x, pos.y),
-                            }
-                        };
-                        renderer_requests
-                            .lock()
-                            .unwrap()
-                            .push(RendererRequest::WheelEvent {
-                                name: "wheel",
-                                scroll: scroll_data,
-                                cursor: *cursor_pos,
-                            });
-                    }
-                    WindowEvent::CursorMoved { position, .. } => {
-                        let cursor_pos = {
-                            let mut cursor_pos = cursor_pos.lock().unwrap();
-                            cursor_pos.0 = position.x;
-                            cursor_pos.1 = position.y;
+                WindowEvent::CursorMoved { position, .. } => {
+                    let cursor_pos = {
+                        let mut cursor_pos = cursor_pos.lock().unwrap();
+                        cursor_pos.0 = position.x;
+                        cursor_pos.1 = position.y;
 
-                            *cursor_pos
-                        };
+                        *cursor_pos
+                    };
 
-                        renderer_requests
-                            .lock()
-                            .unwrap()
-                            .push(RendererRequest::MouseEvent {
-                                name: "mouseover",
-                                cursor: cursor_pos,
-                            });
+                    renderer_requests
+                        .lock()
+                        .unwrap()
+                        .push(RendererRequest::MouseEvent {
+                            name: "mouseover",
+                            cursor: cursor_pos,
+                        });
+                }
+                WindowEvent::MouseInput { state, .. } => {
+                    let event_name = match state {
+                        ElementState::Pressed => "mousedown",
+                        ElementState::Released => "click",
+                    };
+                    let cursor_pos = cursor_pos.lock().unwrap();
+                    renderer_requests
+                        .lock()
+                        .unwrap()
+                        .push(RendererRequest::MouseEvent {
+                            name: event_name,
+                            cursor: *cursor_pos,
+                        });
+                }
+                WindowEvent::Resized(physical_size) => {
+                    *is_resizing.lock().unwrap() = true;
+                    let result = get_window_context(window_id);
+                    if let Some(env) = result {
+                        let mut env = env.lock().unwrap();
+                        let mut context = env.gr_context.clone();
+                        env.surface =
+                            create_surface(&env.windowed_context, &env.fb_info, &mut context);
+                        env.windowed_context.resize(physical_size);
                     }
-                    WindowEvent::MouseInput { state, .. } => {
-                        let event_name = match state {
-                            ElementState::Pressed => "mousedown",
-                            ElementState::Released => "click",
-                        };
-                        let cursor_pos = cursor_pos.lock().unwrap();
-                        renderer_requests
-                            .lock()
-                            .unwrap()
-                            .push(RendererRequest::MouseEvent {
-                                name: event_name,
-                                cursor: *cursor_pos,
-                            });
-                    }
-                    WindowEvent::Resized(physical_size) => {
-                        let result = get_window_context(window_id);
-                        if let Some(env) = result {
-                            let mut env = env.lock().unwrap();
-                            let mut context = env.gr_context.clone();
-                            env.surface =
-                                create_surface(&env.windowed_context, &env.fb_info, &mut context);
-                            env.windowed_context.resize(physical_size)
+                    *resize_timer.lock().unwrap() = Instant::now();
+                }
+                WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
+                WindowEvent::KeyboardInput {
+                    input:
+                        KeyboardInput {
+                            virtual_keycode,
+                            modifiers,
+                            ..
+                        },
+                    ..
+                } => {
+                    if modifiers.logo() {
+                        if let Some(VirtualKeyCode::Q) = virtual_keycode {
+                            *control_flow = ControlFlow::Exit;
                         }
                     }
-                    WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
-                    WindowEvent::KeyboardInput {
-                        input:
-                            KeyboardInput {
-                                virtual_keycode,
-                                modifiers,
-                                ..
-                            },
-                        ..
-                    } => {
-                        if modifiers.logo() {
-                            if let Some(VirtualKeyCode::Q) = virtual_keycode {
-                                *control_flow = ControlFlow::Exit;
-                            }
-                        }
-                    }
-                    _ => (),
                 }
-            }
+                _ => (),
+            },
             Event::RedrawRequested(window_id) => {
                 let result = get_window_context(window_id);
                 if let Some(env) = result {

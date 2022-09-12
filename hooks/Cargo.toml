@@ -1,0 +1,9 @@
+[package]
+name = "hooks"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+dioxus = { git = "https://github.com/marc2332/dioxus", branch = "patch-3", features = ["macro", "hooks"]}
+tween = "1.0.1"
+tokio = "1.17.0"

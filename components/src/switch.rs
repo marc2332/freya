@@ -1,6 +1,7 @@
 use dioxus::{core::UiEvent, events::MouseData, prelude::*};
 use elements_namespace as dioxus_elements;
 use fermi::use_atom_ref;
+use hooks::{use_animation, AnimationMode};
 
 use crate::THEME;
 
@@ -12,6 +13,10 @@ pub struct SwitchProps<'a> {
 
 #[allow(non_snake_case)]
 pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
+    let (start_enabled, restart_enabled, progress_enabled) =
+        use_animation(&cx, || AnimationMode::new_sine_in_out(0.0..=25.0, 200));
+    let (start_disabled, restart_disabled, progress_disabled) =
+        use_animation(&cx, || AnimationMode::new_sine_in_out(25.0..=0.0, 200));
     let theme = use_atom_ref(&cx, THEME);
     let theme = theme.read();
     let hovering = use_state(&cx, || false);
@@ -36,16 +41,26 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
         cx.props.ontoggled.call(());
     };
 
+    use_effect(&cx, cx.props.enabled, move |enabled| async move {
+        if enabled {
+            start_enabled();
+            restart_disabled();
+        } else {
+            start_disabled();
+            restart_enabled();
+        }
+    });
+
     let (scroll_x, border, circle) = {
         if *cx.props.enabled {
             (
-                if *clicking.get() { 20 } else { 25 },
+                progress_enabled,
                 theme.switch.enabled_background,
                 theme.switch.enabled_thumb_background,
             )
         } else {
             (
-                if *clicking.get() { 5 } else { 0 },
+                progress_disabled,
                 theme.switch.background,
                 theme.switch.thumb_background,
             )
@@ -53,12 +68,11 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
     };
 
     cx.render(rsx!(
-        container {
+        rect {
             width: "50",
             height: "25",
             padding: "2",
             radius: "50",
-            shadow: "0 0 60 35 white",
             background: "{border}",
             onmousedown: onmousedown,
             onmouseover: onmouseover,
