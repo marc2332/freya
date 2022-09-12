@@ -4,10 +4,11 @@
 
 A GUI library for Rust powered by [Skia](https://skia.org/) and [Dioxus](https://dioxuslabs.com).
 
+<table>
+<tr>
+<td>
 
 ```rust
-
-
 fn app(cx: Scope) -> Element {
     let mut count = use_state(&cx, || 0);
 
@@ -18,7 +19,10 @@ fn app(cx: Scope) -> Element {
             background: "rgb(233, 196, 106)",
             padding: "25",
             color: "rgb(20, 33, 61)",
-            label { font_size: "20", "Number is: {count}" }
+            label { 
+                font_size: "20", 
+                "Number is: {count}"
+            }
         }
         container {
             height: "80%",
@@ -31,6 +35,15 @@ fn app(cx: Scope) -> Element {
         }
     ))
 ```
+</td>
+<td>
+
+![Freya](./demo.png)
+
+</td>
+</table>
+
+
 ### Features ✨
 - Text, Paragraph
 - Containers and rectangles
