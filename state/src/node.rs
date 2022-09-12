@@ -79,7 +79,11 @@ impl ParentDepState for FontStyle {
     type DepState = Self;
 
     const NODE_MASK: NodeMask =
-        NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!(["color"])));
+        NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
+            "color",
+            "font_size",
+            "font_family"
+        ])));
 
     fn reduce<'a>(
         &mut self,

@@ -99,7 +99,7 @@ pub fn run(skia_dom: SkiaDom, event_emitter: EventEmitter) {
 
     let wins = Arc::new(Mutex::new(vec![]));
 
-    let wb = WindowBuilder::new().with_title("test");
+    let wb = WindowBuilder::new().with_title("Freya");
 
     let cb = glutin::ContextBuilder::new()
         .with_depth_buffer(0)

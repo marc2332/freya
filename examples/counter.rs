@@ -15,34 +15,25 @@ fn app(cx: Scope) -> Element {
     let mut count = use_state(&cx, || 0);
 
     cx.render(rsx!(
-        rect {
+        container {
             height: "20%",
             width: "100%",
-            background: "black",
+            background: "rgb(233, 196, 106)",
             padding: "25",
+            color: "rgb(20, 33, 61)",
             label {
+                font_size: "20",
                 "Number is: {count}"
             }
         }
-        rect {
-            height: "40%",
+        container {
+            height: "80%",
             width: "100%",
-            background: "blue",
+            background: "rgb(168, 218, 220)",
+            color: "black",
             padding: "25",
             onclick: move |_| count += 1,
-            label {
-                "Increase!"
-             }
-        }
-        rect {
-            height: "40%",
-            width: "100%",
-            background: "red",
-            padding: "25",
-            onclick: move |_| count -= 1,
-            label {
-                "Decrease!"
-             }
+            label { "Click to increase!" }
         }
     ))
 }
