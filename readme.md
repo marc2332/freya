@@ -4,7 +4,7 @@
 
 A GUI library for Rust powered by [Skia](https://skia.org/) and [Dioxus](https://dioxuslabs.com). 
 
-It's currently work in progress and not usable for production, but you can already play with it! You can join the [Discord](https://discord.gg/sYejxCdewG) server if you have any question. 
+⚠️ It's currently work in progress and not usable for production, but you can already play with it! You can join the [Discord](https://discord.gg/sYejxCdewG) server if you have any question. 
 
 <table>
 <tr>
@@ -47,24 +47,25 @@ fn app(cx: Scope) -> Element {
 
 
 ### Features ✨
-- Text, Paragraph
+- Label and paragraphs
 - Containers and rectangles
-- Nested scroll views
-- Click, mouse move, scroll events
-- Background, text color, padding, width, height, min_width, min_height, shadow, border radius, custom layer (like z-index)
+- Scroll views (nested too)
+- Click, wheel, mouse /down/leave/over events
 - Windows, Linux and MacOS support
-- Optional components library
-- Animation hooks
+- Components library
+- Animation hook
 
 ### Goals 😁
 - Fast
+- Low memory usage
 - Lightweight
 - Secure
 - Full cross platform
+- Fluid animations
 
 ### Ideas 💭
 - Tauri integration
-- Browser-like devtools
+- Devtools
 
 ## TO-DO 🚧
 Besides all the [tracking](https://github.com/marc2332/freya/issues?q=is%3Aopen+is%3Aissue+label%3Atracking) issues, here are some of the things to do:
