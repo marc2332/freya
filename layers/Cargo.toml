@@ -1,7 +1,15 @@
 [package]
 name = "freya-layers"
+description = "Cross-platform GUI Library."
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../readme.md"
+homepage = "https://github.com/marc2332/freya"
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
+categories = ["GUI"]
 
 [dependencies]
 freya-node-state = { path = "../state", version = "0.1.0" }
