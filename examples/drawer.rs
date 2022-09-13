@@ -127,6 +127,7 @@ fn app(cx: Scope) -> Element {
             rect {
                 height: "100%",
                 width: "100%",
+                onclick: move |_| { opened.set(false) },
                 rect {
                     height: "30",
                     width: "80",
