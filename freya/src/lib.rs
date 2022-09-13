@@ -25,8 +25,7 @@ pub fn launch(app: Component<()>) {
 
             let muts = dom.rebuild();
             let to_update = rdom.lock().unwrap().apply_mutations(vec![muts]);
-            let mut ctx = AnyMap::new();
-            ctx.insert(0.0f32);
+            let ctx = AnyMap::new();
             rdom.lock().unwrap().update_state(&dom, to_update, ctx);
 
             event_emitter
