@@ -4,10 +4,7 @@
 )]
 
 use dioxus::{core::UiEvent, events::MouseData, prelude::*};
-use elements_namespace as dioxus_elements;
-
-use freya::launch;
-use hooks::{use_animation, AnimationMode};
+use freya::{dioxus_elements, *};
 
 fn main() {
     launch(app);

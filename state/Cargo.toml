@@ -1,15 +1,15 @@
 [package]
-name = "state"
+name = "freya-node-state"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dioxus = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
-dioxus-html = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
-dioxus-native-core = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
-dioxus-native-core-macro = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
-dioxus-core = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
+dioxus = { git = "https://github.com/dioxuslabs/dioxus"  }
+dioxus-html = { git = "https://github.com/dioxuslabs/dioxus"  }
+dioxus-native-core = { git = "https://github.com/dioxuslabs/dioxus"  }
+dioxus-native-core-macro = { git = "https://github.com/dioxuslabs/dioxus"  }
+dioxus-core = { git = "https://github.com/dioxuslabs/dioxus"  }
 anymap = "0.12.1"
 fxhash = "0.2.1"
 skia-safe = "*"
-elements-namespace = { path = "../elements-namespace"}
+freya-elements = { path = "../elements", version = "0.1.0"}

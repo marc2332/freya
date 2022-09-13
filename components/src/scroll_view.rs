@@ -1,5 +1,5 @@
 use dioxus::{core::UiEvent, events::WheelData, prelude::*};
-use elements_namespace as dioxus_elements;
+use freya_elements as dioxus_elements;
 
 #[allow(non_snake_case)]
 pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {

@@ -4,17 +4,20 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
-x11 = ["renderer/x11"]
-wireframe = ["renderer/wireframe"]
+x11 = ["freya-renderer/x11"]
+wireframe = ["freya-renderer/wireframe"]
 
 [dependencies]
-state = { path = "../state"}
-layout = { path = "../layout"}
-renderer = { path = "../renderer"}
-dioxus = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
-dioxus-html = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
-dioxus-native-core = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
-dioxus-core = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
+freya-node-state = { path = "../state", version = "0.1.0" }
+freya-layout = { path = "../layout", version = "0.1.0" }
+freya-renderer = { path = "../renderer", version = "0.1.0" }
+freya-elements = { path = "../elements", version = "0.1.0" }
+freya-hooks = { path = "../hooks"}
+freya-components ={ path = "../components"}
+dioxus = { git = "https://github.com/dioxuslabs/dioxus"  }
+dioxus-html = { git = "https://github.com/dioxuslabs/dioxus"  }
+dioxus-native-core = { git = "https://github.com/dioxuslabs/dioxus"  }
+dioxus-core = { git = "https://github.com/dioxuslabs/dioxus"  }
 tokio = { version = "1.17.0", features = ["full"] }
 anymap = "0.12.1"
 fxhash = "0.2.1"

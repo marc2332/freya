@@ -1,7 +1,7 @@
 use dioxus::{core::UiEvent, events::MouseData, prelude::*};
-use elements_namespace as dioxus_elements;
 use fermi::use_atom_ref;
-use hooks::{use_animation, AnimationMode};
+use freya_elements as dioxus_elements;
+use freya_hooks::{use_animation, AnimationMode};
 
 use crate::THEME;
 

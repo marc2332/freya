@@ -1,12 +1,12 @@
 use dioxus_native_core::real_dom::{Node, NodeType};
-use layers::{NodeArea, NodeData};
+use freya_layers::{NodeArea, NodeData};
+use freya_node_state::node::NodeState;
 use skia_safe::{
     textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle},
     utils::text_utils::Align,
     BlurStyle, Canvas, ClipOp, Data, Font, FontStyle, IRect, Image, MaskFilter, Paint, PaintStyle,
     Path, PathDirection, Rect,
 };
-use state::node::NodeState;
 use std::ops::Index;
 
 use crate::SkiaDom;

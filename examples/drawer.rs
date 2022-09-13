@@ -3,10 +3,8 @@
     windows_subsystem = "windows"
 )]
 
-use components::ScrollView;
 use dioxus::{events::MouseEvent, prelude::*};
-use elements_namespace as dioxus_elements;
-use freya::launch;
+use freya::{dioxus_elements, *};
 use tokio::time::Instant;
 
 fn main() {

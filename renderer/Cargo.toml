@@ -1,5 +1,5 @@
 [package]
-name = "renderer"
+name = "freya-renderer"
 version = "0.1.0"
 edition = "2021"
 
@@ -11,10 +11,10 @@ wireframe = []
 gl = "*"
 glutin = "*"
 skia-safe = { version = "*", features = ["gl", "textlayout"] }
-dioxus-core = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
-dioxus-native-core = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
-dioxus-html = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
-layout = { path = "../layout"}
-state = { path = "../state"}
+dioxus-core = { git = "https://github.com/dioxuslabs/dioxus"  }
+dioxus-native-core = { git = "https://github.com/dioxuslabs/dioxus"  }
+dioxus-html = { git = "https://github.com/dioxuslabs/dioxus"  }
 enumset = "1.0.11"
-layers = { path = "../layers"}
+freya-layout = { path = "../layout", version = "0.1.0" }
+freya-node-state = { path = "../state", version = "0.1.0" }
+freya-layers = { path = "../layers", version = "0.1.0" }

@@ -1,10 +1,10 @@
 [package]
 name = "examples"
-version = "0.1.0"
+version = "0.0.0"
 edition = "2021"
 
 [workspace]
-members = ["layers", "layout", "renderer", "state", "freya", "elements-namespace", "components", "hooks"]
+members = ["layers", "layout", "renderer", "state", "freya", "elements", "components", "hooks"]
 
 [features]
 x11 = ["freya/x11"]
@@ -12,9 +12,6 @@ wireframe = ["freya/wireframe"]
 
 [dev-dependencies]
 freya = { path = "./freya"}
-dioxus = { git = "https://github.com/marc2332/dioxus", branch = "patch-3", features = ["macro", "hooks"]}
+dioxus = { git = "https://github.com/dioxuslabs/dioxus", features = ["macro", "hooks"]}
 tokio = "1.17.0"
-elements-namespace = { path = "./elements-namespace"}
-components = { path = "./components"}
-fermi = { git = "https://github.com/marc2332/dioxus", branch = "patch-3" }
-hooks = { path = "./hooks"}
+fermi = { git = "https://github.com/dioxuslabs/dioxus" }

@@ -2,12 +2,15 @@ use anymap::AnyMap;
 use dioxus::prelude::*;
 use dioxus_core::SchedulerMsg;
 use dioxus_native_core::real_dom::RealDom;
-use renderer::run;
-use state::node::NodeState;
+use freya_node_state::node::NodeState;
+use freya_renderer::run;
 use std::sync::Arc;
 use std::sync::Mutex;
 
-pub use renderer;
+pub use freya_components::*;
+pub use freya_elements as dioxus_elements;
+pub use freya_hooks::*;
+pub use freya_renderer::*;
 
 pub fn launch(app: Component<()>) {
     let rdom = Arc::new(Mutex::new(RealDom::<NodeState>::new()));

@@ -46,6 +46,19 @@ fn app(cx: Scope) -> Element {
 </td>
 </table>
 
+### Want to try it? 🤔
+
+Windows & MacOS:
+
+```shell
+cargo run --example counter
+```
+
+Linux:
+
+```shell
+cargo run --example counter --features x11
+```
 
 ### Features ✨
 - Label and paragraphs

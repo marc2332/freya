@@ -4,8 +4,7 @@
 )]
 
 use dioxus::prelude::*;
-use elements_namespace as dioxus_elements;
-use freya::launch;
+use freya::{dioxus_elements, *};
 use std::time::Duration;
 use tokio::time::sleep;
 

@@ -9,10 +9,10 @@ use dioxus_html::{
 };
 use dioxus_native_core::real_dom::{Node, NodeType};
 use enumset::enum_set;
-use layers::{Layers, NodeArea, NodeData, RenderData};
-use layout::calculate_node;
+use freya_layers::{Layers, NodeArea, NodeData, RenderData};
+use freya_layout::calculate_node;
+use freya_node_state::node::{NodeState, Size};
 use skia_safe::{textlayout::FontCollection, Canvas, Color};
-use state::node::{NodeState, Size};
 use std::{collections::HashMap, ops::Index, sync::Arc};
 
 use crate::{

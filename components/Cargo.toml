@@ -1,11 +1,11 @@
 [package]
-name = "components"
+name = "freya-components"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dioxus = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
-elements-namespace = { path = "../elements-namespace"}
-state = { path = "../state"}
-fermi = { git = "https://github.com/marc2332/dioxus", branch = "patch-3" }
-hooks = { path = "../hooks"}
+dioxus = { git = "https://github.com/dioxuslabs/dioxus"  }
+fermi = { git = "https://github.com/dioxuslabs/dioxus" }
+freya-elements = { path = "../elements", version = "0.1.0" }
+freya-node-state = { path = "../state", version = "0.1.0" }
+freya-hooks = { path = "../hooks", version = "0.1.0" }

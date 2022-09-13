@@ -1,9 +1,9 @@
 [package]
-name = "layers"
+name = "freya-layers"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-state = { path = "../state"}
-dioxus-native-core = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
-dioxus = { git = "https://github.com/marc2332/dioxus" , branch = "patch-3" }
+freya-node-state = { path = "../state", version = "0.1.0" }
+dioxus-native-core = { git = "https://github.com/dioxuslabs/dioxus"  }
+dioxus = { git = "https://github.com/dioxuslabs/dioxus"  }

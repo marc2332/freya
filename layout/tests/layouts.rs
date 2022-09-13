@@ -1,9 +1,9 @@
 use dioxus_core::ElementId;
 use dioxus_native_core::real_dom::{Node, NodeType};
-use layers::{Layers, NodeArea, NodeData};
-use layout::calculate_node;
+use freya_layers::{Layers, NodeArea, NodeData};
+use freya_layout::calculate_node;
+use freya_node_state::node::{DirectionMode, NodeState, Size, SizeMode};
 use lazy_static::lazy_static;
-use state::node::{DirectionMode, NodeState, Size, SizeMode};
 
 lazy_static! {
     static ref TEST_NODE: Node<NodeState> = Node {

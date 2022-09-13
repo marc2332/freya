@@ -1,9 +1,9 @@
 use dioxus_core::{exports::futures_channel::mpsc::UnboundedSender, SchedulerMsg};
 use dioxus_native_core::real_dom::RealDom;
+use freya_layers::NodeArea;
+use freya_node_state::node::NodeState;
 use glutin::event::{MouseScrollDelta, WindowEvent};
-use layers::NodeArea;
 use skia_safe::{textlayout::FontCollection, FontMgr};
-use state::node::NodeState;
 use std::{
     sync::{Arc, Mutex},
     thread,

@@ -3,12 +3,9 @@
     windows_subsystem = "windows"
 )]
 
-use components::*;
 use dioxus::prelude::*;
-use elements_namespace as dioxus_elements;
 use fermi::*;
-
-use freya::launch;
+use freya::{dioxus_elements, *};
 
 fn main() {
     launch(app);

@@ -1,6 +1,6 @@
 use dioxus::core::ElementId;
 use dioxus_native_core::real_dom::{Node, NodeType};
-use state::node::{NodeState, Size};
+use freya_node_state::node::{NodeState, Size};
 use std::collections::HashMap;
 
 #[derive(Clone, Debug)]

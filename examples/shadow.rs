@@ -4,9 +4,7 @@
 )]
 
 use dioxus::{core::UiEvent, events::WheelData, prelude::*};
-use elements_namespace as dioxus_elements;
-
-use freya::launch;
+use freya::{dioxus_elements, *};
 
 fn main() {
     launch(app);

@@ -7,7 +7,7 @@ use dioxus_html::{
     on::MouseData,
 };
 use enumset::enum_set;
-use layers::RenderData;
+use freya_layers::RenderData;
 
 use crate::RendererRequest;
 
@@ -93,8 +93,8 @@ impl EventsProcessor {
                     self.states.insert(*id, ElementState::default());
                 }
 
-                let state = self.states.get_mut(&event.element.unwrap()).unwrap();
-                state.mouseover = true;
+                let node_state = self.states.get_mut(&event.element.unwrap()).unwrap();
+                node_state.mouseover = true;
             }
         }
 

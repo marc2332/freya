@@ -6,9 +6,10 @@
 use dioxus::core::UiEvent;
 use dioxus::events::WheelData;
 use dioxus::prelude::*;
-use elements_namespace as dioxus_elements;
-use elements_namespace::AttributeValue;
-use freya::launch;
+use freya::{
+    dioxus_elements::{self, AttributeValue},
+    *,
+};
 
 fn main() {
     launch(app);

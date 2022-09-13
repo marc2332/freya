@@ -1,7 +1,7 @@
 use dioxus::core::ElementId;
 use dioxus_native_core::real_dom::NodeType;
-use layers::{Layers, NodeArea, NodeData};
-use state::node::{DirectionMode, SizeMode};
+use freya_layers::{Layers, NodeArea, NodeData};
+use freya_node_state::node::{DirectionMode, SizeMode};
 
 fn calculate_area(node_data: &NodeData, mut area: NodeArea, parent_area: NodeArea) -> NodeArea {
     let calculate = |value: SizeMode, area_value: f32, parent_area_value: f32| -> f32 {
