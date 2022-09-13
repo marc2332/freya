@@ -48,6 +48,8 @@ fn app(cx: Scope) -> Element {
 
 ### Want to try it? 🤔
 
+**Note for Windows**: You need Visual Studio 2022.
+
 Windows & MacOS:
 
 ```shell
