@@ -190,7 +190,11 @@ pub fn run(skia_dom: SkiaDom, event_emitter: EventEmitter) {
         let resize_timer = resize_timer.clone();
         thread::spawn(move || {
             let time = 1000;
+            #[cfg(target_os = "windows")]
+            let fps = 120; // Seems like Windows needs more renderings to feel equally faster
+            #[cfg(not(target_os = "windows"))]
             let fps = 60;
+
             let step = time / fps;
             loop {
                 if *is_resizing.lock().unwrap() == false {
