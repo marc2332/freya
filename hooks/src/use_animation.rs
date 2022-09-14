@@ -10,7 +10,7 @@ pub enum AnimationMode {
 }
 
 impl AnimationMode {
-    pub fn new_bounce_in(range: RangeInclusive<f64>, time: i32) -> Self {
+    pub fn newounce_in(range: RangeInclusive<f64>, time: i32) -> Self {
         Self::BounceIn(RefCell::new(BounceIn::new(range, time)))
     }
     pub fn new_sine_in(range: RangeInclusive<f64>, time: i32) -> Self {
@@ -45,42 +45,40 @@ pub fn use_animation(
     let value_setter = value.setter();
     let index_setter = index.setter();
 
-    let started_setter_b = started_setter.clone();
-    let value_setter_b = value_setter.clone();
-    let index_setter_b = index_setter.clone();
-
-    use_effect(&cx, (started, index), move |(started, index)| {
-        let started_setter = started_setter_b.clone();
-        async move {
+    {
+        let started_setter = started_setter.clone();
+        let value_setter = value_setter.clone();
+        let index_setter = index_setter.clone();
+        use_effect(&cx, (started, index), move |(started, index)| async move {
             if *started.get() {
                 if index.get() > &tween.duration() {
                     started_setter(false);
-                    index_setter_b(0);
+                    index_setter(0);
                     return;
                 }
                 match tween {
                     AnimationMode::BounceIn(mut tween) => {
                         let tween = tween.get_mut();
                         let v = tween.run(*index.get());
-                        value_setter_b(v);
-                        index_setter_b(index.get() + 1);
+                        value_setter(v);
+                        index_setter(index.get() + 1);
                     }
                     AnimationMode::SineIn(mut tween) => {
                         let tween = tween.get_mut();
                         let v = tween.run(*index.get());
-                        value_setter_b(v);
-                        index_setter_b(index.get() + 1);
+                        value_setter(v);
+                        index_setter(index.get() + 1);
                     }
                     AnimationMode::SineInOut(mut tween) => {
                         let tween = tween.get_mut();
                         let v = tween.run(*index.get());
-                        value_setter_b(v);
-                        index_setter_b(index.get() + 1);
+                        value_setter(v);
+                        index_setter(index.get() + 1);
                     }
                 }
             }
-        }
-    });
+        });
+    }
 
     (
         {

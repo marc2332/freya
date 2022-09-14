@@ -5,10 +5,9 @@
 
 use dioxus::{events::MouseEvent, prelude::*};
 use freya::{dioxus_elements, *};
-use tokio::time::Instant;
 
 fn main() {
-    launch(app);
+   launch(app);
 }
 
 #[derive(Props)]
@@ -19,43 +18,31 @@ struct DrawerOptions<'a> {
 
 #[allow(non_snake_case)]
 fn Drawer<'a>(cx: Scope<'a, DrawerOptions<'a>>) -> Element<'a> {
-    let pos = use_state(&cx, || 0);
-    let timer = use_state(&cx, || Instant::now());
+   let (start_opened, restart_opened, progress_opened) =
+        use_animation(&cx, || AnimationMode::new_sine_in_out(-250.0..=0.0, 750));
+   let (start_closed, restart_closed, progress_closed) =
+        use_animation(&cx, || AnimationMode::new_sine_in(0.0..=-250.0, 800));
+
 
     use_effect(
         &cx,
-        (&cx.props.opened, pos, timer),
-        move |(opened, mut pos, timer)| async move {
-            async {
-                loop {
-                    if timer.elapsed().as_nanos() > 500000 {
-                        break;
-                    }
-                }
-            }
-            .await;
-
-            if *pos == -200 && opened == false {
-                pos -= 100;
-            }
-            if *pos == -250 && opened == true {
-                pos += 100;
-            }
-            if (*pos >= 0 && opened == true) || (*pos <= -200 && opened == false) {
-                return;
-            }
-
+        &cx.props.opened,
+        move |opened| async move {
             if opened {
-                pos += 1;
+                start_opened();
+                restart_closed();
             } else {
-                pos -= 1;
+                start_closed();
+                restart_opened();
             }
-
-            timer.with_mut(|timer| {
-                *timer = Instant::now();
-            });
         },
     );
+
+   let pos = if cx.props.opened {
+        progress_opened
+    } else {
+        progress_closed
+    };
 
     cx.render(rsx! {
         rect {
@@ -66,7 +53,7 @@ fn Drawer<'a>(cx: Scope<'a, DrawerOptions<'a>>) -> Element<'a> {
                 height: "100%",
                 width: "200",
                 background: "gray",
-                layer: "-10",
+               layer: "-10",
                 shadow: "5 0 200 25.0 black",
                 &cx.props.body
             }
@@ -74,7 +61,7 @@ fn Drawer<'a>(cx: Scope<'a, DrawerOptions<'a>>) -> Element<'a> {
     })
 }
 fn app(cx: Scope) -> Element {
-    let opened = use_state(&cx, || false);
+   let opened = use_state(&cx, || false);
 
     cx.render(rsx!(
         rect {
@@ -86,40 +73,40 @@ fn app(cx: Scope) -> Element {
                 body: cx.render(rsx!(
                     Button {
                         onclick: move |_| { opened.set(false) },
-                        body: cx.render(rsx!(  label { "CLOSE"} ))
+                        body: cx.render(rsx!( label { "Close Drawer"} ))
                     }
                     ScrollView {
                         Button {
                             onclick: move |_| {  },
-                            body: cx.render(rsx!(  label { "Hi"} ))
+                            body: cx.render(rsx!( label { "Hi"} ))
                         }
                         Button {
                             onclick: move |_| {  },
-                            body: cx.render(rsx!(  label { "Hi"} ))
+                            body: cx.render(rsx!( label { "Hi"} ))
                         }
                         Button {
                             onclick: move |_| {  },
-                            body: cx.render(rsx!(  label { "Hi"} ))
+                            body: cx.render(rsx!( label { "Hi"} ))
                         }
                         Button {
                             onclick: move |_| {  },
-                            body: cx.render(rsx!(  label { "Hi"} ))
+                            body: cx.render(rsx!( label { "Hi"} ))
                         }
                         Button {
                             onclick: move |_| {  },
-                            body: cx.render(rsx!(  label { "Hi"} ))
+                            body: cx.render(rsx!( label { "Hi"} ))
                         }
                         Button {
                             onclick: move |_| {  },
-                            body: cx.render(rsx!(  label { "Hi"} ))
+                            body: cx.render(rsx!( label { "Hi"} ))
                         }
                         Button {
                             onclick: move |_| {  },
-                            body: cx.render(rsx!(  label { "Hi"} ))
+                            body: cx.render(rsx!( label { "Hi"} ))
                         }
                         Button {
                             onclick: move |_| {  },
-                            body: cx.render(rsx!(  label { "Hi"} ))
+                            body: cx.render(rsx!( label { "Hi"} ))
                         }
                     }
                  ))
@@ -129,11 +116,12 @@ fn app(cx: Scope) -> Element {
                 width: "100%",
                 onclick: move |_| { opened.set(false) },
                 rect {
+                    padding: "5",
                     height: "30",
-                    width: "80",
+                    width: "100",
                     background: "black",
                     onclick: move |_| { opened.set(true) },
-                    label { "open"}
+                   label { "Open Drawer"}
                 }
             }
         }
@@ -142,7 +130,7 @@ fn app(cx: Scope) -> Element {
 
 #[allow(non_snake_case)]
 fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
-    let background = use_state(&cx, || "black");
+   let background = use_state(&cx, || "black");
 
     cx.render(rsx!(
         rect {
