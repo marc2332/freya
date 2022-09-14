@@ -19,9 +19,9 @@ struct DrawerOptions<'a> {
 #[allow(non_snake_case)]
 fn Drawer<'a>(cx: Scope<'a, DrawerOptions<'a>>) -> Element<'a> {
     let (start_opened, restart_opened, progress_opened) =
-        use_animation(&cx, || AnimationMode::new_sine_in(-250.0..=0.0, 150));
+        use_animation(&cx, || AnimationMode::new_sine_in(-225.0..=0.0, 130));
     let (start_closed, restart_closed, progress_closed) =
-        use_animation(&cx, || AnimationMode::new_sine_in(0.0..=-250.0, 300));
+        use_animation(&cx, || AnimationMode::new_sine_in(0.0..=-225.0, 200));
 
     use_effect(&cx, &cx.props.opened, move |opened| async move {
         if opened {
