@@ -14,3 +14,4 @@ categories = ["GUI"]
 [dependencies]
 dioxus = { git = "https://github.com/dioxuslabs/dioxus", features = ["macro", "hooks"]}
 tween = "1.0.1"
+tokio = { version = "1.17.0" }
