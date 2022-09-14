@@ -62,6 +62,13 @@ Linux:
 cargo run --example counter --features x11
 ```
 
+### Usage 📜
+Add Freya as a dependency in your `Cargo.toml`:
+
+```toml
+freya = { git = "https://github.com/marc2332/freya" }
+```
+
 ### Features ✨
 - Label and paragraphs
 - Containers and rectangles
