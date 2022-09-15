@@ -23,7 +23,7 @@ fn app(cx: Scope) -> Element {
     };
 
     cx.render(rsx!(
-        rect {
+        container {
             background: "black",
             direction: "both",
             width: "100%",

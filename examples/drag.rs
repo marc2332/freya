@@ -38,7 +38,7 @@ fn app(cx: Scope) -> Element {
     };
 
     cx.render(rsx!(
-        rect {
+        container {
             background: "rgb(35, 35, 35)",
             width: "100%",
             height: "100%",
@@ -47,10 +47,11 @@ fn app(cx: Scope) -> Element {
             onmousedown: onmousedown,
             onclick: onclick,
             label {
+                width: "100",
                 color: "white",
                 "Drag me"
             }
-            rect {
+            container {
                 background: "rgb(255, 166, 0)",
                 direction: "both",
                 width: "100",
