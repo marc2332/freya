@@ -192,7 +192,12 @@ pub fn render_skia(
                             canvas.draw_image_nine(
                                 pic,
                                 &IRect::new(0, 0, 0, 0),
-                                Rect::new(area.x, area.y, area.width, area.height),
+                                Rect::new(
+                                    area.x,
+                                    area.y,
+                                    area.x + area.width,
+                                    area.y + area.height,
+                                ),
                                 skia_safe::FilterMode::Last,
                                 Some(&paint),
                             );
