@@ -1,5 +1,6 @@
 use dioxus::core::ElementId;
 use dioxus_native_core::real_dom::NodeType;
+use freya_elements::NodeLayout;
 use freya_layers::{Layers, NodeArea, NodeData};
 use freya_node_state::node::{DirectionMode, SizeMode};
 
@@ -84,6 +85,9 @@ pub fn calculate_node<T>(
     remaining_inner_area.y += node_data.size.scroll_y;
     remaining_inner_area.x += node_data.size.scroll_x;
 
+    let mut inner_height = 0.0;
+    let mut inner_width = 0.0;
+
     match &node_data.node.node_type {
         NodeType::Element { children, .. } => {
             for child in children {
@@ -103,13 +107,17 @@ pub fn calculate_node<T>(
                     match node_data.size.direction {
                         DirectionMode::Vertical => {
                             remaining_inner_area.y = child_node_area.y + child_node_area.height;
+                            inner_height += child_node_area.height;
                         }
                         DirectionMode::Horizontal => {
                             remaining_inner_area.x = child_node_area.x + child_node_area.width;
+                            inner_width += child_node_area.width;
                         }
                         DirectionMode::Both => {
                             remaining_inner_area.y = child_node_area.y + child_node_area.height;
                             remaining_inner_area.x = child_node_area.x + child_node_area.width;
+                            inner_height += child_node_area.height;
+                            inner_width += child_node_area.width;
                         }
                     }
 
@@ -148,6 +156,24 @@ pub fn calculate_node<T>(
 
     // Registers the element in the Layers handler
     layers.add_element(node_data, &node_area, node_layer);
+
+    // Asynchronously notify the Node's reference about the new size layout
+    if let Some(r) = &node_data.node.state.references.node_ref {
+        let node_area = node_area.clone();
+        let r = r.clone();
+        tokio::spawn(async move {
+            r.send(NodeLayout {
+                x: node_area.x,
+                y: node_area.y,
+                width: node_area.width,
+                height: node_area.height,
+                inner_height: inner_height,
+                inner_width: inner_width,
+            })
+            .await
+            .ok();
+        });
+    }
 
     node_area
 }

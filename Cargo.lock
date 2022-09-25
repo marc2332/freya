@@ -151,12 +151,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "14c189c53d098945499cdfa7ecc63567cf3886b3332b312a5b4585d8d3a6a610"
 
 [[package]]
-name = "bytes"
-version = "1.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ec8a7b6a70fde80372154c65702f00a0f56f3e1c36abbc6c440484be248856db"
-
-[[package]]
 name = "calloop"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -409,7 +403,7 @@ dependencies = [
 [[package]]
 name = "dioxus"
 version = "0.2.4"
-source = "git+https://github.com/dioxuslabs/dioxus#67dc6e6017b1b6ec035b5e766058110e48bfb547"
+source = "git+https://github.com/marc2332/dioxus?branch=feat/attribute-value-any#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
 dependencies = [
  "dioxus-core",
  "dioxus-core-macro",
@@ -421,7 +415,7 @@ dependencies = [
 [[package]]
 name = "dioxus-core"
 version = "0.2.1"
-source = "git+https://github.com/dioxuslabs/dioxus#67dc6e6017b1b6ec035b5e766058110e48bfb547"
+source = "git+https://github.com/marc2332/dioxus?branch=feat/attribute-value-any#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
 dependencies = [
  "backtrace",
  "bumpalo",
@@ -439,7 +433,7 @@ dependencies = [
 [[package]]
 name = "dioxus-core-macro"
 version = "0.2.1"
-source = "git+https://github.com/dioxuslabs/dioxus#67dc6e6017b1b6ec035b5e766058110e48bfb547"
+source = "git+https://github.com/marc2332/dioxus?branch=feat/attribute-value-any#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
 dependencies = [
  "dioxus-rsx",
  "proc-macro2",
@@ -450,7 +444,7 @@ dependencies = [
 [[package]]
 name = "dioxus-hooks"
 version = "0.2.1"
-source = "git+https://github.com/dioxuslabs/dioxus#67dc6e6017b1b6ec035b5e766058110e48bfb547"
+source = "git+https://github.com/marc2332/dioxus?branch=feat/attribute-value-any#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
 dependencies = [
  "dioxus-core",
  "futures-channel",
@@ -460,7 +454,7 @@ dependencies = [
 [[package]]
 name = "dioxus-html"
 version = "0.2.1"
-source = "git+https://github.com/dioxuslabs/dioxus#67dc6e6017b1b6ec035b5e766058110e48bfb547"
+source = "git+https://github.com/marc2332/dioxus?branch=feat/attribute-value-any#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
 dependencies = [
  "dioxus-core",
  "enumset",
@@ -471,7 +465,7 @@ dependencies = [
 [[package]]
 name = "dioxus-native-core"
 version = "0.2.0"
-source = "git+https://github.com/dioxuslabs/dioxus#67dc6e6017b1b6ec035b5e766058110e48bfb547"
+source = "git+https://github.com/marc2332/dioxus?branch=feat/attribute-value-any#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
 dependencies = [
  "anymap",
  "dioxus-core",
@@ -485,7 +479,7 @@ dependencies = [
 [[package]]
 name = "dioxus-native-core-macro"
 version = "0.2.0"
-source = "git+https://github.com/dioxuslabs/dioxus#67dc6e6017b1b6ec035b5e766058110e48bfb547"
+source = "git+https://github.com/marc2332/dioxus?branch=feat/attribute-value-any#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
 dependencies = [
  "dioxus-native-core",
  "quote",
@@ -495,7 +489,7 @@ dependencies = [
 [[package]]
 name = "dioxus-rsx"
 version = "0.0.0"
-source = "git+https://github.com/dioxuslabs/dioxus#67dc6e6017b1b6ec035b5e766058110e48bfb547"
+source = "git+https://github.com/marc2332/dioxus?branch=feat/attribute-value-any#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -609,7 +603,7 @@ dependencies = [
 [[package]]
 name = "fermi"
 version = "0.2.1"
-source = "git+https://github.com/dioxuslabs/dioxus#67dc6e6017b1b6ec035b5e766058110e48bfb547"
+source = "git+https://github.com/marc2332/dioxus?branch=feat/attribute-value-any#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
 dependencies = [
  "dioxus-core",
  "im-rc",
@@ -753,6 +747,7 @@ version = "0.1.0"
 dependencies = [
  "bumpalo",
  "dioxus-core",
+ "dioxus-hooks",
  "dioxus-html",
 ]
 
@@ -761,6 +756,7 @@ name = "freya-hooks"
 version = "0.1.0"
 dependencies = [
  "dioxus",
+ "freya-elements",
  "tokio",
  "tween",
 ]
@@ -783,10 +779,12 @@ dependencies = [
  "dioxus-core",
  "dioxus-native-core",
  "dioxus-native-core-macro",
+ "freya-elements",
  "freya-layers",
  "freya-node-state",
  "fxhash",
  "lazy_static",
+ "tokio",
 ]
 
 [[package]]
@@ -802,6 +800,7 @@ dependencies = [
  "freya-elements",
  "fxhash",
  "skia-safe",
+ "tokio",
 ]
 
 [[package]]
@@ -1679,15 +1678,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "43b2853a4d09f215c24cc5489c992ce46052d359b5109343cbafbf26bc62f8a3"
 
 [[package]]
-name = "signal-hook-registry"
-version = "1.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e51e73328dc4ac0c7ccbda3a494dfa03df1de2f46018127f60c693f2648455b0"
-dependencies = [
- "libc",
-]
-
-[[package]]
 name = "sized-chunks"
 version = "0.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1767,16 +1757,6 @@ dependencies = [
  "wayland-client",
  "wayland-cursor",
  "wayland-protocols",
-]
-
-[[package]]
-name = "socket2"
-version = "0.4.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02e2d2db9033d13a1567121ddd7a095ee144db4e1ca1b1bda3419bc0da294ebd"
-dependencies = [
- "libc",
- "winapi",
 ]
 
 [[package]]
@@ -1908,29 +1888,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0020c875007ad96677dcc890298f4b942882c5d4eb7cc8f439fc3bf813dc9c95"
 dependencies = [
  "autocfg",
- "bytes",
- "libc",
- "memchr",
- "mio",
  "num_cpus",
  "once_cell",
- "parking_lot",
  "pin-project-lite",
- "signal-hook-registry",
- "socket2",
- "tokio-macros",
- "winapi",
-]
-
-[[package]]
-name = "tokio-macros"
-version = "1.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9724f9a975fb987ef7a3cd9be0350edcbe130698af5b8f7a631e23d42d052484"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
 ]
 
 [[package]]

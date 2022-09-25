@@ -1,7 +1,11 @@
+use dioxus::prelude::UseRef;
+use dioxus_core::AttributeValue;
 use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
 use dioxus_native_core::state::{NodeDepState, ParentDepState, State};
 use dioxus_native_core_macro::{sorted_str_slice, State};
+use freya_elements::NodeLayout;
 use skia_safe::Color;
+use tokio::sync::mpsc::Sender;
 
 #[derive(Default, Copy, Clone, Debug, PartialEq)]
 pub enum SizeMode {
@@ -36,8 +40,15 @@ impl Default for FontStyle {
     }
 }
 
-#[derive(Debug, Clone, State, Default)]
+#[derive(Default, Clone)]
+pub struct References {
+    pub node_ref: Option<Sender<NodeLayout>>,
+}
+
+#[derive(Clone, State, Default)]
 pub struct NodeState {
+    #[node_dep_state()]
+    pub references: References,
     #[node_dep_state()]
     pub size: Size,
     #[node_dep_state()]
@@ -46,7 +57,7 @@ pub struct NodeState {
     pub font_style: FontStyle,
 }
 
-#[derive(Default, Copy, Clone, Debug, PartialEq)]
+#[derive(Default, Clone, Copy)]
 pub struct Size {
     pub width: SizeMode,
     pub height: SizeMode,
@@ -70,6 +81,35 @@ impl Size {
             scroll_x: 0.0,
             direction: DirectionMode::Both,
         }
+    }
+}
+
+impl NodeDepState<()> for References {
+    type Ctx = ();
+
+    const NODE_MASK: NodeMask =
+        NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!(["reference"])));
+
+    fn reduce<'a>(&mut self, node: NodeView, _sibling: (), _ctx: &Self::Ctx) -> bool {
+        let mut node_ref = None;
+
+        for a in node.attributes() {
+            match a.name {
+                "reference" => {
+                    if let AttributeValue::Any(v) = a.value {
+                        let r: &UseRef<Sender<NodeLayout>> = v.value.downcast_ref().unwrap();
+                        node_ref = Some(r.read().clone())
+                    }
+                }
+                _ => {
+                    println!("Unsupported attribute <{}>", a.name);
+                }
+            }
+        }
+
+        let changed = false;
+        *self = Self { node_ref };
+        changed
     }
 }
 
@@ -130,7 +170,7 @@ impl NodeDepState<()> for Size {
             "padding",
             "scroll_y",
             "scroll_x",
-            "direction"
+            "direction",
         ])));
 
     fn reduce<'a>(&mut self, node: NodeView, _sibling: (), _ctx: &Self::Ctx) -> bool {

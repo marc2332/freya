@@ -222,7 +222,7 @@ fn create_windows_from_config(
                     proxy.send_event(window_id).unwrap();
                     thread::sleep(Duration::from_millis(step));
                 }
-                if resize_timer.lock().unwrap().elapsed().as_millis() > 200 {
+                if resize_timer.lock().unwrap().elapsed().as_millis() > 50 {
                     *is_resizing.lock().unwrap() = false;
                 }
             }

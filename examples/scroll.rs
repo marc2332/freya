@@ -16,31 +16,46 @@ fn app(cx: Scope) -> Element {
             height: "100%",
             width: "100%",
             padding: "100",
-            background: "black",
+            background: "white",
             ScrollView {
                 rect {
                     height: "200",
                     width: "100%",
-                    background: "red",
-                    padding: "20",
+                    background: "rgb(214, 40, 40)",
+                    padding: "30",
                     rect {
                         height: "100%",
                         width: "100%",
-                        background: "blue",
-                        label { "hi" }
+                        background: "rgb(27, 38, 59)",
+                        padding: "25",
+                        label { "Scrollbar support!!!" }
                     }
                 }
                 rect {
                     height: "200",
                     width: "100%",
-                    background: "red",
-                    label { "hi" }
+                    background: "rgb(214, 40, 40)",
+                    padding: "30",
+                    rect {
+                        height: "100%",
+                        width: "100%",
+                        background: "rgb(27, 38, 59)",
+                        padding: "25",
+                        label { "Scrollbar support!!!" }
+                    }
                 }
                 rect {
                     height: "200",
                     width: "100%",
-                    background: "red",
-                    label { "hi" }
+                    background: "rgb(214, 40, 40)",
+                    padding: "30",
+                    rect {
+                        height: "100%",
+                        width: "100%",
+                        background: "rgb(27, 38, 59)",
+                        padding: "25",
+                        label { "Scrollbar support!!!" }
+                    }
                 }
             }
         }

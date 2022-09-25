@@ -25,6 +25,25 @@ macro_rules! builder_constructors {
             }
 
             impl $name {
+                pub fn reference<'a, T: Clone + 'static + PartialEq>(
+                    &self,
+                    cx: NodeFactory<'a>,
+                    val: &'a T,
+                ) -> Attribute<'a> {
+                    cx.custom_attr(
+                        "reference",
+                        AttributeValue::Any(ArbitraryAttributeValue {
+                            value: val,
+                            cmp: |a, b| a.downcast_ref::<T>() == b.downcast_ref::<T>(),
+                        }),
+                        None,
+                        true,
+                        false,
+                    )
+                }
+            }
+
+            impl $name {
                 $(
                     $(#[$attr_method])*
                     pub fn $fil<'a>(&self, cx: NodeFactory<'a>, val: Arguments) -> Attribute<'a> {
@@ -87,6 +106,29 @@ builder_constructors! {
         font_size: String,
         font_family: String,
     };
+}
+
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct NodeLayout {
+    pub x: f32,
+    pub y: f32,
+    pub width: f32,
+    pub height: f32,
+    pub inner_height: f32,
+    pub inner_width: f32,
+}
+
+impl NodeLayout {
+    pub fn new() -> Self {
+        NodeLayout {
+            x: 0.0,
+            y: 0.0,
+            width: 0.0,
+            height: 0.0,
+            inner_height: 0.0,
+            inner_width: 0.0,
+        }
+    }
 }
 
 // I am still bad at Macros so I created this element directly

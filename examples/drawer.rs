@@ -48,7 +48,7 @@ fn Drawer<'a>(cx: Scope<'a, DrawerOptions<'a>>) -> Element<'a> {
                 height: "100%",
                 width: "200",
                 background: "gray",
-               layer: "-10",
+                layer: "-10",
                 shadow: "5 0 200 25.0 black",
                 &cx.props.body
             }
@@ -70,39 +70,37 @@ fn app(cx: Scope) -> Element {
                         onclick: move |_| { opened.set(false) },
                         body: cx.render(rsx!( label { "Close Drawer"} ))
                     }
-                    ScrollView {
-                        Button {
-                            onclick: move |_| {  },
-                            body: cx.render(rsx!( label { "Hi"} ))
-                        }
-                        Button {
-                            onclick: move |_| {  },
-                            body: cx.render(rsx!( label { "Hi"} ))
-                        }
-                        Button {
-                            onclick: move |_| {  },
-                            body: cx.render(rsx!( label { "Hi"} ))
-                        }
-                        Button {
-                            onclick: move |_| {  },
-                            body: cx.render(rsx!( label { "Hi"} ))
-                        }
-                        Button {
-                            onclick: move |_| {  },
-                            body: cx.render(rsx!( label { "Hi"} ))
-                        }
-                        Button {
-                            onclick: move |_| {  },
-                            body: cx.render(rsx!( label { "Hi"} ))
-                        }
-                        Button {
-                            onclick: move |_| {  },
-                            body: cx.render(rsx!( label { "Hi"} ))
-                        }
-                        Button {
-                            onclick: move |_| {  },
-                            body: cx.render(rsx!( label { "Hi"} ))
-                        }
+                    Button {
+                        onclick: move |_| {  },
+                        body: cx.render(rsx!( label { "Hi"} ))
+                    }
+                    Button {
+                        onclick: move |_| {  },
+                        body: cx.render(rsx!( label { "Hi"} ))
+                    }
+                    Button {
+                        onclick: move |_| {  },
+                        body: cx.render(rsx!( label { "Hi"} ))
+                    }
+                    Button {
+                        onclick: move |_| {  },
+                        body: cx.render(rsx!( label { "Hi"} ))
+                    }
+                    Button {
+                        onclick: move |_| {  },
+                        body: cx.render(rsx!( label { "Hi"} ))
+                    }
+                    Button {
+                        onclick: move |_| {  },
+                        body: cx.render(rsx!( label { "Hi"} ))
+                    }
+                    Button {
+                        onclick: move |_| {  },
+                        body: cx.render(rsx!( label { "Hi"} ))
+                    }
+                    Button {
+                        onclick: move |_| {  },
+                        body: cx.render(rsx!( label { "Hi"} ))
                     }
                  ))
             }

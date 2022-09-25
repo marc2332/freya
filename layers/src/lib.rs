@@ -3,7 +3,7 @@ use dioxus_native_core::real_dom::{Node, NodeType};
 use freya_node_state::node::{NodeState, Size};
 use std::collections::HashMap;
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct NodeData {
     pub size: Size,
     pub node: Node<NodeState>,
@@ -17,12 +17,12 @@ pub struct NodeArea {
     pub height: f32,
 }
 
-#[derive(Default, Clone, Debug)]
+#[derive(Default, Clone)]
 pub struct Layers {
     pub layers: HashMap<i16, HashMap<ElementId, RenderData>>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct RenderData {
     pub node_data: NodeData,
     pub node_area: NodeArea,

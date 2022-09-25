@@ -12,14 +12,16 @@ keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
 [dependencies]
-dioxus-native-core = { git = "https://github.com/dioxuslabs/dioxus"  }
-dioxus = { git = "https://github.com/dioxuslabs/dioxus"  }
+dioxus-native-core = { git = "https://github.com/marc2332/dioxus", branch = "feat/attribute-value-any"  }
+dioxus = { git = "https://github.com/marc2332/dioxus", branch = "feat/attribute-value-any"  }
 freya-node-state = { path = "../state", version = "0.1.0" }
 freya-layers = { path = "../layers", version = "0.1.0" }
+tokio = { version = "1.17.0", features = ["sync", "rt-multi-thread", "time"] }
+freya-elements = { path = "../elements", version = "0.1.0"}
 
 [dev-dependencies]
-dioxus-native-core-macro = { git = "https://github.com/dioxuslabs/dioxus"  }
-dioxus-core = { git = "https://github.com/dioxuslabs/dioxus"  }
+dioxus-native-core-macro = { git = "https://github.com/marc2332/dioxus", branch = "feat/attribute-value-any"  }
+dioxus-core = { git = "https://github.com/marc2332/dioxus", branch = "feat/attribute-value-any"  }
 fxhash = "0.2.1"
 anymap = "0.12.1"
 lazy_static = "1.4.0"
