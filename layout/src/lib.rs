@@ -4,7 +4,7 @@ use freya_elements::NodeLayout;
 use freya_layers::{Layers, NodeArea, NodeData};
 use freya_node_state::node::{CalcType, DirectionMode, SizeMode};
 
-fn run_calculations(calcs: &Vec<CalcType>, parent_area_value: f32) -> f32 {
+pub fn run_calculations(calcs: &Vec<CalcType>, parent_area_value: f32) -> f32 {
     let mut prev_number: Option<f32> = None;
     let mut prev_op: Option<CalcType> = None;
 
