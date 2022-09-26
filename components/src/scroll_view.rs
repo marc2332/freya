@@ -6,38 +6,50 @@ use dioxus::{
 use freya_elements as dioxus_elements;
 use freya_hooks::use_node;
 
+// TODO(marc2332): Make this code readable.
+
 #[allow(non_snake_case)]
 pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     let hovering = use_state(&cx, || false);
     let clicking = use_state(&cx, || false);
-    let y = use_state(&cx, || 0);
+    let scrolled_y = use_state(&cx, || 0);
     let (node_ref, size) = use_node(&cx);
     let (container_ref, container_size) = use_node(&cx);
 
     let onwheel = move |e: UiEvent<WheelData>| {
         let wheel_y = e.delta().strip_units().y;
-        let new_y = (*y.get() as f32) + (wheel_y as f32 * 20.0);
+        let new_y = (*scrolled_y.get() as f32) + (wheel_y as f32 * 20.0);
         if size.height >= size.inner_height {
-            y.with_mut(|y| *y = 0);
+            scrolled_y.with_mut(|y| *y = 0);
             return;
         }
         if new_y >= 0.0 && wheel_y > 0.0 {
-            y.with_mut(|y| *y = 0);
+            scrolled_y.with_mut(|y| *y = 0);
             return;
         }
         if new_y <= -(size.inner_height - size.height) && wheel_y < 0.0 {
-            y.with_mut(|y| *y = -(size.inner_height - size.height) as i32);
+            scrolled_y.with_mut(|y| *y = -(size.inner_height - size.height) as i32);
             return;
         }
-        y.with_mut(|y| *y = new_y as i32);
+        scrolled_y.with_mut(|y| *y = new_y as i32);
     };
 
     let container_width = cx.props.width.unwrap_or("100%");
     let container_height = cx.props.height.unwrap_or("100%");
 
+    let scrollbar_is_visible = if cx.props.show_scrollbar.unwrap_or(false) {
+        !(size.height >= size.inner_height)
+    } else {
+        false
+    };
+
     // I am currently getting the size of the viewport *asynchronously* so then I can calculate the proper size for the scroll content minus the scrollbar width.
     // This could be avoided if I implemented something like a CSS's calc() function
-    let width = container_size.width - 13.0;
+    let width = if scrollbar_is_visible {
+        container_size.width - 13.0
+    } else {
+        container_size.width
+    };
     let padding = cx.props.padding.unwrap_or("0");
 
     let viewableRatio = size.height / size.inner_height;
@@ -45,7 +57,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     if size.height >= size.inner_height {
         scrollbar_height = size.inner_height;
     }
-    let scroll_pos = (100.0 / size.inner_height) * -(*y.get()) as f32;
+    let scroll_pos = (100.0 / size.inner_height) * -(*scrolled_y.get()) as f32;
     let scrollbar_y = (scroll_pos / 100.0) * size.height;
 
     let onmouseleave = |_: UiEvent<MouseData>| {
@@ -62,19 +74,18 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
             let per = 100.0 / size.height * cursor_y as f32;
             let new_y = -(size.inner_height / 100.0 * per);
             if size.height >= size.inner_height {
-                y.with_mut(|y| *y = 0);
+                scrolled_y.with_mut(|y| *y = 0);
                 return;
             }
             if new_y >= 0.0 {
-                y.with_mut(|y| *y = 0);
+                scrolled_y.with_mut(|y| *y = 0);
                 return;
             }
             if new_y <= -(size.inner_height - size.height) {
-                y.with_mut(|y| *y = -(size.inner_height - size.height) as i32);
+                scrolled_y.with_mut(|y| *y = -(size.inner_height - size.height) as i32);
                 return;
             }
-
-            y.with_mut(|y| *y = new_y as i32);
+            scrolled_y.with_mut(|y| *y = new_y as i32);
         }
     };
 
@@ -96,25 +107,31 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
                 padding: "{padding}",
                 width: "{width}",
                 height: "100%",
-                scroll_y: "{y}",
+                scroll_y: "{scrolled_y}",
                 reference: node_ref,
                 onwheel: onwheel,
                 &cx.props.children
             }
-            container {
-                width: "13",
-                scroll_y: "{scrollbar_y}",
-                onmouseover: onmouseover,
-                onclick: onclick,
-                onmouseleave: onmouseleave,
-                rect {
-                    onmousedown: onmousedown,
-                    width: "100%",
-                    height: "{scrollbar_height}",
-                    radius: "10",
-                    background: "rgb(135, 135, 135)",
+            cx.render(if scrollbar_is_visible {
+                rsx!{
+                    container {
+                        width: "13",
+                        scroll_y: "{scrollbar_y}",
+                        onmouseover: onmouseover,
+                        onclick: onclick,
+                        onmouseleave: onmouseleave,
+                        rect {
+                            onmousedown: onmousedown,
+                            width: "100%",
+                            height: "{scrollbar_height}",
+                            radius: "10",
+                            background: "rgb(135, 135, 135)",
+                        }
+                    }
                 }
-            }
+            } else {
+               rsx!{ container {} }
+            })
         }
     ))
 }
@@ -128,4 +145,6 @@ pub struct ScrollViewProps<'a> {
     width: Option<&'a str>,
     #[props(optional)]
     padding: Option<&'a str>,
+    #[props(optional)]
+    show_scrollbar: Option<bool>,
 }

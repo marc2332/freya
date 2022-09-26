@@ -18,6 +18,7 @@ fn app(cx: Scope) -> Element {
             padding: "100",
             background: "white",
             ScrollView {
+                show_scrollbar: true,
                 rect {
                     height: "200",
                     width: "100%",
