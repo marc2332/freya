@@ -68,28 +68,34 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
     };
 
     cx.render(rsx!(
-        rect {
-            width: "50",
-            height: "25",
-            padding: "2",
-            radius: "50",
-            background: "{border}",
-            onmousedown: onmousedown,
-            onmouseover: onmouseover,
-            onmouseleave: onmouseleave,
-            onclick: onclick,
+        container {
+            width: "auto",
+            height: "auto",
+            direction: "both",
+            padding: "3",
             rect {
-                width: "100%",
-                height: "100%",
-                scroll_x: "{scroll_x}",
-                padding: "5",
+                width: "50",
+                height: "25",
+                padding: "2",
                 radius: "50",
+                background: "{border}",
+                onmousedown: onmousedown,
+                onmouseover: onmouseover,
+                onmouseleave: onmouseleave,
+                onclick: onclick,
                 rect {
-                    background: "{circle}",
-                    direction: "both",
-                    width: "18",
-                    height: "18",
+                    width: "100%",
+                    height: "100%",
+                    scroll_x: "{scroll_x}",
+                    padding: "5",
                     radius: "50",
+                    rect {
+                        background: "{circle}",
+                        direction: "both",
+                        width: "18",
+                        height: "18",
+                        radius: "50",
+                    }
                 }
             }
         }
