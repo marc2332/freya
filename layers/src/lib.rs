@@ -1,11 +1,10 @@
 use dioxus::core::ElementId;
 use dioxus_native_core::real_dom::{Node, NodeType};
-use freya_node_state::node::{NodeState, Size};
+use freya_node_state::node::NodeState;
 use std::collections::HashMap;
 
 #[derive(Clone)]
 pub struct NodeData {
-    pub size: Size,
     pub node: Node<NodeState>,
 }
 

@@ -21,7 +21,8 @@ fn app(cx: Scope) -> Element {
             ))
             body: cx.render(rsx!(
                 ScrollView {
-                    height: "70%",
+                    height: "calc(100% - 75 - 75)"
+                    show_scrollbar: true,
                     Card {
                         title: "Another title",
                         content: "Some content",
@@ -100,7 +101,7 @@ struct NavbarProps<'a> {
 fn Navbar<'a>(cx: Scope<'a, NavbarProps<'a>>) -> Element {
     cx.render(rsx!(
         rect {
-            height: "15%",
+            height: "75",
             width: "stretch",
             background: "rgb(20, 20, 20)",
             padding: "30",

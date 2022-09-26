@@ -7,10 +7,21 @@ use freya_elements::NodeLayout;
 use skia_safe::Color;
 use tokio::sync::mpsc::Sender;
 
-#[derive(Default, Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum CalcType {
+    Sub,
+    Mul,
+    Div,
+    Add,
+    Percentage(f32),
+    Manual(f32),
+}
+
+#[derive(Default, Clone, Debug, PartialEq)]
 pub enum SizeMode {
     #[default]
     Auto,
+    Calculation(Vec<CalcType>),
     Percentage(f32),
     Manual(f32),
 }
@@ -57,7 +68,14 @@ pub struct NodeState {
     pub font_style: FontStyle,
 }
 
-#[derive(Default, Clone, Copy)]
+impl NodeState {
+    pub fn set_size(mut self, size: Size) -> Self {
+        self.size = size;
+        self
+    }
+}
+
+#[derive(Default, Clone)]
 pub struct Size {
     pub width: SizeMode,
     pub height: SizeMode,
@@ -394,9 +412,42 @@ fn parse_size(size: &str) -> Option<SizeMode> {
         Some(SizeMode::Percentage(100.0))
     } else if size == "auto" {
         Some(SizeMode::Auto)
+    } else if size.contains("calc") {
+        Some(SizeMode::Calculation(parse_calc(size).unwrap()))
     } else if size.contains("%") {
         Some(SizeMode::Percentage(size.replace("%", "").parse().ok()?))
+    } else if size.contains("calc") {
+        Some(SizeMode::Calculation(parse_calc(size).unwrap()))
     } else {
         Some(SizeMode::Manual(size.parse().ok()?))
     }
+}
+
+fn parse_calc(mut size: &str) -> Option<Vec<CalcType>> {
+    let mut calcs = Vec::new();
+
+    size = size.strip_prefix("calc(").unwrap();
+    size = size.strip_suffix(")").unwrap();
+
+    let vals = size.split_whitespace();
+
+    for val in vals {
+        if val.contains("%") {
+            calcs.push(CalcType::Percentage(
+                val.replace("%", "").parse().ok().unwrap(),
+            ));
+        } else if val == "+" {
+            calcs.push(CalcType::Add);
+        } else if val == "-" {
+            calcs.push(CalcType::Sub);
+        } else if val == "/" {
+            calcs.push(CalcType::Div);
+        } else if val == "*" {
+            calcs.push(CalcType::Mul);
+        } else {
+            calcs.push(CalcType::Manual(val.parse().ok().unwrap()));
+        }
+    }
+
+    Some(calcs)
 }

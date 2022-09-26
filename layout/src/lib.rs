@@ -2,20 +2,67 @@ use dioxus::core::ElementId;
 use dioxus_native_core::real_dom::NodeType;
 use freya_elements::NodeLayout;
 use freya_layers::{Layers, NodeArea, NodeData};
-use freya_node_state::node::{DirectionMode, SizeMode};
+use freya_node_state::node::{CalcType, DirectionMode, SizeMode};
 
-fn calculate_area(node_data: &NodeData, mut area: NodeArea, parent_area: NodeArea) -> NodeArea {
-    let calculate = |value: SizeMode, area_value: f32, parent_area_value: f32| -> f32 {
-        match value {
-            SizeMode::Manual(v) => v,
-            SizeMode::Percentage(per) => (parent_area_value / 100.0 * per).round(),
-            SizeMode::Auto => area_value,
+fn run_calculations(calcs: &Vec<CalcType>, parent_area_value: f32) -> f32 {
+    let mut prev_number: Option<f32> = None;
+    let mut prev_op: Option<CalcType> = None;
+
+    let mut calc_with_op = |val: f32, prev_op: Option<CalcType>| {
+        if let Some(op) = prev_op {
+            match op {
+                CalcType::Sub => {
+                    prev_number = Some(prev_number.unwrap() - val);
+                }
+                CalcType::Add => {
+                    prev_number = Some(prev_number.unwrap() + val);
+                }
+                CalcType::Mul => {
+                    prev_number = Some(prev_number.unwrap() * val);
+                }
+                CalcType::Div => {
+                    prev_number = Some(prev_number.unwrap() / val);
+                }
+                _ => {}
+            }
+        } else {
+            prev_number = Some(val);
         }
     };
 
-    let calculate_min = |value: SizeMode, area_value: f32, parent_area_value: f32| -> f32 {
+    for calc in calcs {
+        match calc {
+            CalcType::Percentage(per) => {
+                let val = (parent_area_value / 100.0 * per).round();
+
+                calc_with_op(val, prev_op);
+
+                prev_op = None;
+            }
+            CalcType::Manual(val) => {
+                calc_with_op(*val, prev_op);
+                prev_op = None;
+            }
+            _ => prev_op = Some(calc.clone()),
+        }
+    }
+
+    prev_number.unwrap()
+}
+
+fn calculate_area(node_data: &NodeData, mut area: NodeArea, parent_area: NodeArea) -> NodeArea {
+    let calculate = |value: &SizeMode, area_value: f32, parent_area_value: f32| -> f32 {
         match value {
-            SizeMode::Manual(v) => {
+            &SizeMode::Manual(v) => v,
+            SizeMode::Percentage(per) => (parent_area_value / 100.0 * per).round(),
+            SizeMode::Auto => area_value,
+            SizeMode::Calculation(calcs) => run_calculations(calcs, parent_area_value),
+        }
+    };
+
+    let calculate_min = |value: &SizeMode, area_value: f32, parent_area_value: f32| -> f32 {
+        match value {
+            &SizeMode::Manual(v) => {
                 if v > area_value {
                     v
                 } else {
@@ -31,13 +78,29 @@ fn calculate_area(node_data: &NodeData, mut area: NodeArea, parent_area: NodeAre
                 }
             }
             SizeMode::Auto => area_value,
+            SizeMode::Calculation(calcs) => {
+                let by_calcs = run_calculations(calcs, parent_area_value);
+                if by_calcs > area_value {
+                    by_calcs
+                } else {
+                    area_value
+                }
+            }
         }
     };
 
-    area.width = calculate(node_data.size.width, area.width, parent_area.width);
-    area.height = calculate(node_data.size.height, area.height, parent_area.height);
+    area.width = calculate(
+        &node_data.node.state.size.width,
+        area.width,
+        parent_area.width,
+    );
+    area.height = calculate(
+        &node_data.node.state.size.height,
+        area.height,
+        parent_area.height,
+    );
 
-    if SizeMode::Auto == node_data.size.height {
+    if SizeMode::Auto == node_data.node.state.size.height {
         if let NodeType::Element { tag, .. } = &node_data.node.node_type {
             if tag == "label" {
                 area.height = 18.0;
@@ -45,8 +108,16 @@ fn calculate_area(node_data: &NodeData, mut area: NodeArea, parent_area: NodeAre
         }
     }
 
-    area.height = calculate_min(node_data.size.min_height, area.height, parent_area.height);
-    area.width = calculate_min(node_data.size.min_width, area.width, parent_area.width);
+    area.height = calculate_min(
+        &node_data.node.state.size.min_height,
+        area.height,
+        parent_area.height,
+    );
+    area.width = calculate_min(
+        &node_data.node.state.size.min_width,
+        area.width,
+        parent_area.width,
+    );
 
     area
 }
@@ -68,7 +139,7 @@ pub fn calculate_node<T>(
     let (node_layer, inherited_relative_layer) =
         layers.calculate_layer(node_data, inherited_relative_layer);
 
-    let padding = node_data.size.padding;
+    let padding = node_data.node.state.size.padding;
     let horizontal_padding = padding.1 + padding.3;
     let vertical_padding = padding.0 + padding.2;
 
@@ -82,8 +153,8 @@ pub fn calculate_node<T>(
     // Visible area occupied by the child elements
     let inner_area = remaining_inner_area.clone();
 
-    remaining_inner_area.y += node_data.size.scroll_y;
-    remaining_inner_area.x += node_data.size.scroll_x;
+    remaining_inner_area.y += node_data.node.state.size.scroll_y;
+    remaining_inner_area.x += node_data.node.state.size.scroll_x;
 
     let mut inner_height = 0.0;
     let mut inner_width = 0.0;
@@ -104,7 +175,7 @@ pub fn calculate_node<T>(
                         inherited_relative_layer,
                     );
 
-                    match node_data.size.direction {
+                    match node_data.node.state.size.direction {
                         DirectionMode::Vertical => {
                             remaining_inner_area.y = child_node_area.y + child_node_area.height;
                             inner_height += child_node_area.height;
@@ -145,11 +216,11 @@ pub fn calculate_node<T>(
     }
 
     if !is_text {
-        if let SizeMode::Auto = node_data.size.width {
+        if let SizeMode::Auto = node_data.node.state.size.width {
             node_area.width = remaining_inner_area.x - node_area.x + padding.1;
         }
 
-        if let SizeMode::Auto = node_data.size.height {
+        if let SizeMode::Auto = node_data.node.state.size.height {
             node_area.height = remaining_inner_area.y - node_area.y + padding.0;
         }
     }

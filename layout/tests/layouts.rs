@@ -21,15 +21,14 @@ lazy_static! {
 
 #[test]
 fn percentage() {
+    let mut node = TEST_NODE.clone();
+    node.state = node.state.set_size(Size {
+        width: SizeMode::Percentage(50.0),
+        height: SizeMode::Percentage(25.0),
+        ..Size::expanded()
+    });
     let result = calculate_node(
-        &NodeData {
-            size: Size {
-                width: SizeMode::Percentage(50.0),
-                height: SizeMode::Percentage(25.0),
-                ..Size::expanded()
-            },
-            node: TEST_NODE.clone(),
-        },
+        &NodeData { node },
         NodeArea {
             x: 0.0,
             y: 0.0,
@@ -54,15 +53,14 @@ fn percentage() {
 
 #[test]
 fn manual() {
+    let mut node = TEST_NODE.clone();
+    node.state = node.state.set_size(Size {
+        width: SizeMode::Manual(250.0),
+        height: SizeMode::Manual(150.0),
+        ..Size::expanded()
+    });
     let result = calculate_node(
-        &NodeData {
-            size: Size {
-                width: SizeMode::Manual(250.0),
-                height: SizeMode::Manual(150.0),
-                ..Size::expanded()
-            },
-            node: TEST_NODE.clone(),
-        },
+        &NodeData { node },
         NodeArea {
             x: 0.0,
             y: 0.0,
@@ -89,16 +87,15 @@ fn manual() {
 fn auto() {
     let result = calculate_node(
         &NodeData {
-            size: Size {
-                width: SizeMode::Auto,
-                height: SizeMode::Auto,
-                direction: DirectionMode::Both,
-                ..Size::expanded()
-            },
             node: Node {
                 id: ElementId(0),
                 parent: None,
-                state: NodeState::default(),
+                state: NodeState::default().set_size(Size {
+                    width: SizeMode::Auto,
+                    height: SizeMode::Auto,
+                    direction: DirectionMode::Both,
+                    ..Size::expanded()
+                }),
                 node_type: NodeType::Element {
                     tag: "rect".to_string(),
                     namespace: None,
@@ -123,15 +120,14 @@ fn auto() {
         &mut Layers::default(),
         |_, _| {
             Some(NodeData {
-                size: Size {
-                    width: SizeMode::Manual(170.0),
-                    height: SizeMode::Manual(25.0),
-                    ..Size::expanded()
-                },
                 node: Node {
                     id: ElementId(1),
                     parent: None,
-                    state: NodeState::default(),
+                    state: NodeState::default().set_size(Size {
+                        width: SizeMode::Manual(170.0),
+                        height: SizeMode::Manual(25.0),
+                        ..Size::expanded()
+                    }),
                     node_type: NodeType::Element {
                         tag: "rect".to_string(),
                         namespace: None,
@@ -150,15 +146,14 @@ fn auto() {
 
 #[test]
 fn x_y() {
+    let mut node = TEST_NODE.clone();
+    node.state = node.state.set_size(Size {
+        width: SizeMode::Auto,
+        height: SizeMode::Auto,
+        ..Size::expanded()
+    });
     let result = calculate_node(
-        &NodeData {
-            size: Size {
-                width: SizeMode::Auto,
-                height: SizeMode::Auto,
-                ..Size::expanded()
-            },
-            node: TEST_NODE.clone(),
-        },
+        &NodeData { node },
         NodeArea {
             x: 15.0,
             y: 25.0,
@@ -175,15 +170,14 @@ fn x_y() {
         &mut Layers::default(),
         |_, _| {
             Some(NodeData {
-                size: Size {
-                    width: SizeMode::Manual(170.0),
-                    height: SizeMode::Manual(25.0),
-                    ..Size::expanded()
-                },
                 node: Node {
                     id: ElementId(1),
                     parent: None,
-                    state: NodeState::default(),
+                    state: NodeState::default().set_size(Size {
+                        width: SizeMode::Manual(170.0),
+                        height: SizeMode::Manual(25.0),
+                        ..Size::expanded()
+                    }),
                     node_type: NodeType::Element {
                         tag: "rect".to_string(),
                         namespace: None,

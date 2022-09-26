@@ -14,7 +14,6 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     let clicking = use_state(&cx, || false);
     let scrolled_y = use_state(&cx, || 0);
     let (node_ref, size) = use_node(&cx);
-    let (container_ref, container_size) = use_node(&cx);
 
     let onwheel = move |e: UiEvent<WheelData>| {
         let wheel_y = e.delta().strip_units().y;
@@ -46,9 +45,9 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     // I am currently getting the size of the viewport *asynchronously* so then I can calculate the proper size for the scroll content minus the scrollbar width.
     // This could be avoided if I implemented something like a CSS's calc() function
     let width = if scrollbar_is_visible {
-        container_size.width - 13.0
+        "calc(100% - 13)"
     } else {
-        container_size.width
+        "100%"
     };
     let padding = cx.props.padding.unwrap_or("0");
 
@@ -102,7 +101,6 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
             direction: "horizontal",
             width: "{container_width}",
             height: "{container_height}",
-            reference: container_ref,
             container {
                 padding: "{padding}",
                 width: "{width}",
@@ -116,6 +114,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
                 rsx!{
                     container {
                         width: "13",
+                        height: "100%",
                         scroll_y: "{scrollbar_y}",
                         onmouseover: onmouseover,
                         onclick: onclick,

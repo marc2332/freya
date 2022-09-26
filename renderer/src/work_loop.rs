@@ -11,7 +11,7 @@ use dioxus_native_core::real_dom::{Node, NodeType};
 use enumset::enum_set;
 use freya_layers::{Layers, NodeArea, NodeData, RenderData};
 use freya_layout::calculate_node;
-use freya_node_state::node::{NodeState, Size};
+use freya_node_state::node::NodeState;
 use skia_safe::{textlayout::FontCollection, Canvas, Color};
 use std::{collections::HashMap, ops::Index, sync::Arc};
 
@@ -37,10 +37,7 @@ pub fn work_loop(
     let layers = &mut Layers::default();
 
     calculate_node(
-        &NodeData {
-            size: Size::default(),
-            node: root,
-        },
+        &NodeData { node: root },
         area.clone(),
         area,
         &mut dom,
@@ -51,10 +48,7 @@ pub fn work_loop(
                 dom.index(*node_id).clone()
             };
 
-            Some(NodeData {
-                size: child.state.size,
-                node: child,
-            })
+            Some(NodeData { node: child })
         },
         0,
     );
