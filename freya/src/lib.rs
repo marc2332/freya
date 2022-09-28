@@ -12,6 +12,32 @@ pub use freya_elements as dioxus_elements;
 pub use freya_hooks::*;
 pub use freya_renderer::*;
 
+#[cfg(not(doctest))]
+/// Launch a new Window with the default config:
+/// - Width: `400`
+/// - Height: `300`
+/// - Decorations enabled
+/// - Transparency disabled
+/// - Window title: `Freya`
+///
+/// # Example
+/// ```rust
+/// # use dioxus::prelude::*;
+/// # use freya::{dioxus_elements, *};
+/// launch(app);
+///
+/// fn app(cx: Scope) -> Element {
+///     cx.render(rsx!(
+///         rect {
+///             width: "100%",
+///             height: "100%",
+///             label {
+///                 "Hello World!"
+///             }
+///         }
+///     ))
+/// }
+/// ```
 pub fn launch(app: Component<()>) {
     launch_cfg(vec![(
         app,
@@ -25,6 +51,31 @@ pub fn launch(app: Component<()>) {
     )])
 }
 
+#[cfg(not(doctest))]
+/// Launch a new Window with a custom title and the default config:
+/// - Width: `400`
+/// - Height: `300`
+/// - Decorations enabled
+/// - Transparency disabled
+///
+/// # Example
+/// ```rust
+/// # use dioxus::prelude::*;
+/// # use freya::{dioxus_elements, *};
+/// launch_with_title(app, "Whoah!");
+///
+/// fn app(cx: Scope) -> Element {
+///     cx.render(rsx!(
+///         rect {
+///             width: "100%",
+///             height: "100%",
+///             label {
+///                 "Hello World!"
+///             }
+///         }
+///     ))
+/// }
+/// ```
 pub fn launch_with_title(app: Component<()>, title: &'static str) {
     launch_cfg(vec![(
         app,
@@ -38,6 +89,42 @@ pub fn launch_with_title(app: Component<()>, title: &'static str) {
     )])
 }
 
+#[cfg(not(doctest))]
+/// Launch a new Window with custom options:
+/// - Width
+/// - Height
+/// - Decorations
+/// - Transparency
+/// - Window title
+///
+/// # Example
+/// ```rust
+/// # use dioxus::prelude::*;
+/// # use freya::{dioxus_elements, *};
+///
+/// launch_cfg(vec![(
+///     app,
+///     WindowConfig {
+///         width: 500,
+///         height: 400,
+///         decorations: true,
+///         transparent: false,
+///         title: "Freya Window"
+///     }
+/// )]);
+///
+/// fn app(cx: Scope) -> Element {
+///     cx.render(rsx!(
+///         rect {
+///             width: "100%",
+///             height: "100%",
+///             label {
+///                 "Hello World!"
+///             }
+///         }
+///     ))
+/// }
+/// ```
 pub fn launch_cfg(wins_config: Vec<(Component<()>, WindowConfig)>) {
     let wins = wins_config
         .into_iter()
