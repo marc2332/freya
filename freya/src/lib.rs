@@ -90,11 +90,12 @@ pub fn launch_with_title(app: Component<()>, title: &'static str) {
 }
 
 #[cfg(not(doctest))]
-/// Launch a new Window with a custom title and the default config:
-/// - Width: `400`
-/// - Height: `300`
-/// - Decorations enabled
-/// - Transparency disabled
+/// Launch a new Window with custom options:
+/// - Width
+/// - Height
+/// - Decorations
+/// - Transparency
+/// - Window title
 ///
 /// # Example
 /// ```rust
