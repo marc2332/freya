@@ -141,8 +141,8 @@ pub fn launch_cfg(wins_config: Vec<(Component<()>, WindowConfig)>) {
 
                     let muts = dom.rebuild();
                     let to_update = rdom.lock().unwrap().apply_mutations(vec![muts]);
-                    let mut ctx = AnyMap::new();
-                    ctx.insert(1.0);
+                    let ctx = AnyMap::new();
+
                     rdom.lock().unwrap().update_state(&dom, to_update, ctx);
 
                     event_emitter
@@ -156,21 +156,11 @@ pub fn launch_cfg(wins_config: Vec<(Component<()>, WindowConfig)>) {
                         .unwrap()
                         .block_on(async move {
                             loop {
-                                dom.get_scope(ScopeId(0))
-                                    .unwrap()
-                                    .provide_root_context(45.0);
                                 dom.wait_for_work().await;
-                                dom.get_scope(ScopeId(0))
-                                    .unwrap()
-                                    .provide_root_context(45.0);
                                 let mutations = dom.work_with_deadline(|| false);
 
                                 let to_update = rdom.lock().unwrap().apply_mutations(mutations);
-                                dom.get_scope(ScopeId(0))
-                                    .unwrap()
-                                    .provide_root_context(45.0);
-                                let mut ctx = AnyMap::new();
-                                ctx.insert(1.0);
+                                let ctx = AnyMap::new();
                                 rdom.lock().unwrap().update_state(&dom, to_update, ctx);
                             }
                         });
