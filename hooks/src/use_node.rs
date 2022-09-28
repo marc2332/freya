@@ -1,14 +1,14 @@
 use dioxus::prelude::*;
 use freya_elements::NodeLayout;
-use tokio::sync::{mpsc::channel, mpsc::Sender};
+use tokio::sync::{mpsc::unbounded_channel, mpsc::UnboundedSender};
 
 /// Creates a reference to the desired node's layout size
-pub fn use_node(cx: &ScopeState) -> (&UseRef<Sender<NodeLayout>>, &UseState<NodeLayout>) {
+pub fn use_node(cx: &ScopeState) -> (&UseRef<UnboundedSender<NodeLayout>>, &UseState<NodeLayout>) {
     let status = use_state::<NodeLayout>(&cx, || NodeLayout::default());
     let status_getter = status.current();
     let status_setter = status.setter();
     let node_ref = use_ref(&cx, || {
-        let (tx, rx) = channel::<NodeLayout>(1);
+        let (tx, rx) = unbounded_channel::<NodeLayout>();
 
         (tx, Some(rx))
     });

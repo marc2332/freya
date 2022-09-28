@@ -180,11 +180,5 @@ pub fn launch_cfg(wins_config: Vec<(Component<()>, WindowConfig)>) {
         })
         .collect();
 
-    tokio::runtime::Builder::new_multi_thread()
-        .enable_all()
-        .build()
-        .unwrap()
-        .block_on(async move {
-            run(wins);
-        });
+    run(wins);
 }

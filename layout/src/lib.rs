@@ -229,11 +229,10 @@ pub fn calculate_node<T>(
     layers.add_element(node_data, &node_area, node_layer);
 
     // Asynchronously notify the Node's reference about the new size layout
-    if let Some(r) = &node_data.node.state.references.node_ref {
+    if let Some(reference) = &node_data.node.state.references.node_ref {
         let node_area = node_area.clone();
-        let r = r.clone();
-        tokio::spawn(async move {
-            r.send(NodeLayout {
+        reference
+            .send(NodeLayout {
                 x: node_area.x,
                 y: node_area.y,
                 width: node_area.width,
@@ -241,9 +240,7 @@ pub fn calculate_node<T>(
                 inner_height: inner_height,
                 inner_width: inner_width,
             })
-            .await
             .ok();
-        });
     }
 
     node_area

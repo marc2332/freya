@@ -5,7 +5,7 @@ use dioxus_native_core::state::{NodeDepState, ParentDepState, State};
 use dioxus_native_core_macro::{sorted_str_slice, State};
 use freya_elements::NodeLayout;
 use skia_safe::Color;
-use tokio::sync::mpsc::Sender;
+use tokio::sync::mpsc::UnboundedSender;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum CalcType {
@@ -53,7 +53,7 @@ impl Default for FontStyle {
 
 #[derive(Default, Clone)]
 pub struct References {
-    pub node_ref: Option<Sender<NodeLayout>>,
+    pub node_ref: Option<UnboundedSender<NodeLayout>>,
 }
 
 #[derive(Clone, State, Default)]
@@ -115,7 +115,8 @@ impl NodeDepState<()> for References {
             match a.name {
                 "reference" => {
                     if let AttributeValue::Any(v) = a.value {
-                        let r: &UseRef<Sender<NodeLayout>> = v.value.downcast_ref().unwrap();
+                        let r: &UseRef<UnboundedSender<NodeLayout>> =
+                            v.value.downcast_ref().unwrap();
                         node_ref = Some(r.read().clone())
                     }
                 }
