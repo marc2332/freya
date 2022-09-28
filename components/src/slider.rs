@@ -3,14 +3,58 @@ use freya_elements as dioxus_elements;
 
 #[derive(Props)]
 pub struct SliderProps<'a> {
-    onmoved: EventHandler<'a, f64>,
-    width: f64,
+    pub onmoved: EventHandler<'a, f64>,
+    pub width: f64,
+    /// The value that the slider will use when first initialized.
+    #[props(optional)]
+    pub starting_value: Option<f64>,
 }
 
+/// Provides a slider that goes between 0 and the width of the slider. An
+/// initial value can be provided with the `starting_value` prop, but this will
+/// not change the slider value if updated.
+///
+/// # Example
+/// ```rs
+/// use dioxus::prelude::*;
+/// use freya::{dioxus_elements, *};
+///
+/// const INITIAL_SLIDER_OFFSET: f64 = 30.0;
+///
+/// fn main() {
+///     launch(app);
+/// }
+///
+/// fn app(cx: Scope) -> Element {
+///     let font_size = use_state(&cx, || 20.0 + INITIAL_SLIDER_OFFSET);
+///
+///     cx.render(rsx!(
+///         rect {
+///             width: "100%",
+///             height: "100%",
+///             background: "black",
+///             padding: "20",
+///             label {
+///                 font_size: "{font_size}",
+///                 font_family: "Inter",
+///                 height: "150",
+///                 "Hello World"
+///             }
+///             Slider {
+///                 width: 100.0,
+///                 starting_value: INITIAL_SLIDER_OFFSET,
+///                 onmoved: |e| {
+///                     font_size.set(e + 20.0); // Minimum is 20
+///                 }
+///             }
+///         }
+///     ))
+/// }
+/// ```
 #[allow(non_snake_case)]
 pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
     let hovering = use_state(&cx, || false);
-    let progress = use_state(&cx, || 0.0f64);
+    let progress = use_state(&cx, || cx.props.starting_value.unwrap_or(0.0));
     let clicking = use_state(&cx, || false);
 
     let onmouseleave = |_: UiEvent<MouseData>| {

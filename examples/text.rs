@@ -6,12 +6,14 @@
 use dioxus::prelude::*;
 use freya::{dioxus_elements, *};
 
+const INITIAL_SLIDER_OFFSET: f64 = 30.0;
+
 fn main() {
     launch(app);
 }
 
 fn app(cx: Scope) -> Element {
-    let font_size = use_state(&cx, || 20.0);
+    let font_size = use_state(&cx, || 20.0 + INITIAL_SLIDER_OFFSET);
 
     cx.render(rsx!(
         rect {
@@ -27,6 +29,7 @@ fn app(cx: Scope) -> Element {
             }
             Slider {
                 width: 100.0,
+                starting_value: INITIAL_SLIDER_OFFSET,
                 onmoved: |e| {
                     font_size.set(e + 20.0); // Minimum is 20
                 }
