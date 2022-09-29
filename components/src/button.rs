@@ -63,7 +63,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
 
 #[derive(Props)]
 pub struct ButtonProps<'a> {
-    children: Element<'a>,
+    pub children: Element<'a>,
     #[props(optional)]
-    on_click: Option<EventHandler<'a, MouseEvent>>,
+    pub on_click: Option<EventHandler<'a, MouseEvent>>,
 }

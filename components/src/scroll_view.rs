@@ -137,13 +137,13 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
 
 #[derive(Props)]
 pub struct ScrollViewProps<'a> {
-    children: Element<'a>,
+    pub children: Element<'a>,
     #[props(optional)]
-    height: Option<&'a str>,
+    pub height: Option<&'a str>,
     #[props(optional)]
-    width: Option<&'a str>,
+    pub width: Option<&'a str>,
     #[props(optional)]
-    padding: Option<&'a str>,
+    pub padding: Option<&'a str>,
     #[props(optional)]
-    show_scrollbar: Option<bool>,
+    pub show_scrollbar: Option<bool>,
 }

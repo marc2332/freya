@@ -7,8 +7,8 @@ use crate::THEME;
 
 #[derive(Props)]
 pub struct SwitchProps<'a> {
-    enabled: &'a bool,
-    ontoggled: EventHandler<'a, ()>,
+    pub enabled: &'a bool,
+    pub ontoggled: EventHandler<'a, ()>,
 }
 
 #[allow(non_snake_case)]
