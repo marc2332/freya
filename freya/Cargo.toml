@@ -12,6 +12,7 @@ keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
 [features]
+devtools = []
 x11 = ["freya-renderer/x11"]
 wireframe = ["freya-renderer/wireframe"]
 

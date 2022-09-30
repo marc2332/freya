@@ -100,7 +100,7 @@ struct NavbarProps<'a> {
 #[allow(non_snake_case)]
 fn Navbar<'a>(cx: Scope<'a, NavbarProps<'a>>) -> Element {
     cx.render(rsx!(
-        rect {
+        container {
             height: "75",
             width: "stretch",
             background: "rgb(20, 20, 20)",
