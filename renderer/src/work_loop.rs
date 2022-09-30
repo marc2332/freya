@@ -166,7 +166,7 @@ pub fn work_loop(
 
     let mut new_events: Vec<UserEvent> = Vec::new();
 
-    // Calculate what process can actually be triggered
+    // Calculate what event listeners can actually be triggered
     for (event_name, event_nodes) in calculated_events.iter_mut() {
         let dom = dom.lock().unwrap();
         let listeners = dom.get_listening_sorted(event_name);
