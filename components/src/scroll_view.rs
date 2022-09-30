@@ -101,6 +101,8 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
             direction: "horizontal",
             width: "{container_width}",
             height: "{container_height}",
+            onclick: onclick, // TODO(marc2332): mouseup would be better
+            onmouseover: onmouseover,
             container {
                 padding: "{padding}",
                 width: "{width}",
@@ -116,8 +118,6 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
                         width: "13",
                         height: "100%",
                         scroll_y: "{scrollbar_y}",
-                        onmouseover: onmouseover,
-                        onclick: onclick,
                         onmouseleave: onmouseleave,
                         rect {
                             onmousedown: onmousedown,

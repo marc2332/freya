@@ -171,7 +171,7 @@ pub fn work_loop(
         let dom = dom.lock().unwrap();
         let listeners = dom.get_listening_sorted(event_name);
 
-        let mut found_node: Option<(&RenderData, &RendererRequest)> = None;
+        let mut found_nodes: Vec<(&RenderData, &RendererRequest)> = Vec::new();
 
         'event_nodes: for (node, request) in event_nodes.iter() {
             let node_state = &node.node_data.node;
@@ -182,12 +182,17 @@ pub fn work_loop(
                     {
                         break 'event_nodes;
                     }
-                    found_node = Some((node, request));
+                    if event_name == &"mouseover" {
+                        // Mouseover events can be stackked
+                        found_nodes.push((node, request))
+                    } else {
+                        found_nodes = vec![(node, request)]
+                    }
                 }
             }
         }
 
-        if let Some((node, request)) = found_node {
+        for (node, request) in found_nodes {
             let event = match &request {
                 &RendererRequest::MouseEvent { cursor, .. } => Some(UserEvent {
                     scope_id: None,
