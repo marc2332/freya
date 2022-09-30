@@ -227,36 +227,6 @@ pub fn render_skia(
                     y + area.height
                 };
 
-                let half_x = x + (area.width / 2.0);
-                let half_y = y + (area.height / 2.0);
-
-                let closest_viewport_area = viewports.get(0);
-
-                if let Some(closest_viewport_area) = closest_viewport_area {
-                    let mut paint = Paint::default();
-                    paint.set_anti_alias(true);
-                    paint.set_style(PaintStyle::Fill);
-                    paint.set_color(Color::GREEN);
-                    canvas.draw_line((x, half_y), (closest_viewport_area.x, half_y), &paint);
-                    canvas.draw_line(
-                        (x2, half_y),
-                        (
-                            closest_viewport_area.x + closest_viewport_area.width,
-                            half_y,
-                        ),
-                        &paint,
-                    );
-                    canvas.draw_line((half_x, y), (half_x, closest_viewport_area.y), &paint);
-                    canvas.draw_line(
-                        (half_x, y2),
-                        (
-                            half_x,
-                            closest_viewport_area.y + closest_viewport_area.height,
-                        ),
-                        &paint,
-                    );
-                }
-
                 canvas.draw_line((x, y), (x2, y), &paint);
                 canvas.draw_line((x2, y), (x2, y2), &paint);
                 canvas.draw_line((x2, y2), (x, y2), &paint);
