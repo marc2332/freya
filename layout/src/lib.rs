@@ -156,8 +156,8 @@ pub fn calculate_node<T>(
     remaining_inner_area.y += node_data.node.state.size.scroll_y;
     remaining_inner_area.x += node_data.node.state.size.scroll_x;
 
-    let mut inner_height = 0.0;
-    let mut inner_width = 0.0;
+    let mut inner_height = vertical_padding;
+    let mut inner_width = vertical_padding;
 
     match &node_data.node.node_type {
         NodeType::Element { children, .. } => {
