@@ -12,6 +12,9 @@ pub use freya_elements as dioxus_elements;
 pub use freya_hooks::*;
 pub use freya_renderer::*;
 
+#[cfg(feature = "devtools")]
+mod devtools;
+
 #[cfg(not(doctest))]
 /// Launch a new Window with the default config:
 /// - Width: `400`
@@ -188,89 +191,11 @@ fn with_devtools(
     rdom: Arc<Mutex<RealDom<NodeState>>>,
     root: fn(cx: Scope) -> Element,
 ) -> VirtualDom {
-    use dioxus::core::ElementId;
-    use dioxus_native_core::real_dom::NodeType;
-    use std::time::Duration;
-    use tokio::time::sleep;
+    use devtools::DevTools;
 
-    #[derive(PartialEq, Eq, Clone)]
-    struct TreeNode {
-        tag: String,
-        id: ElementId,
-        height: u16,
-        text: Option<String>,
-    }
-
-    fn app<'a>(cx: Scope<'a, DomProps>) -> Element<'a> {
-        let children = use_state(&cx, || Vec::<TreeNode>::new());
-        let setter = children.setter();
-
+    fn app(cx: Scope<DomProps>) -> Element {
         #[allow(non_snake_case)]
         let Root = cx.props.root;
-
-        use_effect(&cx, (), move |_| {
-            let rdom = cx.props.rdom.clone();
-            async move {
-                loop {
-                    sleep(Duration::from_millis(25)).await;
-
-                    let rdom = rdom.lock().unwrap();
-                    let mut children = Vec::new();
-
-                    let mut root_found = false;
-                    let mut devtools_found = false;
-
-                    rdom.traverse_depth_first(|n| {
-                        if n.height == 2 {
-                            if root_found == false {
-                                root_found = true;
-                            } else {
-                                devtools_found = true;
-                            }
-                        }
-
-                        if !devtools_found {
-                            let mut maybe_text = None;
-                            let tag = match &n.node_type {
-                                NodeType::Text { text, .. } => {
-                                    maybe_text = Some(text.clone());
-                                    "text"
-                                }
-                                NodeType::Element { tag, .. } => tag,
-                                NodeType::Placeholder => "placeholder",
-                            }
-                            .to_string();
-
-                            children.push(TreeNode {
-                                height: n.height,
-                                id: n.id,
-                                tag,
-                                text: maybe_text,
-                            });
-                        }
-                    });
-                    setter(children);
-                }
-            }
-        });
-
-        let children = children.get().iter().map(|node| {
-            let text = node
-                .text
-                .as_ref()
-                .map(|v| format!("({v})"))
-                .unwrap_or_default();
-            rsx! {
-                rect {
-                    width: "100%",
-                    height: "25",
-                    scroll_x: "{node.height * 10}",
-                    label {
-                        "{node.tag} #{node.id} {text}"
-                    }
-                }
-            }
-        });
 
         cx.render(rsx! {
             rect {
@@ -279,21 +204,15 @@ fn with_devtools(
                 direction: "horizontal",
                 rect {
                     height: "100%",
-                    width: "75%",
+                    width: "calc(100% - 350)",
                     Root { },
                 }
                 rect {
                     background: "rgb(40, 40, 40)",
                     height: "100%",
-                    width: "25%",
-                    label {
-                        height: "25",
-                        "Devtools!"
-                    }
-                    ScrollView {
-                        height: "calc(100% - 25)",
-                        show_scrollbar: true,
-                        children
+                    width: "350",
+                    DevTools {
+                        rdom: cx.props.rdom.clone()
                     }
                 }
             }
