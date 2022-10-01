@@ -12,11 +12,11 @@ keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
 [dependencies]
-dioxus = { git = "https://github.com/marc2332/dioxus", branch = "feat/attribute-value-any"  }
-dioxus-html = { git = "https://github.com/marc2332/dioxus", branch = "feat/attribute-value-any"  }
-dioxus-native-core = { git = "https://github.com/marc2332/dioxus", branch = "feat/attribute-value-any"  }
-dioxus-native-core-macro = { git = "https://github.com/marc2332/dioxus", branch = "feat/attribute-value-any"  }
-dioxus-core = { git = "https://github.com/marc2332/dioxus", branch = "feat/attribute-value-any"  }
+dioxus = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
+dioxus-html = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
+dioxus-native-core = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
+dioxus-native-core-macro = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
+dioxus-core = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
 anymap = "0.12.1"
 fxhash = "0.2.1"
 skia-safe = "*"

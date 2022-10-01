@@ -403,7 +403,7 @@ dependencies = [
 [[package]]
 name = "dioxus"
 version = "0.2.4"
-source = "git+https://github.com/marc2332/dioxus?branch=feat/attribute-value-any#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
+source = "git+https://github.com/marc2332/dioxus?branch=fix/remove-node-listeners#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
 dependencies = [
  "dioxus-core",
  "dioxus-core-macro",
@@ -415,7 +415,7 @@ dependencies = [
 [[package]]
 name = "dioxus-core"
 version = "0.2.1"
-source = "git+https://github.com/marc2332/dioxus?branch=feat/attribute-value-any#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
+source = "git+https://github.com/marc2332/dioxus?branch=fix/remove-node-listeners#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
 dependencies = [
  "backtrace",
  "bumpalo",
@@ -433,7 +433,7 @@ dependencies = [
 [[package]]
 name = "dioxus-core-macro"
 version = "0.2.1"
-source = "git+https://github.com/marc2332/dioxus?branch=feat/attribute-value-any#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
+source = "git+https://github.com/marc2332/dioxus?branch=fix/remove-node-listeners#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
 dependencies = [
  "dioxus-rsx",
  "proc-macro2",
@@ -444,7 +444,7 @@ dependencies = [
 [[package]]
 name = "dioxus-hooks"
 version = "0.2.1"
-source = "git+https://github.com/marc2332/dioxus?branch=feat/attribute-value-any#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
+source = "git+https://github.com/marc2332/dioxus?branch=fix/remove-node-listeners#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
 dependencies = [
  "dioxus-core",
  "futures-channel",
@@ -454,7 +454,7 @@ dependencies = [
 [[package]]
 name = "dioxus-html"
 version = "0.2.1"
-source = "git+https://github.com/marc2332/dioxus?branch=feat/attribute-value-any#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
+source = "git+https://github.com/marc2332/dioxus?branch=fix/remove-node-listeners#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
 dependencies = [
  "dioxus-core",
  "enumset",
@@ -465,7 +465,7 @@ dependencies = [
 [[package]]
 name = "dioxus-native-core"
 version = "0.2.0"
-source = "git+https://github.com/marc2332/dioxus?branch=feat/attribute-value-any#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
+source = "git+https://github.com/marc2332/dioxus?branch=fix/remove-node-listeners#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
 dependencies = [
  "anymap",
  "dioxus-core",
@@ -479,7 +479,7 @@ dependencies = [
 [[package]]
 name = "dioxus-native-core-macro"
 version = "0.2.0"
-source = "git+https://github.com/marc2332/dioxus?branch=feat/attribute-value-any#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
+source = "git+https://github.com/marc2332/dioxus?branch=fix/remove-node-listeners#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
 dependencies = [
  "dioxus-native-core",
  "quote",
@@ -489,7 +489,7 @@ dependencies = [
 [[package]]
 name = "dioxus-router"
 version = "0.2.3"
-source = "git+https://github.com/marc2332/dioxus?branch=feat/attribute-value-any#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
+source = "git+https://github.com/marc2332/dioxus?branch=fix/remove-node-listeners#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
 dependencies = [
  "dioxus",
  "futures-channel",
@@ -504,7 +504,7 @@ dependencies = [
 [[package]]
 name = "dioxus-rsx"
 version = "0.0.0"
-source = "git+https://github.com/marc2332/dioxus?branch=feat/attribute-value-any#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
+source = "git+https://github.com/marc2332/dioxus?branch=fix/remove-node-listeners#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -618,7 +618,7 @@ dependencies = [
 [[package]]
 name = "fermi"
 version = "0.2.1"
-source = "git+https://github.com/marc2332/dioxus?branch=feat/attribute-value-any#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
+source = "git+https://github.com/marc2332/dioxus?branch=fix/remove-node-listeners#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
 dependencies = [
  "dioxus-core",
  "im-rc",

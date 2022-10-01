@@ -13,5 +13,5 @@ categories = ["GUI"]
 
 [dependencies]
 freya-node-state = { path = "../state", version = "0.1.0" }
-dioxus-native-core = { git = "https://github.com/marc2332/dioxus", branch = "feat/attribute-value-any"  }
-dioxus = { git = "https://github.com/marc2332/dioxus", branch = "feat/attribute-value-any"  }
+dioxus-native-core = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
+dioxus = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
