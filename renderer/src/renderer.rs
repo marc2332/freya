@@ -1,5 +1,5 @@
 use dioxus_native_core::real_dom::{Node, NodeType};
-use freya_layers::{NodeArea, NodeData};
+use freya_layers::{NodeArea, NodeInfo};
 use freya_node_state::node::NodeState;
 use skia_safe::{
     textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle},
@@ -14,7 +14,7 @@ use crate::SkiaDom;
 pub fn render_skia(
     dom: &mut &SkiaDom,
     canvas: &mut &mut Canvas,
-    node_data: &NodeData,
+    node_data: &NodeInfo,
     area: &NodeArea,
     font_collection: &mut FontCollection,
     viewports: &Vec<NodeArea>,
@@ -34,7 +34,7 @@ pub fn render_skia(
         );
     }
 
-    match &node.node_type {
+    match &node.node_data.node_type {
         NodeType::Element { tag, children, .. } => {
             match tag.as_str() {
                 "rect" | "container" => {
@@ -98,7 +98,7 @@ pub fn render_skia(
                             dom.index(*child_id).clone()
                         };
 
-                        if let NodeType::Text { text } = child.node_type {
+                        if let NodeType::Text { text } = child.node_data.node_type {
                             text
                         } else {
                             String::new()
@@ -136,7 +136,9 @@ pub fn render_skia(
                                 dom.index(*child_id).clone()
                             };
 
-                            if let NodeType::Element { tag, children, .. } = child.node_type {
+                            if let NodeType::Element { tag, children, .. } =
+                                child.node_data.node_type
+                            {
                                 if tag != "text" {
                                     return None;
                                 }
@@ -145,7 +147,8 @@ pub fn render_skia(
                                         let dom = dom.lock().unwrap();
                                         dom.index(*child_text_id).clone()
                                     };
-                                    if let NodeType::Text { text } = child_text.node_type {
+                                    if let NodeType::Text { text } = child_text.node_data.node_type
+                                    {
                                         Some((child.state, text))
                                     } else {
                                         None

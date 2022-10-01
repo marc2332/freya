@@ -1,6 +1,6 @@
-use dioxus::core::ElementId;
+use dioxus::core::GlobalNodeId;
 use dioxus::prelude::*;
-use dioxus_core::Scope;
+use dioxus_core::{ElementId, Scope};
 use dioxus_native_core::real_dom::{NodeType, RealDom};
 use freya_components::*;
 use freya_elements as dioxus_elements;
@@ -49,7 +49,7 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                 let mut devtools_found = false;
 
                 rdom.traverse_depth_first(|n| {
-                    if n.height == 2 {
+                    if n.node_data.height == 2 {
                         if root_found == false {
                             root_found = true;
                         } else {
@@ -59,7 +59,7 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
 
                     if !devtools_found {
                         let mut maybe_text = None;
-                        let tag = match &n.node_type {
+                        let tag = match &n.node_data.node_type {
                             NodeType::Text { text, .. } => {
                                 maybe_text = Some(text.clone());
                                 "text"
@@ -69,9 +69,16 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                         }
                         .to_string();
 
+                        let id = match n.node_data.id {
+                            GlobalNodeId::VNodeId(id) => id,
+                            GlobalNodeId::TemplateId {
+                                template_ref_id, ..
+                            } => template_ref_id,
+                        };
+
                         children.push(TreeNode {
-                            height: n.height,
-                            id: n.id,
+                            height: n.node_data.height,
+                            id,
                             tag,
                             text: maybe_text,
                         });

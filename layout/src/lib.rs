@@ -1,7 +1,7 @@
-use dioxus::core::ElementId;
+use dioxus_core::GlobalNodeId;
 use dioxus_native_core::real_dom::NodeType;
 use freya_elements::NodeLayout;
-use freya_layers::{Layers, NodeArea, NodeData};
+use freya_layers::{Layers, NodeArea, NodeInfo};
 use freya_node_state::node::{CalcType, DirectionMode, SizeMode};
 
 pub fn run_calculations(calcs: &Vec<CalcType>, parent_area_value: f32) -> f32 {
@@ -50,7 +50,7 @@ pub fn run_calculations(calcs: &Vec<CalcType>, parent_area_value: f32) -> f32 {
     prev_number.unwrap()
 }
 
-fn calculate_area(node_data: &NodeData, mut area: NodeArea, parent_area: NodeArea) -> NodeArea {
+fn calculate_area(node_data: &NodeInfo, mut area: NodeArea, parent_area: NodeArea) -> NodeArea {
     let calculate = |value: &SizeMode, area_value: f32, parent_area_value: f32| -> f32 {
         match value {
             &SizeMode::Manual(v) => v,
@@ -101,7 +101,7 @@ fn calculate_area(node_data: &NodeData, mut area: NodeArea, parent_area: NodeAre
     );
 
     if SizeMode::Auto == node_data.node.state.size.height {
-        if let NodeType::Element { tag, .. } = &node_data.node.node_type {
+        if let NodeType::Element { tag, .. } = &node_data.node.node_data.node_type {
             if tag == "label" {
                 area.height = 18.0;
             }
@@ -123,12 +123,12 @@ fn calculate_area(node_data: &NodeData, mut area: NodeArea, parent_area: NodeAre
 }
 
 pub fn calculate_node<T>(
-    node_data: &NodeData,
+    node_data: &NodeInfo,
     remaining_area: NodeArea,
     parent_area: NodeArea,
     resolver_options: &mut T,
     layers: &mut Layers,
-    node_resolver: fn(&ElementId, &mut T) -> Option<NodeData>,
+    node_resolver: fn(&GlobalNodeId, &mut T) -> Option<NodeInfo>,
     inherited_relative_layer: i16,
 ) -> NodeArea {
     let mut node_area = calculate_area(node_data, remaining_area, parent_area);
@@ -159,7 +159,7 @@ pub fn calculate_node<T>(
     let mut inner_height = vertical_padding;
     let mut inner_width = vertical_padding;
 
-    match &node_data.node.node_type {
+    match &node_data.node.node_data.node_type {
         NodeType::Element { children, .. } => {
             for child in children {
                 let child_node = node_resolver(child, resolver_options);

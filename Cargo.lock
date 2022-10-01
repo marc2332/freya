@@ -403,7 +403,7 @@ dependencies = [
 [[package]]
 name = "dioxus"
 version = "0.2.4"
-source = "git+https://github.com/marc2332/dioxus?branch=feat/attribute-value-any#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
+source = "git+https://github.com/Demonthos/dioxus?branch=fix_native_core_arbitrary_attribute#ddcea9b56d20299e4f2aab3f9576526a0e4d09a2"
 dependencies = [
  "dioxus-core",
  "dioxus-core-macro",
@@ -415,10 +415,11 @@ dependencies = [
 [[package]]
 name = "dioxus-core"
 version = "0.2.1"
-source = "git+https://github.com/marc2332/dioxus?branch=feat/attribute-value-any#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
+source = "git+https://github.com/Demonthos/dioxus?branch=fix_native_core_arbitrary_attribute#ddcea9b56d20299e4f2aab3f9576526a0e4d09a2"
 dependencies = [
  "backtrace",
  "bumpalo",
+ "dyn-clone",
  "futures-channel",
  "futures-util",
  "fxhash",
@@ -426,6 +427,7 @@ dependencies = [
  "log",
  "longest-increasing-subsequence",
  "once_cell",
+ "serde",
  "slab",
  "smallvec",
 ]
@@ -433,7 +435,7 @@ dependencies = [
 [[package]]
 name = "dioxus-core-macro"
 version = "0.2.1"
-source = "git+https://github.com/marc2332/dioxus?branch=feat/attribute-value-any#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
+source = "git+https://github.com/Demonthos/dioxus?branch=fix_native_core_arbitrary_attribute#ddcea9b56d20299e4f2aab3f9576526a0e4d09a2"
 dependencies = [
  "dioxus-rsx",
  "proc-macro2",
@@ -444,7 +446,7 @@ dependencies = [
 [[package]]
 name = "dioxus-hooks"
 version = "0.2.1"
-source = "git+https://github.com/marc2332/dioxus?branch=feat/attribute-value-any#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
+source = "git+https://github.com/Demonthos/dioxus?branch=fix_native_core_arbitrary_attribute#ddcea9b56d20299e4f2aab3f9576526a0e4d09a2"
 dependencies = [
  "dioxus-core",
  "futures-channel",
@@ -454,7 +456,7 @@ dependencies = [
 [[package]]
 name = "dioxus-html"
 version = "0.2.1"
-source = "git+https://github.com/marc2332/dioxus?branch=feat/attribute-value-any#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
+source = "git+https://github.com/Demonthos/dioxus?branch=fix_native_core_arbitrary_attribute#ddcea9b56d20299e4f2aab3f9576526a0e4d09a2"
 dependencies = [
  "dioxus-core",
  "enumset",
@@ -465,7 +467,7 @@ dependencies = [
 [[package]]
 name = "dioxus-native-core"
 version = "0.2.0"
-source = "git+https://github.com/marc2332/dioxus?branch=feat/attribute-value-any#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
+source = "git+https://github.com/Demonthos/dioxus?branch=fix_native_core_arbitrary_attribute#ddcea9b56d20299e4f2aab3f9576526a0e4d09a2"
 dependencies = [
  "anymap",
  "dioxus-core",
@@ -479,7 +481,7 @@ dependencies = [
 [[package]]
 name = "dioxus-native-core-macro"
 version = "0.2.0"
-source = "git+https://github.com/marc2332/dioxus?branch=feat/attribute-value-any#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
+source = "git+https://github.com/Demonthos/dioxus?branch=fix_native_core_arbitrary_attribute#ddcea9b56d20299e4f2aab3f9576526a0e4d09a2"
 dependencies = [
  "dioxus-native-core",
  "quote",
@@ -489,10 +491,12 @@ dependencies = [
 [[package]]
 name = "dioxus-rsx"
 version = "0.0.0"
-source = "git+https://github.com/marc2332/dioxus?branch=feat/attribute-value-any#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
+source = "git+https://github.com/Demonthos/dioxus?branch=fix_native_core_arbitrary_attribute#ddcea9b56d20299e4f2aab3f9576526a0e4d09a2"
 dependencies = [
+ "dioxus-core",
  "proc-macro2",
  "quote",
+ "serde",
  "syn",
 ]
 
@@ -530,6 +534,12 @@ dependencies = [
  "winapi",
  "wio",
 ]
+
+[[package]]
+name = "dyn-clone"
+version = "1.0.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4f94fa09c2aeea5b8839e414b7b841bf429fd25b9c522116ac97ee87856d88b2"
 
 [[package]]
 name = "either"
@@ -603,7 +613,7 @@ dependencies = [
 [[package]]
 name = "fermi"
 version = "0.2.1"
-source = "git+https://github.com/marc2332/dioxus?branch=feat/attribute-value-any#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
+source = "git+https://github.com/Demonthos/dioxus?branch=fix_native_core_arbitrary_attribute#ddcea9b56d20299e4f2aab3f9576526a0e4d09a2"
 dependencies = [
  "dioxus-core",
  "im-rc",
@@ -749,6 +759,7 @@ dependencies = [
  "dioxus-core",
  "dioxus-hooks",
  "dioxus-html",
+ "tokio",
 ]
 
 [[package]]
@@ -798,6 +809,7 @@ dependencies = [
  "dioxus-native-core",
  "dioxus-native-core-macro",
  "freya-elements",
+ "freya-hooks",
  "fxhash",
  "skia-safe",
  "tokio",

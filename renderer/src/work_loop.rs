@@ -1,4 +1,4 @@
-use dioxus_core::{ElementId, EventPriority, SchedulerMsg, UserEvent};
+use dioxus_core::{ElementId, EventPriority, GlobalNodeId, SchedulerMsg, UserEvent};
 use dioxus_html::{
     geometry::{
         euclid::{Length, Point2D},
@@ -9,7 +9,7 @@ use dioxus_html::{
 };
 use dioxus_native_core::real_dom::{Node, NodeType};
 use enumset::enum_set;
-use freya_layers::{Layers, NodeArea, NodeData, RenderData};
+use freya_layers::{Layers, NodeArea, NodeInfo, RenderData};
 use freya_layout::calculate_node;
 use freya_node_state::node::NodeState;
 use skia_safe::{textlayout::FontCollection, Canvas, Color};
@@ -37,7 +37,7 @@ pub fn work_loop(
     let layers = &mut Layers::default();
 
     calculate_node(
-        &NodeData { node: root },
+        &NodeInfo { node: root },
         area.clone(),
         area,
         &mut dom,
@@ -48,7 +48,7 @@ pub fn work_loop(
                 dom.index(*node_id).clone()
             };
 
-            Some(NodeData { node: child })
+            Some(NodeInfo { node: child })
         },
         0,
     );
@@ -59,12 +59,12 @@ pub fn work_loop(
     layers_nums.sort_by(|a, b| a.cmp(b));
 
     // Calculate all the applicable viewports for the given elements
-    let mut calculated_viewports: HashMap<ElementId, Vec<NodeArea>> = HashMap::new();
+    let mut calculated_viewports: HashMap<GlobalNodeId, Vec<NodeArea>> = HashMap::new();
 
     for layer_num in &layers_nums {
         let layer = layers.layers.get(layer_num).unwrap();
         for (id, element) in layer {
-            match &element.node_data.node.node_type {
+            match &element.node_data.node.node_data.node_type {
                 NodeType::Element { tag, .. } => {
                     for child in &element.node_children {
                         if !calculated_viewports.contains_key(&child) {
@@ -176,7 +176,7 @@ pub fn work_loop(
         'event_nodes: for (node, request) in event_nodes.iter() {
             let node_state = &node.node_data.node;
             for listener in &listeners {
-                if listener.id == node_state.id {
+                if listener.node_data.id == node_state.node_data.id {
                     if node_state.state.style.background != Color::TRANSPARENT
                         && event_name == &"wheel"
                     {
@@ -197,7 +197,7 @@ pub fn work_loop(
                 &RendererRequest::MouseEvent { cursor, .. } => Some(UserEvent {
                     scope_id: None,
                     priority: EventPriority::Medium,
-                    element: Some(node.node_data.node.id.clone()),
+                    element: Some(node.node_data.node.node_data.id.clone()),
                     name: event_name,
                     bubbles: false,
                     data: Arc::new(MouseData::new(
@@ -218,7 +218,7 @@ pub fn work_loop(
                 &RendererRequest::WheelEvent { scroll, .. } => Some(UserEvent {
                     scope_id: None,
                     priority: EventPriority::Medium,
-                    element: Some(node.node_data.node.id.clone()),
+                    element: Some(node.node_data.node.node_data.id.clone()),
                     name: event_name,
                     bubbles: false,
                     data: Arc::new(WheelData::new(WheelDelta::Pixels(PixelsVector::new(

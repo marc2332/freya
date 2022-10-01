@@ -1,9 +1,9 @@
-use dioxus::prelude::UseRef;
-use dioxus_core::AttributeValue;
+use dioxus_core::OwnedAttributeValue;
 use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
 use dioxus_native_core::state::{NodeDepState, ParentDepState, State};
 use dioxus_native_core_macro::{sorted_str_slice, State};
 use freya_elements::NodeLayout;
+use freya_hooks::NodeRefWrapper;
 use skia_safe::Color;
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -111,17 +111,21 @@ impl NodeDepState<()> for References {
     fn reduce<'a>(&mut self, node: NodeView, _sibling: (), _ctx: &Self::Ctx) -> bool {
         let mut node_ref = None;
 
-        for a in node.attributes() {
-            match a.name {
-                "reference" => {
-                    if let AttributeValue::Any(v) = a.value {
-                        let r: &UseRef<UnboundedSender<NodeLayout>> =
-                            v.value.downcast_ref().unwrap();
-                        node_ref = Some(r.read().clone())
+        if let Some(attributes) = node.attributes() {
+            for attr in attributes {
+                match attr.attribute.name.as_str() {
+                    "reference" => {
+                        println!("{:?}", attr.value);
+                        if let OwnedAttributeValue::Any(v) = attr.value {
+                            println!("==={:?}", v.value.type_id());
+                            let ref_wrapper: &NodeRefWrapper =
+                                v.value.as_any().downcast_ref().unwrap();
+                            node_ref = Some(ref_wrapper.0.read().clone())
+                        }
                     }
-                }
-                _ => {
-                    println!("Unsupported attribute <{}>", a.name);
+                    _ => {
+                        println!("Unsupported attribute <{}>", attr.attribute.name);
+                    }
                 }
             }
         }
@@ -152,25 +156,34 @@ impl ParentDepState for FontStyle {
     ) -> bool {
         let mut font_style = parent.map(|c| c.clone()).unwrap_or_default();
 
-        for attr in node.attributes() {
-            match attr.name {
-                "color" => {
-                    let new_color = parse_color(&attr.value.to_string());
-                    if let Some(new_color) = new_color {
-                        font_style.color = new_color;
+        if let Some(attributes) = node.attributes() {
+            for attr in attributes {
+                match attr.attribute.name.as_str() {
+                    "color" => {
+                        if let Some(color) = attr.value.as_text() {
+                            let new_color = parse_color(color);
+                            if let Some(new_color) = new_color {
+                                font_style.color = new_color;
+                            }
+                        }
                     }
-                }
-                "font_family" => {
-                    font_style.font_family = attr.value.to_string();
-                }
-                "font_size" => {
-                    if let Ok(font_size) = attr.value.to_string().parse() {
-                        font_style.font_size = font_size;
+                    "font_family" => {
+                        if let Some(font_family) = attr.value.as_text() {
+                            font_style.font_family = font_family.to_string();
+                        }
                     }
+                    "font_size" => {
+                        if let Some(font_size) = attr.value.as_text() {
+                            if let Ok(font_size) = font_size.parse::<f32>() {
+                                font_style.font_size = font_size;
+                            }
+                        }
+                    }
+                    _ => {}
                 }
-                _ => {}
             }
         }
+
         let changed = &font_style != self;
         *self = font_style;
         changed
@@ -202,59 +215,77 @@ impl NodeDepState<()> for Size {
         let mut scroll_x = 0.0;
         let mut direction = DirectionMode::Vertical;
 
-        for a in node.attributes() {
-            match a.name {
-                "width" => {
-                    let attr = a.value.to_string();
-                    if let Some(new_width) = parse_size(&attr) {
-                        width = new_width;
+        if let Some(attributes) = node.attributes() {
+            for attr in attributes {
+                match attr.attribute.name.as_str() {
+                    "width" => {
+                        if let Some(attr) = attr.value.as_text() {
+                            if let Some(new_width) = parse_size(attr) {
+                                width = new_width;
+                            }
+                        }
                     }
-                }
-                "height" => {
-                    let attr = a.value.to_string();
-                    if let Some(new_height) = parse_size(&attr) {
-                        height = new_height;
+                    "height" => {
+                        if let Some(attr) = attr.value.as_text() {
+                            if let Some(new_height) = parse_size(attr) {
+                                height = new_height;
+                            }
+                        }
                     }
-                }
-                "min_height" => {
-                    let attr = a.value.to_string();
-                    if let Some(new_min_height) = parse_size(&attr) {
-                        min_height = new_min_height;
+                    "min_height" => {
+                        if let Some(attr) = attr.value.as_text() {
+                            if let Some(new_min_height) = parse_size(attr) {
+                                min_height = new_min_height;
+                            }
+                        }
                     }
-                }
-                "min_width" => {
-                    let attr = a.value.to_string();
-                    if let Some(new_min_width) = parse_size(&attr) {
-                        min_width = new_min_width;
+                    "min_width" => {
+                        if let Some(attr) = attr.value.as_text() {
+                            if let Some(new_min_width) = parse_size(attr) {
+                                min_width = new_min_width;
+                            }
+                        }
                     }
-                }
-                "padding" => {
-                    let total_padding: f32 = a.value.to_string().parse().unwrap();
-                    let padding_for_side = total_padding / 2.0;
-                    padding.0 = padding_for_side;
-                    padding.1 = padding_for_side;
-                    padding.2 = padding_for_side;
-                    padding.3 = padding_for_side;
-                }
-                "scroll_y" => {
-                    let scroll: f32 = a.value.to_string().parse().unwrap();
-                    scroll_y = scroll;
-                }
-                "scroll_x" => {
-                    let scroll: f32 = a.value.to_string().parse().unwrap();
-                    scroll_x = scroll;
-                }
-                "direction" => {
-                    direction = if a.value.to_string() == "horizontal" {
-                        DirectionMode::Horizontal
-                    } else if a.value.to_string() == "both" {
-                        DirectionMode::Both
-                    } else {
-                        DirectionMode::Vertical
-                    };
-                }
-                _ => {
-                    println!("Unsupported attribute <{}>", a.name);
+                    "padding" => {
+                        if let Some(attr) = attr.value.as_text() {
+                            if let Ok(total_padding) = attr.parse::<f32>() {
+                                let padding_for_side = total_padding / 2.0;
+                                padding.0 = padding_for_side;
+                                padding.1 = padding_for_side;
+                                padding.2 = padding_for_side;
+                                padding.3 = padding_for_side;
+                            }
+                        }
+                    }
+                    "scroll_y" => {
+                        if let Some(attr) = attr.value.as_text() {
+                            if let Ok(scroll) = attr.parse::<f32>() {
+                                println!("{scroll}");
+                                scroll_y = scroll;
+                            }
+                        }
+                    }
+                    "scroll_x" => {
+                        if let Some(attr) = attr.value.as_text() {
+                            if let Ok(scroll) = attr.parse::<f32>() {
+                                scroll_x = scroll;
+                            }
+                        }
+                    }
+                    "direction" => {
+                        if let Some(attr) = attr.value.as_text() {
+                            direction = if attr == "horizontal" {
+                                DirectionMode::Horizontal
+                            } else if attr == "both" {
+                                DirectionMode::Both
+                            } else {
+                                DirectionMode::Vertical
+                            };
+                        }
+                    }
+                    _ => {
+                        println!("Unsupported attribute <{}>", attr.attribute.name);
+                    }
                 }
             }
         }
@@ -318,40 +349,46 @@ impl NodeDepState<()> for Style {
         let mut radius = 0.0;
         let mut image_data = None;
 
-        for attr in node.attributes() {
-            match attr.name {
-                "background" => {
-                    let new_back = parse_color(&attr.value.to_string());
-                    if let Some(new_back) = new_back {
-                        background = new_back;
+        if let Some(attributes) = node.attributes() {
+            for attr in attributes {
+                match attr.attribute.name.as_str() {
+                    "background" => {
+                        if let Some(attr) = attr.value.as_text() {
+                            let new_back = parse_color(attr);
+                            if let Some(new_back) = new_back {
+                                background = new_back;
+                            }
+                        }
                     }
-                }
-                "layer" => {
-                    let new_relative_layer: Option<i16> = attr.value.to_string().parse().ok();
-                    if let Some(new_relative_layer) = new_relative_layer {
-                        relative_layer = new_relative_layer;
+                    "layer" => {
+                        if let Some(attr) = attr.value.as_text() {
+                            if let Ok(new_relative_layer) = attr.parse::<i16>() {
+                                relative_layer = new_relative_layer;
+                            }
+                        }
                     }
-                }
-                "shadow" => {
-                    let new_shadow = parse_shadow(&attr.value.to_string());
-
-                    if let Some(new_shadow) = new_shadow {
-                        shadow = new_shadow;
+                    "shadow" => {
+                        if let Some(attr) = attr.value.as_text() {
+                            if let Some(new_shadow) = parse_shadow(attr) {
+                                shadow = new_shadow;
+                            }
+                        }
                     }
-                }
-                "radius" => {
-                    let new_radius: Option<f32> = attr.value.to_string().parse().ok();
-
-                    if let Some(new_radius) = new_radius {
-                        radius = new_radius;
+                    "radius" => {
+                        if let Some(attr) = attr.value.as_text() {
+                            if let Ok(new_radius) = attr.parse::<f32>() {
+                                radius = new_radius;
+                            }
+                        }
                     }
-                }
-                "image_data" => {
-                    let bytes = attr.value.as_bytes();
-                    image_data = bytes.map(|v| v.to_vec());
-                }
-                _ => {
-                    println!("Unsupported attribute <{}>", attr.name);
+                    "image_data" => {
+                        if let Some(attr) = attr.value.as_bytes() {
+                            image_data = Some(attr.to_vec());
+                        }
+                    }
+                    _ => {
+                        println!("Unsupported attribute <{}>", attr.attribute.name);
+                    }
                 }
             }
         }

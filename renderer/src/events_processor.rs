@@ -1,6 +1,6 @@
 use std::{collections::HashMap, sync::Arc};
 
-use dioxus_core::{ElementId, EventPriority, UserEvent};
+use dioxus_core::{EventPriority, GlobalNodeId, UserEvent};
 use dioxus_html::{
     geometry::{euclid::Point2D, Coordinates},
     input_data::{keyboard_types::Modifiers, MouseButton},
@@ -26,7 +26,7 @@ struct ElementState {
 
 #[derive(Default)]
 pub struct EventsProcessor {
-    states: HashMap<ElementId, ElementState>,
+    states: HashMap<GlobalNodeId, ElementState>,
 }
 
 impl EventsProcessor {

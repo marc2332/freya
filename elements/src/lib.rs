@@ -1,7 +1,8 @@
+use dioxus_core::AttributeDiscription;
 pub use dioxus_core::AttributeValue;
 use dioxus_core::*;
+use dioxus_hooks::UseRef;
 use std::fmt::Arguments;
-
 macro_rules! builder_constructors {
     (
         $(
@@ -24,8 +25,9 @@ macro_rules! builder_constructors {
                 const NAME_SPACE: Option<&'static str> = None;
             }
 
+/*            // before custom attribibute
             impl $name {
-                pub fn reference<'a, T: Clone + 'static + PartialEq>(
+                pub fn reference<'a, T: Clone + 'static + PartialEq + Sync + Send>(
                     &self,
                     cx: NodeFactory<'a>,
                     val: &'a T,
@@ -34,7 +36,7 @@ macro_rules! builder_constructors {
                         "reference",
                         AttributeValue::Any(ArbitraryAttributeValue {
                             value: val,
-                            cmp: |a, b| a.downcast_ref::<T>() == b.downcast_ref::<T>(),
+                            cmp: |a, b| a.as_any().downcast_ref::<T>() == b.as_any().downcast_ref::<T>(),
                         }),
                         None,
                         true,
@@ -42,13 +44,16 @@ macro_rules! builder_constructors {
                     )
                 }
             }
+ */
 
             impl $name {
                 $(
-                    $(#[$attr_method])*
-                    pub fn $fil<'a>(&self, cx: NodeFactory<'a>, val: Arguments) -> Attribute<'a> {
-                        cx.attr(stringify!($fil), val, None, false)
-                    }
+                    #[allow(non_upper_case_globals)]
+                    pub const $fil: AttributeDiscription = AttributeDiscription{
+                        name: stringify!($fil),
+                        namespace: None,
+                        volatile: false
+                    };
                 )*
             }
         )*
@@ -70,6 +75,7 @@ builder_constructors! {
         shadow: String,
         radius: String,
         color: String,
+        reference: String,
     };
     container {
         padding: String,
@@ -85,6 +91,7 @@ builder_constructors! {
         shadow: String,
         radius: String,
         color: String,
+        reference: String,
     };
     label {
         color: String,
@@ -106,6 +113,18 @@ builder_constructors! {
         font_size: String,
         font_family: String,
     };
+}
+
+use std::fmt::Display;
+use tokio::sync::mpsc::UnboundedSender;
+
+pub struct NodeRefWrapper<'a>(pub &'a UseRef<UnboundedSender<NodeLayout>>);
+
+// Hacky
+impl Display for NodeRefWrapper<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("")
+    }
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]

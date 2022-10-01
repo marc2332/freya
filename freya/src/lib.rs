@@ -156,7 +156,7 @@ pub fn launch_cfg(wins_config: Vec<(Component<()>, WindowConfig)>) {
                     let to_update = rdom.lock().unwrap().apply_mutations(vec![muts]);
                     let ctx = AnyMap::new();
 
-                    rdom.lock().unwrap().update_state(&dom, to_update, ctx);
+                    rdom.lock().unwrap().update_state(to_update, ctx);
 
                     event_emitter
                         .lock()
@@ -174,7 +174,7 @@ pub fn launch_cfg(wins_config: Vec<(Component<()>, WindowConfig)>) {
 
                                 let to_update = rdom.lock().unwrap().apply_mutations(mutations);
                                 let ctx = AnyMap::new();
-                                rdom.lock().unwrap().update_state(&dom, to_update, ctx);
+                                rdom.lock().unwrap().update_state(to_update, ctx);
                             }
                         });
                 });

@@ -1,21 +1,27 @@
-use dioxus_core::ElementId;
-use dioxus_native_core::real_dom::{Node, NodeType};
-use freya_layers::{Layers, NodeArea, NodeData};
+use dioxus::core::ElementId;
+use dioxus_core::GlobalNodeId;
+use dioxus_native_core::real_dom::{Node, NodeData, NodeType};
+use freya_layers::{Layers, NodeArea, NodeInfo};
 use freya_layout::calculate_node;
 use freya_node_state::node::{DirectionMode, NodeState, Size, SizeMode};
+use fxhash::{FxHashMap, FxHashSet};
 use lazy_static::lazy_static;
 
 lazy_static! {
     static ref TEST_NODE: Node<NodeState> = Node {
-        id: ElementId(0),
-        parent: None,
         state: NodeState::default(),
-        node_type: NodeType::Element {
-            tag: "rect".to_string(),
-            namespace: None,
-            children: Vec::new()
-        },
-        height: 0,
+        node_data: NodeData {
+            id: GlobalNodeId::VNodeId(ElementId(0)),
+            parent: None,
+            node_type: NodeType::Element {
+                tag: "rect".to_string(),
+                namespace: None,
+                children: Vec::new(),
+                listeners: FxHashSet::default(),
+                attributes: FxHashMap::default()
+            },
+            height: 0,
+        }
     };
 }
 
@@ -28,7 +34,7 @@ fn percentage() {
         ..Size::expanded()
     });
     let result = calculate_node(
-        &NodeData { node },
+        &NodeInfo { node },
         NodeArea {
             x: 0.0,
             y: 0.0,
@@ -60,7 +66,7 @@ fn manual() {
         ..Size::expanded()
     });
     let result = calculate_node(
-        &NodeData { node },
+        &NodeInfo { node },
         NodeArea {
             x: 0.0,
             y: 0.0,
@@ -86,22 +92,26 @@ fn manual() {
 #[test]
 fn auto() {
     let result = calculate_node(
-        &NodeData {
+        &NodeInfo {
             node: Node {
-                id: ElementId(0),
-                parent: None,
+                node_data: NodeData {
+                    id: GlobalNodeId::VNodeId(ElementId(0)),
+                    parent: None,
+                    node_type: NodeType::Element {
+                        tag: "rect".to_string(),
+                        namespace: None,
+                        children: vec![GlobalNodeId::VNodeId(ElementId(0))],
+                        listeners: FxHashSet::default(),
+                        attributes: FxHashMap::default(),
+                    },
+                    height: 0,
+                },
                 state: NodeState::default().set_size(Size {
                     width: SizeMode::Auto,
                     height: SizeMode::Auto,
                     direction: DirectionMode::Both,
                     ..Size::expanded()
                 }),
-                node_type: NodeType::Element {
-                    tag: "rect".to_string(),
-                    namespace: None,
-                    children: vec![ElementId(1)],
-                },
-                height: 0,
             },
         },
         NodeArea {
@@ -119,21 +129,25 @@ fn auto() {
         &mut (),
         &mut Layers::default(),
         |_, _| {
-            Some(NodeData {
+            Some(NodeInfo {
                 node: Node {
-                    id: ElementId(1),
-                    parent: None,
+                    node_data: NodeData {
+                        id: GlobalNodeId::VNodeId(ElementId(0)),
+                        parent: None,
+                        node_type: NodeType::Element {
+                            tag: "rect".to_string(),
+                            namespace: None,
+                            children: Vec::new(),
+                            listeners: FxHashSet::default(),
+                            attributes: FxHashMap::default(),
+                        },
+                        height: 0,
+                    },
                     state: NodeState::default().set_size(Size {
                         width: SizeMode::Manual(170.0),
                         height: SizeMode::Manual(25.0),
                         ..Size::expanded()
                     }),
-                    node_type: NodeType::Element {
-                        tag: "rect".to_string(),
-                        namespace: None,
-                        children: Vec::new(),
-                    },
-                    height: 0,
                 },
             })
         },
@@ -153,7 +167,7 @@ fn x_y() {
         ..Size::expanded()
     });
     let result = calculate_node(
-        &NodeData { node },
+        &NodeInfo { node },
         NodeArea {
             x: 15.0,
             y: 25.0,
@@ -169,21 +183,25 @@ fn x_y() {
         &mut (),
         &mut Layers::default(),
         |_, _| {
-            Some(NodeData {
+            Some(NodeInfo {
                 node: Node {
-                    id: ElementId(1),
-                    parent: None,
+                    node_data: NodeData {
+                        id: GlobalNodeId::VNodeId(ElementId(1)),
+                        parent: None,
+                        node_type: NodeType::Element {
+                            tag: "rect".to_string(),
+                            namespace: None,
+                            children: Vec::new(),
+                            listeners: FxHashSet::default(),
+                            attributes: FxHashMap::default(),
+                        },
+                        height: 0,
+                    },
                     state: NodeState::default().set_size(Size {
                         width: SizeMode::Manual(170.0),
                         height: SizeMode::Manual(25.0),
                         ..Size::expanded()
                     }),
-                    node_type: NodeType::Element {
-                        tag: "rect".to_string(),
-                        namespace: None,
-                        children: Vec::new(),
-                    },
-                    height: 0,
                 },
             })
         },

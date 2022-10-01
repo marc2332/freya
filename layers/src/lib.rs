@@ -1,10 +1,10 @@
-use dioxus::core::ElementId;
+use dioxus::core::GlobalNodeId;
 use dioxus_native_core::real_dom::{Node, NodeType};
 use freya_node_state::node::NodeState;
 use std::collections::HashMap;
 
 #[derive(Clone)]
-pub struct NodeData {
+pub struct NodeInfo {
     pub node: Node<NodeState>,
 }
 
@@ -18,25 +18,25 @@ pub struct NodeArea {
 
 #[derive(Default, Clone)]
 pub struct Layers {
-    pub layers: HashMap<i16, HashMap<ElementId, RenderData>>,
+    pub layers: HashMap<i16, HashMap<GlobalNodeId, RenderData>>,
 }
 
 #[derive(Clone)]
 pub struct RenderData {
-    pub node_data: NodeData,
+    pub node_data: NodeInfo,
     pub node_area: NodeArea,
-    pub node_children: Vec<ElementId>,
+    pub node_children: Vec<GlobalNodeId>,
 }
 
 impl Layers {
     pub fn calculate_layer(
         &mut self,
-        node_data: &NodeData,
+        node_data: &NodeInfo,
         inherited_relative_layer: i16,
     ) -> (i16, i16) {
         // Relative layer (optionally define by the user) + height of the element in the VDOM - inherited relative_layer by parent
         let element_layer = (-node_data.node.state.style.relative_layer
-            + (node_data.node.height as i16)
+            + (node_data.node.node_data.height as i16)
             - inherited_relative_layer) as i16;
 
         (
@@ -45,7 +45,7 @@ impl Layers {
         )
     }
 
-    pub fn add_element(&mut self, node_data: &NodeData, area: &NodeArea, node_layer: i16) {
+    pub fn add_element(&mut self, node_data: &NodeInfo, area: &NodeArea, node_layer: i16) {
         if !self.layers.contains_key(&node_layer) {
             self.layers.insert(node_layer, HashMap::default());
         }
@@ -54,12 +54,12 @@ impl Layers {
 
         let mut node_children = Vec::new();
 
-        if let NodeType::Element { children, .. } = &node_data.node.node_type {
+        if let NodeType::Element { children, .. } = &node_data.node.node_data.node_type {
             node_children = children.clone();
         }
 
         layer.insert(
-            node_data.node.id,
+            node_data.node.node_data.id,
             RenderData {
                 node_data: node_data.clone(),
                 node_area: area.clone(),

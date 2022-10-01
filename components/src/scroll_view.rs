@@ -16,6 +16,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     let (node_ref, size) = use_node(&cx);
 
     let onwheel = move |e: UiEvent<WheelData>| {
+        println!("{:?}", size.get());
         let wheel_y = e.delta().strip_units().y;
         let new_y = (*scrolled_y.get() as f32) + (wheel_y as f32 * 20.0);
         if size.height >= size.inner_height {
@@ -96,7 +97,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
         clicking.set(false);
     };
 
-    cx.render(rsx!(
+    render!(
         rect {
             direction: "horizontal",
             width: "{container_width}",
@@ -132,7 +133,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
                rsx!{ container {} }
             })
         }
-    ))
+    )
 }
 
 #[derive(Props)]

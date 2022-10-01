@@ -23,10 +23,10 @@ freya-renderer = { path = "../renderer", version = "0.1.0" }
 freya-elements = { path = "../elements", version = "0.1.0" }
 freya-hooks = { path = "../hooks"}
 freya-components ={ path = "../components"}
-dioxus = { git = "https://github.com/marc2332/dioxus", branch = "feat/attribute-value-any"  }
-dioxus-html = { git = "https://github.com/marc2332/dioxus", branch = "feat/attribute-value-any"  }
-dioxus-native-core = { git = "https://github.com/marc2332/dioxus", branch = "feat/attribute-value-any"  }
-dioxus-core = { git = "https://github.com/marc2332/dioxus", branch = "feat/attribute-value-any"  }
+dioxus = { git = "https://github.com/Demonthos/dioxus", branch = "fix_native_core_arbitrary_attribute"  }
+dioxus-html = { git = "https://github.com/Demonthos/dioxus", branch = "fix_native_core_arbitrary_attribute"  }
+dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch = "fix_native_core_arbitrary_attribute"  }
+dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch = "fix_native_core_arbitrary_attribute"  }
 tokio = { version = "1.17.0", features = ["sync", "rt-multi-thread", "time"] }
 anymap = "0.12.1"
 fxhash = "0.2.1"
