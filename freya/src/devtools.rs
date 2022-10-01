@@ -96,23 +96,19 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
              container {
                 width: "100%",
                 direction: "horizontal",
-                height: "50",
-                FreyaLink {
+                height: "45",
+                padding: "10",
+                TabButton {
                     to: "/",
-                    label {
-                        width: "100",
-                        "Elements"
-                    }
+                    label: "Elements"
                 }
-                FreyaLink {
+                TabButton {
                     to: "/settings",
-                    label {
-                        width: "100",
-                        "Settings"
-                    }
+                    label: "Settings"
                 }
              }
-            Route { to: "/",
+            Route {
+                to: "/",
                 ScrollView {
                     width: "100%",
                     height: "calc(100% - 50)",
@@ -121,7 +117,8 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                     children
                 }
             }
-            Route { to: "/settings",
+            Route {
+                to: "/settings",
                 label {
                     "Settings would be here."
                 }
@@ -131,25 +128,28 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
 }
 
 #[derive(Props)]
-struct FreyaLinkProps<'a> {
+struct TabButtonProps<'a> {
     pub to: &'a str,
-    pub children: Element<'a>,
+    pub label: &'a str,
 }
 
 #[allow(non_snake_case)]
-fn FreyaLink<'a>(cx: Scope<'a, FreyaLinkProps<'a>>) -> Element<'a> {
-    let svc = cx.use_hook(|| cx.consume_context::<Arc<RouterCore>>());
-
+fn TabButton<'a>(cx: Scope<'a, TabButtonProps<'a>>) -> Element<'a> {
+    let content = cx.props.label;
     render!(
-        Button {
-            on_click: move |_| {
-                if let Some(service) = svc {
-                    service.push_route(cx.props.to, None, None);
-                } else {
-                    println!("Not in router");
+        container {
+            width: "100",
+            height: "100%",
+            RouterLink {
+                to: cx.props.to,
+                Button {
+                    label {
+                        width: "100%",
+                        height: "100%",
+                        content
+                    }
                 }
-            },
-            &cx.props.children
+            }
         }
     )
 }

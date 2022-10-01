@@ -751,6 +751,7 @@ name = "freya-components"
 version = "0.1.0"
 dependencies = [
  "dioxus",
+ "dioxus-router",
  "fermi",
  "freya-elements",
  "freya-hooks",
