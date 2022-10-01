@@ -2,6 +2,7 @@ use dioxus::core::ElementId;
 use dioxus::prelude::*;
 use dioxus_core::Scope;
 use dioxus_native_core::real_dom::{NodeType, RealDom};
+use dioxus_router::*;
 use freya_components::*;
 use freya_elements as dioxus_elements;
 use freya_node_state::node::NodeState;
@@ -83,30 +84,93 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
     });
 
     let children = children.get().iter().map(|node| {
-        let text = node
-            .text
-            .as_ref()
-            .map(|v| format!("({v})"))
-            .unwrap_or_default();
         rsx! {
-            rect {
-                width: "100%",
-                height: "25",
-                scroll_x: "{node.height * 10}",
-                label {
-                    "{node.tag} #{node.id} {text}"
-                }
+            NodeElement {
+                node: node
             }
         }
     });
 
     cx.render(rsx! {
-        ScrollView {
-            width: "100%",
-            height: "100%",
-            padding: "30",
-            show_scrollbar: true,
-            children
+        Router {
+             container {
+                width: "100%",
+                direction: "horizontal",
+                height: "50",
+                FreyaLink {
+                    to: "/",
+                    label {
+                        width: "100",
+                        "Elements"
+                    }
+                }
+                FreyaLink {
+                    to: "/settings",
+                    label {
+                        width: "100",
+                        "Settings"
+                    }
+                }
+             }
+            Route { to: "/",
+                ScrollView {
+                    width: "100%",
+                    height: "calc(100% - 50)",
+                    padding: "30",
+                    show_scrollbar: true,
+                    children
+                }
+            }
+            Route { to: "/settings",
+                label {
+                    "Settings would be here."
+                }
+            }
         }
     })
+}
+
+#[derive(Props)]
+struct FreyaLinkProps<'a> {
+    pub to: &'a str,
+    pub children: Element<'a>,
+}
+
+#[allow(non_snake_case)]
+fn FreyaLink<'a>(cx: Scope<'a, FreyaLinkProps<'a>>) -> Element<'a> {
+    let svc = cx.use_hook(|| cx.consume_context::<Arc<RouterCore>>());
+
+    render!(
+        Button {
+            on_click: move |_| {
+                if let Some(service) = svc {
+                    service.push_route(cx.props.to, None, None);
+                } else {
+                    println!("Not in router");
+                }
+            },
+            &cx.props.children
+        }
+    )
+}
+
+#[allow(non_snake_case)]
+#[inline_props]
+fn NodeElement<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> {
+    let text = node
+        .text
+        .as_ref()
+        .map(|v| format!("({v})"))
+        .unwrap_or_default();
+
+    render!(
+        rect {
+            width: "100%",
+            height: "25",
+            scroll_x: "{node.height * 10}",
+            label {
+                "{node.tag} #{node.id} {text}"
+            }
+        }
+    )
 }

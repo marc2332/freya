@@ -487,6 +487,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "dioxus-router"
+version = "0.2.3"
+source = "git+https://github.com/marc2332/dioxus?branch=feat/attribute-value-any#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
+dependencies = [
+ "dioxus",
+ "futures-channel",
+ "futures-util",
+ "log",
+ "serde",
+ "serde_urlencoded",
+ "thiserror",
+ "url",
+]
+
+[[package]]
 name = "dioxus-rsx"
 version = "0.0.0"
 source = "git+https://github.com/marc2332/dioxus?branch=feat/attribute-value-any#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
@@ -720,6 +735,7 @@ dependencies = [
  "dioxus-core",
  "dioxus-html",
  "dioxus-native-core",
+ "dioxus-router",
  "freya-components",
  "freya-elements",
  "freya-hooks",
@@ -835,6 +851,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4e5aa3de05362c3fb88de6531e6296e85cde7739cccad4b9dfeeb7f6ebce56bf"
 
 [[package]]
+name = "futures-macro"
+version = "0.3.24"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "42cd15d1c7456c04dbdf7e88bcd69760d74f3a798d6444e16974b505b0e62f17"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "futures-task"
 version = "0.3.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -847,9 +874,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "44fb6cb1be61cc1d2e43b262516aafcf63b241cffdb1d3fa115f91d9c7b09c90"
 dependencies = [
  "futures-core",
+ "futures-macro",
  "futures-task",
  "pin-project-lite",
  "pin-utils",
+ "slab",
 ]
 
 [[package]]
@@ -1635,6 +1664,18 @@ version = "1.0.85"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e55a28e3aaef9d5ce0506d0a14dbba8054ddc7e499ef522dd8b26859ec9d4a44"
 dependencies = [
+ "itoa",
+ "ryu",
+ "serde",
+]
+
+[[package]]
+name = "serde_urlencoded"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d3491c14715ca2294c4d6a88f15e84739788c1d030eed8c110436aafdaa2f3fd"
+dependencies = [
+ "form_urlencoded",
  "itoa",
  "ryu",
  "serde",

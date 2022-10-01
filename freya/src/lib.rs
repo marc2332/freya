@@ -174,7 +174,9 @@ pub fn launch_cfg(wins_config: Vec<(Component<()>, WindowConfig)>) {
 
                                 let to_update = rdom.lock().unwrap().apply_mutations(mutations);
                                 let ctx = AnyMap::new();
-                                rdom.lock().unwrap().update_state(&dom, to_update, ctx);
+                                if !to_update.is_empty() {
+                                    rdom.lock().unwrap().update_state(&dom, to_update, ctx);
+                                }
                             }
                         });
                 });

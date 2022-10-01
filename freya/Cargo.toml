@@ -27,6 +27,7 @@ dioxus = { git = "https://github.com/marc2332/dioxus", branch = "feat/attribute-
 dioxus-html = { git = "https://github.com/marc2332/dioxus", branch = "feat/attribute-value-any"  }
 dioxus-native-core = { git = "https://github.com/marc2332/dioxus", branch = "feat/attribute-value-any"  }
 dioxus-core = { git = "https://github.com/marc2332/dioxus", branch = "feat/attribute-value-any"  }
+dioxus-router = { git = "https://github.com/marc2332/dioxus", branch = "feat/attribute-value-any"  }
 tokio = { version = "1.17.0", features = ["sync", "rt-multi-thread", "time"] }
 anymap = "0.12.1"
 fxhash = "0.2.1"
