@@ -19,6 +19,6 @@ dioxus-native-core-macro = { git = "https://github.com/marc2332/dioxus", branch 
 dioxus-core = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
 anymap = "0.12.1"
 fxhash = "0.2.1"
-skia-safe = "*"
+skia-safe = "0.55.0"
 freya-elements = { path = "../elements", version = "0.1.0"}
 tokio = { version = "1.17.0" }

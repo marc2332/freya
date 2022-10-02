@@ -335,6 +335,7 @@ pub struct Style {
     pub shadow: ShadowSettings,
     pub radius: f32,
     pub image_data: Option<Vec<u8>>,
+    pub svg_data: Option<Vec<u8>>,
 }
 
 impl NodeDepState<()> for Style {
@@ -346,7 +347,9 @@ impl NodeDepState<()> for Style {
             "layer",
             "shadow",
             "radius",
-            "image_data"
+            "image_data",
+            "svg_data",
+            "svg_content"
         ])));
 
     fn reduce<'a>(&mut self, node: NodeView, _sibling: (), _ctx: &Self::Ctx) -> bool {
@@ -355,6 +358,7 @@ impl NodeDepState<()> for Style {
         let mut shadow = ShadowSettings::default();
         let mut radius = 0.0;
         let mut image_data = None;
+        let mut svg_data = None;
 
         for attr in node.attributes() {
             match attr.name {
@@ -388,6 +392,14 @@ impl NodeDepState<()> for Style {
                     let bytes = attr.value.as_bytes();
                     image_data = bytes.map(|v| v.to_vec());
                 }
+                "svg_data" => {
+                    let bytes = attr.value.as_bytes();
+                    svg_data = bytes.map(|v| v.to_vec());
+                }
+                "svg_content" => {
+                    let text = attr.value.as_text();
+                    svg_data = text.map(|v| v.as_bytes().to_vec());
+                }
                 _ => {
                     println!("Unsupported attribute <{}>", attr.name);
                 }
@@ -406,6 +418,7 @@ impl NodeDepState<()> for Style {
             shadow,
             radius,
             image_data,
+            svg_data,
         };
         changed
     }
