@@ -223,7 +223,8 @@ impl NodeDepState<()> for Size {
             "scroll_y",
             "scroll_x",
             "direction",
-        ])));
+        ])))
+        .with_tag();
 
     fn reduce<'a>(&mut self, node: NodeView, _sibling: (), _ctx: &Self::Ctx) -> bool {
         let mut width = SizeMode::default();
@@ -233,7 +234,11 @@ impl NodeDepState<()> for Size {
         let mut padding = (0.0, 0.0, 0.0, 0.0);
         let mut scroll_y = 0.0;
         let mut scroll_x = 0.0;
-        let mut direction = DirectionMode::Vertical;
+        let mut direction = if let Some("label") = node.tag() {
+            DirectionMode::Both
+        } else {
+            DirectionMode::Vertical
+        };
 
         for a in node.attributes() {
             match a.name {
