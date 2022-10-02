@@ -1,6 +1,6 @@
-use dioxus::core::ElementId;
 use dioxus::prelude::*;
-use dioxus_core::Scope;
+use dioxus::{core::ElementId, events::MouseData};
+use dioxus_core::{Scope, UiEvent};
 use dioxus_native_core::real_dom::{NodeType, RealDom};
 use dioxus_router::*;
 use fermi::use_atom_ref;
@@ -13,12 +13,13 @@ use std::{
 };
 use tokio::time::sleep;
 
-#[derive(PartialEq, Eq, Clone)]
+#[derive(Clone)]
 struct TreeNode {
     tag: String,
     id: ElementId,
     height: u16,
     text: Option<String>,
+    state: NodeState,
 }
 
 #[derive(Props)]
@@ -76,6 +77,7 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                             id: n.id,
                             tag,
                             text: maybe_text,
+                            state: n.state.clone(),
                         });
                     }
                 });
@@ -176,21 +178,81 @@ fn TabButton<'a>(cx: Scope<'a, TabButtonProps<'a>>) -> Element<'a> {
 
 #[allow(non_snake_case)]
 #[inline_props]
+fn NodePopup<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> {
+    let background = node.state.style.background.to_rgb();
+    render!(
+        rect {
+            width: "0",
+            height: "0",
+            layer: "-10",
+            rect {
+                width: "200",
+                height: "auto",
+                radius: "10",
+                background: "rgb(70, 70, 70)",
+                shadow: "0 0 100 15 black",
+                padding: "25",
+                container {
+                    height: "30",
+                    width: "100%",
+                    direction: "horizontal",
+                    rect {
+                        width: "17",
+                        height: "17",
+                        radius: "5",
+                        background: "white",
+                        padding: "5",
+                        rect {
+                            radius: "3",
+                            width: "100%",
+                            height: "100%",
+                            background: "rgb({background.r}, {background.g}, {background.b})",
+                        }
+                    }
+                    label {
+                        "rgb({background.r}, {background.g}, {background.b})"
+                    }
+                }
+            }
+        }
+    )
+}
+
+#[allow(non_snake_case)]
+#[inline_props]
 fn NodeElement<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> {
     let text = node
         .text
         .as_ref()
         .map(|v| format!("({v})"))
         .unwrap_or_default();
+    let show_popup = use_state(&cx, || false);
+
+    let mouseover = |_: UiEvent<MouseData>| {
+        show_popup.set(true);
+    };
+
+    let mouseleave = |_: UiEvent<MouseData>| {
+        show_popup.set(false);
+    };
 
     render!(
         rect {
             width: "100%",
             height: "25",
             scroll_x: "{node.height * 10}",
+            onmouseover: mouseover,
+            onmouseleave: mouseleave,
             label {
                 "{node.tag} #{node.id} {text}"
             }
+            show_popup.get().then(|| {
+                cx.render(rsx! {
+                    NodePopup {
+                        node: node
+                    }
+                })
+            })
         }
     )
 }
