@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use dioxus::prelude::UseRef;
 use dioxus_core::AttributeValue;
 use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
@@ -17,6 +19,19 @@ pub enum CalcType {
     Manual(f32),
 }
 
+impl Display for CalcType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CalcType::Sub => f.write_str("-"),
+            CalcType::Mul => f.write_str("*"),
+            CalcType::Div => f.write_str("/"),
+            CalcType::Add => f.write_str("+"),
+            CalcType::Percentage(p) => f.write_fmt(format_args!("{p}%")),
+            CalcType::Manual(s) => f.write_fmt(format_args!("{s}")),
+        }
+    }
+}
+
 #[derive(Default, Clone, Debug, PartialEq)]
 pub enum SizeMode {
     #[default]
@@ -24,6 +39,24 @@ pub enum SizeMode {
     Calculation(Vec<CalcType>),
     Percentage(f32),
     Manual(f32),
+}
+
+impl Display for SizeMode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            SizeMode::Auto => f.write_str("auto"),
+            SizeMode::Manual(s) => f.write_fmt(format_args!("{s}")),
+            SizeMode::Calculation(calcs) => f.write_fmt(format_args!(
+                "calc({})",
+                calcs
+                    .iter()
+                    .map(|c| c.to_string())
+                    .collect::<Vec<String>>()
+                    .join(" ")
+            )),
+            SizeMode::Percentage(p) => f.write_fmt(format_args!("{p}%")),
+        }
+    }
 }
 
 #[derive(Default, Copy, Clone, Debug, PartialEq, Eq)]

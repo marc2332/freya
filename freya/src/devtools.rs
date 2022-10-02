@@ -1,12 +1,13 @@
+use dioxus::core::ElementId;
 use dioxus::prelude::*;
-use dioxus::{core::ElementId, events::MouseData};
-use dioxus_core::{Scope, UiEvent};
+use dioxus_core::Scope;
 use dioxus_native_core::real_dom::{NodeType, RealDom};
 use dioxus_router::*;
 use fermi::use_atom_ref;
 use freya_components::*;
 use freya_elements as dioxus_elements;
 use freya_node_state::node::NodeState;
+use skia_safe::Color;
 use std::{
     sync::{Arc, Mutex},
     time::Duration,
@@ -86,38 +87,75 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
         }
     });
 
-    let children = children.get().iter().map(|node| {
-        rsx! {
-            NodeElement {
-                node: node
-            }
+    let selected_node_id = use_state::<Option<ElementId>>(&cx, || None);
+
+    let selected_node = children.iter().find(|c| {
+        if let Some(n_id) = selected_node_id.get() {
+            n_id == &c.id
+        } else {
+            false
         }
     });
 
     cx.render(rsx! {
         Router {
-             container {
+            initial_url: "bla://bla/elements".to_string(),
+            container {
                 width: "100%",
                 direction: "horizontal",
                 height: "35",
                 TabButton {
-                    to: "/",
+                    to: "/elements",
                     label: "Elements"
                 }
                 TabButton {
                     to: "/settings",
                     label: "Settings"
                 }
-             }
+            }
             Route {
-                to: "/",
-                ScrollView {
-                    width: "100%",
-                    height: "calc(100% - 50)",
-                    padding: "30",
-                    show_scrollbar: true,
-                    children
+                to: "/elements",
+                NodesTree {
+                    nodes: children,
+                    height: "100%",
+                    onselected: |node: &TreeNode| {
+                        selected_node_id.set(Some(node.id));
+                    }
                 }
+            }
+            Route {
+                to: "/elements/style",
+                NodesTree {
+                    nodes: children,
+                    height: "60%",
+                    onselected: |node: &TreeNode| {
+                        selected_node_id.set(Some(node.id));
+                    }
+                }
+                selected_node.and_then(|selected_node| {
+                    render!(
+                        NodeInspectorStyle {
+                            node: selected_node
+                        }
+                    )
+                })
+            }
+            Route {
+                to: "/elements/listeners",
+                NodesTree {
+                    nodes: children,
+                    height: "60%",
+                    onselected: |node: &TreeNode| {
+                        selected_node_id.set(Some(node.id));
+                    }
+                }
+                selected_node.and_then(|selected_node| {
+                    render!(
+                        NodeInspectorListeners {
+                            node: selected_node
+                        }
+                    )
+                })
             }
             Route {
                 to: "/settings",
@@ -126,6 +164,37 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                 }
             }
         }
+    })
+}
+
+#[allow(non_snake_case)]
+#[inline_props]
+fn NodesTree<'a>(
+    cx: Scope<'a>,
+    nodes: &'a Vec<TreeNode>,
+    height: &'a str,
+    onselected: EventHandler<'a, &'a TreeNode>,
+) -> Element<'a> {
+    let router = use_router(&cx);
+
+    let nodes = nodes.iter().map(|node| {
+        rsx! {
+            NodeElement {
+                onselected: |node: &TreeNode| {
+                    onselected.call(node);
+                    router.push_route("/elements/style", None, None)
+                }
+                node: node
+            }
+        }
+    });
+
+    render!(ScrollView {
+        width: "100%",
+        height: "{height}",
+        padding: "30",
+        show_scrollbar: true,
+        nodes
     })
 }
 
@@ -157,7 +226,7 @@ fn TabButton<'a>(cx: Scope<'a, TabButtonProps<'a>>) -> Element<'a> {
             onmouseleave: move |_| {
                 background.set(theme.read().button.background);
             },
-            width: "100",
+            width: "150",
             height: "100%",
             color: "{button_theme.font_theme.color}",
             RouterLink {
@@ -177,41 +246,54 @@ fn TabButton<'a>(cx: Scope<'a, TabButtonProps<'a>>) -> Element<'a> {
 }
 
 #[allow(non_snake_case)]
-#[inline_props]
-fn NodePopup<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> {
-    let background = node.state.style.background.to_rgb();
+fn NodeInspectorBar<'a>(cx: Scope<'a>) -> Element<'a> {
     render!(
-        rect {
-            width: "0",
-            height: "0",
-            layer: "-10",
-            rect {
-                width: "200",
-                height: "auto",
-                radius: "10",
-                background: "rgb(70, 70, 70)",
-                shadow: "0 0 100 15 black",
-                padding: "25",
-                container {
-                    height: "30",
-                    width: "100%",
-                    direction: "horizontal",
-                    rect {
-                        width: "17",
-                        height: "17",
-                        radius: "5",
-                        background: "white",
-                        padding: "5",
-                        rect {
-                            radius: "3",
-                            width: "100%",
-                            height: "100%",
-                            background: "rgb({background.r}, {background.g}, {background.b})",
-                        }
-                    }
-                    label {
-                        "rgb({background.r}, {background.g}, {background.b})"
-                    }
+        container {
+            width: "100%",
+            direction: "horizontal",
+            height: "35",
+            TabButton {
+                to: "/elements/style",
+                label: "Style"
+            }
+            TabButton {
+                to: "/elements/listeners",
+                label: "Event Listeners"
+            }
+        }
+    )
+}
+
+#[allow(non_snake_case)]
+#[inline_props]
+fn NodeInspectorStyle<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> {
+    let background = &node.state.style.background;
+    let color = &node.state.font_style.color;
+    let height = node.state.size.height.to_string();
+    let width = node.state.size.width.to_string();
+    render!(
+        container {
+            width: "100%",
+            height: "40%",
+            NodeInspectorBar { }
+            ScrollView {
+                show_scrollbar: true,
+                height: "calc(100% - 70)",
+                ColorfulProperty {
+                    name: "Background",
+                    color: background
+                }
+                ColorfulProperty {
+                    name: "Color",
+                    color: color
+                }
+                Property {
+                    name: "Width",
+                    value: width
+                }
+                Property {
+                    name: "Height",
+                    value: height
                 }
             }
         }
@@ -220,39 +302,115 @@ fn NodePopup<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> {
 
 #[allow(non_snake_case)]
 #[inline_props]
-fn NodeElement<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> {
+fn Property<'a>(cx: Scope<'a>, name: &'a str, value: String) -> Element<'a> {
+    render!(
+        container {
+            height: "30",
+            width: "100%",
+            direction: "horizontal",
+            padding: "20",
+            label {
+                font_size: "15",
+                width: "90",
+                "{name}: {value}"
+            }
+        }
+    )
+}
+
+#[allow(non_snake_case)]
+#[inline_props]
+fn ColorfulProperty<'a>(cx: Scope<'a>, name: &'a str, color: &'a Color) -> Element<'a> {
+    let color = color.to_rgb();
+    render!(
+        container {
+            height: "30",
+            width: "100%",
+            direction: "horizontal",
+            padding: "20",
+            label {
+                font_size: "15",
+                width: "90",
+                "{name}: "
+            }
+            rect {
+                width: "17",
+                height: "17",
+                radius: "5",
+                background: "white",
+                padding: "5",
+                rect {
+                    radius: "3",
+                    width: "100%",
+                    height: "100%",
+                    background: "rgb({color.r}, {color.g}, {color.b})",
+                }
+            }
+            rect { // hacky spacer
+                width: "5"
+            }
+            label {
+                font_size: "15",
+                "rgb({color.r}, {color.g}, {color.b})"
+            }
+        }
+    )
+}
+
+#[allow(unused_variables)]
+#[allow(non_snake_case)]
+#[inline_props]
+fn NodeInspectorListeners<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> {
+    render!(
+        container {
+            width: "100%",
+            height: "40%",
+            NodeInspectorBar { }
+            container {
+                height: "calc(100% - 35)",
+                width: "100%",
+                direction: "horizontal",
+                padding: "30",
+                label {
+                    "Listeners would be here."
+                }
+            }
+        }
+    )
+}
+
+#[allow(non_snake_case)]
+#[inline_props]
+fn NodeElement<'a>(
+    cx: Scope<'a>,
+    node: &'a TreeNode,
+    onselected: EventHandler<'a, &'a TreeNode>,
+) -> Element<'a> {
     let text = node
         .text
         .as_ref()
         .map(|v| format!("({v})"))
         .unwrap_or_default();
-    let show_popup = use_state(&cx, || false);
 
-    let mouseover = |_: UiEvent<MouseData>| {
-        show_popup.set(true);
-    };
-
-    let mouseleave = |_: UiEvent<MouseData>| {
-        show_popup.set(false);
-    };
+    let text_color = use_state(&cx, || "white");
 
     render!(
         rect {
             width: "100%",
             height: "25",
             scroll_x: "{node.height * 10}",
-            onmouseover: mouseover,
-            onmouseleave: mouseleave,
+            onclick: |_| onselected.call(node),
+            onmouseover: move |_| {
+                text_color.set("rgb(150, 150, 150)");
+            },
+            onmouseleave: move |_| {
+                text_color.set("white");
+            },
             label {
+                font_size: "14",
+                color: "{text_color}",
                 "{node.tag} #{node.id} {text}"
             }
-            show_popup.get().then(|| {
-                cx.render(rsx! {
-                    NodePopup {
-                        node: node
-                    }
-                })
-            })
         }
     )
 }

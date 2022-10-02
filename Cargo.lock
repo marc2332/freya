@@ -744,6 +744,7 @@ dependencies = [
  "freya-node-state",
  "freya-renderer",
  "fxhash",
+ "skia-safe",
  "tokio",
 ]
 
