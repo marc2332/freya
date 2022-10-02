@@ -736,6 +736,7 @@ dependencies = [
  "dioxus-html",
  "dioxus-native-core",
  "dioxus-router",
+ "fermi",
  "freya-components",
  "freya-elements",
  "freya-hooks",

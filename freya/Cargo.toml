@@ -28,6 +28,7 @@ dioxus-html = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove
 dioxus-native-core = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
 dioxus-core = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
 dioxus-router = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
+fermi = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners" }
 tokio = { version = "1.17.0", features = ["sync", "rt-multi-thread", "time"] }
 anymap = "0.12.1"
 fxhash = "0.2.1"

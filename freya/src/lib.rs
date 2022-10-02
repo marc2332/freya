@@ -204,7 +204,7 @@ fn with_devtools(
                 width: "100%",
                 height: "100%",
                 direction: "horizontal",
-                rect {
+                container {
                     height: "100%",
                     width: "calc(100% - 350)",
                     Root { },

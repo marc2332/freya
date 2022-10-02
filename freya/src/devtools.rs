@@ -3,6 +3,7 @@ use dioxus::prelude::*;
 use dioxus_core::Scope;
 use dioxus_native_core::real_dom::{NodeType, RealDom};
 use dioxus_router::*;
+use fermi::use_atom_ref;
 use freya_components::*;
 use freya_elements as dioxus_elements;
 use freya_node_state::node::NodeState;
@@ -96,8 +97,7 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
              container {
                 width: "100%",
                 direction: "horizontal",
-                height: "45",
-                padding: "10",
+                height: "35",
                 TabButton {
                     to: "/",
                     label: "Elements"
@@ -135,16 +135,36 @@ struct TabButtonProps<'a> {
 
 #[allow(non_snake_case)]
 fn TabButton<'a>(cx: Scope<'a, TabButtonProps<'a>>) -> Element<'a> {
+    let theme = use_atom_ref(&cx, THEME);
+    let button_theme = &theme.read().button;
+
+    let background = use_state(&cx, || button_theme.background.clone());
+    let set_background = background.setter();
+
+    use_effect(&cx, &button_theme.clone(), move |button_theme| async move {
+        set_background(button_theme.background);
+    });
+
     let content = cx.props.label;
     render!(
         container {
+            background: "{background}",
+            onmouseover: move |_| {
+                    background.set(theme.read().button.hover_background);
+            },
+            onmouseleave: move |_| {
+                background.set(theme.read().button.background);
+            },
             width: "100",
             height: "100%",
+            color: "{button_theme.font_theme.color}",
             RouterLink {
                 to: cx.props.to,
-                Button {
+                container {
+                    width: "100%",
+                    height: "100%",
+                    padding: "15",
                     label {
-                        width: "100%",
                         height: "100%",
                         content
                     }
