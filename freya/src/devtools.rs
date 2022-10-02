@@ -117,7 +117,7 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                 to: "/elements",
                 NodesTree {
                     nodes: children,
-                    height: "100%",
+                    height: "calc(100% - 35)",
                     onselected: |node: &TreeNode| {
                         selected_node_id.set(Some(node.id));
                     }
@@ -127,7 +127,7 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                 to: "/elements/style",
                 NodesTree {
                     nodes: children,
-                    height: "60%",
+                    height: "calc(60% - 35)",
                     onselected: |node: &TreeNode| {
                         selected_node_id.set(Some(node.id));
                     }
@@ -144,7 +144,7 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                 to: "/elements/listeners",
                 NodesTree {
                     nodes: children,
-                    height: "60%",
+                    height: "calc(60% - 35)",
                     onselected: |node: &TreeNode| {
                         selected_node_id.set(Some(node.id));
                     }
@@ -278,7 +278,7 @@ fn NodeInspectorStyle<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> {
             NodeInspectorBar { }
             ScrollView {
                 show_scrollbar: true,
-                height: "calc(100% - 70)",
+                height: "calc(100% - 35)",
                 ColorfulProperty {
                     name: "Background",
                     color: background
