@@ -154,6 +154,32 @@ impl image {
     }
 }
 
+#[allow(non_camel_case_types)]
+pub struct svg;
+
+impl DioxusElement for svg {
+    const TAG_NAME: &'static str = "svg";
+    const NAME_SPACE: Option<&'static str> = None;
+}
+
+impl svg {
+    pub fn svg_data<'a>(&self, cx: NodeFactory<'a>, val: AttributeValue<'a>) -> Attribute<'a> {
+        cx.custom_attr("svg_data", val, None, false, false)
+    }
+
+    pub fn svg_content<'a>(&self, cx: NodeFactory<'a>, val: Arguments) -> Attribute<'a> {
+        cx.attr("svg_content", val, None, false)
+    }
+
+    pub fn width<'a>(&self, cx: NodeFactory<'a>, val: Arguments) -> Attribute<'a> {
+        cx.attr("width", val, None, false)
+    }
+
+    pub fn height<'a>(&self, cx: NodeFactory<'a>, val: Arguments) -> Attribute<'a> {
+        cx.attr("height", val, None, false)
+    }
+}
+
 pub mod on {
     use dioxus_core::*;
     use dioxus_html::on::{MouseData, MouseEvent, WheelData, WheelEvent};
