@@ -141,8 +141,8 @@ impl DioxusElement for image {
 }
 
 impl image {
-    pub fn image_data<'a>(&self, cx: NodeFactory<'a>, val: AttributeValue<'a>) -> Attribute<'a> {
-        cx.custom_attr("image_data", val, None, false, false)
+    pub fn image_data<'a>(&self, cx: NodeFactory<'a>, val: &'a [u8]) -> Attribute<'a> {
+        cx.custom_attr("image_data", AttributeValue::Bytes(val), None, false, false)
     }
 
     pub fn width<'a>(&self, cx: NodeFactory<'a>, val: Arguments) -> Attribute<'a> {
@@ -163,8 +163,8 @@ impl DioxusElement for svg {
 }
 
 impl svg {
-    pub fn svg_data<'a>(&self, cx: NodeFactory<'a>, val: AttributeValue<'a>) -> Attribute<'a> {
-        cx.custom_attr("svg_data", val, None, false, false)
+    pub fn svg_data<'a>(&self, cx: NodeFactory<'a>, val: &'a [u8]) -> Attribute<'a> {
+        cx.custom_attr("svg_data", AttributeValue::Bytes(val), None, false, false)
     }
 
     pub fn svg_content<'a>(&self, cx: NodeFactory<'a>, val: Arguments) -> Attribute<'a> {
