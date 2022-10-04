@@ -70,13 +70,14 @@ freya = { git = "https://github.com/marc2332/freya" }
 ```
 
 ### Features ✨
-- Label and paragraphs
-- Containers and rectangles
+- Text
+- Containers
 - Scroll views (nested too)
-- Click, wheel, mouse /down/leave/over events
-- Windows, Linux (needs `x11` feature) and MacOS support
-- Components library
-- Animation hook
+- Events: click, wheel, mouse /down/leave/over for now
+- Support for Windows, Linux (needs `x11` feature) and MacOS support
+- Optional Components library (buttons, switch, etc)
+- Animation hook utility
+- SVG Support
 
 ### Goals 😁
 - Fast
