@@ -28,15 +28,17 @@ fn app(cx: Scope) -> Element {
         size += (y as i32) * 20;
     };
 
-    cx.render(rsx!(rect {
-        width: "100%",
-        height: "100%",
-        padding: "100",
-        onwheel: onwheel,
-        image {
-            image_data: RUST_LOGO,
-            width: "{size}",
-            height: "{size}",
+    render!(
+        rect {
+            width: "100%",
+            height: "100%",
+            padding: "100",
+            onwheel: onwheel,
+            image {
+                image_data: RUST_LOGO,
+                width: "{size}",
+                height: "{size}",
+            }
         }
-    }))
+    )
 }

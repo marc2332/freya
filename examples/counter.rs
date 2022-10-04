@@ -13,7 +13,7 @@ fn main() {
 fn app(cx: Scope) -> Element {
     let mut count = use_state(&cx, || 0);
 
-    cx.render(rsx!(
+    render!(
         container {
             height: "20%",
             width: "100%",
@@ -34,5 +34,5 @@ fn app(cx: Scope) -> Element {
             onclick: move |_| count += 1,
             label { "Click to increase!" }
         }
-    ))
+    )
 }

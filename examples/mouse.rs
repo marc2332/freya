@@ -11,7 +11,7 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    cx.render(rsx! {
+    render!(
         rect {
             height: "100%",
             width: "100%",
@@ -22,7 +22,7 @@ fn app(cx: Scope) -> Element {
 
             }
         }
-    })
+    )
 }
 
 #[allow(non_snake_case)]
@@ -46,7 +46,7 @@ fn Area<'a>(cx: Scope<'a>) -> Element {
         })
     };
 
-    cx.render(rsx! {
+    render!(
         rect {
             height: "50%",
             width: "100%",
@@ -61,5 +61,5 @@ fn Area<'a>(cx: Scope<'a>) -> Element {
                 "Mouse clicked at [x: {cursor_pos_click.0}, y: {cursor_pos_click.1}]"
             }
         }
-    })
+    )
 }

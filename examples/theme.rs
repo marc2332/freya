@@ -15,32 +15,34 @@ fn app(cx: Scope) -> Element {
     let theme = use_atom_ref(&cx, THEME);
     let enabled = use_state(&cx, || false);
 
-    cx.render(rsx!(rect {
-        height: "100%",
-        width: "100%",
-        Button {
-            on_click: |_| {
-                *theme.write() = LIGHT_THEME.clone();
-            },
-            label {
-                width: "100",
-                "Light"
+    render!(
+        rect {
+            height: "100%",
+            width: "100%",
+            Button {
+                on_click: |_| {
+                    *theme.write() = LIGHT_THEME.clone();
+                },
+                label {
+                    width: "100",
+                    "Light"
+                }
+            }
+            Button {
+                on_click: |_| {
+                    *theme.write() = DARK_THEME.clone();
+                },
+                label {
+                    width: "100",
+                    "Dark"
+                }
+            }
+            Switch {
+                enabled: enabled,
+                ontoggled: |_| {
+                    enabled.set(!enabled.get());
+                }
             }
         }
-        Button {
-            on_click: |_| {
-                *theme.write() = DARK_THEME.clone();
-            },
-            label {
-                width: "100",
-                "Dark"
-            }
-        }
-        Switch {
-            enabled: enabled,
-            ontoggled: |_| {
-                enabled.set(!enabled.get());
-            }
-        }
-    }))
+    )
 }

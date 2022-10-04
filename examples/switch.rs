@@ -15,7 +15,7 @@ fn app(cx: Scope) -> Element {
 
     let is_enabled = if *enabled.get() { "Yes" } else { "No" };
 
-    cx.render(rsx!(
+    render!(
         rect {
             width: "100%",
             height: "100%",
@@ -31,5 +31,5 @@ fn app(cx: Scope) -> Element {
                 }
             }
         }
-    ))
+    )
 }

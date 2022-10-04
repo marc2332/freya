@@ -15,7 +15,7 @@ A GUI library for Rust powered by [Skia](https://skia.org/) and [Dioxus](https:/
 fn app(cx: Scope) -> Element {
     let mut count = use_state(&cx, || 0);
 
-    cx.render(rsx!(
+    render!(
         container {
             height: "20%",
             width: "100%",
@@ -36,7 +36,7 @@ fn app(cx: Scope) -> Element {
             onclick: move |_| count += 1,
             label { "Click to increase!" }
         }
-    ))
+    )
 ```
 </td>
 <td style="border:hidden;">

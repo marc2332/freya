@@ -97,7 +97,7 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
         }
     });
 
-    cx.render(rsx! {
+    render!(
         Router {
             initial_url: "bla://bla/elements".to_string(),
             container {
@@ -164,7 +164,7 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                 }
             }
         }
-    })
+    )
 }
 
 #[allow(non_snake_case)]

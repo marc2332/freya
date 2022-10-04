@@ -36,7 +36,7 @@ fn app(cx: Scope) -> Element {
     let mid = colors[1];
     let small = colors[2];
 
-    cx.render(rsx! {
+    render!(
         rect {
             background: "{big}",
             height: "stretch",
@@ -64,5 +64,5 @@ fn app(cx: Scope) -> Element {
                 }
             },
         }
-    })
+    )
 }

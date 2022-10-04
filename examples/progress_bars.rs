@@ -50,7 +50,7 @@ fn app(cx: Scope) -> Element {
         });
     });
 
-    cx.render(rsx! {
+    render!(
         LoadingBar {
             progress: **progress_1
         }
@@ -60,7 +60,7 @@ fn app(cx: Scope) -> Element {
         LoadingBar {
             progress: **progress_3
         }
-    })
+    )
 }
 
 #[derive(PartialEq, Props)]
@@ -70,7 +70,7 @@ struct LoadingBarProps {
 
 #[allow(non_snake_case)]
 fn LoadingBar<'a>(cx: Scope<'a, LoadingBarProps>) -> Element {
-    cx.render(rsx!(
+    render!(
         rect {
             width: "auto",
             height: "30",
@@ -82,5 +82,5 @@ fn LoadingBar<'a>(cx: Scope<'a, LoadingBarProps>) -> Element {
                 background: "blue",
             }
         }
-    ))
+    )
 }

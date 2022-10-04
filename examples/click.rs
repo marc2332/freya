@@ -12,7 +12,7 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     let count = use_state(&cx, || 0);
-    cx.render(rsx!(
+    render!(
         container {
             background: "rgb(15, 15, 15)",
             padding: "50",
@@ -47,5 +47,5 @@ fn app(cx: Scope) -> Element {
                 }
             }
         }
-    ))
+    )
 }

@@ -16,7 +16,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
         set_background(button_theme.background);
     });
 
-    cx.render(rsx!(
+    render!(
         container {
             width: "auto",
             height: "auto",
@@ -45,7 +45,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
                 &cx.props.children
             }
         }
-    ))
+    )
 }
 
 #[derive(Props)]

@@ -148,7 +148,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
         0
     };
 
-    cx.render(rsx!(
+    render!(
         rect {
             direction: "horizontal",
             width: "{user_container_width}",
@@ -198,7 +198,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
                 }
             }
         }
-    ))
+    )
 }
 
 #[derive(Props)]

@@ -67,7 +67,7 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
         }
     };
 
-    cx.render(rsx!(
+    render!(
         container {
             width: "auto",
             height: "auto",
@@ -99,5 +99,5 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
                 }
             }
         }
-    ))
+    )
 }

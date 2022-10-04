@@ -46,7 +46,7 @@ fn app<'a>(cx: Scope<'a>) -> Element<'a> {
         })
     };
 
-    cx.render(rsx!(
+    render!(
         container {
             background: "rgb(15, 15, 15)",
             width: "100%",
@@ -77,5 +77,5 @@ fn app<'a>(cx: Scope<'a>) -> Element<'a> {
                 }
             }
         }
-    ))
+    )
 }
