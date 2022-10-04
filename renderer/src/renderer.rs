@@ -185,11 +185,16 @@ pub fn render_skia(
                     paragraph.paint(canvas, (x, y));
                 }
                 "svg" => {
+                    let x = area.x;
+                    let y = area.y;
                     if let Some(svg_data) = &node.state.style.svg_data {
                         let svg_dom = svg::Dom::from_bytes(svg_data);
                         if let Ok(mut svg_dom) = svg_dom {
+                            canvas.save();
+                            canvas.translate((x, y));
                             svg_dom.set_container_size((area.width as i32, area.height as i32));
                             svg_dom.render(canvas);
+                            canvas.restore();
                         }
                     }
                 }

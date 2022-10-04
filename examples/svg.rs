@@ -13,9 +13,16 @@ fn main() {
 static FERRIS: &[u8] = include_bytes!("./ferris.svg");
 
 fn app(cx: Scope) -> Element {
-    cx.render(rsx!(svg {
-        width: "100%",
-        height: "100%",
-        svg_data: FERRIS,
-    }))
+    cx.render(rsx!(
+        svg {
+            width: "100%",
+            height: "50%",
+            svg_data: FERRIS,
+        }
+        svg {
+            width: "100%",
+            height: "50%",
+            svg_data: FERRIS,
+        }
+    ))
 }
