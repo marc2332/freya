@@ -3,30 +3,30 @@ use freya_elements as dioxus_elements;
 
 #[derive(Props)]
 pub struct SliderProps<'a> {
-    pub onmoved: EventHandler<'a, f64>,
-    pub width: f64,
-    /// The value that the slider will use when first initialized.
     #[props(optional)]
-    pub starting_value: Option<f64>,
+    pub onmoved: Option<EventHandler<'a, f64>>,
+    pub width: f64,
+    pub value: &'a UseState<f64>,
 }
 
-/// Provides a slider that goes between 0 and the width of the slider. An
-/// initial value can be provided with the `starting_value` prop, but this will
-/// not change the slider value if updated.
+/// A slider which takes in a state (`value`), which is set to any value between
+/// 0 and 1. When the slider is moved, both the optional `onmoved` event is
+/// called and the state is updated with the new value
 ///
 /// # Example
 /// ```rs
 /// use dioxus::prelude::*;
 /// use freya::{dioxus_elements, *};
 ///
-/// const INITIAL_SLIDER_OFFSET: f64 = 30.0;
+/// const MAX_FONT_SIZE: f64 = 100.0;
 ///
 /// fn main() {
 ///     launch(app);
 /// }
 ///
 /// fn app(cx: Scope) -> Element {
-///     let font_size = use_state(&cx, || 20.0 + INITIAL_SLIDER_OFFSET);
+///     let percentage = use_state(&cx, || 0.2);
+///     let font_size = percentage.get() * MAX_FONT_SIZE + 20.0;
 ///
 ///     cx.render(rsx!(
 ///         rect {
@@ -40,12 +40,15 @@ pub struct SliderProps<'a> {
 ///                 height: "150",
 ///                 "Hello World"
 ///             }
+///             Button {
+///                 on_click: move |_| {
+///                     percentage.set(0.2);
+///                 },
+///                 label { "Reset size" }
+///             }
 ///             Slider {
 ///                 width: 100.0,
-///                 starting_value: INITIAL_SLIDER_OFFSET,
-///                 onmoved: |e| {
-///                     font_size.set(e + 20.0); // Minimum is 20
-///                 }
+///                 value: percentage,
 ///             }
 ///         }
 ///     ))
@@ -54,8 +57,8 @@ pub struct SliderProps<'a> {
 #[allow(non_snake_case)]
 pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
     let hovering = use_state(&cx, || false);
-    let progress = use_state(&cx, || cx.props.starting_value.unwrap_or(0.0));
     let clicking = use_state(&cx, || false);
+    let progress = cx.props.value * cx.props.width;
 
     let onmouseleave = |_: UiEvent<MouseData>| {
         if *clicking.get() == false {
@@ -74,8 +77,12 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
             if x > cx.props.width - 20.0 {
                 x = cx.props.width - 20.0;
             }
-            progress.set(x);
-            cx.props.onmoved.call(x);
+            let percentage = x / cx.props.width;
+
+            cx.props.value.set(percentage);
+            if let Some(onmoved) = &cx.props.onmoved {
+                onmoved.call(percentage);
+            }
         }
     };
 
