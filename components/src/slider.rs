@@ -60,6 +60,14 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
     let clicking = use_state(&cx, || false);
     let progress = cx.props.value * cx.props.width;
 
+    // The slider's input value should *never*, be outside of the range 0-1.
+    // Panic if this happens
+    assert!(
+        cx.props.value.get().clone() >= 0.0 && cx.props.value.get().clone() <= 1.0,
+        "The value passed into a slider must be between 0 and 1. The value passed in was: {}",
+        cx.props.value.get().clone()
+    );
+
     let onmouseleave = |_: UiEvent<MouseData>| {
         if *clicking.get() == false {
             hovering.set(false);
