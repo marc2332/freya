@@ -8,17 +8,32 @@ pub struct SliderProps<'a> {
     pub width: f64,
     #[props(optional)]
     pub state: Option<&'a UseState<f64>>,
+    #[props(optional)]
+    pub value: Option<&'a f64>,
 }
 
-/// A slider component. It can either be uncontrolled or bound to a state.
+#[inline]
+fn ensure_correct_slider_range(value: f64) {
+    assert!(
+        value >= 0.0 && value <= 1.0,
+        "The value passed into a slider must be between 0 and 1. The value passed in was: {}",
+        value
+    );
+}
+
+/// A slider component. It can be uncontrolled, bound to a state or controlled
+/// via the value property.
 ///
 /// When it is uncontrolled, there is no way of directly accessing or
 /// controlling the state. You can listen to changes with the `onmoved` event.
 ///
-/// If you need to provide a default value, change the value, or sync the value
-/// with other parts of the UI, you should pass a state to the `state` prop.
-/// This state will be updated when the slider is moved and the slider will
-/// update when the state is changed.
+/// The easiest way to manage state is to pass a `UseState<f64>` to the `state`
+/// property. This will automatically update with the state of the slider.
+///
+/// If you need to interface with an outside state management system, you can
+/// pass a `&f64` to the `value` property. This will overwrite the state, and
+/// the value of the slider will not change unless you change `value`. You can
+/// listen for value changes with `onmoved`.
 ///
 /// # Example
 /// ```rs
@@ -65,16 +80,28 @@ pub struct SliderProps<'a> {
 pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
     let hovering = use_state(&cx, || false);
     let clicking = use_state(&cx, || false);
-    let state = cx.props.state.unwrap_or_else(|| use_state(&cx, || 0.0));
-    let progress = state * cx.props.width;
+
+    // The slider's state can be managed in three separate ways:
+    // - A state can be passed in
+    // - A value can be passed in
+    // - Neither can be passed in
+    //
+    // We always need a state instance, although it will be overridden if the
+    // `value` prop is passed in.
+    let state = cx.props.state.unwrap_or_else(|| use_state(&cx, || -1.0));
+    let value = cx.props.value.unwrap_or_else(|| state.get());
+
+    // Map the 0 to 1 values to the width of the slider
+    let progress = value * cx.props.width;
 
     // The slider's input value should *never*, be outside of the range 0-1.
     // Panic if this happens
-    assert!(
-        state.get().clone() >= 0.0 && state.get().clone() <= 1.0,
-        "The value passed into a slider must be between 0 and 1. The value passed in was: {}",
-        state.get().clone()
-    );
+    if let Some(state) = cx.props.state {
+        ensure_correct_slider_range(*state.get());
+    }
+    if let Some(value) = cx.props.value {
+        ensure_correct_slider_range(*value);
+    }
 
     let onmouseleave = |_: UiEvent<MouseData>| {
         if *clicking.get() == false {
@@ -95,6 +122,9 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
             }
             let percentage = x / cx.props.width;
 
+            // Even though we are setting state here, if a value is specified,
+            // that value will override the state on the next render, so this
+            // would do nothing
             state.set(percentage);
             if let Some(onmoved) = &cx.props.onmoved {
                 onmoved.call(percentage);
