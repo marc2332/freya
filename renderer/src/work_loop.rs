@@ -8,6 +8,7 @@ use dioxus_html::{
     on::{MouseData, WheelData},
 };
 use dioxus_native_core::real_dom::{Node, NodeType};
+use dioxus_native_core::traversable::Traversable;
 use enumset::enum_set;
 use freya_layers::{Layers, NodeArea, NodeInfo, RenderData};
 use freya_layout::calculate_node;
@@ -43,12 +44,9 @@ pub fn work_loop(
         &mut dom,
         layers,
         |node_id, dom| {
-            let child = {
-                let dom = dom.lock().unwrap();
-                dom.index(*node_id).clone()
-            };
-
-            Some(NodeInfo { node: child })
+            let dom = dom.lock().unwrap();
+            dom.get(*node_id)
+                .map(|node| NodeInfo { node: node.clone() })
         },
         0,
     );

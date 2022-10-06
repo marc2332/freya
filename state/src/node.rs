@@ -115,12 +115,10 @@ impl NodeDepState<()> for References {
             for attr in attributes {
                 match attr.attribute.name.as_str() {
                     "reference" => {
-                        println!("{:?}", attr.value);
                         if let OwnedAttributeValue::Any(v) = attr.value {
-                            println!("==={:?}", v.value.type_id());
                             let ref_wrapper: &NodeRefWrapper =
                                 v.value.as_any().downcast_ref().unwrap();
-                            node_ref = Some(ref_wrapper.0.read().clone())
+                            node_ref = Some(ref_wrapper.0.clone())
                         }
                     }
                     _ => {
@@ -260,7 +258,6 @@ impl NodeDepState<()> for Size {
                     "scroll_y" => {
                         if let Some(attr) = attr.value.as_text() {
                             if let Ok(scroll) = attr.parse::<f32>() {
-                                println!("{scroll}");
                                 scroll_y = scroll;
                             }
                         }

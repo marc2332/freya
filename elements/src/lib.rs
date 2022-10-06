@@ -1,8 +1,9 @@
 use dioxus_core::AttributeDiscription;
 pub use dioxus_core::AttributeValue;
 use dioxus_core::*;
-use dioxus_hooks::UseRef;
-use std::fmt::Arguments;
+use std::fmt::Display;
+use tokio::sync::mpsc::UnboundedSender;
+
 macro_rules! builder_constructors {
     (
         $(
@@ -25,26 +26,6 @@ macro_rules! builder_constructors {
                 const NAME_SPACE: Option<&'static str> = None;
             }
 
-/*            // before custom attribibute
-            impl $name {
-                pub fn reference<'a, T: Clone + 'static + PartialEq + Sync + Send>(
-                    &self,
-                    cx: NodeFactory<'a>,
-                    val: &'a T,
-                ) -> Attribute<'a> {
-                    cx.custom_attr(
-                        "reference",
-                        AttributeValue::Any(ArbitraryAttributeValue {
-                            value: val,
-                            cmp: |a, b| a.as_any().downcast_ref::<T>() == b.as_any().downcast_ref::<T>(),
-                        }),
-                        None,
-                        true,
-                        false,
-                    )
-                }
-            }
- */
 
             impl $name {
                 $(
@@ -75,7 +56,7 @@ builder_constructors! {
         shadow: String,
         radius: String,
         color: String,
-        reference: String,
+        reference: NodeRefWrapper,
     };
     container {
         padding: String,
@@ -91,7 +72,7 @@ builder_constructors! {
         shadow: String,
         radius: String,
         color: String,
-        reference: String,
+        reference: NodeRefWrapper,
     };
     label {
         color: String,
@@ -113,17 +94,27 @@ builder_constructors! {
         font_size: String,
         font_family: String,
     };
+    image {
+        image_data: String,
+        width: String,
+        height: String,
+    };
 }
 
-use std::fmt::Display;
-use tokio::sync::mpsc::UnboundedSender;
-
-pub struct NodeRefWrapper<'a>(pub &'a UseRef<UnboundedSender<NodeLayout>>);
+#[derive(Clone)]
+pub struct NodeRefWrapper(pub UnboundedSender<NodeLayout>);
 
 // Hacky
-impl Display for NodeRefWrapper<'_> {
+impl PartialEq for NodeRefWrapper {
+    fn eq(&self, _other: &Self) -> bool {
+        true
+    }
+}
+
+// Hacky
+impl Display for NodeRefWrapper {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str("")
+        f.debug_struct("NodeRefWrapper").finish_non_exhaustive()
     }
 }
 
@@ -147,29 +138,6 @@ impl NodeLayout {
             inner_height: 0.0,
             inner_width: 0.0,
         }
-    }
-}
-
-// I am still bad at Macros so I created this element directly
-#[allow(non_camel_case_types)]
-pub struct image;
-
-impl DioxusElement for image {
-    const TAG_NAME: &'static str = "image";
-    const NAME_SPACE: Option<&'static str> = None;
-}
-
-impl image {
-    pub fn image_data<'a>(&self, cx: NodeFactory<'a>, val: AttributeValue<'a>) -> Attribute<'a> {
-        cx.custom_attr("image_data", val, None, false, false)
-    }
-
-    pub fn width<'a>(&self, cx: NodeFactory<'a>, val: Arguments) -> Attribute<'a> {
-        cx.attr("width", val, None, false)
-    }
-
-    pub fn height<'a>(&self, cx: NodeFactory<'a>, val: Arguments) -> Attribute<'a> {
-        cx.attr("height", val, None, false)
     }
 }
 

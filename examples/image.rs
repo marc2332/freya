@@ -7,7 +7,7 @@ use dioxus::core::UiEvent;
 use dioxus::events::WheelData;
 use dioxus::prelude::*;
 use freya::{
-    dioxus_elements::{self, AttributeValue},
+    dioxus_elements::{self},
     *,
 };
 
@@ -34,7 +34,7 @@ fn app(cx: Scope) -> Element {
         padding: "100",
         onwheel: onwheel,
         image {
-            image_data: AttributeValue::Bytes(RUST_LOGO),
+            image_data: RUST_LOGO,
             width: "{size}",
             height: "{size}",
         }

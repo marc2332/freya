@@ -13,6 +13,6 @@ wireframe = ["freya/wireframe"]
 
 [dev-dependencies]
 freya = { path = "./freya"}
-dioxus = { git = "https://github.com/Demonthos/dioxus", branch = "fix_native_core_arbitrary_attribute", features = ["macro", "hooks"]}
+dioxus = { git = "https://github.com/Demonthos/dioxus", branch = "compile_time_attribute_checks", features = ["macro", "hooks"]}
 tokio = "1.17.0"
-fermi = { git = "https://github.com/Demonthos/dioxus", branch = "fix_native_core_arbitrary_attribute" }
+fermi = { git = "https://github.com/Demonthos/dioxus", branch = "compile_time_attribute_checks" }

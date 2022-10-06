@@ -12,16 +12,16 @@ keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
 [dependencies]
-dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch = "fix_native_core_arbitrary_attribute"  }
-dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch = "fix_native_core_arbitrary_attribute"  }
-dioxus = { git = "https://github.com/Demonthos/dioxus", branch = "fix_native_core_arbitrary_attribute"  }
+dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch = "compile_time_attribute_checks"  }
+dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch = "compile_time_attribute_checks"  }
+dioxus = { git = "https://github.com/Demonthos/dioxus", branch = "compile_time_attribute_checks"  }
 freya-node-state = { path = "../state", version = "0.1.0" }
 freya-layers = { path = "../layers", version = "0.1.0" }
 tokio = { version = "1.17.0", features = ["sync", "rt-multi-thread", "time"] }
 freya-elements = { path = "../elements", version = "0.1.0"}
 
 [dev-dependencies]
-dioxus-native-core-macro = { git = "https://github.com/Demonthos/dioxus", branch = "fix_native_core_arbitrary_attribute"  }
+dioxus-native-core-macro = { git = "https://github.com/Demonthos/dioxus", branch = "compile_time_attribute_checks"  }
 fxhash = "0.2.1"
 anymap = "0.12.1"
 lazy_static = "1.4.0"

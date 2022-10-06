@@ -12,7 +12,7 @@ keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
 [dependencies]
-dioxus = { git = "https://github.com/Demonthos/dioxus", branch = "fix_native_core_arbitrary_attribute", features = ["macro", "hooks"]}
+dioxus = { git = "https://github.com/Demonthos/dioxus", branch = "compile_time_attribute_checks", features = ["macro", "hooks"]}
 tween = "1.0.1"
 tokio = { version = "1.17.0" }
 freya-elements = { path = "../elements", version = "0.1.0" }

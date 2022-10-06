@@ -18,9 +18,9 @@ wireframe = []
 gl = "*"
 glutin = "*"
 skia-safe = { version = "*", features = ["gl", "textlayout"] }
-dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch = "fix_native_core_arbitrary_attribute"  }
-dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch = "fix_native_core_arbitrary_attribute"  }
-dioxus-html = { git = "https://github.com/Demonthos/dioxus", branch = "fix_native_core_arbitrary_attribute"  }
+dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch = "compile_time_attribute_checks"  }
+dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch = "compile_time_attribute_checks"  }
+dioxus-html = { git = "https://github.com/Demonthos/dioxus", branch = "compile_time_attribute_checks"  }
 enumset = "1.0.11"
 freya-layout = { path = "../layout", version = "0.1.0" }
 freya-node-state = { path = "../state", version = "0.1.0" }

@@ -1,4 +1,5 @@
 use dioxus_native_core::real_dom::{Node, NodeType};
+use dioxus_native_core::traversable::Traversable;
 use freya_layers::{NodeArea, NodeInfo};
 use freya_node_state::node::NodeState;
 use skia_safe::{
@@ -7,7 +8,6 @@ use skia_safe::{
     BlurStyle, Canvas, ClipOp, Data, Font, FontStyle, IRect, Image, MaskFilter, Paint, PaintStyle,
     Path, PathDirection, Rect,
 };
-use std::ops::Index;
 
 use crate::SkiaDom;
 
@@ -93,13 +93,13 @@ pub fn render_skia(
                     let child_id = children.get(0);
 
                     let text = if let Some(child_id) = child_id {
-                        let child: Node<NodeState> = {
-                            let dom = dom.lock().unwrap();
-                            dom.index(*child_id).clone()
-                        };
-
-                        if let NodeType::Text { text } = child.node_data.node_type {
-                            text
+                        let dom = dom.lock().unwrap();
+                        if let Some(child) = dom.get(*child_id) {
+                            if let NodeType::Text { text } = &child.node_data.node_type {
+                                text.clone()
+                            } else {
+                                String::new()
+                            }
                         } else {
                             String::new()
                         }
@@ -131,25 +131,35 @@ pub fn render_skia(
                     let texts = children
                         .iter()
                         .filter_map(|child_id| {
-                            let child: Node<NodeState> = {
+                            let child: Option<Node<NodeState>> = {
                                 let dom = dom.lock().unwrap();
-                                dom.index(*child_id).clone()
+                                dom.get(*child_id).map(|v| v.clone())
                             };
 
-                            if let NodeType::Element { tag, children, .. } =
-                                child.node_data.node_type
-                            {
-                                if tag != "text" {
-                                    return None;
-                                }
-                                if let Some(child_text_id) = children.get(0) {
-                                    let child_text: Node<NodeState> = {
-                                        let dom = dom.lock().unwrap();
-                                        dom.index(*child_text_id).clone()
-                                    };
-                                    if let NodeType::Text { text } = child_text.node_data.node_type
-                                    {
-                                        Some((child.state, text))
+                            if let Some(child) = child {
+                                if let NodeType::Element { tag, children, .. } =
+                                    child.node_data.node_type
+                                {
+                                    if tag != "text" {
+                                        return None;
+                                    }
+                                    if let Some(child_text_id) = children.get(0) {
+                                        let child_text: Option<Node<NodeState>> = {
+                                            let dom = dom.lock().unwrap();
+                                            dom.get(*child_text_id).map(|v| v.clone())
+                                        };
+
+                                        if let Some(child_text) = child_text {
+                                            if let NodeType::Text { text } =
+                                                &child_text.node_data.node_type
+                                            {
+                                                Some((child.state, text.clone()))
+                                            } else {
+                                                None
+                                            }
+                                        } else {
+                                            None
+                                        }
                                     } else {
                                         None
                                     }
