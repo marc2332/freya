@@ -60,7 +60,7 @@ fn app<'a>(cx: Scope<'a>) -> Element<'a> {
                         image {
                             width: "100%",
                             height: "100%",
-                            image_data: &bytes
+                            image_data: bytes
                         }
                     }
                 })

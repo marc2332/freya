@@ -84,7 +84,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
         scrolled_y.with_mut(|y| *y = new_y as i32);
     };
 
-    let onmouseover = |e: UiEvent<MouseData>| {
+    let onmouseover = move |e: UiEvent<MouseData>| {
         if *clicking.get() == Some(Axes::Y) {
             let coordinates = e.coordinates().element();
             let cursor_y = coordinates.y - 11.0;

@@ -176,7 +176,7 @@ pub fn launch_cfg(wins_config: Vec<(Component<()>, WindowConfig)>) {
                                 let ctx = AnyMap::new();
 
                                 if !to_update.is_empty() {
-                                     rdom.lock().unwrap().update_state(to_update, ctx);
+                                    rdom.lock().unwrap().update_state(to_update, ctx);
                                 }
                             }
                         });

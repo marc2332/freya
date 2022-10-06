@@ -531,7 +531,7 @@ dependencies = [
 [[package]]
 name = "dioxus-router"
 version = "0.2.3"
-source = "git+https://github.com/marc2332/dioxus?branch=fix/remove-node-listeners#2a087eb7d18d35002e35aca1d21a35efc84c73c4"
+source = "git+https://github.com/Demonthos/dioxus?branch=compile_time_attribute_checks#3ab8b46243a9769bce3df92a04dbccf8b00f27cc"
 dependencies = [
  "dioxus",
  "futures-channel",

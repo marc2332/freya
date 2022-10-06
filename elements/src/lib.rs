@@ -99,6 +99,11 @@ builder_constructors! {
         width: String,
         height: String,
     };
+    svg {
+        svg_data: String,
+        width: String,
+        height: String,
+    };
 }
 
 #[derive(Clone)]
