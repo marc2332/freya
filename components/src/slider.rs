@@ -13,12 +13,17 @@ pub struct SliderProps<'a> {
 }
 
 #[inline]
-fn ensure_correct_slider_range(value: f64) {
-    assert!(
-        value >= 0.0 && value <= 1.0,
-        "The value passed into a slider must be between 0 and 1. The value passed in was: {}",
+fn ensure_correct_slider_range(value: f64) -> f64 {
+    if value < 0.0 {
+        // TODO: Better logging
+        println!("Slider value is less than 0.0, setting to 0.0");
+        0.0
+    } else if value > 1.0 {
+        println!("Slider value is greater than 1.0, setting to 1.0");
+        1.0
+    } else {
         value
-    );
+    }
 }
 
 /// A slider component. It can be uncontrolled, bound to a state or controlled
@@ -89,14 +94,10 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
     // We always need a state instance, although it will be overridden if the
     // `value` prop is passed in.
     let state = cx.props.state.unwrap_or_else(|| use_state(&cx, || -1.0));
-    let value = cx.props.value.unwrap_or_else(|| state.get());
+    let value = ensure_correct_slider_range(*cx.props.value.unwrap_or_else(|| state.get()));
 
     // Map the 0 to 1 values to the width of the slider
     let progress = value * cx.props.width;
-
-    // The slider's input value should *never*, be outside of the range 0-1.
-    // Panic if this happens
-    ensure_correct_slider_range(*value);
 
     let onmouseleave = |_: UiEvent<MouseData>| {
         if *clicking.get() == false {
