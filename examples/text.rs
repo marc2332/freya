@@ -6,15 +6,13 @@
 use dioxus::prelude::*;
 use freya::{dioxus_elements, *};
 
-const MAX_FONT_SIZE: f64 = 100.0;
-
 fn main() {
     launch(app);
 }
 
 fn app(cx: Scope) -> Element {
     let percentage = use_state(&cx, || 0.2);
-    let font_size = percentage * MAX_FONT_SIZE + 20.0;
+    let font_size = percentage * 100.0 + 20.0;
 
     cx.render(rsx!(
         rect {
