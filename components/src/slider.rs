@@ -96,12 +96,7 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
 
     // The slider's input value should *never*, be outside of the range 0-1.
     // Panic if this happens
-    if let Some(state) = cx.props.state {
-        ensure_correct_slider_range(*state.get());
-    }
-    if let Some(value) = cx.props.value {
-        ensure_correct_slider_range(*value);
-    }
+    ensure_correct_slider_range(*value);
 
     let onmouseleave = |_: UiEvent<MouseData>| {
         if *clicking.get() == false {
