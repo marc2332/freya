@@ -6,12 +6,19 @@ pub struct SliderProps<'a> {
     #[props(optional)]
     pub onmoved: Option<EventHandler<'a, f64>>,
     pub width: f64,
-    pub value: &'a UseState<f64>,
+    #[props(optional)]
+    pub state: Option<&'a UseState<f64>>,
 }
 
-/// A slider which takes in a state (`value`), which is set to any value between
-/// 0 and 1. When the slider is moved, both the optional `onmoved` event is
-/// called and the state is updated with the new value
+/// A slider component. It can either be uncontrolled or bound to a state.
+///
+/// When it is uncontrolled, there is no way of directly accessing or
+/// controlling the state. You can listen to changes with the `onmoved` event.
+///
+/// If you need to provide a default value, change the value, or sync the value
+/// with other parts of the UI, you should pass a state to the `state` prop.
+/// This state will be updated when the slider is moved and the slider will
+/// update when the state is changed.
 ///
 /// # Example
 /// ```rs
@@ -48,7 +55,7 @@ pub struct SliderProps<'a> {
 ///             }
 ///             Slider {
 ///                 width: 100.0,
-///                 value: percentage,
+///                 state: percentage,
 ///             }
 ///         }
 ///     ))
@@ -58,14 +65,15 @@ pub struct SliderProps<'a> {
 pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
     let hovering = use_state(&cx, || false);
     let clicking = use_state(&cx, || false);
-    let progress = cx.props.value * cx.props.width;
+    let state = cx.props.state.unwrap_or_else(|| use_state(&cx, || 0.0));
+    let progress = state * cx.props.width;
 
     // The slider's input value should *never*, be outside of the range 0-1.
     // Panic if this happens
     assert!(
-        cx.props.value.get().clone() >= 0.0 && cx.props.value.get().clone() <= 1.0,
+        state.get().clone() >= 0.0 && state.get().clone() <= 1.0,
         "The value passed into a slider must be between 0 and 1. The value passed in was: {}",
-        cx.props.value.get().clone()
+        state.get().clone()
     );
 
     let onmouseleave = |_: UiEvent<MouseData>| {
@@ -87,7 +95,7 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
             }
             let percentage = x / cx.props.width;
 
-            cx.props.value.set(percentage);
+            state.set(percentage);
             if let Some(onmoved) = &cx.props.onmoved {
                 onmoved.call(percentage);
             }
