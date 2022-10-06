@@ -37,7 +37,7 @@ fn app(cx: Scope) -> Element {
         clicking.set(false);
     };
 
-    cx.render(rsx!(
+    render!(
         container {
             background: "rgb(35, 35, 35)",
             width: "100%",
@@ -62,6 +62,5 @@ fn app(cx: Scope) -> Element {
                 onmouseleave: onmouseleave
             }
         }
-
-    ))
+    )
 }

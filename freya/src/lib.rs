@@ -30,7 +30,7 @@ mod devtools;
 /// launch(app);
 ///
 /// fn app(cx: Scope) -> Element {
-///     cx.render(rsx!(
+///    render!(
 ///         rect {
 ///             width: "100%",
 ///             height: "100%",
@@ -68,7 +68,7 @@ pub fn launch(app: Component<()>) {
 /// launch_with_title(app, "Whoah!");
 ///
 /// fn app(cx: Scope) -> Element {
-///     cx.render(rsx!(
+///    render!(
 ///         rect {
 ///             width: "100%",
 ///             height: "100%",
@@ -117,7 +117,7 @@ pub fn launch_with_title(app: Component<()>, title: &'static str) {
 /// )]);
 ///
 /// fn app(cx: Scope) -> Element {
-///     cx.render(rsx!(
+///    render!(
 ///         rect {
 ///             width: "100%",
 ///             height: "100%",
@@ -174,7 +174,10 @@ pub fn launch_cfg(wins_config: Vec<(Component<()>, WindowConfig)>) {
 
                                 let to_update = rdom.lock().unwrap().apply_mutations(mutations);
                                 let ctx = AnyMap::new();
-                                rdom.lock().unwrap().update_state(to_update, ctx);
+
+                                if !to_update.is_empty() {
+                                     rdom.lock().unwrap().update_state(to_update, ctx);
+                                }
                             }
                         });
                 });
@@ -197,12 +200,12 @@ fn with_devtools(
         #[allow(non_snake_case)]
         let Root = cx.props.root;
 
-        cx.render(rsx! {
+        render!(
             rect {
                 width: "100%",
                 height: "100%",
                 direction: "horizontal",
-                rect {
+                container {
                     height: "100%",
                     width: "calc(100% - 350)",
                     Root { },
@@ -216,7 +219,7 @@ fn with_devtools(
                     }
                 }
             }
-        })
+        )
     }
 
     struct DomProps {

@@ -13,6 +13,7 @@ categories = ["GUI"]
 
 [dependencies]
 dioxus = { git = "https://github.com/Demonthos/dioxus", branch = "compile_time_attribute_checks"  }
+dioxus-router = { git = "https://github.com/Demonthos/dioxus", branch = "compile_time_attribute_checks"  }
 fermi = { git = "https://github.com/Demonthos/dioxus", branch = "compile_time_attribute_checks" }
 freya-elements = { path = "../elements", version = "0.1.0" }
 freya-node-state = { path = "../state", version = "0.1.0" }

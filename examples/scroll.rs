@@ -11,7 +11,7 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    cx.render(rsx!(
+    render!(
         rect {
             height: "100%",
             width: "100%",
@@ -21,7 +21,7 @@ fn app(cx: Scope) -> Element {
                 show_scrollbar: true,
                 rect {
                     height: "200",
-                    width: "100%",
+                    width: "400",
                     background: "rgb(214, 40, 40)",
                     padding: "30",
                     rect {
@@ -34,7 +34,7 @@ fn app(cx: Scope) -> Element {
                 }
                 rect {
                     height: "200",
-                    width: "100%",
+                    width: "400",
                     background: "rgb(214, 40, 40)",
                     padding: "30",
                     rect {
@@ -47,7 +47,7 @@ fn app(cx: Scope) -> Element {
                 }
                 rect {
                     height: "200",
-                    width: "100%",
+                    width: "400",
                     background: "rgb(214, 40, 40)",
                     padding: "30",
                     rect {
@@ -60,5 +60,5 @@ fn app(cx: Scope) -> Element {
                 }
             }
         }
-    ))
+    )
 }

@@ -43,7 +43,7 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
         clicking.set(false);
     };
 
-    cx.render(rsx!(
+    render!(
         container {
             background: "white",
             width: "{cx.props.width}",
@@ -63,5 +63,5 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
                 radius: "15",
             }
         }
-    ))
+    )
 }

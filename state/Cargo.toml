@@ -19,7 +19,7 @@ dioxus-native-core-macro = { git = "https://github.com/Demonthos/dioxus", branch
 dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch = "compile_time_attribute_checks"  }
 anymap = "0.12.1"
 fxhash = "0.2.1"
-skia-safe = "*"
+skia-safe = "0.55.0"
 freya-elements = { path = "../elements", version = "0.1.0"}
 freya-hooks = { path = "../hooks", version = "0.1.0"}
 tokio = { version = "1.17.0" }

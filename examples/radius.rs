@@ -18,7 +18,7 @@ fn app(cx: Scope) -> Element {
         radius += (y as f32) * 20.0;
     };
 
-    cx.render(rsx!(
+    render!(
         container {
             height: "100%",
             width: "100%",
@@ -32,5 +32,5 @@ fn app(cx: Scope) -> Element {
                 background: "black",
             }
         }
-    ))
+    )
 }

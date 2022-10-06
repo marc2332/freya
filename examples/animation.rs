@@ -22,7 +22,7 @@ fn app(cx: Scope) -> Element {
         restart();
     };
 
-    cx.render(rsx!(
+    render!(
         container {
             background: "black",
             direction: "both",
@@ -55,5 +55,5 @@ fn app(cx: Scope) -> Element {
                 }
             }
         }
-    ))
+    )
 }

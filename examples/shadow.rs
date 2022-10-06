@@ -18,7 +18,7 @@ fn app(cx: Scope) -> Element {
         shadow_size += (y as f32) * 7.0;
     };
 
-    cx.render(rsx!(
+    render!(
         container {
             height: "100%",
             width: "100%",
@@ -35,5 +35,5 @@ fn app(cx: Scope) -> Element {
                 }
             }
         }
-    ))
+    )
 }

@@ -2,21 +2,25 @@ use dioxus::core::GlobalNodeId;
 use dioxus::prelude::*;
 use dioxus_core::{ElementId, Scope};
 use dioxus_native_core::real_dom::{NodeType, RealDom};
+use dioxus_router::*;
+use fermi::use_atom_ref;
 use freya_components::*;
 use freya_elements as dioxus_elements;
 use freya_node_state::node::NodeState;
+use skia_safe::Color;
 use std::{
     sync::{Arc, Mutex},
     time::Duration,
 };
 use tokio::time::sleep;
 
-#[derive(PartialEq, Eq, Clone)]
+#[derive(Clone)]
 struct TreeNode {
     tag: String,
     id: ElementId,
     height: u16,
     text: Option<String>,
+    state: NodeState,
 }
 
 #[derive(Props)]
@@ -81,6 +85,7 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                             id,
                             tag,
                             text: maybe_text,
+                            state: n.state.clone(),
                         });
                     }
                 });
@@ -89,31 +94,330 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
         }
     });
 
-    let children = children.get().iter().map(|node| {
-        let text = node
-            .text
-            .as_ref()
-            .map(|v| format!("({v})"))
-            .unwrap_or_default();
-        rsx! {
-            rect {
+    let selected_node_id = use_state::<Option<ElementId>>(&cx, || None);
+
+    let selected_node = children.iter().find(|c| {
+        if let Some(n_id) = selected_node_id.get() {
+            n_id == &c.id
+        } else {
+            false
+        }
+    });
+
+    render!(
+        Router {
+            initial_url: "bla://bla/elements".to_string(),
+            container {
                 width: "100%",
-                height: "25",
-                scroll_x: "{node.height * 10}",
-                label {
-                    "{node.tag} #{node.id} {text}"
+                direction: "horizontal",
+                height: "35",
+                TabButton {
+                    to: "/elements",
+                    label: "Elements"
                 }
+                TabButton {
+                    to: "/settings",
+                    label: "Settings"
+                }
+            }
+            Route {
+                to: "/elements",
+                NodesTree {
+                    nodes: children,
+                    height: "calc(100% - 35)",
+                    onselected: |node: &TreeNode| {
+                        selected_node_id.set(Some(node.id));
+                    }
+                }
+            }
+            Route {
+                to: "/elements/style",
+                NodesTree {
+                    nodes: children,
+                    height: "calc(60% - 35)",
+                    onselected: |node: &TreeNode| {
+                        selected_node_id.set(Some(node.id));
+                    }
+                }
+                selected_node.and_then(|selected_node| {
+                    render!(
+                        NodeInspectorStyle {
+                            node: selected_node
+                        }
+                    )
+                })
+            }
+            Route {
+                to: "/elements/listeners",
+                NodesTree {
+                    nodes: children,
+                    height: "calc(60% - 35)",
+                    onselected: |node: &TreeNode| {
+                        selected_node_id.set(Some(node.id));
+                    }
+                }
+                selected_node.and_then(|selected_node| {
+                    render!(
+                        NodeInspectorListeners {
+                            node: selected_node
+                        }
+                    )
+                })
+            }
+            Route {
+                to: "/settings",
+                label {
+                    "Settings would be here."
+                }
+            }
+        }
+    )
+}
+
+#[allow(non_snake_case)]
+#[inline_props]
+fn NodesTree<'a>(
+    cx: Scope<'a>,
+    nodes: &'a Vec<TreeNode>,
+    height: &'a str,
+    onselected: EventHandler<'a, &'a TreeNode>,
+) -> Element<'a> {
+    let router = use_router(&cx);
+
+    let nodes = nodes.iter().map(|node| {
+        rsx! {
+            NodeElement {
+                onselected: |node: &TreeNode| {
+                    onselected.call(node);
+                    router.push_route("/elements/style", None, None)
+                }
+                node: node
             }
         }
     });
 
-    cx.render(rsx! {
-        ScrollView {
-            width: "100%",
-            height: "100%",
-            padding: "30",
-            show_scrollbar: true,
-            children
-        }
+    render!(ScrollView {
+        width: "100%",
+        height: "{height}",
+        padding: "30",
+        show_scrollbar: true,
+        nodes
     })
+}
+
+#[derive(Props)]
+struct TabButtonProps<'a> {
+    pub to: &'a str,
+    pub label: &'a str,
+}
+
+#[allow(non_snake_case)]
+fn TabButton<'a>(cx: Scope<'a, TabButtonProps<'a>>) -> Element<'a> {
+    let theme = use_atom_ref(&cx, THEME);
+    let button_theme = &theme.read().button;
+
+    let background = use_state(&cx, || button_theme.background.clone());
+    let set_background = background.setter();
+
+    use_effect(&cx, &button_theme.clone(), move |button_theme| async move {
+        set_background(button_theme.background);
+    });
+
+    let content = cx.props.label;
+    render!(
+        container {
+            background: "{background}",
+            onmouseover: move |_| {
+                    background.set(theme.read().button.hover_background);
+            },
+            onmouseleave: move |_| {
+                background.set(theme.read().button.background);
+            },
+            width: "150",
+            height: "100%",
+            color: "{button_theme.font_theme.color}",
+            RouterLink {
+                to: cx.props.to,
+                container {
+                    width: "100%",
+                    height: "100%",
+                    padding: "15",
+                    label {
+                        height: "100%",
+                        content
+                    }
+                }
+            }
+        }
+    )
+}
+
+#[allow(non_snake_case)]
+fn NodeInspectorBar<'a>(cx: Scope<'a>) -> Element<'a> {
+    render!(
+        container {
+            width: "100%",
+            direction: "horizontal",
+            height: "35",
+            TabButton {
+                to: "/elements/style",
+                label: "Style"
+            }
+            TabButton {
+                to: "/elements/listeners",
+                label: "Event Listeners"
+            }
+        }
+    )
+}
+
+#[allow(non_snake_case)]
+#[inline_props]
+fn NodeInspectorStyle<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> {
+    let background = &node.state.style.background;
+    let color = &node.state.font_style.color;
+    let height = node.state.size.height.to_string();
+    let width = node.state.size.width.to_string();
+    render!(
+        container {
+            width: "100%",
+            height: "40%",
+            NodeInspectorBar { }
+            ScrollView {
+                show_scrollbar: true,
+                height: "calc(100% - 35)",
+                ColorfulProperty {
+                    name: "Background",
+                    color: background
+                }
+                ColorfulProperty {
+                    name: "Color",
+                    color: color
+                }
+                Property {
+                    name: "Width",
+                    value: width
+                }
+                Property {
+                    name: "Height",
+                    value: height
+                }
+            }
+        }
+    )
+}
+
+#[allow(non_snake_case)]
+#[inline_props]
+fn Property<'a>(cx: Scope<'a>, name: &'a str, value: String) -> Element<'a> {
+    render!(
+        container {
+            height: "30",
+            width: "100%",
+            direction: "horizontal",
+            padding: "20",
+            label {
+                font_size: "15",
+                width: "90",
+                "{name}: {value}"
+            }
+        }
+    )
+}
+
+#[allow(non_snake_case)]
+#[inline_props]
+fn ColorfulProperty<'a>(cx: Scope<'a>, name: &'a str, color: &'a Color) -> Element<'a> {
+    let color = color.to_rgb();
+    render!(
+        container {
+            height: "30",
+            width: "100%",
+            direction: "horizontal",
+            padding: "20",
+            label {
+                font_size: "15",
+                width: "90",
+                "{name}: "
+            }
+            rect {
+                width: "17",
+                height: "17",
+                radius: "5",
+                background: "white",
+                padding: "5",
+                rect {
+                    radius: "3",
+                    width: "100%",
+                    height: "100%",
+                    background: "rgb({color.r}, {color.g}, {color.b})",
+                }
+            }
+            rect { // hacky spacer
+                width: "5"
+            }
+            label {
+                font_size: "15",
+                "rgb({color.r}, {color.g}, {color.b})"
+            }
+        }
+    )
+}
+
+#[allow(unused_variables)]
+#[allow(non_snake_case)]
+#[inline_props]
+fn NodeInspectorListeners<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> {
+    render!(
+        container {
+            width: "100%",
+            height: "40%",
+            NodeInspectorBar { }
+            container {
+                height: "calc(100% - 35)",
+                width: "100%",
+                direction: "horizontal",
+                padding: "30",
+                label {
+                    "Listeners would be here."
+                }
+            }
+        }
+    )
+}
+
+#[allow(non_snake_case)]
+#[inline_props]
+fn NodeElement<'a>(
+    cx: Scope<'a>,
+    node: &'a TreeNode,
+    onselected: EventHandler<'a, &'a TreeNode>,
+) -> Element<'a> {
+    let text = node
+        .text
+        .as_ref()
+        .map(|v| format!("({v})"))
+        .unwrap_or_default();
+
+    let text_color = use_state(&cx, || "white");
+
+    render!(
+        rect {
+            width: "100%",
+            height: "25",
+            scroll_x: "{node.height * 10}",
+            onclick: |_| onselected.call(node),
+            onmouseover: move |_| {
+                text_color.set("rgb(150, 150, 150)");
+            },
+            onmouseleave: move |_| {
+                text_color.set("white");
+            },
+            label {
+                font_size: "14",
+                color: "{text_color}",
+                "{node.tag} #{node.id} {text}"
+            }
+        }
+    )
 }

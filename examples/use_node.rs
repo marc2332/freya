@@ -15,18 +15,20 @@ fn app(cx: Scope) -> Element {
 
     let w = size.width / 2.0;
 
-    cx.render(rsx!(rect {
-        width: "100%",
-        height: "100%",
-        reference: node_ref,
-        container {
-            width: "{w}",
+    render!(
+        rect {
+            width: "100%",
             height: "100%",
-            background: "blue",
-            padding: "20",
-            label {
-                "Size: {size.width / 2.0}x{size.height}"
+            reference: node_ref,
+            container {
+                width: "{w}",
+                height: "100%",
+                background: "blue",
+                padding: "20",
+                label {
+                    "Size: {size.width / 2.0}x{size.height}"
+                }
             }
         }
-    }))
+    )
 }

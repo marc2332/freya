@@ -180,8 +180,15 @@ pub fn work_loop(
                     {
                         break 'event_nodes;
                     }
-                    if event_name == &"mouseover" {
-                        // Mouseover events can be stackked
+
+                    if node_state.state.style.background != Color::TRANSPARENT
+                        && event_name == &"click"
+                    {
+                        found_nodes.clear();
+                    }
+
+                    if event_name == &"mouseover" || event_name == &"click" {
+                        // Mouseover and click events can be stackked
                         found_nodes.push((node, request))
                     } else {
                         found_nodes = vec![(node, request)]

@@ -1,4 +1,5 @@
 use dioxus_core::OwnedAttributeValue;
+use std::fmt::Display;
 use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
 use dioxus_native_core::state::{NodeDepState, ParentDepState, State};
 use dioxus_native_core_macro::{sorted_str_slice, State};
@@ -17,6 +18,19 @@ pub enum CalcType {
     Manual(f32),
 }
 
+impl Display for CalcType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CalcType::Sub => f.write_str("-"),
+            CalcType::Mul => f.write_str("*"),
+            CalcType::Div => f.write_str("/"),
+            CalcType::Add => f.write_str("+"),
+            CalcType::Percentage(p) => f.write_fmt(format_args!("{p}%")),
+            CalcType::Manual(s) => f.write_fmt(format_args!("{s}")),
+        }
+    }
+}
+
 #[derive(Default, Clone, Debug, PartialEq)]
 pub enum SizeMode {
     #[default]
@@ -24,6 +38,24 @@ pub enum SizeMode {
     Calculation(Vec<CalcType>),
     Percentage(f32),
     Manual(f32),
+}
+
+impl Display for SizeMode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            SizeMode::Auto => f.write_str("auto"),
+            SizeMode::Manual(s) => f.write_fmt(format_args!("{s}")),
+            SizeMode::Calculation(calcs) => f.write_fmt(format_args!(
+                "calc({})",
+                calcs
+                    .iter()
+                    .map(|c| c.to_string())
+                    .collect::<Vec<String>>()
+                    .join(" ")
+            )),
+            SizeMode::Percentage(p) => f.write_fmt(format_args!("{p}%")),
+        }
+    }
 }
 
 #[derive(Default, Copy, Clone, Debug, PartialEq, Eq)]
@@ -201,7 +233,8 @@ impl NodeDepState<()> for Size {
             "scroll_y",
             "scroll_x",
             "direction",
-        ])));
+        ])))
+        .with_tag();
 
     fn reduce<'a>(&mut self, node: NodeView, _sibling: (), _ctx: &Self::Ctx) -> bool {
         let mut width = SizeMode::default();
@@ -211,7 +244,11 @@ impl NodeDepState<()> for Size {
         let mut padding = (0.0, 0.0, 0.0, 0.0);
         let mut scroll_y = 0.0;
         let mut scroll_x = 0.0;
-        let mut direction = DirectionMode::Vertical;
+        let mut direction = if let Some("label") = node.tag() {
+            DirectionMode::Both
+        } else {
+            DirectionMode::Vertical
+        };
 
         if let Some(attributes) = node.attributes() {
             for attr in attributes {
@@ -325,6 +362,7 @@ pub struct Style {
     pub shadow: ShadowSettings,
     pub radius: f32,
     pub image_data: Option<Vec<u8>>,
+    pub svg_data: Option<Vec<u8>>,
 }
 
 impl NodeDepState<()> for Style {
@@ -336,7 +374,9 @@ impl NodeDepState<()> for Style {
             "layer",
             "shadow",
             "radius",
-            "image_data"
+            "image_data",
+            "svg_data",
+            "svg_content"
         ])));
 
     fn reduce<'a>(&mut self, node: NodeView, _sibling: (), _ctx: &Self::Ctx) -> bool {
@@ -345,6 +385,7 @@ impl NodeDepState<()> for Style {
         let mut shadow = ShadowSettings::default();
         let mut radius = 0.0;
         let mut image_data = None;
+        let mut svg_data = None;
 
         if let Some(attributes) = node.attributes() {
             for attr in attributes {
@@ -379,9 +420,16 @@ impl NodeDepState<()> for Style {
                         }
                     }
                     "image_data" => {
-                        if let Some(attr) = attr.value.as_bytes() {
-                            image_data = Some(attr.to_vec());
-                        }
+                        let bytes = attr.value.as_bytes();
+                        image_data = bytes.map(|v| v.to_vec());
+                    }
+                    "svg_data" => {
+                        let bytes = attr.value.as_bytes();
+                        svg_data = bytes.map(|v| v.to_vec());
+                    }
+                    "svg_content" => {
+                        let text = attr.value.as_text();
+                        svg_data = text.map(|v| v.as_bytes().to_vec());
                     }
                     _ => {
                         println!("Unsupported attribute <{}>", attr.attribute.name);
@@ -402,6 +450,7 @@ impl NodeDepState<()> for Style {
             shadow,
             radius,
             image_data,
+            svg_data,
         };
         changed
     }

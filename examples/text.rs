@@ -13,7 +13,7 @@ fn main() {
 fn app(cx: Scope) -> Element {
     let font_size = use_state(&cx, || 20.0);
 
-    cx.render(rsx!(
+    render!(
         rect {
             width: "100%",
             height: "100%",
@@ -32,5 +32,5 @@ fn app(cx: Scope) -> Element {
                 }
             }
         }
-    ))
+    )
 }

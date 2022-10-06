@@ -20,7 +20,7 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    cx.render(rsx!(
+    render!(
         rect {
             background: "white",
             padding: "50",
@@ -33,5 +33,5 @@ fn app(cx: Scope) -> Element {
                 "Whoooah"
             }
         }
-    ))
+    )
 }

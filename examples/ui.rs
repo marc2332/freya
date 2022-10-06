@@ -11,15 +11,15 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    cx.render(rsx! {
+    render!(
         App {
             title: "My App",
-            navbar:  cx.render(rsx!(
+            navbar: render!(
                 Navbar {
                     title: "Top navbar"
                 }
-            ))
-            body: cx.render(rsx!(
+            )
+            body: render!(
                 ScrollView {
                     height: "calc(100% - 75 - 75)"
                     show_scrollbar: true,
@@ -87,9 +87,9 @@ fn app(cx: Scope) -> Element {
                 Navbar {
                     title: "Bottom bar"
                 }
-            ))
+            )
         }
-    })
+    )
 }
 
 #[derive(Props)]
@@ -99,7 +99,7 @@ struct NavbarProps<'a> {
 
 #[allow(non_snake_case)]
 fn Navbar<'a>(cx: Scope<'a, NavbarProps<'a>>) -> Element {
-    cx.render(rsx!(
+    render!(
         container {
             height: "75",
             width: "stretch",
@@ -109,7 +109,7 @@ fn Navbar<'a>(cx: Scope<'a, NavbarProps<'a>>) -> Element {
                 "{&cx.props.title}"
             }
         }
-    ))
+    )
 }
 
 #[allow(dead_code)]
@@ -122,7 +122,7 @@ struct AppProps<'a> {
 
 #[allow(non_snake_case)]
 fn App<'a>(cx: Scope<'a, AppProps<'a>>) -> Element {
-    cx.render(rsx!(
+    render!(
         rect {
             width: "stretch",
             height: "stretch",
@@ -133,7 +133,7 @@ fn App<'a>(cx: Scope<'a, AppProps<'a>>) -> Element {
                 &cx.props.body
             }
         }
-    ))
+    )
 }
 
 #[derive(Props)]
@@ -144,7 +144,7 @@ struct CardProps<'a> {
 
 #[allow(non_snake_case)]
 fn Card<'a>(cx: Scope<'a, CardProps<'a>>) -> Element {
-    cx.render(rsx!(
+    render!(
         rect {
             width: "stretch",
             height: "200",
@@ -168,7 +168,7 @@ fn Card<'a>(cx: Scope<'a, CardProps<'a>>) -> Element {
 
             }
         }
-    ))
+    )
 }
 
 #[allow(non_snake_case)]
@@ -192,7 +192,7 @@ fn Area<'a>(cx: Scope<'a>) -> Element {
         })
     };
 
-    cx.render(rsx! {
+    render!(
         rect {
             height: "50%",
             width: "100%",
@@ -208,5 +208,5 @@ fn Area<'a>(cx: Scope<'a>) -> Element {
                 "Mouse clicked at [x: {cursor_pos_click.0}, y: {cursor_pos_click.1}]"
             }
         }
-    })
+    )
 }

@@ -1,6 +1,6 @@
 # Freya :crab:
 
-[![Discord Server](https://img.shields.io/discord/1015005816094478347?logo=discord&style=social)](https://discord.gg/sYejxCdewG)
+[![Discord Server](https://img.shields.io/discord/1015005816094478347.svg?logo=discord&style=flat-square)](https://discord.gg/sYejxCdewG)
 [![Github Sponsors](https://img.shields.io/github/sponsors/marc2332?style=social)](https://github.com/sponsors/marc2332)
 
 A GUI library for Rust powered by [Skia](https://skia.org/) and [Dioxus](https://dioxuslabs.com). 
@@ -15,7 +15,7 @@ A GUI library for Rust powered by [Skia](https://skia.org/) and [Dioxus](https:/
 fn app(cx: Scope) -> Element {
     let mut count = use_state(&cx, || 0);
 
-    cx.render(rsx!(
+    render!(
         container {
             height: "20%",
             width: "100%",
@@ -36,7 +36,7 @@ fn app(cx: Scope) -> Element {
             onclick: move |_| count += 1,
             label { "Click to increase!" }
         }
-    ))
+    )
 ```
 </td>
 <td style="border:hidden;">
@@ -70,13 +70,14 @@ freya = { git = "https://github.com/marc2332/freya" }
 ```
 
 ### Features ✨
-- Label and paragraphs
-- Containers and rectangles
+- Text
+- Containers
 - Scroll views (nested too)
-- Click, wheel, mouse /down/leave/over events
-- Windows, Linux (needs `x11` feature) and MacOS support
-- Components library
-- Animation hook
+- Events: click, wheel, mouse /down/leave/over for now
+- Support for Windows, Linux (needs `x11` feature) and MacOS support
+- Optional Components library (buttons, switch, etc)
+- Animation hook utility
+- SVG Support
 
 ### Goals 😁
 - Fast

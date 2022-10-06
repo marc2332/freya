@@ -13,7 +13,7 @@ fn main() {
 fn app(cx: Scope) -> Element {
     let sizes = use_state(&cx, || (50, 50, 50, 50));
 
-    cx.render(rsx! {
+    render!(
         rect {
             height: "stretch",
             width: "stretch",
@@ -88,5 +88,5 @@ fn app(cx: Scope) -> Element {
                 }
             }
         }
-    })
+    )
 }

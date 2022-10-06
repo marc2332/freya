@@ -178,15 +178,26 @@ pub fn calculate_node<T>(
                     match node_data.node.state.size.direction {
                         DirectionMode::Vertical => {
                             remaining_inner_area.y = child_node_area.y + child_node_area.height;
+                            // Accumulate all heights
                             inner_height += child_node_area.height;
+                            // Only save the biggest width
+                            if inner_width < child_node_area.width {
+                                inner_width = child_node_area.width;
+                            }
                         }
                         DirectionMode::Horizontal => {
                             remaining_inner_area.x = child_node_area.x + child_node_area.width;
+                            // Accumulate all widths
                             inner_width += child_node_area.width;
+                            // Only save the biggest height
+                            if inner_height < child_node_area.height {
+                                inner_height = child_node_area.height;
+                            }
                         }
                         DirectionMode::Both => {
                             remaining_inner_area.y = child_node_area.y + child_node_area.height;
                             remaining_inner_area.x = child_node_area.x + child_node_area.width;
+                            // Accumulate all heights and widths
                             inner_height += child_node_area.height;
                             inner_width += child_node_area.width;
                         }

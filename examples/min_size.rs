@@ -11,7 +11,7 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    cx.render(rsx!(
+    render!(
         rect {
             height: "50%",
             width: "50%",
@@ -23,5 +23,5 @@ fn app(cx: Scope) -> Element {
                 "This element has a minimum width of 200 and minimum height of 100"
             }
         }
-    ))
+    )
 }

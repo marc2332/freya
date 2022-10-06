@@ -59,7 +59,7 @@ impl EventsProcessor {
                 // therefore proving the mouse has moved outside the element area, therefore
                 // the `mouseleave` event must be thrown
 
-                if no_recent_mouseover && cursor_was_moved {
+                if no_recent_mouseover && state.mouseover && cursor_was_moved {
                     // And also at least one mouseover event ocurred
                     new_events.push(UserEvent {
                         scope_id: None,

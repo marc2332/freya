@@ -27,6 +27,9 @@ dioxus = { git = "https://github.com/Demonthos/dioxus", branch = "compile_time_a
 dioxus-html = { git = "https://github.com/Demonthos/dioxus", branch = "compile_time_attribute_checks"  }
 dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch = "compile_time_attribute_checks"  }
 dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch = "compile_time_attribute_checks"  }
+dioxus-router = { git = "https://github.com/Demonthos/dioxus", branch = "compile_time_attribute_checks"  }
+fermi = { git = "https://github.com/marc2332/dioxus", branch = "compile_time_attribute_checks" }
 tokio = { version = "1.17.0", features = ["sync", "rt-multi-thread", "time"] }
 anymap = "0.12.1"
 fxhash = "0.2.1"
+skia-safe = { version = "0.55.0" }
