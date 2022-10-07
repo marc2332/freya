@@ -18,17 +18,19 @@ fn app(cx: Scope) -> Element {
             width: "100%",
             height: "100%",
             background: "black",
-            padding: "20",
-            label {
-                font_size: "{font_size}",
-                font_family: "Inter",
-                height: "150",
-                "Hello World"
-            }
             Slider {
                 width: 100.0,
                 onmoved: |e| {
                     font_size.set(e + 20.0); // Minimum is 20
+                }
+            }
+            rect {
+                background: "red",
+                direction: "both",
+                label {
+                    font_size: "{font_size}",
+                    font_family: "Inter",
+                    "Hello World"
                 }
             }
         }

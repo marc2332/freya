@@ -4,9 +4,8 @@ use freya_node_state::node::NodeState;
 use skia_safe::{
     svg,
     textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle},
-    utils::text_utils::Align,
-    BlurStyle, Canvas, ClipOp, Data, Font, FontStyle, IRect, Image, MaskFilter, Paint, PaintStyle,
-    Path, PathDirection, Rect,
+    BlurStyle, Canvas, ClipOp, Data, IRect, Image, MaskFilter, Paint, PaintStyle, Path,
+    PathDirection, Rect,
 };
 use std::ops::Index;
 
@@ -100,33 +99,37 @@ pub fn render_skia(
                         };
 
                         if let NodeType::Text { text } = child.node_type {
-                            text
+                            Some(text)
                         } else {
-                            String::new()
+                            None
                         }
                     } else {
-                        String::new()
+                        None
                     };
 
-                    let x = area.x;
-                    let y = area.y + node.state.font_style.font_size - 4.0; // TODO: Fix this, it's TOO MAGIC
+                    if let Some(text) = text {
+                        let x = area.x;
+                        let y = area.y;
 
-                    let type_faces = font_collection.find_typefaces(
-                        &[&node.state.font_style.font_family],
-                        FontStyle::default(),
-                    );
+                        let paragraph_style = ParagraphStyle::default();
+                        let mut paragraph_builder =
+                            ParagraphBuilder::new(&paragraph_style, font_collection.clone());
 
-                    let type_face = type_faces.get(0);
+                        paragraph_builder.push_style(
+                            TextStyle::new()
+                                .set_color(node.state.font_style.color)
+                                .set_font_size(node.state.font_style.font_size)
+                                .set_font_families(&[node.state.font_style.font_family.clone()]),
+                        );
 
-                    let font = if let Some(type_face) = type_face {
-                        Font::new(type_face, node.state.font_style.font_size)
-                    } else {
-                        let mut font = Font::default();
-                        font.set_size(node.state.font_style.font_size);
-                        font
-                    };
+                        paragraph_builder.add_text(text);
 
-                    canvas.draw_str_align(text, (x, y), &font, &paint, Align::Left);
+                        let mut paragraph = paragraph_builder.build();
+
+                        paragraph.layout(area.width + 1.0);
+
+                        paragraph.paint(canvas, (x, y));
+                    }
                 }
                 "paragraph" => {
                     let texts = children

@@ -51,6 +51,7 @@ pub fn work_loop(
             Some(NodeData { node: child })
         },
         0,
+        font_collection,
     );
 
     let mut layers_nums: Vec<&i16> = layers.layers.keys().collect();

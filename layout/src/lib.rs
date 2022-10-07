@@ -3,6 +3,7 @@ use dioxus_native_core::real_dom::NodeType;
 use freya_elements::NodeLayout;
 use freya_layers::{Layers, NodeArea, NodeData};
 use freya_node_state::node::{CalcType, DirectionMode, SizeMode};
+use skia_safe::textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle};
 
 pub fn run_calculations(calcs: &Vec<CalcType>, parent_area_value: f32) -> f32 {
     let mut prev_number: Option<f32> = None;
@@ -130,9 +131,9 @@ pub fn calculate_node<T>(
     layers: &mut Layers,
     node_resolver: fn(&ElementId, &mut T) -> Option<NodeData>,
     inherited_relative_layer: i16,
+    font_collection: &mut FontCollection,
 ) -> NodeArea {
     let mut node_area = calculate_area(node_data, remaining_area, parent_area);
-    let mut is_text = false;
 
     // Returns a tuple, the first element is the layer in which the current node must be added
     // and the second indicates the layer that it's children must inherit
@@ -173,6 +174,7 @@ pub fn calculate_node<T>(
                         layers,
                         node_resolver,
                         inherited_relative_layer,
+                        font_collection,
                     );
 
                     match node_data.node.state.size.direction {
@@ -219,21 +221,41 @@ pub fn calculate_node<T>(
                     }
                 }
             }
+
+            if let SizeMode::Auto = node_data.node.state.size.width {
+                node_area.width = remaining_inner_area.x - node_area.x + padding.1;
+            }
+
+            if let SizeMode::Auto = node_data.node.state.size.height {
+                node_area.height = remaining_inner_area.y - node_area.y + padding.0;
+            }
         }
-        NodeType::Text { .. } => {
-            is_text = true;
+        NodeType::Text { text } => {
+            let line_height = node_data.node.state.font_style.line_height;
+            let font_size = node_data.node.state.font_style.font_size;
+            let font_family = &node_data.node.state.font_style.font_family;
+
+            let paragraph_style = ParagraphStyle::default();
+            let mut paragraph_builder =
+                ParagraphBuilder::new(&paragraph_style, font_collection.clone());
+
+            paragraph_builder.push_style(
+                TextStyle::new()
+                    .set_font_size(font_size)
+                    .set_font_families(&[font_family]),
+            );
+
+            paragraph_builder.add_text(text);
+
+            let mut paragraph = paragraph_builder.build();
+            paragraph.layout(node_area.width);
+
+            let lines_count = paragraph.line_number() as f32;
+
+            node_area.width = paragraph.longest_line();
+            node_area.height = lines_count * (line_height * font_size);
         }
         NodeType::Placeholder => {}
-    }
-
-    if !is_text {
-        if let SizeMode::Auto = node_data.node.state.size.width {
-            node_area.width = remaining_inner_area.x - node_area.x + padding.1;
-        }
-
-        if let SizeMode::Auto = node_data.node.state.size.height {
-            node_area.height = remaining_inner_area.y - node_area.y + padding.0;
-        }
     }
 
     // Registers the element in the Layers handler
