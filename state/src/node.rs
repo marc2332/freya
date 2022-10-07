@@ -176,7 +176,8 @@ impl ParentDepState for FontStyle {
         NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
             "color",
             "font_size",
-            "font_family"
+            "font_family",
+            "line_height"
         ])));
 
     fn reduce<'a>(
