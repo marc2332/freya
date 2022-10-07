@@ -3,13 +3,9 @@ use freya_elements as dioxus_elements;
 
 #[derive(Props)]
 pub struct SliderProps<'a> {
-    #[props(optional)]
-    pub onmoved: Option<EventHandler<'a, f64>>,
+    pub onmoved: EventHandler<'a, f64>,
     pub width: f64,
-    #[props(optional)]
-    pub state: Option<&'a UseState<f64>>,
-    #[props(optional)]
-    pub value: Option<&'a f64>,
+    pub value: f64
 }
 
 #[inline]
@@ -18,7 +14,7 @@ fn ensure_correct_slider_range(value: f64) -> f64 {
         // TODO: Better logging
         println!("Slider value is less than 0.0, setting to 0.0");
         0.0
-    } else if value > 1.0 {
+    } else if value > 100.0 {
         println!("Slider value is greater than 1.0, setting to 1.0");
         1.0
     } else {
@@ -26,19 +22,10 @@ fn ensure_correct_slider_range(value: f64) -> f64 {
     }
 }
 
-/// A slider component. It can be uncontrolled, bound to a state or controlled
-/// via the value property.
-///
-/// When it is uncontrolled, there is no way of directly accessing or
-/// controlling the state. You can listen to changes with the `onmoved` event.
-///
-/// The easiest way to manage state is to pass a `UseState<f64>` to the `state`
-/// property. This will automatically update with the state of the slider.
-///
-/// If you need to interface with an outside state management system, you can
-/// pass a `&f64` to the `value` property. This will overwrite the state, and
-/// the value of the slider will not change unless you change `value`. You can
-/// listen for value changes with `onmoved`.
+/// A controlled Slider component.
+/// 
+/// You must pass a percentage from 0.0 to 100.0 and listen for value changes with `onmoved` and then decide if this changes are applicable,
+/// and if so, apply them.
 ///
 /// # Example
 /// ```rs
@@ -52,10 +39,10 @@ fn ensure_correct_slider_range(value: f64) -> f64 {
 /// }
 ///
 /// fn app(cx: Scope) -> Element {
-///     let percentage = use_state(&cx, || 0.2);
+///     let percentage = use_state(&cx, || 20.0);
 ///     let font_size = percentage.get() * MAX_FONT_SIZE + 20.0;
 ///
-///     cx.render(rsx!(
+///     render!(
 ///         rect {
 ///             width: "100%",
 ///             height: "100%",
@@ -69,35 +56,31 @@ fn ensure_correct_slider_range(value: f64) -> f64 {
 ///             }
 ///             Button {
 ///                 on_click: move |_| {
-///                     percentage.set(0.2);
+///                     percentage.set(20);
 ///                 },
-///                 label { "Reset size" }
+///                  label {
+///                     width: "80", 
+///                     "Reset size"
+///                  }
 ///             }
 ///             Slider {
 ///                 width: 100.0,
-///                 state: percentage,
+///                 value: *percentage.get(),
+///                 onmoved: |p| {
+///                     percentage.set(p);
+///                 }
 ///             }
 ///         }
-///     ))
+///     )
 /// }
 /// ```
 #[allow(non_snake_case)]
 pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
     let hovering = use_state(&cx, || false);
     let clicking = use_state(&cx, || false);
+    let value = ensure_correct_slider_range(cx.props.value);
 
-    // The slider's state can be managed in three separate ways:
-    // - A state can be passed in
-    // - A value can be passed in
-    // - Neither can be passed in
-    //
-    // We always need a state instance, although it will be overridden if the
-    // `value` prop is passed in.
-    let state = cx.props.state.unwrap_or_else(|| use_state(&cx, || -1.0));
-    let value = ensure_correct_slider_range(*cx.props.value.unwrap_or_else(|| state.get()));
-
-    // Map the 0 to 1 values to the width of the slider
-    let progress = value * cx.props.width;
+    let progress = (value / 100.0) as f64 * cx.props.width;
 
     let onmouseleave = |_: UiEvent<MouseData>| {
         if *clicking.get() == false {
@@ -116,15 +99,9 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
             if x > cx.props.width - 20.0 {
                 x = cx.props.width - 20.0;
             }
-            let percentage = x / cx.props.width;
+            let percentage = x / cx.props.width * 100.0;
 
-            // Even though we are setting state here, if a value is specified,
-            // that value will override the state on the next render, so this
-            // would do nothing
-            state.set(percentage);
-            if let Some(onmoved) = &cx.props.onmoved {
-                onmoved.call(percentage);
-            }
+            cx.props.onmoved.call(percentage);
         }
     };
 
@@ -136,7 +113,7 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
         clicking.set(false);
     };
 
-    cx.render(rsx!(
+    render!(
         container {
             background: "white",
             width: "{cx.props.width}",
@@ -156,5 +133,5 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
                 radius: "15",
             }
         }
-    ))
+    )
 }
