@@ -84,6 +84,10 @@ pub fn render_skia(
                     canvas.draw_path(&path, &paint);
                 }
                 "label" => {
+                    let font_size = node.state.font_style.font_size;
+                    let font_family = &node.state.font_style.font_family;
+                    let font_color = node.state.font_style.color;
+
                     let mut paint = Paint::default();
 
                     paint.set_anti_alias(true);
@@ -117,9 +121,9 @@ pub fn render_skia(
 
                         paragraph_builder.push_style(
                             TextStyle::new()
-                                .set_color(node.state.font_style.color)
-                                .set_font_size(node.state.font_style.font_size)
-                                .set_font_families(&[node.state.font_style.font_family.clone()]),
+                                .set_color(font_color)
+                                .set_font_size(font_size)
+                                .set_font_families(&[font_family]),
                         );
 
                         paragraph_builder.add_text(text);

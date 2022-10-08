@@ -24,13 +24,32 @@ fn app(cx: Scope) -> Element {
                     font_size.set(e + 20.0); // Minimum is 20
                 }
             }
-            rect {
-                background: "red",
-                direction: "both",
+            ScrollView {
+                show_scrollbar: true,
+                height: "calc(100% - 20)",
+                rect {
+                    background: "red",
+                    direction: "both",
+                    label {
+                        font_size: "{font_size}",
+                        font_family: "Inter",
+                        "Hello World 1"
+                    }
+                }
                 label {
-                    font_size: "{font_size}",
+                    font_size: "{font_size / 2f64}",
                     font_family: "Inter",
-                    "Hello World"
+                    "Hello World 2"
+                }
+                label {
+                    font_size: "{font_size / 3f64}",
+                    font_family: "Inter",
+                    "Hello World 3"
+                }
+                label {
+                    font_size: "{font_size / 2f64}",
+                    font_family: "Inter",
+                    "Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World"
                 }
             }
         }

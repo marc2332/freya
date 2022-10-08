@@ -179,34 +179,40 @@ pub fn calculate_node<T>(
 
                     match node_data.node.state.size.direction {
                         DirectionMode::Vertical => {
+                            remaining_inner_area.height -= child_node_area.height;
                             remaining_inner_area.y = child_node_area.y + child_node_area.height;
+
                             // Accumulate all heights
                             inner_height += child_node_area.height;
+
                             // Only save the biggest width
                             if inner_width < child_node_area.width {
                                 inner_width = child_node_area.width;
                             }
                         }
                         DirectionMode::Horizontal => {
+                            remaining_inner_area.width -= child_node_area.width;
                             remaining_inner_area.x = child_node_area.x + child_node_area.width;
+
                             // Accumulate all widths
                             inner_width += child_node_area.width;
+
                             // Only save the biggest height
                             if inner_height < child_node_area.height {
                                 inner_height = child_node_area.height;
                             }
                         }
                         DirectionMode::Both => {
+                            remaining_inner_area.height -= child_node_area.height;
+                            remaining_inner_area.width -= child_node_area.width;
                             remaining_inner_area.y = child_node_area.y + child_node_area.height;
                             remaining_inner_area.x = child_node_area.x + child_node_area.width;
+
                             // Accumulate all heights and widths
                             inner_height += child_node_area.height;
                             inner_width += child_node_area.width;
                         }
                     }
-
-                    remaining_inner_area.height -= child_node_area.height;
-                    remaining_inner_area.width -= child_node_area.width;
 
                     if child_node_area.width > remaining_inner_area.width
                         || remaining_inner_area.width == 0.0
@@ -253,7 +259,7 @@ pub fn calculate_node<T>(
             let lines_count = paragraph.line_number() as f32;
 
             node_area.width = paragraph.longest_line();
-            node_area.height = lines_count * (line_height * font_size);
+            node_area.height = (line_height * font_size) * lines_count;
         }
         NodeType::Placeholder => {}
     }
@@ -263,7 +269,6 @@ pub fn calculate_node<T>(
 
     // Asynchronously notify the Node's reference about the new size layout
     if let Some(reference) = &node_data.node.state.references.node_ref {
-        let node_area = node_area.clone();
         reference
             .send(NodeLayout {
                 x: node_area.x,
