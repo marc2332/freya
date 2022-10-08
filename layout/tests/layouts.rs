@@ -6,6 +6,7 @@ use freya_layout::calculate_node;
 use freya_node_state::node::{DirectionMode, NodeState, Size, SizeMode};
 use fxhash::{FxHashMap, FxHashSet};
 use lazy_static::lazy_static;
+use skia_safe::textlayout::FontCollection;
 
 lazy_static! {
     static ref TEST_NODE: Node<NodeState> = Node {
@@ -51,6 +52,7 @@ fn percentage() {
         &mut Layers::default(),
         |_, _| None,
         0,
+        &mut FontCollection::new(),
     );
 
     assert_eq!(result.height, 75.0);
@@ -83,6 +85,7 @@ fn manual() {
         &mut Layers::default(),
         |_, _| None,
         0,
+        &mut FontCollection::new(),
     );
 
     assert_eq!(result.height, 150.0);
@@ -152,6 +155,7 @@ fn auto() {
             })
         },
         0,
+        &mut FontCollection::new(),
     );
 
     assert_eq!(result.height, 25.0);
@@ -206,6 +210,7 @@ fn x_y() {
             })
         },
         0,
+        &mut FontCollection::new(),
     );
 
     assert_eq!(result.x, 15.0);

@@ -71,6 +71,7 @@ pub struct FontStyle {
     pub color: Color,
     pub font_family: String,
     pub font_size: f32,
+    pub line_height: f32, // https://developer.mozilla.org/en-US/docs/Web/CSS/line-height
 }
 
 impl Default for FontStyle {
@@ -79,6 +80,7 @@ impl Default for FontStyle {
             color: Color::WHITE,
             font_family: "Fira Sans".to_string(),
             font_size: 16.0,
+            line_height: 1.2,
         }
     }
 }
@@ -175,7 +177,8 @@ impl ParentDepState for FontStyle {
         NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
             "color",
             "font_size",
-            "font_family"
+            "font_family",
+            "line_height"
         ])));
 
     fn reduce<'a>(
@@ -207,6 +210,11 @@ impl ParentDepState for FontStyle {
                             if let Ok(font_size) = font_size.parse::<f32>() {
                                 font_style.font_size = font_size;
                             }
+                        }
+                    }
+                   "line_height" => {
+                        if let Ok(line_height) = attr.value.to_string().parse() {
+                            font_style.line_height = line_height;
                         }
                     }
                     _ => {}
@@ -245,6 +253,12 @@ impl NodeDepState<()> for Size {
         let mut scroll_y = 0.0;
         let mut scroll_x = 0.0;
         let mut direction = if let Some("label") = node.tag() {
+            DirectionMode::Both
+        } else if let Some("paragraph") = node.tag() {
+            DirectionMode::Both
+        } else if let Some("text") = node.tag() {
+            DirectionMode::Both
+        } else if node.text().is_some() {
             DirectionMode::Both
         } else {
             DirectionMode::Vertical

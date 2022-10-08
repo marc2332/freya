@@ -874,6 +874,7 @@ dependencies = [
  "freya-node-state",
  "fxhash",
  "lazy_static",
+ "skia-safe",
  "tokio",
 ]
 

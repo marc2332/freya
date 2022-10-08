@@ -49,6 +49,7 @@ pub fn work_loop(
                 .map(|node| NodeInfo { node: node.clone() })
         },
         0,
+        font_collection,
     );
 
     let mut layers_nums: Vec<&i16> = layers.layers.keys().collect();
