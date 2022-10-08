@@ -83,7 +83,7 @@ pub const DARK_THEME: Theme = Theme {
         color: "white",
     },
     slider: SliderTheme {
-        background: "rgb(80, 80, 80)",
+        background: "rgb(60, 60, 60)",
         thumb_background: "rgb(247, 127, 0)",
     },
     button: ButtonTheme {
