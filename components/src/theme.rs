@@ -55,7 +55,7 @@ pub static LIGHT_THEME: Theme = Theme {
         color: "black",
     },
     slider: SliderTheme {
-        background: "rgb(234, 221, 255)",
+        background: "rgb(225, 225, 225)",
         thumb_background: "rgb(103, 80, 164)",
     },
     button: ButtonTheme {
@@ -83,7 +83,7 @@ pub const DARK_THEME: Theme = Theme {
         color: "white",
     },
     slider: SliderTheme {
-        background: "rgb(234, 221, 255)",
+        background: "rgb(80, 80, 80)",
         thumb_background: "rgb(247, 127, 0)",
     },
     button: ButtonTheme {
