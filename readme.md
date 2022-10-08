@@ -37,6 +37,7 @@ fn app(cx: Scope) -> Element {
             label { "Click to increase!" }
         }
     )
+}
 ```
 </td>
 <td style="border:hidden;">
