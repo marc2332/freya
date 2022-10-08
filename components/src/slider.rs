@@ -1,11 +1,14 @@
 use dioxus::{core::UiEvent, events::MouseData, prelude::*};
+use fermi::use_atom_ref;
 use freya_elements as dioxus_elements;
+
+use crate::THEME;
 
 #[derive(Props)]
 pub struct SliderProps<'a> {
     pub onmoved: EventHandler<'a, f64>,
     pub width: f64,
-    pub value: f64
+    pub value: f64,
 }
 
 #[inline]
@@ -15,15 +18,15 @@ fn ensure_correct_slider_range(value: f64) -> f64 {
         println!("Slider value is less than 0.0, setting to 0.0");
         0.0
     } else if value > 100.0 {
-        println!("Slider value is greater than 1.0, setting to 1.0");
-        1.0
+        println!("Slider value is greater than 100.0, setting to 100.0");
+        100.0
     } else {
         value
     }
 }
 
 /// A controlled Slider component.
-/// 
+///
 /// You must pass a percentage from 0.0 to 100.0 and listen for value changes with `onmoved` and then decide if this changes are applicable,
 /// and if so, apply them.
 ///
@@ -59,7 +62,7 @@ fn ensure_correct_slider_range(value: f64) -> f64 {
 ///                     percentage.set(20);
 ///                 },
 ///                  label {
-///                     width: "80", 
+///                     width: "80",
 ///                     "Reset size"
 ///                  }
 ///             }
@@ -76,9 +79,12 @@ fn ensure_correct_slider_range(value: f64) -> f64 {
 /// ```
 #[allow(non_snake_case)]
 pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
+    let theme = use_atom_ref(&cx, THEME);
+    let theme = &theme.read().slider;
     let hovering = use_state(&cx, || false);
     let clicking = use_state(&cx, || false);
     let value = ensure_correct_slider_range(cx.props.value);
+    let width = cx.props.width + 20.0;
 
     let progress = (value / 100.0) as f64 * cx.props.width;
 
@@ -88,7 +94,7 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
         }
     };
 
-    let onmouseover = |e: UiEvent<MouseData>| {
+    let onmouseover = move |e: UiEvent<MouseData>| {
         hovering.set(true);
         if *clicking.get() {
             let coordinates = e.coordinates().element();
@@ -96,10 +102,18 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
             if x < 0.0 {
                 x = 0.0;
             }
-            if x > cx.props.width - 20.0 {
-                x = cx.props.width - 20.0;
+            if x > width {
+                x = width;
             }
             let percentage = x / cx.props.width * 100.0;
+
+            let percentage = if percentage < 0.0 {
+                0.0
+            } else if percentage > 100.0 {
+                100.0
+            } else {
+                percentage
+            };
 
             cx.props.onmoved.call(percentage);
         }
@@ -115,19 +129,18 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
 
     render!(
         container {
-            background: "white",
-            width: "{cx.props.width}",
+            background: "{theme.background}",
+            width: "{width}",
             height: "20",
             scroll_x: "{progress}",
             padding: "5",
             onmousedown: onmousedown,
             onclick: onclick,
-            shadow: "0 0 60 35 white",
             radius: "25",
             onmouseover: onmouseover,
             onmouseleave: onmouseleave,
             rect {
-                background: "rgb(255, 166, 0)",
+                background: "{theme.thumb_background}",
                 width: "15",
                 height: "15",
                 radius: "15",

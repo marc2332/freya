@@ -3,8 +3,11 @@ use dioxus::{
     events::{MouseData, WheelData},
     prelude::*,
 };
+use fermi::use_atom_ref;
 use freya_elements as dioxus_elements;
 use freya_hooks::use_node;
+
+use crate::THEME;
 
 const SCROLLBAR_SIZE: u8 = 15;
 
@@ -21,6 +24,8 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     let scrolled_y = use_state(&cx, || 0);
     let scrolled_x = use_state(&cx, || 0);
     let (node_ref, size) = use_node(&cx);
+    let theme = use_atom_ref(&cx, THEME);
+    let scrollbar_theme = &theme.read().scrollbar;
 
     let user_container_width = cx.props.width.unwrap_or("100%");
     let user_container_height = cx.props.height.unwrap_or("100%");
@@ -175,12 +180,13 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
                     height: "{horizontal_scrollbar_size}",
                     scroll_x: "{scrollbar_x}",
                     onmouseleave: |_| {},
+                    background: "{scrollbar_theme.background}",
                     rect {
                         onmousedown: onmousedown_x,
                         width: "{scrollbar_width}",
                         height: "100%",
                         radius: "10",
-                        background: "rgb(135, 135, 135)",
+                        background: "{scrollbar_theme.thumb_background}",
                     }
                 }
             }
@@ -189,12 +195,13 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
                 height: "100%",
                 scroll_y: "{scrollbar_y}",
                 onmouseleave: |_| {},
+                background: "{scrollbar_theme.background}",
                 rect {
                     onmousedown: onmousedown_y,
                     width: "100%",
                     height: "{scrollbar_height}",
                     radius: "10",
-                    background: "rgb(135, 135, 135)",
+                    background: "{scrollbar_theme.thumb_background}",
                 }
             }
         }

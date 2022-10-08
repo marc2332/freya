@@ -24,7 +24,7 @@ fn app(cx: Scope) -> Element {
                     percentage.set(20.0);
                 },
                 label {
-                    width: "80", 
+                    width: "80",
                     "Reset size"
                 }
             }
