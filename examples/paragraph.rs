@@ -33,10 +33,14 @@ fn app(cx: Scope) -> Element {
                     }
                 }
             }
-            label {
-                font_size: "100",
-                font_family: "Inter",
-                "Hello World"
+            ScrollView {
+                show_scrollbar: true,
+                height: "25%",
+                label {
+                    font_size: "100",
+                    font_family: "Inter",
+                    "Hello World"
+                }
             }
         }
     )

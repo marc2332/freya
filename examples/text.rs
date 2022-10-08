@@ -19,13 +19,6 @@ fn app(cx: Scope) -> Element {
             width: "100%",
             height: "100%",
             background: "black",
-            padding: "20",
-            label {
-                font_size: "{font_size}",
-                font_family: "Inter",
-                height: "150",
-                "Hello World"
-            }
             Button {
                 on_click: move |_| {
                     percentage.set(20.0);
@@ -40,6 +33,34 @@ fn app(cx: Scope) -> Element {
                 value: *percentage.get(),
                 onmoved: |p| {
                     percentage.set(p);
+                }
+            }
+            ScrollView {
+                show_scrollbar: true,
+                height: "calc(100% - 40)",
+                rect {
+                    background: "red",
+                    direction: "both",
+                    label {
+                        font_size: "{font_size}",
+                        font_family: "Inter",
+                        "Hello World 1"
+                    }
+                }
+                label {
+                    font_size: "{font_size / 2f64}",
+                    font_family: "Inter",
+                    "Hello World 2"
+                }
+                label {
+                    font_size: "{font_size / 3f64}",
+                    font_family: "Inter",
+                    "Hello World 3"
+                }
+                label {
+                    font_size: "{font_size / 2f64}",
+                    font_family: "Inter",
+                    "Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World"
                 }
             }
         }
