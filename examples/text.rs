@@ -11,7 +11,8 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    let font_size = use_state(&cx, || 20.0);
+    let percentage = use_state(&cx, || 20.0);
+    let font_size = percentage + 20.0;
 
     render!(
         rect {
@@ -25,10 +26,20 @@ fn app(cx: Scope) -> Element {
                 height: "150",
                 "Hello World"
             }
+            Button {
+                on_click: move |_| {
+                    percentage.set(20.0);
+                },
+                label {
+                    width: "80", 
+                    "Reset size"
+                }
+            }
             Slider {
                 width: 100.0,
-                onmoved: |e| {
-                    font_size.set(e + 20.0); // Minimum is 20
+                value: *percentage.get(),
+                onmoved: |p| {
+                    percentage.set(p);
                 }
             }
         }
