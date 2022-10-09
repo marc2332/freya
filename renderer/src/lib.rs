@@ -3,7 +3,7 @@ use dioxus_native_core::real_dom::RealDom;
 use freya_layers::NodeArea;
 use freya_node_state::node::NodeState;
 use glutin::{
-    event::{MouseScrollDelta, WindowEvent},
+    event::{ModifiersState, MouseScrollDelta, WindowEvent},
     event_loop::EventLoopBuilder,
 };
 use skia_safe::{textlayout::FontCollection, FontMgr};
@@ -54,7 +54,11 @@ pub enum RendererRequest {
         cursor: (f64, f64),
     },
     #[allow(dead_code)]
-    KeyboardEvent { name: &'static str },
+    KeyboardEvent {
+        name: &'static str,
+        code: VirtualKeyCode,
+        modifiers: ModifiersState,
+    },
 }
 
 struct WindowEnv {
@@ -323,10 +327,25 @@ pub fn run(windows_config: Vec<(SkiaDom, EventEmitter, WindowConfig)>) {
                                 KeyboardInput {
                                     virtual_keycode,
                                     modifiers,
+                                    state,
                                     ..
                                 },
                             ..
                         } => {
+                            if let Some(code) = virtual_keycode {
+                                let event_name = match state {
+                                    ElementState::Pressed => "keydown",
+                                    ElementState::Released => "keyup",
+                                };
+                                env.renderer_requests.lock().unwrap().push(
+                                    RendererRequest::KeyboardEvent {
+                                        name: event_name,
+                                        code,
+                                        modifiers,
+                                    },
+                                );
+                            }
+
                             if modifiers.logo() {
                                 if let Some(VirtualKeyCode::Q) = virtual_keycode {
                                     *control_flow = ControlFlow::Exit;

@@ -1,3 +1,5 @@
+pub mod events;
+
 pub use dioxus_core::AttributeValue;
 use dioxus_core::*;
 use std::fmt::Arguments;
@@ -186,6 +188,8 @@ pub mod on {
 
     use bumpalo::boxed::Box as BumpBox;
 
+    use crate::events::KeyboardData;
+
     macro_rules! event_directory {
         ( $(
             $( #[$attr:meta] )*
@@ -231,6 +235,8 @@ pub mod on {
         };
     }
 
+    type KeyboardEvent = UiEvent<KeyboardData>;
+
     event_directory! {
         MouseEvent(MouseData): [
             onclick
@@ -240,6 +246,10 @@ pub mod on {
         ];
         WheelEvent(WheelData): [
             onwheel
+        ];
+        KeyboardEvent(KeyboardData): [
+            onkeydown
+            onkeyup
         ];
     }
 }

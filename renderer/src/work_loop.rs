@@ -9,6 +9,7 @@ use dioxus_html::{
 };
 use dioxus_native_core::real_dom::{Node, NodeType};
 use enumset::enum_set;
+use freya_elements::events::KeyboardData;
 use freya_layers::{Layers, NodeArea, NodeData, RenderData};
 use freya_layout::calculate_node;
 use freya_node_state::node::NodeState;
@@ -119,45 +120,56 @@ pub fn work_loop(
 
             for request in requests.iter() {
                 let area = &element.node_area;
-                let data = match request {
-                    RendererRequest::MouseEvent { name, cursor, .. } => Some((name, cursor)),
-                    RendererRequest::WheelEvent { name, cursor, .. } => Some((name, cursor)),
-                    _ => None,
-                };
-                if let Some((name, cursor)) = data {
-                    let x = area.x as f64;
-                    let y = area.y as f64;
-                    let width = (area.x + area.width) as f64;
-                    let height = (area.y + area.height) as f64;
-
-                    let mut visible = true;
-
-                    // Make sure the cursor is inside all the applicable viewports from the element
-                    for viewport in calculated_viewports.get(&id).unwrap_or(&Vec::new()) {
-                        if cursor.0 < viewport.x as f64
-                            || cursor.0 > (viewport.x + viewport.width) as f64
-                            || cursor.1 < viewport.y as f64
-                            || cursor.1 > (viewport.y + viewport.height) as f64
-                        {
-                            visible = false;
-                        }
+                if let RendererRequest::KeyboardEvent { name, .. } = request {
+                    if !calculated_events.contains_key(name) {
+                        calculated_events.insert(name, vec![(element.clone(), request.clone())]);
+                    } else {
+                        calculated_events
+                            .get_mut(name)
+                            .unwrap()
+                            .push((element.clone(), request.clone()));
                     }
+                } else {
+                    let data = match request {
+                        RendererRequest::MouseEvent { name, cursor, .. } => Some((name, cursor)),
+                        RendererRequest::WheelEvent { name, cursor, .. } => Some((name, cursor)),
+                        _ => None,
+                    };
+                    if let Some((name, cursor)) = data {
+                        let x = area.x as f64;
+                        let y = area.y as f64;
+                        let width = (area.x + area.width) as f64;
+                        let height = (area.y + area.height) as f64;
 
-                    // Make sure the cursor is inside the node area
-                    if visible
-                        && cursor.0 > x
-                        && cursor.0 < width
-                        && cursor.1 > y
-                        && cursor.1 < height
-                    {
-                        if !calculated_events.contains_key(name) {
-                            calculated_events
-                                .insert(name, vec![(element.clone(), request.clone())]);
-                        } else {
-                            calculated_events
-                                .get_mut(name)
-                                .unwrap()
-                                .push((element.clone(), request.clone()));
+                        let mut visible = true;
+
+                        // Make sure the cursor is inside all the applicable viewports from the element
+                        for viewport in calculated_viewports.get(&id).unwrap_or(&Vec::new()) {
+                            if cursor.0 < viewport.x as f64
+                                || cursor.0 > (viewport.x + viewport.width) as f64
+                                || cursor.1 < viewport.y as f64
+                                || cursor.1 > (viewport.y + viewport.height) as f64
+                            {
+                                visible = false;
+                            }
+                        }
+
+                        // Make sure the cursor is inside the node area
+                        if visible
+                            && cursor.0 > x
+                            && cursor.0 < width
+                            && cursor.1 > y
+                            && cursor.1 < height
+                        {
+                            if !calculated_events.contains_key(name) {
+                                calculated_events
+                                    .insert(name, vec![(element.clone(), request.clone())]);
+                            } else {
+                                calculated_events
+                                    .get_mut(name)
+                                    .unwrap()
+                                    .push((element.clone(), request.clone()));
+                            }
                         }
                     }
                 }
@@ -190,7 +202,11 @@ pub fn work_loop(
                         found_nodes.clear();
                     }
 
-                    if event_name == &"mouseover" || event_name == &"click" {
+                    if event_name == &"mouseover"
+                        || event_name == &"click"
+                        || event_name == &"keydown"
+                        || event_name == &"keyup"
+                    {
                         // Mouseover and click events can be stackked
                         found_nodes.push((node, request))
                     } else {
@@ -233,7 +249,18 @@ pub fn work_loop(
                         scroll.0, scroll.1, 0.0,
                     )))),
                 }),
-                _ => None,
+                &RendererRequest::KeyboardEvent {
+                    name,
+                    code,
+                    modifiers,
+                } => Some(UserEvent {
+                    scope_id: None,
+                    priority: EventPriority::Medium,
+                    element: Some(node.node_data.node.id.clone()),
+                    name,
+                    bubbles: false,
+                    data: Arc::new(KeyboardData::new(code.clone(), modifiers.clone())),
+                }),
             };
 
             if let Some(event) = event {
