@@ -180,6 +180,7 @@ fn NodesTree<'a>(
     let nodes = nodes.iter().map(|node| {
         rsx! {
             NodeElement {
+                key: "{node.id}",
                 onselected: |node: &TreeNode| {
                     onselected.call(node);
                     router.push_route("/elements/style", None, None)

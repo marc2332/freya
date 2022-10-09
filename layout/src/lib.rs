@@ -228,13 +228,7 @@ pub fn calculate_node<T>(
                 }
             }
 
-            if let SizeMode::Auto = node_data.node.state.size.width {
-                node_area.width = remaining_inner_area.x - node_area.x + padding.1;
-            }
-
-            if let SizeMode::Auto = node_data.node.state.size.height {
-                node_area.height = remaining_inner_area.y - node_area.y + padding.0;
-            }
+            
         }
         NodeType::Text { text } => {
             let line_height = node_data.node.state.font_style.line_height;
@@ -262,6 +256,19 @@ pub fn calculate_node<T>(
             node_area.height = (line_height * font_size) * lines_count;
         }
         NodeType::Placeholder => {}
+    }
+
+    match &node_data.node.node_type {
+        NodeType::Text { .. } => { }
+        _ => {
+            if let SizeMode::Auto = node_data.node.state.size.width {
+                node_area.width = remaining_inner_area.x - node_area.x + padding.1;
+            }
+    
+            if let SizeMode::Auto = node_data.node.state.size.height {
+                node_area.height = remaining_inner_area.y - node_area.y + padding.0;
+            }
+        }
     }
 
     // Registers the element in the Layers handler
