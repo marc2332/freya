@@ -249,20 +249,15 @@ pub fn work_loop(
                         scroll.0, scroll.1, 0.0,
                     )))),
                 }),
-                &RendererRequest::KeyboardEvent {
-                    name,
-                    code,
-                    modifiers,
-                } => Some(UserEvent {
+                &RendererRequest::KeyboardEvent { name, code } => Some(UserEvent {
                     scope_id: None,
                     priority: EventPriority::Medium,
                     element: Some(node.node_data.node.id.clone()),
                     name,
                     bubbles: false,
-                    data: Arc::new(KeyboardData::new(code.clone(), modifiers.clone())),
+                    data: Arc::new(KeyboardData::new(code.clone())),
                 }),
             };
-
             if let Some(event) = event {
                 new_events.push(event.clone());
 

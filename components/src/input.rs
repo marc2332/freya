@@ -17,14 +17,14 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
             if let KeyCode::Space = e.data.code {
                 // Add a space
                 cx.props.onchange.call(format!("{} ", text));
-            } else if let KeyCode::Back = e.data.code {
+            } else if let KeyCode::Backspace = e.data.code {
                 // Remove the last character
                 let mut content = text.to_string();
                 content.pop();
                 cx.props.onchange.call(content);
             } else {
                 // Add a new char
-                let text_char = e.data.char_to_str();
+                let text_char = e.data.to_text();
                 if let Some(text_char) = &text_char {
                     cx.props.onchange.call(format!("{}{}", text, text_char));
                 }
