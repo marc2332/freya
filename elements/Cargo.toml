@@ -16,3 +16,4 @@ bumpalo = "3.11.0"
 dioxus-core = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
 dioxus-html = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
 dioxus-hooks = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
+glutin = { version = "0.29.1", features = ["serde"]}

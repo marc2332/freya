@@ -794,6 +794,7 @@ dependencies = [
  "dioxus-core",
  "dioxus-hooks",
  "dioxus-html",
+ "glutin",
 ]
 
 [[package]]
@@ -858,11 +859,13 @@ dependencies = [
  "dioxus-html",
  "dioxus-native-core",
  "enumset",
+ "freya-elements",
  "freya-layers",
  "freya-layout",
  "freya-node-state",
  "gl",
  "glutin",
+ "serde_json",
  "skia-safe",
 ]
 
@@ -2726,6 +2729,7 @@ dependencies = [
  "raw-window-handle 0.4.3",
  "raw-window-handle 0.5.0",
  "sctk-adwaita",
+ "serde",
  "smithay-client-toolkit",
  "wasm-bindgen",
  "wayland-client",
