@@ -2,7 +2,7 @@ use dioxus::core::ElementId;
 use dioxus_native_core::real_dom::NodeType;
 use freya_elements::NodeLayout;
 use freya_layers::{Layers, NodeArea, NodeData};
-use freya_node_state::node::{CalcType, DirectionMode, SizeMode};
+use freya_node_state::node::{CalcType, DirectionMode, DisplayMode, SizeMode};
 use skia_safe::textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle};
 
 pub fn run_calculations(calcs: &Vec<CalcType>, parent_area_value: f32) -> f32 {
@@ -123,43 +123,21 @@ fn calculate_area(node_data: &NodeData, mut area: NodeArea, parent_area: NodeAre
     area
 }
 
-pub fn calculate_node<T>(
+type NodeResolver<T> = fn(&ElementId, &mut T) -> Option<NodeData>;
+
+fn process_node_layout<T>(
     node_data: &NodeData,
-    remaining_area: NodeArea,
-    parent_area: NodeArea,
-    resolver_options: &mut T,
+    node_area: &mut NodeArea,
     layers: &mut Layers,
-    node_resolver: fn(&ElementId, &mut T) -> Option<NodeData>,
+    remaining_inner_area: &mut NodeArea,
+    inner_area: NodeArea,
+    resolver_options: &mut T,
+    node_resolver: NodeResolver<T>,
+    inner_height: &mut f32,
+    inner_width: &mut f32,
     inherited_relative_layer: i16,
     font_collection: &mut FontCollection,
-) -> NodeArea {
-    let mut node_area = calculate_area(node_data, remaining_area, parent_area);
-
-    // Returns a tuple, the first element is the layer in which the current node must be added
-    // and the second indicates the layer that it's children must inherit
-    let (node_layer, inherited_relative_layer) =
-        layers.calculate_layer(node_data, inherited_relative_layer);
-
-    let padding = node_data.node.state.size.padding;
-    let horizontal_padding = padding.1 + padding.3;
-    let vertical_padding = padding.0 + padding.2;
-
-    // Area that is available consideing the parent area
-    let mut remaining_inner_area = NodeArea {
-        x: node_area.x + padding.3,
-        y: node_area.y + padding.0,
-        width: node_area.width - horizontal_padding,
-        height: node_area.height - vertical_padding,
-    };
-    // Visible area occupied by the child elements
-    let inner_area = remaining_inner_area.clone();
-
-    remaining_inner_area.y += node_data.node.state.size.scroll_y;
-    remaining_inner_area.x += node_data.node.state.size.scroll_x;
-
-    let mut inner_height = vertical_padding;
-    let mut inner_width = vertical_padding;
-
+) {
     match &node_data.node.node_type {
         NodeType::Element { children, .. } => {
             for child in children {
@@ -168,7 +146,7 @@ pub fn calculate_node<T>(
                 if let Some(child_node) = child_node {
                     let child_node_area = calculate_node::<T>(
                         &child_node,
-                        remaining_inner_area,
+                        remaining_inner_area.clone(),
                         inner_area,
                         resolver_options,
                         layers,
@@ -183,11 +161,11 @@ pub fn calculate_node<T>(
                             remaining_inner_area.y = child_node_area.y + child_node_area.height;
 
                             // Accumulate all heights
-                            inner_height += child_node_area.height;
+                            *inner_height += child_node_area.height;
 
                             // Only save the biggest width
-                            if inner_width < child_node_area.width {
-                                inner_width = child_node_area.width;
+                            if *inner_width < child_node_area.width {
+                                *inner_width = child_node_area.width;
                             }
                         }
                         DirectionMode::Horizontal => {
@@ -195,11 +173,11 @@ pub fn calculate_node<T>(
                             remaining_inner_area.x = child_node_area.x + child_node_area.width;
 
                             // Accumulate all widths
-                            inner_width += child_node_area.width;
+                            *inner_width += child_node_area.width;
 
                             // Only save the biggest height
-                            if inner_height < child_node_area.height {
-                                inner_height = child_node_area.height;
+                            if *inner_height < child_node_area.height {
+                                *inner_height = child_node_area.height;
                             }
                         }
                         DirectionMode::Both => {
@@ -209,8 +187,8 @@ pub fn calculate_node<T>(
                             remaining_inner_area.x = child_node_area.x + child_node_area.width;
 
                             // Accumulate all heights and widths
-                            inner_height += child_node_area.height;
-                            inner_width += child_node_area.width;
+                            *inner_height += child_node_area.height;
+                            *inner_width += child_node_area.width;
                         }
                     }
 
@@ -227,8 +205,6 @@ pub fn calculate_node<T>(
                     }
                 }
             }
-
-            
         }
         NodeType::Text { text } => {
             let line_height = node_data.node.state.font_style.line_height;
@@ -257,14 +233,105 @@ pub fn calculate_node<T>(
         }
         NodeType::Placeholder => {}
     }
+}
+
+pub fn calculate_node<T>(
+    node_data: &NodeData,
+    remaining_area: NodeArea,
+    parent_area: NodeArea,
+    resolver_options: &mut T,
+    layers: &mut Layers,
+    node_resolver: NodeResolver<T>,
+    inherited_relative_layer: i16,
+    font_collection: &mut FontCollection,
+) -> NodeArea {
+    let mut node_area = calculate_area(node_data, remaining_area, parent_area);
+
+    // Returns a tuple, the first element is the layer in which the current node must be added
+    // and the second indicates the layer that it's children must inherit
+    let (node_layer, inherited_relative_layer) =
+        layers.calculate_layer(node_data, inherited_relative_layer);
+
+    let padding = node_data.node.state.size.padding;
+    let horizontal_padding = padding.1 + padding.3;
+    let vertical_padding = padding.0 + padding.2;
+
+    // Area that is available consideing the parent area
+    let mut remaining_inner_area = NodeArea {
+        x: node_area.x + padding.3,
+        y: node_area.y + padding.0,
+        width: node_area.width - horizontal_padding,
+        height: node_area.height - vertical_padding,
+    };
+
+    // Visible area occupied by the child elements
+    let inner_area = remaining_inner_area.clone();
+
+    remaining_inner_area.y += node_data.node.state.size.scroll_y;
+    remaining_inner_area.x += node_data.node.state.size.scroll_x;
+
+    let mut inner_height = vertical_padding;
+    let mut inner_width = vertical_padding;
+
+    process_node_layout(
+        node_data,
+        &mut node_area,
+        layers,
+        &mut remaining_inner_area,
+        inner_area,
+        resolver_options,
+        node_resolver,
+        &mut inner_height,
+        &mut inner_width,
+        inherited_relative_layer,
+        font_collection,
+    );
+
+    if DisplayMode::Center == node_data.node.state.style.display {
+        let space_left_vertically = (inner_area.height - inner_height) / 2.0;
+        let space_left_horizontally = (inner_area.width - inner_width) / 2.0;
+
+        match node_data.node.state.size.direction {
+            DirectionMode::Vertical => {
+                remaining_inner_area.y = inner_area.y + space_left_vertically + padding.0;
+                remaining_inner_area.height = inner_area.height - space_left_vertically - padding.2;
+            }
+            DirectionMode::Horizontal => {
+                remaining_inner_area.x = inner_area.x + space_left_horizontally + padding.1;
+                remaining_inner_area.width = inner_area.width - space_left_horizontally - padding.3;
+            }
+            DirectionMode::Both => {
+                remaining_inner_area.x = inner_area.x + space_left_horizontally + padding.1;
+                remaining_inner_area.y = inner_area.y + space_left_vertically + padding.0;
+
+                remaining_inner_area.width = inner_area.width - space_left_horizontally - padding.3;
+                remaining_inner_area.height = inner_area.height - space_left_vertically - padding.2;
+            }
+        }
+
+        // Re calculate the children layouts after the centered has properly adjusted it's size and axis according to the children itself
+        process_node_layout(
+            node_data,
+            &mut node_area,
+            layers,
+            &mut remaining_inner_area,
+            inner_area,
+            resolver_options,
+            node_resolver,
+            &mut inner_height,
+            &mut inner_width,
+            inherited_relative_layer,
+            font_collection,
+        );
+    }
 
     match &node_data.node.node_type {
-        NodeType::Text { .. } => { }
+        NodeType::Text { .. } => {}
         _ => {
             if let SizeMode::Auto = node_data.node.state.size.width {
                 node_area.width = remaining_inner_area.x - node_area.x + padding.1;
             }
-    
+
             if let SizeMode::Auto = node_data.node.state.size.height {
                 node_area.height = remaining_inner_area.y - node_area.y + padding.0;
             }

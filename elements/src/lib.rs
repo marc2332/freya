@@ -70,6 +70,7 @@ builder_constructors! {
         shadow: String,
         radius: String,
         color: String,
+        display: String,
     };
     container {
         padding: String,
@@ -85,6 +86,7 @@ builder_constructors! {
         shadow: String,
         radius: String,
         color: String,
+        display: String,
     };
     label {
         color: String,
