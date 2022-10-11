@@ -3,7 +3,7 @@ use dioxus_native_core::real_dom::RealDom;
 use freya_layers::NodeArea;
 use freya_node_state::node::NodeState;
 use glutin::{
-    event::{KeyEvent, MouseScrollDelta, WindowEvent},
+    event::{KeyEvent, MouseScrollDelta, WindowEvent, TouchPhase},
     event_loop::EventLoop,
     keyboard::Key,
 };
@@ -265,22 +265,25 @@ pub fn run(windows_config: Vec<(SkiaDom, EventEmitter, WindowConfig)>) {
                 if let Some(result) = result {
                     let mut env = result.lock().unwrap();
                     match event {
-                        WindowEvent::MouseWheel { delta, .. } => {
-                            let cursor_pos = cursor_pos.lock().unwrap();
-                            let scroll_data = {
-                                match delta {
-                                    MouseScrollDelta::LineDelta(x, y) => (x as f64, y as f64),
-                                    MouseScrollDelta::PixelDelta(pos) => (pos.x, pos.y),
-                                    _ => (0.0, 0.0),
-                                }
-                            };
-                            env.renderer_requests.lock().unwrap().push(
-                                RendererRequest::WheelEvent {
-                                    name: "wheel",
-                                    scroll: scroll_data,
-                                    cursor: *cursor_pos,
-                                },
-                            );
+                        WindowEvent::MouseWheel { delta, phase, .. } => {
+                            if TouchPhase::Moved == phase {
+                                let cursor_pos = cursor_pos.lock().unwrap();
+                                let scroll_data = {
+                                    match delta {
+                                        MouseScrollDelta::LineDelta(x, y) => (x as f64, y as f64),
+                                        MouseScrollDelta::PixelDelta(pos) => (pos.x, pos.y),
+                                        _ => (0.0, 0.0),
+                                    }
+                                };
+                                
+                                env.renderer_requests.lock().unwrap().push(
+                                    RendererRequest::WheelEvent {
+                                        name: "wheel",
+                                        scroll: scroll_data,
+                                        cursor: *cursor_pos,
+                                    },
+                                );
+                            }
                         }
                         WindowEvent::CursorMoved { position, .. } => {
                             let cursor_pos = {
