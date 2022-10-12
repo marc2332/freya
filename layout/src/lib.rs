@@ -287,6 +287,7 @@ pub fn calculate_node<T>(
         font_collection,
     );
 
+    // Re calculate the children layouts after the parent has properly adjusted it's size and axis according to it's children
     if DisplayMode::Center == node_data.node.state.style.display {
         let space_left_vertically = (inner_area.height - inner_height) / 2.0;
         let space_left_horizontally = (inner_area.width - inner_width) / 2.0;
@@ -309,7 +310,6 @@ pub fn calculate_node<T>(
             }
         }
 
-        // Re calculate the children layouts after the centered has properly adjusted it's size and axis according to the children itself
         process_node_layout(
             node_data,
             &mut node_area,
