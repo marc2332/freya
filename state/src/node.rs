@@ -342,6 +342,13 @@ pub struct ShadowSettings {
     pub color: Color,
 }
 
+#[derive(Default, Clone, Debug, PartialEq)]
+pub enum DisplayMode {
+    #[default]
+    Normal,
+    Center,
+}
+
 #[derive(Default, Clone, Debug)]
 pub struct Style {
     pub background: Color,
@@ -350,6 +357,7 @@ pub struct Style {
     pub radius: f32,
     pub image_data: Option<Vec<u8>>,
     pub svg_data: Option<Vec<u8>>,
+    pub display: DisplayMode,
 }
 
 impl NodeDepState<()> for Style {
@@ -363,7 +371,8 @@ impl NodeDepState<()> for Style {
             "radius",
             "image_data",
             "svg_data",
-            "svg_content"
+            "svg_content",
+            "display"
         ])));
 
     fn reduce<'a>(&mut self, node: NodeView, _sibling: (), _ctx: &Self::Ctx) -> bool {
@@ -373,9 +382,11 @@ impl NodeDepState<()> for Style {
         let mut radius = 0.0;
         let mut image_data = None;
         let mut svg_data = None;
+        let mut display = DisplayMode::Normal;
 
         for attr in node.attributes() {
             match attr.name {
+                "display" => display = parse_display(&attr.value.to_string()),
                 "background" => {
                     let new_back = parse_color(&attr.value.to_string());
                     if let Some(new_back) = new_back {
@@ -433,8 +444,16 @@ impl NodeDepState<()> for Style {
             radius,
             image_data,
             svg_data,
+            display,
         };
         changed
+    }
+}
+
+fn parse_display(value: &str) -> DisplayMode {
+    match value {
+        "center" => DisplayMode::Center,
+        _ => DisplayMode::Normal,
     }
 }
 
