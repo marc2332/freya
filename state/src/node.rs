@@ -450,14 +450,14 @@ impl NodeDepState<()> for Style {
     }
 }
 
-fn parse_display(value: &str) -> DisplayMode {
+pub fn parse_display(value: &str) -> DisplayMode {
     match value {
         "center" => DisplayMode::Center,
         _ => DisplayMode::Normal,
     }
 }
 
-fn parse_shadow(value: &str) -> Option<ShadowSettings> {
+pub fn parse_shadow(value: &str) -> Option<ShadowSettings> {
     let value = value.to_string();
     let mut shadow_values = value.split_ascii_whitespace();
     Some(ShadowSettings {
@@ -469,7 +469,7 @@ fn parse_shadow(value: &str) -> Option<ShadowSettings> {
     })
 }
 
-fn parse_rgb(color: &str) -> Option<Color> {
+pub fn parse_rgb(color: &str) -> Option<Color> {
     let color = color.replace("rgb(", "").replace(")", "");
     let mut colors = color.split(",");
 
@@ -479,7 +479,7 @@ fn parse_rgb(color: &str) -> Option<Color> {
     Some(Color::from_rgb(r, g, b))
 }
 
-fn parse_color(color: &str) -> Option<Color> {
+pub fn parse_color(color: &str) -> Option<Color> {
     match color {
         "red" => Some(Color::RED),
         "green" => Some(Color::GREEN),
@@ -492,34 +492,34 @@ fn parse_color(color: &str) -> Option<Color> {
     }
 }
 
-fn parse_size(size: &str) -> Option<SizeMode> {
+pub fn parse_size(size: &str) -> Option<SizeMode> {
     if size == "stretch" {
         Some(SizeMode::Percentage(100.0))
     } else if size == "auto" {
         Some(SizeMode::Auto)
     } else if size.contains("calc") {
-        Some(SizeMode::Calculation(parse_calc(size).unwrap()))
+        Some(SizeMode::Calculation(parse_calc(size)?))
     } else if size.contains("%") {
         Some(SizeMode::Percentage(size.replace("%", "").parse().ok()?))
     } else if size.contains("calc") {
-        Some(SizeMode::Calculation(parse_calc(size).unwrap()))
+        Some(SizeMode::Calculation(parse_calc(size)?))
     } else {
         Some(SizeMode::Manual(size.parse().ok()?))
     }
 }
 
-fn parse_calc(mut size: &str) -> Option<Vec<CalcType>> {
+pub fn parse_calc(mut size: &str) -> Option<Vec<CalcType>> {
     let mut calcs = Vec::new();
 
-    size = size.strip_prefix("calc(").unwrap();
-    size = size.strip_suffix(")").unwrap();
+    size = size.strip_prefix("calc(")?;
+    size = size.strip_suffix(")")?;
 
     let vals = size.split_whitespace();
 
     for val in vals {
         if val.contains("%") {
             calcs.push(CalcType::Percentage(
-                val.replace("%", "").parse().ok().unwrap(),
+                val.replace("%", "").parse().ok()?,
             ));
         } else if val == "+" {
             calcs.push(CalcType::Add);
@@ -530,7 +530,7 @@ fn parse_calc(mut size: &str) -> Option<Vec<CalcType>> {
         } else if val == "*" {
             calcs.push(CalcType::Mul);
         } else {
-            calcs.push(CalcType::Manual(val.parse().ok().unwrap()));
+            calcs.push(CalcType::Manual(val.parse().ok()?));
         }
     }
 
