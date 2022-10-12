@@ -5,7 +5,7 @@
 
 A GUI library for Rust powered by [Skia](https://skia.org/) and [Dioxus](https://dioxuslabs.com). 
 
-⚠️ It's currently work in progress and not usable for production, but you can already play with it! You can join the [Discord](https://discord.gg/sYejxCdewG) server if you have any question. 
+⚠️ It's currently work in progress and not usable for production, but you can already play with it! You can join the [Discord](https://discord.gg/sYejxCdewG) server if you have any question or issue. 
 
 <table>
 <tr>
@@ -96,12 +96,11 @@ freya = { git = "https://github.com/marc2332/freya" }
 ## TO-DO 🚧
 Besides all the [tracking](https://github.com/marc2332/freya/issues?q=is%3Aopen+is%3Aissue+label%3Atracking) issues, here are some of the things to do:
 - [ ] Support for percentages in padding
-- [ ] Add `flex` support (using [taffy](https://github.com/dioxusLabs/taffy)).
+- [ ] Add `flex` support.
 - [ ] Documentation
 - [ ] Improve Auto calculation for width and height
 - [ ] Investigate if `image` diffing can be speeded up (reference: https://github.com/DioxusLabs/dioxus/pull/543#issuecomment-1238393539)
 - [ ] Better touchpad support
-- [ ] Move layout calculation from the layout engine into the node's state? Not sure.
 - [ ] Render shadows one layer below it's element to avoid overlapping with it's siblings
 
 [MIT License](./LICENSE.md)
