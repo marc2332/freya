@@ -1,0 +1,6 @@
+[book]
+authors = ["marc2332"]
+language = "en"
+multilingual = false
+src = "src"
+title = "Freya Docs"
