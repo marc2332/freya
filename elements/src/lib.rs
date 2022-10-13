@@ -97,10 +97,12 @@ builder_constructors! {
         width: String,
         font_size: String,
         font_family: String,
+        align: String,
     };
     paragraph {
         layer: String,
         width: String,
+        align: String,
     };
     text {
         color: String,

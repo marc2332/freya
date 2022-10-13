@@ -87,6 +87,7 @@ pub fn render_skia(
                     let font_size = node.state.font_style.font_size;
                     let font_family = &node.state.font_style.font_family;
                     let font_color = node.state.font_style.color;
+                    let align = node.state.font_style.align;
 
                     let mut paint = Paint::default();
 
@@ -115,16 +116,16 @@ pub fn render_skia(
                         let x = area.x;
                         let y = area.y;
 
-                        let paragraph_style = ParagraphStyle::default();
-                        let mut paragraph_builder =
-                            ParagraphBuilder::new(&paragraph_style, font_collection.clone());
-
-                        paragraph_builder.push_style(
+                        let mut paragraph_style = ParagraphStyle::default();
+                        paragraph_style.set_text_align(align);
+                        paragraph_style.set_text_style(
                             TextStyle::new()
                                 .set_color(font_color)
                                 .set_font_size(font_size)
                                 .set_font_families(&[font_family]),
                         );
+                        let mut paragraph_builder =
+                            ParagraphBuilder::new(&paragraph_style, font_collection.clone());
 
                         paragraph_builder.add_text(text);
 
@@ -136,6 +137,7 @@ pub fn render_skia(
                     }
                 }
                 "paragraph" => {
+                    let align = node.state.font_style.align;
                     let texts = children
                         .iter()
                         .filter_map(|child_id| {
@@ -170,7 +172,8 @@ pub fn render_skia(
                     let x = area.x;
                     let y = area.y;
 
-                    let paragraph_style = ParagraphStyle::default();
+                    let mut paragraph_style = ParagraphStyle::default();
+                    paragraph_style.set_text_align(align);
 
                     let mut paragraph_builder =
                         ParagraphBuilder::new(&paragraph_style, font_collection.clone());

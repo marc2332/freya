@@ -3,7 +3,7 @@ use dioxus_native_core::real_dom::RealDom;
 use freya_layers::NodeArea;
 use freya_node_state::node::NodeState;
 use glutin::{
-    event::{KeyEvent, MouseScrollDelta, WindowEvent, TouchPhase},
+    event::{KeyEvent, MouseScrollDelta, TouchPhase, WindowEvent},
     event_loop::EventLoop,
     keyboard::Key,
 };
@@ -275,7 +275,7 @@ pub fn run(windows_config: Vec<(SkiaDom, EventEmitter, WindowConfig)>) {
                                         _ => (0.0, 0.0),
                                     }
                                 };
-                                
+
                                 env.renderer_requests.lock().unwrap().push(
                                     RendererRequest::WheelEvent {
                                         name: "wheel",

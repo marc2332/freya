@@ -1,4 +1,4 @@
-use freya_node_state::{parse_color};
+use freya_node_state::parse_color;
 use skia_safe::Color;
 
 #[test]
