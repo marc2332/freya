@@ -212,9 +212,11 @@ impl ParentDepState for FontStyle {
                             }
                         }
                     }
-                   "line_height" => {
-                        if let Ok(line_height) = attr.value.to_string().parse() {
-                            font_style.line_height = line_height;
+                    "line_height" => {
+                        if let Some(line_height) = attr.value.as_text() {
+                            if let Ok(line_height) = line_height.parse() {
+                                font_style.line_height = line_height;
+                            }
                         }
                     }
                     _ => {}

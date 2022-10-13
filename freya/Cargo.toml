@@ -23,13 +23,13 @@ freya-renderer = { path = "../renderer", version = "0.1.0" }
 freya-elements = { path = "../elements", version = "0.1.0" }
 freya-hooks = { path = "../hooks"}
 freya-components ={ path = "../components"}
-dioxus = { git = "https://github.com/Demonthos/dioxus", branch = "compile_time_attribute_checks"  }
-dioxus-html = { git = "https://github.com/Demonthos/dioxus", branch = "compile_time_attribute_checks"  }
-dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch = "compile_time_attribute_checks"  }
-dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch = "compile_time_attribute_checks"  }
-dioxus-router = { git = "https://github.com/Demonthos/dioxus", branch = "compile_time_attribute_checks"  }
-fermi = { git = "https://github.com/Demonthos/dioxus", branch = "compile_time_attribute_checks" }
+dioxus = { git = "https://github.com/DioxusLabs/dioxus" }
+dioxus-html = { git = "https://github.com/DioxusLabs/dioxus" }
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus" }
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus" }
+dioxus-router = { git = "https://github.com/DioxusLabs/dioxus" }
+fermi = { git = "https://github.com/DioxusLabs/dioxus" }
 tokio = { version = "1.17.0", features = ["sync", "rt-multi-thread", "time"] }
 anymap = "0.12.1"
-fxhash = "0.2.1"
+rustc-hash = "1.1.0"
 skia-safe = { version = "0.55.0" }

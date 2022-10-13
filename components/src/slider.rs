@@ -5,7 +5,7 @@ use freya_elements as dioxus_elements;
 pub struct SliderProps<'a> {
     pub onmoved: EventHandler<'a, f64>,
     pub width: f64,
-    pub value: f64
+    pub value: f64,
 }
 
 #[inline]
@@ -23,7 +23,7 @@ fn ensure_correct_slider_range(value: f64) -> f64 {
 }
 
 /// A controlled Slider component.
-/// 
+///
 /// You must pass a percentage from 0.0 to 100.0 and listen for value changes with `onmoved` and then decide if this changes are applicable,
 /// and if so, apply them.
 ///
@@ -59,7 +59,7 @@ fn ensure_correct_slider_range(value: f64) -> f64 {
 ///                     percentage.set(20);
 ///                 },
 ///                  label {
-///                     width: "80", 
+///                     width: "80",
 ///                     "Reset size"
 ///                  }
 ///             }

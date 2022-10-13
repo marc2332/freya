@@ -73,20 +73,15 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                         }
                         .to_string();
 
-                        let id = match n.node_data.id {
-                            GlobalNodeId::VNodeId(id) => id,
-                            GlobalNodeId::TemplateId {
-                                template_ref_id, ..
-                            } => template_ref_id,
-                        };
-
-                        children.push(TreeNode {
-                            height: n.node_data.height,
-                            id,
-                            tag,
-                            text: maybe_text,
-                            state: n.state.clone(),
-                        });
+                        if let GlobalNodeId::VNodeId(id) = n.node_data.id {
+                            children.push(TreeNode {
+                                height: n.node_data.height,
+                                id,
+                                tag,
+                                text: maybe_text,
+                                state: n.state.clone(),
+                            });
+                        }
                     }
                 });
                 setter(children);
@@ -187,6 +182,7 @@ fn NodesTree<'a>(
     let nodes = nodes.iter().map(|node| {
         rsx! {
             NodeElement {
+                key: "{node.id.0}",
                 onselected: |node: &TreeNode| {
                     onselected.call(node);
                     router.push_route("/elements/style", None, None)

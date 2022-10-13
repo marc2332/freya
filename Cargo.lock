@@ -443,19 +443,31 @@ dependencies = [
 [[package]]
 name = "dioxus"
 version = "0.2.4"
-source = "git+https://github.com/Demonthos/dioxus?branch=compile_time_attribute_checks#3ab8b46243a9769bce3df92a04dbccf8b00f27cc"
+source = "git+https://github.com/Demonthos/dioxus?branch=compile_time_attribute_checks#69b5cb384b23a580a9f119dfc92ab283b6ad1d46"
 dependencies = [
- "dioxus-core",
- "dioxus-core-macro",
- "dioxus-hooks",
- "dioxus-html",
- "dioxus-rsx",
+ "dioxus-core 0.2.1 (git+https://github.com/Demonthos/dioxus?branch=compile_time_attribute_checks)",
+ "dioxus-core-macro 0.2.1 (git+https://github.com/Demonthos/dioxus?branch=compile_time_attribute_checks)",
+ "dioxus-hooks 0.2.1 (git+https://github.com/Demonthos/dioxus?branch=compile_time_attribute_checks)",
+ "dioxus-html 0.2.1 (git+https://github.com/Demonthos/dioxus?branch=compile_time_attribute_checks)",
+ "dioxus-rsx 0.0.0 (git+https://github.com/Demonthos/dioxus?branch=compile_time_attribute_checks)",
+]
+
+[[package]]
+name = "dioxus"
+version = "0.2.4"
+source = "git+https://github.com/DioxusLabs/dioxus#ab10d327ac1c93b4f7d87a516494cb976d259f1a"
+dependencies = [
+ "dioxus-core 0.2.1 (git+https://github.com/DioxusLabs/dioxus)",
+ "dioxus-core-macro 0.2.1 (git+https://github.com/DioxusLabs/dioxus)",
+ "dioxus-hooks 0.2.1 (git+https://github.com/DioxusLabs/dioxus)",
+ "dioxus-html 0.2.1 (git+https://github.com/DioxusLabs/dioxus)",
+ "dioxus-rsx 0.0.0 (git+https://github.com/DioxusLabs/dioxus)",
 ]
 
 [[package]]
 name = "dioxus-core"
 version = "0.2.1"
-source = "git+https://github.com/Demonthos/dioxus?branch=compile_time_attribute_checks#3ab8b46243a9769bce3df92a04dbccf8b00f27cc"
+source = "git+https://github.com/Demonthos/dioxus?branch=compile_time_attribute_checks#69b5cb384b23a580a9f119dfc92ab283b6ad1d46"
 dependencies = [
  "backtrace",
  "bumpalo",
@@ -473,11 +485,42 @@ dependencies = [
 ]
 
 [[package]]
+name = "dioxus-core"
+version = "0.2.1"
+source = "git+https://github.com/DioxusLabs/dioxus#ab10d327ac1c93b4f7d87a516494cb976d259f1a"
+dependencies = [
+ "backtrace",
+ "bumpalo",
+ "dyn-clone",
+ "futures-channel",
+ "futures-util",
+ "indexmap",
+ "log",
+ "longest-increasing-subsequence",
+ "once_cell",
+ "rustc-hash",
+ "serde",
+ "slab",
+ "smallvec",
+]
+
+[[package]]
 name = "dioxus-core-macro"
 version = "0.2.1"
-source = "git+https://github.com/Demonthos/dioxus?branch=compile_time_attribute_checks#3ab8b46243a9769bce3df92a04dbccf8b00f27cc"
+source = "git+https://github.com/Demonthos/dioxus?branch=compile_time_attribute_checks#69b5cb384b23a580a9f119dfc92ab283b6ad1d46"
 dependencies = [
- "dioxus-rsx",
+ "dioxus-rsx 0.0.0 (git+https://github.com/Demonthos/dioxus?branch=compile_time_attribute_checks)",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "dioxus-core-macro"
+version = "0.2.1"
+source = "git+https://github.com/DioxusLabs/dioxus#ab10d327ac1c93b4f7d87a516494cb976d259f1a"
+dependencies = [
+ "dioxus-rsx 0.0.0 (git+https://github.com/DioxusLabs/dioxus)",
  "proc-macro2",
  "quote",
  "syn",
@@ -486,9 +529,19 @@ dependencies = [
 [[package]]
 name = "dioxus-hooks"
 version = "0.2.1"
-source = "git+https://github.com/Demonthos/dioxus?branch=compile_time_attribute_checks#3ab8b46243a9769bce3df92a04dbccf8b00f27cc"
+source = "git+https://github.com/Demonthos/dioxus?branch=compile_time_attribute_checks#69b5cb384b23a580a9f119dfc92ab283b6ad1d46"
 dependencies = [
- "dioxus-core",
+ "dioxus-core 0.2.1 (git+https://github.com/Demonthos/dioxus?branch=compile_time_attribute_checks)",
+ "futures-channel",
+ "log",
+]
+
+[[package]]
+name = "dioxus-hooks"
+version = "0.2.1"
+source = "git+https://github.com/DioxusLabs/dioxus#ab10d327ac1c93b4f7d87a516494cb976d259f1a"
+dependencies = [
+ "dioxus-core 0.2.1 (git+https://github.com/DioxusLabs/dioxus)",
  "futures-channel",
  "log",
 ]
@@ -496,9 +549,20 @@ dependencies = [
 [[package]]
 name = "dioxus-html"
 version = "0.2.1"
-source = "git+https://github.com/Demonthos/dioxus?branch=compile_time_attribute_checks#3ab8b46243a9769bce3df92a04dbccf8b00f27cc"
+source = "git+https://github.com/Demonthos/dioxus?branch=compile_time_attribute_checks#69b5cb384b23a580a9f119dfc92ab283b6ad1d46"
 dependencies = [
- "dioxus-core",
+ "dioxus-core 0.2.1 (git+https://github.com/Demonthos/dioxus?branch=compile_time_attribute_checks)",
+ "enumset",
+ "euclid",
+ "keyboard-types",
+]
+
+[[package]]
+name = "dioxus-html"
+version = "0.2.1"
+source = "git+https://github.com/DioxusLabs/dioxus#ab10d327ac1c93b4f7d87a516494cb976d259f1a"
+dependencies = [
+ "dioxus-core 0.2.1 (git+https://github.com/DioxusLabs/dioxus)",
  "enumset",
  "euclid",
  "keyboard-types",
@@ -507,13 +571,13 @@ dependencies = [
 [[package]]
 name = "dioxus-native-core"
 version = "0.2.0"
-source = "git+https://github.com/Demonthos/dioxus?branch=compile_time_attribute_checks#3ab8b46243a9769bce3df92a04dbccf8b00f27cc"
+source = "git+https://github.com/DioxusLabs/dioxus#ab10d327ac1c93b4f7d87a516494cb976d259f1a"
 dependencies = [
  "anymap",
- "dioxus-core",
- "dioxus-core-macro",
- "dioxus-html",
- "fxhash",
+ "dioxus-core 0.2.1 (git+https://github.com/DioxusLabs/dioxus)",
+ "dioxus-core-macro 0.2.1 (git+https://github.com/DioxusLabs/dioxus)",
+ "dioxus-html 0.2.1 (git+https://github.com/DioxusLabs/dioxus)",
+ "rustc-hash",
  "smallvec",
  "taffy",
 ]
@@ -521,7 +585,7 @@ dependencies = [
 [[package]]
 name = "dioxus-native-core-macro"
 version = "0.2.0"
-source = "git+https://github.com/Demonthos/dioxus?branch=compile_time_attribute_checks#3ab8b46243a9769bce3df92a04dbccf8b00f27cc"
+source = "git+https://github.com/DioxusLabs/dioxus#ab10d327ac1c93b4f7d87a516494cb976d259f1a"
 dependencies = [
  "dioxus-native-core",
  "quote",
@@ -531,9 +595,9 @@ dependencies = [
 [[package]]
 name = "dioxus-router"
 version = "0.2.3"
-source = "git+https://github.com/Demonthos/dioxus?branch=compile_time_attribute_checks#3ab8b46243a9769bce3df92a04dbccf8b00f27cc"
+source = "git+https://github.com/DioxusLabs/dioxus#ab10d327ac1c93b4f7d87a516494cb976d259f1a"
 dependencies = [
- "dioxus",
+ "dioxus 0.2.4 (git+https://github.com/DioxusLabs/dioxus)",
  "futures-channel",
  "futures-util",
  "log",
@@ -546,9 +610,21 @@ dependencies = [
 [[package]]
 name = "dioxus-rsx"
 version = "0.0.0"
-source = "git+https://github.com/Demonthos/dioxus?branch=compile_time_attribute_checks#3ab8b46243a9769bce3df92a04dbccf8b00f27cc"
+source = "git+https://github.com/Demonthos/dioxus?branch=compile_time_attribute_checks#69b5cb384b23a580a9f119dfc92ab283b6ad1d46"
 dependencies = [
- "dioxus-core",
+ "dioxus-core 0.2.1 (git+https://github.com/Demonthos/dioxus?branch=compile_time_attribute_checks)",
+ "proc-macro2",
+ "quote",
+ "serde",
+ "syn",
+]
+
+[[package]]
+name = "dioxus-rsx"
+version = "0.0.0"
+source = "git+https://github.com/DioxusLabs/dioxus#ab10d327ac1c93b4f7d87a516494cb976d259f1a"
+dependencies = [
+ "dioxus-core 0.2.1 (git+https://github.com/DioxusLabs/dioxus)",
  "proc-macro2",
  "quote",
  "serde",
@@ -658,8 +734,8 @@ dependencies = [
 name = "examples"
 version = "0.0.0"
 dependencies = [
- "dioxus",
- "fermi",
+ "dioxus 0.2.4 (git+https://github.com/Demonthos/dioxus?branch=compile_time_attribute_checks)",
+ "fermi 0.2.1 (git+https://github.com/Demonthos/dioxus?branch=compile_time_attribute_checks)",
  "freya",
  "reqwest",
  "serde",
@@ -688,9 +764,19 @@ dependencies = [
 [[package]]
 name = "fermi"
 version = "0.2.1"
-source = "git+https://github.com/Demonthos/dioxus?branch=compile_time_attribute_checks#3ab8b46243a9769bce3df92a04dbccf8b00f27cc"
+source = "git+https://github.com/Demonthos/dioxus?branch=compile_time_attribute_checks#69b5cb384b23a580a9f119dfc92ab283b6ad1d46"
 dependencies = [
- "dioxus-core",
+ "dioxus-core 0.2.1 (git+https://github.com/Demonthos/dioxus?branch=compile_time_attribute_checks)",
+ "im-rc",
+ "log",
+]
+
+[[package]]
+name = "fermi"
+version = "0.2.1"
+source = "git+https://github.com/DioxusLabs/dioxus#ab10d327ac1c93b4f7d87a516494cb976d259f1a"
+dependencies = [
+ "dioxus-core 0.2.1 (git+https://github.com/DioxusLabs/dioxus)",
  "im-rc",
  "log",
 ]
@@ -801,19 +887,19 @@ name = "freya"
 version = "0.1.0"
 dependencies = [
  "anymap",
- "dioxus",
- "dioxus-core",
- "dioxus-html",
+ "dioxus 0.2.4 (git+https://github.com/DioxusLabs/dioxus)",
+ "dioxus-core 0.2.1 (git+https://github.com/DioxusLabs/dioxus)",
+ "dioxus-html 0.2.1 (git+https://github.com/DioxusLabs/dioxus)",
  "dioxus-native-core",
  "dioxus-router",
- "fermi",
+ "fermi 0.2.1 (git+https://github.com/DioxusLabs/dioxus)",
  "freya-components",
  "freya-elements",
  "freya-hooks",
  "freya-layout",
  "freya-node-state",
  "freya-renderer",
- "fxhash",
+ "rustc-hash",
  "skia-safe",
  "tokio",
 ]
@@ -822,9 +908,9 @@ dependencies = [
 name = "freya-components"
 version = "0.1.0"
 dependencies = [
- "dioxus",
+ "dioxus 0.2.4 (git+https://github.com/DioxusLabs/dioxus)",
  "dioxus-router",
- "fermi",
+ "fermi 0.2.1 (git+https://github.com/DioxusLabs/dioxus)",
  "freya-elements",
  "freya-hooks",
  "freya-node-state",
@@ -835,9 +921,9 @@ name = "freya-elements"
 version = "0.1.0"
 dependencies = [
  "bumpalo",
- "dioxus-core",
- "dioxus-hooks",
- "dioxus-html",
+ "dioxus-core 0.2.1 (git+https://github.com/DioxusLabs/dioxus)",
+ "dioxus-hooks 0.2.1 (git+https://github.com/DioxusLabs/dioxus)",
+ "dioxus-html 0.2.1 (git+https://github.com/DioxusLabs/dioxus)",
  "tokio",
 ]
 
@@ -845,7 +931,7 @@ dependencies = [
 name = "freya-hooks"
 version = "0.1.0"
 dependencies = [
- "dioxus",
+ "dioxus 0.2.4 (git+https://github.com/DioxusLabs/dioxus)",
  "freya-elements",
  "tokio",
  "tween",
@@ -855,7 +941,7 @@ dependencies = [
 name = "freya-layers"
 version = "0.1.0"
 dependencies = [
- "dioxus",
+ "dioxus 0.2.4 (git+https://github.com/DioxusLabs/dioxus)",
  "dioxus-native-core",
  "freya-node-state",
 ]
@@ -865,15 +951,15 @@ name = "freya-layout"
 version = "0.1.0"
 dependencies = [
  "anymap",
- "dioxus",
- "dioxus-core",
+ "dioxus 0.2.4 (git+https://github.com/DioxusLabs/dioxus)",
+ "dioxus-core 0.2.1 (git+https://github.com/DioxusLabs/dioxus)",
  "dioxus-native-core",
  "dioxus-native-core-macro",
  "freya-elements",
  "freya-layers",
  "freya-node-state",
- "fxhash",
  "lazy_static",
+ "rustc-hash",
  "skia-safe",
  "tokio",
 ]
@@ -883,14 +969,14 @@ name = "freya-node-state"
 version = "0.1.0"
 dependencies = [
  "anymap",
- "dioxus",
- "dioxus-core",
- "dioxus-html",
+ "dioxus 0.2.4 (git+https://github.com/DioxusLabs/dioxus)",
+ "dioxus-core 0.2.1 (git+https://github.com/DioxusLabs/dioxus)",
+ "dioxus-html 0.2.1 (git+https://github.com/DioxusLabs/dioxus)",
  "dioxus-native-core",
  "dioxus-native-core-macro",
  "freya-elements",
  "freya-hooks",
- "fxhash",
+ "rustc-hash",
  "skia-safe",
  "tokio",
 ]
@@ -899,8 +985,8 @@ dependencies = [
 name = "freya-renderer"
 version = "0.1.0"
 dependencies = [
- "dioxus-core",
- "dioxus-html",
+ "dioxus-core 0.2.1 (git+https://github.com/DioxusLabs/dioxus)",
+ "dioxus-html 0.2.1 (git+https://github.com/DioxusLabs/dioxus)",
  "dioxus-native-core",
  "enumset",
  "freya-layers",
@@ -1267,9 +1353,9 @@ checksum = "879d54834c8c76457ef4293a689b2a8c59b076067ad77b15efafbb05f92a592b"
 
 [[package]]
 name = "itoa"
-version = "1.0.3"
+version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c8af84674fe1f223a982c933a0ee1086ac4d4052aa0fb8060c12c6ad838e754"
+checksum = "4217ad341ebadf8d8e724e264f13e593e0648f5b3e94b3896a5df283be015ecc"
 
 [[package]]
 name = "jni-sys"
@@ -1317,9 +1403,9 @@ checksum = "830d08ce1d1d941e6b30645f1a0eb5643013d835ce3779a5fc208261dbe10f55"
 
 [[package]]
 name = "libc"
-version = "0.2.134"
+version = "0.2.135"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "329c933548736bc49fd575ee68c89e8be4d260064184389a5b77517cddd99ffb"
+checksum = "68783febc7782c6c5cb401fbda4de5a9898be1762314da0bb2c10ced61f18b0c"
 
 [[package]]
 name = "libloading"
@@ -1986,9 +2072,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.85"
+version = "1.0.86"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e55a28e3aaef9d5ce0506d0a14dbba8054ddc7e499ef522dd8b26859ec9d4a44"
+checksum = "41feea4228a6f1cd09ec7a3593a682276702cd67b5273544757dae23c096f074"
 dependencies = [
  "itoa",
  "ryu",
@@ -2152,9 +2238,9 @@ checksum = "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
 
 [[package]]
 name = "syn"
-version = "1.0.101"
+version = "1.0.102"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e90cde112c4b9690b8cbe810cba9ddd8bc1d7472e2cae317b69e9438c1cba7d2"
+checksum = "3fcd952facd492f9be3ef0d0b7032a6e442ee9b361d4acc2b1d0c4aaa5f613a1"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2332,9 +2418,9 @@ checksum = "b6bc1c9ce2b5135ac7f93c72918fc37feb872bdc6a5533a8b85eb4b86bfdae52"
 
 [[package]]
 name = "tracing"
-version = "0.1.36"
+version = "0.1.37"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2fce9567bd60a67d08a16488756721ba392f24f29006402881e43b19aac64307"
+checksum = "8ce8c33a8d48bd45d624a6e523445fd21ec13d3653cd51f681abf67418f54eb8"
 dependencies = [
  "cfg-if",
  "pin-project-lite",
@@ -2343,9 +2429,9 @@ dependencies = [
 
 [[package]]
 name = "tracing-core"
-version = "0.1.29"
+version = "0.1.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5aeea4303076558a00714b823f9ad67d58a3bbda1df83d8827d21193156e22f7"
+checksum = "24eb03ba0eab1fd845050058ce5e616558e8f8d8fca633e6b163fe25c797213a"
 dependencies = [
  "once_cell",
 ]
@@ -2376,9 +2462,9 @@ checksum = "099b7128301d285f79ddd55b9a83d5e6b9e97c92e0ea0daebee7263e932de992"
 
 [[package]]
 name = "unicode-ident"
-version = "1.0.4"
+version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dcc811dc4066ac62f84f11307873c4850cb653bfa9b1719cee2bd2204a4bc5dd"
+checksum = "6ceab39d59e4c9499d4e5a8ee0e2735b891bb7308ac83dfb4e80cad195c9f6f3"
 
 [[package]]
 name = "unicode-normalization"
@@ -2728,9 +2814,9 @@ checksum = "c811ca4a8c853ef420abd8592ba53ddbbac90410fab6903b3e79972a631f7680"
 
 [[package]]
 name = "winit"
-version = "0.27.3"
+version = "0.27.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a22e94ba35ca3ff11820044bfa0dc48b95a3a15569c0068555566a12ef41c9e5"
+checksum = "37f64802920c4c35d12a53dad5e0c55bbc3004d8dc4f2e4dd64ad02c5665d7aa"
 dependencies = [
  "bitflags",
  "cocoa",

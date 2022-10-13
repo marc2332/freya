@@ -4,8 +4,8 @@ use dioxus_native_core::real_dom::{Node, NodeData, NodeType};
 use freya_layers::{Layers, NodeArea, NodeInfo};
 use freya_layout::calculate_node;
 use freya_node_state::node::{DirectionMode, NodeState, Size, SizeMode};
-use fxhash::{FxHashMap, FxHashSet};
 use lazy_static::lazy_static;
+use rustc_hash::{FxHashMap, FxHashSet};
 use skia_safe::textlayout::FontCollection;
 
 lazy_static! {

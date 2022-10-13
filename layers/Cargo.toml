@@ -13,5 +13,5 @@ categories = ["GUI"]
 
 [dependencies]
 freya-node-state = { path = "../state", version = "0.1.0" }
-dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch = "compile_time_attribute_checks"  }
-dioxus = { git = "https://github.com/Demonthos/dioxus", branch = "compile_time_attribute_checks"  }
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus" }
+dioxus = { git = "https://github.com/DioxusLabs/dioxus" }
