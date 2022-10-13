@@ -16,12 +16,14 @@ wireframe = []
 
 [dependencies]
 gl = "*"
-glutin = "*"
-skia-safe = { version = "*", features = ["gl", "textlayout", "svg"] }
+glutin_tao = { version = "0.30.0", features = ["serde"]}
+skia-safe = { version = "0.55.0", features = ["gl", "textlayout", "svg"] }
 dioxus-core = { git = "https://github.com/DioxusLabs/dioxus" }
 dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus" }
 dioxus-html = { git = "https://github.com/DioxusLabs/dioxus" }
 enumset = "1.0.11"
 freya-layout = { path = "../layout", version = "0.1.0" }
 freya-node-state = { path = "../state", version = "0.1.0" }
+freya-elements = { path = "../elements", version = "0.1.0" }
 freya-layers = { path = "../layers", version = "0.1.0" }
+serde_json = "1.0.85"

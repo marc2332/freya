@@ -25,7 +25,7 @@ fn app(cx: Scope) -> Element {
                 "Is enabled? {is_enabled}"
             }
             Switch {
-                enabled: enabled,
+                enabled: *enabled.get(),
                 ontoggled: |_| {
                     enabled.set(!enabled.get());
                 }

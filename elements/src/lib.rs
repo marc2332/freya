@@ -1,6 +1,6 @@
 use dioxus_core::AttributeDiscription;
-pub use dioxus_core::AttributeValue;
-use dioxus_core::*;
+pub mod events;
+pub use dioxus_core::{AttributeValue, DioxusElement};
 use std::fmt::Display;
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -57,6 +57,7 @@ builder_constructors! {
         radius: String,
         color: String,
         reference: NodeRefWrapper,
+        display: String,
     };
     container {
         padding: String,
@@ -73,6 +74,7 @@ builder_constructors! {
         radius: String,
         color: String,
         reference: NodeRefWrapper,
+        display: String,
     };
     label {
         color: String,
@@ -81,10 +83,12 @@ builder_constructors! {
         width: String,
         font_size: String,
         font_family: String,
+        align: String,
     };
     paragraph {
         layer: String,
         width: String,
+        align: String,
     };
     text {
         color: String,
@@ -152,6 +156,8 @@ pub mod on {
 
     use bumpalo::boxed::Box as BumpBox;
 
+    use crate::events::KeyboardData;
+
     macro_rules! event_directory {
         ( $(
             $( #[$attr:meta] )*
@@ -197,6 +203,8 @@ pub mod on {
         };
     }
 
+    type KeyboardEvent = UiEvent<KeyboardData>;
+
     event_directory! {
         MouseEvent(MouseData): [
             onclick
@@ -206,6 +214,10 @@ pub mod on {
         ];
         WheelEvent(WheelData): [
             onwheel
+        ];
+        KeyboardEvent(KeyboardData): [
+            onkeydown
+            onkeyup
         ];
     }
 }

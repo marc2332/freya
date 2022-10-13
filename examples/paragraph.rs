@@ -18,11 +18,13 @@ fn app(cx: Scope) -> Element {
             width: "75%",
             height: "100%",
             background: "black",
-            container {
+            ScrollView {
+                show_scrollbar: true,
                 width: "100%",
                 height: "75%",
                 paragraph {
                     width: "100%",
+                    align: "right",
                     text {
                         color: "rgb(240, 50, 100)",
                         "{loremipsum.repeat(2)}"

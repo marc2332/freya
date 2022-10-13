@@ -16,3 +16,4 @@ dioxus = { git = "https://github.com/DioxusLabs/dioxus", features = ["macro", "h
 tween = "1.0.1"
 tokio = { version = "1.17.0" }
 freya-elements = { path = "../elements", version = "0.1.0" }
+uuid = { version =  "1.2.1", features = ["v4"]}

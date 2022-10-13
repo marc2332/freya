@@ -4,6 +4,7 @@ use dioxus_native_core::state::{NodeDepState, ParentDepState, State};
 use dioxus_native_core_macro::{sorted_str_slice, State};
 use freya_elements::NodeLayout;
 use freya_hooks::NodeRefWrapper;
+use skia_safe::textlayout::TextAlign;
 use skia_safe::Color;
 use std::fmt::Display;
 use tokio::sync::mpsc::UnboundedSender;
@@ -71,7 +72,8 @@ pub struct FontStyle {
     pub color: Color,
     pub font_family: String,
     pub font_size: f32,
-    pub line_height: f32, // https://developer.mozilla.org/en-US/docs/Web/CSS/line-height
+    pub line_height: f32, // https://developer.mozilla.org/en-US/docs/Web/CSS/line-height,
+    pub align: TextAlign,
 }
 
 impl Default for FontStyle {
@@ -81,6 +83,7 @@ impl Default for FontStyle {
             font_family: "Fira Sans".to_string(),
             font_size: 16.0,
             line_height: 1.2,
+            align: TextAlign::default(),
         }
     }
 }
@@ -178,7 +181,8 @@ impl ParentDepState for FontStyle {
             "color",
             "font_size",
             "font_family",
-            "line_height"
+            "line_height",
+            "align"
         ])));
 
     fn reduce<'a>(
@@ -217,6 +221,11 @@ impl ParentDepState for FontStyle {
                             if let Ok(line_height) = line_height.parse() {
                                 font_style.line_height = line_height;
                             }
+                        }
+                    }
+                    "align" => {
+                        if let Some(new_text_align) = attr.value.as_text() {
+                            font_style.align = parse_text_align(new_text_align);
                         }
                     }
                     _ => {}
@@ -371,6 +380,13 @@ pub struct ShadowSettings {
     pub color: Color,
 }
 
+#[derive(Default, Clone, Debug, PartialEq)]
+pub enum DisplayMode {
+    #[default]
+    Normal,
+    Center,
+}
+
 #[derive(Default, Clone, Debug)]
 pub struct Style {
     pub background: Color,
@@ -379,6 +395,7 @@ pub struct Style {
     pub radius: f32,
     pub image_data: Option<Vec<u8>>,
     pub svg_data: Option<Vec<u8>>,
+    pub display: DisplayMode,
 }
 
 impl NodeDepState<()> for Style {
@@ -392,7 +409,8 @@ impl NodeDepState<()> for Style {
             "radius",
             "image_data",
             "svg_data",
-            "svg_content"
+            "svg_content",
+            "display"
         ])));
 
     fn reduce<'a>(&mut self, node: NodeView, _sibling: (), _ctx: &Self::Ctx) -> bool {
@@ -402,6 +420,7 @@ impl NodeDepState<()> for Style {
         let mut radius = 0.0;
         let mut image_data = None;
         let mut svg_data = None;
+        let mut display = DisplayMode::Normal;
 
         if let Some(attributes) = node.attributes() {
             for attr in attributes {
@@ -412,6 +431,11 @@ impl NodeDepState<()> for Style {
                             if let Some(new_back) = new_back {
                                 background = new_back;
                             }
+                        }
+                    }
+                    "display" => {
+                        if let Some(new_display) = attr.value.as_text() {
+                            display = parse_display(new_display)
                         }
                     }
                     "layer" => {
@@ -467,12 +491,20 @@ impl NodeDepState<()> for Style {
             radius,
             image_data,
             svg_data,
+            display,
         };
         changed
     }
 }
 
-fn parse_shadow(value: &str) -> Option<ShadowSettings> {
+pub fn parse_display(value: &str) -> DisplayMode {
+    match value {
+        "center" => DisplayMode::Center,
+        _ => DisplayMode::Normal,
+    }
+}
+
+pub fn parse_shadow(value: &str) -> Option<ShadowSettings> {
     let value = value.to_string();
     let mut shadow_values = value.split_ascii_whitespace();
     Some(ShadowSettings {
@@ -484,7 +516,7 @@ fn parse_shadow(value: &str) -> Option<ShadowSettings> {
     })
 }
 
-fn parse_rgb(color: &str) -> Option<Color> {
+pub fn parse_rgb(color: &str) -> Option<Color> {
     let color = color.replace("rgb(", "").replace(")", "");
     let mut colors = color.split(",");
 
@@ -494,7 +526,7 @@ fn parse_rgb(color: &str) -> Option<Color> {
     Some(Color::from_rgb(r, g, b))
 }
 
-fn parse_color(color: &str) -> Option<Color> {
+pub fn parse_color(color: &str) -> Option<Color> {
     match color {
         "red" => Some(Color::RED),
         "green" => Some(Color::GREEN),
@@ -507,35 +539,45 @@ fn parse_color(color: &str) -> Option<Color> {
     }
 }
 
-fn parse_size(size: &str) -> Option<SizeMode> {
+pub fn parse_text_align(align: &str) -> TextAlign {
+    match align {
+        "center" => TextAlign::Center,
+        "end" => TextAlign::End,
+        "justify" => TextAlign::Justify,
+        "left" => TextAlign::Left,
+        "right" => TextAlign::Right,
+        "start" => TextAlign::Start,
+        _ => TextAlign::Left,
+    }
+}
+
+pub fn parse_size(size: &str) -> Option<SizeMode> {
     if size == "stretch" {
         Some(SizeMode::Percentage(100.0))
     } else if size == "auto" {
         Some(SizeMode::Auto)
     } else if size.contains("calc") {
-        Some(SizeMode::Calculation(parse_calc(size).unwrap()))
+        Some(SizeMode::Calculation(parse_calc(size)?))
     } else if size.contains("%") {
         Some(SizeMode::Percentage(size.replace("%", "").parse().ok()?))
     } else if size.contains("calc") {
-        Some(SizeMode::Calculation(parse_calc(size).unwrap()))
+        Some(SizeMode::Calculation(parse_calc(size)?))
     } else {
         Some(SizeMode::Manual(size.parse().ok()?))
     }
 }
 
-fn parse_calc(mut size: &str) -> Option<Vec<CalcType>> {
+pub fn parse_calc(mut size: &str) -> Option<Vec<CalcType>> {
     let mut calcs = Vec::new();
 
-    size = size.strip_prefix("calc(").unwrap();
-    size = size.strip_suffix(")").unwrap();
+    size = size.strip_prefix("calc(")?;
+    size = size.strip_suffix(")")?;
 
     let vals = size.split_whitespace();
 
     for val in vals {
         if val.contains("%") {
-            calcs.push(CalcType::Percentage(
-                val.replace("%", "").parse().ok().unwrap(),
-            ));
+            calcs.push(CalcType::Percentage(val.replace("%", "").parse().ok()?));
         } else if val == "+" {
             calcs.push(CalcType::Add);
         } else if val == "-" {
@@ -545,7 +587,7 @@ fn parse_calc(mut size: &str) -> Option<Vec<CalcType>> {
         } else if val == "*" {
             calcs.push(CalcType::Mul);
         } else {
-            calcs.push(CalcType::Manual(val.parse().ok().unwrap()));
+            calcs.push(CalcType::Manual(val.parse().ok()?));
         }
     }
 

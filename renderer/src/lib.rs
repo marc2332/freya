@@ -3,8 +3,9 @@ use dioxus_native_core::real_dom::RealDom;
 use freya_layers::NodeArea;
 use freya_node_state::node::NodeState;
 use glutin::{
-    event::{MouseScrollDelta, WindowEvent},
-    event_loop::EventLoopBuilder,
+    event::{KeyEvent, MouseScrollDelta, TouchPhase, WindowEvent},
+    event_loop::EventLoop,
+    keyboard::Key,
 };
 use skia_safe::{textlayout::FontCollection, FontMgr};
 use std::{
@@ -17,12 +18,7 @@ use gl::types::*;
 use glutin::dpi::PhysicalSize;
 use glutin::event::ElementState;
 use glutin::window::WindowId;
-use glutin::{
-    event::{Event, KeyboardInput, VirtualKeyCode},
-    event_loop::{ControlFlow, EventLoop},
-    window::WindowBuilder,
-    GlProfile,
-};
+use glutin::{event::Event, event_loop::ControlFlow, window::WindowBuilder, GlProfile};
 use skia_safe::Color;
 use skia_safe::{
     gpu::{gl::FramebufferInfo, BackendRenderTarget, SurfaceOrigin},
@@ -54,7 +50,10 @@ pub enum RendererRequest {
         cursor: (f64, f64),
     },
     #[allow(dead_code)]
-    KeyboardEvent { name: &'static str },
+    KeyboardEvent {
+        name: &'static str,
+        code: Key<'static>,
+    },
 }
 
 struct WindowEnv {
@@ -236,7 +235,7 @@ fn create_windows_from_config(
 
 pub fn run(windows_config: Vec<(SkiaDom, EventEmitter, WindowConfig)>) {
     let cursor_pos = Arc::new(Mutex::new((0.0, 0.0)));
-    let el = EventLoopBuilder::<WindowId>::with_user_event().build();
+    let el = EventLoop::<WindowId>::with_user_event();
     let mut font_collection = FontCollection::new();
     font_collection.set_default_font_manager(FontMgr::default(), "Fira Sans");
 
@@ -259,26 +258,32 @@ pub fn run(windows_config: Vec<(SkiaDom, EventEmitter, WindowConfig)>) {
         #[allow(deprecated)]
         match event {
             Event::LoopDestroyed => {}
-            Event::WindowEvent { event, window_id } => {
+            Event::WindowEvent {
+                event, window_id, ..
+            } => {
                 let result = get_window_context(window_id);
                 if let Some(result) = result {
                     let mut env = result.lock().unwrap();
                     match event {
-                        WindowEvent::MouseWheel { delta, .. } => {
-                            let cursor_pos = cursor_pos.lock().unwrap();
-                            let scroll_data = {
-                                match delta {
-                                    MouseScrollDelta::LineDelta(x, y) => (x as f64, y as f64),
-                                    MouseScrollDelta::PixelDelta(pos) => (pos.x, pos.y),
-                                }
-                            };
-                            env.renderer_requests.lock().unwrap().push(
-                                RendererRequest::WheelEvent {
-                                    name: "wheel",
-                                    scroll: scroll_data,
-                                    cursor: *cursor_pos,
-                                },
-                            );
+                        WindowEvent::MouseWheel { delta, phase, .. } => {
+                            if TouchPhase::Moved == phase {
+                                let cursor_pos = cursor_pos.lock().unwrap();
+                                let scroll_data = {
+                                    match delta {
+                                        MouseScrollDelta::LineDelta(x, y) => (x as f64, y as f64),
+                                        MouseScrollDelta::PixelDelta(pos) => (pos.x, pos.y),
+                                        _ => (0.0, 0.0),
+                                    }
+                                };
+
+                                env.renderer_requests.lock().unwrap().push(
+                                    RendererRequest::WheelEvent {
+                                        name: "wheel",
+                                        scroll: scroll_data,
+                                        cursor: *cursor_pos,
+                                    },
+                                );
+                            }
                         }
                         WindowEvent::CursorMoved { position, .. } => {
                             let cursor_pos = {
@@ -300,6 +305,7 @@ pub fn run(windows_config: Vec<(SkiaDom, EventEmitter, WindowConfig)>) {
                             let event_name = match state {
                                 ElementState::Pressed => "mousedown",
                                 ElementState::Released => "click",
+                                _ => "mousedown",
                             };
                             let cursor_pos = cursor_pos.lock().unwrap();
                             env.renderer_requests.lock().unwrap().push(
@@ -319,19 +325,24 @@ pub fn run(windows_config: Vec<(SkiaDom, EventEmitter, WindowConfig)>) {
                         }
                         WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
                         WindowEvent::KeyboardInput {
-                            input:
-                                KeyboardInput {
-                                    virtual_keycode,
-                                    modifiers,
-                                    ..
+                            event:
+                                KeyEvent {
+                                    logical_key, state, ..
                                 },
                             ..
                         } => {
-                            if modifiers.logo() {
-                                if let Some(VirtualKeyCode::Q) = virtual_keycode {
-                                    *control_flow = ControlFlow::Exit;
-                                }
-                            }
+                            let event_name = match state {
+                                ElementState::Pressed => "keydown",
+                                ElementState::Released => "keyup",
+                                _ => "keydown",
+                            };
+
+                            env.renderer_requests.lock().unwrap().push(
+                                RendererRequest::KeyboardEvent {
+                                    name: event_name,
+                                    code: logical_key,
+                                },
+                            );
                         }
                         _ => (),
                     }

@@ -7,7 +7,7 @@ use crate::THEME;
 
 #[derive(Props)]
 pub struct SwitchProps<'a> {
-    pub enabled: &'a bool,
+    pub enabled: bool,
     pub ontoggled: EventHandler<'a, ()>,
 }
 
@@ -41,7 +41,7 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
         cx.props.ontoggled.call(());
     };
 
-    use_effect(&cx, cx.props.enabled, move |enabled| async move {
+    use_effect(&cx, &cx.props.enabled, move |enabled| async move {
         if enabled {
             start_enabled();
             restart_disabled();
@@ -52,7 +52,7 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
     });
 
     let (scroll_x, border, circle) = {
-        if *cx.props.enabled {
+        if cx.props.enabled {
             (
                 progress_enabled,
                 theme.switch.enabled_background,
