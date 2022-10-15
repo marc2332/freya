@@ -98,11 +98,15 @@ builder_constructors! {
         font_size: String,
         font_family: String,
         align: String,
+        max_lines: String,
     };
     paragraph {
         layer: String,
         width: String,
         align: String,
+        cursor_index: String,
+        max_lines: String,
+        cursor_color: String,
     };
     text {
         color: String,

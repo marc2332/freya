@@ -210,8 +210,14 @@ fn process_node_layout<T>(
             let line_height = node_data.node.state.font_style.line_height;
             let font_size = node_data.node.state.font_style.font_size;
             let font_family = &node_data.node.state.font_style.font_family;
+            let align = node_data.node.state.font_style.align;
+            let max_lines = node_data.node.state.font_style.max_lines;
 
-            let paragraph_style = ParagraphStyle::default();
+            let mut paragraph_style = ParagraphStyle::default();
+            paragraph_style.set_text_align(align);
+            paragraph_style.set_max_lines(max_lines);
+            paragraph_style.set_replace_tab_characters(true);
+
             let mut paragraph_builder =
                 ParagraphBuilder::new(&paragraph_style, font_collection.clone());
 
@@ -227,7 +233,6 @@ fn process_node_layout<T>(
             paragraph.layout(node_area.width);
 
             let lines_count = paragraph.line_number() as f32;
-
             node_area.width = paragraph.longest_line();
             node_area.height = (line_height * font_size) * lines_count;
         }

@@ -75,6 +75,7 @@ pub struct FontStyle {
     pub font_size: f32,
     pub line_height: f32, // https://developer.mozilla.org/en-US/docs/Web/CSS/line-height,
     pub align: TextAlign,
+    pub max_lines: Option<usize>,
 }
 
 impl Default for FontStyle {
@@ -85,6 +86,7 @@ impl Default for FontStyle {
             font_size: 16.0,
             line_height: 1.2,
             align: TextAlign::default(),
+            max_lines: None,
         }
     }
 }
@@ -181,7 +183,8 @@ impl ParentDepState for FontStyle {
             "font_size",
             "font_family",
             "line_height",
-            "align"
+            "align",
+            "max_lines"
         ])));
 
     fn reduce<'a>(
@@ -215,6 +218,11 @@ impl ParentDepState for FontStyle {
                 }
                 "align" => {
                     font_style.align = parse_text_align(&attr.value.to_string());
+                }
+                "max_lines" => {
+                    if let Ok(max_lines) = attr.value.to_string().parse() {
+                        font_style.max_lines = Some(max_lines);
+                    }
                 }
                 _ => {}
             }
@@ -356,6 +364,21 @@ pub enum DisplayMode {
     Center,
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub struct CursorSettings {
+    pub position: Option<i32>,
+    pub color: Color,
+}
+
+impl Default for CursorSettings {
+    fn default() -> Self {
+        Self {
+            position: None,
+            color: Color::WHITE,
+        }
+    }
+}
+
 #[derive(Default, Clone, Debug)]
 pub struct Style {
     pub background: Color,
@@ -365,6 +388,7 @@ pub struct Style {
     pub image_data: Option<Vec<u8>>,
     pub svg_data: Option<Vec<u8>>,
     pub display: DisplayMode,
+    pub cursor: CursorSettings,
 }
 
 impl NodeDepState<()> for Style {
@@ -379,7 +403,9 @@ impl NodeDepState<()> for Style {
             "image_data",
             "svg_data",
             "svg_content",
-            "display"
+            "display",
+            "cursor_index",
+            "cursor_color",
         ])));
 
     fn reduce<'a>(&mut self, node: NodeView, _sibling: (), _ctx: &Self::Ctx) -> bool {
@@ -390,6 +416,7 @@ impl NodeDepState<()> for Style {
         let mut image_data = None;
         let mut svg_data = None;
         let mut display = DisplayMode::Normal;
+        let mut cursor = CursorSettings::default();
 
         for attr in node.attributes() {
             match attr.name {
@@ -432,6 +459,19 @@ impl NodeDepState<()> for Style {
                     let text = attr.value.as_text();
                     svg_data = text.map(|v| v.as_bytes().to_vec());
                 }
+                "cursor_index" => {
+                    let text = attr.value.as_text().unwrap();
+                    if text != "none" {
+                        let new_cursor_index = text.parse().unwrap();
+                        cursor.position = Some(new_cursor_index);
+                    }
+                }
+                "cursor_color" => {
+                    let new_cursor_color = parse_color(&attr.value.to_string());
+                    if let Some(new_cursor_color) = new_cursor_color {
+                        cursor.color = new_cursor_color;
+                    }
+                }
                 _ => {
                     println!("Unsupported attribute <{}>", attr.name);
                 }
@@ -442,6 +482,7 @@ impl NodeDepState<()> for Style {
             || (relative_layer != self.relative_layer)
             || (shadow != self.shadow)
             || (radius != self.radius)
+            || (cursor != self.cursor)
             || (image_data != self.image_data);
 
         *self = Self {
@@ -452,6 +493,7 @@ impl NodeDepState<()> for Style {
             image_data,
             svg_data,
             display,
+            cursor,
         };
         changed
     }
