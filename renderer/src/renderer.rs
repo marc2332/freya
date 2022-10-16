@@ -21,6 +21,18 @@ pub fn render_skia(
 ) {
     let node = &node_data.node;
 
+    let mut must_skip = false;
+    for v in viewports {
+        if area.x + area.width < v.x || area.y + area.height < v.y || area.x  > v.x + v.width || area.y  > v.y + v.height {
+            must_skip = true;
+            break;
+        }
+    }
+
+    if must_skip {
+        return;
+    }
+
     for viewport in viewports {
         canvas.clip_rect(
             Rect::new(
@@ -33,6 +45,8 @@ pub fn render_skia(
             true,
         );
     }
+
+    
 
     match &node.node_type {
         NodeType::Element { tag, children, .. } => {
