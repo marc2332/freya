@@ -3,9 +3,10 @@
     windows_subsystem = "windows"
 )]
 
+use dioxus::events::MouseData;
 use dioxus::{core::UiEvent, prelude::*};
 use freya::{
-    dioxus_elements::{self, events::KeyboardData},
+    dioxus_elements::{self},
     *,
 };
 
@@ -14,7 +15,13 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    let (content, cursor, process_keyevent) = use_editable(&cx);
+    let (content, cursor, process_keyevent, process_clickevent, cursor_ref) = use_editable(
+        &cx,
+        || {
+            "Lorem ipsum dolor sit amet \nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet"
+        },
+        EditableMode::SingleLineMultipleEditor,
+    );
     let percentage = use_state(&cx, || 15.0);
 
     // minimum font size is 5
@@ -26,16 +33,24 @@ fn app(cx: Scope) -> Element {
         rect {
             width: "100%",
             height: "calc(100% - 20)",
-            onkeydown: move |e: UiEvent<KeyboardData>| process_keyevent(e),
+            onkeydown: process_keyevent,
+            cursor_reference: cursor_ref,
             ScrollView {
                 show_scrollbar: true,
-                content_lines.into_iter().map(|l| {
+                content_lines.map(move |l| {
+                    let process_clickevent = process_clickevent.clone();
+
                     // Only show the cursor in the active line
                     let character_index = if cursor.1 == line_index {
                         cursor.0.to_string()
                     } else {
                         "none".to_string()
                     };
+
+                    let onmousedown = move |e: UiEvent<MouseData>| {
+                        process_clickevent.send((e, line_index)).ok();
+                    };
+
                     line_index += 1;
                     rsx! {
                         rect {
@@ -60,6 +75,8 @@ fn app(cx: Scope) -> Element {
                                 cursor_index: "{character_index}",
                                 cursor_color: "black",
                                 max_lines: "1",
+                                cursor_mode: "editable",
+                                onmousedown: onmousedown,
                                 text {
                                     color: "rgb(25, 25, 25)",
                                     font_size: "{font_size}",

@@ -1,4 +1,5 @@
 use std::fmt::Display;
+use std::sync::{Arc, Mutex};
 
 use dioxus::prelude::UseRef;
 use dioxus_core::AttributeValue;
@@ -91,14 +92,30 @@ impl Default for FontStyle {
     }
 }
 
+#[derive(Clone, Debug)]
+pub struct CursorReference {
+    pub positions: Arc<Mutex<Option<(f32, f32)>>>,
+    pub agent: UnboundedSender<(usize, usize)>,
+    pub id: Arc<Mutex<Option<usize>>>,
+}
+
+impl PartialEq for CursorReference {
+    fn eq(&self, _: &Self) -> bool {
+        true
+    }
+}
+
 #[derive(Default, Clone)]
 pub struct References {
     pub node_ref: Option<UnboundedSender<NodeLayout>>,
+    pub cursor_ref: Option<CursorReference>,
 }
 
 #[derive(Clone, State, Default)]
 pub struct NodeState {
-    #[node_dep_state()]
+    #[parent_dep_state(cursor_settings)]
+    pub cursor_settings: CursorSettings,
+    #[parent_dep_state(references)]
     pub references: References,
     #[node_dep_state()]
     pub size: Size,
@@ -142,14 +159,28 @@ impl Size {
     }
 }
 
-impl NodeDepState<()> for References {
+impl ParentDepState for References {
     type Ctx = ();
+    type DepState = Self;
 
     const NODE_MASK: NodeMask =
-        NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!(["reference"])));
+        NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
+            "reference",
+            "cursor_reference"
+        ])));
 
-    fn reduce<'a>(&mut self, node: NodeView, _sibling: (), _ctx: &Self::Ctx) -> bool {
+    fn reduce<'a>(
+        &mut self,
+        node: NodeView,
+        parent: Option<&'a Self::DepState>,
+        _ctx: &Self::Ctx,
+    ) -> bool {
         let mut node_ref = None;
+        let mut cursor_ref = if let Some(parent) = parent {
+            parent.cursor_ref.clone()
+        } else {
+            None
+        };
 
         for a in node.attributes() {
             match a.name {
@@ -160,6 +191,12 @@ impl NodeDepState<()> for References {
                         node_ref = Some(r.read().clone())
                     }
                 }
+                "cursor_reference" => {
+                    if let AttributeValue::Any(v) = a.value {
+                        let r: &UseRef<CursorReference> = v.value.downcast_ref().unwrap();
+                        cursor_ref = Some(r.read().clone())
+                    }
+                }
                 _ => {
                     println!("Unsupported attribute <{}>", a.name);
                 }
@@ -167,7 +204,10 @@ impl NodeDepState<()> for References {
         }
 
         let changed = false;
-        *self = Self { node_ref };
+        *self = Self {
+            node_ref,
+            cursor_ref,
+        };
         changed
     }
 }
@@ -365,9 +405,16 @@ pub enum DisplayMode {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+pub enum CursorMode {
+    None,
+    Editable,
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub struct CursorSettings {
     pub position: Option<i32>,
     pub color: Color,
+    pub mode: CursorMode,
 }
 
 impl Default for CursorSettings {
@@ -375,6 +422,7 @@ impl Default for CursorSettings {
         Self {
             position: None,
             color: Color::WHITE,
+            mode: CursorMode::None,
         }
     }
 }
@@ -388,7 +436,6 @@ pub struct Style {
     pub image_data: Option<Vec<u8>>,
     pub svg_data: Option<Vec<u8>>,
     pub display: DisplayMode,
-    pub cursor: CursorSettings,
 }
 
 impl NodeDepState<()> for Style {
@@ -404,8 +451,6 @@ impl NodeDepState<()> for Style {
             "svg_data",
             "svg_content",
             "display",
-            "cursor_index",
-            "cursor_color",
         ])));
 
     fn reduce<'a>(&mut self, node: NodeView, _sibling: (), _ctx: &Self::Ctx) -> bool {
@@ -416,7 +461,6 @@ impl NodeDepState<()> for Style {
         let mut image_data = None;
         let mut svg_data = None;
         let mut display = DisplayMode::Normal;
-        let mut cursor = CursorSettings::default();
 
         for attr in node.attributes() {
             match attr.name {
@@ -459,6 +503,52 @@ impl NodeDepState<()> for Style {
                     let text = attr.value.as_text();
                     svg_data = text.map(|v| v.as_bytes().to_vec());
                 }
+                _ => {
+                    println!("Unsupported attribute <{}>", attr.name);
+                }
+            }
+        }
+
+        let changed = (background != self.background)
+            || (relative_layer != self.relative_layer)
+            || (shadow != self.shadow)
+            || (radius != self.radius)
+            || (image_data != self.image_data);
+
+        *self = Self {
+            background,
+            relative_layer,
+            shadow,
+            radius,
+            image_data,
+            svg_data,
+            display,
+        };
+        changed
+    }
+}
+
+impl ParentDepState for CursorSettings {
+    type Ctx = ();
+    type DepState = Self;
+
+    const NODE_MASK: NodeMask =
+        NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
+            "cursor_index",
+            "cursor_color",
+            "cursor_mode",
+        ])));
+
+    fn reduce<'a>(
+        &mut self,
+        node: NodeView,
+        parent: Option<&'a Self::DepState>,
+        _ctx: &Self::Ctx,
+    ) -> bool {
+        let mut cursor = parent.map(|c| c.clone()).unwrap_or_default();
+
+        for attr in node.attributes() {
+            match attr.name {
                 "cursor_index" => {
                     let text = attr.value.as_text().unwrap();
                     if text != "none" {
@@ -472,29 +562,14 @@ impl NodeDepState<()> for Style {
                         cursor.color = new_cursor_color;
                     }
                 }
-                _ => {
-                    println!("Unsupported attribute <{}>", attr.name);
+                "cursor_mode" => {
+                    cursor.mode = CursorMode::Editable;
                 }
+                _ => {}
             }
         }
-
-        let changed = (background != self.background)
-            || (relative_layer != self.relative_layer)
-            || (shadow != self.shadow)
-            || (radius != self.radius)
-            || (cursor != self.cursor)
-            || (image_data != self.image_data);
-
-        *self = Self {
-            background,
-            relative_layer,
-            shadow,
-            radius,
-            image_data,
-            svg_data,
-            display,
-            cursor,
-        };
+        let changed = &cursor != self;
+        *self = cursor;
         changed
     }
 }

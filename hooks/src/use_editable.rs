@@ -1,18 +1,114 @@
-use dioxus::{core::UiEvent, prelude::*};
+use std::sync::{Arc, Mutex};
+
+use dioxus::{core::UiEvent, events::MouseData, prelude::*};
 use freya_elements::events::{KeyCode, KeyboardData};
+use freya_node_state::CursorReference;
+use tokio::sync::{mpsc::unbounded_channel, mpsc::UnboundedSender};
 use xi_rope::Rope;
 
-pub fn use_editable(
+pub enum EditableMode {
+    SingleLineMultipleEditor,
+    MultipleLinesSingleEditors,
+}
+
+pub fn use_editable<'a>(
     cx: &ScopeState,
+    initializer: impl Fn() -> &'a str,
+    mode: EditableMode,
 ) -> (
     &UseState<Rope>,
     &UseState<(usize, usize)>,
     impl Fn(UiEvent<KeyboardData>) + '_,
+    UnboundedSender<(UiEvent<MouseData>, usize)>,
+    &UseRef<CursorReference>,
 ) {
-    let content = use_state(cx, || {
-        Rope::from("Lorem ipsum dolor sit amet,\nconsectetur adipiscing elit,\nsed do eiusmod tempor incididunt\nut labore et dolore magna aliqua.\nUt enim ad minim veniam,\nquis nostrud exercitation\nullamco laboris nisi ut \naliquip ex ea commodo consequat.\n\n\n\n\n\n\n\n\n\n")
-    });
+    // Hold the actual editable content
+    let content = use_state(cx, || Rope::from(initializer()));
+    let content_getter = content.current();
+
+    // Holds the column and line where the cursor is
     let cursor = use_state(cx, || (0, 0));
+    let cursor_getter = cursor.current();
+    let cursor_setter = cursor.setter();
+
+    let cursor_channels = use_ref(&cx, || {
+        let (tx, rx) = unbounded_channel::<(usize, usize)>();
+        (tx, Some(rx))
+    });
+
+    // Cursor reference passed to the layout engine
+    let cursor_ref = use_ref(&cx, || CursorReference {
+        agent: cursor_channels.read().0.clone(),
+        positions: Arc::new(Mutex::new(None)),
+        id: Arc::new(Mutex::new(None)),
+    });
+
+    // Single listener multiple triggers channel so the mouse can be changed from multiple elements
+    let click_channel = use_ref(&cx, || {
+        let (tx, rx) = unbounded_channel::<(UiEvent<MouseData>, usize)>();
+        (tx, Some(rx))
+    });
+
+    // Update the new positions and ID from the cursor reference so the layout engine can make the proper calculations
+    {
+        let click_channel = click_channel.clone();
+        let cursor_ref = cursor_ref.clone();
+        use_effect(&cx, (), move |_| {
+            let click_channel = click_channel.clone();
+            async move {
+                let rx = click_channel.write().1.take();
+                let mut rx = rx.unwrap();
+
+                loop {
+                    if let Some((e, id)) = rx.recv().await {
+                        let points = e.element_coordinates();
+                        let cursor_ref = cursor_ref.clone();
+                        cursor_ref.write().id.lock().unwrap().replace(id);
+                        cursor_ref
+                            .write()
+                            .positions
+                            .lock()
+                            .unwrap()
+                            .replace((points.x as f32, points.y as f32));
+                    }
+                }
+            }
+        });
+    }
+
+    // Listen for new calculations from the layout engine
+    use_effect(&cx, (), move |_| {
+        let cursor_ref = cursor_ref.clone();
+        let getter = cursor_getter.clone();
+        let cursor_channels = cursor_channels.clone();
+
+        async move {
+            let cursor_receiver = cursor_channels.write().1.take();
+            let mut cursor_receiver = cursor_receiver.unwrap();
+            let mut prev_cursor = (*getter).clone();
+            let cursor_ref = cursor_ref.clone();
+
+            loop {
+                if let Some((new_index, editor_num)) = cursor_receiver.recv().await {
+                    let row = content_getter.line_of_offset(new_index);
+                    let col = new_index - row;
+                    let new_cursor = match mode {
+                        EditableMode::MultipleLinesSingleEditors => (col, row),
+                        EditableMode::SingleLineMultipleEditor => (col, editor_num),
+                    };
+
+                    // Only update if it's actually different
+                    if prev_cursor != new_cursor {
+                        cursor_setter(new_cursor.clone());
+                        prev_cursor = new_cursor;
+                    }
+
+                    // Remove the current calcutions so the layout engine doesn't try to calculate again
+                    cursor_ref.write().positions.lock().unwrap().take();
+                }
+            }
+        }
+    });
 
     let process_keyevent = move |e: UiEvent<KeyboardData>| match &e.code {
         KeyCode::ArrowDown => {
@@ -127,5 +223,11 @@ pub fn use_editable(
         }
     };
 
-    (content, cursor, process_keyevent)
+    (
+        content,
+        cursor,
+        process_keyevent,
+        click_channel.read().0.clone(),
+        cursor_ref,
+    )
 }

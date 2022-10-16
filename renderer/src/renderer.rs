@@ -209,8 +209,8 @@ pub fn render_skia(
                     paragraph.paint(canvas, (x, y));
 
                     // Draw a cursor if specified
-                    if let Some(cursor) = node.state.style.cursor.position {
-                        let cursor_color = node.state.style.cursor.color;
+                    if let Some(cursor) = node.state.cursor_settings.position {
+                        let cursor_color = node.state.cursor_settings.color;
                         let cursor_position = cursor as usize;
 
                         let cursor_rects = paragraph.get_rects_for_range(

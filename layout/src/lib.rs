@@ -2,7 +2,10 @@ use dioxus::core::ElementId;
 use dioxus_native_core::real_dom::NodeType;
 use freya_elements::NodeLayout;
 use freya_layers::{Layers, NodeArea, NodeData};
-use freya_node_state::node::{CalcType, DirectionMode, DisplayMode, SizeMode};
+use freya_node_state::{
+    node::{CalcType, DirectionMode, DisplayMode, SizeMode},
+    CursorMode,
+};
 use skia_safe::textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle};
 
 pub fn run_calculations(calcs: &Vec<CalcType>, parent_area_value: f32) -> f32 {
@@ -235,6 +238,25 @@ fn process_node_layout<T>(
             let lines_count = paragraph.line_number() as f32;
             node_area.width = paragraph.longest_line();
             node_area.height = (line_height * font_size) * lines_count;
+
+            if CursorMode::Editable == node_data.node.state.cursor_settings.mode {
+                if let Some(cursor_ref) = &node_data.node.state.references.cursor_ref {
+                    let positions = cursor_ref.positions.lock().unwrap();
+                    if let Some(positions) = positions.as_ref() {
+                        // Calculate the new cursor position
+                        let char_position = paragraph.get_glyph_position_at_coordinate(*positions);
+
+                        // Notify the cursor reference listener
+                        cursor_ref
+                            .agent
+                            .send((
+                                char_position.position as usize,
+                                cursor_ref.id.lock().unwrap().unwrap(),
+                            ))
+                            .ok();
+                    }
+                }
+            }
         }
         NodeType::Placeholder => {}
     }
