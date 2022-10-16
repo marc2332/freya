@@ -6,11 +6,19 @@ use freya_node_state::CursorReference;
 use tokio::sync::{mpsc::unbounded_channel, mpsc::UnboundedSender};
 use xi_rope::Rope;
 
+/// How the editable content must behave.
 pub enum EditableMode {
+    /// Multiple editors of only one line.
+    /// 
+    /// Useful for textarea-like editors that need more customization than a simple paragraph for example.
     SingleLineMultipleEditor,
+    /// One editor of multiple lines.
+    /// 
+    /// A paragraph for example.
     MultipleLinesSingleEditors,
 }
 
+/// Create a cursor for some editable text.
 pub fn use_editable<'a>(
     cx: &ScopeState,
     initializer: impl Fn() -> &'a str,
@@ -92,6 +100,7 @@ pub fn use_editable<'a>(
                 if let Some((new_index, editor_num)) = cursor_receiver.recv().await {
                     let row = content_getter.line_of_offset(new_index);
                     let col = new_index - row;
+
                     let new_cursor = match mode {
                         EditableMode::MultipleLinesSingleEditors => (col, row),
                         EditableMode::SingleLineMultipleEditor => (col, editor_num),
