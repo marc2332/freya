@@ -2,7 +2,7 @@ use dioxus_native_core::real_dom::{Node, NodeType};
 use dioxus_native_core::traversable::Traversable;
 use freya_layers::{NodeArea, NodeData};
 use freya_node_state::node::NodeState;
-use skia_safe::textlayout::{RectHeightStyle, RectWidthStyle};
+use skia_safe::textlayout::{RectHeightStyle, RectWidthStyle, TextHeightBehavior};
 use skia_safe::{
     svg,
     textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle},
@@ -188,6 +188,7 @@ pub fn render_skia(
                     paragraph_style.set_max_lines(max_lines);
                     paragraph_style.set_text_align(align);
                     paragraph_style.set_replace_tab_characters(true);
+                    paragraph_style.set_text_height_behavior(TextHeightBehavior::DisableAll);
 
                     let mut paragraph_builder =
                         ParagraphBuilder::new(&paragraph_style, font_collection.clone());
@@ -195,6 +196,8 @@ pub fn render_skia(
                     for node_text in &texts {
                         paragraph_builder.push_style(
                             TextStyle::new()
+                                .set_height_override(true)
+                                .set_height(node_text.0.font_style.line_height)
                                 .set_color(node_text.0.font_style.color)
                                 .set_font_size(node_text.0.font_style.font_size)
                                 .set_font_families(&[node_text.0.font_style.font_family.clone()]),
@@ -283,6 +286,7 @@ pub fn render_skia(
 
             #[cfg(feature = "wireframe")]
             {
+                use skia_safe::Color;
                 let mut paint = Paint::default();
 
                 paint.set_anti_alias(true);

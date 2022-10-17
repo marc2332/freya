@@ -125,6 +125,7 @@ builder_constructors! {
         max_lines: String,
         cursor_color: String,
         cursor_mode: String,
+        line_height: String,
     };
     text {
         color: String,
@@ -133,6 +134,7 @@ builder_constructors! {
         width: String,
         font_size: String,
         font_family: String,
+        line_height: String,
     };
 }
 

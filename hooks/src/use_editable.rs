@@ -9,11 +9,11 @@ use xi_rope::Rope;
 /// How the editable content must behave.
 pub enum EditableMode {
     /// Multiple editors of only one line.
-    /// 
+    ///
     /// Useful for textarea-like editors that need more customization than a simple paragraph for example.
     SingleLineMultipleEditor,
     /// One editor of multiple lines.
-    /// 
+    ///
     /// A paragraph for example.
     MultipleLinesSingleEditors,
 }
@@ -32,11 +32,9 @@ pub fn use_editable<'a>(
 ) {
     // Hold the actual editable content
     let content = use_state(cx, || Rope::from(initializer()));
-    let content_getter = content.current();
 
     // Holds the column and line where the cursor is
     let cursor = use_state(cx, || (0, 0));
-    let cursor_getter = cursor.current();
     let cursor_setter = cursor.setter();
 
     let cursor_channels = use_ref(&cx, || {
@@ -87,23 +85,35 @@ pub fn use_editable<'a>(
     // Listen for new calculations from the layout engine
     use_effect(&cx, (), move |_| {
         let cursor_ref = cursor_ref.clone();
-        let getter = cursor_getter.clone();
+        let cursor_getter = cursor.current();
         let cursor_channels = cursor_channels.clone();
+        let content = content.clone();
 
         async move {
             let cursor_receiver = cursor_channels.write().1.take();
             let mut cursor_receiver = cursor_receiver.unwrap();
-            let mut prev_cursor = (*getter).clone();
+            let mut prev_cursor = (*cursor_getter).clone();
             let cursor_ref = cursor_ref.clone();
 
             loop {
                 if let Some((new_index, editor_num)) = cursor_receiver.recv().await {
-                    let row = content_getter.line_of_offset(new_index);
+                    let content = content.current();
+
+                    let row = content.line_of_offset(new_index);
                     let col = new_index - row;
 
                     let new_cursor = match mode {
                         EditableMode::MultipleLinesSingleEditors => (col, row),
                         EditableMode::SingleLineMultipleEditor => (col, editor_num),
+                    };
+
+                    let new_current_line = content.lines(..).nth(new_cursor.1).unwrap();
+
+                    // Use the line lenght as new column if the clicked column surpases the length
+                    let new_cursor = if new_cursor.1 > new_current_line.len() {
+                        (new_current_line.len(), new_cursor.1)
+                    } else {
+                        new_cursor
                     };
 
                     // Only update if it's actually different
