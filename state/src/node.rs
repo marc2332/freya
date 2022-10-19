@@ -287,6 +287,7 @@ impl NodeDepState<()> for Size {
             "scroll_x",
             "direction",
         ])))
+        .with_text()
         .with_tag();
 
     fn reduce<'a>(&mut self, node: NodeView, _sibling: (), _ctx: &Self::Ctx) -> bool {
@@ -415,6 +416,7 @@ pub struct CursorSettings {
     pub position: Option<i32>,
     pub color: Color,
     pub mode: CursorMode,
+    pub id: Option<usize>,
 }
 
 impl Default for CursorSettings {
@@ -423,6 +425,7 @@ impl Default for CursorSettings {
             position: None,
             color: Color::WHITE,
             mode: CursorMode::None,
+            id: None,
         }
     }
 }
@@ -537,6 +540,7 @@ impl ParentDepState for CursorSettings {
             "cursor_index",
             "cursor_color",
             "cursor_mode",
+            "cursor_id",
         ])));
 
     fn reduce<'a>(
@@ -564,6 +568,12 @@ impl ParentDepState for CursorSettings {
                 }
                 "cursor_mode" => {
                     cursor.mode = CursorMode::Editable;
+                }
+                "cursor_id" => {
+                    let new_cursor_id = attr.value.to_string().parse();
+                    if let Ok(new_cursor_id) = new_cursor_id {
+                        cursor.id = Some(new_cursor_id);
+                    }
                 }
                 _ => {}
             }

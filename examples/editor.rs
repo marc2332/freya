@@ -60,6 +60,8 @@ fn app(cx: Scope) -> Element {
 
                     let manual_line_height = font_size * line_height;
 
+                    let cursor_id = line_index;
+
                     line_index += 1;
                     rsx! {
                         rect {
@@ -85,6 +87,7 @@ fn app(cx: Scope) -> Element {
                                 cursor_color: "black",
                                 max_lines: "1",
                                 cursor_mode: "editable",
+                                cursor_id: "{cursor_id}",
                                 onmousedown: onmousedown,
                                 text {
                                     color: "rgb(25, 25, 25)",

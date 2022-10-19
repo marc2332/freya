@@ -243,17 +243,23 @@ fn process_node_layout<T>(
                 if let Some(cursor_ref) = &node_data.node.state.references.cursor_ref {
                     let positions = cursor_ref.positions.lock().unwrap();
                     if let Some(positions) = positions.as_ref() {
-                        // Calculate the new cursor position
-                        let char_position = paragraph.get_glyph_position_at_coordinate(*positions);
+                        let current_cursor_id = cursor_ref.id.lock().unwrap();
+                        if let Some(current_cursor_id) = *current_cursor_id {
+                            let cursor_id = &node_data.node.state.cursor_settings.id;
+                            if let Some(cursor_id) = cursor_id {
+                                if current_cursor_id == *cursor_id {
+                                    // Calculate the new cursor position
+                                    let char_position =
+                                        paragraph.get_glyph_position_at_coordinate(*positions);
 
-                        // Notify the cursor reference listener
-                        cursor_ref
-                            .agent
-                            .send((
-                                char_position.position as usize,
-                                cursor_ref.id.lock().unwrap().unwrap(),
-                            ))
-                            .ok();
+                                    // Notify the cursor reference listener
+                                    cursor_ref
+                                        .agent
+                                        .send((char_position.position as usize, current_cursor_id))
+                                        .ok();
+                                }
+                            }
+                        }
                     }
                 }
             }

@@ -126,6 +126,7 @@ builder_constructors! {
         cursor_color: String,
         cursor_mode: String,
         line_height: String,
+        cursor_id: String,
     };
     text {
         color: String,
