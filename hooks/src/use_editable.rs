@@ -11,11 +11,11 @@ pub enum EditableMode {
     /// Multiple editors of only one line.
     ///
     /// Useful for textarea-like editors that need more customization than a simple paragraph for example.
-    SingleLineMultipleEditor,
+    SingleLineMultipleEditors,
     /// One editor of multiple lines.
     ///
     /// A paragraph for example.
-    MultipleLinesSingleEditors,
+    MultipleLinesSingleEditor,
 }
 
 /// Create a cursor for some editable text.
@@ -99,21 +99,27 @@ pub fn use_editable<'a>(
                 if let Some((new_index, editor_num)) = cursor_receiver.recv().await {
                     let content = content.current();
 
-                    let row = content.line_of_offset(new_index);
-                    let col = new_index - row;
-
-                    let new_cursor = match mode {
-                        EditableMode::MultipleLinesSingleEditors => (col, row),
-                        EditableMode::SingleLineMultipleEditor => (col, editor_num),
+                    let new_cursor_row = match mode {
+                        EditableMode::MultipleLinesSingleEditor => {
+                            content.line_of_offset(new_index)
+                        }
+                        EditableMode::SingleLineMultipleEditors => editor_num,
                     };
 
-                    let new_current_line = content.lines(..).nth(new_cursor.1).unwrap();
+                    let new_cursor_col = match mode {
+                        EditableMode::MultipleLinesSingleEditor => {
+                            new_index - content.offset_of_line(new_cursor_row)
+                        }
+                        EditableMode::SingleLineMultipleEditors => new_index,
+                    };
+
+                    let new_current_line = content.lines(..).nth(new_cursor_row).unwrap();
 
                     // Use the line lenght as new column if the clicked column surpases the length
-                    let new_cursor = if new_cursor.1 > new_current_line.len() {
-                        (new_current_line.len(), new_cursor.1)
+                    let new_cursor = if new_cursor_col > new_current_line.len() {
+                        (new_current_line.len(), new_cursor_row)
                     } else {
-                        new_cursor
+                        (new_cursor_col, new_cursor_row)
                     };
 
                     // Only update if it's actually different
@@ -134,12 +140,12 @@ pub fn use_editable<'a>(
             let total_lines = content.lines(..).count() - 1;
             if cursor.1 < total_lines {
                 let next_line = content.get().lines(..).nth(cursor.1 + 1).unwrap();
-                let cursor_indexolumn = if cursor.0 <= next_line.len() {
+                let cursor_index = if cursor.0 <= next_line.len() {
                     cursor.0
                 } else {
                     next_line.len()
                 };
-                cursor.set((cursor_indexolumn, cursor.1 + 1))
+                cursor.set((cursor_index, cursor.1 + 1))
             }
         }
         KeyCode::ArrowLeft => {

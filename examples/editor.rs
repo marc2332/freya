@@ -20,7 +20,7 @@ fn app(cx: Scope) -> Element {
         || {
             "Lorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet"
         },
-        EditableMode::SingleLineMultipleEditor,
+        EditableMode::SingleLineMultipleEditors,
     );
     let font_size_percentage = use_state(&cx, || 15.0);
     let line_height_percentage = use_state(&cx, || 0.0);
