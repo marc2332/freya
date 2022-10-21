@@ -242,8 +242,7 @@ fn process_node_layout<T>(
             if CursorMode::Editable == node_data.node.state.cursor_settings.mode {
                 if let Some((cursor_ref, cursor_id, positions)) = get_cursor(node_data) {
                     // Calculate the new cursor position
-                    let char_position =
-                    paragraph.get_glyph_position_at_coordinate(positions);
+                    let char_position = paragraph.get_glyph_position_at_coordinate(positions);
 
                     // Notify the cursor reference listener
                     cursor_ref
@@ -259,12 +258,8 @@ fn process_node_layout<T>(
 
 fn get_cursor(node_data: &NodeData) -> Option<(&CursorReference, usize, (f32, f32))> {
     let cursor_ref = node_data.node.state.references.cursor_ref.as_ref()?;
-    let positions = {
-        *cursor_ref.positions.lock().unwrap().as_ref()?
-    };
-    let current_cursor_id = {
-        *cursor_ref.id.lock().unwrap().as_ref()?
-    };
+    let positions = { *cursor_ref.positions.lock().unwrap().as_ref()? };
+    let current_cursor_id = { *cursor_ref.id.lock().unwrap().as_ref()? };
     let cursor_id = node_data.node.state.cursor_settings.id.as_ref()?;
 
     if current_cursor_id == *cursor_id {

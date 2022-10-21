@@ -11,15 +11,16 @@ use freya::{
 };
 
 fn main() {
-    launch_cfg(vec![
-        (app, WindowConfig { 
-            width: 900, 
-            height: 500, 
-            decorations: true, 
-            title: "Editors", 
-            transparent: false
-        })
-    ]);
+    launch_cfg(vec![(
+        app,
+        WindowConfig {
+            width: 900,
+            height: 500,
+            decorations: true,
+            title: "Editors",
+            transparent: false,
+        },
+    )]);
 }
 
 fn app(cx: Scope) -> Element {
@@ -30,11 +31,15 @@ fn app(cx: Scope) -> Element {
         },
         EditableMode::SingleLineMultipleEditors,
     );
-    let (second_content, second_cursor, second_process_keyevent, second_process_clickevent, second_cursor_ref) = use_editable(
+    let (
+        second_content,
+        second_cursor,
+        second_process_keyevent,
+        second_process_clickevent,
+        second_cursor_ref,
+    ) = use_editable(
         &cx,
-        || {
-            "hello World\nHello World\nHello World"
-        },
+        || "hello World\nHello World\nHello World",
         EditableMode::MultipleLinesSingleEditor,
     );
     let font_size_percentage = use_state(&cx, || 15.0);

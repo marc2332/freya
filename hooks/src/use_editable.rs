@@ -93,13 +93,11 @@ pub fn use_editable<'a>(
             let mut prev_cursor = (*cursor_getter).clone();
             let cursor_ref = cursor_ref.clone();
 
-           while let Some((new_index, editor_num)) = cursor_receiver.recv().await {
+            while let Some((new_index, editor_num)) = cursor_receiver.recv().await {
                 let content = content.current();
 
                 let new_cursor_row = match mode {
-                    EditableMode::MultipleLinesSingleEditor => {
-                        content.line_of_offset(new_index)
-                    }
+                    EditableMode::MultipleLinesSingleEditor => content.line_of_offset(new_index),
                     EditableMode::SingleLineMultipleEditors => editor_num,
                 };
 
@@ -111,6 +109,7 @@ pub fn use_editable<'a>(
                 };
 
                 let new_current_line = content.lines(..).nth(new_cursor_row).unwrap();
+
                 // Use the line lenght as new column if the clicked column surpases the length
                 let new_cursor = if new_cursor_col >= new_current_line.len() {
                     (new_current_line.len(), new_cursor_row)
@@ -133,56 +132,67 @@ pub fn use_editable<'a>(
     let process_keyevent = move |e: UiEvent<KeyboardData>| match &e.code {
         KeyCode::ArrowDown => {
             let total_lines = content.lines(..).count() - 1;
+            // Go one line down
             if cursor.1 < total_lines {
                 let next_line = content.get().lines(..).nth(cursor.1 + 1).unwrap();
+
+                // Try to use the current cursor column, otherwise use the new line length
                 let cursor_index = if cursor.0 <= next_line.len() {
                     cursor.0
                 } else {
                     next_line.len()
                 };
+
                 cursor.set((cursor_index, cursor.1 + 1))
             }
         }
         KeyCode::ArrowLeft => {
+            // Go one character to the left
             if cursor.0 > 0 {
                 cursor.set((cursor.0 - 1, cursor.1));
             } else if cursor.1 > 0 {
+                // Go one line up if there is no more characters on the left
                 let prev_line = content.get().lines(..).nth(cursor.1 - 1);
                 if let Some(prev_line) = prev_line {
-                    if cursor.0 == 0 && cursor.1 > 0 {
-                        let len = if prev_line.len() > 0 {
-                            prev_line.len() - 1
-                        } else {
-                            0
-                        };
-                        cursor.set((len, cursor.1 - 1));
-                    } else if cursor.0 > 0 {
-                        cursor.set((cursor.0 - 1, cursor.1));
-                    }
+                    // Use the new line length as new cursor column, otherwise just set it to 0
+                    let len = if prev_line.len() > 0 {
+                        prev_line.len()
+                    } else {
+                        0
+                    };
+                    cursor.set((len, cursor.1 - 1));
                 }
             }
         }
         KeyCode::ArrowRight => {
             let total_lines = content.lines(..).count() - 1;
             let current_line = content.get().lines(..).nth(cursor.1).unwrap();
-            if cursor.0 < current_line.len() {
-                cursor.set((cursor.0 + 1, cursor.1));
-            } else if cursor.0 == current_line.len() && cursor.1 < total_lines {
+
+            // Go one line down if there isn't more characters on the right
+            if cursor.1 < total_lines && cursor.0 == current_line.len() {
                 cursor.set((0, cursor.1 + 1));
+            } else if cursor.0 < current_line.len() {
+                // Go one character to the right if possible
+                cursor.set((cursor.0 + 1, cursor.1));
             }
         }
         KeyCode::ArrowUp => {
+            // Go one line up if there is any
             if cursor.1 > 0 {
                 let prev_line = content.get().lines(..).nth(cursor.1 - 1).unwrap();
+
+                // Try to use the current cursor column, otherwise use the new line length
                 let cursor_indexolumn = if cursor.0 <= prev_line.len() {
                     cursor.0
                 } else {
                     prev_line.len()
                 };
+
                 cursor.set((cursor_indexolumn, cursor.1 - 1))
             }
         }
         KeyCode::Space => {
+            // Simply adds an space
             let char_idx = content.get().offset_of_line(cursor.1) + cursor.0;
             content.with_mut(|code| {
                 code.edit(char_idx..char_idx, " ");
@@ -191,6 +201,7 @@ pub fn use_editable<'a>(
         }
         KeyCode::Backspace => {
             if cursor.0 > 0 {
+                // Remove the character to the left if there is any
                 let char_idx = content.get().offset_of_line(cursor.1) + cursor.0;
                 content.with_mut(|code| {
                     code.edit(char_idx - 1..char_idx, "");
@@ -198,6 +209,7 @@ pub fn use_editable<'a>(
 
                 cursor.set((cursor.0 - 1, cursor.1))
             } else if cursor.1 > 0 {
+                // Moves the whole current line to the end of the line above.
                 let prev_line = content.get().lines(..).nth(cursor.1 - 1).unwrap();
                 let current_line = content.get().lines(..).nth(cursor.1);
 
@@ -216,6 +228,7 @@ pub fn use_editable<'a>(
             }
         }
         KeyCode::Enter => {
+            // Breaks the line
             let total_lines = content.lines(..).count();
             let char_idx = content.get().offset_of_line(cursor.1) + cursor.0;
             let current_line = content.get().lines(..).nth(cursor.1).unwrap();
@@ -231,6 +244,7 @@ pub fn use_editable<'a>(
             cursor.set((0, cursor.1 + 1))
         }
         character => {
+            // Adds a new character to the right
             if let Some(character) = character.to_text() {
                 let char_idx = content.get().offset_of_line(cursor.1) + cursor.0;
 
