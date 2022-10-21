@@ -22,6 +22,13 @@ fn app(cx: Scope) -> Element {
         },
         EditableMode::SingleLineMultipleEditors,
     );
+    let (second_content, second_cursor, second_process_keyevent, second_process_clickevent, second_cursor_ref) = use_editable(
+        &cx,
+        || {
+            "hello World\nHello World\nHello World"
+        },
+        EditableMode::MultipleLinesSingleEditor,
+    );
     let font_size_percentage = use_state(&cx, || 15.0);
     let line_height_percentage = use_state(&cx, || 0.0);
 
@@ -33,10 +40,12 @@ fn app(cx: Scope) -> Element {
     let mirror_process_clickevent = process_clickevent.clone();
     let cursor_char = content.offset_of_line(cursor.1) + cursor.0;
 
+    let second_cursor_char = second_content.offset_of_line(second_cursor.1) + second_cursor.0;
+
     render!(
         rect {
             width: "100%",
-            height: "calc(100% - 20)",
+            height: "calc(100% - 100 - 20)",
             onkeydown: process_keyevent,
             cursor_reference: cursor_ref,
             direction: "horizontal",
@@ -169,6 +178,27 @@ fn app(cx: Scope) -> Element {
                         font_size: "{font_size}",
                         "{content}"
                     }
+                }
+            }
+        }
+        rect {
+            width: "100%",
+            height: "100",
+            onkeydown: second_process_keyevent,
+            cursor_reference: second_cursor_ref,
+            onmousedown:  move |e: UiEvent<MouseData>| {
+                second_process_clickevent.send((e, 0)).ok();
+            },
+            paragraph {
+                width: "100%",
+                cursor_index: "{second_cursor_char}",
+                cursor_color: "black",
+                cursor_mode: "editable",
+                cursor_id: "0",
+                text {
+                    color: "rgb(25, 25, 25)",
+                    font_size: "15",
+                    "{second_content}"
                 }
             }
         }

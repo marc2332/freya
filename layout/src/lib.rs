@@ -4,7 +4,7 @@ use freya_elements::NodeLayout;
 use freya_layers::{Layers, NodeArea, NodeData};
 use freya_node_state::{
     node::{CalcType, DirectionMode, DisplayMode, SizeMode},
-    CursorMode,
+    CursorMode, CursorReference,
 };
 use skia_safe::textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle};
 
@@ -240,31 +240,37 @@ fn process_node_layout<T>(
             node_area.height = (line_height * font_size) * lines_count;
 
             if CursorMode::Editable == node_data.node.state.cursor_settings.mode {
-                if let Some(cursor_ref) = &node_data.node.state.references.cursor_ref {
-                    let positions = cursor_ref.positions.lock().unwrap();
-                    if let Some(positions) = positions.as_ref() {
-                        let current_cursor_id = cursor_ref.id.lock().unwrap();
-                        if let Some(current_cursor_id) = *current_cursor_id {
-                            let cursor_id = &node_data.node.state.cursor_settings.id;
-                            if let Some(cursor_id) = cursor_id {
-                                if current_cursor_id == *cursor_id {
-                                    // Calculate the new cursor position
-                                    let char_position =
-                                        paragraph.get_glyph_position_at_coordinate(*positions);
+                if let Some((cursor_ref, cursor_id, positions)) = get_cursor(node_data) {
+                    // Calculate the new cursor position
+                    let char_position =
+                    paragraph.get_glyph_position_at_coordinate(positions);
 
-                                    // Notify the cursor reference listener
-                                    cursor_ref
-                                        .agent
-                                        .send((char_position.position as usize, current_cursor_id))
-                                        .ok();
-                                }
-                            }
-                        }
-                    }
+                    // Notify the cursor reference listener
+                    cursor_ref
+                        .agent
+                        .send((char_position.position as usize, cursor_id))
+                        .ok();
                 }
             }
         }
         NodeType::Placeholder => {}
+    }
+}
+
+fn get_cursor(node_data: &NodeData) -> Option<(&CursorReference, usize, (f32, f32))> {
+    let cursor_ref = node_data.node.state.references.cursor_ref.as_ref()?;
+    let positions = {
+        *cursor_ref.positions.lock().unwrap().as_ref()?
+    };
+    let current_cursor_id = {
+        *cursor_ref.id.lock().unwrap().as_ref()?
+    };
+    let cursor_id = node_data.node.state.cursor_settings.id.as_ref()?;
+
+    if current_cursor_id == *cursor_id {
+        Some((cursor_ref, *cursor_id, positions))
+    } else {
+        None
     }
 }
 

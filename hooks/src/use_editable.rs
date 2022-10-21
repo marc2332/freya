@@ -65,18 +65,16 @@ pub fn use_editable<'a>(
                 let rx = click_channel.write().1.take();
                 let mut rx = rx.unwrap();
 
-                loop {
-                    if let Some((e, id)) = rx.recv().await {
-                        let points = e.element_coordinates();
-                        let cursor_ref = cursor_ref.clone();
-                        cursor_ref.write().id.lock().unwrap().replace(id);
-                        cursor_ref
-                            .write()
-                            .positions
-                            .lock()
-                            .unwrap()
-                            .replace((points.x as f32, points.y as f32));
-                    }
+                while let Some((e, id)) = rx.recv().await {
+                    let points = e.element_coordinates();
+                    let cursor_ref = cursor_ref.clone();
+                    cursor_ref.write().id.lock().unwrap().replace(id);
+                    cursor_ref
+                        .write()
+                        .positions
+                        .lock()
+                        .unwrap()
+                        .replace((points.x as f32, points.y as f32));
                 }
             }
         });
@@ -95,42 +93,39 @@ pub fn use_editable<'a>(
             let mut prev_cursor = (*cursor_getter).clone();
             let cursor_ref = cursor_ref.clone();
 
-            loop {
-                if let Some((new_index, editor_num)) = cursor_receiver.recv().await {
-                    let content = content.current();
+           while let Some((new_index, editor_num)) = cursor_receiver.recv().await {
+                let content = content.current();
 
-                    let new_cursor_row = match mode {
-                        EditableMode::MultipleLinesSingleEditor => {
-                            content.line_of_offset(new_index)
-                        }
-                        EditableMode::SingleLineMultipleEditors => editor_num,
-                    };
-
-                    let new_cursor_col = match mode {
-                        EditableMode::MultipleLinesSingleEditor => {
-                            new_index - content.offset_of_line(new_cursor_row)
-                        }
-                        EditableMode::SingleLineMultipleEditors => new_index,
-                    };
-
-                    let new_current_line = content.lines(..).nth(new_cursor_row).unwrap();
-
-                    // Use the line lenght as new column if the clicked column surpases the length
-                    let new_cursor = if new_cursor_col > new_current_line.len() {
-                        (new_current_line.len(), new_cursor_row)
-                    } else {
-                        (new_cursor_col, new_cursor_row)
-                    };
-
-                    // Only update if it's actually different
-                    if prev_cursor != new_cursor {
-                        cursor_setter(new_cursor.clone());
-                        prev_cursor = new_cursor;
+                let new_cursor_row = match mode {
+                    EditableMode::MultipleLinesSingleEditor => {
+                        content.line_of_offset(new_index)
                     }
+                    EditableMode::SingleLineMultipleEditors => editor_num,
+                };
 
-                    // Remove the current calcutions so the layout engine doesn't try to calculate again
-                    cursor_ref.write().positions.lock().unwrap().take();
+                let new_cursor_col = match mode {
+                    EditableMode::MultipleLinesSingleEditor => {
+                        new_index - content.offset_of_line(new_cursor_row)
+                    }
+                    EditableMode::SingleLineMultipleEditors => new_index,
+                };
+
+                let new_current_line = content.lines(..).nth(new_cursor_row).unwrap();
+                // Use the line lenght as new column if the clicked column surpases the length
+                let new_cursor = if new_cursor_col >= new_current_line.len() {
+                    (new_current_line.len(), new_cursor_row)
+                } else {
+                    (new_cursor_col, new_cursor_row)
+                };
+
+                // Only update if it's actually different
+                if prev_cursor != new_cursor {
+                    cursor_setter(new_cursor.clone());
+                    prev_cursor = new_cursor;
                 }
+
+                // Remove the current calcutions so the layout engine doesn't try to calculate again
+                cursor_ref.write().positions.lock().unwrap().take();
             }
         }
     });
