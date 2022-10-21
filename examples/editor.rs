@@ -11,7 +11,15 @@ use freya::{
 };
 
 fn main() {
-    launch(app);
+    launch_cfg(vec![
+        (app, WindowConfig { 
+            width: 900, 
+            height: 500, 
+            decorations: true, 
+            title: "Editors", 
+            transparent: false
+        })
+    ]);
 }
 
 fn app(cx: Scope) -> Element {
@@ -45,7 +53,7 @@ fn app(cx: Scope) -> Element {
     render!(
         rect {
             width: "100%",
-            height: "calc(100% - 100 - 20)",
+            height: "calc(75% - 20)",
             onkeydown: process_keyevent,
             cursor_reference: cursor_ref,
             direction: "horizontal",
@@ -181,9 +189,9 @@ fn app(cx: Scope) -> Element {
                 }
             }
         }
-        rect {
+        container {
             width: "100%",
-            height: "100",
+            height: "25%",
             onkeydown: second_process_keyevent,
             cursor_reference: second_cursor_ref,
             onmousedown:  move |e: UiEvent<MouseData>| {
