@@ -146,7 +146,7 @@ pub fn use_editable<'a>(
         KeyCode::ArrowLeft => {
             if cursor.0 > 0 {
                 cursor.set((cursor.0 - 1, cursor.1));
-            } else {
+            } else if cursor.1 > 0 {
                 let prev_line = content.get().lines(..).nth(cursor.1 - 1);
                 if let Some(prev_line) = prev_line {
                     if cursor.0 == 0 && cursor.1 > 0 {
