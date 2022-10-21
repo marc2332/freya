@@ -2,7 +2,10 @@ use dioxus::core::ElementId;
 use dioxus_native_core::real_dom::NodeType;
 use freya_elements::NodeLayout;
 use freya_layers::{Layers, NodeArea, NodeData};
-use freya_node_state::node::{CalcType, DirectionMode, DisplayMode, SizeMode};
+use freya_node_state::{
+    node::{CalcType, DirectionMode, DisplayMode, SizeMode},
+    CursorMode, CursorReference,
+};
 use skia_safe::textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle};
 
 pub fn run_calculations(calcs: &Vec<CalcType>, parent_area_value: f32) -> f32 {
@@ -210,8 +213,14 @@ fn process_node_layout<T>(
             let line_height = node_data.node.state.font_style.line_height;
             let font_size = node_data.node.state.font_style.font_size;
             let font_family = &node_data.node.state.font_style.font_family;
+            let align = node_data.node.state.font_style.align;
+            let max_lines = node_data.node.state.font_style.max_lines;
 
-            let paragraph_style = ParagraphStyle::default();
+            let mut paragraph_style = ParagraphStyle::default();
+            paragraph_style.set_text_align(align);
+            paragraph_style.set_max_lines(max_lines);
+            paragraph_style.set_replace_tab_characters(true);
+
             let mut paragraph_builder =
                 ParagraphBuilder::new(&paragraph_style, font_collection.clone());
 
@@ -227,11 +236,36 @@ fn process_node_layout<T>(
             paragraph.layout(node_area.width);
 
             let lines_count = paragraph.line_number() as f32;
-
             node_area.width = paragraph.longest_line();
             node_area.height = (line_height * font_size) * lines_count;
+
+            if CursorMode::Editable == node_data.node.state.cursor_settings.mode {
+                if let Some((cursor_ref, cursor_id, positions)) = get_cursor(node_data) {
+                    // Calculate the new cursor position
+                    let char_position = paragraph.get_glyph_position_at_coordinate(positions);
+
+                    // Notify the cursor reference listener
+                    cursor_ref
+                        .agent
+                        .send((char_position.position as usize, cursor_id))
+                        .ok();
+                }
+            }
         }
         NodeType::Placeholder => {}
+    }
+}
+
+fn get_cursor(node_data: &NodeData) -> Option<(&CursorReference, usize, (f32, f32))> {
+    let cursor_ref = node_data.node.state.references.cursor_ref.as_ref()?;
+    let positions = { *cursor_ref.positions.lock().unwrap().as_ref()? };
+    let current_cursor_id = { *cursor_ref.id.lock().unwrap().as_ref()? };
+    let cursor_id = node_data.node.state.cursor_settings.id.as_ref()?;
+
+    if current_cursor_id == *cursor_id {
+        Some((cursor_ref, *cursor_id, positions))
+    } else {
+        None
     }
 }
 

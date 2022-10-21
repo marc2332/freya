@@ -1,13 +1,14 @@
 use dioxus_native_core::real_dom::{Node, NodeType};
+use dioxus_native_core::traversable::Traversable;
 use freya_layers::{NodeArea, NodeData};
 use freya_node_state::node::NodeState;
+use skia_safe::textlayout::{RectHeightStyle, RectWidthStyle, TextHeightBehavior};
 use skia_safe::{
     svg,
     textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle},
     BlurStyle, Canvas, ClipOp, Data, IRect, Image, MaskFilter, Paint, PaintStyle, Path,
     PathDirection, Rect,
 };
-use std::ops::Index;
 
 use crate::SkiaDom;
 
@@ -112,13 +113,13 @@ pub fn render_skia(
                     let child_id = children.get(0);
 
                     let text = if let Some(child_id) = child_id {
-                        let child: Node<NodeState> = {
-                            let dom = dom.lock().unwrap();
-                            dom.index(*child_id).clone()
-                        };
-
-                        if let NodeType::Text { text } = child.node_type {
-                            Some(text)
+                        let dom = dom.lock().unwrap();
+                        if let Some(child) = dom.get(*child_id) {
+                            if let NodeType::Text { text } = &child.node_type {
+                                Some(text.clone())
+                            } else {
+                                None
+                            }
                         } else {
                             None
                         }
@@ -152,25 +153,36 @@ pub fn render_skia(
                 }
                 "paragraph" => {
                     let align = node.state.font_style.align;
+                    let max_lines = node.state.font_style.max_lines;
+
                     let texts = children
                         .iter()
                         .filter_map(|child_id| {
-                            let child: Node<NodeState> = {
+                            let child: Option<Node<NodeState>> = {
                                 let dom = dom.lock().unwrap();
-                                dom.index(*child_id).clone()
+                                dom.get(*child_id).map(|v| v.clone())
                             };
 
-                            if let NodeType::Element { tag, children, .. } = child.node_type {
-                                if tag != "text" {
-                                    return None;
-                                }
-                                if let Some(child_text_id) = children.get(0) {
-                                    let child_text: Node<NodeState> = {
-                                        let dom = dom.lock().unwrap();
-                                        dom.index(*child_text_id).clone()
-                                    };
-                                    if let NodeType::Text { text } = child_text.node_type {
-                                        Some((child.state, text))
+                            if let Some(child) = child {
+                                if let NodeType::Element { tag, children, .. } = child.node_type {
+                                    if tag != "text" {
+                                        return None;
+                                    }
+                                    if let Some(child_text_id) = children.get(0) {
+                                        let child_text: Option<Node<NodeState>> = {
+                                            let dom = dom.lock().unwrap();
+                                            dom.get(*child_text_id).map(|v| v.clone())
+                                        };
+
+                                        if let Some(child_text) = child_text {
+                                            if let NodeType::Text { text } = &child_text.node_type {
+                                                Some((child.state, text.clone()))
+                                            } else {
+                                                None
+                                            }
+                                        } else {
+                                            None
+                                        }
                                     } else {
                                         None
                                     }
@@ -187,19 +199,24 @@ pub fn render_skia(
                     let y = area.y;
 
                     let mut paragraph_style = ParagraphStyle::default();
+                    paragraph_style.set_max_lines(max_lines);
                     paragraph_style.set_text_align(align);
+                    paragraph_style.set_replace_tab_characters(true);
+                    paragraph_style.set_text_height_behavior(TextHeightBehavior::DisableAll);
 
                     let mut paragraph_builder =
                         ParagraphBuilder::new(&paragraph_style, font_collection.clone());
 
-                    for node_text in texts {
+                    for node_text in &texts {
                         paragraph_builder.push_style(
                             TextStyle::new()
+                                .set_height_override(true)
+                                .set_height(node_text.0.font_style.line_height)
                                 .set_color(node_text.0.font_style.color)
                                 .set_font_size(node_text.0.font_style.font_size)
-                                .set_font_families(&[node_text.0.font_style.font_family]),
+                                .set_font_families(&[node_text.0.font_style.font_family.clone()]),
                         );
-                        paragraph_builder.add_text(node_text.1);
+                        paragraph_builder.add_text(node_text.1.clone());
                     }
 
                     let mut paragraph = paragraph_builder.build();
@@ -207,6 +224,41 @@ pub fn render_skia(
                     paragraph.layout(area.width);
 
                     paragraph.paint(canvas, (x, y));
+
+                    // Draw a cursor if specified
+                    if let Some(cursor) = node.state.cursor_settings.position {
+                        let cursor_color = node.state.cursor_settings.color;
+                        let cursor_position = cursor as usize;
+
+                        let cursor_rects = paragraph.get_rects_for_range(
+                            cursor_position..cursor_position + 1,
+                            RectHeightStyle::Tight,
+                            RectWidthStyle::Tight,
+                        );
+                        let cursor_rect = cursor_rects.first();
+
+                        if let Some(cursor_rect) = cursor_rect {
+                            let x = area.x + cursor_rect.rect.left;
+                            let y = area.y + cursor_rect.rect.top;
+
+                            let x2 = x + 1.0;
+                            let y2 = y + (cursor_rect.rect.bottom - cursor_rect.rect.top);
+
+                            let mut paint = Paint::default();
+                            paint.set_anti_alias(true);
+                            paint.set_style(PaintStyle::Fill);
+                            paint.set_color(cursor_color);
+
+                            let mut path = Path::new();
+                            path.add_rect(
+                                Rect::new(x as f32, y as f32, x2 as f32, y2 as f32),
+                                None,
+                            );
+                            path.close();
+
+                            canvas.draw_path(&path, &paint);
+                        }
+                    }
                 }
                 "svg" => {
                     let x = area.x;
@@ -249,7 +301,6 @@ pub fn render_skia(
             #[cfg(feature = "wireframe")]
             {
                 use skia_safe::Color;
-
                 let mut paint = Paint::default();
 
                 paint.set_anti_alias(true);

@@ -43,6 +43,23 @@ macro_rules! builder_constructors {
                         false,
                     )
                 }
+
+                pub fn cursor_reference<'a, T: Clone + 'static + PartialEq>(
+                    &self,
+                    cx: NodeFactory<'a>,
+                    val: &'a T,
+                ) -> Attribute<'a> {
+                    cx.custom_attr(
+                        "cursor_reference",
+                        AttributeValue::Any(ArbitraryAttributeValue {
+                            value: val,
+                            cmp: |a, b| a.downcast_ref::<T>() == b.downcast_ref::<T>(),
+                        }),
+                        None,
+                        true,
+                        false,
+                    )
+                }
             }
 
             impl $name {
@@ -98,11 +115,18 @@ builder_constructors! {
         font_size: String,
         font_family: String,
         align: String,
+        max_lines: String,
     };
     paragraph {
         layer: String,
         width: String,
         align: String,
+        cursor_index: String,
+        max_lines: String,
+        cursor_color: String,
+        cursor_mode: String,
+        line_height: String,
+        cursor_id: String,
     };
     text {
         color: String,
@@ -111,6 +135,7 @@ builder_constructors! {
         width: String,
         font_size: String,
         font_family: String,
+        line_height: String,
     };
 }
 

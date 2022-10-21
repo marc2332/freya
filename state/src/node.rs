@@ -1,4 +1,5 @@
 use std::fmt::Display;
+use std::sync::{Arc, Mutex};
 
 use dioxus::prelude::UseRef;
 use dioxus_core::AttributeValue;
@@ -75,6 +76,7 @@ pub struct FontStyle {
     pub font_size: f32,
     pub line_height: f32, // https://developer.mozilla.org/en-US/docs/Web/CSS/line-height,
     pub align: TextAlign,
+    pub max_lines: Option<usize>,
 }
 
 impl Default for FontStyle {
@@ -85,18 +87,35 @@ impl Default for FontStyle {
             font_size: 16.0,
             line_height: 1.2,
             align: TextAlign::default(),
+            max_lines: None,
         }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct CursorReference {
+    pub positions: Arc<Mutex<Option<(f32, f32)>>>,
+    pub agent: UnboundedSender<(usize, usize)>,
+    pub id: Arc<Mutex<Option<usize>>>,
+}
+
+impl PartialEq for CursorReference {
+    fn eq(&self, _: &Self) -> bool {
+        true
     }
 }
 
 #[derive(Default, Clone)]
 pub struct References {
     pub node_ref: Option<UnboundedSender<NodeLayout>>,
+    pub cursor_ref: Option<CursorReference>,
 }
 
 #[derive(Clone, State, Default)]
 pub struct NodeState {
-    #[node_dep_state()]
+    #[parent_dep_state(cursor_settings)]
+    pub cursor_settings: CursorSettings,
+    #[parent_dep_state(references)]
     pub references: References,
     #[node_dep_state()]
     pub size: Size,
@@ -140,14 +159,28 @@ impl Size {
     }
 }
 
-impl NodeDepState<()> for References {
+impl ParentDepState for References {
     type Ctx = ();
+    type DepState = Self;
 
     const NODE_MASK: NodeMask =
-        NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!(["reference"])));
+        NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
+            "reference",
+            "cursor_reference"
+        ])));
 
-    fn reduce<'a>(&mut self, node: NodeView, _sibling: (), _ctx: &Self::Ctx) -> bool {
+    fn reduce<'a>(
+        &mut self,
+        node: NodeView,
+        parent: Option<&'a Self::DepState>,
+        _ctx: &Self::Ctx,
+    ) -> bool {
         let mut node_ref = None;
+        let mut cursor_ref = if let Some(parent) = parent {
+            parent.cursor_ref.clone()
+        } else {
+            None
+        };
 
         for a in node.attributes() {
             match a.name {
@@ -158,6 +191,12 @@ impl NodeDepState<()> for References {
                         node_ref = Some(r.read().clone())
                     }
                 }
+                "cursor_reference" => {
+                    if let AttributeValue::Any(v) = a.value {
+                        let r: &UseRef<CursorReference> = v.value.downcast_ref().unwrap();
+                        cursor_ref = Some(r.read().clone())
+                    }
+                }
                 _ => {
                     println!("Unsupported attribute <{}>", a.name);
                 }
@@ -165,7 +204,10 @@ impl NodeDepState<()> for References {
         }
 
         let changed = false;
-        *self = Self { node_ref };
+        *self = Self {
+            node_ref,
+            cursor_ref,
+        };
         changed
     }
 }
@@ -181,7 +223,8 @@ impl ParentDepState for FontStyle {
             "font_size",
             "font_family",
             "line_height",
-            "align"
+            "align",
+            "max_lines"
         ])));
 
     fn reduce<'a>(
@@ -216,6 +259,11 @@ impl ParentDepState for FontStyle {
                 "align" => {
                     font_style.align = parse_text_align(&attr.value.to_string());
                 }
+                "max_lines" => {
+                    if let Ok(max_lines) = attr.value.to_string().parse() {
+                        font_style.max_lines = Some(max_lines);
+                    }
+                }
                 _ => {}
             }
         }
@@ -239,6 +287,7 @@ impl NodeDepState<()> for Size {
             "scroll_x",
             "direction",
         ])))
+        .with_text()
         .with_tag();
 
     fn reduce<'a>(&mut self, node: NodeView, _sibling: (), _ctx: &Self::Ctx) -> bool {
@@ -356,6 +405,31 @@ pub enum DisplayMode {
     Center,
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub enum CursorMode {
+    None,
+    Editable,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct CursorSettings {
+    pub position: Option<i32>,
+    pub color: Color,
+    pub mode: CursorMode,
+    pub id: Option<usize>,
+}
+
+impl Default for CursorSettings {
+    fn default() -> Self {
+        Self {
+            position: None,
+            color: Color::WHITE,
+            mode: CursorMode::None,
+            id: None,
+        }
+    }
+}
+
 #[derive(Default, Clone, Debug)]
 pub struct Style {
     pub background: Color,
@@ -379,7 +453,7 @@ impl NodeDepState<()> for Style {
             "image_data",
             "svg_data",
             "svg_content",
-            "display"
+            "display",
         ])));
 
     fn reduce<'a>(&mut self, node: NodeView, _sibling: (), _ctx: &Self::Ctx) -> bool {
@@ -453,6 +527,59 @@ impl NodeDepState<()> for Style {
             svg_data,
             display,
         };
+        changed
+    }
+}
+
+impl ParentDepState for CursorSettings {
+    type Ctx = ();
+    type DepState = Self;
+
+    const NODE_MASK: NodeMask =
+        NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
+            "cursor_index",
+            "cursor_color",
+            "cursor_mode",
+            "cursor_id",
+        ])));
+
+    fn reduce<'a>(
+        &mut self,
+        node: NodeView,
+        parent: Option<&'a Self::DepState>,
+        _ctx: &Self::Ctx,
+    ) -> bool {
+        let mut cursor = parent.map(|c| c.clone()).unwrap_or_default();
+
+        for attr in node.attributes() {
+            match attr.name {
+                "cursor_index" => {
+                    let text = attr.value.as_text().unwrap();
+                    if text != "none" {
+                        let new_cursor_index = text.parse().unwrap();
+                        cursor.position = Some(new_cursor_index);
+                    }
+                }
+                "cursor_color" => {
+                    let new_cursor_color = parse_color(&attr.value.to_string());
+                    if let Some(new_cursor_color) = new_cursor_color {
+                        cursor.color = new_cursor_color;
+                    }
+                }
+                "cursor_mode" => {
+                    cursor.mode = CursorMode::Editable;
+                }
+                "cursor_id" => {
+                    let new_cursor_id = attr.value.to_string().parse();
+                    if let Ok(new_cursor_id) = new_cursor_id {
+                        cursor.id = Some(new_cursor_id);
+                    }
+                }
+                _ => {}
+            }
+        }
+        let changed = &cursor != self;
+        *self = cursor;
         changed
     }
 }
