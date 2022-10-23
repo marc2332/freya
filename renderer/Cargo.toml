@@ -26,4 +26,5 @@ freya-layout = { path = "../layout", version = "0.1.0" }
 freya-node-state = { path = "../state", version = "0.1.0" }
 freya-elements = { path = "../elements", version = "0.1.0" }
 freya-layers = { path = "../layers", version = "0.1.0" }
+freya-layout-memo = { path = "../layout-memo", version = "0.1.0" }
 serde_json = "1.0.85"

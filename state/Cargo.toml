@@ -21,4 +21,5 @@ anymap = "0.12.1"
 fxhash = "0.2.1"
 skia-safe = "0.55.0"
 freya-elements = { path = "../elements", version = "0.1.0"}
+freya-layout-memo = { path = "../layout-memo", version = "0.1.0" }
 tokio = { version = "1.17.0" }

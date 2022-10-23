@@ -1,6 +1,7 @@
 use dioxus_native_core::real_dom::{Node, NodeType};
 use dioxus_native_core::traversable::Traversable;
-use freya_layers::{NodeArea, NodeData};
+use freya_layers::RenderData;
+use freya_layout_memo::NodeArea;
 use freya_node_state::node::NodeState;
 use skia_safe::textlayout::{RectHeightStyle, RectWidthStyle, TextHeightBehavior};
 use skia_safe::{
@@ -15,25 +16,10 @@ use crate::SkiaDom;
 pub fn render_skia(
     dom: &mut &SkiaDom,
     canvas: &mut &mut Canvas,
-    node_data: &NodeData,
-    area: &NodeArea,
+    node: &RenderData,
     font_collection: &mut FontCollection,
     viewports: &Vec<NodeArea>,
 ) {
-    let node = &node_data.node;
-
-    let mut must_skip = false;
-    for v in viewports {
-        if area.x + area.width < v.x || area.y + area.height < v.y || area.x  > v.x + v.width || area.y  > v.y + v.height {
-            must_skip = true;
-            break;
-        }
-    }
-
-    if must_skip {
-        return;
-    }
-
     for viewport in viewports {
         canvas.clip_rect(
             Rect::new(
@@ -47,8 +33,6 @@ pub fn render_skia(
         );
     }
 
-    
-
     match &node.node_type {
         NodeType::Element { tag, children, .. } => {
             match tag.as_str() {
@@ -57,15 +41,15 @@ pub fn render_skia(
 
                     paint.set_anti_alias(true);
                     paint.set_style(PaintStyle::Fill);
-                    paint.set_color(node.state.style.background);
+                    paint.set_color(node.node_state.style.background);
 
-                    let x = area.x;
-                    let y = area.y;
+                    let x = node.node_area.x;
+                    let y = node.node_area.y;
 
-                    let x2 = x + area.width;
-                    let y2 = y + area.height;
+                    let x2 = x + node.node_area.width;
+                    let y2 = y + node.node_area.height;
 
-                    let radius = node.state.style.radius;
+                    let radius = node.node_state.style.radius;
                     let radius = if radius < 0.0 { 0.0 } else { radius };
 
                     let mut path = Path::new();
@@ -80,7 +64,7 @@ pub fn render_skia(
 
                     // Shadow effect
                     {
-                        let shadow = &node.state.style.shadow;
+                        let shadow = &node.node_state.style.shadow;
 
                         if shadow.intensity > 0 {
                             let mut blur_paint = paint.clone();
@@ -99,16 +83,16 @@ pub fn render_skia(
                     canvas.draw_path(&path, &paint);
                 }
                 "label" => {
-                    let font_size = node.state.font_style.font_size;
-                    let font_family = &node.state.font_style.font_family;
-                    let font_color = node.state.font_style.color;
-                    let align = node.state.font_style.align;
+                    let font_size = node.node_state.font_style.font_size;
+                    let font_family = &node.node_state.font_style.font_family;
+                    let font_color = node.node_state.font_style.color;
+                    let align = node.node_state.font_style.align;
 
                     let mut paint = Paint::default();
 
                     paint.set_anti_alias(true);
                     paint.set_style(PaintStyle::StrokeAndFill);
-                    paint.set_color(node.state.font_style.color);
+                    paint.set_color(node.node_state.font_style.color);
 
                     let child_id = children.get(0);
 
@@ -128,8 +112,8 @@ pub fn render_skia(
                     };
 
                     if let Some(text) = text {
-                        let x = area.x;
-                        let y = area.y;
+                        let x = node.node_area.x;
+                        let y = node.node_area.y;
 
                         let mut paragraph_style = ParagraphStyle::default();
                         paragraph_style.set_text_align(align);
@@ -146,14 +130,14 @@ pub fn render_skia(
 
                         let mut paragraph = paragraph_builder.build();
 
-                        paragraph.layout(area.width + 1.0);
+                        paragraph.layout(node.node_area.width + 1.0);
 
                         paragraph.paint(canvas, (x, y));
                     }
                 }
                 "paragraph" => {
-                    let align = node.state.font_style.align;
-                    let max_lines = node.state.font_style.max_lines;
+                    let align = node.node_state.font_style.align;
+                    let max_lines = node.node_state.font_style.max_lines;
 
                     let texts = children
                         .iter()
@@ -195,8 +179,8 @@ pub fn render_skia(
                         })
                         .collect::<Vec<(NodeState, String)>>();
 
-                    let x = area.x;
-                    let y = area.y;
+                    let x = node.node_area.x;
+                    let y = node.node_area.y;
 
                     let mut paragraph_style = ParagraphStyle::default();
                     paragraph_style.set_max_lines(max_lines);
@@ -221,13 +205,13 @@ pub fn render_skia(
 
                     let mut paragraph = paragraph_builder.build();
 
-                    paragraph.layout(area.width);
+                    paragraph.layout(node.node_area.width);
 
                     paragraph.paint(canvas, (x, y));
 
                     // Draw a cursor if specified
-                    if let Some(cursor) = node.state.cursor_settings.position {
-                        let cursor_color = node.state.cursor_settings.color;
+                    if let Some(cursor) = node.node_state.cursor_settings.position {
+                        let cursor_color = node.node_state.cursor_settings.color;
                         let cursor_position = cursor as usize;
 
                         let cursor_rects = paragraph.get_rects_for_range(
@@ -238,8 +222,8 @@ pub fn render_skia(
                         let cursor_rect = cursor_rects.first();
 
                         if let Some(cursor_rect) = cursor_rect {
-                            let x = area.x + cursor_rect.rect.left;
-                            let y = area.y + cursor_rect.rect.top;
+                            let x = node.node_area.x + cursor_rect.rect.left;
+                            let y = node.node_area.y + cursor_rect.rect.top;
 
                             let x2 = x + 1.0;
                             let y2 = y + (cursor_rect.rect.bottom - cursor_rect.rect.top);
@@ -261,21 +245,24 @@ pub fn render_skia(
                     }
                 }
                 "svg" => {
-                    let x = area.x;
-                    let y = area.y;
-                    if let Some(svg_data) = &node.state.style.svg_data {
+                    let x = node.node_area.x;
+                    let y = node.node_area.y;
+                    if let Some(svg_data) = &node.node_state.style.svg_data {
                         let svg_dom = svg::Dom::from_bytes(svg_data);
                         if let Ok(mut svg_dom) = svg_dom {
                             canvas.save();
                             canvas.translate((x, y));
-                            svg_dom.set_container_size((area.width as i32, area.height as i32));
+                            svg_dom.set_container_size((
+                                node.node_area.width as i32,
+                                node.node_area.height as i32,
+                            ));
                             svg_dom.render(canvas);
                             canvas.restore();
                         }
                     }
                 }
                 "image" => {
-                    if let Some(image_data) = &node.state.style.image_data {
+                    if let Some(image_data) = &node.node_state.style.image_data {
                         let pic = Image::from_encoded(unsafe { Data::new_bytes(image_data) });
                         if let Some(pic) = pic {
                             let mut paint = Paint::default();
@@ -284,10 +271,10 @@ pub fn render_skia(
                                 pic,
                                 &IRect::new(0, 0, 0, 0),
                                 Rect::new(
-                                    area.x,
-                                    area.y,
-                                    area.x + area.width,
-                                    area.y + area.height,
+                                    node.node_area.x,
+                                    node.node_area.y,
+                                    node.node_area.x + node.node_area.width,
+                                    node.node_area.y + node.node_area.height,
                                 ),
                                 skia_safe::FilterMode::Last,
                                 Some(&paint),
@@ -307,14 +294,14 @@ pub fn render_skia(
                 paint.set_style(PaintStyle::Fill);
                 paint.set_color(Color::MAGENTA);
 
-                let x = area.x;
-                let y = area.y;
+                let x = node.node_area.x;
+                let y = node.node_area.y;
 
-                let x2 = x + area.width;
-                let y2 = if area.height < 0.0 {
+                let x2 = x + node.node_area.width;
+                let y2 = if node.node_area.height < 0.0 {
                     y
                 } else {
-                    y + area.height
+                    y + node.node_area.height
                 };
 
                 canvas.draw_line((x, y), (x2, y), &paint);

@@ -1,7 +1,10 @@
+use std::sync::{Arc, Mutex};
+
 use dioxus_core::ElementId;
 use dioxus_native_core::real_dom::{Node, NodeType};
-use freya_layers::{Layers, NodeArea, NodeData};
+use freya_layers::{Layers, NodeData};
 use freya_layout::calculate_node;
+use freya_layout_memo::{LayoutManager, NodeArea};
 use freya_node_state::node::{DirectionMode, NodeState, Size, SizeMode};
 use lazy_static::lazy_static;
 use skia_safe::textlayout::FontCollection;
@@ -47,6 +50,7 @@ fn percentage() {
         |_, _| None,
         0,
         &mut FontCollection::new(),
+        &Arc::new(Mutex::new(LayoutManager::new())),
     );
 
     assert_eq!(result.height, 75.0);
@@ -80,6 +84,7 @@ fn manual() {
         |_, _| None,
         0,
         &mut FontCollection::new(),
+        &Arc::new(Mutex::new(LayoutManager::new())),
     );
 
     assert_eq!(result.height, 150.0);
@@ -142,6 +147,7 @@ fn auto() {
         },
         0,
         &mut FontCollection::new(),
+        &Arc::new(Mutex::new(LayoutManager::new())),
     );
 
     assert_eq!(result.height, 25.0);
@@ -193,6 +199,7 @@ fn x_y() {
         },
         0,
         &mut FontCollection::new(),
+        &Arc::new(Mutex::new(LayoutManager::new())),
     );
 
     assert_eq!(result.x, 15.0);

@@ -1,6 +1,6 @@
 use dioxus_core::{exports::futures_channel::mpsc::UnboundedSender, SchedulerMsg};
 use dioxus_native_core::real_dom::RealDom;
-use freya_layers::NodeArea;
+use freya_layout_memo::{LayoutManager, NodeArea};
 use freya_node_state::node::NodeState;
 use glutin::{
     event::{KeyEvent, MouseScrollDelta, TouchPhase, WindowEvent},
@@ -35,6 +35,7 @@ use crate::events_processor::EventsProcessor;
 
 type SkiaDom = Arc<Mutex<RealDom<NodeState>>>;
 type EventEmitter = Arc<Mutex<Option<UnboundedSender<SchedulerMsg>>>>;
+type SafeLayoutManager = Arc<Mutex<LayoutManager>>;
 type WindowedContext = glutin::ContextWrapper<glutin::PossiblyCurrent, glutin::window::Window>;
 pub type RendererRequests = Arc<Mutex<Vec<RendererRequest>>>;
 
@@ -69,17 +70,21 @@ struct WindowEnv {
     is_resizing: Arc<Mutex<bool>>,
     resizing_timer: Arc<Mutex<Instant>>,
     win_config: WindowConfig,
+    layout_manager: SafeLayoutManager,
 }
 
 impl WindowEnv {
     pub fn redraw(&mut self) {
         let canvas = self.surface.canvas();
+
         canvas.clear(if self.win_config.decorations {
             Color::WHITE
         } else {
             Color::TRANSPARENT
         });
+
         let window_size = self.windowed_context.window().inner_size();
+
         work_loop(
             &self.skia_dom,
             canvas,
@@ -93,6 +98,7 @@ impl WindowEnv {
             &self.event_emitter,
             &mut self.font_collection,
             &mut self.events_processor,
+            &self.layout_manager,
         );
         self.gr_context.flush(None);
         self.windowed_context.swap_buffers().unwrap();
@@ -136,13 +142,13 @@ fn create_surface(
 }
 
 fn create_windows_from_config(
-    windows_config: Vec<(SkiaDom, EventEmitter, WindowConfig)>,
+    windows_config: Vec<(SkiaDom, EventEmitter, SafeLayoutManager, WindowConfig)>,
     el: &EventLoop<WindowId>,
     font_collection: FontCollection,
 ) -> Arc<Mutex<Vec<Arc<Mutex<WindowEnv>>>>> {
     let wins = Arc::new(Mutex::new(vec![]));
 
-    for (skia_dom, event_emitter, win_config) in windows_config {
+    for (skia_dom, event_emitter, layout_manager, win_config) in windows_config {
         let events_processor = EventsProcessor::default();
         let renderer_requests: RendererRequests = Arc::new(Mutex::new(Vec::new()));
         let wb = WindowBuilder::new()
@@ -202,6 +208,7 @@ fn create_windows_from_config(
             is_resizing: Arc::new(Mutex::new(false)),
             resizing_timer: Arc::new(Mutex::new(Instant::now())),
             win_config,
+            layout_manager,
         };
 
         let proxy = el.create_proxy();
@@ -209,12 +216,9 @@ fn create_windows_from_config(
         let resize_timer = env.resizing_timer.clone();
         thread::spawn(move || {
             let time = 1000;
-            #[cfg(target_os = "windows")]
-            let fps = 120; // Seems like Windows needs more renderings to feel equally faster
-            #[cfg(not(target_os = "windows"))]
-            let fps = 60;
+            let fps_target = 60;
 
-            let step = time / fps;
+            let step = time / fps_target;
             loop {
                 if *is_resizing.lock().unwrap() == false {
                     // Trigger redraw
@@ -233,7 +237,7 @@ fn create_windows_from_config(
     wins
 }
 
-pub fn run(windows_config: Vec<(SkiaDom, EventEmitter, WindowConfig)>) {
+pub fn run(windows_config: Vec<(SkiaDom, EventEmitter, SafeLayoutManager, WindowConfig)>) {
     let cursor_pos = Arc::new(Mutex::new((0.0, 0.0)));
     let el = EventLoop::<WindowId>::with_user_event();
     let mut font_collection = FontCollection::new();
@@ -322,6 +326,8 @@ pub fn run(windows_config: Vec<(SkiaDom, EventEmitter, WindowConfig)>) {
                                 create_surface(&env.windowed_context, &env.fb_info, &mut context);
                             env.windowed_context.resize(physical_size);
                             *env.resizing_timer.lock().unwrap() = Instant::now();
+                            env.layout_manager.lock().unwrap().dirty_nodes.clear();
+                            env.layout_manager.lock().unwrap().nodes.clear();
                         }
                         WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
                         WindowEvent::KeyboardInput {

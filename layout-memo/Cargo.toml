@@ -1,0 +1,19 @@
+[package]
+name = "freya-layout-memo"
+description = "Cross-platform GUI Library."
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../readme.md"
+homepage = "https://github.com/marc2332/freya"
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
+categories = ["GUI"]
+
+[dependencies]
+dioxus = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
+dioxus-html = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
+dioxus-native-core = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
+dioxus-native-core-macro = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
+dioxus-core = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
