@@ -288,6 +288,7 @@ pub fn calculate_node<T>(
     manager: &Arc<Mutex<LayoutManager>>,
     must_memorize_layout: bool,
 ) -> NodeArea {
+    // Caculate the corresponding layer of this node
     let (node_layer, inherited_relative_layer) =
         layers.calculate_layer(node_data, inherited_relative_layer);
 
@@ -297,6 +298,7 @@ pub fn calculate_node<T>(
         .map(|p| manager.lock().unwrap().is_dirty(&p))
         .unwrap_or(false);
 
+    // If parent is dirty, mark this node as dirty too
     if is_parent_dirty {
         manager
             .lock()
@@ -305,8 +307,9 @@ pub fn calculate_node<T>(
     }
 
     let is_dirty = manager.lock().unwrap().is_dirty(&node_data.node.id);
-    let does_exist = manager.lock().unwrap().does_exist(&node_data.node.id);
+    let is_cached = manager.lock().unwrap().does_exist(&node_data.node.id);
 
+    // If this node is dirty and parent is not dirty, mark this node dirty
     if is_dirty && !is_parent_dirty {
         node_data.node.parent.map(|p| {
             manager
@@ -317,10 +320,11 @@ pub fn calculate_node<T>(
     }
 
     let padding = node_data.node.state.size.padding;
-    let must_recalculate = is_dirty || !does_exist;
+    let must_recalculate = is_dirty || !is_cached;
 
     let (mut node_area, mut remaining_inner_area, inner_area, (mut inner_width, mut inner_height)) =
         if must_recalculate {
+            println!("{}", node_data.node.id);
             let node_area = calculate_area(node_data, remaining_area, parent_area);
 
             // Returns a tuple, the first element is the layer in which the current node must be added
@@ -346,7 +350,7 @@ pub fn calculate_node<T>(
             let inner_height = vertical_padding;
             let inner_width = vertical_padding;
 
-            if !must_memorize_layout {
+            if must_memorize_layout {
                 manager.lock().unwrap().add_node(
                     node_data.node.id,
                     node_area,
@@ -371,7 +375,6 @@ pub fn calculate_node<T>(
         };
 
     // Re calculate the children layouts after the parent has properly adjusted it's size and axis according to it's children
-    // By specifying the `must_memorize_layout` it will not cache any inner children layout in this first iteration
     if DisplayMode::Center == node_data.node.state.style.display {
         process_node_layout(
             node_data,
@@ -386,7 +389,7 @@ pub fn calculate_node<T>(
             inherited_relative_layer,
             font_collection,
             manager,
-            false,
+            false, // By specifying `false` in the argument `must_memorize_layout` it will not cache any inner children layout in this first iteration
         );
 
         let space_left_vertically = (inner_area.height - inner_height) / 2.0;
