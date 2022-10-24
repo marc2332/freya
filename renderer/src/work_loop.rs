@@ -56,6 +56,7 @@ pub fn work_loop(
         0,
         font_collection,
         manager,
+        true,
     );
 
     let mut layers_nums: Vec<&i16> = layers.layers.keys().collect();

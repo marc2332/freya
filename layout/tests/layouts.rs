@@ -51,6 +51,7 @@ fn percentage() {
         0,
         &mut FontCollection::new(),
         &Arc::new(Mutex::new(LayoutManager::new())),
+        true,
     );
 
     assert_eq!(result.height, 75.0);
@@ -85,6 +86,7 @@ fn manual() {
         0,
         &mut FontCollection::new(),
         &Arc::new(Mutex::new(LayoutManager::new())),
+        true,
     );
 
     assert_eq!(result.height, 150.0);
@@ -148,6 +150,7 @@ fn auto() {
         0,
         &mut FontCollection::new(),
         &Arc::new(Mutex::new(LayoutManager::new())),
+        true,
     );
 
     assert_eq!(result.height, 25.0);
@@ -200,6 +203,7 @@ fn x_y() {
         0,
         &mut FontCollection::new(),
         &Arc::new(Mutex::new(LayoutManager::new())),
+        true,
     );
 
     assert_eq!(result.x, 15.0);

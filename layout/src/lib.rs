@@ -144,6 +144,7 @@ fn process_node_layout<T>(
     inherited_relative_layer: i16,
     font_collection: &mut FontCollection,
     manager: &Arc<Mutex<LayoutManager>>,
+    must_memorize_layout: bool,
 ) {
     match &node_data.node.node_type {
         NodeType::Element { children, .. } => {
@@ -161,6 +162,7 @@ fn process_node_layout<T>(
                         inherited_relative_layer,
                         font_collection,
                         manager,
+                        must_memorize_layout,
                     );
 
                     match node_data.node.state.size.direction {
@@ -284,6 +286,7 @@ pub fn calculate_node<T>(
     inherited_relative_layer: i16,
     font_collection: &mut FontCollection,
     manager: &Arc<Mutex<LayoutManager>>,
+    must_memorize_layout: bool,
 ) -> NodeArea {
     let (node_layer, inherited_relative_layer) =
         layers.calculate_layer(node_data, inherited_relative_layer);
@@ -343,13 +346,15 @@ pub fn calculate_node<T>(
             let inner_height = vertical_padding;
             let inner_width = vertical_padding;
 
-            manager.lock().unwrap().add_node(
-                node_data.node.id,
-                node_area,
-                remaining_inner_area,
-                inner_area,
-                (inner_width, inner_height),
-            );
+            if !must_memorize_layout {
+                manager.lock().unwrap().add_node(
+                    node_data.node.id,
+                    node_area,
+                    remaining_inner_area,
+                    inner_area,
+                    (inner_width, inner_height),
+                );
+            }
 
             (
                 node_area,
@@ -365,23 +370,25 @@ pub fn calculate_node<T>(
                 .unwrap()
         };
 
-    process_node_layout(
-        node_data,
-        &mut node_area,
-        layers,
-        &mut remaining_inner_area,
-        inner_area,
-        resolver_options,
-        node_resolver,
-        &mut inner_height,
-        &mut inner_width,
-        inherited_relative_layer,
-        font_collection,
-        manager,
-    );
-
     // Re calculate the children layouts after the parent has properly adjusted it's size and axis according to it's children
+    // By specifying the `must_memorize_layout` it will not cache any inner children layout in this first iteration
     if DisplayMode::Center == node_data.node.state.style.display {
+        process_node_layout(
+            node_data,
+            &mut node_area,
+            layers,
+            &mut remaining_inner_area,
+            inner_area,
+            resolver_options,
+            node_resolver,
+            &mut inner_height,
+            &mut inner_width,
+            inherited_relative_layer,
+            font_collection,
+            manager,
+            false,
+        );
+
         let space_left_vertically = (inner_area.height - inner_height) / 2.0;
         let space_left_horizontally = (inner_area.width - inner_width) / 2.0;
 
@@ -402,24 +409,25 @@ pub fn calculate_node<T>(
                 remaining_inner_area.height = inner_area.height - space_left_vertically - padding.2;
             }
         }
-
-        process_node_layout(
-            node_data,
-            &mut node_area,
-            layers,
-            &mut remaining_inner_area,
-            inner_area,
-            resolver_options,
-            node_resolver,
-            &mut inner_height,
-            &mut inner_width,
-            inherited_relative_layer,
-            font_collection,
-            manager,
-        );
     }
 
-    if must_recalculate {
+    process_node_layout(
+        node_data,
+        &mut node_area,
+        layers,
+        &mut remaining_inner_area,
+        inner_area,
+        resolver_options,
+        node_resolver,
+        &mut inner_height,
+        &mut inner_width,
+        inherited_relative_layer,
+        font_collection,
+        manager,
+        must_memorize_layout,
+    );
+
+    if must_recalculate && must_memorize_layout {
         manager.lock().unwrap().remove_as_dirty(&node_data.node.id);
     }
 
@@ -429,15 +437,16 @@ pub fn calculate_node<T>(
             if let SizeMode::Auto = node_data.node.state.size.width {
                 node_area.width = remaining_inner_area.x - node_area.x + padding.1;
             }
-
             if let SizeMode::Auto = node_data.node.state.size.height {
                 node_area.height = remaining_inner_area.y - node_area.y + padding.0;
             }
         }
     }
 
-    // Registers the element in the Layers handler
-    layers.add_element(node_data, &node_area, node_layer);
+    if must_memorize_layout {
+        // Registers the element in the Layers handler
+        layers.add_element(node_data, &node_area, node_layer);
+    }
 
     // Asynchronously notify the Node's reference about the new size layout
     if let Some(reference) = &node_data.node.state.references.node_ref {
