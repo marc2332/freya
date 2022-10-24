@@ -6,8 +6,7 @@ use dioxus_core::AttributeValue;
 use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
 use dioxus_native_core::state::{NodeDepState, ParentDepState, State};
 use dioxus_native_core_macro::{sorted_str_slice, State};
-use freya_elements::NodeLayout;
-use freya_layout_common::LayoutMemorizer;
+use freya_layout_common::{LayoutMemorizer, NodeReferenceLayout};
 use skia_safe::textlayout::TextAlign;
 use skia_safe::Color;
 use tokio::sync::mpsc::UnboundedSender;
@@ -108,7 +107,7 @@ impl PartialEq for CursorReference {
 
 #[derive(Default, Clone)]
 pub struct References {
-    pub node_ref: Option<UnboundedSender<NodeLayout>>,
+    pub node_ref: Option<UnboundedSender<NodeReferenceLayout>>,
     pub cursor_ref: Option<CursorReference>,
 }
 
@@ -194,7 +193,7 @@ impl ParentDepState for References {
             match a.name {
                 "reference" => {
                     if let AttributeValue::Any(v) = a.value {
-                        let r: &UseRef<UnboundedSender<NodeLayout>> =
+                        let r: &UseRef<UnboundedSender<NodeReferenceLayout>> =
                             v.value.downcast_ref().unwrap();
                         node_ref = Some(r.read().clone())
                     }

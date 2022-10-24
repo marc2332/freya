@@ -2,9 +2,8 @@ use std::sync::{Arc, Mutex};
 
 use dioxus::core::ElementId;
 use dioxus_native_core::real_dom::NodeType;
-use freya_elements::NodeLayout;
 use freya_layers::{Layers, NodeData};
-use freya_layout_common::{LayoutMemorizer, NodeArea, NodeLayoutInfo};
+use freya_layout_common::{LayoutMemorizer, NodeArea, NodeLayoutInfo, NodeReferenceLayout};
 use freya_node_state::{
     node::{CalcType, DirectionMode, DisplayMode, SizeMode},
     CursorMode, CursorReference,
@@ -471,7 +470,7 @@ pub fn measure_node_layout<T>(
     // Asynchronously notify the Node's reference about the new size layout
     if let Some(reference) = &node_data.node.state.references.node_ref {
         reference
-            .send(NodeLayout {
+            .send(NodeReferenceLayout {
                 x: node_area.x,
                 y: node_area.y,
                 width: node_area.width,
