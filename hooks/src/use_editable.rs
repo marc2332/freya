@@ -37,20 +37,20 @@ pub fn use_editable<'a>(
     let cursor = use_state(cx, || (0, 0));
     let cursor_setter = cursor.setter();
 
-    let cursor_channels = use_ref(&cx, || {
+    let cursor_channels = use_ref(cx, || {
         let (tx, rx) = unbounded_channel::<(usize, usize)>();
         (tx, Some(rx))
     });
 
     // Cursor reference passed to the layout engine
-    let cursor_ref = use_ref(&cx, || CursorReference {
+    let cursor_ref = use_ref(cx, || CursorReference {
         agent: cursor_channels.read().0.clone(),
         positions: Arc::new(Mutex::new(None)),
         id: Arc::new(Mutex::new(None)),
     });
 
     // Single listener multiple triggers channel so the mouse can be changed from multiple elements
-    let click_channel = use_ref(&cx, || {
+    let click_channel = use_ref(cx, || {
         let (tx, rx) = unbounded_channel::<(UiEvent<MouseData>, usize)>();
         (tx, Some(rx))
     });
@@ -59,7 +59,7 @@ pub fn use_editable<'a>(
     {
         let click_channel = click_channel.clone();
         let cursor_ref = cursor_ref.clone();
-        use_effect(&cx, (), move |_| {
+        use_effect(cx, (), move |_| {
             let click_channel = click_channel.clone();
             async move {
                 let rx = click_channel.write().1.take();
@@ -81,7 +81,7 @@ pub fn use_editable<'a>(
     }
 
     // Listen for new calculations from the layout engine
-    use_effect(&cx, (), move |_| {
+    use_effect(cx, (), move |_| {
         let cursor_ref = cursor_ref.clone();
         let cursor_getter = cursor.current();
         let cursor_channels = cursor_channels.clone();
@@ -90,7 +90,7 @@ pub fn use_editable<'a>(
         async move {
             let cursor_receiver = cursor_channels.write().1.take();
             let mut cursor_receiver = cursor_receiver.unwrap();
-            let mut prev_cursor = (*cursor_getter).clone();
+            let mut prev_cursor = *cursor_getter;
             let cursor_ref = cursor_ref.clone();
 
             while let Some((new_index, editor_num)) = cursor_receiver.recv().await {
@@ -119,7 +119,7 @@ pub fn use_editable<'a>(
 
                 // Only update if it's actually different
                 if prev_cursor != new_cursor {
-                    cursor_setter(new_cursor.clone());
+                    cursor_setter(new_cursor);
                     prev_cursor = new_cursor;
                 }
 

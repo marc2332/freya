@@ -240,7 +240,7 @@ impl ParentDepState for FontStyle {
         parent: Option<&'a Self::DepState>,
         _ctx: &Self::Ctx,
     ) -> bool {
-        let mut font_style = parent.map(|c| c.clone()).unwrap_or_default();
+        let mut font_style = parent.cloned().unwrap_or_default();
 
         for attr in node.attributes() {
             match attr.name {
@@ -453,20 +453,20 @@ pub struct ShadowSettings {
     pub color: Color,
 }
 
-#[derive(Default, Clone, Debug, PartialEq)]
+#[derive(Default, Clone, Debug, PartialEq, Eq)]
 pub enum DisplayMode {
     #[default]
     Normal,
     Center,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum CursorMode {
     None,
     Editable,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CursorSettings {
     pub position: Option<i32>,
     pub color: Color,
@@ -604,7 +604,7 @@ impl ParentDepState for CursorSettings {
         parent: Option<&'a Self::DepState>,
         _ctx: &Self::Ctx,
     ) -> bool {
-        let mut cursor = parent.map(|c| c.clone()).unwrap_or_default();
+        let mut cursor = parent.cloned().unwrap_or_default();
 
         for attr in node.attributes() {
             match attr.name {
@@ -650,21 +650,21 @@ pub fn parse_shadow(value: &str) -> Option<ShadowSettings> {
     let value = value.to_string();
     let mut shadow_values = value.split_ascii_whitespace();
     Some(ShadowSettings {
-        x: shadow_values.nth(0)?.parse().ok()?,
-        y: shadow_values.nth(0)?.parse().ok()?,
-        intensity: shadow_values.nth(0)?.parse().ok()?,
-        size: shadow_values.nth(0)?.parse().ok()?,
-        color: parse_color(shadow_values.nth(0)?)?,
+        x: shadow_values.next()?.parse().ok()?,
+        y: shadow_values.next()?.parse().ok()?,
+        intensity: shadow_values.next()?.parse().ok()?,
+        size: shadow_values.next()?.parse().ok()?,
+        color: parse_color(shadow_values.next()?)?,
     })
 }
 
 pub fn parse_rgb(color: &str) -> Option<Color> {
-    let color = color.replace("rgb(", "").replace(")", "");
-    let mut colors = color.split(",");
+    let color = color.replace("rgb(", "").replace(')', "");
+    let mut colors = color.split(',');
 
-    let r = colors.nth(0)?.trim().parse().ok()?;
-    let g = colors.nth(0)?.trim().parse().ok()?;
-    let b = colors.nth(0)?.trim().parse().ok()?;
+    let r = colors.next()?.trim().parse().ok()?;
+    let g = colors.next()?.trim().parse().ok()?;
+    let b = colors.next()?.trim().parse().ok()?;
     Some(Color::from_rgb(r, g, b))
 }
 
@@ -700,8 +700,8 @@ pub fn parse_size(size: &str) -> Option<SizeMode> {
         Some(SizeMode::Auto)
     } else if size.contains("calc") {
         Some(SizeMode::Calculation(parse_calc(size)?))
-    } else if size.contains("%") {
-        Some(SizeMode::Percentage(size.replace("%", "").parse().ok()?))
+    } else if size.contains('%') {
+        Some(SizeMode::Percentage(size.replace('%', "").parse().ok()?))
     } else if size.contains("calc") {
         Some(SizeMode::Calculation(parse_calc(size)?))
     } else {
@@ -713,13 +713,13 @@ pub fn parse_calc(mut size: &str) -> Option<Vec<CalcType>> {
     let mut calcs = Vec::new();
 
     size = size.strip_prefix("calc(")?;
-    size = size.strip_suffix(")")?;
+    size = size.strip_suffix(')')?;
 
     let vals = size.split_whitespace();
 
     for val in vals {
-        if val.contains("%") {
-            calcs.push(CalcType::Percentage(val.replace("%", "").parse().ok()?));
+        if val.contains('%') {
+            calcs.push(CalcType::Percentage(val.replace('%', "").parse().ok()?));
         } else if val == "+" {
             calcs.push(CalcType::Add);
         } else if val == "-" {

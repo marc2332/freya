@@ -49,7 +49,7 @@ pub fn run_calculations(calcs: &Vec<CalcType>, parent_area_value: f32) -> f32 {
                 calc_with_op(*val, prev_op);
                 prev_op = None;
             }
-            _ => prev_op = Some(calc.clone()),
+            _ => prev_op = Some(*calc),
         }
     }
 
@@ -319,10 +319,9 @@ pub fn measure_node_layout<T>(
 
     // If this node is dirty and parent is not dirty, mark this node dirty
     if is_dirty && !is_parent_dirty {
-        node_data
-            .node
-            .parent
-            .map(|p| layout_memorizer.lock().unwrap().mark_as_dirty(p.clone()));
+        if let Some(p) = node_data.node.parent {
+            layout_memorizer.lock().unwrap().mark_as_dirty(p)
+        }
     }
 
     let padding = node_data.node.state.size.padding;
@@ -347,7 +346,7 @@ pub fn measure_node_layout<T>(
             };
 
             // Visible area occupied by the child elements
-            let inner_area = remaining_inner_area.clone();
+            let inner_area = remaining_inner_area;
 
             // Transform the x and y axis with the node's scroll attributes
             remaining_inner_area.y += node_data.node.state.scroll.scroll_y;

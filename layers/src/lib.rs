@@ -41,11 +41,7 @@ impl Layers {
     }
 
     pub fn add_element(&mut self, node_data: &NodeData, node_area: &NodeArea, node_layer: i16) {
-        if !self.layers.contains_key(&node_layer) {
-            self.layers.insert(node_layer, BTreeMap::new());
-        }
-
-        let layer = self.layers.get_mut(&node_layer).unwrap();
+        let layer = self.layers.entry(node_layer).or_insert_with(BTreeMap::new);
 
         layer.insert(
             node_data.node.id.0,
@@ -53,7 +49,7 @@ impl Layers {
                 node_id: node_data.node.id,
                 node_type: node_data.node.node_type.clone(),
                 node_state: node_data.node.state.clone(),
-                node_area: node_area.clone(),
+                node_area: *node_area,
             },
         );
     }
