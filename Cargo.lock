@@ -729,7 +729,7 @@ dependencies = [
  "freya-elements",
  "freya-hooks",
  "freya-layout",
- "freya-layout-memo",
+ "freya-layout-common",
  "freya-node-state",
  "freya-renderer",
  "fxhash",
@@ -779,7 +779,7 @@ version = "0.1.0"
 dependencies = [
  "dioxus",
  "dioxus-native-core",
- "freya-layout-memo",
+ "freya-layout-common",
  "freya-node-state",
 ]
 
@@ -795,7 +795,7 @@ dependencies = [
  "freya-components",
  "freya-elements",
  "freya-layers",
- "freya-layout-memo",
+ "freya-layout-common",
  "freya-node-state",
  "fxhash",
  "lazy_static",
@@ -804,7 +804,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "freya-layout-memo"
+name = "freya-layout-common"
 version = "0.1.0"
 dependencies = [
  "dioxus",
@@ -825,7 +825,7 @@ dependencies = [
  "dioxus-native-core",
  "dioxus-native-core-macro",
  "freya-elements",
- "freya-layout-memo",
+ "freya-layout-common",
  "fxhash",
  "skia-safe",
  "tokio",
@@ -842,7 +842,7 @@ dependencies = [
  "freya-elements",
  "freya-layers",
  "freya-layout",
- "freya-layout-memo",
+ "freya-layout-common",
  "freya-node-state",
  "gl",
  "glutin_tao",

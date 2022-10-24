@@ -1,5 +1,5 @@
 [package]
-name = "freya-layout-memo"
+name = "freya-layout-common"
 description = "Cross-platform GUI Library."
 version = "0.1.0"
 edition = "2021"

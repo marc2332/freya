@@ -1,7 +1,7 @@
 use dioxus_native_core::real_dom::{Node, NodeType};
 use dioxus_native_core::traversable::Traversable;
 use freya_layers::RenderData;
-use freya_layout_memo::NodeArea;
+use freya_layout_common::NodeArea;
 use freya_node_state::node::NodeState;
 use skia_safe::textlayout::{RectHeightStyle, RectWidthStyle, TextHeightBehavior};
 use skia_safe::{
@@ -11,10 +11,10 @@ use skia_safe::{
     PathDirection, Rect,
 };
 
-use crate::SkiaDom;
+use crate::SafeDOM;
 
 pub fn render_skia(
-    dom: &mut &SkiaDom,
+    dom: &mut &SafeDOM,
     canvas: &mut &mut Canvas,
     node: &RenderData,
     font_collection: &mut FontCollection,

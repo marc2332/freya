@@ -4,7 +4,7 @@ use dioxus::core::ElementId;
 use dioxus_native_core::real_dom::NodeType;
 use freya_elements::NodeLayout;
 use freya_layers::{Layers, NodeData};
-use freya_layout_memo::{LayoutMemorizer, NodeArea, NodeLayoutInfo};
+use freya_layout_common::{LayoutMemorizer, NodeArea, NodeLayoutInfo};
 use freya_node_state::{
     node::{CalcType, DirectionMode, DisplayMode, SizeMode},
     CursorMode, CursorReference,
@@ -57,6 +57,7 @@ pub fn run_calculations(calcs: &Vec<CalcType>, parent_area_value: f32) -> f32 {
     prev_number.unwrap()
 }
 
+/// Calculate the are of a node considering it's parent area
 fn calculate_area(node_data: &NodeData, mut area: NodeArea, parent_area: NodeArea) -> NodeArea {
     let calculate = |value: &SizeMode, area_value: f32, parent_area_value: f32| -> f32 {
         match value {
@@ -131,7 +132,8 @@ fn calculate_area(node_data: &NodeData, mut area: NodeArea, parent_area: NodeAre
 
 type NodeResolver<T> = fn(&ElementId, &mut T) -> Option<NodeData>;
 
-fn process_node_layout<T>(
+/// Measure the areas of a node's inner children
+fn measure_node_children<T>(
     node_data: &NodeData,
     node_area: &mut NodeArea,
     layers: &mut Layers,
@@ -152,7 +154,7 @@ fn process_node_layout<T>(
                 let child_node = node_resolver(child, resolver_options);
 
                 if let Some(child_node) = child_node {
-                    let child_node_area = calculate_node::<T>(
+                    let child_node_area = measure_node_layout::<T>(
                         &child_node,
                         *remaining_inner_area,
                         inner_area,
@@ -276,7 +278,8 @@ fn get_cursor(node_data: &NodeData) -> Option<(&CursorReference, usize, (f32, f3
     }
 }
 
-pub fn calculate_node<T>(
+/// Measure an area of a given Node
+pub fn measure_node_layout<T>(
     node_data: &NodeData,
     remaining_area: NodeArea,
     parent_area: NodeArea,
@@ -387,7 +390,7 @@ pub fn calculate_node<T>(
 
     // Re calculate the children layouts after the parent has properly adjusted it's size and axis according to it's children
     if DisplayMode::Center == node_data.node.state.style.display {
-        process_node_layout(
+        measure_node_children(
             node_data,
             &mut node_area,
             layers,
@@ -425,7 +428,7 @@ pub fn calculate_node<T>(
         }
     }
 
-    process_node_layout(
+    measure_node_children(
         node_data,
         &mut node_area,
         layers,

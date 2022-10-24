@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use dioxus::core::ElementId;
 use dioxus_native_core::real_dom::{Node, NodeType};
-use freya_layout_memo::NodeArea;
+use freya_layout_common::NodeArea;
 use freya_node_state::node::NodeState;
 
 #[derive(Clone)]

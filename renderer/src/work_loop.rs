@@ -11,23 +11,28 @@ use dioxus_native_core::real_dom::{Node, NodeType};
 use enumset::enum_set;
 use freya_elements::events::KeyboardData;
 use freya_layers::{Layers, NodeData, RenderData};
-use freya_layout::calculate_node;
-use freya_layout_memo::NodeArea;
+use freya_layout::measure_node_layout;
+use freya_layout_common::NodeArea;
 use freya_node_state::node::NodeState;
 use skia_safe::{textlayout::FontCollection, Canvas, Color};
 use std::{collections::HashMap, ops::Index, sync::Arc};
 
 use crate::{
-    events_processor::EventsProcessor, renderer::render_skia, EventEmitter, RendererRequest,
-    RendererRequests, SafeLayoutManager, SkiaDom,
+    events_processor::EventsProcessor, renderer::render_skia, FreyaEvents, SafeDOM,
+    SafeEventEmitter, SafeFreyaEvents, SafeLayoutManager,
 };
 
+/// The Work Loop has a few jobs:
+/// - Measure the nodes layouts
+/// - Organize the nodes layouts in layers
+/// - Paint the nodes
+/// - Calculate what events must be triggered
 pub fn work_loop(
-    mut dom: &SkiaDom,
+    mut dom: &SafeDOM,
     mut canvas: &mut Canvas,
     area: NodeArea,
-    renderer_requests: RendererRequests,
-    event_emitter: &EventEmitter,
+    freya_events: SafeFreyaEvents,
+    event_emitter: &SafeEventEmitter,
     font_collection: &mut FontCollection,
     events_processor: &mut EventsProcessor,
     manager: &SafeLayoutManager,
@@ -39,7 +44,7 @@ pub fn work_loop(
 
     let layers = &mut Layers::default();
 
-    calculate_node(
+    measure_node_layout(
         &NodeData { node: root },
         area.clone(),
         area,
@@ -129,7 +134,7 @@ pub fn work_loop(
     }
 
     // Calculated events are those that match considering their viewports
-    let mut calculated_events: HashMap<&'static str, Vec<(RenderData, RendererRequest)>> =
+    let mut calculated_events: HashMap<&'static str, Vec<(RenderData, FreyaEvents)>> =
         HashMap::new();
 
     // Propagate events from the top to the bottom
@@ -137,23 +142,23 @@ pub fn work_loop(
         let layer = layers.layers.get(layer_num).unwrap();
 
         for element in layer.values() {
-            let requests = renderer_requests.lock().unwrap();
+            let events = freya_events.lock().unwrap();
 
-            for request in requests.iter() {
+            for event in events.iter() {
                 let area = &element.node_area;
-                if let RendererRequest::KeyboardEvent { name, .. } = request {
+                if let FreyaEvents::KeyboardEvent { name, .. } = event {
                     if !calculated_events.contains_key(name) {
-                        calculated_events.insert(name, vec![(element.clone(), request.clone())]);
+                        calculated_events.insert(name, vec![(element.clone(), event.clone())]);
                     } else {
                         calculated_events
                             .get_mut(name)
                             .unwrap()
-                            .push((element.clone(), request.clone()));
+                            .push((element.clone(), event.clone()));
                     }
                 } else {
-                    let data = match request {
-                        RendererRequest::MouseEvent { name, cursor, .. } => Some((name, cursor)),
-                        RendererRequest::WheelEvent { name, cursor, .. } => Some((name, cursor)),
+                    let data = match event {
+                        FreyaEvents::MouseEvent { name, cursor, .. } => Some((name, cursor)),
+                        FreyaEvents::WheelEvent { name, cursor, .. } => Some((name, cursor)),
                         _ => None,
                     };
                     if let Some((name, cursor)) = data {
@@ -187,12 +192,12 @@ pub fn work_loop(
                         {
                             if !calculated_events.contains_key(name) {
                                 calculated_events
-                                    .insert(name, vec![(element.clone(), request.clone())]);
+                                    .insert(name, vec![(element.clone(), event.clone())]);
                             } else {
                                 calculated_events
                                     .get_mut(name)
                                     .unwrap()
-                                    .push((element.clone(), request.clone()));
+                                    .push((element.clone(), event.clone()));
                             }
                         }
                     }
@@ -208,7 +213,7 @@ pub fn work_loop(
         let dom = dom.lock().unwrap();
         let listeners = dom.get_listening_sorted(event_name);
 
-        let mut found_nodes: Vec<(&RenderData, &RendererRequest)> = Vec::new();
+        let mut found_nodes: Vec<(&RenderData, &FreyaEvents)> = Vec::new();
 
         'event_nodes: for (node, request) in event_nodes.iter() {
             for listener in &listeners {
@@ -241,7 +246,7 @@ pub fn work_loop(
 
         for (node, request) in found_nodes {
             let event = match &request {
-                &RendererRequest::MouseEvent { cursor, .. } => Some(UserEvent {
+                &FreyaEvents::MouseEvent { cursor, .. } => Some(UserEvent {
                     scope_id: None,
                     priority: EventPriority::Medium,
                     element: Some(node.node_id.clone()),
@@ -262,7 +267,7 @@ pub fn work_loop(
                         Modifiers::empty(),
                     )),
                 }),
-                &RendererRequest::WheelEvent { scroll, .. } => Some(UserEvent {
+                &FreyaEvents::WheelEvent { scroll, .. } => Some(UserEvent {
                     scope_id: None,
                     priority: EventPriority::Medium,
                     element: Some(node.node_id.clone()),
@@ -272,7 +277,7 @@ pub fn work_loop(
                         scroll.0, scroll.1, 0.0,
                     )))),
                 }),
-                &RendererRequest::KeyboardEvent { name, code } => Some(UserEvent {
+                &FreyaEvents::KeyboardEvent { name, code } => Some(UserEvent {
                     scope_id: None,
                     priority: EventPriority::Medium,
                     element: Some(node.node_id.clone()),
@@ -308,5 +313,5 @@ pub fn work_loop(
             .unwrap();
     }
 
-    renderer_requests.lock().unwrap().clear();
+    freya_events.lock().unwrap().clear();
 }

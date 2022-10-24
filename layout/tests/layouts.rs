@@ -3,8 +3,8 @@ use std::sync::{Arc, Mutex};
 use dioxus_core::ElementId;
 use dioxus_native_core::real_dom::{Node, NodeType};
 use freya_layers::{Layers, NodeData};
-use freya_layout::calculate_node;
-use freya_layout_memo::{LayoutMemorizer, NodeArea};
+use freya_layout::measure_node_layout;
+use freya_layout_common::{LayoutMemorizer, NodeArea};
 use freya_node_state::node::{DirectionMode, NodeState, Size, SizeMode};
 use lazy_static::lazy_static;
 use skia_safe::textlayout::FontCollection;
@@ -31,7 +31,7 @@ fn percentage() {
         height: SizeMode::Percentage(25.0),
         ..Size::expanded()
     });
-    let result = calculate_node(
+    let result = measure_node_layout(
         &NodeData { node },
         NodeArea {
             x: 0.0,
@@ -66,7 +66,7 @@ fn manual() {
         height: SizeMode::Manual(150.0),
         ..Size::expanded()
     });
-    let result = calculate_node(
+    let result = measure_node_layout(
         &NodeData { node },
         NodeArea {
             x: 0.0,
@@ -95,7 +95,7 @@ fn manual() {
 
 #[test]
 fn auto() {
-    let result = calculate_node(
+    let result = measure_node_layout(
         &NodeData {
             node: Node {
                 id: ElementId(0),
@@ -165,7 +165,7 @@ fn x_y() {
         height: SizeMode::Auto,
         ..Size::expanded()
     });
-    let result = calculate_node(
+    let result = measure_node_layout(
         &NodeData { node },
         NodeArea {
             x: 15.0,

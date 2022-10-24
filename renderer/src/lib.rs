@@ -1,7 +1,10 @@
 use dioxus_core::{exports::futures_channel::mpsc::UnboundedSender, SchedulerMsg};
 use dioxus_native_core::real_dom::RealDom;
-use freya_layout_memo::{LayoutMemorizer, NodeArea};
+use freya_layout_common::LayoutMemorizer;
 use freya_node_state::node::NodeState;
+use glutin::event::ElementState;
+use glutin::window::WindowId;
+use glutin::{event::Event, event_loop::ControlFlow};
 use glutin::{
     event::{KeyEvent, MouseScrollDelta, TouchPhase, WindowEvent},
     event_loop::EventLoop,
@@ -10,234 +13,42 @@ use glutin::{
 use skia_safe::{textlayout::FontCollection, FontMgr};
 use std::{
     sync::{Arc, Mutex},
-    thread,
-    time::{Duration, Instant},
+    time::Instant,
 };
-
-use gl::types::*;
-use glutin::dpi::PhysicalSize;
-use glutin::event::ElementState;
-use glutin::window::WindowId;
-use glutin::{event::Event, event_loop::ControlFlow, window::WindowBuilder, GlProfile};
-use skia_safe::Color;
-use skia_safe::{
-    gpu::{gl::FramebufferInfo, BackendRenderTarget, SurfaceOrigin},
-    ColorType, Surface,
-};
+pub use window::{create_surface, create_windows_from_config, WindowConfig, WindowEnv};
 
 mod events_processor;
 mod renderer;
+mod window;
 mod work_loop;
 
-use work_loop::work_loop;
-
-use crate::events_processor::EventsProcessor;
-
-type SkiaDom = Arc<Mutex<RealDom<NodeState>>>;
-type EventEmitter = Arc<Mutex<Option<UnboundedSender<SchedulerMsg>>>>;
+type SafeDOM = Arc<Mutex<RealDom<NodeState>>>;
+type SafeEventEmitter = Arc<Mutex<Option<UnboundedSender<SchedulerMsg>>>>;
 type SafeLayoutManager = Arc<Mutex<LayoutMemorizer>>;
 type WindowedContext = glutin::ContextWrapper<glutin::PossiblyCurrent, glutin::window::Window>;
-pub type RendererRequests = Arc<Mutex<Vec<RendererRequest>>>;
+pub type SafeFreyaEvents = Arc<Mutex<Vec<FreyaEvents>>>;
 
 #[derive(Clone, Debug)]
-pub enum RendererRequest {
+pub enum FreyaEvents {
+    /// A Mouse Event
     MouseEvent {
         name: &'static str,
         cursor: (f64, f64),
     },
+    /// A Wheel event
     WheelEvent {
         name: &'static str,
         scroll: (f64, f64),
         cursor: (f64, f64),
     },
-    #[allow(dead_code)]
+    /// A Keyboard event
     KeyboardEvent {
         name: &'static str,
         code: Key<'static>,
     },
 }
 
-struct WindowEnv {
-    surface: Surface,
-    gr_context: skia_safe::gpu::DirectContext,
-    windowed_context: WindowedContext,
-    skia_dom: SkiaDom,
-    fb_info: FramebufferInfo,
-    renderer_requests: RendererRequests,
-    event_emitter: EventEmitter,
-    font_collection: FontCollection,
-    events_processor: EventsProcessor,
-    is_resizing: Arc<Mutex<bool>>,
-    resizing_timer: Arc<Mutex<Instant>>,
-    win_config: WindowConfig,
-    layout_memorizer: SafeLayoutManager,
-}
-
-impl WindowEnv {
-    pub fn redraw(&mut self) {
-        let canvas = self.surface.canvas();
-
-        canvas.clear(if self.win_config.decorations {
-            Color::WHITE
-        } else {
-            Color::TRANSPARENT
-        });
-
-        let window_size = self.windowed_context.window().inner_size();
-
-        work_loop(
-            &self.skia_dom,
-            canvas,
-            NodeArea {
-                width: window_size.width as f32,
-                height: window_size.height as f32,
-                x: 0.0,
-                y: 0.0,
-            },
-            self.renderer_requests.clone(),
-            &self.event_emitter,
-            &mut self.font_collection,
-            &mut self.events_processor,
-            &self.layout_memorizer,
-        );
-        self.gr_context.flush(None);
-        self.windowed_context.swap_buffers().unwrap();
-    }
-}
-
-#[derive(Clone)]
-pub struct WindowConfig {
-    pub width: u32,
-    pub height: u32,
-    pub decorations: bool,
-    pub title: &'static str,
-    pub transparent: bool,
-}
-
-fn create_surface(
-    windowed_context: &WindowedContext,
-    fb_info: &FramebufferInfo,
-    gr_context: &mut skia_safe::gpu::DirectContext,
-) -> skia_safe::Surface {
-    let pixel_format = windowed_context.get_pixel_format();
-    let size = windowed_context.window().inner_size();
-    let backend_render_target = BackendRenderTarget::new_gl(
-        (
-            size.width.try_into().unwrap(),
-            size.height.try_into().unwrap(),
-        ),
-        pixel_format.multisampling.map(|s| s.try_into().unwrap()),
-        pixel_format.stencil_bits.try_into().unwrap(),
-        *fb_info,
-    );
-    Surface::from_backend_render_target(
-        gr_context,
-        &backend_render_target,
-        SurfaceOrigin::BottomLeft,
-        ColorType::RGBA8888,
-        None,
-        None,
-    )
-    .unwrap()
-}
-
-fn create_windows_from_config(
-    windows_config: Vec<(SkiaDom, EventEmitter, SafeLayoutManager, WindowConfig)>,
-    el: &EventLoop<WindowId>,
-    font_collection: FontCollection,
-) -> Arc<Mutex<Vec<Arc<Mutex<WindowEnv>>>>> {
-    let wins = Arc::new(Mutex::new(vec![]));
-
-    for (skia_dom, event_emitter, layout_memorizer, win_config) in windows_config {
-        let events_processor = EventsProcessor::default();
-        let renderer_requests: RendererRequests = Arc::new(Mutex::new(Vec::new()));
-        let wb = WindowBuilder::new()
-            .with_title(win_config.title)
-            .with_decorations(win_config.decorations)
-            .with_transparent(win_config.transparent);
-
-        let cb = glutin::ContextBuilder::new()
-            .with_depth_buffer(0)
-            .with_stencil_buffer(8)
-            .with_pixel_format(24, 8)
-            .with_gl_profile(GlProfile::Core);
-
-        #[cfg(not(feature = "wayland"))]
-        let cb = cb.with_double_buffer(Some(true));
-
-        let windowed_context = cb.build_windowed(wb, &el).unwrap();
-
-        let windowed_context = unsafe { windowed_context.make_current().unwrap() };
-        let window_id = windowed_context.window().id();
-
-        windowed_context
-            .window()
-            .set_inner_size(PhysicalSize::<u32>::new(
-                win_config.width,
-                win_config.height,
-            ));
-
-        gl::load_with(|s| windowed_context.get_proc_address(s));
-
-        let fb_info = {
-            let mut fboid: GLint = 0;
-            unsafe { gl::GetIntegerv(gl::FRAMEBUFFER_BINDING, &mut fboid) };
-
-            FramebufferInfo {
-                fboid: fboid.try_into().unwrap(),
-                format: skia_safe::gpu::gl::Format::RGBA8.into(),
-            }
-        };
-
-        let mut gr_context = skia_safe::gpu::DirectContext::new_gl(None, None).unwrap();
-
-        let mut surface = create_surface(&windowed_context, &fb_info, &mut gr_context);
-        let sf = windowed_context.window().scale_factor() as f32;
-        surface.canvas().scale((sf, sf));
-
-        let env = WindowEnv {
-            surface,
-            gr_context,
-            windowed_context,
-            fb_info,
-            skia_dom,
-            renderer_requests: renderer_requests.clone(),
-            event_emitter,
-            font_collection: font_collection.clone(),
-            events_processor,
-            is_resizing: Arc::new(Mutex::new(false)),
-            resizing_timer: Arc::new(Mutex::new(Instant::now())),
-            win_config,
-            layout_memorizer,
-        };
-
-        let proxy = el.create_proxy();
-        let is_resizing = env.is_resizing.clone();
-        let resize_timer = env.resizing_timer.clone();
-        thread::spawn(move || {
-            let time = 1000;
-            let fps_target = 60;
-
-            let step = time / fps_target;
-            loop {
-                if *is_resizing.lock().unwrap() == false {
-                    // Trigger redraw
-                    proxy.send_event(window_id).unwrap();
-                    thread::sleep(Duration::from_millis(step));
-                }
-                if resize_timer.lock().unwrap().elapsed().as_millis() > 50 {
-                    *is_resizing.lock().unwrap() = false;
-                }
-            }
-        });
-
-        wins.lock().unwrap().push(Arc::new(Mutex::new(env)));
-    }
-
-    wins
-}
-
-pub fn run(windows_config: Vec<(SkiaDom, EventEmitter, SafeLayoutManager, WindowConfig)>) {
+pub fn run(windows_config: Vec<(SafeDOM, SafeEventEmitter, SafeLayoutManager, WindowConfig)>) {
     let cursor_pos = Arc::new(Mutex::new((0.0, 0.0)));
     let el = EventLoop::<WindowId>::with_user_event();
     let mut font_collection = FontCollection::new();
@@ -280,13 +91,14 @@ pub fn run(windows_config: Vec<(SkiaDom, EventEmitter, SafeLayoutManager, Window
                                     }
                                 };
 
-                                env.renderer_requests.lock().unwrap().push(
-                                    RendererRequest::WheelEvent {
+                                env.freya_events
+                                    .lock()
+                                    .unwrap()
+                                    .push(FreyaEvents::WheelEvent {
                                         name: "wheel",
                                         scroll: scroll_data,
                                         cursor: *cursor_pos,
-                                    },
-                                );
+                                    });
                             }
                         }
                         WindowEvent::CursorMoved { position, .. } => {
@@ -298,12 +110,13 @@ pub fn run(windows_config: Vec<(SkiaDom, EventEmitter, SafeLayoutManager, Window
                                 *cursor_pos
                             };
 
-                            env.renderer_requests.lock().unwrap().push(
-                                RendererRequest::MouseEvent {
+                            env.freya_events
+                                .lock()
+                                .unwrap()
+                                .push(FreyaEvents::MouseEvent {
                                     name: "mouseover",
                                     cursor: cursor_pos,
-                                },
-                            );
+                                });
                         }
                         WindowEvent::MouseInput { state, .. } => {
                             let event_name = match state {
@@ -312,12 +125,13 @@ pub fn run(windows_config: Vec<(SkiaDom, EventEmitter, SafeLayoutManager, Window
                                 _ => "mousedown",
                             };
                             let cursor_pos = cursor_pos.lock().unwrap();
-                            env.renderer_requests.lock().unwrap().push(
-                                RendererRequest::MouseEvent {
+                            env.freya_events
+                                .lock()
+                                .unwrap()
+                                .push(FreyaEvents::MouseEvent {
                                     name: event_name,
                                     cursor: *cursor_pos,
-                                },
-                            );
+                                });
                         }
                         WindowEvent::Resized(physical_size) => {
                             *env.is_resizing.lock().unwrap() = true;
@@ -343,12 +157,13 @@ pub fn run(windows_config: Vec<(SkiaDom, EventEmitter, SafeLayoutManager, Window
                                 _ => "keydown",
                             };
 
-                            env.renderer_requests.lock().unwrap().push(
-                                RendererRequest::KeyboardEvent {
+                            env.freya_events
+                                .lock()
+                                .unwrap()
+                                .push(FreyaEvents::KeyboardEvent {
                                     name: event_name,
                                     code: logical_key,
-                                },
-                            );
+                                });
                         }
                         _ => (),
                     }

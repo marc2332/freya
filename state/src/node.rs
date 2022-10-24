@@ -7,7 +7,7 @@ use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
 use dioxus_native_core::state::{NodeDepState, ParentDepState, State};
 use dioxus_native_core_macro::{sorted_str_slice, State};
 use freya_elements::NodeLayout;
-use freya_layout_memo::LayoutMemorizer;
+use freya_layout_common::LayoutMemorizer;
 use skia_safe::textlayout::TextAlign;
 use skia_safe::Color;
 use tokio::sync::mpsc::UnboundedSender;
