@@ -129,7 +129,7 @@ pub fn launch_with_title(app: Component<()>, title: &'static str) {
 /// }
 /// ```
 pub fn launch_cfg(wins_config: Vec<(Component<()>, WindowConfig)>) {
-    use freya_layout_memo::LayoutManager;
+    use freya_layout_memo::LayoutMemorizer;
 
     let wins = wins_config
         .into_iter()
@@ -138,10 +138,10 @@ pub fn launch_cfg(wins_config: Vec<(Component<()>, WindowConfig)>) {
             let event_emitter: Arc<Mutex<Option<UnboundedSender<SchedulerMsg>>>> =
                 Arc::new(Mutex::new(None));
 
-            let layout_manager = Arc::new(Mutex::new(LayoutManager::new()));
+            let layout_memorizer = Arc::new(Mutex::new(LayoutMemorizer::new()));
 
             {
-                let layout_manager = layout_manager.clone();
+                let layout_memorizer = layout_memorizer.clone();
                 let rdom = rdom.clone();
                 let event_emitter = event_emitter.clone();
                 std::thread::spawn(move || {
@@ -161,7 +161,7 @@ pub fn launch_cfg(wins_config: Vec<(Component<()>, WindowConfig)>) {
                     let to_update = rdom.lock().unwrap().apply_mutations(vec![muts]);
                     let mut ctx = AnyMap::new();
 
-                    ctx.insert(layout_manager.clone());
+                    ctx.insert(layout_memorizer.clone());
 
                     rdom.lock().unwrap().update_state(&dom, to_update, ctx);
 
@@ -182,7 +182,7 @@ pub fn launch_cfg(wins_config: Vec<(Component<()>, WindowConfig)>) {
                                 let to_update = rdom.lock().unwrap().apply_mutations(mutations);
 
                                 let mut ctx = AnyMap::new();
-                                ctx.insert(layout_manager.clone());
+                                ctx.insert(layout_memorizer.clone());
                                 if !to_update.is_empty() {
                                     rdom.lock().unwrap().update_state(&dom, to_update, ctx);
                                 }
@@ -190,7 +190,7 @@ pub fn launch_cfg(wins_config: Vec<(Component<()>, WindowConfig)>) {
                         });
                 });
             }
-            (rdom, event_emitter, layout_manager, win.clone())
+            (rdom, event_emitter, layout_memorizer, win.clone())
         })
         .collect();
 

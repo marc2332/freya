@@ -7,7 +7,7 @@ use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
 use dioxus_native_core::state::{NodeDepState, ParentDepState, State};
 use dioxus_native_core_macro::{sorted_str_slice, State};
 use freya_elements::NodeLayout;
-use freya_layout_memo::{DirtyCause, LayoutManager};
+use freya_layout_memo::LayoutMemorizer;
 use skia_safe::textlayout::TextAlign;
 use skia_safe::Color;
 use tokio::sync::mpsc::UnboundedSender;
@@ -282,7 +282,7 @@ impl ParentDepState for FontStyle {
 }
 
 impl ParentDepState for Size {
-    type Ctx = Arc<Mutex<LayoutManager>>;
+    type Ctx = Arc<Mutex<LayoutMemorizer>>;
     type DepState = Self;
 
     const NODE_MASK: NodeMask =
@@ -377,9 +377,7 @@ impl ParentDepState for Size {
             || (direction != self.direction);
 
         if changed {
-            ctx.lock()
-                .unwrap()
-                .mark_as_dirty(node.id(), DirtyCause::IChanged);
+            ctx.lock().unwrap().mark_as_dirty(node.id());
         }
 
         *self = Self {
@@ -397,7 +395,7 @@ impl ParentDepState for Size {
 
 // TODO(marc2332) Why use ParentDepState? NodeDepState might make more sense
 impl ParentDepState for Scroll {
-    type Ctx = Arc<Mutex<LayoutManager>>;
+    type Ctx = Arc<Mutex<LayoutMemorizer>>;
     type DepState = Self;
 
     const NODE_MASK: NodeMask =
@@ -435,9 +433,7 @@ impl ParentDepState for Scroll {
         let changed = (scroll_x != self.scroll_x) || (scroll_y != self.scroll_y);
 
         if changed {
-            ctx.lock()
-                .unwrap()
-                .mark_as_dirty(node.id(), DirtyCause::IChanged);
+            ctx.lock().unwrap().mark_as_dirty(node.id());
         }
 
         *self = Self {

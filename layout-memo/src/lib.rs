@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use dioxus_core::ElementId;
 
+/// An area starting at point `x` and `y` with a certain `width` and `height`.
 #[derive(Default, Copy, Clone, Debug, PartialEq)]
 pub struct NodeArea {
     pub x: f32,
@@ -10,73 +11,57 @@ pub struct NodeArea {
     pub height: f32,
 }
 
+/// Info about different areas and sizes of a certain node.
+#[derive(Debug, Clone)]
+pub struct NodeLayoutInfo {
+    pub area: NodeArea,
+    pub remaining_inner_area: NodeArea,
+    pub inner_area: NodeArea,
+    pub inner_sizes: (f32, f32),
+}
+
+/// Stores all the nodes layout and what nodes should be calculated again on the next check.
 #[derive(Debug, Default)]
-pub struct LayoutManager {
-    pub nodes: HashMap<ElementId, (NodeArea, NodeArea, NodeArea, (f32, f32))>,
-    pub dirty_nodes: HashMap<ElementId, DirtyCause>,
-    pub is_calculating: bool,
+pub struct LayoutMemorizer {
+    pub nodes: HashMap<ElementId, NodeLayoutInfo>,
+    pub dirty_nodes: HashMap<ElementId, ()>,
 }
 
-// TODO(marc2332) Remove this as it's basically useless
-#[derive(Debug)]
-pub enum DirtyCause {
-    IChanged,
-    BrotherChanged,
-    ParentChanged,
-    ChildChanged,
-}
-
-impl LayoutManager {
+impl LayoutMemorizer {
     pub fn new() -> Self {
         Self {
             nodes: HashMap::new(),
             dirty_nodes: HashMap::new(),
-            is_calculating: false,
         }
     }
 
-    pub fn set_calculating(&mut self, is_calculating: bool) {
-        self.is_calculating = is_calculating;
-    }
-
-    pub fn does_exist(&mut self, element_id: &ElementId) -> bool {
+    /// Check if a node's layout is memorized or not
+    pub fn is_node_layout_memorized(&mut self, element_id: &ElementId) -> bool {
         self.nodes.contains_key(element_id)
     }
 
-    pub fn add_node(
-        &mut self,
-        element_id: ElementId,
-        area: NodeArea,
-        remaining_inner_area: NodeArea,
-        inner_area: NodeArea,
-        inner_sizes: (f32, f32),
-    ) {
-        self.nodes.insert(
-            element_id,
-            (area, remaining_inner_area, inner_area, inner_sizes),
-        );
+    /// Memorize a node's layout
+    pub fn add_node_layout(&mut self, element_id: ElementId, layout_info: NodeLayoutInfo) {
+        self.nodes.insert(element_id, layout_info);
     }
 
+    /// Check if a node's layout is no longer valid
     pub fn is_dirty(&self, element_id: &ElementId) -> bool {
         self.dirty_nodes.contains_key(element_id)
     }
 
-    pub fn get_dirty_cause(&self, element_id: &ElementId) -> Option<&DirtyCause> {
-        self.dirty_nodes.get(element_id)
+    /// Mark a node's layout as no longer valid
+    pub fn mark_as_dirty(&mut self, element_id: ElementId) {
+        self.dirty_nodes.insert(element_id, ());
     }
 
-    pub fn mark_as_dirty(&mut self, element_id: ElementId, cause: DirtyCause) {
-        self.dirty_nodes.insert(element_id, cause);
-    }
-
+    // Unmark a node's layout as no longer valid
     pub fn remove_as_dirty(&mut self, element_id: &ElementId) {
         self.dirty_nodes.remove(element_id);
     }
 
-    pub fn get_node(
-        &mut self,
-        element_id: &ElementId,
-    ) -> Option<(NodeArea, NodeArea, NodeArea, (f32, f32))> {
-        self.nodes.get(element_id).copied()
+    // Get the memorized layout of a certain node
+    pub fn get_node_layout(&mut self, element_id: &ElementId) -> Option<NodeLayoutInfo> {
+        self.nodes.get(element_id).cloned()
     }
 }

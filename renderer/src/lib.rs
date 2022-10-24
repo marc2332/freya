@@ -1,6 +1,6 @@
 use dioxus_core::{exports::futures_channel::mpsc::UnboundedSender, SchedulerMsg};
 use dioxus_native_core::real_dom::RealDom;
-use freya_layout_memo::{LayoutManager, NodeArea};
+use freya_layout_memo::{LayoutMemorizer, NodeArea};
 use freya_node_state::node::NodeState;
 use glutin::{
     event::{KeyEvent, MouseScrollDelta, TouchPhase, WindowEvent},
@@ -35,7 +35,7 @@ use crate::events_processor::EventsProcessor;
 
 type SkiaDom = Arc<Mutex<RealDom<NodeState>>>;
 type EventEmitter = Arc<Mutex<Option<UnboundedSender<SchedulerMsg>>>>;
-type SafeLayoutManager = Arc<Mutex<LayoutManager>>;
+type SafeLayoutManager = Arc<Mutex<LayoutMemorizer>>;
 type WindowedContext = glutin::ContextWrapper<glutin::PossiblyCurrent, glutin::window::Window>;
 pub type RendererRequests = Arc<Mutex<Vec<RendererRequest>>>;
 
@@ -70,7 +70,7 @@ struct WindowEnv {
     is_resizing: Arc<Mutex<bool>>,
     resizing_timer: Arc<Mutex<Instant>>,
     win_config: WindowConfig,
-    layout_manager: SafeLayoutManager,
+    layout_memorizer: SafeLayoutManager,
 }
 
 impl WindowEnv {
@@ -98,7 +98,7 @@ impl WindowEnv {
             &self.event_emitter,
             &mut self.font_collection,
             &mut self.events_processor,
-            &self.layout_manager,
+            &self.layout_memorizer,
         );
         self.gr_context.flush(None);
         self.windowed_context.swap_buffers().unwrap();
@@ -148,7 +148,7 @@ fn create_windows_from_config(
 ) -> Arc<Mutex<Vec<Arc<Mutex<WindowEnv>>>>> {
     let wins = Arc::new(Mutex::new(vec![]));
 
-    for (skia_dom, event_emitter, layout_manager, win_config) in windows_config {
+    for (skia_dom, event_emitter, layout_memorizer, win_config) in windows_config {
         let events_processor = EventsProcessor::default();
         let renderer_requests: RendererRequests = Arc::new(Mutex::new(Vec::new()));
         let wb = WindowBuilder::new()
@@ -208,7 +208,7 @@ fn create_windows_from_config(
             is_resizing: Arc::new(Mutex::new(false)),
             resizing_timer: Arc::new(Mutex::new(Instant::now())),
             win_config,
-            layout_manager,
+            layout_memorizer,
         };
 
         let proxy = el.create_proxy();
@@ -326,8 +326,8 @@ pub fn run(windows_config: Vec<(SkiaDom, EventEmitter, SafeLayoutManager, Window
                                 create_surface(&env.windowed_context, &env.fb_info, &mut context);
                             env.windowed_context.resize(physical_size);
                             *env.resizing_timer.lock().unwrap() = Instant::now();
-                            env.layout_manager.lock().unwrap().dirty_nodes.clear();
-                            env.layout_manager.lock().unwrap().nodes.clear();
+                            env.layout_memorizer.lock().unwrap().dirty_nodes.clear();
+                            env.layout_memorizer.lock().unwrap().nodes.clear();
                         }
                         WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
                         WindowEvent::KeyboardInput {

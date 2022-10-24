@@ -4,7 +4,7 @@ use dioxus::core::ElementId;
 use dioxus_native_core::real_dom::NodeType;
 use freya_elements::NodeLayout;
 use freya_layers::{Layers, NodeData};
-use freya_layout_memo::{DirtyCause, LayoutManager, NodeArea};
+use freya_layout_memo::{LayoutMemorizer, NodeArea, NodeLayoutInfo};
 use freya_node_state::{
     node::{CalcType, DirectionMode, DisplayMode, SizeMode},
     CursorMode, CursorReference,
@@ -143,7 +143,7 @@ fn process_node_layout<T>(
     inner_width: &mut f32,
     inherited_relative_layer: i16,
     font_collection: &mut FontCollection,
-    manager: &Arc<Mutex<LayoutManager>>,
+    layout_memorizer: &Arc<Mutex<LayoutMemorizer>>,
     must_memorize_layout: bool,
 ) {
     match &node_data.node.node_type {
@@ -161,7 +161,7 @@ fn process_node_layout<T>(
                         node_resolver,
                         inherited_relative_layer,
                         font_collection,
-                        manager,
+                        layout_memorizer,
                         must_memorize_layout,
                     );
 
@@ -285,7 +285,7 @@ pub fn calculate_node<T>(
     node_resolver: NodeResolver<T>,
     inherited_relative_layer: i16,
     font_collection: &mut FontCollection,
-    manager: &Arc<Mutex<LayoutManager>>,
+    layout_memorizer: &Arc<Mutex<LayoutMemorizer>>,
     must_memorize_layout: bool,
 ) -> NodeArea {
     // Caculate the corresponding layer of this node
@@ -295,28 +295,32 @@ pub fn calculate_node<T>(
     let is_parent_dirty = node_data
         .node
         .parent
-        .map(|p| manager.lock().unwrap().is_dirty(&p))
+        .map(|p| layout_memorizer.lock().unwrap().is_dirty(&p))
         .unwrap_or(false);
 
     // If parent is dirty, mark this node as dirty too
     if is_parent_dirty {
-        manager
+        layout_memorizer
             .lock()
             .unwrap()
-            .mark_as_dirty(node_data.node.id, DirtyCause::ParentChanged);
+            .mark_as_dirty(node_data.node.id);
     }
 
-    let is_dirty = manager.lock().unwrap().is_dirty(&node_data.node.id);
-    let is_cached = manager.lock().unwrap().does_exist(&node_data.node.id);
+    let is_dirty = layout_memorizer
+        .lock()
+        .unwrap()
+        .is_dirty(&node_data.node.id);
+    let is_cached = layout_memorizer
+        .lock()
+        .unwrap()
+        .is_node_layout_memorized(&node_data.node.id);
 
     // If this node is dirty and parent is not dirty, mark this node dirty
     if is_dirty && !is_parent_dirty {
-        node_data.node.parent.map(|p| {
-            manager
-                .lock()
-                .unwrap()
-                .mark_as_dirty(p.clone(), DirtyCause::ChildChanged)
-        });
+        node_data
+            .node
+            .parent
+            .map(|p| layout_memorizer.lock().unwrap().mark_as_dirty(p.clone()));
     }
 
     let padding = node_data.node.state.size.padding;
@@ -324,7 +328,6 @@ pub fn calculate_node<T>(
 
     let (mut node_area, mut remaining_inner_area, inner_area, (mut inner_width, mut inner_height)) =
         if must_recalculate {
-            println!("{}", node_data.node.id);
             let node_area = calculate_area(node_data, remaining_area, parent_area);
 
             // Returns a tuple, the first element is the layer in which the current node must be added
@@ -344,19 +347,20 @@ pub fn calculate_node<T>(
             // Visible area occupied by the child elements
             let inner_area = remaining_inner_area.clone();
 
+            // Transform the x and y axis with the node's scroll attributes
             remaining_inner_area.y += node_data.node.state.scroll.scroll_y;
             remaining_inner_area.x += node_data.node.state.scroll.scroll_x;
 
-            let inner_height = vertical_padding;
-            let inner_width = vertical_padding;
-
             if must_memorize_layout {
-                manager.lock().unwrap().add_node(
+                // Memorize these layouts
+                layout_memorizer.lock().unwrap().add_node_layout(
                     node_data.node.id,
-                    node_area,
-                    remaining_inner_area,
-                    inner_area,
-                    (inner_width, inner_height),
+                    NodeLayoutInfo {
+                        area: node_area,
+                        remaining_inner_area,
+                        inner_area,
+                        inner_sizes: (horizontal_padding, vertical_padding),
+                    },
                 );
             }
 
@@ -364,14 +368,21 @@ pub fn calculate_node<T>(
                 node_area,
                 remaining_inner_area,
                 inner_area,
-                (inner_width, inner_height),
+                (horizontal_padding, vertical_padding),
             )
         } else {
-            manager
+            // Get the memorized layouts
+            let NodeLayoutInfo {
+                area,
+                remaining_inner_area,
+                inner_area,
+                inner_sizes,
+            } = layout_memorizer
                 .lock()
                 .unwrap()
-                .get_node(&node_data.node.id)
-                .unwrap()
+                .get_node_layout(&node_data.node.id)
+                .unwrap();
+            (area, remaining_inner_area, inner_area, inner_sizes)
         };
 
     // Re calculate the children layouts after the parent has properly adjusted it's size and axis according to it's children
@@ -388,7 +399,7 @@ pub fn calculate_node<T>(
             &mut inner_width,
             inherited_relative_layer,
             font_collection,
-            manager,
+            layout_memorizer,
             false, // By specifying `false` in the argument `must_memorize_layout` it will not cache any inner children layout in this first iteration
         );
 
@@ -426,12 +437,15 @@ pub fn calculate_node<T>(
         &mut inner_width,
         inherited_relative_layer,
         font_collection,
-        manager,
+        layout_memorizer,
         must_memorize_layout,
     );
 
     if must_recalculate && must_memorize_layout {
-        manager.lock().unwrap().remove_as_dirty(&node_data.node.id);
+        layout_memorizer
+            .lock()
+            .unwrap()
+            .remove_as_dirty(&node_data.node.id);
     }
 
     match &node_data.node.node_type {

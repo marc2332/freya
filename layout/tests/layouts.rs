@@ -4,7 +4,7 @@ use dioxus_core::ElementId;
 use dioxus_native_core::real_dom::{Node, NodeType};
 use freya_layers::{Layers, NodeData};
 use freya_layout::calculate_node;
-use freya_layout_memo::{LayoutManager, NodeArea};
+use freya_layout_memo::{LayoutMemorizer, NodeArea};
 use freya_node_state::node::{DirectionMode, NodeState, Size, SizeMode};
 use lazy_static::lazy_static;
 use skia_safe::textlayout::FontCollection;
@@ -50,7 +50,7 @@ fn percentage() {
         |_, _| None,
         0,
         &mut FontCollection::new(),
-        &Arc::new(Mutex::new(LayoutManager::new())),
+        &Arc::new(Mutex::new(LayoutMemorizer::new())),
         true,
     );
 
@@ -85,7 +85,7 @@ fn manual() {
         |_, _| None,
         0,
         &mut FontCollection::new(),
-        &Arc::new(Mutex::new(LayoutManager::new())),
+        &Arc::new(Mutex::new(LayoutMemorizer::new())),
         true,
     );
 
@@ -149,7 +149,7 @@ fn auto() {
         },
         0,
         &mut FontCollection::new(),
-        &Arc::new(Mutex::new(LayoutManager::new())),
+        &Arc::new(Mutex::new(LayoutMemorizer::new())),
         true,
     );
 
@@ -202,7 +202,7 @@ fn x_y() {
         },
         0,
         &mut FontCollection::new(),
-        &Arc::new(Mutex::new(LayoutManager::new())),
+        &Arc::new(Mutex::new(LayoutMemorizer::new())),
         true,
     );
 
