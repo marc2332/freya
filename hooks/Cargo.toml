@@ -19,3 +19,4 @@ freya-elements = { path = "../elements", version = "0.1.0" }
 uuid = { version =  "1.2.1", features = ["v4"]}
 xi-rope = "0.3.0"
 freya-node-state = { path = "../state", version = "0.1.0" }
+freya-layout-common = { path = "../layout-common", version = "0.1.0" }

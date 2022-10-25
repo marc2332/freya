@@ -1,7 +1,9 @@
+use std::sync::{Arc, Mutex};
+
 use dioxus::core::ElementId;
 use dioxus_native_core::real_dom::NodeType;
-use freya_elements::NodeLayout;
-use freya_layers::{Layers, NodeArea, NodeData};
+use freya_layers::{Layers, NodeData};
+use freya_layout_common::{LayoutMemorizer, NodeArea, NodeLayoutInfo, NodeReferenceLayout};
 use freya_node_state::{
     node::{CalcType, DirectionMode, DisplayMode, SizeMode},
     CursorMode, CursorReference,
@@ -47,13 +49,14 @@ pub fn run_calculations(calcs: &Vec<CalcType>, parent_area_value: f32) -> f32 {
                 calc_with_op(*val, prev_op);
                 prev_op = None;
             }
-            _ => prev_op = Some(calc.clone()),
+            _ => prev_op = Some(*calc),
         }
     }
 
     prev_number.unwrap()
 }
 
+/// Calculate the are of a node considering it's parent area
 fn calculate_area(node_data: &NodeData, mut area: NodeArea, parent_area: NodeArea) -> NodeArea {
     let calculate = |value: &SizeMode, area_value: f32, parent_area_value: f32| -> f32 {
         match value {
@@ -128,7 +131,8 @@ fn calculate_area(node_data: &NodeData, mut area: NodeArea, parent_area: NodeAre
 
 type NodeResolver<T> = fn(&ElementId, &mut T) -> Option<NodeData>;
 
-fn process_node_layout<T>(
+/// Measure the areas of a node's inner children
+fn measure_node_children<T>(
     node_data: &NodeData,
     node_area: &mut NodeArea,
     layers: &mut Layers,
@@ -140,6 +144,8 @@ fn process_node_layout<T>(
     inner_width: &mut f32,
     inherited_relative_layer: i16,
     font_collection: &mut FontCollection,
+    layout_memorizer: &Arc<Mutex<LayoutMemorizer>>,
+    must_memorize_layout: bool,
 ) {
     match &node_data.node.node_type {
         NodeType::Element { children, .. } => {
@@ -147,15 +153,17 @@ fn process_node_layout<T>(
                 let child_node = node_resolver(child, resolver_options);
 
                 if let Some(child_node) = child_node {
-                    let child_node_area = calculate_node::<T>(
+                    let child_node_area = measure_node_layout::<T>(
                         &child_node,
-                        remaining_inner_area.clone(),
+                        *remaining_inner_area,
                         inner_area,
                         resolver_options,
                         layers,
                         node_resolver,
                         inherited_relative_layer,
                         font_collection,
+                        layout_memorizer,
+                        must_memorize_layout,
                     );
 
                     match node_data.node.state.size.direction {
@@ -269,7 +277,8 @@ fn get_cursor(node_data: &NodeData) -> Option<(&CursorReference, usize, (f32, f3
     }
 }
 
-pub fn calculate_node<T>(
+/// Measure an area of a given Node
+pub fn measure_node_layout<T>(
     node_data: &NodeData,
     remaining_area: NodeArea,
     parent_area: NodeArea,
@@ -278,51 +287,123 @@ pub fn calculate_node<T>(
     node_resolver: NodeResolver<T>,
     inherited_relative_layer: i16,
     font_collection: &mut FontCollection,
+    layout_memorizer: &Arc<Mutex<LayoutMemorizer>>,
+    must_memorize_layout: bool,
 ) -> NodeArea {
-    let mut node_area = calculate_area(node_data, remaining_area, parent_area);
-
-    // Returns a tuple, the first element is the layer in which the current node must be added
-    // and the second indicates the layer that it's children must inherit
+    // Caculate the corresponding layer of this node
     let (node_layer, inherited_relative_layer) =
         layers.calculate_layer(node_data, inherited_relative_layer);
 
+    let is_parent_dirty = node_data
+        .node
+        .parent
+        .map(|p| layout_memorizer.lock().unwrap().is_dirty(&p))
+        .unwrap_or(false);
+
+    // If parent is dirty, mark this node as dirty too
+    if is_parent_dirty {
+        layout_memorizer
+            .lock()
+            .unwrap()
+            .mark_as_dirty(node_data.node.id);
+    }
+
+    let is_dirty = layout_memorizer
+        .lock()
+        .unwrap()
+        .is_dirty(&node_data.node.id);
+    let is_cached = layout_memorizer
+        .lock()
+        .unwrap()
+        .is_node_layout_memorized(&node_data.node.id);
+
+    // If this node is dirty and parent is not dirty, mark this node dirty
+    if is_dirty && !is_parent_dirty {
+        if let Some(p) = node_data.node.parent {
+            layout_memorizer.lock().unwrap().mark_as_dirty(p)
+        }
+    }
+
     let padding = node_data.node.state.size.padding;
-    let horizontal_padding = padding.1 + padding.3;
-    let vertical_padding = padding.0 + padding.2;
+    let must_recalculate = is_dirty || !is_cached;
 
-    // Area that is available consideing the parent area
-    let mut remaining_inner_area = NodeArea {
-        x: node_area.x + padding.3,
-        y: node_area.y + padding.0,
-        width: node_area.width - horizontal_padding,
-        height: node_area.height - vertical_padding,
-    };
+    let (mut node_area, mut remaining_inner_area, inner_area, (mut inner_width, mut inner_height)) =
+        if must_recalculate {
+            let node_area = calculate_area(node_data, remaining_area, parent_area);
 
-    // Visible area occupied by the child elements
-    let inner_area = remaining_inner_area.clone();
+            // Returns a tuple, the first element is the layer in which the current node must be added
+            // and the second indicates the layer that it's children must inherit
 
-    remaining_inner_area.y += node_data.node.state.size.scroll_y;
-    remaining_inner_area.x += node_data.node.state.size.scroll_x;
+            let horizontal_padding = padding.1 + padding.3;
+            let vertical_padding = padding.0 + padding.2;
 
-    let mut inner_height = vertical_padding;
-    let mut inner_width = vertical_padding;
+            // Area that is available consideing the parent area
+            let mut remaining_inner_area = NodeArea {
+                x: node_area.x + padding.3,
+                y: node_area.y + padding.0,
+                width: node_area.width - horizontal_padding,
+                height: node_area.height - vertical_padding,
+            };
 
-    process_node_layout(
-        node_data,
-        &mut node_area,
-        layers,
-        &mut remaining_inner_area,
-        inner_area,
-        resolver_options,
-        node_resolver,
-        &mut inner_height,
-        &mut inner_width,
-        inherited_relative_layer,
-        font_collection,
-    );
+            // Visible area occupied by the child elements
+            let inner_area = remaining_inner_area;
+
+            // Transform the x and y axis with the node's scroll attributes
+            remaining_inner_area.y += node_data.node.state.scroll.scroll_y;
+            remaining_inner_area.x += node_data.node.state.scroll.scroll_x;
+
+            if must_memorize_layout {
+                // Memorize these layouts
+                layout_memorizer.lock().unwrap().add_node_layout(
+                    node_data.node.id,
+                    NodeLayoutInfo {
+                        area: node_area,
+                        remaining_inner_area,
+                        inner_area,
+                        inner_sizes: (horizontal_padding, vertical_padding),
+                    },
+                );
+            }
+
+            (
+                node_area,
+                remaining_inner_area,
+                inner_area,
+                (horizontal_padding, vertical_padding),
+            )
+        } else {
+            // Get the memorized layouts
+            let NodeLayoutInfo {
+                area,
+                remaining_inner_area,
+                inner_area,
+                inner_sizes,
+            } = layout_memorizer
+                .lock()
+                .unwrap()
+                .get_node_layout(&node_data.node.id)
+                .unwrap();
+            (area, remaining_inner_area, inner_area, inner_sizes)
+        };
 
     // Re calculate the children layouts after the parent has properly adjusted it's size and axis according to it's children
     if DisplayMode::Center == node_data.node.state.style.display {
+        measure_node_children(
+            node_data,
+            &mut node_area,
+            layers,
+            &mut remaining_inner_area,
+            inner_area,
+            resolver_options,
+            node_resolver,
+            &mut inner_height,
+            &mut inner_width,
+            inherited_relative_layer,
+            font_collection,
+            layout_memorizer,
+            false, // By specifying `false` in the argument `must_memorize_layout` it will not cache any inner children layout in this first iteration
+        );
+
         let space_left_vertically = (inner_area.height - inner_height) / 2.0;
         let space_left_horizontally = (inner_area.width - inner_width) / 2.0;
 
@@ -343,20 +424,29 @@ pub fn calculate_node<T>(
                 remaining_inner_area.height = inner_area.height - space_left_vertically - padding.2;
             }
         }
+    }
 
-        process_node_layout(
-            node_data,
-            &mut node_area,
-            layers,
-            &mut remaining_inner_area,
-            inner_area,
-            resolver_options,
-            node_resolver,
-            &mut inner_height,
-            &mut inner_width,
-            inherited_relative_layer,
-            font_collection,
-        );
+    measure_node_children(
+        node_data,
+        &mut node_area,
+        layers,
+        &mut remaining_inner_area,
+        inner_area,
+        resolver_options,
+        node_resolver,
+        &mut inner_height,
+        &mut inner_width,
+        inherited_relative_layer,
+        font_collection,
+        layout_memorizer,
+        must_memorize_layout,
+    );
+
+    if must_recalculate && must_memorize_layout {
+        layout_memorizer
+            .lock()
+            .unwrap()
+            .remove_as_dirty(&node_data.node.id);
     }
 
     match &node_data.node.node_type {
@@ -365,26 +455,27 @@ pub fn calculate_node<T>(
             if let SizeMode::Auto = node_data.node.state.size.width {
                 node_area.width = remaining_inner_area.x - node_area.x + padding.1;
             }
-
             if let SizeMode::Auto = node_data.node.state.size.height {
                 node_area.height = remaining_inner_area.y - node_area.y + padding.0;
             }
         }
     }
 
-    // Registers the element in the Layers handler
-    layers.add_element(node_data, &node_area, node_layer);
+    if must_memorize_layout {
+        // Registers the element in the Layers handler
+        layers.add_element(node_data, &node_area, node_layer);
+    }
 
     // Asynchronously notify the Node's reference about the new size layout
     if let Some(reference) = &node_data.node.state.references.node_ref {
         reference
-            .send(NodeLayout {
+            .send(NodeReferenceLayout {
                 x: node_area.x,
                 y: node_area.y,
                 width: node_area.width,
                 height: node_area.height,
-                inner_height: inner_height,
-                inner_width: inner_width,
+                inner_height,
+                inner_width,
             })
             .ok();
     }

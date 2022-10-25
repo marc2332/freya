@@ -1,31 +1,26 @@
+use std::collections::BTreeMap;
+
 use dioxus::core::ElementId;
 use dioxus_native_core::real_dom::{Node, NodeType};
+use freya_layout_common::NodeArea;
 use freya_node_state::node::NodeState;
-use std::collections::HashMap;
 
 #[derive(Clone)]
 pub struct NodeData {
     pub node: Node<NodeState>,
 }
 
-#[derive(Default, Copy, Clone, Debug, PartialEq)]
-pub struct NodeArea {
-    pub x: f32,
-    pub y: f32,
-    pub width: f32,
-    pub height: f32,
-}
-
 #[derive(Default, Clone)]
 pub struct Layers {
-    pub layers: HashMap<i16, HashMap<ElementId, RenderData>>,
+    pub layers: BTreeMap<i16, BTreeMap<usize, RenderData>>,
 }
 
 #[derive(Clone)]
 pub struct RenderData {
-    pub node_data: NodeData,
+    pub node_state: NodeState,
     pub node_area: NodeArea,
-    pub node_children: Vec<ElementId>,
+    pub node_id: ElementId,
+    pub node_type: NodeType,
 }
 
 impl Layers {
@@ -45,25 +40,16 @@ impl Layers {
         )
     }
 
-    pub fn add_element(&mut self, node_data: &NodeData, area: &NodeArea, node_layer: i16) {
-        if !self.layers.contains_key(&node_layer) {
-            self.layers.insert(node_layer, HashMap::default());
-        }
-
-        let layer = self.layers.get_mut(&node_layer).unwrap();
-
-        let mut node_children = Vec::new();
-
-        if let NodeType::Element { children, .. } = &node_data.node.node_type {
-            node_children = children.clone();
-        }
+    pub fn add_element(&mut self, node_data: &NodeData, node_area: &NodeArea, node_layer: i16) {
+        let layer = self.layers.entry(node_layer).or_insert_with(BTreeMap::new);
 
         layer.insert(
-            node_data.node.id,
+            node_data.node.id.0,
             RenderData {
-                node_data: node_data.clone(),
-                node_area: area.clone(),
-                node_children,
+                node_id: node_data.node.id,
+                node_type: node_data.node.node_type.clone(),
+                node_state: node_data.node.state.clone(),
+                node_area: *node_area,
             },
         );
     }

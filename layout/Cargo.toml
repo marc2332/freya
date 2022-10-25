@@ -14,6 +14,7 @@ categories = ["GUI"]
 [dependencies]
 dioxus-native-core = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
 dioxus = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
+freya-layout-common = { path = "../layout-common", version = "0.1.0" }
 freya-node-state = { path = "../state", version = "0.1.0" }
 freya-layers = { path = "../layers", version = "0.1.0" }
 tokio = { version = "1.17.0", features = ["sync", "rt-multi-thread", "time"] }
@@ -26,3 +27,4 @@ dioxus-core = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove
 fxhash = "0.2.1"
 anymap = "0.12.1"
 lazy_static = "1.4.0"
+freya-components ={ path = "../components"}

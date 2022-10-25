@@ -12,6 +12,7 @@ keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
 [dependencies]
+freya-layout-common = { path = "../layout-common", version = "0.1.0" }
 freya-node-state = { path = "../state", version = "0.1.0" }
 dioxus-native-core = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
 dioxus = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }

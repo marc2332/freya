@@ -9,7 +9,7 @@ use dioxus_html::{
 use enumset::enum_set;
 use freya_layers::RenderData;
 
-use crate::RendererRequest;
+use crate::FreyaEvents;
 
 #[derive(Default)]
 struct ElementState {
@@ -33,7 +33,7 @@ impl EventsProcessor {
     pub fn process_events_batch(
         &mut self,
         events_to_emit: Vec<UserEvent>,
-        events_filtered: HashMap<&str, Vec<(RenderData, RendererRequest)>>,
+        events_filtered: HashMap<&str, Vec<(RenderData, FreyaEvents)>>,
     ) -> Vec<UserEvent> {
         let mut new_events = Vec::new();
 

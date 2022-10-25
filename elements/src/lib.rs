@@ -139,29 +139,6 @@ builder_constructors! {
     };
 }
 
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct NodeLayout {
-    pub x: f32,
-    pub y: f32,
-    pub width: f32,
-    pub height: f32,
-    pub inner_height: f32,
-    pub inner_width: f32,
-}
-
-impl NodeLayout {
-    pub fn new() -> Self {
-        NodeLayout {
-            x: 0.0,
-            y: 0.0,
-            width: 0.0,
-            height: 0.0,
-            inner_height: 0.0,
-            inner_width: 0.0,
-        }
-    }
-}
-
 // I am still bad at Macros so I created this element directly
 #[allow(non_camel_case_types)]
 pub struct image;

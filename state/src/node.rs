@@ -6,7 +6,7 @@ use dioxus_core::AttributeValue;
 use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
 use dioxus_native_core::state::{NodeDepState, ParentDepState, State};
 use dioxus_native_core_macro::{sorted_str_slice, State};
-use freya_elements::NodeLayout;
+use freya_layout_common::{LayoutMemorizer, NodeReferenceLayout};
 use skia_safe::textlayout::TextAlign;
 use skia_safe::Color;
 use tokio::sync::mpsc::UnboundedSender;
@@ -107,7 +107,7 @@ impl PartialEq for CursorReference {
 
 #[derive(Default, Clone)]
 pub struct References {
-    pub node_ref: Option<UnboundedSender<NodeLayout>>,
+    pub node_ref: Option<UnboundedSender<NodeReferenceLayout>>,
     pub cursor_ref: Option<CursorReference>,
 }
 
@@ -117,8 +117,10 @@ pub struct NodeState {
     pub cursor_settings: CursorSettings,
     #[parent_dep_state(references)]
     pub references: References,
-    #[node_dep_state()]
+    #[parent_dep_state(size, Arc<Mutex<LayoutManager>>)]
     pub size: Size,
+    #[parent_dep_state(scroll, Arc<Mutex<LayoutManager>>)]
+    pub scroll: Scroll,
     #[node_dep_state()]
     pub style: Style,
     #[parent_dep_state(font_style)]
@@ -133,15 +135,21 @@ impl NodeState {
 }
 
 #[derive(Default, Clone)]
+pub struct Scroll {
+    pub scroll_y: f32,
+    pub scroll_x: f32,
+    pub id: usize,
+}
+
+#[derive(Default, Clone)]
 pub struct Size {
     pub width: SizeMode,
     pub height: SizeMode,
     pub min_height: SizeMode,
     pub min_width: SizeMode,
     pub padding: (f32, f32, f32, f32),
-    pub scroll_y: f32,
-    pub scroll_x: f32,
     pub direction: DirectionMode,
+    pub id: usize,
 }
 
 impl Size {
@@ -152,9 +160,8 @@ impl Size {
             min_height: SizeMode::Manual(0.0),
             min_width: SizeMode::Manual(0.0),
             padding: (0.0, 0.0, 0.0, 0.0),
-            scroll_y: 0.0,
-            scroll_x: 0.0,
             direction: DirectionMode::Both,
+            id: 0,
         }
     }
 }
@@ -186,7 +193,7 @@ impl ParentDepState for References {
             match a.name {
                 "reference" => {
                     if let AttributeValue::Any(v) = a.value {
-                        let r: &UseRef<UnboundedSender<NodeLayout>> =
+                        let r: &UseRef<UnboundedSender<NodeReferenceLayout>> =
                             v.value.downcast_ref().unwrap();
                         node_ref = Some(r.read().clone())
                     }
@@ -233,7 +240,7 @@ impl ParentDepState for FontStyle {
         parent: Option<&'a Self::DepState>,
         _ctx: &Self::Ctx,
     ) -> bool {
-        let mut font_style = parent.map(|c| c.clone()).unwrap_or_default();
+        let mut font_style = parent.cloned().unwrap_or_default();
 
         for attr in node.attributes() {
             match attr.name {
@@ -273,8 +280,9 @@ impl ParentDepState for FontStyle {
     }
 }
 
-impl NodeDepState<()> for Size {
-    type Ctx = ();
+impl ParentDepState for Size {
+    type Ctx = Arc<Mutex<LayoutMemorizer>>;
+    type DepState = Self;
 
     const NODE_MASK: NodeMask =
         NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
@@ -283,21 +291,22 @@ impl NodeDepState<()> for Size {
             "min_height",
             "min_width",
             "padding",
-            "scroll_y",
-            "scroll_x",
             "direction",
         ])))
         .with_text()
         .with_tag();
 
-    fn reduce<'a>(&mut self, node: NodeView, _sibling: (), _ctx: &Self::Ctx) -> bool {
+    fn reduce<'a>(
+        &mut self,
+        node: NodeView,
+        _parent: Option<&'a Self::DepState>,
+        ctx: &Self::Ctx,
+    ) -> bool {
         let mut width = SizeMode::default();
         let mut height = SizeMode::default();
         let mut min_height = SizeMode::default();
         let mut min_width = SizeMode::default();
         let mut padding = (0.0, 0.0, 0.0, 0.0);
-        let mut scroll_y = 0.0;
-        let mut scroll_x = 0.0;
         let mut direction = if let Some("label") = node.tag() {
             DirectionMode::Both
         } else if let Some("paragraph") = node.tag() {
@@ -344,14 +353,6 @@ impl NodeDepState<()> for Size {
                     padding.2 = padding_for_side;
                     padding.3 = padding_for_side;
                 }
-                "scroll_y" => {
-                    let scroll: f32 = a.value.to_string().parse().unwrap();
-                    scroll_y = scroll;
-                }
-                "scroll_x" => {
-                    let scroll: f32 = a.value.to_string().parse().unwrap();
-                    scroll_x = scroll;
-                }
                 "direction" => {
                     direction = if a.value.to_string() == "horizontal" {
                         DirectionMode::Horizontal
@@ -372,18 +373,72 @@ impl NodeDepState<()> for Size {
             || (min_height != self.min_height)
             || (min_width != self.min_width)
             || (padding != self.padding)
-            || (direction != self.direction)
-            || (scroll_x != self.scroll_x)
-            || (scroll_y != self.scroll_y);
+            || (direction != self.direction);
+
+        if changed {
+            ctx.lock().unwrap().mark_as_dirty(node.id());
+        }
+
         *self = Self {
             width,
             height,
             min_height,
             min_width,
             padding,
+            direction,
+            id: node.id().0,
+        };
+        changed
+    }
+}
+
+// TODO(marc2332) Why use ParentDepState? NodeDepState might make more sense
+impl ParentDepState for Scroll {
+    type Ctx = Arc<Mutex<LayoutMemorizer>>;
+    type DepState = Self;
+
+    const NODE_MASK: NodeMask =
+        NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
+            "scroll_y", "scroll_x",
+        ])))
+        .with_text()
+        .with_tag();
+
+    fn reduce<'a>(
+        &mut self,
+        node: NodeView,
+        _parent: Option<&'a Self::DepState>,
+        ctx: &Self::Ctx,
+    ) -> bool {
+        let mut scroll_y = 0.0;
+        let mut scroll_x = 0.0;
+
+        for attr in node.attributes() {
+            match attr.name {
+                "scroll_y" => {
+                    let scroll: f32 = attr.value.to_string().parse().unwrap();
+                    scroll_y = scroll;
+                }
+                "scroll_x" => {
+                    let scroll: f32 = attr.value.to_string().parse().unwrap();
+                    scroll_x = scroll;
+                }
+                _ => {
+                    println!("Unsupported attribute <{}>", attr.name);
+                }
+            }
+        }
+
+        let changed = (scroll_x != self.scroll_x) || (scroll_y != self.scroll_y);
+
+        if changed {
+            ctx.lock().unwrap().mark_as_dirty(node.id());
+        }
+
+        *self = Self {
             scroll_y,
             scroll_x,
-            direction,
+            id: node.id().0,
         };
         changed
     }
@@ -398,20 +453,20 @@ pub struct ShadowSettings {
     pub color: Color,
 }
 
-#[derive(Default, Clone, Debug, PartialEq)]
+#[derive(Default, Clone, Debug, PartialEq, Eq)]
 pub enum DisplayMode {
     #[default]
     Normal,
     Center,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum CursorMode {
     None,
     Editable,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CursorSettings {
     pub position: Option<i32>,
     pub color: Color,
@@ -549,7 +604,7 @@ impl ParentDepState for CursorSettings {
         parent: Option<&'a Self::DepState>,
         _ctx: &Self::Ctx,
     ) -> bool {
-        let mut cursor = parent.map(|c| c.clone()).unwrap_or_default();
+        let mut cursor = parent.cloned().unwrap_or_default();
 
         for attr in node.attributes() {
             match attr.name {
@@ -595,21 +650,21 @@ pub fn parse_shadow(value: &str) -> Option<ShadowSettings> {
     let value = value.to_string();
     let mut shadow_values = value.split_ascii_whitespace();
     Some(ShadowSettings {
-        x: shadow_values.nth(0)?.parse().ok()?,
-        y: shadow_values.nth(0)?.parse().ok()?,
-        intensity: shadow_values.nth(0)?.parse().ok()?,
-        size: shadow_values.nth(0)?.parse().ok()?,
-        color: parse_color(shadow_values.nth(0)?)?,
+        x: shadow_values.next()?.parse().ok()?,
+        y: shadow_values.next()?.parse().ok()?,
+        intensity: shadow_values.next()?.parse().ok()?,
+        size: shadow_values.next()?.parse().ok()?,
+        color: parse_color(shadow_values.next()?)?,
     })
 }
 
 pub fn parse_rgb(color: &str) -> Option<Color> {
-    let color = color.replace("rgb(", "").replace(")", "");
-    let mut colors = color.split(",");
+    let color = color.replace("rgb(", "").replace(')', "");
+    let mut colors = color.split(',');
 
-    let r = colors.nth(0)?.trim().parse().ok()?;
-    let g = colors.nth(0)?.trim().parse().ok()?;
-    let b = colors.nth(0)?.trim().parse().ok()?;
+    let r = colors.next()?.trim().parse().ok()?;
+    let g = colors.next()?.trim().parse().ok()?;
+    let b = colors.next()?.trim().parse().ok()?;
     Some(Color::from_rgb(r, g, b))
 }
 
@@ -645,8 +700,8 @@ pub fn parse_size(size: &str) -> Option<SizeMode> {
         Some(SizeMode::Auto)
     } else if size.contains("calc") {
         Some(SizeMode::Calculation(parse_calc(size)?))
-    } else if size.contains("%") {
-        Some(SizeMode::Percentage(size.replace("%", "").parse().ok()?))
+    } else if size.contains('%') {
+        Some(SizeMode::Percentage(size.replace('%', "").parse().ok()?))
     } else if size.contains("calc") {
         Some(SizeMode::Calculation(parse_calc(size)?))
     } else {
@@ -658,13 +713,13 @@ pub fn parse_calc(mut size: &str) -> Option<Vec<CalcType>> {
     let mut calcs = Vec::new();
 
     size = size.strip_prefix("calc(")?;
-    size = size.strip_suffix(")")?;
+    size = size.strip_suffix(')')?;
 
     let vals = size.split_whitespace();
 
     for val in vals {
-        if val.contains("%") {
-            calcs.push(CalcType::Percentage(val.replace("%", "").parse().ok()?));
+        if val.contains('%') {
+            calcs.push(CalcType::Percentage(val.replace('%', "").parse().ok()?));
         } else if val == "+" {
             calcs.push(CalcType::Add);
         } else if val == "-" {
