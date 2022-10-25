@@ -288,7 +288,6 @@ pub fn render_skia(
 
         #[cfg(feature = "wireframe")]
         {
-            use skia_safe::Color;
             let mut paint = Paint::default();
 
             paint.set_anti_alias(true);
