@@ -28,6 +28,7 @@ type SafeLayoutManager = Arc<Mutex<LayoutMemorizer>>;
 type WindowedContext = glutin::ContextWrapper<glutin::PossiblyCurrent, glutin::window::Window>;
 pub type SafeFreyaEvents = Arc<Mutex<Vec<FreyaEvents>>>;
 
+/// Events emitted in Freya
 #[derive(Clone, Debug)]
 pub enum FreyaEvents {
     /// A Mouse Event
@@ -48,15 +49,16 @@ pub enum FreyaEvents {
     },
 }
 
+/// Run the Windows Event Loop
 pub fn run(windows_config: Vec<(SafeDOM, SafeEventEmitter, SafeLayoutManager, WindowConfig)>) {
     let cursor_pos = Arc::new(Mutex::new((0.0, 0.0)));
-    let el = EventLoop::<WindowId>::with_user_event();
+    let event_loop = EventLoop::<WindowId>::with_user_event();
     let mut font_collection = FontCollection::new();
     font_collection.set_default_font_manager(FontMgr::default(), "Fira Sans");
 
-    let wins = create_windows_from_config(windows_config, &el, font_collection);
+    let wins = create_windows_from_config(windows_config, &event_loop, font_collection);
 
-    let get_window_context = move |window_id: WindowId| -> Option<Arc<Mutex<WindowEnv>>> {
+    let get_window_env = move |window_id: WindowId| -> Option<Arc<Mutex<WindowEnv>>> {
         let mut win = None;
         for env in &*wins.lock().unwrap() {
             if env.lock().unwrap().windowed_context.window().id() == window_id {
@@ -67,16 +69,15 @@ pub fn run(windows_config: Vec<(SafeDOM, SafeEventEmitter, SafeLayoutManager, Wi
         win
     };
 
-    el.run(move |event, _, control_flow| {
+    event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Wait;
 
-        #[allow(deprecated)]
         match event {
             Event::LoopDestroyed => {}
             Event::WindowEvent {
                 event, window_id, ..
             } => {
-                let result = get_window_context(window_id);
+                let result = get_window_env(window_id);
                 if let Some(result) = result {
                     let mut env = result.lock().unwrap();
                     match event {
@@ -170,14 +171,14 @@ pub fn run(windows_config: Vec<(SafeDOM, SafeEventEmitter, SafeLayoutManager, Wi
                 }
             }
             Event::RedrawRequested(window_id) => {
-                let result = get_window_context(window_id);
+                let result = get_window_env(window_id);
                 if let Some(env) = result {
                     let mut env = env.lock().unwrap();
                     env.redraw();
                 }
             }
             Event::UserEvent(window_id) => {
-                let result = get_window_context(window_id);
+                let result = get_window_env(window_id);
                 if let Some(env) = result {
                     let mut env = env.lock().unwrap();
                     env.redraw();
