@@ -4,6 +4,7 @@ use freya_layers::RenderData;
 use freya_layout_common::NodeArea;
 use freya_node_state::node::NodeState;
 use skia_safe::textlayout::{RectHeightStyle, RectWidthStyle, TextHeightBehavior};
+use skia_safe::Color;
 use skia_safe::{
     svg,
     textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle},
@@ -20,22 +21,28 @@ pub fn render_skia(
     font_collection: &mut FontCollection,
     viewports: &Vec<NodeArea>,
 ) {
-    for viewport in viewports {
-        canvas.clip_rect(
-            Rect::new(
-                viewport.x,
-                viewport.y,
-                viewport.x + viewport.width,
-                viewport.y + viewport.height,
-            ),
-            ClipOp::Intersect,
-            true,
-        );
-    }
-
     if let NodeType::Element { tag, children, .. } = &node.node_type {
+        for viewport in viewports {
+            canvas.clip_rect(
+                Rect::new(
+                    viewport.x,
+                    viewport.y,
+                    viewport.x + viewport.width,
+                    viewport.y + viewport.height,
+                ),
+                ClipOp::Intersect,
+                true,
+            );
+        }
+
         match tag.as_str() {
             "rect" | "container" => {
+                let shadow = &node.node_state.style.shadow;
+
+                if node.node_state.style.background == Color::TRANSPARENT && shadow.intensity <= 0 {
+                    return;
+                }
+
                 let mut paint = Paint::default();
 
                 paint.set_anti_alias(true);
@@ -63,8 +70,6 @@ pub fn render_skia(
 
                 // Shadow effect
                 {
-                    let shadow = &node.node_state.style.shadow;
-
                     if shadow.intensity > 0 {
                         let mut blur_paint = paint.clone();
 
