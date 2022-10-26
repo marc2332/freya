@@ -622,7 +622,7 @@ impl ParentDepState for CursorSettings {
                     }
                 }
                 "cursor_mode" => {
-                    cursor.mode = CursorMode::Editable;
+                    cursor.mode = parse_cursor(&attr.value.to_string());
                 }
                 "cursor_id" => {
                     let new_cursor_id = attr.value.to_string().parse();
@@ -734,4 +734,11 @@ pub fn parse_calc(mut size: &str) -> Option<Vec<CalcType>> {
     }
 
     Some(calcs)
+}
+
+fn parse_cursor(cursor: &str) -> CursorMode {
+    match cursor {
+        "editable" => CursorMode::Editable,
+        _ => CursorMode::None
+    }
 }
