@@ -77,6 +77,7 @@ pub struct FontStyle {
     pub line_height: f32, // https://developer.mozilla.org/en-US/docs/Web/CSS/line-height,
     pub align: TextAlign,
     pub max_lines: Option<usize>,
+    pub font_style: skia_safe::FontStyle,
 }
 
 impl Default for FontStyle {
@@ -88,6 +89,7 @@ impl Default for FontStyle {
             line_height: 1.2,
             align: TextAlign::default(),
             max_lines: None,
+            font_style: skia_safe::FontStyle::default(),
         }
     }
 }
@@ -231,7 +233,8 @@ impl ParentDepState for FontStyle {
             "font_family",
             "line_height",
             "align",
-            "max_lines"
+            "max_lines",
+            "font_style"
         ])));
 
     fn reduce<'a>(
@@ -270,6 +273,9 @@ impl ParentDepState for FontStyle {
                     if let Ok(max_lines) = attr.value.to_string().parse() {
                         font_style.max_lines = Some(max_lines);
                     }
+                }
+                "font_style" => {
+                    font_style.font_style = parse_font_style(&attr.value.to_string());
                 }
                 _ => {}
             }
@@ -739,6 +745,15 @@ pub fn parse_calc(mut size: &str) -> Option<Vec<CalcType>> {
 fn parse_cursor(cursor: &str) -> CursorMode {
     match cursor {
         "editable" => CursorMode::Editable,
-        _ => CursorMode::None
+        _ => CursorMode::None,
+    }
+}
+
+fn parse_font_style(style: &str) -> skia_safe::FontStyle {
+    match style {
+        "italic" => skia_safe::FontStyle::italic(),
+        "bold" => skia_safe::FontStyle::bold(),
+        "bold-italic" => skia_safe::FontStyle::bold_italic(),
+        _ => skia_safe::FontStyle::default(),
     }
 }

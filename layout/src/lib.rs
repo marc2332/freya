@@ -223,6 +223,7 @@ fn measure_node_children<T>(
             let font_family = &node_data.node.state.font_style.font_family;
             let align = node_data.node.state.font_style.align;
             let max_lines = node_data.node.state.font_style.max_lines;
+            let font_style = node_data.node.state.font_style.font_style;
 
             let mut paragraph_style = ParagraphStyle::default();
             paragraph_style.set_text_align(align);
@@ -234,6 +235,7 @@ fn measure_node_children<T>(
 
             paragraph_builder.push_style(
                 TextStyle::new()
+                    .set_font_style(font_style)
                     .set_font_size(font_size)
                     .set_font_families(&[font_family]),
             );

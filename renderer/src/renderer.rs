@@ -91,6 +91,7 @@ pub fn render_skia(
                 let font_family = &node.node_state.font_style.font_family;
                 let font_color = node.node_state.font_style.color;
                 let align = node.node_state.font_style.align;
+                let font_style = node.node_state.font_style.font_style;
 
                 let mut paint = Paint::default();
 
@@ -123,6 +124,7 @@ pub fn render_skia(
                     paragraph_style.set_text_align(align);
                     paragraph_style.set_text_style(
                         TextStyle::new()
+                            .set_font_style(font_style)
                             .set_color(font_color)
                             .set_font_size(font_size)
                             .set_font_families(&[font_family]),
@@ -198,6 +200,7 @@ pub fn render_skia(
                 for node_text in &texts {
                     paragraph_builder.push_style(
                         TextStyle::new()
+                            .set_font_style(node_text.0.font_style.font_style)
                             .set_height_override(true)
                             .set_height(node_text.0.font_style.line_height)
                             .set_color(node_text.0.font_style.color)

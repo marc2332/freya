@@ -116,6 +116,7 @@ builder_constructors! {
         font_family: String,
         align: String,
         max_lines: String,
+        font_style: String,
     };
     paragraph {
         layer: String,
@@ -127,6 +128,7 @@ builder_constructors! {
         cursor_mode: String,
         line_height: String,
         cursor_id: String,
+        direction: String,
     };
     text {
         color: String,
@@ -136,6 +138,7 @@ builder_constructors! {
         font_size: String,
         font_family: String,
         line_height: String,
+        font_style: String,
     };
 }
 
