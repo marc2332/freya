@@ -84,7 +84,7 @@ pub const DARK_THEME: Theme = Theme {
     },
     slider: SliderTheme {
         background: "rgb(60, 60, 60)",
-        thumb_background: "rgb(247, 127, 0)",
+        thumb_background: "rgb(200, 200, 200",
     },
     button: ButtonTheme {
         background: "rgb(35, 35, 35)",
@@ -92,8 +92,8 @@ pub const DARK_THEME: Theme = Theme {
         font_theme: FontTheme { color: "white" },
     },
     switch: SwitchTheme {
-        background: "rgb(121, 116, 126)",
-        thumb_background: "rgb(231, 224, 236)",
+        background: "rgb(60, 60, 60)",
+        thumb_background: "rgb(200, 200, 200)",
         enabled_background: "rgb(247, 127, 0)",
         enabled_thumb_background: "rgb(234, 221, 255)",
     },

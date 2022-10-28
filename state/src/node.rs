@@ -671,7 +671,13 @@ pub fn parse_rgb(color: &str) -> Option<Color> {
     let r = colors.next()?.trim().parse().ok()?;
     let g = colors.next()?.trim().parse().ok()?;
     let b = colors.next()?.trim().parse().ok()?;
-    Some(Color::from_rgb(r, g, b))
+    let a: Option<&str> = colors.next();
+    if let Some(a) = a {
+        let a = a.trim().parse::<u8>().ok()?;
+        Some(Color::from_argb(a, r, g, b))
+    } else {
+        Some(Color::from_rgb(r, g, b))
+    }
 }
 
 pub fn parse_color(color: &str) -> Option<Color> {
