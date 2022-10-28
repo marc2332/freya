@@ -194,7 +194,7 @@ fn app(cx: Scope) -> Element {
                             "none".to_string()
                         };
 
-                        // Only highlight the line in the active line
+                        // Only highlight the active line
                         let line_background = if is_line_selected {
                             "rgb(37, 37, 37)"
                         } else {
