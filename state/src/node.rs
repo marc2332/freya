@@ -149,6 +149,8 @@ pub struct Size {
     pub height: SizeMode,
     pub min_height: SizeMode,
     pub min_width: SizeMode,
+    pub max_height: SizeMode,
+    pub max_width: SizeMode,
     pub padding: (f32, f32, f32, f32),
     pub direction: DirectionMode,
     pub id: usize,
@@ -161,6 +163,8 @@ impl Size {
             height: SizeMode::Percentage(100.0),
             min_height: SizeMode::Manual(0.0),
             min_width: SizeMode::Manual(0.0),
+            max_height: SizeMode::Manual(0.0),
+            max_width: SizeMode::Manual(0.0),
             padding: (0.0, 0.0, 0.0, 0.0),
             direction: DirectionMode::Both,
             id: 0,
@@ -296,6 +300,8 @@ impl ParentDepState for Size {
             "height",
             "min_height",
             "min_width",
+            "max_height",
+            "max_width",
             "padding",
             "direction",
         ])))
@@ -312,6 +318,8 @@ impl ParentDepState for Size {
         let mut height = SizeMode::default();
         let mut min_height = SizeMode::default();
         let mut min_width = SizeMode::default();
+        let mut max_height = SizeMode::default();
+        let mut max_width = SizeMode::default();
         let mut padding = (0.0, 0.0, 0.0, 0.0);
         let mut direction = if let Some("label") = node.tag() {
             DirectionMode::Both
@@ -351,6 +359,18 @@ impl ParentDepState for Size {
                         min_width = new_min_width;
                     }
                 }
+                "max_height" => {
+                    let attr = a.value.to_string();
+                    if let Some(new_max_height) = parse_size(&attr) {
+                        max_height = new_max_height;
+                    }
+                }
+                "max_width" => {
+                    let attr = a.value.to_string();
+                    if let Some(new_max_width) = parse_size(&attr) {
+                        max_width = new_max_width;
+                    }
+                }
                 "padding" => {
                     let total_padding: f32 = a.value.to_string().parse().unwrap();
                     let padding_for_side = total_padding / 2.0;
@@ -378,6 +398,8 @@ impl ParentDepState for Size {
             || (height != self.height)
             || (min_height != self.min_height)
             || (min_width != self.min_width)
+            || (max_height != self.max_height)
+            || (max_width != self.max_width)
             || (padding != self.padding)
             || (direction != self.direction);
 
@@ -390,6 +412,8 @@ impl ParentDepState for Size {
             height,
             min_height,
             min_width,
+            max_height,
+            max_width,
             padding,
             direction,
             id: node.id().0,

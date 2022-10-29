@@ -96,6 +96,35 @@ fn calculate_area(node_data: &NodeData, mut area: NodeArea, parent_area: NodeAre
         }
     };
 
+    let calculate_max = |value: &SizeMode, area_value: f32, parent_area_value: f32| -> f32 {
+        match value {
+            &SizeMode::Manual(v) => {
+                if v > area_value {
+                    area_value
+                } else {
+                    v
+                }
+            }
+            SizeMode::Percentage(per) => {
+                let by_per = (parent_area_value / 100.0 * per).round();
+                if by_per > area_value {
+                    area_value
+                } else {
+                    by_per
+                }
+            }
+            SizeMode::Auto => area_value,
+            SizeMode::Calculation(calcs) => {
+                let by_calcs = run_calculations(calcs, parent_area_value);
+                if by_calcs > area_value {
+                    area_value
+                } else {
+                    by_calcs
+                }
+            }
+        }
+    };
+
     area.width = calculate(
         &node_data.node.state.size.width,
         area.width,
@@ -122,6 +151,17 @@ fn calculate_area(node_data: &NodeData, mut area: NodeArea, parent_area: NodeAre
     );
     area.width = calculate_min(
         &node_data.node.state.size.min_width,
+        area.width,
+        parent_area.width,
+    );
+
+    area.height = calculate_max(
+        &node_data.node.state.size.max_height,
+        area.height,
+        parent_area.height,
+    );
+    area.width = calculate_max(
+        &node_data.node.state.size.max_width,
         area.width,
         parent_area.width,
     );
