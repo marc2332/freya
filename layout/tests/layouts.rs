@@ -29,7 +29,7 @@ fn percentage() {
     node.state = node.state.set_size(Size {
         width: SizeMode::Percentage(50.0),
         height: SizeMode::Percentage(25.0),
-        ..Size::expanded()
+        ..expanded_size()
     });
     let result = measure_node_layout(
         &NodeData { node },
@@ -64,7 +64,7 @@ fn manual() {
     node.state = node.state.set_size(Size {
         width: SizeMode::Manual(250.0),
         height: SizeMode::Manual(150.0),
-        ..Size::expanded()
+        ..expanded_size()
     });
     let result = measure_node_layout(
         &NodeData { node },
@@ -104,7 +104,7 @@ fn auto() {
                     width: SizeMode::Auto,
                     height: SizeMode::Auto,
                     direction: DirectionMode::Both,
-                    ..Size::expanded()
+                    ..expanded_size()
                 }),
                 node_type: NodeType::Element {
                     tag: "rect".to_string(),
@@ -136,7 +136,7 @@ fn auto() {
                     state: NodeState::default().set_size(Size {
                         width: SizeMode::Manual(170.0),
                         height: SizeMode::Manual(25.0),
-                        ..Size::expanded()
+                        ..expanded_size()
                     }),
                     node_type: NodeType::Element {
                         tag: "rect".to_string(),
@@ -163,7 +163,7 @@ fn x_y() {
     node.state = node.state.set_size(Size {
         width: SizeMode::Auto,
         height: SizeMode::Auto,
-        ..Size::expanded()
+        ..expanded_size()
     });
     let result = measure_node_layout(
         &NodeData { node },
@@ -189,7 +189,7 @@ fn x_y() {
                     state: NodeState::default().set_size(Size {
                         width: SizeMode::Manual(170.0),
                         height: SizeMode::Manual(25.0),
-                        ..Size::expanded()
+                        ..expanded_size()
                     }),
                     node_type: NodeType::Element {
                         tag: "rect".to_string(),
@@ -208,4 +208,18 @@ fn x_y() {
 
     assert_eq!(result.x, 15.0);
     assert_eq!(result.y, 25.0);
+}
+
+fn expanded_size() -> Size {
+    Size {
+        width: SizeMode::Percentage(100.0),
+        height: SizeMode::Percentage(100.0),
+        min_height: SizeMode::Manual(0.0),
+        min_width: SizeMode::Manual(0.0),
+        max_height: SizeMode::Auto,
+        max_width: SizeMode::Auto,
+        padding: (0.0, 0.0, 0.0, 0.0),
+        direction: DirectionMode::Both,
+        id: 0,
+    }
 }

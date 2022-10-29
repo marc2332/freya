@@ -19,22 +19,6 @@ pub struct Size {
     pub id: usize,
 }
 
-impl Size {
-    pub fn expanded() -> Self {
-        Self {
-            width: SizeMode::Percentage(100.0),
-            height: SizeMode::Percentage(100.0),
-            min_height: SizeMode::Manual(0.0),
-            min_width: SizeMode::Manual(0.0),
-            max_height: SizeMode::Manual(0.0),
-            max_width: SizeMode::Manual(0.0),
-            padding: (0.0, 0.0, 0.0, 0.0),
-            direction: DirectionMode::Both,
-            id: 0,
-        }
-    }
-}
-
 impl ParentDepState for Size {
     type Ctx = Arc<Mutex<LayoutMemorizer>>;
     type DepState = Self;
