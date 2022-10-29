@@ -190,7 +190,7 @@ pub fn launch_cfg(wins_config: Vec<(Component<()>, WindowConfig)>) {
                         });
                 });
             }
-            (rdom, event_emitter, layout_memorizer, win.clone())
+            (rdom, event_emitter, layout_memorizer, win)
         })
         .collect();
 

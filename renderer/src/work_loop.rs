@@ -27,6 +27,7 @@ use crate::{
 /// - Organize the nodes layouts in layers
 /// - Paint the nodes
 /// - Calculate what events must be triggered
+#[allow(clippy::too_many_arguments)]
 pub fn work_loop(
     mut dom: &SafeDOM,
     mut canvas: &mut Canvas,
@@ -46,7 +47,7 @@ pub fn work_loop(
 
     measure_node_layout(
         &NodeData { node: root },
-        area.clone(),
+        area,
         area,
         &mut dom,
         layers,
@@ -67,7 +68,7 @@ pub fn work_loop(
     let mut layers_nums: Vec<&i16> = layers.layers.keys().collect();
 
     // From top to bottom
-    layers_nums.sort_by(|a, b| a.cmp(b));
+    layers_nums.sort();
 
     // Calculate all the applicable viewports for the given elements
     let mut calculated_viewports: HashMap<ElementId, Vec<NodeArea>> = HashMap::new();
@@ -78,7 +79,7 @@ pub fn work_loop(
             match &element.node_type {
                 NodeType::Element { tag, children, .. } => {
                     for child in children {
-                        if !calculated_viewports.contains_key(&child) {
+                        if !calculated_viewports.contains_key(child) {
                             calculated_viewports.insert(*child, Vec::new());
                         }
                         if calculated_viewports.contains_key(&element.node_id) {
@@ -89,9 +90,9 @@ pub fn work_loop(
                         }
                         if tag == "container" {
                             calculated_viewports
-                                .get_mut(&child)
+                                .get_mut(child)
                                 .unwrap()
-                                .push(element.node_area.clone());
+                                .push(element.node_area);
                         }
                     }
                 }
@@ -123,9 +124,9 @@ pub fn work_loop(
             render_skia(
                 &mut dom,
                 &mut canvas,
-                &element,
+                element,
                 font_collection,
-                &calculated_viewports
+                calculated_viewports
                     .get(&element.node_id)
                     .unwrap_or(&Vec::new()),
             );
@@ -245,11 +246,11 @@ pub fn work_loop(
         }
 
         for (node, request) in found_nodes {
-            let event = match &request {
-                &FreyaEvents::MouseEvent { cursor, .. } => Some(UserEvent {
+            let event = match request {
+                FreyaEvents::MouseEvent { cursor, .. } => Some(UserEvent {
                     scope_id: None,
                     priority: EventPriority::Medium,
-                    element: Some(node.node_id.clone()),
+                    element: Some(node.node_id),
                     name: event_name,
                     bubbles: false,
                     data: Arc::new(MouseData::new(
@@ -267,20 +268,20 @@ pub fn work_loop(
                         Modifiers::empty(),
                     )),
                 }),
-                &FreyaEvents::WheelEvent { scroll, .. } => Some(UserEvent {
+                FreyaEvents::WheelEvent { scroll, .. } => Some(UserEvent {
                     scope_id: None,
                     priority: EventPriority::Medium,
-                    element: Some(node.node_id.clone()),
+                    element: Some(node.node_id),
                     name: event_name,
                     bubbles: false,
                     data: Arc::new(WheelData::new(WheelDelta::Pixels(PixelsVector::new(
                         scroll.0, scroll.1, 0.0,
                     )))),
                 }),
-                &FreyaEvents::KeyboardEvent { name, code } => Some(UserEvent {
+                FreyaEvents::KeyboardEvent { name, code } => Some(UserEvent {
                     scope_id: None,
                     priority: EventPriority::Medium,
-                    element: Some(node.node_id.clone()),
+                    element: Some(node.node_id),
                     name,
                     bubbles: false,
                     data: Arc::new(KeyboardData::new(code.clone())),

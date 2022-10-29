@@ -9,7 +9,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
     let theme = use_atom_ref(&cx, THEME);
     let button_theme = &theme.read().button;
 
-    let background = use_state(&cx, || button_theme.background.clone());
+    let background = use_state(&cx, || <&str>::clone(&button_theme.background));
     let set_background = background.setter();
 
     use_effect(&cx, &button_theme.clone(), move |button_theme| async move {

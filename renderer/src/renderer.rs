@@ -39,7 +39,7 @@ pub fn render_skia(
             "rect" | "container" => {
                 let shadow = &node.node_state.style.shadow;
 
-                if node.node_state.style.background == Color::TRANSPARENT && shadow.intensity <= 0 {
+                if node.node_state.style.background == Color::TRANSPARENT && shadow.intensity == 0 {
                     return;
                 }
 
@@ -150,7 +150,7 @@ pub fn render_skia(
                     .filter_map(|child_id| {
                         let child: Option<Node<NodeState>> = {
                             let dom = dom.lock().unwrap();
-                            dom.get(*child_id).map(|v| v.clone())
+                            dom.get(*child_id).cloned()
                         };
 
                         if let Some(child) = child {
@@ -161,7 +161,7 @@ pub fn render_skia(
                                 if let Some(child_text_id) = children.get(0) {
                                     let child_text: Option<Node<NodeState>> = {
                                         let dom = dom.lock().unwrap();
-                                        dom.get(*child_text_id).map(|v| v.clone())
+                                        dom.get(*child_text_id).cloned()
                                     };
 
                                     if let Some(child_text) = child_text {

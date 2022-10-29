@@ -132,7 +132,7 @@ pub fn create_windows_from_config(
         #[cfg(not(feature = "wayland"))]
         let cb = cb.with_double_buffer(Some(true));
 
-        let windowed_context = cb.build_windowed(wb, &event_loop).unwrap();
+        let windowed_context = cb.build_windowed(wb, event_loop).unwrap();
 
         let windowed_context = unsafe { windowed_context.make_current().unwrap() };
         let window_id = windowed_context.window().id();
@@ -187,7 +187,7 @@ pub fn create_windows_from_config(
 
             let step = time / fps_target;
             loop {
-                if *is_resizing.lock().unwrap() == false {
+                if !(*is_resizing.lock().unwrap()) {
                     // Trigger redraw
                     proxy.send_event(window_id).unwrap();
                     thread::sleep(Duration::from_millis(step));

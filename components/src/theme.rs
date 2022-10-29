@@ -1,18 +1,18 @@
 use fermi::*;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ButtonTheme {
     pub background: &'static str,
     pub hover_background: &'static str,
     pub font_theme: FontTheme,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FontTheme {
     pub color: &'static str,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SwitchTheme {
     pub background: &'static str,
     pub thumb_background: &'static str,
@@ -20,25 +20,25 @@ pub struct SwitchTheme {
     pub enabled_thumb_background: &'static str,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ScrollbarTheme {
     pub background: &'static str,
     pub thumb_background: &'static str,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct BodyTheme {
     pub background: &'static str,
     pub color: &'static str,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SliderTheme {
     pub background: &'static str,
     pub thumb_background: &'static str,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Theme {
     pub body: BodyTheme,
     pub button: ButtonTheme,

@@ -18,17 +18,23 @@ pub enum EditableMode {
     MultipleLinesSingleEditor,
 }
 
+pub type ClickNotifier = UnboundedSender<(UiEvent<MouseData>, usize)>;
+pub type EditableText = UseState<Rope>;
+pub type CursorPosition = UseState<(usize, usize)>;
+pub type KeyboardEvent = UiEvent<KeyboardData>;
+pub type CursorRef = UseRef<CursorReference>;
+
 /// Create a cursor for some editable text.
 pub fn use_editable<'a>(
     cx: &ScopeState,
     initializer: impl Fn() -> &'a str,
     mode: EditableMode,
 ) -> (
-    &UseState<Rope>,
-    &UseState<(usize, usize)>,
-    impl Fn(UiEvent<KeyboardData>) + '_,
-    UnboundedSender<(UiEvent<MouseData>, usize)>,
-    &UseRef<CursorReference>,
+    &EditableText,
+    &CursorPosition,
+    impl Fn(KeyboardEvent) + '_,
+    ClickNotifier,
+    &CursorRef,
 ) {
     // Hold the actual editable content
     let content = use_state(cx, || Rope::from(initializer()));

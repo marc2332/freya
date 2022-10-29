@@ -23,7 +23,7 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
     let clicking = use_state(&cx, || false);
 
     let onmouseleave = |_: UiEvent<MouseData>| {
-        if *clicking.get() == false {
+        if !(*clicking.get()) {
             hovering.set(false);
         }
     };

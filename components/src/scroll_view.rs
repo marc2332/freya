@@ -32,13 +32,13 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     let user_direction = cx.props.direction.unwrap_or("vertical");
 
     let vertical_scrollbar_is_visible = if cx.props.show_scrollbar.unwrap_or(false) {
-        !(size.height >= size.inner_height)
+        size.height < size.inner_height
     } else {
         false
     };
 
     let horizontal_scrollbar_is_visible = if cx.props.show_scrollbar.unwrap_or(false) {
-        !(size.width >= size.inner_width)
+        size.width < size.inner_width
     } else {
         false
     };

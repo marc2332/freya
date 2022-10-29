@@ -132,6 +132,7 @@ fn calculate_area(node_data: &NodeData, mut area: NodeArea, parent_area: NodeAre
 type NodeResolver<T> = fn(&ElementId, &mut T) -> Option<NodeData>;
 
 /// Measure the areas of a node's inner children
+#[allow(clippy::too_many_arguments)]
 fn measure_node_children<T>(
     node_data: &NodeData,
     node_area: &mut NodeArea,
@@ -280,6 +281,7 @@ fn get_cursor(node_data: &NodeData) -> Option<(&CursorReference, usize, (f32, f3
 }
 
 /// Measure an area of a given Node
+#[allow(clippy::too_many_arguments)]
 pub fn measure_node_layout<T>(
     node_data: &NodeData,
     remaining_area: NodeArea,

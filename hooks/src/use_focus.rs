@@ -17,5 +17,5 @@ pub fn use_focus(cx: &ScopeState) -> (bool, impl Fn() + '_) {
 }
 
 pub fn use_init_focus(cx: &ScopeState) {
-    use_context_provider(cx, || Uuid::new_v4());
+    use_context_provider(cx, Uuid::new_v4);
 }

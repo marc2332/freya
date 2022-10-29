@@ -89,7 +89,7 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
     let progress = (value / 100.0) as f64 * cx.props.width;
 
     let onmouseleave = |_: UiEvent<MouseData>| {
-        if *clicking.get() == false {
+        if !(*clicking.get()) {
             hovering.set(false);
         }
     };
