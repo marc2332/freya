@@ -1,9 +1,10 @@
+use dioxus_core::ElementId;
 use dioxus_native_core::real_dom::{Node, NodeType};
 use dioxus_native_core::traversable::Traversable;
 use freya_layers::RenderData;
 use freya_layout_common::NodeArea;
 use freya_node_state::NodeState;
-use skia_safe::textlayout::{RectHeightStyle, RectWidthStyle, TextHeightBehavior};
+use skia_safe::textlayout::{RectHeightStyle, RectWidthStyle, TextHeightBehavior, Paragraph};
 use skia_safe::Color;
 use skia_safe::{
     svg,
@@ -145,45 +146,7 @@ pub fn render_skia(
                 let align = node.node_state.font_style.align;
                 let max_lines = node.node_state.font_style.max_lines;
 
-                let texts = children
-                    .iter()
-                    .filter_map(|child_id| {
-                        let child: Option<Node<NodeState>> = {
-                            let dom = dom.lock().unwrap();
-                            dom.get(*child_id).cloned()
-                        };
-
-                        if let Some(child) = child {
-                            if let NodeType::Element { tag, children, .. } = child.node_type {
-                                if tag != "text" {
-                                    return None;
-                                }
-                                if let Some(child_text_id) = children.get(0) {
-                                    let child_text: Option<Node<NodeState>> = {
-                                        let dom = dom.lock().unwrap();
-                                        dom.get(*child_text_id).cloned()
-                                    };
-
-                                    if let Some(child_text) = child_text {
-                                        if let NodeType::Text { text } = &child_text.node_type {
-                                            Some((child.state, text.clone()))
-                                        } else {
-                                            None
-                                        }
-                                    } else {
-                                        None
-                                    }
-                                } else {
-                                    None
-                                }
-                            } else {
-                                None
-                            }
-                        } else {
-                            None
-                        }
-                    })
-                    .collect::<Vec<(NodeState, String)>>();
+                let texts = get_inner_texts(children, dom);
 
                 let x = node.node_area.x;
                 let y = node.node_area.y;
@@ -217,36 +180,7 @@ pub fn render_skia(
                 paragraph.paint(canvas, (x, y));
 
                 // Draw a cursor if specified
-                if let Some(cursor) = node.node_state.cursor_settings.position {
-                    let cursor_color = node.node_state.cursor_settings.color;
-                    let cursor_position = cursor as usize;
-
-                    let cursor_rects = paragraph.get_rects_for_range(
-                        cursor_position..cursor_position + 1,
-                        RectHeightStyle::Tight,
-                        RectWidthStyle::Tight,
-                    );
-                    let cursor_rect = cursor_rects.first();
-
-                    if let Some(cursor_rect) = cursor_rect {
-                        let x = node.node_area.x + cursor_rect.rect.left;
-                        let y = node.node_area.y + cursor_rect.rect.top;
-
-                        let x2 = x + 1.0;
-                        let y2 = y + (cursor_rect.rect.bottom - cursor_rect.rect.top);
-
-                        let mut paint = Paint::default();
-                        paint.set_anti_alias(true);
-                        paint.set_style(PaintStyle::Fill);
-                        paint.set_color(cursor_color);
-
-                        let mut path = Path::new();
-                        path.add_rect(Rect::new(x as f32, y as f32, x2 as f32, y2 as f32), None);
-                        path.close();
-
-                        canvas.draw_path(&path, &paint);
-                    }
-                }
+                draw_cursor(node, paragraph, canvas);
             }
             "svg" => {
                 let x = node.node_area.x;
@@ -313,4 +247,75 @@ pub fn render_skia(
             canvas.draw_line((x, y2), (x, y), &paint);
         }
     }
+}
+
+
+fn get_inner_texts(children: &Vec<ElementId>, dom: &SafeDOM) -> Vec<(NodeState, String)> {
+    children
+        .iter()
+        .filter_map(|child_id| {
+            let child: Option<Node<NodeState>> = {
+                let dom = dom.lock().unwrap();
+                dom.get(*child_id).cloned()
+            };
+    
+            if let Some(child) = child {
+                if let NodeType::Element { tag, children, .. } = child.node_type {
+                    if tag != "text" {
+                        return None;
+                    }
+                    if let Some(child_text_id) = children.get(0) {
+                        let child_text: Option<Node<NodeState>> = {
+                            let dom = dom.lock().unwrap();
+                            dom.get(*child_text_id).cloned()
+                        };
+    
+                        if let Some(child_text) = child_text {
+                            if let NodeType::Text { text } = &child_text.node_type {
+                                Some((child.state, text.clone()))
+                            } else {
+                                None
+                            }
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<(NodeState, String)>>()
+}
+
+fn draw_cursor(node: &RenderData, paragraph: Paragraph, canvas: &mut Canvas) -> Option<()> {
+    let cursor = node.node_state.cursor_settings.position?;
+    let cursor_color = node.node_state.cursor_settings.color;
+    let cursor_position = cursor as usize;
+
+    let cursor_rects = paragraph.get_rects_for_range(
+        cursor_position..cursor_position + 1,
+        RectHeightStyle::Tight,
+        RectWidthStyle::Tight,
+    );
+    let cursor_rect = cursor_rects.first()?;
+
+    let x = node.node_area.x + cursor_rect.rect.left;
+    let y = node.node_area.y + cursor_rect.rect.top;
+
+    let x2 = x + 1.0;
+    let y2 = y + (cursor_rect.rect.bottom - cursor_rect.rect.top);
+
+    let mut paint = Paint::default();
+    paint.set_anti_alias(true);
+    paint.set_style(PaintStyle::Fill);
+    paint.set_color(cursor_color);
+
+    canvas.draw_rect(Rect::new(x as f32, y as f32, x2 as f32, y2 as f32), &paint);
+
+    Some(())
 }
