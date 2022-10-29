@@ -1,5 +1,5 @@
 use freya_layout::run_calculations;
-use freya_node_state::node::CalcType;
+use freya_node_state::CalcType;
 
 #[test]
 fn works_per_add_man() {

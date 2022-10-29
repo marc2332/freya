@@ -1,7 +1,7 @@
 use dioxus_core::{exports::futures_channel::mpsc::UnboundedSender, SchedulerMsg};
 use dioxus_native_core::real_dom::RealDom;
 use freya_layout_common::LayoutMemorizer;
-use freya_node_state::node::NodeState;
+use freya_node_state::NodeState;
 use glutin::event::ElementState;
 use glutin::window::WindowId;
 use glutin::{event::Event, event_loop::ControlFlow};

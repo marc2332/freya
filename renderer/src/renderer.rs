@@ -2,7 +2,7 @@ use dioxus_native_core::real_dom::{Node, NodeType};
 use dioxus_native_core::traversable::Traversable;
 use freya_layers::RenderData;
 use freya_layout_common::NodeArea;
-use freya_node_state::node::NodeState;
+use freya_node_state::NodeState;
 use skia_safe::textlayout::{RectHeightStyle, RectWidthStyle, TextHeightBehavior};
 use skia_safe::Color;
 use skia_safe::{

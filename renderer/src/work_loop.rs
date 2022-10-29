@@ -13,7 +13,7 @@ use freya_elements::events::KeyboardData;
 use freya_layers::{Layers, NodeData, RenderData};
 use freya_layout::measure_node_layout;
 use freya_layout_common::NodeArea;
-use freya_node_state::node::NodeState;
+use freya_node_state::NodeState;
 use skia_safe::{textlayout::FontCollection, Canvas, Color};
 use std::{collections::HashMap, ops::Index, sync::Arc};
 

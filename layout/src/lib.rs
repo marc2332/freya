@@ -5,8 +5,7 @@ use dioxus_native_core::real_dom::NodeType;
 use freya_layers::{Layers, NodeData};
 use freya_layout_common::{LayoutMemorizer, NodeArea, NodeLayoutInfo, NodeReferenceLayout};
 use freya_node_state::{
-    node::{CalcType, DirectionMode, DisplayMode, SizeMode},
-    CursorMode, CursorReference,
+    CalcType, CursorMode, CursorReference, DirectionMode, DisplayMode, SizeMode,
 };
 use skia_safe::textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle};
 

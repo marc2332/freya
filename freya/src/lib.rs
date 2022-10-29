@@ -2,7 +2,7 @@ use anymap::AnyMap;
 use dioxus::prelude::*;
 use dioxus_core::SchedulerMsg;
 use dioxus_native_core::real_dom::RealDom;
-use freya_node_state::node::NodeState;
+use freya_node_state::NodeState;
 use freya_renderer::run;
 use std::sync::Arc;
 use std::sync::Mutex;

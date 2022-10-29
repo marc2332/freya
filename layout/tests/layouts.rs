@@ -5,7 +5,7 @@ use dioxus_native_core::real_dom::{Node, NodeType};
 use freya_layers::{Layers, NodeData};
 use freya_layout::measure_node_layout;
 use freya_layout_common::{LayoutMemorizer, NodeArea};
-use freya_node_state::node::{DirectionMode, NodeState, Size, SizeMode};
+use freya_node_state::{DirectionMode, NodeState, Size, SizeMode};
 use lazy_static::lazy_static;
 use skia_safe::textlayout::FontCollection;
 

@@ -6,7 +6,7 @@ use dioxus_router::*;
 use fermi::use_atom_ref;
 use freya_components::*;
 use freya_elements as dioxus_elements;
-use freya_node_state::node::NodeState;
+use freya_node_state::NodeState;
 use skia_safe::Color;
 use std::{
     sync::{Arc, Mutex},

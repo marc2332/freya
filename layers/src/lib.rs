@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use dioxus::core::ElementId;
 use dioxus_native_core::real_dom::{Node, NodeType};
 use freya_layout_common::NodeArea;
-use freya_node_state::node::NodeState;
+use freya_node_state::NodeState;
 
 #[derive(Clone)]
 pub struct NodeData {
