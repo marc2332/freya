@@ -4,7 +4,7 @@ use dioxus_native_core::traversable::Traversable;
 use freya_layers::RenderData;
 use freya_layout_common::NodeArea;
 use freya_node_state::NodeState;
-use skia_safe::textlayout::{Paragraph, RectHeightStyle, RectWidthStyle, TextHeightBehavior};
+use skia_safe::textlayout::{RectHeightStyle, RectWidthStyle, TextHeightBehavior, Paragraph};
 use skia_safe::Color;
 use skia_safe::{
     svg,
@@ -250,7 +250,8 @@ pub fn render_skia(
     }
 }
 
-fn get_inner_texts(children: &Vec<ElementId>, dom: &SafeDOM) -> Vec<(NodeState, String)> {
+
+fn get_inner_texts(children: &[ElementId], dom: &SafeDOM) -> Vec<(NodeState, String)> {
     children
         .iter()
         .filter_map(|child_id| {
@@ -258,7 +259,7 @@ fn get_inner_texts(children: &Vec<ElementId>, dom: &SafeDOM) -> Vec<(NodeState, 
                 let dom = dom.lock().unwrap();
                 dom.get(*child_id).cloned()
             };
-
+    
             if let Some(child) = child {
                 if let NodeType::Element { tag, children, .. } = child.node_type {
                     if tag != "text" {
@@ -269,7 +270,7 @@ fn get_inner_texts(children: &Vec<ElementId>, dom: &SafeDOM) -> Vec<(NodeState, 
                             let dom = dom.lock().unwrap();
                             dom.get(*child_text_id).cloned()
                         };
-
+    
                         if let Some(child_text) = child_text {
                             if let NodeType::Text { text } = &child_text.node_type {
                                 Some((child.state, text.clone()))
