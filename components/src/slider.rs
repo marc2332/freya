@@ -1,4 +1,8 @@
-use dioxus::{core::UiEvent, events::MouseData, prelude::*};
+use dioxus::{
+    core::UiEvent,
+    events::{MouseData, WheelData},
+    prelude::*,
+};
 use fermi::use_atom_ref;
 use freya_elements as dioxus_elements;
 
@@ -84,9 +88,9 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
     let hovering = use_state(&cx, || false);
     let clicking = use_state(&cx, || false);
     let value = ensure_correct_slider_range(cx.props.value);
-    let width = cx.props.width + 20.0;
+    let width = cx.props.width + 14.0;
 
-    let progress = (value / 100.0) as f64 * cx.props.width;
+    let progress = (value / 100.0) as f64 * cx.props.width + 0.5;
 
     let onmouseleave = |_: UiEvent<MouseData>| {
         if !(*clicking.get()) {
@@ -98,7 +102,7 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
         hovering.set(true);
         if *clicking.get() {
             let coordinates = e.coordinates().element();
-            let mut x = coordinates.x - 11.0;
+            let mut x = coordinates.x - 7.5;
             if x < 0.0 {
                 x = 0.0;
             }
@@ -127,23 +131,73 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
         clicking.set(false);
     };
 
+    let onwheel = move |e: UiEvent<WheelData>| {
+        let wheel_y = e.delta().strip_units().y;
+        let progress_x = (value / 100.0) as f64 * cx.props.width;
+
+        let mut x = progress_x + (wheel_y * 7.5);
+        if x < 0.0 {
+            x = 0.0;
+        }
+        if x > width {
+            x = width;
+        }
+        let percentage = x / cx.props.width * 100.0;
+
+        let percentage = if percentage < 0.0 {
+            0.0
+        } else if percentage > 100.0 {
+            100.0
+        } else {
+            percentage
+        };
+
+        cx.props.onmoved.call(percentage);
+    };
+
     render!(
         container {
-            background: "{theme.background}",
             width: "{width}",
             height: "20",
-            scroll_x: "{progress}",
-            padding: "5",
             onmousedown: onmousedown,
             onclick: onclick,
-            radius: "25",
             onmouseover: onmouseover,
             onmouseleave: onmouseleave,
+            onwheel: onwheel,
+            display: "center",
+            direction: "both",
+            padding: "2",
             rect {
-                background: "{theme.thumb_background}",
-                width: "15",
-                height: "15",
-                radius: "15",
+                background: "{theme.background}",
+                width: "100%",
+                height: "6",
+                direction: "horizontal",
+                radius: "50",
+                rect {
+                    background: "{theme.thumb_inner_background}",
+                    width: "{progress}",
+                    height: "100%",
+                    radius: "50",
+                }
+                rect {
+                    width: "{progress}",
+                    height: "100%",
+                    scroll_y: "-5",
+                    scroll_x: "-2",
+                    rect {
+                        background: "{theme.thumb_background}",
+                        width: "17",
+                        height: "17",
+                        radius: "50",
+                        padding: "6",
+                        rect {
+                            height: "100%",
+                            width: "100%",
+                            background: "{theme.thumb_inner_background}",
+                            radius: "50"
+                        }
+                    }
+                }
             }
         }
     )

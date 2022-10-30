@@ -36,6 +36,7 @@ pub struct BodyTheme {
 pub struct SliderTheme {
     pub background: &'static str,
     pub thumb_background: &'static str,
+    pub thumb_inner_background: &'static str,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -55,8 +56,9 @@ pub static LIGHT_THEME: Theme = Theme {
         color: "black",
     },
     slider: SliderTheme {
-        background: "rgb(225, 225, 225)",
-        thumb_background: "rgb(103, 80, 164)",
+        background: "rgb(210, 210, 210)",
+        thumb_background: "rgb(210, 210, 210)",
+        thumb_inner_background: "rgb(103, 80, 164)",
     },
     button: ButtonTheme {
         background: "rgb(220, 220, 220)",
@@ -84,7 +86,8 @@ pub const DARK_THEME: Theme = Theme {
     },
     slider: SliderTheme {
         background: "rgb(60, 60, 60)",
-        thumb_background: "rgb(200, 200, 200",
+        thumb_background: "rgb(60, 60, 60)",
+        thumb_inner_background: "rgb(255, 95, 0)",
     },
     button: ButtonTheme {
         background: "rgb(35, 35, 35)",
@@ -94,7 +97,7 @@ pub const DARK_THEME: Theme = Theme {
     switch: SwitchTheme {
         background: "rgb(60, 60, 60)",
         thumb_background: "rgb(200, 200, 200)",
-        enabled_background: "rgb(247, 127, 0)",
+        enabled_background: "rgb(255, 95, 0)",
         enabled_thumb_background: "rgb(234, 221, 255)",
     },
     scrollbar: ScrollbarTheme {

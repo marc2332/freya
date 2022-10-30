@@ -114,6 +114,22 @@ fn FirstSection(cx: Scope) -> Element {
         }
         Space {},
         SectionHeader {
+            "Slider"
+        }
+        Space {},
+        Slider {
+            width: 100.0,
+            value: *slider_percentage.get(),
+            onmoved: |p| {
+                slider_percentage.set(p);
+            }
+        }
+        Space {},
+        label {
+            "Value is {slider_percentage.floor()}"
+        }
+        Space {},
+        SectionHeader {
             "Scrollview"
         }
         label {
@@ -139,22 +155,6 @@ fn FirstSection(cx: Scope) -> Element {
                 height: "105",
                 background: "rgb(197, 186, 175)",
             }
-        }
-        Space {},
-        SectionHeader {
-            "Slider"
-        }
-        Space {},
-        Slider {
-            width: 100.0,
-            value: *slider_percentage.get(),
-            onmoved: |p| {
-                slider_percentage.set(p);
-            }
-        }
-        Space {},
-        label {
-            "Value is {slider_percentage}"
         }
     )
 }
