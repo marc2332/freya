@@ -4,7 +4,8 @@ use dioxus_native_core::traversable::Traversable;
 use freya_layers::RenderData;
 use freya_layout_common::NodeArea;
 use freya_node_state::NodeState;
-use skia_safe::textlayout::{RectHeightStyle, RectWidthStyle, TextHeightBehavior, Paragraph};
+use rustc_hash::FxHashMap;
+use skia_safe::textlayout::{Paragraph, RectHeightStyle, RectWidthStyle, TextHeightBehavior};
 use skia_safe::Color;
 use skia_safe::{
     svg,
@@ -20,20 +21,26 @@ pub fn render_skia(
     canvas: &mut &mut Canvas,
     node: &RenderData,
     font_collection: &mut FontCollection,
-    viewports: &Vec<NodeArea>,
+    calculated_viewports: &FxHashMap<ElementId, (Option<NodeArea>, Vec<ElementId>)>,
 ) {
     if let NodeType::Element { tag, children, .. } = &node.node_type {
-        for viewport in viewports {
-            canvas.clip_rect(
-                Rect::new(
-                    viewport.x,
-                    viewport.y,
-                    viewport.x + viewport.width,
-                    viewport.y + viewport.height,
-                ),
-                ClipOp::Intersect,
-                true,
-            );
+        let viewports = calculated_viewports.get(&node.node_id);
+        if let Some((_, viewports)) = viewports {
+            for viewport_id in viewports {
+                let viewport = calculated_viewports.get(viewport_id).unwrap().0;
+                if let Some(viewport) = viewport {
+                    canvas.clip_rect(
+                        Rect::new(
+                            viewport.x,
+                            viewport.y,
+                            viewport.x + viewport.width,
+                            viewport.y + viewport.height,
+                        ),
+                        ClipOp::Intersect,
+                        true,
+                    );
+                }
+            }
         }
 
         match tag.as_str() {
@@ -250,7 +257,6 @@ pub fn render_skia(
     }
 }
 
-
 fn get_inner_texts(children: &[ElementId], dom: &SafeDOM) -> Vec<(NodeState, String)> {
     children
         .iter()
@@ -259,7 +265,7 @@ fn get_inner_texts(children: &[ElementId], dom: &SafeDOM) -> Vec<(NodeState, Str
                 let dom = dom.lock().unwrap();
                 dom.get(*child_id).cloned()
             };
-    
+
             if let Some(child) = child {
                 if let NodeType::Element { tag, children, .. } = child.node_type {
                     if tag != "text" {
@@ -270,7 +276,7 @@ fn get_inner_texts(children: &[ElementId], dom: &SafeDOM) -> Vec<(NodeState, Str
                             let dom = dom.lock().unwrap();
                             dom.get(*child_text_id).cloned()
                         };
-    
+
                         if let Some(child_text) = child_text {
                             if let NodeType::Text { text } = &child_text.node_type {
                                 Some((child.state, text.clone()))

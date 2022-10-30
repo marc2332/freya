@@ -8,6 +8,7 @@ use dioxus_html::{
 };
 use enumset::enum_set;
 use freya_layers::RenderData;
+use rustc_hash::FxHashMap;
 
 use crate::FreyaEvents;
 
@@ -33,7 +34,7 @@ impl EventsProcessor {
     pub fn process_events_batch(
         &mut self,
         events_to_emit: Vec<UserEvent>,
-        events_filtered: HashMap<&str, Vec<(RenderData, FreyaEvents)>>,
+        events_filtered: FxHashMap<&str, Vec<(RenderData, FreyaEvents)>>,
     ) -> Vec<UserEvent> {
         let mut new_events = Vec::new();
 

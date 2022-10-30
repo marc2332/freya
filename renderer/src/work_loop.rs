@@ -14,8 +14,9 @@ use freya_layers::{Layers, NodeData, RenderData};
 use freya_layout::measure_node_layout;
 use freya_layout_common::NodeArea;
 use freya_node_state::NodeState;
+use rustc_hash::FxHashMap;
 use skia_safe::{textlayout::FontCollection, Canvas, Color};
-use std::{collections::HashMap, ops::Index, sync::Arc};
+use std::{ops::Index, sync::Arc};
 
 use crate::{
     events_processor::EventsProcessor, renderer::render_skia, FreyaEvents, SafeDOM,
@@ -71,33 +72,30 @@ pub fn work_loop(
     layers_nums.sort();
 
     // Calculate all the applicable viewports for the given elements
-    let mut calculated_viewports: HashMap<ElementId, Vec<NodeArea>> = HashMap::new();
+    let mut calculated_viewports: FxHashMap<ElementId, (Option<NodeArea>, Vec<ElementId>)> =
+        FxHashMap::default();
 
     for layer_num in &layers_nums {
         let layer = layers.layers.get(layer_num).unwrap();
         for element in layer.values() {
-            match &element.node_type {
-                NodeType::Element { tag, children, .. } => {
-                    for child in children {
-                        if !calculated_viewports.contains_key(child) {
-                            calculated_viewports.insert(*child, Vec::new());
-                        }
-                        if calculated_viewports.contains_key(&element.node_id) {
-                            calculated_viewports.insert(
-                                *child,
-                                calculated_viewports.get(&element.node_id).unwrap().clone(),
-                            );
-                        }
-                        if tag == "container" {
-                            calculated_viewports
-                                .get_mut(child)
-                                .unwrap()
-                                .push(element.node_area);
-                        }
+            if let NodeType::Element { tag, children, .. } = &element.node_type {
+                if tag == "container" {
+                    calculated_viewports
+                        .insert(element.node_id, (Some(element.node_area), Vec::new()));
+                }
+                for child in children {
+                    if calculated_viewports.contains_key(&element.node_id) {
+                        let mut inherited_viewports = calculated_viewports
+                            .get(&element.node_id)
+                            .unwrap()
+                            .1
+                            .clone();
+
+                        inherited_viewports.push(element.node_id);
+
+                        calculated_viewports.insert(*child, (None, inherited_viewports));
                     }
                 }
-                NodeType::Text { .. } => {}
-                _ => {}
             }
         }
     }
@@ -108,14 +106,18 @@ pub fn work_loop(
         'elements: for element in layer.values() {
             let viewports = calculated_viewports.get(&element.node_id);
 
-            if let Some(viewports) = viewports {
-                for viewport in viewports {
-                    if element.node_area.x + element.node_area.width < viewport.x
-                        || element.node_area.y + element.node_area.height < viewport.y
-                        || element.node_area.x > viewport.x + viewport.width
-                        || element.node_area.y > viewport.y + viewport.height
-                    {
-                        continue 'elements;
+            // Skip elements that are totally out of some their parent's viewport
+            if let Some((_, viewports)) = viewports {
+                for viewport_id in viewports {
+                    let viewport = calculated_viewports.get(viewport_id).unwrap().0;
+                    if let Some(viewport) = viewport {
+                        if element.node_area.x + element.node_area.width < viewport.x
+                            || element.node_area.y + element.node_area.height < viewport.y
+                            || element.node_area.x > viewport.x + viewport.width
+                            || element.node_area.y > viewport.y + viewport.height
+                        {
+                            continue 'elements;
+                        }
                     }
                 }
             }
@@ -126,17 +128,15 @@ pub fn work_loop(
                 &mut canvas,
                 element,
                 font_collection,
-                calculated_viewports
-                    .get(&element.node_id)
-                    .unwrap_or(&Vec::new()),
+                &calculated_viewports,
             );
             canvas.restore();
         }
     }
 
     // Calculated events are those that match considering their viewports
-    let mut calculated_events: HashMap<&'static str, Vec<(RenderData, FreyaEvents)>> =
-        HashMap::new();
+    let mut calculated_events: FxHashMap<&'static str, Vec<(RenderData, FreyaEvents)>> =
+        FxHashMap::default();
 
     // Propagate events from the top to the bottom
     for layer_num in &layers_nums {
@@ -169,18 +169,21 @@ pub fn work_loop(
                         let height = (area.y + area.height) as f64;
 
                         let mut visible = true;
+                        let viewports = calculated_viewports.get(&element.node_id);
 
-                        // Make sure the cursor is inside all the applicable viewports from the element
-                        for viewport in calculated_viewports
-                            .get(&element.node_id)
-                            .unwrap_or(&Vec::new())
-                        {
-                            if cursor.0 < viewport.x as f64
-                                || cursor.0 > (viewport.x + viewport.width) as f64
-                                || cursor.1 < viewport.y as f64
-                                || cursor.1 > (viewport.y + viewport.height) as f64
-                            {
-                                visible = false;
+                        if let Some((_, viewports)) = viewports {
+                            // Make sure the cursor is inside all the applicable viewports from the element
+                            for viewport_id in viewports {
+                                let viewport = calculated_viewports.get(viewport_id).unwrap().0;
+                                if let Some(viewport) = viewport {
+                                    if cursor.0 < viewport.x as f64
+                                        || cursor.0 > (viewport.x + viewport.width) as f64
+                                        || cursor.1 < viewport.y as f64
+                                        || cursor.1 > (viewport.y + viewport.height) as f64
+                                    {
+                                        visible = false;
+                                    }
+                                }
                             }
                         }
 
