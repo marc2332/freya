@@ -26,11 +26,11 @@ type SafeDOM = Arc<Mutex<RealDom<NodeState>>>;
 type SafeEventEmitter = Arc<Mutex<Option<UnboundedSender<SchedulerMsg>>>>;
 type SafeLayoutManager = Arc<Mutex<LayoutMemorizer>>;
 type WindowedContext = glutin::ContextWrapper<glutin::PossiblyCurrent, glutin::window::Window>;
-pub type SafeFreyaEvents = Arc<Mutex<Vec<FreyaEvents>>>;
+pub type SafeFreyaEvents = Arc<Mutex<Vec<FreyaEvent>>>;
 
 /// Events emitted in Freya
 #[derive(Clone, Debug)]
-pub enum FreyaEvents {
+pub enum FreyaEvent {
     /// A Mouse Event
     MouseEvent {
         name: &'static str,
@@ -95,7 +95,7 @@ pub fn run(windows_config: Vec<(SafeDOM, SafeEventEmitter, SafeLayoutManager, Wi
                                 env.freya_events
                                     .lock()
                                     .unwrap()
-                                    .push(FreyaEvents::WheelEvent {
+                                    .push(FreyaEvent::WheelEvent {
                                         name: "wheel",
                                         scroll: scroll_data,
                                         cursor: *cursor_pos,
@@ -114,7 +114,7 @@ pub fn run(windows_config: Vec<(SafeDOM, SafeEventEmitter, SafeLayoutManager, Wi
                             env.freya_events
                                 .lock()
                                 .unwrap()
-                                .push(FreyaEvents::MouseEvent {
+                                .push(FreyaEvent::MouseEvent {
                                     name: "mouseover",
                                     cursor: cursor_pos,
                                 });
@@ -129,7 +129,7 @@ pub fn run(windows_config: Vec<(SafeDOM, SafeEventEmitter, SafeLayoutManager, Wi
                             env.freya_events
                                 .lock()
                                 .unwrap()
-                                .push(FreyaEvents::MouseEvent {
+                                .push(FreyaEvent::MouseEvent {
                                     name: event_name,
                                     cursor: *cursor_pos,
                                 });
@@ -161,7 +161,7 @@ pub fn run(windows_config: Vec<(SafeDOM, SafeEventEmitter, SafeLayoutManager, Wi
                             env.freya_events
                                 .lock()
                                 .unwrap()
-                                .push(FreyaEvents::KeyboardEvent {
+                                .push(FreyaEvent::KeyboardEvent {
                                     name: event_name,
                                     code: logical_key,
                                 });

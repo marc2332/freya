@@ -53,28 +53,21 @@ pub fn render_skia(
                 }
 
                 let mut paint = Paint::default();
-
                 paint.set_anti_alias(true);
                 paint.set_style(PaintStyle::Fill);
                 paint.set_color(node.node_state.style.background);
 
-                let x = node.node_area.x;
-                let y = node.node_area.y;
-
-                let x2 = x + node.node_area.width;
-                let y2 = y + node.node_area.height;
-
                 let radius = node.node_state.style.radius;
                 let radius = if radius < 0.0 { 0.0 } else { radius };
 
-                let mut path = Path::new();
+                let ((x, y), (x2, y2)) = node.node_area.get_rect();
 
+                let mut path = Path::new();
                 path.add_round_rect(
                     Rect::new(x as f32, y as f32, x2 as f32, y2 as f32),
                     (radius as f32, radius as f32),
                     PathDirection::CW,
                 );
-
                 path.close();
 
                 // Shadow effect
@@ -156,8 +149,7 @@ pub fn render_skia(
 
                 let texts = get_inner_texts(children, dom);
 
-                let x = node.node_area.x;
-                let y = node.node_area.y;
+                let (x, y) = node.node_area.get_origin_points();
 
                 let mut paragraph_style = ParagraphStyle::default();
                 paragraph_style.set_max_lines(max_lines);

@@ -10,7 +10,7 @@ use enumset::enum_set;
 use freya_layers::RenderData;
 use rustc_hash::FxHashMap;
 
-use crate::FreyaEvents;
+use crate::FreyaEvent;
 
 #[derive(Default)]
 struct ElementState {
@@ -34,7 +34,7 @@ impl EventsProcessor {
     pub fn process_events_batch(
         &mut self,
         events_to_emit: Vec<UserEvent>,
-        events_filtered: FxHashMap<&str, Vec<(RenderData, FreyaEvents)>>,
+        events_filtered: FxHashMap<&str, Vec<(RenderData, FreyaEvent)>>,
     ) -> Vec<UserEvent> {
         let mut new_events = Vec::new();
 
