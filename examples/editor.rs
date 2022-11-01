@@ -1,8 +1,3 @@
-#![cfg_attr(
-    all(not(debug_assertions), target_os = "windows"),
-    windows_subsystem = "windows"
-)]
-
 use dioxus::events::MouseData;
 use dioxus::{core::UiEvent, prelude::*};
 use fermi::use_atom_ref;

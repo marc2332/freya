@@ -1,9 +1,8 @@
-use std::collections::BTreeMap;
-
 use dioxus::core::ElementId;
 use dioxus_native_core::real_dom::{Node, NodeType};
 use freya_layout_common::NodeArea;
 use freya_node_state::NodeState;
+use rustc_hash::FxHashMap;
 
 #[derive(Clone)]
 pub struct NodeData {
@@ -12,7 +11,7 @@ pub struct NodeData {
 
 #[derive(Default, Clone)]
 pub struct Layers {
-    pub layers: BTreeMap<i16, BTreeMap<usize, RenderData>>,
+    pub layers: FxHashMap<i16, FxHashMap<ElementId, RenderData>>,
 }
 
 #[derive(Clone)]
@@ -41,10 +40,13 @@ impl Layers {
     }
 
     pub fn add_element(&mut self, node_data: &NodeData, node_area: &NodeArea, node_layer: i16) {
-        let layer = self.layers.entry(node_layer).or_insert_with(BTreeMap::new);
+        let layer = self
+            .layers
+            .entry(node_layer)
+            .or_insert_with(FxHashMap::default);
 
         layer.insert(
-            node_data.node.id.0,
+            node_data.node.id,
             RenderData {
                 node_id: node_data.node.id,
                 node_type: node_data.node.node_type.clone(),

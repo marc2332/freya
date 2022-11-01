@@ -782,6 +782,7 @@ dependencies = [
  "dioxus-native-core",
  "freya-layout-common",
  "freya-node-state",
+ "rustc-hash",
 ]
 
 [[package]]
@@ -847,6 +848,7 @@ dependencies = [
  "freya-node-state",
  "gl",
  "glutin_tao",
+ "rustc-hash",
  "serde_json",
  "skia-safe",
 ]

@@ -14,11 +14,12 @@ use freya_layers::{Layers, NodeData, RenderData};
 use freya_layout::measure_node_layout;
 use freya_layout_common::NodeArea;
 use freya_node_state::NodeState;
+use rustc_hash::FxHashMap;
 use skia_safe::{textlayout::FontCollection, Canvas, Color};
-use std::{collections::HashMap, ops::Index, sync::Arc};
+use std::{ops::Index, sync::Arc};
 
 use crate::{
-    events_processor::EventsProcessor, renderer::render_skia, FreyaEvents, SafeDOM,
+    events_processor::EventsProcessor, renderer::render_skia, FreyaEvent, SafeDOM,
     SafeEventEmitter, SafeFreyaEvents, SafeLayoutManager,
 };
 
@@ -71,33 +72,32 @@ pub fn work_loop(
     layers_nums.sort();
 
     // Calculate all the applicable viewports for the given elements
-    let mut calculated_viewports: HashMap<ElementId, Vec<NodeArea>> = HashMap::new();
+    let mut calculated_viewports: FxHashMap<ElementId, (Option<NodeArea>, Vec<ElementId>)> =
+        FxHashMap::default();
 
     for layer_num in &layers_nums {
         let layer = layers.layers.get(layer_num).unwrap();
         for element in layer.values() {
-            match &element.node_type {
-                NodeType::Element { tag, children, .. } => {
-                    for child in children {
-                        if !calculated_viewports.contains_key(child) {
-                            calculated_viewports.insert(*child, Vec::new());
-                        }
-                        if calculated_viewports.contains_key(&element.node_id) {
-                            calculated_viewports.insert(
-                                *child,
-                                calculated_viewports.get(&element.node_id).unwrap().clone(),
-                            );
-                        }
-                        if tag == "container" {
-                            calculated_viewports
-                                .get_mut(child)
-                                .unwrap()
-                                .push(element.node_area);
-                        }
+            if let NodeType::Element { tag, children, .. } = &element.node_type {
+                if tag == "container" {
+                    calculated_viewports
+                        .entry(element.node_id)
+                        .or_insert_with(|| (None, Vec::new()))
+                        .0 = Some(element.node_area);
+                }
+                for child in children {
+                    if calculated_viewports.contains_key(&element.node_id) {
+                        let mut inherited_viewports = calculated_viewports
+                            .get(&element.node_id)
+                            .unwrap()
+                            .1
+                            .clone();
+
+                        inherited_viewports.push(element.node_id);
+
+                        calculated_viewports.insert(*child, (None, inherited_viewports));
                     }
                 }
-                NodeType::Text { .. } => {}
-                _ => {}
             }
         }
     }
@@ -108,14 +108,14 @@ pub fn work_loop(
         'elements: for element in layer.values() {
             let viewports = calculated_viewports.get(&element.node_id);
 
-            if let Some(viewports) = viewports {
-                for viewport in viewports {
-                    if element.node_area.x + element.node_area.width < viewport.x
-                        || element.node_area.y + element.node_area.height < viewport.y
-                        || element.node_area.x > viewport.x + viewport.width
-                        || element.node_area.y > viewport.y + viewport.height
-                    {
-                        continue 'elements;
+            // Skip elements that are totally out of some their parent's viewport
+            if let Some((_, viewports)) = viewports {
+                for viewport_id in viewports {
+                    let viewport = calculated_viewports.get(viewport_id).unwrap().0;
+                    if let Some(viewport) = viewport {
+                        if viewport.is_area_outside(element.node_area) {
+                            continue 'elements;
+                        }
                     }
                 }
             }
@@ -126,17 +126,15 @@ pub fn work_loop(
                 &mut canvas,
                 element,
                 font_collection,
-                calculated_viewports
-                    .get(&element.node_id)
-                    .unwrap_or(&Vec::new()),
+                &calculated_viewports,
             );
             canvas.restore();
         }
     }
 
     // Calculated events are those that match considering their viewports
-    let mut calculated_events: HashMap<&'static str, Vec<(RenderData, FreyaEvents)>> =
-        HashMap::new();
+    let mut calculated_events: FxHashMap<&'static str, Vec<(RenderData, FreyaEvent)>> =
+        FxHashMap::default();
 
     // Propagate events from the top to the bottom
     for layer_num in &layers_nums {
@@ -145,61 +143,48 @@ pub fn work_loop(
         for element in layer.values() {
             let events = freya_events.lock().unwrap();
 
-            for event in events.iter() {
+            'events: for event in events.iter() {
                 let area = &element.node_area;
-                if let FreyaEvents::KeyboardEvent { name, .. } = event {
-                    if !calculated_events.contains_key(name) {
-                        calculated_events.insert(name, vec![(element.clone(), event.clone())]);
-                    } else {
-                        calculated_events
-                            .get_mut(name)
-                            .unwrap()
-                            .push((element.clone(), event.clone()));
-                    }
+                if let FreyaEvent::KeyboardEvent { name, .. } = event {
+                    let event_data = (element.clone(), event.clone());
+                    calculated_events
+                        .entry(name)
+                        .or_insert_with(|| vec![event_data.clone()])
+                        .push(event_data);
                 } else {
                     let data = match event {
-                        FreyaEvents::MouseEvent { name, cursor, .. } => Some((name, cursor)),
-                        FreyaEvents::WheelEvent { name, cursor, .. } => Some((name, cursor)),
+                        FreyaEvent::MouseEvent { name, cursor, .. } => Some((name, cursor)),
+                        FreyaEvent::WheelEvent { name, cursor, .. } => Some((name, cursor)),
                         _ => None,
                     };
                     if let Some((name, cursor)) = data {
-                        let x = area.x as f64;
-                        let y = area.y as f64;
-                        let width = (area.x + area.width) as f64;
-                        let height = (area.y + area.height) as f64;
+                        let ((x, y), (x2, y2)) = area.get_rect();
 
-                        let mut visible = true;
-
-                        // Make sure the cursor is inside all the applicable viewports from the element
-                        for viewport in calculated_viewports
-                            .get(&element.node_id)
-                            .unwrap_or(&Vec::new())
-                        {
-                            if cursor.0 < viewport.x as f64
-                                || cursor.0 > (viewport.x + viewport.width) as f64
-                                || cursor.1 < viewport.y as f64
-                                || cursor.1 > (viewport.y + viewport.height) as f64
-                            {
-                                visible = false;
-                            }
-                        }
+                        let cursor_is_inside =
+                            cursor.0 > x && cursor.0 < x2 && cursor.1 > y && cursor.1 < y2;
 
                         // Make sure the cursor is inside the node area
-                        if visible
-                            && cursor.0 > x
-                            && cursor.0 < width
-                            && cursor.1 > y
-                            && cursor.1 < height
-                        {
-                            if !calculated_events.contains_key(name) {
-                                calculated_events
-                                    .insert(name, vec![(element.clone(), event.clone())]);
-                            } else {
-                                calculated_events
-                                    .get_mut(name)
-                                    .unwrap()
-                                    .push((element.clone(), event.clone()));
+                        if cursor_is_inside {
+                            let viewports = calculated_viewports.get(&element.node_id);
+
+                            // Make sure the cursor is inside all the applicable viewports from the element
+                            if let Some((_, viewports)) = viewports {
+                                for viewport_id in viewports {
+                                    let viewport = calculated_viewports.get(viewport_id).unwrap().0;
+                                    if let Some(viewport) = viewport {
+                                        if viewport.is_point_outside(*cursor) {
+                                            continue 'events;
+                                        }
+                                    }
+                                }
                             }
+
+                            let event_data = (element.clone(), event.clone());
+
+                            calculated_events
+                                .entry(name)
+                                .or_insert_with(|| vec![event_data.clone()])
+                                .push(event_data);
                         }
                     }
                 }
@@ -214,7 +199,7 @@ pub fn work_loop(
         let dom = dom.lock().unwrap();
         let listeners = dom.get_listening_sorted(event_name);
 
-        let mut found_nodes: Vec<(&RenderData, &FreyaEvents)> = Vec::new();
+        let mut found_nodes: Vec<(&RenderData, &FreyaEvent)> = Vec::new();
 
         'event_nodes: for (node, request) in event_nodes.iter() {
             for listener in &listeners {
@@ -247,7 +232,7 @@ pub fn work_loop(
 
         for (node, request) in found_nodes {
             let event = match request {
-                FreyaEvents::MouseEvent { cursor, .. } => Some(UserEvent {
+                FreyaEvent::MouseEvent { cursor, .. } => Some(UserEvent {
                     scope_id: None,
                     priority: EventPriority::Medium,
                     element: Some(node.node_id),
@@ -268,7 +253,7 @@ pub fn work_loop(
                         Modifiers::empty(),
                     )),
                 }),
-                FreyaEvents::WheelEvent { scroll, .. } => Some(UserEvent {
+                FreyaEvent::WheelEvent { scroll, .. } => Some(UserEvent {
                     scope_id: None,
                     priority: EventPriority::Medium,
                     element: Some(node.node_id),
@@ -278,7 +263,7 @@ pub fn work_loop(
                         scroll.0, scroll.1, 0.0,
                     )))),
                 }),
-                FreyaEvents::KeyboardEvent { name, code } => Some(UserEvent {
+                FreyaEvent::KeyboardEvent { name, code } => Some(UserEvent {
                     scope_id: None,
                     priority: EventPriority::Medium,
                     element: Some(node.node_id),
