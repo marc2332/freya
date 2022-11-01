@@ -81,7 +81,9 @@ pub fn work_loop(
             if let NodeType::Element { tag, children, .. } = &element.node_type {
                 if tag == "container" {
                     calculated_viewports
-                        .insert(element.node_id, (Some(element.node_area), Vec::new()));
+                        .entry(element.node_id)
+                        .or_insert_with(|| (None, Vec::new()))
+                        .0 = Some(element.node_area);
                 }
                 for child in children {
                     if calculated_viewports.contains_key(&element.node_id) {
@@ -144,14 +146,11 @@ pub fn work_loop(
             'events: for event in events.iter() {
                 let area = &element.node_area;
                 if let FreyaEvent::KeyboardEvent { name, .. } = event {
-                    if !calculated_events.contains_key(name) {
-                        calculated_events.insert(name, vec![(element.clone(), event.clone())]);
-                    } else {
-                        calculated_events
-                            .get_mut(name)
-                            .unwrap()
-                            .push((element.clone(), event.clone()));
-                    }
+                    let event_data = (element.clone(), event.clone());
+                    calculated_events
+                        .entry(name)
+                        .or_insert_with(|| vec![event_data.clone()])
+                        .push(event_data);
                 } else {
                     let data = match event {
                         FreyaEvent::MouseEvent { name, cursor, .. } => Some((name, cursor)),
