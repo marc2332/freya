@@ -40,7 +40,7 @@ jobs:
       run: cargo clippy
     - name: Run Linux tests
       if: runner.os == 'Linux'
-      run: cargo test --features x11
+      run: cargo test --workspace --features x11
     - name: Run MacOS and Windows tests
       if: runner.os != 'Linux'
-      run: cargo test
+      run: cargo test --workspace
