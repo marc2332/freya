@@ -183,7 +183,7 @@ pub fn create_windows_from_config(
         let resize_timer = env.resizing_timer.clone();
         thread::spawn(move || {
             let time = 1000;
-            let fps_target = 60;
+            let fps_target = 75;
 
             let step = time / fps_target;
             loop {
