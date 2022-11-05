@@ -10,7 +10,7 @@ use freya_hooks::use_node;
 use crate::THEME;
 
 #[derive(Props)]
-pub struct VirtProps<'a, T> {
+pub struct VirtProps<'a, T: 'a> {
     length: i32,
     item_size: f32,
     builder: Box<dyn Fn((i32, i32, &'a Option<T>)) -> LazyNodes<'a, 'a>>,
