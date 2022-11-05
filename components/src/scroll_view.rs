@@ -56,18 +56,20 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     let padding = cx.props.padding.unwrap_or("0");
 
     let viewableRatioHeight = size.height / size.inner_height;
-    let mut scrollbar_height = size.height * viewableRatioHeight;
-    if size.height >= size.inner_height {
-        scrollbar_height = size.inner_height;
-    }
+    let scrollbar_height = if size.height >= size.inner_height {
+        size.inner_height
+    } else {
+        size.height * viewableRatioHeight
+    };
     let scroll_pos_y = (100.0 / size.inner_height) * -(*scrolled_y.get()) as f32;
     let scrollbar_y = (scroll_pos_y / 100.0) * size.height;
 
     let viewableRatioWidth = size.width / size.inner_width;
-    let mut scrollbar_width = size.width * viewableRatioWidth;
-    if size.width >= size.inner_width {
-        scrollbar_width = size.inner_width;
-    }
+    let scrollbar_width = if size.width >= size.inner_width {
+        size.inner_width
+    } else {
+        size.width * viewableRatioWidth
+    };
     let scroll_pos_x = (100.0 / size.inner_width) * -(*scrolled_x.get()) as f32;
     let scrollbar_x = (scroll_pos_x / 100.0) * size.width;
 

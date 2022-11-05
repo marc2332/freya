@@ -10,10 +10,12 @@ use freya_hooks::use_node;
 use crate::THEME;
 
 #[derive(Props)]
-pub struct VirtProps<'a> {
+pub struct VirtProps<'a, T> {
     length: i32,
     item_size: f32,
-    builder: Box<dyn Fn((i32, i32)) -> LazyNodes<'a, 'a>>,
+    builder: Box<dyn Fn((i32, i32, &'a Option<T>)) -> LazyNodes<'a, 'a>>,
+    #[props(optional)]
+    pub builder_values: Option<T>,
     #[props(optional)]
     pub direction: Option<&'a str>,
     #[props(optional)]
@@ -36,7 +38,7 @@ enum Axes {
 
 // TODO(marc2332): Make this code readable.
 #[allow(non_snake_case)]
-pub fn VirtualScrollView<'a>(cx: Scope<'a, VirtProps<'a>>) -> Element {
+pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtProps<'a, T>>) -> Element {
     let clicking = use_state::<Option<Axes>>(&cx, || None);
     let scrolled_y = use_state(&cx, || 0);
     let scrolled_x = use_state(&cx, || 0);
@@ -75,18 +77,20 @@ pub fn VirtualScrollView<'a>(cx: Scope<'a, VirtProps<'a>>) -> Element {
     let padding = cx.props.padding.unwrap_or("0");
 
     let viewableRatioHeight = size.height / max_size;
-    let mut scrollbar_height = size.height * viewableRatioHeight;
-    if size.height >= max_size {
-        scrollbar_height = max_size;
-    }
+    let scrollbar_height = if size.height >= max_size {
+        max_size
+    } else {
+        size.height * viewableRatioHeight
+    };
     let scroll_pos_y = (100.0 / max_size) * -(*scrolled_y.get()) as f32;
     let scrollbar_y = (scroll_pos_y / 100.0) * size.height;
 
     let viewableRatioWidth = size.width / size.inner_width;
-    let mut scrollbar_width = size.width * viewableRatioWidth;
-    if size.width >= size.inner_width {
-        scrollbar_width = size.inner_width;
-    }
+    let scrollbar_width = if size.width >= size.inner_width {
+        size.inner_width
+    } else {
+        size.width * viewableRatioWidth
+    };
     let scroll_pos_x = (100.0 / size.inner_width) * -(*scrolled_x.get()) as f32;
     let scrollbar_x = (scroll_pos_x / 100.0) * size.width;
 
@@ -160,27 +164,35 @@ pub fn VirtualScrollView<'a>(cx: Scope<'a, VirtProps<'a>>) -> Element {
         clicking.set(None);
     };
 
-    // For now instead of not rendering the scrollbars they will simply have a size of 0 because I have some issues.
     let horizontal_scrollbar_size = if horizontal_scrollbar_is_visible {
         SCROLLBAR_SIZE
     } else {
         0
     };
+
     let vertical_scrollbar_size = if vertical_scrollbar_is_visible {
         SCROLLBAR_SIZE
     } else {
         0
     };
 
-    let render_index = (-*scrolled_y.get()) / cx.props.item_size as i32;
-    let how_many_items_can_i_render = (size.height / cx.props.item_size) as i32;
-    let range = render_index..(render_index + how_many_items_can_i_render);
+    let render_index_start = (-*scrolled_y.get()) / cx.props.item_size as i32;
+    let potentially_visible_length = (size.height / cx.props.item_size) as i32;
+    let remaining_length = cx.props.length - render_index_start;
 
-    let mut k = 0;
-    let children = range
+    let render_index_end = if remaining_length <= potentially_visible_length {
+        cx.props.length
+    } else {
+        render_index_start + potentially_visible_length
+    };
+
+    let render_range = render_index_start..(render_index_end);
+
+    let mut key_index = 0;
+    let children = render_range
         .map(|i| {
-            k += 1;
-            (cx.props.builder)((k, i))
+            key_index += 1;
+            (cx.props.builder)((key_index, i, &cx.props.builder_values))
         })
         .collect::<Vec<LazyNodes>>();
 
