@@ -27,3 +27,5 @@
     - [Hooks](./references/hooks.md)
         - [use_animation](./references/hooks/use_animation.md)
         - [use_node](./references/hooks/use_node.md)
+        - [use_editable](./references/hooks/use_editable.md)
+        - [use_focus](./references/hooks/use_focus.md)
