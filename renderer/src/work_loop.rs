@@ -23,9 +23,12 @@ use crate::{
     SafeEventEmitter, SafeFreyaEvents, SafeLayoutManager,
 };
 
+pub type ViewportsCollection = FxHashMap<ElementId, (Option<NodeArea>, Vec<ElementId>)>;
+
 /// The Work Loop has a few jobs:
 /// - Measure the nodes layouts
 /// - Organize the nodes layouts in layers
+/// - Calculate all the nodes viewports
 /// - Paint the nodes
 /// - Calculate what events must be triggered
 #[allow(clippy::too_many_arguments)]
@@ -72,22 +75,21 @@ pub fn work_loop(
     layers_nums.sort();
 
     // Calculate all the applicable viewports for the given elements
-    let mut calculated_viewports: FxHashMap<ElementId, (Option<NodeArea>, Vec<ElementId>)> =
-        FxHashMap::default();
+    let mut viewports_collection: ViewportsCollection = FxHashMap::default();
 
     for layer_num in &layers_nums {
         let layer = layers.layers.get(layer_num).unwrap();
         for element in layer.values() {
             if let NodeType::Element { tag, children, .. } = &element.node_type {
                 if tag == "container" {
-                    calculated_viewports
+                    viewports_collection
                         .entry(element.node_id)
                         .or_insert_with(|| (None, Vec::new()))
                         .0 = Some(element.node_area);
                 }
                 for child in children {
-                    if calculated_viewports.contains_key(&element.node_id) {
-                        let mut inherited_viewports = calculated_viewports
+                    if viewports_collection.contains_key(&element.node_id) {
+                        let mut inherited_viewports = viewports_collection
                             .get(&element.node_id)
                             .unwrap()
                             .1
@@ -95,7 +97,7 @@ pub fn work_loop(
 
                         inherited_viewports.push(element.node_id);
 
-                        calculated_viewports.insert(*child, (None, inherited_viewports));
+                        viewports_collection.insert(*child, (None, inherited_viewports));
                     }
                 }
             }
@@ -106,12 +108,12 @@ pub fn work_loop(
     for layer_num in &layers_nums {
         let layer = layers.layers.get(layer_num).unwrap();
         'elements: for element in layer.values() {
-            let viewports = calculated_viewports.get(&element.node_id);
+            let viewports = viewports_collection.get(&element.node_id);
 
             // Skip elements that are totally out of some their parent's viewport
             if let Some((_, viewports)) = viewports {
                 for viewport_id in viewports {
-                    let viewport = calculated_viewports.get(viewport_id).unwrap().0;
+                    let viewport = viewports_collection.get(viewport_id).unwrap().0;
                     if let Some(viewport) = viewport {
                         if viewport.is_area_outside(element.node_area) {
                             continue 'elements;
@@ -126,7 +128,7 @@ pub fn work_loop(
                 &mut canvas,
                 element,
                 font_collection,
-                &calculated_viewports,
+                &viewports_collection,
             );
             canvas.restore();
         }
@@ -165,12 +167,12 @@ pub fn work_loop(
 
                         // Make sure the cursor is inside the node area
                         if cursor_is_inside {
-                            let viewports = calculated_viewports.get(&element.node_id);
+                            let viewports = viewports_collection.get(&element.node_id);
 
                             // Make sure the cursor is inside all the applicable viewports from the element
                             if let Some((_, viewports)) = viewports {
                                 for viewport_id in viewports {
-                                    let viewport = calculated_viewports.get(viewport_id).unwrap().0;
+                                    let viewport = viewports_collection.get(viewport_id).unwrap().0;
                                     if let Some(viewport) = viewport {
                                         if viewport.is_point_outside(*cursor) {
                                             continue 'events;

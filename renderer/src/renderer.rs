@@ -15,19 +15,20 @@ use skia_safe::{
 };
 
 use crate::SafeDOM;
+use crate::work_loop::ViewportsCollection;
 
 pub fn render_skia(
     dom: &mut &SafeDOM,
     canvas: &mut &mut Canvas,
     node: &RenderData,
     font_collection: &mut FontCollection,
-    calculated_viewports: &FxHashMap<ElementId, (Option<NodeArea>, Vec<ElementId>)>,
+    viewports_collection: &ViewportsCollection,
 ) {
     if let NodeType::Element { tag, children, .. } = &node.node_type {
-        let viewports = calculated_viewports.get(&node.node_id);
+        let viewports = viewports_collection.get(&node.node_id);
         if let Some((_, viewports)) = viewports {
             for viewport_id in viewports {
-                let viewport = calculated_viewports.get(viewport_id).unwrap().0;
+                let viewport = viewports_collection.get(viewport_id).unwrap().0;
                 if let Some(viewport) = viewport {
                     canvas.clip_rect(
                         Rect::new(
