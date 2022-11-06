@@ -92,14 +92,11 @@ pub fn run(windows_config: Vec<(SafeDOM, SafeEventEmitter, SafeLayoutManager, Wi
                                     }
                                 };
 
-                                env.freya_events
-                                    .lock()
-                                    .unwrap()
-                                    .push(FreyaEvent::Wheel {
-                                        name: "wheel",
-                                        scroll: scroll_data,
-                                        cursor: *cursor_pos,
-                                    });
+                                env.freya_events.lock().unwrap().push(FreyaEvent::Wheel {
+                                    name: "wheel",
+                                    scroll: scroll_data,
+                                    cursor: *cursor_pos,
+                                });
                             }
                         }
                         WindowEvent::CursorMoved { position, .. } => {
@@ -111,13 +108,10 @@ pub fn run(windows_config: Vec<(SafeDOM, SafeEventEmitter, SafeLayoutManager, Wi
                                 *cursor_pos
                             };
 
-                            env.freya_events
-                                .lock()
-                                .unwrap()
-                                .push(FreyaEvent::Mouse {
-                                    name: "mouseover",
-                                    cursor: cursor_pos,
-                                });
+                            env.freya_events.lock().unwrap().push(FreyaEvent::Mouse {
+                                name: "mouseover",
+                                cursor: cursor_pos,
+                            });
                         }
                         WindowEvent::MouseInput { state, .. } => {
                             let event_name = match state {
@@ -126,21 +120,18 @@ pub fn run(windows_config: Vec<(SafeDOM, SafeEventEmitter, SafeLayoutManager, Wi
                                 _ => "mousedown",
                             };
                             let cursor_pos = cursor_pos.lock().unwrap();
-                            env.freya_events
-                                .lock()
-                                .unwrap()
-                                .push(FreyaEvent::Mouse {
-                                    name: event_name,
-                                    cursor: *cursor_pos,
-                                });
+                            env.freya_events.lock().unwrap().push(FreyaEvent::Mouse {
+                                name: event_name,
+                                cursor: *cursor_pos,
+                            });
                         }
                         WindowEvent::Resized(physical_size) => {
-                            *env.is_resizing.lock().unwrap() = true;
+                            env.resizer.lock().unwrap().0 = true;
                             let mut context = env.gr_context.clone();
                             env.surface =
                                 create_surface(&env.windowed_context, &env.fb_info, &mut context);
                             env.windowed_context.resize(physical_size);
-                            *env.resizing_timer.lock().unwrap() = Instant::now();
+                            env.resizer.lock().unwrap().1 = Instant::now();
                             env.layout_memorizer.lock().unwrap().dirty_nodes.clear();
                             env.layout_memorizer.lock().unwrap().nodes.clear();
                         }
@@ -158,13 +149,10 @@ pub fn run(windows_config: Vec<(SafeDOM, SafeEventEmitter, SafeLayoutManager, Wi
                                 _ => "keydown",
                             };
 
-                            env.freya_events
-                                .lock()
-                                .unwrap()
-                                .push(FreyaEvent::Keyboard {
-                                    name: event_name,
-                                    code: logical_key,
-                                });
+                            env.freya_events.lock().unwrap().push(FreyaEvent::Keyboard {
+                                name: event_name,
+                                code: logical_key,
+                            });
                         }
                         _ => (),
                     }

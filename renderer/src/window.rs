@@ -35,8 +35,7 @@ pub struct WindowEnv {
     pub(crate) font_collection: FontCollection,
     pub(crate) events_processor: EventsProcessor,
     pub(crate) win_config: WindowConfig,
-    pub(crate) is_resizing: Arc<Mutex<bool>>,
-    pub(crate) resizing_timer: Arc<Mutex<Instant>>,
+    pub(crate) resizer: Arc<Mutex<(bool, Instant)>>,
 }
 
 impl WindowEnv {
@@ -173,28 +172,26 @@ pub fn create_windows_from_config(
             event_emitter,
             font_collection: font_collection.clone(),
             events_processor,
-            is_resizing: Arc::new(Mutex::new(false)),
-            resizing_timer: Arc::new(Mutex::new(Instant::now())),
+            resizer: Arc::new(Mutex::new((false, Instant::now()))),
             win_config,
             layout_memorizer,
         };
 
         let proxy = event_loop.create_proxy();
-        let is_resizing = env.is_resizing.clone();
-        let resize_timer = env.resizing_timer.clone();
+        let resizer = env.resizer.clone();
         thread::spawn(move || {
             let time = 1000;
             let fps_target = 75;
 
             let step = time / fps_target;
             loop {
-                if !(*is_resizing.lock().unwrap()) {
+                if !(resizer.lock().unwrap().0) {
                     // Trigger redraw
                     proxy.send_event(window_id).unwrap();
                     thread::sleep(Duration::from_millis(step));
                 }
-                if resize_timer.lock().unwrap().elapsed().as_millis() > 50 {
-                    *is_resizing.lock().unwrap() = false;
+                if resizer.lock().unwrap().1.elapsed().as_millis() > 50 {
+                    resizer.lock().unwrap().0 = false;
                 }
             }
         });
