@@ -1,6 +1,6 @@
 //! # Freya
 //! A GUI library for Rust powered by [Skia](https://skia.org/) and [Dioxus](https://dioxuslabs.com).
-//! ```rust
+//! ```no_run
 //! use dioxus::prelude::*;
 //! use freya::{dioxus_elements, *};
 //!
