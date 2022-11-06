@@ -59,7 +59,7 @@ fn get_render_range(
 #[allow(non_snake_case)]
 pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) -> Element {
     let theme = use_atom_ref(&cx, THEME);
-    let clicking = use_state::<Option<Axis>>(&cx, || None);
+    let clicking_scrollbar = use_state::<Option<(Axis, f64)>>(&cx, || None);
     let scrolled_y = use_state(&cx, || 0);
     let scrolled_x = use_state(&cx, || 0);
     let (node_ref, size) = use_node(&cx);
@@ -105,17 +105,17 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
 
     // Drag the scrollbars
     let onmouseover = move |e: UiEvent<MouseData>| {
-        if *clicking.get() == Some(Axis::Y) {
+        if let Some((Axis::Y, y)) = clicking_scrollbar.get() {
             let coordinates = e.coordinates().element();
-            let cursor_y = coordinates.y - 11.0;
+            let cursor_y = coordinates.y - y;
 
             let scroll_position =
                 get_scroll_position_from_cursor(cursor_y as f32, inner_size, size.height);
 
             scrolled_y.with_mut(|y| *y = scroll_position);
-        } else if *clicking.get() == Some(Axis::X) {
+        } else if let Some((Axis::X, x)) = clicking_scrollbar.get() {
             let coordinates = e.coordinates().element();
-            let cursor_x = coordinates.x - 11.0;
+            let cursor_x = coordinates.x - x;
 
             let scroll_position =
                 get_scroll_position_from_cursor(cursor_x as f32, inner_size, size.width);
@@ -125,18 +125,20 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
     };
 
     // Mark the Y axis scrollbar as the one being dragged
-    let onmousedown_y = |_: UiEvent<MouseData>| {
-        clicking.set(Some(Axis::Y));
+    let onmousedown_y = |e: UiEvent<MouseData>| {
+        let coordinates = e.coordinates().element();
+        clicking_scrollbar.set(Some((Axis::Y, coordinates.y)));
     };
 
     // Mark the X axis scrollbar as the one being dragged
-    let onmousedown_x = |_: UiEvent<MouseData>| {
-        clicking.set(Some(Axis::X));
+    let onmousedown_x = |e: UiEvent<MouseData>| {
+        let coordinates = e.coordinates().element();
+        clicking_scrollbar.set(Some((Axis::X, coordinates.x)));
     };
 
     // Unmark any scrollbar
     let onclick = |_: UiEvent<MouseData>| {
-        clicking.set(None);
+        clicking_scrollbar.set(None);
     };
 
     let horizontal_scrollbar_size = if horizontal_scrollbar_is_visible {
