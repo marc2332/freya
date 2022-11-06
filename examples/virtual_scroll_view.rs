@@ -32,7 +32,7 @@ fn app(cx: Scope) -> Element {
             padding: "50",
             direction: "both",
             width: "auto",
-            height: "auto",
+            height: "50%",
             onkeydown: process_keyevent,
             cursor_reference: cursor_ref,
             VirtualScrollView {
@@ -100,6 +100,31 @@ fn app(cx: Scope) -> Element {
                                     "{line_content} "
                                 }
                             }
+                        }
+                    }
+                })
+            }
+        }
+        container {
+            background: "rgb(15, 15, 15)",
+            padding: "50",
+            direction: "both",
+            width: "auto",
+            height: "50%",
+            VirtualScrollView {
+                width: "100%",
+                height: "100%",
+                show_scrollbar: true,
+                length: 5,
+                item_size: 80.0,
+                builder_values: (),
+                direction: "horizontal",
+                builder: Box::new(move |(k, i, _)| {
+                    rsx! {
+                        label {
+                            key: "{k}",
+                            width: "80",
+                            "Number {i}"
                         }
                     }
                 })
