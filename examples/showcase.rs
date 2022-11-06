@@ -79,7 +79,7 @@ fn FirstSection(cx: Scope) -> Element {
         }
         Space {},
         Button {
-            on_click: |_| {
+            onclick: |_| {
                 *theme.write() = DARK_THEME.clone();
             },
             label {

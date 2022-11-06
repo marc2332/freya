@@ -70,7 +70,7 @@ fn app<'a>(cx: Scope<'a>) -> Element<'a> {
                 height: "58",
                 width: "100%",
                 Button {
-                    on_click: move |_|  fetch(),
+                    onclick: move |_|  fetch(),
                     label {
                         "Fetch random Doggo!"
                     }

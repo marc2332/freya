@@ -20,7 +20,7 @@ fn app(cx: Scope) -> Element {
             height: "100%",
             background: "black",
             Button {
-                on_click: move |_| {
+                onclick: move |_| {
                     percentage.set(20.0);
                 },
                 label {

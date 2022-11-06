@@ -63,7 +63,7 @@ fn ensure_correct_slider_range(value: f64) -> f64 {
 ///                 "Hello World"
 ///             }
 ///             Button {
-///                 on_click: move |_| {
+///                 onclick: move |_| {
 ///                     percentage.set(20);
 ///                 },
 ///                  label {

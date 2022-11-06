@@ -9,7 +9,7 @@ use crate::THEME;
 pub struct ButtonProps<'a> {
     pub children: Element<'a>,
     #[props(optional)]
-    pub on_click: Option<EventHandler<'a, MouseEvent>>,
+    pub onclick: Option<EventHandler<'a, MouseEvent>>,
 }
 
 /// A simple Button component.
@@ -33,8 +33,8 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
             padding: "3",
             container {
                 onclick: move |ev| {
-                    if let Some(on_click) = &cx.props.on_click {
-                        on_click.call(ev)
+                    if let Some(onclick) = &cx.props.onclick {
+                        onclick.call(ev)
                     }
                 },
                 onmouseover: move |_| {

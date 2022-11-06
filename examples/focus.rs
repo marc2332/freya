@@ -15,7 +15,7 @@ fn Child(cx: Scope) -> Element {
     let (focused, focus) = use_focus(&cx);
     render!(
         Button {
-            on_click: move |_| {
+            onclick: move |_| {
                 focus();
             }
             label {

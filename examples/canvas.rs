@@ -133,7 +133,7 @@ fn app(cx: Scope) -> Element {
                 direction: "both",
                 background: "rgb(20, 20, 20)",
                 Button {
-                    on_click: create_node,
+                    onclick: create_node,
                     label {
                         color: "white",
                         "Create new node"
