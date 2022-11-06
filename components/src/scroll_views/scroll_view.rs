@@ -12,6 +12,7 @@ use crate::{
     get_scrollbar_pos_and_size, is_scrollbar_visible, Axis, SCROLLBAR_SIZE, THEME,
 };
 
+/// Properties for the ScrollView component.
 #[derive(Props)]
 pub struct ScrollViewProps<'a> {
     #[props(optional)]
@@ -27,6 +28,7 @@ pub struct ScrollViewProps<'a> {
     pub show_scrollbar: Option<bool>,
 }
 
+/// A Scrollable container.
 #[allow(non_snake_case)]
 pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     let theme = use_atom_ref(&cx, THEME);

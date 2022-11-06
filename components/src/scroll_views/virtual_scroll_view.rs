@@ -16,8 +16,9 @@ use crate::{
 
 type BuilderFunction<'a, T> = dyn Fn((i32, i32, &'a Option<T>)) -> LazyNodes<'a, 'a>;
 
+/// Properties for the VirtualScrollView component.
 #[derive(Props)]
-pub struct VirtProps<'a, T: 'a> {
+pub struct VirtualScrollViewProps<'a, T: 'a> {
     length: i32,
     item_size: f32,
     builder: Box<BuilderFunction<'a, T>>,
@@ -54,8 +55,9 @@ fn get_render_range(
     render_index_start..(render_index_end)
 }
 
+/// A ScrollView with virtual scrolling.
 #[allow(non_snake_case)]
-pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtProps<'a, T>>) -> Element {
+pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) -> Element {
     let theme = use_atom_ref(&cx, THEME);
     let clicking = use_state::<Option<Axis>>(&cx, || None);
     let scrolled_y = use_state(&cx, || 0);
