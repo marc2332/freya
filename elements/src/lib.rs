@@ -43,6 +43,23 @@ macro_rules! builder_constructors {
                         false,
                     )
                 }
+
+                pub fn cursor_reference<'a, T: Clone + 'static + PartialEq>(
+                    &self,
+                    cx: NodeFactory<'a>,
+                    val: &'a T,
+                ) -> Attribute<'a> {
+                    cx.custom_attr(
+                        "cursor_reference",
+                        AttributeValue::Any(ArbitraryAttributeValue {
+                            value: val,
+                            cmp: |a, b| a.downcast_ref::<T>() == b.downcast_ref::<T>(),
+                        }),
+                        None,
+                        true,
+                        false,
+                    )
+                }
             }
 
             impl $name {
@@ -64,6 +81,8 @@ builder_constructors! {
         width: String,
         min_height: String,
         min_width: String,
+        max_height: String,
+        max_width: String,
         background: String,
         layer: String,
         scroll_y: String,
@@ -80,6 +99,8 @@ builder_constructors! {
         width: String,
         min_height: String,
         min_width: String,
+        max_height: String,
+        max_width: String,
         background: String,
         layer: String,
         scroll_y: String,
@@ -97,10 +118,21 @@ builder_constructors! {
         width: String,
         font_size: String,
         font_family: String,
+        align: String,
+        max_lines: String,
+        font_style: String,
     };
     paragraph {
         layer: String,
         width: String,
+        align: String,
+        cursor_index: String,
+        max_lines: String,
+        cursor_color: String,
+        cursor_mode: String,
+        line_height: String,
+        cursor_id: String,
+        direction: String,
     };
     text {
         color: String,
@@ -109,30 +141,9 @@ builder_constructors! {
         width: String,
         font_size: String,
         font_family: String,
+        line_height: String,
+        font_style: String,
     };
-}
-
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct NodeLayout {
-    pub x: f32,
-    pub y: f32,
-    pub width: f32,
-    pub height: f32,
-    pub inner_height: f32,
-    pub inner_width: f32,
-}
-
-impl NodeLayout {
-    pub fn new() -> Self {
-        NodeLayout {
-            x: 0.0,
-            y: 0.0,
-            width: 0.0,
-            height: 0.0,
-            inner_height: 0.0,
-            inner_width: 0.0,
-        }
-    }
 }
 
 // I am still bad at Macros so I created this element directly

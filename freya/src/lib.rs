@@ -1,8 +1,38 @@
+//! # Freya
+//! A GUI library for Rust powered by [Skia](https://skia.org/) and [Dioxus](https://dioxuslabs.com).
+//! ```no_run
+//! use dioxus::prelude::*;
+//! use freya::{dioxus_elements, *};
+//!
+//! fn main(){
+//!     launch(app);
+//! }
+//!
+//! fn app(cx: Scope) -> Element {
+//!    let mut count = use_state(&cx, || 0);
+//!
+//!    render!(
+//!        container {
+//!            height: "100%",
+//!            width: "100%",
+//!            background: "rgb(35, 35, 35)",
+//!            color: "white",
+//!            padding: "25",
+//!            onclick: move |_| count += 1,
+//!            label { "Click to increase -> {count}" }
+//!        }
+//!    )
+//! }
+//!
+//! ```
+//!
+//!
+//!
 use anymap::AnyMap;
 use dioxus::prelude::*;
 use dioxus_core::SchedulerMsg;
 use dioxus_native_core::real_dom::RealDom;
-use freya_node_state::node::NodeState;
+use freya_node_state::NodeState;
 use freya_renderer::run;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -10,13 +40,13 @@ use std::sync::Mutex;
 pub use freya_components::*;
 pub use freya_elements as dioxus_elements;
 pub use freya_hooks::*;
-pub use freya_renderer::*;
+pub use freya_renderer::WindowConfig;
 
 #[cfg(feature = "devtools")]
 mod devtools;
 
 #[cfg(not(doctest))]
-/// Launch a new Window with the default config:
+/// Launch a new Window with the default config.
 /// - Width: `400`
 /// - Height: `300`
 /// - Decorations enabled
@@ -38,7 +68,7 @@ mod devtools;
 ///                 "Hello World!"
 ///             }
 ///         }
-///     ))
+///     )
 /// }
 /// ```
 pub fn launch(app: Component<()>) {
@@ -55,7 +85,7 @@ pub fn launch(app: Component<()>) {
 }
 
 #[cfg(not(doctest))]
-/// Launch a new Window with a custom title and the default config:
+/// Launch a new Window with a custom title and the default config.
 /// - Width: `400`
 /// - Height: `300`
 /// - Decorations enabled
@@ -76,7 +106,7 @@ pub fn launch(app: Component<()>) {
 ///                 "Hello World!"
 ///             }
 ///         }
-///     ))
+///     )
 /// }
 /// ```
 pub fn launch_with_title(app: Component<()>, title: &'static str) {
@@ -104,7 +134,6 @@ pub fn launch_with_title(app: Component<()>, title: &'static str) {
 /// ```rust
 /// # use dioxus::prelude::*;
 /// # use freya::{dioxus_elements, *};
-///
 /// launch_cfg(vec![(
 ///     app,
 ///     WindowConfig {
@@ -125,10 +154,12 @@ pub fn launch_with_title(app: Component<()>, title: &'static str) {
 ///                 "Hello World!"
 ///             }
 ///         }
-///     ))
+///     )
 /// }
 /// ```
 pub fn launch_cfg(wins_config: Vec<(Component<()>, WindowConfig)>) {
+    use freya_layout_common::LayoutMemorizer;
+
     let wins = wins_config
         .into_iter()
         .map(|(root, win)| {
@@ -136,7 +167,10 @@ pub fn launch_cfg(wins_config: Vec<(Component<()>, WindowConfig)>) {
             let event_emitter: Arc<Mutex<Option<UnboundedSender<SchedulerMsg>>>> =
                 Arc::new(Mutex::new(None));
 
+            let layout_memorizer = Arc::new(Mutex::new(LayoutMemorizer::new()));
+
             {
+                let layout_memorizer = layout_memorizer.clone();
                 let rdom = rdom.clone();
                 let event_emitter = event_emitter.clone();
                 std::thread::spawn(move || {
@@ -154,7 +188,9 @@ pub fn launch_cfg(wins_config: Vec<(Component<()>, WindowConfig)>) {
 
                     let muts = dom.rebuild();
                     let to_update = rdom.lock().unwrap().apply_mutations(vec![muts]);
-                    let ctx = AnyMap::new();
+                    let mut ctx = AnyMap::new();
+
+                    ctx.insert(layout_memorizer.clone());
 
                     rdom.lock().unwrap().update_state(&dom, to_update, ctx);
 
@@ -173,7 +209,9 @@ pub fn launch_cfg(wins_config: Vec<(Component<()>, WindowConfig)>) {
                                 let mutations = dom.work_with_deadline(|| false);
 
                                 let to_update = rdom.lock().unwrap().apply_mutations(mutations);
-                                let ctx = AnyMap::new();
+
+                                let mut ctx = AnyMap::new();
+                                ctx.insert(layout_memorizer.clone());
                                 if !to_update.is_empty() {
                                     rdom.lock().unwrap().update_state(&dom, to_update, ctx);
                                 }
@@ -181,7 +219,7 @@ pub fn launch_cfg(wins_config: Vec<(Component<()>, WindowConfig)>) {
                         });
                 });
             }
-            (rdom, event_emitter, win.clone())
+            (rdom, event_emitter, layout_memorizer, win)
         })
         .collect();
 

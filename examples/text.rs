@@ -20,7 +20,7 @@ fn app(cx: Scope) -> Element {
             height: "100%",
             background: "black",
             Button {
-                on_click: move |_| {
+                onclick: move |_| {
                     percentage.set(20.0);
                 },
                 label {
@@ -61,6 +61,48 @@ fn app(cx: Scope) -> Element {
                     font_size: "{font_size / 2f64}",
                     font_family: "Inter",
                     "Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World"
+                }
+                label {
+                    font_size: "18",
+                    font_family: "Inter",
+                    align: "right",
+                    width: "100%",
+                    "Right align"
+                }
+                label {
+                    font_size: "18",
+                    font_family: "Inter",
+                    align: "center",
+                    width: "100%",
+                    "Center align"
+                }
+                label {
+                    font_size: "18",
+                    font_family: "Inter",
+                    align: "justify",
+                    width: "100%",
+                    "Justify align"
+                }
+                label {
+                    font_size: "18",
+                    font_family: "Inter",
+                    align: "end",
+                    width: "100%",
+                    "End align"
+                }
+                label {
+                    font_size: "18",
+                    font_family: "Inter",
+                    align: "start",
+                    width: "100%",
+                    "Start align"
+                }
+                label {
+                    font_size: "18",
+                    font_family: "Inter",
+                    align: "left",
+                    width: "100%",
+                    "Left align"
                 }
             }
         }

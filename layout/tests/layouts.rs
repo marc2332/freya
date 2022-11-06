@@ -1,8 +1,11 @@
+use std::sync::{Arc, Mutex};
+
 use dioxus_core::ElementId;
 use dioxus_native_core::real_dom::{Node, NodeType};
-use freya_layers::{Layers, NodeArea, NodeData};
-use freya_layout::calculate_node;
-use freya_node_state::node::{DirectionMode, NodeState, Size, SizeMode};
+use freya_layers::{Layers, NodeData};
+use freya_layout::measure_node_layout;
+use freya_layout_common::{LayoutMemorizer, NodeArea};
+use freya_node_state::{DirectionMode, NodeState, Size, SizeMode};
 use lazy_static::lazy_static;
 use skia_safe::textlayout::FontCollection;
 
@@ -26,9 +29,9 @@ fn percentage() {
     node.state = node.state.set_size(Size {
         width: SizeMode::Percentage(50.0),
         height: SizeMode::Percentage(25.0),
-        ..Size::expanded()
+        ..expanded_size()
     });
-    let result = calculate_node(
+    let result = measure_node_layout(
         &NodeData { node },
         NodeArea {
             x: 0.0,
@@ -47,6 +50,8 @@ fn percentage() {
         |_, _| None,
         0,
         &mut FontCollection::new(),
+        &Arc::new(Mutex::new(LayoutMemorizer::new())),
+        true,
     );
 
     assert_eq!(result.height, 75.0);
@@ -59,9 +64,9 @@ fn manual() {
     node.state = node.state.set_size(Size {
         width: SizeMode::Manual(250.0),
         height: SizeMode::Manual(150.0),
-        ..Size::expanded()
+        ..expanded_size()
     });
-    let result = calculate_node(
+    let result = measure_node_layout(
         &NodeData { node },
         NodeArea {
             x: 0.0,
@@ -80,6 +85,8 @@ fn manual() {
         |_, _| None,
         0,
         &mut FontCollection::new(),
+        &Arc::new(Mutex::new(LayoutMemorizer::new())),
+        true,
     );
 
     assert_eq!(result.height, 150.0);
@@ -88,7 +95,7 @@ fn manual() {
 
 #[test]
 fn auto() {
-    let result = calculate_node(
+    let result = measure_node_layout(
         &NodeData {
             node: Node {
                 id: ElementId(0),
@@ -97,7 +104,7 @@ fn auto() {
                     width: SizeMode::Auto,
                     height: SizeMode::Auto,
                     direction: DirectionMode::Both,
-                    ..Size::expanded()
+                    ..expanded_size()
                 }),
                 node_type: NodeType::Element {
                     tag: "rect".to_string(),
@@ -129,7 +136,7 @@ fn auto() {
                     state: NodeState::default().set_size(Size {
                         width: SizeMode::Manual(170.0),
                         height: SizeMode::Manual(25.0),
-                        ..Size::expanded()
+                        ..expanded_size()
                     }),
                     node_type: NodeType::Element {
                         tag: "rect".to_string(),
@@ -142,6 +149,8 @@ fn auto() {
         },
         0,
         &mut FontCollection::new(),
+        &Arc::new(Mutex::new(LayoutMemorizer::new())),
+        true,
     );
 
     assert_eq!(result.height, 25.0);
@@ -154,9 +163,9 @@ fn x_y() {
     node.state = node.state.set_size(Size {
         width: SizeMode::Auto,
         height: SizeMode::Auto,
-        ..Size::expanded()
+        ..expanded_size()
     });
-    let result = calculate_node(
+    let result = measure_node_layout(
         &NodeData { node },
         NodeArea {
             x: 15.0,
@@ -180,7 +189,7 @@ fn x_y() {
                     state: NodeState::default().set_size(Size {
                         width: SizeMode::Manual(170.0),
                         height: SizeMode::Manual(25.0),
-                        ..Size::expanded()
+                        ..expanded_size()
                     }),
                     node_type: NodeType::Element {
                         tag: "rect".to_string(),
@@ -193,8 +202,24 @@ fn x_y() {
         },
         0,
         &mut FontCollection::new(),
+        &Arc::new(Mutex::new(LayoutMemorizer::new())),
+        true,
     );
 
     assert_eq!(result.x, 15.0);
     assert_eq!(result.y, 25.0);
+}
+
+fn expanded_size() -> Size {
+    Size {
+        width: SizeMode::Percentage(100.0),
+        height: SizeMode::Percentage(100.0),
+        min_height: SizeMode::Manual(0.0),
+        min_width: SizeMode::Manual(0.0),
+        max_height: SizeMode::Auto,
+        max_width: SizeMode::Auto,
+        padding: (0.0, 0.0, 0.0, 0.0),
+        direction: DirectionMode::Both,
+        id: 0,
+    }
 }

@@ -5,12 +5,14 @@ use freya_hooks::{use_animation, AnimationMode};
 
 use crate::THEME;
 
+/// Properties for the Switch component.
 #[derive(Props)]
 pub struct SwitchProps<'a> {
     pub enabled: bool,
     pub ontoggled: EventHandler<'a, ()>,
 }
 
+/// A controled Switch component.
 #[allow(non_snake_case)]
 pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
     let (start_enabled, restart_enabled, progress_enabled) =
@@ -23,7 +25,7 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
     let clicking = use_state(&cx, || false);
 
     let onmouseleave = |_: UiEvent<MouseData>| {
-        if *clicking.get() == false {
+        if !(*clicking.get()) {
             hovering.set(false);
         }
     };

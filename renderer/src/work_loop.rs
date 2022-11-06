@@ -10,25 +10,37 @@ use dioxus_html::{
 use dioxus_native_core::real_dom::{Node, NodeType};
 use enumset::enum_set;
 use freya_elements::events::KeyboardData;
-use freya_layers::{Layers, NodeArea, NodeData, RenderData};
-use freya_layout::calculate_node;
-use freya_node_state::node::NodeState;
+use freya_layers::{Layers, NodeData, RenderData};
+use freya_layout::measure_node_layout;
+use freya_layout_common::NodeArea;
+use freya_node_state::NodeState;
+use rustc_hash::FxHashMap;
 use skia_safe::{textlayout::FontCollection, Canvas, Color};
-use std::{collections::HashMap, ops::Index, sync::Arc};
+use std::{ops::Index, sync::Arc};
 
 use crate::{
-    events_processor::EventsProcessor, renderer::render_skia, EventEmitter, RendererRequest,
-    RendererRequests, SkiaDom,
+    events_processor::EventsProcessor, renderer::render_skia, FreyaEvent, SafeDOM,
+    SafeEventEmitter, SafeFreyaEvents, SafeLayoutManager,
 };
 
-pub fn work_loop(
-    mut dom: &SkiaDom,
+pub type ViewportsCollection = FxHashMap<ElementId, (Option<NodeArea>, Vec<ElementId>)>;
+
+/// The Work Loop has a few jobs:
+/// - Measure the nodes layouts
+/// - Organize the nodes layouts in layers
+/// - Calculate all the nodes viewports
+/// - Paint the nodes
+/// - Calculate what events must be triggered
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn work_loop(
+    mut dom: &SafeDOM,
     mut canvas: &mut Canvas,
     area: NodeArea,
-    renderer_requests: RendererRequests,
-    event_emitter: &EventEmitter,
+    freya_events: SafeFreyaEvents,
+    event_emitter: &SafeEventEmitter,
     font_collection: &mut FontCollection,
     events_processor: &mut EventsProcessor,
+    manager: &SafeLayoutManager,
 ) {
     let root: Node<NodeState> = {
         let dom = dom.lock().unwrap();
@@ -37,9 +49,9 @@ pub fn work_loop(
 
     let layers = &mut Layers::default();
 
-    calculate_node(
+    measure_node_layout(
         &NodeData { node: root },
-        area.clone(),
+        area,
         area,
         &mut dom,
         layers,
@@ -53,39 +65,41 @@ pub fn work_loop(
         },
         0,
         font_collection,
+        manager,
+        true,
     );
 
     let mut layers_nums: Vec<&i16> = layers.layers.keys().collect();
 
     // From top to bottom
-    layers_nums.sort_by(|a, b| a.cmp(b));
+    layers_nums.sort();
 
     // Calculate all the applicable viewports for the given elements
-    let mut calculated_viewports: HashMap<ElementId, Vec<NodeArea>> = HashMap::new();
+    let mut viewports_collection: ViewportsCollection = FxHashMap::default();
 
     for layer_num in &layers_nums {
         let layer = layers.layers.get(layer_num).unwrap();
-        for (id, element) in layer {
-            match &element.node_data.node.node_type {
-                NodeType::Element { tag, .. } => {
-                    for child in &element.node_children {
-                        if !calculated_viewports.contains_key(&child) {
-                            calculated_viewports.insert(*child, Vec::new());
-                        }
-                        if calculated_viewports.contains_key(&id) {
-                            calculated_viewports
-                                .insert(*child, calculated_viewports.get(&id).unwrap().clone());
-                        }
-                        if tag == "container" {
-                            calculated_viewports
-                                .get_mut(&child)
-                                .unwrap()
-                                .push(element.node_area.clone());
-                        }
+        for element in layer.values() {
+            if let NodeType::Element { tag, children, .. } = &element.node_type {
+                if tag == "container" {
+                    viewports_collection
+                        .entry(element.node_id)
+                        .or_insert_with(|| (None, Vec::new()))
+                        .0 = Some(element.node_area);
+                }
+                for child in children {
+                    if viewports_collection.contains_key(&element.node_id) {
+                        let mut inherited_viewports = viewports_collection
+                            .get(&element.node_id)
+                            .unwrap()
+                            .1
+                            .clone();
+
+                        inherited_viewports.push(element.node_id);
+
+                        viewports_collection.insert(*child, (None, inherited_viewports));
                     }
                 }
-                NodeType::Text { .. } => {}
-                _ => {}
             }
         }
     }
@@ -93,83 +107,86 @@ pub fn work_loop(
     // Render all the layers from the bottom to the top
     for layer_num in &layers_nums {
         let layer = layers.layers.get(layer_num).unwrap();
-        for (id, element) in layer {
+        'elements: for element in layer.values() {
+            let viewports = viewports_collection.get(&element.node_id);
+
+            // Skip elements that are totally out of some their parent's viewport
+            if let Some((_, viewports)) = viewports {
+                for viewport_id in viewports {
+                    let viewport = viewports_collection.get(viewport_id).unwrap().0;
+                    if let Some(viewport) = viewport {
+                        if viewport.is_area_outside(element.node_area) {
+                            continue 'elements;
+                        }
+                    }
+                }
+            }
+
             canvas.save();
             render_skia(
                 &mut dom,
                 &mut canvas,
-                &element.node_data,
-                &element.node_area,
+                element,
                 font_collection,
-                &calculated_viewports.get(id).unwrap_or(&Vec::new()),
+                &viewports_collection,
             );
             canvas.restore();
         }
     }
 
     // Calculated events are those that match considering their viewports
-    let mut calculated_events: HashMap<&'static str, Vec<(RenderData, RendererRequest)>> =
-        HashMap::new();
+    let mut calculated_events: FxHashMap<&'static str, Vec<(RenderData, FreyaEvent)>> =
+        FxHashMap::default();
 
     // Propagate events from the top to the bottom
     for layer_num in &layers_nums {
         let layer = layers.layers.get(layer_num).unwrap();
 
-        for (id, element) in layer.iter() {
-            let requests = renderer_requests.lock().unwrap();
+        for element in layer.values() {
+            let events = freya_events.lock().unwrap();
 
-            for request in requests.iter() {
+            'events: for event in events.iter() {
                 let area = &element.node_area;
-                if let RendererRequest::KeyboardEvent { name, .. } = request {
-                    if !calculated_events.contains_key(name) {
-                        calculated_events.insert(name, vec![(element.clone(), request.clone())]);
-                    } else {
-                        calculated_events
-                            .get_mut(name)
-                            .unwrap()
-                            .push((element.clone(), request.clone()));
-                    }
+                if let FreyaEvent::Keyboard { name, .. } = event {
+                    let event_data = (element.clone(), event.clone());
+                    calculated_events
+                        .entry(name)
+                        .or_insert_with(|| vec![event_data.clone()])
+                        .push(event_data);
                 } else {
-                    let data = match request {
-                        RendererRequest::MouseEvent { name, cursor, .. } => Some((name, cursor)),
-                        RendererRequest::WheelEvent { name, cursor, .. } => Some((name, cursor)),
+                    let data = match event {
+                        FreyaEvent::Mouse { name, cursor, .. } => Some((name, cursor)),
+                        FreyaEvent::Wheel { name, cursor, .. } => Some((name, cursor)),
                         _ => None,
                     };
                     if let Some((name, cursor)) = data {
-                        let x = area.x as f64;
-                        let y = area.y as f64;
-                        let width = (area.x + area.width) as f64;
-                        let height = (area.y + area.height) as f64;
+                        let ((x, y), (x2, y2)) = area.get_rect();
 
-                        let mut visible = true;
-
-                        // Make sure the cursor is inside all the applicable viewports from the element
-                        for viewport in calculated_viewports.get(&id).unwrap_or(&Vec::new()) {
-                            if cursor.0 < viewport.x as f64
-                                || cursor.0 > (viewport.x + viewport.width) as f64
-                                || cursor.1 < viewport.y as f64
-                                || cursor.1 > (viewport.y + viewport.height) as f64
-                            {
-                                visible = false;
-                            }
-                        }
+                        let cursor_is_inside =
+                            cursor.0 > x && cursor.0 < x2 && cursor.1 > y && cursor.1 < y2;
 
                         // Make sure the cursor is inside the node area
-                        if visible
-                            && cursor.0 > x
-                            && cursor.0 < width
-                            && cursor.1 > y
-                            && cursor.1 < height
-                        {
-                            if !calculated_events.contains_key(name) {
-                                calculated_events
-                                    .insert(name, vec![(element.clone(), request.clone())]);
-                            } else {
-                                calculated_events
-                                    .get_mut(name)
-                                    .unwrap()
-                                    .push((element.clone(), request.clone()));
+                        if cursor_is_inside {
+                            let viewports = viewports_collection.get(&element.node_id);
+
+                            // Make sure the cursor is inside all the applicable viewports from the element
+                            if let Some((_, viewports)) = viewports {
+                                for viewport_id in viewports {
+                                    let viewport = viewports_collection.get(viewport_id).unwrap().0;
+                                    if let Some(viewport) = viewport {
+                                        if viewport.is_point_outside(*cursor) {
+                                            continue 'events;
+                                        }
+                                    }
+                                }
                             }
+
+                            let event_data = (element.clone(), event.clone());
+
+                            calculated_events
+                                .entry(name)
+                                .or_insert_with(|| vec![event_data.clone()])
+                                .push(event_data);
                         }
                     }
                 }
@@ -184,19 +201,18 @@ pub fn work_loop(
         let dom = dom.lock().unwrap();
         let listeners = dom.get_listening_sorted(event_name);
 
-        let mut found_nodes: Vec<(&RenderData, &RendererRequest)> = Vec::new();
+        let mut found_nodes: Vec<(&RenderData, &FreyaEvent)> = Vec::new();
 
         'event_nodes: for (node, request) in event_nodes.iter() {
-            let node_state = &node.node_data.node;
             for listener in &listeners {
-                if listener.id == node_state.id {
-                    if node_state.state.style.background != Color::TRANSPARENT
+                if listener.id == node.node_id {
+                    if node.node_state.style.background != Color::TRANSPARENT
                         && event_name == &"wheel"
                     {
                         break 'event_nodes;
                     }
 
-                    if node_state.state.style.background != Color::TRANSPARENT
+                    if node.node_state.style.background != Color::TRANSPARENT
                         && event_name == &"click"
                     {
                         found_nodes.clear();
@@ -217,11 +233,11 @@ pub fn work_loop(
         }
 
         for (node, request) in found_nodes {
-            let event = match &request {
-                &RendererRequest::MouseEvent { cursor, .. } => Some(UserEvent {
+            let event = match request {
+                FreyaEvent::Mouse { cursor, .. } => Some(UserEvent {
                     scope_id: None,
                     priority: EventPriority::Medium,
-                    element: Some(node.node_data.node.id.clone()),
+                    element: Some(node.node_id),
                     name: event_name,
                     bubbles: false,
                     data: Arc::new(MouseData::new(
@@ -239,20 +255,20 @@ pub fn work_loop(
                         Modifiers::empty(),
                     )),
                 }),
-                &RendererRequest::WheelEvent { scroll, .. } => Some(UserEvent {
+                FreyaEvent::Wheel { scroll, .. } => Some(UserEvent {
                     scope_id: None,
                     priority: EventPriority::Medium,
-                    element: Some(node.node_data.node.id.clone()),
+                    element: Some(node.node_id),
                     name: event_name,
                     bubbles: false,
                     data: Arc::new(WheelData::new(WheelDelta::Pixels(PixelsVector::new(
                         scroll.0, scroll.1, 0.0,
                     )))),
                 }),
-                &RendererRequest::KeyboardEvent { name, code } => Some(UserEvent {
+                FreyaEvent::Keyboard { name, code } => Some(UserEvent {
                     scope_id: None,
                     priority: EventPriority::Medium,
-                    element: Some(node.node_data.node.id.clone()),
+                    element: Some(node.node_id),
                     name,
                     bubbles: false,
                     data: Arc::new(KeyboardData::new(code.clone())),
@@ -285,5 +301,5 @@ pub fn work_loop(
             .unwrap();
     }
 
-    renderer_requests.lock().unwrap().clear();
+    freya_events.lock().unwrap().clear();
 }

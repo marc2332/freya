@@ -4,12 +4,21 @@ use freya_elements as dioxus_elements;
 
 use crate::THEME;
 
+/// Properties for the Button component.
+#[derive(Props)]
+pub struct ButtonProps<'a> {
+    pub children: Element<'a>,
+    #[props(optional)]
+    pub onclick: Option<EventHandler<'a, MouseEvent>>,
+}
+
+/// A simple Button component.
 #[allow(non_snake_case)]
 pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
     let theme = use_atom_ref(&cx, THEME);
     let button_theme = &theme.read().button;
 
-    let background = use_state(&cx, || button_theme.background.clone());
+    let background = use_state(&cx, || <&str>::clone(&button_theme.background));
     let set_background = background.setter();
 
     use_effect(&cx, &button_theme.clone(), move |button_theme| async move {
@@ -24,8 +33,8 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
             padding: "3",
             container {
                 onclick: move |ev| {
-                    if let Some(on_click) = &cx.props.on_click {
-                        on_click.call(ev)
+                    if let Some(onclick) = &cx.props.onclick {
+                        onclick.call(ev)
                     }
                 },
                 onmouseover: move |_| {
@@ -46,11 +55,4 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
             }
         }
     )
-}
-
-#[derive(Props)]
-pub struct ButtonProps<'a> {
-    pub children: Element<'a>,
-    #[props(optional)]
-    pub on_click: Option<EventHandler<'a, MouseEvent>>,
 }

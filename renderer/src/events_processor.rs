@@ -8,8 +8,9 @@ use dioxus_html::{
 };
 use enumset::enum_set;
 use freya_layers::RenderData;
+use rustc_hash::FxHashMap;
 
-use crate::RendererRequest;
+use crate::FreyaEvent;
 
 #[derive(Default)]
 struct ElementState {
@@ -25,7 +26,7 @@ struct ElementState {
 /// At the moment, whether if it has entered or not is defined by the mouseover event.
 
 #[derive(Default)]
-pub struct EventsProcessor {
+pub(crate) struct EventsProcessor {
     states: HashMap<ElementId, ElementState>,
 }
 
@@ -33,7 +34,7 @@ impl EventsProcessor {
     pub fn process_events_batch(
         &mut self,
         events_to_emit: Vec<UserEvent>,
-        events_filtered: HashMap<&str, Vec<(RenderData, RendererRequest)>>,
+        events_filtered: FxHashMap<&str, Vec<(RenderData, FreyaEvent)>>,
     ) -> Vec<UserEvent> {
         let mut new_events = Vec::new();
 
