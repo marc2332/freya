@@ -26,7 +26,7 @@ struct ElementState {
 /// At the moment, whether if it has entered or not is defined by the mouseover event.
 
 #[derive(Default)]
-pub struct EventsProcessor {
+pub(crate) struct EventsProcessor {
     states: HashMap<ElementId, ElementState>,
 }
 

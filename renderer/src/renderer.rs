@@ -2,9 +2,7 @@ use dioxus_core::ElementId;
 use dioxus_native_core::real_dom::{Node, NodeType};
 use dioxus_native_core::traversable::Traversable;
 use freya_layers::RenderData;
-use freya_layout_common::NodeArea;
 use freya_node_state::NodeState;
-use rustc_hash::FxHashMap;
 use skia_safe::textlayout::{Paragraph, RectHeightStyle, RectWidthStyle, TextHeightBehavior};
 use skia_safe::Color;
 use skia_safe::{
@@ -14,8 +12,8 @@ use skia_safe::{
     PathDirection, Rect,
 };
 
-use crate::SafeDOM;
 use crate::work_loop::ViewportsCollection;
+use crate::SafeDOM;
 
 pub fn render_skia(
     dom: &mut &SafeDOM,

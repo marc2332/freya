@@ -1,5 +1,6 @@
 use fermi::*;
 
+/// Theming properties for the Button component.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ButtonTheme {
     pub background: &'static str,
@@ -7,11 +8,13 @@ pub struct ButtonTheme {
     pub font_theme: FontTheme,
 }
 
+/// Theming properties for Fonts.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FontTheme {
     pub color: &'static str,
 }
 
+/// Theming properties for the Switch component.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SwitchTheme {
     pub background: &'static str,
@@ -20,18 +23,21 @@ pub struct SwitchTheme {
     pub enabled_thumb_background: &'static str,
 }
 
+/// Theming properties for the Scrollbar component.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ScrollbarTheme {
     pub background: &'static str,
     pub thumb_background: &'static str,
 }
 
+/// Theming properties for the window body.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct BodyTheme {
     pub background: &'static str,
     pub color: &'static str,
 }
 
+/// Theming properties for the Slider component.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SliderTheme {
     pub background: &'static str,
@@ -39,6 +45,7 @@ pub struct SliderTheme {
     pub thumb_inner_background: &'static str,
 }
 
+/// Theming properties for Themes.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Theme {
     pub body: BodyTheme,
@@ -48,9 +55,11 @@ pub struct Theme {
     pub slider: SliderTheme,
 }
 
+/// Global configured theme.
 pub static THEME: AtomRef<Theme> = |_| DARK_THEME.clone();
 
-pub static LIGHT_THEME: Theme = Theme {
+/// Light theme
+pub const LIGHT_THEME: Theme = Theme {
     body: BodyTheme {
         background: "white",
         color: "black",
@@ -79,6 +88,7 @@ pub static LIGHT_THEME: Theme = Theme {
     },
 };
 
+/// Dark theme
 pub const DARK_THEME: Theme = Theme {
     body: BodyTheme {
         background: "rgb(25, 25, 25)",

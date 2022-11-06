@@ -7,15 +7,16 @@ use dioxus::{core::UiEvent, events::MouseData, prelude::*};
 use freya::{dioxus_elements, *};
 
 fn main() {
-    launch_cfg(vec![
-        (app, WindowConfig {
+    launch_cfg(vec![(
+        app,
+        WindowConfig {
             width: 500,
             height: 500,
             title: "Cool experiment",
             decorations: true,
-            transparent: false
-        })
-    ]);
+            transparent: false,
+        },
+    )]);
 }
 
 fn app(cx: Scope) -> Element {
@@ -50,7 +51,10 @@ fn app(cx: Scope) -> Element {
 
     let onmousedown = |e: UiEvent<MouseData>| {
         let coordinates = e.coordinates().screen();
-        clicking.set(Some(( canvas_pos.0 - coordinates.x, canvas_pos.1 - coordinates.y)));
+        clicking.set(Some((
+            canvas_pos.0 - coordinates.x,
+            canvas_pos.1 - coordinates.y,
+        )));
     };
 
     let onclick = |_: UiEvent<MouseData>| {

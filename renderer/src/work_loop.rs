@@ -32,7 +32,7 @@ pub type ViewportsCollection = FxHashMap<ElementId, (Option<NodeArea>, Vec<Eleme
 /// - Paint the nodes
 /// - Calculate what events must be triggered
 #[allow(clippy::too_many_arguments)]
-pub fn work_loop(
+pub(crate) fn work_loop(
     mut dom: &SafeDOM,
     mut canvas: &mut Canvas,
     area: NodeArea,
@@ -147,7 +147,7 @@ pub fn work_loop(
 
             'events: for event in events.iter() {
                 let area = &element.node_area;
-                if let FreyaEvent::KeyboardEvent { name, .. } = event {
+                if let FreyaEvent::Keyboard { name, .. } = event {
                     let event_data = (element.clone(), event.clone());
                     calculated_events
                         .entry(name)
@@ -155,8 +155,8 @@ pub fn work_loop(
                         .push(event_data);
                 } else {
                     let data = match event {
-                        FreyaEvent::MouseEvent { name, cursor, .. } => Some((name, cursor)),
-                        FreyaEvent::WheelEvent { name, cursor, .. } => Some((name, cursor)),
+                        FreyaEvent::Mouse { name, cursor, .. } => Some((name, cursor)),
+                        FreyaEvent::Wheel { name, cursor, .. } => Some((name, cursor)),
                         _ => None,
                     };
                     if let Some((name, cursor)) = data {
@@ -234,7 +234,7 @@ pub fn work_loop(
 
         for (node, request) in found_nodes {
             let event = match request {
-                FreyaEvent::MouseEvent { cursor, .. } => Some(UserEvent {
+                FreyaEvent::Mouse { cursor, .. } => Some(UserEvent {
                     scope_id: None,
                     priority: EventPriority::Medium,
                     element: Some(node.node_id),
@@ -255,7 +255,7 @@ pub fn work_loop(
                         Modifiers::empty(),
                     )),
                 }),
-                FreyaEvent::WheelEvent { scroll, .. } => Some(UserEvent {
+                FreyaEvent::Wheel { scroll, .. } => Some(UserEvent {
                     scope_id: None,
                     priority: EventPriority::Medium,
                     element: Some(node.node_id),
@@ -265,7 +265,7 @@ pub fn work_loop(
                         scroll.0, scroll.1, 0.0,
                     )))),
                 }),
-                FreyaEvent::KeyboardEvent { name, code } => Some(UserEvent {
+                FreyaEvent::Keyboard { name, code } => Some(UserEvent {
                     scope_id: None,
                     priority: EventPriority::Medium,
                     element: Some(node.node_id),

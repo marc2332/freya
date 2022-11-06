@@ -3,6 +3,7 @@ use std::{cell::RefCell, ops::RangeInclusive, time::Duration};
 use tokio::time::interval;
 use tween::{BounceIn, SineIn, SineInOut, Tween};
 
+/// Type of animation to use.
 #[derive(Clone)]
 pub enum AnimationMode {
     BounceIn(RefCell<BounceIn<f64, i32>>),
@@ -32,6 +33,7 @@ impl AnimationMode {
     }
 }
 
+/// Crate and configure an animation.
 pub fn use_animation(
     cx: &ScopeState,
     mode: impl FnOnce() -> AnimationMode,
