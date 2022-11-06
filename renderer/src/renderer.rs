@@ -207,7 +207,7 @@ pub fn render_skia(
                         paint.set_anti_alias(true);
                         canvas.draw_image_nine(
                             pic,
-                            &IRect::new(0, 0, 0, 0),
+                            IRect::new(0, 0, 0, 0),
                             Rect::new(
                                 node.node_area.x,
                                 node.node_area.y,
