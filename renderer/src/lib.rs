@@ -126,12 +126,12 @@ pub fn run(windows_config: Vec<(SafeDOM, SafeEventEmitter, SafeLayoutManager, Wi
                             });
                         }
                         WindowEvent::Resized(physical_size) => {
-                            env.resizer.lock().unwrap().0 = true;
+                            *env.is_resizing.lock().unwrap() = true;
                             let mut context = env.gr_context.clone();
                             env.surface =
                                 create_surface(&env.windowed_context, &env.fb_info, &mut context);
                             env.windowed_context.resize(physical_size);
-                            env.resizer.lock().unwrap().1 = Instant::now();
+                            *env.resizing_timer.lock().unwrap() = Instant::now();
                             env.layout_memorizer.lock().unwrap().dirty_nodes.clear();
                             env.layout_memorizer.lock().unwrap().nodes.clear();
                         }
