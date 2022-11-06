@@ -6,6 +6,14 @@ use freya_hooks::use_focus;
 
 use crate::THEME;
 
+/// Properties for the Input component.
+#[derive(Props)]
+pub struct InputProps<'a> {
+    pub value: &'a str,
+    pub onchange: EventHandler<'a, String>,
+}
+
+/// A controlled Input component.
 #[allow(non_snake_case)]
 pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     let theme = use_atom_ref(&cx, THEME);
@@ -57,10 +65,4 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
             }
         }
     )
-}
-
-#[derive(Props)]
-pub struct InputProps<'a> {
-    pub value: &'a str,
-    pub onchange: EventHandler<'a, String>,
 }

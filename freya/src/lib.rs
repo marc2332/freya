@@ -1,3 +1,33 @@
+//! # Freya
+//! A GUI library for Rust powered by [Skia](https://skia.org/) and [Dioxus](https://dioxuslabs.com).
+//! ```no_run
+//! use dioxus::prelude::*;
+//! use freya::{dioxus_elements, *};
+//!
+//! fn main(){
+//!     launch(app);
+//! }
+//!
+//! fn app(cx: Scope) -> Element {
+//!    let mut count = use_state(&cx, || 0);
+//!
+//!    render!(
+//!        container {
+//!            height: "100%",
+//!            width: "100%",
+//!            background: "rgb(35, 35, 35)",
+//!            color: "white",
+//!            padding: "25",
+//!            onclick: move |_| count += 1,
+//!            label { "Click to increase -> {count}" }
+//!        }
+//!    )
+//! }
+//!
+//! ```
+//!
+//!
+//!
 use anymap::AnyMap;
 use dioxus::prelude::*;
 use dioxus_core::SchedulerMsg;
@@ -10,13 +40,13 @@ use std::sync::Mutex;
 pub use freya_components::*;
 pub use freya_elements as dioxus_elements;
 pub use freya_hooks::*;
-pub use freya_renderer::*;
+pub use freya_renderer::WindowConfig;
 
 #[cfg(feature = "devtools")]
 mod devtools;
 
 #[cfg(not(doctest))]
-/// Launch a new Window with the default config:
+/// Launch a new Window with the default config.
 /// - Width: `400`
 /// - Height: `300`
 /// - Decorations enabled
@@ -38,7 +68,7 @@ mod devtools;
 ///                 "Hello World!"
 ///             }
 ///         }
-///     ))
+///     )
 /// }
 /// ```
 pub fn launch(app: Component<()>) {
@@ -55,7 +85,7 @@ pub fn launch(app: Component<()>) {
 }
 
 #[cfg(not(doctest))]
-/// Launch a new Window with a custom title and the default config:
+/// Launch a new Window with a custom title and the default config.
 /// - Width: `400`
 /// - Height: `300`
 /// - Decorations enabled
@@ -76,7 +106,7 @@ pub fn launch(app: Component<()>) {
 ///                 "Hello World!"
 ///             }
 ///         }
-///     ))
+///     )
 /// }
 /// ```
 pub fn launch_with_title(app: Component<()>, title: &'static str) {
@@ -104,7 +134,6 @@ pub fn launch_with_title(app: Component<()>, title: &'static str) {
 /// ```rust
 /// # use dioxus::prelude::*;
 /// # use freya::{dioxus_elements, *};
-///
 /// launch_cfg(vec![(
 ///     app,
 ///     WindowConfig {
@@ -125,7 +154,7 @@ pub fn launch_with_title(app: Component<()>, title: &'static str) {
 ///                 "Hello World!"
 ///             }
 ///         }
-///     ))
+///     )
 /// }
 /// ```
 pub fn launch_cfg(wins_config: Vec<(Component<()>, WindowConfig)>) {

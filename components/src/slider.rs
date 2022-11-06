@@ -8,6 +8,7 @@ use freya_elements as dioxus_elements;
 
 use crate::THEME;
 
+/// Properties for the Slider component.
 #[derive(Props)]
 pub struct SliderProps<'a> {
     pub onmoved: EventHandler<'a, f64>,

@@ -2,9 +2,7 @@ use dioxus_core::ElementId;
 use dioxus_native_core::real_dom::{Node, NodeType};
 use dioxus_native_core::traversable::Traversable;
 use freya_layers::RenderData;
-use freya_layout_common::NodeArea;
 use freya_node_state::NodeState;
-use rustc_hash::FxHashMap;
 use skia_safe::textlayout::{Paragraph, RectHeightStyle, RectWidthStyle, TextHeightBehavior};
 use skia_safe::Color;
 use skia_safe::{
@@ -14,6 +12,7 @@ use skia_safe::{
     PathDirection, Rect,
 };
 
+use crate::work_loop::ViewportsCollection;
 use crate::SafeDOM;
 
 pub fn render_skia(
@@ -21,13 +20,13 @@ pub fn render_skia(
     canvas: &mut &mut Canvas,
     node: &RenderData,
     font_collection: &mut FontCollection,
-    calculated_viewports: &FxHashMap<ElementId, (Option<NodeArea>, Vec<ElementId>)>,
+    viewports_collection: &ViewportsCollection,
 ) {
     if let NodeType::Element { tag, children, .. } = &node.node_type {
-        let viewports = calculated_viewports.get(&node.node_id);
+        let viewports = viewports_collection.get(&node.node_id);
         if let Some((_, viewports)) = viewports {
             for viewport_id in viewports {
-                let viewport = calculated_viewports.get(viewport_id).unwrap().0;
+                let viewport = viewports_collection.get(viewport_id).unwrap().0;
                 if let Some(viewport) = viewport {
                     canvas.clip_rect(
                         Rect::new(

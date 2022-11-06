@@ -72,6 +72,7 @@ impl WindowEnv {
     }
 }
 
+/// Configuration for a window.
 #[derive(Clone)]
 pub struct WindowConfig {
     pub width: u32,

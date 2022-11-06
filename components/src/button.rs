@@ -4,6 +4,15 @@ use freya_elements as dioxus_elements;
 
 use crate::THEME;
 
+/// Properties for the Button component.
+#[derive(Props)]
+pub struct ButtonProps<'a> {
+    pub children: Element<'a>,
+    #[props(optional)]
+    pub on_click: Option<EventHandler<'a, MouseEvent>>,
+}
+
+/// A simple Button component.
 #[allow(non_snake_case)]
 pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
     let theme = use_atom_ref(&cx, THEME);
@@ -46,11 +55,4 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
             }
         }
     )
-}
-
-#[derive(Props)]
-pub struct ButtonProps<'a> {
-    pub children: Element<'a>,
-    #[props(optional)]
-    pub on_click: Option<EventHandler<'a, MouseEvent>>,
 }
