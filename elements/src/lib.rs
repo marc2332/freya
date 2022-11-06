@@ -1,5 +1,7 @@
 pub mod events;
 
+pub use events::*;
+
 pub use dioxus_core::AttributeValue;
 use dioxus_core::*;
 use std::fmt::Arguments;
@@ -197,11 +199,13 @@ impl svg {
 
 pub mod on {
     use dioxus_core::*;
-    use dioxus_html::on::{MouseData, MouseEvent, WheelData, WheelEvent};
 
     use bumpalo::boxed::Box as BumpBox;
 
-    use crate::events::KeyboardData;
+    use crate::{
+        events::{KeyboardData, KeyboardEvent, MouseData, MouseEvent, WheelEvent},
+        WheelData,
+    };
 
     macro_rules! event_directory {
         ( $(
@@ -247,8 +251,6 @@ pub mod on {
             )*
         };
     }
-
-    type KeyboardEvent = UiEvent<KeyboardData>;
 
     event_directory! {
         MouseEvent(MouseData): [

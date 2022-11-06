@@ -3,8 +3,11 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus::{core::UiEvent, events::MouseData, prelude::*};
-use freya::{dioxus_elements, *};
+use dioxus::prelude::*;
+use freya::{
+    dioxus_elements::{self, events::MouseEvent},
+    *,
+};
 
 fn main() {
     launch_cfg(vec![(
@@ -26,20 +29,20 @@ fn app(cx: Scope) -> Element {
     let clicking = use_state::<Option<(f64, f64)>>(&cx, || None);
     let clicking_drag = use_state::<Option<usize>>(&cx, || None);
 
-    let onmouseleave = |_: UiEvent<MouseData>| {
+    let onmouseleave = |_: MouseEvent| {
         if clicking.is_none() {
             hovering.set(false);
         }
     };
 
-    let onmouseover = |e: UiEvent<MouseData>| {
+    let onmouseover = |e: MouseEvent| {
         hovering.set(true);
         if let Some(clicking) = clicking.get() {
-            let coordinates = e.coordinates().screen();
+            let coordinates = e.get_screen_coordinates();
             canvas_pos.set((coordinates.x + clicking.0, coordinates.y + clicking.1));
         }
         if let Some(node_id) = clicking_drag.get() {
-            let coordinates = e.coordinates().screen();
+            let coordinates = e.get_screen_coordinates();
 
             nodes.with_mut(|nodes| {
                 let node = nodes.get_mut(*node_id).unwrap();
@@ -49,20 +52,20 @@ fn app(cx: Scope) -> Element {
         }
     };
 
-    let onmousedown = |e: UiEvent<MouseData>| {
-        let coordinates = e.coordinates().screen();
+    let onmousedown = |e: MouseEvent| {
+        let coordinates = e.get_screen_coordinates();
         clicking.set(Some((
             canvas_pos.0 - coordinates.x,
             canvas_pos.1 - coordinates.y,
         )));
     };
 
-    let onclick = |_: UiEvent<MouseData>| {
+    let onclick = |_: MouseEvent| {
         clicking.set(None);
         clicking_drag.set(None);
     };
 
-    let create_node = |_: UiEvent<MouseData>| {
+    let create_node = |_: MouseEvent| {
         nodes.with_mut(|nodes| {
             nodes.push((0.0f64, 0.0f64));
         });
@@ -98,10 +101,10 @@ fn app(cx: Scope) -> Element {
                                 radius: "15",
                                 padding: "10",
                                 shadow: "0 0 60 35 white",
-                                onmousedown:  move |_: UiEvent<MouseData>| {
+                                onmousedown:  move |_: MouseEvent| {
                                     clicking_drag.set(Some(id));
                                 },
-                                onmouseleave: |_: UiEvent<MouseData>| {
+                                onmouseleave: |_: MouseEvent| {
                                     if clicking.is_none() {
                                         hovering.set(false);
                                     }
@@ -308,7 +311,7 @@ fn Editor(cx: Scope) -> Element {
                             ""
                         };
 
-                        let onmousedown = move |e: UiEvent<MouseData>| {
+                        let onmousedown = move |e: MouseEvent| {
                             process_clickevent.send((e, line_index)).ok();
                         };
 

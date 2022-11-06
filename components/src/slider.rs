@@ -1,10 +1,7 @@
-use dioxus::{
-    core::UiEvent,
-    events::{MouseData, WheelData},
-    prelude::*,
-};
+use dioxus::prelude::*;
 use fermi::use_atom_ref;
 use freya_elements as dioxus_elements;
+use freya_elements::{MouseEvent, WheelEvent};
 
 use crate::THEME;
 
@@ -93,16 +90,16 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
 
     let progress = (value / 100.0) as f64 * cx.props.width + 0.5;
 
-    let onmouseleave = |_: UiEvent<MouseData>| {
+    let onmouseleave = |_: MouseEvent| {
         if !(*clicking.get()) {
             hovering.set(false);
         }
     };
 
-    let onmouseover = move |e: UiEvent<MouseData>| {
+    let onmouseover = move |e: MouseEvent| {
         hovering.set(true);
         if *clicking.get() {
-            let coordinates = e.coordinates().element();
+            let coordinates = e.get_element_coordinates();
             let mut x = coordinates.x - 7.5;
             if x < 0.0 {
                 x = 0.0;
@@ -124,16 +121,16 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
         }
     };
 
-    let onmousedown = |_: UiEvent<MouseData>| {
+    let onmousedown = |_: MouseEvent| {
         clicking.set(true);
     };
 
-    let onclick = |_: UiEvent<MouseData>| {
+    let onclick = |_: MouseEvent| {
         clicking.set(false);
     };
 
-    let onwheel = move |e: UiEvent<WheelData>| {
-        let wheel_y = e.delta().strip_units().y;
+    let onwheel = move |e: WheelEvent| {
+        let wheel_y = e.get_delta_y();
         let progress_x = (value / 100.0) as f64 * cx.props.width;
 
         let mut x = progress_x + (wheel_y * 7.5);

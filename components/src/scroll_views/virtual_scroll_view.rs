@@ -1,12 +1,9 @@
 use std::ops::Range;
 
-use dioxus::{
-    core::UiEvent,
-    events::{MouseData, WheelData},
-    prelude::*,
-};
+use dioxus::prelude::*;
 use fermi::use_atom_ref;
 use freya_elements as dioxus_elements;
+use freya_elements::{MouseEvent, WheelEvent};
 use freya_hooks::use_node;
 
 use crate::{
@@ -90,8 +87,8 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
         get_scrollbar_pos_and_size(inner_size, size.width, *scrolled_x.get() as f32);
 
     // Moves the Y axis when the user scrolls in the container
-    let onwheel = move |e: UiEvent<WheelData>| {
-        let wheel_y = e.delta().strip_units().y;
+    let onwheel = move |e: WheelEvent| {
+        let wheel_y = e.get_delta_y();
 
         let scroll_position = get_scroll_position_from_wheel(
             wheel_y as f32,
@@ -104,9 +101,9 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
     };
 
     // Drag the scrollbars
-    let onmouseover = move |e: UiEvent<MouseData>| {
+    let onmouseover = move |e: MouseEvent| {
         if let Some((Axis::Y, y)) = clicking_scrollbar.get() {
-            let coordinates = e.coordinates().element();
+            let coordinates = e.get_element_coordinates();
             let cursor_y = coordinates.y - y;
 
             let scroll_position =
@@ -114,7 +111,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
 
             scrolled_y.with_mut(|y| *y = scroll_position);
         } else if let Some((Axis::X, x)) = clicking_scrollbar.get() {
-            let coordinates = e.coordinates().element();
+            let coordinates = e.get_element_coordinates();
             let cursor_x = coordinates.x - x;
 
             let scroll_position =
@@ -125,19 +122,19 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
     };
 
     // Mark the Y axis scrollbar as the one being dragged
-    let onmousedown_y = |e: UiEvent<MouseData>| {
-        let coordinates = e.coordinates().element();
+    let onmousedown_y = |e: MouseEvent| {
+        let coordinates = e.get_element_coordinates();
         clicking_scrollbar.set(Some((Axis::Y, coordinates.y)));
     };
 
     // Mark the X axis scrollbar as the one being dragged
-    let onmousedown_x = |e: UiEvent<MouseData>| {
-        let coordinates = e.coordinates().element();
+    let onmousedown_x = |e: MouseEvent| {
+        let coordinates = e.get_element_coordinates();
         clicking_scrollbar.set(Some((Axis::X, coordinates.x)));
     };
 
     // Unmark any scrollbar
-    let onclick = |_: UiEvent<MouseData>| {
+    let onclick = |_: MouseEvent| {
         clicking_scrollbar.set(None);
     };
 

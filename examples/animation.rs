@@ -3,8 +3,11 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus::{core::UiEvent, events::MouseData, prelude::*};
-use freya::{dioxus_elements, *};
+use dioxus::prelude::*;
+use freya::{
+    dioxus_elements::{self, MouseEvent},
+    *,
+};
 
 fn main() {
     launch(app);
@@ -14,11 +17,11 @@ fn app(cx: Scope) -> Element {
     let (start, restart, progress) =
         use_animation(&cx, || AnimationMode::new_sine_in_out(0.0..=700.0, 1000));
 
-    let start_animation = move |_: UiEvent<MouseData>| {
+    let start_animation = move |_: MouseEvent| {
         start();
     };
 
-    let restart_animation = move |_: UiEvent<MouseData>| {
+    let restart_animation = move |_: MouseEvent| {
         restart();
     };
 

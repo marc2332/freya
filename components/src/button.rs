@@ -1,6 +1,7 @@
-use dioxus::{events::MouseEvent, prelude::*};
+use dioxus::prelude::*;
 use fermi::*;
 use freya_elements as dioxus_elements;
+use freya_elements::MouseEvent;
 
 use crate::THEME;
 

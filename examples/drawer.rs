@@ -3,8 +3,11 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus::{events::MouseEvent, prelude::*};
-use freya::{dioxus_elements, *};
+use dioxus::prelude::*;
+use freya::{
+    dioxus_elements::{self, MouseEvent},
+    *,
+};
 
 fn main() {
     launch(app);

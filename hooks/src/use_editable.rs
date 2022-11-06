@@ -1,7 +1,10 @@
 use std::sync::{Arc, Mutex};
 
-use dioxus::{core::UiEvent, events::MouseData, prelude::*};
-use freya_elements::events::{KeyCode, KeyboardData};
+use dioxus::{core::UiEvent, prelude::*};
+use freya_elements::{
+    events::{KeyCode, KeyboardData},
+    MouseEvent,
+};
 use freya_node_state::CursorReference;
 use tokio::sync::{mpsc::unbounded_channel, mpsc::UnboundedSender};
 use xi_rope::Rope;
@@ -18,7 +21,7 @@ pub enum EditableMode {
     MultipleLinesSingleEditor,
 }
 
-pub type ClickNotifier = UnboundedSender<(UiEvent<MouseData>, usize)>;
+pub type ClickNotifier = UnboundedSender<(MouseEvent, usize)>;
 pub type EditableText = UseState<Rope>;
 pub type CursorPosition = UseState<(usize, usize)>;
 pub type KeyboardEvent = UiEvent<KeyboardData>;
@@ -57,7 +60,7 @@ pub fn use_editable<'a>(
 
     // Single listener multiple triggers channel so the mouse can be changed from multiple elements
     let click_channel = use_ref(cx, || {
-        let (tx, rx) = unbounded_channel::<(UiEvent<MouseData>, usize)>();
+        let (tx, rx) = unbounded_channel::<(MouseEvent, usize)>();
         (tx, Some(rx))
     });
 
@@ -72,7 +75,7 @@ pub fn use_editable<'a>(
                 let mut rx = rx.unwrap();
 
                 while let Some((e, id)) = rx.recv().await {
-                    let points = e.element_coordinates();
+                    let points = e.get_element_coordinates();
                     let cursor_ref = cursor_ref.clone();
                     cursor_ref.write().id.lock().unwrap().replace(id);
                     cursor_ref
