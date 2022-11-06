@@ -9,6 +9,8 @@ It's children are clipped when they overflow the container bounds.
 - height
 - min_width
 - min_height
+- max_width
+- max_height
 - background
 - padding
 - layer

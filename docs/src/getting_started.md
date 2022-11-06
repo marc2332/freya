@@ -2,7 +2,7 @@
 
 **Freya** is a native GUI toolkit written in [Rust](https://www.rust-lang.org/), uses [Skia](https://skia.org/) as renderer and [Dioxus](https://dioxuslabs.com/) as components Library.
 
-```rust
+```rust no_run
 fn app(cx: Scope) -> Element {
     let mut count = use_state(&cx, || 0);
 
@@ -20,7 +20,7 @@ fn app(cx: Scope) -> Element {
 }
 ```
 
-### Introduction
+### About
 
 **Freya** provides rendering for a Dioxus app using Skia, but also has some utility [hooks](/references/hooks.html), [components](/references/components.html) and theming support.
 

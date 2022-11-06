@@ -9,6 +9,8 @@ Unlike [`container`](/references/elements/container.html), it's children can ove
 - height
 - min_width
 - min_height
+- max_width
+- max_height
 - background
 - padding
 - layer
