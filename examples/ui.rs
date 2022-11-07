@@ -3,8 +3,11 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus::{core::UiEvent, events::MouseData, prelude::*};
-use freya::{dioxus_elements, *};
+use dioxus::prelude::*;
+use freya::{
+    dioxus_elements::{self, MouseEvent},
+    *,
+};
 
 fn main() {
     launch(app);
@@ -176,17 +179,17 @@ fn Area<'a>(cx: Scope<'a>) -> Element {
     let cursor_pos_over = use_state(&cx, || (0f64, 0f64));
     let cursor_pos_click = use_state(&cx, || (0f64, 0f64));
 
-    let cursor_moved = |ev: UiEvent<MouseData>| {
+    let cursor_moved = |e: MouseEvent| {
         cursor_pos_over.with_mut(|cursor_pos| {
-            let pos = ev.data.element_coordinates();
+            let pos = e.get_screen_coordinates();
             cursor_pos.0 = pos.x;
             cursor_pos.1 = pos.y;
         });
     };
 
-    let cursor_clicked = |ev: UiEvent<MouseData>| {
+    let cursor_clicked = |e: MouseEvent| {
         cursor_pos_click.with_mut(|cursor_pos| {
-            let pos = ev.data.element_coordinates();
+            let pos = e.get_screen_coordinates();
             cursor_pos.0 = pos.x;
             cursor_pos.1 = pos.y;
         })

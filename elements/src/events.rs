@@ -1,20 +1,12 @@
-use glutin::keyboard::Key;
+mod keyboard;
+mod mouse;
+mod wheel;
 
-pub type KeyCode = Key<'static>;
+use dioxus_core::UiEvent;
+pub use keyboard::*;
+pub use mouse::*;
+pub use wheel::*;
 
-#[derive(Debug)]
-pub struct KeyboardData {
-    pub code: KeyCode,
-}
-
-impl KeyboardData {
-    pub fn new(code: KeyCode) -> Self {
-        Self { code }
-    }
-}
-
-impl KeyboardData {
-    pub fn to_text(&self) -> Option<&str> {
-        self.code.to_text()
-    }
-}
+pub type KeyboardEvent = UiEvent<KeyboardData>;
+pub type MouseEvent = UiEvent<MouseData>;
+pub type WheelEvent = UiEvent<WheelData>;

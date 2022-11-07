@@ -1,13 +1,10 @@
 use std::{collections::HashMap, sync::Arc};
 
 use dioxus_core::{ElementId, EventPriority, UserEvent};
-use dioxus_html::{
-    geometry::{euclid::Point2D, Coordinates},
-    input_data::{keyboard_types::Modifiers, MouseButton},
-    on::MouseData,
-};
-use enumset::enum_set;
+use euclid::Point2D;
+use freya_elements::MouseData;
 use freya_layers::RenderData;
+use glutin::event::MouseButton;
 use rustc_hash::FxHashMap;
 
 use crate::FreyaEvent;
@@ -69,15 +66,9 @@ impl EventsProcessor {
                         name: "mouseleave",
                         bubbles: false,
                         data: Arc::new(MouseData::new(
-                            Coordinates::new(
-                                Point2D::default(),
-                                Point2D::default(),
-                                Point2D::default(),
-                                Point2D::default(),
-                            ),
-                            Some(MouseButton::Primary),
-                            enum_set! {MouseButton::Primary},
-                            Modifiers::empty(),
+                            Point2D::default(),
+                            Point2D::default(),
+                            Some(MouseButton::Left),
                         )),
                     });
 

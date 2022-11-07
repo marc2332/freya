@@ -2,7 +2,7 @@ use dioxus_core::{exports::futures_channel::mpsc::UnboundedSender, SchedulerMsg}
 use dioxus_native_core::real_dom::RealDom;
 use freya_layout_common::LayoutMemorizer;
 use freya_node_state::NodeState;
-use glutin::event::ElementState;
+use glutin::event::{ElementState, MouseButton};
 use glutin::window::WindowId;
 use glutin::{event::Event, event_loop::ControlFlow};
 use glutin::{
@@ -35,6 +35,7 @@ pub(crate) enum FreyaEvent {
     Mouse {
         name: &'static str,
         cursor: (f64, f64),
+        button: Option<MouseButton>,
     },
     /// A Wheel event.
     Wheel {
@@ -111,9 +112,10 @@ pub fn run(windows_config: Vec<(SafeDOM, SafeEventEmitter, SafeLayoutManager, Wi
                             env.freya_events.lock().unwrap().push(FreyaEvent::Mouse {
                                 name: "mouseover",
                                 cursor: cursor_pos,
+                                button: None,
                             });
                         }
-                        WindowEvent::MouseInput { state, .. } => {
+                        WindowEvent::MouseInput { state, button, .. } => {
                             let event_name = match state {
                                 ElementState::Pressed => "mousedown",
                                 ElementState::Released => "click",
@@ -123,6 +125,7 @@ pub fn run(windows_config: Vec<(SafeDOM, SafeEventEmitter, SafeLayoutManager, Wi
                             env.freya_events.lock().unwrap().push(FreyaEvent::Mouse {
                                 name: event_name,
                                 cursor: *cursor_pos,
+                                button: Some(button),
                             });
                         }
                         WindowEvent::Resized(physical_size) => {

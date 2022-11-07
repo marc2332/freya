@@ -3,11 +3,9 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus::core::UiEvent;
-use dioxus::events::WheelData;
 use dioxus::prelude::*;
 use freya::{
-    dioxus_elements::{self},
+    dioxus_elements::{self, WheelEvent},
     *,
 };
 
@@ -20,8 +18,8 @@ static RUST_LOGO: &[u8] = include_bytes!("./rust_logo.png");
 fn app(cx: Scope) -> Element {
     let mut size = use_state(&cx, || 150);
 
-    let onwheel = move |e: UiEvent<WheelData>| {
-        let y = e.delta().strip_units().y;
+    let onwheel = move |e: WheelEvent| {
+        let y = e.get_delta_y();
         if *size.get() >= 15 && y > 15.0 {
             return;
         }

@@ -13,7 +13,7 @@ categories = ["GUI"]
 
 [dependencies]
 dioxus-native-core = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
-dioxus = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
+dioxus = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners", features = ["macro", "hooks"]}
 freya-layout-common = { path = "../layout-common", version = "0.1.0" }
 freya-node-state = { path = "../state", version = "0.1.0" }
 freya-layers = { path = "../layers", version = "0.1.0" }

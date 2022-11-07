@@ -1,6 +1,7 @@
-use dioxus::{core::UiEvent, events::MouseData, prelude::*};
+use dioxus::prelude::*;
 use fermi::use_atom_ref;
 use freya_elements as dioxus_elements;
+use freya_elements::MouseEvent;
 use freya_hooks::{use_animation, AnimationMode};
 
 use crate::THEME;
@@ -24,21 +25,21 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
     let hovering = use_state(&cx, || false);
     let clicking = use_state(&cx, || false);
 
-    let onmouseleave = |_: UiEvent<MouseData>| {
+    let onmouseleave = |_: MouseEvent| {
         if !(*clicking.get()) {
             hovering.set(false);
         }
     };
 
-    let onmouseover = |_: UiEvent<MouseData>| {
+    let onmouseover = |_: MouseEvent| {
         hovering.set(true);
     };
 
-    let onmousedown = |_: UiEvent<MouseData>| {
+    let onmousedown = |_: MouseEvent| {
         clicking.set(true);
     };
 
-    let onclick = |_: UiEvent<MouseData>| {
+    let onclick = |_: MouseEvent| {
         clicking.set(false);
         cx.props.ontoggled.call(());
     };

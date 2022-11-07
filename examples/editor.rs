@@ -1,8 +1,7 @@
-use dioxus::events::MouseData;
-use dioxus::{core::UiEvent, prelude::*};
+use dioxus::prelude::*;
 use fermi::use_atom_ref;
 use freya::{
-    dioxus_elements::{self},
+    dioxus_elements::{self, MouseEvent},
     *,
 };
 
@@ -196,7 +195,7 @@ fn app(cx: Scope) -> Element {
                             ""
                         };
 
-                        let onmousedown = move |e: UiEvent<MouseData>| {
+                        let onmousedown = move |e: MouseEvent| {
                             process_clickevent.send((e, line_index)).ok();
                         };
 

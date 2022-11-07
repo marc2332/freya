@@ -1,15 +1,10 @@
 use dioxus_core::{ElementId, EventPriority, SchedulerMsg, UserEvent};
-use dioxus_html::{
-    geometry::{
-        euclid::{Length, Point2D},
-        Coordinates, PixelsVector, WheelDelta,
-    },
-    input_data::{keyboard_types::Modifiers, MouseButton},
-    on::{MouseData, WheelData},
-};
 use dioxus_native_core::real_dom::{Node, NodeType};
-use enumset::enum_set;
-use freya_elements::events::KeyboardData;
+use euclid::{Length, Point2D};
+use freya_elements::{
+    events::{KeyboardData, MouseData},
+    WheelData,
+};
 use freya_layers::{Layers, NodeData, RenderData};
 use freya_layout::measure_node_layout;
 use freya_layout_common::NodeArea;
@@ -234,25 +229,19 @@ pub(crate) fn work_loop(
 
         for (node, request) in found_nodes {
             let event = match request {
-                FreyaEvent::Mouse { cursor, .. } => Some(UserEvent {
+                FreyaEvent::Mouse { cursor, button, .. } => Some(UserEvent {
                     scope_id: None,
                     priority: EventPriority::Medium,
                     element: Some(node.node_id),
                     name: event_name,
                     bubbles: false,
                     data: Arc::new(MouseData::new(
-                        Coordinates::new(
-                            Point2D::from_lengths(Length::new(cursor.0), Length::new(cursor.1)),
-                            Point2D::default(),
-                            Point2D::from_lengths(
-                                Length::new(cursor.0 - node.node_area.x as f64),
-                                Length::new(cursor.1 - node.node_area.y as f64),
-                            ),
-                            Point2D::default(),
+                        Point2D::from_lengths(Length::new(cursor.0), Length::new(cursor.1)),
+                        Point2D::from_lengths(
+                            Length::new(cursor.0 - node.node_area.x as f64),
+                            Length::new(cursor.1 - node.node_area.y as f64),
                         ),
-                        Some(MouseButton::Primary),
-                        enum_set! {MouseButton::Primary},
-                        Modifiers::empty(),
+                        *button,
                     )),
                 }),
                 FreyaEvent::Wheel { scroll, .. } => Some(UserEvent {
@@ -261,9 +250,7 @@ pub(crate) fn work_loop(
                     element: Some(node.node_id),
                     name: event_name,
                     bubbles: false,
-                    data: Arc::new(WheelData::new(WheelDelta::Pixels(PixelsVector::new(
-                        scroll.0, scroll.1, 0.0,
-                    )))),
+                    data: Arc::new(WheelData::new(scroll.0, scroll.1)),
                 }),
                 FreyaEvent::Keyboard { name, code } => Some(UserEvent {
                     scope_id: None,

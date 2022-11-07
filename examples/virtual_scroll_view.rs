@@ -3,10 +3,11 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus::core::UiEvent;
-use dioxus::events::MouseData;
 use dioxus::prelude::*;
-use freya::{dioxus_elements, *};
+use freya::{
+    dioxus_elements::{self, MouseEvent},
+    *,
+};
 
 fn main() {
     launch(app);
@@ -62,7 +63,7 @@ fn app(cx: Scope) -> Element {
                         ""
                     };
 
-                    let onmousedown = move |e: UiEvent<MouseData>| {
+                    let onmousedown = move |e: MouseEvent| {
                         process_clickevent.send((e, line_index as usize)).ok();
                     };
 
