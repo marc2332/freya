@@ -14,7 +14,6 @@ categories = ["GUI"]
 [dependencies]
 dioxus = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners", features = ["macro", "hooks"]}
 dioxus-router = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
-fermi = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners" }
 freya-elements = { path = "../elements", version = "0.1.0" }
 freya-node-state = { path = "../state", version = "0.1.0" }
 freya-hooks = { path = "../hooks", version = "0.1.0" }

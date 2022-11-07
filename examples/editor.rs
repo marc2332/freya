@@ -1,5 +1,4 @@
 use dioxus::prelude::*;
-use fermi::use_atom_ref;
 use freya::{
     dioxus_elements::{self, MouseEvent},
     *,
@@ -18,8 +17,10 @@ fn main() {
     )]);
 }
 
-fn app(cx: Scope) -> Element {
-    let theme = use_atom_ref(&cx, THEME);
+#[allow(non_snake_case)]
+fn Body(cx: Scope) -> Element {
+    let theme = use_theme(&cx);
+    let theme = theme.read();
     let (content, cursor, process_keyevent, process_clickevent, cursor_ref) = use_editable(
         &cx,
         || {
@@ -38,8 +39,6 @@ fn app(cx: Scope) -> Element {
     let mut line_index = 0;
 
     let cursor_char = content.offset_of_line(cursor.1) + cursor.0;
-
-    let theme = theme.read();
 
     let font_style = {
         if *is_bold.get() && *is_italic.get() {
@@ -280,4 +279,9 @@ fn app(cx: Scope) -> Element {
             }
         }
     )
+}
+
+fn app(cx: Scope) -> Element {
+    use_init_theme(&cx, DARK_THEME);
+    render!(Body {})
 }

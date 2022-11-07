@@ -3,9 +3,9 @@ use dioxus::prelude::*;
 use dioxus_core::Scope;
 use dioxus_native_core::real_dom::{NodeType, RealDom};
 use dioxus_router::*;
-use fermi::use_atom_ref;
 use freya_components::*;
 use freya_elements as dioxus_elements;
+use freya_hooks::use_theme;
 use freya_node_state::NodeState;
 use skia_safe::Color;
 use std::{
@@ -207,7 +207,7 @@ struct TabButtonProps<'a> {
 
 #[allow(non_snake_case)]
 fn TabButton<'a>(cx: Scope<'a, TabButtonProps<'a>>) -> Element<'a> {
-    let theme = use_atom_ref(&cx, THEME);
+    let theme = use_theme(&cx);
     let button_theme = &theme.read().button;
 
     let background = use_state(&cx, || button_theme.background.clone());

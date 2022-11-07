@@ -15,7 +15,6 @@ wireframe = ["freya/wireframe"]
 freya = { path = "./freya"}
 dioxus = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners", features = ["macro", "hooks"]}
 tokio = "1.17.0"
-fermi = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners" }
 reqwest = {version = "0.11.12", features = ["json"] }
 serde = "1.0.145"
 

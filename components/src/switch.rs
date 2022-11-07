@@ -1,10 +1,7 @@
 use dioxus::prelude::*;
-use fermi::use_atom_ref;
 use freya_elements as dioxus_elements;
 use freya_elements::MouseEvent;
-use freya_hooks::{use_animation, AnimationMode};
-
-use crate::THEME;
+use freya_hooks::{use_animation, use_get_theme, AnimationMode};
 
 /// Properties for the Switch component.
 #[derive(Props)]
@@ -20,8 +17,7 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
         use_animation(&cx, || AnimationMode::new_sine_in_out(0.0..=25.0, 200));
     let (start_disabled, restart_disabled, progress_disabled) =
         use_animation(&cx, || AnimationMode::new_sine_in_out(25.0..=0.0, 200));
-    let theme = use_atom_ref(&cx, THEME);
-    let theme = theme.read();
+    let theme = use_get_theme(&cx);
     let hovering = use_state(&cx, || false);
     let clicking = use_state(&cx, || false);
 
