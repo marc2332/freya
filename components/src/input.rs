@@ -1,10 +1,7 @@
 use dioxus::{core::UiEvent, prelude::*};
 use dioxus_elements::events::{KeyCode, KeyboardData};
-use fermi::*;
 use freya_elements as dioxus_elements;
-use freya_hooks::use_focus;
-
-use crate::THEME;
+use freya_hooks::{use_focus, use_get_theme};
 
 /// Properties for the Input component.
 #[derive(Props)]
@@ -16,8 +13,8 @@ pub struct InputProps<'a> {
 /// A controlled Input component.
 #[allow(non_snake_case)]
 pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
-    let theme = use_atom_ref(&cx, THEME);
-    let button_theme = &theme.read().button;
+    let theme = use_get_theme(&cx);
+    let button_theme = &theme.button;
     let (focused, focus) = use_focus(&cx);
     let text = cx.props.value;
     let onkeydown = move |e: UiEvent<KeyboardData>| {

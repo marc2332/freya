@@ -1,12 +1,11 @@
 use dioxus::prelude::*;
-use fermi::use_atom_ref;
 use freya_elements as dioxus_elements;
 use freya_elements::{MouseEvent, WheelEvent};
-use freya_hooks::use_node;
+use freya_hooks::{use_get_theme, use_node};
 
 use crate::{
     get_container_size, get_scroll_position_from_cursor, get_scroll_position_from_wheel,
-    get_scrollbar_pos_and_size, is_scrollbar_visible, Axis, SCROLLBAR_SIZE, THEME,
+    get_scrollbar_pos_and_size, is_scrollbar_visible, Axis, SCROLLBAR_SIZE,
 };
 
 /// Properties for the ScrollView component.
@@ -28,13 +27,13 @@ pub struct ScrollViewProps<'a> {
 /// A Scrollable container.
 #[allow(non_snake_case)]
 pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
-    let theme = use_atom_ref(&cx, THEME);
+    let theme = use_get_theme(&cx);
     let clicking_scrollbar = use_state::<Option<(Axis, f64)>>(&cx, || None);
     let scrolled_y = use_state(&cx, || 0);
     let scrolled_x = use_state(&cx, || 0);
     let (node_ref, size) = use_node(&cx);
 
-    let scrollbar_theme = &theme.read().scrollbar;
+    let scrollbar_theme = &theme.scrollbar;
 
     let padding = cx.props.padding.unwrap_or("0");
     let user_container_width = cx.props.width.unwrap_or("100%");

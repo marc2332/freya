@@ -1,4 +1,23 @@
-use fermi::*;
+use dioxus::prelude::{use_context, use_context_provider, ScopeState, UseSharedState};
+
+pub fn use_init_theme(cx: &ScopeState, theme: Theme) {
+    use_context_provider(cx, || theme);
+}
+
+pub fn use_init_default_theme(cx: &ScopeState) -> Theme {
+    use_context_provider(cx, || DARK_THEME);
+    DARK_THEME
+}
+
+pub fn use_theme(cx: &ScopeState) -> UseSharedState<Theme> {
+    use_context::<Theme>(cx).unwrap()
+}
+
+pub fn use_get_theme(cx: &ScopeState) -> Theme {
+    use_context::<Theme>(cx)
+        .map(|f| f.read().clone())
+        .unwrap_or(DARK_THEME)
+}
 
 /// Theming properties for the Button component.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -48,6 +67,7 @@ pub struct SliderTheme {
 /// Theming properties for Themes.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Theme {
+    pub name: &'static str,
     pub body: BodyTheme,
     pub button: ButtonTheme,
     pub switch: SwitchTheme,
@@ -55,11 +75,9 @@ pub struct Theme {
     pub slider: SliderTheme,
 }
 
-/// Global configured theme.
-pub static THEME: AtomRef<Theme> = |_| DARK_THEME.clone();
-
 /// Light theme
 pub const LIGHT_THEME: Theme = Theme {
+    name: "light",
     body: BodyTheme {
         background: "white",
         color: "black",
@@ -90,6 +108,7 @@ pub const LIGHT_THEME: Theme = Theme {
 
 /// Dark theme
 pub const DARK_THEME: Theme = Theme {
+    name: "dark",
     body: BodyTheme {
         background: "rgb(25, 25, 25)",
         color: "white",

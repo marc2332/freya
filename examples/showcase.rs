@@ -4,7 +4,6 @@
 )]
 
 use dioxus::prelude::*;
-use fermi::*;
 use freya::{dioxus_elements, *};
 
 static FERRIS: &[u8] = include_bytes!("./ferris.svg");
@@ -37,10 +36,11 @@ fn SectionHeader<'a>(cx: Scope<'a>, children: Element<'a>) -> Element {
     )
 }
 
-fn app(cx: Scope) -> Element {
-    let theme = use_atom_ref(&cx, THEME);
-    let current_theme = &theme.read();
-    let body_theme = &current_theme.body;
+#[allow(non_snake_case)]
+fn Body(cx: Scope) -> Element {
+    let theme = use_theme(&cx);
+    let theme = theme.read();
+    let body_theme = &theme.body;
 
     render!(
         rect {
@@ -65,9 +65,15 @@ fn app(cx: Scope) -> Element {
     )
 }
 
+fn app(cx: Scope) -> Element {
+    use_init_theme(&cx, DARK_THEME);
+
+    render!(Body {})
+}
+
 #[allow(non_snake_case)]
 fn FirstSection(cx: Scope) -> Element {
-    let theme = use_atom_ref(&cx, THEME);
+    let theme = use_theme(&cx);
     let current_theme = &theme.read();
     let enabled = current_theme.eq(&LIGHT_THEME);
 
@@ -79,7 +85,7 @@ fn FirstSection(cx: Scope) -> Element {
         }
         Space {},
         Button {
-            onclick: |_| {
+            onclick: move |_| {
                 *theme.write() = DARK_THEME.clone();
             },
             label {

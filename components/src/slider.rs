@@ -1,9 +1,7 @@
 use dioxus::prelude::*;
-use fermi::use_atom_ref;
 use freya_elements as dioxus_elements;
 use freya_elements::{MouseEvent, WheelEvent};
-
-use crate::THEME;
+use freya_hooks::use_get_theme;
 
 /// Properties for the Slider component.
 #[derive(Props)]
@@ -81,8 +79,8 @@ fn ensure_correct_slider_range(value: f64) -> f64 {
 /// ```
 #[allow(non_snake_case)]
 pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
-    let theme = use_atom_ref(&cx, THEME);
-    let theme = &theme.read().slider;
+    let theme = use_get_theme(&cx);
+    let theme = &theme.slider;
     let hovering = use_state(&cx, || false);
     let clicking = use_state(&cx, || false);
     let value = ensure_correct_slider_range(cx.props.value);
