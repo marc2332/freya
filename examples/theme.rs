@@ -10,25 +10,11 @@ fn main() {
     launch(app);
 }
 
-pub fn use_init_theme(cx: &ScopeState, theme: Theme) -> Theme {
-    use_context_provider(cx, || theme.clone());
-    theme
-}
-
-pub fn use_init_default_theme(cx: &ScopeState) -> Theme {
-    use_context_provider(cx, || DARK_THEME);
-    DARK_THEME
-}
-
-pub fn use_theme(cx: &ScopeState) -> UseSharedState<Theme> {
-    use_context::<Theme>(cx).unwrap()
-}
-
 #[allow(non_snake_case)]
-fn Comp(cx: Scope) -> Element {
+fn THeOtherSwitch(cx: Scope) -> Element {
     let theme = use_theme(&cx);
 
-    let is_enabled = *theme.read() == DARK_THEME;
+    let is_enabled = theme.read().name == "dark";
 
     render!(Switch {
         enabled: is_enabled,
@@ -43,18 +29,18 @@ fn Comp(cx: Scope) -> Element {
 }
 
 fn app(cx: Scope) -> Element {
-    use_init_theme(&cx, DARK_THEME);
-    let enabled = use_state(&cx, || false);
+    let enabled = use_state(&cx, || true);
 
     render!(
-        Switch {
-            enabled: *enabled.get(),
-            ontoggled: |_| {
-                enabled.set(!enabled.get());
+        ThemeProvider {
+            theme: LIGHT_THEME,
+            Switch {
+                enabled: *enabled.get(),
+                ontoggled: |_| {
+                    enabled.set(!enabled.get());
+                }
             }
-        }
-        Comp {
-
+            THeOtherSwitch { }
         }
     )
 }
