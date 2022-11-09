@@ -13,8 +13,8 @@ fn main() {
     launch_cfg(vec![(
         app,
         WindowConfig {
-            width: 500,
-            height: 500,
+            width: 700,
+            height: 570,
             title: "Cool experiment",
             decorations: true,
             transparent: false,
@@ -27,7 +27,7 @@ fn app(cx: Scope) -> Element {
     let canvas_pos = use_state(&cx, || (0.0f64, 0.0f64));
     let nodes = use_state(&cx, || vec![(0.0f64, 0.0f64)]);
     let clicking = use_state::<Option<(f64, f64)>>(&cx, || None);
-    let clicking_drag = use_state::<Option<usize>>(&cx, || None);
+    let clicking_drag = use_state::<Option<(usize, (f64, f64))>>(&cx, || None);
 
     let onmouseleave = |_: MouseEvent| {
         if clicking.is_none() {
@@ -37,17 +37,17 @@ fn app(cx: Scope) -> Element {
 
     let onmouseover = |e: MouseEvent| {
         hovering.set(true);
-        if let Some(clicking) = clicking.get() {
+        if let Some(clicking_cords) = clicking.get() {
             let coordinates = e.get_screen_coordinates();
-            canvas_pos.set((coordinates.x + clicking.0, coordinates.y + clicking.1));
+            canvas_pos.set((coordinates.x + clicking_cords.0, coordinates.y + clicking_cords.1));
         }
-        if let Some(node_id) = clicking_drag.get() {
+        if let Some((node_id, clicking_cords)) = clicking_drag.get() {
             let coordinates = e.get_screen_coordinates();
 
             nodes.with_mut(|nodes| {
                 let node = nodes.get_mut(*node_id).unwrap();
-                node.0 = coordinates.x - 50.0 - canvas_pos.0;
-                node.1 = coordinates.y - 50.0 - canvas_pos.1;
+                node.0 = coordinates.x - clicking_cords.0 - canvas_pos.0;
+                node.1 = coordinates.y - clicking_cords.1 - canvas_pos.1;
             });
         }
     };
@@ -96,13 +96,13 @@ fn app(cx: Scope) -> Element {
                             scroll_y: "{node.1}",
                             container {
                                 background: "rgb(20, 20, 20)",
-                                width: "400",
-                                height: "250",
+                                width: "600",
+                                height: "400",
                                 radius: "15",
-                                padding: "10",
+                                padding: "20",
                                 shadow: "0 0 60 35 white",
-                                onmousedown:  move |_: MouseEvent| {
-                                    clicking_drag.set(Some(id));
+                                onmousedown:  move |e: MouseEvent| {
+                                    clicking_drag.set(Some((id, e.get_element_coordinates().to_tuple())));
                                 },
                                 onmouseleave: |_: MouseEvent| {
                                     if clicking.is_none() {
