@@ -122,6 +122,43 @@ pub fn launch_with_title(app: Component<()>, title: &'static str) {
     )])
 }
 
+
+#[cfg(not(doctest))]
+/// Launch a new Window with a custom title, width and height and the default config.
+/// - Decorations enabled
+/// - Transparency disabled
+///
+/// # Example
+/// ```rust
+/// # use dioxus::prelude::*;
+/// # use freya::{dioxus_elements, *};
+/// launch_with_props(app, "Whoah!", (400, 600));
+///
+/// fn app(cx: Scope) -> Element {
+///    render!(
+///         rect {
+///             width: "100%",
+///             height: "100%",
+///             label {
+///                 "Hello World!"
+///             }
+///         }
+///     )
+/// }
+/// ```
+pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height): (u32, u32)) {
+    launch_cfg(vec![(
+        app,
+        WindowConfig {
+            width,
+            height,
+            decorations: true,
+            transparent: false,
+            title,
+        },
+    )])
+}
+
 #[cfg(not(doctest))]
 /// Launch a new Window with custom options:
 /// - Width

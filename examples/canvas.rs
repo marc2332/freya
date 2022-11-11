@@ -10,16 +10,7 @@ use freya::{
 };
 
 fn main() {
-    launch_cfg(vec![(
-        app,
-        WindowConfig {
-            width: 700,
-            height: 570,
-            title: "Cool experiment",
-            decorations: true,
-            transparent: false,
-        },
-    )]);
+    launch_with_props(app, "Freya canvas experiment", (700, 570));
 }
 
 fn app(cx: Scope) -> Element {

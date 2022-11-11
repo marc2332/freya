@@ -82,6 +82,18 @@ pub struct WindowConfig {
     pub transparent: bool,
 }
 
+impl Default for WindowConfig {
+    fn default() -> Self {
+        Self {
+            width: 350,
+            height: 350,
+            decorations: true,
+            title: "Freya app",
+            transparent: false,
+        }
+    }
+}
+
 pub fn create_surface(
     windowed_context: &WindowedContext,
     fb_info: &FramebufferInfo,
