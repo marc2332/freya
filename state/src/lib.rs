@@ -57,6 +57,7 @@ pub fn parse_rgb(color: &str) -> Option<Color> {
 
 pub fn parse_color(color: &str) -> Option<Color> {
     match color {
+        "inherit" => None,
         "red" => Some(Color::RED),
         "green" => Some(Color::GREEN),
         "blue" => Some(Color::BLUE),
