@@ -30,7 +30,10 @@ fn app(cx: Scope) -> Element {
         hovering.set(true);
         if let Some(clicking_cords) = clicking.get() {
             let coordinates = e.get_screen_coordinates();
-            canvas_pos.set((coordinates.x + clicking_cords.0, coordinates.y + clicking_cords.1));
+            canvas_pos.set((
+                coordinates.x + clicking_cords.0,
+                coordinates.y + clicking_cords.1,
+            ));
         }
         if let Some((node_id, clicking_cords)) = clicking_drag.get() {
             let coordinates = e.get_screen_coordinates();

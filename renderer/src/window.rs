@@ -134,7 +134,11 @@ pub fn create_windows_from_config(
         let wb = WindowBuilder::new()
             .with_title(win_config.title)
             .with_decorations(win_config.decorations)
-            .with_transparent(win_config.transparent);
+            .with_transparent(win_config.transparent)
+            .with_inner_size(PhysicalSize::<u32>::new(
+                win_config.width,
+                win_config.height,
+            ));
 
         let cb = glutin::ContextBuilder::new()
             .with_depth_buffer(0)
@@ -149,13 +153,6 @@ pub fn create_windows_from_config(
 
         let windowed_context = unsafe { windowed_context.make_current().unwrap() };
         let window_id = windowed_context.window().id();
-
-        windowed_context
-            .window()
-            .set_inner_size(PhysicalSize::<u32>::new(
-                win_config.width,
-                win_config.height,
-            ));
 
         gl::load_with(|s| windowed_context.get_proc_address(s));
 
