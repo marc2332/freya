@@ -64,6 +64,19 @@ pub struct SliderTheme {
     pub thumb_inner_background: &'static str,
 }
 
+/// Theming properties for the Tooltip component.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct TooltipTheme {
+    pub background: &'static str,
+    pub color: &'static str,
+}
+
+/// Theming properties for the ExternalLink component.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ExternalLinkTheme {
+    pub highlight_color: &'static str,
+}
+
 /// Theming properties for Themes.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Theme {
@@ -73,6 +86,8 @@ pub struct Theme {
     pub switch: SwitchTheme,
     pub scrollbar: ScrollbarTheme,
     pub slider: SliderTheme,
+    pub tooltip: TooltipTheme,
+    pub external_link: ExternalLinkTheme,
 }
 
 /// Light theme
@@ -104,6 +119,13 @@ pub const LIGHT_THEME: Theme = Theme {
         background: "rgb(225, 225, 225)",
         thumb_background: "rgb(135, 135, 135)",
     },
+    tooltip: TooltipTheme {
+        background: "rgb(230,230,230)",
+        color: "rgb(25,25,25)",
+    },
+    external_link: ExternalLinkTheme {
+        highlight_color: "rgb(43,106,208)",
+    },
 };
 
 /// Dark theme
@@ -132,5 +154,12 @@ pub const DARK_THEME: Theme = Theme {
     scrollbar: ScrollbarTheme {
         background: "rgb(35, 35, 35)",
         thumb_background: "rgb(100, 100, 100)",
+    },
+    tooltip: TooltipTheme {
+        background: "rgb(35,35,35)",
+        color: "rgb(240,240,240)",
+    },
+    external_link: ExternalLinkTheme {
+        highlight_color: "rgb(43,106,208)",
     },
 };
