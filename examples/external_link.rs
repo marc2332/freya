@@ -60,8 +60,9 @@ fn app(cx: Scope) -> Element {
                     url: "https://link3.com",
                     label {
                         font_size: "25",
-                        "link3"
-                    }
+                        "link3 (no tooltip)"
+                    },
+                    show_tooltip: false
                 }
             }
         }

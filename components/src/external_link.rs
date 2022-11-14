@@ -10,6 +10,8 @@ pub struct ExternalLinkProps<'a> {
     children: Element<'a>,
     #[props(optional)]
     onerror: Option<EventHandler<'a, ()>>,
+    #[props(optional)]
+    show_tooltip: Option<bool>,
     url: &'a str,
 }
 
@@ -18,6 +20,7 @@ pub fn ExternalLink<'a>(cx: Scope<'a, ExternalLinkProps<'a>>) -> Element {
     let theme = use_get_theme(&cx);
     let theme = &theme.external_link;
     let is_hovering = use_state(&cx, || false);
+    let show_tooltip = cx.props.show_tooltip.unwrap_or(true);
 
     let onmouseover = |_: MouseEvent| {
         is_hovering.with_mut(|v| *v = true);
@@ -53,17 +56,13 @@ pub fn ExternalLink<'a>(cx: Scope<'a, ExternalLinkProps<'a>>) -> Element {
         rect {
             height: "0",
             width: "0",
-            if *is_hovering.get() {
+            (*is_hovering.get() && show_tooltip).then_some({
                 rsx!(
                     Tooltip {
                         url: cx.props.url
                     }
                 )
-            } else {
-                rsx!(
-                    rect {}
-                )
-            }
+            })
         }
     )
 }
