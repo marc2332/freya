@@ -1,8 +1,4 @@
-use dioxus::prelude::*;
-use freya::{
-    dioxus_elements::{self, MouseEvent},
-    *,
-};
+use freya::prelude::*;
 
 fn main() {
     launch_cfg(vec![(

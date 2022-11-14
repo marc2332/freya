@@ -3,8 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus::prelude::*;
-use freya::{dioxus_elements, *};
+use freya::prelude::*;
 
 static FERRIS: &[u8] = include_bytes!("./ferris.svg");
 static RUST_LOGO: &[u8] = include_bytes!("./rust_logo.png");

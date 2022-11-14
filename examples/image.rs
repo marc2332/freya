@@ -3,11 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus::prelude::*;
-use freya::{
-    dioxus_elements::{self, WheelEvent},
-    *,
-};
+use freya::prelude::*;
 
 fn main() {
     launch(app);

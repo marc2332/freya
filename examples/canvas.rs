@@ -3,11 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus::prelude::*;
-use freya::{
-    dioxus_elements::{self, events::MouseEvent},
-    *,
-};
+use freya::prelude::*;
 
 fn main() {
     launch_with_props(app, "Freya canvas experiment", (700, 570));
