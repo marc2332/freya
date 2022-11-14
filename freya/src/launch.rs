@@ -271,11 +271,5 @@ fn with_devtools(
         rdom: Arc<Mutex<RealDom<NodeState>>>,
     }
 
-    VirtualDom::new_with_props(
-        app,
-        DomProps {
-            root,
-            rdom: rdom.clone(),
-        },
-    )
+    VirtualDom::new_with_props(app, DomProps { root, rdom })
 }

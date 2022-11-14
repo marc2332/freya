@@ -24,7 +24,7 @@
 //! }
 //!
 //! ```
-//! 
+//!
 
 #[cfg(feature = "devtools")]
 mod devtools;

@@ -37,7 +37,7 @@ impl PartialEq for DevToolsProps {
 
 #[allow(non_snake_case)]
 pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
-    let children = use_state(&cx, || Vec::<TreeNode>::new());
+    let children = use_state(&cx, Vec::<TreeNode>::new);
     let setter = children.setter();
 
     use_effect(&cx, (), move |_| {
@@ -54,7 +54,7 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
 
                 rdom.traverse_depth_first(|n| {
                     if n.height == 2 {
-                        if root_found == false {
+                        if !root_found {
                             root_found = true;
                         } else {
                             devtools_found = true;
@@ -210,7 +210,7 @@ fn TabButton<'a>(cx: Scope<'a, TabButtonProps<'a>>) -> Element<'a> {
     let theme = use_theme(&cx);
     let button_theme = &theme.read().button;
 
-    let background = use_state(&cx, || button_theme.background.clone());
+    let background = use_state(&cx, || <&str>::clone(&button_theme.background));
     let set_background = background.setter();
 
     use_effect(&cx, &button_theme.clone(), move |button_theme| async move {
@@ -247,7 +247,7 @@ fn TabButton<'a>(cx: Scope<'a, TabButtonProps<'a>>) -> Element<'a> {
 }
 
 #[allow(non_snake_case)]
-fn NodeInspectorBar<'a>(cx: Scope<'a>) -> Element<'a> {
+fn NodeInspectorBar(cx: Scope) -> Element {
     render!(
         container {
             width: "100%",
