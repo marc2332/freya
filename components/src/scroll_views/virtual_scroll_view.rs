@@ -6,8 +6,9 @@ use freya_elements::{MouseEvent, WheelEvent};
 use freya_hooks::{use_get_theme, use_node};
 
 use crate::{
-    get_container_size, get_scroll_position_from_cursor, get_scroll_position_from_wheel,
-    get_scrollbar_pos_and_size, is_scrollbar_visible, Axis, SCROLLBAR_SIZE,
+    get_container_size, get_corrected_scroll_position, get_scroll_position_from_cursor,
+    get_scroll_position_from_wheel, get_scrollbar_pos_and_size, is_scrollbar_visible, Axis,
+    SCROLLBAR_SIZE,
 };
 
 type BuilderFunction<'a, T> = dyn Fn((i32, i32, &'a Option<T>)) -> LazyNodes<'a, 'a>;
@@ -80,10 +81,15 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
     let container_width = get_container_size(vertical_scrollbar_is_visible);
     let container_height = get_container_size(horizontal_scrollbar_is_visible);
 
+    let corrected_scrolled_y =
+        get_corrected_scroll_position(inner_size, size.height, *scrolled_y.get() as f32);
+    let corrected_scrolled_x =
+        get_corrected_scroll_position(inner_size, size.width, *scrolled_x.get() as f32);
+
     let (scrollbar_y, scrollbar_height) =
-        get_scrollbar_pos_and_size(inner_size, size.height, *scrolled_y.get() as f32);
+        get_scrollbar_pos_and_size(inner_size, size.height, corrected_scrolled_y);
     let (scrollbar_x, scrollbar_width) =
-        get_scrollbar_pos_and_size(inner_size, size.width, *scrolled_x.get() as f32);
+        get_scrollbar_pos_and_size(inner_size, size.width, corrected_scrolled_x);
 
     // Moves the Y axis when the user scrolls in the container
     let onwheel = move |e: WheelEvent| {
@@ -150,15 +156,15 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
     };
 
     let (viewport_size, scroll_position) = if user_direction == "vertical" {
-        (size.height, *scrolled_y.get())
+        (size.height, corrected_scrolled_y)
     } else {
-        (size.width, *scrolled_x.get())
+        (size.width, corrected_scrolled_x)
     };
 
     // Calculate from what to what items must be rendered
     let render_range = get_render_range(
         viewport_size,
-        scroll_position,
+        scroll_position as i32,
         items_size as i32,
         items_length,
     );
