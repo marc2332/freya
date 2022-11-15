@@ -18,25 +18,29 @@ fn app(cx: Scope) -> Element {
             width: "100%",
             height: "100%",
             background: "black",
-            Button {
-                onclick: move |_| {
-                    percentage.set(20.0);
-                },
-                label {
-                    width: "80",
-                    "Reset size"
+            container {
+                width: "100%",
+                height: "60",
+                Button {
+                    onclick: move |_| {
+                        percentage.set(20.0);
+                    },
+                    label {
+                        width: "80",
+                        "Reset size"
+                    }
                 }
-            }
-            Slider {
-                width: 100.0,
-                value: *percentage.get(),
-                onmoved: |p| {
-                    percentage.set(p);
+                Slider {
+                    width: 100.0,
+                    value: *percentage.get(),
+                    onmoved: |p| {
+                        percentage.set(p);
+                    }
                 }
             }
             ScrollView {
                 show_scrollbar: true,
-                height: "calc(100% - 40)",
+                height: "calc(100% - 60)",
                 rect {
                     background: "red",
                     direction: "both",

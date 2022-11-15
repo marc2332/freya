@@ -4,8 +4,9 @@ use freya_elements::{MouseEvent, WheelEvent};
 use freya_hooks::{use_get_theme, use_node};
 
 use crate::{
-    get_container_size, get_scroll_position_from_cursor, get_scroll_position_from_wheel,
-    get_scrollbar_pos_and_size, is_scrollbar_visible, Axis, SCROLLBAR_SIZE,
+    get_container_size, get_corrected_scroll_position, get_scroll_position_from_cursor,
+    get_scroll_position_from_wheel, get_scrollbar_pos_and_size, is_scrollbar_visible, Axis,
+    SCROLLBAR_SIZE,
 };
 
 /// Properties for the ScrollView component.
@@ -49,10 +50,15 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     let container_width = get_container_size(vertical_scrollbar_is_visible);
     let container_height = get_container_size(horizontal_scrollbar_is_visible);
 
+    let corrected_scrolled_y =
+        get_corrected_scroll_position(size.inner_height, size.height, *scrolled_y.get() as f32);
+    let corrected_scrolled_x =
+        get_corrected_scroll_position(size.inner_width, size.width, *scrolled_x.get() as f32);
+
     let (scrollbar_y, scrollbar_height) =
-        get_scrollbar_pos_and_size(size.inner_height, size.height, *scrolled_y.get() as f32);
+        get_scrollbar_pos_and_size(size.inner_height, size.height, corrected_scrolled_y);
     let (scrollbar_x, scrollbar_width) =
-        get_scrollbar_pos_and_size(size.inner_width, size.width, *scrolled_x.get() as f32);
+        get_scrollbar_pos_and_size(size.inner_width, size.width, corrected_scrolled_x);
 
     // Moves the Y axis when the user scrolls in the container
     let onwheel = move |e: WheelEvent| {
@@ -118,7 +124,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     };
 
     render!(
-        rect {
+        container {
             direction: "horizontal",
             width: "{user_container_width}",
             height: "{user_container_height}",
@@ -133,8 +139,8 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
                     height: "100%",
                     width: "100%",
                     direction: "{user_direction}",
-                    scroll_y: "{scrolled_y}",
-                    scroll_x: "{scrolled_x}",
+                    scroll_y: "{corrected_scrolled_y}",
+                    scroll_x: "{corrected_scrolled_x}",
                     reference: node_ref,
                     onwheel: onwheel,
                     &cx.props.children
