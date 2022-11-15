@@ -31,4 +31,4 @@ dioxus-router = { git = "https://github.com/marc2332/dioxus", branch = "fix/remo
 tokio = { version = "1.17.0", features = ["sync", "rt-multi-thread", "time"] }
 anymap = "0.12.1"
 fxhash = "0.2.1"
-skia-safe = { version = "0.55.0" }
+skia-safe = { version = "0.56.1" }
