@@ -94,11 +94,13 @@ pub fn get_scroll_position_from_wheel(
     new_position as i32
 }
 
+// Limit the scroll position to the scroll view bounds to avoid overflows
 pub fn get_corrected_scroll_position(
     inner_size: f32,
     viewport_size: f32,
     scroll_position: f32,
 ) -> f32 {
+    // Considering it was a vertical scroll view, the start would be on top and the end on bottom.
     let overscrolled_start = scroll_position > 0.0;
     let overscrolled_end = (-scroll_position + viewport_size) > inner_size;
 
