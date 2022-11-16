@@ -47,10 +47,10 @@ jobs:
     - name: Run coverage
       if: runner.os == 'Linux'
       run: |
-        export RUSTFLAGS="-Cinstrument-coverage" \
-        cargo install grcov \
-        rustup component add llvm-tools-preview \
-        grcov . --binary-path ./target/debug/ -s . -t lcov --branch --ignore-not-existing --ignore "/*" -o lcov.info \
-        curl -Os https://uploader.codecov.io/latest/linux/codecov \
-        chmod +x codecov \
+        export RUSTFLAGS="-Cinstrument-coverage"
+        cargo install grcov 
+        rustup component add llvm-tools-preview 
+        grcov . --binary-path ./target/debug/ -s . -t lcov --branch --ignore-not-existing --ignore "/*" -o lcov.info 
+        curl -Os https://uploader.codecov.io/latest/linux/codecov 
+        chmod +x codecov 
         ./codecov
