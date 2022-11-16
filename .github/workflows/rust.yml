@@ -42,7 +42,7 @@ jobs:
       run: cargo clippy
     - name: Run Linux tests
       if: runner.os == 'Linux'
-      run: 
+      run: |
         export RUSTFLAGS="-Cinstrument-coverage"
         cargo test --workspace --features x11
     - name: Run MacOS and Windows tests
