@@ -32,12 +32,6 @@ jobs:
           target/            
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: ${{ runner.os }}-cargo-
-    - name: Run coverage
-      if: runner.os == 'Linux'
-      run: |
-        curl -Os https://uploader.codecov.io/latest/linux/codecov \
-        chmod +x codecov \
-        ./codecov
     - name: Install linux dependencies
       if: runner.os == 'Linux'
       run: |
@@ -50,3 +44,12 @@ jobs:
     - name: Run MacOS and Windows tests
       if: runner.os != 'Linux'
       run: cargo test --workspace
+    - name: Run coverage
+      if: runner.os == 'Linux'
+      run: |
+        export RUSTFLAGS="-Cinstrument-coverage"
+        cargo install grcov
+        grcov . --binary-path ./target/debug/ -s . -t lcov --branch --ignore-not-existing --ignore "/*" -o lcov.info
+        curl -Os https://uploader.codecov.io/latest/linux/codecov \
+        chmod +x codecov \
+        ./codecov
