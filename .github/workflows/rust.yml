@@ -32,6 +32,12 @@ jobs:
           target/            
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: ${{ runner.os }}-cargo-
+    - name: Run coverage
+      if: runner.os == 'Linux'
+      run: |
+        curl -Os https://uploader.codecov.io/latest/linux/codecov \
+        chmod +x codecov \
+        ./codecov
     - name: Install linux dependencies
       if: runner.os == 'Linux'
       run: |
