@@ -42,14 +42,15 @@ jobs:
       run: cargo clippy
     - name: Run Linux tests
       if: runner.os == 'Linux'
-      run: cargo test --workspace --features x11
+      run: 
+        export RUSTFLAGS="-Cinstrument-coverage"
+        cargo test --workspace --features x11
     - name: Run MacOS and Windows tests
       if: runner.os != 'Linux'
       run: cargo test --workspace
     - name: Run coverage
       if: runner.os == 'Linux'
       run: |
-        export RUSTFLAGS="-Cinstrument-coverage"
         cargo install grcov --force
         rustup component add llvm-tools-preview 
         grcov . --binary-path ./target/debug/ -s . -t lcov --branch --ignore-not-existing --ignore "/*" -o lcov.info 
