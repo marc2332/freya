@@ -44,6 +44,7 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         export RUSTFLAGS="-Cinstrument-coverage"
+        export LLVM_PROFILE_FILE='cargo-test-%p-%m.profraw'
         cargo test --workspace --features x11
     - name: Run MacOS and Windows tests
       if: runner.os != 'Linux'
