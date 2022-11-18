@@ -178,7 +178,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
         .collect::<Vec<LazyNodes>>();
 
     render!(
-        rect {
+        container {
             direction: "horizontal",
             width: "{user_container_width}",
             height: "{user_container_height}",
