@@ -157,7 +157,7 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
 /// }
 /// ```
 pub fn launch_cfg(wins_config: Vec<(Component<()>, WindowConfig)>) {
-    use freya_layout_common::LayoutMemorizer;
+    use freya_common::LayoutMemorizer;
 
     let wins = wins_config
         .into_iter()

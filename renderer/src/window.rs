@@ -1,26 +1,28 @@
-use freya_layout_common::NodeArea;
+use freya_common::NodeArea;
+use freya_processor::{
+    events::EventsProcessor, process_work, SafeDOM, SafeEventEmitter, SafeFreyaEvents,
+    SafeLayoutManager,
+};
+use gl::types::*;
+use glutin::dpi::PhysicalSize;
 use glutin::event_loop::EventLoop;
+use glutin::window::WindowId;
+use glutin::{window::WindowBuilder, GlProfile};
+use skia_safe::Color;
 use skia_safe::{gpu::DirectContext, textlayout::FontCollection};
+use skia_safe::{
+    gpu::{gl::FramebufferInfo, BackendRenderTarget, SurfaceOrigin},
+    ColorType, Surface,
+};
 use std::{
     sync::{Arc, Mutex},
     thread,
     time::{Duration, Instant},
 };
 
-use crate::work_loop::work_loop;
-use crate::{
-    events_processor::EventsProcessor, SafeDOM, SafeEventEmitter, SafeFreyaEvents,
-    SafeLayoutManager, WindowedContext,
-};
-use gl::types::*;
-use glutin::dpi::PhysicalSize;
-use glutin::window::WindowId;
-use glutin::{window::WindowBuilder, GlProfile};
-use skia_safe::Color;
-use skia_safe::{
-    gpu::{gl::FramebufferInfo, BackendRenderTarget, SurfaceOrigin},
-    ColorType, Surface,
-};
+use crate::renderer::render_skia;
+
+type WindowedContext = glutin::ContextWrapper<glutin::PossiblyCurrent, glutin::window::Window>;
 
 /// Information related go a specific window
 pub struct WindowEnv {
@@ -51,9 +53,8 @@ impl WindowEnv {
 
         let window_size = self.windowed_context.window().inner_size();
 
-        work_loop(
+        process_work(
             &self.dom,
-            canvas,
             NodeArea {
                 width: window_size.width as f32,
                 height: window_size.height as f32,
@@ -65,6 +66,12 @@ impl WindowEnv {
             &mut self.font_collection,
             &mut self.events_processor,
             &self.layout_memorizer,
+            canvas,
+            |dom, element, font_collection, viewports_collection, canvas| {
+                canvas.save();
+                render_skia(dom, canvas, element, font_collection, viewports_collection);
+                canvas.restore();
+            },
         );
 
         self.gr_context.flush(None);

@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use freya_layout_common::NodeReferenceLayout;
+use freya_common::NodeReferenceLayout;
 use tokio::sync::{mpsc::unbounded_channel, mpsc::UnboundedSender};
 
 /// Creates a reference to the desired node's layout size

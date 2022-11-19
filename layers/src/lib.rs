@@ -1,6 +1,6 @@
 use dioxus::core::ElementId;
 use dioxus_native_core::real_dom::{Node, NodeType};
-use freya_layout_common::NodeArea;
+use freya_common::NodeArea;
 use freya_node_state::NodeState;
 use rustc_hash::FxHashMap;
 
@@ -14,7 +14,7 @@ pub struct Layers {
     pub layers: FxHashMap<i16, FxHashMap<ElementId, RenderData>>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct RenderData {
     pub node_state: NodeState,
     pub node_area: NodeArea,

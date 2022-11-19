@@ -81,6 +81,7 @@ freya = { git = "https://github.com/marc2332/freya" }
 - Animation hook utility
 - SVG Support
 - Devtools / Wireframe inspector
+- Headless testing
 
 ### Goals 😁
 - Easy to use

@@ -1,14 +1,11 @@
-use dioxus_core::{exports::futures_channel::mpsc::UnboundedSender, SchedulerMsg};
-use dioxus_native_core::real_dom::RealDom;
-use freya_layout_common::LayoutMemorizer;
-use freya_node_state::NodeState;
-use glutin::event::{ElementState, MouseButton};
+use freya_processor::events::FreyaEvent;
+use freya_processor::{SafeDOM, SafeEventEmitter, SafeLayoutManager};
+use glutin::event::ElementState;
 use glutin::window::WindowId;
 use glutin::{event::Event, event_loop::ControlFlow};
 use glutin::{
     event::{KeyEvent, MouseScrollDelta, TouchPhase, WindowEvent},
     event_loop::EventLoop,
-    keyboard::Key,
 };
 use skia_safe::{textlayout::FontCollection, FontMgr};
 use std::{
@@ -17,38 +14,8 @@ use std::{
 };
 pub use window::{create_surface, create_windows_from_config, WindowConfig, WindowEnv};
 
-mod events_processor;
 mod renderer;
 mod window;
-mod work_loop;
-
-type SafeDOM = Arc<Mutex<RealDom<NodeState>>>;
-type SafeEventEmitter = Arc<Mutex<Option<UnboundedSender<SchedulerMsg>>>>;
-type SafeLayoutManager = Arc<Mutex<LayoutMemorizer>>;
-type WindowedContext = glutin::ContextWrapper<glutin::PossiblyCurrent, glutin::window::Window>;
-pub(crate) type SafeFreyaEvents = Arc<Mutex<Vec<FreyaEvent>>>;
-
-/// Events emitted in Freya.
-#[derive(Clone, Debug)]
-pub(crate) enum FreyaEvent {
-    /// A Mouse Event.
-    Mouse {
-        name: &'static str,
-        cursor: (f64, f64),
-        button: Option<MouseButton>,
-    },
-    /// A Wheel event.
-    Wheel {
-        name: &'static str,
-        scroll: (f64, f64),
-        cursor: (f64, f64),
-    },
-    /// A Keyboard event.
-    Keyboard {
-        name: &'static str,
-        code: Key<'static>,
-    },
-}
 
 /// Run the Windows Event Loop
 pub fn run(windows_config: Vec<(SafeDOM, SafeEventEmitter, SafeLayoutManager, WindowConfig)>) {
