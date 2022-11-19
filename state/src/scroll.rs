@@ -3,9 +3,9 @@ use std::sync::{Arc, Mutex};
 use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
 use dioxus_native_core::state::ParentDepState;
 use dioxus_native_core_macro::sorted_str_slice;
-use freya_layout_common::LayoutMemorizer;
+use freya_common::LayoutMemorizer;
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct Scroll {
     pub scroll_y: f32,
     pub scroll_x: f32,

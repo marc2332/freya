@@ -1,41 +1,57 @@
-use dioxus_core::{ElementId, EventPriority, SchedulerMsg, UserEvent};
-use dioxus_native_core::real_dom::{Node, NodeType};
+use dioxus_core::{
+    exports::futures_channel::mpsc::UnboundedSender, ElementId, EventPriority, SchedulerMsg,
+    UserEvent,
+};
+use dioxus_native_core::real_dom::{Node, NodeType, RealDom};
 use euclid::{Length, Point2D};
+use freya_common::{LayoutMemorizer, NodeArea};
 use freya_elements::{
     events::{KeyboardData, MouseData},
     WheelData,
 };
 use freya_layers::{Layers, NodeData, RenderData};
 use freya_layout::measure_node_layout;
-use freya_layout_common::NodeArea;
 use freya_node_state::NodeState;
 use rustc_hash::FxHashMap;
-use skia_safe::{textlayout::FontCollection, Canvas, Color};
-use std::{ops::Index, sync::Arc};
-
-use crate::{
-    events_processor::EventsProcessor, renderer::render_skia, FreyaEvent, SafeDOM,
-    SafeEventEmitter, SafeFreyaEvents, SafeLayoutManager,
+use skia_safe::{textlayout::FontCollection, Color};
+use std::{
+    ops::Index,
+    sync::{Arc, Mutex},
 };
 
+pub mod events;
+
+use events::{EventsProcessor, FreyaEvent};
+
+pub type SafeDOM = Arc<Mutex<RealDom<NodeState>>>;
+pub type SafeEventEmitter = Arc<Mutex<Option<UnboundedSender<SchedulerMsg>>>>;
+pub type SafeLayoutManager = Arc<Mutex<LayoutMemorizer>>;
+pub type SafeFreyaEvents = Arc<Mutex<Vec<FreyaEvent>>>;
 pub type ViewportsCollection = FxHashMap<ElementId, (Option<NodeArea>, Vec<ElementId>)>;
 
 /// The Work Loop has a few jobs:
 /// - Measure the nodes layouts
 /// - Organize the nodes layouts in layers
 /// - Calculate all the nodes viewports
-/// - Paint the nodes
+/// - Call the render to paint
 /// - Calculate what events must be triggered
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn work_loop(
+pub fn process_work<HookOptions>(
     mut dom: &SafeDOM,
-    mut canvas: &mut Canvas,
     area: NodeArea,
     freya_events: SafeFreyaEvents,
     event_emitter: &SafeEventEmitter,
     font_collection: &mut FontCollection,
     events_processor: &mut EventsProcessor,
     manager: &SafeLayoutManager,
+    hook_options: &mut HookOptions,
+    render_hook: impl Fn(
+        &SafeDOM,
+        &RenderData,
+        &mut FontCollection,
+        &ViewportsCollection,
+        &mut HookOptions,
+    ),
 ) {
     let root: Node<NodeState> = {
         let dom = dom.lock().unwrap();
@@ -117,15 +133,14 @@ pub(crate) fn work_loop(
                 }
             }
 
-            canvas.save();
-            render_skia(
-                &mut dom,
-                &mut canvas,
+            // Let the render know what to actually render
+            render_hook(
+                dom,
                 element,
                 font_collection,
                 &viewports_collection,
-            );
-            canvas.restore();
+                hook_options,
+            )
         }
     }
 
@@ -263,7 +278,6 @@ pub(crate) fn work_loop(
             };
             if let Some(event) = event {
                 new_events.push(event.clone());
-
                 event_emitter
                     .lock()
                     .unwrap()

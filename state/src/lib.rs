@@ -16,7 +16,7 @@ pub use scroll::*;
 pub use size::*;
 pub use style::*;
 
-#[derive(Clone, State, Default)]
+#[derive(Clone, State, Default, Debug)]
 pub struct NodeState {
     #[parent_dep_state(cursor_settings)]
     pub cursor_settings: CursorSettings,

@@ -24,6 +24,5 @@ freya-layout = { path = "../layout", version = "0.1.0" }
 freya-node-state = { path = "../state", version = "0.1.0" }
 freya-elements = { path = "../elements", version = "0.1.0" }
 freya-layers = { path = "../layers", version = "0.1.0" }
-freya-layout-common = { path = "../layout-common", version = "0.1.0" }
-rustc-hash = "1.1.0"
-euclid = "0.22.7"
+freya-common = { path = "../common", version = "0.1.0" }
+freya-processor = { path = "../processor", version = "0.1.0" }

@@ -3,6 +3,7 @@ use dioxus_native_core::real_dom::{Node, NodeType};
 use dioxus_native_core::traversable::Traversable;
 use freya_layers::RenderData;
 use freya_node_state::NodeState;
+use freya_processor::ViewportsCollection;
 use skia_safe::textlayout::{Paragraph, RectHeightStyle, RectWidthStyle, TextHeightBehavior};
 use skia_safe::Color;
 use skia_safe::{
@@ -12,12 +13,11 @@ use skia_safe::{
     PathDirection, Rect,
 };
 
-use crate::work_loop::ViewportsCollection;
 use crate::SafeDOM;
 
 pub fn render_skia(
-    dom: &mut &SafeDOM,
-    canvas: &mut &mut Canvas,
+    dom: &SafeDOM,
+    canvas: &mut Canvas,
     node: &RenderData,
     font_collection: &mut FontCollection,
     viewports_collection: &ViewportsCollection,

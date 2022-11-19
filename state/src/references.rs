@@ -5,10 +5,10 @@ use dioxus_core::AttributeValue;
 use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
 use dioxus_native_core::state::ParentDepState;
 use dioxus_native_core_macro::sorted_str_slice;
-use freya_layout_common::NodeReferenceLayout;
+use freya_common::NodeReferenceLayout;
 use tokio::sync::mpsc::UnboundedSender;
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct References {
     pub node_ref: Option<UnboundedSender<NodeReferenceLayout>>,
     pub cursor_ref: Option<CursorReference>,

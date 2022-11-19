@@ -654,16 +654,26 @@ dependencies = [
  "dioxus-core",
  "dioxus-native-core",
  "dioxus-router",
+ "freya-common",
  "freya-components",
  "freya-elements",
  "freya-hooks",
  "freya-layout",
- "freya-layout-common",
  "freya-node-state",
  "freya-renderer",
  "fxhash",
  "skia-safe",
  "tokio",
+]
+
+[[package]]
+name = "freya-common"
+version = "0.1.0"
+dependencies = [
+ "dioxus",
+ "dioxus-core",
+ "dioxus-native-core",
+ "dioxus-native-core-macro",
 ]
 
 [[package]]
@@ -694,8 +704,8 @@ name = "freya-hooks"
 version = "0.1.0"
 dependencies = [
  "dioxus",
+ "freya-common",
  "freya-elements",
- "freya-layout-common",
  "freya-node-state",
  "tokio",
  "tween",
@@ -709,7 +719,7 @@ version = "0.1.0"
 dependencies = [
  "dioxus",
  "dioxus-native-core",
- "freya-layout-common",
+ "freya-common",
  "freya-node-state",
  "rustc-hash",
 ]
@@ -723,25 +733,15 @@ dependencies = [
  "dioxus-core",
  "dioxus-native-core",
  "dioxus-native-core-macro",
+ "freya-common",
  "freya-components",
  "freya-elements",
  "freya-layers",
- "freya-layout-common",
  "freya-node-state",
  "fxhash",
  "lazy_static",
  "skia-safe",
  "tokio",
-]
-
-[[package]]
-name = "freya-layout-common"
-version = "0.1.0"
-dependencies = [
- "dioxus",
- "dioxus-core",
- "dioxus-native-core",
- "dioxus-native-core-macro",
 ]
 
 [[package]]
@@ -753,11 +753,28 @@ dependencies = [
  "dioxus-core",
  "dioxus-native-core",
  "dioxus-native-core-macro",
+ "freya-common",
  "freya-elements",
- "freya-layout-common",
  "fxhash",
  "skia-safe",
  "tokio",
+]
+
+[[package]]
+name = "freya-processor"
+version = "0.1.0"
+dependencies = [
+ "dioxus-core",
+ "dioxus-native-core",
+ "euclid",
+ "freya-common",
+ "freya-elements",
+ "freya-layers",
+ "freya-layout",
+ "freya-node-state",
+ "glutin_tao",
+ "rustc-hash",
+ "skia-safe",
 ]
 
 [[package]]
@@ -766,16 +783,50 @@ version = "0.1.0"
 dependencies = [
  "dioxus-core",
  "dioxus-native-core",
- "euclid",
+ "freya-common",
  "freya-elements",
  "freya-layers",
  "freya-layout",
- "freya-layout-common",
  "freya-node-state",
+ "freya-processor",
  "gl",
  "glutin_tao",
- "rustc-hash",
  "skia-safe",
+]
+
+[[package]]
+name = "freya-testing"
+version = "0.1.0"
+dependencies = [
+ "anymap",
+ "dioxus",
+ "dioxus-core",
+ "dioxus-native-core",
+ "dioxus-native-core-macro",
+ "freya-common",
+ "freya-components",
+ "freya-elements",
+ "freya-node-state",
+ "freya-processor",
+ "futures",
+ "glutin_tao",
+ "skia-safe",
+ "tokio",
+]
+
+[[package]]
+name = "futures"
+version = "0.3.25"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "38390104763dc37a5145a53c29c63c1290b5d316d6086ec32c293f6736051bb0"
+dependencies = [
+ "futures-channel",
+ "futures-core",
+ "futures-executor",
+ "futures-io",
+ "futures-sink",
+ "futures-task",
+ "futures-util",
 ]
 
 [[package]]
@@ -785,6 +836,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "52ba265a92256105f45b719605a571ffe2d1f0fea3807304b522c1d778f79eed"
 dependencies = [
  "futures-core",
+ "futures-sink",
 ]
 
 [[package]]
@@ -839,9 +891,13 @@ version = "0.3.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "197676987abd2f9cadff84926f410af1c183608d36641465df73ae8211dc65d6"
 dependencies = [
+ "futures-channel",
  "futures-core",
+ "futures-io",
  "futures-macro",
+ "futures-sink",
  "futures-task",
+ "memchr",
  "pin-project-lite",
  "pin-utils",
  "slab",
@@ -2390,7 +2446,19 @@ dependencies = [
  "num_cpus",
  "pin-project-lite",
  "socket2",
+ "tokio-macros",
  "winapi",
+]
+
+[[package]]
+name = "tokio-macros"
+version = "1.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9724f9a975fb987ef7a3cd9be0350edcbe130698af5b8f7a631e23d42d052484"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

@@ -4,10 +4,30 @@ use dioxus_core::{ElementId, EventPriority, UserEvent};
 use euclid::Point2D;
 use freya_elements::MouseData;
 use freya_layers::RenderData;
-use glutin::event::MouseButton;
+use glutin::{event::MouseButton, keyboard::Key};
 use rustc_hash::FxHashMap;
 
-use crate::FreyaEvent;
+/// Events emitted in Freya.
+#[derive(Clone, Debug)]
+pub enum FreyaEvent {
+    /// A Mouse Event.
+    Mouse {
+        name: &'static str,
+        cursor: (f64, f64),
+        button: Option<MouseButton>,
+    },
+    /// A Wheel event.
+    Wheel {
+        name: &'static str,
+        scroll: (f64, f64),
+        cursor: (f64, f64),
+    },
+    /// A Keyboard event.
+    Keyboard {
+        name: &'static str,
+        code: Key<'static>,
+    },
+}
 
 #[derive(Default)]
 struct ElementState {
@@ -23,7 +43,7 @@ struct ElementState {
 /// At the moment, whether if it has entered or not is defined by the mouseover event.
 
 #[derive(Default)]
-pub(crate) struct EventsProcessor {
+pub struct EventsProcessor {
     states: HashMap<ElementId, ElementState>,
 }
 
