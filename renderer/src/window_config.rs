@@ -1,6 +1,6 @@
 /// Configuration for a window.
 #[derive(Clone)]
-pub struct WindowConfig<T> {
+pub struct WindowConfig<T: Clone> {
     pub width: u32,
     pub height: u32,
     pub decorations: bool,
@@ -9,7 +9,7 @@ pub struct WindowConfig<T> {
     pub state: Option<T>,
 }
 
-impl<T> Default for WindowConfig<T> {
+impl<T: Clone> Default for WindowConfig<T> {
     fn default() -> Self {
         Self {
             width: 350,
@@ -22,7 +22,7 @@ impl<T> Default for WindowConfig<T> {
     }
 }
 
-impl<T> WindowConfig<T> {
+impl<T: Clone> WindowConfig<T> {
     pub fn builder() -> WindowConfigBuilder<T> {
         WindowConfigBuilder::default()
     }
@@ -52,7 +52,7 @@ impl<T> Default for WindowConfigBuilder<T> {
     }
 }
 
-impl<T> WindowConfigBuilder<T> {
+impl<T: Clone> WindowConfigBuilder<T> {
     pub fn with_width(mut self, width: u32) -> Self {
         self.width = width;
         self

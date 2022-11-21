@@ -20,7 +20,7 @@ mod window;
 mod window_config;
 
 /// Run the Windows Event Loop
-pub fn run<T: 'static>(
+pub fn run<T: 'static + Clone>(
     windows_config: Vec<(
         SafeDOM,
         SafeEventEmitter,

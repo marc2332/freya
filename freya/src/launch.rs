@@ -159,7 +159,7 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
 ///     )
 /// }
 /// ```
-pub fn launch_cfg<T: 'static>(wins_config: Vec<(Component<()>, WindowConfig<T>)>) {
+pub fn launch_cfg<T: 'static + Clone + Send>(wins_config: Vec<(Component<()>, WindowConfig<T>)>) {
     use freya_common::LayoutMemorizer;
 
     let wins = wins_config
@@ -170,6 +170,7 @@ pub fn launch_cfg<T: 'static>(wins_config: Vec<(Component<()>, WindowConfig<T>)>
                 Arc::new(Mutex::new(None));
 
             let layout_memorizer = Arc::new(Mutex::new(LayoutMemorizer::new()));
+            let state = win.state.clone();
 
             {
                 let layout_memorizer = layout_memorizer.clone();
@@ -187,6 +188,10 @@ pub fn launch_cfg<T: 'static>(wins_config: Vec<(Component<()>, WindowConfig<T>)>
                             VirtualDom::new(root)
                         }
                     };
+
+                    if let Some(state) = state.clone() {
+                        dom.base_scope().provide_context(state);
+                    }
 
                     let muts = dom.rebuild();
                     let to_update = rdom.lock().unwrap().apply_mutations(vec![muts]);
@@ -212,8 +217,13 @@ pub fn launch_cfg<T: 'static>(wins_config: Vec<(Component<()>, WindowConfig<T>)>
 
                                 let to_update = rdom.lock().unwrap().apply_mutations(mutations);
 
+                                if let Some(state) = state.clone() {
+                                    dom.base_scope().provide_context(state);
+                                }
+
                                 let mut ctx = AnyMap::new();
                                 ctx.insert(layout_memorizer.clone());
+
                                 if !to_update.is_empty() {
                                     rdom.lock().unwrap().update_state(&dom, to_update, ctx);
                                 }

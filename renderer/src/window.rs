@@ -27,7 +27,7 @@ type WindowedContext = glutin::ContextWrapper<glutin::PossiblyCurrent, glutin::w
 type SharedWindow<T> = Arc<Mutex<WindowEnv<T>>>;
 
 /// Information related to a specific window
-pub struct WindowEnv<T> {
+pub struct WindowEnv<T: Clone> {
     pub(crate) surface: Surface,
     pub(crate) gr_context: DirectContext,
     pub(crate) windowed_context: WindowedContext,
@@ -43,7 +43,7 @@ pub struct WindowEnv<T> {
     pub(crate) resizing_timer: Arc<Mutex<Instant>>,
 }
 
-impl<T> WindowEnv<T> {
+impl<T: Clone> WindowEnv<T> {
     pub fn redraw(&mut self) {
         let canvas = self.surface.canvas();
 
@@ -108,7 +108,7 @@ pub fn create_surface(
     .unwrap()
 }
 
-pub fn create_windows_from_config<T>(
+pub fn create_windows_from_config<T: Clone>(
     windows_config: Vec<(
         SafeDOM,
         SafeEventEmitter,
