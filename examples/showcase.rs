@@ -11,13 +11,13 @@ static RUST_LOGO: &[u8] = include_bytes!("./rust_logo.png");
 fn main() {
     launch_cfg(vec![(
         app,
-        WindowConfig {
-            width: 550,
-            height: 700,
-            decorations: true,
-            title: "Freya Showcase",
-            transparent: false,
-        },
+        WindowConfig::<()>::builder()
+            .with_width(550)
+            .with_height(700)
+            .with_decorations(true)
+            .with_transparency(false)
+            .with_title("Freya showcase!")
+            .build(),
     )]);
 }
 

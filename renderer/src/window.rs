@@ -21,11 +21,13 @@ use std::{
 };
 
 use crate::renderer::render_skia;
+use crate::window_config::WindowConfig;
 
 type WindowedContext = glutin::ContextWrapper<glutin::PossiblyCurrent, glutin::window::Window>;
+type SharedWindow<T> = Arc<Mutex<WindowEnv<T>>>;
 
-/// Information related go a specific window
-pub struct WindowEnv {
+/// Information related to a specific window
+pub struct WindowEnv<T> {
     pub(crate) surface: Surface,
     pub(crate) gr_context: DirectContext,
     pub(crate) windowed_context: WindowedContext,
@@ -36,12 +38,12 @@ pub struct WindowEnv {
     pub(crate) event_emitter: SafeEventEmitter,
     pub(crate) font_collection: FontCollection,
     pub(crate) events_processor: EventsProcessor,
-    pub(crate) win_config: WindowConfig,
+    pub(crate) win_config: WindowConfig<T>,
     pub(crate) is_resizing: Arc<Mutex<bool>>,
     pub(crate) resizing_timer: Arc<Mutex<Instant>>,
 }
 
-impl WindowEnv {
+impl<T> WindowEnv<T> {
     pub fn redraw(&mut self) {
         let canvas = self.surface.canvas();
 
@@ -79,28 +81,6 @@ impl WindowEnv {
     }
 }
 
-/// Configuration for a window.
-#[derive(Clone)]
-pub struct WindowConfig {
-    pub width: u32,
-    pub height: u32,
-    pub decorations: bool,
-    pub title: &'static str,
-    pub transparent: bool,
-}
-
-impl Default for WindowConfig {
-    fn default() -> Self {
-        Self {
-            width: 350,
-            height: 350,
-            decorations: true,
-            title: "Freya app",
-            transparent: false,
-        }
-    }
-}
-
 pub fn create_surface(
     windowed_context: &WindowedContext,
     fb_info: &FramebufferInfo,
@@ -128,11 +108,16 @@ pub fn create_surface(
     .unwrap()
 }
 
-pub fn create_windows_from_config(
-    windows_config: Vec<(SafeDOM, SafeEventEmitter, SafeLayoutManager, WindowConfig)>,
+pub fn create_windows_from_config<T>(
+    windows_config: Vec<(
+        SafeDOM,
+        SafeEventEmitter,
+        SafeLayoutManager,
+        WindowConfig<T>,
+    )>,
     event_loop: &EventLoop<WindowId>,
     font_collection: FontCollection,
-) -> Arc<Mutex<Vec<Arc<Mutex<WindowEnv>>>>> {
+) -> Arc<Mutex<Vec<SharedWindow<T>>>> {
     let wins = Arc::new(Mutex::new(vec![]));
 
     for (skia_dom, event_emitter, layout_memorizer, win_config) in windows_config {

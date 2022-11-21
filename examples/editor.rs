@@ -3,13 +3,13 @@ use freya::prelude::*;
 fn main() {
     launch_cfg(vec![(
         app,
-        WindowConfig {
-            width: 900,
-            height: 500,
-            decorations: true,
-            title: "Editors",
-            transparent: false,
-        },
+        WindowConfig::<()>::builder()
+            .with_width(900)
+            .with_height(500)
+            .with_decorations(true)
+            .with_transparency(false)
+            .with_title("Editor")
+            .build(),
     )]);
 }
 

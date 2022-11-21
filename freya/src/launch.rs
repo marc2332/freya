@@ -37,12 +37,13 @@ use std::sync::Mutex;
 pub fn launch(app: Component<()>) {
     launch_cfg(vec![(
         app,
-        WindowConfig {
+        WindowConfig::<()> {
             width: 400,
             height: 300,
             decorations: true,
             transparent: false,
             title: "Freya",
+            state: None,
         },
     )])
 }
@@ -75,12 +76,13 @@ pub fn launch(app: Component<()>) {
 pub fn launch_with_title(app: Component<()>, title: &'static str) {
     launch_cfg(vec![(
         app,
-        WindowConfig {
+        WindowConfig::<()> {
             width: 400,
             height: 300,
             decorations: true,
             transparent: false,
             title,
+            state: None,
         },
     )])
 }
@@ -111,12 +113,13 @@ pub fn launch_with_title(app: Component<()>, title: &'static str) {
 pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height): (u32, u32)) {
     launch_cfg(vec![(
         app,
-        WindowConfig {
+        WindowConfig::<()> {
             width,
             height,
             decorations: true,
             transparent: false,
             title,
+            state: None,
         },
     )])
 }
@@ -135,13 +138,13 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
 /// # use freya::{dioxus_elements, *};
 /// launch_cfg(vec![(
 ///     app,
-///     WindowConfig {
-///         width: 500,
-///         height: 400,
-///         decorations: true,
-///         transparent: false,
-///         title: "Freya Window"
-///     }
+///     WindowConfig::<()>::builder()
+///         .with_width(500)
+///         .with_height(400)
+///         .with_decorations(true)
+///         .with_transparency(false)
+///         .with_title("Freya App")
+///         .build()
 /// )]);
 ///
 /// fn app(cx: Scope) -> Element {
@@ -156,7 +159,7 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
 ///     )
 /// }
 /// ```
-pub fn launch_cfg(wins_config: Vec<(Component<()>, WindowConfig)>) {
+pub fn launch_cfg<T: 'static>(wins_config: Vec<(Component<()>, WindowConfig<T>)>) {
     use freya_common::LayoutMemorizer;
 
     let wins = wins_config
@@ -224,6 +227,7 @@ pub fn launch_cfg(wins_config: Vec<(Component<()>, WindowConfig)>) {
 
     run(wins);
 }
+
 #[cfg(feature = "devtools")]
 use dioxus::prelude::{
     fc_to_builder, format_args_f, render, Element, LazyNodes, NodeFactory, Scope, VNode,

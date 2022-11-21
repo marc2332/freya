@@ -8,13 +8,13 @@ use freya::prelude::*;
 fn main() {
     launch_cfg(vec![(
         app,
-        WindowConfig {
-            width: 100,
-            height: 100,
-            decorations: false,
-            transparent: true,
-            title: "Custom window",
-        },
+        WindowConfig::<()>::builder()
+            .with_width(100)
+            .with_height(100)
+            .with_decorations(false)
+            .with_transparency(true)
+            .with_title("Floating window")
+            .build(),
     )]);
 }
 
@@ -22,10 +22,11 @@ fn app(cx: Scope) -> Element {
     render!(
         rect {
             background: "white",
-            padding: "50",
+            padding: "20",
+            display: "center",
             direction: "both",
-            width: "100%",
-            height: "100%",
+            width: "100",
+            height: "100",
             radius: "50",
             label {
                 color: "black",

@@ -12,13 +12,22 @@ use std::{
     sync::{Arc, Mutex},
     time::Instant,
 };
-pub use window::{create_surface, create_windows_from_config, WindowConfig, WindowEnv};
+pub use window::{create_surface, create_windows_from_config, WindowEnv};
+pub use window_config::WindowConfig;
 
 mod renderer;
 mod window;
+mod window_config;
 
 /// Run the Windows Event Loop
-pub fn run(windows_config: Vec<(SafeDOM, SafeEventEmitter, SafeLayoutManager, WindowConfig)>) {
+pub fn run<T: 'static>(
+    windows_config: Vec<(
+        SafeDOM,
+        SafeEventEmitter,
+        SafeLayoutManager,
+        WindowConfig<T>,
+    )>,
+) {
     let cursor_pos = Arc::new(Mutex::new((0.0, 0.0)));
     let event_loop = EventLoop::<WindowId>::with_user_event();
     let mut font_collection = FontCollection::new();
@@ -26,7 +35,7 @@ pub fn run(windows_config: Vec<(SafeDOM, SafeEventEmitter, SafeLayoutManager, Wi
 
     let wins = create_windows_from_config(windows_config, &event_loop, font_collection);
 
-    let get_window_env = move |window_id: WindowId| -> Option<Arc<Mutex<WindowEnv>>> {
+    let get_window_env = move |window_id: WindowId| -> Option<Arc<Mutex<WindowEnv<T>>>> {
         let mut win = None;
         for env in &*wins.lock().unwrap() {
             if env.lock().unwrap().windowed_context.window().id() == window_id {
