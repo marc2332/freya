@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
 use dioxus_native_core::state::NodeDepState;
 use dioxus_native_core_macro::sorted_str_slice;
@@ -130,6 +132,15 @@ pub enum DisplayMode {
     #[default]
     Normal,
     Center,
+}
+
+impl Display for DisplayMode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DisplayMode::Normal => f.write_str("normal"),
+            DisplayMode::Center => f.write_str("center"),
+        }
+    }
 }
 
 #[derive(Default, Clone, Debug, PartialEq)]

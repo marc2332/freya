@@ -202,6 +202,16 @@ pub enum DirectionMode {
     Both,
 }
 
+impl Display for DirectionMode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DirectionMode::Vertical => f.write_str("vertical"),
+            DirectionMode::Horizontal => f.write_str("horizontal"),
+            DirectionMode::Both => f.write_str("both"),
+        }
+    }
+}
+
 #[derive(Default, Clone, Debug, PartialEq)]
 pub enum SizeMode {
     #[default]
