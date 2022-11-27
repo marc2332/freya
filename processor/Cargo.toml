@@ -26,3 +26,4 @@ freya-layers = { path = "../layers", version = "0.1.0" }
 freya-common = { path = "../common", version = "0.1.0" }
 rustc-hash = "1.1.0"
 euclid = "0.22.7"
+tracing = "0.1"

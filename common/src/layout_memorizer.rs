@@ -18,6 +18,8 @@ pub struct NodeLayoutInfo {
 pub struct LayoutMemorizer {
     pub nodes: HashMap<ElementId, NodeLayoutInfo>,
     pub dirty_nodes: HashMap<ElementId, ()>,
+    #[cfg(debug_assertions)]
+    pub dirty_nodes_counter: i32,
 }
 
 impl LayoutMemorizer {
@@ -25,6 +27,8 @@ impl LayoutMemorizer {
         Self {
             nodes: HashMap::new(),
             dirty_nodes: HashMap::new(),
+            #[cfg(debug_assertions)]
+            dirty_nodes_counter: 0,
         }
     }
 
@@ -45,6 +49,12 @@ impl LayoutMemorizer {
 
     /// Mark a node's layout as no longer valid
     pub fn mark_as_dirty(&mut self, element_id: ElementId) {
+        #[cfg(debug_assertions)]
+        {
+            if !self.dirty_nodes.contains_key(&element_id) {
+                self.dirty_nodes_counter += 1;
+            }
+        }
         self.dirty_nodes.insert(element_id, ());
     }
 

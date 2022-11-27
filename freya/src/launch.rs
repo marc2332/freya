@@ -161,6 +161,7 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
 /// ```
 pub fn launch_cfg<T: 'static + Clone + Send>(wins_config: Vec<(Component<()>, WindowConfig<T>)>) {
     use freya_common::LayoutMemorizer;
+    use tracing::info;
 
     let wins = wins_config
         .into_iter()
@@ -225,6 +226,7 @@ pub fn launch_cfg<T: 'static + Clone + Send>(wins_config: Vec<(Component<()>, Wi
                                 ctx.insert(layout_memorizer.clone());
 
                                 if !to_update.is_empty() {
+                                    info!("Updated Dioxus DOM with {} mutations.", to_update.len());
                                     rdom.lock().unwrap().update_state(&dom, to_update, ctx);
                                 }
                             }

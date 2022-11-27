@@ -3,9 +3,16 @@
     windows_subsystem = "windows"
 )]
 
-use freya::prelude::*;
+use freya::prelude::{tracing::Level, *};
+use tracing_subscriber::FmtSubscriber;
 
 fn main() {
+    let subscriber = FmtSubscriber::builder()
+        .with_max_level(Level::TRACE)
+        .finish();
+
+    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+
     launch_with_props(app, "Freya canvas experiment", (700, 570));
 }
 

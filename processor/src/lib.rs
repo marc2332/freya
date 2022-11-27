@@ -18,6 +18,7 @@ use std::{
     ops::Index,
     sync::{Arc, Mutex},
 };
+use tracing::info;
 
 pub mod events;
 
@@ -79,6 +80,16 @@ pub fn process_work<HookOptions>(
         manager,
         true,
     );
+
+    #[cfg(debug_assertions)]
+    {
+        let dirty_nodes_counter = manager.lock().unwrap().dirty_nodes_counter;
+        if dirty_nodes_counter > 0 {
+            let nodes = manager.lock().unwrap().nodes.len();
+            info!("Measured layout of {}/{}", dirty_nodes_counter, nodes);
+            manager.lock().unwrap().dirty_nodes_counter = 0;
+        }
+    }
 
     let mut layers_nums: Vec<&i16> = layers.layers.keys().collect();
 
@@ -277,6 +288,7 @@ pub fn process_work<HookOptions>(
                 }),
             };
             if let Some(event) = event {
+                info!("Emitted event: {:?}", event);
                 new_events.push(event.clone());
                 event_emitter
                     .lock()
@@ -293,6 +305,7 @@ pub fn process_work<HookOptions>(
     let new_processed_events = events_processor.process_events_batch(new_events, calculated_events);
 
     for event in new_processed_events {
+        info!("Emitted event: {:?}", event);
         event_emitter
             .lock()
             .unwrap()
