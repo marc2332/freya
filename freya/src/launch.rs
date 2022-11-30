@@ -2,11 +2,13 @@ use anymap::AnyMap;
 use dioxus::prelude::{Component, UnboundedSender, VirtualDom};
 use dioxus_core::SchedulerMsg;
 use dioxus_native_core::real_dom::RealDom;
+use freya_common::LayoutMemorizer;
 use freya_node_state::NodeState;
 use freya_renderer::run;
 use freya_renderer::WindowConfig;
 use std::sync::Arc;
 use std::sync::Mutex;
+use tracing::info;
 
 #[cfg(not(doctest))]
 /// Launch a new Window with the default config.
@@ -160,8 +162,6 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
 /// }
 /// ```
 pub fn launch_cfg<T: 'static + Clone + Send>(wins_config: Vec<(Component<()>, WindowConfig<T>)>) {
-    use freya_common::LayoutMemorizer;
-
     let wins = wins_config
         .into_iter()
         .map(|(root, win)| {
@@ -225,6 +225,7 @@ pub fn launch_cfg<T: 'static + Clone + Send>(wins_config: Vec<(Component<()>, Wi
                                 ctx.insert(layout_memorizer.clone());
 
                                 if !to_update.is_empty() {
+                                    info!("Updated Dioxus DOM with {} mutations.", to_update.len());
                                     rdom.lock().unwrap().update_state(&dom, to_update, ctx);
                                 }
                             }
