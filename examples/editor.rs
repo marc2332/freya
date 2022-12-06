@@ -21,7 +21,7 @@ fn Body(cx: Scope) -> Element {
     let theme = theme.read();
     let (content, cursor, process_keyevent, process_clickevent, cursor_ref) = use_editable(
         &cx,
-        || "const test = false; \n hello_world(true); \n hello_world(false); \n hello_world(false);",
+        || "const test = false; \n let data = `idk \n hi`;",
         EditableMode::SingleLineMultipleEditors,
     );
     let font_size_percentage = use_state(&cx, || 15.0);
@@ -33,75 +33,113 @@ fn Body(cx: Scope) -> Element {
     let font_size = font_size_percentage + 5.0;
     let line_height = (line_height_percentage / 25.0) + 1.2;
 
-    let highlight_names = &mut [
-        "attribute",
-        "constant",
-        "function.builtin",
-        "function",
-        "keyword",
-        "operator",
-        "property",
-        "punctuation",
-        "punctuation.bracket",
-        "punctuation.delimiter",
-        "string",
-        "string.special",
-        "tag",
-        "type",
-        "type.builtin",
-        "variable",
-        "variable.builtin",
-        "variable.parameter",
-    ];
+    let mut words = use_state::<Vec<Vec<(&str, String)>>>(&cx, || vec![]);
+    
+    use_effect(&cx, &content.len(), move |_| {
+        // a   
+        let content = content.clone();
+        let words = words.clone();
+        async move {
+            let content = content.clone();
+            let highlight_names = &mut [
+                "attribute",
+                "constant",
+                "function.builtin",
+                "function",
+                "keyword",
+                "operator",
+                "property",
+                "punctuation",
+                "punctuation.bracket",
+                "punctuation.delimiter",
+                "string",
+                "string.special",
+                "tag",
+                "type",
+                "type.builtin",
+                "variable",
+                "variable.builtin",
+                "variable.parameter",
+            ];
+    
+            let mut highlighter = Highlighter::new();
+    
+            let mut javascript_config = HighlightConfiguration::new(
+                tree_sitter_javascript::language(),
+                tree_sitter_javascript::HIGHLIGHT_QUERY,
+                tree_sitter_javascript::INJECTION_QUERY,
+                tree_sitter_javascript::LOCALS_QUERY,
+            )
+            .unwrap();
+            javascript_config.configure(highlight_names);
+    
+            let data = content.to_string();
+            let highlights = highlighter
+                .highlight(&javascript_config, data.as_bytes(), None, |_| None)
+                .unwrap();
+            words.with_mut(|words| {
 
-    let mut highlighter = Highlighter::new();
+                words.clear();
 
-    let mut javascript_config = HighlightConfiguration::new(
-        tree_sitter_javascript::language(),
-        tree_sitter_javascript::HIGHLIGHT_QUERY,
-        tree_sitter_javascript::INJECTION_QUERY,
-        tree_sitter_javascript::LOCALS_QUERY,
-    )
-    .unwrap();
-    javascript_config.configure(highlight_names);
-
-    let data = content.to_string();
-    let highlights = highlighter
-        .highlight(&javascript_config, data.as_bytes(), None, |_| None)
-        .unwrap();
-
-    let mut words: Vec<Vec<(&str, String)>> = vec![];
-    let mut last_finished: (Option<&str>, Vec<(usize, String)>) = (None, vec![]);
-
-
-    for event in highlights {
-        match event.unwrap() {
-            HighlightEvent::Source { start, end } => {
-                let data = content.get().lines(start..end);
-                let starting_line = content.get().line_of_offset(start);
-
-                for (i, d) in data.enumerate() {
-                    last_finished.1.push((starting_line + i, d.to_string()));
+                let mut last_finished: (Option<&str>, Vec<(usize, String)>) = (None, vec![]);
+        
+                for event in highlights {
+                
+                        match event.unwrap() {
+                            HighlightEvent::Source { start, end } => {
+                                let data = content.get().lines(start..end);
+                                let starting_line = content.get().line_of_offset(start);
+            
+                                for (i, d) in data.enumerate() {
+                                    last_finished.1.push((starting_line + i, d.to_string()));
+                                }
+                            }
+                            HighlightEvent::HighlightStart(s) => {
+                                last_finished.0 = Some(highlight_names[s.0]);
+                                //eprintln!("highlight style started: {:?}", highlight_names[s.0]);
+                            }
+                            HighlightEvent::HighlightEnd => {
+                                for (i, d) in last_finished.1 {
+                                    if words.get(i).is_none() {
+                                        words.push(vec![]);
+                                    }
+                                    let mut line = words.last_mut().unwrap();
+                                    line.push((last_finished.0.unwrap(), d));
+                                }
+                                last_finished = (None, vec![]);
+                                
+                            }
+                        }
+                    
                 }
-            }
-            HighlightEvent::HighlightStart(s) => {
-                last_finished.0 = Some(highlight_names[s.0]);
-                eprintln!("highlight style started: {:?}", highlight_names[s.0]);
-            }
-            HighlightEvent::HighlightEnd => {
-                for (i, d) in last_finished.1 {
-                    if words.get(i).is_none() {
-                        words.push(vec![]);
+        
+                // Mark all the remaining text as not readable
+                if !last_finished.1.is_empty() {
+                    for (i, d) in last_finished.1 {
+                        if words.get(i).is_none() {
+                            words.push(vec![]);
+                        }
+                        let mut line = words.last_mut().unwrap();
+                        line.push(("", d));
                     }
-                    let mut line = words.last_mut().unwrap();
-                    line.push((last_finished.0.unwrap(), d));
                 }
-                last_finished = (None, vec![]);
-            }
+            });
         }
-    }
+    });
 
-   
+    let font_style = {
+        if *is_bold.get() && *is_italic.get() {
+            "bold-italic"
+        } else if *is_italic.get() {
+            "italic"
+        } else if *is_bold.get() {
+            "bold"
+        } else {
+            "normal"
+        }
+    };
+
+    let manual_line_height = font_size * line_height;
 
     render!(
         rect {
@@ -222,12 +260,18 @@ fn Body(cx: Scope) -> Element {
                 width: "100%",
                 height: "100%",
                 padding: "30",
-                ScrollView {
+                VirtualScrollView {
                     width: "100%",
                     height: "100%",
                     show_scrollbar: true,
-                    words.iter().enumerate().map(move |(line_index, line)| {
+                    builder_values: (cursor, words),
+                    length: words.len() as i32,
+                    item_size: manual_line_height as f32,
+                    builder: Box::new(move |(k, line_index, args)| {
+                        let (cursor, words) = args.unwrap();
                         let process_clickevent = process_clickevent.clone();
+                        let line_index = line_index as usize;
+                        let line = words.get().get(line_index).as_ref().unwrap().clone();
 
                         let is_line_selected = cursor.1 == line_index;
 
@@ -249,14 +293,12 @@ fn Body(cx: Scope) -> Element {
                             process_clickevent.send((e, line_index)).ok();
                         };
 
-                        let manual_line_height = font_size * line_height;
-
                         let cursor_id = line_index;
 
 
-                        rsx! {
+                        rsx!(
                             rect {
-                                key: "{line_index}",
+                                key: "{k}",
                                 width: "100%",
                                 height: "{manual_line_height}",
                                 direction: "horizontal",
@@ -283,19 +325,19 @@ fn Body(cx: Scope) -> Element {
                                     onmousedown: onmousedown,
                                     height: "{manual_line_height}",
                                     line.iter().map(|(t, word)| {
-                                        println!("{line_index:?}{:?}", word);
                                         rsx!(
                                             text {
                                                 width: "100%",
                                                 color: "{get_color_from_type(t)}",
                                                 font_size: "{font_size}",
+                                                font_style: "{font_style}",
                                                 "{word}"
                                             }
                                         )
                                     })
                                 }
                             }
-                        }
+                        )
                     })
                 }
             }
