@@ -76,6 +76,7 @@ pub fn use_editable<'a>(
 
                 while let Some((e, id)) = rx.recv().await {
                     let points = e.get_element_coordinates();
+                    println!("{:?}", points);
                     let cursor_ref = cursor_ref.clone();
                     cursor_ref.write().id.lock().unwrap().replace(id);
                     cursor_ref
