@@ -173,7 +173,7 @@ pub fn render_skia(
                 }
 
                 if node.node_state.cursor_settings.position.is_some() {
-                    // This is very tricky but works, it allows ferya to render a character at the end of a line.
+                    // This is very tricky, but it works! It allows freya to render the cursor at the end of a line.
                     paragraph_builder.add_text(" ");
                 }
 
