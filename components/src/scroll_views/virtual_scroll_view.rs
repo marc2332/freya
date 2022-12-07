@@ -35,21 +35,21 @@ pub struct VirtualScrollViewProps<'a, T: 'a> {
 
 fn get_render_range(
     viewport_size: f32,
-    scroll_position: i32,
-    item_size: i32,
-    item_length: i32,
+    scroll_position: f32,
+    item_size: f32,
+    item_length: f32,
 ) -> Range<i32> {
     let render_index_start = (-scroll_position) / item_size;
-    let potentially_visible_length = viewport_size as i32 / item_size;
+    let potentially_visible_length = viewport_size / item_size;
     let remaining_length = item_length - render_index_start;
 
     let render_index_end = if remaining_length <= potentially_visible_length {
-        item_length
+        item_length as f32
     } else {
         render_index_start + potentially_visible_length
     };
 
-    render_index_start..(render_index_end)
+    render_index_start as i32..(render_index_end as i32)
 }
 
 /// A ScrollView with virtual scrolling.
@@ -163,10 +163,10 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
 
     // Calculate from what to what items must be rendered
     let render_range = get_render_range(
-        viewport_size,
-        scroll_position as i32,
-        items_size as i32,
-        items_length,
+        viewport_size as f32,
+        scroll_position,
+        items_size,
+        items_length as f32,
     );
 
     let mut key_index = 0;

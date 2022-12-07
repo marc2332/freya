@@ -172,6 +172,11 @@ pub fn render_skia(
                     paragraph_builder.add_text(node_text.1.clone());
                 }
 
+                if node.node_state.cursor_settings.position.is_some() {
+                    // This is very tricky but works, it allows ferya to render a character at the end of a line.
+                    paragraph_builder.add_text(" ");
+                }
+
                 let mut paragraph = paragraph_builder.build();
 
                 paragraph.layout(node.node_area.width);

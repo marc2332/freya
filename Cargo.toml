@@ -18,8 +18,6 @@ tokio = "1.17.0"
 reqwest = {version = "0.11.12", features = ["json"] }
 serde = "1.0.145"
 tracing-subscriber = "0.2.0"
-tree-sitter-highlight = "0.20.1"
-tree-sitter-javascript = "0.20.0"
 
 [profile.release]
 lto = true
