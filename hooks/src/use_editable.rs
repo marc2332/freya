@@ -1,13 +1,10 @@
 use std::sync::{Arc, Mutex};
 
 use dioxus::{core::UiEvent, prelude::*};
-use freya_elements::{
-    events::{KeyCode, KeyboardData},
-    MouseEvent,
-};
+use freya_elements::events::{KeyCode, KeyboardData, MouseData};
 use freya_node_state::CursorReference;
 use tokio::sync::{mpsc::unbounded_channel, mpsc::UnboundedSender};
-use xi_rope::Rope;
+pub use xi_rope::Rope;
 
 /// How the editable content must behave.
 pub enum EditableMode {
@@ -21,7 +18,8 @@ pub enum EditableMode {
     MultipleLinesSingleEditor,
 }
 
-pub type ClickNotifier = UnboundedSender<(MouseEvent, usize)>;
+pub type KeypressNotifier = UnboundedSender<Arc<KeyboardData>>;
+pub type ClickNotifier = UnboundedSender<(Arc<MouseData>, usize)>;
 pub type EditableText = UseState<Rope>;
 pub type CursorPosition = UseState<(usize, usize)>;
 pub type KeyboardEvent = UiEvent<KeyboardData>;
@@ -35,7 +33,7 @@ pub fn use_editable<'a>(
 ) -> (
     &EditableText,
     &CursorPosition,
-    impl Fn(KeyboardEvent) + '_,
+    KeypressNotifier,
     ClickNotifier,
     &CursorRef,
 ) {
@@ -44,7 +42,6 @@ pub fn use_editable<'a>(
 
     // Holds the column and line where the cursor is
     let cursor = use_state(cx, || (0, 0));
-    let cursor_setter = cursor.setter();
 
     let cursor_channels = use_ref(cx, || {
         let (tx, rx) = unbounded_channel::<(usize, usize)>();
@@ -60,7 +57,13 @@ pub fn use_editable<'a>(
 
     // Single listener multiple triggers channel so the mouse can be changed from multiple elements
     let click_channel = use_ref(cx, || {
-        let (tx, rx) = unbounded_channel::<(MouseEvent, usize)>();
+        let (tx, rx) = unbounded_channel::<(Arc<MouseData>, usize)>();
+        (tx, Some(rx))
+    });
+
+    // Single listener multiple triggers channel to write from different sources
+    let keypress_channel = use_ref(cx, || {
+        let (tx, rx) = unbounded_channel::<Arc<KeyboardData>>();
         (tx, Some(rx))
     });
 
@@ -95,6 +98,7 @@ pub fn use_editable<'a>(
         let cursor_getter = cursor.current();
         let cursor_channels = cursor_channels.clone();
         let content = content.clone();
+        let cursor_setter = cursor.setter();
 
         async move {
             let cursor_receiver = cursor_channels.write().1.take();
@@ -138,137 +142,155 @@ pub fn use_editable<'a>(
         }
     });
 
-    let process_keyevent = move |e: UiEvent<KeyboardData>| match &e.code {
-        KeyCode::ArrowDown => {
-            let total_lines = content.lines(..).count() - 1;
-            // Go one line down
-            if cursor.1 < total_lines {
-                let next_line = content.get().lines(..).nth(cursor.1 + 1).unwrap();
+    use_effect(cx, (), move |_| {
+        let cursor_getter = cursor.to_owned();
+        let keypress_channel = keypress_channel.clone();
+        let content = content.clone();
+        let cursor_setter = cursor.setter();
+        async move {
+            let rx = keypress_channel.write().1.take();
+            let mut rx = rx.unwrap();
 
-                // Try to use the current cursor column, otherwise use the new line length
-                let cursor_index = if cursor.0 <= next_line.len() {
-                    cursor.0
-                } else {
-                    next_line.len()
-                };
+            while let Some(e) = rx.recv().await {
+                let rope = content.current();
+                let cursor = cursor_getter.current();
 
-                cursor.set((cursor_index, cursor.1 + 1))
-            }
-        }
-        KeyCode::ArrowLeft => {
-            // Go one character to the left
-            if cursor.0 > 0 {
-                cursor.set((cursor.0 - 1, cursor.1));
-            } else if cursor.1 > 0 {
-                // Go one line up if there is no more characters on the left
-                let prev_line = content.get().lines(..).nth(cursor.1 - 1);
-                if let Some(prev_line) = prev_line {
-                    // Use the new line length as new cursor column, otherwise just set it to 0
-                    let len = if prev_line.len() > 0 {
-                        prev_line.len()
-                    } else {
-                        0
-                    };
-                    cursor.set((len, cursor.1 - 1));
+                match &e.code {
+                    KeyCode::ArrowDown => {
+                        let total_lines = rope.lines(..).count() - 1;
+                        // Go one line down
+                        if cursor.1 < total_lines {
+                            let next_line = rope.lines(..).nth(cursor.1 + 1).unwrap();
+
+                            // Try to use the current cursor column, otherwise use the new line length
+                            let cursor_index = if cursor.0 <= next_line.len() {
+                                cursor.0
+                            } else {
+                                next_line.len()
+                            };
+
+                            cursor_setter((cursor_index, cursor.1 + 1));
+                        }
+                    }
+                    KeyCode::ArrowLeft => {
+                        // Go one character to the left
+                        if cursor.0 > 0 {
+                            cursor_setter((cursor.0 - 1, cursor.1));
+                        } else if cursor.1 > 0 {
+                            // Go one line up if there is no more characters on the left
+                            let prev_line = rope.lines(..).nth(cursor.1 - 1);
+                            if let Some(prev_line) = prev_line {
+                                // Use the new line length as new cursor column, otherwise just set it to 0
+                                let len = if prev_line.len() > 0 {
+                                    prev_line.len()
+                                } else {
+                                    0
+                                };
+                                cursor_setter((len, cursor.1 - 1));
+                            }
+                        }
+                    }
+                    KeyCode::ArrowRight => {
+                        let total_lines = rope.lines(..).count() - 1;
+                        let current_line = rope.lines(..).nth(cursor.1).unwrap();
+
+                        // Go one line down if there isn't more characters on the right
+                        if cursor.1 < total_lines && cursor.0 == current_line.len() {
+                            cursor_setter((0, cursor.1 + 1));
+                        } else if cursor.0 < current_line.len() {
+                            // Go one character to the right if possible
+                            cursor_setter((cursor.0 + 1, cursor.1));
+                        }
+                    }
+                    KeyCode::ArrowUp => {
+                        // Go one line up if there is any
+                        if cursor.1 > 0 {
+                            let prev_line = rope.lines(..).nth(cursor.1 - 1).unwrap();
+
+                            // Try to use the current cursor column, otherwise use the new line length
+                            let cursor_column = if cursor.0 <= prev_line.len() {
+                                cursor.0
+                            } else {
+                                prev_line.len()
+                            };
+
+                            cursor_setter((cursor_column, cursor.1 - 1));
+                        }
+                    }
+                    KeyCode::Space => {
+                        // Simply adds an space
+                        let char_idx = rope.offset_of_line(cursor.1) + cursor.0;
+                        content.with_mut(|code| {
+                            code.edit(char_idx..char_idx, " ");
+                        });
+                        cursor_setter((cursor.0 + 1, cursor.1));
+                    }
+                    KeyCode::Backspace => {
+                        if cursor.0 > 0 {
+                            // Remove the character to the left if there is any
+                            let char_idx = rope.offset_of_line(cursor.1) + cursor.0;
+                            content.with_mut(|code| {
+                                code.edit(char_idx - 1..char_idx, "");
+                            });
+
+                            cursor_setter((cursor.0 - 1, cursor.1));
+                        } else if cursor.1 > 0 {
+                            // Moves the whole current line to the end of the line above.
+                            let prev_line = rope.lines(..).nth(cursor.1 - 1).unwrap();
+                            let current_line = rope.lines(..).nth(cursor.1);
+
+                            if let Some(current_line) = current_line {
+                                let prev_char_idx =
+                                    rope.offset_of_line(cursor.1 - 1) + prev_line.len();
+                                let char_idx = rope.offset_of_line(cursor.1) + current_line.len();
+
+                                content.with_mut(|code| {
+                                    code.edit(prev_char_idx..prev_char_idx, current_line.clone());
+                                    code.edit(char_idx..char_idx + current_line.len() + 1, "");
+                                });
+                            }
+
+                            cursor_setter((prev_line.len(), cursor.1 - 1));
+                        }
+                    }
+                    KeyCode::Enter => {
+                        // Breaks the line
+                        let total_lines = rope.lines(..).count();
+                        let char_idx = rope.offset_of_line(cursor.1) + cursor.0;
+                        let current_line = rope.lines(..).nth(cursor.1).unwrap();
+                        content.with_mut(|code| {
+                            let break_line =
+                                if cursor.1 == total_lines - 1 && current_line.len() > 0 {
+                                    "\n\n"
+                                } else {
+                                    "\n"
+                                };
+                            code.edit(char_idx..char_idx, break_line);
+                        });
+
+                        cursor_setter((0, cursor.1 + 1));
+                    }
+                    character => {
+                        // Adds a new character to the right
+                        if let Some(character) = character.to_text() {
+                            let char_idx = rope.offset_of_line(cursor.1) + cursor.0;
+
+                            content.with_mut(|code| {
+                                code.edit(char_idx..char_idx, character);
+                            });
+
+                            cursor_setter((cursor.0 + 1, cursor.1));
+                        }
+                    }
                 }
             }
         }
-        KeyCode::ArrowRight => {
-            let total_lines = content.lines(..).count() - 1;
-            let current_line = content.get().lines(..).nth(cursor.1).unwrap();
-
-            // Go one line down if there isn't more characters on the right
-            if cursor.1 < total_lines && cursor.0 == current_line.len() {
-                cursor.set((0, cursor.1 + 1));
-            } else if cursor.0 < current_line.len() {
-                // Go one character to the right if possible
-                cursor.set((cursor.0 + 1, cursor.1));
-            }
-        }
-        KeyCode::ArrowUp => {
-            // Go one line up if there is any
-            if cursor.1 > 0 {
-                let prev_line = content.get().lines(..).nth(cursor.1 - 1).unwrap();
-
-                // Try to use the current cursor column, otherwise use the new line length
-                let cursor_indexolumn = if cursor.0 <= prev_line.len() {
-                    cursor.0
-                } else {
-                    prev_line.len()
-                };
-
-                cursor.set((cursor_indexolumn, cursor.1 - 1))
-            }
-        }
-        KeyCode::Space => {
-            // Simply adds an space
-            let char_idx = content.get().offset_of_line(cursor.1) + cursor.0;
-            content.with_mut(|code| {
-                code.edit(char_idx..char_idx, " ");
-            });
-            cursor.with_mut(|cursor| *cursor = (cursor.0 + 1, cursor.1));
-        }
-        KeyCode::Backspace => {
-            if cursor.0 > 0 {
-                // Remove the character to the left if there is any
-                let char_idx = content.get().offset_of_line(cursor.1) + cursor.0;
-                content.with_mut(|code| {
-                    code.edit(char_idx - 1..char_idx, "");
-                });
-
-                cursor.with_mut(|cursor| *cursor = (cursor.0 - 1, cursor.1));
-            } else if cursor.1 > 0 {
-                // Moves the whole current line to the end of the line above.
-                let prev_line = content.get().lines(..).nth(cursor.1 - 1).unwrap();
-                let current_line = content.get().lines(..).nth(cursor.1);
-
-                if let Some(current_line) = current_line {
-                    let prev_char_idx =
-                        content.get().offset_of_line(cursor.1 - 1) + prev_line.len();
-                    let char_idx = content.get().offset_of_line(cursor.1) + current_line.len();
-
-                    content.with_mut(|code| {
-                        code.edit(prev_char_idx..prev_char_idx, current_line.clone());
-                        code.edit(char_idx..char_idx + current_line.len(), "");
-                    });
-                }
-
-                cursor.with_mut(|cursor| *cursor = (prev_line.len(), cursor.1 - 1));
-            }
-        }
-        KeyCode::Enter => {
-            // Breaks the line
-            let total_lines = content.lines(..).count();
-            let char_idx = content.get().offset_of_line(cursor.1) + cursor.0;
-            let current_line = content.get().lines(..).nth(cursor.1).unwrap();
-            content.with_mut(|code| {
-                let break_line = if cursor.1 == total_lines - 1 && current_line.len() > 0 {
-                    "\n\n"
-                } else {
-                    "\n"
-                };
-                code.edit(char_idx..char_idx, break_line);
-            });
-
-            cursor.with_mut(|cursor| *cursor = (0, cursor.1 + 1));
-        }
-        character => {
-            // Adds a new character to the right
-            if let Some(character) = character.to_text() {
-                let char_idx = content.get().offset_of_line(cursor.1) + cursor.0;
-
-                content.with_mut(|code| {
-                    code.edit(char_idx..char_idx, character);
-                });
-                cursor.with_mut(|cursor| cursor.0 += 1);
-            }
-        }
-    };
+    });
 
     (
         content,
         cursor,
-        process_keyevent,
+        keypress_channel.read().0.clone(),
         click_channel.read().0.clone(),
         cursor_ref,
     )

@@ -159,7 +159,9 @@ fn Body(cx: Scope) -> Element {
             width: "100%",
             height: "calc(100% - 90)",
             padding: "20",
-            onkeydown: process_keyevent,
+            onkeydown: move |e| {
+                process_keyevent.send(e.data).unwrap();
+            },
             cursor_reference: cursor_ref,
             direction: "horizontal",
             background: "{theme.body.background}",
@@ -191,7 +193,7 @@ fn Body(cx: Scope) -> Element {
                         };
 
                         let onmousedown = move |e: MouseEvent| {
-                            process_clickevent.send((e, line_index)).ok();
+                            process_clickevent.send((e.data, line_index)).ok();
                         };
 
                         let manual_line_height = font_size * line_height;

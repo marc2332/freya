@@ -30,7 +30,9 @@ fn app(cx: Scope) -> Element {
             direction: "both",
             width: "auto",
             height: "50%",
-            onkeydown: process_keyevent,
+            onkeydown: move |e| {
+                process_keyevent.send(e.data).unwrap();
+            },
             cursor_reference: cursor_ref,
             VirtualScrollView {
                 width: "100%",
@@ -60,7 +62,7 @@ fn app(cx: Scope) -> Element {
                     };
 
                     let onmousedown = move |e: MouseEvent| {
-                        process_clickevent.send((e, line_index as usize)).ok();
+                        process_clickevent.send((e.data, line_index as usize)).ok();
                     };
 
                     rsx! {
