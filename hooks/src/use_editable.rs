@@ -206,7 +206,7 @@ pub fn use_editable<'a>(
             content.with_mut(|code| {
                 code.edit(char_idx..char_idx, " ");
             });
-            cursor.set((cursor.0 + 1, cursor.1))
+            cursor.with_mut(|cursor| *cursor = (cursor.0 + 1, cursor.1));
         }
         KeyCode::Backspace => {
             if cursor.0 > 0 {
@@ -216,7 +216,7 @@ pub fn use_editable<'a>(
                     code.edit(char_idx - 1..char_idx, "");
                 });
 
-                cursor.set((cursor.0 - 1, cursor.1))
+                cursor.with_mut(|cursor| *cursor = (cursor.0 - 1, cursor.1));
             } else if cursor.1 > 0 {
                 // Moves the whole current line to the end of the line above.
                 let prev_line = content.get().lines(..).nth(cursor.1 - 1).unwrap();
@@ -233,7 +233,7 @@ pub fn use_editable<'a>(
                     });
                 }
 
-                cursor.set((prev_line.len(), cursor.1 - 1));
+                cursor.with_mut(|cursor| *cursor = (prev_line.len(), cursor.1 - 1));
             }
         }
         KeyCode::Enter => {
@@ -250,7 +250,7 @@ pub fn use_editable<'a>(
                 code.edit(char_idx..char_idx, break_line);
             });
 
-            cursor.set((0, cursor.1 + 1))
+            cursor.with_mut(|cursor| *cursor = (0, cursor.1 + 1));
         }
         character => {
             // Adds a new character to the right
@@ -260,8 +260,7 @@ pub fn use_editable<'a>(
                 content.with_mut(|code| {
                     code.edit(char_idx..char_idx, character);
                 });
-
-                cursor.set((cursor.0 + 1, cursor.1))
+                cursor.with_mut(|cursor| cursor.0 += 1);
             }
         }
     };
