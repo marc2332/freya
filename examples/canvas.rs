@@ -278,7 +278,9 @@ fn Editor(cx: Scope) -> Element {
             width: "100%",
             height: "calc(100% - 80)",
             padding: "5",
-            onkeydown: process_keyevent,
+            onkeydown: move |e| {
+                process_keyevent.send(e.data).unwrap();
+            },
             cursor_reference: cursor_ref,
             direction: "horizontal",
             rect {
@@ -309,7 +311,7 @@ fn Editor(cx: Scope) -> Element {
                         };
 
                         let onmousedown = move |e: MouseEvent| {
-                            process_clickevent.send((e, line_index)).ok();
+                            process_clickevent.send((e.data, line_index)).ok();
                         };
 
                         let manual_line_height = font_size * line_height;

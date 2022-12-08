@@ -5,7 +5,7 @@ use dioxus_native_core::real_dom::NodeType;
 use freya_common::{LayoutMemorizer, NodeArea, NodeLayoutInfo, NodeReferenceLayout};
 use freya_layers::{Layers, NodeData};
 use freya_node_state::{
-    CalcType, CursorMode, CursorReference, DirectionMode, DisplayMode, SizeMode,
+    CalcType, CursorMode, CursorReference, DirectionMode, DisplayMode, NodeState, SizeMode,
 };
 use skia_safe::textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle};
 
@@ -188,7 +188,7 @@ fn measure_node_children<T>(
     must_memorize_layout: bool,
 ) {
     match &node_data.node.node_type {
-        NodeType::Element { children, .. } => {
+        NodeType::Element { children, tag, .. } => {
             for child in children {
                 let child_node = node_resolver(child, resolver_options);
 
@@ -256,6 +256,59 @@ fn measure_node_children<T>(
                     }
                 }
             }
+            if tag == "paragraph"
+                && CursorMode::Editable == node_data.node.state.cursor_settings.mode
+            {
+                let font_size = node_data.node.state.font_style.font_size;
+                let font_family = &node_data.node.state.font_style.font_family;
+                let align = node_data.node.state.font_style.align;
+                let max_lines = node_data.node.state.font_style.max_lines;
+                let font_style = node_data.node.state.font_style.font_style;
+
+                let mut paragraph_style = ParagraphStyle::default();
+                paragraph_style.set_text_align(align);
+                paragraph_style.set_max_lines(max_lines);
+                paragraph_style.set_replace_tab_characters(true);
+
+                let mut paragraph_builder =
+                    ParagraphBuilder::new(&paragraph_style, font_collection.clone());
+
+                paragraph_builder.push_style(
+                    TextStyle::new()
+                        .set_font_style(font_style)
+                        .set_font_size(font_size)
+                        .set_font_families(&[font_family]),
+                );
+
+                let texts = get_inner_texts(children, node_resolver, resolver_options);
+
+                for node_text in texts {
+                    paragraph_builder.push_style(
+                        TextStyle::new()
+                            .set_font_style(node_text.0.font_style.font_style)
+                            .set_height_override(true)
+                            .set_height(node_text.0.font_style.line_height)
+                            .set_color(node_text.0.font_style.color)
+                            .set_font_size(node_text.0.font_style.font_size)
+                            .set_font_families(&[node_text.0.font_style.font_family.clone()]),
+                    );
+                    paragraph_builder.add_text(node_text.1.clone());
+                }
+
+                let mut paragraph = paragraph_builder.build();
+                paragraph.layout(node_area.width);
+
+                if let Some((cursor_ref, cursor_id, positions)) = get_cursor(node_data) {
+                    // Calculate the new cursor position
+                    let char_position = paragraph.get_glyph_position_at_coordinate(positions);
+
+                    // Notify the cursor reference listener
+                    cursor_ref
+                        .agent
+                        .send((char_position.position as usize, cursor_id))
+                        .ok();
+                }
+            }
         }
         NodeType::Text { text } => {
             let line_height = node_data.node.state.font_style.line_height;
@@ -288,22 +341,49 @@ fn measure_node_children<T>(
             let lines_count = paragraph.line_number() as f32;
             node_area.width = paragraph.longest_line();
             node_area.height = (line_height * font_size) * lines_count;
-
-            if CursorMode::Editable == node_data.node.state.cursor_settings.mode {
-                if let Some((cursor_ref, cursor_id, positions)) = get_cursor(node_data) {
-                    // Calculate the new cursor position
-                    let char_position = paragraph.get_glyph_position_at_coordinate(positions);
-
-                    // Notify the cursor reference listener
-                    cursor_ref
-                        .agent
-                        .send((char_position.position as usize, cursor_id))
-                        .ok();
-                }
-            }
         }
         NodeType::Placeholder => {}
     }
+}
+
+fn get_inner_texts<T>(
+    children: &[ElementId],
+    node_resolver: NodeResolver<T>,
+    resolver_options: &mut T,
+) -> Vec<(NodeState, String)> {
+    children
+        .iter()
+        .filter_map(|child_id| {
+            let child = node_resolver(child_id, resolver_options);
+
+            if let Some(child) = child {
+                if let NodeType::Element { tag, children, .. } = child.node.node_type {
+                    if tag != "text" {
+                        return None;
+                    }
+                    if let Some(child_text_id) = children.get(0) {
+                        let child_text = node_resolver(child_text_id, resolver_options);
+
+                        if let Some(child_text) = child_text {
+                            if let NodeType::Text { text } = &child_text.node.node_type {
+                                Some((child.node.state, text.clone()))
+                            } else {
+                                None
+                            }
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<(NodeState, String)>>()
 }
 
 fn get_cursor(node_data: &NodeData) -> Option<(&CursorReference, usize, (f32, f32))> {
