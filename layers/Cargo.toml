@@ -14,6 +14,9 @@ categories = ["GUI"]
 [dependencies]
 freya-common = { path = "../common", version = "0.1.0" }
 freya-node-state = { path = "../state", version = "0.1.0" }
-dioxus-native-core = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
-dioxus = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
+dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
+dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
+dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
+dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
+dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes", features = ["sync_attributes"] }
 rustc-hash = "1.1.0"

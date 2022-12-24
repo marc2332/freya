@@ -14,8 +14,8 @@ fn app(cx: Scope) -> Element {
 
     let is_enabled = if *enabled.get() { "Yes" } else { "No" };
 
-    let cols = 40;
-    let rows = 34;
+    let cols = 5;
+    let rows = 5;
 
     render!(
         container {
@@ -34,6 +34,7 @@ fn app(cx: Scope) -> Element {
                 (0..cols).map(|col| {
                     rsx! {
                         rect {
+                            key: "{col}",
                             width: "calc(100% / {cols})",
                             height: "100%",
                             (0..rows).map(|row| {

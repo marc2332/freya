@@ -24,7 +24,7 @@ pub struct NodeState {
     pub references: References,
     #[parent_dep_state(size, Arc<Mutex<LayoutManager>>)]
     pub size: Size,
-    #[parent_dep_state(scroll, Arc<Mutex<LayoutManager>>)]
+    #[node_dep_state((), Arc<Mutex<LayoutManager>>)]
     pub scroll: Scroll,
     #[node_dep_state()]
     pub style: Style,

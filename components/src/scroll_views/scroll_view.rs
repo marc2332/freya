@@ -1,7 +1,10 @@
-use dioxus::prelude::*;
+use dioxus_core_macro::{Props, render};
+use dioxus_hooks::use_state;
 use freya_elements as dioxus_elements;
 use freya_elements::{MouseEvent, WheelEvent};
 use freya_hooks::{use_get_theme, use_node};
+use dioxus_core::{VNode, Element, Scope};
+
 
 use crate::{
     get_container_size, get_corrected_scroll_position, get_scroll_position_from_cursor,
@@ -75,7 +78,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     };
 
     // Drag the scrollbars
-    let onmouseover = |e: MouseEvent| {
+    let onmouseover = move |e: MouseEvent| {
         if let Some((Axis::Y, y)) = clicking_scrollbar.get() {
             let coordinates = e.get_element_coordinates();
             let cursor_y = coordinates.y - y;
@@ -141,7 +144,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
                     direction: "{user_direction}",
                     scroll_y: "{corrected_scrolled_y}",
                     scroll_x: "{corrected_scrolled_x}",
-                    reference: node_ref,
+                    reference: node_ref.clone(),
                     onwheel: onwheel,
                     &cx.props.children
                 }

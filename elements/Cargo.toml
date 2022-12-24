@@ -13,7 +13,12 @@ categories = ["GUI"]
 
 [dependencies]
 bumpalo = "3.11.0"
-dioxus-core = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
-dioxus-hooks = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
+dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
+dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
+dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
+dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
+dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes", features = ["sync_attributes"] }
 glutin_tao = { version = "0.30.0", features = ["serde"]}
 euclid = "0.22.7"
+tokio = { version = "1.17.0" }
+freya-common = { path = "../common"}

@@ -13,10 +13,12 @@ categories = ["GUI"]
 
 [dependencies]
 glutin_tao = { version = "0.30.1", features = ["serde"]}
-dioxus = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners", features = ["macro", "hooks"]}
-dioxus-native-core = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
-dioxus-native-core-macro = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
-dioxus-core = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
+dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
+dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
+dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
+dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
+dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes", features = ["sync_attributes"] }
+dioxus-native-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes"  }
 freya-elements = { path = "../elements", version = "0.1.0"}
 freya-common = { path = "../common", version = "0.1.0" }
 freya-node-state = { path = "../state", version = "0.1.0" }

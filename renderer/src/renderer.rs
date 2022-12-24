@@ -1,6 +1,6 @@
 use dioxus_core::ElementId;
-use dioxus_native_core::real_dom::{Node, NodeType};
-use dioxus_native_core::traversable::Traversable;
+use dioxus_native_core::NodeId;
+use dioxus_native_core::node::{NodeType, Node};
 use freya_layers::RenderData;
 use freya_node_state::NodeState;
 use freya_processor::ViewportsCollection;
@@ -12,6 +12,7 @@ use skia_safe::{
     BlurStyle, Canvas, ClipOp, Data, IRect, Image, MaskFilter, Paint, PaintStyle, Path,
     PathDirection, Rect,
 };
+use dioxus_native_core::tree::TreeView;
 
 use crate::SafeDOM;
 
@@ -22,7 +23,8 @@ pub fn render_skia(
     font_collection: &mut FontCollection,
     viewports_collection: &ViewportsCollection,
 ) {
-    if let NodeType::Element { tag, children, .. } = &node.node_type {
+    if let NodeType::Element { tag, .. } = &node.node_type {
+        let children = node.children.as_ref();
         let viewports = viewports_collection.get(&node.node_id);
         if let Some((_, viewports)) = viewports {
             for viewport_id in viewports {
@@ -88,103 +90,111 @@ pub fn render_skia(
                 canvas.draw_path(&path, &paint);
             }
             "label" => {
-                let font_size = node.node_state.font_style.font_size;
-                let font_family = &node.node_state.font_style.font_family;
-                let font_color = node.node_state.font_style.color;
-                let align = node.node_state.font_style.align;
-                let font_style = node.node_state.font_style.font_style;
+                if let Some(children) = children {
+                    let font_size = node.node_state.font_style.font_size;
+                    let font_family = &node.node_state.font_style.font_family;
+                    let font_color = node.node_state.font_style.color;
+                    let align = node.node_state.font_style.align;
+                    let font_style = node.node_state.font_style.font_style;
 
-                let mut paint = Paint::default();
+                    let mut paint = Paint::default();
 
-                paint.set_anti_alias(true);
-                paint.set_style(PaintStyle::StrokeAndFill);
-                paint.set_color(node.node_state.font_style.color);
+                    paint.set_anti_alias(true);
+                    paint.set_style(PaintStyle::StrokeAndFill);
+                    paint.set_color(node.node_state.font_style.color);
 
-                let child_id = children.get(0);
+                    let child_id = children.get(0);
 
-                let text = if let Some(child_id) = child_id {
-                    let dom = dom.lock().unwrap();
-                    if let Some(child) = dom.get(*child_id) {
-                        if let NodeType::Text { text } = &child.node_type {
-                            Some(text.clone())
+                    let text = if let Some(child_id) = child_id {
+                        let dom = dom.lock().unwrap();
+                        if let Some(child) = dom.get(*child_id) {
+                            if let NodeType::Text { text } = &child.node_data.node_type {
+                                Some(text.clone())
+                            } else {
+                                None
+                            }
                         } else {
                             None
                         }
                     } else {
                         None
+                    };
+
+                    if let Some(text) = text {
+                        let x = node.node_area.x;
+                        let y = node.node_area.y;
+
+                        let mut paragraph_style = ParagraphStyle::default();
+                        paragraph_style.set_text_align(align);
+                        paragraph_style.set_text_style(
+                            TextStyle::new()
+                                .set_font_style(font_style)
+                                .set_color(font_color)
+                                .set_font_size(font_size)
+                                .set_font_families(&[font_family]),
+                        );
+                        let mut paragraph_builder =
+                            ParagraphBuilder::new(&paragraph_style, font_collection.clone());
+
+                        paragraph_builder.add_text(text);
+
+                        let mut paragraph = paragraph_builder.build();
+
+                        paragraph.layout(node.node_area.width + 1.0);
+
+                        paragraph.paint(canvas, (x, y));
                     }
-                } else {
-                    None
-                };
-
-                if let Some(text) = text {
-                    let x = node.node_area.x;
-                    let y = node.node_area.y;
-
-                    let mut paragraph_style = ParagraphStyle::default();
-                    paragraph_style.set_text_align(align);
-                    paragraph_style.set_text_style(
-                        TextStyle::new()
-                            .set_font_style(font_style)
-                            .set_color(font_color)
-                            .set_font_size(font_size)
-                            .set_font_families(&[font_family]),
-                    );
-                    let mut paragraph_builder =
-                        ParagraphBuilder::new(&paragraph_style, font_collection.clone());
-
-                    paragraph_builder.add_text(text);
-
-                    let mut paragraph = paragraph_builder.build();
-
-                    paragraph.layout(node.node_area.width + 1.0);
-
-                    paragraph.paint(canvas, (x, y));
                 }
+
+               
+                
             }
             "paragraph" => {
-                let align = node.node_state.font_style.align;
-                let max_lines = node.node_state.font_style.max_lines;
-
-                let texts = get_inner_texts(children, dom);
-
-                let (x, y) = node.node_area.get_origin_points();
-
-                let mut paragraph_style = ParagraphStyle::default();
-                paragraph_style.set_max_lines(max_lines);
-                paragraph_style.set_text_align(align);
-                paragraph_style.set_replace_tab_characters(true);
-                paragraph_style.set_text_height_behavior(TextHeightBehavior::DisableAll);
-
-                let mut paragraph_builder =
-                    ParagraphBuilder::new(&paragraph_style, font_collection.clone());
-
-                for node_text in &texts {
-                    paragraph_builder.push_style(
-                        TextStyle::new()
-                            .set_font_style(node_text.0.font_style.font_style)
-                            .set_height_override(true)
-                            .set_height(node_text.0.font_style.line_height)
-                            .set_color(node_text.0.font_style.color)
-                            .set_font_size(node_text.0.font_style.font_size)
-                            .set_font_families(&[node_text.0.font_style.font_family.clone()]),
-                    );
-                    paragraph_builder.add_text(node_text.1.clone());
+                if let Some(children) = children {
+                    let align = node.node_state.font_style.align;
+                    let max_lines = node.node_state.font_style.max_lines;
+    
+                    let texts = get_inner_texts(&children, dom);
+    
+                    let (x, y) = node.node_area.get_origin_points();
+    
+                    let mut paragraph_style = ParagraphStyle::default();
+                    paragraph_style.set_max_lines(max_lines);
+                    paragraph_style.set_text_align(align);
+                    paragraph_style.set_replace_tab_characters(true);
+                    paragraph_style.set_text_height_behavior(TextHeightBehavior::DisableAll);
+    
+                    let mut paragraph_builder =
+                        ParagraphBuilder::new(&paragraph_style, font_collection.clone());
+    
+                    for node_text in &texts {
+                        paragraph_builder.push_style(
+                            TextStyle::new()
+                                .set_font_style(node_text.0.font_style.font_style)
+                                .set_height_override(true)
+                                .set_height(node_text.0.font_style.line_height)
+                                .set_color(node_text.0.font_style.color)
+                                .set_font_size(node_text.0.font_style.font_size)
+                                .set_font_families(&[node_text.0.font_style.font_family.clone()]),
+                        );
+                        paragraph_builder.add_text(node_text.1.clone());
+                    }
+    
+                    if node.node_state.cursor_settings.position.is_some() {
+                        // This is very tricky, but it works! It allows freya to render the cursor at the end of a line.
+                        paragraph_builder.add_text(" ");
+                    }
+    
+                    let mut paragraph = paragraph_builder.build();
+    
+                    paragraph.layout(node.node_area.width);
+    
+                    paragraph.paint(canvas, (x, y));
+    
+                    // Draw a cursor if specified
+                    draw_cursor(node, paragraph, canvas);
                 }
-
-                if node.node_state.cursor_settings.position.is_some() {
-                    // This is very tricky, but it works! It allows freya to render the cursor at the end of a line.
-                    paragraph_builder.add_text(" ");
-                }
-
-                let mut paragraph = paragraph_builder.build();
-
-                paragraph.layout(node.node_area.width);
-
-                paragraph.paint(canvas, (x, y));
-
-                // Draw a cursor if specified
-                draw_cursor(node, paragraph, canvas);
+                
             }
             "svg" => {
                 let x = node.node_area.x;
@@ -253,29 +263,34 @@ pub fn render_skia(
     }
 }
 
-fn get_inner_texts(children: &[ElementId], dom: &SafeDOM) -> Vec<(NodeState, String)> {
+fn get_inner_texts(children: &[NodeId], dom: &SafeDOM) -> Vec<(NodeState, String)> {
     children
         .iter()
         .filter_map(|child_id| {
-            let child: Option<Node<NodeState>> = {
+            let (child, children): (Option<Node<NodeState>>, Option<Vec<NodeId>>) = {
                 let dom = dom.lock().unwrap();
-                dom.get(*child_id).cloned()
+                let children = dom.tree.children_ids(*child_id).map(|v| v.to_vec());
+                (dom.get(*child_id).cloned(), children)
             };
 
             if let Some(child) = child {
-                if let NodeType::Element { tag, children, .. } = child.node_type {
+                if let NodeType::Element { tag, .. } = child.node_data.node_type {
                     if tag != "text" {
                         return None;
                     }
-                    if let Some(child_text_id) = children.get(0) {
-                        let child_text: Option<Node<NodeState>> = {
-                            let dom = dom.lock().unwrap();
-                            dom.get(*child_text_id).cloned()
-                        };
-
-                        if let Some(child_text) = child_text {
-                            if let NodeType::Text { text } = &child_text.node_type {
-                                Some((child.state, text.clone()))
+                    if let Some(children) = children {
+                        if let Some(child_text_id) = children.get(0) {
+                            let child_text: Option<Node<NodeState>> = {
+                                let dom = dom.lock().unwrap();
+                                dom.get(*child_text_id).cloned()
+                            };
+    
+                            if let Some(child_text) = child_text {
+                                if let NodeType::Text { text } = &child_text.node_data.node_type {
+                                    Some((child.state, text.clone()))
+                                } else {
+                                    None
+                                }
                             } else {
                                 None
                             }

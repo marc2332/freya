@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use dioxus_core::ElementId;
+use dioxus_native_core::NodeId;
 
 use crate::NodeArea;
 
@@ -16,8 +16,8 @@ pub struct NodeLayoutInfo {
 /// Stores all the nodes layout and what nodes should be calculated again on the next check.
 #[derive(Debug, Default)]
 pub struct LayoutMemorizer {
-    pub nodes: HashMap<ElementId, NodeLayoutInfo>,
-    pub dirty_nodes: HashMap<ElementId, ()>,
+    pub nodes: HashMap<NodeId, NodeLayoutInfo>,
+    pub dirty_nodes: HashMap<NodeId, ()>,
     #[cfg(debug_assertions)]
     pub dirty_nodes_counter: i32,
 }
@@ -33,22 +33,22 @@ impl LayoutMemorizer {
     }
 
     /// Check if a node's layout is memorized or not
-    pub fn is_node_layout_memorized(&mut self, element_id: &ElementId) -> bool {
+    pub fn is_node_layout_memorized(&mut self, element_id: &NodeId) -> bool {
         self.nodes.contains_key(element_id)
     }
 
     /// Memorize a node's layout
-    pub fn add_node_layout(&mut self, element_id: ElementId, layout_info: NodeLayoutInfo) {
+    pub fn add_node_layout(&mut self, element_id: NodeId, layout_info: NodeLayoutInfo) {
         self.nodes.insert(element_id, layout_info);
     }
 
     /// Check if a node's layout is no longer valid
-    pub fn is_dirty(&self, element_id: &ElementId) -> bool {
+    pub fn is_dirty(&self, element_id: &NodeId) -> bool {
         self.dirty_nodes.contains_key(element_id)
     }
 
     /// Mark a node's layout as no longer valid
-    pub fn mark_as_dirty(&mut self, element_id: ElementId) {
+    pub fn mark_as_dirty(&mut self, element_id: NodeId) {
         #[cfg(debug_assertions)]
         {
             if !self.dirty_nodes.contains_key(&element_id) {
@@ -59,12 +59,12 @@ impl LayoutMemorizer {
     }
 
     // Unmark a node's layout as no longer valid
-    pub fn remove_as_dirty(&mut self, element_id: &ElementId) {
+    pub fn remove_as_dirty(&mut self, element_id: &NodeId) {
         self.dirty_nodes.remove(element_id);
     }
 
     // Get the memorized layout of a certain node
-    pub fn get_node_layout(&mut self, element_id: &ElementId) -> Option<NodeLayoutInfo> {
+    pub fn get_node_layout(&mut self, element_id: &NodeId) -> Option<NodeLayoutInfo> {
         self.nodes.get(element_id).cloned()
     }
 }

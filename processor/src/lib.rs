@@ -1,22 +1,19 @@
-use dioxus_core::{
-    exports::futures_channel::mpsc::UnboundedSender, ElementId, EventPriority, SchedulerMsg,
-    UserEvent,
-};
-use dioxus_native_core::real_dom::{Node, NodeType, RealDom};
+use dioxus_core::ElementId;
+use dioxus_native_core::{real_dom::{ RealDom}, tree::TreeView, NodeId, node::{Node, NodeType}};
 use euclid::{Length, Point2D};
 use freya_common::{LayoutMemorizer, NodeArea};
 use freya_elements::{
-    events::{KeyboardData, MouseData},
-    WheelData,
+    events_data::{KeyboardData, MouseData, WheelData},
 };
 use freya_layers::{Layers, NodeData, RenderData};
 use freya_layout::measure_node_layout;
 use freya_node_state::NodeState;
 use rustc_hash::FxHashMap;
 use skia_safe::{textlayout::FontCollection, Color};
+use tokio::sync::mpsc::UnboundedSender;
 use std::{
     ops::Index,
-    sync::{Arc, Mutex},
+    sync::{Arc, Mutex}, any::Any, rc::Rc,
 };
 use tracing::info;
 
@@ -25,10 +22,10 @@ pub mod events;
 use events::{EventsProcessor, FreyaEvent};
 
 pub type SafeDOM = Arc<Mutex<RealDom<NodeState>>>;
-pub type SafeEventEmitter = Arc<Mutex<Option<UnboundedSender<SchedulerMsg>>>>;
+pub type SafeEventEmitter = UnboundedSender<DomEvent>;
 pub type SafeLayoutManager = Arc<Mutex<LayoutMemorizer>>;
 pub type SafeFreyaEvents = Arc<Mutex<Vec<FreyaEvent>>>;
-pub type ViewportsCollection = FxHashMap<ElementId, (Option<NodeArea>, Vec<ElementId>)>;
+pub type ViewportsCollection = FxHashMap<NodeId, (Option<NodeArea>, Vec<NodeId>)>;
 
 /// The Work Loop has a few jobs:
 /// - Measure the nodes layouts
@@ -54,32 +51,40 @@ pub fn process_work<HookOptions>(
         &mut HookOptions,
     ),
 ) {
-    let root: Node<NodeState> = {
+    let (root, root_children): (Node<NodeState>, Option<Vec<NodeId>>) = {
         let dom = dom.lock().unwrap();
-        dom.index(ElementId(0)).clone()
+        let children = dom.tree.children_ids(NodeId(0)).map(|v| v.to_vec());
+        (dom.index(NodeId(0)).clone(), children)
     };
 
     let layers = &mut Layers::default();
 
     measure_node_layout(
-        &NodeData { node: root },
+        &NodeData { node: root, height: 0, parent_id: None, children: root_children },
         area,
         area,
         &mut dom,
         layers,
         |node_id, dom| {
-            let child = {
+            let (child, height, parent_id, children) = {
                 let dom = dom.lock().unwrap();
-                dom.index(*node_id).clone()
+                let height = dom.tree.height(*node_id);
+                let parent_id = dom.tree.parent_id(*node_id);
+                let children = dom.tree.children_ids(*node_id).map(|v| v.to_vec());
+                (dom.index(*node_id).clone(), height.unwrap(), parent_id, children)
             };
 
-            Some(NodeData { node: child })
+           
+
+            Some(NodeData { node: child, height, parent_id, children })
         },
         0,
         font_collection,
         manager,
         true,
     );
+
+   // println!("-> {:#?}", layers.layers);
 
     #[cfg(debug_assertions)]
     {
@@ -102,24 +107,26 @@ pub fn process_work<HookOptions>(
     for layer_num in &layers_nums {
         let layer = layers.layers.get(layer_num).unwrap();
         for element in layer.values() {
-            if let NodeType::Element { tag, children, .. } = &element.node_type {
+            if let NodeType::Element { tag, .. } = &element.node_type {
                 if tag == "container" {
                     viewports_collection
                         .entry(element.node_id)
                         .or_insert_with(|| (None, Vec::new()))
                         .0 = Some(element.node_area);
                 }
-                for child in children {
-                    if viewports_collection.contains_key(&element.node_id) {
-                        let mut inherited_viewports = viewports_collection
-                            .get(&element.node_id)
-                            .unwrap()
-                            .1
-                            .clone();
-
-                        inherited_viewports.push(element.node_id);
-
-                        viewports_collection.insert(*child, (None, inherited_viewports));
+                if let Some(children) = &element.children {
+                    for child in children {
+                        if viewports_collection.contains_key(&element.node_id) {
+                            let mut inherited_viewports = viewports_collection
+                                .get(&element.node_id)
+                                .unwrap()
+                                .1
+                                .clone();
+    
+                            inherited_viewports.push(element.node_id);
+    
+                            viewports_collection.insert(*child, (None, inherited_viewports));
+                        }
                     }
                 }
             }
@@ -206,7 +213,7 @@ pub fn process_work<HookOptions>(
 
                             calculated_events
                                 .entry(name)
-                                .or_insert_with(|| vec![event_data.clone()])
+                                .or_insert_with(Vec::new)
                                 .push(event_data);
                         }
                     }
@@ -215,7 +222,7 @@ pub fn process_work<HookOptions>(
         }
     }
 
-    let mut new_events: Vec<UserEvent> = Vec::new();
+    let mut new_events: Vec<DomEvent> = Vec::new();
 
     // Calculate what event listeners can actually be triggered
     for (event_name, event_nodes) in calculated_events.iter_mut() {
@@ -226,7 +233,7 @@ pub fn process_work<HookOptions>(
 
         'event_nodes: for (node, request) in event_nodes.iter() {
             for listener in &listeners {
-                if listener.id == node.node_id {
+                if listener.node_data.node_id == node.node_id {
                     if node.node_state.style.background != Color::TRANSPARENT
                         && event_name == &"wheel"
                     {
@@ -255,49 +262,34 @@ pub fn process_work<HookOptions>(
 
         for (node, request) in found_nodes {
             let event = match request {
-                FreyaEvent::Mouse { cursor, button, .. } => Some(UserEvent {
-                    scope_id: None,
-                    priority: EventPriority::Medium,
-                    element: Some(node.node_id),
-                    name: event_name,
-                    bubbles: false,
-                    data: Arc::new(MouseData::new(
+                FreyaEvent::Mouse { cursor, button, .. } => DomEvent {
+                    element_id: node.element_id.unwrap(),
+                    name: event_name.to_string(),
+                    data: DomEventData::Mouse(MouseData::new(
                         Point2D::from_lengths(Length::new(cursor.0), Length::new(cursor.1)),
                         Point2D::from_lengths(
                             Length::new(cursor.0 - node.node_area.x as f64),
                             Length::new(cursor.1 - node.node_area.y as f64),
                         ),
                         *button,
-                    )),
-                }),
-                FreyaEvent::Wheel { scroll, .. } => Some(UserEvent {
-                    scope_id: None,
-                    priority: EventPriority::Medium,
-                    element: Some(node.node_id),
-                    name: event_name,
-                    bubbles: false,
-                    data: Arc::new(WheelData::new(scroll.0, scroll.1)),
-                }),
-                FreyaEvent::Keyboard { name, code } => Some(UserEvent {
-                    scope_id: None,
-                    priority: EventPriority::Medium,
-                    element: Some(node.node_id),
-                    name,
-                    bubbles: false,
-                    data: Arc::new(KeyboardData::new(code.clone())),
-                }),
+                    ))
+                },
+                FreyaEvent::Wheel { scroll, .. } => DomEvent {
+                    element_id: node.element_id.unwrap(),
+                    name: event_name.to_string(),
+                    data: DomEventData::Wheel(WheelData::new(scroll.0, scroll.1))
+                },
+                FreyaEvent::Keyboard { name, code } => DomEvent {
+                    element_id: node.element_id.unwrap(),
+                    name: event_name.to_string(),
+                    data: DomEventData::Keyboard(KeyboardData::new(code.clone())),
+                },
             };
-            if let Some(event) = event {
-                info!("Emitted event: {:?}", event);
-                new_events.push(event.clone());
-                event_emitter
-                    .lock()
-                    .unwrap()
-                    .as_ref()
-                    .unwrap()
-                    .unbounded_send(SchedulerMsg::Event(event))
-                    .unwrap();
-            }
+            //println!("Emitted event: {:?}", event);
+            //new_events.push(event.clone());
+            event_emitter
+                .send(event)
+                .unwrap();
         }
     }
 
@@ -305,15 +297,35 @@ pub fn process_work<HookOptions>(
     let new_processed_events = events_processor.process_events_batch(new_events, calculated_events);
 
     for event in new_processed_events {
-        info!("Emitted event: {:?}", event);
+       /* println!("2Emitted event: {:?}", event);
         event_emitter
-            .lock()
-            .unwrap()
-            .as_ref()
-            .unwrap()
-            .unbounded_send(SchedulerMsg::Event(event))
-            .unwrap();
+            .send(event)
+            .unwrap(); */
     }
 
     freya_events.lock().unwrap().clear();
+}
+
+#[derive(Debug)]
+pub struct DomEvent {
+    pub name: String,
+    pub element_id: ElementId,
+    pub data: DomEventData
+}
+
+#[derive(Debug)]
+pub enum DomEventData {
+    Mouse(MouseData),
+    Keyboard(KeyboardData),
+    Wheel(WheelData)
+}
+
+impl DomEventData {
+    pub fn any(self) -> Rc<dyn Any> {
+        match self {
+            DomEventData::Mouse(m) => Rc::new(m),
+            DomEventData::Keyboard(k) => Rc::new(k),
+            DomEventData::Wheel(w) => Rc::new(w),
+        }
+    }
 }

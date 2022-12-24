@@ -1,30 +1,28 @@
-use dioxus::prelude::*;
+use dioxus_core::ScopeState;
+use dioxus_hooks::{use_state, use_ref, use_effect};
 use freya_common::NodeReferenceLayout;
-use tokio::sync::{mpsc::unbounded_channel, mpsc::UnboundedSender};
+pub use freya_elements::{NodeRefWrapper};
+use tokio::sync::mpsc::unbounded_channel;
+
 
 /// Creates a reference to the desired node's layout size
-pub fn use_node(
-    cx: &ScopeState,
-) -> (
-    &UseRef<UnboundedSender<NodeReferenceLayout>>,
-    &UseState<NodeReferenceLayout>,
-) {
-    let status = use_state::<NodeReferenceLayout>(cx, NodeReferenceLayout::default);
+pub fn use_node(cx: &ScopeState) -> (&NodeRefWrapper, NodeReferenceLayout) {
+    let status = use_state::<NodeReferenceLayout>(&cx, || NodeReferenceLayout::default());
     let status_getter = status.current();
     let status_setter = status.setter();
-    let node_ref = use_ref(cx, || {
+    let channel = use_ref(&cx, || {
         let (tx, rx) = unbounded_channel::<NodeReferenceLayout>();
 
         (tx, Some(rx))
     });
-    let sender = use_ref(cx, || node_ref.read().0.clone());
+    let node_ref = cx.use_hook(|| NodeRefWrapper(channel.read().0.clone()));
 
-    use_effect(cx, (), move |()| {
-        let node_ref = node_ref.clone();
+    use_effect(&cx, (), move |_| {
+        let channel = channel.clone();
         let getter = status_getter.clone();
 
         async move {
-            let rx = node_ref.write().1.take();
+            let rx = channel.write().1.take();
             let mut rx = rx.unwrap();
             let mut prev_status = (*getter).clone();
 
@@ -39,5 +37,5 @@ pub fn use_node(
         }
     });
 
-    (sender, status)
+    (node_ref, status.get().clone())
 }

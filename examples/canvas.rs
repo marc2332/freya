@@ -5,6 +5,7 @@
 
 use freya::prelude::{tracing::Level, *};
 use tracing_subscriber::FmtSubscriber;
+use freya::dioxus_elements::MouseEvent;
 
 fn main() {
     let subscriber = FmtSubscriber::builder()
@@ -70,73 +71,77 @@ fn app(cx: Scope) -> Element {
 
     render!(
         rect {
-            background: "rgb(35, 35, 35)",
             width: "100%",
-            height: "calc(100% - 100)",
-            scroll_x: "{canvas_pos.0}",
-            scroll_y: "{canvas_pos.1}",
-            onmousedown: onmousedown,
-            onclick: onclick,
-            onmouseover: onmouseover,
-            onmouseleave: onmouseleave,
-            label {
-                font_size: "25",
-                "What is this even about? I have no idea, but it's cool"
-            }
-            nodes.get().iter().enumerate().map(|(id, node)| {
-                rsx! {
-                    rect {
-                        key: "{id}",
-                        direction: "horizontal",
+            height: "100%",
+            rect {
+                background: "rgb(35, 35, 35)",
+                width: "100%",
+                height: "calc(100% - 100)",
+                scroll_x: "{canvas_pos.0}",
+                scroll_y: "{canvas_pos.1}",
+                onmousedown: onmousedown,
+                onclick: onclick,
+                onmouseover: onmouseover,
+                onmouseleave: onmouseleave,
+                label {
+                    font_size: "25",
+                    "What is this even about? I have no idea, but it's cool"
+                }
+                nodes.get().iter().enumerate().map(|(id, node)| {
+                    rsx! {
                         rect {
-                            scroll_x: "{node.0}",
-                            scroll_y: "{node.1}",
-                            container {
-                                background: "rgb(20, 20, 20)",
-                                width: "600",
-                                height: "400",
-                                radius: "15",
-                                padding: "20",
-                                shadow: "0 0 60 35 white",
-                                onmousedown:  move |e: MouseEvent| {
-                                    clicking_drag.set(Some((id, e.get_element_coordinates().to_tuple())));
-                                },
-                                onmouseleave: |_: MouseEvent| {
-                                    if clicking.is_none() {
-                                        hovering.set(false);
+                            key: "{id}",
+                            direction: "horizontal",
+                            rect {
+                                scroll_x: "{node.0}",
+                                scroll_y: "{node.1}",
+                                container {
+                                    background: "rgb(20, 20, 20)",
+                                    width: "600",
+                                    height: "400",
+                                    radius: "15",
+                                    padding: "20",
+                                    shadow: "0 0 60 35 white",
+                                    onmousedown:  move |e: MouseEvent| {
+                                        clicking_drag.set(Some((id, e.get_element_coordinates().to_tuple())));
+                                    },
+                                    onmouseleave: |_: MouseEvent| {
+                                        if clicking.is_none() {
+                                            hovering.set(false);
+                                        }
+                                    },
+                                    Editor {
+    
                                     }
-                                },
-                                Editor {
-
                                 }
                             }
                         }
                     }
-                }
-            })
-        }
-        rect {
-            background: "rgb(35, 35, 35)",
-            height: "100",
-            width: "100%",
-            display: "center",
-            direction: "horizontal",
-            padding: "30",
+                })
+            }
             rect {
-                layer: "-100",
-                padding: "10",
-                radius: "7",
-                width: "170",
-                height: "100%",
-                radius: "15",
+                background: "rgb(35, 35, 35)",
+                height: "100",
+                width: "100%",
                 display: "center",
-                direction: "both",
-                background: "rgb(20, 20, 20)",
-                Button {
-                    onclick: create_node,
-                    label {
-                        color: "white",
-                        "Create new node"
+                direction: "horizontal",
+                padding: "30",
+                rect {
+                    layer: "-100",
+                    padding: "10",
+                    radius: "7",
+                    width: "170",
+                    height: "100%",
+                    radius: "15",
+                    display: "center",
+                    direction: "both",
+                    background: "rgb(20, 20, 20)",
+                    Button {
+                        onclick: create_node,
+                        label {
+                            color: "white",
+                            "Create new node"
+                        }
                     }
                 }
             }
@@ -178,184 +183,188 @@ fn Editor(cx: Scope) -> Element {
     render!(
         rect {
             width: "100%",
-            height: "50",
-            padding: "10",
-            direction: "horizontal",
+            height: "100%",   
             rect {
-                height: "100%",
                 width: "100%",
+                height: "50",
+                padding: "10",
                 direction: "horizontal",
-                padding: "5",
                 rect {
-                    height: "40%",
-                    display: "center",
-                    width: "130",
-                    Slider {
-                        width: 100.0,
-                        value: *font_size_percentage.get(),
-                        onmoved: |p| {
-                            font_size_percentage.set(p);
-                        }
-                    }
+                    height: "100%",
+                    width: "100%",
+                    direction: "horizontal",
+                    padding: "5",
                     rect {
-                        height: "auto",
-                        width: "100%",
+                        height: "40%",
                         display: "center",
-                        direction: "horizontal",
-                        label {
-                            "Font size"
+                        width: "130",
+                        Slider {
+                            width: 100.0,
+                            value: *font_size_percentage.get(),
+                            onmoved: |p| {
+                                font_size_percentage.set(p);
+                            }
                         }
-                    }
+                        rect {
+                            height: "auto",
+                            width: "100%",
+                            display: "center",
+                            direction: "horizontal",
+                            label {
+                                "Font size"
+                            }
+                        }
 
-                }
-                rect {
-                    height: "40%",
-                    display: "center",
-                    direction: "vertical",
-                    width: "130",
-                    Slider {
-                        width: 100.0,
-                        value: *line_height_percentage.get(),
-                        onmoved: |p| {
-                            line_height_percentage.set(p);
+                    }
+                    rect {
+                        height: "40%",
+                        display: "center",
+                        direction: "vertical",
+                        width: "130",
+                        Slider {
+                            width: 100.0,
+                            value: *line_height_percentage.get(),
+                            onmoved: |p| {
+                                line_height_percentage.set(p);
+                            }
+                        }
+                        rect {
+                            height: "auto",
+                            width: "100%",
+                            display: "center",
+                            direction: "horizontal",
+                            label {
+                                "Line height"
+                            }
                         }
                     }
                     rect {
-                        height: "auto",
-                        width: "100%",
+                        height: "40%",
                         display: "center",
-                        direction: "horizontal",
-                        label {
-                            "Line height"
+                        direction: "vertical",
+                        width: "60",
+                        Switch {
+                            enabled: *is_bold.get(),
+                            ontoggled: |_| {
+                                is_bold.set(!is_bold.get());
+                            }
                         }
-                    }
-                }
-                rect {
-                    height: "40%",
-                    display: "center",
-                    direction: "vertical",
-                    width: "60",
-                    Switch {
-                        enabled: *is_bold.get(),
-                        ontoggled: |_| {
-                            is_bold.set(!is_bold.get());
+                        rect {
+                            height: "auto",
+                            width: "100%",
+                            display: "center",
+                            direction: "horizontal",
+                            label {
+                                "Bold"
+                            }
                         }
                     }
                     rect {
-                        height: "auto",
-                        width: "100%",
+                        height: "40%",
                         display: "center",
-                        direction: "horizontal",
-                        label {
-                            "Bold"
+                        direction: "vertical",
+                        width: "60",
+                        Switch {
+                            enabled: *is_italic.get(),
+                            ontoggled: |_| {
+                                is_italic.set(!is_italic.get());
+                            }
                         }
-                    }
-                }
-                rect {
-                    height: "40%",
-                    display: "center",
-                    direction: "vertical",
-                    width: "60",
-                    Switch {
-                        enabled: *is_italic.get(),
-                        ontoggled: |_| {
-                            is_italic.set(!is_italic.get());
-                        }
-                    }
-                    rect {
-                        height: "auto",
-                        width: "100%",
-                        display: "center",
-                        direction: "horizontal",
-                        label {
-                            "Italic"
+                        rect {
+                            height: "auto",
+                            width: "100%",
+                            display: "center",
+                            direction: "horizontal",
+                            label {
+                                "Italic"
+                            }
                         }
                     }
                 }
             }
-        }
-        rect {
-            width: "100%",
-            height: "calc(100% - 80)",
-            padding: "5",
-            onkeydown: move |e| {
-                process_keyevent.send(e.data).unwrap();
-            },
-            cursor_reference: cursor_ref,
-            direction: "horizontal",
             rect {
                 width: "100%",
-                height: "100%",
+                height: "calc(100% - 80)",
                 padding: "5",
-                ScrollView {
+                onkeydown: move |e| {
+                    //process_keyevent.send(e.data).unwrap();
+                },
+                cursor_reference: cursor_ref.read().clone(),
+                direction: "horizontal",
+                rect {
                     width: "100%",
                     height: "100%",
-                    show_scrollbar: true,
-                    content.lines(0..).map(move |l| {
-                        let process_clickevent = process_clickevent.clone();
+                    padding: "5",
+                    ScrollView {
+                        width: "100%",
+                        height: "100%",
+                        show_scrollbar: true,
+                        content.lines(0..).map(move |l| {
+                            let process_clickevent = process_clickevent.clone();
 
-                        let is_line_selected = cursor.1 == line_index;
+                            let is_line_selected = cursor.1 == line_index;
 
-                        // Only show the cursor in the active line
-                        let character_index = if is_line_selected {
-                            cursor.0.to_string()
-                        } else {
-                            "none".to_string()
-                        };
+                            // Only show the cursor in the active line
+                            let character_index = if is_line_selected {
+                                cursor.0.to_string()
+                            } else {
+                                "none".to_string()
+                            };
 
-                        // Only highlight the active line
-                        let line_background = if is_line_selected {
-                            "rgb(37, 37, 37)"
-                        } else {
-                            ""
-                        };
+                            // Only highlight the active line
+                            let line_background = if is_line_selected {
+                                "rgb(37, 37, 37)"
+                            } else {
+                                ""
+                            };
 
-                        let onmousedown = move |e: MouseEvent| {
-                            process_clickevent.send((e.data, line_index)).ok();
-                        };
+                            let onmousedown = move |e: MouseEvent| {
+                                //process_clickevent.send((e.data, line_index)).ok();
+                            };
 
-                        let manual_line_height = font_size * line_height;
+                            let manual_line_height = font_size * line_height;
 
-                        let cursor_id = line_index;
+                            let cursor_id = line_index;
 
-                        line_index += 1;
-                        rsx! {
-                            rect {
-                                key: "{line_index}",
-                                width: "100%",
-                                height: "{manual_line_height}",
-                                direction: "horizontal",
-                                background: "{line_background}",
-                                radius: "7",
+                            line_index += 1;
+                            rsx! {
                                 rect {
-                                    width: "{font_size * 2.0}",
-                                    height: "100%",
-                                    display: "center",
-                                    direction: "horizontal",
-                                    label {
-                                        font_size: "{font_size}",
-                                        color: "rgb(200, 200, 200)",
-                                        "{line_index} "
-                                    }
-                                }
-                                paragraph {
+                                    key: "{line_index}",
                                     width: "100%",
-                                    cursor_index: "{character_index}",
-                                    cursor_color: "white",
-                                    max_lines: "1",
-                                    cursor_mode: "editable",
-                                    cursor_id: "{cursor_id}",
-                                    onmousedown: onmousedown,
-                                    text {
-                                        color: "rgb(240, 240, 240)",
-                                        font_size: "{font_size}",
-                                        font_style: "{font_style}",
-                                        "{l} "
+                                    height: "{manual_line_height}",
+                                    direction: "horizontal",
+                                    background: "{line_background}",
+                                    radius: "7",
+                                    rect {
+                                        width: "{font_size * 2.0}",
+                                        height: "100%",
+                                        display: "center",
+                                        direction: "horizontal",
+                                        label {
+                                            font_size: "{font_size}",
+                                            color: "rgb(200, 200, 200)",
+                                            "{line_index} "
+                                        }
+                                    }
+                                    paragraph {
+                                        width: "100%",
+                                        cursor_index: "{character_index}",
+                                        cursor_color: "white",
+                                        max_lines: "1",
+                                        cursor_mode: "editable",
+                                        cursor_id: "{cursor_id}",
+                                        onmousedown: onmousedown,
+                                        text {
+                                            color: "rgb(240, 240, 240)",
+                                            font_size: "{font_size}",
+                                            font_style: "{font_style}",
+                                            "{l} "
+                                        }
                                     }
                                 }
                             }
-                        }
-                    })
+                        })
+                    }
                 }
             }
         }

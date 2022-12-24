@@ -14,7 +14,7 @@ pub struct RouterLinkProps<'a> {
 /// Freya Link for Dioxus Router.
 #[allow(non_snake_case)]
 pub fn RouterLink<'a>(cx: Scope<'a, RouterLinkProps<'a>>) -> Element<'a> {
-    let svc = cx.use_hook(|| cx.consume_context::<Arc<RouterCore>>());
+    let svc = cx.use_hook(|| cx.consume_context::<Arc<()>>());
 
     render!(
         container {
@@ -22,7 +22,7 @@ pub fn RouterLink<'a>(cx: Scope<'a, RouterLinkProps<'a>>) -> Element<'a> {
             height: "100%",
             onclick: move |_| {
                 if let Some(service) = svc {
-                    service.push_route(cx.props.to, None, None);
+                    //service.push_route(cx.props.to, None, None);
                 }
             },
             &cx.props.children

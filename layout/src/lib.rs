@@ -1,7 +1,8 @@
 use std::sync::{Arc, Mutex};
 
 use dioxus::core::ElementId;
-use dioxus_native_core::real_dom::NodeType;
+
+use dioxus_native_core::{node::NodeType, NodeId};
 use freya_common::{LayoutMemorizer, NodeArea, NodeLayoutInfo, NodeReferenceLayout};
 use freya_layers::{Layers, NodeData};
 use freya_node_state::{
@@ -136,7 +137,7 @@ fn calculate_area(node_data: &NodeData, mut area: NodeArea, parent_area: NodeAre
     );
 
     if SizeMode::Auto == node_data.node.state.size.height {
-        if let NodeType::Element { tag, .. } = &node_data.node.node_type {
+        if let NodeType::Element { tag, .. } = &node_data.node.node_data.node_type {
             if tag == "label" {
                 area.height = 18.0;
             }
@@ -168,7 +169,7 @@ fn calculate_area(node_data: &NodeData, mut area: NodeArea, parent_area: NodeAre
     area
 }
 
-type NodeResolver<T> = fn(&ElementId, &mut T) -> Option<NodeData>;
+type NodeResolver<T> = fn(&NodeId, &mut T) -> Option<NodeData>;
 
 /// Measure the areas of a node's inner children
 #[allow(clippy::too_many_arguments)]
@@ -187,76 +188,77 @@ fn measure_node_children<T>(
     layout_memorizer: &Arc<Mutex<LayoutMemorizer>>,
     must_memorize_layout: bool,
 ) {
-    match &node_data.node.node_type {
-        NodeType::Element { children, tag, .. } => {
-            for child in children {
-                let child_node = node_resolver(child, resolver_options);
-
-                if let Some(child_node) = child_node {
-                    let child_node_area = measure_node_layout::<T>(
-                        &child_node,
-                        *remaining_inner_area,
-                        inner_area,
-                        resolver_options,
-                        layers,
-                        node_resolver,
-                        inherited_relative_layer,
-                        font_collection,
-                        layout_memorizer,
-                        must_memorize_layout,
-                    );
-
-                    match node_data.node.state.size.direction {
-                        DirectionMode::Vertical => {
-                            remaining_inner_area.height -= child_node_area.height;
-                            remaining_inner_area.y = child_node_area.y + child_node_area.height;
-
-                            // Accumulate all heights
-                            *inner_height += child_node_area.height;
-
-                            // Only save the biggest width
-                            if *inner_width < child_node_area.width {
-                                *inner_width = child_node_area.width;
+    match &node_data.node.node_data.node_type {
+        NodeType::Element { tag, .. } => {
+            if let Some(children) = &node_data.children {
+                for child in children {
+                    let child_node = node_resolver(&child, resolver_options);
+    
+                    if let Some(child_node) = child_node {
+                        let child_node_area = measure_node_layout::<T>(
+                            &child_node,
+                            *remaining_inner_area,
+                            inner_area,
+                            resolver_options,
+                            layers,
+                            node_resolver,
+                            inherited_relative_layer,
+                            font_collection,
+                            layout_memorizer,
+                            must_memorize_layout,
+                        );
+    
+                        match node_data.node.state.size.direction {
+                            DirectionMode::Vertical => {
+                                remaining_inner_area.height -= child_node_area.height;
+                                remaining_inner_area.y = child_node_area.y + child_node_area.height;
+    
+                                // Accumulate all heights
+                                *inner_height += child_node_area.height;
+    
+                                // Only save the biggest width
+                                if *inner_width < child_node_area.width {
+                                    *inner_width = child_node_area.width;
+                                }
+                            }
+                            DirectionMode::Horizontal => {
+                                remaining_inner_area.width -= child_node_area.width;
+                                remaining_inner_area.x = child_node_area.x + child_node_area.width;
+    
+                                // Accumulate all widths
+                                *inner_width += child_node_area.width;
+    
+                                // Only save the biggest height
+                                if *inner_height < child_node_area.height {
+                                    *inner_height = child_node_area.height;
+                                }
+                            }
+                            DirectionMode::Both => {
+                                remaining_inner_area.height -= child_node_area.height;
+                                remaining_inner_area.width -= child_node_area.width;
+                                remaining_inner_area.y = child_node_area.y + child_node_area.height;
+                                remaining_inner_area.x = child_node_area.x + child_node_area.width;
+    
+                                // Accumulate all heights and widths
+                                *inner_height += child_node_area.height;
+                                *inner_width += child_node_area.width;
                             }
                         }
-                        DirectionMode::Horizontal => {
-                            remaining_inner_area.width -= child_node_area.width;
-                            remaining_inner_area.x = child_node_area.x + child_node_area.width;
-
-                            // Accumulate all widths
-                            *inner_width += child_node_area.width;
-
-                            // Only save the biggest height
-                            if *inner_height < child_node_area.height {
-                                *inner_height = child_node_area.height;
-                            }
+    
+                        if child_node_area.width > remaining_inner_area.width
+                            || remaining_inner_area.width == 0.0
+                        {
+                            remaining_inner_area.width = child_node_area.width;
                         }
-                        DirectionMode::Both => {
-                            remaining_inner_area.height -= child_node_area.height;
-                            remaining_inner_area.width -= child_node_area.width;
-                            remaining_inner_area.y = child_node_area.y + child_node_area.height;
-                            remaining_inner_area.x = child_node_area.x + child_node_area.width;
-
-                            // Accumulate all heights and widths
-                            *inner_height += child_node_area.height;
-                            *inner_width += child_node_area.width;
+    
+                        if child_node_area.height > remaining_inner_area.height
+                            || remaining_inner_area.height == 0.0
+                        {
+                            remaining_inner_area.height = child_node_area.height;
                         }
-                    }
-
-                    if child_node_area.width > remaining_inner_area.width
-                        || remaining_inner_area.width == 0.0
-                    {
-                        remaining_inner_area.width = child_node_area.width;
-                    }
-
-                    if child_node_area.height > remaining_inner_area.height
-                        || remaining_inner_area.height == 0.0
-                    {
-                        remaining_inner_area.height = child_node_area.height;
                     }
                 }
-            }
-            if tag == "paragraph"
+                if tag == "paragraph"
                 && CursorMode::Editable == node_data.node.state.cursor_settings.mode
             {
                 let font_size = node_data.node.state.font_style.font_size;
@@ -280,7 +282,7 @@ fn measure_node_children<T>(
                         .set_font_families(&[font_family]),
                 );
 
-                let texts = get_inner_texts(children, node_resolver, resolver_options);
+                let texts = get_inner_texts(&children, node_resolver, resolver_options);
 
                 for node_text in texts {
                     paragraph_builder.push_style(
@@ -309,6 +311,8 @@ fn measure_node_children<T>(
                         .ok();
                 }
             }
+        }
+            
         }
         NodeType::Text { text } => {
             let line_height = node_data.node.state.font_style.line_height;
@@ -347,7 +351,7 @@ fn measure_node_children<T>(
 }
 
 fn get_inner_texts<T>(
-    children: &[ElementId],
+    children: &[NodeId],
     node_resolver: NodeResolver<T>,
     resolver_options: &mut T,
 ) -> Vec<(NodeState, String)> {
@@ -357,16 +361,20 @@ fn get_inner_texts<T>(
             let child = node_resolver(child_id, resolver_options);
 
             if let Some(child) = child {
-                if let NodeType::Element { tag, children, .. } = child.node.node_type {
+                if let NodeType::Element { tag, .. } = child.node.node_data.node_type {
                     if tag != "text" {
                         return None;
                     }
-                    if let Some(child_text_id) = children.get(0) {
-                        let child_text = node_resolver(child_text_id, resolver_options);
-
-                        if let Some(child_text) = child_text {
-                            if let NodeType::Text { text } = &child_text.node.node_type {
-                                Some((child.node.state, text.clone()))
+                    if let Some(children) = child.children {
+                        if let Some(child_text_id) = children.get(0) {
+                            let child_text = node_resolver(child_text_id, resolver_options);
+    
+                            if let Some(child_text) = child_text {
+                                if let NodeType::Text { text } = &child_text.node.node_data.node_type {
+                                    Some((child.node.state, text.clone()))
+                                } else {
+                                    None
+                                }
                             } else {
                                 None
                             }
@@ -418,8 +426,7 @@ pub fn measure_node_layout<T>(
         layers.calculate_layer(node_data, inherited_relative_layer);
 
     let is_parent_dirty = node_data
-        .node
-        .parent
+        .parent_id
         .map(|p| layout_memorizer.lock().unwrap().is_dirty(&p))
         .unwrap_or(false);
 
@@ -428,21 +435,21 @@ pub fn measure_node_layout<T>(
         layout_memorizer
             .lock()
             .unwrap()
-            .mark_as_dirty(node_data.node.id);
+            .mark_as_dirty(node_data.node.node_data.node_id);
     }
 
     let is_dirty = layout_memorizer
         .lock()
         .unwrap()
-        .is_dirty(&node_data.node.id);
+        .is_dirty(&node_data.node.node_data.node_id);
     let is_cached = layout_memorizer
         .lock()
         .unwrap()
-        .is_node_layout_memorized(&node_data.node.id);
+        .is_node_layout_memorized(&node_data.node.node_data.node_id);
 
     // If this node is dirty and parent is not dirty, mark this node dirty
     if is_dirty && !is_parent_dirty {
-        if let Some(p) = node_data.node.parent {
+        if let Some(p) = node_data.parent_id {
             layout_memorizer.lock().unwrap().mark_as_dirty(p)
         }
     }
@@ -478,7 +485,7 @@ pub fn measure_node_layout<T>(
             if must_memorize_layout {
                 // Memorize these layouts
                 layout_memorizer.lock().unwrap().add_node_layout(
-                    node_data.node.id,
+                    node_data.node.node_data.node_id,
                     NodeLayoutInfo {
                         area: node_area,
                         remaining_inner_area,
@@ -504,7 +511,7 @@ pub fn measure_node_layout<T>(
             } = layout_memorizer
                 .lock()
                 .unwrap()
-                .get_node_layout(&node_data.node.id)
+                .get_node_layout(&node_data.node.node_data.node_id)
                 .unwrap();
             (area, remaining_inner_area, inner_area, inner_sizes)
         };
@@ -569,10 +576,10 @@ pub fn measure_node_layout<T>(
         layout_memorizer
             .lock()
             .unwrap()
-            .remove_as_dirty(&node_data.node.id);
+            .remove_as_dirty(&node_data.node.node_data.node_id);
     }
 
-    match &node_data.node.node_type {
+    match &node_data.node.node_data.node_type {
         NodeType::Text { .. } => {}
         _ => {
             if let SizeMode::Auto = node_data.node.state.size.width {

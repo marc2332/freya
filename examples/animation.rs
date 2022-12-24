@@ -4,6 +4,7 @@
 )]
 
 use freya::prelude::*;
+use freya::dioxus_elements::MouseEvent;
 
 fn main() {
     launch(app);

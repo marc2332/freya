@@ -34,7 +34,7 @@ impl Default for FontStyle {
 /// Font style are inherited by default if not specified otherwise by some of the supported attributes.
 impl ParentDepState for FontStyle {
     type Ctx = ();
-    type DepState = Self;
+    type DepState = (Self,);
 
     const NODE_MASK: NodeMask =
         NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
@@ -50,46 +50,70 @@ impl ParentDepState for FontStyle {
     fn reduce<'a>(
         &mut self,
         node: NodeView,
-        parent: Option<&'a Self::DepState>,
+        parent: Option<(&'a Self,)>,
         _ctx: &Self::Ctx,
     ) -> bool {
-        let mut font_style = parent.cloned().unwrap_or_default();
+        let mut font_style = parent.map(|(v,)| v.clone()).unwrap_or_default();
 
-        for attr in node.attributes() {
-            match attr.name {
-                "color" => {
-                    let new_color = parse_color(&attr.value.to_string());
-                    if let Some(new_color) = new_color {
-                        font_style.color = new_color;
+        if let Some(attributes) = node.attributes() {
+            for attr in attributes {
+                match attr.attribute.name.as_str() {
+                    "color" => {
+                        let attr = attr.value.as_text();
+                        if let Some(attr) = attr {
+                            let new_color = parse_color(attr);
+                            if let Some(new_color) = new_color {
+                                font_style.color = new_color;
+                            }
+                        }
                     }
-                }
-                "font_family" => {
-                    font_style.font_family = attr.value.to_string();
-                }
-                "font_size" => {
-                    if let Ok(font_size) = attr.value.to_string().parse() {
-                        font_style.font_size = font_size;
+                    "font_family" => {
+                        let attr = attr.value.as_text();
+                        if let Some(attr) = attr {
+                            font_style.font_family = attr.to_string();
+                        }
                     }
-                }
-                "line_height" => {
-                    if let Ok(line_height) = attr.value.to_string().parse() {
-                        font_style.line_height = line_height;
+                    "font_size" => {
+                        let attr = attr.value.as_text();
+                        if let Some(attr) = attr {
+                            if let Ok(font_size) = attr.parse() {
+                                font_style.font_size = font_size;
+                            }
+                        }
                     }
-                }
-                "align" => {
-                    font_style.align = parse_text_align(&attr.value.to_string());
-                }
-                "max_lines" => {
-                    if let Ok(max_lines) = attr.value.to_string().parse() {
-                        font_style.max_lines = Some(max_lines);
+                    "line_height" => {
+                        let attr = attr.value.as_text();
+                        if let Some(attr) = attr {
+                            if let Ok(line_height) = attr.parse() {
+                                font_style.line_height = line_height;
+                            }
+                        }
                     }
+                    "align" => {
+                        let attr = attr.value.as_text();
+                        if let Some(attr) = attr {
+                            font_style.align = parse_text_align(attr);
+                        }
+                    }
+                    "max_lines" => {
+                        let attr = attr.value.as_text();
+                        if let Some(attr) = attr {
+                            if let Ok(max_lines) = attr.parse() {
+                                font_style.max_lines = Some(max_lines);
+                            }
+                        }
+                    }
+                    "font_style" => {
+                        let attr = attr.value.as_text();
+                        if let Some(attr) = attr {
+                            font_style.font_style = parse_font_style(attr);
+                        }
+                    }
+                    _ => {}
                 }
-                "font_style" => {
-                    font_style.font_style = parse_font_style(&attr.value.to_string());
-                }
-                _ => {}
             }
         }
+
         let changed = &font_style != self;
         *self = font_style;
         changed

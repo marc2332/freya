@@ -1,5 +1,6 @@
 use std::fmt::Display;
 
+use dioxus_native_core::node::OwnedAttributeValue;
 use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
 use dioxus_native_core::state::NodeDepState;
 use dioxus_native_core_macro::sorted_str_slice;
@@ -18,7 +19,8 @@ pub struct Style {
     pub display: DisplayMode,
 }
 
-impl NodeDepState<()> for Style {
+impl NodeDepState for Style {
+    type DepState = ();
     type Ctx = ();
 
     const NODE_MASK: NodeMask =
@@ -42,52 +44,64 @@ impl NodeDepState<()> for Style {
         let mut svg_data = None;
         let mut display = DisplayMode::Normal;
 
-        for attr in node.attributes() {
-            match attr.name {
-                "display" => display = parse_display(&attr.value.to_string()),
-                "background" => {
-                    let new_back = parse_color(&attr.value.to_string());
-                    if let Some(new_back) = new_back {
-                        background = new_back;
+        if let Some(attributes) = node.attributes() {
+            for attr in attributes {
+                match attr.attribute.name.as_str() {
+                    "background" => {
+                        if let Some(attr) = attr.value.as_text() {
+                            let new_back = parse_color(attr);
+                            if let Some(new_back) = new_back {
+                                background = new_back;
+                            }
+                        }
                     }
-                }
-                "layer" => {
-                    let new_relative_layer: Option<i16> = attr.value.to_string().parse().ok();
-                    if let Some(new_relative_layer) = new_relative_layer {
-                        relative_layer = new_relative_layer;
+                    "display" => {
+                        if let Some(new_display) = attr.value.as_text() {
+                            display = parse_display(new_display)
+                        }
                     }
-                }
-                "shadow" => {
-                    let new_shadow = parse_shadow(&attr.value.to_string());
-
-                    if let Some(new_shadow) = new_shadow {
-                        shadow = new_shadow;
+                    "layer" => {
+                        if let Some(attr) = attr.value.as_text() {
+                            if let Ok(new_relative_layer) = attr.parse::<i16>() {
+                                relative_layer = new_relative_layer;
+                            }
+                        }
                     }
-                }
-                "radius" => {
-                    let new_radius: Option<f32> = attr.value.to_string().parse().ok();
-
-                    if let Some(new_radius) = new_radius {
-                        radius = new_radius;
+                    "shadow" => {
+                        if let Some(attr) = attr.value.as_text() {
+                            if let Some(new_shadow) = parse_shadow(attr) {
+                                shadow = new_shadow;
+                            }
+                        }
                     }
-                }
-                "image_data" => {
-                    let bytes = attr.value.as_bytes();
-                    image_data = bytes.map(|v| v.to_vec());
-                }
-                "svg_data" => {
-                    let bytes = attr.value.as_bytes();
-                    svg_data = bytes.map(|v| v.to_vec());
-                }
-                "svg_content" => {
-                    let text = attr.value.as_text();
-                    svg_data = text.map(|v| v.as_bytes().to_vec());
-                }
-                _ => {
-                    println!("Unsupported attribute <{}>", attr.name);
+                    "radius" => {
+                        if let Some(attr) = attr.value.as_text() {
+                            if let Ok(new_radius) = attr.parse::<f32>() {
+                                radius = new_radius;
+                            }
+                        }
+                    }
+                    "image_data" => {
+                        if let OwnedAttributeValue::Any(bytes) = attr.value {
+                            image_data = bytes.downcast_ref::<&[u8]>().map(|v| v.to_vec());
+                        }
+                    }
+                    "svg_data" => {
+                        if let OwnedAttributeValue::Any(bytes) = attr.value {
+                            svg_data = bytes.downcast_ref::<&[u8]>().map(|v| v.to_vec());
+                        }
+                    }
+                    "svg_content" => {
+                        let text = attr.value.as_text();
+                        svg_data = text.map(|v| v.as_bytes().to_vec());
+                    }
+                    _ => {
+                        println!("Unsupported attribute <{}>", attr.attribute.name);
+                    }
                 }
             }
         }
+
 
         let changed = (background != self.background)
             || (relative_layer != self.relative_layer)

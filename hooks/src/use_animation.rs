@@ -1,4 +1,5 @@
-use dioxus::prelude::{use_effect, use_state, ScopeState};
+use dioxus_core::ScopeState;
+use dioxus_hooks::{use_effect, use_state};
 use std::{cell::RefCell, ops::RangeInclusive, time::Duration};
 use tokio::time::interval;
 use tween::{BounceIn, SineIn, SineInOut, Tween};

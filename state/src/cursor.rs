@@ -5,9 +5,17 @@ use skia_safe::Color;
 
 use crate::parse_color;
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CursorSettings {
+    pub position: Option<i32>,
+    pub color: Color,
+    pub mode: CursorMode,
+    pub id: Option<usize>,
+}
+
 impl ParentDepState for CursorSettings {
     type Ctx = ();
-    type DepState = Self;
+    type DepState = (Self, );
 
     const NODE_MASK: NodeMask =
         NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
@@ -20,36 +28,45 @@ impl ParentDepState for CursorSettings {
     fn reduce<'a>(
         &mut self,
         node: NodeView,
-        parent: Option<&'a Self::DepState>,
+        parent: Option<(&'a Self,)>,
         _ctx: &Self::Ctx,
     ) -> bool {
-        let mut cursor = parent.cloned().unwrap_or_default();
+        let mut cursor = parent.map(|(p,)| p.clone()).unwrap_or_default();
 
-        for attr in node.attributes() {
-            match attr.name {
-                "cursor_index" => {
-                    let text = attr.value.as_text().unwrap();
-                    if text != "none" {
-                        let new_cursor_index = text.parse().unwrap();
-                        cursor.position = Some(new_cursor_index);
+        if let Some(attributes) = node.attributes() {
+            for attr in attributes {
+                match attr.attribute.name.as_str() {
+                    "cursor_index" => {
+                        let text = attr.value.as_text().unwrap();
+                        if text != "none" {
+                            let new_cursor_index = text.parse().unwrap();
+                            cursor.position = Some(new_cursor_index);
+                        }
                     }
-                }
-                "cursor_color" => {
-                    let new_cursor_color = parse_color(&attr.value.to_string());
-                    if let Some(new_cursor_color) = new_cursor_color {
-                        cursor.color = new_cursor_color;
+                    "cursor_color" => {
+                        if let Some(val) = attr.value.as_text() {
+                            let new_cursor_color = parse_color(val);
+                            if let Some(new_cursor_color) = new_cursor_color {
+                                cursor.color = new_cursor_color;
+                            }
+                        }
+                        
                     }
-                }
-                "cursor_mode" => {
-                    cursor.mode = parse_cursor(&attr.value.to_string());
-                }
-                "cursor_id" => {
-                    let new_cursor_id = attr.value.to_string().parse();
-                    if let Ok(new_cursor_id) = new_cursor_id {
-                        cursor.id = Some(new_cursor_id);
+                    "cursor_mode" => {
+                        if let Some(val) = attr.value.as_text() {
+                            cursor.mode = parse_cursor(val);
+                        }
+                       
                     }
+                    "cursor_id" => {
+                        if let Some(val) = attr.value.as_text() {
+                            if let Ok(new_cursor_id) = val.parse() {
+                                cursor.id = Some(new_cursor_id);
+                            }
+                        }
+                    }
+                    _ => {}
                 }
-                _ => {}
             }
         }
         let changed = &cursor != self;
@@ -65,13 +82,7 @@ fn parse_cursor(cursor: &str) -> CursorMode {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct CursorSettings {
-    pub position: Option<i32>,
-    pub color: Color,
-    pub mode: CursorMode,
-    pub id: Option<usize>,
-}
+
 
 impl Default for CursorSettings {
     fn default() -> Self {

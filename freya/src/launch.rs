@@ -1,6 +1,4 @@
-use anymap::AnyMap;
-use dioxus::prelude::{Component, UnboundedSender, VirtualDom};
-use dioxus_core::SchedulerMsg;
+use dioxus::prelude::{VirtualDom};
 use dioxus_native_core::real_dom::RealDom;
 use freya_common::LayoutMemorizer;
 use freya_node_state::NodeState;
@@ -8,7 +6,8 @@ use freya_renderer::run;
 use freya_renderer::WindowConfig;
 use std::sync::Arc;
 use std::sync::Mutex;
-use tracing::info;
+use dioxus_core::Component;
+use freya_processor::DomEvent;
 
 #[cfg(not(doctest))]
 /// Launch a new Window with the default config.
@@ -162,12 +161,17 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
 /// }
 /// ```
 pub fn launch_cfg<T: 'static + Clone + Send>(wins_config: Vec<(Component<()>, WindowConfig<T>)>) {
+    use std::{time::Duration, rc::Rc};
+
+    use anymap::{any::Any, Map};
+    use dioxus_native_core::SendAnyMap;
+    use tokio::{sync::mpsc::{UnboundedSender, unbounded_channel}, select};
+
     let wins = wins_config
         .into_iter()
         .map(|(root, win)| {
             let rdom = Arc::new(Mutex::new(RealDom::<NodeState>::new()));
-            let event_emitter: Arc<Mutex<Option<UnboundedSender<SchedulerMsg>>>> =
-                Arc::new(Mutex::new(None));
+            let (event_emitter, mut event_emitter_rx) = unbounded_channel::<DomEvent>();
 
             let layout_memorizer = Arc::new(Mutex::new(LayoutMemorizer::new()));
             let state = win.state.clone();
@@ -177,34 +181,20 @@ pub fn launch_cfg<T: 'static + Clone + Send>(wins_config: Vec<(Component<()>, Wi
                 let rdom = rdom.clone();
                 let event_emitter = event_emitter.clone();
                 std::thread::spawn(move || {
-                    let mut dom = {
-                        #[cfg(feature = "devtools")]
-                        {
-                            with_devtools(rdom.clone(), root)
-                        }
-
-                        #[cfg(not(feature = "devtools"))]
-                        {
-                            VirtualDom::new(root)
-                        }
-                    };
+                    let mut dom =  VirtualDom::new(root);
 
                     if let Some(state) = state.clone() {
                         dom.base_scope().provide_context(state);
                     }
 
                     let muts = dom.rebuild();
-                    let to_update = rdom.lock().unwrap().apply_mutations(vec![muts]);
-                    let mut ctx = AnyMap::new();
+                    let (to_update, diff) = rdom.lock().unwrap().apply_mutations(muts);
 
+                    let mut ctx = SendAnyMap::new();
                     ctx.insert(layout_memorizer.clone());
 
-                    rdom.lock().unwrap().update_state(&dom, to_update, ctx);
-
-                    event_emitter
-                        .lock()
-                        .unwrap()
-                        .replace(dom.get_scheduler_channel());
+                    //println!("Updated Dioxus DOM with {} mutations.", diff.len());
+                    rdom.lock().unwrap().update_state(to_update, ctx);
 
                     tokio::runtime::Builder::new_multi_thread()
                         .enable_all()
@@ -212,22 +202,36 @@ pub fn launch_cfg<T: 'static + Clone + Send>(wins_config: Vec<(Component<()>, Wi
                         .unwrap()
                         .block_on(async move {
                             loop {
-                                dom.wait_for_work().await;
-                                let mutations = dom.work_with_deadline(|| false);
+                                select! {
+                                    ev = event_emitter_rx.recv() => {
+                                        if let Some(ev) = ev {
+                                            let data = ev.data.any();
+                                            dom.handle_event(&ev.name, data, ev.element_id, false);
+                                           
+                                            dom.process_events();
+                                        }
+                                    },
+                                    _ = dom.wait_for_work() => {},
+                                };
 
-                                let to_update = rdom.lock().unwrap().apply_mutations(mutations);
+                               
+
+                                // Or wait for a deadline and then collect edits
+                                let mutations = dom.render_immediate();
+                                let (to_update, diff) = rdom.lock().unwrap().apply_mutations(mutations);
 
                                 if let Some(state) = state.clone() {
                                     dom.base_scope().provide_context(state);
                                 }
 
-                                let mut ctx = AnyMap::new();
+
+                                let mut ctx = SendAnyMap::new();
                                 ctx.insert(layout_memorizer.clone());
 
-                                if !to_update.is_empty() {
-                                    info!("Updated Dioxus DOM with {} mutations.", to_update.len());
-                                    rdom.lock().unwrap().update_state(&dom, to_update, ctx);
-                                }
+                                //println!("Updated Dioxus DOM with {} mutations.", diff.len());
+                                rdom.lock().unwrap().update_state(to_update, ctx);
+
+                                //println!("{:#?}", rdom.lock().unwrap());
                             }
                         });
                 });
@@ -241,7 +245,7 @@ pub fn launch_cfg<T: 'static + Clone + Send>(wins_config: Vec<(Component<()>, Wi
 
 #[cfg(feature = "devtools")]
 use dioxus::prelude::{
-    fc_to_builder, format_args_f, render, Element, LazyNodes, NodeFactory, Scope, VNode,
+    fc_to_builder, format_args_f, render, Element, LazyNodes, Scope, VNode,
 };
 
 #[cfg(feature = "devtools")]

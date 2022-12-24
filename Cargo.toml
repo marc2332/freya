@@ -13,7 +13,12 @@ wireframe = ["freya/wireframe"]
 
 [dev-dependencies]
 freya = { path = "./freya"}
-dioxus = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners", features = ["macro", "hooks"]}
+dioxus = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
+dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
+dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
+dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
+dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
+dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes", features = ["sync_attributes"] }
 tokio = "1.17.0"
 reqwest = {version = "0.11.12", features = ["json"] }
 serde = "1.0.145"
