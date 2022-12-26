@@ -6,14 +6,14 @@
 use std::time::Duration;
 
 use freya::prelude::*;
-use tokio::{time::sleep, sync::mpsc::unbounded_channel};
+use tokio::{sync::mpsc::unbounded_channel, time::sleep};
 
 fn main() {
     launch(app);
 }
 
 fn app(cx: Scope) -> Element {
-    let enabled = use_state(&cx, || false);  
+    let enabled = use_state(&cx, || false);
     let is_enabled = if *enabled.get() { "Yes" } else { "No" };
 
     render!(
@@ -29,7 +29,7 @@ fn app(cx: Scope) -> Element {
                 "{is_enabled}"
             }
             vec![0,0,0,0,0,0,0,0].iter().enumerate().map(move |(i, _)| {
-                println!("{}", i);                       
+                println!("{}", i);
                 rsx! {
                     rect {
                         key: "{i}",

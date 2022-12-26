@@ -102,7 +102,6 @@ impl NodeDepState for Style {
             }
         }
 
-
         let changed = (background != self.background)
             || (relative_layer != self.relative_layer)
             || (shadow != self.shadow)

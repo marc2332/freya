@@ -1,7 +1,8 @@
 use dioxus::core::ElementId;
 use dioxus::prelude::*;
 use dioxus_core::Scope;
-use dioxus_native_core::{real_dom::{RealDom}, node::NodeType};
+use dioxus_native_core::tree::TreeView;
+use dioxus_native_core::{node::NodeType, real_dom::RealDom};
 use dioxus_router::*;
 use freya_components::*;
 use freya_elements as dioxus_elements;
@@ -13,7 +14,6 @@ use std::{
     time::Duration,
 };
 use tokio::time::sleep;
-use dioxus_native_core::tree::TreeView;
 
 #[derive(Clone)]
 struct TreeNode {

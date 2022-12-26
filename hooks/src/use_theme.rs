@@ -1,5 +1,5 @@
 use dioxus_core::ScopeState;
-use dioxus_hooks::{use_context_provider, use_context};
+use dioxus_hooks::{use_context, use_context_provider};
 
 pub fn use_init_theme(cx: &ScopeState, theme: Theme) {
     use_context_provider(cx, || theme);

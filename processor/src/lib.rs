@@ -1,20 +1,25 @@
 use dioxus_core::ElementId;
-use dioxus_native_core::{real_dom::{ RealDom}, tree::TreeView, NodeId, node::{Node, NodeType}};
+use dioxus_native_core::{
+    node::{Node, NodeType},
+    real_dom::RealDom,
+    tree::TreeView,
+    NodeId,
+};
 use euclid::{Length, Point2D};
 use freya_common::{LayoutMemorizer, NodeArea};
-use freya_elements::{
-    events_data::{KeyboardData, MouseData, WheelData},
-};
+use freya_elements::events_data::{KeyboardData, MouseData, WheelData};
 use freya_layers::{Layers, NodeData, RenderData};
 use freya_layout::measure_node_layout;
 use freya_node_state::NodeState;
 use rustc_hash::FxHashMap;
 use skia_safe::{textlayout::FontCollection, Color};
-use tokio::sync::mpsc::UnboundedSender;
 use std::{
+    any::Any,
     ops::Index,
-    sync::{Arc, Mutex}, any::Any, rc::Rc,
+    rc::Rc,
+    sync::{Arc, Mutex},
 };
+use tokio::sync::mpsc::UnboundedSender;
 use tracing::info;
 
 pub mod events;
@@ -60,7 +65,12 @@ pub fn process_work<HookOptions>(
     let layers = &mut Layers::default();
 
     measure_node_layout(
-        &NodeData { node: root, height: 0, parent_id: None, children: root_children },
+        &NodeData {
+            node: root,
+            height: 0,
+            parent_id: None,
+            children: root_children,
+        },
         area,
         area,
         &mut dom,
@@ -71,12 +81,20 @@ pub fn process_work<HookOptions>(
                 let height = dom.tree.height(*node_id);
                 let parent_id = dom.tree.parent_id(*node_id);
                 let children = dom.tree.children_ids(*node_id).map(|v| v.to_vec());
-                (dom.index(*node_id).clone(), height.unwrap(), parent_id, children)
+                (
+                    dom.index(*node_id).clone(),
+                    height.unwrap(),
+                    parent_id,
+                    children,
+                )
             };
 
-           
-
-            Some(NodeData { node: child, height, parent_id, children })
+            Some(NodeData {
+                node: child,
+                height,
+                parent_id,
+                children,
+            })
         },
         0,
         font_collection,
@@ -84,7 +102,7 @@ pub fn process_work<HookOptions>(
         true,
     );
 
-   // println!("-> {:#?}", layers.layers);
+    // println!("-> {:#?}", layers.layers);
 
     #[cfg(debug_assertions)]
     {
@@ -122,9 +140,9 @@ pub fn process_work<HookOptions>(
                                 .unwrap()
                                 .1
                                 .clone();
-    
+
                             inherited_viewports.push(element.node_id);
-    
+
                             viewports_collection.insert(*child, (None, inherited_viewports));
                         }
                     }
@@ -272,12 +290,12 @@ pub fn process_work<HookOptions>(
                             Length::new(cursor.1 - node.node_area.y as f64),
                         ),
                         *button,
-                    ))
+                    )),
                 },
                 FreyaEvent::Wheel { scroll, .. } => DomEvent {
                     element_id: node.element_id.unwrap(),
                     name: event_name.to_string(),
-                    data: DomEventData::Wheel(WheelData::new(scroll.0, scroll.1))
+                    data: DomEventData::Wheel(WheelData::new(scroll.0, scroll.1)),
                 },
                 FreyaEvent::Keyboard { name, code } => DomEvent {
                     element_id: node.element_id.unwrap(),
@@ -287,9 +305,7 @@ pub fn process_work<HookOptions>(
             };
             //println!("Emitted event: {:?}", event);
             //new_events.push(event.clone());
-            event_emitter
-                .send(event)
-                .unwrap();
+            event_emitter.send(event).unwrap();
         }
     }
 
@@ -297,7 +313,7 @@ pub fn process_work<HookOptions>(
     let new_processed_events = events_processor.process_events_batch(new_events, calculated_events);
 
     for event in new_processed_events {
-       /* println!("2Emitted event: {:?}", event);
+        /* println!("2Emitted event: {:?}", event);
         event_emitter
             .send(event)
             .unwrap(); */
@@ -310,14 +326,14 @@ pub fn process_work<HookOptions>(
 pub struct DomEvent {
     pub name: String,
     pub element_id: ElementId,
-    pub data: DomEventData
+    pub data: DomEventData,
 }
 
 #[derive(Debug)]
 pub enum DomEventData {
     Mouse(MouseData),
     Keyboard(KeyboardData),
-    Wheel(WheelData)
+    Wheel(WheelData),
 }
 
 impl DomEventData {

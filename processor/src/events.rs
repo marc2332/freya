@@ -1,6 +1,6 @@
-use std::{collections::HashMap, sync::Arc, rc::Rc};
+use std::{collections::HashMap, rc::Rc, sync::Arc};
 
-use dioxus_core::{ElementId};
+use dioxus_core::ElementId;
 use dioxus_native_core::NodeId;
 use euclid::Point2D;
 use freya_elements::events_data::MouseData;

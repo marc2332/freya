@@ -1,7 +1,8 @@
+use std::cell::RefCell;
 use std::sync::{Arc, Mutex};
 
 use dioxus_core::exports::bumpalo::Bump;
-use dioxus_core::{IntoAttributeValue, AttributeValue, AnyValueContainer};
+use dioxus_core::{AnyValueContainer, AttributeValue, IntoAttributeValue};
 use dioxus_hooks::UseRef;
 use dioxus_native_core::node::OwnedAttributeValue;
 use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
@@ -45,12 +46,14 @@ impl ParentDepState for References {
                 match attr.attribute.name.as_str() {
                     "reference" => {
                         if let OwnedAttributeValue::Any(v) = attr.value {
-                            node_ref = v.downcast_ref::<NodeRefWrapper>().map(|v|v.0.clone());
+                            node_ref = v.downcast_ref::<NodeRefWrapper>().map(|v| v.0.clone());
                         }
                     }
                     "cursor_reference" => {
                         if let OwnedAttributeValue::Any(v) = attr.value {
-                            cursor_ref = v.downcast_ref::<&UseRef<CursorReference>>().map(|v|v.read().clone());
+                            cursor_ref = v
+                                .downcast_ref::<&UseRef<CursorReference>>()
+                                .map(|v| v.read().clone());
                         }
                     }
                     _ => {
@@ -78,7 +81,7 @@ pub struct CursorReference {
 
 impl<'a> IntoAttributeValue<'a> for CursorReference {
     fn into_value(self, _bump: &'a Bump) -> AttributeValue<'a> {
-        AttributeValue::Any(AnyValueContainer(Arc::new(self)))
+        AttributeValue::Any(RefCell::new(Some(AnyValueContainer(Arc::new(self)))))
     }
 }
 

@@ -1,9 +1,9 @@
 use std::fmt::Display;
 use std::sync::{Arc, Mutex};
 
-use dioxus_native_core::NodeId;
 use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
 use dioxus_native_core::state::ParentDepState;
+use dioxus_native_core::NodeId;
 use dioxus_native_core_macro::sorted_str_slice;
 use freya_common::LayoutMemorizer;
 
@@ -123,7 +123,6 @@ impl ParentDepState for Size {
                             padding.2 = padding_for_side;
                             padding.3 = padding_for_side;
                         }
-                        
                     }
                     "direction" => {
                         let attr = attr.value.as_text();

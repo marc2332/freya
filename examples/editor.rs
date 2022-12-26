@@ -1,5 +1,5 @@
-use freya::prelude::*;
 use freya::dioxus_elements::MouseEvent;
+use freya::prelude::*;
 
 fn main() {
     launch_cfg(vec![(
@@ -14,40 +14,14 @@ fn main() {
     )]);
 }
 
-
-
-#[allow(non_snake_case)]
-fn Test(cx: Scope) -> Element {
-    render!(
-        rect {
-            ScrollView {
-                width: "100%",
-                height: "100%",
-                show_scrollbar: true,
-                (vec![0,1,2,3]).iter().enumerate().map(move |(i, l)| {
-                    rsx! {
-                        rect {
-                            key:"{l}"
-                        }
-                    }
-                })
-            }
-        }       
-    )
-}
-
-
 fn app(cx: Scope) -> Element {
     use_init_default_theme(&cx);
-    render!(
-        Body {}
-    )
+    render!(Body {})
 }
 
 #[allow(non_snake_case)]
 fn Body(cx: Scope) -> Element {
     let theme = use_theme(&cx);
-    println!("CALLED");
     let (content, cursor, process_keyevent, process_clickevent, cursor_ref) = use_editable(
         &cx,
         || {
@@ -123,7 +97,7 @@ fn Body(cx: Scope) -> Element {
                                 "Font size"
                             }
                         }
-    
+
                     }
                     rect {
                         height: "40%",
@@ -205,17 +179,76 @@ fn Body(cx: Scope) -> Element {
                     width: "50%",
                     height: "100%",
                     padding: "30",
-                    vec![0,0,0,0,0,0,0,0].iter().enumerate().map(move |(i, _)| {
-                        println!("{}", i);                       
-                        rsx! {
-                            rect {
-                                key: "{i}",
-                                label {
-                                    "{i}"
+                    ScrollView {
+                        width: "100%",
+                        height: "100%",
+                        show_scrollbar: true,
+                        content.lines(0..).map(move |l| {
+                            let process_clickevent = process_clickevent.clone();
+
+                            let is_line_selected = cursor.1 == line_index;
+
+                            // Only show the cursor in the active line
+                            let character_index = if is_line_selected {
+                                cursor.0.to_string()
+                            } else {
+                                "none".to_string()
+                            };
+
+                            // Only highlight the active line
+                            let line_background = if is_line_selected {
+                                "rgb(37, 37, 37)"
+                            } else {
+                                ""
+                            };
+
+                            let onmousedown = move |e: MouseEvent| {
+                                process_clickevent.send((e.data, line_index)).ok();
+                            };
+
+                            let manual_line_height = font_size * line_height;
+
+                            let cursor_id = line_index;
+
+                            line_index += 1;
+                            rsx! {
+                                rect {
+                                    key: "{line_index}",
+                                    width: "100%",
+                                    height: "{manual_line_height}",
+                                    direction: "horizontal",
+                                    background: "{line_background}",
+                                    radius: "7",
+                                    rect {
+                                        width: "{font_size * 2.0}",
+                                        height: "100%",
+                                        display: "center",
+                                        direction: "horizontal",
+                                        label {
+                                            font_size: "{font_size}",
+                                            color: "rgb(200, 200, 200)",
+                                            "{line_index} "
+                                        }
+                                    }
+                                    paragraph {
+                                        width: "100%",
+                                        cursor_index: "{character_index}",
+                                        cursor_color: "white",
+                                        max_lines: "1",
+                                        cursor_mode: "editable",
+                                        cursor_id: "{cursor_id}",
+                                        onmousedown: onmousedown,
+                                        text {
+                                            color: "rgb(240, 240, 240)",
+                                            font_size: "{font_size}",
+                                            font_style: "{font_style}",
+                                            "{l} "
+                                        }
+                                    }
                                 }
                             }
-                        }
-                    })
+                        })
+                    }
                 }
                 rect {
                     background: "{theme.body.background}",

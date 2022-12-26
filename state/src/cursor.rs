@@ -15,7 +15,7 @@ pub struct CursorSettings {
 
 impl ParentDepState for CursorSettings {
     type Ctx = ();
-    type DepState = (Self, );
+    type DepState = (Self,);
 
     const NODE_MASK: NodeMask =
         NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
@@ -50,13 +50,11 @@ impl ParentDepState for CursorSettings {
                                 cursor.color = new_cursor_color;
                             }
                         }
-                        
                     }
                     "cursor_mode" => {
                         if let Some(val) = attr.value.as_text() {
                             cursor.mode = parse_cursor(val);
                         }
-                       
                     }
                     "cursor_id" => {
                         if let Some(val) = attr.value.as_text() {
@@ -81,8 +79,6 @@ fn parse_cursor(cursor: &str) -> CursorMode {
         _ => CursorMode::None,
     }
 }
-
-
 
 impl Default for CursorSettings {
     fn default() -> Self {

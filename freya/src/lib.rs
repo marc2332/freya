@@ -39,11 +39,11 @@ pub use freya_renderer::WindowConfig;
 
 pub mod prelude {
     pub use crate::launch::*;
+    pub use dioxus::prelude::*;
     pub use freya_components::*;
     pub use freya_elements as dioxus_elements;
     pub use freya_elements::*;
     pub use freya_hooks::*;
     pub use freya_renderer::WindowConfig;
     pub use tracing;
-    pub use dioxus::prelude::*;
 }

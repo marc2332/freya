@@ -193,7 +193,7 @@ fn measure_node_children<T>(
             if let Some(children) = &node_data.children {
                 for child in children {
                     let child_node = node_resolver(&child, resolver_options);
-    
+
                     if let Some(child_node) = child_node {
                         let child_node_area = measure_node_layout::<T>(
                             &child_node,
@@ -207,15 +207,15 @@ fn measure_node_children<T>(
                             layout_memorizer,
                             must_memorize_layout,
                         );
-    
+
                         match node_data.node.state.size.direction {
                             DirectionMode::Vertical => {
                                 remaining_inner_area.height -= child_node_area.height;
                                 remaining_inner_area.y = child_node_area.y + child_node_area.height;
-    
+
                                 // Accumulate all heights
                                 *inner_height += child_node_area.height;
-    
+
                                 // Only save the biggest width
                                 if *inner_width < child_node_area.width {
                                     *inner_width = child_node_area.width;
@@ -224,10 +224,10 @@ fn measure_node_children<T>(
                             DirectionMode::Horizontal => {
                                 remaining_inner_area.width -= child_node_area.width;
                                 remaining_inner_area.x = child_node_area.x + child_node_area.width;
-    
+
                                 // Accumulate all widths
                                 *inner_width += child_node_area.width;
-    
+
                                 // Only save the biggest height
                                 if *inner_height < child_node_area.height {
                                     *inner_height = child_node_area.height;
@@ -238,19 +238,19 @@ fn measure_node_children<T>(
                                 remaining_inner_area.width -= child_node_area.width;
                                 remaining_inner_area.y = child_node_area.y + child_node_area.height;
                                 remaining_inner_area.x = child_node_area.x + child_node_area.width;
-    
+
                                 // Accumulate all heights and widths
                                 *inner_height += child_node_area.height;
                                 *inner_width += child_node_area.width;
                             }
                         }
-    
+
                         if child_node_area.width > remaining_inner_area.width
                             || remaining_inner_area.width == 0.0
                         {
                             remaining_inner_area.width = child_node_area.width;
                         }
-    
+
                         if child_node_area.height > remaining_inner_area.height
                             || remaining_inner_area.height == 0.0
                         {
@@ -259,60 +259,59 @@ fn measure_node_children<T>(
                     }
                 }
                 if tag == "paragraph"
-                && CursorMode::Editable == node_data.node.state.cursor_settings.mode
-            {
-                let font_size = node_data.node.state.font_style.font_size;
-                let font_family = &node_data.node.state.font_style.font_family;
-                let align = node_data.node.state.font_style.align;
-                let max_lines = node_data.node.state.font_style.max_lines;
-                let font_style = node_data.node.state.font_style.font_style;
+                    && CursorMode::Editable == node_data.node.state.cursor_settings.mode
+                {
+                    let font_size = node_data.node.state.font_style.font_size;
+                    let font_family = &node_data.node.state.font_style.font_family;
+                    let align = node_data.node.state.font_style.align;
+                    let max_lines = node_data.node.state.font_style.max_lines;
+                    let font_style = node_data.node.state.font_style.font_style;
 
-                let mut paragraph_style = ParagraphStyle::default();
-                paragraph_style.set_text_align(align);
-                paragraph_style.set_max_lines(max_lines);
-                paragraph_style.set_replace_tab_characters(true);
+                    let mut paragraph_style = ParagraphStyle::default();
+                    paragraph_style.set_text_align(align);
+                    paragraph_style.set_max_lines(max_lines);
+                    paragraph_style.set_replace_tab_characters(true);
 
-                let mut paragraph_builder =
-                    ParagraphBuilder::new(&paragraph_style, font_collection.clone());
+                    let mut paragraph_builder =
+                        ParagraphBuilder::new(&paragraph_style, font_collection.clone());
 
-                paragraph_builder.push_style(
-                    TextStyle::new()
-                        .set_font_style(font_style)
-                        .set_font_size(font_size)
-                        .set_font_families(&[font_family]),
-                );
-
-                let texts = get_inner_texts(&children, node_resolver, resolver_options);
-
-                for node_text in texts {
                     paragraph_builder.push_style(
                         TextStyle::new()
-                            .set_font_style(node_text.0.font_style.font_style)
-                            .set_height_override(true)
-                            .set_height(node_text.0.font_style.line_height)
-                            .set_color(node_text.0.font_style.color)
-                            .set_font_size(node_text.0.font_style.font_size)
-                            .set_font_families(&[node_text.0.font_style.font_family.clone()]),
+                            .set_font_style(font_style)
+                            .set_font_size(font_size)
+                            .set_font_families(&[font_family]),
                     );
-                    paragraph_builder.add_text(node_text.1.clone());
-                }
 
-                let mut paragraph = paragraph_builder.build();
-                paragraph.layout(node_area.width);
+                    let texts = get_inner_texts(&children, node_resolver, resolver_options);
 
-                if let Some((cursor_ref, cursor_id, positions)) = get_cursor(node_data) {
-                    // Calculate the new cursor position
-                    let char_position = paragraph.get_glyph_position_at_coordinate(positions);
+                    for node_text in texts {
+                        paragraph_builder.push_style(
+                            TextStyle::new()
+                                .set_font_style(node_text.0.font_style.font_style)
+                                .set_height_override(true)
+                                .set_height(node_text.0.font_style.line_height)
+                                .set_color(node_text.0.font_style.color)
+                                .set_font_size(node_text.0.font_style.font_size)
+                                .set_font_families(&[node_text.0.font_style.font_family.clone()]),
+                        );
+                        paragraph_builder.add_text(node_text.1.clone());
+                    }
 
-                    // Notify the cursor reference listener
-                    cursor_ref
-                        .agent
-                        .send((char_position.position as usize, cursor_id))
-                        .ok();
+                    let mut paragraph = paragraph_builder.build();
+                    paragraph.layout(node_area.width);
+
+                    if let Some((cursor_ref, cursor_id, positions)) = get_cursor(node_data) {
+                        // Calculate the new cursor position
+                        let char_position = paragraph.get_glyph_position_at_coordinate(positions);
+
+                        // Notify the cursor reference listener
+                        cursor_ref
+                            .agent
+                            .send((char_position.position as usize, cursor_id))
+                            .ok();
+                    }
                 }
             }
-        }
-            
         }
         NodeType::Text { text } => {
             let line_height = node_data.node.state.font_style.line_height;
@@ -368,9 +367,11 @@ fn get_inner_texts<T>(
                     if let Some(children) = child.children {
                         if let Some(child_text_id) = children.get(0) {
                             let child_text = node_resolver(child_text_id, resolver_options);
-    
+
                             if let Some(child_text) = child_text {
-                                if let NodeType::Text { text } = &child_text.node.node_data.node_type {
+                                if let NodeType::Text { text } =
+                                    &child_text.node.node_data.node_type
+                                {
                                     Some((child.node.state, text.clone()))
                                 } else {
                                     None

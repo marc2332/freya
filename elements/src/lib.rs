@@ -1,12 +1,12 @@
 pub mod events_data;
 
 use bumpalo::Bump;
-use dioxus_core::{IntoAttributeValue, AnyValueContainer};
+use dioxus_core::{AnyValueContainer, IntoAttributeValue};
 pub use events_data::*;
 
-pub use dioxus_core::{AttributeValue};
+pub use dioxus_core::AttributeValue;
 use freya_common::NodeReferenceLayout;
-use std::{fmt::Display, rc::Rc, sync::Arc};
+use std::{cell::RefCell, fmt::Display, sync::Arc};
 use tokio::sync::mpsc::UnboundedSender;
 
 pub type AttributeDescription = (&'static str, Option<&'static str>, bool);
@@ -119,13 +119,12 @@ builder_constructors! {
     };
 }
 
-
 #[derive(Clone)]
 pub struct NodeRefWrapper(pub UnboundedSender<NodeReferenceLayout>);
 
 impl<'a> IntoAttributeValue<'a> for NodeRefWrapper {
     fn into_value(self, _bump: &'a Bump) -> AttributeValue<'a> {
-        AttributeValue::Any(AnyValueContainer(Arc::new(self)))
+        AttributeValue::Any(RefCell::new(Some(AnyValueContainer(Arc::new(self)))))
     }
 }
 
@@ -210,9 +209,7 @@ impl svg {
 
 */
 pub mod events {
-    use crate::{
-        events_data::{KeyboardData, MouseData, WheelData},
-    };
+    use crate::events_data::{KeyboardData, MouseData, WheelData};
 
     macro_rules! impl_event {
         (

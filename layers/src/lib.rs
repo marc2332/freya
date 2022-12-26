@@ -1,5 +1,8 @@
 use dioxus_core::ElementId;
-use dioxus_native_core::{node::{Node, NodeType}, NodeId};
+use dioxus_native_core::{
+    node::{Node, NodeType},
+    NodeId,
+};
 use freya_common::NodeArea;
 use freya_node_state::NodeState;
 use rustc_hash::FxHashMap;
@@ -9,7 +12,7 @@ pub struct NodeData {
     pub node: Node<NodeState>,
     pub height: u16,
     pub parent_id: Option<NodeId>,
-    pub children: Option<Vec<NodeId>>
+    pub children: Option<Vec<NodeId>>,
 }
 
 #[derive(Default, Clone)]
@@ -24,7 +27,7 @@ pub struct RenderData {
     pub node_id: NodeId,
     pub element_id: Option<ElementId>,
     pub node_type: NodeType,
-    pub children: Option<Vec<NodeId>>
+    pub children: Option<Vec<NodeId>>,
 }
 
 impl Layers {
@@ -34,8 +37,7 @@ impl Layers {
         inherited_relative_layer: i16,
     ) -> (i16, i16) {
         // Relative layer (optionally define by the user) + height of the element in the VDOM - inherited relative_layer by parent
-        let element_layer = (-node_data.node.state.style.relative_layer
-            + (node_data.height as i16)
+        let element_layer = (-node_data.node.state.style.relative_layer + (node_data.height as i16)
             - inherited_relative_layer) as i16;
 
         (
@@ -58,7 +60,7 @@ impl Layers {
                 node_type: node_data.node.node_data.node_type.clone(),
                 node_state: node_data.node.state.clone(),
                 node_area: *node_area,
-                children: node_data.children.clone()
+                children: node_data.children.clone(),
             },
         );
     }

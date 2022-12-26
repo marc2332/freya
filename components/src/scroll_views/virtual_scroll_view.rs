@@ -195,7 +195,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
                     direction: "{user_direction}",
                     reference: node_ref.clone(),
                     onwheel: onwheel,
-                    
+
                 }
                 container {
                     width: "100%",

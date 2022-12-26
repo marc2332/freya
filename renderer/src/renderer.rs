@@ -1,6 +1,7 @@
 use dioxus_core::ElementId;
+use dioxus_native_core::node::{Node, NodeType};
+use dioxus_native_core::tree::TreeView;
 use dioxus_native_core::NodeId;
-use dioxus_native_core::node::{NodeType, Node};
 use freya_layers::RenderData;
 use freya_node_state::NodeState;
 use freya_processor::ViewportsCollection;
@@ -12,7 +13,6 @@ use skia_safe::{
     BlurStyle, Canvas, ClipOp, Data, IRect, Image, MaskFilter, Paint, PaintStyle, Path,
     PathDirection, Rect,
 };
-use dioxus_native_core::tree::TreeView;
 
 use crate::SafeDOM;
 
@@ -145,28 +145,25 @@ pub fn render_skia(
                         paragraph.paint(canvas, (x, y));
                     }
                 }
-
-               
-                
             }
             "paragraph" => {
                 if let Some(children) = children {
                     let align = node.node_state.font_style.align;
                     let max_lines = node.node_state.font_style.max_lines;
-    
+
                     let texts = get_inner_texts(&children, dom);
-    
+
                     let (x, y) = node.node_area.get_origin_points();
-    
+
                     let mut paragraph_style = ParagraphStyle::default();
                     paragraph_style.set_max_lines(max_lines);
                     paragraph_style.set_text_align(align);
                     paragraph_style.set_replace_tab_characters(true);
                     paragraph_style.set_text_height_behavior(TextHeightBehavior::DisableAll);
-    
+
                     let mut paragraph_builder =
                         ParagraphBuilder::new(&paragraph_style, font_collection.clone());
-    
+
                     for node_text in &texts {
                         paragraph_builder.push_style(
                             TextStyle::new()
@@ -179,22 +176,21 @@ pub fn render_skia(
                         );
                         paragraph_builder.add_text(node_text.1.clone());
                     }
-    
+
                     if node.node_state.cursor_settings.position.is_some() {
                         // This is very tricky, but it works! It allows freya to render the cursor at the end of a line.
                         paragraph_builder.add_text(" ");
                     }
-    
+
                     let mut paragraph = paragraph_builder.build();
-    
+
                     paragraph.layout(node.node_area.width);
-    
+
                     paragraph.paint(canvas, (x, y));
-    
+
                     // Draw a cursor if specified
                     draw_cursor(node, paragraph, canvas);
                 }
-                
             }
             "svg" => {
                 let x = node.node_area.x;
@@ -284,7 +280,7 @@ fn get_inner_texts(children: &[NodeId], dom: &SafeDOM) -> Vec<(NodeState, String
                                 let dom = dom.lock().unwrap();
                                 dom.get(*child_text_id).cloned()
                             };
-    
+
                             if let Some(child_text) = child_text {
                                 if let NodeType::Text { text } = &child_text.node_data.node_type {
                                     Some((child.state, text.clone()))

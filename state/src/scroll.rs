@@ -1,8 +1,8 @@
 use std::sync::{Arc, Mutex};
 
-use dioxus_native_core::NodeId;
 use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
-use dioxus_native_core::state::{NodeDepState};
+use dioxus_native_core::state::NodeDepState;
+use dioxus_native_core::NodeId;
 use dioxus_native_core_macro::sorted_str_slice;
 use freya_common::LayoutMemorizer;
 
@@ -23,7 +23,7 @@ impl NodeDepState for Scroll {
         .with_text()
         .with_tag();
 
-        fn reduce<'a>(&mut self, node: NodeView, _sibling: (), ctx: &Self::Ctx) -> bool {
+    fn reduce<'a>(&mut self, node: NodeView, _sibling: (), ctx: &Self::Ctx) -> bool {
         let mut scroll_y = 0.0;
         let mut scroll_x = 0.0;
 
@@ -36,7 +36,6 @@ impl NodeDepState for Scroll {
                             let scroll: f32 = attr.parse().unwrap();
                             scroll_y = scroll;
                         }
-                        
                     }
                     "scroll_x" => {
                         let attr = attr.value.as_text();
@@ -53,15 +52,12 @@ impl NodeDepState for Scroll {
         }
 
         let changed = (scroll_x != self.scroll_x) || (scroll_y != self.scroll_y);
-        
+
         if changed {
             ctx.lock().unwrap().mark_as_dirty(node.node_id());
         }
 
-        *self = Self {
-            scroll_y,
-            scroll_x,
-        };
+        *self = Self { scroll_y, scroll_x };
         changed
     }
 }

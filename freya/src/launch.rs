@@ -1,13 +1,13 @@
-use dioxus::prelude::{VirtualDom};
+use dioxus::prelude::VirtualDom;
+use dioxus_core::Component;
 use dioxus_native_core::real_dom::RealDom;
 use freya_common::LayoutMemorizer;
 use freya_node_state::NodeState;
+use freya_processor::DomEvent;
 use freya_renderer::run;
 use freya_renderer::WindowConfig;
 use std::sync::Arc;
 use std::sync::Mutex;
-use dioxus_core::Component;
-use freya_processor::DomEvent;
 
 #[cfg(not(doctest))]
 /// Launch a new Window with the default config.
@@ -161,11 +161,14 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
 /// }
 /// ```
 pub fn launch_cfg<T: 'static + Clone + Send>(wins_config: Vec<(Component<()>, WindowConfig<T>)>) {
-    use std::{time::Duration, rc::Rc};
+    use std::{rc::Rc, time::Duration};
 
     use anymap::{any::Any, Map};
     use dioxus_native_core::SendAnyMap;
-    use tokio::{sync::mpsc::{UnboundedSender, unbounded_channel}, select};
+    use tokio::{
+        select,
+        sync::mpsc::{unbounded_channel, UnboundedSender},
+    };
 
     let wins = wins_config
         .into_iter()
@@ -181,7 +184,7 @@ pub fn launch_cfg<T: 'static + Clone + Send>(wins_config: Vec<(Component<()>, Wi
                 let rdom = rdom.clone();
                 let event_emitter = event_emitter.clone();
                 std::thread::spawn(move || {
-                    let mut dom =  VirtualDom::new(root);
+                    let mut dom = VirtualDom::new(root);
 
                     if let Some(state) = state.clone() {
                         dom.base_scope().provide_context(state);
@@ -207,23 +210,21 @@ pub fn launch_cfg<T: 'static + Clone + Send>(wins_config: Vec<(Component<()>, Wi
                                         if let Some(ev) = ev {
                                             let data = ev.data.any();
                                             dom.handle_event(&ev.name, data, ev.element_id, false);
-                                           
+
                                             dom.process_events();
                                         }
                                     },
                                     _ = dom.wait_for_work() => {},
                                 };
 
-                               
-
                                 // Or wait for a deadline and then collect edits
                                 let mutations = dom.render_immediate();
-                                let (to_update, diff) = rdom.lock().unwrap().apply_mutations(mutations);
+                                let (to_update, diff) =
+                                    rdom.lock().unwrap().apply_mutations(mutations);
 
                                 if let Some(state) = state.clone() {
                                     dom.base_scope().provide_context(state);
                                 }
-
 
                                 let mut ctx = SendAnyMap::new();
                                 ctx.insert(layout_memorizer.clone());
@@ -244,9 +245,7 @@ pub fn launch_cfg<T: 'static + Clone + Send>(wins_config: Vec<(Component<()>, Wi
 }
 
 #[cfg(feature = "devtools")]
-use dioxus::prelude::{
-    fc_to_builder, format_args_f, render, Element, LazyNodes, Scope, VNode,
-};
+use dioxus::prelude::{fc_to_builder, format_args_f, render, Element, LazyNodes, Scope, VNode};
 
 #[cfg(feature = "devtools")]
 fn with_devtools(

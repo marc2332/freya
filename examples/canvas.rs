@@ -3,9 +3,9 @@
     windows_subsystem = "windows"
 )]
 
+use freya::dioxus_elements::MouseEvent;
 use freya::prelude::{tracing::Level, *};
 use tracing_subscriber::FmtSubscriber;
-use freya::dioxus_elements::MouseEvent;
 
 fn main() {
     let subscriber = FmtSubscriber::builder()
@@ -111,7 +111,7 @@ fn app(cx: Scope) -> Element {
                                         }
                                     },
                                     Editor {
-    
+
                                     }
                                 }
                             }
@@ -183,7 +183,7 @@ fn Editor(cx: Scope) -> Element {
     render!(
         rect {
             width: "100%",
-            height: "100%",   
+            height: "100%",
             rect {
                 width: "100%",
                 height: "50",
