@@ -2,7 +2,8 @@ use std::cell::RefCell;
 use std::sync::{Arc, Mutex};
 
 use dioxus_core::exports::bumpalo::Bump;
-use dioxus_core::{AnyValueContainer, AttributeValue, IntoAttributeValue};
+use dioxus_core::prelude::IntoAttributeValue;
+use dioxus_core::{AnyValueContainer, AttributeValue};
 use dioxus_hooks::UseRef;
 use dioxus_native_core::node::OwnedAttributeValue;
 use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};

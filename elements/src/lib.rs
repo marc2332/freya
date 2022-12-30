@@ -1,7 +1,7 @@
 pub mod events_data;
 
 use bumpalo::Bump;
-use dioxus_core::{AnyValueContainer, IntoAttributeValue};
+use dioxus_core::{AnyValueContainer, prelude::IntoAttributeValue};
 pub use events_data::*;
 
 pub use dioxus_core::AttributeValue;
