@@ -2755,9 +2755,9 @@ checksum = "59547bce71d9c38b83d9c0e92b6066c4253371f15005def0c30d9657f50c7642"
 
 [[package]]
 name = "tween"
-version = "1.0.1"
+version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "63e9aab86b1958c0ff7f3d18d04abd6d8e583d237f92e88191ce5c7bf481c5ec"
+checksum = "f114398da254e78168e12edec0ece6b4ca15a97262ecd8e5efd5025e3fc30204"
 
 [[package]]
 name = "typenum"

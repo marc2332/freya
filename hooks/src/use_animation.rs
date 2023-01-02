@@ -1,34 +1,35 @@
-use dioxus::prelude::{use_effect, use_state, ScopeState};
+use dioxus_core::ScopeState;
+use dioxus_hooks::{use_effect, use_state};
 use std::{cell::RefCell, ops::RangeInclusive, time::Duration};
 use tokio::time::interval;
-use tween::{BounceIn, SineIn, SineInOut, Tween};
+use tween::{BounceIn, SineIn, SineInOut, Tweener};
 
 /// Type of animation to use.
 #[derive(Clone)]
 pub enum AnimationMode {
-    BounceIn(RefCell<BounceIn<f64, i32>>),
-    SineIn(RefCell<SineIn<f64, i32>>),
-    SineInOut(RefCell<SineInOut<f64, i32>>),
+    BounceIn(RefCell<Tweener<f64, i32, BounceIn>>),
+    SineIn(RefCell<Tweener<f64, i32, SineIn>>),
+    SineInOut(RefCell<Tweener<f64, i32, SineInOut>>),
 }
 
 impl AnimationMode {
     pub fn new_bounce_in(range: RangeInclusive<f64>, time: i32) -> Self {
-        Self::BounceIn(RefCell::new(BounceIn::new(range, time)))
+        Self::BounceIn(RefCell::new(Tweener::bounce_in(*range.start(), *range.end(), time)))
     }
     pub fn new_sine_in(range: RangeInclusive<f64>, time: i32) -> Self {
-        Self::SineIn(RefCell::new(SineIn::new(range, time)))
+        Self::SineIn(RefCell::new(Tweener::sine_in(*range.start(), *range.end(), time)))
     }
     pub fn new_sine_in_out(range: RangeInclusive<f64>, time: i32) -> Self {
-        Self::SineInOut(RefCell::new(SineInOut::new(range, time)))
+        Self::SineInOut(RefCell::new(Tweener::sine_in_out(*range.start(), *range.end(), time)))
     }
 }
 
 impl AnimationMode {
     fn duration(&self) -> i32 {
         match self {
-            AnimationMode::BounceIn(tween) => tween.borrow().duration(),
-            AnimationMode::SineIn(tween) => tween.borrow().duration(),
-            AnimationMode::SineInOut(tween) => tween.borrow().duration(),
+            AnimationMode::BounceIn(tween) => tween.borrow().duration,
+            AnimationMode::SineIn(tween) => tween.borrow().duration,
+            AnimationMode::SineInOut(tween) => tween.borrow().duration,
         }
     }
 }
@@ -57,17 +58,17 @@ pub fn use_animation(
             let mut run_with = move |index: i32| match tween {
                 AnimationMode::BounceIn(ref mut tween) => {
                     let tween = tween.get_mut();
-                    let v = tween.run(index);
+                    let v = tween.move_to(index);
                     value_setter(v);
                 }
                 AnimationMode::SineIn(ref mut tween) => {
                     let tween = tween.get_mut();
-                    let v = tween.run(index);
+                    let v = tween.move_to(index);
                     value_setter(v);
                 }
                 AnimationMode::SineInOut(ref mut tween) => {
                     let tween = tween.get_mut();
-                    let v = tween.run(index);
+                    let v = tween.move_to(index);
                     value_setter(v);
                 }
             };
