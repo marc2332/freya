@@ -7,10 +7,11 @@ pub fn use_focus(cx: &ScopeState) -> (bool, impl Fn() + '_) {
     let my_id = cx.use_hook(Uuid::new_v4);
     let focused_id = use_context::<Uuid>(cx);
 
-    let focused = Some(*my_id) == focused_id.map(|v| *v);
+    let focused = Some(*my_id) == focused_id.copied();
 
     let focus = move || {
         if let Some(focused_id) = focused_id {
+            //focused_id.borrow_mut() = *my_id;
             //*focused_id = *my_id;
         }
     };

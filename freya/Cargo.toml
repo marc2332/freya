@@ -25,14 +25,14 @@ freya-common = { path = "../common", version = "0.1.0" }
 freya-hooks = { path = "../hooks"}
 freya-processor = { path = "../processor"}
 freya-components ={ path = "../components"}
-dioxus = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes", features = []}
-dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
-dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
-dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
-dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
-dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes", features = ["sync_attributes"] }
-dioxus-router = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes"  }
-tokio = { version = "1.17.0", features = ["sync", "rt-multi-thread", "time", "macros"] }
+dioxus = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
+dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
+dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
+dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
+dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
+dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
+dioxus-router = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
+tokio = { version = "1.23.0", features = ["sync", "rt-multi-thread", "time", "macros"] }
 anymap = "0.12.1"
 fxhash = "0.2.1"
 skia-safe = { version = "0.56.1" }

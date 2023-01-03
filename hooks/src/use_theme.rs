@@ -15,9 +15,7 @@ pub fn use_theme(cx: &ScopeState) -> &Theme {
 }
 
 pub fn use_get_theme(cx: &ScopeState) -> Theme {
-    use_context::<Theme>(cx)
-        .map(|f| f.clone())
-        .unwrap_or(DARK_THEME)
+    use_context::<Theme>(cx).cloned().unwrap_or(DARK_THEME)
 }
 
 /// Theming properties for the Button component.

@@ -1,6 +1,12 @@
-use dioxus_native_core::state::{NodeDepState, ParentDepState, State};
+use dioxus_core::AnyValue;
+use dioxus_native_core::{
+    node::FromAnyValue,
+    state::{NodeDepState, ParentDepState, State},
+};
 use dioxus_native_core_macro::State;
+use freya_elements::NodeRefWrapper;
 use skia_safe::Color;
+use std::fmt::Debug;
 
 mod cursor;
 mod font_style;
@@ -16,7 +22,32 @@ pub use scroll::*;
 pub use size::*;
 pub use style::*;
 
+#[derive(Clone, PartialEq)]
+pub enum CustomAttributeValues {
+    Reference(NodeRefWrapper),
+    CursorReference(CursorReference),
+}
+
+impl Debug for CustomAttributeValues {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Reference(_) => f.debug_tuple("Reference").finish(),
+            Self::CursorReference(_) => f.debug_tuple("CursorReference").finish(),
+        }
+    }
+}
+
+impl FromAnyValue for CustomAttributeValues {
+    fn from_any_value(b: &dyn AnyValue) -> Self {
+        b.as_any()
+            .downcast_ref::<CustomAttributeValues>()
+            .unwrap()
+            .clone()
+    }
+}
+
 #[derive(Clone, State, Default, Debug)]
+#[state(custom_value = CustomAttributeValues)]
 pub struct NodeState {
     #[parent_dep_state(cursor_settings)]
     pub cursor_settings: CursorSettings,

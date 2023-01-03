@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use dioxus::prelude::*;
-use dioxus_router::*;
+//use dioxus_router::*;
 use freya_elements as dioxus_elements;
 
 /// Properties for the Router Link component.
@@ -21,7 +21,7 @@ pub fn RouterLink<'a>(cx: Scope<'a, RouterLinkProps<'a>>) -> Element<'a> {
             width: "100%",
             height: "100%",
             onclick: move |_| {
-                if let Some(service) = svc {
+                if let Some(_service) = svc {
                     //service.push_route(cx.props.to, None, None);
                 }
             },

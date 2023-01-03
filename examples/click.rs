@@ -10,7 +10,7 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    let count = use_state(&cx, || 0);
+    let count = use_state(cx, || 0);
     render!(
         container {
             background: "rgb(15, 15, 15)",

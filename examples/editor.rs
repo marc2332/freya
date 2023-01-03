@@ -29,10 +29,10 @@ fn Body(cx: Scope) -> Element {
         },
         EditableMode::SingleLineMultipleEditors,
     );
-    let font_size_percentage = use_state(&cx, || 15.0);
-    let line_height_percentage = use_state(&cx, || 0.0);
-    let is_bold = use_state(&cx, || false);
-    let is_italic = use_state(&cx, || false);
+    let font_size_percentage = use_state(cx, || 15.0);
+    let line_height_percentage = use_state(cx, || 0.0);
+    let is_bold = use_state(cx, || false);
+    let is_italic = use_state(cx, || false);
 
     // minimum font size is 5
     let font_size = font_size_percentage + 5.0;

@@ -8,7 +8,7 @@
 //! }
 //!
 //! fn app(cx: Scope) -> Element {
-//!    let mut count = use_state(&cx, || 0);
+//!    let mut count = use_state(cx, || 0);
 //!
 //!    render!(
 //!        container {
@@ -39,9 +39,12 @@ pub use freya_renderer::WindowConfig;
 
 pub mod prelude {
     pub use crate::launch::*;
-    pub use dioxus::prelude::*;
+    pub use dioxus_core::prelude::*;
+    pub use dioxus_core_macro::*;
+    pub use dioxus_hooks::*;
     pub use freya_components::*;
     pub use freya_elements as dioxus_elements;
+    pub use freya_elements::events_data::*;
     pub use freya_elements::*;
     pub use freya_hooks::*;
     pub use freya_renderer::WindowConfig;

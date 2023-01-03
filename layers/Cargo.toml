@@ -14,9 +14,9 @@ categories = ["GUI"]
 [dependencies]
 freya-common = { path = "../common", version = "0.1.0" }
 freya-node-state = { path = "../state", version = "0.1.0" }
-dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
-dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
-dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
-dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
-dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes", features = ["sync_attributes"] }
+dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
+dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
+dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
+dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
+dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
 rustc-hash = "1.1.0"

@@ -1,4 +1,4 @@
-use dioxus_core::{Element, Scope, VNode};
+use dioxus_core::{Element, Scope};
 use dioxus_core_macro::{render, Props};
 use dioxus_hooks::use_state;
 use freya_elements as dioxus_elements;
@@ -30,11 +30,11 @@ pub struct ScrollViewProps<'a> {
 /// A Scrollable container.
 #[allow(non_snake_case)]
 pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
-    let theme = use_get_theme(&cx);
-    let clicking_scrollbar = use_state::<Option<(Axis, f64)>>(&cx, || None);
-    let scrolled_y = use_state(&cx, || 0);
-    let scrolled_x = use_state(&cx, || 0);
-    let (node_ref, size) = use_node(&cx);
+    let theme = use_get_theme(cx);
+    let clicking_scrollbar = use_state::<Option<(Axis, f64)>>(cx, || None);
+    let scrolled_y = use_state(cx, || 0);
+    let scrolled_x = use_state(cx, || 0);
+    let (node_ref, size) = use_node(cx);
 
     let scrollbar_theme = &theme.scrollbar;
 
@@ -143,7 +143,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
                     direction: "{user_direction}",
                     scroll_y: "{corrected_scrolled_y}",
                     scroll_x: "{corrected_scrolled_x}",
-                    reference: node_ref.clone(),
+                    reference: node_ref,
                     onwheel: onwheel,
                     &cx.props.children
                 }

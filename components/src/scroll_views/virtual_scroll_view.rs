@@ -55,11 +55,11 @@ fn get_render_range(
 /// A ScrollView with virtual scrolling.
 #[allow(non_snake_case)]
 pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) -> Element {
-    let theme = use_get_theme(&cx);
-    let clicking_scrollbar = use_state::<Option<(Axis, f64)>>(&cx, || None);
-    let scrolled_y = use_state(&cx, || 0);
-    let scrolled_x = use_state(&cx, || 0);
-    let (node_ref, size) = use_node(&cx);
+    let theme = use_get_theme(cx);
+    let clicking_scrollbar = use_state::<Option<(Axis, f64)>>(cx, || None);
+    let scrolled_y = use_state(cx, || 0);
+    let scrolled_x = use_state(cx, || 0);
+    let (node_ref, size) = use_node(cx);
 
     let scrollbar_theme = &theme.scrollbar;
 
@@ -163,13 +163,14 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
 
     // Calculate from what to what items must be rendered
     let render_range = get_render_range(
-        viewport_size as f32,
+        viewport_size,
         scroll_position,
         items_size,
         items_length as f32,
     );
 
     let mut key_index = 0;
+    // TODO Support VirtualScrollView
     let children = render_range
         .map(|i| {
             key_index += 1;
@@ -193,7 +194,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
                     height: "100%",
                     width: "100%",
                     direction: "{user_direction}",
-                    reference: node_ref.clone(),
+                    reference: node_ref,
                     onwheel: onwheel,
 
                 }
@@ -209,7 +210,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
                         height: "100%",
                         radius: "10",
                         background: "{scrollbar_theme.thumb_background}",
-                    }
+                    },
                 }
             }
             container {

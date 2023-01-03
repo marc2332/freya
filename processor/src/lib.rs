@@ -8,9 +8,9 @@ use dioxus_native_core::{
 use euclid::{Length, Point2D};
 use freya_common::{LayoutMemorizer, NodeArea};
 use freya_elements::events_data::{KeyboardData, MouseData, WheelData};
-use freya_layers::{Layers, NodeData, RenderData};
+use freya_layers::{Layers, NodeInfoData, RenderData};
 use freya_layout::measure_node_layout;
-use freya_node_state::NodeState;
+use freya_node_state::{CustomAttributeValues, NodeState};
 use rustc_hash::FxHashMap;
 use skia_safe::{textlayout::FontCollection, Color};
 use std::{
@@ -26,9 +26,9 @@ pub mod events;
 
 use events::{EventsProcessor, FreyaEvent};
 
-pub type SafeDOM = Arc<Mutex<RealDom<NodeState>>>;
+pub type SafeDOM = Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>;
 pub type SafeEventEmitter = UnboundedSender<DomEvent>;
-pub type SafeLayoutManager = Arc<Mutex<LayoutMemorizer>>;
+pub type SafeLayoutMemorizer = Arc<Mutex<LayoutMemorizer>>;
 pub type SafeFreyaEvents = Arc<Mutex<Vec<FreyaEvent>>>;
 pub type ViewportsCollection = FxHashMap<NodeId, (Option<NodeArea>, Vec<NodeId>)>;
 
@@ -46,7 +46,7 @@ pub fn process_work<HookOptions>(
     event_emitter: &SafeEventEmitter,
     font_collection: &mut FontCollection,
     events_processor: &mut EventsProcessor,
-    manager: &SafeLayoutManager,
+    manager: &SafeLayoutMemorizer,
     hook_options: &mut HookOptions,
     render_hook: impl Fn(
         &SafeDOM,
@@ -56,7 +56,7 @@ pub fn process_work<HookOptions>(
         &mut HookOptions,
     ),
 ) {
-    let (root, root_children): (Node<NodeState>, Option<Vec<NodeId>>) = {
+    let (root, root_children): (Node<NodeState, CustomAttributeValues>, Option<Vec<NodeId>>) = {
         let dom = dom.lock().unwrap();
         let children = dom.tree.children_ids(NodeId(0)).map(|v| v.to_vec());
         (dom.index(NodeId(0)).clone(), children)
@@ -65,7 +65,7 @@ pub fn process_work<HookOptions>(
     let layers = &mut Layers::default();
 
     measure_node_layout(
-        &NodeData {
+        &NodeInfoData {
             node: root,
             height: 0,
             parent_id: None,
@@ -89,7 +89,7 @@ pub fn process_work<HookOptions>(
                 )
             };
 
-            Some(NodeData {
+            Some(NodeInfoData {
                 node: child,
                 height,
                 parent_id,
@@ -101,8 +101,6 @@ pub fn process_work<HookOptions>(
         manager,
         true,
     );
-
-    // println!("-> {:#?}", layers.layers);
 
     #[cfg(debug_assertions)]
     {
@@ -297,14 +295,14 @@ pub fn process_work<HookOptions>(
                     name: event_name.to_string(),
                     data: DomEventData::Wheel(WheelData::new(scroll.0, scroll.1)),
                 },
-                FreyaEvent::Keyboard { name, code } => DomEvent {
+                FreyaEvent::Keyboard { code, .. } => DomEvent {
                     element_id: node.element_id.unwrap(),
                     name: event_name.to_string(),
                     data: DomEventData::Keyboard(KeyboardData::new(code.clone())),
                 },
             };
-            //println!("Emitted event: {:?}", event);
-            //new_events.push(event.clone());
+
+            new_events.push(event.clone());
             event_emitter.send(event).unwrap();
         }
     }
@@ -313,23 +311,20 @@ pub fn process_work<HookOptions>(
     let new_processed_events = events_processor.process_events_batch(new_events, calculated_events);
 
     for event in new_processed_events {
-        /* println!("2Emitted event: {:?}", event);
-        event_emitter
-            .send(event)
-            .unwrap(); */
+        event_emitter.send(event).unwrap();
     }
 
     freya_events.lock().unwrap().clear();
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DomEvent {
     pub name: String,
     pub element_id: ElementId,
     pub data: DomEventData,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum DomEventData {
     Mouse(MouseData),
     Keyboard(KeyboardData),

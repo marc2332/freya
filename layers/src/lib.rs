@@ -4,12 +4,12 @@ use dioxus_native_core::{
     NodeId,
 };
 use freya_common::NodeArea;
-use freya_node_state::NodeState;
+use freya_node_state::{CustomAttributeValues, NodeState};
 use rustc_hash::FxHashMap;
 
 #[derive(Clone)]
-pub struct NodeData {
-    pub node: Node<NodeState>,
+pub struct NodeInfoData {
+    pub node: Node<NodeState, CustomAttributeValues>,
     pub height: u16,
     pub parent_id: Option<NodeId>,
     pub children: Option<Vec<NodeId>>,
@@ -26,19 +26,19 @@ pub struct RenderData {
     pub node_area: NodeArea,
     pub node_id: NodeId,
     pub element_id: Option<ElementId>,
-    pub node_type: NodeType,
+    pub node_type: NodeType<CustomAttributeValues>,
     pub children: Option<Vec<NodeId>>,
 }
 
 impl Layers {
     pub fn calculate_layer(
         &mut self,
-        node_data: &NodeData,
+        node_data: &NodeInfoData,
         inherited_relative_layer: i16,
     ) -> (i16, i16) {
         // Relative layer (optionally define by the user) + height of the element in the VDOM - inherited relative_layer by parent
-        let element_layer = (-node_data.node.state.style.relative_layer + (node_data.height as i16)
-            - inherited_relative_layer) as i16;
+        let element_layer = -node_data.node.state.style.relative_layer + (node_data.height as i16)
+            - inherited_relative_layer;
 
         (
             element_layer,
@@ -46,7 +46,7 @@ impl Layers {
         )
     }
 
-    pub fn add_element(&mut self, node_data: &NodeData, node_area: &NodeArea, node_layer: i16) {
+    pub fn add_element(&mut self, node_data: &NodeInfoData, node_area: &NodeArea, node_layer: i16) {
         let layer = self
             .layers
             .entry(node_layer)

@@ -31,7 +31,7 @@ async fn fetch_image(url: Url) -> Option<Vec<u8>> {
 }
 
 fn app<'a>(cx: Scope<'a>) -> Element<'a> {
-    let bytes = use_state(&cx, || None);
+    let bytes = use_state(cx, || None);
     let bytes_setter = bytes.setter();
 
     let fetch = move || {

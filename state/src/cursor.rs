@@ -3,7 +3,7 @@ use dioxus_native_core::state::ParentDepState;
 use dioxus_native_core_macro::sorted_str_slice;
 use skia_safe::Color;
 
-use crate::parse_color;
+use crate::{parse_color, CustomAttributeValues};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CursorSettings {
@@ -13,7 +13,7 @@ pub struct CursorSettings {
     pub id: Option<usize>,
 }
 
-impl ParentDepState for CursorSettings {
+impl ParentDepState<CustomAttributeValues> for CursorSettings {
     type Ctx = ();
     type DepState = (Self,);
 
@@ -27,7 +27,7 @@ impl ParentDepState for CursorSettings {
 
     fn reduce<'a>(
         &mut self,
-        node: NodeView,
+        node: NodeView<CustomAttributeValues>,
         parent: Option<(&'a Self,)>,
         _ctx: &Self::Ctx,
     ) -> bool {

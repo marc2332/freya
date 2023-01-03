@@ -13,16 +13,17 @@ wireframe = ["freya/wireframe"]
 
 [dev-dependencies]
 freya = { path = "./freya"}
-dioxus = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
-dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
-dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
-dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
-dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
-dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes", features = ["sync_attributes"] }
-tokio = "1.17.0"
-reqwest = {version = "0.11.12", features = ["json"] }
-serde = "1.0.145"
-tracing-subscriber = "0.2.0"
+dioxus-native-core-macro = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
+dioxus = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
+dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
+dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
+dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
+dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
+dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
+tokio = "1.23.0"
+reqwest = {version = "0.11.13", features = ["json"] }
+serde = "1.0.152"
+tracing-subscriber = "0.2.25"
 
 [profile.release]
 lto = true

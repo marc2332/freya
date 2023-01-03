@@ -2,9 +2,10 @@ use std::sync::{Arc, Mutex};
 
 use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
 use dioxus_native_core::state::NodeDepState;
-use dioxus_native_core::NodeId;
 use dioxus_native_core_macro::sorted_str_slice;
 use freya_common::LayoutMemorizer;
+
+use crate::CustomAttributeValues;
 
 #[derive(Default, Clone, Debug)]
 pub struct Scroll {
@@ -12,7 +13,7 @@ pub struct Scroll {
     pub scroll_x: f32,
 }
 
-impl NodeDepState for Scroll {
+impl NodeDepState<CustomAttributeValues> for Scroll {
     type Ctx = Arc<Mutex<LayoutMemorizer>>;
     type DepState = ();
 
@@ -23,7 +24,12 @@ impl NodeDepState for Scroll {
         .with_text()
         .with_tag();
 
-    fn reduce<'a>(&mut self, node: NodeView, _sibling: (), ctx: &Self::Ctx) -> bool {
+    fn reduce<'a>(
+        &mut self,
+        node: NodeView<CustomAttributeValues>,
+        _sibling: (),
+        ctx: &Self::Ctx,
+    ) -> bool {
         let mut scroll_y = 0.0;
         let mut scroll_x = 0.0;
 

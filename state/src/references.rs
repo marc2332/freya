@@ -1,17 +1,12 @@
-use std::cell::RefCell;
-use std::sync::{Arc, Mutex};
-
-use dioxus_core::exports::bumpalo::Bump;
-use dioxus_core::prelude::IntoAttributeValue;
-use dioxus_core::{AnyValueContainer, AttributeValue};
-use dioxus_hooks::UseRef;
 use dioxus_native_core::node::OwnedAttributeValue;
 use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
 use dioxus_native_core::state::ParentDepState;
 use dioxus_native_core_macro::sorted_str_slice;
 use freya_common::NodeReferenceLayout;
-use freya_elements::NodeRefWrapper;
+use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc::UnboundedSender;
+
+use crate::CustomAttributeValues;
 
 #[derive(Default, Clone, Debug)]
 pub struct References {
@@ -19,7 +14,7 @@ pub struct References {
     pub cursor_ref: Option<CursorReference>,
 }
 
-impl ParentDepState for References {
+impl ParentDepState<CustomAttributeValues> for References {
     type Ctx = ();
     type DepState = (Self,);
 
@@ -31,7 +26,7 @@ impl ParentDepState for References {
 
     fn reduce<'a>(
         &mut self,
-        node: NodeView,
+        node: NodeView<CustomAttributeValues>,
         parent: Option<(&'a Self,)>,
         _ctx: &Self::Ctx,
     ) -> bool {
@@ -46,15 +41,19 @@ impl ParentDepState for References {
             for attr in attributes {
                 match attr.attribute.name.as_str() {
                     "reference" => {
-                        if let OwnedAttributeValue::Any(v) = attr.value {
-                            node_ref = v.downcast_ref::<NodeRefWrapper>().map(|v| v.0.clone());
+                        if let OwnedAttributeValue::Custom(CustomAttributeValues::Reference(
+                            reference,
+                        )) = attr.value
+                        {
+                            node_ref = Some(reference.0.clone());
                         }
                     }
                     "cursor_reference" => {
-                        if let OwnedAttributeValue::Any(v) = attr.value {
-                            cursor_ref = v
-                                .downcast_ref::<&UseRef<CursorReference>>()
-                                .map(|v| v.read().clone());
+                        if let OwnedAttributeValue::Custom(
+                            CustomAttributeValues::CursorReference(reference),
+                        ) = attr.value
+                        {
+                            cursor_ref = Some(reference.clone());
                         }
                     }
                     _ => {
@@ -78,12 +77,6 @@ pub struct CursorReference {
     pub positions: Arc<Mutex<Option<(f32, f32)>>>,
     pub agent: UnboundedSender<(usize, usize)>,
     pub id: Arc<Mutex<Option<usize>>>,
-}
-
-impl<'a> IntoAttributeValue<'a> for CursorReference {
-    fn into_value(self, _bump: &'a Bump) -> AttributeValue<'a> {
-        AttributeValue::Any(RefCell::new(Some(AnyValueContainer(Arc::new(self)))))
-    }
 }
 
 impl PartialEq for CursorReference {

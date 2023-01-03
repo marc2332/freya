@@ -10,7 +10,7 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    let (node_ref, size) = use_node(&cx);
+    let (node_ref, size) = use_node(cx);
     render!(
         rect {
             height: "50%",

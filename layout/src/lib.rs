@@ -1,14 +1,11 @@
-use std::sync::{Arc, Mutex};
-
-use dioxus::core::ElementId;
-
 use dioxus_native_core::{node::NodeType, NodeId};
 use freya_common::{LayoutMemorizer, NodeArea, NodeLayoutInfo, NodeReferenceLayout};
-use freya_layers::{Layers, NodeData};
+use freya_layers::{Layers, NodeInfoData};
 use freya_node_state::{
     CalcType, CursorMode, CursorReference, DirectionMode, DisplayMode, NodeState, SizeMode,
 };
 use skia_safe::textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle};
+use std::sync::{Arc, Mutex};
 
 pub fn run_calculations(calcs: &Vec<CalcType>, parent_area_value: f32) -> f32 {
     let mut prev_number: Option<f32> = None;
@@ -57,7 +54,7 @@ pub fn run_calculations(calcs: &Vec<CalcType>, parent_area_value: f32) -> f32 {
 }
 
 /// Calculate the are of a node considering it's parent area
-fn calculate_area(node_data: &NodeData, mut area: NodeArea, parent_area: NodeArea) -> NodeArea {
+fn calculate_area(node_data: &NodeInfoData, mut area: NodeArea, parent_area: NodeArea) -> NodeArea {
     let calculate = |value: &SizeMode, area_value: f32, parent_area_value: f32| -> f32 {
         match value {
             &SizeMode::Manual(v) => v,
@@ -169,12 +166,12 @@ fn calculate_area(node_data: &NodeData, mut area: NodeArea, parent_area: NodeAre
     area
 }
 
-type NodeResolver<T> = fn(&NodeId, &mut T) -> Option<NodeData>;
+type NodeResolver<T> = fn(&NodeId, &mut T) -> Option<NodeInfoData>;
 
 /// Measure the areas of a node's inner children
 #[allow(clippy::too_many_arguments)]
 fn measure_node_children<T>(
-    node_data: &NodeData,
+    node_data: &NodeInfoData,
     node_area: &mut NodeArea,
     layers: &mut Layers,
     remaining_inner_area: &mut NodeArea,
@@ -192,7 +189,7 @@ fn measure_node_children<T>(
         NodeType::Element { tag, .. } => {
             if let Some(children) = &node_data.children {
                 for child in children {
-                    let child_node = node_resolver(&child, resolver_options);
+                    let child_node = node_resolver(child, resolver_options);
 
                     if let Some(child_node) = child_node {
                         let child_node_area = measure_node_layout::<T>(
@@ -282,7 +279,7 @@ fn measure_node_children<T>(
                             .set_font_families(&[font_family]),
                     );
 
-                    let texts = get_inner_texts(&children, node_resolver, resolver_options);
+                    let texts = get_inner_texts(children, node_resolver, resolver_options);
 
                     for node_text in texts {
                         paragraph_builder.push_style(
@@ -395,7 +392,7 @@ fn get_inner_texts<T>(
         .collect::<Vec<(NodeState, String)>>()
 }
 
-fn get_cursor(node_data: &NodeData) -> Option<(&CursorReference, usize, (f32, f32))> {
+fn get_cursor(node_data: &NodeInfoData) -> Option<(&CursorReference, usize, (f32, f32))> {
     let cursor_ref = node_data.node.state.references.cursor_ref.as_ref()?;
     let positions = { *cursor_ref.positions.lock().unwrap().as_ref()? };
     let current_cursor_id = { *cursor_ref.id.lock().unwrap().as_ref()? };
@@ -411,7 +408,7 @@ fn get_cursor(node_data: &NodeData) -> Option<(&CursorReference, usize, (f32, f3
 /// Measure an area of a given Node
 #[allow(clippy::too_many_arguments)]
 pub fn measure_node_layout<T>(
-    node_data: &NodeData,
+    node_data: &NodeInfoData,
     remaining_area: NodeArea,
     parent_area: NodeArea,
     resolver_options: &mut T,

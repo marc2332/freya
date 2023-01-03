@@ -1,13 +1,6 @@
-use dioxus::prelude::VirtualDom;
 use dioxus_core::Component;
-use dioxus_native_core::real_dom::RealDom;
-use freya_common::LayoutMemorizer;
-use freya_node_state::NodeState;
-use freya_processor::DomEvent;
 use freya_renderer::run;
 use freya_renderer::WindowConfig;
-use std::sync::Arc;
-use std::sync::Mutex;
 
 #[cfg(not(doctest))]
 /// Launch a new Window with the default config.
@@ -36,7 +29,7 @@ use std::sync::Mutex;
 /// }
 /// ```
 pub fn launch(app: Component<()>) {
-    launch_cfg(vec![(
+    launch_cfg((
         app,
         WindowConfig::<()> {
             width: 400,
@@ -46,7 +39,7 @@ pub fn launch(app: Component<()>) {
             title: "Freya",
             state: None,
         },
-    )])
+    ))
 }
 
 #[cfg(not(doctest))]
@@ -75,7 +68,7 @@ pub fn launch(app: Component<()>) {
 /// }
 /// ```
 pub fn launch_with_title(app: Component<()>, title: &'static str) {
-    launch_cfg(vec![(
+    launch_cfg((
         app,
         WindowConfig::<()> {
             width: 400,
@@ -85,7 +78,7 @@ pub fn launch_with_title(app: Component<()>, title: &'static str) {
             title,
             state: None,
         },
-    )])
+    ))
 }
 
 #[cfg(not(doctest))]
@@ -112,7 +105,7 @@ pub fn launch_with_title(app: Component<()>, title: &'static str) {
 /// }
 /// ```
 pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height): (u32, u32)) {
-    launch_cfg(vec![(
+    launch_cfg((
         app,
         WindowConfig::<()> {
             width,
@@ -122,7 +115,7 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
             title,
             state: None,
         },
-    )])
+    ))
 }
 
 #[cfg(not(doctest))]
@@ -160,96 +153,18 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
 ///     )
 /// }
 /// ```
-pub fn launch_cfg<T: 'static + Clone + Send>(wins_config: Vec<(Component<()>, WindowConfig<T>)>) {
-    use std::{rc::Rc, time::Duration};
-
-    use anymap::{any::Any, Map};
-    use dioxus_native_core::SendAnyMap;
-    use tokio::{
-        select,
-        sync::mpsc::{unbounded_channel, UnboundedSender},
-    };
-
-    let wins = wins_config
-        .into_iter()
-        .map(|(root, win)| {
-            let rdom = Arc::new(Mutex::new(RealDom::<NodeState>::new()));
-            let (event_emitter, mut event_emitter_rx) = unbounded_channel::<DomEvent>();
-
-            let layout_memorizer = Arc::new(Mutex::new(LayoutMemorizer::new()));
-            let state = win.state.clone();
-
-            {
-                let layout_memorizer = layout_memorizer.clone();
-                let rdom = rdom.clone();
-                let event_emitter = event_emitter.clone();
-                std::thread::spawn(move || {
-                    let mut dom = VirtualDom::new(root);
-
-                    if let Some(state) = state.clone() {
-                        dom.base_scope().provide_context(state);
-                    }
-
-                    let muts = dom.rebuild();
-                    let (to_update, diff) = rdom.lock().unwrap().apply_mutations(muts);
-
-                    let mut ctx = SendAnyMap::new();
-                    ctx.insert(layout_memorizer.clone());
-
-                    //println!("Updated Dioxus DOM with {} mutations.", diff.len());
-                    rdom.lock().unwrap().update_state(to_update, ctx);
-
-                    tokio::runtime::Builder::new_multi_thread()
-                        .enable_all()
-                        .build()
-                        .unwrap()
-                        .block_on(async move {
-                            loop {
-                                select! {
-                                    ev = event_emitter_rx.recv() => {
-                                        if let Some(ev) = ev {
-                                            let data = ev.data.any();
-                                            dom.handle_event(&ev.name, data, ev.element_id, false);
-
-                                            dom.process_events();
-                                        }
-                                    },
-                                    _ = dom.wait_for_work() => {},
-                                };
-
-                                // Or wait for a deadline and then collect edits
-                                let mutations = dom.render_immediate();
-                                let (to_update, diff) =
-                                    rdom.lock().unwrap().apply_mutations(mutations);
-
-                                if let Some(state) = state.clone() {
-                                    dom.base_scope().provide_context(state);
-                                }
-
-                                let mut ctx = SendAnyMap::new();
-                                ctx.insert(layout_memorizer.clone());
-
-                                //println!("Updated Dioxus DOM with {} mutations.", diff.len());
-                                rdom.lock().unwrap().update_state(to_update, ctx);
-
-                                //println!("{:#?}", rdom.lock().unwrap());
-                            }
-                        });
-                });
-            }
-            (rdom, event_emitter, layout_memorizer, win)
-        })
-        .collect();
-
-    run(wins);
+pub fn launch_cfg<T: 'static + Clone + Send>(win_config: (Component<()>, WindowConfig<T>)) {
+    run(win_config);
 }
 
 #[cfg(feature = "devtools")]
 use dioxus::prelude::{fc_to_builder, format_args_f, render, Element, LazyNodes, Scope, VNode};
+#[cfg(feature = "devtools")]
+use freya_node_state::CustomAttributeValues;
 
 #[cfg(feature = "devtools")]
 fn with_devtools(
-    rdom: Arc<Mutex<RealDom<NodeState>>>,
+    rdom: Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>,
     root: fn(cx: Scope) -> Element,
 ) -> VirtualDom {
     use crate::devtools::DevTools;
@@ -286,7 +201,7 @@ fn with_devtools(
 
     struct DomProps {
         root: fn(cx: Scope) -> Element,
-        rdom: Arc<Mutex<RealDom<NodeState>>>,
+        rdom: Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>,
     }
 
     VirtualDom::new_with_props(app, DomProps { root, rdom })

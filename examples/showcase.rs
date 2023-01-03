@@ -76,7 +76,7 @@ fn FirstSection(cx: Scope) -> Element {
     let current_theme = &theme.read();
     let enabled = current_theme.eq(&LIGHT_THEME);
 
-    let slider_percentage = use_state(&cx, || 50.0);
+    let slider_percentage = use_state(cx, || 50.0);
 
     render!(
         SectionHeader {

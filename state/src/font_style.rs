@@ -4,7 +4,7 @@ use dioxus_native_core_macro::sorted_str_slice;
 use skia_safe::textlayout::TextAlign;
 use skia_safe::Color;
 
-use crate::parse_color;
+use crate::{parse_color, CustomAttributeValues};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FontStyle {
@@ -32,7 +32,7 @@ impl Default for FontStyle {
 }
 
 /// Font style are inherited by default if not specified otherwise by some of the supported attributes.
-impl ParentDepState for FontStyle {
+impl ParentDepState<CustomAttributeValues> for FontStyle {
     type Ctx = ();
     type DepState = (Self,);
 
@@ -49,7 +49,7 @@ impl ParentDepState for FontStyle {
 
     fn reduce<'a>(
         &mut self,
-        node: NodeView,
+        node: NodeView<CustomAttributeValues>,
         parent: Option<(&'a Self,)>,
         _ctx: &Self::Ctx,
     ) -> bool {

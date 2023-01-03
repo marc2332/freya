@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex};
 use dioxus_core::ElementId;
 use dioxus_native_core::real_dom::{Node, NodeType};
 use freya_common::{LayoutMemorizer, NodeArea};
-use freya_layers::{Layers, NodeData};
+use freya_layers::{Layers, NodeInfoData};
 use freya_layout::measure_node_layout;
 use freya_node_state::{DirectionMode, NodeState, Size, SizeMode};
 use lazy_static::lazy_static;
@@ -32,7 +32,7 @@ fn percentage() {
         ..expanded_size()
     });
     let result = measure_node_layout(
-        &NodeData { node },
+        &NodeInfoData { node },
         NodeArea {
             x: 0.0,
             y: 0.0,
@@ -67,7 +67,7 @@ fn manual() {
         ..expanded_size()
     });
     let result = measure_node_layout(
-        &NodeData { node },
+        &NodeInfoData { node },
         NodeArea {
             x: 0.0,
             y: 0.0,
@@ -96,7 +96,7 @@ fn manual() {
 #[test]
 fn auto() {
     let result = measure_node_layout(
-        &NodeData {
+        &NodeInfoData {
             node: Node {
                 id: ElementId(0),
                 parent: None,
@@ -129,7 +129,7 @@ fn auto() {
         &mut (),
         &mut Layers::default(),
         |_, _| {
-            Some(NodeData {
+            Some(NodeInfoData {
                 node: Node {
                     id: ElementId(1),
                     parent: None,
@@ -166,7 +166,7 @@ fn x_y() {
         ..expanded_size()
     });
     let result = measure_node_layout(
-        &NodeData { node },
+        &NodeInfoData { node },
         NodeArea {
             x: 15.0,
             y: 25.0,
@@ -182,7 +182,7 @@ fn x_y() {
         &mut (),
         &mut Layers::default(),
         |_, _| {
-            Some(NodeData {
+            Some(NodeInfoData {
                 node: Node {
                     id: ElementId(1),
                     parent: None,

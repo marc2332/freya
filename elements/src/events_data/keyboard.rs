@@ -2,7 +2,7 @@ use glutin::keyboard::Key;
 
 pub type KeyCode = Key<'static>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct KeyboardData {
     pub code: KeyCode,
 }

@@ -6,7 +6,7 @@ use dioxus_native_core::state::NodeDepState;
 use dioxus_native_core_macro::sorted_str_slice;
 use skia_safe::Color;
 
-use crate::parse_color;
+use crate::{parse_color, CustomAttributeValues};
 
 #[derive(Default, Clone, Debug)]
 pub struct Style {
@@ -19,7 +19,7 @@ pub struct Style {
     pub display: DisplayMode,
 }
 
-impl NodeDepState for Style {
+impl NodeDepState<CustomAttributeValues> for Style {
     type DepState = ();
     type Ctx = ();
 
@@ -35,12 +35,17 @@ impl NodeDepState for Style {
             "display",
         ])));
 
-    fn reduce<'a>(&mut self, node: NodeView, _sibling: (), _ctx: &Self::Ctx) -> bool {
+    fn reduce<'a>(
+        &mut self,
+        node: NodeView<CustomAttributeValues>,
+        _sibling: (),
+        _ctx: &Self::Ctx,
+    ) -> bool {
         let mut background = Color::TRANSPARENT;
         let mut relative_layer = 0;
         let mut shadow = ShadowSettings::default();
         let mut radius = 0.0;
-        let mut image_data = None;
+        let image_data = None;
         let mut svg_data = None;
         let mut display = DisplayMode::Normal;
 
@@ -81,14 +86,16 @@ impl NodeDepState for Style {
                             }
                         }
                     }
+                    // TODO Support images
                     "image_data" => {
-                        if let OwnedAttributeValue::Any(bytes) = attr.value {
-                            image_data = bytes.downcast_ref::<&[u8]>().map(|v| v.to_vec());
+                        if let OwnedAttributeValue::Custom(_bytes) = attr.value {
+                            //image_data = bytes.as_any().downcast_ref::<&[u8]>().map(|v| v.to_vec());
                         }
                     }
+                    // TODO raw SVG
                     "svg_data" => {
-                        if let OwnedAttributeValue::Any(bytes) = attr.value {
-                            svg_data = bytes.downcast_ref::<&[u8]>().map(|v| v.to_vec());
+                        if let OwnedAttributeValue::Custom(_bytes) = attr.value {
+                            //svg_data = bytes.as_any().downcast_ref::<&[u8]>().map(|v| v.to_vec());
                         }
                     }
                     "svg_content" => {

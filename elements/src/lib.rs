@@ -1,12 +1,10 @@
 pub mod events_data;
 
-use bumpalo::Bump;
-use dioxus_core::{AnyValueContainer, prelude::IntoAttributeValue};
 pub use events_data::*;
 
 pub use dioxus_core::AttributeValue;
 use freya_common::NodeReferenceLayout;
-use std::{cell::RefCell, fmt::Display, sync::Arc};
+use std::fmt::Display;
 use tokio::sync::mpsc::UnboundedSender;
 
 pub type AttributeDescription = (&'static str, Option<&'static str>, bool);
@@ -33,6 +31,7 @@ macro_rules! builder_constructors {
                 pub const NAME_SPACE: Option<&'static str> = None;
 
                 $(
+                    #[allow(non_upper_case_globals)]
                     pub const $fil: AttributeDescription = (stringify!($fil), None, false);
                 )*
             }
@@ -122,12 +121,6 @@ builder_constructors! {
 #[derive(Clone)]
 pub struct NodeRefWrapper(pub UnboundedSender<NodeReferenceLayout>);
 
-impl<'a> IntoAttributeValue<'a> for NodeRefWrapper {
-    fn into_value(self, _bump: &'a Bump) -> AttributeValue<'a> {
-        AttributeValue::Any(RefCell::new(Some(AnyValueContainer(Arc::new(self)))))
-    }
-}
-
 // Hacky
 impl PartialEq for NodeRefWrapper {
     fn eq(&self, _other: &Self) -> bool {
@@ -158,6 +151,9 @@ impl Display for CursorRefWrapper {
         f.debug_struct("CursorRefWrapper").finish_non_exhaustive()
     }
 }
+
+// Support images
+
 /*
 #[allow(non_camel_case_types)]
 pub struct image;

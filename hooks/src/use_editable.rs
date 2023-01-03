@@ -3,10 +3,10 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use dioxus_core::{Event, ScopeState};
+use dioxus_core::{AttributeValue, Event, ScopeState};
 use dioxus_hooks::{use_effect, use_ref, use_state, UseRef, UseState};
 use freya_elements::events_data::{KeyCode, KeyboardData, MouseData};
-use freya_node_state::CursorReference;
+use freya_node_state::{CursorReference, CustomAttributeValues};
 use tokio::sync::{mpsc::unbounded_channel, mpsc::UnboundedSender};
 pub use xi_rope::Rope;
 
@@ -39,7 +39,7 @@ pub fn use_editable<'a>(
     &CursorPosition,
     KeypressNotifier,
     ClickNotifier,
-    &CursorRef,
+    AttributeValue,
 ) {
     // Hold the actual editable content
     let content = use_state(cx, || Rope::from(initializer()));
@@ -58,6 +58,10 @@ pub fn use_editable<'a>(
         positions: Arc::new(Mutex::new(None)),
         id: Arc::new(Mutex::new(None)),
     });
+
+    let cursor_ref_attr = cx.any_value(CustomAttributeValues::CursorReference(
+        cursor_ref.read().clone(),
+    ));
 
     // Single listener multiple triggers channel so the mouse can be changed from multiple elements
     let click_channel = cx.use_hook(|| {
@@ -157,6 +161,7 @@ pub fn use_editable<'a>(
             while let Some(e) = rx.recv().await {
                 let rope = content.current();
                 let cursor = cursor_getter.current();
+                println!("{:?}", e);
 
                 match &e.code {
                     KeyCode::ArrowDown => {
@@ -295,6 +300,6 @@ pub fn use_editable<'a>(
         cursor,
         keypress_channel_sender,
         click_channel_sender,
-        cursor_ref,
+        cursor_ref_attr,
     )
 }

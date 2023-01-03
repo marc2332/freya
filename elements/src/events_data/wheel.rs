@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct WheelData {
     #[allow(dead_code)]
     delta_x: f64,

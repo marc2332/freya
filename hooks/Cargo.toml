@@ -12,15 +12,15 @@ keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
 [dependencies]
-dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
-dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
-dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
-dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes" }
-dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-str-attributes", features = ["sync_attributes"] }
-tween = "1.0.1"
-tokio = { version = "1.17.0" }
+dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
+dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
+dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
+dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
+dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
+tween = "2.0.0"
+tokio = { version = "1.23.0" }
 freya-elements = { path = "../elements", version = "0.1.0" }
-uuid = { version =  "1.2.1", features = ["v4"]}
+uuid = { version =  "1.2.2", features = ["v4"]}
 xi-rope = "0.3.0"
 freya-node-state = { path = "../state", version = "0.1.0" }
 freya-common = { path = "../common", version = "0.1.0" }

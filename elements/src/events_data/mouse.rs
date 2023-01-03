@@ -1,7 +1,7 @@
 use euclid::Point2D;
 use glutin::event::MouseButton;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MouseData {
     pub screen_coordinates: Point2D<f64, f64>,
     pub element_coordinates: Point2D<f64, f64>,

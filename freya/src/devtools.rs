@@ -7,7 +7,7 @@ use dioxus_router::*;
 use freya_components::*;
 use freya_elements as dioxus_elements;
 use freya_hooks::use_theme;
-use freya_node_state::{AttributeType, NodeState, ShadowSettings};
+use freya_node_state::{AttributeType, CustomAttributeValues, NodeState, ShadowSettings};
 use skia_safe::Color;
 use std::{
     sync::{Arc, Mutex},
@@ -27,7 +27,7 @@ struct TreeNode {
 
 #[derive(Props)]
 pub struct DevToolsProps {
-    rdom: Arc<Mutex<RealDom<NodeState>>>,
+    rdom: Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>,
 }
 
 // Hacky stuff over here
@@ -39,10 +39,10 @@ impl PartialEq for DevToolsProps {
 
 #[allow(non_snake_case)]
 pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
-    let children = use_state(&cx, Vec::<TreeNode>::new);
+    let children = use_state(cx, Vec::<TreeNode>::new);
     let setter = children.setter();
 
-    use_effect(&cx, (), move |_| {
+    use_effect(cx, (), move |_| {
         let rdom = cx.props.rdom.clone();
         async move {
             loop {
@@ -235,10 +235,10 @@ fn TabButton<'a>(cx: Scope<'a, TabButtonProps<'a>>) -> Element<'a> {
     let theme = use_theme(&cx);
     let button_theme = &theme.read().button;
 
-    let background = use_state(&cx, || <&str>::clone(&button_theme.background));
+    let background = use_state(cx, || <&str>::clone(&button_theme.background));
     let set_background = background.setter();
 
-    use_effect(&cx, &button_theme.clone(), move |button_theme| async move {
+    use_effect(cx, &button_theme.clone(), move |button_theme| async move {
         set_background(button_theme.background);
     });
 
@@ -551,7 +551,7 @@ fn NodeElement<'a>(
     is_selected: bool,
     onselected: EventHandler<'a, &'a TreeNode>,
 ) -> Element<'a> {
-    let text_color = use_state(&cx, || "white");
+    let text_color = use_state(cx, || "white");
 
     let mut margin_left = (node.height * 10) as f32 + 16.5;
     let mut text = format!("{} #{}", node.tag, node.id);

@@ -3,9 +3,10 @@ use std::sync::{Arc, Mutex};
 
 use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
 use dioxus_native_core::state::ParentDepState;
-use dioxus_native_core::NodeId;
 use dioxus_native_core_macro::sorted_str_slice;
 use freya_common::LayoutMemorizer;
+
+use crate::CustomAttributeValues;
 
 #[derive(Default, Clone, Debug)]
 pub struct Size {
@@ -19,7 +20,7 @@ pub struct Size {
     pub direction: DirectionMode,
 }
 
-impl ParentDepState for Size {
+impl ParentDepState<CustomAttributeValues> for Size {
     type Ctx = Arc<Mutex<LayoutMemorizer>>;
     type DepState = (Self,);
 
@@ -39,7 +40,7 @@ impl ParentDepState for Size {
 
     fn reduce<'a>(
         &mut self,
-        node: NodeView,
+        node: NodeView<CustomAttributeValues>,
         _parent: Option<(&'a Self,)>,
         ctx: &Self::Ctx,
     ) -> bool {
@@ -68,7 +69,7 @@ impl ParentDepState for Size {
                     "width" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
-                            if let Some(new_width) = parse_size(&attr) {
+                            if let Some(new_width) = parse_size(attr) {
                                 width = new_width;
                             }
                         }
@@ -76,7 +77,7 @@ impl ParentDepState for Size {
                     "height" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
-                            if let Some(new_height) = parse_size(&attr) {
+                            if let Some(new_height) = parse_size(attr) {
                                 height = new_height;
                             }
                         }
@@ -84,7 +85,7 @@ impl ParentDepState for Size {
                     "min_height" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
-                            if let Some(new_min_height) = parse_size(&attr) {
+                            if let Some(new_min_height) = parse_size(attr) {
                                 min_height = new_min_height;
                             }
                         }
@@ -92,7 +93,7 @@ impl ParentDepState for Size {
                     "min_width" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
-                            if let Some(new_min_width) = parse_size(&attr) {
+                            if let Some(new_min_width) = parse_size(attr) {
                                 min_width = new_min_width;
                             }
                         }
@@ -100,7 +101,7 @@ impl ParentDepState for Size {
                     "max_height" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
-                            if let Some(new_max_height) = parse_size(&attr) {
+                            if let Some(new_max_height) = parse_size(attr) {
                                 max_height = new_max_height;
                             }
                         }
@@ -108,7 +109,7 @@ impl ParentDepState for Size {
                     "max_width" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
-                            if let Some(new_max_width) = parse_size(&attr) {
+                            if let Some(new_max_width) = parse_size(attr) {
                                 max_width = new_max_width;
                             }
                         }

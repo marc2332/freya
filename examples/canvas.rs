@@ -18,9 +18,9 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    let hovering = use_state(&cx, || false);
-    let canvas_pos = use_state(&cx, || (0.0f64, 0.0f64));
-    let nodes = use_state(&cx, || vec![(0.0f64, 0.0f64)]);
+    let hovering = use_state(cx, || false);
+    let canvas_pos = use_state(cx, || (0.0f64, 0.0f64));
+    let nodes = use_state(cx, || vec![(0.0f64, 0.0f64)]);
     let clicking = use_state::<Option<(f64, f64)>>(&cx, || None);
     let clicking_drag = use_state::<Option<(usize, (f64, f64))>>(&cx, || None);
 
@@ -158,10 +158,10 @@ fn Editor(cx: Scope) -> Element {
         },
         EditableMode::SingleLineMultipleEditors,
     );
-    let font_size_percentage = use_state(&cx, || 15.0);
-    let line_height_percentage = use_state(&cx, || 0.0);
-    let is_bold = use_state(&cx, || false);
-    let is_italic = use_state(&cx, || false);
+    let font_size_percentage = use_state(cx, || 15.0);
+    let line_height_percentage = use_state(cx, || 0.0);
+    let is_bold = use_state(cx, || false);
+    let is_italic = use_state(cx, || false);
 
     // minimum font size is 5
     let font_size = font_size_percentage + 5.0;
@@ -287,9 +287,9 @@ fn Editor(cx: Scope) -> Element {
                 height: "calc(100% - 80)",
                 padding: "5",
                 onkeydown: move |e| {
-                    //process_keyevent.send(e.data).unwrap();
+                    process_keyevent.send(e.data).unwrap();
                 },
-                cursor_reference: cursor_ref.read().clone(),
+                cursor_reference: cursor_ref,
                 direction: "horizontal",
                 rect {
                     width: "100%",
@@ -319,7 +319,7 @@ fn Editor(cx: Scope) -> Element {
                             };
 
                             let onmousedown = move |e: MouseEvent| {
-                                //process_clickevent.send((e.data, line_index)).ok();
+                                process_clickevent.send((e.data, line_index)).ok();
                             };
 
                             let manual_line_height = font_size * line_height;

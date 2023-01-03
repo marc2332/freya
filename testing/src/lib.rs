@@ -2,10 +2,10 @@ use std::sync::{Arc, Mutex};
 
 use anymap::AnyMap;
 use dioxus_core::{Component, ElementId, VirtualDom};
-use dioxus_native_core::real_dom::{Node, NodeType, RealDom};
-use dioxus_native_core::traversable::Traversable;
+use dioxus_native_core::node::NodeType;
+use dioxus_native_core::real_dom::RealDom;
 use freya_common::{LayoutMemorizer, NodeArea};
-use freya_node_state::NodeState;
+use freya_node_state::{CustomAttributeValues, NodeState};
 use freya_processor::events::{EventsProcessor, FreyaEvent};
 use freya_processor::{process_work, SafeEventEmitter, SafeFreyaEvents};
 use skia_safe::textlayout::FontCollection;
@@ -15,7 +15,7 @@ pub struct TestNode {
     id: ElementId,
     utils: TestUtils,
     state: NodeState,
-    node_type: NodeType,
+    node_type: NodeType<CustomAttributeValues>,
 }
 
 impl TestNode {
@@ -60,7 +60,7 @@ impl TestNode {
 /// Collection of utils to test a freya Component
 #[derive(Clone)]
 pub struct TestUtils {
-    rdom: Arc<Mutex<RealDom<NodeState>>>,
+    rdom: Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>,
     dom: Arc<Mutex<VirtualDom>>,
     layout_memorizer: Arc<Mutex<LayoutMemorizer>>,
     freya_events: SafeFreyaEvents,
@@ -119,7 +119,7 @@ impl TestUtils {
     pub fn root(&mut self) -> TestNode {
         let rdom = self.rdom.lock().unwrap();
         let root_id = rdom.root_id();
-        let root: &Node<NodeState> = rdom.get(ElementId(root_id)).unwrap();
+        let root: &Node<NodeState, CustomAttributeValues> = rdom.get(ElementId(root_id)).unwrap();
         TestNode {
             id: ElementId(root_id),
             utils: self.clone(),
@@ -131,7 +131,7 @@ impl TestUtils {
     /// Get a Node by the given ID
     pub fn get_node_by_id(&self, id: ElementId) -> TestNode {
         let rdom = self.rdom.lock().unwrap();
-        let child: &Node<NodeState> = rdom.get(id).unwrap();
+        let child: &Node<NodeState, CustomAttributeValues> = rdom.get(id).unwrap();
         TestNode {
             id: child.id,
             utils: self.clone(),
@@ -144,7 +144,9 @@ impl TestUtils {
 /// Run a component in a headless testing environment
 pub fn launch_test(root: Component<()>) -> TestUtils {
     let mut dom = VirtualDom::new(root);
-    let rdom = Arc::new(Mutex::new(RealDom::<NodeState>::new()));
+    let rdom = Arc::new(Mutex::new(
+        RealDom::<NodeState, CustomAttributeValues>::new(),
+    ));
 
     let event_emitter: SafeEventEmitter = Arc::default();
     let layout_memorizer = Arc::new(Mutex::new(LayoutMemorizer::new()));

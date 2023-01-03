@@ -1,9 +1,8 @@
-use dioxus_core::ElementId;
 use dioxus_native_core::node::{Node, NodeType};
 use dioxus_native_core::tree::TreeView;
 use dioxus_native_core::NodeId;
 use freya_layers::RenderData;
-use freya_node_state::NodeState;
+use freya_node_state::{CustomAttributeValues, NodeState};
 use freya_processor::ViewportsCollection;
 use skia_safe::textlayout::{Paragraph, RectHeightStyle, RectWidthStyle, TextHeightBehavior};
 use skia_safe::Color;
@@ -66,7 +65,7 @@ pub fn render_skia(
                 let mut path = Path::new();
                 path.add_round_rect(
                     Rect::new(x as f32, y as f32, x2 as f32, y2 as f32),
-                    (radius as f32, radius as f32),
+                    (radius, radius),
                     PathDirection::CW,
                 );
                 path.close();
@@ -263,7 +262,10 @@ fn get_inner_texts(children: &[NodeId], dom: &SafeDOM) -> Vec<(NodeState, String
     children
         .iter()
         .filter_map(|child_id| {
-            let (child, children): (Option<Node<NodeState>>, Option<Vec<NodeId>>) = {
+            let (child, children): (
+                Option<Node<NodeState, CustomAttributeValues>>,
+                Option<Vec<NodeId>>,
+            ) = {
                 let dom = dom.lock().unwrap();
                 let children = dom.tree.children_ids(*child_id).map(|v| v.to_vec());
                 (dom.get(*child_id).cloned(), children)
@@ -276,7 +278,7 @@ fn get_inner_texts(children: &[NodeId], dom: &SafeDOM) -> Vec<(NodeState, String
                     }
                     if let Some(children) = children {
                         if let Some(child_text_id) = children.get(0) {
-                            let child_text: Option<Node<NodeState>> = {
+                            let child_text: Option<Node<NodeState, CustomAttributeValues>> = {
                                 let dom = dom.lock().unwrap();
                                 dom.get(*child_text_id).cloned()
                             };
@@ -329,7 +331,7 @@ fn draw_cursor(node: &RenderData, paragraph: Paragraph, canvas: &mut Canvas) -> 
     paint.set_style(PaintStyle::Fill);
     paint.set_color(cursor_color);
 
-    canvas.draw_rect(Rect::new(x as f32, y as f32, x2 as f32, y2 as f32), &paint);
+    canvas.draw_rect(Rect::new(x, y, x2, y2), &paint);
 
     Some(())
 }
