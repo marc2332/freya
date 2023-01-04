@@ -13,13 +13,13 @@ wireframe = ["freya/wireframe"]
 
 [dev-dependencies]
 freya = { path = "./freya"}
-dioxus-native-core-macro = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
-dioxus = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
-dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
-dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
-dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
-dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
-dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
+dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus"}
+dioxus = { git = "https://github.com/DioxusLabs/dioxus"}
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus"}
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus"}
+dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus"}
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus"}
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus"}
 tokio = "1.23.0"
 reqwest = {version = "0.11.13", features = ["json"] }
 serde = "1.0.152"

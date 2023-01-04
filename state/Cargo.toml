@@ -12,12 +12,12 @@ keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
 [dependencies]
-dioxus-native-core-macro = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
-dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
-dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
-dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
-dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
-dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
+dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus"}
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus"}
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus"}
+dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus"}
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus"}
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus"}
 anymap = "0.12.1"
 fxhash = "0.2.1"
 skia-safe = { version = "0.56.1", features = ["gl", "textlayout", "svg"] }

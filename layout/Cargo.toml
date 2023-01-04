@@ -12,8 +12,8 @@ keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
 [dependencies]
-dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
-dioxus = { git = "https://github.com/Demonthos/dioxus", branch="realdom-generic-over-custom-types", features = ["macro", "hooks"]}
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus"}
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", features = ["macro", "hooks"]}
 freya-common = { path = "../common", version = "0.1.0" }
 freya-node-state = { path = "../state", version = "0.1.0" }
 freya-layers = { path = "../layers", version = "0.1.0" }
@@ -22,12 +22,12 @@ freya-elements = { path = "../elements", version = "0.1.0"}
 skia-safe = { version = "0.56.1", features = ["textlayout"] }
 
 [dev-dependencies]
-dioxus-native-core-macro = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
-dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
-dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
-dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
-dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
-dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
+dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus"}
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus"}
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus"}
+dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus"}
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus"}
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus"}
 fxhash = "0.2.1"
 anymap = "0.12.1"
 lazy_static = "1.4.0"

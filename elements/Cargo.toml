@@ -13,11 +13,11 @@ categories = ["GUI"]
 
 [dependencies]
 bumpalo = "3.11.1"
-dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
-dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
-dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
-dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
-dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch = "realdom-generic-over-custom-types"}
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus"}
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus"}
+dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus"}
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus"}
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus"}
 glutin_tao = { version = "0.30.1", features = ["serde"]}
 euclid = "0.22.7"
 tokio = { version = "1.23.0" }

@@ -169,14 +169,13 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
         items_length as f32,
     );
 
+    println!("{:?}", render_range);
     let mut key_index = 0;
     // TODO Support VirtualScrollView
     let children = render_range
         .map(|i| {
-            key_index += 1;
-            (cx.props.builder)((key_index, i, &cx.props.builder_values))
-        })
-        .collect::<Vec<LazyNodes>>();
+            rsx!(label { color:"black", key: "{i}", "{i}" })
+        });
 
     render!(
         container {
@@ -196,7 +195,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
                     direction: "{user_direction}",
                     reference: node_ref,
                     onwheel: onwheel,
-
+                    children
                 }
                 container {
                     width: "100%",
