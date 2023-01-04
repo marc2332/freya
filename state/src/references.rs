@@ -3,10 +3,9 @@ use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
 use dioxus_native_core::state::ParentDepState;
 use dioxus_native_core_macro::sorted_str_slice;
 use freya_common::NodeReferenceLayout;
-use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc::UnboundedSender;
 
-use crate::CustomAttributeValues;
+use crate::{CursorReference, CustomAttributeValues};
 
 #[derive(Default, Clone, Debug)]
 pub struct References {
@@ -69,18 +68,5 @@ impl ParentDepState<CustomAttributeValues> for References {
             cursor_ref,
         };
         changed
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct CursorReference {
-    pub positions: Arc<Mutex<Option<(f32, f32)>>>,
-    pub agent: UnboundedSender<(usize, usize)>,
-    pub id: Arc<Mutex<Option<usize>>>,
-}
-
-impl PartialEq for CursorReference {
-    fn eq(&self, _: &Self) -> bool {
-        true
     }
 }

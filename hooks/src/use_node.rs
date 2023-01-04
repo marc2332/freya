@@ -1,8 +1,7 @@
 use dioxus_core::{AttributeValue, ScopeState};
 use dioxus_hooks::{use_effect, use_state};
 use freya_common::NodeReferenceLayout;
-pub use freya_elements::NodeRefWrapper;
-use freya_node_state::CustomAttributeValues;
+use freya_node_state::{CustomAttributeValues, NodeReference};
 use tokio::sync::mpsc::unbounded_channel;
 
 /// Creates a reference to the desired node's layout size
@@ -14,7 +13,7 @@ pub fn use_node(cx: &ScopeState) -> (AttributeValue, NodeReferenceLayout) {
         (tx, Some(rx))
     });
 
-    let node_ref = NodeRefWrapper(channel.0.clone());
+    let node_ref = NodeReference(channel.0.clone());
 
     use_effect(cx, (), move |_| {
         let rx = channel.1.take();

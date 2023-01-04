@@ -1,11 +1,6 @@
 pub mod events_data;
-
-pub use events_data::*;
-
 pub use dioxus_core::AttributeValue;
-use freya_common::NodeReferenceLayout;
-use std::fmt::Display;
-use tokio::sync::mpsc::UnboundedSender;
+pub use events_data::*;
 
 pub type AttributeDescription = (&'static str, Option<&'static str>, bool);
 
@@ -118,41 +113,7 @@ builder_constructors! {
     };
 }
 
-#[derive(Clone)]
-pub struct NodeRefWrapper(pub UnboundedSender<NodeReferenceLayout>);
-
-// Hacky
-impl PartialEq for NodeRefWrapper {
-    fn eq(&self, _other: &Self) -> bool {
-        true
-    }
-}
-
-// Hacky
-impl Display for NodeRefWrapper {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("NodeRefWrapper").finish_non_exhaustive()
-    }
-}
-
-#[derive(Clone)]
-pub struct CursorRefWrapper(pub UnboundedSender<NodeReferenceLayout>); // TO-DO
-
-// Hacky
-impl PartialEq for CursorRefWrapper {
-    fn eq(&self, _other: &Self) -> bool {
-        true
-    }
-}
-
-// Hacky
-impl Display for CursorRefWrapper {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("CursorRefWrapper").finish_non_exhaustive()
-    }
-}
-
-// Support images
+// TODO Support images
 
 /*
 #[allow(non_camel_case_types)]
