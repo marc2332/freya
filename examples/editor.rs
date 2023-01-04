@@ -2,7 +2,7 @@ use freya::dioxus_elements::MouseEvent;
 use freya::prelude::*;
 
 fn main() {
-    launch_cfg(vec![(
+    launch_cfg((
         app,
         WindowConfig::<()>::builder()
             .with_width(900)
@@ -11,7 +11,7 @@ fn main() {
             .with_transparency(false)
             .with_title("Editor")
             .build(),
-    )]);
+    ));
 }
 
 fn app(cx: Scope) -> Element {

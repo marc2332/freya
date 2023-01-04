@@ -45,7 +45,7 @@ impl NodeDepState<CustomAttributeValues> for Style {
         let mut relative_layer = 0;
         let mut shadow = ShadowSettings::default();
         let mut radius = 0.0;
-        let image_data = None;
+        let mut image_data = None;
         let mut svg_data = None;
         let mut display = DisplayMode::Normal;
 
@@ -86,21 +86,23 @@ impl NodeDepState<CustomAttributeValues> for Style {
                             }
                         }
                     }
-                    // TODO Support images
                     "image_data" => {
-                        if let OwnedAttributeValue::Custom(_bytes) = attr.value {
-                            //image_data = bytes.as_any().downcast_ref::<&[u8]>().map(|v| v.to_vec());
+                        if let OwnedAttributeValue::Custom(CustomAttributeValues::Bytes(bytes)) =
+                            attr.value
+                        {
+                            image_data = Some(bytes.clone());
                         }
                     }
-                    // TODO raw SVG
                     "svg_data" => {
-                        if let OwnedAttributeValue::Custom(_bytes) = attr.value {
-                            //svg_data = bytes.as_any().downcast_ref::<&[u8]>().map(|v| v.to_vec());
+                        if let OwnedAttributeValue::Custom(CustomAttributeValues::Bytes(bytes)) =
+                            attr.value
+                        {
+                            svg_data = Some(bytes.clone());
                         }
                     }
                     "svg_content" => {
                         let text = attr.value.as_text();
-                        svg_data = text.map(|v| v.as_bytes().to_vec());
+                        svg_data = text.map(|v| v.as_bytes().to_owned());
                     }
                     _ => {
                         println!("Unsupported attribute <{}>", attr.attribute.name);

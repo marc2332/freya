@@ -130,7 +130,7 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
 /// ```rust
 /// # use dioxus::prelude::*;
 /// # use freya::{dioxus_elements, *};
-/// launch_cfg(vec![(
+/// launch_cfg((
 ///     app,
 ///     WindowConfig::<()>::builder()
 ///         .with_width(500)
@@ -139,7 +139,7 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
 ///         .with_transparency(false)
 ///         .with_title("Freya App")
 ///         .build()
-/// )]);
+/// ]);
 ///
 /// fn app(cx: Scope) -> Element {
 ///    render!(

@@ -6,13 +6,13 @@
 use freya::prelude::*;
 
 fn main() {
-    launch_cfg(vec![(
+    launch_cfg((
         app,
         WindowConfig::builder()
             .with_title("Window with state")
             .with_state(10)
             .build(),
-    )]);
+    ));
 }
 
 fn app(cx: Scope) -> Element {

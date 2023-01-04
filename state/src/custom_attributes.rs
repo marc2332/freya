@@ -4,6 +4,8 @@ use std::sync::Arc;
 use std::sync::Mutex;
 
 use dioxus_core::AnyValue;
+use dioxus_core::AttributeValue;
+use dioxus_core::Scope;
 use dioxus_native_core::node::FromAnyValue;
 use freya_common::NodeReferenceLayout;
 use tokio::sync::mpsc::UnboundedSender;
@@ -49,6 +51,7 @@ impl Display for CursorReference {
 pub enum CustomAttributeValues {
     Reference(NodeReference),
     CursorReference(CursorReference),
+    Bytes(Vec<u8>),
 }
 
 impl Debug for CustomAttributeValues {
@@ -56,6 +59,7 @@ impl Debug for CustomAttributeValues {
         match self {
             Self::Reference(_) => f.debug_tuple("Reference").finish(),
             Self::CursorReference(_) => f.debug_tuple("CursorReference").finish(),
+            Self::Bytes(_) => f.debug_tuple("Bytes").finish(),
         }
     }
 }
@@ -67,4 +71,9 @@ impl FromAnyValue for CustomAttributeValues {
             .unwrap()
             .clone()
     }
+}
+
+/// Transform some bytes (e.g: raw image, raw svg) into attribute data
+pub fn bytes_to_data<'a>(cx: Scope<'a>, bytes: &[u8]) -> AttributeValue<'a> {
+    cx.any_value(CustomAttributeValues::Bytes(bytes.to_vec()))
 }

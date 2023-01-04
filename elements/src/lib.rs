@@ -111,60 +111,19 @@ builder_constructors! {
         line_height: String,
         font_style: String,
     };
+    image {
+        image_data: String,
+        width: String,
+        height: String,
+    };
+    svg {
+        svg_data: String,
+        svg_content: String,
+        width: String,
+        height: String,
+    };
 }
 
-// TODO Support images
-
-/*
-#[allow(non_camel_case_types)]
-pub struct image;
-
-impl DioxusElement for image {
-    const TAG_NAME: &'static str = "image";
-    const NAME_SPACE: Option<&'static str> = None;
-}
-
-impl image {
-    pub fn image_data<'a>(&self, cx: NodeFactory<'a>, val: &'a [u8]) -> Attribute<'a> {
-        cx.custom_attr("image_data", AttributeValue::Bytes(val), None, false, false)
-    }
-
-    pub fn width<'a>(&self, cx: NodeFactory<'a>, val: Arguments) -> Attribute<'a> {
-        cx.attr("width", val, None, false)
-    }
-
-    pub fn height<'a>(&self, cx: NodeFactory<'a>, val: Arguments) -> Attribute<'a> {
-        cx.attr("height", val, None, false)
-    }
-}
-
-#[allow(non_camel_case_types)]
-pub struct svg;
-
-impl DioxusElement for svg {
-    const TAG_NAME: &'static str = "svg";
-    const NAME_SPACE: Option<&'static str> = None;
-}
-
-impl svg {
-    pub fn svg_data<'a>(&self, cx: NodeFactory<'a>, val: &'a [u8]) -> Attribute<'a> {
-        cx.custom_attr("svg_data", AttributeValue::Bytes(val), None, false, false)
-    }
-
-    pub fn svg_content<'a>(&self, cx: NodeFactory<'a>, val: Arguments) -> Attribute<'a> {
-        cx.attr("svg_content", val, None, false)
-    }
-
-    pub fn width<'a>(&self, cx: NodeFactory<'a>, val: Arguments) -> Attribute<'a> {
-        cx.attr("width", val, None, false)
-    }
-
-    pub fn height<'a>(&self, cx: NodeFactory<'a>, val: Arguments) -> Attribute<'a> {
-        cx.attr("height", val, None, false)
-    }
-}
-
-*/
 pub mod events {
     use crate::events_data::{KeyboardData, MouseData, WheelData};
 
