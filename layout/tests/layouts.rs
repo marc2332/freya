@@ -1,38 +1,51 @@
-use std::sync::{Arc, Mutex};
+use std::{
+    collections::HashSet,
+    sync::{Arc, Mutex},
+};
 
-use dioxus_core::ElementId;
-use dioxus_native_core::real_dom::{Node, NodeType};
+use dioxus_native_core::{
+    node::{Node, NodeData, NodeType},
+    NodeId,
+};
 use freya_common::{LayoutMemorizer, NodeArea};
 use freya_layers::{Layers, NodeInfoData};
 use freya_layout::measure_node_layout;
 use freya_node_state::{DirectionMode, NodeState, Size, SizeMode};
 use lazy_static::lazy_static;
+use rustc_hash::FxHashMap;
 use skia_safe::textlayout::FontCollection;
 
 lazy_static! {
-    static ref TEST_NODE: Node<NodeState> = Node {
-        id: ElementId(0),
-        parent: None,
-        state: NodeState::default(),
-        node_type: NodeType::Element {
-            tag: "rect".to_string(),
-            namespace: None,
-            children: Vec::new()
+    static ref TEST_NODE: NodeInfoData = NodeInfoData {
+        node: Node {
+            node_data: NodeData {
+                node_id: NodeId(0),
+                element_id: None,
+                node_type: NodeType::Element {
+                    tag: "rect".to_string(),
+                    namespace: None,
+                    attributes: FxHashMap::default(),
+                    listeners: HashSet::default(),
+                }
+            },
+            state: NodeState::default(),
         },
         height: 0,
+        parent_id: None,
+        children: None
     };
 }
 
 #[test]
 fn percentage() {
     let mut node = TEST_NODE.clone();
-    node.state = node.state.set_size(Size {
+    node.node.state = node.node.state.with_size(Size {
         width: SizeMode::Percentage(50.0),
         height: SizeMode::Percentage(25.0),
         ..expanded_size()
     });
     let result = measure_node_layout(
-        &NodeInfoData { node },
+        &node,
         NodeArea {
             x: 0.0,
             y: 0.0,
@@ -61,13 +74,13 @@ fn percentage() {
 #[test]
 fn manual() {
     let mut node = TEST_NODE.clone();
-    node.state = node.state.set_size(Size {
+    node.node.state = node.node.state.with_size(Size {
         width: SizeMode::Manual(250.0),
         height: SizeMode::Manual(150.0),
         ..expanded_size()
     });
     let result = measure_node_layout(
-        &NodeInfoData { node },
+        &node,
         NodeArea {
             x: 0.0,
             y: 0.0,
@@ -98,21 +111,26 @@ fn auto() {
     let result = measure_node_layout(
         &NodeInfoData {
             node: Node {
-                id: ElementId(0),
-                parent: None,
-                state: NodeState::default().set_size(Size {
+                node_data: NodeData {
+                    node_id: NodeId(0),
+                    element_id: None,
+                    node_type: NodeType::Element {
+                        tag: "rect".to_string(),
+                        namespace: None,
+                        attributes: FxHashMap::default(),
+                        listeners: HashSet::default(),
+                    },
+                },
+                state: NodeState::default().with_size(Size {
                     width: SizeMode::Auto,
                     height: SizeMode::Auto,
                     direction: DirectionMode::Both,
                     ..expanded_size()
                 }),
-                node_type: NodeType::Element {
-                    tag: "rect".to_string(),
-                    namespace: None,
-                    children: vec![ElementId(1)],
-                },
-                height: 0,
             },
+            height: 0,
+            parent_id: None,
+            children: Some(vec![NodeId(1)]),
         },
         NodeArea {
             x: 0.0,
@@ -131,20 +149,25 @@ fn auto() {
         |_, _| {
             Some(NodeInfoData {
                 node: Node {
-                    id: ElementId(1),
-                    parent: None,
-                    state: NodeState::default().set_size(Size {
+                    node_data: NodeData {
+                        node_id: NodeId(1),
+                        element_id: None,
+                        node_type: NodeType::Element {
+                            tag: "rect".to_string(),
+                            namespace: None,
+                            attributes: FxHashMap::default(),
+                            listeners: HashSet::default(),
+                        },
+                    },
+                    state: NodeState::default().with_size(Size {
                         width: SizeMode::Manual(170.0),
                         height: SizeMode::Manual(25.0),
                         ..expanded_size()
                     }),
-                    node_type: NodeType::Element {
-                        tag: "rect".to_string(),
-                        namespace: None,
-                        children: Vec::new(),
-                    },
-                    height: 0,
                 },
+                height: 0,
+                parent_id: None,
+                children: None,
             })
         },
         0,
@@ -160,13 +183,13 @@ fn auto() {
 #[test]
 fn x_y() {
     let mut node = TEST_NODE.clone();
-    node.state = node.state.set_size(Size {
-        width: SizeMode::Auto,
-        height: SizeMode::Auto,
+    node.node.state = node.node.state.with_size(Size {
+        width: SizeMode::Manual(250.0),
+        height: SizeMode::Manual(150.0),
         ..expanded_size()
     });
     let result = measure_node_layout(
-        &NodeInfoData { node },
+        &node,
         NodeArea {
             x: 15.0,
             y: 25.0,
@@ -184,20 +207,25 @@ fn x_y() {
         |_, _| {
             Some(NodeInfoData {
                 node: Node {
-                    id: ElementId(1),
-                    parent: None,
-                    state: NodeState::default().set_size(Size {
+                    node_data: NodeData {
+                        node_id: NodeId(1),
+                        element_id: None,
+                        node_type: NodeType::Element {
+                            tag: "rect".to_string(),
+                            namespace: None,
+                            attributes: FxHashMap::default(),
+                            listeners: HashSet::default(),
+                        },
+                    },
+                    state: NodeState::default().with_size(Size {
                         width: SizeMode::Manual(170.0),
                         height: SizeMode::Manual(25.0),
                         ..expanded_size()
                     }),
-                    node_type: NodeType::Element {
-                        tag: "rect".to_string(),
-                        namespace: None,
-                        children: Vec::new(),
-                    },
-                    height: 0,
                 },
+                height: 0,
+                parent_id: None,
+                children: None,
             })
         },
         0,
@@ -220,6 +248,5 @@ fn expanded_size() -> Size {
         max_width: SizeMode::Auto,
         padding: (0.0, 0.0, 0.0, 0.0),
         direction: DirectionMode::Both,
-        id: 0,
     }
 }

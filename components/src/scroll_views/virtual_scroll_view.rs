@@ -169,13 +169,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
         items_length as f32,
     );
 
-    println!("{:?}", render_range);
-    let mut key_index = 0;
-    // TODO Support VirtualScrollView
-    let children = render_range
-        .map(|i| {
-            rsx!(label { color:"black", key: "{i}", "{i}" })
-        });
+    let children = render_range.map(|i| (cx.props.builder)((i + 1, i, &cx.props.builder_values)));
 
     render!(
         container {

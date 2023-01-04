@@ -29,6 +29,7 @@ dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus"}
 dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus"}
 dioxus-core = { git = "https://github.com/DioxusLabs/dioxus"}
 fxhash = "0.2.1"
+rustc-hash = "1.1.0"
 anymap = "0.12.1"
 lazy_static = "1.4.0"
 freya-components ={ path = "../components"}

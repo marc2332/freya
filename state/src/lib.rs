@@ -64,7 +64,7 @@ pub struct NodeState {
 }
 
 impl NodeState {
-    pub fn set_size(mut self, size: Size) -> Self {
+    pub fn with_size(mut self, size: Size) -> Self {
         self.size = size;
         self
     }

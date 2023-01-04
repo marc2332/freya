@@ -22,17 +22,10 @@ fn app(cx: Scope) -> Element {
 
     use_effect(cx, range, |range| async move {
         sleep(Duration::from_millis(1000)).await;
-        range.with_mut(|v| *v+=1 );
+        range.with_mut(|v| *v += 1);
     });
 
-    let children = (0..*range.get())
-        .map(|i| {
-            rsx!(label { color:"black", key: "{i}", "{i}" })
-        });
+    let children = (0..*range.get()).map(|i| rsx!(label { color:"black", key: "{i}", "{i}" }));
 
-    render!(
-        rect {
-            children
-        }
-    )
+    render!(rect { children })
 }
