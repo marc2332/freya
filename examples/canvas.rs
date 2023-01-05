@@ -4,16 +4,9 @@
 )]
 
 use freya::dioxus_elements::MouseEvent;
-use freya::prelude::{tracing::Level, *};
-use tracing_subscriber::FmtSubscriber;
+use freya::prelude::*;
 
 fn main() {
-    let subscriber = FmtSubscriber::builder()
-        .with_max_level(Level::TRACE)
-        .finish();
-
-    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
-
     launch_with_props(app, "Freya canvas experiment", (700, 570));
 }
 
@@ -45,7 +38,7 @@ fn app(cx: Scope) -> Element {
             nodes.with_mut(|nodes| {
                 let node = nodes.get_mut(*node_id).unwrap();
                 node.0 = coordinates.x - clicking_cords.0 - canvas_pos.0;
-                node.1 = coordinates.y - clicking_cords.1 - canvas_pos.1;
+                node.1 = coordinates.y - clicking_cords.1 - canvas_pos.1 - 25.0; // The 25 is because of label from below.
             });
         }
     };
