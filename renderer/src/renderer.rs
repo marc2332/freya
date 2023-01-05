@@ -150,7 +150,7 @@ pub fn render_skia(
                     let align = node.node_state.font_style.align;
                     let max_lines = node.node_state.font_style.max_lines;
 
-                    let texts = get_inner_texts(&children, dom);
+                    let texts = get_inner_texts(children, dom);
 
                     let (x, y) = node.node_area.get_origin_points();
 

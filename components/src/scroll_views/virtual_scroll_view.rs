@@ -44,7 +44,7 @@ fn get_render_range(
     let remaining_length = item_length - render_index_start;
 
     let render_index_end = if remaining_length <= potentially_visible_length {
-        item_length as f32
+        item_length
     } else {
         render_index_start + potentially_visible_length
     };
