@@ -48,7 +48,8 @@ pub fn render_skia(
                 let shadow = &node.get_state().style.shadow;
 
                 #[cfg(not(feature = "wireframe"))]
-                if node.get_state().style.background == Color::TRANSPARENT && shadow.intensity == 0 {
+                if node.get_state().style.background == Color::TRANSPARENT && shadow.intensity == 0
+                {
                     return;
                 }
 
@@ -262,10 +263,7 @@ fn get_inner_texts(children: &[NodeId], dom: &SafeDOM) -> Vec<(NodeState, String
     children
         .iter()
         .filter_map(|child_id| {
-            let (child, children): (
-                Node<NodeState, CustomAttributeValues>,
-                Vec<NodeId>,
-            ) = {
+            let (child, children): (Node<NodeState, CustomAttributeValues>, Vec<NodeId>) = {
                 let dom = dom.lock().unwrap();
                 let children = dom.tree.children_ids(*child_id).map(|v| v.to_vec());
                 (dom.get(*child_id).cloned()?, children?)

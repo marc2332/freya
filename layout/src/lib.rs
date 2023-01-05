@@ -1,177 +1,24 @@
 use dioxus_native_core::{node::NodeType, NodeId};
 use freya_common::{LayoutMemorizer, NodeArea, NodeLayoutInfo, NodeReferenceLayout};
-use freya_layers::{Layers, DOMNode};
+use freya_layers::{DOMNode, Layers};
 use freya_node_state::{
-    CalcType, CursorMode, CursorReference, DirectionMode, DisplayMode, NodeState, SizeMode,
+    CursorMode, CursorReference, DirectionMode, DisplayMode, NodeState, SizeMode,
 };
 use skia_safe::textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle};
 use std::sync::{Arc, Mutex};
 
-pub fn run_calculations(calcs: &Vec<CalcType>, parent_area_value: f32) -> f32 {
-    let mut prev_number: Option<f32> = None;
-    let mut prev_op: Option<CalcType> = None;
+mod area_calc;
+mod ops_calc;
 
-    let mut calc_with_op = |val: f32, prev_op: Option<CalcType>| {
-        if let Some(op) = prev_op {
-            match op {
-                CalcType::Sub => {
-                    prev_number = Some(prev_number.unwrap() - val);
-                }
-                CalcType::Add => {
-                    prev_number = Some(prev_number.unwrap() + val);
-                }
-                CalcType::Mul => {
-                    prev_number = Some(prev_number.unwrap() * val);
-                }
-                CalcType::Div => {
-                    prev_number = Some(prev_number.unwrap() / val);
-                }
-                _ => {}
-            }
-        } else {
-            prev_number = Some(val);
-        }
-    };
-
-    for calc in calcs {
-        match calc {
-            CalcType::Percentage(per) => {
-                let val = (parent_area_value / 100.0 * per).round();
-
-                calc_with_op(val, prev_op);
-
-                prev_op = None;
-            }
-            CalcType::Manual(val) => {
-                calc_with_op(*val, prev_op);
-                prev_op = None;
-            }
-            _ => prev_op = Some(*calc),
-        }
-    }
-
-    prev_number.unwrap()
-}
-
-/// Calculate the are of a node considering it's parent area
-fn calculate_area(node_data: &DOMNode, mut area: NodeArea, parent_area: NodeArea) -> NodeArea {
-    let calculate = |value: &SizeMode, area_value: f32, parent_area_value: f32| -> f32 {
-        match value {
-            &SizeMode::Manual(v) => v,
-            SizeMode::Percentage(per) => (parent_area_value / 100.0 * per).round(),
-            SizeMode::Auto => area_value,
-            SizeMode::Calculation(calcs) => run_calculations(calcs, parent_area_value),
-        }
-    };
-
-    let calculate_min = |value: &SizeMode, area_value: f32, parent_area_value: f32| -> f32 {
-        match value {
-            &SizeMode::Manual(v) => {
-                if v > area_value {
-                    v
-                } else {
-                    area_value
-                }
-            }
-            SizeMode::Percentage(per) => {
-                let by_per = (parent_area_value / 100.0 * per).round();
-                if by_per > area_value {
-                    by_per
-                } else {
-                    area_value
-                }
-            }
-            SizeMode::Auto => area_value,
-            SizeMode::Calculation(calcs) => {
-                let by_calcs = run_calculations(calcs, parent_area_value);
-                if by_calcs > area_value {
-                    by_calcs
-                } else {
-                    area_value
-                }
-            }
-        }
-    };
-
-    let calculate_max = |value: &SizeMode, area_value: f32, parent_area_value: f32| -> f32 {
-        match value {
-            &SizeMode::Manual(v) => {
-                if v > area_value {
-                    area_value
-                } else {
-                    v
-                }
-            }
-            SizeMode::Percentage(per) => {
-                let by_per = (parent_area_value / 100.0 * per).round();
-                if by_per > area_value {
-                    area_value
-                } else {
-                    by_per
-                }
-            }
-            SizeMode::Auto => area_value,
-            SizeMode::Calculation(calcs) => {
-                let by_calcs = run_calculations(calcs, parent_area_value);
-                if by_calcs > area_value {
-                    area_value
-                } else {
-                    by_calcs
-                }
-            }
-        }
-    };
-
-    area.width = calculate(
-        &node_data.node.state.size.width,
-        area.width,
-        parent_area.width,
-    );
-    area.height = calculate(
-        &node_data.node.state.size.height,
-        area.height,
-        parent_area.height,
-    );
-
-    if SizeMode::Auto == node_data.node.state.size.height {
-        if let NodeType::Element { tag, .. } = &node_data.node.node_data.node_type {
-            if tag == "label" {
-                area.height = 18.0;
-            }
-        }
-    }
-
-    area.height = calculate_min(
-        &node_data.node.state.size.min_height,
-        area.height,
-        parent_area.height,
-    );
-    area.width = calculate_min(
-        &node_data.node.state.size.min_width,
-        area.width,
-        parent_area.width,
-    );
-
-    area.height = calculate_max(
-        &node_data.node.state.size.max_height,
-        area.height,
-        parent_area.height,
-    );
-    area.width = calculate_max(
-        &node_data.node.state.size.max_width,
-        area.width,
-        parent_area.width,
-    );
-
-    area
-}
+use area_calc::calculate_area;
+pub use ops_calc::run_calculations;
 
 type NodeResolver<T> = fn(&NodeId, &mut T) -> Option<DOMNode>;
 
 /// Measure the areas of a node's inner children
 #[allow(clippy::too_many_arguments)]
 fn measure_node_children<T>(
-    node_data: &DOMNode,
+    dom_node: &DOMNode,
     node_area: &mut NodeArea,
     layers: &mut Layers,
     remaining_inner_area: &mut NodeArea,
@@ -185,9 +32,9 @@ fn measure_node_children<T>(
     layout_memorizer: &Arc<Mutex<LayoutMemorizer>>,
     must_memorize_layout: bool,
 ) {
-    match &node_data.node.node_data.node_type {
+    match &dom_node.get_type() {
         NodeType::Element { tag, .. } => {
-            if let Some(children) = &node_data.children {
+            if let Some(children) = &dom_node.get_children() {
                 for child in children {
                     let child_node = node_resolver(child, resolver_options);
 
@@ -205,7 +52,7 @@ fn measure_node_children<T>(
                             must_memorize_layout,
                         );
 
-                        match node_data.node.state.size.direction {
+                        match dom_node.get_state().size.direction {
                             DirectionMode::Vertical => {
                                 remaining_inner_area.height -= child_node_area.height;
                                 remaining_inner_area.y = child_node_area.y + child_node_area.height;
@@ -256,13 +103,13 @@ fn measure_node_children<T>(
                     }
                 }
                 if tag == "paragraph"
-                    && CursorMode::Editable == node_data.node.state.cursor_settings.mode
+                    && CursorMode::Editable == dom_node.get_state().cursor_settings.mode
                 {
-                    let font_size = node_data.node.state.font_style.font_size;
-                    let font_family = &node_data.node.state.font_style.font_family;
-                    let align = node_data.node.state.font_style.align;
-                    let max_lines = node_data.node.state.font_style.max_lines;
-                    let font_style = node_data.node.state.font_style.font_style;
+                    let font_size = dom_node.get_state().font_style.font_size;
+                    let font_family = &dom_node.get_state().font_style.font_family;
+                    let align = dom_node.get_state().font_style.align;
+                    let max_lines = dom_node.get_state().font_style.max_lines;
+                    let font_style = dom_node.get_state().font_style.font_style;
 
                     let mut paragraph_style = ParagraphStyle::default();
                     paragraph_style.set_text_align(align);
@@ -297,7 +144,7 @@ fn measure_node_children<T>(
                     let mut paragraph = paragraph_builder.build();
                     paragraph.layout(node_area.width);
 
-                    if let Some((cursor_ref, cursor_id, positions)) = get_cursor(node_data) {
+                    if let Some((cursor_ref, cursor_id, positions)) = get_cursor(dom_node) {
                         // Calculate the new cursor position
                         let char_position = paragraph.get_glyph_position_at_coordinate(positions);
 
@@ -311,12 +158,12 @@ fn measure_node_children<T>(
             }
         }
         NodeType::Text { text } => {
-            let line_height = node_data.node.state.font_style.line_height;
-            let font_size = node_data.node.state.font_style.font_size;
-            let font_family = &node_data.node.state.font_style.font_family;
-            let align = node_data.node.state.font_style.align;
-            let max_lines = node_data.node.state.font_style.max_lines;
-            let font_style = node_data.node.state.font_style.font_style;
+            let line_height = dom_node.get_state().font_style.line_height;
+            let font_size = dom_node.get_state().font_style.font_size;
+            let font_family = &dom_node.get_state().font_style.font_family;
+            let align = dom_node.get_state().font_style.align;
+            let max_lines = dom_node.get_state().font_style.max_lines;
+            let font_style = dom_node.get_state().font_style.font_style;
 
             let mut paragraph_style = ParagraphStyle::default();
             paragraph_style.set_text_align(align);
@@ -363,8 +210,8 @@ fn get_inner_texts<T>(
                 let child_text_id = children.get(0)?;
                 let child_text = node_resolver(child_text_id, resolver_options)?;
 
-                if let NodeType::Text { text } =  &child_text.get_type() {
-                        Some((child.node.state, text.clone()))
+                if let NodeType::Text { text } = &child_text.get_type() {
+                    Some((child.node.state, text.clone()))
                 } else {
                     None
                 }
@@ -377,10 +224,10 @@ fn get_inner_texts<T>(
 
 /// Get the info related to a cursor refer
 fn get_cursor(node_data: &DOMNode) -> Option<(&CursorReference, usize, (f32, f32))> {
-    let cursor_ref = node_data.node.state.references.cursor_ref.as_ref()?;
+    let cursor_ref = node_data.get_state().references.cursor_ref.as_ref()?;
     let positions = { *cursor_ref.positions.lock().unwrap().as_ref()? };
     let current_cursor_id = { *cursor_ref.id.lock().unwrap().as_ref()? };
-    let cursor_id = node_data.node.state.cursor_settings.id.as_ref()?;
+    let cursor_id = node_data.get_state().cursor_settings.id.as_ref()?;
 
     if current_cursor_id == *cursor_id {
         Some((cursor_ref, *cursor_id, positions))
@@ -417,18 +264,18 @@ pub fn measure_node_layout<T>(
         layout_memorizer
             .lock()
             .unwrap()
-            .mark_as_dirty(node_data.node.node_data.node_id);
+            .mark_as_dirty(*node_data.get_id());
     }
 
     let is_dirty = layout_memorizer
         .lock()
         .unwrap()
-        .is_dirty(&node_data.node.node_data.node_id);
-        
+        .is_dirty(node_data.get_id());
+
     let is_cached = layout_memorizer
         .lock()
         .unwrap()
-        .is_node_layout_memorized(&node_data.node.node_data.node_id);
+        .is_node_layout_memorized(node_data.get_id());
 
     // If this node is dirty and parent is not dirty, mark this node dirty
     if is_dirty && !is_parent_dirty {
@@ -437,7 +284,7 @@ pub fn measure_node_layout<T>(
         }
     }
 
-    let padding = node_data.node.state.size.padding;
+    let padding = node_data.get_state().size.padding;
     let must_recalculate = is_dirty || !is_cached;
 
     let (mut node_area, mut remaining_inner_area, inner_area, (mut inner_width, mut inner_height)) =
@@ -462,13 +309,13 @@ pub fn measure_node_layout<T>(
             let inner_area = remaining_inner_area;
 
             // Transform the x and y axis with the node's scroll attributes
-            remaining_inner_area.y += node_data.node.state.scroll.scroll_y;
-            remaining_inner_area.x += node_data.node.state.scroll.scroll_x;
+            remaining_inner_area.y += node_data.get_state().scroll.scroll_y;
+            remaining_inner_area.x += node_data.get_state().scroll.scroll_x;
 
             if must_memorize_layout {
                 // Memorize these layouts
                 layout_memorizer.lock().unwrap().add_node_layout(
-                    node_data.node.node_data.node_id,
+                    *node_data.get_id(),
                     NodeLayoutInfo {
                         area: node_area,
                         remaining_inner_area,
@@ -494,13 +341,13 @@ pub fn measure_node_layout<T>(
             } = layout_memorizer
                 .lock()
                 .unwrap()
-                .get_node_layout(&node_data.node.node_data.node_id)
+                .get_node_layout(node_data.get_id())
                 .unwrap();
             (area, remaining_inner_area, inner_area, inner_sizes)
         };
 
-    // Re calculate the children layouts after the parent has properly adjusted it's size and axis according to it's children
-    if DisplayMode::Center == node_data.node.state.style.display {
+    // Calculate the children layouts  for the first time without the size and axis adjusted.
+    if DisplayMode::Center == node_data.get_state().style.display {
         measure_node_children(
             node_data,
             &mut node_area,
@@ -520,7 +367,7 @@ pub fn measure_node_layout<T>(
         let space_left_vertically = (inner_area.height - inner_height) / 2.0;
         let space_left_horizontally = (inner_area.width - inner_width) / 2.0;
 
-        match node_data.node.state.size.direction {
+        match node_data.get_state().size.direction {
             DirectionMode::Vertical => {
                 remaining_inner_area.y = inner_area.y + space_left_vertically + padding.0;
                 remaining_inner_area.height = inner_area.height - space_left_vertically - padding.2;
@@ -555,32 +402,33 @@ pub fn measure_node_layout<T>(
         must_memorize_layout,
     );
 
+    // Unmark the node as dirty as it's layout has been calculted
     if must_recalculate && must_memorize_layout {
         layout_memorizer
             .lock()
             .unwrap()
-            .remove_as_dirty(&node_data.node.node_data.node_id);
+            .remove_as_dirty(node_data.get_id());
     }
 
-    match &node_data.node.node_data.node_type {
+    match &node_data.get_type() {
         NodeType::Text { .. } => {}
         _ => {
-            if let SizeMode::Auto = node_data.node.state.size.width {
+            if let SizeMode::Auto = node_data.get_state().size.width {
                 node_area.width = remaining_inner_area.x - node_area.x + padding.1;
             }
-            if let SizeMode::Auto = node_data.node.state.size.height {
+            if let SizeMode::Auto = node_data.get_state().size.height {
                 node_area.height = remaining_inner_area.y - node_area.y + padding.0;
             }
         }
     }
 
+    // Registers the element in the Layers handler
     if must_memorize_layout {
-        // Registers the element in the Layers handler
         layers.add_element(node_data, &node_area, node_layer);
     }
 
-    // Asynchronously notify the Node's reference about the new size layout
-    if let Some(reference) = &node_data.node.state.references.node_ref {
+    // Notify the node's reference about the new size layout
+    if let Some(reference) = &node_data.get_state().references.node_ref {
         reference
             .send(NodeReferenceLayout {
                 x: node_area.x,

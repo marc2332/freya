@@ -8,7 +8,7 @@ use dioxus_native_core::{
     NodeId,
 };
 use freya_common::{LayoutMemorizer, NodeArea};
-use freya_layers::{Layers, DOMNode};
+use freya_layers::{DOMNode, Layers};
 use freya_layout::measure_node_layout;
 use freya_node_state::{DirectionMode, NodeState, Size, SizeMode};
 use lazy_static::lazy_static;

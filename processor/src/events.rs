@@ -40,7 +40,7 @@ struct ElementState {
 /// The EventsProcessor calculates by comparing previous and current events
 /// if new events must be produced.
 ///
-/// For example, mouseleave indicates the the user has left the hovering area of
+/// For example, mouseleave indicates the user has left the hovering area of
 /// a particular element, which previously had to enter that area.
 /// At the moment, whether if it has entered or not is defined by the mouseover event.
 

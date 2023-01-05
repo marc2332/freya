@@ -38,7 +38,8 @@ fn app(cx: Scope) -> Element {
             nodes.with_mut(|nodes| {
                 let node = nodes.get_mut(*node_id).unwrap();
                 node.0 = coordinates.x - clicking_cords.0 - canvas_pos.0;
-                node.1 = coordinates.y - clicking_cords.1 - canvas_pos.1 - 25.0; // The 25 is because of label from below.
+                node.1 = coordinates.y - clicking_cords.1 - canvas_pos.1 - 25.0;
+                // The 25 is because of label from below.
             });
         }
     };

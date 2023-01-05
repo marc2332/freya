@@ -16,7 +16,6 @@ pub struct DOMNode {
     pub children: Option<Vec<NodeId>>,
 }
 
-
 impl DOMNode {
     #[inline(always)]
     pub fn get_type(&self) -> &NodeType<CustomAttributeValues> {
@@ -27,10 +26,15 @@ impl DOMNode {
     pub fn get_children(&self) -> &Option<Vec<NodeId>> {
         &self.children
     }
-    
+
     #[inline(always)]
     pub fn get_state(&self) -> &NodeState {
         &self.node.state
+    }
+
+    #[inline(always)]
+    pub fn get_id(&self) -> &NodeId {
+        &self.node.node_data.node_id
     }
 }
 
@@ -73,7 +77,7 @@ impl RenderData {
     pub fn get_children(&self) -> &Option<Vec<NodeId>> {
         &self.children
     }
-    
+
     #[inline(always)]
     pub fn get_state(&self) -> &NodeState {
         &self.node.state
