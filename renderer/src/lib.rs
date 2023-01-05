@@ -44,6 +44,11 @@ pub fn run<T: 'static + Clone>(
     let mut font_collection = FontCollection::new();
     font_collection.set_default_font_manager(FontMgr::default(), "Fira Sans");
     let layout_memorizer = Arc::new(Mutex::new(LayoutMemorizer::new()));
+    let app_state = window_config.state.clone();
+
+    if let Some(state) = &app_state {
+        vdom.base_scope().provide_context(state.clone());
+    }
 
     let muts = vdom.rebuild();
     let (to_update, _) = rdom.lock().unwrap().apply_mutations(muts);
@@ -82,6 +87,7 @@ pub fn run<T: 'static + Clone>(
                     &rdom,
                     &layout_memorizer,
                     &mut event_emitter_rx,
+                    &app_state,
                 );
             }
             Event::WindowEvent { event, .. } => match event {
@@ -207,28 +213,33 @@ pub fn tao_waker(proxy: &EventLoopProxy<()>) -> std::task::Waker {
     task::waker(Arc::new(DomHandle(proxy.clone())))
 }
 
-fn poll_vdom(
+fn poll_vdom<T: 'static + Clone>(
     waker: &Waker,
-    dom: &mut VirtualDom,
+    vdom: &mut VirtualDom,
     rdom: &Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>,
     layout_memorizer: &Arc<Mutex<LayoutMemorizer>>,
     event_emitter_rx: &mut UnboundedReceiver<DomEvent>,
+    state: &Option<T>,
 ) {
     let mut cx = std::task::Context::from_waker(waker);
 
     loop {
+        if let Some(state) = state.clone() {
+            vdom.base_scope().provide_context(state);
+        }
+
         {
             let fut = async {
                 select! {
                     ev = event_emitter_rx.recv() => {
                         if let Some(ev) = ev {
                             let data = ev.data.any();
-                            dom.handle_event(&ev.name, data, ev.element_id, false);
+                            vdom.handle_event(&ev.name, data, ev.element_id, false);
 
-                            dom.process_events();
+                            vdom.process_events();
                         }
                     },
-                    _ = dom.wait_for_work() => {},
+                    _ = vdom.wait_for_work() => {},
                 }
             };
             pin_mut!(fut);
@@ -239,7 +250,7 @@ fn poll_vdom(
             }
         }
 
-        let mutations = dom.render_immediate();
+        let mutations = vdom.render_immediate();
         let (to_update, _diff) = rdom.lock().unwrap().apply_mutations(mutations);
 
         let mut ctx = SendAnyMap::new();

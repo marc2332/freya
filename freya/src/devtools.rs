@@ -9,9 +9,9 @@ use freya_elements as dioxus_elements;
 use freya_hooks::use_theme;
 use freya_node_state::{AttributeType, CustomAttributeValues, NodeState, ShadowSettings};
 use skia_safe::Color;
-use tokio::time::sleep;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
+use tokio::time::sleep;
 
 /// Launch a component with the devtools panel enabled.
 pub fn with_devtools(
@@ -84,7 +84,7 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
         let children = children.clone();
         async move {
             loop {
-                // TODO I hate the idea of manually checking every 100ms, it would be better to create a tokio channel to 
+                // TODO I hate the idea of manually checking every 100ms, it would be better to create a tokio channel to
                 // to notify a listener in here if there has been any mutation at all.
                 sleep(Duration::from_millis(100)).await;
 

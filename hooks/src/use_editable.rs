@@ -29,7 +29,7 @@ pub type CursorPosition = UseState<(usize, usize)>;
 pub type KeyboardEvent = Event<KeyboardData>;
 pub type CursorRef = UseRef<CursorReference>;
 
-/// Create a cursor for some editable text.
+/// Create a virtual text editor with it's own cursor and rope.
 pub fn use_editable<'a>(
     cx: &ScopeState,
     initializer: impl Fn() -> &'a str,
@@ -59,6 +59,7 @@ pub fn use_editable<'a>(
         id: Arc::new(Mutex::new(None)),
     });
 
+    // This will allow to pass the cursor reference as an attribute value
     let cursor_ref_attr = cx.any_value(CustomAttributeValues::CursorReference(
         cursor_ref.read().clone(),
     ));
@@ -78,7 +79,7 @@ pub fn use_editable<'a>(
     let keypress_channel_sender = keypress_channel.0.clone();
     let click_channel_sender = click_channel.0.clone();
 
-    // Update the new positions and ID from the cursor reference so the layout engine can make the proper calculations
+    // Listen for click events and pass them to the layout engine
     {
         let cursor_ref = cursor_ref.clone();
         use_effect(cx, (), move |_| {
@@ -104,9 +105,9 @@ pub fn use_editable<'a>(
     // Listen for new calculations from the layout engine
     use_effect(cx, (), move |_| {
         let cursor_ref = cursor_ref.clone();
-        let cursor_getter = cursor.current();
         let cursor_receiver = cursor_channels.1.take();
         let content = content.clone();
+        let cursor_getter = cursor.current();
         let cursor_setter = cursor.setter();
 
         async move {
@@ -150,6 +151,7 @@ pub fn use_editable<'a>(
         }
     });
 
+    // Listen for keypresses
     use_effect(cx, (), move |_| {
         let cursor_getter = cursor.to_owned();
         let rx = keypress_channel.1.take();
