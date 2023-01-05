@@ -19,7 +19,7 @@ use std::{
     rc::Rc,
     sync::{Arc, Mutex},
 };
-use tokio::sync::mpsc::UnboundedSender;
+use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tracing::info;
 
 pub mod events;
@@ -27,7 +27,8 @@ pub mod events;
 use events::{EventsProcessor, FreyaEvent};
 
 pub type SafeDOM = Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>;
-pub type SafeEventEmitter = UnboundedSender<DomEvent>;
+pub type EventEmitter = UnboundedSender<DomEvent>;
+pub type EventReceiver = UnboundedReceiver<DomEvent>;
 pub type SafeLayoutMemorizer = Arc<Mutex<LayoutMemorizer>>;
 pub type SafeFreyaEvents = Arc<Mutex<Vec<FreyaEvent>>>;
 pub type ViewportsCollection = FxHashMap<NodeId, (Option<NodeArea>, Vec<NodeId>)>;
@@ -43,7 +44,7 @@ pub fn process_work<HookOptions>(
     mut dom: &SafeDOM,
     area: NodeArea,
     freya_events: SafeFreyaEvents,
-    event_emitter: &SafeEventEmitter,
+    event_emitter: &EventEmitter,
     font_collection: &mut FontCollection,
     events_processor: &mut EventsProcessor,
     manager: &SafeLayoutMemorizer,

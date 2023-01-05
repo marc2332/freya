@@ -1,6 +1,6 @@
 use freya_common::NodeArea;
 use freya_processor::{
-    events::EventsProcessor, process_work, SafeDOM, SafeEventEmitter, SafeFreyaEvents,
+    events::EventsProcessor, process_work, EventEmitter, SafeDOM, SafeFreyaEvents,
     SafeLayoutMemorizer,
 };
 use gl::types::*;
@@ -29,7 +29,7 @@ pub struct WindowEnv<T: Clone> {
     pub(crate) rdom: SafeDOM,
     pub(crate) layout_memorizer: SafeLayoutMemorizer,
     pub(crate) freya_events: SafeFreyaEvents,
-    pub(crate) event_emitter: SafeEventEmitter,
+    pub(crate) event_emitter: EventEmitter,
     pub(crate) font_collection: FontCollection,
     pub(crate) events_processor: EventsProcessor,
     pub(crate) window_config: WindowConfig<T>,
@@ -38,7 +38,7 @@ pub struct WindowEnv<T: Clone> {
 impl<T: Clone> WindowEnv<T> {
     pub fn from_config(
         rdom: &SafeDOM,
-        event_emitter: SafeEventEmitter,
+        event_emitter: EventEmitter,
         layout_memorizer: &SafeLayoutMemorizer,
         window_config: WindowConfig<T>,
         event_loop: &EventLoop<()>,

@@ -1108,6 +1108,7 @@ name = "freya-testing"
 version = "0.1.0"
 dependencies = [
  "anymap 0.12.1",
+ "dioxus",
  "dioxus-core",
  "dioxus-core-macro",
  "dioxus-hooks",
@@ -1117,6 +1118,7 @@ dependencies = [
  "freya-common",
  "freya-components",
  "freya-elements",
+ "freya-layers",
  "freya-node-state",
  "freya-processor",
  "futures",
