@@ -637,7 +637,7 @@ dependencies = [
 [[package]]
 name = "dioxus"
 version = "0.3.1"
-source = "git+https://github.com/DioxusLabs/dioxus#a0961583d144345a48a469495fcebdf6f96a3ca0"
+source = "git+https://github.com/DioxusLabs/dioxus#a7f0df150742716d7b43a340d70a5067457cbec8"
 dependencies = [
  "dioxus-core",
  "dioxus-core-macro",
@@ -649,7 +649,7 @@ dependencies = [
 [[package]]
 name = "dioxus-core"
 version = "0.3.0"
-source = "git+https://github.com/DioxusLabs/dioxus#a0961583d144345a48a469495fcebdf6f96a3ca0"
+source = "git+https://github.com/DioxusLabs/dioxus#a7f0df150742716d7b43a340d70a5067457cbec8"
 dependencies = [
  "bumpalo",
  "futures-channel",
@@ -666,7 +666,7 @@ dependencies = [
 [[package]]
 name = "dioxus-core-macro"
 version = "0.3.0"
-source = "git+https://github.com/DioxusLabs/dioxus#a0961583d144345a48a469495fcebdf6f96a3ca0"
+source = "git+https://github.com/DioxusLabs/dioxus#a7f0df150742716d7b43a340d70a5067457cbec8"
 dependencies = [
  "dioxus-rsx",
  "proc-macro2",
@@ -677,7 +677,7 @@ dependencies = [
 [[package]]
 name = "dioxus-hooks"
 version = "0.3.0"
-source = "git+https://github.com/DioxusLabs/dioxus#a0961583d144345a48a469495fcebdf6f96a3ca0"
+source = "git+https://github.com/DioxusLabs/dioxus#a7f0df150742716d7b43a340d70a5067457cbec8"
 dependencies = [
  "dioxus-core",
  "futures-channel",
@@ -687,7 +687,7 @@ dependencies = [
 [[package]]
 name = "dioxus-html"
 version = "0.3.0"
-source = "git+https://github.com/DioxusLabs/dioxus#a0961583d144345a48a469495fcebdf6f96a3ca0"
+source = "git+https://github.com/DioxusLabs/dioxus#a7f0df150742716d7b43a340d70a5067457cbec8"
 dependencies = [
  "async-trait",
  "dioxus-core",
@@ -702,7 +702,7 @@ dependencies = [
 [[package]]
 name = "dioxus-native-core"
 version = "0.2.0"
-source = "git+https://github.com/DioxusLabs/dioxus#a0961583d144345a48a469495fcebdf6f96a3ca0"
+source = "git+https://github.com/DioxusLabs/dioxus#a7f0df150742716d7b43a340d70a5067457cbec8"
 dependencies = [
  "anymap 1.0.0-beta.2",
  "crossbeam-deque",
@@ -721,7 +721,7 @@ dependencies = [
 [[package]]
 name = "dioxus-native-core-macro"
 version = "0.2.0"
-source = "git+https://github.com/DioxusLabs/dioxus#a0961583d144345a48a469495fcebdf6f96a3ca0"
+source = "git+https://github.com/DioxusLabs/dioxus#a7f0df150742716d7b43a340d70a5067457cbec8"
 dependencies = [
  "dioxus",
  "dioxus-native-core",
@@ -732,7 +732,7 @@ dependencies = [
 [[package]]
 name = "dioxus-router"
 version = "0.3.0"
-source = "git+https://github.com/DioxusLabs/dioxus#a0961583d144345a48a469495fcebdf6f96a3ca0"
+source = "git+https://github.com/DioxusLabs/dioxus#a7f0df150742716d7b43a340d70a5067457cbec8"
 dependencies = [
  "dioxus",
  "futures-channel",
@@ -748,7 +748,7 @@ dependencies = [
 [[package]]
 name = "dioxus-rsx"
 version = "0.0.2"
-source = "git+https://github.com/DioxusLabs/dioxus#a0961583d144345a48a469495fcebdf6f96a3ca0"
+source = "git+https://github.com/DioxusLabs/dioxus#a7f0df150742716d7b43a340d70a5067457cbec8"
 dependencies = [
  "dioxus-core",
  "internment",
@@ -835,6 +835,7 @@ dependencies = [
  "dioxus-hooks",
  "dioxus-native-core",
  "dioxus-native-core-macro",
+ "dioxus-router",
  "dioxus-rsx",
  "freya",
  "reqwest",

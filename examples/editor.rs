@@ -22,6 +22,7 @@ fn app(cx: Scope) -> Element {
 #[allow(non_snake_case)]
 fn Body(cx: Scope) -> Element {
     let theme = use_theme(&cx);
+    let theme = theme.read();
     let (content, cursor, process_keyevent, process_clickevent, cursor_ref) = use_editable(
         &cx,
         || {
@@ -172,7 +173,7 @@ fn Body(cx: Scope) -> Element {
                 onkeydown: move |e| {
                    process_keyevent.send(e.data).unwrap();
                 },
-                cursor_reference: cursor_ref.read().clone(),
+                cursor_reference: cursor_ref,
                 direction: "horizontal",
                 background: "{theme.body.background}",
                 rect {

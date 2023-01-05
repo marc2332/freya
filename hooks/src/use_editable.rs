@@ -161,7 +161,6 @@ pub fn use_editable<'a>(
             while let Some(e) = rx.recv().await {
                 let rope = content.current();
                 let cursor = cursor_getter.current();
-                println!("{:?}", e);
 
                 match &e.code {
                     KeyCode::ArrowDown => {

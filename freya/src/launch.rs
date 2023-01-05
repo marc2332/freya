@@ -154,55 +154,26 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
 /// }
 /// ```
 pub fn launch_cfg<T: 'static + Clone + Send>(win_config: (Component<()>, WindowConfig<T>)) {
-    run(win_config);
-}
+    use std::sync::{Arc, Mutex};
 
-#[cfg(feature = "devtools")]
-use dioxus::prelude::{fc_to_builder, format_args_f, render, Element, LazyNodes, Scope, VNode};
-#[cfg(feature = "devtools")]
-use freya_node_state::CustomAttributeValues;
+    use dioxus_native_core::real_dom::RealDom;
+    use freya_node_state::{CustomAttributeValues, NodeState};
 
-#[cfg(feature = "devtools")]
-fn with_devtools(
-    rdom: Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>,
-    root: fn(cx: Scope) -> Element,
-) -> VirtualDom {
-    use crate::devtools::DevTools;
-    use freya_components::ThemeProvider;
-    use freya_elements as dioxus_elements;
+    let rdom = Arc::new(Mutex::new(
+        RealDom::<NodeState, CustomAttributeValues>::new(),
+    ));
+    let vdom = {
+        #[cfg(feature = "devtools")]
+        {
+            use crate::devtools::with_devtools;
+            with_devtools(rdom.clone(), win_config.0)
+        }
 
-    fn app(cx: Scope<DomProps>) -> Element {
-        #[allow(non_snake_case)]
-        let Root = cx.props.root;
-
-        render!(
-            rect {
-                width: "100%",
-                height: "100%",
-                direction: "horizontal",
-                container {
-                    height: "100%",
-                    width: "calc(100% - 350)",
-                    Root { },
-                }
-                rect {
-                    background: "rgb(40, 40, 40)",
-                    height: "100%",
-                    width: "350",
-                    ThemeProvider {
-                        DevTools {
-                            rdom: cx.props.rdom.clone()
-                        }
-                    }
-                }
-            }
-        )
-    }
-
-    struct DomProps {
-        root: fn(cx: Scope) -> Element,
-        rdom: Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>,
-    }
-
-    VirtualDom::new_with_props(app, DomProps { root, rdom })
+        #[cfg(not(feature = "devtools"))]
+        {
+            use dioxus_core::VirtualDom;
+            VirtualDom::new(win_config.0)
+        }
+    };
+    run(vdom, rdom, win_config.1);
 }

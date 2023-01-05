@@ -1,4 +1,4 @@
-use dioxus_core::{Component, VirtualDom};
+use dioxus_core::VirtualDom;
 use dioxus_native_core::real_dom::RealDom;
 use dioxus_native_core::SendAnyMap;
 use freya_common::LayoutMemorizer;
@@ -27,7 +27,11 @@ mod window;
 mod window_config;
 
 /// Run the Windows Event Loop
-pub fn run<T: 'static + Clone>(win_config: (Component<()>, WindowConfig<T>)) {
+pub fn run<T: 'static + Clone>(
+    mut vdom: VirtualDom,
+    rdom: Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>,
+    window_config: WindowConfig<T>,
+) {
     let rt = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()
@@ -41,12 +45,7 @@ pub fn run<T: 'static + Clone>(win_config: (Component<()>, WindowConfig<T>)) {
     font_collection.set_default_font_manager(FontMgr::default(), "Fira Sans");
     let layout_memorizer = Arc::new(Mutex::new(LayoutMemorizer::new()));
 
-    let rdom = Arc::new(Mutex::new(
-        RealDom::<NodeState, CustomAttributeValues>::new(),
-    ));
-    let mut dom = VirtualDom::new(win_config.0);
-
-    let muts = dom.rebuild();
+    let muts = vdom.rebuild();
     let (to_update, _) = rdom.lock().unwrap().apply_mutations(muts);
 
     let mut ctx = SendAnyMap::new();
@@ -57,7 +56,7 @@ pub fn run<T: 'static + Clone>(win_config: (Component<()>, WindowConfig<T>)) {
         &rdom,
         event_emitter,
         &layout_memorizer,
-        win_config.1,
+        window_config,
         &event_loop,
         font_collection,
     );
@@ -79,7 +78,7 @@ pub fn run<T: 'static + Clone>(win_config: (Component<()>, WindowConfig<T>)) {
             Event::UserEvent(_s) => {
                 poll_vdom(
                     &waker,
-                    &mut dom,
+                    &mut vdom,
                     &rdom,
                     &layout_memorizer,
                     &mut event_emitter_rx,
