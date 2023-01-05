@@ -22,9 +22,9 @@ pub fn render_skia(
     font_collection: &mut FontCollection,
     viewports_collection: &ViewportsCollection,
 ) {
-    if let NodeType::Element { tag, .. } = &node.node_type {
+    if let NodeType::Element { tag, .. } = &node.get_type() {
         let children = node.children.as_ref();
-        let viewports = viewports_collection.get(&node.node_id);
+        let viewports = viewports_collection.get(node.get_id());
         if let Some((_, viewports)) = viewports {
             for viewport_id in viewports {
                 let viewport = viewports_collection.get(viewport_id).unwrap().0;
@@ -45,19 +45,19 @@ pub fn render_skia(
 
         match tag.as_str() {
             "rect" | "container" => {
-                let shadow = &node.node_state.style.shadow;
+                let shadow = &node.get_state().style.shadow;
 
                 #[cfg(not(feature = "wireframe"))]
-                if node.node_state.style.background == Color::TRANSPARENT && shadow.intensity == 0 {
+                if node.get_state().style.background == Color::TRANSPARENT && shadow.intensity == 0 {
                     return;
                 }
 
                 let mut paint = Paint::default();
                 paint.set_anti_alias(true);
                 paint.set_style(PaintStyle::Fill);
-                paint.set_color(node.node_state.style.background);
+                paint.set_color(node.get_state().style.background);
 
-                let radius = node.node_state.style.radius;
+                let radius = node.get_state().style.radius;
                 let radius = if radius < 0.0 { 0.0 } else { radius };
 
                 let ((x, y), (x2, y2)) = node.node_area.get_rect();
@@ -90,17 +90,17 @@ pub fn render_skia(
             }
             "label" => {
                 if let Some(children) = children {
-                    let font_size = node.node_state.font_style.font_size;
-                    let font_family = &node.node_state.font_style.font_family;
-                    let font_color = node.node_state.font_style.color;
-                    let align = node.node_state.font_style.align;
-                    let font_style = node.node_state.font_style.font_style;
+                    let font_size = node.get_state().font_style.font_size;
+                    let font_family = &node.get_state().font_style.font_family;
+                    let font_color = node.get_state().font_style.color;
+                    let align = node.get_state().font_style.align;
+                    let font_style = node.get_state().font_style.font_style;
 
                     let mut paint = Paint::default();
 
                     paint.set_anti_alias(true);
                     paint.set_style(PaintStyle::StrokeAndFill);
-                    paint.set_color(node.node_state.font_style.color);
+                    paint.set_color(node.get_state().font_style.color);
 
                     let child_id = children.get(0);
 
@@ -147,8 +147,8 @@ pub fn render_skia(
             }
             "paragraph" => {
                 if let Some(children) = children {
-                    let align = node.node_state.font_style.align;
-                    let max_lines = node.node_state.font_style.max_lines;
+                    let align = node.get_state().font_style.align;
+                    let max_lines = node.get_state().font_style.max_lines;
 
                     let texts = get_inner_texts(children, dom);
 
@@ -176,7 +176,7 @@ pub fn render_skia(
                         paragraph_builder.add_text(node_text.1.clone());
                     }
 
-                    if node.node_state.cursor_settings.position.is_some() {
+                    if node.get_state().cursor_settings.position.is_some() {
                         // This is very tricky, but it works! It allows freya to render the cursor at the end of a line.
                         paragraph_builder.add_text(" ");
                     }
@@ -194,7 +194,7 @@ pub fn render_skia(
             "svg" => {
                 let x = node.node_area.x;
                 let y = node.node_area.y;
-                if let Some(svg_data) = &node.node_state.style.svg_data {
+                if let Some(svg_data) = &node.get_state().style.svg_data {
                     let svg_dom = svg::Dom::from_bytes(svg_data);
                     if let Ok(mut svg_dom) = svg_dom {
                         canvas.save();
@@ -209,7 +209,7 @@ pub fn render_skia(
                 }
             }
             "image" => {
-                if let Some(image_data) = &node.node_state.style.image_data {
+                if let Some(image_data) = &node.get_state().style.image_data {
                     let pic = Image::from_encoded(unsafe { Data::new_bytes(image_data) });
                     if let Some(pic) = pic {
                         let mut paint = Paint::default();
@@ -263,41 +263,25 @@ fn get_inner_texts(children: &[NodeId], dom: &SafeDOM) -> Vec<(NodeState, String
         .iter()
         .filter_map(|child_id| {
             let (child, children): (
-                Option<Node<NodeState, CustomAttributeValues>>,
-                Option<Vec<NodeId>>,
+                Node<NodeState, CustomAttributeValues>,
+                Vec<NodeId>,
             ) = {
                 let dom = dom.lock().unwrap();
                 let children = dom.tree.children_ids(*child_id).map(|v| v.to_vec());
-                (dom.get(*child_id).cloned(), children)
+                (dom.get(*child_id).cloned()?, children?)
             };
 
-            if let Some(child) = child {
-                if let NodeType::Element { tag, .. } = child.node_data.node_type {
-                    if tag != "text" {
-                        return None;
-                    }
-                    if let Some(children) = children {
-                        if let Some(child_text_id) = children.get(0) {
-                            let child_text: Option<Node<NodeState, CustomAttributeValues>> = {
-                                let dom = dom.lock().unwrap();
-                                dom.get(*child_text_id).cloned()
-                            };
-
-                            if let Some(child_text) = child_text {
-                                if let NodeType::Text { text } = &child_text.node_data.node_type {
-                                    Some((child.state, text.clone()))
-                                } else {
-                                    None
-                                }
-                            } else {
-                                None
-                            }
-                        } else {
-                            None
-                        }
-                    } else {
-                        None
-                    }
+            if let NodeType::Element { tag, .. } = child.node_data.node_type {
+                if tag != "text" {
+                    return None;
+                }
+                let child_text_id = children.get(0)?;
+                let child_text: Node<NodeState, CustomAttributeValues> = {
+                    let dom = dom.lock().unwrap();
+                    dom.get(*child_text_id).cloned()
+                }?;
+                if let NodeType::Text { text } = &child_text.node_data.node_type {
+                    Some((child.state, text.clone()))
                 } else {
                     None
                 }
@@ -309,8 +293,8 @@ fn get_inner_texts(children: &[NodeId], dom: &SafeDOM) -> Vec<(NodeState, String
 }
 
 fn draw_cursor(node: &RenderData, paragraph: Paragraph, canvas: &mut Canvas) -> Option<()> {
-    let cursor = node.node_state.cursor_settings.position?;
-    let cursor_color = node.node_state.cursor_settings.color;
+    let cursor = node.get_state().cursor_settings.position?;
+    let cursor_color = node.get_state().cursor_settings.color;
     let cursor_position = cursor as usize;
 
     let cursor_rects = paragraph.get_rects_for_range(

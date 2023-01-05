@@ -1,6 +1,6 @@
 use dioxus_native_core::{node::NodeType, NodeId};
 use freya_common::{LayoutMemorizer, NodeArea, NodeLayoutInfo, NodeReferenceLayout};
-use freya_layers::{Layers, NodeInfoData};
+use freya_layers::{Layers, DOMNode};
 use freya_node_state::{
     CalcType, CursorMode, CursorReference, DirectionMode, DisplayMode, NodeState, SizeMode,
 };
@@ -54,7 +54,7 @@ pub fn run_calculations(calcs: &Vec<CalcType>, parent_area_value: f32) -> f32 {
 }
 
 /// Calculate the are of a node considering it's parent area
-fn calculate_area(node_data: &NodeInfoData, mut area: NodeArea, parent_area: NodeArea) -> NodeArea {
+fn calculate_area(node_data: &DOMNode, mut area: NodeArea, parent_area: NodeArea) -> NodeArea {
     let calculate = |value: &SizeMode, area_value: f32, parent_area_value: f32| -> f32 {
         match value {
             &SizeMode::Manual(v) => v,
@@ -166,12 +166,12 @@ fn calculate_area(node_data: &NodeInfoData, mut area: NodeArea, parent_area: Nod
     area
 }
 
-type NodeResolver<T> = fn(&NodeId, &mut T) -> Option<NodeInfoData>;
+type NodeResolver<T> = fn(&NodeId, &mut T) -> Option<DOMNode>;
 
 /// Measure the areas of a node's inner children
 #[allow(clippy::too_many_arguments)]
 fn measure_node_children<T>(
-    node_data: &NodeInfoData,
+    node_data: &DOMNode,
     node_area: &mut NodeArea,
     layers: &mut Layers,
     remaining_inner_area: &mut NodeArea,
@@ -354,34 +354,17 @@ fn get_inner_texts<T>(
     children
         .iter()
         .filter_map(|child_id| {
-            let child = node_resolver(child_id, resolver_options);
+            let child = node_resolver(child_id, resolver_options)?;
+            if let NodeType::Element { tag, .. } = child.get_type() {
+                if tag != "text" {
+                    return None;
+                }
+                let children = child.children?;
+                let child_text_id = children.get(0)?;
+                let child_text = node_resolver(child_text_id, resolver_options)?;
 
-            if let Some(child) = child {
-                if let NodeType::Element { tag, .. } = child.node.node_data.node_type {
-                    if tag != "text" {
-                        return None;
-                    }
-                    if let Some(children) = child.children {
-                        if let Some(child_text_id) = children.get(0) {
-                            let child_text = node_resolver(child_text_id, resolver_options);
-
-                            if let Some(child_text) = child_text {
-                                if let NodeType::Text { text } =
-                                    &child_text.node.node_data.node_type
-                                {
-                                    Some((child.node.state, text.clone()))
-                                } else {
-                                    None
-                                }
-                            } else {
-                                None
-                            }
-                        } else {
-                            None
-                        }
-                    } else {
-                        None
-                    }
+                if let NodeType::Text { text } =  &child_text.get_type() {
+                        Some((child.node.state, text.clone()))
                 } else {
                     None
                 }
@@ -392,7 +375,8 @@ fn get_inner_texts<T>(
         .collect::<Vec<(NodeState, String)>>()
 }
 
-fn get_cursor(node_data: &NodeInfoData) -> Option<(&CursorReference, usize, (f32, f32))> {
+/// Get the info related to a cursor refer
+fn get_cursor(node_data: &DOMNode) -> Option<(&CursorReference, usize, (f32, f32))> {
     let cursor_ref = node_data.node.state.references.cursor_ref.as_ref()?;
     let positions = { *cursor_ref.positions.lock().unwrap().as_ref()? };
     let current_cursor_id = { *cursor_ref.id.lock().unwrap().as_ref()? };
@@ -408,7 +392,7 @@ fn get_cursor(node_data: &NodeInfoData) -> Option<(&CursorReference, usize, (f32
 /// Measure an area of a given Node
 #[allow(clippy::too_many_arguments)]
 pub fn measure_node_layout<T>(
-    node_data: &NodeInfoData,
+    node_data: &DOMNode,
     remaining_area: NodeArea,
     parent_area: NodeArea,
     resolver_options: &mut T,
@@ -440,6 +424,7 @@ pub fn measure_node_layout<T>(
         .lock()
         .unwrap()
         .is_dirty(&node_data.node.node_data.node_id);
+        
     let is_cached = layout_memorizer
         .lock()
         .unwrap()

@@ -8,7 +8,7 @@ use dioxus_native_core::{
     NodeId,
 };
 use freya_common::{LayoutMemorizer, NodeArea};
-use freya_layers::{Layers, NodeInfoData};
+use freya_layers::{Layers, DOMNode};
 use freya_layout::measure_node_layout;
 use freya_node_state::{DirectionMode, NodeState, Size, SizeMode};
 use lazy_static::lazy_static;
@@ -16,7 +16,7 @@ use rustc_hash::FxHashMap;
 use skia_safe::textlayout::FontCollection;
 
 lazy_static! {
-    static ref TEST_NODE: NodeInfoData = NodeInfoData {
+    static ref TEST_NODE: DOMNode = DOMNode {
         node: Node {
             node_data: NodeData {
                 node_id: NodeId(0),
@@ -109,7 +109,7 @@ fn manual() {
 #[test]
 fn auto() {
     let result = measure_node_layout(
-        &NodeInfoData {
+        &DOMNode {
             node: Node {
                 node_data: NodeData {
                     node_id: NodeId(0),
@@ -147,7 +147,7 @@ fn auto() {
         &mut (),
         &mut Layers::default(),
         |_, _| {
-            Some(NodeInfoData {
+            Some(DOMNode {
                 node: Node {
                     node_data: NodeData {
                         node_id: NodeId(1),
@@ -205,7 +205,7 @@ fn x_y() {
         &mut (),
         &mut Layers::default(),
         |_, _| {
-            Some(NodeInfoData {
+            Some(DOMNode {
                 node: Node {
                     node_data: NodeData {
                         node_id: NodeId(1),

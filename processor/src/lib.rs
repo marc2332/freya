@@ -8,7 +8,7 @@ use dioxus_native_core::{
 use euclid::{Length, Point2D};
 use freya_common::{LayoutMemorizer, NodeArea};
 use freya_elements::events_data::{KeyboardData, MouseData, WheelData};
-use freya_layers::{Layers, NodeInfoData, RenderData};
+use freya_layers::{Layers, DOMNode, RenderData};
 use freya_layout::measure_node_layout;
 use freya_node_state::{CustomAttributeValues, NodeState};
 use rustc_hash::FxHashMap;
@@ -59,14 +59,15 @@ pub fn process_work<HookOptions>(
 ) {
     let (root, root_children): (Node<NodeState, CustomAttributeValues>, Option<Vec<NodeId>>) = {
         let dom = dom.lock().unwrap();
-        let children = dom.tree.children_ids(NodeId(0)).map(|v| v.to_vec());
-        (dom.index(NodeId(0)).clone(), children)
+        let root_id = NodeId(0);
+        let children = dom.tree.children_ids(root_id).map(|v| v.to_vec());
+        (dom.index(root_id).clone(), children)
     };
 
     let layers = &mut Layers::default();
 
     measure_node_layout(
-        &NodeInfoData {
+        &DOMNode {
             node: root,
             height: 0,
             parent_id: None,
@@ -90,7 +91,7 @@ pub fn process_work<HookOptions>(
                 )
             };
 
-            Some(NodeInfoData {
+            Some(DOMNode {
                 node: child,
                 height,
                 parent_id,
@@ -118,29 +119,29 @@ pub fn process_work<HookOptions>(
     // From top to bottom
     layers_nums.sort();
 
-    // Calculate all the applicable viewports for the given elements
+    // Calculate all the applicable viewports for the given nodes
     let mut viewports_collection: ViewportsCollection = FxHashMap::default();
 
     for layer_num in &layers_nums {
         let layer = layers.layers.get(layer_num).unwrap();
-        for element in layer.values() {
-            if let NodeType::Element { tag, .. } = &element.node_type {
+        for dom_element in layer.values() {
+            if let NodeType::Element { tag, .. } = &dom_element.get_type() {
                 if tag == "container" {
                     viewports_collection
-                        .entry(element.node_id)
+                        .entry(*dom_element.get_id())
                         .or_insert_with(|| (None, Vec::new()))
-                        .0 = Some(element.node_area);
+                        .0 = Some(dom_element.node_area);
                 }
-                if let Some(children) = &element.children {
+                if let Some(children) = &dom_element.get_children() {
                     for child in children {
-                        if viewports_collection.contains_key(&element.node_id) {
+                        if viewports_collection.contains_key(dom_element.get_id()) {
                             let mut inherited_viewports = viewports_collection
-                                .get(&element.node_id)
+                                .get(dom_element.get_id())
                                 .unwrap()
                                 .1
                                 .clone();
 
-                            inherited_viewports.push(element.node_id);
+                            inherited_viewports.push(*dom_element.get_id());
 
                             viewports_collection.insert(*child, (None, inherited_viewports));
                         }
@@ -153,15 +154,15 @@ pub fn process_work<HookOptions>(
     // Render all the layers from the bottom to the top
     for layer_num in &layers_nums {
         let layer = layers.layers.get(layer_num).unwrap();
-        'elements: for element in layer.values() {
-            let viewports = viewports_collection.get(&element.node_id);
+        'elements: for dom_element in layer.values() {
+            let viewports = viewports_collection.get(dom_element.get_id());
 
-            // Skip elements that are totally out of some their parent's viewport
+            // Skip elements that are completely out of any their parent's viewport
             if let Some((_, viewports)) = viewports {
                 for viewport_id in viewports {
                     let viewport = viewports_collection.get(viewport_id).unwrap().0;
                     if let Some(viewport) = viewport {
-                        if viewport.is_area_outside(element.node_area) {
+                        if viewport.is_area_outside(dom_element.node_area) {
                             continue 'elements;
                         }
                     }
@@ -171,7 +172,7 @@ pub fn process_work<HookOptions>(
             // Let the render know what to actually render
             render_hook(
                 dom,
-                element,
+                dom_element,
                 font_collection,
                 &viewports_collection,
                 hook_options,
@@ -212,7 +213,7 @@ pub fn process_work<HookOptions>(
 
                         // Make sure the cursor is inside the node area
                         if cursor_is_inside {
-                            let viewports = viewports_collection.get(&element.node_id);
+                            let viewports = viewports_collection.get(element.get_id());
 
                             // Make sure the cursor is inside all the applicable viewports from the element
                             if let Some((_, viewports)) = viewports {
@@ -250,14 +251,14 @@ pub fn process_work<HookOptions>(
 
         'event_nodes: for (node, request) in event_nodes.iter() {
             for listener in &listeners {
-                if listener.node_data.node_id == node.node_id {
-                    if node.node_state.style.background != Color::TRANSPARENT
+                if listener.node_data.node_id == *node.get_id() {
+                    if node.get_state().style.background != Color::TRANSPARENT
                         && event_name == &"wheel"
                     {
                         break 'event_nodes;
                     }
 
-                    if node.node_state.style.background != Color::TRANSPARENT
+                    if node.get_state().style.background != Color::TRANSPARENT
                         && event_name == &"click"
                     {
                         found_nodes.clear();

@@ -6,7 +6,7 @@ use dioxus_native_core::real_dom::RealDom;
 use dioxus_native_core::tree::TreeView;
 use dioxus_native_core::{NodeId, SendAnyMap};
 use freya_common::{LayoutMemorizer, NodeArea};
-use freya_layers::NodeInfoData;
+use freya_layers::DOMNode;
 use freya_node_state::{CustomAttributeValues, NodeState};
 use freya_processor::events::{EventsProcessor, FreyaEvent};
 use freya_processor::{process_work, DomEvent, EventEmitter, EventReceiver, SafeFreyaEvents};
@@ -17,7 +17,7 @@ pub struct TestNode {
     node_id: NodeId,
     utils: TestUtils,
     state: NodeState,
-    node_info: NodeInfoData,
+    node_info: DOMNode,
 }
 
 impl TestNode {
@@ -59,7 +59,7 @@ impl TestNode {
     }
 }
 
-/// Collection of utils to test a freya Component
+/// Collection of utils to test a Freya Component
 #[derive(Clone)]
 pub struct TestUtils {
     rdom: Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>,
@@ -132,7 +132,7 @@ impl TestUtils {
             node_id: root_id,
             utils: self.clone(),
             state: root.state.clone(),
-            node_info: NodeInfoData {
+            node_info: DOMNode {
                 node: root.clone(),
                 height: 0,
                 parent_id: None,
@@ -152,7 +152,7 @@ impl TestUtils {
             node_id,
             utils: self.clone(),
             state: child.state.clone(),
-            node_info: NodeInfoData {
+            node_info: DOMNode {
                 node: child.clone(),
                 height,
                 parent_id,
