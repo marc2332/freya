@@ -12,11 +12,15 @@ keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
 [dependencies]
-dioxus = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners", features = ["macro", "hooks"]}
-tween = "1.0.1"
-tokio = { version = "1.17.0" }
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
+dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
+tween = "2.0.0"
+tokio = { version = "1.23.0" }
 freya-elements = { path = "../elements", version = "0.1.0" }
-uuid = { version =  "1.2.1", features = ["v4"]}
+uuid = { version =  "1.2.2", features = ["v4"]}
 xi-rope = "0.3.0"
 freya-node-state = { path = "../state", version = "0.1.0" }
 freya-common = { path = "../common", version = "0.1.0" }

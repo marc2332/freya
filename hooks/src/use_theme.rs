@@ -1,21 +1,22 @@
-use dioxus::prelude::{use_context, use_context_provider, ScopeState, UseSharedState};
+use dioxus_core::ScopeState;
+use dioxus_hooks::{use_shared_state, use_shared_state_provider, UseSharedState};
 
 pub fn use_init_theme(cx: &ScopeState, theme: Theme) {
-    use_context_provider(cx, || theme);
+    use_shared_state_provider(cx, || theme);
 }
 
 pub fn use_init_default_theme(cx: &ScopeState) -> Theme {
-    use_context_provider(cx, || DARK_THEME);
+    use_shared_state_provider(cx, || DARK_THEME);
     DARK_THEME
 }
 
 pub fn use_theme(cx: &ScopeState) -> UseSharedState<Theme> {
-    use_context::<Theme>(cx).unwrap()
+    use_shared_state::<Theme>(cx).unwrap()
 }
 
 pub fn use_get_theme(cx: &ScopeState) -> Theme {
-    use_context::<Theme>(cx)
-        .map(|f| f.read().clone())
+    use_shared_state::<Theme>(cx)
+        .map(|v| v.read().clone())
         .unwrap_or(DARK_THEME)
 }
 

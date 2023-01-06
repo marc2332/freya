@@ -1,8 +1,10 @@
 use dioxus_native_core::state::{NodeDepState, ParentDepState, State};
 use dioxus_native_core_macro::State;
 use skia_safe::Color;
+use std::fmt::Debug;
 
 mod cursor;
+mod custom_attributes;
 mod font_style;
 mod references;
 mod scroll;
@@ -10,6 +12,7 @@ mod size;
 mod style;
 
 pub use cursor::*;
+pub use custom_attributes::*;
 pub use font_style::*;
 pub use references::*;
 pub use scroll::*;
@@ -17,6 +20,7 @@ pub use size::*;
 pub use style::*;
 
 #[derive(Clone, State, Default, Debug)]
+#[state(custom_value = CustomAttributeValues)]
 pub struct NodeState {
     #[parent_dep_state(cursor_settings)]
     pub cursor_settings: CursorSettings,
@@ -24,7 +28,7 @@ pub struct NodeState {
     pub references: References,
     #[parent_dep_state(size, Arc<Mutex<LayoutManager>>)]
     pub size: Size,
-    #[parent_dep_state(scroll, Arc<Mutex<LayoutManager>>)]
+    #[node_dep_state((), Arc<Mutex<LayoutManager>>)]
     pub scroll: Scroll,
     #[node_dep_state()]
     pub style: Style,
@@ -33,7 +37,7 @@ pub struct NodeState {
 }
 
 impl NodeState {
-    pub fn set_size(mut self, size: Size) -> Self {
+    pub fn with_size(mut self, size: Size) -> Self {
         self.size = size;
         self
     }

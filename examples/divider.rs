@@ -10,7 +10,7 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    let sizes = use_state(&cx, || (50, 50, 50, 50));
+    let sizes = use_state(cx, || (50, 50, 50, 50));
 
     render!(
         rect {

@@ -1,12 +1,11 @@
-use std::sync::{Arc, Mutex};
-
-use dioxus::prelude::UseRef;
-use dioxus_core::AttributeValue;
+use dioxus_native_core::node::OwnedAttributeValue;
 use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
 use dioxus_native_core::state::ParentDepState;
 use dioxus_native_core_macro::sorted_str_slice;
 use freya_common::NodeReferenceLayout;
 use tokio::sync::mpsc::UnboundedSender;
+
+use crate::{CursorReference, CustomAttributeValues};
 
 #[derive(Default, Clone, Debug)]
 pub struct References {
@@ -14,9 +13,9 @@ pub struct References {
     pub cursor_ref: Option<CursorReference>,
 }
 
-impl ParentDepState for References {
+impl ParentDepState<CustomAttributeValues> for References {
     type Ctx = ();
-    type DepState = Self;
+    type DepState = (Self,);
 
     const NODE_MASK: NodeMask =
         NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
@@ -26,34 +25,39 @@ impl ParentDepState for References {
 
     fn reduce<'a>(
         &mut self,
-        node: NodeView,
-        parent: Option<&'a Self::DepState>,
+        node: NodeView<CustomAttributeValues>,
+        parent: Option<(&'a Self,)>,
         _ctx: &Self::Ctx,
     ) -> bool {
         let mut node_ref = None;
         let mut cursor_ref = if let Some(parent) = parent {
-            parent.cursor_ref.clone()
+            parent.0.cursor_ref.clone()
         } else {
             None
         };
 
-        for a in node.attributes() {
-            match a.name {
-                "reference" => {
-                    if let AttributeValue::Any(v) = a.value {
-                        let r: &UseRef<UnboundedSender<NodeReferenceLayout>> =
-                            v.value.downcast_ref().unwrap();
-                        node_ref = Some(r.read().clone())
+        if let Some(attributes) = node.attributes() {
+            for attr in attributes {
+                match attr.attribute.name.as_str() {
+                    "reference" => {
+                        if let OwnedAttributeValue::Custom(CustomAttributeValues::Reference(
+                            reference,
+                        )) = attr.value
+                        {
+                            node_ref = Some(reference.0.clone());
+                        }
                     }
-                }
-                "cursor_reference" => {
-                    if let AttributeValue::Any(v) = a.value {
-                        let r: &UseRef<CursorReference> = v.value.downcast_ref().unwrap();
-                        cursor_ref = Some(r.read().clone())
+                    "cursor_reference" => {
+                        if let OwnedAttributeValue::Custom(
+                            CustomAttributeValues::CursorReference(reference),
+                        ) = attr.value
+                        {
+                            cursor_ref = Some(reference.clone());
+                        }
                     }
-                }
-                _ => {
-                    println!("Unsupported attribute <{}>", a.name);
+                    _ => {
+                        println!("Unsupported attribute <{}>", attr.attribute.name);
+                    }
                 }
             }
         }
@@ -64,18 +68,5 @@ impl ParentDepState for References {
             cursor_ref,
         };
         changed
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct CursorReference {
-    pub positions: Arc<Mutex<Option<(f32, f32)>>>,
-    pub agent: UnboundedSender<(usize, usize)>,
-    pub id: Arc<Mutex<Option<usize>>>,
-}
-
-impl PartialEq for CursorReference {
-    fn eq(&self, _: &Self) -> bool {
-        true
     }
 }

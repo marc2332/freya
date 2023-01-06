@@ -47,7 +47,7 @@ fn get_render_range(
     let remaining_length = item_length - render_index_start;
 
     let render_index_end = if remaining_length <= potentially_visible_length {
-        item_length as f32
+        item_length
     } else {
         render_index_start + potentially_visible_length
     };
@@ -60,12 +60,12 @@ fn get_render_range(
 pub fn ControlledVirtualScrollView<'a, T>(
     cx: Scope<'a, ControlledVirtualScrollViewProps<'a, T>>,
 ) -> Element {
-    let theme = use_get_theme(&cx);
-    let clicking_scrollbar = use_state::<Option<(Axis, f64)>>(&cx, || None);
+    let theme = use_get_theme(cx);
+    let clicking_scrollbar = use_state::<Option<(Axis, f64)>>(cx, || None);
     let scrolled_y = cx.props.scroll_y;
     let scrolled_x = cx.props.scroll_x;
     let onscroll = cx.props.onscroll.as_ref().unwrap();
-    let (node_ref, size) = use_node(&cx);
+    let (node_ref, size) = use_node(cx);
 
     let scrollbar_theme = &theme.scrollbar;
 
@@ -170,19 +170,17 @@ pub fn ControlledVirtualScrollView<'a, T>(
 
     // Calculate from what to what items must be rendered
     let render_range = get_render_range(
-        viewport_size as f32,
+        viewport_size,
         scroll_position,
         items_size,
         items_length as f32,
     );
 
     let mut key_index = 0;
-    let children = render_range
-        .map(|i| {
-            key_index += 1;
-            (cx.props.builder)((key_index, i, &cx.props.builder_values))
-        })
-        .collect::<Vec<LazyNodes>>();
+    let children = render_range.map(|i| {
+        key_index += 1;
+        (cx.props.builder)((key_index, i, &cx.props.builder_values))
+    });
 
     render!(
         container {

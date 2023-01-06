@@ -25,10 +25,10 @@ async fn no_state() {
 #[tokio::test]
 async fn with_state() {
     fn stateful_app(cx: Scope) -> Element {
-        let state = use_state(&cx, || false);
+        let state = use_state(cx, || false);
         let state_setter = state.setter();
 
-        use_effect(&cx, (), move |_| async move {
+        use_effect(cx, (), move |_| async move {
             state_setter(true);
         });
 
@@ -72,7 +72,7 @@ async fn check_size() {
 #[tokio::test]
 async fn simulate_events() {
     fn stateful_app(cx: Scope) -> Element {
-        let enabled = use_state(&cx, || false);
+        let enabled = use_state(cx, || false);
         render!(
             container {
                 width: "100%",

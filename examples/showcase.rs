@@ -9,7 +9,7 @@ static FERRIS: &[u8] = include_bytes!("./ferris.svg");
 static RUST_LOGO: &[u8] = include_bytes!("./rust_logo.png");
 
 fn main() {
-    launch_cfg(vec![(
+    launch_cfg(
         app,
         WindowConfig::<()>::builder()
             .with_width(550)
@@ -18,7 +18,7 @@ fn main() {
             .with_transparency(false)
             .with_title("Freya showcase!")
             .build(),
-    )]);
+    );
 }
 
 #[allow(non_snake_case)]
@@ -76,7 +76,7 @@ fn FirstSection(cx: Scope) -> Element {
     let current_theme = &theme.read();
     let enabled = current_theme.eq(&LIGHT_THEME);
 
-    let slider_percentage = use_state(&cx, || 50.0);
+    let slider_percentage = use_state(cx, || 50.0);
 
     render!(
         SectionHeader {
@@ -166,6 +166,8 @@ fn FirstSection(cx: Scope) -> Element {
 
 #[allow(non_snake_case)]
 fn SecondSection(cx: Scope) -> Element {
+    let ferris = bytes_to_data(cx, FERRIS);
+    let rust = bytes_to_data(cx, RUST_LOGO);
     render!(
         SectionHeader {
             "SVG and Images"
@@ -177,11 +179,11 @@ fn SecondSection(cx: Scope) -> Element {
             svg {
                 width: "150",
                 height: "150",
-                svg_data: FERRIS,
+                svg_data: ferris,
             }
             Space {},
             image {
-                image_data: RUST_LOGO,
+                image_data: rust,
                 width: "130",
                 height: "130",
             }

@@ -28,7 +28,7 @@ fn TheOtherSwitch(cx: Scope) -> Element {
 }
 
 fn app(cx: Scope) -> Element {
-    let enabled = use_state(&cx, || true);
+    let enabled = use_state(cx, || true);
 
     render!(
         ThemeProvider {

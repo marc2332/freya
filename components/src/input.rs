@@ -1,5 +1,5 @@
-use dioxus::{core::UiEvent, prelude::*};
-use dioxus_elements::events::{KeyCode, KeyboardData};
+use dioxus::{core::Event, prelude::*};
+use dioxus_elements::events_data::{KeyCode, KeyboardData};
 use freya_elements as dioxus_elements;
 use freya_hooks::{use_focus, use_get_theme};
 
@@ -13,11 +13,11 @@ pub struct InputProps<'a> {
 /// A controlled Input component.
 #[allow(non_snake_case)]
 pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
-    let theme = use_get_theme(&cx);
+    let theme = use_get_theme(cx);
     let button_theme = &theme.button;
-    let (focused, focus) = use_focus(&cx);
+    let (focused, focus) = use_focus(cx);
     let text = cx.props.value;
-    let onkeydown = move |e: UiEvent<KeyboardData>| {
+    let onkeydown = move |e: Event<KeyboardData>| {
         if focused {
             if let KeyCode::Space = e.data.code {
                 // Add a space

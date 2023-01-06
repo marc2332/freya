@@ -12,7 +12,8 @@ fn main() {
 static RUST_LOGO: &[u8] = include_bytes!("./rust_logo.png");
 
 fn app(cx: Scope) -> Element {
-    let mut size = use_state(&cx, || 150);
+    let image_data = bytes_to_data(cx, RUST_LOGO);
+    let mut size = use_state(cx, || 150);
 
     let onwheel = move |e: WheelEvent| {
         let y = e.get_delta_y();
@@ -29,7 +30,7 @@ fn app(cx: Scope) -> Element {
             padding: "100",
             onwheel: onwheel,
             image {
-                image_data: RUST_LOGO,
+                image_data: image_data,
                 width: "{size}",
                 height: "{size}",
             }
