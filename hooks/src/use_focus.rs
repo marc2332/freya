@@ -1,12 +1,13 @@
-use dioxus::prelude::{use_context, use_context_provider, ScopeState};
+use dioxus_core::ScopeState;
+use dioxus_hooks::{use_shared_state, use_shared_state_provider};
 use uuid::Uuid;
 
-/// Connect to the Focus provider.
+/// Listen for focus changes, or mark your self as focused.
 pub fn use_focus(cx: &ScopeState) -> (bool, impl Fn() + '_) {
     let my_id = cx.use_hook(Uuid::new_v4);
-    let focused_id = use_context::<Uuid>(cx);
+    let focused_id = use_shared_state::<Uuid>(cx);
 
-    let focused = Some(*my_id) == focused_id.map(|v| *v.read());
+    let is_focused = Some(*my_id) == focused_id.map(|v| *v.read());
 
     let focus = move || {
         if let Some(focused_id) = focused_id {
@@ -14,10 +15,10 @@ pub fn use_focus(cx: &ScopeState) -> (bool, impl Fn() + '_) {
         }
     };
 
-    (focused, focus)
+    (is_focused, focus)
 }
 
-/// Create a Foxus provider.
+/// Create a focus provider.
 pub fn use_init_focus(cx: &ScopeState) {
-    use_context_provider(cx, Uuid::new_v4);
+    use_shared_state_provider(cx, Uuid::new_v4);
 }

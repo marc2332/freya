@@ -10,9 +10,9 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    let hovering = use_state(&cx, || false);
-    let positions = use_state(&cx, || (0.0f64, 0.0f64));
-    let clicking = use_state(&cx, || false);
+    let hovering = use_state(cx, || false);
+    let positions = use_state(cx, || (0.0f64, 0.0f64));
+    let clicking = use_state(cx, || false);
 
     let onmouseleave = |_: MouseEvent| {
         if *clicking.get() == false {

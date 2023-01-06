@@ -1,18 +1,70 @@
 use dioxus::core::ElementId;
 use dioxus::prelude::*;
 use dioxus_core::Scope;
-use dioxus_native_core::real_dom::{NodeType, RealDom};
+use dioxus_native_core::tree::TreeView;
+use dioxus_native_core::{node::NodeType, real_dom::RealDom};
 use dioxus_router::*;
 use freya_components::*;
 use freya_elements as dioxus_elements;
 use freya_hooks::use_theme;
-use freya_node_state::{AttributeType, NodeState, ShadowSettings};
+use freya_node_state::{AttributeType, CustomAttributeValues, NodeState, ShadowSettings};
 use skia_safe::Color;
-use std::{
-    sync::{Arc, Mutex},
-    time::Duration,
-};
-use tokio::time::sleep;
+use std::sync::{Arc, Mutex};
+use tokio::sync::mpsc::UnboundedReceiver;
+
+/// Launch a Component with the devtools panel enabled.
+pub fn with_devtools(
+    rdom: Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>,
+    root: fn(cx: Scope) -> Element,
+    mutations_receiver: UnboundedReceiver<()>,
+) -> VirtualDom {
+    fn app(cx: Scope<DomProps>) -> Element {
+        #[allow(non_snake_case)]
+        let Root = cx.props.root;
+        let mutations_receiver = cx.props.mutations_receiver.clone();
+
+        render!(
+            rect {
+                width: "100%",
+                height: "100%",
+                direction: "horizontal",
+                container {
+                    height: "100%",
+                    width: "calc(100% - 350)",
+                    Root { },
+                }
+                rect {
+                    background: "rgb(40, 40, 40)",
+                    height: "100%",
+                    width: "350",
+                    ThemeProvider {
+                        DevTools {
+                            rdom: cx.props.rdom.clone(),
+                            mutations_receiver: mutations_receiver
+                        }
+                    }
+                }
+            }
+        )
+    }
+
+    struct DomProps {
+        root: fn(cx: Scope) -> Element,
+        rdom: Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>,
+        mutations_receiver: Arc<Mutex<UnboundedReceiver<()>>>,
+    }
+
+    let mutations_receiver = Arc::new(Mutex::new(mutations_receiver));
+
+    VirtualDom::new_with_props(
+        app,
+        DomProps {
+            root,
+            rdom,
+            mutations_receiver,
+        },
+    )
+}
 
 #[derive(Clone)]
 struct TreeNode {
@@ -26,10 +78,10 @@ struct TreeNode {
 
 #[derive(Props)]
 pub struct DevToolsProps {
-    rdom: Arc<Mutex<RealDom<NodeState>>>,
+    rdom: Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>,
+    mutations_receiver: Arc<Mutex<UnboundedReceiver<()>>>,
 }
 
-// Hacky stuff over here
 impl PartialEq for DevToolsProps {
     fn eq(&self, _: &Self) -> bool {
         true
@@ -38,52 +90,58 @@ impl PartialEq for DevToolsProps {
 
 #[allow(non_snake_case)]
 pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
-    let children = use_state(&cx, Vec::<TreeNode>::new);
-    let setter = children.setter();
+    let children = use_state(cx, Vec::<TreeNode>::new);
 
-    use_effect(&cx, (), move |_| {
+    use_effect(cx, (), move |_| {
         let rdom = cx.props.rdom.clone();
+        let mutations_receiver = cx.props.mutations_receiver.clone();
+        let children = children.clone();
         async move {
+            let mut mutations_receiver = mutations_receiver.lock().unwrap();
             loop {
-                sleep(Duration::from_millis(25)).await;
+                if mutations_receiver.recv().await.is_some() {
+                    let rdom = rdom.lock().unwrap();
+                    let mut new_children = Vec::new();
 
-                let rdom = rdom.lock().unwrap();
-                let mut children = Vec::new();
+                    let mut root_found = false;
+                    let mut devtools_found = false;
 
-                let mut root_found = false;
-                let mut devtools_found = false;
-
-                rdom.traverse_depth_first(|n| {
-                    if n.height == 2 {
-                        if !root_found {
-                            root_found = true;
-                        } else {
-                            devtools_found = true;
-                        }
-                    }
-
-                    if !devtools_found {
-                        let mut maybe_text = None;
-                        let tag = match &n.node_type {
-                            NodeType::Text { text, .. } => {
-                                maybe_text = Some(text.clone());
-                                "text"
+                    rdom.traverse_depth_first(|n| {
+                        let height = rdom.tree.height(n.node_data.node_id).unwrap();
+                        if height == 2 {
+                            if !root_found {
+                                root_found = true;
+                            } else {
+                                devtools_found = true;
                             }
-                            NodeType::Element { tag, .. } => tag,
-                            NodeType::Placeholder => "placeholder",
                         }
-                        .to_string();
 
-                        children.push(TreeNode {
-                            height: n.height,
-                            id: n.id,
-                            tag,
-                            text: maybe_text,
-                            state: n.state.clone(),
-                        });
-                    }
-                });
-                setter(children);
+                        if !devtools_found {
+                            let mut maybe_text = None;
+                            let tag = match &n.node_data.node_type {
+                                NodeType::Text { text, .. } => {
+                                    maybe_text = Some(text.clone());
+                                    "text"
+                                }
+                                NodeType::Element { tag, .. } => tag,
+                                NodeType::Placeholder => "placeholder",
+                            }
+                            .to_string();
+
+                            if let Some(id) = n.node_data.element_id {
+                                new_children.push(TreeNode {
+                                    height,
+                                    id,
+                                    tag,
+                                    text: maybe_text,
+                                    // TODO Improve this, I don't like this.
+                                    state: n.state.clone(),
+                                });
+                            }
+                        }
+                    });
+                    children.set(new_children);
+                }
             }
         }
     });
@@ -100,7 +158,7 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
 
     render!(
         Router {
-            initial_url: "bla://bla/elements".to_string(),
+            initial_url: "freya://freya/elements".to_string(),
             TabsBar {
                 TabButton {
                     to: "/elements",
@@ -133,11 +191,11 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                     }
                 }
                 selected_node.and_then(|selected_node| {
-                    render!(
+                    Some(rsx!(
                         NodeInspectorStyle {
                             node: selected_node
                         }
-                    )
+                    ))
                 })
             }
             Route {
@@ -151,11 +209,11 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                     }
                 }
                 selected_node.and_then(|selected_node| {
-                    render!(
+                    Some(rsx!(
                         NodeInspectorListeners {
                             node: selected_node
                         }
-                    )
+                    ))
                 })
             }
             Route {
@@ -182,7 +240,7 @@ fn NodesTree<'a>(
     let nodes = nodes.iter().map(|node| {
         rsx! {
             NodeElement {
-                key: "{node.id}",
+                key: "{node.id:?}",
                 is_selected: Some(node.id) == **selected_node_id,
                 onselected: |node: &TreeNode| {
                     onselected.call(node);
@@ -234,10 +292,10 @@ fn TabButton<'a>(cx: Scope<'a, TabButtonProps<'a>>) -> Element<'a> {
     let theme = use_theme(&cx);
     let button_theme = &theme.read().button;
 
-    let background = use_state(&cx, || <&str>::clone(&button_theme.background));
+    let background = use_state(cx, || <&str>::clone(&button_theme.background));
     let set_background = background.setter();
 
-    use_effect(&cx, &button_theme.clone(), move |button_theme| async move {
+    use_effect(cx, &button_theme.clone(), move |button_theme| async move {
         set_background(button_theme.background);
     });
 
@@ -550,10 +608,10 @@ fn NodeElement<'a>(
     is_selected: bool,
     onselected: EventHandler<'a, &'a TreeNode>,
 ) -> Element<'a> {
-    let text_color = use_state(&cx, || "white");
+    let text_color = use_state(cx, || "white");
 
     let mut margin_left = (node.height * 10) as f32 + 16.5;
-    let mut text = format!("{} #{}", node.tag, node.id);
+    let mut text = format!("{} #{}", node.tag, node.id.0);
 
     if *is_selected {
         margin_left -= 16.5;

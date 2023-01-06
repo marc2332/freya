@@ -6,6 +6,8 @@ use dioxus_native_core::state::ParentDepState;
 use dioxus_native_core_macro::sorted_str_slice;
 use freya_common::LayoutMemorizer;
 
+use crate::CustomAttributeValues;
+
 #[derive(Default, Clone, Debug)]
 pub struct Size {
     pub width: SizeMode,
@@ -16,12 +18,11 @@ pub struct Size {
     pub max_width: SizeMode,
     pub padding: (f32, f32, f32, f32),
     pub direction: DirectionMode,
-    pub id: usize,
 }
 
-impl ParentDepState for Size {
+impl ParentDepState<CustomAttributeValues> for Size {
     type Ctx = Arc<Mutex<LayoutMemorizer>>;
-    type DepState = Self;
+    type DepState = (Self,);
 
     const NODE_MASK: NodeMask =
         NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
@@ -39,8 +40,8 @@ impl ParentDepState for Size {
 
     fn reduce<'a>(
         &mut self,
-        node: NodeView,
-        _parent: Option<&'a Self::DepState>,
+        node: NodeView<CustomAttributeValues>,
+        _parent: Option<(&'a Self,)>,
         ctx: &Self::Ctx,
     ) -> bool {
         let mut width = SizeMode::default();
@@ -62,63 +63,83 @@ impl ParentDepState for Size {
             DirectionMode::Vertical
         };
 
-        for a in node.attributes() {
-            match a.name {
-                "width" => {
-                    let attr = a.value.to_string();
-                    if let Some(new_width) = parse_size(&attr) {
-                        width = new_width;
+        if let Some(attributes) = node.attributes() {
+            for attr in attributes {
+                match attr.attribute.name.as_str() {
+                    "width" => {
+                        let attr = attr.value.as_text();
+                        if let Some(attr) = attr {
+                            if let Some(new_width) = parse_size(attr) {
+                                width = new_width;
+                            }
+                        }
                     }
-                }
-                "height" => {
-                    let attr = a.value.to_string();
-                    if let Some(new_height) = parse_size(&attr) {
-                        height = new_height;
+                    "height" => {
+                        let attr = attr.value.as_text();
+                        if let Some(attr) = attr {
+                            if let Some(new_height) = parse_size(attr) {
+                                height = new_height;
+                            }
+                        }
                     }
-                }
-                "min_height" => {
-                    let attr = a.value.to_string();
-                    if let Some(new_min_height) = parse_size(&attr) {
-                        min_height = new_min_height;
+                    "min_height" => {
+                        let attr = attr.value.as_text();
+                        if let Some(attr) = attr {
+                            if let Some(new_min_height) = parse_size(attr) {
+                                min_height = new_min_height;
+                            }
+                        }
                     }
-                }
-                "min_width" => {
-                    let attr = a.value.to_string();
-                    if let Some(new_min_width) = parse_size(&attr) {
-                        min_width = new_min_width;
+                    "min_width" => {
+                        let attr = attr.value.as_text();
+                        if let Some(attr) = attr {
+                            if let Some(new_min_width) = parse_size(attr) {
+                                min_width = new_min_width;
+                            }
+                        }
                     }
-                }
-                "max_height" => {
-                    let attr = a.value.to_string();
-                    if let Some(new_max_height) = parse_size(&attr) {
-                        max_height = new_max_height;
+                    "max_height" => {
+                        let attr = attr.value.as_text();
+                        if let Some(attr) = attr {
+                            if let Some(new_max_height) = parse_size(attr) {
+                                max_height = new_max_height;
+                            }
+                        }
                     }
-                }
-                "max_width" => {
-                    let attr = a.value.to_string();
-                    if let Some(new_max_width) = parse_size(&attr) {
-                        max_width = new_max_width;
+                    "max_width" => {
+                        let attr = attr.value.as_text();
+                        if let Some(attr) = attr {
+                            if let Some(new_max_width) = parse_size(attr) {
+                                max_width = new_max_width;
+                            }
+                        }
                     }
-                }
-                "padding" => {
-                    let total_padding: f32 = a.value.to_string().parse().unwrap();
-                    let padding_for_side = total_padding / 2.0;
-                    padding.0 = padding_for_side;
-                    padding.1 = padding_for_side;
-                    padding.2 = padding_for_side;
-                    padding.3 = padding_for_side;
-                }
-                "direction" => {
-                    direction = if a.value.to_string() == "horizontal" {
-                        DirectionMode::Horizontal
-                    } else if a.value.to_string() == "both" {
-                        DirectionMode::Both
-                    } else {
-                        DirectionMode::Vertical
-                    };
-                }
-                _ => {
-                    println!("Unsupported attribute <{}>", a.name);
+                    "padding" => {
+                        let attr = attr.value.as_text();
+                        if let Some(attr) = attr {
+                            let total_padding: f32 = attr.parse().unwrap();
+                            let padding_for_side = total_padding / 2.0;
+                            padding.0 = padding_for_side;
+                            padding.1 = padding_for_side;
+                            padding.2 = padding_for_side;
+                            padding.3 = padding_for_side;
+                        }
+                    }
+                    "direction" => {
+                        let attr = attr.value.as_text();
+                        if let Some(attr) = attr {
+                            direction = if attr == "horizontal" {
+                                DirectionMode::Horizontal
+                            } else if attr == "both" {
+                                DirectionMode::Both
+                            } else {
+                                DirectionMode::Vertical
+                            };
+                        }
+                    }
+                    _ => {
+                        println!("Unsupported attribute <{}>", attr.attribute.name);
+                    }
                 }
             }
         }
@@ -133,7 +154,7 @@ impl ParentDepState for Size {
             || (direction != self.direction);
 
         if changed {
-            ctx.lock().unwrap().mark_as_dirty(node.id());
+            ctx.lock().unwrap().mark_as_dirty(node.node_id());
         }
 
         *self = Self {
@@ -145,7 +166,6 @@ impl ParentDepState for Size {
             max_width,
             padding,
             direction,
-            id: node.id().0,
         };
         changed
     }

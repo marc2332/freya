@@ -10,7 +10,7 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    let count = use_state(&cx, || 0);
+    let count = use_state(cx, || 0);
     render!(
         container {
             background: "rgb(15, 15, 15)",
@@ -38,7 +38,7 @@ fn app(cx: Scope) -> Element {
                         count.with_mut(|c| *c = 2)
                     },
                     label {
-                        "Clikck on every layer."
+                        "Click on every layer."
                     }
                     label {
                         "{count}"

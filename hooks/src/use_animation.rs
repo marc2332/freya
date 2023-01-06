@@ -14,13 +14,25 @@ pub enum AnimationMode {
 
 impl AnimationMode {
     pub fn new_bounce_in(range: RangeInclusive<f64>, time: i32) -> Self {
-        Self::BounceIn(RefCell::new(Tweener::bounce_in(*range.start(), *range.end(), time)))
+        Self::BounceIn(RefCell::new(Tweener::bounce_in(
+            *range.start(),
+            *range.end(),
+            time,
+        )))
     }
     pub fn new_sine_in(range: RangeInclusive<f64>, time: i32) -> Self {
-        Self::SineIn(RefCell::new(Tweener::sine_in(*range.start(), *range.end(), time)))
+        Self::SineIn(RefCell::new(Tweener::sine_in(
+            *range.start(),
+            *range.end(),
+            time,
+        )))
     }
     pub fn new_sine_in_out(range: RangeInclusive<f64>, time: i32) -> Self {
-        Self::SineInOut(RefCell::new(Tweener::sine_in_out(*range.start(), *range.end(), time)))
+        Self::SineInOut(RefCell::new(Tweener::sine_in_out(
+            *range.start(),
+            *range.end(),
+            time,
+        )))
     }
 }
 

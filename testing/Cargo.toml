@@ -13,18 +13,22 @@ categories = ["GUI"]
 
 [dependencies]
 glutin_tao = { version = "0.30.1", features = ["serde"]}
-dioxus = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners", features = ["macro", "hooks"]}
-dioxus-native-core = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
-dioxus-native-core-macro = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
-dioxus-core = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
+dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
+dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
 freya-elements = { path = "../elements", version = "0.1.0"}
 freya-common = { path = "../common", version = "0.1.0" }
+freya-layers = { path = "../layers", version = "0.1.0" }
 freya-node-state = { path = "../state", version = "0.1.0" }
 freya-processor = { path = "../processor", version = "0.1.0" }
-tokio = { version = "1.17.0", features = ["macros", "sync", "rt", "time"]}
+tokio = { version = "1.23.0", features = ["macros", "sync", "rt", "time"]}
 futures = "0.3.25"
 anymap = "0.12.1"
 skia-safe = { version = "0.56.1", features = ["gl", "textlayout", "svg"] }
 
 [dev-dependencies]
 freya-components ={ path = "../components"}
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}

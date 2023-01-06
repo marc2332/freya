@@ -1,8 +1,12 @@
-use std::sync::{Arc, Mutex};
+use std::{
+    rc::Rc,
+    sync::{Arc, Mutex},
+};
 
-use dioxus::{core::UiEvent, prelude::*};
-use freya_elements::events::{KeyCode, KeyboardData, MouseData};
-use freya_node_state::CursorReference;
+use dioxus_core::{AttributeValue, Event, ScopeState};
+use dioxus_hooks::{use_effect, use_ref, use_state, UseRef, UseState};
+use freya_elements::events_data::{KeyCode, KeyboardData, MouseData};
+use freya_node_state::{CursorReference, CustomAttributeValues};
 use tokio::sync::{mpsc::unbounded_channel, mpsc::UnboundedSender};
 pub use xi_rope::Rope;
 
@@ -18,14 +22,14 @@ pub enum EditableMode {
     MultipleLinesSingleEditor,
 }
 
-pub type KeypressNotifier = UnboundedSender<Arc<KeyboardData>>;
-pub type ClickNotifier = UnboundedSender<(Arc<MouseData>, usize)>;
+pub type KeypressNotifier = UnboundedSender<Rc<KeyboardData>>;
+pub type ClickNotifier = UnboundedSender<(Rc<MouseData>, usize)>;
 pub type EditableText = UseState<Rope>;
 pub type CursorPosition = UseState<(usize, usize)>;
-pub type KeyboardEvent = UiEvent<KeyboardData>;
+pub type KeyboardEvent = Event<KeyboardData>;
 pub type CursorRef = UseRef<CursorReference>;
 
-/// Create a cursor for some editable text.
+/// Create a virtual text editor with it's own cursor and rope.
 pub fn use_editable<'a>(
     cx: &ScopeState,
     initializer: impl Fn() -> &'a str,
@@ -35,7 +39,7 @@ pub fn use_editable<'a>(
     &CursorPosition,
     KeypressNotifier,
     ClickNotifier,
-    &CursorRef,
+    AttributeValue,
 ) {
     // Hold the actual editable content
     let content = use_state(cx, || Rope::from(initializer()));
@@ -43,38 +47,44 @@ pub fn use_editable<'a>(
     // Holds the column and line where the cursor is
     let cursor = use_state(cx, || (0, 0));
 
-    let cursor_channels = use_ref(cx, || {
+    let cursor_channels = cx.use_hook(|| {
         let (tx, rx) = unbounded_channel::<(usize, usize)>();
         (tx, Some(rx))
     });
 
     // Cursor reference passed to the layout engine
     let cursor_ref = use_ref(cx, || CursorReference {
-        agent: cursor_channels.read().0.clone(),
+        agent: cursor_channels.0.clone(),
         positions: Arc::new(Mutex::new(None)),
         id: Arc::new(Mutex::new(None)),
     });
 
+    // This will allow to pass the cursor reference as an attribute value
+    let cursor_ref_attr = cx.any_value(CustomAttributeValues::CursorReference(
+        cursor_ref.read().clone(),
+    ));
+
     // Single listener multiple triggers channel so the mouse can be changed from multiple elements
-    let click_channel = use_ref(cx, || {
-        let (tx, rx) = unbounded_channel::<(Arc<MouseData>, usize)>();
+    let click_channel = cx.use_hook(|| {
+        let (tx, rx) = unbounded_channel::<(Rc<MouseData>, usize)>();
         (tx, Some(rx))
     });
 
     // Single listener multiple triggers channel to write from different sources
-    let keypress_channel = use_ref(cx, || {
-        let (tx, rx) = unbounded_channel::<Arc<KeyboardData>>();
+    let keypress_channel = cx.use_hook(|| {
+        let (tx, rx) = unbounded_channel::<Rc<KeyboardData>>();
         (tx, Some(rx))
     });
 
-    // Update the new positions and ID from the cursor reference so the layout engine can make the proper calculations
+    let keypress_channel_sender = keypress_channel.0.clone();
+    let click_channel_sender = click_channel.0.clone();
+
+    // Listen for click events and pass them to the layout engine
     {
-        let click_channel = click_channel.clone();
         let cursor_ref = cursor_ref.clone();
         use_effect(cx, (), move |_| {
-            let click_channel = click_channel.clone();
+            let rx = click_channel.1.take();
             async move {
-                let rx = click_channel.write().1.take();
                 let mut rx = rx.unwrap();
 
                 while let Some((e, id)) = rx.recv().await {
@@ -95,13 +105,12 @@ pub fn use_editable<'a>(
     // Listen for new calculations from the layout engine
     use_effect(cx, (), move |_| {
         let cursor_ref = cursor_ref.clone();
-        let cursor_getter = cursor.current();
-        let cursor_channels = cursor_channels.clone();
+        let cursor_receiver = cursor_channels.1.take();
         let content = content.clone();
+        let cursor_getter = cursor.current();
         let cursor_setter = cursor.setter();
 
         async move {
-            let cursor_receiver = cursor_channels.write().1.take();
             let mut cursor_receiver = cursor_receiver.unwrap();
             let mut prev_cursor = *cursor_getter;
             let cursor_ref = cursor_ref.clone();
@@ -142,13 +151,13 @@ pub fn use_editable<'a>(
         }
     });
 
+    // Listen for keypresses
     use_effect(cx, (), move |_| {
         let cursor_getter = cursor.to_owned();
-        let keypress_channel = keypress_channel.clone();
+        let rx = keypress_channel.1.take();
         let content = content.clone();
         let cursor_setter = cursor.setter();
         async move {
-            let rx = keypress_channel.write().1.take();
             let mut rx = rx.unwrap();
 
             while let Some(e) = rx.recv().await {
@@ -290,8 +299,8 @@ pub fn use_editable<'a>(
     (
         content,
         cursor,
-        keypress_channel.read().0.clone(),
-        click_channel.read().0.clone(),
-        cursor_ref,
+        keypress_channel_sender,
+        click_channel_sender,
+        cursor_ref_attr,
     )
 }

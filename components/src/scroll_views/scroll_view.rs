@@ -1,4 +1,6 @@
-use dioxus::prelude::*;
+use dioxus_core::{Element, Scope};
+use dioxus_core_macro::{render, Props};
+use dioxus_hooks::use_state;
 use freya_elements as dioxus_elements;
 use freya_elements::{MouseEvent, WheelEvent};
 use freya_hooks::{use_get_theme, use_node};
@@ -28,11 +30,11 @@ pub struct ScrollViewProps<'a> {
 /// A Scrollable container.
 #[allow(non_snake_case)]
 pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
-    let theme = use_get_theme(&cx);
-    let clicking_scrollbar = use_state::<Option<(Axis, f64)>>(&cx, || None);
-    let scrolled_y = use_state(&cx, || 0);
-    let scrolled_x = use_state(&cx, || 0);
-    let (node_ref, size) = use_node(&cx);
+    let theme = use_get_theme(cx);
+    let clicking_scrollbar = use_state::<Option<(Axis, f64)>>(cx, || None);
+    let scrolled_y = use_state(cx, || 0);
+    let scrolled_x = use_state(cx, || 0);
+    let (node_ref, size) = use_node(cx);
 
     let scrollbar_theme = &theme.scrollbar;
 
@@ -75,7 +77,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     };
 
     // Drag the scrollbars
-    let onmouseover = |e: MouseEvent| {
+    let onmouseover = move |e: MouseEvent| {
         if let Some((Axis::Y, y)) = clicking_scrollbar.get() {
             let coordinates = e.get_element_coordinates();
             let cursor_y = coordinates.y - y;

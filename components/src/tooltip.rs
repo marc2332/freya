@@ -5,7 +5,7 @@ use freya_hooks::use_get_theme;
 #[allow(non_snake_case)]
 #[inline_props]
 pub fn Tooltip<'a>(cx: Scope<'a>, url: &'a str) -> Element {
-    let theme = use_get_theme(&cx);
+    let theme = use_get_theme(cx);
     let theme = &theme.tooltip;
     render!(
         rect {

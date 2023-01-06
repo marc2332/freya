@@ -81,7 +81,7 @@ pub fn get_scroll_position_from_wheel(
         return 0;
     }
 
-    let new_position = scroll_position + (wheel_movement as f32 * 20.0);
+    let new_position = scroll_position + (wheel_movement * 20.0);
 
     if new_position >= 0.0 && wheel_movement > 0.0 {
         return 0;
@@ -108,7 +108,7 @@ pub fn get_corrected_scroll_position(
         0f32
     } else if overscrolled_end {
         if viewport_size < inner_size {
-            -(inner_size - viewport_size) as f32
+            -(inner_size - viewport_size)
         } else {
             0f32
         }

@@ -3,6 +3,7 @@
     windows_subsystem = "windows"
 )]
 
+use freya::dioxus_elements::MouseEvent;
 use freya::prelude::*;
 
 fn main() {
@@ -11,7 +12,7 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     let (start, restart, progress) =
-        use_animation(&cx, || AnimationMode::new_sine_in_out(0.0..=700.0, 1000));
+        use_animation(cx, || AnimationMode::new_sine_in_out(0.0..=700.0, 1000));
 
     let start_animation = move |_: MouseEvent| {
         start();

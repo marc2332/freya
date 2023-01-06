@@ -14,12 +14,12 @@ pub struct SwitchProps<'a> {
 #[allow(non_snake_case)]
 pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
     let (start_enabled, restart_enabled, progress_enabled) =
-        use_animation(&cx, || AnimationMode::new_sine_in_out(0.0..=25.0, 200));
+        use_animation(cx, || AnimationMode::new_sine_in_out(0.0..=25.0, 200));
     let (start_disabled, restart_disabled, progress_disabled) =
-        use_animation(&cx, || AnimationMode::new_sine_in_out(25.0..=0.0, 200));
-    let theme = use_get_theme(&cx);
-    let hovering = use_state(&cx, || false);
-    let clicking = use_state(&cx, || false);
+        use_animation(cx, || AnimationMode::new_sine_in_out(25.0..=0.0, 200));
+    let theme = use_get_theme(cx);
+    let hovering = use_state(cx, || false);
+    let clicking = use_state(cx, || false);
 
     let onmouseleave = |_: MouseEvent| {
         if !(*clicking.get()) {
@@ -40,7 +40,7 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
         cx.props.ontoggled.call(());
     };
 
-    use_effect(&cx, &cx.props.enabled, move |enabled| async move {
+    use_effect(cx, &cx.props.enabled, move |enabled| async move {
         if enabled {
             start_enabled();
             restart_disabled();
