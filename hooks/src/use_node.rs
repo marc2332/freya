@@ -1,43 +1,36 @@
-use dioxus::prelude::*;
-use freya_layout_common::NodeReferenceLayout;
-use tokio::sync::{mpsc::unbounded_channel, mpsc::UnboundedSender};
+use dioxus_core::{AttributeValue, ScopeState};
+use dioxus_hooks::{use_effect, use_state};
+use freya_common::NodeReferenceLayout;
+use freya_node_state::{CustomAttributeValues, NodeReference};
+use tokio::sync::mpsc::unbounded_channel;
 
 /// Creates a reference to the desired node's layout size
-pub fn use_node(
-    cx: &ScopeState,
-) -> (
-    &UseRef<UnboundedSender<NodeReferenceLayout>>,
-    &UseState<NodeReferenceLayout>,
-) {
+pub fn use_node(cx: &ScopeState) -> (AttributeValue, NodeReferenceLayout) {
     let status = use_state::<NodeReferenceLayout>(cx, NodeReferenceLayout::default);
-    let status_getter = status.current();
-    let status_setter = status.setter();
-    let node_ref = use_ref(cx, || {
-        let (tx, rx) = unbounded_channel::<NodeReferenceLayout>();
 
+    let channel = cx.use_hook(|| {
+        let (tx, rx) = unbounded_channel::<NodeReferenceLayout>();
         (tx, Some(rx))
     });
-    let sender = use_ref(cx, || node_ref.read().0.clone());
 
-    use_effect(cx, (), move |()| {
-        let node_ref = node_ref.clone();
-        let getter = status_getter.clone();
+    let node_ref = NodeReference(channel.0.clone());
 
-        async move {
-            let rx = node_ref.write().1.take();
+    use_effect(cx, (), move |_| {
+        let rx = channel.1.take();
+        let status = status.clone();
+        cx.spawn(async move {
             let mut rx = rx.unwrap();
-            let mut prev_status = (*getter).clone();
-
-            loop {
-                if let Some(status) = rx.recv().await {
-                    if prev_status != status {
-                        status_setter(status.clone());
-                        prev_status = status;
-                    }
+            while let Some(new_status) = rx.recv().await {
+                if status.current().as_ref() != &new_status {
+                    status.set(new_status);
                 }
             }
-        }
+        });
+        async move {}
     });
 
-    (sender, status)
+    (
+        cx.any_value(CustomAttributeValues::Reference(node_ref)),
+        status.get().clone(),
+    )
 }

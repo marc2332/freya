@@ -3,10 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus::core::UiEvent;
-use dioxus::events::MouseData;
-use dioxus::prelude::*;
-use freya::{dioxus_elements, *};
+use freya::prelude::*;
 
 fn main() {
     launch(app);
@@ -33,7 +30,9 @@ fn app(cx: Scope) -> Element {
             direction: "both",
             width: "auto",
             height: "50%",
-            onkeydown: process_keyevent,
+            onkeydown: move |e| {
+                process_keyevent.send(e.data).unwrap();
+            },
             cursor_reference: cursor_ref,
             VirtualScrollView {
                 width: "100%",
@@ -62,8 +61,8 @@ fn app(cx: Scope) -> Element {
                         ""
                     };
 
-                    let onmousedown = move |e: UiEvent<MouseData>| {
-                        process_clickevent.send((e, line_index as usize)).ok();
+                    let onmousedown = move |e: MouseEvent| {
+                        process_clickevent.send((e.data, line_index as usize)).ok();
                     };
 
                     rsx! {

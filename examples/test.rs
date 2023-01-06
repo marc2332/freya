@@ -3,8 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus::prelude::*;
-use freya::{dioxus_elements, *};
+use freya::prelude::*;
 use std::time::Duration;
 use tokio::time::sleep;
 
@@ -13,15 +12,15 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    let colors = use_state(&cx, || vec!["green", "blue", "red"]);
-    let padding = use_state(&cx, || 10);
+    let colors = use_state(cx, || vec!["green", "blue", "red"]);
+    let padding = use_state(cx, || 10);
 
-    use_effect(&cx, colors, |colors| async move {
+    use_effect(cx, colors, |colors| async move {
         sleep(Duration::from_millis(1000)).await;
         colors.with_mut(|colors| colors.reverse());
     });
 
-    use_effect(&cx, padding, |padding| async move {
+    use_effect(cx, padding, |padding| async move {
         sleep(Duration::from_millis(10)).await;
         padding.with_mut(|padding| {
             if *padding < 65 {

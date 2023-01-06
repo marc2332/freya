@@ -3,8 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus::{events::MouseEvent, prelude::*};
-use freya::{dioxus_elements, *};
+use freya::prelude::*;
 
 fn main() {
     launch(app);
@@ -19,11 +18,11 @@ struct DrawerOptions<'a> {
 #[allow(non_snake_case)]
 fn Drawer<'a>(cx: Scope<'a, DrawerOptions<'a>>) -> Element<'a> {
     let (start_opened, restart_opened, progress_opened) =
-        use_animation(&cx, || AnimationMode::new_sine_in(-225.0..=0.0, 130));
+        use_animation(cx, || AnimationMode::new_sine_in(-225.0..=0.0, 130));
     let (start_closed, restart_closed, progress_closed) =
-        use_animation(&cx, || AnimationMode::new_sine_in(0.0..=-225.0, 200));
+        use_animation(cx, || AnimationMode::new_sine_in(0.0..=-225.0, 200));
 
-    use_effect(&cx, &cx.props.opened, move |opened| async move {
+    use_effect(cx, &cx.props.opened, move |opened| async move {
         if opened {
             start_opened();
             restart_closed();
@@ -56,7 +55,7 @@ fn Drawer<'a>(cx: Scope<'a, DrawerOptions<'a>>) -> Element<'a> {
     )
 }
 fn app(cx: Scope) -> Element {
-    let opened = use_state(&cx, || false);
+    let opened = use_state(cx, || false);
 
     render!(
         rect {
@@ -123,7 +122,7 @@ fn app(cx: Scope) -> Element {
 
 #[allow(non_snake_case)]
 fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
-    let background = use_state(&cx, || "black");
+    let background = use_state(cx, || "black");
 
     render!(
         rect {

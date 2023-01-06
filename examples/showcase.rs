@@ -3,24 +3,22 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus::prelude::*;
-use fermi::*;
-use freya::{dioxus_elements, *};
+use freya::prelude::*;
 
 static FERRIS: &[u8] = include_bytes!("./ferris.svg");
 static RUST_LOGO: &[u8] = include_bytes!("./rust_logo.png");
 
 fn main() {
-    launch_cfg(vec![(
+    launch_cfg(
         app,
-        WindowConfig {
-            width: 550,
-            height: 700,
-            decorations: true,
-            title: "Freya Showcase",
-            transparent: false,
-        },
-    )]);
+        WindowConfig::<()>::builder()
+            .with_width(550)
+            .with_height(700)
+            .with_decorations(true)
+            .with_transparency(false)
+            .with_title("Freya showcase!")
+            .build(),
+    );
 }
 
 #[allow(non_snake_case)]
@@ -37,10 +35,11 @@ fn SectionHeader<'a>(cx: Scope<'a>, children: Element<'a>) -> Element {
     )
 }
 
-fn app(cx: Scope) -> Element {
-    let theme = use_atom_ref(&cx, THEME);
-    let current_theme = &theme.read();
-    let body_theme = &current_theme.body;
+#[allow(non_snake_case)]
+fn Body(cx: Scope) -> Element {
+    let theme = use_theme(&cx);
+    let theme = theme.read();
+    let body_theme = &theme.body;
 
     render!(
         rect {
@@ -65,13 +64,19 @@ fn app(cx: Scope) -> Element {
     )
 }
 
+fn app(cx: Scope) -> Element {
+    use_init_theme(&cx, DARK_THEME);
+
+    render!(Body {})
+}
+
 #[allow(non_snake_case)]
 fn FirstSection(cx: Scope) -> Element {
-    let theme = use_atom_ref(&cx, THEME);
+    let theme = use_theme(&cx);
     let current_theme = &theme.read();
     let enabled = current_theme.eq(&LIGHT_THEME);
 
-    let slider_percentage = use_state(&cx, || 50.0);
+    let slider_percentage = use_state(cx, || 50.0);
 
     render!(
         SectionHeader {
@@ -79,7 +84,7 @@ fn FirstSection(cx: Scope) -> Element {
         }
         Space {},
         Button {
-            onclick: |_| {
+            onclick: move |_| {
                 *theme.write() = DARK_THEME.clone();
             },
             label {
@@ -161,6 +166,8 @@ fn FirstSection(cx: Scope) -> Element {
 
 #[allow(non_snake_case)]
 fn SecondSection(cx: Scope) -> Element {
+    let ferris = bytes_to_data(cx, FERRIS);
+    let rust = bytes_to_data(cx, RUST_LOGO);
     render!(
         SectionHeader {
             "SVG and Images"
@@ -172,11 +179,11 @@ fn SecondSection(cx: Scope) -> Element {
             svg {
                 width: "150",
                 height: "150",
-                svg_data: FERRIS,
+                svg_data: ferris,
             }
             Space {},
             image {
-                image_data: RUST_LOGO,
+                image_data: rust,
                 width: "130",
                 height: "130",
             }

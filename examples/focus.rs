@@ -3,8 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus::prelude::*;
-use freya::{dioxus_elements, *};
+use freya::prelude::*;
 
 fn main() {
     launch(app);
@@ -12,7 +11,7 @@ fn main() {
 
 #[allow(non_snake_case)]
 fn Child(cx: Scope) -> Element {
-    let (focused, focus) = use_focus(&cx);
+    let (focused, focus) = use_focus(cx);
     render!(
         Button {
             onclick: move |_| {

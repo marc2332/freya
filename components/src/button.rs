@@ -1,8 +1,7 @@
-use dioxus::{events::MouseEvent, prelude::*};
-use fermi::*;
+use dioxus::prelude::*;
 use freya_elements as dioxus_elements;
-
-use crate::THEME;
+use freya_elements::MouseEvent;
+use freya_hooks::use_get_theme;
 
 /// Properties for the Button component.
 #[derive(Props)]
@@ -15,13 +14,13 @@ pub struct ButtonProps<'a> {
 /// A simple Button component.
 #[allow(non_snake_case)]
 pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
-    let theme = use_atom_ref(&cx, THEME);
-    let button_theme = &theme.read().button;
+    let theme = use_get_theme(cx);
+    let button_theme = &theme.button;
 
-    let background = use_state(&cx, || <&str>::clone(&button_theme.background));
+    let background = use_state(cx, || <&str>::clone(&button_theme.background));
     let set_background = background.setter();
 
-    use_effect(&cx, &button_theme.clone(), move |button_theme| async move {
+    use_effect(cx, &button_theme.clone(), move |button_theme| async move {
         set_background(button_theme.background);
     });
 
@@ -38,10 +37,10 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
                     }
                 },
                 onmouseover: move |_| {
-                    background.set(theme.read().button.hover_background);
+                    background.set(theme.button.hover_background);
                 },
                 onmouseleave: move |_| {
-                    background.set(theme.read().button.background);
+                    background.set(theme.button.background);
                 },
                 width: "auto",
                 height: "auto",

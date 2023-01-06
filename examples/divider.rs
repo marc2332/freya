@@ -3,15 +3,14 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus::prelude::*;
-use freya::{dioxus_elements, *};
+use freya::prelude::*;
 
 fn main() {
     launch(app);
 }
 
 fn app(cx: Scope) -> Element {
-    let sizes = use_state(&cx, || (50, 50, 50, 50));
+    let sizes = use_state(cx, || (50, 50, 50, 50));
 
     render!(
         rect {

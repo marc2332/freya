@@ -3,15 +3,14 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus::prelude::*;
-use freya::{dioxus_elements, *};
+use freya::prelude::*;
 
 fn main() {
     launch(app);
 }
 
 fn app(cx: Scope) -> Element {
-    let mut count = use_state(&cx, || 0);
+    let mut count = use_state(cx, || 0);
 
     render!(
         container {

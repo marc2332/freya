@@ -3,8 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus::prelude::*;
-use freya::{dioxus_elements, *};
+use freya::prelude::*;
 use std::time::Duration;
 use tokio::time::sleep;
 
@@ -13,11 +12,11 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    let progress_1 = use_state(&cx, || 5);
-    let progress_2 = use_state(&cx, || 10);
-    let progress_3 = use_state(&cx, || 15);
+    let progress_1 = use_state(cx, || 5);
+    let progress_2 = use_state(cx, || 10);
+    let progress_3 = use_state(cx, || 15);
 
-    use_effect(&cx, progress_1, |progress| async move {
+    use_effect(cx, progress_1, |progress| async move {
         sleep(Duration::from_millis(15)).await;
         progress.with_mut(|padding| {
             if *padding < 100 {
@@ -28,7 +27,7 @@ fn app(cx: Scope) -> Element {
         });
     });
 
-    use_effect(&cx, progress_2, |progress| async move {
+    use_effect(cx, progress_2, |progress| async move {
         sleep(Duration::from_millis(5)).await;
         progress.with_mut(|padding| {
             if *padding < 100 {
@@ -39,7 +38,7 @@ fn app(cx: Scope) -> Element {
         });
     });
 
-    use_effect(&cx, progress_3, |progress| async move {
+    use_effect(cx, progress_3, |progress| async move {
         sleep(Duration::from_millis(30)).await;
         progress.with_mut(|padding| {
             if *padding < 100 {

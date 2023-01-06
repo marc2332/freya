@@ -1,11 +1,17 @@
 # Freya :crab:
 
+<img align="right" src="logo.svg" alt="Freya logo" width="150"/>
+
 [![Discord Server](https://img.shields.io/discord/1015005816094478347.svg?logo=discord&style=flat-square)](https://discord.gg/sYejxCdewG)
 [![Github Sponsors](https://img.shields.io/github/sponsors/marc2332?style=social)](https://github.com/sponsors/marc2332)
+[![codecov](https://codecov.io/github/marc2332/freya/branch/main/graph/badge.svg?token=APSGEC84B8)](https://codecov.io/github/marc2332/freya)
 
-A GUI library for Rust powered by [Skia](https://skia.org/) and [Dioxus](https://dioxuslabs.com). 
+**Freya** is native GUI library for Rust powered 🧬 [Dioxus](https://dioxuslabs.com) and 🎨 [Skia](https://skia.org/). 
 
 ⚠️ It's currently work in progress and not usable for production, but you can already play with it! You can join the [Discord](https://discord.gg/sYejxCdewG) server if you have any question or issue. 
+
+<br/>
+<br/>
 
 <table>
 <tr>
@@ -13,7 +19,7 @@ A GUI library for Rust powered by [Skia](https://skia.org/) and [Dioxus](https:/
 
 ```rust
 fn app(cx: Scope) -> Element {
-    let mut count = use_state(&cx, || 0);
+    let mut count = use_state(cx, || 0);
 
     render!(
         container {
@@ -80,6 +86,7 @@ freya = { git = "https://github.com/marc2332/freya" }
 - Animation hook utility
 - SVG Support
 - Devtools / Wireframe inspector
+- Headless testing
 
 ### Goals 😁
 - Easy to use
@@ -99,8 +106,6 @@ Besides all the [tracking](https://github.com/marc2332/freya/issues?q=is%3Aopen+
 - [ ] Add `flex` support.
 - [ ] Documentation
 - [ ] Improve Auto calculation for width and height
-- [ ] Investigate if `image` diffing can be speeded up (reference: https://github.com/DioxusLabs/dioxus/pull/543#issuecomment-1238393539)
-- [ ] Better touchpad support
-- [ ] Render shadows one layer below it's element to avoid overlapping with it's siblings
+- [ ] Investigate if `image` diffing can be speeded up ([reference](https://github.com/DioxusLabs/dioxus/pull/543#issuecomment-1238393539))
 
 [MIT License](./LICENSE.md)

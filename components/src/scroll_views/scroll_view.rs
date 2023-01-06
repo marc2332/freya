@@ -1,15 +1,14 @@
-use dioxus::{
-    core::UiEvent,
-    events::{MouseData, WheelData},
-    prelude::*,
-};
-use fermi::use_atom_ref;
+use dioxus_core::{Element, Scope};
+use dioxus_core_macro::{render, Props};
+use dioxus_hooks::use_state;
 use freya_elements as dioxus_elements;
-use freya_hooks::use_node;
+use freya_elements::{MouseEvent, WheelEvent};
+use freya_hooks::{use_get_theme, use_node};
 
 use crate::{
-    get_container_size, get_scroll_position_from_cursor, get_scroll_position_from_wheel,
-    get_scrollbar_pos_and_size, is_scrollbar_visible, Axis, SCROLLBAR_SIZE, THEME,
+    get_container_size, get_corrected_scroll_position, get_scroll_position_from_cursor,
+    get_scroll_position_from_wheel, get_scrollbar_pos_and_size, is_scrollbar_visible, Axis,
+    SCROLLBAR_SIZE,
 };
 
 /// Properties for the ScrollView component.
@@ -31,13 +30,13 @@ pub struct ScrollViewProps<'a> {
 /// A Scrollable container.
 #[allow(non_snake_case)]
 pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
-    let theme = use_atom_ref(&cx, THEME);
-    let clicking_scrollbar = use_state::<Option<(Axis, f64)>>(&cx, || None);
-    let scrolled_y = use_state(&cx, || 0);
-    let scrolled_x = use_state(&cx, || 0);
-    let (node_ref, size) = use_node(&cx);
+    let theme = use_get_theme(cx);
+    let clicking_scrollbar = use_state::<Option<(Axis, f64)>>(cx, || None);
+    let scrolled_y = use_state(cx, || 0);
+    let scrolled_x = use_state(cx, || 0);
+    let (node_ref, size) = use_node(cx);
 
-    let scrollbar_theme = &theme.read().scrollbar;
+    let scrollbar_theme = &theme.scrollbar;
 
     let padding = cx.props.padding.unwrap_or("0");
     let user_container_width = cx.props.width.unwrap_or("100%");
@@ -53,14 +52,19 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     let container_width = get_container_size(vertical_scrollbar_is_visible);
     let container_height = get_container_size(horizontal_scrollbar_is_visible);
 
+    let corrected_scrolled_y =
+        get_corrected_scroll_position(size.inner_height, size.height, *scrolled_y.get() as f32);
+    let corrected_scrolled_x =
+        get_corrected_scroll_position(size.inner_width, size.width, *scrolled_x.get() as f32);
+
     let (scrollbar_y, scrollbar_height) =
-        get_scrollbar_pos_and_size(size.inner_height, size.height, *scrolled_y.get() as f32);
+        get_scrollbar_pos_and_size(size.inner_height, size.height, corrected_scrolled_y);
     let (scrollbar_x, scrollbar_width) =
-        get_scrollbar_pos_and_size(size.inner_width, size.width, *scrolled_x.get() as f32);
+        get_scrollbar_pos_and_size(size.inner_width, size.width, corrected_scrolled_x);
 
     // Moves the Y axis when the user scrolls in the container
-    let onwheel = move |e: UiEvent<WheelData>| {
-        let wheel_y = e.delta().strip_units().y;
+    let onwheel = move |e: WheelEvent| {
+        let wheel_y = e.get_delta_y();
 
         let scroll_position = get_scroll_position_from_wheel(
             wheel_y as f32,
@@ -73,9 +77,9 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     };
 
     // Drag the scrollbars
-    let onmouseover = |e: UiEvent<MouseData>| {
+    let onmouseover = move |e: MouseEvent| {
         if let Some((Axis::Y, y)) = clicking_scrollbar.get() {
-            let coordinates = e.coordinates().element();
+            let coordinates = e.get_element_coordinates();
             let cursor_y = coordinates.y - y;
 
             let scroll_position =
@@ -83,7 +87,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
 
             scrolled_y.with_mut(|y| *y = scroll_position);
         } else if let Some((Axis::X, x)) = clicking_scrollbar.get() {
-            let coordinates = e.coordinates().element();
+            let coordinates = e.get_element_coordinates();
             let cursor_x = coordinates.x - x;
 
             let scroll_position =
@@ -94,19 +98,19 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     };
 
     // Mark the Y axis scrollbar as the one being dragged
-    let onmousedown_y = |e: UiEvent<MouseData>| {
-        let coordinates = e.coordinates().element();
+    let onmousedown_y = |e: MouseEvent| {
+        let coordinates = e.get_element_coordinates();
         clicking_scrollbar.set(Some((Axis::Y, coordinates.y)));
     };
 
     // Mark the X axis scrollbar as the one being dragged
-    let onmousedown_x = |e: UiEvent<MouseData>| {
-        let coordinates = e.coordinates().element();
+    let onmousedown_x = |e: MouseEvent| {
+        let coordinates = e.get_element_coordinates();
         clicking_scrollbar.set(Some((Axis::X, coordinates.x)));
     };
 
     // Unmark any scrollbar
-    let onclick = |_: UiEvent<MouseData>| {
+    let onclick = |_: MouseEvent| {
         clicking_scrollbar.set(None);
     };
 
@@ -122,7 +126,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     };
 
     render!(
-        rect {
+        container {
             direction: "horizontal",
             width: "{user_container_width}",
             height: "{user_container_height}",
@@ -137,8 +141,8 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
                     height: "100%",
                     width: "100%",
                     direction: "{user_direction}",
-                    scroll_y: "{scrolled_y}",
-                    scroll_x: "{scrolled_x}",
+                    scroll_y: "{corrected_scrolled_y}",
+                    scroll_x: "{corrected_scrolled_x}",
                     reference: node_ref,
                     onwheel: onwheel,
                     &cx.props.children

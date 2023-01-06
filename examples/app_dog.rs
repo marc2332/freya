@@ -3,8 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus::prelude::*;
-use freya::{dioxus_elements, *};
+use freya::prelude::*;
 use reqwest::Url;
 use serde::Deserialize;
 
@@ -32,7 +31,7 @@ async fn fetch_image(url: Url) -> Option<Vec<u8>> {
 }
 
 fn app<'a>(cx: Scope<'a>) -> Element<'a> {
-    let bytes = use_state(&cx, || None);
+    let bytes = use_state(cx, || None);
     let bytes_setter = bytes.setter();
 
     let fetch = move || {
@@ -56,11 +55,12 @@ fn app<'a>(cx: Scope<'a>) -> Element<'a> {
                 height: "calc(100% - 58)",
                 radius: "25",
                 bytes.as_ref().map(|bytes| {
+                    let image_data = bytes_to_data(cx, bytes);
                     render!{
                         image {
                             width: "100%",
                             height: "100%",
-                            image_data: &bytes
+                            image_data: image_data
                         }
                     }
                 })

@@ -1,12 +1,7 @@
-use dioxus::{
-    core::UiEvent,
-    events::{MouseData, WheelData},
-    prelude::*,
-};
-use fermi::use_atom_ref;
+use dioxus::prelude::*;
 use freya_elements as dioxus_elements;
-
-use crate::THEME;
+use freya_elements::{MouseEvent, WheelEvent};
+use freya_hooks::use_get_theme;
 
 /// Properties for the Slider component.
 #[derive(Props)]
@@ -47,7 +42,7 @@ fn ensure_correct_slider_range(value: f64) -> f64 {
 /// }
 ///
 /// fn app(cx: Scope) -> Element {
-///     let percentage = use_state(&cx, || 20.0);
+///     let percentage = use_state(cx, || 20.0);
 ///     let font_size = percentage.get() * MAX_FONT_SIZE + 20.0;
 ///
 ///     render!(
@@ -84,74 +79,53 @@ fn ensure_correct_slider_range(value: f64) -> f64 {
 /// ```
 #[allow(non_snake_case)]
 pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
-    let theme = use_atom_ref(&cx, THEME);
-    let theme = &theme.read().slider;
-    let hovering = use_state(&cx, || false);
-    let clicking = use_state(&cx, || false);
+    let theme = use_get_theme(cx);
+    let theme = &theme.slider;
+    let hovering = use_state(cx, || false);
+    let clicking = use_state(cx, || false);
     let value = ensure_correct_slider_range(cx.props.value);
     let width = cx.props.width + 14.0;
 
-    let progress = (value / 100.0) as f64 * cx.props.width + 0.5;
+    let progress = (value / 100.0) * cx.props.width + 0.5;
 
-    let onmouseleave = |_: UiEvent<MouseData>| {
+    let onmouseleave = |_: MouseEvent| {
         if !(*clicking.get()) {
             hovering.set(false);
         }
     };
 
-    let onmouseover = move |e: UiEvent<MouseData>| {
+    let onmouseover = move |e: MouseEvent| {
         hovering.set(true);
         if *clicking.get() {
-            let coordinates = e.coordinates().element();
-            let mut x = coordinates.x - 7.5;
-            if x < 0.0 {
-                x = 0.0;
-            }
-            if x > width {
-                x = width;
-            }
-            let percentage = x / cx.props.width * 100.0;
+            let coordinates = e.get_element_coordinates();
 
-            let percentage = if percentage < 0.0 {
-                0.0
-            } else if percentage > 100.0 {
-                100.0
-            } else {
-                percentage
-            };
+            let mut x = coordinates.x - 7.5;
+            x = x.clamp(0.0, width);
+
+            let mut percentage = x / cx.props.width * 100.0;
+            percentage = percentage.clamp(0.0, 100.0);
 
             cx.props.onmoved.call(percentage);
         }
     };
 
-    let onmousedown = |_: UiEvent<MouseData>| {
+    let onmousedown = |_: MouseEvent| {
         clicking.set(true);
     };
 
-    let onclick = |_: UiEvent<MouseData>| {
+    let onclick = |_: MouseEvent| {
         clicking.set(false);
     };
 
-    let onwheel = move |e: UiEvent<WheelData>| {
-        let wheel_y = e.delta().strip_units().y;
-        let progress_x = (value / 100.0) as f64 * cx.props.width;
+    let onwheel = move |e: WheelEvent| {
+        let wheel_y = e.get_delta_y();
+        let progress_x = (value / 100.0) * cx.props.width;
 
         let mut x = progress_x + (wheel_y * 7.5);
-        if x < 0.0 {
-            x = 0.0;
-        }
-        if x > width {
-            x = width;
-        }
-        let percentage = x / cx.props.width * 100.0;
+        x = x.clamp(0.0, width);
 
-        let percentage = if percentage < 0.0 {
-            0.0
-        } else if percentage > 100.0 {
-            100.0
-        } else {
-            percentage
-        };
+        let mut percentage = x / cx.props.width * 100.0;
+        percentage = percentage.clamp(0.0, 100.0);
 
         cx.props.onmoved.call(percentage);
     };

@@ -12,14 +12,15 @@ keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
 [dependencies]
-dioxus = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
-dioxus-html = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
-dioxus-native-core = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
-dioxus-native-core-macro = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
-dioxus-core = { git = "https://github.com/marc2332/dioxus", branch = "fix/remove-node-listeners"  }
+dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
+dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
 anymap = "0.12.1"
 fxhash = "0.2.1"
-skia-safe = "0.55.0"
+skia-safe = { version = "0.56.1", features = ["gl", "textlayout", "svg"] }
 freya-elements = { path = "../elements", version = "0.1.0"}
-freya-layout-common = { path = "../layout-common", version = "0.1.0" }
-tokio = { version = "1.17.0" }
+freya-common = { path = "../common", version = "0.1.0" }
+tokio = { version = "1.23.0" }

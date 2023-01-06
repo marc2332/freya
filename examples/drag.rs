@@ -3,37 +3,36 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus::{core::UiEvent, events::MouseData, prelude::*};
-use freya::{dioxus_elements, *};
+use freya::prelude::*;
 
 fn main() {
     launch(app);
 }
 
 fn app(cx: Scope) -> Element {
-    let hovering = use_state(&cx, || false);
-    let positions = use_state(&cx, || (0.0f64, 0.0f64));
-    let clicking = use_state(&cx, || false);
+    let hovering = use_state(cx, || false);
+    let positions = use_state(cx, || (0.0f64, 0.0f64));
+    let clicking = use_state(cx, || false);
 
-    let onmouseleave = |_: UiEvent<MouseData>| {
+    let onmouseleave = |_: MouseEvent| {
         if *clicking.get() == false {
             hovering.set(false);
         }
     };
 
-    let onmouseover = |e: UiEvent<MouseData>| {
+    let onmouseover = |e: MouseEvent| {
         hovering.set(true);
         if *clicking.get() {
-            let coordinates = e.coordinates().screen();
+            let coordinates = e.get_screen_coordinates();
             positions.set((coordinates.x - 50.0, coordinates.y - 50.0));
         }
     };
 
-    let onmousedown = |_: UiEvent<MouseData>| {
+    let onmousedown = |_: MouseEvent| {
         clicking.set(true);
     };
 
-    let onclick = |_: UiEvent<MouseData>| {
+    let onclick = |_: MouseEvent| {
         clicking.set(false);
     };
 

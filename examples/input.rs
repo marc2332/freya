@@ -3,11 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus::prelude::*;
-use freya::{
-    dioxus_elements::{self},
-    *,
-};
+use freya::prelude::*;
 
 fn main() {
     launch(app);
@@ -16,7 +12,7 @@ fn main() {
 fn app(cx: Scope) -> Element {
     use_init_focus(&cx);
 
-    let values = use_state(&cx, || (String::new(), String::new()));
+    let values = use_state(cx, || (String::new(), String::new()));
 
     render!(
         container {

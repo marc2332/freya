@@ -1,9 +1,7 @@
-use dioxus::{core::UiEvent, events::MouseData, prelude::*};
-use fermi::use_atom_ref;
+use dioxus::prelude::*;
 use freya_elements as dioxus_elements;
-use freya_hooks::{use_animation, AnimationMode};
-
-use crate::THEME;
+use freya_elements::MouseEvent;
+use freya_hooks::{use_animation, use_get_theme, AnimationMode};
 
 /// Properties for the Switch component.
 #[derive(Props)]
@@ -16,34 +14,33 @@ pub struct SwitchProps<'a> {
 #[allow(non_snake_case)]
 pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
     let (start_enabled, restart_enabled, progress_enabled) =
-        use_animation(&cx, || AnimationMode::new_sine_in_out(0.0..=25.0, 200));
+        use_animation(cx, || AnimationMode::new_sine_in_out(0.0..=25.0, 200));
     let (start_disabled, restart_disabled, progress_disabled) =
-        use_animation(&cx, || AnimationMode::new_sine_in_out(25.0..=0.0, 200));
-    let theme = use_atom_ref(&cx, THEME);
-    let theme = theme.read();
-    let hovering = use_state(&cx, || false);
-    let clicking = use_state(&cx, || false);
+        use_animation(cx, || AnimationMode::new_sine_in_out(25.0..=0.0, 200));
+    let theme = use_get_theme(cx);
+    let hovering = use_state(cx, || false);
+    let clicking = use_state(cx, || false);
 
-    let onmouseleave = |_: UiEvent<MouseData>| {
+    let onmouseleave = |_: MouseEvent| {
         if !(*clicking.get()) {
             hovering.set(false);
         }
     };
 
-    let onmouseover = |_: UiEvent<MouseData>| {
+    let onmouseover = |_: MouseEvent| {
         hovering.set(true);
     };
 
-    let onmousedown = |_: UiEvent<MouseData>| {
+    let onmousedown = |_: MouseEvent| {
         clicking.set(true);
     };
 
-    let onclick = |_: UiEvent<MouseData>| {
+    let onclick = |_: MouseEvent| {
         clicking.set(false);
         cx.props.ontoggled.call(());
     };
 
-    use_effect(&cx, &cx.props.enabled, move |enabled| async move {
+    use_effect(cx, &cx.props.enabled, move |enabled| async move {
         if enabled {
             start_enabled();
             restart_disabled();

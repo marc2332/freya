@@ -1,16 +1,35 @@
-use std::{collections::HashMap, sync::Arc};
+use std::collections::HashMap;
 
-use dioxus_core::{ElementId, EventPriority, UserEvent};
-use dioxus_html::{
-    geometry::{euclid::Point2D, Coordinates},
-    input_data::{keyboard_types::Modifiers, MouseButton},
-    on::MouseData,
-};
-use enumset::enum_set;
+use dioxus_core::ElementId;
+use euclid::Point2D;
+use freya_elements::events_data::MouseData;
 use freya_layers::RenderData;
+use glutin::{event::MouseButton, keyboard::Key};
 use rustc_hash::FxHashMap;
 
-use crate::FreyaEvent;
+use crate::{DomEvent, DomEventData};
+
+/// Events emitted in Freya.
+#[derive(Clone, Debug)]
+pub enum FreyaEvent {
+    /// A Mouse Event.
+    Mouse {
+        name: &'static str,
+        cursor: (f64, f64),
+        button: Option<MouseButton>,
+    },
+    /// A Wheel event.
+    Wheel {
+        name: &'static str,
+        scroll: (f64, f64),
+        cursor: (f64, f64),
+    },
+    /// A Keyboard event.
+    Keyboard {
+        name: &'static str,
+        code: Key<'static>,
+    },
+}
 
 #[derive(Default)]
 struct ElementState {
@@ -21,21 +40,21 @@ struct ElementState {
 /// The EventsProcessor calculates by comparing previous and current events
 /// if new events must be produced.
 ///
-/// For example, mouseleave indicates the the user has left the hovering area of
+/// For example, mouseleave indicates the user has left the hovering area of
 /// a particular element, which previously had to enter that area.
 /// At the moment, whether if it has entered or not is defined by the mouseover event.
 
 #[derive(Default)]
-pub(crate) struct EventsProcessor {
+pub struct EventsProcessor {
     states: HashMap<ElementId, ElementState>,
 }
 
 impl EventsProcessor {
     pub fn process_events_batch(
         &mut self,
-        events_to_emit: Vec<UserEvent>,
+        events_to_emit: Vec<DomEvent>,
         events_filtered: FxHashMap<&str, Vec<(RenderData, FreyaEvent)>>,
-    ) -> Vec<UserEvent> {
+    ) -> Vec<DomEvent> {
         let mut new_events = Vec::new();
 
         for (element, state) in self.states.iter_mut() {
@@ -45,7 +64,7 @@ impl EventsProcessor {
 
                 // Check any mouse event at all
                 for event in &events_to_emit {
-                    if event.name == "mouseover" && &event.element.unwrap() == element {
+                    if event.name == "mouseover" && &event.element_id == element {
                         no_recent_mouseover = false;
                         break;
                     }
@@ -62,22 +81,13 @@ impl EventsProcessor {
 
                 if no_recent_mouseover && state.mouseover && cursor_was_moved {
                     // And also at least one mouseover event ocurred
-                    new_events.push(UserEvent {
-                        scope_id: None,
-                        priority: EventPriority::Medium,
-                        element: Some(*element),
-                        name: "mouseleave",
-                        bubbles: false,
-                        data: Arc::new(MouseData::new(
-                            Coordinates::new(
-                                Point2D::default(),
-                                Point2D::default(),
-                                Point2D::default(),
-                                Point2D::default(),
-                            ),
-                            Some(MouseButton::Primary),
-                            enum_set! {MouseButton::Primary},
-                            Modifiers::empty(),
+                    new_events.push(DomEvent {
+                        element_id: *element,
+                        name: "mouseleave".to_string(),
+                        data: DomEventData::Mouse(MouseData::new(
+                            Point2D::default(),
+                            Point2D::default(),
+                            Some(MouseButton::Left),
                         )),
                     });
 
@@ -89,12 +99,12 @@ impl EventsProcessor {
 
         for event in &events_to_emit {
             if event.name == "mouseover" {
-                let id = &event.element.unwrap();
+                let id = &event.element_id;
                 if !self.states.contains_key(id) {
                     self.states.insert(*id, ElementState::default());
                 }
 
-                let node_state = self.states.get_mut(&event.element.unwrap()).unwrap();
+                let node_state = self.states.get_mut(&event.element_id).unwrap();
                 node_state.mouseover = true;
             }
         }
