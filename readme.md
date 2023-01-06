@@ -50,7 +50,7 @@ fn app(cx: Scope) -> Element {
 
 ### Want to try it? 🤔
 
-**Note for Windows**: You need Visual Studio 2022.
+**⚠️ Note for Windows**: You need the **latest** (this is very important) Visual Studio 2022.
 
 Windows & MacOS:
 
@@ -69,6 +69,7 @@ Add Freya as a dependency in your `Cargo.toml`:
 
 ```toml
 freya = { git = "https://github.com/marc2332/freya" }
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
 ```
 
 ### Features ✨
