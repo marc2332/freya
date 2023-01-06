@@ -637,7 +637,7 @@ dependencies = [
 [[package]]
 name = "dioxus"
 version = "0.3.1"
-source = "git+https://github.com/DioxusLabs/dioxus#a7f0df150742716d7b43a340d70a5067457cbec8"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=a616a8fa9d5fe46a253e1b4bfef24abd46a623fa#a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"
 dependencies = [
  "dioxus-core",
  "dioxus-core-macro",
@@ -649,7 +649,7 @@ dependencies = [
 [[package]]
 name = "dioxus-core"
 version = "0.3.0"
-source = "git+https://github.com/DioxusLabs/dioxus#a7f0df150742716d7b43a340d70a5067457cbec8"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=a616a8fa9d5fe46a253e1b4bfef24abd46a623fa#a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"
 dependencies = [
  "bumpalo",
  "futures-channel",
@@ -666,7 +666,7 @@ dependencies = [
 [[package]]
 name = "dioxus-core-macro"
 version = "0.3.0"
-source = "git+https://github.com/DioxusLabs/dioxus#a7f0df150742716d7b43a340d70a5067457cbec8"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=a616a8fa9d5fe46a253e1b4bfef24abd46a623fa#a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"
 dependencies = [
  "dioxus-rsx",
  "proc-macro2",
@@ -677,7 +677,7 @@ dependencies = [
 [[package]]
 name = "dioxus-hooks"
 version = "0.3.0"
-source = "git+https://github.com/DioxusLabs/dioxus#a7f0df150742716d7b43a340d70a5067457cbec8"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=a616a8fa9d5fe46a253e1b4bfef24abd46a623fa#a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"
 dependencies = [
  "dioxus-core",
  "futures-channel",
@@ -687,7 +687,7 @@ dependencies = [
 [[package]]
 name = "dioxus-html"
 version = "0.3.0"
-source = "git+https://github.com/DioxusLabs/dioxus#a7f0df150742716d7b43a340d70a5067457cbec8"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=a616a8fa9d5fe46a253e1b4bfef24abd46a623fa#a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"
 dependencies = [
  "async-trait",
  "dioxus-core",
@@ -702,7 +702,7 @@ dependencies = [
 [[package]]
 name = "dioxus-native-core"
 version = "0.2.0"
-source = "git+https://github.com/DioxusLabs/dioxus#a7f0df150742716d7b43a340d70a5067457cbec8"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=a616a8fa9d5fe46a253e1b4bfef24abd46a623fa#a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"
 dependencies = [
  "anymap 1.0.0-beta.2",
  "crossbeam-deque",
@@ -721,7 +721,7 @@ dependencies = [
 [[package]]
 name = "dioxus-native-core-macro"
 version = "0.2.0"
-source = "git+https://github.com/DioxusLabs/dioxus#a7f0df150742716d7b43a340d70a5067457cbec8"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=a616a8fa9d5fe46a253e1b4bfef24abd46a623fa#a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"
 dependencies = [
  "dioxus",
  "dioxus-native-core",
@@ -732,7 +732,7 @@ dependencies = [
 [[package]]
 name = "dioxus-router"
 version = "0.3.0"
-source = "git+https://github.com/DioxusLabs/dioxus#a7f0df150742716d7b43a340d70a5067457cbec8"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=a616a8fa9d5fe46a253e1b4bfef24abd46a623fa#a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"
 dependencies = [
  "dioxus",
  "futures-channel",
@@ -748,7 +748,7 @@ dependencies = [
 [[package]]
 name = "dioxus-rsx"
 version = "0.0.2"
-source = "git+https://github.com/DioxusLabs/dioxus#a7f0df150742716d7b43a340d70a5067457cbec8"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=a616a8fa9d5fe46a253e1b4bfef24abd46a623fa#a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"
 dependencies = [
  "dioxus-core",
  "internment",
@@ -1417,9 +1417,9 @@ dependencies = [
 
 [[package]]
 name = "glob"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b919933a397b79c37e33b77bb2aa3dc8eb6e165ad809e58ff75bc7db2e34574"
+checksum = "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
 
 [[package]]
 name = "glutin_egl_sys"
@@ -3268,9 +3268,9 @@ checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
 
 [[package]]
 name = "tokio"
-version = "1.23.1"
+version = "1.24.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38a54aca0c15d014013256222ba0ebed095673f89345dd79119d912eb561b7a8"
+checksum = "1d9f76183f91ecfb55e1d7d5602bd1d979e38a3a522fe900241cf195624d67ae"
 dependencies = [
  "autocfg",
  "bytes",
