@@ -10,14 +10,15 @@ homepage = "https://github.com/marc2332/freya"
 repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
+
 [features]
-x11 = ["skia-safe/x11"]
+linux = ["skia-safe/x11", "skia-safe/wayland"]
 wireframe = []
 
 [dependencies]
 gl = "*"
 glutin_tao = { version = "0.30.1", features = ["serde"]}
-skia-safe = { version = "0.56.1", features = ["gl", "textlayout", "svg"] }
+skia-safe = { version = "0.57.0", features = ["gl", "textlayout", "svg"] }
 dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
 dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
 dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}

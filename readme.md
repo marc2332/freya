@@ -55,7 +55,7 @@ fn app(cx: Scope) -> Element {
 
 ### Want to try it? 🤔
 
-**Note for Windows**: You need Visual Studio 2022.
+**⚠️ Note for Windows**: You need the **latest** (this is very important) Visual Studio 2022.
 
 Windows & MacOS:
 
@@ -66,7 +66,7 @@ cargo run --example counter
 Linux:
 
 ```shell
-cargo run --example counter --features x11
+cargo run --example counter --features linux
 ```
 
 ### Usage 📜
@@ -74,6 +74,7 @@ Add Freya as a dependency in your `Cargo.toml`:
 
 ```toml
 freya = { git = "https://github.com/marc2332/freya" }
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
 ```
 
 ### Features ✨
@@ -81,7 +82,7 @@ freya = { git = "https://github.com/marc2332/freya" }
 - Containers
 - Scroll views (nested too)
 - Events: click, wheel, mouse /down/leave/over for now
-- Support for Windows, Linux (needs `x11` feature) and MacOS support
+- Support for Windows, Linux (needs `linux` feature) and MacOS support
 - Optional Components library (buttons, switch, etc)
 - Animation hook utility
 - SVG Support
