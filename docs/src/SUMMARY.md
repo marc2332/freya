@@ -1,8 +1,13 @@
 # Summary
 
+# User guide
+
+- [Introduction](./introduction.md)
 - [Getting Started](./getting_started.md)
-- [References](./references.md)
-    - [Elements](./references/elements.md)
+
+# References
+
+- [Elements](./references/elements.md)
         - [container](./references/elements/container.md)
         - [rect](./references/elements/rect.md)
         - [label](./references/elements/label.md)

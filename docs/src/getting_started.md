@@ -1,10 +1,35 @@
 # Getting Started
 
-**Freya** is a native GUI toolkit written in [Rust](https://www.rust-lang.org/), uses [Skia](https://skia.org/) as renderer and [Dioxus](https://dioxuslabs.com/) as components Library.
+Let's start by creating a simple project:
+
+### Creating the project
+
+```sh
+mkdir freya-app
+cd freya-app
+cargo init
+```
+
+### Cargo.toml
+
+```toml
+[package]
+name = "freya-app"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+freya = { git="https://github.com/marc2332/freya" }
+dioxus = { git="https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
+```
+
+### src/main.rs
 
 ```rust no_run
 fn app(cx: Scope) -> Element {
-    let mut count = use_state(&cx, || 0);
+    let mut count = use_state(cx, || 0);
 
     render!(
         container {
@@ -20,12 +45,7 @@ fn app(cx: Scope) -> Element {
 }
 ```
 
-### About
-
-**Freya** provides rendering for a Dioxus app using Skia, but also has some utility [hooks](/references/hooks.html), [components](/references/components.html) and theming support.
-
-> **Dioxus** is a cross-platform UI components library for Rust, conceptually similar to React.
-
-> **Skia** is a cross-platform graphics library, it powers some other GUI libraries, such as Flutter and even big projects, like Chromium.
-
-Check out the examples in the Freya [repository](https://github.com/marc2332/freya/tree/main/examples) to learn more.
+### Running
+```sh
+cargo run
+```

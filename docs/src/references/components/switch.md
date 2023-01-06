@@ -6,7 +6,7 @@ A controlled **Switch** to indicate a enabled/disabled state.
 
 ```rust
 fn app(cx: Scope) -> Element {
-    let enabled = use_state(&cx, || false);
+    let enabled = use_state(cx, || false);
 
     let is_enabled = if *enabled.get() { "Yes" } else { "No" };
 
