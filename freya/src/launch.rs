@@ -162,18 +162,23 @@ pub fn launch_cfg<T: 'static + Clone + Send>(win_config: (Component<()>, WindowC
     let rdom = Arc::new(Mutex::new(
         RealDom::<NodeState, CustomAttributeValues>::new(),
     ));
-    let vdom = {
+    let (vdom, mutations_sender) = {
         #[cfg(feature = "devtools")]
         {
             use crate::devtools::with_devtools;
-            with_devtools(rdom.clone(), win_config.0)
+            use tokio::sync::mpsc::unbounded_channel;
+
+            let (mutations_sender, mutations_receiver) = unbounded_channel::<()>();
+            let vdom = with_devtools(rdom.clone(), win_config.0, mutations_receiver);
+            (vdom, Some(mutations_sender))
         }
 
         #[cfg(not(feature = "devtools"))]
         {
             use dioxus_core::VirtualDom;
-            VirtualDom::new(win_config.0)
+            let vdom = VirtualDom::new(win_config.0);
+            (vdom, None)
         }
     };
-    run(vdom, rdom, win_config.1);
+    run(vdom, rdom, win_config.1, mutations_sender);
 }

@@ -11,16 +11,19 @@ use freya_node_state::{AttributeType, CustomAttributeValues, NodeState, ShadowSe
 use skia_safe::Color;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
+use tokio::sync::mpsc::UnboundedReceiver;
 use tokio::time::sleep;
 
 /// Launch a component with the devtools panel enabled.
 pub fn with_devtools(
     rdom: Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>,
     root: fn(cx: Scope) -> Element,
+    mutations_receiver: UnboundedReceiver<()>,
 ) -> VirtualDom {
     fn app(cx: Scope<DomProps>) -> Element {
         #[allow(non_snake_case)]
         let Root = cx.props.root;
+        let mutations_receiver = cx.props.mutations_receiver.clone();
 
         render!(
             rect {
@@ -38,7 +41,8 @@ pub fn with_devtools(
                     width: "350",
                     ThemeProvider {
                         DevTools {
-                            rdom: cx.props.rdom.clone()
+                            rdom: cx.props.rdom.clone(),
+                            mutations_receiver: mutations_receiver
                         }
                     }
                 }
@@ -49,9 +53,19 @@ pub fn with_devtools(
     struct DomProps {
         root: fn(cx: Scope) -> Element,
         rdom: Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>,
+        mutations_receiver: Arc<Mutex<UnboundedReceiver<()>>>,
     }
 
-    VirtualDom::new_with_props(app, DomProps { root, rdom })
+    let mutations_receiver = Arc::new(Mutex::new(mutations_receiver));
+
+    VirtualDom::new_with_props(
+        app,
+        DomProps {
+            root,
+            rdom,
+            mutations_receiver,
+        },
+    )
 }
 
 #[derive(Clone)]
@@ -67,6 +81,7 @@ struct TreeNode {
 #[derive(Props)]
 pub struct DevToolsProps {
     rdom: Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>,
+    mutations_receiver: Arc<Mutex<UnboundedReceiver<()>>>,
 }
 
 impl PartialEq for DevToolsProps {
@@ -81,54 +96,54 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
 
     use_effect(cx, (), move |_| {
         let rdom = cx.props.rdom.clone();
+        let mutations_receiver = cx.props.mutations_receiver.clone();
         let children = children.clone();
         async move {
+            let mut mutations_receiver = mutations_receiver.lock().unwrap();
             loop {
-                // TODO I hate the idea of manually checking every 100ms, it would be better to create a tokio channel to
-                // to notify a listener in here if there has been any mutation at all.
-                sleep(Duration::from_millis(100)).await;
+                if mutations_receiver.recv().await.is_some() {
+                    let rdom = rdom.lock().unwrap();
+                    let mut new_children = Vec::new();
 
-                let rdom = rdom.lock().unwrap();
-                let mut new_children = Vec::new();
+                    let mut root_found = false;
+                    let mut devtools_found = false;
 
-                let mut root_found = false;
-                let mut devtools_found = false;
-
-                rdom.traverse_depth_first(|n| {
-                    let height = rdom.tree.height(n.node_data.node_id).unwrap();
-                    if height == 2 {
-                        if !root_found {
-                            root_found = true;
-                        } else {
-                            devtools_found = true;
-                        }
-                    }
-
-                    if !devtools_found {
-                        let mut maybe_text = None;
-                        let tag = match &n.node_data.node_type {
-                            NodeType::Text { text, .. } => {
-                                maybe_text = Some(text.clone());
-                                "text"
+                    rdom.traverse_depth_first(|n| {
+                        let height = rdom.tree.height(n.node_data.node_id).unwrap();
+                        if height == 2 {
+                            if !root_found {
+                                root_found = true;
+                            } else {
+                                devtools_found = true;
                             }
-                            NodeType::Element { tag, .. } => tag,
-                            NodeType::Placeholder => "placeholder",
                         }
-                        .to_string();
 
-                        if let Some(id) = n.node_data.element_id {
-                            new_children.push(TreeNode {
-                                height,
-                                id,
-                                tag,
-                                text: maybe_text,
-                                // TODO Improve this, I don't like this.
-                                state: n.state.clone(),
-                            });
+                        if !devtools_found {
+                            let mut maybe_text = None;
+                            let tag = match &n.node_data.node_type {
+                                NodeType::Text { text, .. } => {
+                                    maybe_text = Some(text.clone());
+                                    "text"
+                                }
+                                NodeType::Element { tag, .. } => tag,
+                                NodeType::Placeholder => "placeholder",
+                            }
+                            .to_string();
+
+                            if let Some(id) = n.node_data.element_id {
+                                new_children.push(TreeNode {
+                                    height,
+                                    id,
+                                    tag,
+                                    text: maybe_text,
+                                    // TODO Improve this, I don't like this.
+                                    state: n.state.clone(),
+                                });
+                            }
                         }
-                    }
-                });
-                children.set(new_children);
+                    });
+                    children.set(new_children);
+                }
             }
         }
     });

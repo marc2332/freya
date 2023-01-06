@@ -18,7 +18,7 @@ use skia_safe::{textlayout::FontCollection, FontMgr};
 use std::sync::{Arc, Mutex};
 use std::task::Waker;
 use tokio::select;
-use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver};
+use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 pub use window::{create_surface, WindowEnv};
 pub use window_config::WindowConfig;
 
@@ -31,6 +31,7 @@ pub fn run<T: 'static + Clone>(
     mut vdom: VirtualDom,
     rdom: Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>,
     window_config: WindowConfig<T>,
+    mutations_sender: Option<UnboundedSender<()>>,
 ) {
     let rt = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
@@ -51,7 +52,11 @@ pub fn run<T: 'static + Clone>(
     }
 
     let muts = vdom.rebuild();
-    let (to_update, _) = rdom.lock().unwrap().apply_mutations(muts);
+    let (to_update, diff) = rdom.lock().unwrap().apply_mutations(muts);
+
+    if !diff.is_empty() {
+        mutations_sender.as_ref().map(|s| s.send(()));
+    }
 
     let mut ctx = SendAnyMap::new();
     ctx.insert(layout_memorizer.clone());
@@ -88,6 +93,7 @@ pub fn run<T: 'static + Clone>(
                     &layout_memorizer,
                     &mut event_emitter_rx,
                     &app_state,
+                    &mutations_sender,
                 );
             }
             Event::WindowEvent { event, .. } => match event {
@@ -220,6 +226,7 @@ fn poll_vdom<T: 'static + Clone>(
     layout_memorizer: &Arc<Mutex<LayoutMemorizer>>,
     event_emitter_rx: &mut UnboundedReceiver<DomEvent>,
     state: &Option<T>,
+    mutations_sender: &Option<UnboundedSender<()>>,
 ) {
     let mut cx = std::task::Context::from_waker(waker);
 
@@ -251,7 +258,11 @@ fn poll_vdom<T: 'static + Clone>(
         }
 
         let mutations = vdom.render_immediate();
-        let (to_update, _diff) = rdom.lock().unwrap().apply_mutations(mutations);
+        let (to_update, diff) = rdom.lock().unwrap().apply_mutations(mutations);
+
+        if !diff.is_empty() {
+            mutations_sender.as_ref().map(|s| s.send(()));
+        }
 
         let mut ctx = SendAnyMap::new();
         ctx.insert(layout_memorizer.clone());
