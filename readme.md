@@ -10,6 +10,8 @@
 
 ⚠️ It's currently work in progress and not usable for production, but you can already play with it! You can join the [Discord](https://discord.gg/sYejxCdewG) server if you have any question or issue. 
 
+---
+
 <table>
 <tr>
 <td style="border:hidden;">
