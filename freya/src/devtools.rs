@@ -10,11 +10,9 @@ use freya_hooks::use_theme;
 use freya_node_state::{AttributeType, CustomAttributeValues, NodeState, ShadowSettings};
 use skia_safe::Color;
 use std::sync::{Arc, Mutex};
-use std::time::Duration;
 use tokio::sync::mpsc::UnboundedReceiver;
-use tokio::time::sleep;
 
-/// Launch a component with the devtools panel enabled.
+/// Launch a Component with the devtools panel enabled.
 pub fn with_devtools(
     rdom: Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>,
     root: fn(cx: Scope) -> Element,

@@ -6,7 +6,7 @@
 use freya::prelude::*;
 
 fn main() {
-    launch_cfg((
+    launch_cfg(
         app,
         WindowConfig::<()>::builder()
             .with_width(100)
@@ -15,7 +15,7 @@ fn main() {
             .with_transparency(true)
             .with_title("Floating window")
             .build(),
-    ));
+    );
 }
 
 fn app(cx: Scope) -> Element {

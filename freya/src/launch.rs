@@ -29,7 +29,7 @@ use freya_renderer::WindowConfig;
 /// }
 /// ```
 pub fn launch(app: Component<()>) {
-    launch_cfg((
+    launch_cfg(
         app,
         WindowConfig::<()> {
             width: 400,
@@ -39,7 +39,7 @@ pub fn launch(app: Component<()>) {
             title: "Freya",
             state: None,
         },
-    ))
+    )
 }
 
 #[cfg(not(doctest))]
@@ -68,7 +68,7 @@ pub fn launch(app: Component<()>) {
 /// }
 /// ```
 pub fn launch_with_title(app: Component<()>, title: &'static str) {
-    launch_cfg((
+    launch_cfg(
         app,
         WindowConfig::<()> {
             width: 400,
@@ -78,7 +78,7 @@ pub fn launch_with_title(app: Component<()>, title: &'static str) {
             title,
             state: None,
         },
-    ))
+    )
 }
 
 #[cfg(not(doctest))]
@@ -105,7 +105,7 @@ pub fn launch_with_title(app: Component<()>, title: &'static str) {
 /// }
 /// ```
 pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height): (u32, u32)) {
-    launch_cfg((
+    launch_cfg(
         app,
         WindowConfig::<()> {
             width,
@@ -115,7 +115,7 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
             title,
             state: None,
         },
-    ))
+    )
 }
 
 #[cfg(not(doctest))]
@@ -130,7 +130,7 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
 /// ```rust
 /// # use dioxus::prelude::*;
 /// # use freya::{dioxus_elements, *};
-/// launch_cfg((
+/// launch_cfg(
 ///     app,
 ///     WindowConfig::<()>::builder()
 ///         .with_width(500)
@@ -139,7 +139,7 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
 ///         .with_transparency(false)
 ///         .with_title("Freya App")
 ///         .build()
-/// ]);
+/// );
 ///
 /// fn app(cx: Scope) -> Element {
 ///    render!(
@@ -153,7 +153,7 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
 ///     )
 /// }
 /// ```
-pub fn launch_cfg<T: 'static + Clone + Send>(win_config: (Component<()>, WindowConfig<T>)) {
+pub fn launch_cfg<T: 'static + Clone + Send>(root: Component, win_config: WindowConfig<T>) {
     use std::sync::{Arc, Mutex};
 
     use dioxus_native_core::real_dom::RealDom;
@@ -169,16 +169,16 @@ pub fn launch_cfg<T: 'static + Clone + Send>(win_config: (Component<()>, WindowC
             use tokio::sync::mpsc::unbounded_channel;
 
             let (mutations_sender, mutations_receiver) = unbounded_channel::<()>();
-            let vdom = with_devtools(rdom.clone(), win_config.0, mutations_receiver);
+            let vdom = with_devtools(rdom.clone(), root, mutations_receiver);
             (vdom, Some(mutations_sender))
         }
 
         #[cfg(not(feature = "devtools"))]
         {
             use dioxus_core::VirtualDom;
-            let vdom = VirtualDom::new(win_config.0);
+            let vdom = VirtualDom::new(root);
             (vdom, None)
         }
     };
-    run(vdom, rdom, win_config.1, mutations_sender);
+    run(vdom, rdom, win_config, mutations_sender);
 }

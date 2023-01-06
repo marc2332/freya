@@ -9,7 +9,7 @@ static FERRIS: &[u8] = include_bytes!("./ferris.svg");
 static RUST_LOGO: &[u8] = include_bytes!("./rust_logo.png");
 
 fn main() {
-    launch_cfg((
+    launch_cfg(
         app,
         WindowConfig::<()>::builder()
             .with_width(550)
@@ -18,7 +18,7 @@ fn main() {
             .with_transparency(false)
             .with_title("Freya showcase!")
             .build(),
-    ));
+    );
 }
 
 #[allow(non_snake_case)]
