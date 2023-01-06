@@ -61,7 +61,7 @@ cargo run --example counter
 Linux:
 
 ```shell
-cargo run --example counter --features x11
+cargo run --example counter --features linux
 ```
 
 ### Usage 📜
@@ -76,7 +76,7 @@ freya = { git = "https://github.com/marc2332/freya" }
 - Containers
 - Scroll views (nested too)
 - Events: click, wheel, mouse /down/leave/over for now
-- Support for Windows, Linux (needs `x11` feature) and MacOS support
+- Support for Windows, Linux (needs `linux` feature) and MacOS support
 - Optional Components library (buttons, switch, etc)
 - Animation hook utility
 - SVG Support

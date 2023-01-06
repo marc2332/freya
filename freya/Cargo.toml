@@ -13,7 +13,7 @@ categories = ["GUI"]
 
 [features]
 devtools = []
-x11 = ["freya-renderer/x11"]
+linux = ["freya-renderer/linux"]
 wireframe = ["freya-renderer/wireframe"]
 
 [dependencies]
@@ -35,6 +35,6 @@ dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5
 tokio = { version = "1.23.0", features = ["sync", "rt-multi-thread", "time", "macros"] }
 anymap = "0.12.1"
 fxhash = "0.2.1"
-skia-safe = { version = "0.56.1" }
+skia-safe = { version = "0.57.0" }
 tracing = "0.1"
 futures = "0.3.25"
