@@ -9,7 +9,7 @@ use euclid::{Length, Point2D};
 use freya_common::{LayoutMemorizer, NodeArea};
 use freya_elements::events_data::{KeyboardData, MouseData, WheelData};
 use freya_layers::{DOMNode, Layers, RenderData};
-use freya_layout::measure_node_layout;
+use freya_layout::NodeLayoutMeasurer;
 use freya_node_state::{CustomAttributeValues, NodeState};
 use rustc_hash::FxHashMap;
 use skia_safe::{textlayout::FontCollection, Color};
@@ -41,7 +41,7 @@ pub type ViewportsCollection = FxHashMap<NodeId, (Option<NodeArea>, Vec<NodeId>)
 /// - Calculate what events must be triggered
 #[allow(clippy::too_many_arguments)]
 pub fn process_work<HookOptions>(
-    mut dom: &SafeDOM,
+    dom: &SafeDOM,
     area: NodeArea,
     freya_events: SafeFreyaEvents,
     event_emitter: &EventEmitter,
@@ -66,43 +66,47 @@ pub fn process_work<HookOptions>(
 
     let layers = &mut Layers::default();
 
-    measure_node_layout(
-        &DOMNode {
+    {
+        let dom_node = DOMNode {
             node: root,
             height: 0,
             parent_id: None,
             children: root_children,
-        },
-        area,
-        area,
-        &mut dom,
-        layers,
-        |node_id, dom| {
-            let (child, height, parent_id, children) = {
-                let dom = dom.lock().unwrap();
-                let height = dom.tree.height(*node_id);
-                let parent_id = dom.tree.parent_id(*node_id);
-                let children = dom.tree.children_ids(*node_id).map(|v| v.to_vec());
-                (
-                    dom.index(*node_id).clone(),
-                    height.unwrap(),
+        };
+        let mut remaining_area = area;
+        let mut root_node_measurer = NodeLayoutMeasurer::new(
+            &dom_node,
+            &mut remaining_area,
+            area,
+            &dom,
+            layers,
+            |node_id, dom| {
+                let (child, height, parent_id, children) = {
+                    let dom = dom.lock().unwrap();
+                    let height = dom.tree.height(*node_id);
+                    let parent_id = dom.tree.parent_id(*node_id);
+                    let children = dom.tree.children_ids(*node_id).map(|v| v.to_vec());
+                    (
+                        dom.index(*node_id).clone(),
+                        height.unwrap(),
+                        parent_id,
+                        children,
+                    )
+                };
+
+                Some(DOMNode {
+                    node: child,
+                    height,
                     parent_id,
                     children,
-                )
-            };
-
-            Some(DOMNode {
-                node: child,
-                height,
-                parent_id,
-                children,
-            })
-        },
-        0,
-        font_collection,
-        manager,
-        true,
-    );
+                })
+            },
+            0,
+            font_collection,
+            manager,
+        );
+        root_node_measurer.measure_area(true);
+    }
 
     #[cfg(debug_assertions)]
     {

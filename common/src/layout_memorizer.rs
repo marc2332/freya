@@ -10,7 +10,20 @@ pub struct NodeLayoutInfo {
     pub area: NodeArea,
     pub remaining_inner_area: NodeArea,
     pub inner_area: NodeArea,
-    pub inner_sizes: (f32, f32),
+    pub inner_width: f32,
+    pub inner_height: f32,
+}
+
+impl NodeLayoutInfo {
+    pub fn as_tuple(self) -> (NodeArea, NodeArea, NodeArea, f32, f32) {
+        (
+            self.area,
+            self.remaining_inner_area,
+            self.inner_area,
+            self.inner_width,
+            self.inner_height,
+        )
+    }
 }
 
 /// Stores all the nodes layout and what nodes should be calculated again on the next check.
@@ -38,7 +51,7 @@ impl LayoutMemorizer {
     }
 
     /// Memorize a node's layout
-    pub fn add_node_layout(&mut self, node_id: NodeId, layout_info: NodeLayoutInfo) {
+    pub fn memorize_layout(&mut self, node_id: NodeId, layout_info: NodeLayoutInfo) {
         self.nodes.insert(node_id, layout_info);
     }
 

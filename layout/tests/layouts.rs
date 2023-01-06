@@ -9,7 +9,7 @@ use dioxus_native_core::{
 };
 use freya_common::{LayoutMemorizer, NodeArea};
 use freya_layers::{DOMNode, Layers};
-use freya_layout::measure_node_layout;
+use freya_layout::NodeLayoutMeasurer;
 use freya_node_state::{DirectionMode, NodeState, Size, SizeMode};
 use lazy_static::lazy_static;
 use rustc_hash::FxHashMap;
@@ -44,28 +44,32 @@ fn percentage() {
         height: SizeMode::Percentage(25.0),
         ..expanded_size()
     });
-    let result = measure_node_layout(
+    let mut remaining_area = NodeArea {
+        x: 0.0,
+        y: 0.0,
+        height: 300.0,
+        width: 200.0,
+    };
+    let mut layers = Layers::default();
+    let mut fonts = FontCollection::new();
+    let layout_memorizer = Arc::new(Mutex::new(LayoutMemorizer::new()));
+    let mut measurer = NodeLayoutMeasurer::new(
         &node,
+        &mut remaining_area,
         NodeArea {
             x: 0.0,
             y: 0.0,
             height: 300.0,
             width: 200.0,
         },
-        NodeArea {
-            x: 0.0,
-            y: 0.0,
-            height: 300.0,
-            width: 200.0,
-        },
-        &mut (),
-        &mut Layers::default(),
+        &(),
+        &mut layers,
         |_, _| None,
         0,
-        &mut FontCollection::new(),
-        &Arc::new(Mutex::new(LayoutMemorizer::new())),
-        true,
+        &mut fonts,
+        &layout_memorizer,
     );
+    let result = measurer.measure_area(true);
 
     assert_eq!(result.height, 75.0);
     assert_eq!(result.width, 100.0);
@@ -79,28 +83,32 @@ fn manual() {
         height: SizeMode::Manual(150.0),
         ..expanded_size()
     });
-    let result = measure_node_layout(
+    let mut remaining_area = NodeArea {
+        x: 0.0,
+        y: 0.0,
+        height: 300.0,
+        width: 200.0,
+    };
+    let mut layers = Layers::default();
+    let mut fonts = FontCollection::new();
+    let layout_memorizer = Arc::new(Mutex::new(LayoutMemorizer::new()));
+    let mut measurer = NodeLayoutMeasurer::new(
         &node,
+        &mut remaining_area,
         NodeArea {
             x: 0.0,
             y: 0.0,
             height: 300.0,
             width: 200.0,
         },
-        NodeArea {
-            x: 0.0,
-            y: 0.0,
-            height: 300.0,
-            width: 200.0,
-        },
-        &mut (),
-        &mut Layers::default(),
+        &(),
+        &mut layers,
         |_, _| None,
         0,
-        &mut FontCollection::new(),
-        &Arc::new(Mutex::new(LayoutMemorizer::new())),
-        true,
+        &mut fonts,
+        &layout_memorizer,
     );
+    let result = measurer.measure_area(true);
 
     assert_eq!(result.height, 150.0);
     assert_eq!(result.width, 250.0);
@@ -108,44 +116,49 @@ fn manual() {
 
 #[test]
 fn auto() {
-    let result = measure_node_layout(
-        &DOMNode {
-            node: Node {
-                node_data: NodeData {
-                    node_id: NodeId(0),
-                    element_id: None,
-                    node_type: NodeType::Element {
-                        tag: "rect".to_string(),
-                        namespace: None,
-                        attributes: FxHashMap::default(),
-                        listeners: HashSet::default(),
-                    },
+    let node = DOMNode {
+        node: Node {
+            node_data: NodeData {
+                node_id: NodeId(0),
+                element_id: None,
+                node_type: NodeType::Element {
+                    tag: "rect".to_string(),
+                    namespace: None,
+                    attributes: FxHashMap::default(),
+                    listeners: HashSet::default(),
                 },
-                state: NodeState::default().with_size(Size {
-                    width: SizeMode::Auto,
-                    height: SizeMode::Auto,
-                    direction: DirectionMode::Both,
-                    ..expanded_size()
-                }),
             },
-            height: 0,
-            parent_id: None,
-            children: Some(vec![NodeId(1)]),
+            state: NodeState::default().with_size(Size {
+                width: SizeMode::Auto,
+                height: SizeMode::Auto,
+                direction: DirectionMode::Both,
+                ..expanded_size()
+            }),
         },
+        height: 0,
+        parent_id: None,
+        children: Some(vec![NodeId(1)]),
+    };
+    let mut remaining_area = NodeArea {
+        x: 0.0,
+        y: 0.0,
+        height: 300.0,
+        width: 200.0,
+    };
+    let mut layers = Layers::default();
+    let mut fonts = FontCollection::new();
+    let layout_memorizer = Arc::new(Mutex::new(LayoutMemorizer::new()));
+    let mut measurer = NodeLayoutMeasurer::new(
+        &node,
+        &mut remaining_area,
         NodeArea {
             x: 0.0,
             y: 0.0,
             height: 300.0,
             width: 200.0,
         },
-        NodeArea {
-            x: 0.0,
-            y: 0.0,
-            height: 300.0,
-            width: 200.0,
-        },
-        &mut (),
-        &mut Layers::default(),
+        &(),
+        &mut layers,
         |_, _| {
             Some(DOMNode {
                 node: Node {
@@ -171,10 +184,10 @@ fn auto() {
             })
         },
         0,
-        &mut FontCollection::new(),
-        &Arc::new(Mutex::new(LayoutMemorizer::new())),
-        true,
+        &mut fonts,
+        &layout_memorizer,
     );
+    let result = measurer.measure_area(true);
 
     assert_eq!(result.height, 25.0);
     assert_eq!(result.width, 170.0);
@@ -188,22 +201,26 @@ fn x_y() {
         height: SizeMode::Manual(150.0),
         ..expanded_size()
     });
-    let result = measure_node_layout(
+    let mut remaining_area = NodeArea {
+        x: 15.0,
+        y: 25.0,
+        height: 300.0,
+        width: 200.0,
+    };
+    let mut layers = Layers::default();
+    let mut fonts = FontCollection::new();
+    let layout_memorizer = Arc::new(Mutex::new(LayoutMemorizer::new()));
+    let mut measurer = NodeLayoutMeasurer::new(
         &node,
+        &mut remaining_area,
         NodeArea {
             x: 15.0,
             y: 25.0,
             height: 300.0,
             width: 200.0,
         },
-        NodeArea {
-            x: 15.0,
-            y: 25.0,
-            height: 300.0,
-            width: 200.0,
-        },
-        &mut (),
-        &mut Layers::default(),
+        &(),
+        &mut layers,
         |_, _| {
             Some(DOMNode {
                 node: Node {
@@ -229,10 +246,11 @@ fn x_y() {
             })
         },
         0,
-        &mut FontCollection::new(),
-        &Arc::new(Mutex::new(LayoutMemorizer::new())),
-        true,
+        &mut fonts,
+        &layout_memorizer,
     );
+
+    let result = measurer.measure_area(true);
 
     assert_eq!(result.x, 15.0);
     assert_eq!(result.y, 25.0);
