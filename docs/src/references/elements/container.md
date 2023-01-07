@@ -1,10 +1,8 @@
 # container
 
-`container` provides a box with a certain `width` and `height`. 
+`container` is a box whose overflowing children are clipped.
 
-It's children are clipped when they overflow the container bounds.
-
-### Supported attribute
+### Supported attributes
 - width
 - height
 - min_width

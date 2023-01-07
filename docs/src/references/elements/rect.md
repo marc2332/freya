@@ -1,8 +1,6 @@
 # rect
 
-`rect` provides a box with a certain `width` and `height`. 
-
-Unlike [`container`](/references/elements/container.html), it's children can overflow as much as they want.
+`rect` is a box and unlike [`container`](/references/elements/container.html), it's children can overflow as much as they want.
 
 ### Supported attributes
 - width
@@ -27,7 +25,7 @@ Unlike [`container`](/references/elements/container.html), it's children can ove
 ```rust
 fn app(cx: Scope) -> Element {
     render!(
-        container {
+        rect {
             width: "100%",
             height: "100%",
             padding: "25",

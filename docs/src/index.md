@@ -2,11 +2,12 @@
 
 <img align="right" src="./logo.svg" alt="Freya logo" width="120"/>
 
-**Freya** is native GUI library for 🦀 Rust powered 🧬 [Dioxus](https://dioxuslabs.com) and 🎨 [Skia](https://skia.org/). 
+**Freya** is native GUI library for 🦀 Rust, powered 🧬 [Dioxus](https://dioxuslabs.com) and 🎨 [Skia](https://skia.org/). 
 
 ⚠️ It's currently work in progress and not usable for production, but you can already play with it! 
 
 You can join the [Discord](https://discord.gg/sYejxCdewG) server if you have any question or issue. 
+
 
 <br>
 
