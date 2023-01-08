@@ -210,8 +210,8 @@ pub fn render_skia(
                 }
             }
             "image" => {
-                if let Some(image_data) = &node.get_state().style.image_data {
-                    let pic = Image::from_encoded(unsafe { Data::new_bytes(image_data) });
+                let mut draw_img = |bytes: &[u8]| {
+                    let pic = Image::from_encoded(unsafe { Data::new_bytes(bytes) });
                     if let Some(pic) = pic {
                         let mut paint = Paint::default();
                         paint.set_anti_alias(true);
@@ -228,6 +228,15 @@ pub fn render_skia(
                             Some(&paint),
                         );
                     }
+                };
+
+                if let Some(image_ref) = &node.get_state().references.image_ref {
+                    let image_data = image_ref.0.lock().unwrap();
+                    if let Some(image_data) = image_data.as_ref() {
+                        draw_img(image_data)
+                    }
+                } else if let Some(image_data) = &node.get_state().style.image_data {
+                    draw_img(image_data)
                 }
             }
             _ => {}
