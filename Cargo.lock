@@ -964,9 +964,11 @@ dependencies = [
  "dioxus-native-core",
  "dioxus-router",
  "dioxus-rsx",
+ "freya",
  "freya-elements",
  "freya-hooks",
  "freya-node-state",
+ "freya-testing",
  "open",
 ]
 

@@ -1,3 +1,6 @@
+//! # Freya hooks
+//! This is a collection of useful hooks for Freya.
+//!
 mod use_animation;
 mod use_editable;
 mod use_focus;

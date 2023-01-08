@@ -1,19 +1,23 @@
 use dioxus_core::ScopeState;
 use dioxus_hooks::{use_shared_state, use_shared_state_provider, UseSharedState};
 
+/// Provide the given theme down to the children
 pub fn use_init_theme(cx: &ScopeState, theme: Theme) {
     use_shared_state_provider(cx, || theme);
 }
 
+/// Provide the default theme down to the children
 pub fn use_init_default_theme(cx: &ScopeState) -> Theme {
     use_shared_state_provider(cx, || DARK_THEME);
     DARK_THEME
 }
 
+/// Get the current theme
 pub fn use_theme(cx: &ScopeState) -> UseSharedState<Theme> {
     use_shared_state::<Theme>(cx).unwrap()
 }
 
+/// Get a read-only copy of the current theme, otherwise fallback to the default
 pub fn use_get_theme(cx: &ScopeState) -> Theme {
     use_shared_state::<Theme>(cx)
         .map(|v| v.read().clone())

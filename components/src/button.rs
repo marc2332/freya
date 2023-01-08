@@ -11,7 +11,28 @@ pub struct ButtonProps<'a> {
     pub onclick: Option<EventHandler<'a, MouseEvent>>,
 }
 
-/// A simple Button component.
+/// Button component.
+/// # Button
+///
+/// This is a simple Button component.
+///
+/// ```
+/// # use freya::prelude::*;
+/// # use freya_testing::launch_test;
+/// # fn main(){
+///     # launch_test(app);
+/// # }
+/// fn app(cx: Scope) -> Element {
+///    let mut count = use_state(cx, || 0);
+///
+///    render!(
+///       Button {
+///          onclick: move |_| count += 1,
+///          label { "Click to increase -> {count}" }
+///       }
+///    )
+/// }
+/// ```
 #[allow(non_snake_case)]
 pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
     let theme = use_get_theme(cx);

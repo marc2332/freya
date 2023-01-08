@@ -1,3 +1,6 @@
+//! # Freya components
+//! This is a collection of useful components for Freya.
+//!
 mod button;
 mod external_link;
 mod input;
