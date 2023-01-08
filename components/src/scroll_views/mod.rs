@@ -1,6 +1,8 @@
+mod controlled_virtual_scroll_view;
 mod scroll_view;
 mod virtual_scroll_view;
 
+pub use controlled_virtual_scroll_view::ControlledVirtualScrollView;
 pub use scroll_view::*;
 pub use virtual_scroll_view::*;
 
