@@ -13,7 +13,7 @@ use crate::{
 
 type BuilderFunction<'a, T> = dyn Fn((i32, i32, &'a Option<T>)) -> LazyNodes<'a, 'a>;
 
-/// Properties for the VirtualScrollView component.
+/// Properties for the ControlledVirtualScrollView component.
 #[derive(Props)]
 pub struct ControlledVirtualScrollViewProps<'a, T: 'a> {
     length: i32,
