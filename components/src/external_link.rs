@@ -5,6 +5,7 @@ use freya_hooks::use_get_theme;
 
 use crate::Tooltip;
 
+/// Supported props by the ExternalLink component.
 #[derive(Props)]
 pub struct ExternalLinkProps<'a> {
     children: Element<'a>,
@@ -15,6 +16,30 @@ pub struct ExternalLinkProps<'a> {
     url: &'a str,
 }
 
+/// ExternalLink component.
+/// # ExternalLink
+///
+/// This is a Link component for external links (e.g websites).
+///
+/// ```
+/// # use freya::prelude::*;
+/// # use freya_testing::launch_test;
+/// # fn main(){
+///     # launch_test(app);
+/// # }
+/// fn app(cx: Scope) -> Element {
+///    render!(
+///       ExternalLink {
+///          show_tooltip: false,
+///          url: "https://github.com",
+///          label {
+///             font_size: "20",
+///             "GitHub"
+///          }
+///       }
+///    )
+/// }
+/// ```
 #[allow(non_snake_case)]
 pub fn ExternalLink<'a>(cx: Scope<'a, ExternalLinkProps<'a>>) -> Element {
     let theme = use_get_theme(cx);

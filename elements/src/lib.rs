@@ -22,7 +22,9 @@ macro_rules! builder_constructors {
             pub struct $name;
 
             impl $name {
+                #[doc(hidden)]
                 pub const TAG_NAME: &'static str = stringify!($name);
+                #[doc(hidden)]
                 pub const NAME_SPACE: Option<&'static str> = None;
 
                 $(
