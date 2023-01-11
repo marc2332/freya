@@ -19,7 +19,7 @@ freya-node-state = { path = "../state", version = "0.1.0" }
 freya-layers = { path = "../layers", version = "0.1.0" }
 tokio = { version = "1.23.0", features = ["sync", "rt-multi-thread", "time"] }
 freya-elements = { path = "../elements", version = "0.1.0"}
-skia-safe = { version = "0.56.1", features = ["textlayout"] }
+skia-safe = { version = "0.56.1", features = ["gl", "textlayout", "svg"] }
 
 [dev-dependencies]
 dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}

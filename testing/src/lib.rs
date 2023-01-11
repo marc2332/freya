@@ -11,6 +11,7 @@ use freya_node_state::{CustomAttributeValues, NodeState};
 use freya_processor::events::EventsProcessor;
 use freya_processor::{process_work, DomEvent, EventEmitter, EventReceiver, SafeFreyaEvents};
 use skia_safe::textlayout::FontCollection;
+use skia_safe::FontMgr;
 use tokio::sync::mpsc::unbounded_channel;
 
 pub use freya_processor::events::{FreyaEvent, MouseButton};
@@ -182,7 +183,8 @@ pub fn launch_test(root: Component<()>) -> TestUtils {
     let layout_memorizer = Arc::new(Mutex::new(LayoutMemorizer::new()));
     let freya_events = Arc::new(Mutex::new(Vec::new()));
     let events_processor = Arc::new(Mutex::new(EventsProcessor::default()));
-    let font_collection = FontCollection::new();
+    let mut font_collection = FontCollection::new();
+    font_collection.set_default_font_manager(FontMgr::default(), "Fira Sans");
 
     let muts = dom.rebuild();
     let (to_update, _) = rdom.lock().unwrap().apply_mutations(muts);

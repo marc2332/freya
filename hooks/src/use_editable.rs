@@ -304,3 +304,93 @@ pub fn use_editable<'a>(
         cursor_ref_attr,
     )
 }
+
+#[cfg(test)]
+mod test {
+    use crate::{use_editable, EditableMode};
+    use freya::prelude::*;
+    use freya_elements::KeyCode;
+    use freya_testing::{launch_test, FreyaEvent, MouseButton};
+
+    #[tokio::test]
+    pub async fn multiple_lines_single_editor() {
+        fn use_editable_app(cx: Scope) -> Element {
+            let (content, cursor, process_keyevent, process_clickevent, cursor_reference) =
+                use_editable(
+                    &cx,
+                    || "Hello Rustaceans",
+                    EditableMode::MultipleLinesSingleEditor,
+                );
+            let cursor_char = content.offset_of_line(cursor.1) + cursor.0;
+            render!(
+                rect {
+                    width: "100%",
+                    height: "100%",
+                    background: "white",
+                    cursor_reference: cursor_reference,
+                    onclick:  move |e: MouseEvent| {
+                        process_clickevent.send((e.data, 0)).ok();
+                    },
+                    paragraph {
+                        height: "50%",
+                        width: "100%",
+                        cursor_id: "0",
+                        cursor_index: "{cursor_char}",
+                        cursor_color: "black",
+                        cursor_mode: "editable",
+                        onkeydown: move |e| {
+                            process_keyevent.send(e.data).unwrap();
+                        },
+                        text {
+                            color: "black",
+                            "{content}"
+                        }
+                    }
+                    label {
+                        color: "black",
+                        height: "50%",
+                        "{cursor.0}:{cursor.1}"
+                    }
+                }
+            )
+        }
+
+        let mut utils = launch_test(use_editable_app);
+
+        // Initial state
+        let root = utils.root().child(0).unwrap();
+        let cursor = root.child(1).unwrap().child(0).unwrap();
+        let content = root.child(0).unwrap().child(0).unwrap().child(0).unwrap();
+        assert_eq!(cursor.text(), Some("0:0"));
+        assert_eq!(content.text(), Some("Hello Rustaceans"));
+
+        // Move cursor
+        utils.send_event(FreyaEvent::Mouse {
+            name: "click",
+            cursor: (35.0, 3.0),
+            button: Some(MouseButton::Left),
+        });
+
+        utils.wait_for_update((500.0, 500.0)).await;
+        utils.wait_for_update((500.0, 500.0)).await;
+
+        // Cursor has been moved
+        let root = utils.root().child(0).unwrap();
+        let cursor = root.child(1).unwrap().child(0).unwrap();
+        assert_eq!(cursor.text(), Some("5:0"));
+
+        // Insert text
+        utils.send_event(FreyaEvent::Keyboard {
+            name: "keydown",
+            code: KeyCode::Character("!"),
+        });
+
+        utils.wait_for_update((500.0, 500.0)).await;
+
+        // Text and cursor have changed
+        let cursor = root.child(1).unwrap().child(0).unwrap();
+        let content = root.child(0).unwrap().child(0).unwrap().child(0).unwrap();
+        assert_eq!(cursor.text(), Some("6:0"));
+        assert_eq!(content.text(), Some("Hello! Rustaceans"));
+    }
+}
