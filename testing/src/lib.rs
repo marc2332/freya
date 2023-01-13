@@ -184,7 +184,7 @@ pub fn launch_test(root: Component<()>) -> TestUtils {
     let freya_events = Arc::new(Mutex::new(Vec::new()));
     let events_processor = Arc::new(Mutex::new(EventsProcessor::default()));
     let mut font_collection = FontCollection::new();
-    font_collection.set_default_font_manager(FontMgr::default(), "Fira Sans");
+    font_collection.set_dynamic_font_manager(FontMgr::default());
 
     let muts = dom.rebuild();
     let (to_update, _) = rdom.lock().unwrap().apply_mutations(muts);
