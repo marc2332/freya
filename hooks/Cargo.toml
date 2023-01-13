@@ -26,3 +26,8 @@ freya-node-state = { path = "../state", version = "0.1.0" }
 freya-common = { path = "../common", version = "0.1.0" }
 nokhwa = {version = "0.10.3", features = ["input-native"] }
 bytes = "1.3.0"
+
+[dev-dependencies]
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
+freya = { path = "../freya"}
+freya-testing = { path = "../testing"}

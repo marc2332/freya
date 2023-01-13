@@ -1147,14 +1147,17 @@ name = "freya-hooks"
 version = "0.1.0"
 dependencies = [
  "bytes",
+ "dioxus",
  "dioxus-core",
  "dioxus-core-macro",
  "dioxus-hooks",
  "dioxus-native-core",
  "dioxus-rsx",
+ "freya",
  "freya-common",
  "freya-elements",
  "freya-node-state",
+ "freya-testing",
  "nokhwa",
  "tokio",
  "tween",
