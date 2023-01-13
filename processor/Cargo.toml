@@ -16,7 +16,7 @@ linux = ["skia-safe/x11", "skia-safe/wayland"]
 
 [dependencies]
 glutin_tao = { version = "0.30.1", features = ["serde"]}
-skia-safe = { version = "0.57.0", features = ["gl", "textlayout", "svg"] }
+skia-safe = { version = "0.58.0", features = ["gl", "textlayout", "svg"] }
 dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="fdf72b709a1ccc3924f67bbd7ae236d3fffacc51"}
 dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="fdf72b709a1ccc3924f67bbd7ae236d3fffacc51"}
 dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="fdf72b709a1ccc3924f67bbd7ae236d3fffacc51"}
