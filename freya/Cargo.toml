@@ -25,13 +25,13 @@ freya-common = { path = "../common", version = "0.1.0" }
 freya-hooks = { path = "../hooks"}
 freya-processor = { path = "../processor"}
 freya-components ={ path = "../components"}
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
-dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
-dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
-dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
-dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="fdf72b709a1ccc3924f67bbd7ae236d3fffacc51"}
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="fdf72b709a1ccc3924f67bbd7ae236d3fffacc51"}
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="fdf72b709a1ccc3924f67bbd7ae236d3fffacc51"}
+dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="fdf72b709a1ccc3924f67bbd7ae236d3fffacc51"}
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="fdf72b709a1ccc3924f67bbd7ae236d3fffacc51"}
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="fdf72b709a1ccc3924f67bbd7ae236d3fffacc51"}
+dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev="fdf72b709a1ccc3924f67bbd7ae236d3fffacc51"}
 tokio = { version = "1.23.0", features = ["sync", "rt-multi-thread", "time", "macros"] }
 anymap = "0.12.1"
 fxhash = "0.2.1"
