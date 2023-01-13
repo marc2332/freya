@@ -113,6 +113,7 @@ builder_constructors! {
     };
     image {
         image_data: String,
+        image_reference: String,
         width: String,
         height: String,
     };

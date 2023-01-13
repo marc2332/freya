@@ -8,10 +8,13 @@ use dioxus_native_core::{NodeId, SendAnyMap};
 use freya_common::{LayoutMemorizer, NodeArea};
 use freya_layers::DOMNode;
 use freya_node_state::{CustomAttributeValues, NodeState};
-use freya_processor::events::{EventsProcessor, FreyaEvent};
+use freya_processor::events::EventsProcessor;
 use freya_processor::{process_work, DomEvent, EventEmitter, EventReceiver, SafeFreyaEvents};
 use skia_safe::textlayout::FontCollection;
+use skia_safe::FontMgr;
 use tokio::sync::mpsc::unbounded_channel;
+
+pub use freya_processor::events::{FreyaEvent, MouseButton};
 
 pub struct TestNode {
     node_id: NodeId,
@@ -74,7 +77,7 @@ pub struct TestUtils {
 
 impl TestUtils {
     /// Wait for internal changes
-    // Haven't found a way around this yet
+    // TODO Remove this warning
     #[allow(clippy::await_holding_lock)]
     pub async fn wait_for_update(&mut self, sizes: (f32, f32)) {
         self.wait_for_work(sizes).await;
@@ -119,6 +122,13 @@ impl TestUtils {
         );
     }
 
+    /// Remove any memoization of the DOM layout
+    pub fn cleanup_layout(&mut self) {
+        self.layout_memorizer.lock().unwrap().dirty_nodes.clear();
+        self.layout_memorizer.lock().unwrap().nodes.clear();
+    }
+
+    /// Emit an event
     pub fn send_event(&mut self, event: FreyaEvent) {
         self.freya_events.lock().unwrap().push(event);
     }
@@ -173,7 +183,8 @@ pub fn launch_test(root: Component<()>) -> TestUtils {
     let layout_memorizer = Arc::new(Mutex::new(LayoutMemorizer::new()));
     let freya_events = Arc::new(Mutex::new(Vec::new()));
     let events_processor = Arc::new(Mutex::new(EventsProcessor::default()));
-    let font_collection = FontCollection::new();
+    let mut font_collection = FontCollection::new();
+    font_collection.set_dynamic_font_manager(FontMgr::default());
 
     let muts = dom.rebuild();
     let (to_update, _) = rdom.lock().unwrap().apply_mutations(muts);

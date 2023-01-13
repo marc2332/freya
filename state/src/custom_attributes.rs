@@ -3,12 +3,29 @@ use std::fmt::Display;
 use std::sync::Arc;
 use std::sync::Mutex;
 
+use bytes::Bytes;
 use dioxus_core::AnyValue;
 use dioxus_core::AttributeValue;
 use dioxus_core::Scope;
 use dioxus_native_core::node::FromAnyValue;
 use freya_common::NodeReferenceLayout;
 use tokio::sync::mpsc::UnboundedSender;
+
+/// Image Reference
+#[derive(Clone, Debug)]
+pub struct ImageReference(pub Arc<Mutex<Option<Bytes>>>);
+
+impl PartialEq for ImageReference {
+    fn eq(&self, _other: &Self) -> bool {
+        true
+    }
+}
+
+impl Display for ImageReference {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ImageReference").finish_non_exhaustive()
+    }
+}
 
 /// Node Reference
 #[derive(Clone)]
@@ -52,6 +69,7 @@ pub enum CustomAttributeValues {
     Reference(NodeReference),
     CursorReference(CursorReference),
     Bytes(Vec<u8>),
+    ImageReference(ImageReference),
 }
 
 impl Debug for CustomAttributeValues {
@@ -60,6 +78,7 @@ impl Debug for CustomAttributeValues {
             Self::Reference(_) => f.debug_tuple("Reference").finish(),
             Self::CursorReference(_) => f.debug_tuple("CursorReference").finish(),
             Self::Bytes(_) => f.debug_tuple("Bytes").finish(),
+            Self::ImageReference(_) => f.debug_tuple("ImageReference").finish(),
         }
     }
 }
