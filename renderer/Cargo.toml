@@ -18,11 +18,12 @@ wireframe = []
 gl = "*"
 glutin_tao = { version = "0.30.1", features = ["serde"]}
 skia-safe = { version = "0.56.1", features = ["gl", "textlayout", "svg"] }
-dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="fdf72b709a1ccc3924f67bbd7ae236d3fffacc51"}
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="fdf72b709a1ccc3924f67bbd7ae236d3fffacc51"}
-dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="fdf72b709a1ccc3924f67bbd7ae236d3fffacc51"}
-dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="fdf72b709a1ccc3924f67bbd7ae236d3fffacc51"}
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="fdf72b709a1ccc3924f67bbd7ae236d3fffacc51"}
+dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
+dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
+dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
+dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
+dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
+dioxus-hot-reload = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
 freya-layout = { path = "../layout", version = "0.1.0" }
 freya-node-state = { path = "../state", version = "0.1.0" }
 freya-elements = { path = "../elements", version = "0.1.0" }

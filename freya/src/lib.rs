@@ -42,6 +42,7 @@ pub mod prelude {
     pub use dioxus_core::prelude::*;
     pub use dioxus_core_macro::*;
     pub use dioxus_hooks::*;
+    pub use dioxus_hot_reload::{self, hot_reload_init, Config};
     pub use freya_components::*;
     pub use freya_elements as dioxus_elements;
     pub use freya_elements::events_data::*;

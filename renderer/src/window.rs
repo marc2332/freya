@@ -1,3 +1,4 @@
+use dioxus_core::Template;
 use freya_common::NodeArea;
 use freya_processor::{
     events::EventsProcessor, process_work, EventEmitter, SafeDOM, SafeFreyaEvents,
@@ -41,7 +42,7 @@ impl<T: Clone> WindowEnv<T> {
         event_emitter: EventEmitter,
         layout_memorizer: &SafeLayoutMemorizer,
         window_config: WindowConfig<T>,
-        event_loop: &EventLoop<()>,
+        event_loop: &EventLoop<Option<Template<'static>>>,
         font_collection: FontCollection,
     ) -> Self {
         let events_processor = EventsProcessor::default();

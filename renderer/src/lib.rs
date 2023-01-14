@@ -1,4 +1,4 @@
-use dioxus_core::VirtualDom;
+use dioxus_core::{Template, VirtualDom};
 use dioxus_native_core::real_dom::RealDom;
 use dioxus_native_core::SendAnyMap;
 use freya_common::LayoutMemorizer;
@@ -15,6 +15,7 @@ use glutin::{
     event_loop::EventLoop,
 };
 use skia_safe::{textlayout::FontCollection, FontMgr};
+use std::process::exit;
 use std::sync::{Arc, Mutex};
 use std::task::Waker;
 use tokio::select;
@@ -40,7 +41,19 @@ pub fn run<T: 'static + Clone>(
 
     let _guard = rt.enter();
 
-    let event_loop = EventLoop::<()>::with_user_event();
+    let event_loop = EventLoop::<Option<Template<'static>>>::with_user_event();
+
+    #[cfg(debug_assertions)]
+    {
+        let proxy = event_loop.create_proxy();
+        dioxus_hot_reload::connect(move |msg| match msg {
+            dioxus_hot_reload::HotReloadMsg::UpdateTemplate(template) => {
+                let _ = proxy.send_event(Some(template));
+            }
+            dioxus_hot_reload::HotReloadMsg::Shutdown => exit(0),
+        });
+    }
+
     let (event_emitter, mut event_emitter_rx) = unbounded_channel::<DomEvent>();
     let mut font_collection = FontCollection::new();
     font_collection.set_default_font_manager(FontMgr::default(), "Fira Sans");
@@ -83,9 +96,15 @@ pub fn run<T: 'static + Clone>(
                 window_env.redraw();
             }
             Event::NewEvents(StartCause::Init) => {
-                _ = proxy.send_event(());
+                _ = proxy.send_event(None);
             }
-            Event::UserEvent(_s) => {
+            Event::UserEvent(s) => {
+                match s {
+                    Some(template) => {
+                        vdom.replace_template(template);
+                    }
+                    _ => (),
+                }
                 poll_vdom(
                     &waker,
                     &mut vdom,
@@ -202,8 +221,8 @@ pub fn run<T: 'static + Clone>(
     });
 }
 
-pub fn tao_waker(proxy: &EventLoopProxy<()>) -> std::task::Waker {
-    struct DomHandle(EventLoopProxy<()>);
+pub fn tao_waker(proxy: &EventLoopProxy<Option<Template<'static>>>) -> std::task::Waker {
+    struct DomHandle(EventLoopProxy<Option<Template<'static>>>);
 
     // this should be implemented by most platforms, but ios is missing this until
     // https://github.com/tauri-apps/wry/issues/830 is resolved
@@ -212,7 +231,7 @@ pub fn tao_waker(proxy: &EventLoopProxy<()>) -> std::task::Waker {
 
     impl ArcWake for DomHandle {
         fn wake_by_ref(arc_self: &Arc<Self>) {
-            _ = arc_self.0.send_event(());
+            _ = arc_self.0.send_event(None);
         }
     }
 
