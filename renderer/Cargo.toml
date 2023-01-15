@@ -12,8 +12,15 @@ keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
 [features]
-linux = ["skia-safe/x11", "skia-safe/wayland"]
 wireframe = []
+
+[target."cfg(target_os = \"linux\")".dependencies.skia-safe]
+version = "0.58.0"
+features = ["gl", "textlayout", "svg", "x11", "wayland"]
+
+[target."cfg(target_os = \"linux\")".dependencies.glutin_tao]
+version = "0.30.1"
+features = ["serde", "x11"]
 
 [dependencies]
 gl = "*"

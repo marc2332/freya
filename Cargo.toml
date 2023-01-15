@@ -8,7 +8,6 @@ members = ["layers", "layout", "renderer", "state", "freya", "elements", "compon
 
 [features]
 devtools = ["freya/devtools"]
-linux = ["freya/linux"]
 wireframe = ["freya/wireframe"]
 
 [dev-dependencies]

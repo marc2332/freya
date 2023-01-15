@@ -57,16 +57,10 @@ fn app(cx: Scope) -> Element {
 
 **⚠️ Note for Windows**: You need the **latest** (this is very important) Visual Studio 2022.
 
-Windows & MacOS:
+Run:
 
 ```shell
 cargo run --example counter
-```
-
-Linux:
-
-```shell
-cargo run --example counter --features linux
 ```
 
 ### Usage 📜
@@ -82,7 +76,7 @@ dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a25
 - Containers
 - Scroll views (nested too)
 - Events: click, wheel, mouse /down/leave/over for now
-- Support for Windows, Linux (needs `linux` feature) and MacOS support
+- Support for Windows, Linux and MacOS
 - Optional Components library (buttons, switch, etc)
 - Animation hook utility
 - SVG Support
