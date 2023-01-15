@@ -14,8 +14,8 @@ fn app(cx: Scope) -> Element {
 
     let is_enabled = if *enabled.get() { "Yes" } else { "No" };
 
-    let cols = 15;
-    let rows = 15;
+    let cols = 40;
+    let rows = 40;
 
     render!(
         container {

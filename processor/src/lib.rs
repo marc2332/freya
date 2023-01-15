@@ -1,14 +1,9 @@
 use dioxus_core::ElementId;
-use dioxus_native_core::{
-    node::{Node, NodeType},
-    real_dom::RealDom,
-    tree::TreeView,
-    NodeId,
-};
+use dioxus_native_core::{node::NodeType, real_dom::RealDom, NodeId};
 use euclid::{Length, Point2D};
 use freya_common::{LayoutMemorizer, NodeArea};
 use freya_elements::events_data::{KeyboardData, MouseData, WheelData};
-use freya_layers::{DOMNode, Layers, RenderData};
+use freya_layers::{Layers, RenderData};
 use freya_layout::NodeLayoutMeasurer;
 use freya_node_state::{CustomAttributeValues, NodeState};
 use rustc_hash::FxHashMap;
@@ -57,50 +52,17 @@ pub fn process_work<HookOptions>(
         &mut HookOptions,
     ),
 ) {
-    let (root, root_children): (Node<NodeState, CustomAttributeValues>, Option<Vec<NodeId>>) = {
-        let dom = dom.lock().unwrap();
-        let root_id = NodeId(0);
-        let children = dom.tree.children_ids(root_id).map(|v| v.to_vec());
-        (dom.index(root_id).clone(), children)
-    };
-
     let layers = &mut Layers::default();
 
     {
-        let dom_node = DOMNode {
-            node: root,
-            height: 0,
-            parent_id: None,
-            children: root_children,
-        };
+        let root = dom.lock().unwrap().index(NodeId(0)).clone();
         let mut remaining_area = area;
         let mut root_node_measurer = NodeLayoutMeasurer::new(
-            &dom_node,
+            root,
             &mut remaining_area,
             area,
-            &dom,
+            dom,
             layers,
-            |node_id, dom| {
-                let (child, height, parent_id, children) = {
-                    let dom = dom.lock().unwrap();
-                    let height = dom.tree.height(*node_id);
-                    let parent_id = dom.tree.parent_id(*node_id);
-                    let children = dom.tree.children_ids(*node_id).map(|v| v.to_vec());
-                    (
-                        dom.index(*node_id).clone(),
-                        height.unwrap(),
-                        parent_id,
-                        children,
-                    )
-                };
-
-                Some(DOMNode {
-                    node: child,
-                    height,
-                    parent_id,
-                    children,
-                })
-            },
             0,
             font_collection,
             manager,
