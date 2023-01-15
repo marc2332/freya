@@ -761,7 +761,7 @@ dependencies = [
 [[package]]
 name = "dioxus"
 version = "0.3.1"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=fdf72b709a1ccc3924f67bbd7ae236d3fffacc51#fdf72b709a1ccc3924f67bbd7ae236d3fffacc51"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=1737c55575f35ccd18e95d2d42fdbc60ff98cf58#1737c55575f35ccd18e95d2d42fdbc60ff98cf58"
 dependencies = [
  "dioxus-core",
  "dioxus-core-macro",
@@ -773,7 +773,7 @@ dependencies = [
 [[package]]
 name = "dioxus-core"
 version = "0.3.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=fdf72b709a1ccc3924f67bbd7ae236d3fffacc51#fdf72b709a1ccc3924f67bbd7ae236d3fffacc51"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=1737c55575f35ccd18e95d2d42fdbc60ff98cf58#1737c55575f35ccd18e95d2d42fdbc60ff98cf58"
 dependencies = [
  "bumpalo",
  "futures-channel",
@@ -790,7 +790,7 @@ dependencies = [
 [[package]]
 name = "dioxus-core-macro"
 version = "0.3.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=fdf72b709a1ccc3924f67bbd7ae236d3fffacc51#fdf72b709a1ccc3924f67bbd7ae236d3fffacc51"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=1737c55575f35ccd18e95d2d42fdbc60ff98cf58#1737c55575f35ccd18e95d2d42fdbc60ff98cf58"
 dependencies = [
  "dioxus-rsx",
  "proc-macro2",
@@ -801,7 +801,7 @@ dependencies = [
 [[package]]
 name = "dioxus-hooks"
 version = "0.3.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=fdf72b709a1ccc3924f67bbd7ae236d3fffacc51#fdf72b709a1ccc3924f67bbd7ae236d3fffacc51"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=1737c55575f35ccd18e95d2d42fdbc60ff98cf58#1737c55575f35ccd18e95d2d42fdbc60ff98cf58"
 dependencies = [
  "dioxus-core",
  "futures-channel",
@@ -811,7 +811,7 @@ dependencies = [
 [[package]]
 name = "dioxus-html"
 version = "0.3.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=fdf72b709a1ccc3924f67bbd7ae236d3fffacc51#fdf72b709a1ccc3924f67bbd7ae236d3fffacc51"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=1737c55575f35ccd18e95d2d42fdbc60ff98cf58#1737c55575f35ccd18e95d2d42fdbc60ff98cf58"
 dependencies = [
  "async-trait",
  "dioxus-core",
@@ -826,7 +826,7 @@ dependencies = [
 [[package]]
 name = "dioxus-native-core"
 version = "0.2.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=fdf72b709a1ccc3924f67bbd7ae236d3fffacc51#fdf72b709a1ccc3924f67bbd7ae236d3fffacc51"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=1737c55575f35ccd18e95d2d42fdbc60ff98cf58#1737c55575f35ccd18e95d2d42fdbc60ff98cf58"
 dependencies = [
  "anymap 1.0.0-beta.2",
  "crossbeam-deque",
@@ -845,7 +845,7 @@ dependencies = [
 [[package]]
 name = "dioxus-native-core-macro"
 version = "0.2.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=fdf72b709a1ccc3924f67bbd7ae236d3fffacc51#fdf72b709a1ccc3924f67bbd7ae236d3fffacc51"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=1737c55575f35ccd18e95d2d42fdbc60ff98cf58#1737c55575f35ccd18e95d2d42fdbc60ff98cf58"
 dependencies = [
  "dioxus",
  "dioxus-native-core",
@@ -856,7 +856,7 @@ dependencies = [
 [[package]]
 name = "dioxus-router"
 version = "0.3.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=fdf72b709a1ccc3924f67bbd7ae236d3fffacc51#fdf72b709a1ccc3924f67bbd7ae236d3fffacc51"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=1737c55575f35ccd18e95d2d42fdbc60ff98cf58#1737c55575f35ccd18e95d2d42fdbc60ff98cf58"
 dependencies = [
  "dioxus",
  "futures-channel",
@@ -872,7 +872,7 @@ dependencies = [
 [[package]]
 name = "dioxus-rsx"
 version = "0.0.2"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=fdf72b709a1ccc3924f67bbd7ae236d3fffacc51#fdf72b709a1ccc3924f67bbd7ae236d3fffacc51"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=1737c55575f35ccd18e95d2d42fdbc60ff98cf58#1737c55575f35ccd18e95d2d42fdbc60ff98cf58"
 dependencies = [
  "dioxus-core",
  "internment",
