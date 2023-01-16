@@ -14,9 +14,9 @@ categories = ["GUI"]
 [dependencies]
 freya-common = { path = "../common", version = "0.1.0" }
 freya-node-state = { path = "../state", version = "0.1.0" }
-dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="fdf72b709a1ccc3924f67bbd7ae236d3fffacc51"}
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="fdf72b709a1ccc3924f67bbd7ae236d3fffacc51"}
-dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="fdf72b709a1ccc3924f67bbd7ae236d3fffacc51"}
-dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="fdf72b709a1ccc3924f67bbd7ae236d3fffacc51"}
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="fdf72b709a1ccc3924f67bbd7ae236d3fffacc51"}
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="45abbb7a06bc4697a57c6ab1dfebb822430dcb33"}
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="45abbb7a06bc4697a57c6ab1dfebb822430dcb33"}
+dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="45abbb7a06bc4697a57c6ab1dfebb822430dcb33"}
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="45abbb7a06bc4697a57c6ab1dfebb822430dcb33"}
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="45abbb7a06bc4697a57c6ab1dfebb822430dcb33"}
 rustc-hash = "1.1.0"
