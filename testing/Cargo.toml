@@ -13,12 +13,12 @@ categories = ["GUI"]
 
 [dependencies]
 glutin_tao = { version = "0.30.1", features = ["serde"]}
-dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="1737c55575f35ccd18e95d2d42fdbc60ff98cf58"}
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="1737c55575f35ccd18e95d2d42fdbc60ff98cf58"}
-dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="1737c55575f35ccd18e95d2d42fdbc60ff98cf58"}
-dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="1737c55575f35ccd18e95d2d42fdbc60ff98cf58"}
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="1737c55575f35ccd18e95d2d42fdbc60ff98cf58"}
-dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="1737c55575f35ccd18e95d2d42fdbc60ff98cf58"}
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="45abbb7a06bc4697a57c6ab1dfebb822430dcb33"}
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="45abbb7a06bc4697a57c6ab1dfebb822430dcb33"}
+dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="45abbb7a06bc4697a57c6ab1dfebb822430dcb33"}
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="45abbb7a06bc4697a57c6ab1dfebb822430dcb33"}
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="45abbb7a06bc4697a57c6ab1dfebb822430dcb33"}
+dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="45abbb7a06bc4697a57c6ab1dfebb822430dcb33"}
 freya-elements = { path = "../elements", version = "0.1.0"}
 freya-common = { path = "../common", version = "0.1.0" }
 freya-layers = { path = "../layers", version = "0.1.0" }
@@ -31,4 +31,4 @@ skia-safe = { version = "0.56.1", features = ["gl", "textlayout", "svg"] }
 
 [dev-dependencies]
 freya-components ={ path = "../components"}
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="1737c55575f35ccd18e95d2d42fdbc60ff98cf58"}
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="45abbb7a06bc4697a57c6ab1dfebb822430dcb33"}
