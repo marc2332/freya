@@ -61,7 +61,7 @@ impl<T: Clone> WindowEnv<T> {
             .with_pixel_format(24, 8)
             .with_gl_profile(GlProfile::Core);
 
-        #[cfg(not(feature = "wayland"))]
+        #[cfg(not(target_os = "linux"))]
         let cb = cb.with_double_buffer(Some(true));
 
         let windowed_context = cb.build_windowed(wb, event_loop).unwrap();
