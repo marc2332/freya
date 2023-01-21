@@ -9,7 +9,7 @@ use freya_processor::{DomEvent, SafeDOM};
 use futures::task::ArcWake;
 use futures::{pin_mut, task, FutureExt};
 use glutin::event::{
-    ElementState, KeyboardInput, MouseScrollDelta, StartCause, TouchPhase, WindowEvent,
+    ElementState, Event, KeyboardInput, MouseScrollDelta, StartCause, TouchPhase, WindowEvent,
 };
 use glutin::event_loop::{ControlFlow, EventLoopBuilder, EventLoopProxy};
 use skia_safe::{textlayout::FontCollection, FontMgr};
@@ -19,7 +19,6 @@ use tokio::select;
 use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 pub use window::{create_surface, WindowEnv};
 pub use window_config::WindowConfig;
-use winit::event::Event;
 
 mod renderer;
 mod window;
