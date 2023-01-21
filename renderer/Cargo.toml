@@ -18,10 +18,6 @@ wireframe = []
 version = "0.58.0"
 features = ["gl", "textlayout", "svg", "x11", "wayland"]
 
-[target."cfg(target_os = \"linux\")".dependencies.glutin_tao]
-version = "0.30.1"
-features = ["serde", "x11"]
-
 [dependencies]
 gl = "*"
 glutin = { version = "0.29.0"}
