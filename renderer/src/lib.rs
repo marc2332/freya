@@ -2,18 +2,16 @@ use dioxus_core::VirtualDom;
 use dioxus_native_core::real_dom::RealDom;
 use dioxus_native_core::SendAnyMap;
 use freya_common::LayoutMemorizer;
+use freya_elements::{from_winit_to_code, from_winit_to_key, Code, Key};
 use freya_node_state::{CustomAttributeValues, NodeState};
 use freya_processor::events::FreyaEvent;
 use freya_processor::{DomEvent, SafeDOM};
 use futures::task::ArcWake;
 use futures::{pin_mut, task, FutureExt};
-use glutin::event::{ElementState, StartCause};
-use glutin::event_loop::EventLoopProxy;
-use glutin::{event::Event, event_loop::ControlFlow};
-use glutin::{
-    event::{KeyEvent, MouseScrollDelta, TouchPhase, WindowEvent},
-    event_loop::EventLoop,
+use glutin::event::{
+    ElementState, KeyboardInput, MouseScrollDelta, StartCause, TouchPhase, WindowEvent,
 };
+use glutin::event_loop::{ControlFlow, EventLoopBuilder, EventLoopProxy};
 use skia_safe::{textlayout::FontCollection, FontMgr};
 use std::sync::{Arc, Mutex};
 use std::task::Waker;
@@ -21,6 +19,7 @@ use tokio::select;
 use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 pub use window::{create_surface, WindowEnv};
 pub use window_config::WindowConfig;
+use winit::event::Event;
 
 mod renderer;
 mod window;
@@ -40,7 +39,7 @@ pub fn run<T: 'static + Clone>(
 
     let _guard = rt.enter();
 
-    let event_loop = EventLoop::<()>::with_user_event();
+    let event_loop = EventLoopBuilder::with_user_event().build();
     let (event_emitter, mut event_emitter_rx) = unbounded_channel::<DomEvent>();
     let mut font_collection = FontCollection::new();
     font_collection.set_default_font_manager(FontMgr::default(), "Fira Sans");
@@ -75,6 +74,9 @@ pub fn run<T: 'static + Clone>(
     let waker = tao_waker(&proxy);
     let cursor_pos = Arc::new(Mutex::new((0.0, 0.0)));
 
+    let mut last_keydown = None;
+    let mut last_code = Code::Unidentified;
+
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Poll;
 
@@ -102,7 +104,6 @@ pub fn run<T: 'static + Clone>(
                     let event_name = match state {
                         ElementState::Pressed => "mousedown",
                         ElementState::Released => "click",
-                        _ => "mousedown",
                     };
                     let cursor_pos = cursor_pos.lock().unwrap();
                     window_env
@@ -122,7 +123,6 @@ pub fn run<T: 'static + Clone>(
                             match delta {
                                 MouseScrollDelta::LineDelta(x, y) => (x as f64, y as f64),
                                 MouseScrollDelta::PixelDelta(pos) => (pos.x, pos.y),
-                                _ => (0.0, 0.0),
                             }
                         };
 
@@ -137,27 +137,57 @@ pub fn run<T: 'static + Clone>(
                             });
                     }
                 }
+                WindowEvent::ReceivedCharacter(a) => {
+                    if last_keydown.is_none() {
+                        window_env
+                            .freya_events
+                            .lock()
+                            .unwrap()
+                            .push(FreyaEvent::Keyboard {
+                                name: "keydown",
+                                key: Key::Character(a.to_string()),
+                                code: last_code,
+                            });
+                    }
+                }
                 WindowEvent::KeyboardInput {
-                    event:
-                        KeyEvent {
-                            logical_key, state, ..
+                    input:
+                        KeyboardInput {
+                            virtual_keycode: Some(virtual_keycode),
+                            state,
+                            ..
                         },
                     ..
                 } => {
                     let event_name = match state {
                         ElementState::Pressed => "keydown",
                         ElementState::Released => "keyup",
-                        _ => "keydown",
                     };
 
-                    window_env
-                        .freya_events
-                        .lock()
-                        .unwrap()
-                        .push(FreyaEvent::Keyboard {
-                            name: event_name,
-                            code: logical_key,
-                        });
+                    if let Some(key) = from_winit_to_key(&virtual_keycode) {
+                        if state == ElementState::Pressed {
+                            last_keydown = Some(key.clone());
+                        } else {
+                            last_keydown = None;
+                        }
+                        window_env
+                            .freya_events
+                            .lock()
+                            .unwrap()
+                            .push(FreyaEvent::Keyboard {
+                                name: event_name,
+                                key,
+                                code: from_winit_to_code(&virtual_keycode),
+                            });
+                    } else {
+                        last_keydown = None;
+                    }
+
+                    if state == ElementState::Pressed {
+                        last_code = from_winit_to_code(&virtual_keycode);
+                    } else {
+                        last_code = Code::Unidentified;
+                    }
                 }
                 WindowEvent::CursorMoved { position, .. } => {
                     let cursor_pos = {

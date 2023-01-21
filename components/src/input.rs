@@ -1,5 +1,5 @@
 use dioxus::{core::Event, prelude::*};
-use dioxus_elements::events_data::{KeyCode, KeyboardData};
+use dioxus_elements::events_data::{Key, KeyboardData};
 use freya_elements as dioxus_elements;
 use freya_hooks::{use_focus, use_get_theme};
 
@@ -19,10 +19,12 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     let text = cx.props.value;
     let onkeydown = move |e: Event<KeyboardData>| {
         if focused {
-            if let KeyCode::Space = e.data.code {
-                // Add a space
-                cx.props.onchange.call(format!("{} ", text));
-            } else if let KeyCode::Backspace = e.data.code {
+            if let Key::Character(c) = &e.data.key {
+                if c == " " {
+                    // Add a space
+                    cx.props.onchange.call(format!("{} ", text));
+                }
+            } else if let Key::Backspace = e.data.key {
                 // Remove the last character
                 let mut content = text.to_string();
                 content.pop();
