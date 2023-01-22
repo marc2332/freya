@@ -2,7 +2,7 @@ use dioxus_core::VirtualDom;
 use dioxus_native_core::real_dom::RealDom;
 use dioxus_native_core::SendAnyMap;
 use freya_common::LayoutMemorizer;
-use freya_elements::{from_winit_to_code, from_winit_to_key, Code, Key};
+use freya_elements::{from_winit_to_code, get_non_text_keys, Code, Key};
 use freya_node_state::{CustomAttributeValues, NodeState};
 use freya_processor::events::FreyaEvent;
 use freya_processor::{DomEvent, SafeDOM};
@@ -70,10 +70,10 @@ pub fn run<T: 'static + Clone>(
     );
 
     let proxy = event_loop.create_proxy();
-    let waker = tao_waker(&proxy);
+    let waker = winit_waker(&proxy);
     let cursor_pos = Arc::new(Mutex::new((0.0, 0.0)));
 
-    let mut last_keydown = None;
+    let mut last_keydown = Key::Unidentified;
     let mut last_code = Code::Unidentified;
 
     event_loop.run(move |event, _, control_flow| {
@@ -137,7 +137,8 @@ pub fn run<T: 'static + Clone>(
                     }
                 }
                 WindowEvent::ReceivedCharacter(a) => {
-                    if last_keydown.is_none() {
+                    // Emit the received character if the last pressed key wasn't text
+                    if last_keydown == Key::Unidentified {
                         window_env
                             .freya_events
                             .lock()
@@ -163,11 +164,17 @@ pub fn run<T: 'static + Clone>(
                         ElementState::Released => "keyup",
                     };
 
-                    if let Some(key) = from_winit_to_key(&virtual_keycode) {
+                    // Only emit keys that aren't text (e.g ArrowUp isn't text)
+                    // Text characters will be emitted by `WindowEvent::ReceivedCharacter`
+                    let key = get_non_text_keys(&virtual_keycode);
+                    if key != Key::Unidentified {
                         if state == ElementState::Pressed {
-                            last_keydown = Some(key.clone());
+                            // Cache this key so `WindowEvent::ReceivedCharacter` knows
+                            // it shouldn't emit anything until this same key emits keyup
+                            last_keydown = key.clone();
                         } else {
-                            last_keydown = None;
+                            // Uncahe any key
+                            last_keydown = Key::Unidentified;
                         }
                         window_env
                             .freya_events
@@ -179,12 +186,14 @@ pub fn run<T: 'static + Clone>(
                                 code: from_winit_to_code(&virtual_keycode),
                             });
                     } else {
-                        last_keydown = None;
+                        last_keydown = Key::Unidentified;
                     }
 
                     if state == ElementState::Pressed {
+                        // Cache the key code on keydown event
                         last_code = from_winit_to_code(&virtual_keycode);
                     } else {
+                        // Uncahe any key code
                         last_code = Code::Unidentified;
                     }
                 }
@@ -231,7 +240,7 @@ pub fn run<T: 'static + Clone>(
     });
 }
 
-pub fn tao_waker(proxy: &EventLoopProxy<()>) -> std::task::Waker {
+pub fn winit_waker(proxy: &EventLoopProxy<()>) -> std::task::Waker {
     struct DomHandle(EventLoopProxy<()>);
 
     // this should be implemented by most platforms, but ios is missing this until
