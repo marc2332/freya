@@ -11,6 +11,10 @@ repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
+[target."cfg(target_os = \"linux\")".dependencies.skia-safe]
+version = "0.58.0"
+features = ["gl", "textlayout", "svg", "x11", "wayland"]
+
 [dependencies]
 dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="45abbb7a06bc4697a57c6ab1dfebb822430dcb33"}
 dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="45abbb7a06bc4697a57c6ab1dfebb822430dcb33", features = ["macro", "hooks"]}
@@ -19,7 +23,7 @@ freya-node-state = { path = "../state", version = "0.1.0" }
 freya-layers = { path = "../layers", version = "0.1.0" }
 tokio = { version = "1.23.0", features = ["sync", "rt-multi-thread", "time"] }
 freya-elements = { path = "../elements", version = "0.1.0"}
-skia-safe = { version = "0.56.1", features = ["gl", "textlayout", "svg"] }
+skia-safe = { version = "0.58.0", features = ["gl", "textlayout", "svg"] }
 
 [dev-dependencies]
 dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="45abbb7a06bc4697a57c6ab1dfebb822430dcb33"}
