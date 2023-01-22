@@ -2,12 +2,13 @@
 
 <img align="right" src="./logo.svg" alt="Freya logo" width="120"/>
 
-**Freya** is native GUI library for 🦀 Rust, powered 🧬 [Dioxus](https://dioxuslabs.com) and 🎨 [Skia](https://skia.org/). 
+**Freya** is native GUI library for 🧬 [Dioxus](https://dioxuslabs.com) powered by 🎨 [Skia](https://skia.org/), with 🦀 Rust. 
 
 ⚠️ It's currently work in progress and not usable for production, but you can already play with it! 
 
 You can join the [Discord](https://discord.gg/sYejxCdewG) server if you have any question or issue. 
 
+> You can also see the [API Reference](https://docs.rs/freya/latest/freya/).
 
 <br>
 
@@ -32,7 +33,14 @@ fn app(cx: Scope) -> Element {
 Check out the examples in the Freya [repository](https://github.com/marc2332/freya/tree/main/examples) to learn more.
 
 ### About
-**Freya** is built on top of Dioxus `VirtualDOM` and several other APIs, it provides a renderer powered by a handmade layout engine and Skia, alongside a set of basic elements, components and hooks.
-> **Dioxus** is a cross-platform UI components library for Rust, a *rustified* React.
+**Freya** is built on top of Dioxus, it provides a renderer powered by Skia, alongside a set of elements, components and hooks.
 
-> **Skia** is a cross-platform graphics library, it powers some other GUI libraries, such as Flutter and even big projects, like the Blink engine.
+### Why 🧬 Dioxus?
+
+Dioxus is heavily influenced by React, resulting in a streamlined process for creating complex components without the need for excessive code. 
+
+This sets it apart from other Rust libraries, where equivalent components often require a significant amount of additional code.
+
+### Why 🎨 Skia?
+
+Skia is a battle-tested and well maintained graphics library, and there are even some rusty [bindings](https://github.com/rust-skia/rust-skia). 
