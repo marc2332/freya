@@ -1,5 +1,5 @@
 use euclid::Point2D;
-use glutin::event::MouseButton;
+pub use glutin::event::MouseButton;
 
 #[derive(Debug, Clone)]
 pub struct MouseData {

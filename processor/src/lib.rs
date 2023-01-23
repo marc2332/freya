@@ -263,10 +263,10 @@ pub fn process_work<HookOptions>(
                     name: event_name.to_string(),
                     data: DomEventData::Wheel(WheelData::new(scroll.0, scroll.1)),
                 },
-                FreyaEvent::Keyboard { code, .. } => DomEvent {
+                FreyaEvent::Keyboard { key, code, .. } => DomEvent {
                     element_id: node.element_id.unwrap(),
                     name: event_name.to_string(),
-                    data: DomEventData::Keyboard(KeyboardData::new(code.clone())),
+                    data: DomEventData::Keyboard(KeyboardData::new(key.clone(), *code)),
                 },
             };
 

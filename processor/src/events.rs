@@ -2,12 +2,12 @@ use std::collections::HashMap;
 
 use dioxus_core::ElementId;
 use euclid::Point2D;
-use freya_elements::events_data::MouseData;
+use freya_elements::{events_data::MouseData, Code, Key};
 use freya_layers::RenderData;
+use glutin::event::MouseButton;
 use rustc_hash::FxHashMap;
 
 use crate::{DomEvent, DomEventData};
-pub use glutin::{event::MouseButton, keyboard::Key};
 
 /// Events emitted in Freya.
 #[derive(Clone, Debug)]
@@ -27,7 +27,8 @@ pub enum FreyaEvent {
     /// A Keyboard event.
     Keyboard {
         name: &'static str,
-        code: Key<'static>,
+        key: Key,
+        code: Code,
     },
 }
 

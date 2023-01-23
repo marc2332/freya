@@ -14,7 +14,8 @@ use skia_safe::textlayout::FontCollection;
 use skia_safe::FontMgr;
 use tokio::sync::mpsc::unbounded_channel;
 
-pub use freya_processor::events::{FreyaEvent, MouseButton};
+pub use freya_elements::MouseButton;
+pub use freya_processor::events::FreyaEvent;
 
 #[allow(dead_code)]
 pub struct TestNode {
