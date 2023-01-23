@@ -138,16 +138,19 @@ pub fn run<T: 'static + Clone>(
                 }
                 WindowEvent::ReceivedCharacter(a) => {
                     // Emit the received character if the last pressed key wasn't text
-                    if last_keydown == Key::Unidentified {
-                        window_env
-                            .freya_events
-                            .lock()
-                            .unwrap()
-                            .push(FreyaEvent::Keyboard {
-                                name: "keydown",
-                                key: Key::Character(a.to_string()),
-                                code: last_code,
-                            });
+                    match last_keydown {
+                        Key::Unidentified | Key::Shift => {
+                            window_env
+                                .freya_events
+                                .lock()
+                                .unwrap()
+                                .push(FreyaEvent::Keyboard {
+                                    name: "keydown",
+                                    key: Key::Character(a.to_string()),
+                                    code: last_code,
+                                });
+                        }
+                        _ => {}
                     }
                 }
                 WindowEvent::KeyboardInput {
