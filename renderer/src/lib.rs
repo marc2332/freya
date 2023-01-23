@@ -24,7 +24,7 @@ mod renderer;
 mod window;
 mod window_config;
 
-/// Start the Tao event loop with the virtual dom polling
+/// Start the winit event loop with the virtual dom polling
 pub fn run<T: 'static + Clone>(
     mut vdom: VirtualDom,
     rdom: Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>,
