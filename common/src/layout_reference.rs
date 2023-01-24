@@ -1,4 +1,4 @@
-/// Area and some extra info of a given node on a given time
+/// Layout info of a certain Node, used by `use_node`.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct NodeReferenceLayout {
     pub x: f32,

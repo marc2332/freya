@@ -9,13 +9,17 @@ use freya_common::{LayoutMemorizer, NodeArea};
 use freya_layers::DioxusNode;
 use freya_node_state::{CustomAttributeValues, NodeState};
 use freya_processor::events::EventsProcessor;
-use freya_processor::{process_work, DomEvent, EventEmitter, EventReceiver, SafeFreyaEvents};
+use freya_processor::{
+    events::DomEvent, process_work, EventEmitter, EventReceiver, SafeFreyaEvents,
+};
 use skia_safe::textlayout::FontCollection;
 use skia_safe::FontMgr;
 use tokio::sync::mpsc::unbounded_channel;
 
-pub use freya_processor::events::{FreyaEvent, MouseButton};
+pub use freya_elements::MouseButton;
+pub use freya_processor::events::FreyaEvent;
 
+/// Represents a `Node` in the DOM.
 #[allow(dead_code)]
 pub struct TestNode {
     node_id: NodeId,
