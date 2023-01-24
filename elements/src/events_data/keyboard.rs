@@ -170,6 +170,7 @@ pub fn get_non_text_keys(key: &VirtualKeyCode) -> Key {
     }
 }
 
+/// Return the equivalent code of Winit and `keyboard_types`
 pub fn from_winit_to_code(key: &VirtualKeyCode) -> Code {
     match key {
         VirtualKeyCode::Key1 => Code::Digit1,
@@ -338,6 +339,7 @@ pub fn from_winit_to_code(key: &VirtualKeyCode) -> Code {
     }
 }
 
+/// Data of a Keyboard event.
 #[derive(Debug, Clone)]
 pub struct KeyboardData {
     pub key: Key,
@@ -351,6 +353,7 @@ impl KeyboardData {
 }
 
 impl KeyboardData {
+    /// Try to get the text of the character
     pub fn to_text(&self) -> Option<&str> {
         if let Key::Character(c) = &self.key {
             Some(c)

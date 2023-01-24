@@ -5,7 +5,7 @@ use freya_common::LayoutMemorizer;
 use freya_elements::{from_winit_to_code, get_non_text_keys, Code, Key};
 use freya_node_state::{CustomAttributeValues, NodeState};
 use freya_processor::events::FreyaEvent;
-use freya_processor::{DomEvent, SafeDOM};
+use freya_processor::{events::DomEvent, SafeDOM};
 use futures::task::ArcWake;
 use futures::{pin_mut, task, FutureExt};
 use glutin::event::{
@@ -97,146 +97,146 @@ pub fn run<T: 'static + Clone>(
                     &mutations_sender,
                 );
             }
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
-                WindowEvent::MouseInput { state, button, .. } => {
-                    let event_name = match state {
-                        ElementState::Pressed => "mousedown",
-                        ElementState::Released => "click",
-                    };
-                    let cursor_pos = cursor_pos.lock().unwrap();
-                    window_env
-                        .freya_events
-                        .lock()
-                        .unwrap()
-                        .push(FreyaEvent::Mouse {
-                            name: event_name,
-                            cursor: *cursor_pos,
-                            button: Some(button),
-                        });
-                }
-                WindowEvent::MouseWheel { delta, phase, .. } => {
-                    if TouchPhase::Moved == phase {
+            Event::WindowEvent { event, .. } => {
+                match event {
+                    WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
+                    WindowEvent::MouseInput { state, button, .. } => {
+                        let event_name = match state {
+                            ElementState::Pressed => "mousedown",
+                            ElementState::Released => "click",
+                        };
                         let cursor_pos = cursor_pos.lock().unwrap();
-                        let scroll_data = {
-                            match delta {
-                                MouseScrollDelta::LineDelta(x, y) => (x as f64, y as f64),
-                                MouseScrollDelta::PixelDelta(pos) => (pos.x, pos.y),
+                        window_env
+                            .freya_events
+                            .lock()
+                            .unwrap()
+                            .push(FreyaEvent::Mouse {
+                                name: event_name,
+                                cursor: *cursor_pos,
+                                button: Some(button),
+                            });
+                    }
+                    WindowEvent::MouseWheel { delta, phase, .. } => {
+                        if TouchPhase::Moved == phase {
+                            let cursor_pos = cursor_pos.lock().unwrap();
+                            let scroll_data = {
+                                match delta {
+                                    MouseScrollDelta::LineDelta(x, y) => (x as f64, y as f64),
+                                    MouseScrollDelta::PixelDelta(pos) => (pos.x, pos.y),
+                                }
+                            };
+
+                            window_env
+                                .freya_events
+                                .lock()
+                                .unwrap()
+                                .push(FreyaEvent::Wheel {
+                                    name: "wheel",
+                                    scroll: scroll_data,
+                                    cursor: *cursor_pos,
+                                });
+                        }
+                    }
+                    WindowEvent::ReceivedCharacter(a) => {
+                        // Emit the received character if the last pressed key wasn't text
+                        match last_keydown {
+                            Key::Unidentified | Key::Shift => {
+                                window_env.freya_events.lock().unwrap().push(
+                                    FreyaEvent::Keyboard {
+                                        name: "keydown",
+                                        key: Key::Character(a.to_string()),
+                                        code: last_code,
+                                    },
+                                );
                             }
+                            _ => {}
+                        }
+                    }
+                    WindowEvent::KeyboardInput {
+                        input:
+                            KeyboardInput {
+                                virtual_keycode: Some(virtual_keycode),
+                                state,
+                                ..
+                            },
+                        ..
+                    } => {
+                        let event_name = match state {
+                            ElementState::Pressed => "keydown",
+                            ElementState::Released => "keyup",
+                        };
+
+                        // Only emit keys that aren't text (e.g ArrowUp isn't text)
+                        // Text characters will be emitted by `WindowEvent::ReceivedCharacter`
+                        let key = get_non_text_keys(&virtual_keycode);
+                        if key != Key::Unidentified {
+                            if state == ElementState::Pressed {
+                                // Cache this key so `WindowEvent::ReceivedCharacter` knows
+                                // it shouldn't emit anything until this same key emits keyup
+                                last_keydown = key.clone();
+                            } else {
+                                // Uncahe any key
+                                last_keydown = Key::Unidentified;
+                            }
+                            window_env
+                                .freya_events
+                                .lock()
+                                .unwrap()
+                                .push(FreyaEvent::Keyboard {
+                                    name: event_name,
+                                    key,
+                                    code: from_winit_to_code(&virtual_keycode),
+                                });
+                        } else {
+                            last_keydown = Key::Unidentified;
+                        }
+
+                        if state == ElementState::Pressed {
+                            // Cache the key code on keydown event
+                            last_code = from_winit_to_code(&virtual_keycode);
+                        } else {
+                            // Uncahe any key code
+                            last_code = Code::Unidentified;
+                        }
+                    }
+                    WindowEvent::CursorMoved { position, .. } => {
+                        let cursor_pos = {
+                            let mut cursor_pos = cursor_pos.lock().unwrap();
+                            cursor_pos.0 = position.x;
+                            cursor_pos.1 = position.y;
+
+                            *cursor_pos
                         };
 
                         window_env
                             .freya_events
                             .lock()
                             .unwrap()
-                            .push(FreyaEvent::Wheel {
-                                name: "wheel",
-                                scroll: scroll_data,
-                                cursor: *cursor_pos,
+                            .push(FreyaEvent::Mouse {
+                                name: "mouseover",
+                                cursor: cursor_pos,
+                                button: None,
                             });
                     }
-                }
-                WindowEvent::ReceivedCharacter(a) => {
-                    // Emit the received character if the last pressed key wasn't text
-                    match last_keydown {
-                        Key::Unidentified | Key::Shift => {
-                            window_env
-                                .freya_events
-                                .lock()
-                                .unwrap()
-                                .push(FreyaEvent::Keyboard {
-                                    name: "keydown",
-                                    key: Key::Character(a.to_string()),
-                                    code: last_code,
-                                });
-                        }
-                        _ => {}
-                    }
-                }
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            virtual_keycode: Some(virtual_keycode),
-                            state,
-                            ..
-                        },
-                    ..
-                } => {
-                    let event_name = match state {
-                        ElementState::Pressed => "keydown",
-                        ElementState::Released => "keyup",
-                    };
-
-                    // Only emit keys that aren't text (e.g ArrowUp isn't text)
-                    // Text characters will be emitted by `WindowEvent::ReceivedCharacter`
-                    let key = get_non_text_keys(&virtual_keycode);
-                    if key != Key::Unidentified {
-                        if state == ElementState::Pressed {
-                            // Cache this key so `WindowEvent::ReceivedCharacter` knows
-                            // it shouldn't emit anything until this same key emits keyup
-                            last_keydown = key.clone();
-                        } else {
-                            // Uncahe any key
-                            last_keydown = Key::Unidentified;
-                        }
+                    WindowEvent::Resized(size) => {
+                        let mut context = window_env.gr_context.clone();
+                        window_env.surface = create_surface(
+                            &window_env.windowed_context,
+                            &window_env.fb_info,
+                            &mut context,
+                        );
+                        window_env.windowed_context.resize(size);
                         window_env
-                            .freya_events
+                            .layout_memorizer
                             .lock()
                             .unwrap()
-                            .push(FreyaEvent::Keyboard {
-                                name: event_name,
-                                key,
-                                code: from_winit_to_code(&virtual_keycode),
-                            });
-                    } else {
-                        last_keydown = Key::Unidentified;
+                            .dirty_nodes
+                            .clear();
+                        window_env.layout_memorizer.lock().unwrap().nodes.clear();
                     }
-
-                    if state == ElementState::Pressed {
-                        // Cache the key code on keydown event
-                        last_code = from_winit_to_code(&virtual_keycode);
-                    } else {
-                        // Uncahe any key code
-                        last_code = Code::Unidentified;
-                    }
+                    _ => {}
                 }
-                WindowEvent::CursorMoved { position, .. } => {
-                    let cursor_pos = {
-                        let mut cursor_pos = cursor_pos.lock().unwrap();
-                        cursor_pos.0 = position.x;
-                        cursor_pos.1 = position.y;
-
-                        *cursor_pos
-                    };
-
-                    window_env
-                        .freya_events
-                        .lock()
-                        .unwrap()
-                        .push(FreyaEvent::Mouse {
-                            name: "mouseover",
-                            cursor: cursor_pos,
-                            button: None,
-                        });
-                }
-                WindowEvent::Resized(size) => {
-                    let mut context = window_env.gr_context.clone();
-                    window_env.surface = create_surface(
-                        &window_env.windowed_context,
-                        &window_env.fb_info,
-                        &mut context,
-                    );
-                    window_env.windowed_context.resize(size);
-                    window_env
-                        .layout_memorizer
-                        .lock()
-                        .unwrap()
-                        .dirty_nodes
-                        .clear();
-                    window_env.layout_memorizer.lock().unwrap().nodes.clear();
-                }
-                _ => {}
-            },
+            }
             Event::LoopDestroyed => {}
             _ => (),
         }

@@ -25,6 +25,8 @@ pub fn render_skia(
     if let NodeType::Element { tag, .. } = &node.get_type() {
         let children = node.children.as_ref();
         let viewports = viewports_collection.get(node.get_id());
+
+        // Clip all elements with their corresponding viewports
         if let Some((_, viewports)) = viewports {
             for viewport_id in viewports {
                 let viewport = viewports_collection.get(viewport_id).unwrap().0;

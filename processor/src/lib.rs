@@ -1,4 +1,3 @@
-use dioxus_core::ElementId;
 use dioxus_native_core::{node::NodeType, real_dom::RealDom, NodeId};
 use euclid::{Length, Point2D};
 use freya_common::{LayoutMemorizer, NodeArea};
@@ -9,9 +8,7 @@ use freya_node_state::{CustomAttributeValues, NodeState};
 use rustc_hash::FxHashMap;
 use skia_safe::{textlayout::FontCollection, Color};
 use std::{
-    any::Any,
     ops::Index,
-    rc::Rc,
     sync::{Arc, Mutex},
 };
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
@@ -19,7 +16,7 @@ use tracing::info;
 
 pub mod events;
 
-use events::{EventsProcessor, FreyaEvent};
+use events::{DomEvent, DomEventData, EventsProcessor, FreyaEvent};
 
 pub type SafeDOM = Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>;
 pub type EventEmitter = UnboundedSender<DomEvent>;
@@ -283,28 +280,4 @@ pub fn process_work<HookOptions>(
     }
 
     freya_events.lock().unwrap().clear();
-}
-
-#[derive(Debug, Clone)]
-pub struct DomEvent {
-    pub name: String,
-    pub element_id: ElementId,
-    pub data: DomEventData,
-}
-
-#[derive(Debug, Clone)]
-pub enum DomEventData {
-    Mouse(MouseData),
-    Keyboard(KeyboardData),
-    Wheel(WheelData),
-}
-
-impl DomEventData {
-    pub fn any(self) -> Rc<dyn Any> {
-        match self {
-            DomEventData::Mouse(m) => Rc::new(m),
-            DomEventData::Keyboard(k) => Rc::new(k),
-            DomEventData::Wheel(w) => Rc::new(w),
-        }
-    }
 }

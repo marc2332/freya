@@ -1,13 +1,11 @@
-use std::collections::HashMap;
+use std::{any::Any, collections::HashMap, rc::Rc};
 
 use dioxus_core::ElementId;
 use euclid::Point2D;
-use freya_elements::{events_data::MouseData, Code, Key};
+use freya_elements::{events_data::MouseData, Code, Key, KeyboardData, WheelData};
 use freya_layers::RenderData;
 use glutin::event::MouseButton;
 use rustc_hash::FxHashMap;
-
-use crate::{DomEvent, DomEventData};
 
 /// Events emitted in Freya.
 #[derive(Clone, Debug)]
@@ -32,19 +30,43 @@ pub enum FreyaEvent {
     },
 }
 
+/// Events emitted to the DOM.
+#[derive(Debug, Clone)]
+pub struct DomEvent {
+    pub name: String,
+    pub element_id: ElementId,
+    pub data: DomEventData,
+}
+
+/// Data of a DOM event.
+#[derive(Debug, Clone)]
+pub enum DomEventData {
+    Mouse(MouseData),
+    Keyboard(KeyboardData),
+    Wheel(WheelData),
+}
+
+impl DomEventData {
+    pub fn any(self) -> Rc<dyn Any> {
+        match self {
+            DomEventData::Mouse(m) => Rc::new(m),
+            DomEventData::Keyboard(k) => Rc::new(k),
+            DomEventData::Wheel(w) => Rc::new(w),
+        }
+    }
+}
+
+/// Cached state between re-renders
 #[derive(Default)]
 struct ElementState {
     mouseover: bool,
 }
 
-/// Some events are not produced directly by the user.
-/// The EventsProcessor calculates by comparing previous and current events
-/// if new events must be produced.
+/// `EventsProcessor` calculates new events based on past and new events.
 ///
-/// For example, mouseleave indicates the user has left the hovering area of
+/// For example, `mouseleave` indicates the user has left the hovering area of
 /// a particular element, which previously had to enter that area.
-/// At the moment, whether if it has entered or not is defined by the mouseover event.
-
+/// At the moment, whether if it has entered or not is defined by the `mouseover` event.
 #[derive(Default)]
 pub struct EventsProcessor {
     states: HashMap<ElementId, ElementState>,
