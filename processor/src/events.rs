@@ -3,7 +3,7 @@ use std::{any::Any, collections::HashMap, rc::Rc};
 use dioxus_core::ElementId;
 use euclid::Point2D;
 use freya_elements::{events_data::MouseData, Code, Key, KeyboardData, WheelData};
-use freya_layers::RenderData;
+use freya_layout::RenderData;
 use glutin::event::MouseButton;
 use rustc_hash::FxHashMap;
 

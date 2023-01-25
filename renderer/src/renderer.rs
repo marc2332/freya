@@ -1,7 +1,7 @@
 use dioxus_native_core::node::NodeType;
 use dioxus_native_core::tree::TreeView;
 use dioxus_native_core::NodeId;
-use freya_layers::{DioxusNode, RenderData};
+use freya_layout::{DioxusNode, RenderData};
 use freya_node_state::NodeState;
 use freya_processor::ViewportsCollection;
 use skia_safe::textlayout::{Paragraph, RectHeightStyle, RectWidthStyle, TextHeightBehavior};

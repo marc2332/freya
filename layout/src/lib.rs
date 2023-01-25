@@ -1,6 +1,5 @@
 use dioxus_native_core::{node::NodeType, real_dom::RealDom, tree::TreeView, NodeId};
 use freya_common::{LayoutMemorizer, NodeArea, NodeLayoutInfo, NodeReferenceLayout};
-use freya_layers::{DioxusNode, Layers};
 use freya_node_state::{
     CursorMode, CursorReference, CustomAttributeValues, DirectionMode, DisplayMode, FontStyle,
     NodeState, SizeMode,
@@ -9,9 +8,11 @@ use skia_safe::textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, Te
 use std::sync::{Arc, Mutex};
 
 mod area_calc;
+mod layers;
 mod ops_calc;
 
 use area_calc::calculate_area;
+pub use layers::*;
 pub use ops_calc::run_calculations;
 
 /// Collect all the texts and node states from a given array of children

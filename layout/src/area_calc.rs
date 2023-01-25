@@ -1,9 +1,8 @@
 use dioxus_native_core::node::NodeType;
 use freya_common::NodeArea;
-use freya_layers::DioxusNode;
 use freya_node_state::SizeMode;
 
-use crate::{ops_calc::run_calculations, NodeLayoutMeasurer};
+use crate::{ops_calc::run_calculations, DioxusNode, NodeLayoutMeasurer};
 
 pub fn calculate_area(node_measurer: &NodeLayoutMeasurer, node: &DioxusNode) -> NodeArea {
     let mut area = *node_measurer.remaining_area;

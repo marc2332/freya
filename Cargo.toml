@@ -4,7 +4,7 @@ version = "0.0.0"
 edition = "2021"
 
 [workspace]
-members = ["layers", "layout", "renderer", "state", "freya", "elements", "components", "hooks", "common", "processor", "testing"]
+members = ["layout", "renderer", "state", "freya", "elements", "components", "hooks", "common", "processor", "testing"]
 
 [features]
 devtools = ["freya/devtools"]

@@ -6,7 +6,7 @@ use dioxus_native_core::real_dom::RealDom;
 use dioxus_native_core::tree::TreeView;
 use dioxus_native_core::{NodeId, SendAnyMap};
 use freya_common::{LayoutMemorizer, NodeArea};
-use freya_layers::DioxusNode;
+use freya_layout::DioxusNode;
 use freya_node_state::{CustomAttributeValues, NodeState};
 use freya_processor::events::EventsProcessor;
 use freya_processor::{
