@@ -132,7 +132,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
             .unwrap()
             .is_node_layout_memorized(&self.node_id);
 
-        // If this node is dirty and parent is not dirty, mark this node dirty
+        // If this node is dirty and parent is not dirty, mark the parent as dirty
         if is_dirty && !is_parent_dirty {
             if let Some(p) = parent_id {
                 self.layout_memorizer.lock().unwrap().mark_as_dirty(p)
