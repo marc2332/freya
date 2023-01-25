@@ -16,9 +16,9 @@ version = "0.58.0"
 features = ["gl", "textlayout", "svg", "x11", "wayland"]
 
 [dependencies]
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="45abbb7a06bc4697a57c6ab1dfebb822430dcb33"}
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="45abbb7a06bc4697a57c6ab1dfebb822430dcb33"}
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="45abbb7a06bc4697a57c6ab1dfebb822430dcb33", features = ["macro", "hooks"]}
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="1b597f43d1c8077fe86b42ef5c4c4d5eecd3b021"}
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="1b597f43d1c8077fe86b42ef5c4c4d5eecd3b021"}
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="1b597f43d1c8077fe86b42ef5c4c4d5eecd3b021", features = ["macro", "hooks"]}
 freya-common = { path = "../common", version = "0.1.0" }
 freya-node-state = { path = "../state", version = "0.1.0" }
 tokio = { version = "1.23.0", features = ["sync", "rt-multi-thread", "time"] }
@@ -27,12 +27,12 @@ skia-safe = { version = "0.58.0", features = ["gl", "textlayout", "svg"] }
 rustc-hash = "1.1.0"
 
 [dev-dependencies]
-dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="45abbb7a06bc4697a57c6ab1dfebb822430dcb33"}
-dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="45abbb7a06bc4697a57c6ab1dfebb822430dcb33"}
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="45abbb7a06bc4697a57c6ab1dfebb822430dcb33"}
-dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="45abbb7a06bc4697a57c6ab1dfebb822430dcb33"}
-dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="45abbb7a06bc4697a57c6ab1dfebb822430dcb33"}
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="45abbb7a06bc4697a57c6ab1dfebb822430dcb33"}
+dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="1b597f43d1c8077fe86b42ef5c4c4d5eecd3b021"}
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="1b597f43d1c8077fe86b42ef5c4c4d5eecd3b021"}
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="1b597f43d1c8077fe86b42ef5c4c4d5eecd3b021"}
+dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="1b597f43d1c8077fe86b42ef5c4c4d5eecd3b021"}
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="1b597f43d1c8077fe86b42ef5c4c4d5eecd3b021"}
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="1b597f43d1c8077fe86b42ef5c4c4d5eecd3b021"}
 fxhash = "0.2.1"
 rustc-hash = "1.1.0"
 anymap = "0.12.1"
