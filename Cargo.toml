@@ -12,18 +12,18 @@ wireframe = ["freya/wireframe"]
 
 [dev-dependencies]
 freya = { path = "./freya"}
-dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="1b597f43d1c8077fe86b42ef5c4c4d5eecd3b021" }
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="1b597f43d1c8077fe86b42ef5c4c4d5eecd3b021"}
-dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="1b597f43d1c8077fe86b42ef5c4c4d5eecd3b021"}
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="1b597f43d1c8077fe86b42ef5c4c4d5eecd3b021"}
-dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="1b597f43d1c8077fe86b42ef5c4c4d5eecd3b021"}
-dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="1b597f43d1c8077fe86b42ef5c4c4d5eecd3b021"}
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="1b597f43d1c8077fe86b42ef5c4c4d5eecd3b021"}
+dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="4f83c1b86d396a24b32da6229b73e95a05855db3" }
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="4f83c1b86d396a24b32da6229b73e95a05855db3"}
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="4f83c1b86d396a24b32da6229b73e95a05855db3"}
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="4f83c1b86d396a24b32da6229b73e95a05855db3"}
+dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="4f83c1b86d396a24b32da6229b73e95a05855db3"}
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="4f83c1b86d396a24b32da6229b73e95a05855db3"}
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="4f83c1b86d396a24b32da6229b73e95a05855db3"}
 tokio = "1.23.0"
 reqwest = {version = "0.11.13", features = ["json"] }
 serde = "1.0.152"
 tracing-subscriber = "0.2.25"
-dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev="1b597f43d1c8077fe86b42ef5c4c4d5eecd3b021"}
+dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev="4f83c1b86d396a24b32da6229b73e95a05855db3"}
 
 [profile.release]
 lto = true
