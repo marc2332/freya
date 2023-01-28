@@ -12,7 +12,6 @@ use std::{
     sync::{Arc, Mutex},
 };
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
-use tracing::info;
 
 pub mod events;
 
@@ -69,6 +68,7 @@ pub fn process_work<HookOptions>(
 
     #[cfg(debug_assertions)]
     {
+        use tracing::info;
         let dirty_nodes_counter = manager.lock().unwrap().dirty_nodes_counter;
         if dirty_nodes_counter > 0 {
             let nodes = manager.lock().unwrap().nodes.len();
