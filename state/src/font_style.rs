@@ -47,10 +47,10 @@ impl ParentDepState<CustomAttributeValues> for FontStyle {
             "font_style"
         ])));
 
-    fn reduce<'a>(
+    fn reduce(
         &mut self,
         node: NodeView<CustomAttributeValues>,
-        parent: Option<(&'a Self,)>,
+        parent: Option<(&Self,)>,
         _ctx: &Self::Ctx,
     ) -> bool {
         let mut font_style = parent.map(|(v,)| v.clone()).unwrap_or_default();

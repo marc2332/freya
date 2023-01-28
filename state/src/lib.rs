@@ -59,7 +59,7 @@ impl NodeState {
             return false;
         }
 
-        return true;
+        true
     }
 }
 

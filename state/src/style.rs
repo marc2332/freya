@@ -35,7 +35,7 @@ impl NodeDepState<CustomAttributeValues> for Style {
             "display",
         ])));
 
-    fn reduce<'a>(
+    fn reduce(
         &mut self,
         node: NodeView<CustomAttributeValues>,
         _sibling: (),

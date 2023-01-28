@@ -21,7 +21,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
         if focused {
             if let Key::Character(text_char) = &e.data.key {
                 // Add a new char
-                cx.props.onchange.call(format!("{}{}", text, text_char));
+                cx.props.onchange.call(format!("{text}{text_char}"));
             } else if let Key::Backspace = e.data.key {
                 // Remove the last character
                 let mut content = text.to_string();

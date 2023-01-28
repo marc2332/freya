@@ -38,10 +38,10 @@ impl ParentDepState<CustomAttributeValues> for Size {
         .with_text()
         .with_tag();
 
-    fn reduce<'a>(
+    fn reduce(
         &mut self,
         node: NodeView<CustomAttributeValues>,
-        _parent: Option<(&'a Self,)>,
+        _parent: Option<(&Self,)>,
         ctx: &Self::Ctx,
     ) -> bool {
         let mut width = SizeMode::default();

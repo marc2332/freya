@@ -25,10 +25,10 @@ impl ParentDepState<CustomAttributeValues> for CursorSettings {
             "cursor_id",
         ])));
 
-    fn reduce<'a>(
+    fn reduce(
         &mut self,
         node: NodeView<CustomAttributeValues>,
-        parent: Option<(&'a Self,)>,
+        parent: Option<(&Self,)>,
         _ctx: &Self::Ctx,
     ) -> bool {
         let mut cursor = parent.map(|(p,)| p.clone()).unwrap_or_default();
