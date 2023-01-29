@@ -3,15 +3,39 @@ use freya_elements as dioxus_elements;
 use freya_elements::MouseEvent;
 use freya_hooks::use_get_theme;
 
-/// Properties for the Button component.
+/// [`Button`] component properties.
 #[derive(Props)]
 pub struct ButtonProps<'a> {
+    /// Inner children for the Button.
     pub children: Element<'a>,
     #[props(optional)]
+    /// Handler for the `onclick` event.
     pub onclick: Option<EventHandler<'a, MouseEvent>>,
 }
 
-/// A simple Button component.
+/// `Button` component.
+///
+/// # Props
+/// See [`ButtonProps`].
+///
+/// # Styling
+/// Inherits the [`ButtonTheme`](freya_hooks::ButtonTheme) theme.
+///
+/// # Example
+///
+/// ```rust
+/// fn app() -> Element {
+///     render!(
+///         Button {
+///             onclick: |_| println!("clicked"),
+///             label {
+///                 "Click this"
+///             }
+///         }
+///     )
+/// }
+/// ```
+///
 #[allow(non_snake_case)]
 pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
     let theme = use_get_theme(cx);

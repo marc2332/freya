@@ -3,14 +3,40 @@ use freya_elements as dioxus_elements;
 use freya_elements::MouseEvent;
 use freya_hooks::{use_animation, use_get_theme, AnimationMode};
 
-/// Properties for the Switch component.
+/// [`Switch`] component properties.
 #[derive(Props)]
 pub struct SwitchProps<'a> {
+    /// Whether the `Switch` is enabled or not.
     pub enabled: bool,
+    /// Handler for the `ontoggled` event.
     pub ontoggled: EventHandler<'a, ()>,
 }
 
-/// A controled Switch component.
+/// Controlled `Switch` component.
+///
+/// # Props
+/// See [`SwitchProps`].
+///
+/// # Styling
+/// Inherits the [`SwitchTheme`](freya_hooks::SwitchTheme) theme.
+///
+/// # Example
+///
+/// ```rust
+/// fn app() -> Element {
+///     let enabled = use_state(&cx, || false);
+///
+///     render!(
+///         Switch {
+///         enabled: *enabled.get(),
+///         ontoggled: |_| {
+///             enabled.set(!enabled.get());
+///         }
+///         }
+///     )
+/// }
+/// ```
+///
 #[allow(non_snake_case)]
 pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
     let (start_enabled, restart_enabled, progress_enabled) =

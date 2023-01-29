@@ -3,14 +3,43 @@ use dioxus_elements::events_data::{Key, KeyboardData};
 use freya_elements as dioxus_elements;
 use freya_hooks::{use_focus, use_get_theme};
 
-/// Properties for the Input component.
+/// [`Input`] component properties.
 #[derive(Props)]
 pub struct InputProps<'a> {
+    /// Current value of the Input
     pub value: &'a str,
+    /// Handler for the `onchange` event.
     pub onchange: EventHandler<'a, String>,
 }
 
-/// A controlled Input component.
+/// Controlled `Input` component.
+///
+/// # Props
+/// See [`InputProps`].
+///
+/// # Styling
+/// Inherits the [`ButtonTheme`](freya_hooks::ButtonTheme) theme.
+///
+/// # Example
+///
+/// ```rust
+/// fn app() -> Element {
+///     use_init_focus(&cx);
+///     let value = use_state(cx, String::new);
+///
+///     render!(
+///         label {
+///             "Value: {value}"
+///         }
+///         Input {
+///             value: &value.0,
+///             onchange: |e| {
+///                  value.set(e)
+///             }
+///         }
+///     )
+/// }
+/// ```
 #[allow(non_snake_case)]
 pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     let theme = use_get_theme(cx);

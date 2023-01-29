@@ -11,23 +11,52 @@ use crate::{
     SCROLLBAR_SIZE,
 };
 
-/// Properties for the ScrollView component.
+/// [`ScrollView`] component properties.
 #[derive(Props)]
 pub struct ScrollViewProps<'a> {
+    /// Direction of the ScrollView, `vertical` or `horizontal`.
     #[props(optional)]
     pub direction: Option<&'a str>,
+    /// Inner children for the ScrollView.
     pub children: Element<'a>,
+    /// Height of the ScrollView.
     #[props(optional)]
     pub height: Option<&'a str>,
+    /// Width of the ScrollView.
     #[props(optional)]
     pub width: Option<&'a str>,
+    /// Padding of the ScrollView.
     #[props(optional)]
     pub padding: Option<&'a str>,
+    /// Show the scrollbar, by default is hidden.
     #[props(optional)]
     pub show_scrollbar: Option<bool>,
 }
 
-/// A Scrollable container.
+/// `Scrollable` container.
+///
+/// # Props
+/// See [`ScrollViewProps`](ScrollViewProps).
+///
+/// # Example
+///
+/// ```rust
+/// fn app() -> Element {
+///     render!(
+///         ScrollView {
+///              height: "300",
+///              width: "100%",
+///              show_scrollbar: true,
+///              rect {
+///                 background: "blue",
+///                 height: "500",
+///                 width: "100%"
+///              }
+///         }
+///     )
+/// }
+/// ```
+///
 #[allow(non_snake_case)]
 pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     let theme = use_get_theme(cx);
