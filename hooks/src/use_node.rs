@@ -4,7 +4,7 @@ use freya_common::NodeReferenceLayout;
 use freya_node_state::{CustomAttributeValues, NodeReference};
 use tokio::sync::mpsc::unbounded_channel;
 
-/// Creates a reference to the desired node's layout size
+/// Subscribe to a Node layout changes.
 pub fn use_node(cx: &ScopeState) -> (AttributeValue, NodeReferenceLayout) {
     let status = use_state::<NodeReferenceLayout>(cx, NodeReferenceLayout::default);
 

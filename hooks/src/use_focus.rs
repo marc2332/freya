@@ -2,7 +2,7 @@ use dioxus_core::ScopeState;
 use dioxus_hooks::{use_shared_state, use_shared_state_provider};
 use uuid::Uuid;
 
-/// Listen for focus changes, or mark your self as focused.
+/// Subscribe and change the current focus.
 pub fn use_focus(cx: &ScopeState) -> (bool, impl Fn() + '_) {
     let my_id = cx.use_hook(Uuid::new_v4);
     let focused_id = use_shared_state::<Uuid>(cx);

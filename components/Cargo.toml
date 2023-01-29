@@ -23,3 +23,6 @@ freya-elements = { path = "../elements", version = "0.1.0" }
 freya-node-state = { path = "../state", version = "0.1.0" }
 freya-hooks = { path = "../hooks", version = "0.1.0" }
 open = "1"
+
+[dev-dependencies]
+freya = { path = "../freya", version = "0.1.0" }
