@@ -40,8 +40,9 @@ pub struct ScrollViewProps<'a> {
 ///
 /// # Example
 ///
-/// ```rust
-/// fn app() -> Element {
+/// ```no_run
+/// # use freya::prelude::*;
+/// fn app(cx: Scope) -> Element {
 ///     render!(
 ///         ScrollView {
 ///              height: "300",

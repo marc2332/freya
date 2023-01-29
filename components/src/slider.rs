@@ -40,8 +40,8 @@ fn ensure_correct_slider_range(value: f64) -> f64 {
 /// Inherits a [`SliderTheme`](freya_hooks::SliderTheme) theme.
 ///
 /// # Example
-/// ```rs
-///
+/// ```no_run
+/// # use freya::prelude::*;
 /// fn app(cx: Scope) -> Element {
 ///     let percentage = use_state(cx, || 20.0);
 ///

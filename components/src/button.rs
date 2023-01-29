@@ -23,8 +23,9 @@ pub struct ButtonProps<'a> {
 ///
 /// # Example
 ///
-/// ```rust
-/// fn app() -> Element {
+/// ```no_run
+/// # use freya::prelude::*;
+/// fn app(cx: Scope) -> Element {
 ///     render!(
 ///         Button {
 ///             onclick: |_| println!("clicked"),

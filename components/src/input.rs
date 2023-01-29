@@ -23,7 +23,8 @@ pub struct InputProps<'a> {
 /// # Example
 ///
 /// ```rust
-/// fn app() -> Element {
+/// # use freya::prelude::*;
+/// fn app(cx: Scope) -> Element {
 ///     use_init_focus(&cx);
 ///     let value = use_state(cx, String::new);
 ///
@@ -32,7 +33,7 @@ pub struct InputProps<'a> {
 ///             "Value: {value}"
 ///         }
 ///         Input {
-///             value: &value.0,
+///             value: &value,
 ///             onchange: |e| {
 ///                  value.set(e)
 ///             }

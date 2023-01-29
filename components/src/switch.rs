@@ -22,8 +22,9 @@ pub struct SwitchProps<'a> {
 ///
 /// # Example
 ///
-/// ```rust
-/// fn app() -> Element {
+/// ```no_run
+/// # use freya::prelude::*;
+/// fn app(cx: Scope) -> Element {
 ///     let enabled = use_state(&cx, || false);
 ///
 ///     render!(
