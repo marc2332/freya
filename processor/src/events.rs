@@ -30,6 +30,24 @@ pub enum FreyaEvent {
     },
 }
 
+impl FreyaEvent {
+    pub fn get_name(&self) -> &'static str {
+        match self {
+            Self::Mouse { name, .. } => name,
+            Self::Wheel { name, .. } => name,
+            Self::Keyboard { name, .. } => name,
+        }
+    }
+
+    pub fn set_name(&mut self, new_name: &'static str) {
+        match self {
+            Self::Mouse { name, .. } => *name = new_name,
+            Self::Wheel { name, .. } => *name = new_name,
+            Self::Keyboard { name, .. } => *name = new_name,
+        }
+    }
+}
+
 /// Events emitted to the DOM.
 #[derive(Debug, Clone)]
 pub struct DomEvent {

@@ -147,6 +147,8 @@ pub fn process_work<HookOptions>(
     let mut calculated_events: FxHashMap<&'static str, Vec<(RenderData, FreyaEvent)>> =
         FxHashMap::default();
 
+    let mut global_events: Vec<FreyaEvent> = Vec::default();
+
     // Propagate events from the top to the bottom
     for layer_num in &layers_nums {
         let layer = layers.layers.get(layer_num).unwrap();
@@ -173,6 +175,12 @@ pub fn process_work<HookOptions>(
 
                         let cursor_is_inside =
                             cursor.0 > x && cursor.0 < x2 && cursor.1 > y && cursor.1 < y2;
+
+                        if name == &"click" {
+                            let mut global_event = event.clone();
+                            global_event.set_name("globalclick");
+                            global_events.push(global_event);
+                        }
 
                         // Make sure the cursor is inside the node area
                         if cursor_is_inside {
@@ -268,6 +276,37 @@ pub fn process_work<HookOptions>(
             };
 
             new_events.push(event.clone());
+            event_emitter.send(event).unwrap();
+        }
+    }
+
+    for global_event in global_events {
+        let event_name = global_event.get_name();
+        let dom = dom.lock().unwrap();
+        let listeners = dom.get_listening_sorted(event_name);
+
+        for listener in listeners {
+            let event = match global_event {
+                FreyaEvent::Mouse { cursor, button, .. } => DomEvent {
+                    element_id: listener.node_data.element_id.unwrap(),
+                    name: event_name.to_string(),
+                    data: DomEventData::Mouse(MouseData::new(
+                        Point2D::from_lengths(Length::new(cursor.0), Length::new(cursor.1)),
+                        Point2D::from_lengths(Length::new(cursor.0), Length::new(cursor.1)),
+                        button,
+                    )),
+                },
+                FreyaEvent::Wheel { scroll, .. } => DomEvent {
+                    element_id: listener.node_data.element_id.unwrap(),
+                    name: event_name.to_string(),
+                    data: DomEventData::Wheel(WheelData::new(scroll.0, scroll.1)),
+                },
+                FreyaEvent::Keyboard { ref key, code, .. } => DomEvent {
+                    element_id: listener.node_data.element_id.unwrap(),
+                    name: event_name.to_string(),
+                    data: DomEventData::Keyboard(KeyboardData::new(key.clone(), code)),
+                },
+            };
             event_emitter.send(event).unwrap();
         }
     }
