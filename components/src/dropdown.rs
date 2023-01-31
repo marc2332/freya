@@ -3,8 +3,12 @@ use std::fmt::Display;
 use dioxus::prelude::*;
 use freya_elements as dioxus_elements;
 use freya_elements::MouseEvent;
+use freya_hooks::use_get_theme;
 
 /// `DropdownItem` component.
+///
+/// # Styling
+/// Inherits the [`DropdownItemTheme`](freya_hooks::DropdownTheme) theme.
 #[allow(non_snake_case)]
 #[inline_props]
 pub fn DropdownItem<'a, T>(
@@ -17,17 +21,19 @@ where
     T: PartialEq + 'static,
 {
     let selected = use_shared_state::<T>(cx).unwrap();
+    let theme = use_get_theme(cx);
+    let dropdownitem_theme = &theme.dropdown_item;
 
     let background = if &*selected.read() == value {
-        "rgb(200, 200, 200)"
+        dropdownitem_theme.hover_background
     } else {
-        "white"
+        dropdownitem_theme.background
     };
 
     render!(rect {
+        color: "{dropdownitem_theme.font_theme.color}",
         width: "100%",
         height: "35",
-        color: "black",
         background: background,
         padding: "12",
         radius: "3",
@@ -48,6 +54,12 @@ pub struct DropdownProps<'a, T: 'static> {
 }
 
 /// `Dropdown` component.
+///
+/// # Props
+/// See [`DropdownProps`].
+///
+/// # Styling
+/// Inherits the [`DropdownTheme`](freya_hooks::DropdownTheme) theme.
 #[allow(non_snake_case)]
 pub fn Dropdown<'a, T>(cx: Scope<'a, DropdownProps<'a, T>>) -> Element<'a>
 where
@@ -55,6 +67,18 @@ where
 {
     use_shared_state_provider(cx, || cx.props.value.clone());
     let selected = use_shared_state::<T>(cx).unwrap();
+    let theme = use_get_theme(cx);
+    let dropdown_theme = &theme.dropdown;
+    let background_button = use_state(cx, || <&str>::clone(&dropdown_theme.background_button));
+    let set_background_button = background_button.setter();
+
+    use_effect(
+        cx,
+        &dropdown_theme.clone(),
+        move |dropdown_theme| async move {
+            set_background_button(dropdown_theme.background_button);
+        },
+    );
 
     // Update the provided value if the passed value changes
     use_effect(cx, &cx.props.value, move |value| {
@@ -80,7 +104,7 @@ where
                     onglobalclick: onglobalclick,
                     width: "130",
                     height: "auto",
-                    background: "white",
+                    background: *background_button.get(),
                     shadow: "0 0 100 6 black",
                     padding: "15",
                     &cx.props.children
@@ -90,6 +114,7 @@ where
     } else {
         render!(
             container {
+                color: "{dropdown_theme.font_theme.color}",
                 radius: "3",
                 onclick: move |_| opened.set(true),
                 width: "70",
@@ -97,13 +122,12 @@ where
                 padding: "5",
                 label {
                     align: "center",
-                    color: "black",
                     "{selected.read()}"
                 }
                 rect {
                     width: "100%",
                     height: "2",
-                    background: "black",
+                    background: "{dropdown_theme.font_theme.color}",
                 }
             }
         )

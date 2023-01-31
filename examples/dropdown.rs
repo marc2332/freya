@@ -29,10 +29,24 @@ impl Display for Values {
 }
 
 fn app(cx: Scope) -> Element {
+    render!(
+        ThemeProvider {
+            Body {
+
+            }
+        }
+    )
+}
+
+#[allow(non_snake_case)]
+fn Body(cx: Scope) -> Element {
     let selected_dropdown = use_state(cx, || Values::A);
+    let theme = use_theme(&cx);
+    let body_theme = &theme.read().body;
 
     render!(
         rect {
+            background: "{body_theme.background}",
             padding: "15",
             width: "100%",
             height: "100%",
