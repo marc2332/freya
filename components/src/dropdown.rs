@@ -4,11 +4,17 @@ use dioxus::prelude::*;
 use freya_elements as dioxus_elements;
 use freya_elements::MouseEvent;
 
+/// `DropdownItem` component.
 #[allow(non_snake_case)]
 #[inline_props]
-pub fn DropdownItem<'a, T>(cx: Scope<'a>, children: Element<'a>, value: T) -> Element<'a>
+pub fn DropdownItem<'a, T>(
+    cx: Scope<'a>,
+    children: Element<'a>,
+    value: T,
+    onclick: Option<EventHandler<'a, ()>>,
+) -> Element<'a>
 where
-    T: PartialEq + Clone + Display + 'static,
+    T: PartialEq + 'static,
 {
     let selected = use_shared_state::<T>(cx).unwrap();
 
@@ -20,22 +26,28 @@ where
 
     render!(rect {
         width: "100%",
-        height: "50",
+        height: "35",
         color: "black",
         background: background,
-        padding: "5",
+        padding: "12",
         radius: "3",
-        onclick: move |_| { *selected.write() = value.clone() },
+        onclick: move |_| {
+            if let Some(onclick) = onclick {
+                onclick.call(());
+            }
+        },
         children
     })
 }
 
+/// [`Dropdown`] component properties.
 #[derive(Props)]
 pub struct DropdownProps<'a, T: 'static> {
     children: Element<'a>,
     value: T,
 }
 
+/// `Dropdown` component.
 #[allow(non_snake_case)]
 pub fn Dropdown<'a, T>(cx: Scope<'a, DropdownProps<'a, T>>) -> Element<'a>
 where
@@ -44,6 +56,7 @@ where
     use_shared_state_provider(cx, || cx.props.value.clone());
     let selected = use_shared_state::<T>(cx).unwrap();
 
+    // Update the provided value if the passed value changes
     use_effect(cx, &cx.props.value, move |value| {
         *selected.write() = value;
         async move {}
@@ -51,6 +64,7 @@ where
 
     let opened = use_state(cx, || false);
 
+    // Close the dropdown if clicked anywhere
     let onglobalclick = move |_: MouseEvent| {
         opened.set(false);
     };
@@ -64,10 +78,10 @@ where
                     layer: "-1",
                     radius: "3",
                     onglobalclick: onglobalclick,
-                    width: "100",
+                    width: "130",
                     height: "auto",
                     background: "white",
-                    shadow: "0 0 200 10 black",
+                    shadow: "0 0 100 6 black",
                     padding: "15",
                     &cx.props.children
                 }
@@ -88,7 +102,7 @@ where
                 }
                 rect {
                     width: "100%",
-                    height: "3",
+                    height: "2",
                     background: "black",
                 }
             }

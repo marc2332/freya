@@ -38,9 +38,9 @@ fn app(cx: Scope) -> Element {
             height: "100%",
             Dropdown {
                 value: selected_dropdown.get().clone(),
-                DropdownItem { value: Values::A, label { "A" } }
-                DropdownItem { value: Values::B, label { "B" } }
-                DropdownItem { value: Values::C, label { "C" } }
+                DropdownItem { onclick: move |_| selected_dropdown.set(Values::A), value: Values::A, label { "A" } }
+                DropdownItem { onclick: move |_| selected_dropdown.set(Values::B), value: Values::B, label { "B" } }
+                DropdownItem { onclick: move |_| selected_dropdown.set(Values::C), value: Values::C, label { "C" } }
             }
         }
     )
