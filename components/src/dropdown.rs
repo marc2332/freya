@@ -5,18 +5,27 @@ use freya_elements as dioxus_elements;
 use freya_elements::MouseEvent;
 use freya_hooks::use_get_theme;
 
+/// [`DropdownItem`] component properties.
+#[derive(Props)]
+pub struct DropdownItemProps<'a, T: 'static> {
+    /// Selectable items, like [`DropdownItem`]
+    children: Element<'a>,
+    /// Selected value.
+    value: T,
+    /// Handler for the `onclick` event.
+    #[props(optional)]
+    onclick: Option<EventHandler<'a, ()>>,
+}
+
 /// `DropdownItem` component.
+///
+/// # Props
+/// See [`DropdownItemProps`].
 ///
 /// # Styling
 /// Inherits the [`DropdownItemTheme`](freya_hooks::DropdownTheme) theme.
 #[allow(non_snake_case)]
-#[inline_props]
-pub fn DropdownItem<'a, T>(
-    cx: Scope<'a>,
-    children: Element<'a>,
-    value: T,
-    onclick: Option<EventHandler<'a, ()>>,
-) -> Element<'a>
+pub fn DropdownItem<'a, T>(cx: Scope<'a, DropdownItemProps<'a, T>>) -> Element<'a>
 where
     T: PartialEq + 'static,
 {
@@ -24,7 +33,7 @@ where
     let theme = use_get_theme(cx);
     let dropdownitem_theme = &theme.dropdown_item;
 
-    let background = if &*selected.read() == value {
+    let background = if *selected.read() == cx.props.value {
         dropdownitem_theme.hover_background
     } else {
         dropdownitem_theme.background
@@ -38,18 +47,20 @@ where
         padding: "12",
         radius: "3",
         onclick: move |_| {
-            if let Some(onclick) = onclick {
+            if let Some(onclick) = &cx.props.onclick {
                 onclick.call(());
             }
         },
-        children
+        &cx.props.children
     })
 }
 
 /// [`Dropdown`] component properties.
 #[derive(Props)]
 pub struct DropdownProps<'a, T: 'static> {
+    /// Selectable items, like [`DropdownItem`]
     children: Element<'a>,
+    /// Selected value.
     value: T,
 }
 
@@ -62,7 +73,7 @@ pub struct DropdownProps<'a, T: 'static> {
 /// Inherits the [`DropdownTheme`](freya_hooks::DropdownTheme) theme.
 ///
 /// # Example
-/// ```rust
+/// ```no_run
 /// #[derive(PartialEq, Clone)]
 /// enum Values {
 ///     A,
