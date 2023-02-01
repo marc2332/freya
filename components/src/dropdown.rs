@@ -74,6 +74,7 @@ pub struct DropdownProps<'a, T: 'static> {
 ///
 /// # Example
 /// ```no_run
+/// # use freya::prelude::*;
 /// #[derive(PartialEq, Clone)]
 /// enum Values {
 ///     A,
