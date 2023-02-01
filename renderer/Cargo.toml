@@ -31,6 +31,6 @@ freya-layout = { path = "../layout", version = "0.1.0" }
 freya-node-state = { path = "../state", version = "0.1.0" }
 freya-elements = { path = "../elements", version = "0.1.0" }
 freya-common = { path = "../common", version = "0.1.0" }
-freya-processor = { path = "../processor", version = "0.1.0" }
+freya-core = { path = "../core", version = "0.1.0" }
 futures = "0.3.25"
 tokio = { version = "1.23.0", features = ["sync", "rt-multi-thread", "time", "macros"] }

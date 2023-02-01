@@ -1,5 +1,5 @@
 use freya_common::NodeArea;
-use freya_processor::{
+use freya_core::{
     events::EventsProcessor, process_work, EventEmitter, SafeDOM, SafeFreyaEvents,
     SafeLayoutMemorizer,
 };

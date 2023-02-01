@@ -2,10 +2,10 @@ use dioxus_core::VirtualDom;
 use dioxus_native_core::real_dom::RealDom;
 use dioxus_native_core::SendAnyMap;
 use freya_common::LayoutMemorizer;
+use freya_core::events::FreyaEvent;
+use freya_core::{events::DomEvent, SafeDOM};
 use freya_elements::{from_winit_to_code, get_non_text_keys, Code, Key};
 use freya_node_state::{CustomAttributeValues, NodeState};
-use freya_processor::events::FreyaEvent;
-use freya_processor::{events::DomEvent, SafeDOM};
 use futures::task::ArcWake;
 use futures::{pin_mut, task, FutureExt};
 use glutin::event::{
@@ -20,6 +20,10 @@ use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 pub use window::{create_surface, WindowEnv};
 pub use window_config::WindowConfig;
 
+#[cfg(feature = "wireframe")]
+mod wireframe;
+
+mod elements;
 mod renderer;
 mod window;
 mod window_config;

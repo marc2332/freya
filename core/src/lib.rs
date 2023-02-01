@@ -24,7 +24,6 @@ pub type SafeLayoutMemorizer = Arc<Mutex<LayoutMemorizer>>;
 pub type SafeFreyaEvents = Arc<Mutex<Vec<FreyaEvent>>>;
 pub type ViewportsCollection = FxHashMap<NodeId, (Option<NodeArea>, Vec<NodeId>)>;
 
-/// The Work Loop has a few jobs:
 /// - Measure the nodes layouts
 /// - Organize the nodes layouts in layers
 /// - Calculate all the nodes viewports

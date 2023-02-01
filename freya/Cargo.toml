@@ -26,7 +26,7 @@ freya-renderer = { path = "../renderer", version = "0.1.0" }
 freya-elements = { path = "../elements", version = "0.1.0" }
 freya-common = { path = "../common", version = "0.1.0" }
 freya-hooks = { path = "../hooks"}
-freya-processor = { path = "../processor"}
+freya-core = { path = "../core"}
 freya-components ={ path = "../components"}
 dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="4f83c1b86d396a24b32da6229b73e95a05855db3"}
 dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="4f83c1b86d396a24b32da6229b73e95a05855db3"}

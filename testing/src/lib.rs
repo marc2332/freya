@@ -6,18 +6,16 @@ use dioxus_native_core::real_dom::RealDom;
 use dioxus_native_core::tree::TreeView;
 use dioxus_native_core::{NodeId, SendAnyMap};
 use freya_common::{LayoutMemorizer, NodeArea};
+use freya_core::events::EventsProcessor;
+use freya_core::{events::DomEvent, process_work, EventEmitter, EventReceiver, SafeFreyaEvents};
 use freya_layout::DioxusNode;
 use freya_node_state::{CustomAttributeValues, NodeState};
-use freya_processor::events::EventsProcessor;
-use freya_processor::{
-    events::DomEvent, process_work, EventEmitter, EventReceiver, SafeFreyaEvents,
-};
 use skia_safe::textlayout::FontCollection;
 use skia_safe::FontMgr;
 use tokio::sync::mpsc::unbounded_channel;
 
+pub use freya_core::events::FreyaEvent;
 pub use freya_elements::MouseButton;
-pub use freya_processor::events::FreyaEvent;
 
 /// Represents a `Node` in the DOM.
 #[allow(dead_code)]

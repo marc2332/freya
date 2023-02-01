@@ -1,5 +1,5 @@
 [package]
-name = "freya-processor"
+name = "freya-core"
 description = "Cross-platform GUI Library."
 version = "0.1.0"
 edition = "2021"
