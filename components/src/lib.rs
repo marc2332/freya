@@ -2,6 +2,7 @@
 //! A collection of basic components to be used in Freya.
 
 mod button;
+mod dropdown;
 mod external_link;
 mod input;
 mod router_link;
@@ -12,6 +13,7 @@ mod theme;
 mod tooltip;
 
 pub use button::*;
+pub use dropdown::*;
 pub use external_link::*;
 pub use input::*;
 pub use router_link::*;

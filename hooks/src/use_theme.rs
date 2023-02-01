@@ -26,6 +26,23 @@ pub fn use_get_theme(cx: &ScopeState) -> Theme {
         .unwrap_or(DARK_THEME)
 }
 
+/// Theming properties for DropdownItem components.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DropdownItemTheme {
+    pub background: &'static str,
+    pub hover_background: &'static str,
+    pub font_theme: FontTheme,
+}
+
+/// Theming properties for Dropdown components.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DropdownTheme {
+    pub desplegable_background: &'static str,
+    pub background_button: &'static str,
+    pub hover_background: &'static str,
+    pub font_theme: FontTheme,
+}
+
 /// Theming properties for Button components.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ButtonTheme {
@@ -95,6 +112,8 @@ pub struct Theme {
     pub slider: SliderTheme,
     pub tooltip: TooltipTheme,
     pub external_link: ExternalLinkTheme,
+    pub dropdown: DropdownTheme,
+    pub dropdown_item: DropdownItemTheme,
 }
 
 /// `Light` theme
@@ -133,6 +152,21 @@ pub const LIGHT_THEME: Theme = Theme {
     external_link: ExternalLinkTheme {
         highlight_color: "rgb(43,106,208)",
     },
+    dropdown: DropdownTheme {
+        desplegable_background: "white",
+        background_button: "white",
+        hover_background: "rgb(240, 240, 240)",
+        font_theme: FontTheme {
+            color: "rgb(10, 10, 10)",
+        },
+    },
+    dropdown_item: DropdownItemTheme {
+        background: "white",
+        hover_background: "rgb(240, 240, 240)",
+        font_theme: FontTheme {
+            color: "rgb(10, 10, 10)",
+        },
+    },
 };
 
 /// `Dark` theme
@@ -168,5 +202,16 @@ pub const DARK_THEME: Theme = Theme {
     },
     external_link: ExternalLinkTheme {
         highlight_color: "rgb(43,106,208)",
+    },
+    dropdown: DropdownTheme {
+        desplegable_background: "rgb(25, 25, 25)",
+        background_button: "rgb(35, 35, 35)",
+        hover_background: "rgb(80, 80, 80)",
+        font_theme: FontTheme { color: "white" },
+    },
+    dropdown_item: DropdownItemTheme {
+        background: "rgb(35, 35, 35)",
+        hover_background: "rgb(80, 80, 80)",
+        font_theme: FontTheme { color: "white" },
     },
 };
