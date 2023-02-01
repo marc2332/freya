@@ -23,7 +23,7 @@ pub struct DropdownItemProps<'a, T: 'static> {
 /// See [`DropdownItemProps`].
 ///
 /// # Styling
-/// Inherits the [`DropdownItemTheme`](freya_hooks::DropdownTheme) theme.
+/// Inherits the [`DropdownItemTheme`](freya_hooks::DropdownItemTheme) theme.
 #[allow(non_snake_case)]
 pub fn DropdownItem<'a, T>(cx: Scope<'a, DropdownItemProps<'a, T>>) -> Element<'a>
 where
