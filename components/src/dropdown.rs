@@ -75,6 +75,7 @@ pub struct DropdownProps<'a, T: 'static> {
 /// # Example
 /// ```no_run
 /// # use freya::prelude::*;
+/// # use std::fmt::Display;
 /// #[derive(PartialEq, Clone)]
 /// enum Values {
 ///     A,
