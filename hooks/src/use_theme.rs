@@ -204,7 +204,7 @@ pub const DARK_THEME: Theme = Theme {
         highlight_color: "rgb(43,106,208)",
     },
     dropdown: DropdownTheme {
-        desplegable_background: "rgb(35, 35, 35)",
+        desplegable_background: "rgb(25, 25, 25)",
         background_button: "rgb(35, 35, 35)",
         hover_background: "rgb(80, 80, 80)",
         font_theme: FontTheme { color: "white" },

@@ -60,6 +60,38 @@ pub struct DropdownProps<'a, T: 'static> {
 ///
 /// # Styling
 /// Inherits the [`DropdownTheme`](freya_hooks::DropdownTheme) theme.
+///
+/// # Example
+/// ```rust
+/// #[derive(PartialEq, Clone)]
+/// enum Values {
+///     A,
+///     B,
+///     C,
+/// }
+///
+/// impl Display for Values {
+///     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+///         match self {
+///             Values::A => f.write_str("Value A"),
+///             Values::C => f.write_str("Value C"),
+///             Values::B => f.write_str("Value B"),
+///         }
+///     }
+/// }
+///
+/// fn app(cx: Scope) -> Element {
+///     let selected_dropdown = use_state(cx, || Values::A);
+///     render!(
+///         Dropdown {
+///             value: selected_dropdown.get().clone(),
+///             DropdownItem { onclick: move |_| selected_dropdown.set(Values::A), value: Values::A, label { "A" } }
+///             DropdownItem { onclick: move |_| selected_dropdown.set(Values::B), value: Values::B, label { "B" } }
+///             DropdownItem { onclick: move |_| selected_dropdown.set(Values::C), value: Values::C, label { "C" } }
+///         }
+///     )
+/// }
+/// ```
 #[allow(non_snake_case)]
 pub fn Dropdown<'a, T>(cx: Scope<'a, DropdownProps<'a, T>>) -> Element<'a>
 where
@@ -114,12 +146,13 @@ where
     } else {
         render!(
             container {
+                background: dropdown_theme.desplegable_background,
                 color: "{dropdown_theme.font_theme.color}",
                 radius: "3",
                 onclick: move |_| opened.set(true),
                 width: "70",
-                height: "50",
-                padding: "5",
+                height: "auto",
+                padding: "15",
                 label {
                     align: "center",
                     "{selected.read()}"
