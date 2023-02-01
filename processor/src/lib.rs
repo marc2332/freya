@@ -2,8 +2,8 @@ use dioxus_native_core::{node::NodeType, real_dom::RealDom, NodeId};
 use euclid::{Length, Point2D};
 use freya_common::{LayoutMemorizer, NodeArea};
 use freya_elements::events_data::{KeyboardData, MouseData, WheelData};
-use freya_layers::{Layers, RenderData};
 use freya_layout::NodeLayoutMeasurer;
+use freya_layout::{Layers, RenderData};
 use freya_node_state::{CustomAttributeValues, NodeState};
 use rustc_hash::FxHashMap;
 use skia_safe::{textlayout::FontCollection, Color};
@@ -12,7 +12,6 @@ use std::{
     sync::{Arc, Mutex},
 };
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
-use tracing::info;
 
 pub mod events;
 
@@ -69,6 +68,7 @@ pub fn process_work<HookOptions>(
 
     #[cfg(debug_assertions)]
     {
+        use tracing::info;
         let dirty_nodes_counter = manager.lock().unwrap().dirty_nodes_counter;
         if dirty_nodes_counter > 0 {
             let nodes = manager.lock().unwrap().nodes.len();

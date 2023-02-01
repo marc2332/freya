@@ -1,6 +1,5 @@
 use dioxus_native_core::{node::NodeType, real_dom::RealDom, tree::TreeView, NodeId};
 use freya_common::{LayoutMemorizer, NodeArea, NodeLayoutInfo, NodeReferenceLayout};
-use freya_layers::{DioxusNode, Layers};
 use freya_node_state::{
     CursorMode, CursorReference, CustomAttributeValues, DirectionMode, DisplayMode, FontStyle,
     NodeState, SizeMode,
@@ -9,9 +8,11 @@ use skia_safe::textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, Te
 use std::sync::{Arc, Mutex};
 
 mod area_calc;
+mod layers;
 mod ops_calc;
 
 use area_calc::calculate_area;
+pub use layers::*;
 pub use ops_calc::run_calculations;
 
 /// Collect all the texts and node states from a given array of children
@@ -132,10 +133,16 @@ impl<'a> NodeLayoutMeasurer<'a> {
             .unwrap()
             .is_node_layout_memorized(&self.node_id);
 
-        // If this node is dirty and parent is not dirty, mark this node dirty
+        // If this node is dirty and parent is not dirty, mark the parent as dirty
         if is_dirty && !is_parent_dirty {
             if let Some(p) = parent_id {
-                self.layout_memorizer.lock().unwrap().mark_as_dirty(p)
+                let dom = self.dom.lock().unwrap();
+                let parent = dom.tree.get(p).unwrap();
+                let is_static = parent.state.is_inner_static();
+
+                if !is_static {
+                    self.layout_memorizer.lock().unwrap().mark_as_dirty(p)
+                }
             }
         }
 

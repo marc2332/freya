@@ -48,6 +48,19 @@ impl NodeState {
             curr: 0,
         }
     }
+
+    /// Check if this NodeState has any sizing determined by it's children or not
+    pub fn is_inner_static(&self) -> bool {
+        if SizeMode::Auto == self.size.width {
+            return false;
+        }
+
+        if SizeMode::Auto == self.size.height {
+            return false;
+        }
+
+        true
+    }
 }
 
 pub enum AttributeType<'a> {

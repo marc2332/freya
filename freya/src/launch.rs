@@ -119,7 +119,7 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
 }
 
 #[cfg(not(doctest))]
-/// Launch a new Window with custom options:
+/// Launch a new Window with custom config.
 /// - Width
 /// - Height
 /// - Decorations

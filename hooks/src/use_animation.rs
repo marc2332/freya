@@ -77,7 +77,7 @@ impl AnimationMode {
     }
 }
 
-/// Crate and configure an animation.
+/// Create and configure an animation.
 pub fn use_animation(
     cx: &ScopeState,
     anim_mode: impl FnOnce() -> AnimationMode,

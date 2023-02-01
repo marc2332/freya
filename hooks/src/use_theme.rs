@@ -1,26 +1,32 @@
 use dioxus_core::ScopeState;
 use dioxus_hooks::{use_shared_state, use_shared_state_provider, UseSharedState};
 
+/// Provide a custom [`Theme`].
 pub fn use_init_theme(cx: &ScopeState, theme: Theme) {
     use_shared_state_provider(cx, || theme);
 }
 
+/// Provide the default [`Theme`].
 pub fn use_init_default_theme(cx: &ScopeState) -> Theme {
     use_shared_state_provider(cx, || DARK_THEME);
     DARK_THEME
 }
 
+/// Subscribe to [`Theme`] changes.
 pub fn use_theme(cx: &ScopeState) -> UseSharedState<Theme> {
     use_shared_state::<Theme>(cx).unwrap()
 }
 
+/// Subscribe to [`Theme`] changes, default theme will be used if there is no provided [`Theme`].
+///
+/// Primarily used by built-in components that have no control of whether they will inherit a [`Theme`] or not.
 pub fn use_get_theme(cx: &ScopeState) -> Theme {
     use_shared_state::<Theme>(cx)
         .map(|v| v.read().clone())
         .unwrap_or(DARK_THEME)
 }
 
-/// Theming properties for the Button component.
+/// Theming properties for Button components.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ButtonTheme {
     pub background: &'static str,
@@ -34,7 +40,7 @@ pub struct FontTheme {
     pub color: &'static str,
 }
 
-/// Theming properties for the Switch component.
+/// Theming properties the Switch components.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SwitchTheme {
     pub background: &'static str,
@@ -43,21 +49,21 @@ pub struct SwitchTheme {
     pub enabled_thumb_background: &'static str,
 }
 
-/// Theming properties for the Scrollbar component.
+/// Theming properties the Scrollbar components.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ScrollbarTheme {
     pub background: &'static str,
     pub thumb_background: &'static str,
 }
 
-/// Theming properties for the window body.
+/// Theming properties for the App body.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct BodyTheme {
     pub background: &'static str,
     pub color: &'static str,
 }
 
-/// Theming properties for the Slider component.
+/// Theming properties for Slider components.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SliderTheme {
     pub background: &'static str,
@@ -65,14 +71,14 @@ pub struct SliderTheme {
     pub thumb_inner_background: &'static str,
 }
 
-/// Theming properties for the Tooltip component.
+/// Theming properties for Tooltip components.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TooltipTheme {
     pub background: &'static str,
     pub color: &'static str,
 }
 
-/// Theming properties for the ExternalLink component.
+/// Theming properties for ExternalLink components.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ExternalLinkTheme {
     pub highlight_color: &'static str,
@@ -91,7 +97,7 @@ pub struct Theme {
     pub external_link: ExternalLinkTheme,
 }
 
-/// Light theme
+/// `Light` theme
 pub const LIGHT_THEME: Theme = Theme {
     name: "light",
     body: BodyTheme {
@@ -129,7 +135,7 @@ pub const LIGHT_THEME: Theme = Theme {
     },
 };
 
-/// Dark theme
+/// `Dark` theme
 pub const DARK_THEME: Theme = Theme {
     name: "dark",
     body: BodyTheme {

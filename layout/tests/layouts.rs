@@ -10,8 +10,8 @@ use dioxus_native_core::{
     NodeId,
 };
 use freya_common::{LayoutMemorizer, NodeArea};
-use freya_layers::{DioxusNode, Layers};
 use freya_layout::NodeLayoutMeasurer;
+use freya_layout::{DioxusNode, Layers};
 use freya_node_state::{DirectionMode, NodeState, Size, SizeMode};
 use lazy_static::lazy_static;
 use rustc_hash::FxHashMap;

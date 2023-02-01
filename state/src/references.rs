@@ -25,10 +25,10 @@ impl ParentDepState<CustomAttributeValues> for References {
             "image_reference"
         ])));
 
-    fn reduce<'a>(
+    fn reduce(
         &mut self,
         node: NodeView<CustomAttributeValues>,
-        parent: Option<(&'a Self,)>,
+        parent: Option<(&Self,)>,
         _ctx: &Self::Ctx,
     ) -> bool {
         let mut node_ref = None;
