@@ -1,6 +1,6 @@
 use dioxus_native_core::tree::TreeView;
 use dioxus_native_core::{node::NodeType, NodeId};
-use freya_core::SafeDOM;
+use freya_core::SharedRealDOM;
 use freya_layout::{DioxusNode, RenderData};
 use freya_node_state::NodeState;
 use skia_safe::{
@@ -13,7 +13,7 @@ use skia_safe::{
 
 /// Render a `paragraph` element
 pub fn render_paragraph(
-    dom: &SafeDOM,
+    dom: &SharedRealDOM,
     canvas: &mut Canvas,
     font_collection: &mut FontCollection,
     node: &RenderData,
@@ -90,7 +90,7 @@ fn draw_cursor(node: &RenderData, paragraph: Paragraph, canvas: &mut Canvas) -> 
     Some(())
 }
 
-fn get_inner_texts(children: &[NodeId], dom: &SafeDOM) -> Vec<(NodeState, String)> {
+fn get_inner_texts(children: &[NodeId], dom: &SharedRealDOM) -> Vec<(NodeState, String)> {
     children
         .iter()
         .filter_map(|child_id| {

@@ -7,7 +7,7 @@ use dioxus_native_core::tree::TreeView;
 use dioxus_native_core::{NodeId, SendAnyMap};
 use freya_common::{LayoutMemorizer, NodeArea};
 use freya_core::events::EventsProcessor;
-use freya_core::{events::DomEvent, process_work, EventEmitter, EventReceiver, SafeFreyaEvents};
+use freya_core::{events::DomEvent, process_work, EventEmitter, EventReceiver, SharedFreyaEvents};
 use freya_layout::DioxusNode;
 use freya_node_state::{CustomAttributeValues, NodeState};
 use skia_safe::textlayout::FontCollection;
@@ -73,7 +73,7 @@ pub struct TestUtils {
     rdom: Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>,
     dom: Arc<Mutex<VirtualDom>>,
     layout_memorizer: Arc<Mutex<LayoutMemorizer>>,
-    freya_events: SafeFreyaEvents,
+    freya_events: SharedFreyaEvents,
     events_processor: Arc<Mutex<EventsProcessor>>,
     font_collection: FontCollection,
     event_emitter: EventEmitter,

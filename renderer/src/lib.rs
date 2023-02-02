@@ -3,7 +3,7 @@ use dioxus_native_core::real_dom::RealDom;
 use dioxus_native_core::SendAnyMap;
 use freya_common::LayoutMemorizer;
 use freya_core::events::FreyaEvent;
-use freya_core::{events::DomEvent, SafeDOM};
+use freya_core::{events::DomEvent, SharedRealDOM};
 use freya_elements::{from_winit_to_code, get_non_text_keys, Code, Key};
 use freya_node_state::{CustomAttributeValues, NodeState};
 use futures::task::ArcWake;

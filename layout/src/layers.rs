@@ -56,18 +56,20 @@ impl RenderData {
 }
 
 impl Layers {
+    /// Given the height in the DOM of the Node, it's inherited layer from it's parent
+    /// and the defined layer via the `layer` attribute,
+    /// calculate it's corresponding layer and it's relative layer for it's children to inherit
     pub fn calculate_layer(
         &mut self,
         relative_layer: i16,
         height: i16,
         inherited_relative_layer: i16,
     ) -> (i16, i16) {
-        // Relative layer (optionally define by the user) + height of the element in the VDOM - inherited relative_layer by parent
         let element_layer = -relative_layer + height - inherited_relative_layer;
-
         (element_layer, relative_layer + inherited_relative_layer)
     }
 
+    /// Insert a Node into a layer
     pub fn add_element(
         &mut self,
         node: &DioxusNode,
