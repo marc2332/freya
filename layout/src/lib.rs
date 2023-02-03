@@ -83,6 +83,7 @@ pub struct NodeLayoutMeasurer<'a> {
 }
 
 impl<'a> NodeLayoutMeasurer<'a> {
+    /// Create a NodeLayoutMeasurer
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         node: DioxusNode,
@@ -107,6 +108,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
         }
     }
 
+    /// Run some checks on the node to see if it's layout must be recalculated or not
     pub fn run_dirty_checks(&mut self) -> (bool, bool) {
         let parent_id = self.dom.lock().unwrap().tree.parent_id(self.node_id);
         let is_parent_dirty = parent_id

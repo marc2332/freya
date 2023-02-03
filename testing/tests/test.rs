@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
+use freya_core::events::FreyaEvent;
 use freya_elements as dioxus_elements;
-use freya_processor::events::FreyaEvent;
 use freya_testing::launch_test;
 use glutin::event::MouseButton;
 

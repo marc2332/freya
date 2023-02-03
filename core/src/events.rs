@@ -91,6 +91,7 @@ pub struct EventsProcessor {
 }
 
 impl EventsProcessor {
+    /// Calculate new events according to the last leap and this one
     pub fn process_events_batch(
         &mut self,
         events_to_emit: Vec<DomEvent>,
