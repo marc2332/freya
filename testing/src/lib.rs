@@ -1,29 +1,39 @@
 use std::sync::{Arc, Mutex};
 
 use dioxus_core::{Component, VirtualDom};
-use dioxus_native_core::node::{Node, NodeType};
+use dioxus_native_core::node::NodeType;
 use dioxus_native_core::real_dom::RealDom;
 use dioxus_native_core::tree::TreeView;
 use dioxus_native_core::{NodeId, SendAnyMap};
 use freya_common::{LayoutMemorizer, NodeArea};
-use freya_layers::DOMNode;
+use freya_layout::DioxusNode;
 use freya_node_state::{CustomAttributeValues, NodeState};
-use freya_processor::events::{EventsProcessor, FreyaEvent};
-use freya_processor::{process_work, DomEvent, EventEmitter, EventReceiver, SafeFreyaEvents};
+use freya_processor::events::EventsProcessor;
+use freya_processor::{
+    events::DomEvent, process_work, EventEmitter, EventReceiver, SafeFreyaEvents,
+};
 use skia_safe::textlayout::FontCollection;
+use skia_safe::FontMgr;
 use tokio::sync::mpsc::unbounded_channel;
 
+pub use freya_elements::MouseButton;
+pub use freya_processor::events::FreyaEvent;
+
+/// Represents a `Node` in the DOM.
+#[allow(dead_code)]
 pub struct TestNode {
     node_id: NodeId,
     utils: TestUtils,
-    state: NodeState,
-    node_info: DOMNode,
+    height: u16,
+    children: Option<Vec<NodeId>>,
+    node: DioxusNode,
+    parent_id: Option<NodeId>,
 }
 
 impl TestNode {
     /// Get a child of the Node by the given index
     pub fn child(&self, child_index: usize) -> Option<Self> {
-        if let Some(children) = &self.node_info.children {
+        if let Some(children) = &self.children {
             let child_id = children.get(child_index)?;
             let child: TestNode = self.utils.get_node_by_id(*child_id);
             Some(child)
@@ -34,7 +44,7 @@ impl TestNode {
 
     /// Get the node's text
     pub fn text(&self) -> Option<&str> {
-        if let NodeType::Text { text } = &self.node_info.node.node_data.node_type {
+        if let NodeType::Text { text } = &self.node.node_data.node_type {
             Some(text)
         } else {
             None
@@ -43,7 +53,7 @@ impl TestNode {
 
     /// Get the node's state
     pub fn state(&self) -> &NodeState {
-        &self.state
+        &self.node.state
     }
 
     /// Get the node's layout
@@ -74,7 +84,7 @@ pub struct TestUtils {
 
 impl TestUtils {
     /// Wait for internal changes
-    // Haven't found a way around this yet
+    // TODO Remove this warning
     #[allow(clippy::await_holding_lock)]
     pub async fn wait_for_update(&mut self, sizes: (f32, f32)) {
         self.wait_for_work(sizes).await;
@@ -119,6 +129,13 @@ impl TestUtils {
         );
     }
 
+    /// Remove any memoization of the DOM layout
+    pub fn cleanup_layout(&mut self) {
+        self.layout_memorizer.lock().unwrap().dirty_nodes.clear();
+        self.layout_memorizer.lock().unwrap().nodes.clear();
+    }
+
+    /// Emit an event
     pub fn send_event(&mut self, event: FreyaEvent) {
         self.freya_events.lock().unwrap().push(event);
     }
@@ -126,38 +143,32 @@ impl TestUtils {
     pub fn root(&mut self) -> TestNode {
         let rdom = self.rdom.lock().unwrap();
         let root_id = rdom.root_id();
-        let root: &Node<NodeState, CustomAttributeValues> = rdom.get(root_id).unwrap();
+        let root: &DioxusNode = rdom.get(root_id).unwrap();
         let children = rdom.tree.children_ids(root_id).map(|v| v.to_vec());
         TestNode {
             node_id: root_id,
             utils: self.clone(),
-            state: root.state.clone(),
-            node_info: DOMNode {
-                node: root.clone(),
-                height: 0,
-                parent_id: None,
-                children,
-            },
+            node: root.clone(),
+            height: 0,
+            parent_id: None,
+            children,
         }
     }
 
     /// Get a Node by the given ID
     pub fn get_node_by_id(&self, node_id: NodeId) -> TestNode {
         let rdom = self.rdom.lock().unwrap();
-        let child: &Node<NodeState, CustomAttributeValues> = rdom.get(node_id).unwrap();
+        let child: &DioxusNode = rdom.get(node_id).unwrap();
         let height = rdom.tree.height(node_id).unwrap();
         let parent_id = rdom.tree.parent_id(node_id);
         let children = rdom.tree.children_ids(node_id).map(|v| v.to_vec());
         TestNode {
             node_id,
             utils: self.clone(),
-            state: child.state.clone(),
-            node_info: DOMNode {
-                node: child.clone(),
-                height,
-                parent_id,
-                children,
-            },
+            node: child.clone(),
+            height,
+            parent_id,
+            children,
         }
     }
 }
@@ -173,7 +184,8 @@ pub fn launch_test(root: Component<()>) -> TestUtils {
     let layout_memorizer = Arc::new(Mutex::new(LayoutMemorizer::new()));
     let freya_events = Arc::new(Mutex::new(Vec::new()));
     let events_processor = Arc::new(Mutex::new(EventsProcessor::default()));
-    let font_collection = FontCollection::new();
+    let mut font_collection = FontCollection::new();
+    font_collection.set_dynamic_font_manager(FontMgr::default());
 
     let muts = dom.rebuild();
     let (to_update, _) = rdom.lock().unwrap().apply_mutations(muts);

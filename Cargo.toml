@@ -4,27 +4,26 @@ version = "0.0.0"
 edition = "2021"
 
 [workspace]
-members = ["layers", "layout", "renderer", "state", "freya", "elements", "components", "hooks", "common", "processor", "testing"]
+members = ["layout", "renderer", "state", "freya", "elements", "components", "hooks", "common", "processor", "testing"]
 
 [features]
 devtools = ["freya/devtools"]
-x11 = ["freya/x11"]
 wireframe = ["freya/wireframe"]
 
 [dev-dependencies]
 freya = { path = "./freya"}
-dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa" }
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
-dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
-dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
-dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
+dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="4f83c1b86d396a24b32da6229b73e95a05855db3" }
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="4f83c1b86d396a24b32da6229b73e95a05855db3"}
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="4f83c1b86d396a24b32da6229b73e95a05855db3"}
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="4f83c1b86d396a24b32da6229b73e95a05855db3"}
+dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="4f83c1b86d396a24b32da6229b73e95a05855db3"}
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="4f83c1b86d396a24b32da6229b73e95a05855db3"}
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="4f83c1b86d396a24b32da6229b73e95a05855db3"}
 tokio = "1.23.0"
 reqwest = {version = "0.11.13", features = ["json"] }
 serde = "1.0.152"
 tracing-subscriber = "0.2.25"
-dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
+dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev="4f83c1b86d396a24b32da6229b73e95a05855db3"}
 
 [profile.release]
 lto = true

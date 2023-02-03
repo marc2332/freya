@@ -2,14 +2,20 @@ use dioxus::prelude::*;
 use dioxus_router::use_router;
 use freya_elements as dioxus_elements;
 
-/// Properties for the Router Link component.
+/// [`RouterLink`] component properties.
 #[derive(Props)]
 pub struct RouterLinkProps<'a> {
+    // The RouterLink destination.
     pub to: &'a str,
+    /// Inner children for the RouterLink.
     pub children: Element<'a>,
 }
 
-/// Freya Link for Dioxus Router.
+/// `Link` for Dioxus Router.
+///
+/// # Props
+/// See [`RouterLinkProps`]
+///
 #[allow(non_snake_case)]
 pub fn RouterLink<'a>(cx: Scope<'a, RouterLinkProps<'a>>) -> Element<'a> {
     let svc = use_router(cx);

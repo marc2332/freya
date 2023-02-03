@@ -115,6 +115,7 @@ builder_constructors! {
     };
     image {
         image_data: String,
+        image_reference: String,
         width: String,
         height: String,
     };
@@ -156,6 +157,7 @@ pub mod events {
         MouseData;
 
         onclick
+        onglobalclick
         onmousedown
         onmouseover
         onmouseleave

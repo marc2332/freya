@@ -4,7 +4,7 @@ use freya_common::NodeReferenceLayout;
 use freya_node_state::{CustomAttributeValues, NodeReference};
 use tokio::sync::mpsc::unbounded_channel;
 
-/// Creates a reference to the desired node's layout size
+/// Subscribe to a Node layout changes.
 pub fn use_node(cx: &ScopeState) -> (AttributeValue, NodeReferenceLayout) {
     let status = use_state::<NodeReferenceLayout>(cx, NodeReferenceLayout::default);
 
@@ -33,4 +33,45 @@ pub fn use_node(cx: &ScopeState) -> (AttributeValue, NodeReferenceLayout) {
         cx.any_value(CustomAttributeValues::Reference(node_ref)),
         status.get().clone(),
     )
+}
+
+#[cfg(test)]
+mod test {
+    use crate::use_node;
+    use freya::prelude::*;
+    use freya_testing::launch_test;
+
+    #[tokio::test]
+    pub async fn track_size() {
+        fn use_node_app(cx: Scope) -> Element {
+            let (reference, size) = use_node(cx);
+
+            render!(
+                rect {
+                    reference: reference,
+                    width: "50%",
+                    height: "25%",
+                    "{size.width}"
+                }
+            )
+        }
+
+        let mut utils = launch_test(use_node_app);
+
+        utils.wait_for_update((500.0, 800.0)).await;
+        let root = utils.root().child(0).unwrap();
+        assert_eq!(
+            root.child(0).unwrap().text().unwrap().parse::<f32>(),
+            Ok(500.0 * 0.5)
+        );
+
+        utils.cleanup_layout();
+        utils.wait_for_update((300.0, 800.0)).await;
+
+        let root = utils.root().child(0).unwrap();
+        assert_eq!(
+            root.child(0).unwrap().text().unwrap().parse::<f32>(),
+            Ok(300.0 * 0.5)
+        );
+    }
 }

@@ -1,8 +1,8 @@
-use dioxus_native_core::node::{Node, NodeType};
+use dioxus_native_core::node::NodeType;
 use dioxus_native_core::tree::TreeView;
 use dioxus_native_core::NodeId;
-use freya_layers::RenderData;
-use freya_node_state::{CustomAttributeValues, NodeState};
+use freya_layout::{DioxusNode, RenderData};
+use freya_node_state::NodeState;
 use freya_processor::ViewportsCollection;
 use skia_safe::textlayout::{Paragraph, RectHeightStyle, RectWidthStyle, TextHeightBehavior};
 use skia_safe::Color;
@@ -25,6 +25,8 @@ pub fn render_skia(
     if let NodeType::Element { tag, .. } = &node.get_type() {
         let children = node.children.as_ref();
         let viewports = viewports_collection.get(node.get_id());
+
+        // Clip all elements with their corresponding viewports
         if let Some((_, viewports)) = viewports {
             for viewport_id in viewports {
                 let viewport = viewports_collection.get(viewport_id).unwrap().0;
@@ -210,8 +212,8 @@ pub fn render_skia(
                 }
             }
             "image" => {
-                if let Some(image_data) = &node.get_state().style.image_data {
-                    let pic = Image::from_encoded(unsafe { Data::new_bytes(image_data) });
+                let mut draw_img = |bytes: &[u8]| {
+                    let pic = Image::from_encoded(unsafe { Data::new_bytes(bytes) });
                     if let Some(pic) = pic {
                         let mut paint = Paint::default();
                         paint.set_anti_alias(true);
@@ -228,6 +230,15 @@ pub fn render_skia(
                             Some(&paint),
                         );
                     }
+                };
+
+                if let Some(image_ref) = &node.get_state().references.image_ref {
+                    let image_data = image_ref.0.lock().unwrap();
+                    if let Some(image_data) = image_data.as_ref() {
+                        draw_img(image_data)
+                    }
+                } else if let Some(image_data) = &node.get_state().style.image_data {
+                    draw_img(image_data)
                 }
             }
             _ => {}
@@ -263,7 +274,7 @@ fn get_inner_texts(children: &[NodeId], dom: &SafeDOM) -> Vec<(NodeState, String
     children
         .iter()
         .filter_map(|child_id| {
-            let (child, children): (Node<NodeState, CustomAttributeValues>, Vec<NodeId>) = {
+            let (child, children): (DioxusNode, Vec<NodeId>) = {
                 let dom = dom.lock().unwrap();
                 let children = dom.tree.children_ids(*child_id).map(|v| v.to_vec());
                 (dom.get(*child_id).cloned()?, children?)
@@ -274,7 +285,7 @@ fn get_inner_texts(children: &[NodeId], dom: &SafeDOM) -> Vec<(NodeState, String
                     return None;
                 }
                 let child_text_id = children.get(0)?;
-                let child_text: Node<NodeState, CustomAttributeValues> = {
+                let child_text: DioxusNode = {
                     let dom = dom.lock().unwrap();
                     dom.get(*child_text_id).cloned()
                 }?;

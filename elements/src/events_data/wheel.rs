@@ -1,3 +1,4 @@
+/// Data of a Wheel event.
 #[derive(Debug, Clone)]
 pub struct WheelData {
     #[allow(dead_code)]
@@ -18,6 +19,7 @@ impl WheelData {
     }
     */
 
+    /// Get the Y delta.
     pub fn get_delta_y(&self) -> f64 {
         self.delta_y
     }

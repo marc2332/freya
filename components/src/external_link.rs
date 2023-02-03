@@ -5,41 +5,45 @@ use freya_hooks::use_get_theme;
 
 use crate::Tooltip;
 
-/// Supported props by the ExternalLink component.
+/// [`ExternalLink`] component properties.
 #[derive(Props)]
 pub struct ExternalLinkProps<'a> {
+    /// Inner children for the ExternalLink.
     children: Element<'a>,
     #[props(optional)]
+    /// Handler for the `onerror` event.
     onerror: Option<EventHandler<'a, ()>>,
     #[props(optional)]
+    /// Whether  to show a tooltip with the URL or not.
     show_tooltip: Option<bool>,
+    /// The ExternalLink destination URL.
     url: &'a str,
 }
 
-/// ExternalLink component.
-/// # ExternalLink
+/// `Link` for external locations, e.g websites.
 ///
-/// This is a Link component for external links (e.g websites).
+/// # Props
+/// See [`ExternalLinkProps`].
 ///
-/// ```
+/// # Styling
+/// Inherits the [`ExternalLinkTheme`](freya_hooks::ExternalLinkTheme) theme.
+///
+/// # Example
+///
+/// ```no_run
 /// # use freya::prelude::*;
-/// # use freya_testing::launch_test;
-/// # fn main(){
-///     # launch_test(app);
-/// # }
 /// fn app(cx: Scope) -> Element {
-///    render!(
-///       ExternalLink {
-///          show_tooltip: false,
-///          url: "https://github.com",
-///          label {
-///             font_size: "20",
-///             "GitHub"
-///          }
-///       }
-///    )
+///     render!(
+///         ExternalLink {
+///             url: "https://github.com",
+///             label {
+///                 "GitHub"
+///             }
+///         }
+///     )
 /// }
 /// ```
+///
 #[allow(non_snake_case)]
 pub fn ExternalLink<'a>(cx: Scope<'a, ExternalLinkProps<'a>>) -> Element {
     let theme = use_get_theme(cx);

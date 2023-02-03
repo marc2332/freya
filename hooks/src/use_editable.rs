@@ -5,7 +5,10 @@ use std::{
 
 use dioxus_core::{AttributeValue, Event, ScopeState};
 use dioxus_hooks::{use_effect, use_ref, use_state, UseRef, UseState};
-use freya_elements::events_data::{KeyCode, KeyboardData, MouseData};
+use freya_elements::{
+    events_data::{KeyboardData, MouseData},
+    Code, Key,
+};
 use freya_node_state::{CursorReference, CustomAttributeValues};
 use tokio::sync::{mpsc::unbounded_channel, mpsc::UnboundedSender};
 pub use xi_rope::Rope;
@@ -164,8 +167,8 @@ pub fn use_editable<'a>(
                 let rope = content.current();
                 let cursor = cursor_getter.current();
 
-                match &e.code {
-                    KeyCode::ArrowDown => {
+                match &e.key {
+                    Key::ArrowDown => {
                         let total_lines = rope.lines(..).count() - 1;
                         // Go one line down
                         if cursor.1 < total_lines {
@@ -181,7 +184,7 @@ pub fn use_editable<'a>(
                             cursor_setter((cursor_index, cursor.1 + 1));
                         }
                     }
-                    KeyCode::ArrowLeft => {
+                    Key::ArrowLeft => {
                         // Go one character to the left
                         if cursor.0 > 0 {
                             cursor_setter((cursor.0 - 1, cursor.1));
@@ -199,7 +202,7 @@ pub fn use_editable<'a>(
                             }
                         }
                     }
-                    KeyCode::ArrowRight => {
+                    Key::ArrowRight => {
                         let total_lines = rope.lines(..).count() - 1;
                         let current_line = rope.lines(..).nth(cursor.1).unwrap();
 
@@ -211,7 +214,7 @@ pub fn use_editable<'a>(
                             cursor_setter((cursor.0 + 1, cursor.1));
                         }
                     }
-                    KeyCode::ArrowUp => {
+                    Key::ArrowUp => {
                         // Go one line up if there is any
                         if cursor.1 > 0 {
                             let prev_line = rope.lines(..).nth(cursor.1 - 1).unwrap();
@@ -226,15 +229,7 @@ pub fn use_editable<'a>(
                             cursor_setter((cursor_column, cursor.1 - 1));
                         }
                     }
-                    KeyCode::Space => {
-                        // Simply adds an space
-                        let char_idx = rope.offset_of_line(cursor.1) + cursor.0;
-                        content.with_mut(|code| {
-                            code.edit(char_idx..char_idx, " ");
-                        });
-                        cursor_setter((cursor.0 + 1, cursor.1));
-                    }
-                    KeyCode::Backspace => {
+                    Key::Backspace => {
                         if cursor.0 > 0 {
                             // Remove the character to the left if there is any
                             let char_idx = rope.offset_of_line(cursor.1) + cursor.0;
@@ -262,7 +257,7 @@ pub fn use_editable<'a>(
                             cursor_setter((prev_line.len(), cursor.1 - 1));
                         }
                     }
-                    KeyCode::Enter => {
+                    Key::Enter => {
                         // Breaks the line
                         let total_lines = rope.lines(..).count();
                         let char_idx = rope.offset_of_line(cursor.1) + cursor.0;
@@ -279,18 +274,29 @@ pub fn use_editable<'a>(
 
                         cursor_setter((0, cursor.1 + 1));
                     }
-                    character => {
-                        // Adds a new character to the right
-                        if let Some(character) = character.to_text() {
-                            let char_idx = rope.offset_of_line(cursor.1) + cursor.0;
+                    Key::Character(character) => {
+                        match e.code {
+                            Code::Delete => {}
+                            Code::Space => {
+                                // Simply adds an space
+                                let char_idx = rope.offset_of_line(cursor.1) + cursor.0;
+                                content.with_mut(|code| {
+                                    code.edit(char_idx..char_idx, " ");
+                                });
+                                cursor_setter((cursor.0 + 1, cursor.1));
+                            }
+                            _ => {
+                                // Adds a new character to the right
+                                let char_idx = rope.offset_of_line(cursor.1) + cursor.0;
+                                content.with_mut(|code| {
+                                    code.edit(char_idx..char_idx, character.as_str());
+                                });
 
-                            content.with_mut(|code| {
-                                code.edit(char_idx..char_idx, character);
-                            });
-
-                            cursor_setter((cursor.0 + 1, cursor.1));
+                                cursor_setter((cursor.0 + 1, cursor.1));
+                            }
                         }
                     }
+                    _ => {}
                 }
             }
         }
@@ -303,4 +309,215 @@ pub fn use_editable<'a>(
         click_channel_sender,
         cursor_ref_attr,
     )
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{use_editable, EditableMode};
+    use freya::prelude::*;
+    use freya_elements::{Code, Key};
+    use freya_testing::{launch_test, FreyaEvent, MouseButton};
+
+    #[tokio::test]
+    pub async fn multiple_lines_single_editor() {
+        fn use_editable_app(cx: Scope) -> Element {
+            let (content, cursor, process_keyevent, process_clickevent, cursor_reference) =
+                use_editable(
+                    &cx,
+                    || "Hello Rustaceans",
+                    EditableMode::MultipleLinesSingleEditor,
+                );
+            let cursor_char = content.offset_of_line(cursor.1) + cursor.0;
+            render!(
+                rect {
+                    width: "100%",
+                    height: "100%",
+                    background: "white",
+                    cursor_reference: cursor_reference,
+                    onclick:  move |e: MouseEvent| {
+                        process_clickevent.send((e.data, 0)).ok();
+                    },
+                    paragraph {
+                        height: "50%",
+                        width: "100%",
+                        cursor_id: "0",
+                        cursor_index: "{cursor_char}",
+                        cursor_color: "black",
+                        cursor_mode: "editable",
+                        onkeydown: move |e| {
+                            process_keyevent.send(e.data).unwrap();
+                        },
+                        text {
+                            color: "black",
+                            "{content}"
+                        }
+                    }
+                    label {
+                        color: "black",
+                        height: "50%",
+                        "{cursor.0}:{cursor.1}"
+                    }
+                }
+            )
+        }
+
+        let mut utils = launch_test(use_editable_app);
+
+        // Initial state
+        let root = utils.root().child(0).unwrap();
+        let cursor = root.child(1).unwrap().child(0).unwrap();
+        let content = root.child(0).unwrap().child(0).unwrap().child(0).unwrap();
+        assert_eq!(cursor.text(), Some("0:0"));
+        assert_eq!(content.text(), Some("Hello Rustaceans"));
+
+        // Move cursor
+        utils.send_event(FreyaEvent::Mouse {
+            name: "click",
+            cursor: (35.0, 3.0),
+            button: Some(MouseButton::Left),
+        });
+
+        utils.wait_for_update((500.0, 500.0)).await;
+        utils.wait_for_update((500.0, 500.0)).await;
+
+        // Cursor has been moved
+        let root = utils.root().child(0).unwrap();
+        let cursor = root.child(1).unwrap().child(0).unwrap();
+        #[cfg(not(target_os = "linux"))]
+        assert_eq!(cursor.text(), Some("5:0"));
+
+        #[cfg(target_os = "linux")]
+        assert_eq!(cursor.text(), Some("4:0"));
+
+        // Insert text
+        utils.send_event(FreyaEvent::Keyboard {
+            name: "keydown",
+            key: Key::Character("!".to_string()),
+            code: Code::Unidentified,
+        });
+
+        utils.wait_for_update((500.0, 500.0)).await;
+
+        // Text and cursor have changed
+        let cursor = root.child(1).unwrap().child(0).unwrap();
+        let content = root.child(0).unwrap().child(0).unwrap().child(0).unwrap();
+        #[cfg(not(target_os = "linux"))]
+        {
+            assert_eq!(content.text(), Some("Hello! Rustaceans"));
+            assert_eq!(cursor.text(), Some("6:0"));
+        }
+
+        #[cfg(target_os = "linux")]
+        {
+            assert_eq!(content.text(), Some("Hell!o Rustaceans"));
+            assert_eq!(cursor.text(), Some("5:0"));
+        }
+    }
+
+    #[tokio::test]
+    pub async fn single_line_mulitple_editors() {
+        fn use_editable_app(cx: Scope) -> Element {
+            let (content, cursor, process_keyevent, process_clickevent, cursor_reference) =
+                use_editable(
+                    &cx,
+                    || "Hello Rustaceans\nHello World",
+                    EditableMode::SingleLineMultipleEditors,
+                );
+            render!(
+                rect {
+                    width: "100%",
+                    height: "100%",
+                    background: "white",
+                    cursor_reference: cursor_reference,
+
+                    onkeydown: move |e| {
+                        process_keyevent.send(e.data).unwrap();
+                    },
+                    content.lines(0..).enumerate().map(move |(i, line)| {
+                        let process_clickevent = process_clickevent.clone();
+                        rsx!(
+                            paragraph {
+                                width: "100%",
+                                height: "30",
+                                max_lines: "1",
+                                cursor_id: "0",
+                                cursor_index: "{i}",
+                                cursor_color: "black",
+                                cursor_mode: "editable",
+                                onclick:  move |e: MouseEvent| {
+                                    process_clickevent.send((e.data, i)).ok();
+                                },
+                                text {
+                                    color: "black",
+                                    "{line}"
+                                }
+                            }
+                        )
+                    })
+                    label {
+                        color: "black",
+                        height: "50%",
+                        "{cursor.0}:{cursor.1}"
+                    }
+                }
+            )
+        }
+
+        let mut utils = launch_test(use_editable_app);
+
+        // Initial state
+        let root = utils.root().child(0).unwrap();
+        let cursor = root.child(2).unwrap().child(0).unwrap();
+        let content = root.child(0).unwrap().child(0).unwrap().child(0).unwrap();
+        assert_eq!(cursor.text(), Some("0:0"));
+        assert_eq!(content.text(), Some("Hello Rustaceans"));
+
+        // Move cursor
+        utils.send_event(FreyaEvent::Mouse {
+            name: "click",
+            cursor: (35.0, 3.0),
+            button: Some(MouseButton::Left),
+        });
+
+        utils.wait_for_update((500.0, 500.0)).await;
+        utils.wait_for_update((500.0, 500.0)).await;
+
+        // Cursor has been moved
+        let root = utils.root().child(0).unwrap();
+        let cursor = root.child(2).unwrap().child(0).unwrap();
+        #[cfg(not(target_os = "linux"))]
+        assert_eq!(cursor.text(), Some("5:0"));
+
+        #[cfg(target_os = "linux")]
+        assert_eq!(cursor.text(), Some("4:0"));
+
+        // Insert text
+        utils.send_event(FreyaEvent::Keyboard {
+            name: "keydown",
+            key: Key::Character("!".to_string()),
+            code: Code::Unidentified,
+        });
+
+        utils.wait_for_update((500.0, 500.0)).await;
+
+        // Text and cursor have changed
+        let cursor = root.child(2).unwrap().child(0).unwrap();
+        let content = root.child(0).unwrap().child(0).unwrap().child(0).unwrap();
+
+        #[cfg(not(target_os = "linux"))]
+        {
+            assert_eq!(content.text(), Some("Hello! Rustaceans"));
+            assert_eq!(cursor.text(), Some("6:0"));
+        }
+
+        #[cfg(target_os = "linux")]
+        {
+            assert_eq!(content.text(), Some("Hell!o Rustaceans"));
+            assert_eq!(cursor.text(), Some("5:0"));
+        }
+
+        // Second line
+        let content = root.child(1).unwrap().child(0).unwrap().child(0).unwrap();
+        assert_eq!(content.text(), Some("Hello World"));
+    }
 }

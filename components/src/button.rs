@@ -3,36 +3,40 @@ use freya_elements as dioxus_elements;
 use freya_elements::MouseEvent;
 use freya_hooks::use_get_theme;
 
-/// Properties for the Button component.
+/// [`Button`] component properties.
 #[derive(Props)]
 pub struct ButtonProps<'a> {
+    /// Inner children for the Button.
     pub children: Element<'a>,
     #[props(optional)]
+    /// Handler for the `onclick` event.
     pub onclick: Option<EventHandler<'a, MouseEvent>>,
 }
 
-/// Button component.
-/// # Button
+/// `Button` component.
 ///
-/// This is a simple Button component.
+/// # Props
+/// See [`ButtonProps`].
 ///
-/// ```
+/// # Styling
+/// Inherits the [`ButtonTheme`](freya_hooks::ButtonTheme) theme.
+///
+/// # Example
+///
+/// ```no_run
 /// # use freya::prelude::*;
-/// # use freya_testing::launch_test;
-/// # fn main(){
-///     # launch_test(app);
-/// # }
 /// fn app(cx: Scope) -> Element {
-///    let mut count = use_state(cx, || 0);
-///
-///    render!(
-///       Button {
-///          onclick: move |_| count += 1,
-///          label { "Click to increase -> {count}" }
-///       }
-///    )
+///     render!(
+///         Button {
+///             onclick: |_| println!("clicked"),
+///             label {
+///                 "Click this"
+///             }
+///         }
+///     )
 /// }
 /// ```
+///
 #[allow(non_snake_case)]
 pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
     let theme = use_get_theme(cx);

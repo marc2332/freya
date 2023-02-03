@@ -2,6 +2,11 @@ use dioxus::prelude::*;
 use freya_elements as dioxus_elements;
 use freya_hooks::use_get_theme;
 
+/// `Tooltip` component
+///
+/// # Styling
+/// Inherits the [`TooltipTheme`](freya_hooks::TooltipTheme)
+///
 #[allow(non_snake_case)]
 #[inline_props]
 pub fn Tooltip<'a>(cx: Scope<'a>, url: &'a str) -> Element {

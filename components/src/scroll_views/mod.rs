@@ -4,14 +4,17 @@ mod virtual_scroll_view;
 pub use scroll_view::*;
 pub use virtual_scroll_view::*;
 
+#[doc(hidden)]
 pub const SCROLLBAR_SIZE: u8 = 15;
 
+#[doc(hidden)]
 #[derive(Debug, PartialEq, Eq)]
 pub enum Axis {
     X,
     Y,
 }
 
+#[doc(hidden)]
 pub fn get_container_size(is_scrollbar_visible: bool) -> String {
     if is_scrollbar_visible {
         format!("calc(100% - {SCROLLBAR_SIZE})")
@@ -20,6 +23,7 @@ pub fn get_container_size(is_scrollbar_visible: bool) -> String {
     }
 }
 
+#[doc(hidden)]
 pub fn is_scrollbar_visible(
     is_scrollbar_enabled: bool,
     inner_size: f32,
@@ -32,6 +36,7 @@ pub fn is_scrollbar_visible(
     }
 }
 
+#[doc(hidden)]
 pub fn get_scrollbar_pos_and_size(
     inner_size: f32,
     viewport_size: f32,
@@ -48,6 +53,7 @@ pub fn get_scrollbar_pos_and_size(
     (scrollbar_position, scrollbar_height)
 }
 
+#[doc(hidden)]
 pub fn get_scroll_position_from_cursor(
     cursor_position: f32,
     inner_size: f32,
@@ -71,6 +77,7 @@ pub fn get_scroll_position_from_cursor(
     new_position as i32
 }
 
+#[doc(hidden)]
 pub fn get_scroll_position_from_wheel(
     wheel_movement: f32,
     inner_size: f32,
@@ -94,7 +101,8 @@ pub fn get_scroll_position_from_wheel(
     new_position as i32
 }
 
-// Limit the scroll position to the scroll view bounds to avoid overflows
+/// Limit the scroll position to the scroll view bounds to avoid overflows
+#[doc(hidden)]
 pub fn get_corrected_scroll_position(
     inner_size: f32,
     viewport_size: f32,

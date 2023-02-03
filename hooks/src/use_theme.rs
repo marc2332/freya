@@ -1,30 +1,49 @@
 use dioxus_core::ScopeState;
 use dioxus_hooks::{use_shared_state, use_shared_state_provider, UseSharedState};
 
-/// Provide the given theme down to the children
+/// Provide a custom [`Theme`].
 pub fn use_init_theme(cx: &ScopeState, theme: Theme) {
     use_shared_state_provider(cx, || theme);
 }
 
-/// Provide the default theme down to the children
+/// Provide the default [`Theme`].
 pub fn use_init_default_theme(cx: &ScopeState) -> Theme {
     use_shared_state_provider(cx, || DARK_THEME);
     DARK_THEME
 }
 
-/// Get the current theme
+/// Subscribe to [`Theme`] changes.
 pub fn use_theme(cx: &ScopeState) -> UseSharedState<Theme> {
     use_shared_state::<Theme>(cx).unwrap()
 }
 
-/// Get a read-only copy of the current theme, otherwise fallback to the default
+/// Subscribe to [`Theme`] changes, default theme will be used if there is no provided [`Theme`].
+///
+/// Primarily used by built-in components that have no control of whether they will inherit a [`Theme`] or not.
 pub fn use_get_theme(cx: &ScopeState) -> Theme {
     use_shared_state::<Theme>(cx)
         .map(|v| v.read().clone())
         .unwrap_or(DARK_THEME)
 }
 
-/// Theming properties for the Button component.
+/// Theming properties for DropdownItem components.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DropdownItemTheme {
+    pub background: &'static str,
+    pub hover_background: &'static str,
+    pub font_theme: FontTheme,
+}
+
+/// Theming properties for Dropdown components.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DropdownTheme {
+    pub desplegable_background: &'static str,
+    pub background_button: &'static str,
+    pub hover_background: &'static str,
+    pub font_theme: FontTheme,
+}
+
+/// Theming properties for Button components.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ButtonTheme {
     pub background: &'static str,
@@ -38,7 +57,7 @@ pub struct FontTheme {
     pub color: &'static str,
 }
 
-/// Theming properties for the Switch component.
+/// Theming properties the Switch components.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SwitchTheme {
     pub background: &'static str,
@@ -47,21 +66,21 @@ pub struct SwitchTheme {
     pub enabled_thumb_background: &'static str,
 }
 
-/// Theming properties for the Scrollbar component.
+/// Theming properties the Scrollbar components.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ScrollbarTheme {
     pub background: &'static str,
     pub thumb_background: &'static str,
 }
 
-/// Theming properties for the window body.
+/// Theming properties for the App body.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct BodyTheme {
     pub background: &'static str,
     pub color: &'static str,
 }
 
-/// Theming properties for the Slider component.
+/// Theming properties for Slider components.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SliderTheme {
     pub background: &'static str,
@@ -69,14 +88,14 @@ pub struct SliderTheme {
     pub thumb_inner_background: &'static str,
 }
 
-/// Theming properties for the Tooltip component.
+/// Theming properties for Tooltip components.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TooltipTheme {
     pub background: &'static str,
     pub color: &'static str,
 }
 
-/// Theming properties for the ExternalLink component.
+/// Theming properties for ExternalLink components.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ExternalLinkTheme {
     pub highlight_color: &'static str,
@@ -93,9 +112,11 @@ pub struct Theme {
     pub slider: SliderTheme,
     pub tooltip: TooltipTheme,
     pub external_link: ExternalLinkTheme,
+    pub dropdown: DropdownTheme,
+    pub dropdown_item: DropdownItemTheme,
 }
 
-/// Light theme
+/// `Light` theme
 pub const LIGHT_THEME: Theme = Theme {
     name: "light",
     body: BodyTheme {
@@ -131,9 +152,24 @@ pub const LIGHT_THEME: Theme = Theme {
     external_link: ExternalLinkTheme {
         highlight_color: "rgb(43,106,208)",
     },
+    dropdown: DropdownTheme {
+        desplegable_background: "white",
+        background_button: "white",
+        hover_background: "rgb(240, 240, 240)",
+        font_theme: FontTheme {
+            color: "rgb(10, 10, 10)",
+        },
+    },
+    dropdown_item: DropdownItemTheme {
+        background: "white",
+        hover_background: "rgb(240, 240, 240)",
+        font_theme: FontTheme {
+            color: "rgb(10, 10, 10)",
+        },
+    },
 };
 
-/// Dark theme
+/// `Dark` theme
 pub const DARK_THEME: Theme = Theme {
     name: "dark",
     body: BodyTheme {
@@ -166,5 +202,16 @@ pub const DARK_THEME: Theme = Theme {
     },
     external_link: ExternalLinkTheme {
         highlight_color: "rgb(43,106,208)",
+    },
+    dropdown: DropdownTheme {
+        desplegable_background: "rgb(25, 25, 25)",
+        background_button: "rgb(35, 35, 35)",
+        hover_background: "rgb(80, 80, 80)",
+        font_theme: FontTheme { color: "white" },
+    },
+    dropdown_item: DropdownItemTheme {
+        background: "rgb(35, 35, 35)",
+        hover_background: "rgb(80, 80, 80)",
+        font_theme: FontTheme { color: "white" },
     },
 };

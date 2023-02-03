@@ -1,30 +1,21 @@
-use dioxus_core::ElementId;
-use dioxus_native_core::{
-    node::{Node, NodeType},
-    real_dom::RealDom,
-    tree::TreeView,
-    NodeId,
-};
+use dioxus_native_core::{node::NodeType, real_dom::RealDom, NodeId};
 use euclid::{Length, Point2D};
 use freya_common::{LayoutMemorizer, NodeArea};
 use freya_elements::events_data::{KeyboardData, MouseData, WheelData};
-use freya_layers::{DOMNode, Layers, RenderData};
 use freya_layout::NodeLayoutMeasurer;
+use freya_layout::{Layers, RenderData};
 use freya_node_state::{CustomAttributeValues, NodeState};
 use rustc_hash::FxHashMap;
 use skia_safe::{textlayout::FontCollection, Color};
 use std::{
-    any::Any,
     ops::Index,
-    rc::Rc,
     sync::{Arc, Mutex},
 };
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
-use tracing::info;
 
 pub mod events;
 
-use events::{EventsProcessor, FreyaEvent};
+use events::{DomEvent, DomEventData, EventsProcessor, FreyaEvent};
 
 pub type SafeDOM = Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>;
 pub type EventEmitter = UnboundedSender<DomEvent>;
@@ -57,50 +48,17 @@ pub fn process_work<HookOptions>(
         &mut HookOptions,
     ),
 ) {
-    let (root, root_children): (Node<NodeState, CustomAttributeValues>, Option<Vec<NodeId>>) = {
-        let dom = dom.lock().unwrap();
-        let root_id = NodeId(0);
-        let children = dom.tree.children_ids(root_id).map(|v| v.to_vec());
-        (dom.index(root_id).clone(), children)
-    };
-
     let layers = &mut Layers::default();
 
     {
-        let dom_node = DOMNode {
-            node: root,
-            height: 0,
-            parent_id: None,
-            children: root_children,
-        };
+        let root = dom.lock().unwrap().index(NodeId(0)).clone();
         let mut remaining_area = area;
         let mut root_node_measurer = NodeLayoutMeasurer::new(
-            &dom_node,
+            root,
             &mut remaining_area,
             area,
-            &dom,
+            dom,
             layers,
-            |node_id, dom| {
-                let (child, height, parent_id, children) = {
-                    let dom = dom.lock().unwrap();
-                    let height = dom.tree.height(*node_id);
-                    let parent_id = dom.tree.parent_id(*node_id);
-                    let children = dom.tree.children_ids(*node_id).map(|v| v.to_vec());
-                    (
-                        dom.index(*node_id).clone(),
-                        height.unwrap(),
-                        parent_id,
-                        children,
-                    )
-                };
-
-                Some(DOMNode {
-                    node: child,
-                    height,
-                    parent_id,
-                    children,
-                })
-            },
             0,
             font_collection,
             manager,
@@ -110,6 +68,7 @@ pub fn process_work<HookOptions>(
 
     #[cfg(debug_assertions)]
     {
+        use tracing::info;
         let dirty_nodes_counter = manager.lock().unwrap().dirty_nodes_counter;
         if dirty_nodes_counter > 0 {
             let nodes = manager.lock().unwrap().nodes.len();
@@ -188,6 +147,8 @@ pub fn process_work<HookOptions>(
     let mut calculated_events: FxHashMap<&'static str, Vec<(RenderData, FreyaEvent)>> =
         FxHashMap::default();
 
+    let mut global_events: Vec<FreyaEvent> = Vec::default();
+
     // Propagate events from the top to the bottom
     for layer_num in &layers_nums {
         let layer = layers.layers.get(layer_num).unwrap();
@@ -214,6 +175,12 @@ pub fn process_work<HookOptions>(
 
                         let cursor_is_inside =
                             cursor.0 > x && cursor.0 < x2 && cursor.1 > y && cursor.1 < y2;
+
+                        if name == &"click" {
+                            let mut global_event = event.clone();
+                            global_event.set_name("globalclick");
+                            global_events.push(global_event);
+                        }
 
                         // Make sure the cursor is inside the node area
                         if cursor_is_inside {
@@ -301,14 +268,45 @@ pub fn process_work<HookOptions>(
                     name: event_name.to_string(),
                     data: DomEventData::Wheel(WheelData::new(scroll.0, scroll.1)),
                 },
-                FreyaEvent::Keyboard { code, .. } => DomEvent {
+                FreyaEvent::Keyboard { key, code, .. } => DomEvent {
                     element_id: node.element_id.unwrap(),
                     name: event_name.to_string(),
-                    data: DomEventData::Keyboard(KeyboardData::new(code.clone())),
+                    data: DomEventData::Keyboard(KeyboardData::new(key.clone(), *code)),
                 },
             };
 
             new_events.push(event.clone());
+            event_emitter.send(event).unwrap();
+        }
+    }
+
+    for global_event in global_events {
+        let event_name = global_event.get_name();
+        let dom = dom.lock().unwrap();
+        let listeners = dom.get_listening_sorted(event_name);
+
+        for listener in listeners {
+            let event = match global_event {
+                FreyaEvent::Mouse { cursor, button, .. } => DomEvent {
+                    element_id: listener.node_data.element_id.unwrap(),
+                    name: event_name.to_string(),
+                    data: DomEventData::Mouse(MouseData::new(
+                        Point2D::from_lengths(Length::new(cursor.0), Length::new(cursor.1)),
+                        Point2D::from_lengths(Length::new(cursor.0), Length::new(cursor.1)),
+                        button,
+                    )),
+                },
+                FreyaEvent::Wheel { scroll, .. } => DomEvent {
+                    element_id: listener.node_data.element_id.unwrap(),
+                    name: event_name.to_string(),
+                    data: DomEventData::Wheel(WheelData::new(scroll.0, scroll.1)),
+                },
+                FreyaEvent::Keyboard { ref key, code, .. } => DomEvent {
+                    element_id: listener.node_data.element_id.unwrap(),
+                    name: event_name.to_string(),
+                    data: DomEventData::Keyboard(KeyboardData::new(key.clone(), code)),
+                },
+            };
             event_emitter.send(event).unwrap();
         }
     }
@@ -321,28 +319,4 @@ pub fn process_work<HookOptions>(
     }
 
     freya_events.lock().unwrap().clear();
-}
-
-#[derive(Debug, Clone)]
-pub struct DomEvent {
-    pub name: String,
-    pub element_id: ElementId,
-    pub data: DomEventData,
-}
-
-#[derive(Debug, Clone)]
-pub enum DomEventData {
-    Mouse(MouseData),
-    Keyboard(KeyboardData),
-    Wheel(WheelData),
-}
-
-impl DomEventData {
-    pub fn any(self) -> Rc<dyn Any> {
-        match self {
-            DomEventData::Mouse(m) => Rc::new(m),
-            DomEventData::Keyboard(k) => Rc::new(k),
-            DomEventData::Wheel(w) => Rc::new(w),
-        }
-    }
 }
