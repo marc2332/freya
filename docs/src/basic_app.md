@@ -1,6 +1,6 @@
-# Getting Started
+# Basic app
 
-Let's start by creating a simple project:
+Let's start by creating a simple project.
 
 ### Creating the project
 
@@ -20,7 +20,7 @@ edition = "2021"
 
 [dependencies]
 freya = { git="https://github.com/marc2332/freya" }
-dioxus = { git="https://github.com/DioxusLabs/dioxus", rev="a616a8fa9d5fe46a253e1b4bfef24abd46a623fa"}
+dioxus = { git="https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
 ```
 
 ### src/main.rs
