@@ -80,6 +80,7 @@ pub struct NodeLayoutMeasurer<'a> {
     inherited_relative_layer: i16,
     font_collection: &'a mut FontCollection,
     layout_memorizer: &'a Arc<Mutex<LayoutMemorizer>>,
+    last_child: bool
 }
 
 impl<'a> NodeLayoutMeasurer<'a> {
@@ -94,6 +95,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
         inherited_relative_layer: i16,
         font_collection: &'a mut FontCollection,
         layout_memorizer: &'a Arc<Mutex<LayoutMemorizer>>,
+        last_child: bool
     ) -> Self {
         Self {
             node_id: node.node_data.node_id,
@@ -105,6 +107,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
             inherited_relative_layer,
             font_collection,
             layout_memorizer,
+            last_child
         }
     }
 
@@ -142,7 +145,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
                 let parent = dom.tree.get(p).unwrap();
                 let is_static = parent.state.is_inner_static();
 
-                if !is_static {
+                if !is_static || !self.last_child {
                     self.layout_memorizer.lock().unwrap().mark_as_dirty(p)
                 }
             }
@@ -355,7 +358,9 @@ impl<'a> NodeLayoutMeasurer<'a> {
                     .children(self.node_id)
                     .map(|children| children.cloned().collect());
                 if let Some(children) = node_children {
-                    for child in children.into_iter() {
+                    let children_len = children.len();
+                    for (i, child) in children.into_iter().enumerate() {
+                        let last_child = children_len - 1 == i;
                         let child_node_area = {
                             let mut child_measurer = NodeLayoutMeasurer {
                                 node_id: child.node_data.node_id,
@@ -367,6 +372,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
                                 inherited_relative_layer: node_relative_layer,
                                 font_collection: self.font_collection,
                                 layout_memorizer: self.layout_memorizer,
+                                last_child
                             };
                             child_measurer.measure_area(must_memorize_layout)
                         };

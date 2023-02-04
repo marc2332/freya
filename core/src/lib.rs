@@ -287,6 +287,7 @@ pub fn process_work<HookOptions>(
             0,
             font_collection,
             manager,
+            true
         );
         root_node_measurer.measure_area(true);
     }

@@ -69,6 +69,7 @@ fn percentage() {
         0,
         &mut fonts,
         &layout_memorizer,
+        false
     );
     let result = measurer.measure_area(true);
 
@@ -112,6 +113,7 @@ fn manual() {
         0,
         &mut fonts,
         &layout_memorizer,
+        false
     );
     let result = measurer.measure_area(true);
 
@@ -187,6 +189,7 @@ fn auto() {
         0,
         &mut fonts,
         &layout_memorizer,
+        false
     );
     let result = measurer.measure_area(true);
 
@@ -251,6 +254,7 @@ fn x_y() {
         0,
         &mut fonts,
         &layout_memorizer,
+        false
     );
 
     let result = measurer.measure_area(true);

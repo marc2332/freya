@@ -1,6 +1,9 @@
+use std::sync::{Mutex, Arc};
+
 use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
 use dioxus_native_core::state::ParentDepState;
 use dioxus_native_core_macro::sorted_str_slice;
+use freya_common::LayoutMemorizer;
 use skia_safe::textlayout::TextAlign;
 use skia_safe::Color;
 
@@ -33,7 +36,7 @@ impl Default for FontStyle {
 
 /// Font style are inherited by default if not specified otherwise by some of the supported attributes.
 impl ParentDepState<CustomAttributeValues> for FontStyle {
-    type Ctx = ();
+    type Ctx = Arc<Mutex<LayoutMemorizer>>;
     type DepState = (Self,);
 
     const NODE_MASK: NodeMask =
@@ -51,9 +54,11 @@ impl ParentDepState<CustomAttributeValues> for FontStyle {
         &mut self,
         node: NodeView<CustomAttributeValues>,
         parent: Option<(&Self,)>,
-        _ctx: &Self::Ctx,
+        ctx: &Self::Ctx,
     ) -> bool {
         let mut font_style = parent.map(|(v,)| v.clone()).unwrap_or_default();
+
+        let mut changed_size = false;
 
         if let Some(attributes) = node.attributes() {
             for attr in attributes {
@@ -71,6 +76,7 @@ impl ParentDepState<CustomAttributeValues> for FontStyle {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
                             font_style.font_family = attr.to_string();
+                            changed_size = true;
                         }
                     }
                     "font_size" => {
@@ -78,6 +84,7 @@ impl ParentDepState<CustomAttributeValues> for FontStyle {
                         if let Some(attr) = attr {
                             if let Ok(font_size) = attr.parse() {
                                 font_style.font_size = font_size;
+                                changed_size = true;
                             }
                         }
                     }
@@ -86,6 +93,7 @@ impl ParentDepState<CustomAttributeValues> for FontStyle {
                         if let Some(attr) = attr {
                             if let Ok(line_height) = attr.parse() {
                                 font_style.line_height = line_height;
+                                changed_size = true;
                             }
                         }
                     }
@@ -100,6 +108,7 @@ impl ParentDepState<CustomAttributeValues> for FontStyle {
                         if let Some(attr) = attr {
                             if let Ok(max_lines) = attr.parse() {
                                 font_style.max_lines = Some(max_lines);
+                                changed_size = true;
                             }
                         }
                     }
@@ -107,11 +116,16 @@ impl ParentDepState<CustomAttributeValues> for FontStyle {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
                             font_style.font_style = parse_font_style(attr);
+                            changed_size = true;
                         }
                     }
                     _ => {}
                 }
             }
+        }
+
+        if changed_size {
+            ctx.lock().unwrap().mark_as_dirty(node.node_id());
         }
 
         let changed = &font_style != self;
