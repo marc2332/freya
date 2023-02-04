@@ -32,7 +32,7 @@ pub struct NodeState {
     pub scroll: Scroll,
     #[node_dep_state()]
     pub style: Style,
-    #[parent_dep_state(font_style)]
+    #[parent_dep_state(font_style, Arc<Mutex<LayoutManager>>)]
     pub font_style: FontStyle,
 }
 
