@@ -24,6 +24,8 @@ jobs:
         fetch-depth: 2
     - name: Set up cargo cache
       uses: Swatinem/rust-cache@v2
+      with:
+        prefix-key: "1"
     - name: Install linux dependencies
       if: runner.os == 'Linux'
       run: |
@@ -35,7 +37,7 @@ jobs:
       run: |
         export RUSTFLAGS="-Cinstrument-coverage"
         export LLVM_PROFILE_FILE='cargo-test-%p-%m.profraw'
-        cargo test --workspace --features x11
+        cargo test --workspace 
     - name: Run MacOS and Windows tests
       if: runner.os != 'Linux'
       run: cargo test --workspace

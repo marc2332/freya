@@ -10,25 +10,28 @@ homepage = "https://github.com/marc2332/freya"
 repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
+
 [features]
-x11 = ["skia-safe/x11"]
 wireframe = []
+
+[target."cfg(target_os = \"linux\")".dependencies.skia-safe]
+version = "0.58.0"
+features = ["gl", "textlayout", "svg", "x11", "wayland"]
 
 [dependencies]
 gl = "*"
-glutin_tao = { version = "0.30.1", features = ["serde"]}
-skia-safe = { version = "0.56.1", features = ["gl", "textlayout", "svg"] }
-dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
-dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
-dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
-dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
-dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
-dioxus-hot-reload = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
+glutin = { version = "0.29.0"}
+skia-safe = { version = "0.58.0", features = ["gl", "textlayout", "svg"] }
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-hot-reload = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
 freya-layout = { path = "../layout", version = "0.1.0" }
 freya-node-state = { path = "../state", version = "0.1.0" }
 freya-elements = { path = "../elements", version = "0.1.0" }
-freya-layers = { path = "../layers", version = "0.1.0" }
 freya-common = { path = "../common", version = "0.1.0" }
-freya-processor = { path = "../processor", version = "0.1.0" }
+freya-core = { path = "../core", version = "0.1.0" }
 futures = "0.3.25"
 tokio = { version = "1.23.0", features = ["sync", "rt-multi-thread", "time", "macros"] }

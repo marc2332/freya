@@ -6,7 +6,7 @@
 [![Github Sponsors](https://img.shields.io/github/sponsors/marc2332?style=social)](https://github.com/sponsors/marc2332)
 [![codecov](https://codecov.io/github/marc2332/freya/branch/main/graph/badge.svg?token=APSGEC84B8)](https://codecov.io/github/marc2332/freya)
 
-**Freya** is native GUI library for Rust powered 🧬 [Dioxus](https://dioxuslabs.com) and 🎨 [Skia](https://skia.org/). 
+**Freya** is native GUI library for Rust powered by 🧬 [Dioxus](https://dioxuslabs.com) and 🎨 [Skia](https://skia.org/). 
 
 ⚠️ It's currently work in progress and not usable for production, but you can already play with it! You can join the [Discord](https://discord.gg/sYejxCdewG) server if you have any question or issue. 
 
@@ -55,18 +55,12 @@ fn app(cx: Scope) -> Element {
 
 ### Want to try it? 🤔
 
-**Note for Windows**: You need Visual Studio 2022.
+**⚠️ Note for Windows**: You need the **latest** (this is very important) Visual Studio 2022.
 
-Windows & MacOS:
+Run:
 
 ```shell
 cargo run --example counter
-```
-
-Linux:
-
-```shell
-cargo run --example counter --features x11
 ```
 
 ### Usage 📜
@@ -74,6 +68,7 @@ Add Freya as a dependency in your `Cargo.toml`:
 
 ```toml
 freya = { git = "https://github.com/marc2332/freya" }
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
 ```
 
 ### Features ✨
@@ -81,7 +76,7 @@ freya = { git = "https://github.com/marc2332/freya" }
 - Containers
 - Scroll views (nested too)
 - Events: click, wheel, mouse /down/leave/over for now
-- Support for Windows, Linux (needs `x11` feature) and MacOS support
+- Support for Windows, Linux and MacOS
 - Optional Components library (buttons, switch, etc)
 - Animation hook utility
 - SVG Support

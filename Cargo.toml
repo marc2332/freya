@@ -4,27 +4,26 @@ version = "0.0.0"
 edition = "2021"
 
 [workspace]
-members = ["layers", "layout", "renderer", "state", "freya", "elements", "components", "hooks", "common", "processor", "testing"]
+members = ["layout", "renderer", "state", "freya", "elements", "components", "hooks", "common", "core", "testing"]
 
 [features]
 devtools = ["freya/devtools"]
-x11 = ["freya/x11"]
 wireframe = ["freya/wireframe"]
 
 [dev-dependencies]
 freya = { path = "./freya"}
-dioxus-native-core-macro = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload" }
-dioxus = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
-dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
-dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
-dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
-dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
-dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
+dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3" }
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
 tokio = "1.23.0"
 reqwest = {version = "0.11.13", features = ["json"] }
 serde = "1.0.152"
 tracing-subscriber = "0.2.25"
-dioxus-router = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
+dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
 
 [profile.release]
 lto = true

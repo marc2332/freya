@@ -3,11 +3,14 @@ use freya_elements as dioxus_elements;
 use freya_elements::{MouseEvent, WheelEvent};
 use freya_hooks::use_get_theme;
 
-/// Properties for the Slider component.
+/// [`Slider`] component properties.
 #[derive(Props)]
 pub struct SliderProps<'a> {
+    /// Handler for the `onmoved` event.
     pub onmoved: EventHandler<'a, f64>,
+    /// Width of the Slider.
     pub width: f64,
+    /// Height of the Slider.
     pub value: f64,
 }
 
@@ -25,53 +28,32 @@ fn ensure_correct_slider_range(value: f64) -> f64 {
     }
 }
 
-/// A controlled Slider component.
+/// Controlled `Slider` component.
 ///
 /// You must pass a percentage from 0.0 to 100.0 and listen for value changes with `onmoved` and then decide if this changes are applicable,
 /// and if so, apply them.
 ///
+/// # Props
+/// See [`SliderProps`].
+///
+/// # Styling
+/// Inherits a [`SliderTheme`](freya_hooks::SliderTheme) theme.
+///
 /// # Example
-/// ```rs
-/// use dioxus::prelude::*;
-/// use freya::{dioxus_elements, *};
-///
-/// const MAX_FONT_SIZE: f64 = 100.0;
-///
-/// fn main() {
-///     launch(app);
-/// }
-///
+/// ```no_run
+/// # use freya::prelude::*;
 /// fn app(cx: Scope) -> Element {
 ///     let percentage = use_state(cx, || 20.0);
-///     let font_size = percentage.get() * MAX_FONT_SIZE + 20.0;
 ///
 ///     render!(
-///         rect {
-///             width: "100%",
-///             height: "100%",
-///             background: "black",
-///             padding: "20",
-///             label {
-///                 font_size: "{font_size}",
-///                 font_family: "Inter",
-///                 height: "150",
-///                 "Hello World"
-///             }
-///             Button {
-///                 onclick: move |_| {
-///                     percentage.set(20);
-///                 },
-///                  label {
-///                     width: "80",
-///                     "Reset size"
-///                  }
-///             }
-///             Slider {
-///                 width: 100.0,
-///                 value: *percentage.get(),
-///                 onmoved: |p| {
-///                     percentage.set(p);
-///                 }
+///         label {
+///             "Value: {percentage}"
+///         }
+///         Slider {
+///             width: 100.0,
+///             value: *percentage.get(),
+///             onmoved: |p| {
+///                 percentage.set(p);
 ///             }
 ///         }
 ///     )

@@ -12,23 +12,23 @@ keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
 [dependencies]
-glutin_tao = { version = "0.30.1", features = ["serde"]}
-dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
-dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
-dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
-dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
-dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
-dioxus-native-core-macro = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
+glutin = { version = "0.29.0"}
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
 freya-elements = { path = "../elements", version = "0.1.0"}
 freya-common = { path = "../common", version = "0.1.0" }
-freya-layers = { path = "../layers", version = "0.1.0" }
+freya-layout = { path = "../layout", version = "0.1.0" }
 freya-node-state = { path = "../state", version = "0.1.0" }
-freya-processor = { path = "../processor", version = "0.1.0" }
+freya-core = { path = "../core", version = "0.1.0" }
 tokio = { version = "1.23.0", features = ["macros", "sync", "rt", "time"]}
 futures = "0.3.25"
 anymap = "0.12.1"
-skia-safe = { version = "0.56.1", features = ["gl", "textlayout", "svg"] }
+skia-safe = { version = "0.58.0", features = ["gl", "textlayout", "svg"] }
 
 [dev-dependencies]
 freya-components ={ path = "../components"}
-dioxus = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}

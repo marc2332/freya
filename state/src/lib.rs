@@ -32,7 +32,7 @@ pub struct NodeState {
     pub scroll: Scroll,
     #[node_dep_state()]
     pub style: Style,
-    #[parent_dep_state(font_style)]
+    #[parent_dep_state(font_style, Arc<Mutex<LayoutManager>>)]
     pub font_style: FontStyle,
 }
 
@@ -47,6 +47,19 @@ impl NodeState {
             state: self,
             curr: 0,
         }
+    }
+
+    /// Check if this NodeState has any sizing determined by it's children or not
+    pub fn is_inner_static(&self) -> bool {
+        if SizeMode::Auto == self.size.width {
+            return false;
+        }
+
+        if SizeMode::Auto == self.size.height {
+            return false;
+        }
+
+        true
     }
 }
 

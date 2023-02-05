@@ -12,14 +12,17 @@ keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
 [dependencies]
-dioxus = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
-dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
-dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
-dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
-dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
-dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
-dioxus-router = { git = "https://github.com/Demonthos/dioxus", branch = "desktop-hot-reload"}
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
 freya-elements = { path = "../elements", version = "0.1.0" }
 freya-node-state = { path = "../state", version = "0.1.0" }
 freya-hooks = { path = "../hooks", version = "0.1.0" }
 open = "1"
+
+[dev-dependencies]
+freya = { path = "../freya", version = "0.1.0" }

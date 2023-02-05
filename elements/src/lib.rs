@@ -155,6 +155,7 @@ pub mod events {
         MouseData;
 
         onclick
+        onglobalclick
         onmousedown
         onmouseover
         onmouseleave

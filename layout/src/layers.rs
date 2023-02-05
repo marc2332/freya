@@ -7,36 +7,7 @@ use freya_common::NodeArea;
 use freya_node_state::{CustomAttributeValues, NodeState};
 use rustc_hash::FxHashMap;
 
-/// Collection of info about a specific Node
-#[derive(Clone)]
-pub struct DOMNode {
-    pub node: Node<NodeState, CustomAttributeValues>,
-    pub height: u16,
-    pub parent_id: Option<NodeId>,
-    pub children: Option<Vec<NodeId>>,
-}
-
-impl DOMNode {
-    #[inline(always)]
-    pub fn get_type(&self) -> &NodeType<CustomAttributeValues> {
-        &self.node.node_data.node_type
-    }
-
-    #[inline(always)]
-    pub fn get_children(&self) -> &Option<Vec<NodeId>> {
-        &self.children
-    }
-
-    #[inline(always)]
-    pub fn get_state(&self) -> &NodeState {
-        &self.node.state
-    }
-
-    #[inline(always)]
-    pub fn get_id(&self) -> &NodeId {
-        &self.node.node_data.node_id
-    }
-}
+pub type DioxusNode = Node<NodeState, CustomAttributeValues>;
 
 #[derive(Default, Clone)]
 pub struct Layers {
@@ -48,7 +19,7 @@ pub struct Layers {
 pub struct RenderData {
     pub node_area: NodeArea,
     pub element_id: Option<ElementId>,
-    pub node: Node<NodeState, CustomAttributeValues>,
+    pub node: DioxusNode,
     pub children: Option<Vec<NodeId>>,
 }
 
@@ -85,34 +56,39 @@ impl RenderData {
 }
 
 impl Layers {
+    /// Given the height in the DOM of the Node, it's inherited layer from it's parent
+    /// and the defined layer via the `layer` attribute,
+    /// calculate it's corresponding layer and it's relative layer for it's children to inherit
     pub fn calculate_layer(
         &mut self,
-        node_data: &DOMNode,
+        relative_layer: i16,
+        height: i16,
         inherited_relative_layer: i16,
     ) -> (i16, i16) {
-        // Relative layer (optionally define by the user) + height of the element in the VDOM - inherited relative_layer by parent
-        let element_layer = -node_data.node.state.style.relative_layer + (node_data.height as i16)
-            - inherited_relative_layer;
-
-        (
-            element_layer,
-            node_data.node.state.style.relative_layer + inherited_relative_layer,
-        )
+        let element_layer = -relative_layer + height - inherited_relative_layer;
+        (element_layer, relative_layer + inherited_relative_layer)
     }
 
-    pub fn add_element(&mut self, node_data: &DOMNode, node_area: &NodeArea, node_layer: i16) {
+    /// Insert a Node into a layer
+    pub fn add_element(
+        &mut self,
+        node: &DioxusNode,
+        node_children: Option<Vec<NodeId>>,
+        node_area: &NodeArea,
+        node_layer: i16,
+    ) {
         let layer = self
             .layers
             .entry(node_layer)
             .or_insert_with(FxHashMap::default);
 
         layer.insert(
-            node_data.node.node_data.node_id,
+            node.node_data.node_id,
             RenderData {
-                element_id: node_data.node.node_data.element_id,
-                node: node_data.node.clone(),
+                element_id: node.node_data.element_id,
+                node: node.clone(),
                 node_area: *node_area,
-                children: node_data.children.clone(),
+                children: node_children,
             },
         );
     }

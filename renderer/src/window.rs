@@ -1,8 +1,8 @@
 use dioxus_core::Template;
 use freya_common::NodeArea;
-use freya_processor::{
-    events::EventsProcessor, process_work, EventEmitter, SafeDOM, SafeFreyaEvents,
-    SafeLayoutMemorizer,
+use freya_core::{
+    events::EventsProcessor, process_work, EventEmitter, SharedFreyaEvents, SharedLayoutMemorizer,
+    SharedRealDOM,
 };
 use gl::types::*;
 use glutin::dpi::PhysicalSize;
@@ -27,9 +27,9 @@ pub struct WindowEnv<T: Clone> {
     pub(crate) gr_context: DirectContext,
     pub(crate) windowed_context: WindowedContext,
     pub(crate) fb_info: FramebufferInfo,
-    pub(crate) rdom: SafeDOM,
-    pub(crate) layout_memorizer: SafeLayoutMemorizer,
-    pub(crate) freya_events: SafeFreyaEvents,
+    pub(crate) rdom: SharedRealDOM,
+    pub(crate) layout_memorizer: SharedLayoutMemorizer,
+    pub(crate) freya_events: SharedFreyaEvents,
     pub(crate) event_emitter: EventEmitter,
     pub(crate) font_collection: FontCollection,
     pub(crate) events_processor: EventsProcessor,
@@ -37,10 +37,11 @@ pub struct WindowEnv<T: Clone> {
 }
 
 impl<T: Clone> WindowEnv<T> {
+    /// Create a Window environment from a set of configuration
     pub fn from_config(
-        rdom: &SafeDOM,
+        rdom: &SharedRealDOM,
         event_emitter: EventEmitter,
-        layout_memorizer: &SafeLayoutMemorizer,
+        layout_memorizer: &SharedLayoutMemorizer,
         window_config: WindowConfig<T>,
         event_loop: &EventLoop<Option<Template<'static>>>,
         font_collection: FontCollection,
@@ -62,7 +63,7 @@ impl<T: Clone> WindowEnv<T> {
             .with_pixel_format(24, 8)
             .with_gl_profile(GlProfile::Core);
 
-        #[cfg(not(feature = "wayland"))]
+        #[cfg(not(target_os = "linux"))]
         let cb = cb.with_double_buffer(Some(true));
 
         let windowed_context = cb.build_windowed(wb, event_loop).unwrap();
@@ -102,6 +103,7 @@ impl<T: Clone> WindowEnv<T> {
         }
     }
 
+    /// Redraw the window
     pub fn redraw(&mut self) {
         let canvas = self.surface.canvas();
 
@@ -139,6 +141,7 @@ impl<T: Clone> WindowEnv<T> {
     }
 }
 
+/// Create the surface for Skia to render in
 pub fn create_surface(
     windowed_context: &WindowedContext,
     fb_info: &FramebufferInfo,

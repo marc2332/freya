@@ -8,7 +8,7 @@ pub struct NodeArea {
 }
 
 impl NodeArea {
-    /// Checks if the given area
+    /// Checks if an area is slightly outside of this area
     #[inline(always)]
     pub fn is_area_outside(&self, other_area: Self) -> bool {
         other_area.x + other_area.width < self.x

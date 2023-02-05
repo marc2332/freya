@@ -1,3 +1,6 @@
+//! # Freya Hooks
+//! A collection of hooks to be used in Freya.
+
 mod use_animation;
 mod use_camera;
 mod use_editable;

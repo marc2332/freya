@@ -1,16 +1,46 @@
 use dioxus::{core::Event, prelude::*};
-use dioxus_elements::events_data::{KeyCode, KeyboardData};
+use dioxus_elements::events_data::{Key, KeyboardData};
 use freya_elements as dioxus_elements;
 use freya_hooks::{use_focus, use_get_theme};
 
-/// Properties for the Input component.
+/// [`Input`] component properties.
 #[derive(Props)]
 pub struct InputProps<'a> {
+    /// Current value of the Input
     pub value: &'a str,
+    /// Handler for the `onchange` event.
     pub onchange: EventHandler<'a, String>,
 }
 
-/// A controlled Input component.
+/// Controlled `Input` component.
+///
+/// # Props
+/// See [`InputProps`].
+///
+/// # Styling
+/// Inherits the [`ButtonTheme`](freya_hooks::ButtonTheme) theme.
+///
+/// # Example
+///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app(cx: Scope) -> Element {
+///     use_init_focus(&cx);
+///     let value = use_state(cx, String::new);
+///
+///     render!(
+///         label {
+///             "Value: {value}"
+///         }
+///         Input {
+///             value: &value,
+///             onchange: |e| {
+///                  value.set(e)
+///             }
+///         }
+///     )
+/// }
+/// ```
 #[allow(non_snake_case)]
 pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     let theme = use_get_theme(cx);
@@ -19,20 +49,14 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     let text = cx.props.value;
     let onkeydown = move |e: Event<KeyboardData>| {
         if focused {
-            if let KeyCode::Space = e.data.code {
-                // Add a space
-                cx.props.onchange.call(format!("{} ", text));
-            } else if let KeyCode::Backspace = e.data.code {
+            if let Key::Character(text_char) = &e.data.key {
+                // Add a new char
+                cx.props.onchange.call(format!("{text}{text_char}"));
+            } else if let Key::Backspace = e.data.key {
                 // Remove the last character
                 let mut content = text.to_string();
                 content.pop();
                 cx.props.onchange.call(content);
-            } else {
-                // Add a new char
-                let text_char = e.data.to_text();
-                if let Some(text_char) = &text_char {
-                    cx.props.onchange.call(format!("{}{}", text, text_char));
-                }
             }
         }
     };

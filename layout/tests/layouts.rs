@@ -5,45 +5,47 @@ use std::{
 
 use dioxus_native_core::{
     node::{Node, NodeData, NodeType},
+    real_dom::RealDom,
+    tree::TreeLike,
     NodeId,
 };
 use freya_common::{LayoutMemorizer, NodeArea};
-use freya_layers::{DOMNode, Layers};
 use freya_layout::NodeLayoutMeasurer;
+use freya_layout::{DioxusNode, Layers};
 use freya_node_state::{DirectionMode, NodeState, Size, SizeMode};
 use lazy_static::lazy_static;
 use rustc_hash::FxHashMap;
 use skia_safe::textlayout::FontCollection;
 
 lazy_static! {
-    static ref TEST_NODE: DOMNode = DOMNode {
-        node: Node {
-            node_data: NodeData {
-                node_id: NodeId(0),
-                element_id: None,
-                node_type: NodeType::Element {
-                    tag: "rect".to_string(),
-                    namespace: None,
-                    attributes: FxHashMap::default(),
-                    listeners: HashSet::default(),
-                }
-            },
-            state: NodeState::default(),
+    static ref TEST_NODE: DioxusNode = Node {
+        node_data: NodeData {
+            node_id: NodeId(1),
+            element_id: None,
+            node_type: NodeType::Element {
+                tag: "rect".to_string(),
+                namespace: None,
+                attributes: FxHashMap::default(),
+                listeners: HashSet::default(),
+            }
         },
-        height: 0,
-        parent_id: None,
-        children: None
+        state: NodeState::default(),
     };
 }
 
 #[test]
 fn percentage() {
+    let dom = Arc::new(Mutex::new(RealDom::new()));
+
     let mut node = TEST_NODE.clone();
-    node.node.state = node.node.state.with_size(Size {
+    node.state = node.state.with_size(Size {
         width: SizeMode::Percentage(50.0),
         height: SizeMode::Percentage(25.0),
         ..expanded_size()
     });
+    let root = dom.lock().unwrap().tree.create_node(node.clone());
+    dom.lock().unwrap().tree.add_child(NodeId(0), root);
+
     let mut remaining_area = NodeArea {
         x: 0.0,
         y: 0.0,
@@ -54,7 +56,7 @@ fn percentage() {
     let mut fonts = FontCollection::new();
     let layout_memorizer = Arc::new(Mutex::new(LayoutMemorizer::new()));
     let mut measurer = NodeLayoutMeasurer::new(
-        &node,
+        node,
         &mut remaining_area,
         NodeArea {
             x: 0.0,
@@ -62,12 +64,12 @@ fn percentage() {
             height: 300.0,
             width: 200.0,
         },
-        &(),
+        &dom,
         &mut layers,
-        |_, _| None,
         0,
         &mut fonts,
         &layout_memorizer,
+        false,
     );
     let result = measurer.measure_area(true);
 
@@ -77,12 +79,17 @@ fn percentage() {
 
 #[test]
 fn manual() {
+    let dom = Arc::new(Mutex::new(RealDom::new()));
     let mut node = TEST_NODE.clone();
-    node.node.state = node.node.state.with_size(Size {
+    node.state = node.state.with_size(Size {
         width: SizeMode::Manual(250.0),
         height: SizeMode::Manual(150.0),
         ..expanded_size()
     });
+
+    let root = dom.lock().unwrap().tree.create_node(node.clone());
+    dom.lock().unwrap().tree.add_child(NodeId(0), root);
+
     let mut remaining_area = NodeArea {
         x: 0.0,
         y: 0.0,
@@ -93,7 +100,7 @@ fn manual() {
     let mut fonts = FontCollection::new();
     let layout_memorizer = Arc::new(Mutex::new(LayoutMemorizer::new()));
     let mut measurer = NodeLayoutMeasurer::new(
-        &node,
+        node,
         &mut remaining_area,
         NodeArea {
             x: 0.0,
@@ -101,12 +108,12 @@ fn manual() {
             height: 300.0,
             width: 200.0,
         },
-        &(),
+        &dom,
         &mut layers,
-        |_, _| None,
         0,
         &mut fonts,
         &layout_memorizer,
+        false,
     );
     let result = measurer.measure_area(true);
 
@@ -116,29 +123,49 @@ fn manual() {
 
 #[test]
 fn auto() {
-    let node = DOMNode {
-        node: Node {
-            node_data: NodeData {
-                node_id: NodeId(0),
-                element_id: None,
-                node_type: NodeType::Element {
-                    tag: "rect".to_string(),
-                    namespace: None,
-                    attributes: FxHashMap::default(),
-                    listeners: HashSet::default(),
-                },
+    let dom = Arc::new(Mutex::new(RealDom::new()));
+    let node = Node {
+        node_data: NodeData {
+            node_id: NodeId(1),
+            element_id: None,
+            node_type: NodeType::Element {
+                tag: "rect".to_string(),
+                namespace: None,
+                attributes: FxHashMap::default(),
+                listeners: HashSet::default(),
             },
-            state: NodeState::default().with_size(Size {
-                width: SizeMode::Auto,
-                height: SizeMode::Auto,
-                direction: DirectionMode::Both,
-                ..expanded_size()
-            }),
         },
-        height: 0,
-        parent_id: None,
-        children: Some(vec![NodeId(1)]),
+        state: NodeState::default().with_size(Size {
+            width: SizeMode::Auto,
+            height: SizeMode::Auto,
+            direction: DirectionMode::Both,
+            ..expanded_size()
+        }),
     };
+    let root = dom.lock().unwrap().tree.create_node(node.clone());
+    dom.lock().unwrap().tree.add_child(NodeId(0), root);
+
+    let root_child = Node {
+        node_data: NodeData {
+            node_id: NodeId(2),
+            element_id: None,
+            node_type: NodeType::Element {
+                tag: "rect".to_string(),
+                namespace: None,
+                attributes: FxHashMap::default(),
+                listeners: HashSet::default(),
+            },
+        },
+        state: NodeState::default().with_size(Size {
+            width: SizeMode::Manual(170.0),
+            height: SizeMode::Manual(25.0),
+            ..expanded_size()
+        }),
+    };
+
+    let root_child = dom.lock().unwrap().tree.create_node(root_child);
+    dom.lock().unwrap().tree.add_child(root, root_child);
+
     let mut remaining_area = NodeArea {
         x: 0.0,
         y: 0.0,
@@ -149,7 +176,7 @@ fn auto() {
     let mut fonts = FontCollection::new();
     let layout_memorizer = Arc::new(Mutex::new(LayoutMemorizer::new()));
     let mut measurer = NodeLayoutMeasurer::new(
-        &node,
+        node,
         &mut remaining_area,
         NodeArea {
             x: 0.0,
@@ -157,35 +184,12 @@ fn auto() {
             height: 300.0,
             width: 200.0,
         },
-        &(),
+        &dom,
         &mut layers,
-        |_, _| {
-            Some(DOMNode {
-                node: Node {
-                    node_data: NodeData {
-                        node_id: NodeId(1),
-                        element_id: None,
-                        node_type: NodeType::Element {
-                            tag: "rect".to_string(),
-                            namespace: None,
-                            attributes: FxHashMap::default(),
-                            listeners: HashSet::default(),
-                        },
-                    },
-                    state: NodeState::default().with_size(Size {
-                        width: SizeMode::Manual(170.0),
-                        height: SizeMode::Manual(25.0),
-                        ..expanded_size()
-                    }),
-                },
-                height: 0,
-                parent_id: None,
-                children: None,
-            })
-        },
         0,
         &mut fonts,
         &layout_memorizer,
+        false,
     );
     let result = measurer.measure_area(true);
 
@@ -195,8 +199,9 @@ fn auto() {
 
 #[test]
 fn x_y() {
+    let dom = Arc::new(Mutex::new(RealDom::new()));
     let mut node = TEST_NODE.clone();
-    node.node.state = node.node.state.with_size(Size {
+    node.state = node.state.with_size(Size {
         width: SizeMode::Manual(250.0),
         height: SizeMode::Manual(150.0),
         ..expanded_size()
@@ -207,11 +212,36 @@ fn x_y() {
         height: 300.0,
         width: 200.0,
     };
+
+    let root = dom.lock().unwrap().tree.create_node(node.clone());
+    dom.lock().unwrap().tree.add_child(NodeId(0), root);
+
+    let root_child = Node {
+        node_data: NodeData {
+            node_id: NodeId(2),
+            element_id: None,
+            node_type: NodeType::Element {
+                tag: "rect".to_string(),
+                namespace: None,
+                attributes: FxHashMap::default(),
+                listeners: HashSet::default(),
+            },
+        },
+        state: NodeState::default().with_size(Size {
+            width: SizeMode::Manual(170.0),
+            height: SizeMode::Manual(25.0),
+            ..expanded_size()
+        }),
+    };
+
+    let root_child = dom.lock().unwrap().tree.create_node(root_child);
+    dom.lock().unwrap().tree.add_child(root, root_child);
+
     let mut layers = Layers::default();
     let mut fonts = FontCollection::new();
     let layout_memorizer = Arc::new(Mutex::new(LayoutMemorizer::new()));
     let mut measurer = NodeLayoutMeasurer::new(
-        &node,
+        node,
         &mut remaining_area,
         NodeArea {
             x: 15.0,
@@ -219,35 +249,12 @@ fn x_y() {
             height: 300.0,
             width: 200.0,
         },
-        &(),
+        &dom,
         &mut layers,
-        |_, _| {
-            Some(DOMNode {
-                node: Node {
-                    node_data: NodeData {
-                        node_id: NodeId(1),
-                        element_id: None,
-                        node_type: NodeType::Element {
-                            tag: "rect".to_string(),
-                            namespace: None,
-                            attributes: FxHashMap::default(),
-                            listeners: HashSet::default(),
-                        },
-                    },
-                    state: NodeState::default().with_size(Size {
-                        width: SizeMode::Manual(170.0),
-                        height: SizeMode::Manual(25.0),
-                        ..expanded_size()
-                    }),
-                },
-                height: 0,
-                parent_id: None,
-                children: None,
-            })
-        },
         0,
         &mut fonts,
         &layout_memorizer,
+        false,
     );
 
     let result = measurer.measure_area(true);

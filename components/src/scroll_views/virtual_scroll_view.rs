@@ -13,22 +13,31 @@ use crate::{
 
 type BuilderFunction<'a, T> = dyn Fn((i32, i32, &'a Option<T>)) -> LazyNodes<'a, 'a>;
 
-/// Properties for the VirtualScrollView component.
+/// [`VirtualScrollView`] component properties.
 #[derive(Props)]
 pub struct VirtualScrollViewProps<'a, T: 'a> {
+    /// Quantity of items in the VirtualScrollView.
     length: i32,
+    /// Size of the items, height for vertical direction and width for horizontal.
     item_size: f32,
+    /// The item builder function.
     builder: Box<BuilderFunction<'a, T>>,
+    /// Custom values to pass to the builder function.
     #[props(optional)]
     pub builder_values: Option<T>,
+    /// Direction of the VirtualScrollView, `vertical` or `horizontal`.
     #[props(optional)]
     pub direction: Option<&'a str>,
+    /// Height of the VirtualScrollView.
     #[props(optional)]
     pub height: Option<&'a str>,
+    /// Width of the VirtualScrollView.
     #[props(optional)]
     pub width: Option<&'a str>,
+    /// Padding of the VirtualScrollView.
     #[props(optional)]
     pub padding: Option<&'a str>,
+    /// Show the scrollbar, by default is hidden.
     #[props(optional)]
     pub show_scrollbar: Option<bool>,
 }
@@ -52,7 +61,38 @@ fn get_render_range(
     render_index_start as i32..(render_index_end as i32)
 }
 
-/// A ScrollView with virtual scrolling.
+/// Virtual `Scrollable` container.
+///
+/// # Props
+/// See [`VirtualScrollViewProps`](VirtualScrollViewProps).
+///
+/// # Example
+///
+/// ```no_run
+/// # use freya::prelude::*;
+/// fn app(cx: Scope) -> Element {
+///     render!(
+///         VirtualScrollView {
+///             width: "100%",
+///             height: "100%",
+///             show_scrollbar: true,
+///             length: 5,
+///             item_size: 80.0,
+///             builder_values: (),
+///             direction: "vertical",
+///             builder: Box::new(move |(k, i, _)| {
+///                 rsx! {
+///                     label {
+///                         key: "{k}",
+///                         height: "80",
+///                         "Number {i}"
+///                     }
+///                 }
+///             })
+///         }
+///     )
+/// }
+/// ```
 #[allow(non_snake_case)]
 pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) -> Element {
     let theme = use_get_theme(cx);
