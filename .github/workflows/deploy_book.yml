@@ -23,5 +23,5 @@ jobs:
         uses: denoland/deployctl@v1
         with:
           project: freya-book
-          entrypoint: docs/deploy.ts
+          entrypoint: https://deno.land/std/http/file_server.ts
           root: book
