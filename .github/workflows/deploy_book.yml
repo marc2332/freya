@@ -17,6 +17,7 @@ jobs:
         uses: peaceiris/actions-mdbook@v1
       
       - run: mdbook build
+        working-directory: docs
 
       - name: Upload to Deno Deploy
         uses: denoland/deployctl@v1
