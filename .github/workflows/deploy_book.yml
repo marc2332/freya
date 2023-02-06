@@ -24,4 +24,4 @@ jobs:
         with:
           project: freya-book
           entrypoint: https://deno.land/std/http/file_server.ts
-          root: book
+          root: docs/book
