@@ -24,4 +24,4 @@ jobs:
         with:
           project: freya-book
           entrypoint: docs/deploy.ts
-          root: ./
+          root: book
