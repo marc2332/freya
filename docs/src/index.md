@@ -1,8 +1,8 @@
 # Introduction
 
-<img align="right" src="./logo.svg" alt="Freya logo" width="120"/>
+<img align="right" src="./logo.svg" alt="Freya logo" width="110"/>
 
-**Freya** is native GUI library for 🧬 [Dioxus](https://dioxuslabs.com) powered by 🎨 [Skia](https://skia.org/), with 🦀 Rust. 
+**Freya** is native GUI library built on top of 🧬 [Dioxus](https://dioxuslabs.com) and powered by 🎨 [Skia](https://skia.org/), for 🦀 Rust. 
 
 ⚠️ It's currently work in progress and not usable for production, but you can already play with it! 
 
@@ -33,7 +33,7 @@ fn app(cx: Scope) -> Element {
 Check out the examples in the Freya [repository](https://github.com/marc2332/freya/tree/main/examples) to learn more.
 
 ### About
-**Freya** is built on top of Dioxus, it provides a renderer powered by Skia, alongside a set of elements, components and hooks.
+**Freya** is built on top of Dioxus, it provides a renderer powered by Skia, alongside a set of elements, components, hooks and testing utilities.
 
 ### Why 🧬 Dioxus?
 
