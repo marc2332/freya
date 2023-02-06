@@ -59,6 +59,10 @@ impl NodeState {
             return false;
         }
 
+        if self.references.node_ref.is_some() {
+            return false;
+        }
+
         true
     }
 }

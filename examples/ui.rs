@@ -123,6 +123,7 @@ struct AppProps<'a> {
 fn App<'a>(cx: Scope<'a, AppProps<'a>>) -> Element {
     render!(
         rect {
+            color: "white",
             width: "stretch",
             height: "stretch",
             rect {

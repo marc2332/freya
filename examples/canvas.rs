@@ -67,6 +67,7 @@ fn app(cx: Scope) -> Element {
         rect {
             width: "100%",
             height: "100%",
+            color: "white",
             rect {
                 background: "rgb(35, 35, 35)",
                 width: "100%",

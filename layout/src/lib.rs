@@ -80,6 +80,7 @@ pub struct NodeLayoutMeasurer<'a> {
     inherited_relative_layer: i16,
     font_collection: &'a mut FontCollection,
     layout_memorizer: &'a Arc<Mutex<LayoutMemorizer>>,
+    #[allow(dead_code)]
     last_child: bool
 }
 
@@ -141,13 +142,14 @@ impl<'a> NodeLayoutMeasurer<'a> {
         // If this node is dirty and parent is not dirty, mark the parent as dirty
         if is_dirty && !is_parent_dirty {
             if let Some(p) = parent_id {
-                let dom = self.dom.lock().unwrap();
-                let parent = dom.tree.get(p).unwrap();
-                let is_static = parent.state.is_inner_static();
-
-                if !is_static || !self.last_child {
-                    self.layout_memorizer.lock().unwrap().mark_as_dirty(p)
-                }
+                // TODO(marc2332) Mark as dirty if a children was removed
+                // let dom = self.dom.lock().unwrap();
+                // let parent = dom.tree.get(p).unwrap();
+                // let is_static = parent.state.is_inner_static();
+                // if !is_static || !self.last_child {
+                //   
+                // }
+                self.layout_memorizer.lock().unwrap().mark_as_dirty(p)
             }
         }
 

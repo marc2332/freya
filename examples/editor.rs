@@ -60,6 +60,7 @@ fn Body(cx: Scope) -> Element {
         rect {
             width: "100%",
             height: "100%",
+            color: "white",
             rect {
                 width: "100%",
                 height: "60",

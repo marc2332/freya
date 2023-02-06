@@ -23,7 +23,7 @@ pub struct FontStyle {
 impl Default for FontStyle {
     fn default() -> Self {
         Self {
-            color: Color::WHITE,
+            color: Color::BLACK,
             font_family: "Fira Sans".to_string(),
             font_size: 16.0,
             line_height: 1.2,
