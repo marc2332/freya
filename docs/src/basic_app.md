@@ -26,6 +26,17 @@ dioxus = { git="https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271
 ### src/main.rs
 
 ```rust no_run
+#![cfg_attr(
+    all(not(debug_assertions), target_os = "windows"),
+    windows_subsystem = "windows"
+)]
+
+use freya::prelude::*;
+
+fn main() {
+    launch(app);
+}
+
 fn app(cx: Scope) -> Element {
     let mut count = use_state(cx, || 0);
 

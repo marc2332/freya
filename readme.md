@@ -55,7 +55,7 @@ fn app(cx: Scope) -> Element {
 
 ### Want to try it? 🤔
 
-**⚠️ Note for Windows**: You need the **latest** (this is very important) Visual Studio 2022.
+⚠️ See [Environment setup](https://book.freyaui.dev/setup.html) first.
 
 Run:
 
