@@ -1,9 +1,6 @@
-use std::sync::{Arc, Mutex};
-
 use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
 use dioxus_native_core::state::NodeDepState;
 use dioxus_native_core_macro::sorted_str_slice;
-use freya_common::LayoutMemorizer;
 
 use crate::CustomAttributeValues;
 
@@ -14,7 +11,7 @@ pub struct Scroll {
 }
 
 impl NodeDepState<CustomAttributeValues> for Scroll {
-    type Ctx = Arc<Mutex<LayoutMemorizer>>;
+    type Ctx = ();
     type DepState = ();
 
     const NODE_MASK: NodeMask =
@@ -28,7 +25,7 @@ impl NodeDepState<CustomAttributeValues> for Scroll {
         &mut self,
         node: NodeView<CustomAttributeValues>,
         _sibling: (),
-        ctx: &Self::Ctx,
+        _ctx: &Self::Ctx,
     ) -> bool {
         let mut scroll_y = 0.0;
         let mut scroll_x = 0.0;
@@ -58,10 +55,6 @@ impl NodeDepState<CustomAttributeValues> for Scroll {
         }
 
         let changed = (scroll_x != self.scroll_x) || (scroll_y != self.scroll_y);
-
-        if changed {
-            ctx.lock().unwrap().mark_as_dirty(node.node_id());
-        }
 
         *self = Self { scroll_y, scroll_x };
         changed

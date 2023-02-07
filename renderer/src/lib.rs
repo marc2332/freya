@@ -1,7 +1,6 @@
 use dioxus_core::VirtualDom;
 use dioxus_native_core::real_dom::RealDom;
 use dioxus_native_core::SendAnyMap;
-use freya_common::LayoutMemorizer;
 use freya_core::events::FreyaEvent;
 use freya_core::{events::DomEvent, SharedRealDOM};
 use freya_elements::{from_winit_to_code, get_non_text_keys, Code, Key};
@@ -46,7 +45,6 @@ pub fn run<T: 'static + Clone>(
     let (event_emitter, mut event_emitter_rx) = unbounded_channel::<DomEvent>();
     let mut font_collection = FontCollection::new();
     font_collection.set_default_font_manager(FontMgr::default(), "Fira Sans");
-    let layout_memorizer = Arc::new(Mutex::new(LayoutMemorizer::new()));
     let app_state = window_config.state.clone();
 
     if let Some(state) = &app_state {
@@ -60,14 +58,12 @@ pub fn run<T: 'static + Clone>(
         mutations_sender.as_ref().map(|s| s.send(()));
     }
 
-    let mut ctx = SendAnyMap::new();
-    ctx.insert(layout_memorizer.clone());
+    let ctx = SendAnyMap::new();
     rdom.lock().unwrap().update_state(to_update, ctx);
 
     let mut window_env = WindowEnv::from_config(
         &rdom,
         event_emitter,
-        &layout_memorizer,
         window_config,
         &event_loop,
         font_collection,
@@ -84,22 +80,24 @@ pub fn run<T: 'static + Clone>(
         *control_flow = ControlFlow::Poll;
 
         match event {
-            Event::MainEventsCleared => {
-                window_env.redraw();
-            }
             Event::NewEvents(StartCause::Init) => {
                 _ = proxy.send_event(());
             }
-            Event::UserEvent(_s) => {
+            Event::UserEvent(()) => {
                 poll_vdom(
                     &waker,
                     &mut vdom,
                     &rdom,
-                    &layout_memorizer,
                     &mut event_emitter_rx,
                     &app_state,
                     &mutations_sender,
                 );
+
+                window_env.windowed_context.window().request_redraw();
+            }
+            Event::RedrawRequested(_) => {
+                window_env.process_layout();
+                window_env.render();
             }
             Event::WindowEvent { event, .. } => {
                 match event {
@@ -119,6 +117,7 @@ pub fn run<T: 'static + Clone>(
                                 cursor: *cursor_pos,
                                 button: Some(button),
                             });
+                        window_env.process_events()
                     }
                     WindowEvent::MouseWheel { delta, phase, .. } => {
                         if TouchPhase::Moved == phase {
@@ -139,6 +138,7 @@ pub fn run<T: 'static + Clone>(
                                     scroll: scroll_data,
                                     cursor: *cursor_pos,
                                 });
+                            window_env.process_events()
                         }
                     }
                     WindowEvent::ReceivedCharacter(a) => {
@@ -199,9 +199,10 @@ pub fn run<T: 'static + Clone>(
                             // Cache the key code on keydown event
                             last_code = from_winit_to_code(&virtual_keycode);
                         } else {
-                            // Uncahe any key code
+                            // Uncache any key code
                             last_code = Code::Unidentified;
                         }
+                        window_env.process_events()
                     }
                     WindowEvent::CursorMoved { position, .. } => {
                         let cursor_pos = {
@@ -221,6 +222,7 @@ pub fn run<T: 'static + Clone>(
                                 cursor: cursor_pos,
                                 button: None,
                             });
+                        window_env.process_events()
                     }
                     WindowEvent::Resized(size) => {
                         let mut context = window_env.gr_context.clone();
@@ -230,13 +232,7 @@ pub fn run<T: 'static + Clone>(
                             &mut context,
                         );
                         window_env.windowed_context.resize(size);
-                        window_env
-                            .layout_memorizer
-                            .lock()
-                            .unwrap()
-                            .dirty_nodes
-                            .clear();
-                        window_env.layout_memorizer.lock().unwrap().nodes.clear();
+                        window_env.windowed_context.window().request_redraw();
                     }
                     _ => {}
                 }
@@ -268,7 +264,6 @@ fn poll_vdom<T: 'static + Clone>(
     waker: &Waker,
     vdom: &mut VirtualDom,
     rdom: &Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>,
-    layout_memorizer: &Arc<Mutex<LayoutMemorizer>>,
     event_emitter_rx: &mut UnboundedReceiver<DomEvent>,
     state: &Option<T>,
     mutations_sender: &Option<UnboundedSender<()>>,
@@ -309,8 +304,7 @@ fn poll_vdom<T: 'static + Clone>(
             mutations_sender.as_ref().map(|s| s.send(()));
         }
 
-        let mut ctx = SendAnyMap::new();
-        ctx.insert(layout_memorizer.clone());
+        let ctx = SendAnyMap::new();
         rdom.lock().unwrap().update_state(to_update, ctx);
     }
 }

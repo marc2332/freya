@@ -10,7 +10,9 @@ use freya_hooks::use_theme;
 use freya_node_state::{AttributeType, CustomAttributeValues, NodeState, ShadowSettings};
 use skia_safe::Color;
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
 use tokio::sync::mpsc::UnboundedReceiver;
+use tokio::time::sleep;
 
 /// Launch a Component with the devtools panel enabled.
 pub fn with_devtools(
@@ -91,6 +93,8 @@ impl PartialEq for DevToolsProps {
 #[allow(non_snake_case)]
 pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
     let children = use_state(cx, Vec::<TreeNode>::new);
+    let theme = use_theme(cx);
+    let theme = theme.read();
 
     use_effect(cx, (), move |_| {
         let rdom = cx.props.rdom.clone();
@@ -100,6 +104,8 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
             let mut mutations_receiver = mutations_receiver.lock().unwrap();
             loop {
                 if mutations_receiver.recv().await.is_some() {
+                    sleep(Duration::from_millis(10)).await;
+
                     let rdom = rdom.lock().unwrap();
                     let mut new_children = Vec::new();
 
@@ -134,7 +140,6 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                                     id,
                                     tag,
                                     text: maybe_text,
-                                    // TODO Improve this, I don't like this.
                                     state: n.state.clone(),
                                 });
                             }
@@ -157,69 +162,74 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
     });
 
     render!(
-        Router {
-            initial_url: "freya://freya/elements".to_string(),
-            TabsBar {
-                TabButton {
+        rect {
+            width: "100%",
+            height: "100%",
+            color: theme.body.color,
+            Router {
+                initial_url: "freya://freya/elements".to_string(),
+                TabsBar {
+                    TabButton {
+                        to: "/elements",
+                        label: "Elements"
+                    }
+                    TabButton {
+                        to: "/settings",
+                        label: "Settings"
+                    }
+                }
+                Route {
                     to: "/elements",
-                    label: "Elements"
+                    NodesTree {
+                        nodes: children,
+                        height: "calc(100% - 35)",
+                        selected_node_id: &None,
+                        onselected: |node: &TreeNode| {
+                            selected_node_id.set(Some(node.id));
+                        }
+                    }
                 }
-                TabButton {
+                Route {
+                    to: "/elements/style",
+                    NodesTree {
+                        nodes: children,
+                        height: "calc(50% - 35)",
+                        selected_node_id: selected_node_id.get(),
+                        onselected: |node: &TreeNode| {
+                            selected_node_id.set(Some(node.id));
+                        }
+                    }
+                    selected_node.and_then(|selected_node| {
+                        Some(rsx!(
+                            NodeInspectorStyle {
+                                node: selected_node
+                            }
+                        ))
+                    })
+                }
+                Route {
+                    to: "/elements/listeners",
+                    NodesTree {
+                        nodes: children,
+                        height: "calc(50% - 35)",
+                        selected_node_id: selected_node_id.get(),
+                        onselected: |node: &TreeNode| {
+                            selected_node_id.set(Some(node.id));
+                        }
+                    }
+                    selected_node.and_then(|selected_node| {
+                        Some(rsx!(
+                            NodeInspectorListeners {
+                                node: selected_node
+                            }
+                        ))
+                    })
+                }
+                Route {
                     to: "/settings",
-                    label: "Settings"
-                }
-            }
-            Route {
-                to: "/elements",
-                NodesTree {
-                    nodes: children,
-                    height: "calc(100% - 35)",
-                    selected_node_id: &None,
-                    onselected: |node: &TreeNode| {
-                        selected_node_id.set(Some(node.id));
+                    label {
+                        "Settings would be here."
                     }
-                }
-            }
-            Route {
-                to: "/elements/style",
-                NodesTree {
-                    nodes: children,
-                    height: "calc(50% - 35)",
-                    selected_node_id: selected_node_id.get(),
-                    onselected: |node: &TreeNode| {
-                        selected_node_id.set(Some(node.id));
-                    }
-                }
-                selected_node.and_then(|selected_node| {
-                    Some(rsx!(
-                        NodeInspectorStyle {
-                            node: selected_node
-                        }
-                    ))
-                })
-            }
-            Route {
-                to: "/elements/listeners",
-                NodesTree {
-                    nodes: children,
-                    height: "calc(50% - 35)",
-                    selected_node_id: selected_node_id.get(),
-                    onselected: |node: &TreeNode| {
-                        selected_node_id.set(Some(node.id));
-                    }
-                }
-                selected_node.and_then(|selected_node| {
-                    Some(rsx!(
-                        NodeInspectorListeners {
-                            node: selected_node
-                        }
-                    ))
-                })
-            }
-            Route {
-                to: "/settings",
-                label {
-                    "Settings would be here."
                 }
             }
         }
