@@ -5,11 +5,14 @@ use dioxus_native_core::node::NodeType;
 use dioxus_native_core::real_dom::RealDom;
 use dioxus_native_core::tree::TreeView;
 use dioxus_native_core::{NodeId, SendAnyMap};
-use freya_common::{LayoutMemorizer, NodeArea};
+use freya_common::NodeArea;
 use freya_core::events::EventsProcessor;
-use freya_core::{events::DomEvent, process_work, EventEmitter, EventReceiver, SharedFreyaEvents};
+use freya_core::{events::DomEvent, EventEmitter, EventReceiver, SharedFreyaEvents};
+use freya_core::{process_events, process_layout, ViewportsCollection};
 use freya_layout::DioxusNode;
+use freya_layout::Layers;
 use freya_node_state::{CustomAttributeValues, NodeState};
+use rustc_hash::FxHashMap;
 use skia_safe::textlayout::FontCollection;
 use skia_safe::FontMgr;
 use tokio::sync::mpsc::unbounded_channel;
@@ -56,14 +59,15 @@ impl TestNode {
 
     /// Get the node's layout
     pub fn layout(&self) -> Option<NodeArea> {
-        Some(
-            self.utils
-                .layout_memorizer
-                .lock()
-                .unwrap()
-                .get_node_layout(&self.node_id)?
-                .area,
-        )
+        let layers = &self.utils.layers.lock().unwrap().layers;
+        for layer in layers.values() {
+            for (id, node) in layer {
+                if id == &self.node_id {
+                    return Some(node.node_area);
+                }
+            }
+        }
+        None
     }
 }
 
@@ -72,12 +76,13 @@ impl TestNode {
 pub struct TestUtils {
     rdom: Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>,
     dom: Arc<Mutex<VirtualDom>>,
-    layout_memorizer: Arc<Mutex<LayoutMemorizer>>,
+    layers: Arc<Mutex<Layers>>,
     freya_events: SharedFreyaEvents,
     events_processor: Arc<Mutex<EventsProcessor>>,
     font_collection: FontCollection,
     event_emitter: EventEmitter,
     event_receiver: Arc<Mutex<EventReceiver>>,
+    viewports: Arc<Mutex<ViewportsCollection>>,
 }
 
 impl TestUtils {
@@ -102,14 +107,13 @@ impl TestUtils {
 
         let (to_update, _) = self.rdom.lock().unwrap().apply_mutations(mutations);
 
-        let mut ctx = SendAnyMap::new();
-        ctx.insert(self.layout_memorizer.clone());
+        let ctx = SendAnyMap::new();
         self.rdom.lock().unwrap().update_state(to_update, ctx);
     }
 
     /// Wait to process the internal Freya changes, like layout or events
     pub async fn wait_for_work(&mut self, sizes: (f32, f32)) {
-        process_work::<()>(
+        let (layers, viewports) = process_layout(
             &self.rdom,
             NodeArea {
                 width: sizes.0,
@@ -117,20 +121,20 @@ impl TestUtils {
                 x: 0.0,
                 y: 0.0,
             },
-            self.freya_events.clone(),
-            &self.event_emitter,
             &mut self.font_collection,
-            &mut self.events_processor.lock().unwrap(),
-            &self.layout_memorizer,
-            &mut (),
-            |_, _, _, _, _| {},
         );
-    }
 
-    /// Remove any memoization of the DOM layout
-    pub fn cleanup_layout(&mut self) {
-        self.layout_memorizer.lock().unwrap().dirty_nodes.clear();
-        self.layout_memorizer.lock().unwrap().nodes.clear();
+        *self.layers.lock().unwrap() = layers;
+        *self.viewports.lock().unwrap() = viewports;
+
+        process_events(
+            &self.rdom,
+            &self.layers.lock().unwrap(),
+            &self.freya_events,
+            &self.event_emitter,
+            &mut self.events_processor.lock().unwrap(),
+            &self.viewports.lock().unwrap(),
+        );
     }
 
     /// Emit an event
@@ -179,7 +183,7 @@ pub fn launch_test(root: Component<()>) -> TestUtils {
     ));
 
     let (event_emitter, event_receiver) = unbounded_channel::<DomEvent>();
-    let layout_memorizer = Arc::new(Mutex::new(LayoutMemorizer::new()));
+    let layers = Arc::new(Mutex::new(Layers::default()));
     let freya_events = Arc::new(Mutex::new(Vec::new()));
     let events_processor = Arc::new(Mutex::new(EventsProcessor::default()));
     let mut font_collection = FontCollection::new();
@@ -188,18 +192,18 @@ pub fn launch_test(root: Component<()>) -> TestUtils {
     let muts = dom.rebuild();
     let (to_update, _) = rdom.lock().unwrap().apply_mutations(muts);
 
-    let mut ctx = SendAnyMap::new();
-    ctx.insert(layout_memorizer.clone());
+    let ctx = SendAnyMap::new();
     rdom.lock().unwrap().update_state(to_update, ctx);
 
     TestUtils {
         rdom,
         dom: Arc::new(Mutex::new(dom)),
-        layout_memorizer,
+        layers,
         freya_events,
         events_processor,
         font_collection,
         event_emitter,
         event_receiver: Arc::new(Mutex::new(event_receiver)),
+        viewports: Arc::new(Mutex::new(FxHashMap::default())),
     }
 }

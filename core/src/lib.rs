@@ -1,6 +1,6 @@
 use dioxus_native_core::{node::NodeType, real_dom::RealDom, NodeId};
 use euclid::{Length, Point2D};
-use freya_common::{LayoutMemorizer, NodeArea};
+use freya_common::NodeArea;
 use freya_elements::events_data::{KeyboardData, MouseData, WheelData};
 use freya_layout::NodeLayoutMeasurer;
 use freya_layout::{Layers, RenderData};
@@ -20,7 +20,6 @@ use events::{DomEvent, DomEventData, EventsProcessor, FreyaEvent};
 pub type SharedRealDOM = Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>;
 pub type EventEmitter = UnboundedSender<DomEvent>;
 pub type EventReceiver = UnboundedReceiver<DomEvent>;
-pub type SharedLayoutMemorizer = Arc<Mutex<LayoutMemorizer>>;
 pub type SharedFreyaEvents = Arc<Mutex<Vec<FreyaEvent>>>;
 pub type ViewportsCollection = FxHashMap<NodeId, (Option<NodeArea>, Vec<NodeId>)>;
 pub type NodesEvents<'a> = FxHashMap<&'a str, Vec<(RenderData, FreyaEvent)>>;
@@ -65,7 +64,7 @@ pub fn calculate_node_events<'a>(
     layers_nums: &[&i16],
     layers: &Layers,
     freya_events: SharedFreyaEvents,
-    viewports_collection: ViewportsCollection,
+    viewports_collection: &ViewportsCollection,
 ) -> (NodesEvents<'a>, Vec<FreyaEvent>) {
     let mut calculated_events = FxHashMap::default();
     let mut global_events = Vec::default();
@@ -250,30 +249,13 @@ fn calculate_global_events_listeners(
     }
 }
 
-/// 1. Measure the nodes layouts
-/// 2. Organize the nodes layouts in layers
-/// 3. Calculate all the nodes viewports
-/// 4. Call the render to paint
-/// 5. Calculate what events must be triggered
-#[allow(clippy::too_many_arguments)]
-pub fn process_work<HookOptions>(
+/// Process the layout of the DOM
+pub fn process_layout(
     dom: &SharedRealDOM,
     area: NodeArea,
-    freya_events: SharedFreyaEvents,
-    event_emitter: &EventEmitter,
     font_collection: &mut FontCollection,
-    events_processor: &mut EventsProcessor,
-    manager: &SharedLayoutMemorizer,
-    hook_options: &mut HookOptions,
-    render_hook: impl Fn(
-        &SharedRealDOM,
-        &RenderData,
-        &mut FontCollection,
-        &ViewportsCollection,
-        &mut HookOptions,
-    ),
-) {
-    let layers = &mut Layers::default();
+) -> (Layers, ViewportsCollection) {
+    let mut layers = Layers::default();
 
     {
         let root = dom.lock().unwrap().index(NodeId(0)).clone();
@@ -283,24 +265,11 @@ pub fn process_work<HookOptions>(
             &mut remaining_area,
             area,
             dom,
-            layers,
+            &mut layers,
             0,
             font_collection,
-            manager,
-            true
         );
         root_node_measurer.measure_area(true);
-    }
-
-    #[cfg(debug_assertions)]
-    {
-        use tracing::info;
-        let dirty_nodes_counter = manager.lock().unwrap().dirty_nodes_counter;
-        if dirty_nodes_counter > 0 {
-            let nodes = manager.lock().unwrap().nodes.len();
-            info!("Measured layout of {}/{}", dirty_nodes_counter, nodes);
-            manager.lock().unwrap().dirty_nodes_counter = 0;
-        }
     }
 
     let mut layers_nums: Vec<&i16> = layers.layers.keys().collect();
@@ -308,7 +277,64 @@ pub fn process_work<HookOptions>(
     // Order the layers from top to bottom
     layers_nums.sort();
 
-    let viewports_collection = calculate_viewports(&layers_nums, layers);
+    let viewports_collection = calculate_viewports(&layers_nums, &layers);
+
+    (layers, viewports_collection)
+}
+
+/// Process the events and emit them to the DOM
+pub fn process_events(
+    dom: &SharedRealDOM,
+    layers: &Layers,
+    freya_events: &SharedFreyaEvents,
+    event_emitter: &EventEmitter,
+    events_processor: &mut EventsProcessor,
+    viewports_collection: &ViewportsCollection,
+) {
+    let mut layers_nums: Vec<&i16> = layers.layers.keys().collect();
+
+    // Order the layers from top to bottom
+    layers_nums.sort();
+
+    let (mut node_events, global_events) = calculate_node_events(
+        &layers_nums,
+        layers,
+        freya_events.clone(),
+        viewports_collection,
+    );
+
+    let emitted_events = calculate_events_listeners(&mut node_events, dom, event_emitter);
+
+    calculate_global_events_listeners(global_events, dom, event_emitter);
+
+    let new_processed_events = events_processor.process_events_batch(emitted_events, node_events);
+
+    for event in new_processed_events {
+        event_emitter.send(event).unwrap();
+    }
+
+    freya_events.lock().unwrap().clear();
+}
+
+/// Render the layout
+pub fn process_render<HookOptions>(
+    viewports_collection: &ViewportsCollection,
+    dom: &SharedRealDOM,
+    font_collection: &mut FontCollection,
+    layers: &Layers,
+    hook_options: &mut HookOptions,
+    render_hook: impl Fn(
+        &SharedRealDOM,
+        &RenderData,
+        &mut FontCollection,
+        &ViewportsCollection,
+        &mut HookOptions,
+    ),
+) {
+    let mut layers_nums: Vec<&i16> = layers.layers.keys().collect();
+
+    // Order the layers from top to bottom
+    layers_nums.sort();
 
     // Render all the layers from the bottom to the top
     for layer_num in &layers_nums {
@@ -333,28 +359,9 @@ pub fn process_work<HookOptions>(
                 dom,
                 dom_element,
                 font_collection,
-                &viewports_collection,
+                viewports_collection,
                 hook_options,
             )
         }
     }
-
-    let (mut node_events, global_events) = calculate_node_events(
-        &layers_nums,
-        layers,
-        freya_events.clone(),
-        viewports_collection,
-    );
-
-    let emitted_events = calculate_events_listeners(&mut node_events, dom, event_emitter);
-
-    calculate_global_events_listeners(global_events, dom, event_emitter);
-
-    let new_processed_events = events_processor.process_events_batch(emitted_events, node_events);
-
-    for event in new_processed_events {
-        event_emitter.send(event).unwrap();
-    }
-
-    freya_events.lock().unwrap().clear();
 }

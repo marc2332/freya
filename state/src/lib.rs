@@ -26,13 +26,13 @@ pub struct NodeState {
     pub cursor_settings: CursorSettings,
     #[parent_dep_state(references)]
     pub references: References,
-    #[parent_dep_state(size, Arc<Mutex<LayoutManager>>)]
+    #[parent_dep_state(size)]
     pub size: Size,
-    #[node_dep_state((), Arc<Mutex<LayoutManager>>)]
+    #[node_dep_state(())]
     pub scroll: Scroll,
     #[node_dep_state()]
     pub style: Style,
-    #[parent_dep_state(font_style, Arc<Mutex<LayoutManager>>)]
+    #[parent_dep_state(font_style)]
     pub font_style: FontStyle,
 }
 

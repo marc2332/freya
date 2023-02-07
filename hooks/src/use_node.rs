@@ -65,7 +65,6 @@ mod test {
             Ok(500.0 * 0.5)
         );
 
-        utils.cleanup_layout();
         utils.wait_for_update((300.0, 800.0)).await;
 
         let root = utils.root().child(0).unwrap();
