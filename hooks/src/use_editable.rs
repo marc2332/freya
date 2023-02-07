@@ -383,8 +383,11 @@ mod test {
         // Cursor has been moved
         let root = utils.root().child(0).unwrap();
         let cursor = root.child(1).unwrap().child(0).unwrap();
-
+        #[cfg(not(target_os = "linux"))]
         assert_eq!(cursor.text(), Some("5:0"));
+
+        #[cfg(target_os = "linux")]
+        assert_eq!(cursor.text(), Some("4:0"));
 
         // Insert text
         utils.send_event(FreyaEvent::Keyboard {
@@ -398,9 +401,17 @@ mod test {
         // Text and cursor have changed
         let cursor = root.child(1).unwrap().child(0).unwrap();
         let content = root.child(0).unwrap().child(0).unwrap().child(0).unwrap();
+        #[cfg(not(target_os = "linux"))]
+        {
+            assert_eq!(content.text(), Some("Hello! Rustaceans"));
+            assert_eq!(cursor.text(), Some("6:0"));
+        }
 
-        assert_eq!(content.text(), Some("Hello! Rustaceans"));
-        assert_eq!(cursor.text(), Some("6:0"));
+        #[cfg(target_os = "linux")]
+        {
+            assert_eq!(content.text(), Some("Hell!o Rustaceans"));
+            assert_eq!(cursor.text(), Some("5:0"));
+        }
     }
 
     #[tokio::test]
@@ -474,8 +485,11 @@ mod test {
         // Cursor has been moved
         let root = utils.root().child(0).unwrap();
         let cursor = root.child(2).unwrap().child(0).unwrap();
-
+        #[cfg(not(target_os = "linux"))]
         assert_eq!(cursor.text(), Some("5:0"));
+
+        #[cfg(target_os = "linux")]
+        assert_eq!(cursor.text(), Some("4:0"));
 
         // Insert text
         utils.send_event(FreyaEvent::Keyboard {
@@ -490,8 +504,17 @@ mod test {
         let cursor = root.child(2).unwrap().child(0).unwrap();
         let content = root.child(0).unwrap().child(0).unwrap().child(0).unwrap();
 
-        assert_eq!(content.text(), Some("Hello! Rustaceans"));
-        assert_eq!(cursor.text(), Some("6:0"));
+        #[cfg(not(target_os = "linux"))]
+        {
+            assert_eq!(content.text(), Some("Hello! Rustaceans"));
+            assert_eq!(cursor.text(), Some("6:0"));
+        }
+
+        #[cfg(target_os = "linux")]
+        {
+            assert_eq!(content.text(), Some("Hell!o Rustaceans"));
+            assert_eq!(cursor.text(), Some("5:0"));
+        }
 
         // Second line
         let content = root.child(1).unwrap().child(0).unwrap().child(0).unwrap();
