@@ -1,6 +1,6 @@
 use dioxus_core::VirtualDom;
 use dioxus_native_core::real_dom::RealDom;
-use dioxus_native_core::SendAnyMap;
+use dioxus_native_core::{NodeId, SendAnyMap};
 use freya_core::events::FreyaEvent;
 use freya_core::{events::DomEvent, SharedRealDOM};
 use freya_elements::{from_winit_to_code, get_non_text_keys, Code, Key};
@@ -19,7 +19,6 @@ use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 pub use window::{create_surface, WindowEnv};
 pub use window_config::WindowConfig;
 
-#[cfg(feature = "wireframe")]
 mod wireframe;
 
 mod elements;
@@ -27,12 +26,15 @@ mod renderer;
 mod window;
 mod window_config;
 
+pub type HoveredNode = Option<Arc<Mutex<Option<NodeId>>>>;
+
 /// Start the winit event loop with the virtual dom polling
 pub fn run<T: 'static + Clone>(
     mut vdom: VirtualDom,
     rdom: Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>,
     window_config: WindowConfig<T>,
     mutations_sender: Option<UnboundedSender<()>>,
+    hovered_node: HoveredNode,
 ) {
     let rt = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
@@ -97,7 +99,7 @@ pub fn run<T: 'static + Clone>(
             }
             Event::RedrawRequested(_) => {
                 window_env.process_layout();
-                window_env.render();
+                window_env.render(&hovered_node);
             }
             Event::WindowEvent { event, .. } => {
                 match event {

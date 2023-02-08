@@ -13,7 +13,6 @@ categories = ["GUI"]
 
 [features]
 devtools = []
-wireframe = ["freya-renderer/wireframe"]
 
 [target."cfg(target_os = \"linux\")".dependencies.skia-safe]
 version = "0.58.0"

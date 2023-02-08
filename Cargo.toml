@@ -8,7 +8,6 @@ members = ["layout", "renderer", "state", "freya", "elements", "components", "ho
 
 [features]
 devtools = ["freya/devtools"]
-wireframe = ["freya/wireframe"]
 
 [dev-dependencies]
 freya = { path = "./freya"}

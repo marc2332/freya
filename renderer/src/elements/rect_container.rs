@@ -5,14 +5,6 @@ use skia_safe::{BlurStyle, Canvas, MaskFilter, Paint, PaintStyle, Path, PathDire
 pub fn render_rect_container(canvas: &mut Canvas, node: &RenderData) {
     let shadow = &node.get_state().style.shadow;
 
-    #[cfg(not(feature = "wireframe"))]
-    {
-        use skia_safe::Color;
-        if node.get_state().style.background == Color::TRANSPARENT && shadow.intensity == 0 {
-            return;
-        }
-    }
-
     let mut paint = Paint::default();
     paint.set_anti_alias(true);
     paint.set_style(PaintStyle::Fill);
