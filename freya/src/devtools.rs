@@ -230,26 +230,29 @@ fn NodesTree<'a>(
 ) -> Element<'a> {
     let router = use_router(&cx);
 
-    let nodes = nodes.iter().map(|node| {
-        rsx! {
-            NodeElement {
-                key: "{node.id:?}",
-                is_selected: Some(node.id) == **selected_node_id,
-                onselected: |node: &TreeNode| {
-                    onselected.call(node);
-                    router.push_route("/elements/style", None, None)
-                }
-                node: node
-            }
-        }
-    });
-
-    render!(ScrollView {
+    render!(VirtualScrollView {
         width: "100%",
         height: "{height}",
         padding: "30",
         show_scrollbar: true,
-        nodes
+        length: nodes.len() as i32,
+        item_size: 27.0,
+        builder_values:  (nodes, selected_node_id, onselected, router),
+        builder: Box::new(move |(_k, i, values)| {
+            let (nodes, selected_node_id, onselected, router) = values.unwrap();
+            let node = nodes.get(i as usize).unwrap();
+            rsx! {
+                NodeElement {
+                    key: "{node.id:?}",
+                    is_selected: Some(node.id) == **selected_node_id,
+                    onselected: |node: &TreeNode| {
+                        onselected.call(node);
+                        router.push_route("/elements/style", None, None)
+                    }
+                    node: node
+                }
+            }
+        })
     })
 }
 
@@ -577,18 +580,22 @@ fn NodeElement<'a>(
 ) -> Element<'a> {
     let text_color = use_state(cx, || "white");
 
-    let mut margin_left = (node.height * 10) as f32 + 16.5;
-    let mut text = format!("{} #{}", node.tag, node.id.0);
+    let mut color = *text_color.get();
+    let margin_left = (node.height * 10) as f32 + 16.5;
+    let mut background = "transparent";
 
     if *is_selected {
-        margin_left -= 16.5;
-        text = format!("-> {text}");
+        color = "white";
+        background = "rgb(100, 100, 100)";
     };
 
     render!(
         rect {
+            radius: "7",
+            padding: "10",
+            background: background,
             width: "100%",
-            height: "25",
+            height: "27",
             scroll_x: "{margin_left}",
             onmousedown: |_| onselected.call(node),
             onmouseover: move |_| {
@@ -599,8 +606,8 @@ fn NodeElement<'a>(
             },
             label {
                 font_size: "14",
-                color: "{text_color}",
-                "{text}"
+                color: "{color}",
+                "{node.tag} #{node.id.0}"
             }
         }
     )
