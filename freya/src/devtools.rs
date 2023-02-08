@@ -1,13 +1,14 @@
-use dioxus::core::ElementId;
 use dioxus::prelude::*;
 use dioxus_core::Scope;
 use dioxus_native_core::tree::TreeView;
+use dioxus_native_core::NodeId;
 use dioxus_native_core::{node::NodeType, real_dom::RealDom};
 use dioxus_router::*;
 use freya_components::*;
 use freya_elements as dioxus_elements;
 use freya_hooks::use_theme;
 use freya_node_state::{AttributeType, CustomAttributeValues, NodeState, ShadowSettings};
+use freya_renderer::HoveredNode;
 use skia_safe::Color;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -19,11 +20,13 @@ pub fn with_devtools(
     rdom: Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>,
     root: fn(cx: Scope) -> Element,
     mutations_receiver: UnboundedReceiver<()>,
+    hovered_node: HoveredNode,
 ) -> VirtualDom {
     fn app(cx: Scope<DomProps>) -> Element {
         #[allow(non_snake_case)]
         let Root = cx.props.root;
         let mutations_receiver = cx.props.mutations_receiver.clone();
+        let hovered_node = cx.props.hovered_node.clone();
 
         render!(
             rect {
@@ -43,6 +46,7 @@ pub fn with_devtools(
                         DevTools {
                             rdom: cx.props.rdom.clone(),
                             mutations_receiver: mutations_receiver
+                            hovered_node: hovered_node
                         }
                     }
                 }
@@ -54,6 +58,7 @@ pub fn with_devtools(
         root: fn(cx: Scope) -> Element,
         rdom: Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>,
         mutations_receiver: Arc<Mutex<UnboundedReceiver<()>>>,
+        hovered_node: HoveredNode,
     }
 
     let mutations_receiver = Arc::new(Mutex::new(mutations_receiver));
@@ -64,6 +69,7 @@ pub fn with_devtools(
             root,
             rdom,
             mutations_receiver,
+            hovered_node,
         },
     )
 }
@@ -71,7 +77,7 @@ pub fn with_devtools(
 #[derive(Clone)]
 struct TreeNode {
     tag: String,
-    id: ElementId,
+    id: NodeId,
     height: u16,
     #[allow(dead_code)]
     text: Option<String>,
@@ -82,6 +88,7 @@ struct TreeNode {
 pub struct DevToolsProps {
     rdom: Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>,
     mutations_receiver: Arc<Mutex<UnboundedReceiver<()>>>,
+    hovered_node: HoveredNode,
 }
 
 impl PartialEq for DevToolsProps {
@@ -134,15 +141,13 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                             }
                             .to_string();
 
-                            if let Some(id) = n.node_data.element_id {
-                                new_children.push(TreeNode {
-                                    height,
-                                    id,
-                                    tag,
-                                    text: maybe_text,
-                                    state: n.state.clone(),
-                                });
-                            }
+                            new_children.push(TreeNode {
+                                height,
+                                id: n.node_data.node_id,
+                                tag,
+                                text: maybe_text,
+                                state: n.state.clone(),
+                            });
                         }
                     });
                     children.set(new_children);
@@ -151,7 +156,7 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
         }
     });
 
-    let selected_node_id = use_state::<Option<ElementId>>(&cx, || None);
+    let selected_node_id = use_state::<Option<NodeId>>(&cx, || None);
 
     let selected_node = children.iter().find(|c| {
         if let Some(n_id) = selected_node_id.get() {
@@ -173,10 +178,6 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                         to: "/elements",
                         label: "Elements"
                     }
-                    TabButton {
-                        to: "/settings",
-                        label: "Settings"
-                    }
                 }
                 Route {
                     to: "/elements",
@@ -185,6 +186,9 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                         height: "calc(100% - 35)",
                         selected_node_id: &None,
                         onselected: |node: &TreeNode| {
+                            if let Some(hovered_node) = &cx.props.hovered_node {
+                                hovered_node.lock().unwrap().replace(node.id);
+                            }
                             selected_node_id.set(Some(node.id));
                         }
                     }
@@ -196,6 +200,9 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                         height: "calc(50% - 35)",
                         selected_node_id: selected_node_id.get(),
                         onselected: |node: &TreeNode| {
+                            if let Some(hovered_node) = &cx.props.hovered_node {
+                                hovered_node.lock().unwrap().replace(node.id);
+                            }
                             selected_node_id.set(Some(node.id));
                         }
                     }
@@ -206,30 +213,6 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                             }
                         ))
                     })
-                }
-                Route {
-                    to: "/elements/listeners",
-                    NodesTree {
-                        nodes: children,
-                        height: "calc(50% - 35)",
-                        selected_node_id: selected_node_id.get(),
-                        onselected: |node: &TreeNode| {
-                            selected_node_id.set(Some(node.id));
-                        }
-                    }
-                    selected_node.and_then(|selected_node| {
-                        Some(rsx!(
-                            NodeInspectorListeners {
-                                node: selected_node
-                            }
-                        ))
-                    })
-                }
-                Route {
-                    to: "/settings",
-                    label {
-                        "Settings would be here."
-                    }
                 }
             }
         }
@@ -242,7 +225,7 @@ fn NodesTree<'a>(
     cx: Scope<'a>,
     nodes: &'a Vec<TreeNode>,
     height: &'a str,
-    selected_node_id: &'a Option<ElementId>,
+    selected_node_id: &'a Option<NodeId>,
     onselected: EventHandler<'a, &'a TreeNode>,
 ) -> Element<'a> {
     let router = use_router(&cx);
@@ -348,10 +331,6 @@ fn NodeInspectorBar(cx: Scope) -> Element {
             TabButton {
                 to: "/elements/style",
                 label: "Style"
-            }
-            TabButton {
-                to: "/elements/listeners",
-                label: "Event Listeners"
             }
         }
     )
@@ -588,28 +567,6 @@ fn ShadowProperty<'a>(
     )
 }
 
-#[allow(unused_variables)]
-#[allow(non_snake_case)]
-#[inline_props]
-fn NodeInspectorListeners<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> {
-    render!(
-        container {
-            width: "100%",
-            height: "40%",
-            NodeInspectorBar { }
-            container {
-                height: "calc(100% - 35)",
-                width: "100%",
-                direction: "horizontal",
-                padding: "30",
-                label {
-                    "Listeners would be here."
-                }
-            }
-        }
-    )
-}
-
 #[allow(non_snake_case)]
 #[inline_props]
 fn NodeElement<'a>(
@@ -633,7 +590,7 @@ fn NodeElement<'a>(
             width: "100%",
             height: "25",
             scroll_x: "{margin_left}",
-            onclick: |_| onselected.call(node),
+            onmousedown: |_| onselected.call(node),
             onmouseover: move |_| {
                 text_color.set("rgb(150, 150, 150)");
             },

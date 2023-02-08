@@ -19,6 +19,7 @@ use std::sync::{Arc, Mutex};
 
 use crate::renderer::render_skia;
 use crate::window_config::WindowConfig;
+use crate::HoveredNode;
 
 type WindowedContext = glutin::ContextWrapper<glutin::PossiblyCurrent, glutin::window::Window>;
 
@@ -136,7 +137,7 @@ impl<T: Clone> WindowEnv<T> {
     }
 
     /// Redraw the window
-    pub fn render(&mut self) {
+    pub fn render(&mut self, hovered_node: &HoveredNode) {
         let canvas = self.surface.canvas();
 
         canvas.clear(if self.window_config.decorations {
@@ -153,7 +154,23 @@ impl<T: Clone> WindowEnv<T> {
             canvas,
             |dom, element, font_collection, viewports_collection, canvas| {
                 canvas.save();
-                render_skia(dom, canvas, element, font_collection, viewports_collection);
+                let render_wireframe = if let Some(hovered_node) = &hovered_node {
+                    hovered_node
+                        .lock()
+                        .unwrap()
+                        .map(|id| id == element.node.node_data.node_id)
+                        .unwrap_or_default()
+                } else {
+                    false
+                };
+                render_skia(
+                    dom,
+                    canvas,
+                    element,
+                    font_collection,
+                    viewports_collection,
+                    render_wireframe,
+                );
                 canvas.restore();
             },
         );

@@ -80,7 +80,7 @@ dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e2
 - Optional Components library (buttons, switch, etc)
 - Animation hook utility
 - SVG Support
-- Devtools / Wireframe inspector
+- Devtools panel
 - Headless testing
 
 ### Goals 😁
