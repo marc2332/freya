@@ -68,7 +68,7 @@ Add Freya as a dependency in your `Cargo.toml`:
 
 ```toml
 freya = { git = "https://github.com/marc2332/freya" }
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="bea16f151f3eb519ca8da3e3c20482d345067561", features=["macro", "hooks", "hot-reload"]}
 ```
 
 ### Features ✨

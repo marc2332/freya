@@ -27,10 +27,15 @@ fn app(cx: Scope) -> Element {
                 padding: "50",
                 height: "100%",
                 width: "100%",
-                background: "rgb(45, 45, 45)",
+                background: "blue",
                 label {
                     "{count}"
                 }
+            }
+            rect {
+                width: "50%",
+                height: "100",
+                background: "yellow"
             }
         }
     )

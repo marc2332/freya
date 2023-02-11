@@ -22,12 +22,12 @@ features = ["gl", "textlayout", "svg", "x11", "wayland"]
 gl = "*"
 glutin = { version = "0.29.0"}
 skia-safe = { version = "0.58.0", features = ["gl", "textlayout", "svg"] }
-dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
-dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
-dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
-dioxus-hot-reload = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="bea16f151f3eb519ca8da3e3c20482d345067561"}
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="bea16f151f3eb519ca8da3e3c20482d345067561"}
+dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="bea16f151f3eb519ca8da3e3c20482d345067561"}
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="bea16f151f3eb519ca8da3e3c20482d345067561"}
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="bea16f151f3eb519ca8da3e3c20482d345067561"}
+dioxus-hot-reload = { git = "https://github.com/DioxusLabs/dioxus", rev="bea16f151f3eb519ca8da3e3c20482d345067561"}
 freya-layout = { path = "../layout", version = "0.1.0" }
 freya-node-state = { path = "../state", version = "0.1.0" }
 freya-elements = { path = "../elements", version = "0.1.0" }
