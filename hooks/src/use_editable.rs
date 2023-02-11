@@ -197,7 +197,7 @@ pub fn use_editable<'a>(
                                 } else {
                                     0
                                 };
-                                cursor_setter((len, cursor.1 - 1));
+                                cursor_setter((len - 1, cursor.1 - 1));
                             }
                         }
                     }
@@ -206,7 +206,7 @@ pub fn use_editable<'a>(
                         let current_line = rope.line(cursor.1);
 
                         // Go one line down if there isn't more characters on the right
-                        if cursor.1 < total_lines && cursor.0 == current_line.chars().len() {
+                        if cursor.1 < total_lines && cursor.0 == current_line.chars().len() - 1 {
                             cursor_setter((0, cursor.1 + 1));
                         } else if cursor.0 < current_line.chars().len() {
                             // Go one character to the right if possible
