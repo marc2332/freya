@@ -158,7 +158,7 @@ pub fn get_non_text_keys(key: &VirtualKeyCode) -> Key {
         VirtualKeyCode::Plus => Key::Unidentified,
         VirtualKeyCode::Power => Key::Unidentified,
         VirtualKeyCode::PrevTrack => Key::Unidentified,
-        VirtualKeyCode::RAlt => Key::Alt,
+        VirtualKeyCode::RAlt => Key::AltGraph,
         VirtualKeyCode::RBracket => Key::Unidentified,
         VirtualKeyCode::RControl => Key::Control,
         VirtualKeyCode::RShift => Key::Shift,
