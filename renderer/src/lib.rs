@@ -182,12 +182,21 @@ pub fn run<T: 'static + Clone>(
                         // Text characters will be emitted by `WindowEvent::ReceivedCharacter`
                         let key = get_non_text_keys(&virtual_keycode);
                         if key != Key::Unidentified {
+                            // Winit doesn't enable the alt modifier when pressing the AltGraph key, this is a workaround
+                            if key == Key::AltGraph {
+                                if state == ElementState::Pressed {
+                                    modifiers_state.insert(ModifiersState::ALT)
+                                } else {
+                                    modifiers_state.remove(ModifiersState::ALT)
+                                }
+                            }
+
                             if state == ElementState::Pressed {
                                 // Cache this key so `WindowEvent::ReceivedCharacter` knows
                                 // it shouldn't emit anything until this same key emits keyup
                                 last_keydown = key.clone();
                             } else {
-                                // Uncahe any key
+                                // Uncache any key
                                 last_keydown = Key::Unidentified;
                             }
                             window_env
