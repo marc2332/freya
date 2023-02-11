@@ -122,7 +122,7 @@ pub fn use_editable<'a>(
                 let content = content.current();
 
                 let new_cursor_row = match mode {
-                    EditableMode::MultipleLinesSingleEditor => 0, //content.line_of_offset(new_index),
+                    EditableMode::MultipleLinesSingleEditor => content.char_to_line(new_index),
                     EditableMode::SingleLineMultipleEditors => editor_num,
                 };
 
@@ -136,8 +136,8 @@ pub fn use_editable<'a>(
                 let new_current_line = content.line(new_cursor_row);
 
                 // Use the line lenght as new column if the clicked column surpases the length
-                let new_cursor = if new_cursor_col >= new_current_line.chars().len() {
-                    (new_current_line.chars().len(), new_cursor_row)
+                let new_cursor = if new_cursor_col >= new_current_line.len_chars() {
+                    (new_current_line.len_chars(), new_cursor_row)
                 } else {
                     (new_cursor_col, new_cursor_row)
                 };
@@ -174,10 +174,10 @@ pub fn use_editable<'a>(
                             let next_line = rope.line(cursor.1 + 1);
 
                             // Try to use the current cursor column, otherwise use the new line length
-                            let cursor_index = if cursor.0 <= next_line.chars().len() {
+                            let cursor_index = if cursor.0 <= next_line.len_chars() {
                                 cursor.0
                             } else {
-                                next_line.chars().len()
+                                next_line.len_chars()
                             };
 
                             cursor_setter((cursor_index, cursor.1 + 1));
@@ -192,8 +192,8 @@ pub fn use_editable<'a>(
                             let prev_line = rope.get_line(cursor.1 - 1);
                             if let Some(prev_line) = prev_line {
                                 // Use the new line length as new cursor column, otherwise just set it to 0
-                                let len = if prev_line.chars().len() > 0 {
-                                    prev_line.chars().len()
+                                let len = if prev_line.len_chars() > 0 {
+                                    prev_line.len_chars()
                                 } else {
                                     0
                                 };
@@ -206,9 +206,9 @@ pub fn use_editable<'a>(
                         let current_line = rope.line(cursor.1);
 
                         // Go one line down if there isn't more characters on the right
-                        if cursor.1 < total_lines && cursor.0 == current_line.chars().len() - 1 {
+                        if cursor.1 < total_lines && cursor.0 == current_line.len_chars() - 1 {
                             cursor_setter((0, cursor.1 + 1));
-                        } else if cursor.0 < current_line.chars().len() {
+                        } else if cursor.0 < current_line.len_chars() {
                             // Go one character to the right if possible
                             cursor_setter((cursor.0 + 1, cursor.1));
                         }
@@ -219,10 +219,10 @@ pub fn use_editable<'a>(
                             let prev_line = rope.line(cursor.1 - 1);
 
                             // Try to use the current cursor column, otherwise use the new line length
-                            let cursor_column = if cursor.0 <= prev_line.chars().len() {
+                            let cursor_column = if cursor.0 <= prev_line.len_chars() {
                                 cursor.0
                             } else {
-                                prev_line.chars().len()
+                                prev_line.len_chars()
                             };
 
                             cursor_setter((cursor_column, cursor.1 - 1));
@@ -244,9 +244,9 @@ pub fn use_editable<'a>(
 
                             if let Some(current_line) = current_line {
                                 let prev_char_idx =
-                                    rope.line_to_char(cursor.1 - 1) + prev_line.chars().len() - 1;
+                                    rope.line_to_char(cursor.1 - 1) + prev_line.len_chars() - 1;
                                 let char_idx =
-                                    rope.line_to_char(cursor.1) + current_line.chars().len() - 1;
+                                    rope.line_to_char(cursor.1) + current_line.len_chars() - 1;
 
                                 content.with_mut(|code| {
                                     if let Some(current_line) = current_line.as_str() {
@@ -256,14 +256,14 @@ pub fn use_editable<'a>(
                                 });
                             }
 
-                            cursor_setter((prev_line.chars().len() - 1, cursor.1 - 1));
+                            cursor_setter((prev_line.len_chars() - 1, cursor.1 - 1));
                         }
                     }
                     Key::Enter => {
                         // Breaks the line
                         let char_idx = rope.line_to_char(cursor.1) + cursor.0;
                         content.with_mut(|code| {
-                            code.insert(char_idx,  "\n");
+                            code.insert(char_idx, "\n");
                         });
                         cursor_setter((0, cursor.1 + 1));
                     }
