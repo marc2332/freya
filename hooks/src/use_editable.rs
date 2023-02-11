@@ -10,8 +10,8 @@ use freya_elements::{
     Code, Key,
 };
 use freya_node_state::{CursorReference, CustomAttributeValues};
+use ropey::Rope;
 use tokio::sync::{mpsc::unbounded_channel, mpsc::UnboundedSender};
-pub use xi_rope::Rope;
 
 /// How the editable content must behave.
 pub enum EditableMode {
@@ -122,22 +122,22 @@ pub fn use_editable<'a>(
                 let content = content.current();
 
                 let new_cursor_row = match mode {
-                    EditableMode::MultipleLinesSingleEditor => content.line_of_offset(new_index),
+                    EditableMode::MultipleLinesSingleEditor => 0, //content.line_of_offset(new_index),
                     EditableMode::SingleLineMultipleEditors => editor_num,
                 };
 
                 let new_cursor_col = match mode {
                     EditableMode::MultipleLinesSingleEditor => {
-                        new_index - content.offset_of_line(new_cursor_row)
+                        new_index - content.line_to_char(new_cursor_row)
                     }
                     EditableMode::SingleLineMultipleEditors => new_index,
                 };
 
-                let new_current_line = content.lines(..).nth(new_cursor_row).unwrap();
+                let new_current_line = content.line(new_cursor_row);
 
                 // Use the line lenght as new column if the clicked column surpases the length
-                let new_cursor = if new_cursor_col >= new_current_line.len() {
-                    (new_current_line.len(), new_cursor_row)
+                let new_cursor = if new_cursor_col >= new_current_line.chars().len() {
+                    (new_current_line.chars().len(), new_cursor_row)
                 } else {
                     (new_cursor_col, new_cursor_row)
                 };
@@ -168,16 +168,16 @@ pub fn use_editable<'a>(
                 let cursor = cursor_getter.current();
                 match &pressed_key.key {
                     Key::ArrowDown => {
-                        let total_lines = rope.lines(..).count() - 1;
+                        let total_lines = rope.len_lines() - 1;
                         // Go one line down
                         if cursor.1 < total_lines {
-                            let next_line = rope.lines(..).nth(cursor.1 + 1).unwrap();
+                            let next_line = rope.line(cursor.1 + 1);
 
                             // Try to use the current cursor column, otherwise use the new line length
-                            let cursor_index = if cursor.0 <= next_line.len() {
+                            let cursor_index = if cursor.0 <= next_line.chars().len() {
                                 cursor.0
                             } else {
-                                next_line.len()
+                                next_line.chars().len()
                             };
 
                             cursor_setter((cursor_index, cursor.1 + 1));
@@ -189,11 +189,11 @@ pub fn use_editable<'a>(
                             cursor_setter((cursor.0 - 1, cursor.1));
                         } else if cursor.1 > 0 {
                             // Go one line up if there is no more characters on the left
-                            let prev_line = rope.lines(..).nth(cursor.1 - 1);
+                            let prev_line = rope.get_line(cursor.1 - 1);
                             if let Some(prev_line) = prev_line {
                                 // Use the new line length as new cursor column, otherwise just set it to 0
-                                let len = if prev_line.len() > 0 {
-                                    prev_line.len()
+                                let len = if prev_line.chars().len() > 0 {
+                                    prev_line.chars().len()
                                 } else {
                                     0
                                 };
@@ -202,13 +202,13 @@ pub fn use_editable<'a>(
                         }
                     }
                     Key::ArrowRight => {
-                        let total_lines = rope.lines(..).count() - 1;
-                        let current_line = rope.lines(..).nth(cursor.1).unwrap();
+                        let total_lines = rope.len_lines() - 1;
+                        let current_line = rope.line(cursor.1);
 
                         // Go one line down if there isn't more characters on the right
-                        if cursor.1 < total_lines && cursor.0 == current_line.len() {
+                        if cursor.1 < total_lines && cursor.0 == current_line.chars().len() {
                             cursor_setter((0, cursor.1 + 1));
-                        } else if cursor.0 < current_line.len() {
+                        } else if cursor.0 < current_line.chars().len() {
                             // Go one character to the right if possible
                             cursor_setter((cursor.0 + 1, cursor.1));
                         }
@@ -216,13 +216,13 @@ pub fn use_editable<'a>(
                     Key::ArrowUp => {
                         // Go one line up if there is any
                         if cursor.1 > 0 {
-                            let prev_line = rope.lines(..).nth(cursor.1 - 1).unwrap();
+                            let prev_line = rope.line(cursor.1 - 1);
 
                             // Try to use the current cursor column, otherwise use the new line length
-                            let cursor_column = if cursor.0 <= prev_line.len() {
+                            let cursor_column = if cursor.0 <= prev_line.chars().len() {
                                 cursor.0
                             } else {
-                                prev_line.len()
+                                prev_line.chars().len()
                             };
 
                             cursor_setter((cursor_column, cursor.1 - 1));
@@ -231,46 +231,40 @@ pub fn use_editable<'a>(
                     Key::Backspace => {
                         if cursor.0 > 0 {
                             // Remove the character to the left if there is any
-                            let char_idx = rope.offset_of_line(cursor.1) + cursor.0;
+                            let char_idx = rope.line_to_char(cursor.1) + cursor.0;
                             content.with_mut(|code| {
-                                code.edit(char_idx - 1..char_idx, "");
+                                code.remove(char_idx - 1..char_idx);
                             });
 
                             cursor_setter((cursor.0 - 1, cursor.1));
                         } else if cursor.1 > 0 {
                             // Moves the whole current line to the end of the line above.
-                            let prev_line = rope.lines(..).nth(cursor.1 - 1).unwrap();
-                            let current_line = rope.lines(..).nth(cursor.1);
+                            let prev_line = rope.line(cursor.1 - 1);
+                            let current_line = rope.get_line(cursor.1);
 
                             if let Some(current_line) = current_line {
                                 let prev_char_idx =
-                                    rope.offset_of_line(cursor.1 - 1) + prev_line.len();
-                                let char_idx = rope.offset_of_line(cursor.1) + current_line.len();
+                                    rope.line_to_char(cursor.1 - 1) + prev_line.chars().len() - 1;
+                                let char_idx =
+                                    rope.line_to_char(cursor.1) + current_line.chars().len() - 1;
 
                                 content.with_mut(|code| {
-                                    code.edit(prev_char_idx..prev_char_idx, current_line.clone());
-                                    code.edit(char_idx..char_idx + current_line.len() + 1, "");
+                                    if let Some(current_line) = current_line.as_str() {
+                                        code.insert(prev_char_idx, current_line);
+                                        code.remove(char_idx..(char_idx + current_line.len()) + 1);
+                                    }
                                 });
                             }
 
-                            cursor_setter((prev_line.len(), cursor.1 - 1));
+                            cursor_setter((prev_line.chars().len() - 1, cursor.1 - 1));
                         }
                     }
                     Key::Enter => {
                         // Breaks the line
-                        let total_lines = rope.lines(..).count();
-                        let char_idx = rope.offset_of_line(cursor.1) + cursor.0;
-                        let current_line = rope.lines(..).nth(cursor.1).unwrap();
+                        let char_idx = rope.line_to_char(cursor.1) + cursor.0;
                         content.with_mut(|code| {
-                            let break_line =
-                                if cursor.1 == total_lines - 1 && current_line.len() > 0 {
-                                    "\n\n"
-                                } else {
-                                    "\n"
-                                };
-                            code.edit(char_idx..char_idx, break_line);
+                            code.insert(char_idx,  "\n");
                         });
-
                         cursor_setter((0, cursor.1 + 1));
                     }
                     Key::Character(character) => {
@@ -278,17 +272,17 @@ pub fn use_editable<'a>(
                             Code::Delete => {}
                             Code::Space => {
                                 // Simply adds an space
-                                let char_idx = rope.offset_of_line(cursor.1) + cursor.0;
+                                let char_idx = rope.line_to_char(cursor.1) + cursor.0;
                                 content.with_mut(|code| {
-                                    code.edit(char_idx..char_idx, " ");
+                                    code.insert(char_idx, " ");
                                 });
                                 cursor_setter((cursor.0 + 1, cursor.1));
                             }
                             _ => {
                                 // Adds a new character to the right
-                                let char_idx = rope.offset_of_line(cursor.1) + cursor.0;
+                                let char_idx = rope.line_to_char(cursor.1) + cursor.0;
                                 content.with_mut(|code| {
-                                    code.edit(char_idx..char_idx, character.as_str());
+                                    code.insert(char_idx, character.as_str());
                                 });
 
                                 cursor_setter((cursor.0 + 1, cursor.1));
@@ -326,7 +320,7 @@ mod test {
                     || "Hello Rustaceans",
                     EditableMode::MultipleLinesSingleEditor,
                 );
-            let cursor_char = content.offset_of_line(cursor.1) + cursor.0;
+            let cursor_char = content.line_to_char(cursor.1) + cursor.0;
             render!(
                 rect {
                     width: "100%",
@@ -433,7 +427,7 @@ mod test {
                     onkeydown: move |e| {
                         process_keyevent.send(e.data).unwrap();
                     },
-                    content.lines(0..).enumerate().map(move |(i, line)| {
+                    content.lines().enumerate().map(move |(i, line)| {
                         let process_clickevent = process_clickevent.clone();
                         rsx!(
                             paragraph {
@@ -470,7 +464,7 @@ mod test {
         let cursor = root.child(2).unwrap().child(0).unwrap();
         let content = root.child(0).unwrap().child(0).unwrap().child(0).unwrap();
         assert_eq!(cursor.text(), Some("0:0"));
-        assert_eq!(content.text(), Some("Hello Rustaceans"));
+        assert_eq!(content.text(), Some("Hello Rustaceans\n"));
 
         // Move cursor
         utils.send_event(FreyaEvent::Mouse {
@@ -507,13 +501,13 @@ mod test {
 
         #[cfg(not(target_os = "linux"))]
         {
-            assert_eq!(content.text(), Some("Hello! Rustaceans"));
+            assert_eq!(content.text(), Some("Hello! Rustaceans\n"));
             assert_eq!(cursor.text(), Some("6:0"));
         }
 
         #[cfg(target_os = "linux")]
         {
-            assert_eq!(content.text(), Some("Hell!o Rustaceans"));
+            assert_eq!(content.text(), Some("Hell!o Rustaceans\n"));
             assert_eq!(cursor.text(), Some("5:0"));
         }
 
