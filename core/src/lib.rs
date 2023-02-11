@@ -196,10 +196,15 @@ fn calculate_events_listeners(
                     name: event_name.to_string(),
                     data: DomEventData::Wheel(WheelData::new(scroll.0, scroll.1)),
                 },
-                FreyaEvent::Keyboard { key, code, .. } => DomEvent {
+                FreyaEvent::Keyboard {
+                    key,
+                    code,
+                    modifiers,
+                    ..
+                } => DomEvent {
                     element_id: node.element_id.unwrap(),
                     name: event_name.to_string(),
-                    data: DomEventData::Keyboard(KeyboardData::new(key.clone(), *code)),
+                    data: DomEventData::Keyboard(KeyboardData::new(key.clone(), *code, *modifiers)),
                 },
             };
 
@@ -238,10 +243,15 @@ fn calculate_global_events_listeners(
                     name: event_name.to_string(),
                     data: DomEventData::Wheel(WheelData::new(scroll.0, scroll.1)),
                 },
-                FreyaEvent::Keyboard { ref key, code, .. } => DomEvent {
+                FreyaEvent::Keyboard {
+                    ref key,
+                    code,
+                    modifiers,
+                    ..
+                } => DomEvent {
                     element_id: listener.node_data.element_id.unwrap(),
                     name: event_name.to_string(),
-                    data: DomEventData::Keyboard(KeyboardData::new(key.clone(), code)),
+                    data: DomEventData::Keyboard(KeyboardData::new(key.clone(), code, modifiers)),
                 },
             };
             event_emitter.send(event).unwrap();

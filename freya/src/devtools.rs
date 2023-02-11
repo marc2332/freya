@@ -237,7 +237,7 @@ fn NodesTree<'a>(
         show_scrollbar: true,
         length: nodes.len() as i32,
         item_size: 27.0,
-        builder_values:  (nodes, selected_node_id, onselected, router),
+        builder_values: (nodes, selected_node_id, onselected, router),
         builder: Box::new(move |(_k, i, values)| {
             let (nodes, selected_node_id, onselected, router) = values.unwrap();
             let node = nodes.get(i as usize).unwrap();

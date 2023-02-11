@@ -163,11 +163,10 @@ pub fn use_editable<'a>(
         async move {
             let mut rx = rx.unwrap();
 
-            while let Some(e) = rx.recv().await {
+            while let Some(pressed_key) = rx.recv().await {
                 let rope = content.current();
                 let cursor = cursor_getter.current();
-
-                match &e.key {
+                match &pressed_key.key {
                     Key::ArrowDown => {
                         let total_lines = rope.lines(..).count() - 1;
                         // Go one line down
@@ -275,7 +274,7 @@ pub fn use_editable<'a>(
                         cursor_setter((0, cursor.1 + 1));
                     }
                     Key::Character(character) => {
-                        match e.code {
+                        match pressed_key.code {
                             Code::Delete => {}
                             Code::Space => {
                                 // Simply adds an space
@@ -315,7 +314,7 @@ pub fn use_editable<'a>(
 mod test {
     use crate::{use_editable, EditableMode};
     use freya::prelude::*;
-    use freya_elements::{Code, Key};
+    use freya_elements::{Code, Key, Modifiers};
     use freya_testing::{launch_test, FreyaEvent, MouseButton};
 
     #[tokio::test]
@@ -394,6 +393,7 @@ mod test {
             name: "keydown",
             key: Key::Character("!".to_string()),
             code: Code::Unidentified,
+            modifiers: Modifiers::empty(),
         });
 
         utils.wait_for_update((500.0, 500.0)).await;
@@ -496,6 +496,7 @@ mod test {
             name: "keydown",
             key: Key::Character("!".to_string()),
             code: Code::Unidentified,
+            modifiers: Modifiers::empty(),
         });
 
         utils.wait_for_update((500.0, 500.0)).await;
