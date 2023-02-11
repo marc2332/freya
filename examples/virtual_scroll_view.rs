@@ -38,12 +38,12 @@ fn app(cx: Scope) -> Element {
                 width: "100%",
                 height: "100%",
                 show_scrollbar: true,
-                length: content.lines(..).count() as i32,
+                length: content.len_lines() as i32,
                 item_size: real_line_height,
                 builder_values: (cursor, process_clickevent, content),
                 builder: Box::new(move |(k, line_index, vals)| {
                     let (cursor, process_clickevent, content) = vals.as_ref().unwrap();
-                    let line_content = content.lines(0..).nth(line_index  as usize).unwrap();
+                    let line_content = content.lines().nth(line_index  as usize).unwrap();
 
                     let is_line_selected = cursor.1 == line_index as usize;
 

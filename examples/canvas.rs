@@ -294,7 +294,7 @@ fn Editor(cx: Scope) -> Element {
                         width: "100%",
                         height: "100%",
                         show_scrollbar: true,
-                        content.lines(0..).map(move |l| {
+                        content.lines().map(move |l| {
                             let process_clickevent = process_clickevent.clone();
 
                             let is_line_selected = cursor.1 == line_index;

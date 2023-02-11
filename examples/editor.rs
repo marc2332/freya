@@ -40,7 +40,7 @@ fn Body(cx: Scope) -> Element {
     let line_height = (line_height_percentage / 25.0) + 1.2;
     let mut line_index = 0;
 
-    let cursor_char = content.offset_of_line(cursor.1) + cursor.0;
+    let cursor_char = content.line_to_char(cursor.1) + cursor.0;
 
     let font_style = {
         if *is_bold.get() && *is_italic.get() {
@@ -53,8 +53,6 @@ fn Body(cx: Scope) -> Element {
             "normal"
         }
     };
-
-    content.lines(0..);
 
     render!(
         rect {
@@ -185,7 +183,7 @@ fn Body(cx: Scope) -> Element {
                         width: "100%",
                         height: "100%",
                         show_scrollbar: true,
-                        content.lines(0..).map(move |l| {
+                        content.lines().map(move |l| {
                             let process_clickevent = process_clickevent.clone();
 
                             let is_line_selected = cursor.1 == line_index;
