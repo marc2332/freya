@@ -10,7 +10,7 @@ use freya_elements::{
     Code, Key,
 };
 use freya_node_state::{CursorReference, CustomAttributeValues};
-use ropey::Rope;
+pub use ropey::Rope;
 use tokio::sync::{mpsc::unbounded_channel, mpsc::UnboundedSender};
 
 /// How the editable content must behave.
