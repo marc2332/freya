@@ -1,7 +1,7 @@
 use glutin::event::{ModifiersState, VirtualKeyCode};
 pub use keyboard_types::{Code, Key, Modifiers};
 
-// Map glutin modifiers to keyboard_types modifiers
+// Map winit modifiers to keyboard_types modifiers
 pub fn get_modifiers(modifiers: ModifiersState) -> Modifiers {
     let mut new_modifiers = Modifiers::empty();
     if modifiers.alt() {
