@@ -1,5 +1,23 @@
-use glutin::event::VirtualKeyCode;
-pub use keyboard_types::{Code, Key};
+use glutin::event::{ModifiersState, VirtualKeyCode};
+pub use keyboard_types::{Code, Key, Modifiers};
+
+// Map glutin modifiers to keyboard_types modifiers
+pub fn get_modifiers(modifiers: ModifiersState) -> Modifiers {
+    let mut new_modifiers = Modifiers::empty();
+    if modifiers.alt() {
+        new_modifiers.toggle(Modifiers::ALT);
+    }
+    if modifiers.ctrl() {
+        new_modifiers.toggle(Modifiers::CONTROL);
+    }
+    if modifiers.shift() {
+        new_modifiers.toggle(Modifiers::SHIFT);
+    }
+    if modifiers.logo() {
+        new_modifiers.toggle(Modifiers::META);
+    }
+    new_modifiers
+}
 
 /// Only return keys that aren't text
 pub fn get_non_text_keys(key: &VirtualKeyCode) -> Key {
@@ -344,11 +362,16 @@ pub fn from_winit_to_code(key: &VirtualKeyCode) -> Code {
 pub struct KeyboardData {
     pub key: Key,
     pub code: Code,
+    pub modifiers: Modifiers,
 }
 
 impl KeyboardData {
-    pub fn new(key: Key, code: Code) -> Self {
-        Self { key, code }
+    pub fn new(key: Key, code: Code, modifiers: Modifiers) -> Self {
+        Self {
+            key,
+            code,
+            modifiers,
+        }
     }
 }
 

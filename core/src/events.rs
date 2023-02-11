@@ -2,7 +2,7 @@ use std::{any::Any, collections::HashMap, rc::Rc};
 
 use dioxus_core::ElementId;
 use euclid::Point2D;
-use freya_elements::{events_data::MouseData, Code, Key, KeyboardData, WheelData};
+use freya_elements::{events_data::MouseData, Code, Key, KeyboardData, Modifiers, WheelData};
 use freya_layout::RenderData;
 use glutin::event::MouseButton;
 use rustc_hash::FxHashMap;
@@ -27,6 +27,7 @@ pub enum FreyaEvent {
         name: &'static str,
         key: Key,
         code: Code,
+        modifiers: Modifiers,
     },
 }
 
