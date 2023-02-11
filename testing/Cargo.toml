@@ -32,4 +32,4 @@ skia-safe = { version = "0.58.0", features = ["gl", "textlayout", "svg"] }
 
 [dev-dependencies]
 freya-components ={ path = "../components"}
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3", features = ["macro", "hooks"]}
