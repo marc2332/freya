@@ -110,11 +110,12 @@ fn app(cx: Scope) -> Element {
             direction: "both",
             width: "auto",
             height: "50%",
+            color: "white",
             VirtualScrollView {
                 width: "100%",
                 height: "100%",
                 show_scrollbar: true,
-                length: 5,
+                length: 7,
                 item_size: 80.0,
                 builder_values: (),
                 direction: "horizontal",

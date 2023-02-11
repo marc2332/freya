@@ -13,6 +13,7 @@ fn app(cx: Scope) -> Element {
     let count = use_state(cx, || 0);
     render!(
         container {
+            color: "white",
             background: "rgb(15, 15, 15)",
             padding: "50",
             direction: "both",

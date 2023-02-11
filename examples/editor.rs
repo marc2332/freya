@@ -26,7 +26,7 @@ fn Body(cx: Scope) -> Element {
     let (content, cursor, process_keyevent, process_clickevent, cursor_ref) = use_editable(
         &cx,
         || {
-            "AALorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet"
+            "Lorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet"
         },
         EditableMode::SingleLineMultipleEditors,
     );
@@ -60,6 +60,7 @@ fn Body(cx: Scope) -> Element {
         rect {
             width: "100%",
             height: "100%",
+            color: "white",
             rect {
                 width: "100%",
                 height: "60",

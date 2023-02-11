@@ -1530,6 +1530,7 @@ dependencies = [
  "freya-node-state",
  "futures",
  "glutin",
+ "rustc-hash",
  "skia-safe",
  "tokio",
 ]

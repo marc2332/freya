@@ -1,9 +1,10 @@
 use dioxus_core::Template;
 use freya_common::NodeArea;
 use freya_core::{
-    events::EventsProcessor, process_work, EventEmitter, SharedFreyaEvents, SharedLayoutMemorizer,
-    SharedRealDOM,
+    events::EventsProcessor, process_render, EventEmitter, SharedFreyaEvents, SharedRealDOM,
 };
+use freya_core::{process_events, process_layout, ViewportsCollection};
+use freya_layout::Layers;
 use gl::types::*;
 use glutin::dpi::PhysicalSize;
 use glutin::event_loop::EventLoop;
@@ -14,10 +15,12 @@ use skia_safe::{
     gpu::{gl::FramebufferInfo, BackendRenderTarget, SurfaceOrigin},
     ColorType, Surface,
 };
+use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use crate::renderer::render_skia;
 use crate::window_config::WindowConfig;
+use crate::HoveredNode;
 
 type WindowedContext = glutin::ContextWrapper<glutin::PossiblyCurrent, glutin::window::Window>;
 
@@ -28,12 +31,13 @@ pub struct WindowEnv<T: Clone> {
     pub(crate) windowed_context: WindowedContext,
     pub(crate) fb_info: FramebufferInfo,
     pub(crate) rdom: SharedRealDOM,
-    pub(crate) layout_memorizer: SharedLayoutMemorizer,
     pub(crate) freya_events: SharedFreyaEvents,
     pub(crate) event_emitter: EventEmitter,
     pub(crate) font_collection: FontCollection,
     pub(crate) events_processor: EventsProcessor,
     pub(crate) window_config: WindowConfig<T>,
+    pub(crate) layers: Layers,
+    pub(crate) viewports_collection: ViewportsCollection,
 }
 
 impl<T: Clone> WindowEnv<T> {
@@ -41,7 +45,6 @@ impl<T: Clone> WindowEnv<T> {
     pub fn from_config(
         rdom: &SharedRealDOM,
         event_emitter: EventEmitter,
-        layout_memorizer: &SharedLayoutMemorizer,
         window_config: WindowConfig<T>,
         event_loop: &EventLoop<Option<Template<'static>>>,
         font_collection: FontCollection,
@@ -99,12 +102,43 @@ impl<T: Clone> WindowEnv<T> {
             font_collection,
             events_processor,
             window_config,
-            layout_memorizer: layout_memorizer.clone(),
+            layers: Layers::default(),
+            viewports_collection: HashMap::default(),
         }
     }
 
+    // Process the events and emit them to the DOM
+    pub fn process_events(&mut self) {
+        process_events(
+            &self.rdom,
+            &self.layers,
+            &self.freya_events,
+            &self.event_emitter,
+            &mut self.events_processor,
+            &self.viewports_collection,
+        );
+    }
+
+    // Reprocess the layout
+    pub fn process_layout(&mut self) {
+        let window_size = self.windowed_context.window().inner_size();
+        let (layers, viewports) = process_layout(
+            &self.rdom,
+            NodeArea {
+                width: window_size.width as f32,
+                height: window_size.height as f32,
+                x: 0.0,
+                y: 0.0,
+            },
+            &mut self.font_collection,
+        );
+
+        self.layers = layers;
+        self.viewports_collection = viewports;
+    }
+
     /// Redraw the window
-    pub fn redraw(&mut self) {
+    pub fn render(&mut self, hovered_node: &HoveredNode) {
         let canvas = self.surface.canvas();
 
         canvas.clear(if self.window_config.decorations {
@@ -113,25 +147,31 @@ impl<T: Clone> WindowEnv<T> {
             Color::TRANSPARENT
         });
 
-        let window_size = self.windowed_context.window().inner_size();
-
-        process_work(
+        process_render(
+            &self.viewports_collection,
             &self.rdom,
-            NodeArea {
-                width: window_size.width as f32,
-                height: window_size.height as f32,
-                x: 0.0,
-                y: 0.0,
-            },
-            self.freya_events.clone(),
-            &self.event_emitter,
             &mut self.font_collection,
-            &mut self.events_processor,
-            &self.layout_memorizer,
+            &self.layers,
             canvas,
             |dom, element, font_collection, viewports_collection, canvas| {
                 canvas.save();
-                render_skia(dom, canvas, element, font_collection, viewports_collection);
+                let render_wireframe = if let Some(hovered_node) = &hovered_node {
+                    hovered_node
+                        .lock()
+                        .unwrap()
+                        .map(|id| id == element.node.node_data.node_id)
+                        .unwrap_or_default()
+                } else {
+                    false
+                };
+                render_skia(
+                    dom,
+                    canvas,
+                    element,
+                    font_collection,
+                    viewports_collection,
+                    render_wireframe,
+                );
                 canvas.restore();
             },
         );

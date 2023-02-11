@@ -9,7 +9,7 @@ use dioxus_native_core::{
     tree::TreeLike,
     NodeId,
 };
-use freya_common::{LayoutMemorizer, NodeArea};
+use freya_common::NodeArea;
 use freya_layout::NodeLayoutMeasurer;
 use freya_layout::{DioxusNode, Layers};
 use freya_node_state::{DirectionMode, NodeState, Size, SizeMode};
@@ -54,7 +54,6 @@ fn percentage() {
     };
     let mut layers = Layers::default();
     let mut fonts = FontCollection::new();
-    let layout_memorizer = Arc::new(Mutex::new(LayoutMemorizer::new()));
     let mut measurer = NodeLayoutMeasurer::new(
         node,
         &mut remaining_area,
@@ -68,8 +67,6 @@ fn percentage() {
         &mut layers,
         0,
         &mut fonts,
-        &layout_memorizer,
-        false,
     );
     let result = measurer.measure_area(true);
 
@@ -98,7 +95,6 @@ fn manual() {
     };
     let mut layers = Layers::default();
     let mut fonts = FontCollection::new();
-    let layout_memorizer = Arc::new(Mutex::new(LayoutMemorizer::new()));
     let mut measurer = NodeLayoutMeasurer::new(
         node,
         &mut remaining_area,
@@ -112,8 +108,6 @@ fn manual() {
         &mut layers,
         0,
         &mut fonts,
-        &layout_memorizer,
-        false,
     );
     let result = measurer.measure_area(true);
 
@@ -174,7 +168,6 @@ fn auto() {
     };
     let mut layers = Layers::default();
     let mut fonts = FontCollection::new();
-    let layout_memorizer = Arc::new(Mutex::new(LayoutMemorizer::new()));
     let mut measurer = NodeLayoutMeasurer::new(
         node,
         &mut remaining_area,
@@ -188,8 +181,6 @@ fn auto() {
         &mut layers,
         0,
         &mut fonts,
-        &layout_memorizer,
-        false,
     );
     let result = measurer.measure_area(true);
 
@@ -239,7 +230,6 @@ fn x_y() {
 
     let mut layers = Layers::default();
     let mut fonts = FontCollection::new();
-    let layout_memorizer = Arc::new(Mutex::new(LayoutMemorizer::new()));
     let mut measurer = NodeLayoutMeasurer::new(
         node,
         &mut remaining_area,
@@ -253,8 +243,6 @@ fn x_y() {
         &mut layers,
         0,
         &mut fonts,
-        &layout_memorizer,
-        false,
     );
 
     let result = measurer.measure_area(true);

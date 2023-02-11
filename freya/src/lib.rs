@@ -1,5 +1,7 @@
 //! # Freya
-//! A GUI library for Rust powered by [Skia](https://skia.org/) and [Dioxus](https://dioxuslabs.com).
+//! Build native & cross-platform GUI applications using 🦀 Rust.
+//!
+//! Powered by [🧬 Dioxus](https://dioxuslabs.com) and [🎨 Skia](https://skia.org/).
 //! ```no_run
 //! use freya::prelude::*;
 //!
@@ -24,7 +26,6 @@
 //! }
 //!
 //! ```
-//!
 
 #[cfg(feature = "devtools")]
 mod devtools;
