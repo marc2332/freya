@@ -71,9 +71,13 @@ impl Display for Line<'_> {
     }
 }
 
+/// Events for [TextEditor]
 pub enum TextEvent {
+    /// Cursor position has been moved
     CursorChanged,
+    /// Text has changed
     TextChanged,
+    /// Nothing happened
     None,
 }
 
@@ -152,7 +156,7 @@ pub trait TextEditor: Sized + Clone + Display {
         self.cursor_col() + self.cursor_row()
     }
 
-    // Process a Key press
+    // Process a Key event
     fn process_key(&mut self, key: &Key, code: &Code, _modifers: &Modifiers) -> TextEvent {
         let mut event = TextEvent::None;
         match key {
