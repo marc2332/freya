@@ -40,3 +40,4 @@ fxhash = "0.2.1"
 skia-safe = { version = "0.58.0", features = ["gl", "textlayout", "svg"] }
 tracing = "0.1"
 futures = "0.3.25"
+rustc-hash = "1.1.0"

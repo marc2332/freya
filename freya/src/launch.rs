@@ -157,20 +157,30 @@ pub fn launch_cfg<T: 'static + Clone + Send>(root: Component, win_config: Window
     use std::sync::{Arc, Mutex};
 
     use dioxus_native_core::real_dom::RealDom;
+    use freya_core::events::DomEvent;
     use freya_node_state::{CustomAttributeValues, NodeState};
+    use tokio::sync::mpsc::unbounded_channel;
 
     let rdom = Arc::new(Mutex::new(
         RealDom::<NodeState, CustomAttributeValues>::new(),
     ));
+
+    let (event_emitter, event_emitter_rx) = unbounded_channel::<DomEvent>();
+
     let (vdom, mutations_sender, hovered_node) = {
         #[cfg(feature = "devtools")]
         {
             use crate::devtools::with_devtools;
-            use tokio::sync::mpsc::unbounded_channel;
 
             let hovered_node = Some(Arc::new(Mutex::new(None)));
             let (mutations_sender, mutations_receiver) = unbounded_channel::<()>();
-            let vdom = with_devtools(rdom.clone(), root, mutations_receiver, hovered_node.clone());
+            let vdom = with_devtools(
+                rdom.clone(),
+                root,
+                mutations_receiver,
+                hovered_node.clone(),
+                event_emitter.clone(),
+            );
             (vdom, Some(mutations_sender), hovered_node)
         }
 
@@ -181,5 +191,12 @@ pub fn launch_cfg<T: 'static + Clone + Send>(root: Component, win_config: Window
             (vdom, None, None)
         }
     };
-    run(vdom, rdom, win_config, mutations_sender, hovered_node);
+    run(
+        vdom,
+        rdom,
+        win_config,
+        mutations_sender,
+        hovered_node,
+        (event_emitter, event_emitter_rx),
+    );
 }

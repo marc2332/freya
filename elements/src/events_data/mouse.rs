@@ -1,4 +1,4 @@
-use euclid::Point2D;
+pub use euclid::{Length, Point2D};
 pub use glutin::event::MouseButton;
 
 /// Data of a Mouse event.

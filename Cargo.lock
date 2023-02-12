@@ -1344,6 +1344,7 @@ dependencies = [
  "freya-renderer",
  "futures",
  "fxhash",
+ "rustc-hash",
  "skia-safe",
  "tokio",
  "tracing",

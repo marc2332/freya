@@ -16,7 +16,7 @@ use skia_safe::{textlayout::FontCollection, FontMgr};
 use std::sync::{Arc, Mutex};
 use std::task::Waker;
 use tokio::select;
-use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
+use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 pub use window::{create_surface, WindowEnv};
 pub use window_config::WindowConfig;
 
@@ -36,6 +36,7 @@ pub fn run<T: 'static + Clone>(
     window_config: WindowConfig<T>,
     mutations_sender: Option<UnboundedSender<()>>,
     hovered_node: HoveredNode,
+    (event_emitter, mut event_emitter_rx): (UnboundedSender<DomEvent>, UnboundedReceiver<DomEvent>),
 ) {
     let rt = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
@@ -45,7 +46,6 @@ pub fn run<T: 'static + Clone>(
     let _guard = rt.enter();
 
     let event_loop = EventLoopBuilder::with_user_event().build();
-    let (event_emitter, mut event_emitter_rx) = unbounded_channel::<DomEvent>();
     let mut font_collection = FontCollection::new();
     font_collection.set_default_font_manager(FontMgr::default(), "Fira Sans");
     let app_state = window_config.state.clone();

@@ -1,18 +1,23 @@
 use dioxus::prelude::*;
-use dioxus_core::Scope;
+use dioxus_core::{ElementId, Scope};
+use dioxus_elements::MouseButton;
 use dioxus_native_core::tree::TreeView;
 use dioxus_native_core::NodeId;
 use dioxus_native_core::{node::NodeType, real_dom::RealDom};
 use dioxus_router::*;
 use freya_components::*;
+use freya_core::events::{DomEvent, DomEventData};
 use freya_elements as dioxus_elements;
-use freya_hooks::use_theme;
+use freya_elements::events_data::{Length, MouseData, Point2D};
+use freya_elements::MouseEvent;
+use freya_hooks::{use_init_focus, use_theme};
 use freya_node_state::{AttributeType, CustomAttributeValues, NodeState, ShadowSettings};
 use freya_renderer::HoveredNode;
+use rustc_hash::FxHashSet;
 use skia_safe::Color;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
-use tokio::sync::mpsc::UnboundedReceiver;
+use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tokio::time::sleep;
 
 /// Launch a Component with the devtools panel enabled.
@@ -21,12 +26,16 @@ pub fn with_devtools(
     root: fn(cx: Scope) -> Element,
     mutations_receiver: UnboundedReceiver<()>,
     hovered_node: HoveredNode,
+    event_emitter: UnboundedSender<DomEvent>,
 ) -> VirtualDom {
     fn app(cx: Scope<DomProps>) -> Element {
+        use_init_focus(cx);
+
         #[allow(non_snake_case)]
         let Root = cx.props.root;
         let mutations_receiver = cx.props.mutations_receiver.clone();
         let hovered_node = cx.props.hovered_node.clone();
+        let event_emitter = cx.props.event_emitter.clone();
 
         render!(
             rect {
@@ -47,6 +56,7 @@ pub fn with_devtools(
                             rdom: cx.props.rdom.clone(),
                             mutations_receiver: mutations_receiver
                             hovered_node: hovered_node
+                            event_emitter: event_emitter
                         }
                     }
                 }
@@ -59,6 +69,7 @@ pub fn with_devtools(
         rdom: Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>,
         mutations_receiver: Arc<Mutex<UnboundedReceiver<()>>>,
         hovered_node: HoveredNode,
+        event_emitter: UnboundedSender<DomEvent>,
     }
 
     let mutations_receiver = Arc::new(Mutex::new(mutations_receiver));
@@ -70,6 +81,7 @@ pub fn with_devtools(
             rdom,
             mutations_receiver,
             hovered_node,
+            event_emitter,
         },
     )
 }
@@ -78,10 +90,12 @@ pub fn with_devtools(
 struct TreeNode {
     tag: String,
     id: NodeId,
+    element_id: ElementId,
     height: u16,
     #[allow(dead_code)]
     text: Option<String>,
     state: NodeState,
+    listeners: Option<FxHashSet<String>>,
 }
 
 #[derive(Props)]
@@ -89,6 +103,7 @@ pub struct DevToolsProps {
     rdom: Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>,
     mutations_receiver: Arc<Mutex<UnboundedReceiver<()>>>,
     hovered_node: HoveredNode,
+    event_emitter: UnboundedSender<DomEvent>,
 }
 
 impl PartialEq for DevToolsProps {
@@ -119,8 +134,8 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                     let mut root_found = false;
                     let mut devtools_found = false;
 
-                    rdom.traverse_depth_first(|n| {
-                        let height = rdom.tree.height(n.node_data.node_id).unwrap();
+                    rdom.traverse_depth_first(|node| {
+                        let height = rdom.tree.height(node.node_data.node_id).unwrap();
                         if height == 2 {
                             if !root_found {
                                 root_found = true;
@@ -130,24 +145,27 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                         }
 
                         if !devtools_found {
-                            let mut maybe_text = None;
-                            let tag = match &n.node_data.node_type {
+                            let (tag, text, listeners) = match &node.node_data.node_type {
                                 NodeType::Text { text, .. } => {
-                                    maybe_text = Some(text.clone());
-                                    "text"
+                                    ("text".to_string(), Some(text.clone()), None)
                                 }
-                                NodeType::Element { tag, .. } => tag,
-                                NodeType::Placeholder => "placeholder",
-                            }
-                            .to_string();
+                                NodeType::Element { tag, listeners, .. } => {
+                                    (tag.clone(), None, Some(listeners.clone()))
+                                }
+                                NodeType::Placeholder => ("placeholder".to_string(), None, None),
+                            };
 
-                            new_children.push(TreeNode {
-                                height,
-                                id: n.node_data.node_id,
-                                tag,
-                                text: maybe_text,
-                                state: n.state.clone(),
-                            });
+                            if let Some(element_id) = node.node_data.element_id {
+                                new_children.push(TreeNode {
+                                    height,
+                                    id: node.node_data.node_id,
+                                    tag,
+                                    text,
+                                    listeners,
+                                    element_id,
+                                    state: node.state.clone(),
+                                });
+                            }
                         }
                     });
                     children.set(new_children);
@@ -209,6 +227,28 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                     selected_node.and_then(|selected_node| {
                         Some(rsx!(
                             NodeInspectorStyle {
+                                node: selected_node
+                            }
+                        ))
+                    })
+                }
+                Route {
+                    to: "/elements/listeners",
+                    NodesTree {
+                        nodes: children,
+                        height: "calc(50% - 35)",
+                        selected_node_id: selected_node_id.get(),
+                        onselected: |node: &TreeNode| {
+                            if let Some(hovered_node) = &cx.props.hovered_node {
+                                hovered_node.lock().unwrap().replace(node.id);
+                            }
+                            selected_node_id.set(Some(node.id));
+                        }
+                    }
+                    selected_node.and_then(|selected_node| {
+                        Some(rsx!(
+                            NodeInspectorListeners {
+                                event_emitter: cx.props.event_emitter.clone(),
                                 node: selected_node
                             }
                         ))
@@ -335,6 +375,10 @@ fn NodeInspectorBar(cx: Scope) -> Element {
                 to: "/elements/style",
                 label: "Style"
             }
+            TabButton {
+                to: "/elements/listeners",
+                label: "Listeners"
+            }
         }
     )
 }
@@ -428,6 +472,122 @@ fn NodeInspectorStyle<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> {
                     }
                 })
             }
+        }
+    )
+}
+
+#[allow(non_snake_case)]
+#[inline_props]
+fn NodeInspectorListeners<'a>(
+    cx: Scope<'a>,
+    node: &'a TreeNode,
+    event_emitter: UnboundedSender<DomEvent>,
+) -> Element<'a> {
+    render!(
+        container {
+            width: "100%",
+            height: "50%",
+            NodeInspectorBar { }
+            node.listeners.as_ref().and_then(move|listeners| {
+                Some(rsx!{
+                    listeners.iter()
+                    .map(|listener| {
+                        rsx!(
+                            EventListener {
+                                listener: listener,
+                                node: node,
+                                event_emitter: event_emitter
+                            }
+                        )
+                    })
+                })
+            })
+        }
+    )
+}
+
+#[allow(non_snake_case)]
+#[inline_props]
+fn ClickEventListenerExtra<'a>(
+    cx: Scope<'a>,
+    listener: &'a str,
+    node: &'a TreeNode,
+    event_emitter: &'a UnboundedSender<DomEvent>,
+) -> Element<'a> {
+    let positions = use_state(cx, || (0.0, 0.0));
+
+    let event_handler = move |_: MouseEvent| {
+        let event = DomEvent {
+            name: listener.to_string(),
+            element_id: node.element_id,
+            data: DomEventData::Mouse(MouseData::new(
+                Point2D::from_lengths(Length::new(0.0), Length::new(0.0)),
+                Point2D::from_lengths(Length::new(positions.0), Length::new(positions.1)),
+                Some(MouseButton::Left),
+            )),
+        };
+        event_emitter.send(event).ok();
+    };
+
+    render!(
+        Input {
+            onchange: |v: String| {
+                positions.set((v.parse::<f64>().unwrap_or(positions.0), positions.1));
+            },
+            value: "{positions.0}"
+        }
+        Input {
+            onchange: |v: String| {
+                positions.set((positions.0, v.parse::<f64>().unwrap_or(positions.1)));
+            },
+            value: "{positions.1}"
+        }
+        Button {
+            onclick: event_handler,
+            label { "Trigger" }
+        }
+    )
+}
+
+#[allow(non_snake_case)]
+#[inline_props]
+fn EventListener<'a>(
+    cx: Scope<'a>,
+    listener: &'a str,
+    node: &'a TreeNode,
+    event_emitter: &'a UnboundedSender<DomEvent>,
+) -> Element<'a> {
+    let (color, extra) = match *listener {
+        "mousedown" | "click" => (
+            "white",
+            Some(rsx! {
+                ClickEventListenerExtra {
+                    listener: listener,
+                    node: node,
+                    event_emitter: event_emitter
+                }
+            }),
+        ),
+        _ => ("rgb(200, 200, 200)", None),
+    };
+
+    render!(
+        rect {
+            width: "100%",
+            height: "50",
+            padding: "15",
+            direction: "horizontal",
+            rect {
+                width: "calc(100% - 270)",
+                height: "100%",
+                display: "center",
+                direction: "vertical",
+                label {
+                    color: "{color}",
+                    "{listener}"
+                }
+            }
+            extra
         }
     )
 }
@@ -583,6 +743,11 @@ fn NodeElement<'a>(
     let mut color = *text_color.get();
     let margin_left = (node.height * 10) as f32 + 16.5;
     let mut background = "transparent";
+    let listeners = node
+        .listeners
+        .as_ref()
+        .map(|listeners| format!("({})", listeners.len()))
+        .unwrap_or("".to_owned());
 
     if *is_selected {
         color = "white";
@@ -607,7 +772,7 @@ fn NodeElement<'a>(
             label {
                 font_size: "14",
                 color: "{color}",
-                "{node.tag} #{node.id.0}"
+                "{node.tag} #{node.id.0} {listeners}"
             }
         }
     )
