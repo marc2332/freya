@@ -23,7 +23,7 @@ fn app(cx: Scope) -> Element {
 fn Body(cx: Scope) -> Element {
     let theme = use_theme(&cx);
     let theme = theme.read();
-    let (content, cursor, process_keyevent, process_clickevent, cursor_ref) = use_editable(
+    let (text_editor, process_keyevent, process_clickevent, cursor_ref) = use_editable(
         &cx,
         || {
             "Lorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet"
@@ -40,7 +40,7 @@ fn Body(cx: Scope) -> Element {
     let line_height = (line_height_percentage / 25.0) + 1.2;
     let mut line_index = 0;
 
-    let cursor_char = content.line_to_char(cursor.1) + cursor.0;
+    let cursor_char = text_editor.cursor_pos();
 
     let font_style = {
         if *is_bold.get() && *is_italic.get() {
@@ -183,14 +183,14 @@ fn Body(cx: Scope) -> Element {
                         width: "100%",
                         height: "100%",
                         show_scrollbar: true,
-                        content.lines().map(move |l| {
+                        text_editor.lines().map(move |l| {
                             let process_clickevent = process_clickevent.clone();
 
-                            let is_line_selected = cursor.1 == line_index;
+                            let is_line_selected = text_editor.cursor_row() == line_index;
 
                             // Only show the cursor in the active line
                             let character_index = if is_line_selected {
-                                cursor.0.to_string()
+                                text_editor.cursor_col().to_string()
                             } else {
                                 "none".to_string()
                             };
@@ -269,7 +269,7 @@ fn Body(cx: Scope) -> Element {
                             text {
                                 color: "white",
                                 font_size: "{font_size}",
-                                "{content}"
+                                "{text_editor}"
                             }
                         }
                     }
@@ -283,7 +283,7 @@ fn Body(cx: Scope) -> Element {
                 padding: "10",
                 label {
                     color: "rgb(200, 200, 200)",
-                    "Ln {cursor.1 + 1}, Col {cursor.0 + 1}"
+                    "Ln {text_editor.cursor_row() + 1}, Col {text_editor.cursor_col() + 1}"
                 }
             }
         }
