@@ -41,6 +41,10 @@ impl TextCursor {
     pub fn set_row(&mut self, row: usize) {
         self.row = row;
     }
+
+    pub fn as_tuple(&self) -> (usize, usize) {
+        (self.row, self.col)
+    }
 }
 
 /// A text line from a [TextEditor]

@@ -44,8 +44,8 @@ pub fn use_editable<'a>(
     ClickNotifier,
     AttributeValue,
 ) {
-    // Hold the actual editable content
-    let content = use_state(cx, || UseEditableText::from(initializer()));
+    // Hold the text editor manager
+    let text_editor = use_state(cx, || UseEditableText::from(initializer()));
 
     let cursor_channels = cx.use_hook(|| {
         let (tx, rx) = unbounded_channel::<(usize, usize)>();
@@ -106,29 +106,28 @@ pub fn use_editable<'a>(
     use_effect(cx, (), move |_| {
         let cursor_ref = cursor_ref.clone();
         let cursor_receiver = cursor_channels.1.take();
-        let content = content.clone();
-        let rope = content.clone();
+        let editor = text_editor.clone();
 
         async move {
             let mut cursor_receiver = cursor_receiver.unwrap();
             let cursor_ref = cursor_ref.clone();
 
             while let Some((new_index, editor_num)) = cursor_receiver.recv().await {
-                let content = content.current();
+                let text_editor = editor.current();
 
                 let new_cursor_row = match mode {
-                    EditableMode::MultipleLinesSingleEditor => content.char_to_line(new_index),
+                    EditableMode::MultipleLinesSingleEditor => text_editor.char_to_line(new_index),
                     EditableMode::SingleLineMultipleEditors => editor_num,
                 };
 
                 let new_cursor_col = match mode {
                     EditableMode::MultipleLinesSingleEditor => {
-                        new_index - content.line_to_char(new_cursor_row)
+                        new_index - text_editor.line_to_char(new_cursor_row)
                     }
                     EditableMode::SingleLineMultipleEditors => new_index,
                 };
 
-                let new_current_line = content.line(new_cursor_row).unwrap();
+                let new_current_line = text_editor.line(new_cursor_row).unwrap();
 
                 // Use the line lenght as new column if the clicked column surpases the length
                 let new_cursor = if new_cursor_col >= new_current_line.len_chars() {
@@ -138,10 +137,10 @@ pub fn use_editable<'a>(
                 };
 
                 // Only update if it's actually different
-                if rope.cursor().col() != new_cursor.0 || rope.cursor().row() != new_cursor.1 {
-                    rope.with_mut(|rope| {
-                        rope.cursor_mut().set_col(new_cursor.0);
-                        rope.cursor_mut().set_row(new_cursor.1);
+                if text_editor.cursor().as_tuple() != new_cursor {
+                    editor.with_mut(|text_editor| {
+                        text_editor.cursor_mut().set_col(new_cursor.0);
+                        text_editor.cursor_mut().set_row(new_cursor.1);
                     })
                 }
 
@@ -154,20 +153,24 @@ pub fn use_editable<'a>(
     // Listen for keypresses
     use_effect(cx, (), move |_| {
         let rx = keypress_channel.1.take();
-        let rope = content.clone();
+        let text_editor = text_editor.clone();
         async move {
             let mut rx = rx.unwrap();
 
             while let Some(pressed_key) = rx.recv().await {
-                rope.with_mut(|rope| {
-                    rope.process_key(&pressed_key.key, &pressed_key.code, &pressed_key.modifiers);
+                text_editor.with_mut(|text_editor| {
+                    text_editor.process_key(
+                        &pressed_key.key,
+                        &pressed_key.code,
+                        &pressed_key.modifiers,
+                    );
                 });
             }
         }
     });
 
     (
-        content,
+        text_editor,
         keypress_channel_sender,
         click_channel_sender,
         cursor_ref_attr,
