@@ -1,4 +1,6 @@
 use std::{
+    fmt::Display,
+    ops::Range,
     rc::Rc,
     sync::{Arc, Mutex},
 };
@@ -7,6 +9,7 @@ use dioxus_core::{AttributeValue, Event, ScopeState};
 use dioxus_hooks::{use_effect, use_ref, use_state, UseRef, UseState};
 use freya_elements::events_data::{KeyboardData, MouseData};
 use freya_node_state::{CursorReference, CustomAttributeValues};
+use ropey::iter::Lines;
 pub use ropey::Rope;
 use tokio::sync::{mpsc::unbounded_channel, mpsc::UnboundedSender};
 
@@ -169,4 +172,91 @@ pub fn use_editable<'a>(
         click_channel_sender,
         cursor_ref_attr,
     )
+}
+
+#[derive(Clone)]
+pub struct UseEditableText {
+    rope: Rope,
+    cursor: TextCursor,
+}
+
+impl Display for UseEditableText {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.rope.to_string())
+    }
+}
+
+impl TextEditor for UseEditableText {
+    type LinesIterator<'a> = LinesIterator<'a>;
+
+    fn lines(&self) -> Self::LinesIterator<'_> {
+        let lines = self.rope.lines();
+        LinesIterator { lines }
+    }
+
+    fn insert_char(&mut self, char: char, char_idx: usize) {
+        self.rope.insert_char(char_idx, char);
+    }
+
+    fn insert(&mut self, text: &str, char_idx: usize) {
+        self.rope.insert(char_idx, text);
+    }
+
+    fn remove(&mut self, range: Range<usize>) {
+        self.rope.remove(range)
+    }
+
+    fn char_to_line(&self, char_idx: usize) -> usize {
+        self.rope.char_to_line(char_idx)
+    }
+
+    fn line_to_char(&self, line_idx: usize) -> usize {
+        self.rope.line_to_char(line_idx)
+    }
+
+    fn line(&self, line_idx: usize) -> Option<Line<'_>> {
+        let line = self.rope.get_line(line_idx);
+
+        line.map(|line| Line {
+            text: line.as_str().unwrap_or(""),
+        })
+    }
+
+    fn len_lines<'a>(&self) -> usize {
+        self.rope.len_lines()
+    }
+
+    fn cursor(&self) -> &TextCursor {
+        &self.cursor
+    }
+
+    fn cursor_mut(&mut self) -> &mut TextCursor {
+        &mut self.cursor
+    }
+}
+
+/// Iterator over text lines.
+pub struct LinesIterator<'a> {
+    lines: Lines<'a>,
+}
+
+impl<'a> Iterator for LinesIterator<'a> {
+    type Item = Line<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let line = self.lines.next();
+
+        line.map(|line| Line {
+            text: line.as_str().unwrap_or(""),
+        })
+    }
+}
+
+impl From<&str> for UseEditableText {
+    fn from(value: &str) -> Self {
+        Self {
+            rope: Rope::from_str(value),
+            cursor: TextCursor::new(0, 0),
+        }
+    }
 }
