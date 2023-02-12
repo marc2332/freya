@@ -153,7 +153,8 @@ pub trait TextEditor: Sized + Clone + Display {
 
     /// Get the cursor position
     fn cursor_pos(&self) -> usize {
-        self.cursor_col() + self.cursor_row()
+        let line_begining = self.line_to_char(self.cursor_row());
+        line_begining + self.cursor_col()
     }
 
     // Process a Key event
