@@ -146,7 +146,7 @@ fn app(cx: Scope) -> Element {
 
 #[allow(non_snake_case)]
 fn Editor(cx: Scope) -> Element {
-    let (content, cursor, process_keyevent, process_clickevent, cursor_ref) = use_editable(
+    let (text_editor, process_keyevent, process_clickevent, cursor_ref) = use_editable(
         &cx,
         || {
             "Lorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet"
@@ -294,14 +294,14 @@ fn Editor(cx: Scope) -> Element {
                         width: "100%",
                         height: "100%",
                         show_scrollbar: true,
-                        content.lines().map(move |l| {
+                        text_editor.lines().map(move |l| {
                             let process_clickevent = process_clickevent.clone();
 
-                            let is_line_selected = cursor.1 == line_index;
+                            let is_line_selected = text_editor.cursor_row() == line_index;
 
                             // Only show the cursor in the active line
                             let character_index = if is_line_selected {
-                                cursor.0.to_string()
+                                text_editor.cursor_col().to_string()
                             } else {
                                 "none".to_string()
                             };
