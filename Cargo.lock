@@ -870,7 +870,7 @@ dependencies = [
 [[package]]
 name = "dioxus"
 version = "0.3.1"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=d521da1991719760e271457dfe4f9ddf281afbb3#d521da1991719760e271457dfe4f9ddf281afbb3"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=1aaff40bcdbb22fe7ff31428847e610f9db2e1e0#1aaff40bcdbb22fe7ff31428847e610f9db2e1e0"
 dependencies = [
  "dioxus-core",
  "dioxus-core-macro",
@@ -883,7 +883,7 @@ dependencies = [
 [[package]]
 name = "dioxus-core"
 version = "0.3.1"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=d521da1991719760e271457dfe4f9ddf281afbb3#d521da1991719760e271457dfe4f9ddf281afbb3"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=1aaff40bcdbb22fe7ff31428847e610f9db2e1e0#1aaff40bcdbb22fe7ff31428847e610f9db2e1e0"
 dependencies = [
  "bumpalo",
  "bumpslab",
@@ -901,7 +901,7 @@ dependencies = [
 [[package]]
 name = "dioxus-core-macro"
 version = "0.3.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=d521da1991719760e271457dfe4f9ddf281afbb3#d521da1991719760e271457dfe4f9ddf281afbb3"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=1aaff40bcdbb22fe7ff31428847e610f9db2e1e0#1aaff40bcdbb22fe7ff31428847e610f9db2e1e0"
 dependencies = [
  "dioxus-rsx",
  "proc-macro2",
@@ -912,7 +912,7 @@ dependencies = [
 [[package]]
 name = "dioxus-hooks"
 version = "0.3.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=d521da1991719760e271457dfe4f9ddf281afbb3#d521da1991719760e271457dfe4f9ddf281afbb3"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=1aaff40bcdbb22fe7ff31428847e610f9db2e1e0#1aaff40bcdbb22fe7ff31428847e610f9db2e1e0"
 dependencies = [
  "dioxus-core",
  "futures-channel",
@@ -922,7 +922,7 @@ dependencies = [
 [[package]]
 name = "dioxus-hot-reload"
 version = "0.1.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=d521da1991719760e271457dfe4f9ddf281afbb3#d521da1991719760e271457dfe4f9ddf281afbb3"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=1aaff40bcdbb22fe7ff31428847e610f9db2e1e0#1aaff40bcdbb22fe7ff31428847e610f9db2e1e0"
 dependencies = [
  "chrono",
  "dioxus-core",
@@ -940,7 +940,7 @@ dependencies = [
 [[package]]
 name = "dioxus-html"
 version = "0.3.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=d521da1991719760e271457dfe4f9ddf281afbb3#d521da1991719760e271457dfe4f9ddf281afbb3"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=1aaff40bcdbb22fe7ff31428847e610f9db2e1e0#1aaff40bcdbb22fe7ff31428847e610f9db2e1e0"
 dependencies = [
  "async-trait",
  "dioxus-core",
@@ -956,7 +956,7 @@ dependencies = [
 [[package]]
 name = "dioxus-native-core"
 version = "0.2.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=d521da1991719760e271457dfe4f9ddf281afbb3#d521da1991719760e271457dfe4f9ddf281afbb3"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=1aaff40bcdbb22fe7ff31428847e610f9db2e1e0#1aaff40bcdbb22fe7ff31428847e610f9db2e1e0"
 dependencies = [
  "anymap 1.0.0-beta.2",
  "crossbeam-deque",
@@ -975,7 +975,7 @@ dependencies = [
 [[package]]
 name = "dioxus-native-core-macro"
 version = "0.2.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=d521da1991719760e271457dfe4f9ddf281afbb3#d521da1991719760e271457dfe4f9ddf281afbb3"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=1aaff40bcdbb22fe7ff31428847e610f9db2e1e0#1aaff40bcdbb22fe7ff31428847e610f9db2e1e0"
 dependencies = [
  "dioxus",
  "dioxus-native-core",
@@ -986,7 +986,7 @@ dependencies = [
 [[package]]
 name = "dioxus-router"
 version = "0.3.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=d521da1991719760e271457dfe4f9ddf281afbb3#d521da1991719760e271457dfe4f9ddf281afbb3"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=1aaff40bcdbb22fe7ff31428847e610f9db2e1e0#1aaff40bcdbb22fe7ff31428847e610f9db2e1e0"
 dependencies = [
  "dioxus",
  "futures-channel",
@@ -1002,7 +1002,7 @@ dependencies = [
 [[package]]
 name = "dioxus-rsx"
 version = "0.0.2"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=d521da1991719760e271457dfe4f9ddf281afbb3#d521da1991719760e271457dfe4f9ddf281afbb3"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=1aaff40bcdbb22fe7ff31428847e610f9db2e1e0#1aaff40bcdbb22fe7ff31428847e610f9db2e1e0"
 dependencies = [
  "dioxus-core",
  "internment",
