@@ -1,8 +1,9 @@
 use dioxus_core::ScopeState;
-use dioxus_hooks::{use_effect, use_state};
+use dioxus_hooks::{to_owned, use_effect, use_state};
 use std::{cell::RefCell, ops::RangeInclusive, time::Duration};
 use tokio::time::interval;
 use tween::{BounceIn, Linear, SineIn, SineInOut, Tweener};
+use uuid::Uuid;
 
 /// Type of animation to use.
 #[derive(Clone)]
@@ -75,6 +76,81 @@ impl AnimationMode {
             AnimationMode::Linear(tween) => tween.borrow().final_value(),
         }
     }
+}
+
+pub fn use_animation_manager(
+    cx: &ScopeState,
+    init_value: f64,
+) -> (impl Fn(AnimationMode) + '_, impl Fn(f64) + '_, f64, bool) {
+    let current_anim_id = use_state(cx, || None);
+    let value = use_state(cx, || init_value);
+
+    let value_setter = value.setter();
+
+    (
+        {
+            to_owned![value_setter, current_anim_id];
+
+            move |mut anim: AnimationMode| {
+                let new_id = Uuid::new_v4();
+                let mut index = 0;
+                let value_setter = value_setter.clone();
+
+                current_anim_id.set(Some(new_id));
+                let duration = anim.duration();
+
+                let mut run_with = move |index: i32| {
+                    match anim {
+                        AnimationMode::BounceIn(ref mut tween) => {
+                            let tween = tween.get_mut();
+                            let v = tween.move_to(index);
+                            value_setter(v);
+                        }
+                        AnimationMode::SineIn(ref mut tween) => {
+                            let tween = tween.get_mut();
+                            let v = tween.move_to(index);
+                            value_setter(v);
+                        }
+                        AnimationMode::SineInOut(ref mut tween) => {
+                            let tween = tween.get_mut();
+                            let v = tween.move_to(index);
+                            value_setter(v);
+                        }
+                        AnimationMode::Linear(ref mut tween) => {
+                            let tween = tween.get_mut();
+                            let v = tween.move_to(index);
+                            value_setter(v);
+                        }
+                    };
+                };
+
+                to_owned![current_anim_id];
+
+                cx.spawn(async move {
+                    let mut ticker = interval(Duration::from_millis(1));
+                    loop {
+                        if *current_anim_id.current() == Some(new_id) {
+                            if index > duration {
+                                current_anim_id.set(None);
+                                break;
+                            }
+                            run_with(index);
+                            index += 1;
+                            ticker.tick().await;
+                        } else {
+                            break;
+                        }
+                    }
+                });
+            }
+        },
+        move |value: f64| {
+            current_anim_id.set(None);
+            value_setter(value);
+        },
+        *value.get(),
+        current_anim_id.is_some(),
+    )
 }
 
 /// Create and configure an animation.
