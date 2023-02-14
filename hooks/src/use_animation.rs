@@ -78,7 +78,8 @@ impl AnimationMode {
     }
 }
 
-pub fn use_animation_manager(
+/// More flexible animation hook than `use_animation`
+pub fn use_animation_managed(
     cx: &ScopeState,
     init_value: f64,
 ) -> (impl Fn(AnimationMode) + '_, impl Fn(f64) + '_, f64, bool) {
