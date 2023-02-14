@@ -26,7 +26,7 @@ fn app(cx: Scope) -> Element {
     render!(
         container {
             background: "rgb(15, 15, 15)",
-            padding: "50",
+            padding: "25",
             direction: "both",
             width: "auto",
             height: "50%",
@@ -106,7 +106,7 @@ fn app(cx: Scope) -> Element {
         }
         container {
             background: "rgb(15, 15, 15)",
-            padding: "50",
+            padding: "25",
             direction: "both",
             width: "auto",
             height: "50%",

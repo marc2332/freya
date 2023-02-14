@@ -115,12 +115,9 @@ impl ParentDepState<CustomAttributeValues> for Size {
                     "padding" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
-                            let total_padding: f32 = attr.parse().unwrap();
-                            let padding_for_side = total_padding / 2.0;
-                            padding.0 = padding_for_side;
-                            padding.1 = padding_for_side;
-                            padding.2 = padding_for_side;
-                            padding.3 = padding_for_side;
+                            if let Some(paddings) = parse_padding(attr) {
+                                padding = paddings;
+                            }
                         }
                     }
                     "direction" => {
@@ -163,6 +160,41 @@ impl ParentDepState<CustomAttributeValues> for Size {
         };
         changed
     }
+}
+
+pub fn parse_padding(padding: &str) -> Option<(f32, f32, f32, f32)> {
+    let mut padding_config = (0.0, 0.0, 0.0, 0.0);
+    let mut paddings = padding.split_ascii_whitespace();
+
+    match paddings.clone().count() {
+        // Same in each directions
+        1 => {
+            padding_config.0 = paddings.next()?.parse::<f32>().ok()?;
+            padding_config.1 = padding_config.0;
+            padding_config.2 = padding_config.0;
+            padding_config.3 = padding_config.0;
+        }
+        // By vertical and horizontal
+        2 => {
+            // Vertical
+            padding_config.0 = paddings.next()?.parse::<f32>().ok()?;
+            padding_config.2 = padding_config.0;
+
+            // Horizontal
+            padding_config.1 = paddings.next()?.parse::<f32>().ok()?;
+            padding_config.3 = padding_config.1;
+        }
+        // Each directions
+        4 => {
+            padding_config.0 = paddings.next()?.parse::<f32>().ok()?;
+            padding_config.1 = paddings.next()?.parse::<f32>().ok()?;
+            padding_config.2 = paddings.next()?.parse::<f32>().ok()?;
+            padding_config.3 = paddings.next()?.parse::<f32>().ok()?;
+        }
+        _ => {}
+    }
+
+    Some(padding_config)
 }
 
 pub fn parse_size(size: &str) -> Option<SizeMode> {

@@ -21,14 +21,14 @@ fn app(cx: Scope) -> Element {
         container {
             height: "100%",
             width: "100%",
-            padding: "125",
+            padding: "60",
             onwheel: onwheel,
             rect {
                 shadow: "0 10 210 {shadow_size} red",
                 height: "100%",
                 width: "100%",
                 background: "black",
-                padding: "50",
+                padding: "25",
                 label {
                     "Scroll!"
                 }

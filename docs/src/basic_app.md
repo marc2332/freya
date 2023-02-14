@@ -46,7 +46,7 @@ fn app(cx: Scope) -> Element {
             width: "100%",
             background: "rgb(35, 35, 35)",
             color: "white",
-            padding: "25",
+            padding: "12.5",
             onclick: move |_| count += 1,
             label { "Click to increase -> {count}" }
         }

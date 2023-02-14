@@ -62,14 +62,14 @@ fn Body(cx: Scope) -> Element {
             rect {
                 width: "100%",
                 height: "60",
-                padding: "20",
+                padding: "10",
                 direction: "horizontal",
                 background: "rgb(20, 20, 20)",
                 rect {
                     height: "100%",
                     width: "100%",
                     direction: "horizontal",
-                    padding: "10",
+                    padding: "5",
                     label {
                         font_size: "30",
                         "Editor"
@@ -168,7 +168,7 @@ fn Body(cx: Scope) -> Element {
             rect {
                 width: "100%",
                 height: "calc(100% - 90)",
-                padding: "20",
+                padding: "10",
                 onkeydown: move |e| {
                    process_keyevent.send(e.data).unwrap();
                 },
@@ -178,7 +178,7 @@ fn Body(cx: Scope) -> Element {
                 rect {
                     width: "50%",
                     height: "100%",
-                    padding: "30",
+                    padding: "15",
                     ScrollView {
                         width: "100%",
                         height: "100%",
@@ -255,7 +255,7 @@ fn Body(cx: Scope) -> Element {
                     radius: "15",
                     width: "50%",
                     height: "100%",
-                    padding: "30",
+                    padding: "15",
                     shadow: "0 10 30 7 white",
                     ScrollView {
                         width: "100%",
@@ -280,7 +280,7 @@ fn Body(cx: Scope) -> Element {
                 height: "30",
                 background: "rgb(20, 20, 20)",
                 direction: "horizontal",
-                padding: "10",
+                padding: "5",
                 label {
                     color: "rgb(200, 200, 200)",
                     "Ln {text_editor.cursor_row() + 1}, Col {text_editor.cursor_col() + 1}"

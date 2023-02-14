@@ -47,7 +47,7 @@ fn Body(cx: Scope) -> Element {
     render!(
         rect {
             background: "{body_theme.background}",
-            padding: "15",
+            padding: "7.5",
             width: "100%",
             height: "100%",
             Dropdown {

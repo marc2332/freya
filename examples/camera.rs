@@ -16,7 +16,7 @@ fn app(cx: Scope) -> Element {
         rect {
             width: "100%",
             height: "100%",
-            padding: "100",
+            padding: "50",
             shadow: "0 10 150 40 black",
             if let Some(err) = camera_error.get() {
                 rsx!(
