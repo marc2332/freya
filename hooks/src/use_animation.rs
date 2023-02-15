@@ -86,72 +86,70 @@ pub fn use_animation_managed(
     let current_anim_id = use_state(cx, || None);
     let value = use_state(cx, || init_value);
 
-    let value_setter = value.setter();
+    let start_anim = move |mut anim: AnimationMode| {
+        let new_id = Uuid::new_v4();
+        let mut index = 0;
 
-    (
-        {
-            to_owned![value_setter, current_anim_id];
+        to_owned![value, current_anim_id];
 
-            move |mut anim: AnimationMode| {
-                let new_id = Uuid::new_v4();
-                let mut index = 0;
-                let value_setter = value_setter.clone();
+        // Set as current this new animation
+        current_anim_id.set(Some(new_id));
 
-                current_anim_id.set(Some(new_id));
-                let duration = anim.duration();
+        let duration = anim.duration();
 
-                let mut run_with = move |index: i32| {
-                    match anim {
-                        AnimationMode::BounceIn(ref mut tween) => {
-                            let tween = tween.get_mut();
-                            let v = tween.move_to(index);
-                            value_setter(v);
-                        }
-                        AnimationMode::SineIn(ref mut tween) => {
-                            let tween = tween.get_mut();
-                            let v = tween.move_to(index);
-                            value_setter(v);
-                        }
-                        AnimationMode::SineInOut(ref mut tween) => {
-                            let tween = tween.get_mut();
-                            let v = tween.move_to(index);
-                            value_setter(v);
-                        }
-                        AnimationMode::Linear(ref mut tween) => {
-                            let tween = tween.get_mut();
-                            let v = tween.move_to(index);
-                            value_setter(v);
-                        }
-                    };
-                };
+        let mut run_with = move |index: i32| {
+            match anim {
+                AnimationMode::BounceIn(ref mut tween) => {
+                    let tween = tween.get_mut();
+                    let v = tween.move_to(index);
+                    value.set(v);
+                }
+                AnimationMode::SineIn(ref mut tween) => {
+                    let tween = tween.get_mut();
+                    let v = tween.move_to(index);
+                    value.set(v);
+                }
+                AnimationMode::SineInOut(ref mut tween) => {
+                    let tween = tween.get_mut();
+                    let v = tween.move_to(index);
+                    value.set(v);
+                }
+                AnimationMode::Linear(ref mut tween) => {
+                    let tween = tween.get_mut();
+                    let v = tween.move_to(index);
+                    value.set(v);
+                }
+            };
+        };
 
-                to_owned![current_anim_id];
-
-                cx.spawn(async move {
-                    let mut ticker = interval(Duration::from_millis(1));
-                    loop {
-                        if *current_anim_id.current() == Some(new_id) {
-                            if index > duration {
-                                current_anim_id.set(None);
-                                break;
-                            }
-                            run_with(index);
-                            index += 1;
-                            ticker.tick().await;
-                        } else {
-                            break;
-                        }
+        cx.spawn(async move {
+            let mut ticker = interval(Duration::from_millis(1));
+            loop {
+                if *current_anim_id.current() == Some(new_id) {
+                    if index > duration {
+                        current_anim_id.set(None);
+                        break;
                     }
-                });
+                    run_with(index);
+                    index += 1;
+                    ticker.tick().await;
+                } else {
+                    break;
+                }
             }
-        },
-        move |value: f64| {
-            current_anim_id.set(None);
-            value_setter(value);
-        },
-        *value.get(),
-        current_anim_id.is_some(),
-    )
+        });
+    };
+
+    let set_value = move |new_value: f64| {
+        current_anim_id.set(None);
+        value.set(new_value);
+    };
+
+    let current_value = *value.get();
+
+    let is_animating = current_anim_id.is_some();
+
+    (start_anim, set_value, current_value, is_animating)
 }
 
 /// Create and configure an animation.
