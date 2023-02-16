@@ -16,13 +16,13 @@ pub fn Accordion<'a>(cx: Scope<'a>, children: Element<'a>, summary: Element<'a>)
     // Adapt the accordion if the body size changes
     use_effect(cx, &(size.width, size.height, animating), move |_| {
         if (size.height as f64) < value && !animating {
-            set_value(size.height as f64 + 15.0);
+            set_value(size.height as f64);
         }
         async move {}
     });
 
     let onclick = move |_: MouseEvent| {
-        let bodyHeight = size.height as f64 + 15.0;
+        let bodyHeight = size.height as f64;
         if *open.get() {
             start(AnimationMode::new_sine_in_out(bodyHeight..=0.0, 200));
         } else {
@@ -34,7 +34,7 @@ pub fn Accordion<'a>(cx: Scope<'a>, children: Element<'a>, summary: Element<'a>)
     render!(
         container {
             color: "{accordion_theme.color}",
-            padding: "20",
+            padding: "10",
             radius: "3",
             width: "100%",
             height: "auto",
@@ -44,9 +44,6 @@ pub fn Accordion<'a>(cx: Scope<'a>, children: Element<'a>, summary: Element<'a>)
             container {
                 width: "100%",
                 height: "{value}",
-                rect {
-                    height: "15"
-                },
                 rect {
                     reference: node_ref,
                     height: "auto",
@@ -71,6 +68,7 @@ pub fn AccordionSummary<'a>(cx: Scope<'a>, children: Element<'a>) -> Element<'a>
 pub fn AccordionBody<'a>(cx: Scope<'a>, children: Element<'a>) -> Element<'a> {
     render!(rect {
         width: "100%",
+        padding: "15 0 0 0",
         children
     })
 }

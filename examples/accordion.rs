@@ -13,7 +13,7 @@ fn app(cx: Scope) -> Element {
     render!(
         ScrollView {
             show_scrollbar: true,
-            padding: "10",
+            padding: "5",
             height: "100%",
             width: "100%",
             Accordion {
