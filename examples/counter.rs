@@ -19,8 +19,8 @@ fn app(cx: Scope) -> Element {
             background: "rgb(233, 196, 106)",
             padding: "12",
             color: "rgb(20, 33, 61)",
-            label { 
-                font_size: "20", 
+            label {
+                font_size: "20",
                 "Number is: {count}"
             }
         }
