@@ -50,7 +50,7 @@ fn Area<'a>(cx: Scope<'a>) -> Element {
             height: "50%",
             width: "100%",
             background: "blue",
-            padding: "10",
+            padding: "5",
             onmouseover: cursor_moved,
             onclick: cursor_clicked,
             label {

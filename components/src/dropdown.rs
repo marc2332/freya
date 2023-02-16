@@ -44,7 +44,7 @@ where
         width: "100%",
         height: "35",
         background: background,
-        padding: "12",
+        padding: "6",
         radius: "3",
         onclick: move |_| {
             if let Some(onclick) = &cx.props.onclick {
@@ -151,7 +151,7 @@ where
                     height: "auto",
                     background: *background_button.get(),
                     shadow: "0 0 100 6 black",
-                    padding: "15",
+                    padding: "7",
                     &cx.props.children
                 }
             }
@@ -165,7 +165,7 @@ where
                 onclick: move |_| opened.set(true),
                 width: "70",
                 height: "auto",
-                padding: "15",
+                padding: "7",
                 label {
                     align: "center",
                     "{selected.read()}"

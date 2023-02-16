@@ -19,7 +19,7 @@ fn app(cx: Scope) -> Element {
             direction: "both",
             rect {
                 background: "rgb(255, 0, 255)",
-                padding: "30",
+                padding: "15",
                 height: "75%",
                 width: "75%",
                 display: "center",

@@ -95,7 +95,7 @@ fn app(cx: Scope) -> Element {
                                     width: "600",
                                     height: "400",
                                     radius: "15",
-                                    padding: "20",
+                                    padding: "10",
                                     shadow: "0 0 60 35 white",
                                     onmousedown:  move |e: MouseEvent| {
                                         clicking_drag.set(Some((id, e.get_element_coordinates().to_tuple())));
@@ -120,7 +120,7 @@ fn app(cx: Scope) -> Element {
                 width: "100%",
                 display: "center",
                 direction: "horizontal",
-                padding: "30",
+                padding: "15",
                 rect {
                     layer: "-100",
                     padding: "10",

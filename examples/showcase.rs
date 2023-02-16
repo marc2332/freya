@@ -23,7 +23,7 @@ fn main() {
 
 #[allow(non_snake_case)]
 fn Space(cx: Scope) -> Element {
-    render!(rect { padding: "10" })
+    render!(rect { padding: "5" })
 }
 
 #[allow(non_snake_case)]
@@ -43,7 +43,7 @@ fn Body(cx: Scope) -> Element {
 
     render!(
         rect {
-            padding: "35",
+            padding: "20",
             background: "{body_theme.background}",
             color: "{body_theme.color}",
             width: "100%",

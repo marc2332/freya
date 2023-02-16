@@ -20,7 +20,7 @@ fn app(cx: Scope) -> Element {
 
     render!(rect {
         background: "white",
-        padding: "20",
+        padding: "10",
         width: "100%",
         height: "100%",
         radius: "50",

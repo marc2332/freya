@@ -73,7 +73,7 @@ fn LoadingBar<'a>(cx: Scope<'a, LoadingBarProps>) -> Element {
         rect {
             width: "auto",
             height: "30",
-            padding: "15",
+            padding: "7",
             background: "white",
             rect {
                 width: "{&cx.props.progress}%",
