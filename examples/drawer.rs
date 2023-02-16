@@ -109,7 +109,7 @@ fn app(cx: Scope) -> Element {
                 width: "100%",
                 onclick: move |_| { opened.set(false) },
                 rect {
-                    padding: "5",
+                    padding: "2.5",
                     height: "30",
                     width: "100",
                     background: "black",
@@ -129,12 +129,12 @@ fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
         rect {
             width: "100%",
             height: "60",
-            padding: "10",
+            padding: "5",
             onclick: move |evt| cx.props.onclick.call(evt),
             rect {
                 width: "100%",
                 height: "100%",
-                padding: "2",
+                padding: "1",
                 radius: "7",
                 background: "green",
                 rect {
@@ -147,7 +147,7 @@ fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
                     width: "100%",
                     height: "100%",
                     background: "{background}",
-                    padding: "25",
+                    padding: "12.5",
                     radius: "6",
                     &cx.props.body
                 }

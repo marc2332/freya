@@ -21,7 +21,7 @@ fn app(cx: Scope) -> Element {
         container {
             height: "100%",
             width: "100%",
-            padding: "125",
+            padding: "60",
             onwheel: onwheel,
             rect {
                 shadow: "0 0 150 30.0 black",

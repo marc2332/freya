@@ -28,7 +28,7 @@ fn app(cx: Scope) -> Element {
                     }
                     ScrollView {
                         height: "200",
-                        padding: "40",
+                        padding: "20",
                         Card {
                             title: "Lalala",
                             content: "Wooow",
@@ -39,7 +39,7 @@ fn app(cx: Scope) -> Element {
                         }
                         ScrollView {
                             height: "200",
-                            padding: "40",
+                            padding: "20",
                             Card {
                                 title: "Lalala",
                                 content: "Wooow",
@@ -50,7 +50,7 @@ fn app(cx: Scope) -> Element {
                             }
                             ScrollView {
                                 height: "200",
-                                padding: "40",
+                                padding: "20",
                                 Card {
                                     title: "Lalala",
                                     content: "Wooow",
@@ -103,7 +103,7 @@ fn Navbar<'a>(cx: Scope<'a, NavbarProps<'a>>) -> Element {
             height: "75",
             width: "stretch",
             background: "rgb(20, 20, 20)",
-            padding: "30",
+            padding: "15",
             label {
                 "{&cx.props.title}"
             }
@@ -148,12 +148,12 @@ fn Card<'a>(cx: Scope<'a, CardProps<'a>>) -> Element {
         rect {
             width: "stretch",
             height: "200",
-            padding: "20",
+            padding: "10",
             background: "rgb(45, 45, 45)",
             rect {
                 width: "stretch",
                 height: "50%",
-                padding: "10",
+                padding: "5",
                 radius: "10",
                 label {
                     height: "auto",
@@ -197,7 +197,7 @@ fn Area<'a>(cx: Scope<'a>) -> Element {
             height: "50%",
             width: "100%",
             background: "blue",
-            padding: "20",
+            padding: "10",
             radius: "10",
             onmouseover: cursor_moved,
             onclick: cursor_clicked,

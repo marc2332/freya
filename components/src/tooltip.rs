@@ -15,7 +15,7 @@ pub fn Tooltip<'a>(cx: Scope<'a>, url: &'a str) -> Element {
     render!(
         rect {
             height: "30",
-            padding: "4",
+            padding: "2",
             width: "170",
             direction: "both",
             rect {

@@ -34,7 +34,7 @@ fn app(cx: Scope) -> Element {
                 width: "200",
                 background: "blue",
                 rect {
-                    padding: "20",
+                    padding: "10",
                     height: "50",
                     width: "100%",
                     background: "green",
@@ -44,7 +44,7 @@ fn app(cx: Scope) -> Element {
                     }
                 }
                 rect {
-                    padding: "20",
+                    padding: "10",
                     height: "50",
                     width: "100%",
                     background: "red",

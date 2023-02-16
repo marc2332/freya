@@ -40,7 +40,7 @@ fn app(cx: Scope) -> Element {
             background: "{big}",
             height: "stretch",
             width: "stretch",
-            padding: "50",
+            padding: "25",
             label {
                 "hello",
             }
@@ -56,9 +56,9 @@ fn app(cx: Scope) -> Element {
                     background: "{small}",
                     height: "auto",
                     width: "stretch",
-                    padding: "20",
+                    padding: "10",
                     label {
-                        "ddddddd",
+                        "Wooow",
                     }
                 }
             },

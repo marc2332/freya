@@ -54,7 +54,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
             width: "auto",
             height: "auto",
             direction: "both",
-            padding: "3",
+            padding: "2",
             container {
                 onclick: move |ev| {
                     if let Some(onclick) = &cx.props.onclick {
@@ -73,7 +73,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
                 color: "{button_theme.font_theme.color}",
                 shadow: "0 5 15 10 black",
                 radius: "5",
-                padding: "17",
+                padding: "8",
                 background: "{background}",
                 &cx.props.children
             }

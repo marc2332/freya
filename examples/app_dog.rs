@@ -66,7 +66,7 @@ fn app<'a>(cx: Scope<'a>) -> Element<'a> {
                 })
             }
             container {
-                padding: "20",
+                padding: "10",
                 height: "58",
                 width: "100%",
                 Button {

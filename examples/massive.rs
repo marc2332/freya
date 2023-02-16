@@ -21,7 +21,7 @@ fn app(cx: Scope) -> Element {
         container {
             width: "100%",
             height: "100%",
-            padding: "5",
+            padding: "2.5",
             label {
                 height: "35",
                 color: "black",
