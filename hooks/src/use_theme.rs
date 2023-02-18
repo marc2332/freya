@@ -101,6 +101,13 @@ pub struct ExternalLinkTheme {
     pub highlight_color: &'static str,
 }
 
+/// Theming properties for Accordion component.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct AccordionTheme {
+    pub color: &'static str,
+    pub background: &'static str,
+}
+
 /// Theming properties for Themes.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Theme {
@@ -114,6 +121,7 @@ pub struct Theme {
     pub external_link: ExternalLinkTheme,
     pub dropdown: DropdownTheme,
     pub dropdown_item: DropdownItemTheme,
+    pub accordion: AccordionTheme,
 }
 
 /// `Light` theme
@@ -167,6 +175,10 @@ pub const LIGHT_THEME: Theme = Theme {
             color: "rgb(10, 10, 10)",
         },
     },
+    accordion: AccordionTheme {
+        color: "white",
+        background: "rgb(30, 30, 30)",
+    },
 };
 
 /// `Dark` theme
@@ -213,5 +225,9 @@ pub const DARK_THEME: Theme = Theme {
         background: "rgb(35, 35, 35)",
         hover_background: "rgb(80, 80, 80)",
         font_theme: FontTheme { color: "white" },
+    },
+    accordion: AccordionTheme {
+        color: "black",
+        background: "rgb(215, 215, 215)",
     },
 };
