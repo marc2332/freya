@@ -70,7 +70,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
             width: "auto",
             height: "auto",
             direction: "both",
-            padding: "3",
+            padding: "1.5",
             container {
                 width: "100",
                 height: "35",
@@ -78,7 +78,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
                 color: "{button_theme.font_theme.color}",
                 shadow: "0 5 15 10 black",
                 radius: "5",
-                padding: "17",
+                padding: "8",
                 background: "{button_theme.background}",
                 label {
                     "{text}"

@@ -25,7 +25,7 @@ fn app(cx: Scope) -> Element {
         rect {
             width: "100%",
             height: "100%",
-            padding: "50",
+            padding: "25",
             label {
                 color: "black",
                 "Is enabled? {is_enabled}"

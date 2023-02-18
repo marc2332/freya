@@ -98,11 +98,11 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
             width: "auto",
             height: "auto",
             direction: "both",
-            padding: "3",
+            padding: "1.5",
             rect {
                 width: "50",
                 height: "25",
-                padding: "2",
+                padding: "1",
                 radius: "50",
                 background: "{border}",
                 onmousedown: onmousedown,
@@ -113,7 +113,7 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
                     width: "100%",
                     height: "100%",
                     scroll_x: "{scroll_x}",
-                    padding: "5",
+                    padding: "2.5",
                     radius: "50",
                     rect {
                         background: "{circle}",
