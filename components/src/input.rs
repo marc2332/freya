@@ -64,14 +64,14 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     render!(
         container {
             onkeydown: onkeydown,
-            onclick: move |_| {
-                focus();
-            },
             width: "auto",
             height: "auto",
             direction: "both",
             padding: "1.5",
             container {
+                onclick: move |_| {
+                    focus();
+                },
                 width: "100",
                 height: "35",
                 direction: "both",

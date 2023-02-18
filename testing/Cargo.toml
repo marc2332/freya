@@ -13,12 +13,12 @@ categories = ["GUI"]
 
 [dependencies]
 glutin = { version = "0.29.0"}
-dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="1aaff40bcdbb22fe7ff31428847e610f9db2e1e0"}
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="1aaff40bcdbb22fe7ff31428847e610f9db2e1e0"}
-dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="1aaff40bcdbb22fe7ff31428847e610f9db2e1e0"}
-dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="1aaff40bcdbb22fe7ff31428847e610f9db2e1e0"}
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="1aaff40bcdbb22fe7ff31428847e610f9db2e1e0"}
-dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="1aaff40bcdbb22fe7ff31428847e610f9db2e1e0"}
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="4f0f2484fd16aa24b7ff51b9c55aea5c8a9b5c50"}
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="4f0f2484fd16aa24b7ff51b9c55aea5c8a9b5c50"}
+dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="4f0f2484fd16aa24b7ff51b9c55aea5c8a9b5c50"}
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="4f0f2484fd16aa24b7ff51b9c55aea5c8a9b5c50"}
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="4f0f2484fd16aa24b7ff51b9c55aea5c8a9b5c50"}
+dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="4f0f2484fd16aa24b7ff51b9c55aea5c8a9b5c50"}
 freya-elements = { path = "../elements", version = "0.1.0"}
 freya-common = { path = "../common", version = "0.1.0" }
 freya-layout = { path = "../layout", version = "0.1.0" }
@@ -32,4 +32,4 @@ skia-safe = { version = "0.58.0", features = ["gl", "textlayout", "svg"] }
 
 [dev-dependencies]
 freya-components ={ path = "../components"}
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="1aaff40bcdbb22fe7ff31428847e610f9db2e1e0", features = ["macro", "hooks"]}
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="4f0f2484fd16aa24b7ff51b9c55aea5c8a9b5c50", features = ["macro", "hooks"]}

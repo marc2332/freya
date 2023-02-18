@@ -572,22 +572,17 @@ fn EventListener<'a>(
     };
 
     render!(
-        rect {
-            width: "100%",
-            height: "50",
-            padding: "15",
-            direction: "horizontal",
-            rect {
-                width: "calc(100% - 270)",
-                height: "100%",
-                display: "center",
-                direction: "vertical",
-                label {
-                    color: "{color}",
-                    "{listener}"
+        Accordion {
+            summary: render!(
+                AccordionSummary {
+                    label {
+                        "{listener}"
+                    }
                 }
+            )
+            AccordionBody {
+                extra
             }
-            extra
         }
     )
 }
