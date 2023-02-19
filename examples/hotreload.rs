@@ -6,7 +6,7 @@
 use freya::prelude::*;
 
 fn main() {
-    dioxus_hot_reload::hot_reload_init!();
+    dioxus_hot_reload::hot_reload_init!(Config::<FreyaCtx>::default());
 
     launch(app);
 }
@@ -17,26 +17,34 @@ fn app(cx: Scope) -> Element {
         container {
             background: "rgb(15, 15, 15)",
             padding: "50",
-            direction: "both",
+            direction: "horizontal",
             width: "auto",
-            height: "auto",
+            height: "100%",
             onclick: move |_| {
                 count.with_mut(|c| *c += 1);
             },
             container {
                 padding: "50",
                 height: "100%",
-                width: "100%",
-                background: "blue",
+                width: "50%",
+                background: "red",
                 label {
+                    font_size: "50",
                     "{count}"
                 }
             }
-            rect {
-                width: "50%",
-                height: "100",
-                background: "yellow"
-            }
+            Comp {}
+        }
+    )
+}
+
+#[allow(non_snake_case)]
+fn Comp(cx: Scope) -> Element {
+    render!(
+        rect {
+            width: "50%",
+            height: "100%",
+            background: "yellow"
         }
     )
 }
