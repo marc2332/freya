@@ -72,6 +72,7 @@ impl Display for Line<'_> {
 }
 
 /// Events for [TextEditor]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub enum TextEvent {
     /// Cursor position has been moved
     CursorChanged,
