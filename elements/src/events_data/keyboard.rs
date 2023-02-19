@@ -58,7 +58,7 @@ pub fn get_non_text_keys(key: &VirtualKeyCode) -> Key {
         VirtualKeyCode::X => Key::Unidentified,
         VirtualKeyCode::Y => Key::Unidentified,
         VirtualKeyCode::Z => Key::Unidentified,
-        VirtualKeyCode::Escape => Key::Unidentified,
+        VirtualKeyCode::Escape => Key::Escape,
         VirtualKeyCode::F1 => Key::F1,
         VirtualKeyCode::F2 => Key::F2,
         VirtualKeyCode::F3 => Key::F3,
