@@ -1,7 +1,7 @@
 pub mod events_data;
 pub use dioxus_core::AttributeValue;
-pub use events_data::*;
 use dioxus_rsx::HotReloadingContext;
+pub use events_data::*;
 
 pub type AttributeDescription = (&'static str, Option<&'static str>, bool);
 
@@ -28,7 +28,6 @@ macro_rules! impl_attribute_match {
         }
     };
 }
-
 
 macro_rules! impl_element_match_attributes {
     (

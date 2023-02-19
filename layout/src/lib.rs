@@ -1,5 +1,5 @@
 use dioxus_native_core::{node::NodeType, real_dom::RealDom, tree::TreeView, NodeId};
-use freya_common::{LayoutMemorizer, NodeArea, NodeLayoutInfo, NodeReferenceLayout};
+use freya_common::{NodeArea, NodeReferenceLayout};
 use freya_node_state::{
     CursorMode, CursorReference, CustomAttributeValues, DirectionMode, DisplayMode, FontStyle,
     NodeState, SizeMode,
@@ -79,8 +79,6 @@ pub struct NodeLayoutMeasurer<'a> {
     dom: &'a SafeDOM,
     inherited_relative_layer: i16,
     font_collection: &'a mut FontCollection,
-    layout_memorizer: &'a Arc<Mutex<LayoutMemorizer>>,
-    last_child: bool,
 }
 
 impl<'a> NodeLayoutMeasurer<'a> {
@@ -94,8 +92,6 @@ impl<'a> NodeLayoutMeasurer<'a> {
         layers: &'a mut Layers,
         inherited_relative_layer: i16,
         font_collection: &'a mut FontCollection,
-        layout_memorizer: &'a Arc<Mutex<LayoutMemorizer>>,
-        last_child: bool,
     ) -> Self {
         Self {
             node_id: node.node_data.node_id,
@@ -106,56 +102,11 @@ impl<'a> NodeLayoutMeasurer<'a> {
             layers,
             inherited_relative_layer,
             font_collection,
-            layout_memorizer,
-            last_child,
         }
     }
 
-    /// Run some checks on the node to see if it's layout must be recalculated or not
-    pub fn run_dirty_checks(&mut self) -> (bool, bool) {
-        let parent_id = self.dom.lock().unwrap().tree.parent_id(self.node_id);
-        let is_parent_dirty = parent_id
-            .map(|p| self.layout_memorizer.lock().unwrap().is_dirty(&p))
-            .unwrap_or(false);
-
-        // If parent is dirty, mark this node as dirty too
-        if is_parent_dirty {
-            self.layout_memorizer
-                .lock()
-                .unwrap()
-                .mark_as_dirty(self.node_id);
-        }
-
-        let is_dirty = self
-            .layout_memorizer
-            .lock()
-            .unwrap()
-            .is_dirty(&self.node_id);
-
-        let is_cached = self
-            .layout_memorizer
-            .lock()
-            .unwrap()
-            .is_node_layout_memorized(&self.node_id);
-
-        // If this node is dirty and parent is not dirty, mark the parent as dirty
-        if is_dirty && !is_parent_dirty {
-            if let Some(p) = parent_id {
-                let dom = self.dom.lock().unwrap();
-                let parent = dom.tree.get(p).unwrap();
-                let is_static = parent.state.is_inner_static();
-
-                if !is_static || !self.last_child {
-                    self.layout_memorizer.lock().unwrap().mark_as_dirty(p)
-                }
-            }
-        }
-
-        (is_dirty, is_cached)
-    }
-
-    /// Measure the area of a node
-    pub fn measure_area(&mut self, must_memorize_layout: bool) -> NodeArea {
+    /// Measure the area of a Node
+    pub fn measure_area(&mut self, is_measuring: bool) -> NodeArea {
         let node_height = self.dom.lock().unwrap().tree.height(self.node_id).unwrap();
 
         let direction = self.node.state.size.direction;
@@ -171,67 +122,25 @@ impl<'a> NodeLayoutMeasurer<'a> {
             self.inherited_relative_layer,
         );
 
-        let (is_dirty, is_cached) = self.run_dirty_checks();
-        let must_recalculate = is_dirty || !is_cached;
+        let mut node_area = calculate_area(self, &self.node);
 
-        let (
-            mut node_area,
-            mut remaining_inner_area,
-            inner_area,
-            mut inner_width,
-            mut inner_height,
-        ) = if must_recalculate {
-            // TODO Change to the new version
-            let node_area = calculate_area(self, &self.node);
+        let mut inner_width = padding.1 + padding.3;
+        let mut inner_height = padding.0 + padding.2;
 
-            let horizontal_padding = padding.1 + padding.3;
-            let vertical_padding = padding.0 + padding.2;
-
-            // Area that is available consideing the parent area
-            let mut remaining_inner_area = NodeArea {
-                x: node_area.x + padding.3,
-                y: node_area.y + padding.0,
-                width: node_area.width - horizontal_padding,
-                height: node_area.height - vertical_padding,
-            };
-
-            // Visible area occupied by the child elements
-            let inner_area = remaining_inner_area;
-
-            // Increase the x and y axis with the node's scroll attributes
-            remaining_inner_area.y += scroll_y;
-            remaining_inner_area.x += scroll_x;
-
-            if must_memorize_layout {
-                // Memorize these layouts
-                self.layout_memorizer.lock().unwrap().memorize_layout(
-                    self.node_id,
-                    NodeLayoutInfo {
-                        area: node_area,
-                        remaining_inner_area,
-                        inner_area,
-                        inner_width: horizontal_padding,
-                        inner_height: vertical_padding,
-                    },
-                );
-            }
-
-            (
-                node_area,
-                remaining_inner_area,
-                inner_area,
-                horizontal_padding,
-                vertical_padding,
-            )
-        } else {
-            // Get the memorized layouts
-            self.layout_memorizer
-                .lock()
-                .unwrap()
-                .get_node_layout(&self.node_id)
-                .unwrap()
-                .as_tuple()
+        // Area that is available consideing the parent area
+        let mut remaining_inner_area = NodeArea {
+            x: node_area.x + padding.3,
+            y: node_area.y + padding.0,
+            width: node_area.width - inner_width,
+            height: node_area.height - inner_height,
         };
+
+        // Visible area occupied by the child elements
+        let inner_area = remaining_inner_area;
+
+        // Increase the x and y axis with the node's scroll attributes
+        remaining_inner_area.y += scroll_y;
+        remaining_inner_area.x += scroll_x;
 
         // Calculate the children layouts  for the first time without the size and axis adjusted.
         if DisplayMode::Center == self.node.state.style.display {
@@ -242,7 +151,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
                 &mut inner_width,
                 &mut inner_height,
                 node_relative_layer,
-                false, // By specifying `false` in the argument `must_memorize_layout` it will not cache any inner children layout in this first iteration
+                false,
             );
 
             let space_left_vertically = (inner_area.height - inner_height) / 2.0;
@@ -278,16 +187,8 @@ impl<'a> NodeLayoutMeasurer<'a> {
             &mut inner_width,
             &mut inner_height,
             node_relative_layer,
-            must_memorize_layout,
+            is_measuring,
         );
-
-        // Unmark the node as dirty as it's layout has been calculted
-        if must_recalculate && must_memorize_layout {
-            self.layout_memorizer
-                .lock()
-                .unwrap()
-                .remove_as_dirty(&self.node_id);
-        }
 
         match &self.node.node_data.node_type {
             NodeType::Text { .. } => {}
@@ -302,7 +203,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
         }
 
         // Registers the element in the Layers handler
-        if must_memorize_layout {
+        if is_measuring {
             let node_children = self
                 .dom
                 .lock()
@@ -314,7 +215,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
                 .add_element(&self.node, node_children, &node_area, node_layer);
         }
 
-        if must_recalculate {
+        if is_measuring {
             // Notify the node's reference about the new size layout
             if let Some(reference) = &self.node.state.references.node_ref {
                 reference
@@ -331,6 +232,60 @@ impl<'a> NodeLayoutMeasurer<'a> {
         }
 
         node_area
+    }
+
+    /// Construct a paragraph with all it's inner texts and notify
+    /// the cursor reference where the positions are located in the text
+    fn notify_cursor_reference(&self, node: &DioxusNode, node_area: &NodeArea) {
+        let font_size = node.state.font_style.font_size;
+        let font_family = &node.state.font_style.font_family;
+        let align = node.state.font_style.align;
+        let max_lines = node.state.font_style.max_lines;
+        let font_style = node.state.font_style.font_style;
+
+        let mut paragraph_style = ParagraphStyle::default();
+        paragraph_style.set_text_align(align);
+        paragraph_style.set_max_lines(max_lines);
+        paragraph_style.set_replace_tab_characters(true);
+
+        let mut paragraph_builder =
+            ParagraphBuilder::new(&paragraph_style, self.font_collection.clone());
+
+        paragraph_builder.push_style(
+            TextStyle::new()
+                .set_font_style(font_style)
+                .set_font_size(font_size)
+                .set_font_families(&[font_family]),
+        );
+
+        let texts = get_inner_texts(self.dom, &self.node_id);
+
+        for (font_style, text) in texts.into_iter() {
+            paragraph_builder.push_style(
+                TextStyle::new()
+                    .set_font_style(font_style.font_style)
+                    .set_height_override(true)
+                    .set_height(font_style.line_height)
+                    .set_color(font_style.color)
+                    .set_font_size(font_style.font_size)
+                    .set_font_families(&[font_style.font_family.clone()]),
+            );
+            paragraph_builder.add_text(text);
+        }
+
+        let mut paragraph = paragraph_builder.build();
+        paragraph.layout(node_area.width);
+
+        if let Some((cursor_ref, cursor_id, positions)) = get_cursor_reference(node) {
+            // Calculate the new cursor position
+            let char_position = paragraph.get_glyph_position_at_coordinate(positions);
+
+            // Notify the cursor reference listener
+            cursor_ref
+                .agent
+                .send((char_position.position as usize, cursor_id))
+                .ok();
+        }
     }
 
     /// Measure the node of the inner children
@@ -358,9 +313,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
                     .children(self.node_id)
                     .map(|children| children.cloned().collect());
                 if let Some(children) = node_children {
-                    let children_len = children.len();
-                    for (i, child) in children.into_iter().enumerate() {
-                        let last_child = children_len - 1 == i;
+                    for child in children.into_iter() {
                         let child_node_area = {
                             let mut child_measurer = NodeLayoutMeasurer {
                                 node_id: child.node_data.node_id,
@@ -371,8 +324,6 @@ impl<'a> NodeLayoutMeasurer<'a> {
                                 layers: self.layers,
                                 inherited_relative_layer: node_relative_layer,
                                 font_collection: self.font_collection,
-                                layout_memorizer: self.layout_memorizer,
-                                last_child,
                             };
                             child_measurer.measure_area(must_memorize_layout)
                         };
@@ -426,59 +377,10 @@ impl<'a> NodeLayoutMeasurer<'a> {
                             remaining_area.height = child_node_area.height;
                         }
                     }
-                    // Use SkParagraph to measure the layout of a `paragraph` node.
+
+                    // Use SkParagraph to measure the layout of a `paragraph` and calculate the position of the cursor
                     if tag == "paragraph" && CursorMode::Editable == cursor_settings.mode {
-                        let font_size = node.state.font_style.font_size;
-                        let font_family = &node.state.font_style.font_family;
-                        let align = node.state.font_style.align;
-                        let max_lines = node.state.font_style.max_lines;
-                        let font_style = node.state.font_style.font_style;
-
-                        let mut paragraph_style = ParagraphStyle::default();
-                        paragraph_style.set_text_align(align);
-                        paragraph_style.set_max_lines(max_lines);
-                        paragraph_style.set_replace_tab_characters(true);
-
-                        let mut paragraph_builder =
-                            ParagraphBuilder::new(&paragraph_style, self.font_collection.clone());
-
-                        paragraph_builder.push_style(
-                            TextStyle::new()
-                                .set_font_style(font_style)
-                                .set_font_size(font_size)
-                                .set_font_families(&[font_family]),
-                        );
-
-                        let texts = get_inner_texts(self.dom, &self.node_id);
-
-                        for (font_style, text) in texts.into_iter() {
-                            paragraph_builder.push_style(
-                                TextStyle::new()
-                                    .set_font_style(font_style.font_style)
-                                    .set_height_override(true)
-                                    .set_height(font_style.line_height)
-                                    .set_color(font_style.color)
-                                    .set_font_size(font_style.font_size)
-                                    .set_font_families(&[font_style.font_family.clone()]),
-                            );
-                            paragraph_builder.add_text(text);
-                        }
-
-                        let mut paragraph = paragraph_builder.build();
-                        paragraph.layout(node_area.width);
-
-                        if let Some((cursor_ref, cursor_id, positions)) = get_cursor_reference(node)
-                        {
-                            // Calculate the new cursor position
-                            let char_position =
-                                paragraph.get_glyph_position_at_coordinate(positions);
-
-                            // Notify the cursor reference listener
-                            cursor_ref
-                                .agent
-                                .send((char_position.position as usize, cursor_id))
-                                .ok();
-                        }
+                        self.notify_cursor_reference(node, node_area);
                     }
                 }
             }

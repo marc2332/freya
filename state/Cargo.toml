@@ -12,12 +12,12 @@ keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
 [dependencies]
-dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="bea16f151f3eb519ca8da3e3c20482d345067561"}
-dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="bea16f151f3eb519ca8da3e3c20482d345067561"}
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="bea16f151f3eb519ca8da3e3c20482d345067561"}
-dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="bea16f151f3eb519ca8da3e3c20482d345067561"}
-dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="bea16f151f3eb519ca8da3e3c20482d345067561"}
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="bea16f151f3eb519ca8da3e3c20482d345067561"}
+dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
 anymap = "0.12.1"
 fxhash = "0.2.1"
 skia-safe = { version = "0.58.0", features = ["gl", "textlayout", "svg"] }

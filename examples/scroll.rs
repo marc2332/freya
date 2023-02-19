@@ -28,7 +28,7 @@ fn app(cx: Scope) -> Element {
                         width: "100%",
                         background: "rgb(27, 38, 59)",
                         padding: "25",
-                        label { "Scrollbar support!!!" }
+                        label {             color: "white","Scrollbar support!!!" }
                     }
                 }
                 rect {

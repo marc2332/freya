@@ -40,11 +40,9 @@ fn app(cx: Scope) -> Element {
 
 #[allow(non_snake_case)]
 fn Comp(cx: Scope) -> Element {
-    render!(
-        rect {
-            width: "50%",
-            height: "100%",
-            background: "yellow"
-        }
-    )
+    render!(rect {
+        width: "50%",
+        height: "100%",
+        background: "yellow"
+    })
 }

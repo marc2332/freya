@@ -14,6 +14,7 @@ fn app(cx: Scope) -> Element {
 
     render!(
         rect {
+            color: "white",
             width: "75%",
             height: "100%",
             background: "black",
@@ -38,6 +39,7 @@ fn app(cx: Scope) -> Element {
                 show_scrollbar: true,
                 height: "25%",
                 label {
+                    color: "white",
                     font_size: "100",
                     font_family: "Inter",
                     "Hello World"

@@ -12,13 +12,13 @@ keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
 [dependencies]
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="bea16f151f3eb519ca8da3e3c20482d345067561", features=["macro", "hooks", "hot-reload"]}
-dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="bea16f151f3eb519ca8da3e3c20482d345067561"}
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="bea16f151f3eb519ca8da3e3c20482d345067561"}
-dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="bea16f151f3eb519ca8da3e3c20482d345067561"}
-dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="bea16f151f3eb519ca8da3e3c20482d345067561"}
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="bea16f151f3eb519ca8da3e3c20482d345067561"}
-dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev="bea16f151f3eb519ca8da3e3c20482d345067561"}
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3", features = ["macro", "hooks", "hot-reload"]}
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
 freya-elements = { path = "../elements", version = "0.1.0" }
 freya-node-state = { path = "../state", version = "0.1.0" }
 freya-hooks = { path = "../hooks", version = "0.1.0" }

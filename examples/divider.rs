@@ -18,6 +18,7 @@ fn app(cx: Scope) -> Element {
             width: "stretch",
             direction: "horizontal",
             padding: "30",
+            color: "white",
             rect {
                 width: "{sizes.0}%",
                 height: "stretch",

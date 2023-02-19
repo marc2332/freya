@@ -55,7 +55,7 @@ fn app(cx: Scope) -> Element {
 
 ### Want to try it? 🤔
 
-**⚠️ Note for Windows**: You need the **latest** (this is very important) Visual Studio 2022.
+⚠️ See [Environment setup](https://book.freyaui.dev/setup.html) first.
 
 Run:
 
@@ -68,7 +68,7 @@ Add Freya as a dependency in your `Cargo.toml`:
 
 ```toml
 freya = { git = "https://github.com/marc2332/freya" }
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="bea16f151f3eb519ca8da3e3c20482d345067561", features=["macro", "hooks", "hot-reload"]}
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3", features = ["macro", "hooks"]}
 ```
 
 ### Features ✨
@@ -80,7 +80,7 @@ dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="bea16f151f3eb519ca
 - Optional Components library (buttons, switch, etc)
 - Animation hook utility
 - SVG Support
-- Devtools / Wireframe inspector
+- Devtools panel
 - Headless testing
 
 ### Goals 😁
@@ -92,15 +92,10 @@ dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="bea16f151f3eb519ca
 - Full cross platform
 - Fluid animations
 
-### Ideas 💭
-- Tauri integration
-
 ## TO-DO 🚧
 Besides all the [tracking](https://github.com/marc2332/freya/issues?q=is%3Aopen+is%3Aissue+label%3Atracking) issues, here are some of the things to do:
 - [ ] Support for percentages in padding
 - [ ] Add `flex` support.
-- [ ] Documentation
-- [ ] Improve Auto calculation for width and height
 - [ ] Investigate if `image` diffing can be speeded up ([reference](https://github.com/DioxusLabs/dioxus/pull/543#issuecomment-1238393539))
 
 [MIT License](./LICENSE.md)

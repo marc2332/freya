@@ -15,6 +15,7 @@ pub fn render_skia(
     node: &RenderData,
     font_collection: &mut FontCollection,
     viewports_collection: &ViewportsCollection,
+    render_wireframe: bool,
 ) {
     if let NodeType::Element { tag, .. } = &node.get_type() {
         let children = node.children.as_ref();
@@ -62,7 +63,8 @@ pub fn render_skia(
             _ => {}
         }
 
-        #[cfg(feature = "wireframe")]
-        crate::wireframe::render_wireframe(canvas, node);
+        if render_wireframe {
+            crate::wireframe::render_wireframe(canvas, node);
+        }
     }
 }
