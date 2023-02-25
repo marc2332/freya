@@ -11,18 +11,18 @@ devtools = ["freya/devtools"]
 
 [dev-dependencies]
 freya = { path = "./freya"}
-dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3" }
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3", features = ["macro", "hooks", "hot-reload"]}
-dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
-dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
-dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="264f04fc30d7dbf3ce115a60fc709920e79cf46c" }
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="264f04fc30d7dbf3ce115a60fc709920e79cf46c", features = ["macro", "hooks", "hot-reload"]}
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="264f04fc30d7dbf3ce115a60fc709920e79cf46c"}
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="264f04fc30d7dbf3ce115a60fc709920e79cf46c"}
+dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="264f04fc30d7dbf3ce115a60fc709920e79cf46c"}
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="264f04fc30d7dbf3ce115a60fc709920e79cf46c"}
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="264f04fc30d7dbf3ce115a60fc709920e79cf46c"}
 tokio = "1.23.0"
 reqwest = {version = "0.11.13", features = ["json"] }
 serde = "1.0.152"
 tracing-subscriber = "0.2.25"
-dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev="264f04fc30d7dbf3ce115a60fc709920e79cf46c"}
 
 [profile.release]
 lto = true
