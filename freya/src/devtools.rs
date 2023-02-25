@@ -233,7 +233,7 @@ fn NodesTree<'a>(
     render!(VirtualScrollView {
         width: "100%",
         height: "{height}",
-        padding: "30",
+        padding: "15",
         show_scrollbar: true,
         length: nodes.len() as i32,
         item_size: 27.0,
@@ -314,7 +314,7 @@ fn TabButton<'a>(cx: Scope<'a, TabButtonProps<'a>>) -> Element<'a> {
                 container {
                     width: "100%",
                     height: "100%",
-                    padding: "15",
+                    padding: "7.5",
                     label {
                         align: "center",
                         height: "100%",
@@ -440,7 +440,7 @@ fn Property<'a>(cx: Scope<'a>, name: &'a str, value: String) -> Element<'a> {
             height: "30",
             width: "100%",
             direction: "horizontal",
-            padding: "20",
+            padding: "10",
             paragraph {
                 width: "100%",
                 text {
@@ -472,7 +472,7 @@ fn ColorfulProperty<'a>(cx: Scope<'a>, name: &'a str, color: &'a Color) -> Eleme
             height: "30",
             width: "100%",
             direction: "horizontal",
-            padding: "20",
+            padding: "10",
             label {
                 font_size: "15",
                 color: "rgb(71, 180, 240)",
@@ -491,7 +491,7 @@ fn ColorfulProperty<'a>(cx: Scope<'a>, name: &'a str, color: &'a Color) -> Eleme
                 height: "17",
                 radius: "5",
                 background: "white",
-                padding: "5",
+                padding: "2.5",
                 rect {
                     radius: "3",
                     width: "100%",
@@ -524,7 +524,7 @@ fn ShadowProperty<'a>(
             height: "30",
             width: "100%",
             direction: "horizontal",
-            padding: "20",
+            padding: "10",
             paragraph {
                 text {
                     font_size: "15",
@@ -550,7 +550,7 @@ fn ShadowProperty<'a>(
                 height: "17",
                 radius: "5",
                 background: "white",
-                padding: "5",
+                padding: "2.5",
                 rect {
                     radius: "3",
                     width: "100%",
@@ -592,7 +592,7 @@ fn NodeElement<'a>(
     render!(
         rect {
             radius: "7",
-            padding: "10",
+            padding: "5",
             background: background,
             width: "100%",
             height: "27",

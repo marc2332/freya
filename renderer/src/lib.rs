@@ -3,12 +3,13 @@ use dioxus_native_core::real_dom::RealDom;
 use dioxus_native_core::{NodeId, SendAnyMap};
 use freya_core::events::FreyaEvent;
 use freya_core::{events::DomEvent, SharedRealDOM};
-use freya_elements::{from_winit_to_code, get_non_text_keys, Code, Key};
+use freya_elements::{from_winit_to_code, get_modifiers, get_non_text_keys, Code, Key};
 use freya_node_state::{CustomAttributeValues, NodeState};
 use futures::task::ArcWake;
 use futures::{pin_mut, task, FutureExt};
 use glutin::event::{
-    ElementState, Event, KeyboardInput, MouseScrollDelta, StartCause, TouchPhase, WindowEvent,
+    ElementState, Event, KeyboardInput, ModifiersState, MouseScrollDelta, StartCause, TouchPhase,
+    WindowEvent,
 };
 use glutin::event_loop::{ControlFlow, EventLoopBuilder, EventLoopProxy};
 use skia_safe::{textlayout::FontCollection, FontMgr};
@@ -90,6 +91,7 @@ pub fn run<T: 'static + Clone>(
 
     let mut last_keydown = Key::Unidentified;
     let mut last_code = Code::Unidentified;
+    let mut modifiers_state = ModifiersState::empty();
 
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Poll;
@@ -162,19 +164,23 @@ pub fn run<T: 'static + Clone>(
                             window_env.process_events()
                         }
                     }
+                    WindowEvent::ModifiersChanged(modifiers) => {
+                        modifiers_state = modifiers;
+                    }
                     WindowEvent::ReceivedCharacter(a) => {
                         // Emit the received character if the last pressed key wasn't text
-                        match last_keydown {
-                            Key::Unidentified | Key::Shift => {
-                                window_env.freya_events.lock().unwrap().push(
-                                    FreyaEvent::Keyboard {
-                                        name: "keydown",
-                                        key: Key::Character(a.to_string()),
-                                        code: last_code,
-                                    },
-                                );
-                            }
-                            _ => {}
+                        if last_keydown == Key::Unidentified || !modifiers_state.is_empty() {
+                            window_env
+                                .freya_events
+                                .lock()
+                                .unwrap()
+                                .push(FreyaEvent::Keyboard {
+                                    name: "keydown",
+                                    key: Key::Character(a.to_string()),
+                                    code: last_code,
+                                    modifiers: get_modifiers(modifiers_state),
+                                });
+                            window_env.process_events()
                         }
                     }
                     WindowEvent::KeyboardInput {
@@ -195,12 +201,21 @@ pub fn run<T: 'static + Clone>(
                         // Text characters will be emitted by `WindowEvent::ReceivedCharacter`
                         let key = get_non_text_keys(&virtual_keycode);
                         if key != Key::Unidentified {
+                            // Winit doesn't enable the alt modifier when pressing the AltGraph key, this is a workaround
+                            if key == Key::AltGraph {
+                                if state == ElementState::Pressed {
+                                    modifiers_state.insert(ModifiersState::ALT)
+                                } else {
+                                    modifiers_state.remove(ModifiersState::ALT)
+                                }
+                            }
+
                             if state == ElementState::Pressed {
                                 // Cache this key so `WindowEvent::ReceivedCharacter` knows
                                 // it shouldn't emit anything until this same key emits keyup
                                 last_keydown = key.clone();
                             } else {
-                                // Uncahe any key
+                                // Uncache any key
                                 last_keydown = Key::Unidentified;
                             }
                             window_env
@@ -211,6 +226,7 @@ pub fn run<T: 'static + Clone>(
                                     name: event_name,
                                     key,
                                     code: from_winit_to_code(&virtual_keycode),
+                                    modifiers: get_modifiers(modifiers_state),
                                 });
                         } else {
                             last_keydown = Key::Unidentified;

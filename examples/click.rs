@@ -15,7 +15,7 @@ fn app(cx: Scope) -> Element {
         container {
             color: "white",
             background: "rgb(15, 15, 15)",
-            padding: "50",
+            padding: "25",
             direction: "both",
             width: "auto",
             height: "auto",
@@ -23,7 +23,7 @@ fn app(cx: Scope) -> Element {
                 count.with_mut(|c| *c = 0);
             },
             container {
-                padding: "50",
+                padding: "25",
                 height: "100%",
                 width: "100%",
                 background: "rgb(45, 45, 45)",
@@ -31,7 +31,7 @@ fn app(cx: Scope) -> Element {
                     count.with_mut(|c| *c = 1)
                 },
                 container {
-                    padding: "50",
+                    padding: "25",
                     height: "100%",
                     width: "100%",
                     background: "rgb(90, 90, 90)",

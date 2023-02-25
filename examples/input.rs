@@ -16,7 +16,7 @@ fn app(cx: Scope) -> Element {
 
     render!(
         container {
-            padding: "15",
+            padding: "7",
             width: "100%",
             height: "100%",
             label {

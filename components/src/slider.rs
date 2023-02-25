@@ -123,7 +123,7 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
             onwheel: onwheel,
             display: "center",
             direction: "both",
-            padding: "2",
+            padding: "1",
             rect {
                 background: "{theme.background}",
                 width: "100%",
@@ -146,7 +146,7 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
                         width: "17",
                         height: "17",
                         radius: "50",
-                        padding: "6",
+                        padding: "3",
                         rect {
                             height: "100%",
                             width: "100%",

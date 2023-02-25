@@ -111,6 +111,38 @@ impl TestUtils {
         self.rdom.lock().unwrap().update_state(to_update, ctx);
     }
 
+    /// Wait for all changes to have been applied
+    #[allow(clippy::await_holding_lock)]
+    pub async fn wait_until_cleanup(&mut self, sizes: (f32, f32)) {
+        self.wait_for_update(sizes).await;
+        loop {
+            self.wait_for_work(sizes).await;
+
+            let ev = self.event_receiver.lock().unwrap().try_recv();
+
+            let mut dom = self.dom.lock().unwrap();
+
+            if let Ok(ev) = ev {
+                dom.handle_event(&ev.name, ev.data.any(), ev.element_id, false);
+                dom.process_events();
+            }
+
+            dom.wait_for_work().await;
+
+            let mutations = dom.render_immediate();
+
+            let (to_update, diff) = self.rdom.lock().unwrap().apply_mutations(mutations);
+
+            let ctx = SendAnyMap::new();
+            self.rdom.lock().unwrap().update_state(to_update, ctx);
+
+            if diff.is_empty() {
+                break;
+            }
+        }
+        self.wait_for_work(sizes).await;
+    }
+
     /// Wait to process the internal Freya changes, like layout or events
     pub async fn wait_for_work(&mut self, sizes: (f32, f32)) {
         let (layers, viewports) = process_layout(

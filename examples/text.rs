@@ -18,6 +18,7 @@ fn app(cx: Scope) -> Element {
             width: "100%",
             height: "100%",
             background: "black",
+            color: "white",
             container {
                 width: "100%",
                 height: "60",

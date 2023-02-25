@@ -1,6 +1,6 @@
 # Freya :crab:
 
-<img align="right" src="logo.svg" alt="Freya logo" width="150"/>
+<a href="https://freyaui.dev/"><img align="right" src="logo.svg" alt="Freya logo" width="150"/></a>
 
 [![Discord Server](https://img.shields.io/discord/1015005816094478347.svg?logo=discord&style=flat-square)](https://discord.gg/sYejxCdewG)
 [![Github Sponsors](https://img.shields.io/github/sponsors/marc2332?style=social)](https://github.com/sponsors/marc2332)
@@ -26,7 +26,7 @@ fn app(cx: Scope) -> Element {
             height: "20%",
             width: "100%",
             background: "rgb(233, 196, 106)",
-            padding: "25",
+            padding: "12",
             color: "rgb(20, 33, 61)",
             label { 
                 font_size: "20", 
@@ -38,7 +38,7 @@ fn app(cx: Scope) -> Element {
             width: "100%",
             background: "rgb(168, 218, 220)",
             color: "black",
-            padding: "25",
+            padding: "12",
             onclick: move |_| count += 1,
             label { "Click to increase!" }
         }
@@ -64,7 +64,7 @@ cargo run --example counter
 ```
 
 ### Usage 📜
-Add Freya as a dependency in your `Cargo.toml`:
+Add Freya as a dependency via git (it's not published on [crates.io](https://crates.io/) yet) in your `Cargo.toml`:
 
 ```toml
 freya = { git = "https://github.com/marc2332/freya" }
@@ -72,30 +72,31 @@ dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e2
 ```
 
 ### Features ✨
-- Text
-- Containers
-- Scroll views (nested too)
-- Events: click, wheel, mouse /down/leave/over for now
 - Support for Windows, Linux and MacOS
-- Optional Components library (buttons, switch, etc)
-- Animation hook utility
-- SVG Support
-- Devtools panel
-- Headless testing
+- Text, containers, etc elements
+- Headless testing of components
+- Components crate (with theming support)
+   - Scroll views 
+   - Virtualized scroll views
+   - Button
+   - Slider
+   - Switch
+   - Dropdown
+   - and a few more
+- Keyboard and Mouse events
+- Hooks crate for text editing, animations, webcam, theming..
+- SVG and Images
+- DevTools panel (enabled via a feature)
 
 ### Goals 😁
-- Easy to use
-- Fast
+- Performant
 - Low memory usage
-- Lightweight
-- Secure
-- Full cross platform
-- Fluid animations
+- Lightweight 
+- Good developer experience
+- Cross platform
 
-## TO-DO 🚧
-Besides all the [tracking](https://github.com/marc2332/freya/issues?q=is%3Aopen+is%3Aissue+label%3Atracking) issues, here are some of the things to do:
-- [ ] Support for percentages in padding
-- [ ] Add `flex` support.
-- [ ] Investigate if `image` diffing can be speeded up ([reference](https://github.com/DioxusLabs/dioxus/pull/543#issuecomment-1238393539))
+## Status ⌚
+
+You can see the tracking [issues](https://github.com/marc2332/freya/issues?q=is%3Aopen+is%3Aissue+label%3Atracking) labeled with the `tracking` label to know what features are implemented and which ones are not, yet.
 
 [MIT License](./LICENSE.md)

@@ -10,7 +10,7 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    let (content, cursor, process_keyevent, process_clickevent, cursor_ref) = use_editable(
+    let (text_editor, process_keyevent, process_clickevent, cursor_ref) = use_editable(
         &cx,
         || {
             "Lorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet"
@@ -26,7 +26,7 @@ fn app(cx: Scope) -> Element {
     render!(
         container {
             background: "rgb(15, 15, 15)",
-            padding: "50",
+            padding: "25",
             direction: "both",
             width: "auto",
             height: "50%",
@@ -38,18 +38,18 @@ fn app(cx: Scope) -> Element {
                 width: "100%",
                 height: "100%",
                 show_scrollbar: true,
-                length: content.lines(..).count() as i32,
+                length: text_editor.len_lines() as i32,
                 item_size: real_line_height,
-                builder_values: (cursor, process_clickevent, content),
+                builder_values: (process_clickevent, text_editor),
                 builder: Box::new(move |(k, line_index, vals)| {
-                    let (cursor, process_clickevent, content) = vals.as_ref().unwrap();
-                    let line_content = content.lines(0..).nth(line_index  as usize).unwrap();
+                    let (process_clickevent, text_editor) = vals.as_ref().unwrap();
+                    let line_content = text_editor.line(line_index as usize).unwrap();
 
-                    let is_line_selected = cursor.1 == line_index as usize;
+                    let is_line_selected = text_editor.cursor_row() == line_index as usize;
 
                     // Only show the cursor in the active line
                     let character_index = if is_line_selected {
-                        cursor.0.to_string()
+                        text_editor.cursor_col().to_string()
                     } else {
                         "none".to_string()
                     };
@@ -106,7 +106,7 @@ fn app(cx: Scope) -> Element {
         }
         container {
             background: "rgb(15, 15, 15)",
-            padding: "50",
+            padding: "25",
             direction: "both",
             width: "auto",
             height: "50%",

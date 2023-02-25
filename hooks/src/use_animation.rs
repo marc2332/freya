@@ -1,8 +1,9 @@
 use dioxus_core::ScopeState;
-use dioxus_hooks::{use_effect, use_state};
+use dioxus_hooks::{to_owned, use_effect, use_state};
 use std::{cell::RefCell, ops::RangeInclusive, time::Duration};
 use tokio::time::interval;
 use tween::{BounceIn, Linear, SineIn, SineInOut, Tweener};
+use uuid::Uuid;
 
 /// Type of animation to use.
 #[derive(Clone)]
@@ -75,6 +76,80 @@ impl AnimationMode {
             AnimationMode::Linear(tween) => tween.borrow().final_value(),
         }
     }
+}
+
+/// More flexible animation hook than `use_animation`
+pub fn use_animation_managed(
+    cx: &ScopeState,
+    init_value: f64,
+) -> (impl Fn(AnimationMode) + '_, impl Fn(f64) + '_, f64, bool) {
+    let current_anim_id = use_state(cx, || None);
+    let value = use_state(cx, || init_value);
+
+    let start_anim = move |mut anim: AnimationMode| {
+        let new_id = Uuid::new_v4();
+        let mut index = 0;
+
+        to_owned![value, current_anim_id];
+
+        // Set as current this new animation
+        current_anim_id.set(Some(new_id));
+
+        let duration = anim.duration();
+
+        let mut run_with = move |index: i32| {
+            match anim {
+                AnimationMode::BounceIn(ref mut tween) => {
+                    let tween = tween.get_mut();
+                    let v = tween.move_to(index);
+                    value.set(v);
+                }
+                AnimationMode::SineIn(ref mut tween) => {
+                    let tween = tween.get_mut();
+                    let v = tween.move_to(index);
+                    value.set(v);
+                }
+                AnimationMode::SineInOut(ref mut tween) => {
+                    let tween = tween.get_mut();
+                    let v = tween.move_to(index);
+                    value.set(v);
+                }
+                AnimationMode::Linear(ref mut tween) => {
+                    let tween = tween.get_mut();
+                    let v = tween.move_to(index);
+                    value.set(v);
+                }
+            };
+        };
+
+        cx.spawn(async move {
+            let mut ticker = interval(Duration::from_millis(1));
+            loop {
+                if *current_anim_id.current() == Some(new_id) {
+                    if index > duration {
+                        current_anim_id.set(None);
+                        break;
+                    }
+                    run_with(index);
+                    index += 1;
+                    ticker.tick().await;
+                } else {
+                    break;
+                }
+            }
+        });
+    };
+
+    let set_value = move |new_value: f64| {
+        current_anim_id.set(None);
+        value.set(new_value);
+    };
+
+    let current_value = *value.get();
+
+    let is_animating = current_anim_id.is_some();
+
+    (start_anim, set_value, current_value, is_animating)
 }
 
 /// Create and configure an animation.
@@ -162,7 +237,7 @@ pub fn use_animation(
 mod test {
     use std::time::Duration;
 
-    use crate::{use_animation, AnimationMode};
+    use crate::{use_animation, use_animation_managed, AnimationMode};
     use dioxus_hooks::use_effect;
     use freya::prelude::*;
     use freya_testing::{launch_test, FreyaEvent, MouseButton};
@@ -257,5 +332,50 @@ mod test {
         assert_eq!(anim.duration(), 500);
         assert_eq!(anim.initial_value(), 7.0);
         assert_eq!(anim.final_value(), 99.0);
+    }
+
+    #[tokio::test]
+    pub async fn test_use_animation_managed() {
+        fn use_animation_app(cx: Scope) -> Element {
+            let (anim, _, progress, _) = use_animation_managed(cx, 0.0);
+
+            use_effect(cx, &(progress), move |v| {
+                if v == 0.0 {
+                    anim(AnimationMode::new_sine_in_out(0.0..=100.0, 50));
+                } else if v == 100.0 {
+                    anim(AnimationMode::new_sine_in_out(100.0..=0.0, 50));
+                }
+                async move {}
+            });
+
+            render!(rect {
+                width: "{progress}",
+            })
+        }
+
+        let mut utils = launch_test(use_animation_app);
+        let element = utils.root().child(0).unwrap();
+
+        // Initial state
+        utils.wait_for_update((500.0, 500.0)).await;
+
+        assert_eq!(element.layout().unwrap().width, 0.0);
+
+        // State somewhere in the middle
+        utils.wait_for_update((500.0, 500.0)).await;
+        utils.wait_for_work((500.0, 500.0)).await;
+        let width = element.layout().unwrap().width;
+        assert!(width > 0.0);
+        assert!(width < 100.0);
+
+        // Reached 100.0
+        utils.wait_until_cleanup((500.0, 500.0)).await;
+        let width = element.layout().unwrap().width;
+        assert_eq!(width, 100.0);
+
+        // Back to 0.0
+        utils.wait_until_cleanup((500.0, 500.0)).await;
+        let width = element.layout().unwrap().width;
+        assert_eq!(width, 0.0);
     }
 }
