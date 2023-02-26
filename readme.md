@@ -87,6 +87,7 @@ dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="264f04fc30d7dbf3ce
 - Hooks crate for text editing, animations, webcam, theming..
 - SVG and Images
 - DevTools panel (enabled via a feature)
+- Hot reload
 
 ### Goals 😁
 - Performant
