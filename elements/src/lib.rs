@@ -1,10 +1,125 @@
 pub mod events_data;
 pub use dioxus_core::AttributeValue;
+use dioxus_rsx::HotReloadingContext;
 pub use events_data::*;
 
 pub type AttributeDescription = (&'static str, Option<&'static str>, bool);
 
+macro_rules! impl_element_match {
+    (
+        $el:ident $name:ident None {
+            $(
+                $fil:ident: $vil:ident,
+            )*
+        }
+    ) => {
+        if $el == stringify!($name) {
+            return Some((stringify!($name), None));
+        }
+    };
+}
+
+macro_rules! impl_attribute_match {
+    (
+        $attr:ident $fil:ident: $vil:ident,
+    ) => {
+        if $attr == stringify!($fil) {
+            return Some((stringify!($fil), None));
+        }
+    };
+}
+
+macro_rules! impl_element_match_attributes {
+    (
+        $el:ident $attr:ident $name:ident None {
+            $(
+                $fil:ident: $vil:ident,
+            )*
+        }
+    ) => {
+        if $el == stringify!($name) {
+            $(
+                impl_attribute_match!(
+                    $attr $fil: $vil,
+                );
+            )*
+        }
+    };
+
+    (
+        $el:ident $attr:ident $name:ident  {
+            $(
+                $fil:ident: $vil:ident,
+            )*
+        }
+    ) => {
+        if $el == stringify!($name) {
+            $(
+                impl_attribute_match!(
+                    $attr $fil: $vil,
+                );
+            )*
+        }
+    }
+}
+
 macro_rules! builder_constructors {
+    (
+        $(
+            $(#[$attr:meta])*
+            $name:ident {
+                $(
+                    $(#[$attr_method:meta])*
+                    $fil:ident: $vil:ident,
+                )*
+            };
+         )*
+        ) => {
+        pub struct FreyaCtx;
+
+        impl HotReloadingContext for FreyaCtx {
+            fn map_attribute(element: &str, attribute: &str) -> Option<(&'static str, Option<&'static str>)> {
+                $(
+                    impl_element_match_attributes!(
+                        element attribute $name {
+                            $(
+                                $fil: $vil,
+                            )*
+                        }
+                    );
+                )*
+               None
+            }
+
+            fn map_element(element: &str) -> Option<(&'static str, Option<&'static str>)> {
+                $(
+                    impl_element_match!(
+                        element $name None {
+                            $(
+                                $fil: $vil,
+                            )*
+                        }
+                    );
+                )*
+                None
+            }
+        }
+
+        $(
+            impl_element!(
+                $(#[$attr])*
+                $name {
+                    $(
+                        $(#[$attr_method])*
+                        $fil: $vil,
+                    )*
+                };
+            );
+        )*
+    };
+}
+
+macro_rules! impl_element {
     (
         $(
             $(#[$attr:meta])*

@@ -8,6 +8,7 @@
 - [Basic app](./basic_app.md)
 
 # Guides
+- [Hot reload](hotreload.md)
 - [Using the builtin themes]()
 
 # Advanced

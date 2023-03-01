@@ -13,12 +13,12 @@ categories = ["GUI"]
 
 [dependencies]
 glutin = { version = "0.29.0"}
-dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
-dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
-dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
-dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3"}
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
+dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
+dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
 freya-elements = { path = "../elements", version = "0.1.0"}
 freya-common = { path = "../common", version = "0.1.0" }
 freya-layout = { path = "../layout", version = "0.1.0" }
@@ -32,4 +32,4 @@ skia-safe = { version = "0.58.0", features = ["gl", "textlayout", "svg"] }
 
 [dev-dependencies]
 freya-components ={ path = "../components"}
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="d521da1991719760e271457dfe4f9ddf281afbb3", features = ["macro", "hooks"]}
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519", features = ["macro", "hooks", "hot-reload"]}
