@@ -12,6 +12,8 @@ cargo init
 
 ### Cargo.toml
 
+Make sure to add Freya and Dioxus as dependencies:
+
 ```toml
 [package]
 name = "freya-app"
@@ -20,10 +22,12 @@ edition = "2021"
 
 [dependencies]
 freya = { git="https://github.com/marc2332/freya" }
-dioxus = { git="https://github.com/DioxusLabs/dioxus", rev="264f04fc30d7dbf3ce115a60fc709920e79cf46c"}
+dioxus = { git="https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
 ```
 
 ### src/main.rs
+
+And paste this code in your `main.rs` file.
 
 ```rust no_run
 #![cfg_attr(
@@ -46,7 +50,7 @@ fn app(cx: Scope) -> Element {
             width: "100%",
             background: "rgb(35, 35, 35)",
             color: "white",
-            padding: "12.5",
+            padding: "12",
             onclick: move |_| count += 1,
             label { "Click to increase -> {count}" }
         }
@@ -55,6 +59,8 @@ fn app(cx: Scope) -> Element {
 ```
 
 ### Running
+Simply run with `cargo`:
+
 ```sh
 cargo run
 ```

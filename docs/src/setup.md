@@ -1,7 +1,6 @@
 # Environment Setup
 
-## Requirements
-- Rust
+Make sure you have [Rust](https://www.rust-lang.org/) and your OS dependencies installed.
 
 ### Windows
 
@@ -9,9 +8,9 @@ You will need C++ build tools which you can get through Visual Studio 2022, lear
 
 ### Linux
 
-#### Ubuntu
+#### Debian-based (Ubuntu, PopOS, etc)
 
-Install these packags:
+Install these packages:
 ```sh
 sudo apt install build-essential libssl-dev pkg-config cmake libgtk-3-dev libclang-dev
 ```
