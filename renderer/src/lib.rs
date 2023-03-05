@@ -271,6 +271,10 @@ pub fn run<T: 'static + Clone>(
                         window_env.windowed_context.resize(size);
                         window_env.windowed_context.window().request_redraw();
                     }
+                    WindowEvent::ScaleFactorChanged { scale_factor, .. } => {
+                        let scale_factor = scale_factor as f32;
+                        window_env.surface.canvas().scale((scale_factor, scale_factor));
+                    }
                     _ => {}
                 }
             }
