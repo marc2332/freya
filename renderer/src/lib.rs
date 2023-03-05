@@ -100,12 +100,9 @@ pub fn run<T: 'static + Clone>(
             Event::NewEvents(StartCause::Init) => {
                 _ = proxy.send_event(None);
             }
-            Event::UserEvent(s) => {
-                match s {
-                    Some(template) => {
-                        vdom.replace_template(template);
-                    }
-                    _ => (),
+            Event::UserEvent(ev) => {
+                if let Some(template) = ev {
+                    vdom.replace_template(template);
                 }
                 poll_vdom(
                     &waker,

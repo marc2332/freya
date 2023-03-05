@@ -32,14 +32,13 @@ async fn fetch_image(url: Url) -> Option<Vec<u8>> {
 
 fn app<'a>(cx: Scope<'a>) -> Element<'a> {
     let bytes = use_state(cx, || None);
-    let bytes_setter = bytes.setter();
 
     let fetch = move || {
-        let bytes_setter = bytes_setter.clone();
+        to_owned![bytes];
         cx.spawn(async move {
             if let Some(url) = fetch_random_dog().await {
                 if let Some(doggo) = fetch_image(url).await {
-                    bytes_setter(Some(doggo))
+                    bytes.set(Some(doggo))
                 }
             }
         })

@@ -16,48 +16,42 @@ fn app(cx: Scope) -> Element {
     let progress_2 = use_state(cx, || 10);
     let progress_3 = use_state(cx, || 15);
 
-    use_effect(cx, progress_1, |progress| async move {
+    use_effect(cx, progress_1, |mut progress| async move {
         sleep(Duration::from_millis(15)).await;
-        progress.with_mut(|padding| {
-            if *padding < 100 {
-                *padding += 2;
-            } else {
-                *padding = 0;
-            }
-        });
+        if *progress < 100 {
+            progress += 2;
+        } else {
+            progress.set(0)
+        }
     });
 
-    use_effect(cx, progress_2, |progress| async move {
+    use_effect(cx, progress_2, |mut progress| async move {
         sleep(Duration::from_millis(5)).await;
-        progress.with_mut(|padding| {
-            if *padding < 100 {
-                *padding += 1;
-            } else {
-                *padding = 0;
-            }
-        });
+        if *progress < 100 {
+            progress += 1;
+        } else {
+            progress.set(0)
+        }
     });
 
-    use_effect(cx, progress_3, |progress| async move {
+    use_effect(cx, progress_3, |mut progress| async move {
         sleep(Duration::from_millis(30)).await;
-        progress.with_mut(|padding| {
-            if *padding < 100 {
-                *padding += 1;
-            } else {
-                *padding = 0;
-            }
-        });
+        if *progress < 100 {
+            progress += 1;
+        } else {
+            progress.set(0)
+        }
     });
 
     render!(
         LoadingBar {
-            progress: **progress_1
+            progress: *progress_1.get()
         }
         LoadingBar {
-            progress: **progress_2
+            progress: *progress_2.get()
         }
         LoadingBar {
-            progress: **progress_3
+            progress: *progress_3.get()
         }
     )
 }
