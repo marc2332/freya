@@ -55,7 +55,7 @@ pub fn render_label(
                 .set_font_style(font_style)
                 .set_color(font_color)
                 .set_font_size(font_size)
-                .set_font_families(&[font_family]),
+                .set_font_families(font_family),
         );
         let mut paragraph_builder =
             ParagraphBuilder::new(&paragraph_style, font_collection.clone());

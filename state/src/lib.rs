@@ -75,7 +75,7 @@ pub enum AttributeType<'a> {
     Direction(&'a DirectionMode),
     Display(&'a DisplayMode),
     Shadow(&'a ShadowSettings),
-    Text(&'a str),
+    Text(String),
 }
 
 pub struct NodeStateIterator<'a> {
@@ -115,7 +115,7 @@ impl<'a> Iterator for NodeStateIterator<'a> {
             12 => Some(("color", AttributeType::Color(&self.state.font_style.color))),
             13 => Some((
                 "font_family",
-                AttributeType::Text(&self.state.font_style.font_family),
+                AttributeType::Text(self.state.font_style.font_family.join(",")),
             )),
             14 => Some((
                 "font_size",

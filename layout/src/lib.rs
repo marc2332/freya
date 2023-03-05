@@ -255,7 +255,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
             TextStyle::new()
                 .set_font_style(font_style)
                 .set_font_size(font_size)
-                .set_font_families(&[font_family]),
+                .set_font_families(font_family),
         );
 
         let texts = get_inner_texts(self.dom, &self.node_id);
@@ -268,7 +268,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
                     .set_height(font_style.line_height)
                     .set_color(font_style.color)
                     .set_font_size(font_style.font_size)
-                    .set_font_families(&[font_style.font_family.clone()]),
+                    .set_font_families(&font_style.font_family),
             );
             paragraph_builder.add_text(text);
         }
@@ -404,7 +404,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
                     TextStyle::new()
                         .set_font_style(font_style)
                         .set_font_size(font_size)
-                        .set_font_families(&[font_family]),
+                        .set_font_families(font_family),
                 );
 
                 paragraph_builder.add_text(text);

@@ -3,13 +3,14 @@ use dioxus_native_core::state::ParentDepState;
 use dioxus_native_core_macro::sorted_str_slice;
 use skia_safe::textlayout::TextAlign;
 use skia_safe::Color;
+use smallvec::{smallvec, SmallVec};
 
 use crate::{parse_color, CustomAttributeValues};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FontStyle {
     pub color: Color,
-    pub font_family: String,
+    pub font_family: SmallVec<[String; 2]>,
     pub font_size: f32,
     pub line_height: f32, // https://developer.mozilla.org/en-US/docs/Web/CSS/line-height,
     pub align: TextAlign,
@@ -21,7 +22,7 @@ impl Default for FontStyle {
     fn default() -> Self {
         Self {
             color: Color::BLACK,
-            font_family: "Fira Sans".to_string(),
+            font_family: smallvec!["Fira Sans".to_string()],
             font_size: 16.0,
             line_height: 1.2,
             align: TextAlign::default(),
@@ -70,7 +71,13 @@ impl ParentDepState<CustomAttributeValues> for FontStyle {
                     "font_family" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
-                            font_style.font_family = attr.to_string();
+                            let families = attr.split(',');
+                            font_style.font_family = SmallVec::from(
+                                families
+                                    .into_iter()
+                                    .map(|f| f.trim().to_string())
+                                    .collect::<Vec<String>>(),
+                            );
                         }
                     }
                     "font_size" => {
