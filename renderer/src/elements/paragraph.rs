@@ -42,7 +42,7 @@ pub fn render_paragraph(
                 .set_height(node_text.0.font_style.line_height)
                 .set_color(node_text.0.font_style.color)
                 .set_font_size(node_text.0.font_style.font_size)
-                .set_font_families(&[node_text.0.font_style.font_family.clone()]),
+                .set_font_families(&node_text.0.font_style.font_family),
         );
         paragraph_builder.add_text(node_text.1.clone());
     }

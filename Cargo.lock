@@ -1477,6 +1477,7 @@ dependencies = [
  "freya-elements",
  "fxhash",
  "skia-safe",
+ "smallvec",
  "tokio",
 ]
 
