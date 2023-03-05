@@ -29,7 +29,7 @@ async fn with_state() {
         let state_setter = state.setter();
 
         use_effect(cx, (), move |_| async move {
-            state.set(true);
+            state_setter(true);
         });
 
         render!(
