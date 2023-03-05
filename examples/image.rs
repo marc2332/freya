@@ -28,6 +28,8 @@ fn app(cx: Scope) -> Element {
             width: "100%",
             height: "100%",
             padding: "50",
+            display: "center",
+            direction: "both",
             onwheel: onwheel,
             image {
                 image_data: image_data,

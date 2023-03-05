@@ -12,7 +12,7 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    let count = use_state(cx, || 0);
+    let mut count = use_state(cx, || 0);
     render!(
         container {
             background: "rgb(15, 15, 15)",
@@ -21,7 +21,7 @@ fn app(cx: Scope) -> Element {
             width: "auto",
             height: "100%",
             onclick: move |_| {
-                count.with_mut(|c| *c += 1);
+                count += 1;
             },
             container {
                 padding: "50",

@@ -11,7 +11,7 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     render!(
-        rect {
+        container {
             height: "33%",
             width: "100%",
             padding: "15",
@@ -22,7 +22,7 @@ fn app(cx: Scope) -> Element {
                 background: "yellow"
             }
         }
-        rect {
+        container {
             height: "33%",
             width: "100%",
             padding: "10 30 50 70",
@@ -33,7 +33,7 @@ fn app(cx: Scope) -> Element {
                 background: "yellow"
             }
         }
-        rect {
+        container {
             height: "33%",
             width: "100%",
             padding: "25 125",

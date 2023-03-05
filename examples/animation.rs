@@ -7,19 +7,23 @@ use freya::dioxus_elements::MouseEvent;
 use freya::prelude::*;
 
 fn main() {
-    launch(app);
+    launch_with_props(app, "Animation", (700, 250));
 }
 
+const TIME: i32 = 500;
+const TARGET: f64 = 500.0;
+
 fn app(cx: Scope) -> Element {
-    let (start, restart, progress) =
-        use_animation(cx, || AnimationMode::new_sine_in_out(0.0..=700.0, 1000));
+    let (run, _, progress, running) = use_animation_managed(cx, 0.0);
 
-    let start_animation = move |_: MouseEvent| {
-        start();
-    };
-
-    let restart_animation = move |_: MouseEvent| {
-        restart();
+    let anim = move |_: MouseEvent| {
+        if running {
+            return;
+        } else if progress == 0.0 {
+            run(AnimationMode::new_sine_in_out(0.0..=TARGET, TIME));
+        } else if progress == TARGET {
+            run(AnimationMode::new_sine_in_out(TARGET..=0.0, TIME));
+        }
     };
 
     render!(
@@ -30,27 +34,24 @@ fn app(cx: Scope) -> Element {
             height: "100%",
             scroll_x: "{progress}",
             rect {
+                display: "center",
+                direction: "both",
                 height: "100%",
                 width: "200",
-                background: "blue",
                 rect {
-                    padding: "10",
-                    height: "50",
+                    height: "200",
                     width: "100%",
-                    background: "green",
-                    onclick: start_animation,
+                    background: "rgb(100, 100, 100)",
+                    padding: "25",
+                    radius: "100",
+                    display: "center",
+                    direction: "both",
+                    onclick: anim,
                     label {
-                        "Start"
-                    }
-                }
-                rect {
-                    padding: "10",
-                    height: "50",
-                    width: "100%",
-                    background: "red",
-                    onclick: restart_animation,
-                    label {
-                        "Restart"
+                        font_size: "30",
+                        align: "center",
+                        color: "white",
+                        "Click to move"
                     }
                 }
             }

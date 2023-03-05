@@ -73,10 +73,10 @@ fn app(cx: Scope) -> Element {
 #[allow(non_snake_case)]
 fn FirstSection(cx: Scope) -> Element {
     let theme = use_theme(&cx);
+    let slider_percentage = use_state(cx, || 50.0);
+
     let current_theme = &theme.read();
     let enabled = current_theme.eq(&LIGHT_THEME);
-
-    let slider_percentage = use_state(cx, || 50.0);
 
     render!(
         SectionHeader {
