@@ -32,3 +32,5 @@ freya-common = { path = "../common", version = "0.1.0" }
 freya-core = { path = "../core", version = "0.1.0" }
 futures = "0.3.25"
 tokio = { version = "1.23.0", features = ["sync", "rt-multi-thread", "time", "macros"] }
+accesskit = { git = "https://github.com/marc2332/accesskit", branch="downgrade-winit"}
+accesskit_winit = { git = "https://github.com/marc2332/accesskit", branch="downgrade-winit"}

@@ -3,6 +3,7 @@ use std::fmt::Display;
 use std::sync::Arc;
 use std::sync::Mutex;
 
+use accesskit::NodeId as NodeIdKit;
 use bytes::Bytes;
 use dioxus_core::AnyValue;
 use dioxus_core::AttributeValue;
@@ -70,6 +71,7 @@ pub enum CustomAttributeValues {
     CursorReference(CursorReference),
     Bytes(Vec<u8>),
     ImageReference(ImageReference),
+    AccessibilityId(NodeIdKit),
 }
 
 impl Debug for CustomAttributeValues {
@@ -79,6 +81,7 @@ impl Debug for CustomAttributeValues {
             Self::CursorReference(_) => f.debug_tuple("CursorReference").finish(),
             Self::Bytes(_) => f.debug_tuple("Bytes").finish(),
             Self::ImageReference(_) => f.debug_tuple("ImageReference").finish(),
+            Self::AccessibilityId(_) => f.debug_tuple("AccessibilityId").finish(),
         }
     }
 }

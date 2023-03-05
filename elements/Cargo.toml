@@ -23,3 +23,4 @@ euclid = "0.22.7"
 tokio = { version = "1.23.0" }
 freya-common = { path = "../common"}
 keyboard-types = "0.6.2"
+accesskit = { git = "https://github.com/marc2332/accesskit", branch="downgrade-winit"}

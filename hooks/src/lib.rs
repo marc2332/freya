@@ -2,6 +2,7 @@
 //! A collection of hooks to be used in Freya.
 
 mod text_editor;
+mod use_accessibility;
 mod use_animation;
 mod use_camera;
 mod use_editable;
@@ -10,6 +11,7 @@ mod use_node;
 mod use_theme;
 
 pub use text_editor::*;
+pub use use_accessibility::*;
 pub use use_animation::*;
 pub use use_camera::*;
 pub use use_editable::*;

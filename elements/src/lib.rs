@@ -1,4 +1,5 @@
 pub mod events_data;
+use accesskit::NodeId as NodeIdKit;
 pub use dioxus_core::AttributeValue;
 use dioxus_rsx::HotReloadingContext;
 pub use events_data::*;
@@ -173,6 +174,7 @@ builder_constructors! {
         display: String,
         reference: Reference,
         cursor_reference: CursorReference,
+        accessibility_id: NodeIdKit,
     };
     container {
         padding: String,

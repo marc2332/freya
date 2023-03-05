@@ -1,10 +1,11 @@
-use dioxus_core::Template;
+use accesskit::{Node, NodeBuilder, NodeClassSet, NodeId, Rect, Role, Tree, TreeUpdate};
+use accesskit_winit::Adapter;
 use freya_common::NodeArea;
 use freya_core::{
     events::EventsProcessor, process_render, EventEmitter, SharedFreyaEvents, SharedRealDOM,
 };
 use freya_core::{process_events, process_layout, ViewportsCollection};
-use freya_layout::Layers;
+use freya_layout::{Layers, RenderData};
 use gl::types::*;
 use glutin::dpi::PhysicalSize;
 use glutin::event_loop::EventLoop;
@@ -16,11 +17,77 @@ use skia_safe::{
     ColorType, Surface,
 };
 use std::collections::HashMap;
+use std::num::NonZeroU128;
 use std::sync::{Arc, Mutex};
 
 use crate::renderer::render_skia;
 use crate::window_config::WindowConfig;
-use crate::HoveredNode;
+use crate::{EventMessage, HoveredNode};
+
+pub type SharedAccessibilityState = Arc<Mutex<AccessibilityState>>;
+
+pub struct AccessibilityState {
+    pub nodes: Vec<(NodeId, Node)>,
+}
+
+impl AccessibilityState {
+    pub fn wrap(self) -> SharedAccessibilityState {
+        Arc::new(Mutex::new(self))
+    }
+
+    pub fn add_element(&mut self, dioxus_node: &RenderData, accessibility_id: NodeId) {
+        let mut node_classes = NodeClassSet::new();
+        let mut builder = NodeBuilder::new(Role::Button);
+
+        //builder.set_children(vec![NodeId(NonZeroU128::new(1).unwrap())]);
+        builder.set_bounds(Rect {
+            x0: dioxus_node.node_area.x as f64,
+            x1: (dioxus_node.node_area.x + dioxus_node.node_area.width) as f64,
+            y0: dioxus_node.node_area.y as f64,
+            y1: (dioxus_node.node_area.y + dioxus_node.node_area.height) as f64,
+        });
+        builder.set_name("test");
+        let node = builder.build(&mut node_classes);
+        self.nodes.push((accessibility_id, node));
+    }
+
+    pub fn build_root(&mut self) -> Node {
+        let mut node_classes = NodeClassSet::new();
+        let mut builder = NodeBuilder::new(Role::Window);
+        builder.set_children(
+            self.nodes
+                .iter()
+                .map(|(id, _)| id.clone())
+                .collect::<Vec<NodeId>>(),
+        );
+        builder.set_name("window");
+
+        builder.build(&mut node_classes)
+    }
+
+    pub fn process(&mut self) -> TreeUpdate {
+        let root = self.build_root();
+        let mut nodes = vec![(NodeId(NonZeroU128::new(1).unwrap()), root)];
+        nodes.extend(self.nodes.clone());
+
+        let focus_id = nodes.get(0).unwrap().0;
+
+        let result = TreeUpdate {
+            nodes,
+            tree: Some(Tree::new(NodeId(NonZeroU128::new(1).unwrap()))),
+            focus: Some(focus_id),
+        };
+        result
+    }
+
+    pub fn set_focus(&mut self, adapter: &Adapter, id: NodeId) {
+        adapter.update_if_active(|| TreeUpdate {
+            nodes: Vec::new(),
+            tree: None,
+            focus: Some(id),
+        });
+    }
+}
 
 type WindowedContext = glutin::ContextWrapper<glutin::PossiblyCurrent, glutin::window::Window>;
 
@@ -38,6 +105,7 @@ pub struct WindowEnv<T: Clone> {
     pub(crate) window_config: WindowConfig<T>,
     pub(crate) layers: Layers,
     pub(crate) viewports_collection: ViewportsCollection,
+    pub(crate) accessibility_state: SharedAccessibilityState,
 }
 
 impl<T: Clone> WindowEnv<T> {
@@ -46,8 +114,9 @@ impl<T: Clone> WindowEnv<T> {
         rdom: &SharedRealDOM,
         event_emitter: EventEmitter,
         window_config: WindowConfig<T>,
-        event_loop: &EventLoop<Option<Template<'static>>>,
+        event_loop: &EventLoop<EventMessage>,
         font_collection: FontCollection,
+        accessibility_state: SharedAccessibilityState,
     ) -> Self {
         let events_processor = EventsProcessor::default();
         let freya_events = Arc::new(Mutex::new(Vec::new()));
@@ -104,6 +173,7 @@ impl<T: Clone> WindowEnv<T> {
             window_config,
             layers: Layers::default(),
             viewports_collection: HashMap::default(),
+            accessibility_state,
         }
     }
 
@@ -117,6 +187,20 @@ impl<T: Clone> WindowEnv<T> {
             &mut self.events_processor,
             &self.viewports_collection,
         );
+    }
+
+    pub fn process_accessibility(&mut self) {
+        // TODO: move logic to core
+        for (_, layer) in &self.layers.layers {
+            for node in layer.values() {
+                if let Some(accessibility_id) = node.get_state().accessibility.accessibility_id {
+                    self.accessibility_state
+                        .lock()
+                        .unwrap()
+                        .add_element(node, accessibility_id);
+                }
+            }
+        }
     }
 
     // Reprocess the layout
@@ -135,6 +219,8 @@ impl<T: Clone> WindowEnv<T> {
 
         self.layers = layers;
         self.viewports_collection = viewports;
+
+        self.process_accessibility();
     }
 
     /// Redraw the window

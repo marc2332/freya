@@ -3,6 +3,7 @@ use dioxus_native_core_macro::State;
 use skia_safe::Color;
 use std::fmt::Debug;
 
+mod accessibility;
 mod cursor;
 mod custom_attributes;
 mod font_style;
@@ -11,6 +12,7 @@ mod scroll;
 mod size;
 mod style;
 
+pub use accessibility::*;
 pub use cursor::*;
 pub use custom_attributes::*;
 pub use font_style::*;
@@ -34,6 +36,8 @@ pub struct NodeState {
     pub style: Style,
     #[parent_dep_state(font_style)]
     pub font_style: FontStyle,
+    #[parent_dep_state(accessibility)]
+    pub accessibility: AccessibilitySettings,
 }
 
 impl NodeState {
