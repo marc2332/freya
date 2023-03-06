@@ -22,7 +22,7 @@ mod tabs;
 use tabs::{style::*, tree::*};
 use tab::*;
 
-/// Run with [VirtualDom] with a sidepanel where the devtools are located.
+/// Run the [VirtualDom] with a sidepanel where the devtools are located.
 pub fn with_devtools(
     rdom: SharedRealDOM,
     root: fn(cx: Scope) -> Element,
