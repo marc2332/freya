@@ -1,4 +1,7 @@
-use accesskit::{Node, NodeBuilder, NodeClassSet, NodeId, Rect, Role, Tree, TreeUpdate};
+use accesskit::{
+    Action, DefaultActionVerb, Node, NodeBuilder, NodeClassSet, NodeId, Rect, Role, Tree,
+    TreeUpdate,
+};
 use accesskit_winit::Adapter;
 use freya_common::NodeArea;
 use freya_core::{
@@ -30,6 +33,8 @@ const WINDOW_ID: NodeId = NodeId(unsafe { NonZeroU128::new_unchecked(1) });
 
 pub struct AccessibilityState {
     pub nodes: Vec<(NodeId, Node)>,
+    pub node_classes: NodeClassSet,
+    pub focus: Option<NodeId>,
 }
 
 impl AccessibilityState {
@@ -42,7 +47,6 @@ impl AccessibilityState {
     }
 
     pub fn add_element(&mut self, dioxus_node: &RenderData, accessibility_id: NodeId) {
-        let mut node_classes = NodeClassSet::new();
         let mut builder = NodeBuilder::new(Role::Button);
 
         //builder.set_children(vec![NodeId(NonZeroU128::new(1).unwrap())]);
@@ -52,13 +56,14 @@ impl AccessibilityState {
             y0: dioxus_node.node_area.y as f64,
             y1: (dioxus_node.node_area.y + dioxus_node.node_area.height) as f64,
         });
-        builder.set_name("test");
-        let node = builder.build(&mut node_classes);
+        builder.add_action(Action::Focus);
+        builder.set_default_action_verb(DefaultActionVerb::Click);
+        builder.set_name("Button");
+        let node = builder.build(&mut self.node_classes);
         self.nodes.push((accessibility_id, node));
     }
 
     pub fn build_root(&mut self) -> Node {
-        let mut node_classes = NodeClassSet::new();
         let mut builder = NodeBuilder::new(Role::Window);
         builder.set_children(
             self.nodes
@@ -68,7 +73,7 @@ impl AccessibilityState {
         );
         builder.set_name("window");
 
-        builder.build(&mut node_classes)
+        builder.build(&mut self.node_classes)
     }
 
     pub fn process(&mut self) -> TreeUpdate {
@@ -79,16 +84,17 @@ impl AccessibilityState {
         let result = TreeUpdate {
             nodes,
             tree: Some(Tree::new(WINDOW_ID)),
-            focus: Some(WINDOW_ID),
+            focus: self.focus,
         };
         result
     }
 
     pub fn set_focus(&mut self, adapter: &Adapter, id: NodeId) {
-        adapter.update_if_active(|| TreeUpdate {
+        self.focus = Some(id);
+        adapter.update(TreeUpdate {
             nodes: Vec::new(),
             tree: None,
-            focus: Some(id),
+            focus: self.focus,
         });
     }
 }

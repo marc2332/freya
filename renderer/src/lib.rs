@@ -1,3 +1,4 @@
+use accesskit::NodeClassSet;
 use accesskit_winit::Adapter;
 use dioxus_core::VirtualDom;
 use dioxus_native_core::real_dom::RealDom;
@@ -83,7 +84,12 @@ pub fn run<T: 'static + Clone>(
     let ctx = SendAnyMap::new();
     rdom.lock().unwrap().update_state(to_update, ctx);
 
-    let accessibility_state = AccessibilityState { nodes: Vec::new() }.wrap();
+    let accessibility_state = AccessibilityState {
+        nodes: Vec::new(),
+        node_classes: NodeClassSet::new(),
+        focus: None,
+    }
+    .wrap();
 
     let mut window_env = WindowEnv::from_config(
         &rdom,
