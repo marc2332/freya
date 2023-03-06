@@ -113,9 +113,6 @@ pub fn run<T: 'static + Clone>(
         )
     };
 
-    // just a temporary test
-    let mut render_count = 0;
-
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Poll;
 
@@ -133,8 +130,9 @@ pub fn run<T: 'static + Clone>(
                     // TODO
                 }
 
-                // TODO: also consider TemplateUpdate for hotreload ?
-                if let EventMessage::Empty = ev {
+                if matches!(ev, EventMessage::Empty)
+                    || matches!(ev, EventMessage::TemplateUpdate(..))
+                {
                     poll_vdom(
                         &waker,
                         &mut vdom,
@@ -145,18 +143,14 @@ pub fn run<T: 'static + Clone>(
                         &proxy,
                     );
 
-                    if render_count == 1 {
-                        adapter.update(accessibility_state.lock().unwrap().process());
-                    }
-
-                    render_count += 1;
+                    window_env.windowed_context.window().request_redraw();
                 }
-
-                window_env.windowed_context.window().request_redraw();
             }
             Event::RedrawRequested(_) => {
+                accessibility_state.lock().unwrap().clear();
                 window_env.process_layout();
                 window_env.render(&hovered_node);
+                adapter.update(accessibility_state.lock().unwrap().process());
             }
             Event::WindowEvent { event, .. }
                 if adapter.on_event(&window_env.windowed_context.window(), &event) =>

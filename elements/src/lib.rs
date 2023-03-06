@@ -1,5 +1,4 @@
 pub mod events_data;
-use accesskit::NodeId as NodeIdKit;
 pub use dioxus_core::AttributeValue;
 use dioxus_rsx::HotReloadingContext;
 pub use events_data::*;

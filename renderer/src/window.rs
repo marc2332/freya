@@ -26,6 +26,8 @@ use crate::{EventMessage, HoveredNode};
 
 pub type SharedAccessibilityState = Arc<Mutex<AccessibilityState>>;
 
+const WINDOW_ID: NodeId = NodeId(unsafe { NonZeroU128::new_unchecked(1) });
+
 pub struct AccessibilityState {
     pub nodes: Vec<(NodeId, Node)>,
 }
@@ -33,6 +35,10 @@ pub struct AccessibilityState {
 impl AccessibilityState {
     pub fn wrap(self) -> SharedAccessibilityState {
         Arc::new(Mutex::new(self))
+    }
+
+    pub fn clear(&mut self) {
+        self.nodes.clear();
     }
 
     pub fn add_element(&mut self, dioxus_node: &RenderData, accessibility_id: NodeId) {
@@ -67,15 +73,13 @@ impl AccessibilityState {
 
     pub fn process(&mut self) -> TreeUpdate {
         let root = self.build_root();
-        let mut nodes = vec![(NodeId(NonZeroU128::new(1).unwrap()), root)];
+        let mut nodes = vec![(WINDOW_ID, root)];
         nodes.extend(self.nodes.clone());
-
-        let focus_id = nodes.get(0).unwrap().0;
 
         let result = TreeUpdate {
             nodes,
-            tree: Some(Tree::new(NodeId(NonZeroU128::new(1).unwrap()))),
-            focus: Some(focus_id),
+            tree: Some(Tree::new(WINDOW_ID)),
+            focus: Some(WINDOW_ID),
         };
         result
     }
