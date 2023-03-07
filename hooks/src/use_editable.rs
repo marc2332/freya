@@ -7,8 +7,10 @@ use std::{
 
 use dioxus_core::{AttributeValue, Event, ScopeState};
 use dioxus_hooks::{use_effect, use_ref, use_state, UseRef, UseState};
+use freya_common::EventMessage;
 use freya_elements::events_data::{KeyboardData, MouseData};
 use freya_node_state::{CursorReference, CustomAttributeValues};
+use glutin::event_loop::EventLoopProxy;
 use ropey::iter::Lines;
 pub use ropey::Rope;
 use tokio::sync::{mpsc::unbounded_channel, mpsc::UnboundedSender};
@@ -84,6 +86,7 @@ pub fn use_editable<'a>(
         let cursor_ref = cursor_ref.clone();
         use_effect(cx, (), move |_| {
             let rx = click_channel.1.take();
+            let event_loop_proxy = cx.consume_context::<EventLoopProxy<EventMessage>>();
             async move {
                 let mut rx = rx.unwrap();
 
@@ -97,6 +100,13 @@ pub fn use_editable<'a>(
                         .lock()
                         .unwrap()
                         .replace((points.x as f32, points.y as f32));
+
+                    // Request the renderer to relayout
+                    if let Some(event_loop_proxy) = &event_loop_proxy {
+                        event_loop_proxy
+                            .send_event(EventMessage::RequestRelayout)
+                            .unwrap();
+                    }
                 }
             }
         });

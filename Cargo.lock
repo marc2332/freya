@@ -1431,6 +1431,7 @@ dependencies = [
  "freya-elements",
  "freya-node-state",
  "freya-testing",
+ "glutin",
  "nokhwa",
  "ropey",
  "tokio",

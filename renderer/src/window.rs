@@ -1,5 +1,4 @@
-use dioxus_core::Template;
-use freya_common::NodeArea;
+use freya_common::{EventMessage, NodeArea};
 use freya_core::{
     events::EventsProcessor, process_render, EventEmitter, SharedFreyaEvents, SharedRealDOM,
 };
@@ -46,7 +45,7 @@ impl<T: Clone> WindowEnv<T> {
         rdom: &SharedRealDOM,
         event_emitter: EventEmitter,
         window_config: WindowConfig<T>,
-        event_loop: &EventLoop<Option<Template<'static>>>,
+        event_loop: &EventLoop<EventMessage>,
         font_collection: FontCollection,
     ) -> Self {
         let events_processor = EventsProcessor::default();
