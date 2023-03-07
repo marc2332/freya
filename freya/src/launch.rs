@@ -164,8 +164,9 @@ pub fn launch_cfg<T: 'static + Clone + Send>(root: Component, win_config: Window
     ));
     let (vdom, mutations_sender, hovered_node) = {
         #[cfg(feature = "devtools")]
+        #[cfg(debug_assertions)]
         {
-            use crate::devtools::with_devtools;
+            use freya_devtools::with_devtools;
             use tokio::sync::mpsc::unbounded_channel;
 
             let hovered_node = Some(Arc::new(Mutex::new(None)));
@@ -174,7 +175,7 @@ pub fn launch_cfg<T: 'static + Clone + Send>(root: Component, win_config: Window
             (vdom, Some(mutations_sender), hovered_node)
         }
 
-        #[cfg(not(feature = "devtools"))]
+        #[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
         {
             use dioxus_core::VirtualDom;
             let vdom = VirtualDom::new(root);

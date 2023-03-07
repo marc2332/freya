@@ -4,10 +4,16 @@ use dioxus_core::Template;
 
 #[derive(Debug)]
 pub enum EventMessage {
-    TemplateUpdate(Template<'static>),
+    /// Update the given template
+    UpdateTemplate(Template<'static>),
+    /// Pull the VirtualDOM
+    PollVDOM,
+    /// Request a layout recalculation
+    RequestRelayout,
+    /// Accessibility action request event
     ActionRequestEvent(ActionRequestEvent),
-    FocusAccessibilityButton(NodeId),
-    Empty,
+    /// Focus the given accessibility NodeID
+    FocusAccessibilityNode(NodeId),
 }
 
 impl From<ActionRequestEvent> for EventMessage {

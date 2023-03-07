@@ -1590,6 +1590,7 @@ dependencies = [
  "freya-common",
  "freya-components",
  "freya-core",
+ "freya-devtools",
  "freya-elements",
  "freya-hooks",
  "freya-layout",
@@ -1652,6 +1653,26 @@ dependencies = [
  "skia-safe",
  "tokio",
  "tracing",
+]
+
+[[package]]
+name = "freya-devtools"
+version = "0.1.0"
+dependencies = [
+ "dioxus",
+ "dioxus-core",
+ "dioxus-core-macro",
+ "dioxus-native-core",
+ "dioxus-router",
+ "freya-components",
+ "freya-core",
+ "freya-elements",
+ "freya-hooks",
+ "freya-layout",
+ "freya-node-state",
+ "freya-renderer",
+ "skia-safe",
+ "tokio",
 ]
 
 [[package]]

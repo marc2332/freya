@@ -19,7 +19,7 @@ pub fn use_focus_accessibility(cx: &ScopeState) -> impl Fn(NodeIdKit) + '_ {
         let proxy = cx.consume_context::<EventLoopProxy<EventMessage>>();
         if let Some(proxy) = &proxy {
             proxy
-                .send_event(EventMessage::FocusAccessibilityButton(id))
+                .send_event(EventMessage::FocusAccessibilityNode(id))
                 .unwrap();
         }
     }

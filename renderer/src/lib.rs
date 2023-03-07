@@ -15,7 +15,6 @@ use glutin::event::{
     WindowEvent,
 };
 use glutin::event_loop::{ControlFlow, EventLoopBuilder, EventLoopProxy};
-use skia_safe::{textlayout::FontCollection, FontMgr};
 use std::process::exit;
 use std::sync::{Arc, Mutex};
 use std::task::Waker;
@@ -49,6 +48,13 @@ pub fn run<T: 'static + Clone>(
 
     let _guard = rt.enter();
 
+    let accessibility_state = AccessibilityState {
+        nodes: Vec::new(),
+        node_classes: NodeClassSet::new(),
+        focus: None,
+    }
+    .wrap();
+
     let event_loop = EventLoopBuilder::<EventMessage>::with_user_event().build();
     let proxy = event_loop.create_proxy();
 
@@ -57,20 +63,27 @@ pub fn run<T: 'static + Clone>(
         let proxy = proxy.clone();
         dioxus_hot_reload::connect(move |msg| match msg {
             dioxus_hot_reload::HotReloadMsg::UpdateTemplate(template) => {
-                let _ = proxy.send_event(EventMessage::TemplateUpdate(template));
+                let _ = proxy.send_event(EventMessage::UpdateTemplate(template));
             }
             dioxus_hot_reload::HotReloadMsg::Shutdown => exit(0),
         });
     }
 
     let (event_emitter, mut event_emitter_rx) = unbounded_channel::<DomEvent>();
-    let mut font_collection = FontCollection::new();
-    font_collection.set_default_font_manager(FontMgr::default(), "Fira Sans");
     let app_state = window_config.state.clone();
+
+    let mut window_env = WindowEnv::from_config(
+        &rdom,
+        event_emitter,
+        window_config,
+        &event_loop,
+        accessibility_state.clone(),
+    );
 
     if let Some(state) = &app_state {
         vdom.base_scope().provide_context(state.clone());
     }
+    vdom.base_scope().provide_context(proxy.clone());
 
     vdom.base_scope().provide_context(proxy.clone());
 
@@ -81,24 +94,9 @@ pub fn run<T: 'static + Clone>(
         mutations_sender.as_ref().map(|s| s.send(()));
     }
 
-    let ctx = SendAnyMap::new();
-    rdom.lock().unwrap().update_state(to_update, ctx);
-
-    let accessibility_state = AccessibilityState {
-        nodes: Vec::new(),
-        node_classes: NodeClassSet::new(),
-        focus: None,
-    }
-    .wrap();
-
-    let mut window_env = WindowEnv::from_config(
-        &rdom,
-        event_emitter,
-        window_config,
-        &event_loop,
-        font_collection,
-        accessibility_state.clone(),
-    );
+    rdom.lock()
+        .unwrap()
+        .update_state(to_update, SendAnyMap::new());
 
     let waker = winit_waker(&proxy);
     let cursor_pos = Arc::new(Mutex::new((0.0, 0.0)));
@@ -120,24 +118,26 @@ pub fn run<T: 'static + Clone>(
     };
 
     event_loop.run(move |event, _, control_flow| {
-        *control_flow = ControlFlow::Poll;
-
+        *control_flow = ControlFlow::Wait;
         match event {
             Event::NewEvents(StartCause::Init) => {
-                _ = proxy.send_event(EventMessage::Empty);
+                _ = proxy.send_event(EventMessage::PollVDOM);
             }
-            Event::UserEvent(EventMessage::FocusAccessibilityButton(id)) => {
+            Event::UserEvent(EventMessage::FocusAccessibilityNode(id)) => {
                 accessibility_state.lock().unwrap().set_focus(&adapter, id);
             }
+            Event::UserEvent(EventMessage::RequestRelayout) => {
+                window_env.process_layout();
+            }
             Event::UserEvent(ev) => {
-                if let EventMessage::TemplateUpdate(template) = ev {
+                if let EventMessage::UpdateTemplate(template) = ev {
                     vdom.replace_template(template);
                 } else if let EventMessage::ActionRequestEvent(_event) = &ev {
                     // TODO
                 }
 
-                if matches!(ev, EventMessage::Empty)
-                    || matches!(ev, EventMessage::TemplateUpdate(..))
+                if matches!(ev, EventMessage::PollVDOM)
+                    || matches!(ev, EventMessage::UpdateTemplate(..))
                 {
                     poll_vdom(
                         &waker,
@@ -146,10 +146,9 @@ pub fn run<T: 'static + Clone>(
                         &mut event_emitter_rx,
                         &app_state,
                         &mutations_sender,
+                        &window_env,
                         &proxy,
                     );
-
-                    window_env.windowed_context.window().request_redraw();
                 }
             }
             Event::RedrawRequested(_) => {
@@ -328,7 +327,7 @@ pub fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
 
     impl ArcWake for DomHandle {
         fn wake_by_ref(arc_self: &Arc<Self>) {
-            _ = arc_self.0.send_event(EventMessage::Empty);
+            _ = arc_self.0.send_event(EventMessage::PollVDOM);
         }
     }
 
@@ -342,6 +341,7 @@ fn poll_vdom<T: 'static + Clone>(
     event_emitter_rx: &mut UnboundedReceiver<DomEvent>,
     state: &Option<T>,
     mutations_sender: &Option<UnboundedSender<()>>,
+    window_env: &WindowEnv<T>,
     proxy: &EventLoopProxy<EventMessage>,
 ) {
     let mut cx = std::task::Context::from_waker(waker);
@@ -350,6 +350,7 @@ fn poll_vdom<T: 'static + Clone>(
         if let Some(state) = state.clone() {
             vdom.base_scope().provide_context(state);
         }
+        vdom.base_scope().provide_context(proxy.clone());
 
         vdom.base_scope().provide_context(proxy.clone());
 
@@ -384,5 +385,9 @@ fn poll_vdom<T: 'static + Clone>(
 
         let ctx = SendAnyMap::new();
         rdom.lock().unwrap().update_state(to_update, ctx);
+
+        if !diff.is_empty() {
+            window_env.windowed_context.window().request_redraw();
+        }
     }
 }
