@@ -13,7 +13,6 @@ use glutin::event::{
     WindowEvent,
 };
 use glutin::event_loop::{ControlFlow, EventLoopBuilder, EventLoopProxy};
-use skia_safe::{textlayout::FontCollection, FontMgr};
 use std::process::exit;
 use std::sync::{Arc, Mutex};
 use std::task::Waker;
@@ -47,10 +46,11 @@ pub fn run<T: 'static + Clone>(
     let _guard = rt.enter();
 
     let event_loop = EventLoopBuilder::<EventMessage>::with_user_event().build();
+    let proxy = event_loop.create_proxy();
 
     #[cfg(debug_assertions)]
     {
-        let proxy = event_loop.create_proxy();
+        let proxy = proxy.clone();
         dioxus_hot_reload::connect(move |msg| match msg {
             dioxus_hot_reload::HotReloadMsg::UpdateTemplate(template) => {
                 let _ = proxy.send_event(EventMessage::UpdateTemplate(template));
@@ -60,26 +60,13 @@ pub fn run<T: 'static + Clone>(
     }
 
     let (event_emitter, mut event_emitter_rx) = unbounded_channel::<DomEvent>();
-    let mut font_collection = FontCollection::new();
-    font_collection.set_default_font_manager(FontMgr::default(), "Fira Sans");
     let app_state = window_config.state.clone();
 
-    let mut window_env = WindowEnv::from_config(
-        &rdom,
-        event_emitter,
-        window_config,
-        &event_loop,
-        font_collection,
-    );
-
-    let proxy = event_loop.create_proxy();
-    let waker = winit_waker(&proxy);
-    let cursor_pos = Arc::new(Mutex::new((0.0, 0.0)));
+    let mut window_env = WindowEnv::from_config(&rdom, event_emitter, window_config, &event_loop);
 
     if let Some(state) = &app_state {
         vdom.base_scope().provide_context(state.clone());
     }
-
     vdom.base_scope().provide_context(proxy.clone());
 
     let muts = vdom.rebuild();
@@ -89,8 +76,12 @@ pub fn run<T: 'static + Clone>(
         mutations_sender.as_ref().map(|s| s.send(()));
     }
 
-    let ctx = SendAnyMap::new();
-    rdom.lock().unwrap().update_state(to_update, ctx);
+    rdom.lock()
+        .unwrap()
+        .update_state(to_update, SendAnyMap::new());
+
+    let waker = winit_waker(&proxy);
+    let cursor_pos = Arc::new(Mutex::new((0.0, 0.0)));
 
     let mut last_keydown = Key::Unidentified;
     let mut last_code = Code::Unidentified;
@@ -320,7 +311,6 @@ fn poll_vdom<T: 'static + Clone>(
         if let Some(state) = state.clone() {
             vdom.base_scope().provide_context(state);
         }
-
         vdom.base_scope().provide_context(proxy.clone());
 
         {
