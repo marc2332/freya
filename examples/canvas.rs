@@ -11,6 +11,7 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
+    use_init_focus(cx);
     let hovering = use_state(cx, || false);
     let canvas_pos = use_state(cx, || (0.0f64, 0.0f64));
     let nodes = use_state(cx, || vec![(0.0f64, 0.0f64)]);
@@ -146,6 +147,7 @@ fn app(cx: Scope) -> Element {
 
 #[allow(non_snake_case)]
 fn Editor(cx: Scope) -> Element {
+    let (focused, focus_id, focus) = use_raw_focus(cx);
     let (text_editor, process_keyevent, process_clickevent, cursor_ref) = use_editable(
         &cx,
         || {
@@ -175,8 +177,16 @@ fn Editor(cx: Scope) -> Element {
         }
     };
 
+    use_effect(cx, (), move |_| {
+        focus.map(|f| *f.write() = focus_id);
+        async move {}
+    });
+
     render!(
         rect {
+            onclick: move |_| {
+                focus.map(|f| *f.write() = focus_id);
+            },
             width: "100%",
             height: "100%",
             rect {
@@ -282,7 +292,9 @@ fn Editor(cx: Scope) -> Element {
                 height: "calc(100% - 80)",
                 padding: "5",
                 onkeydown: move |e| {
-                    process_keyevent.send(e.data).unwrap();
+                    if focused {
+                        process_keyevent.send(e.data).unwrap();
+                    }
                 },
                 cursor_reference: cursor_ref,
                 direction: "horizontal",
