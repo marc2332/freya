@@ -93,6 +93,9 @@ pub fn run<T: 'static + Clone>(
             Event::NewEvents(StartCause::Init) => {
                 _ = proxy.send_event(EventMessage::PollVDOM);
             }
+            Event::UserEvent(EventMessage::RequestRerender) => {
+                window_env.windowed_context.window().request_redraw();
+            }
             Event::UserEvent(EventMessage::RequestRelayout) => {
                 window_env.process_layout();
             }

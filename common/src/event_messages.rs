@@ -8,4 +8,6 @@ pub enum EventMessage {
     PollVDOM,
     /// Request a layout recalculation
     RequestRelayout,
+    /// Request a rerender
+    RequestRerender,
 }
