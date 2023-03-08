@@ -15,13 +15,13 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    use_init_default_theme(&cx);
+    use_init_default_theme(cx);
     render!(Body {})
 }
 
 #[allow(non_snake_case)]
 fn Body(cx: Scope) -> Element {
-    let theme = use_theme(&cx);
+    let theme = use_theme(cx);
     let theme = theme.read();
     let (text_editor, process_keyevent, process_clickevent, cursor_ref) = use_editable(
         &cx,

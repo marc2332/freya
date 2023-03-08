@@ -41,7 +41,7 @@ fn app(cx: Scope) -> Element {
 #[allow(non_snake_case)]
 fn Body(cx: Scope) -> Element {
     let selected_dropdown = use_state(cx, || Values::A);
-    let theme = use_theme(&cx);
+    let theme = use_theme(cx);
     let body_theme = &theme.read().body;
 
     render!(

@@ -37,7 +37,7 @@ fn SectionHeader<'a>(cx: Scope<'a>, children: Element<'a>) -> Element {
 
 #[allow(non_snake_case)]
 fn Body(cx: Scope) -> Element {
-    let theme = use_theme(&cx);
+    let theme = use_theme(cx);
     let theme = theme.read();
     let body_theme = &theme.body;
 
@@ -72,7 +72,7 @@ fn app(cx: Scope) -> Element {
 
 #[allow(non_snake_case)]
 fn FirstSection(cx: Scope) -> Element {
-    let theme = use_theme(&cx);
+    let theme = use_theme(cx);
     let slider_percentage = use_state(cx, || 50.0);
 
     let current_theme = &theme.read();

@@ -10,6 +10,8 @@ pub enum EventMessage {
     PollVDOM,
     /// Request a layout recalculation
     RequestRelayout,
+    /// Request a rerender
+    RequestRerender,
     /// Accessibility action request event
     ActionRequestEvent(ActionRequestEvent),
     /// Focus the given accessibility NodeID

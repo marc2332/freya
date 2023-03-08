@@ -126,6 +126,9 @@ pub fn run<T: 'static + Clone>(
             Event::UserEvent(EventMessage::FocusAccessibilityNode(id)) => {
                 accessibility_state.lock().unwrap().set_focus(&adapter, id);
             }
+            Event::UserEvent(EventMessage::RequestRerender) => {
+                window_env.windowed_context.window().request_redraw();
+            }
             Event::UserEvent(EventMessage::RequestRelayout) => {
                 window_env.process_layout();
             }
@@ -334,6 +337,7 @@ pub fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
     task::waker(Arc::new(DomHandle(proxy.clone())))
 }
 
+#[allow(clippy::too_many_arguments)]
 fn poll_vdom<T: 'static + Clone>(
     waker: &Waker,
     vdom: &mut VirtualDom,

@@ -111,11 +111,13 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
     let theme = use_theme(cx);
     let theme = theme.read();
 
+    #[allow(clippy::await_holding_lock)]
     use_effect(cx, (), move |_| {
         let rdom = cx.props.rdom.clone();
         let mutations_receiver = cx.props.mutations_receiver.clone();
         let children = children.clone();
         async move {
+            
             let mut mutations_receiver = mutations_receiver.lock().unwrap();
             loop {
                 if mutations_receiver.recv().await.is_some() {
@@ -164,7 +166,7 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
         }
     });
 
-    let selected_node_id = use_state::<Option<NodeId>>(&cx, || None);
+    let selected_node_id = use_state::<Option<NodeId>>(cx, || None);
 
     let selected_node = children.iter().find(|c| {
         if let Some(n_id) = selected_node_id.get() {
@@ -209,12 +211,12 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                             selected_node_id.set(Some(node.id));
                         }
                     }
-                    selected_node.and_then(|selected_node| {
-                        Some(rsx!(
+                    selected_node.map(|selected_node| {
+                        rsx!(
                             NodeInspectorStyle {
                                 node: selected_node
                             }
-                        ))
+                        )
                     })
                 }
             }
