@@ -298,6 +298,7 @@ pub fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
     task::waker(Arc::new(DomHandle(proxy.clone())))
 }
 
+#[allow(clippy::too_many_arguments)]
 fn poll_vdom<T: 'static + Clone>(
     waker: &Waker,
     vdom: &mut VirtualDom,

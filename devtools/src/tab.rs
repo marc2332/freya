@@ -10,7 +10,7 @@ pub struct TabsBarProps<'a> {
 
 #[allow(non_snake_case)]
 pub fn TabsBar<'a>(cx: Scope<'a, TabsBarProps<'a>>) -> Element<'a> {
-    let theme = use_theme(&cx);
+    let theme = use_theme(cx);
     let button_theme = &theme.read().button;
     render!(
         container {
@@ -32,7 +32,7 @@ pub struct TabButtonProps<'a> {
 
 #[allow(non_snake_case)]
 pub fn TabButton<'a>(cx: Scope<'a, TabButtonProps<'a>>) -> Element<'a> {
-    let theme = use_theme(&cx);
+    let theme = use_theme(cx);
     let button_theme = &theme.read().button;
 
     let background = use_state(cx, || <&str>::clone(&button_theme.background));

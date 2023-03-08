@@ -14,7 +14,7 @@ pub fn NodesTree<'a>(
     selected_node_id: &'a Option<NodeId>,
     onselected: EventHandler<'a, &'a TreeNode>,
 ) -> Element<'a> {
-    let router = use_router(&cx);
+    let router = use_router(cx);
 
     render!(VirtualScrollView {
         width: "100%",

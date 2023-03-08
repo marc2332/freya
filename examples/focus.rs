@@ -25,7 +25,7 @@ fn Child(cx: Scope) -> Element {
 }
 
 fn app(cx: Scope) -> Element {
-    use_init_focus(&cx);
+    use_init_focus(cx);
     render!(
         container {
             width: "100%",
