@@ -117,7 +117,6 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
         let mutations_receiver = cx.props.mutations_receiver.clone();
         let children = children.clone();
         async move {
-            
             let mut mutations_receiver = mutations_receiver.lock().unwrap();
             loop {
                 if mutations_receiver.recv().await.is_some() {

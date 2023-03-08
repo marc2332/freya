@@ -1,4 +1,6 @@
+use accesskit::NodeId as NodeIdKit;
 use dioxus_core::ElementId;
+use dioxus_native_core::tree::TreeView;
 use dioxus_native_core::{
     node::{Node, NodeType},
     NodeId,
@@ -6,6 +8,8 @@ use dioxus_native_core::{
 use freya_common::NodeArea;
 use freya_node_state::{CustomAttributeValues, NodeState};
 use rustc_hash::FxHashMap;
+
+use crate::SafeDOM;
 
 pub type DioxusNode = Node<NodeState, CustomAttributeValues>;
 
@@ -52,6 +56,27 @@ impl RenderData {
     #[inline(always)]
     pub fn get_state(&self) -> &NodeState {
         &self.node.state
+    }
+
+    pub fn get_accessibility_children(&self, rdom: &SafeDOM) -> Option<Vec<NodeIdKit>> {
+        if let Some(children) = &self.children {
+            let rdom = rdom.lock().unwrap();
+            Some(
+                children
+                    .iter()
+                    .filter_map(|child| {
+                        let node = rdom.get(*child);
+                        if let Some(node) = &node {
+                            node.state.accessibility.accessibility_id
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<NodeIdKit>>(),
+            )
+        } else {
+            None
+        }
     }
 }
 

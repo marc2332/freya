@@ -161,7 +161,7 @@ pub fn run<T: 'static + Clone>(
                 adapter.update(accessibility_state.lock().unwrap().process());
             }
             Event::WindowEvent { event, .. }
-                if adapter.on_event(&window_env.windowed_context.window(), &event) =>
+                if adapter.on_event(window_env.windowed_context.window(), &event) =>
             {
                 match event {
                     WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,

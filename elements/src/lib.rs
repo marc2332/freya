@@ -205,6 +205,7 @@ builder_constructors! {
         align: String,
         max_lines: String,
         font_style: String,
+        accessibility_id: NodeIdKit,
     };
     paragraph {
         layer: String,

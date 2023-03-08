@@ -12,8 +12,10 @@ fn main() {
 fn app(cx: Scope) -> Element {
     let focus_a = use_focus_accessibility(cx);
     let focus_b = use_focus_accessibility(cx);
+    let focus_c = use_focus_accessibility(cx);
     let (id_a, attr_a) = use_accessibility(cx);
     let (id_b, attr_b) = use_accessibility(cx);
+    let (id_c, attr_c) = use_accessibility(cx);
     render!(
         rect {
             accessibility_id: attr_a,
@@ -23,6 +25,13 @@ fn app(cx: Scope) -> Element {
             height: "50%",
             onclick: move |_| {
                 focus_a(id_a);
+            },
+            label {
+                accessibility_id: attr_c,
+                onclick: move |_| {
+                    focus_c(id_c);
+                },
+                "test"
             }
         }
         rect {

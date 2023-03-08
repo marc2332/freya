@@ -30,6 +30,7 @@ impl ParentDepState<CustomAttributeValues> for AccessibilitySettings {
 
         if let Some(attributes) = node.attributes() {
             for attr in attributes {
+                #[allow(clippy::single_match)]
                 match attr.attribute.name.as_str() {
                     "accessibility_id" => {
                         if let OwnedAttributeValue::Custom(

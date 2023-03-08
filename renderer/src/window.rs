@@ -46,10 +46,18 @@ impl AccessibilityState {
         self.nodes.clear();
     }
 
-    pub fn add_element(&mut self, dioxus_node: &RenderData, accessibility_id: NodeId) {
+    pub fn add_element(
+        &mut self,
+        dioxus_node: &RenderData,
+        accessibility_id: NodeId,
+        children: Option<Vec<NodeId>>,
+    ) {
         let mut builder = NodeBuilder::new(Role::Button);
 
-        //builder.set_children(vec![NodeId(NonZeroU128::new(1).unwrap())]);
+        if let Some(children) = children {
+            builder.set_children(children);
+        }
+
         builder.set_bounds(Rect {
             x0: dioxus_node.node_area.x as f64,
             x1: (dioxus_node.node_area.x + dioxus_node.node_area.width) as f64,
@@ -68,7 +76,7 @@ impl AccessibilityState {
         builder.set_children(
             self.nodes
                 .iter()
-                .map(|(id, _)| id.clone())
+                .map(|(id, _)| *id)
                 .collect::<Vec<NodeId>>(),
         );
         builder.set_name("window");
@@ -81,12 +89,11 @@ impl AccessibilityState {
         let mut nodes = vec![(WINDOW_ID, root)];
         nodes.extend(self.nodes.clone());
 
-        let result = TreeUpdate {
+        TreeUpdate {
             nodes,
             tree: Some(Tree::new(WINDOW_ID)),
             focus: self.focus,
-        };
-        result
+        }
     }
 
     pub fn set_focus(&mut self, adapter: &Adapter, id: NodeId) {
@@ -202,13 +209,15 @@ impl<T: Clone> WindowEnv<T> {
 
     pub fn process_accessibility(&mut self) {
         // TODO: move logic to core
-        for (_, layer) in &self.layers.layers {
+        for layer in self.layers.layers.values() {
             for node in layer.values() {
                 if let Some(accessibility_id) = node.get_state().accessibility.accessibility_id {
-                    self.accessibility_state
-                        .lock()
-                        .unwrap()
-                        .add_element(node, accessibility_id);
+                    let children = node.get_accessibility_children(&self.rdom);
+                    self.accessibility_state.lock().unwrap().add_element(
+                        node,
+                        accessibility_id,
+                        children,
+                    );
                 }
             }
         }

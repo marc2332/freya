@@ -1722,6 +1722,7 @@ dependencies = [
 name = "freya-layout"
 version = "0.1.0"
 dependencies = [
+ "accesskit",
  "anymap 0.12.1",
  "dioxus",
  "dioxus-core",
