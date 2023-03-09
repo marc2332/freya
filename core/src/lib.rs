@@ -270,7 +270,7 @@ pub fn process_layout(
     let mut layers = Layers::default();
 
     {
-        let root = dom.index(NodeId(0)).clone();
+        let root = dom.index(NodeId(0));
         let mut remaining_area = area;
         let mut root_node_measurer = NodeLayoutMeasurer::new(
             root,

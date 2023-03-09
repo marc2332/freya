@@ -18,9 +18,9 @@ pub type DioxusDOM = RealDom<NodeState, CustomAttributeValues>;
 
 /// Collect all the texts and node states from a given array of children
 fn get_inner_texts(dom: &DioxusDOM, node_id: &NodeId) -> Vec<(FontStyle, String)> {
-    let children: Vec<DioxusNode> = dom.tree.children(*node_id).unwrap().cloned().collect();
-    children
-        .iter()
+    dom.tree
+        .children(*node_id)
+        .unwrap()
         .filter_map(|child| {
             if let NodeType::Element { tag, .. } = &child.node_data.node_type {
                 if tag != "text" {
@@ -62,7 +62,7 @@ fn get_cursor_reference(node: &DioxusNode) -> Option<(&CursorReference, usize, (
 
 /// Measure the layout of a given Node and all it's children
 pub struct NodeLayoutMeasurer<'a> {
-    node: DioxusNode,
+    node: &'a DioxusNode,
     node_id: NodeId,
     remaining_area: &'a mut NodeArea,
     parent_area: NodeArea,
@@ -76,7 +76,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
     /// Create a NodeLayoutMeasurer
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        node: DioxusNode,
+        node: &'a DioxusNode,
         remaining_area: &'a mut NodeArea,
         parent_area: NodeArea,
         dom: &'a DioxusDOM,
@@ -113,7 +113,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
             self.inherited_relative_layer,
         );
 
-        let mut node_area = calculate_area(self, &self.node);
+        let mut node_area = calculate_area(self);
 
         let mut inner_width = padding.1 + padding.3;
         let mut inner_height = padding.0 + padding.2;
@@ -197,7 +197,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
         if is_measuring {
             let node_children = self.dom.tree.children_ids(self.node_id).map(|v| v.to_vec());
             self.layers
-                .add_element(&self.node, node_children, &node_area, node_layer);
+                .add_element(self.node, node_children, &node_area, node_layer);
         }
 
         if is_measuring {
@@ -290,13 +290,8 @@ impl<'a> NodeLayoutMeasurer<'a> {
         let cursor_settings = &node.state.cursor_settings;
         match &node.node_data.node_type {
             NodeType::Element { tag, .. } => {
-                let node_children: Option<Vec<DioxusNode>> = self
-                    .dom
-                    .tree
-                    .children(self.node_id)
-                    .map(|children| children.cloned().collect());
-                if let Some(children) = node_children {
-                    for child in children.into_iter() {
+                if let Some(children) = self.dom.tree.children(self.node_id) {
+                    for child in children {
                         let child_node_area = {
                             let mut child_measurer = NodeLayoutMeasurer {
                                 node_id: child.node_data.node_id,
