@@ -5,7 +5,6 @@ use freya_node_state::{
     NodeState, SizeMode,
 };
 use skia_safe::textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle};
-use std::sync::{Arc, Mutex};
 
 mod area_calc;
 mod layers;
@@ -17,14 +16,7 @@ pub use ops_calc::run_calculations;
 
 /// Collect all the texts and node states from a given array of children
 fn get_inner_texts(dom: &SafeDOM, node_id: &NodeId) -> Vec<(FontStyle, String)> {
-    let children: Vec<DioxusNode> = dom
-        .lock()
-        .unwrap()
-        .tree
-        .children(*node_id)
-        .unwrap()
-        .cloned()
-        .collect();
+    let children: Vec<DioxusNode> = dom.tree.children(*node_id).unwrap().cloned().collect();
     children
         .iter()
         .filter_map(|child| {
@@ -33,7 +25,6 @@ fn get_inner_texts(dom: &SafeDOM, node_id: &NodeId) -> Vec<(FontStyle, String)> 
                     return None;
                 }
 
-                let dom = dom.lock().unwrap();
                 let child_text = dom
                     .tree
                     .children(child.node_data.node_id)
@@ -67,7 +58,7 @@ fn get_cursor_reference(node: &DioxusNode) -> Option<(&CursorReference, usize, (
     }
 }
 
-pub type SafeDOM = Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>;
+pub type SafeDOM = RealDom<NodeState, CustomAttributeValues>;
 
 /// Measure the layout of a given Node and all it's children
 pub struct NodeLayoutMeasurer<'a> {
@@ -107,7 +98,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
 
     /// Measure the area of a Node
     pub fn measure_area(&mut self, is_measuring: bool) -> NodeArea {
-        let node_height = self.dom.lock().unwrap().tree.height(self.node_id).unwrap();
+        let node_height = self.dom.tree.height(self.node_id).unwrap();
 
         let direction = self.node.state.size.direction;
         let padding = self.node.state.size.padding;
@@ -204,13 +195,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
 
         // Registers the element in the Layers handler
         if is_measuring {
-            let node_children = self
-                .dom
-                .lock()
-                .unwrap()
-                .tree
-                .children_ids(self.node_id)
-                .map(|v| v.to_vec());
+            let node_children = self.dom.tree.children_ids(self.node_id).map(|v| v.to_vec());
             self.layers
                 .add_element(&self.node, node_children, &node_area, node_layer);
         }
@@ -307,8 +292,6 @@ impl<'a> NodeLayoutMeasurer<'a> {
             NodeType::Element { tag, .. } => {
                 let node_children: Option<Vec<DioxusNode>> = self
                     .dom
-                    .lock()
-                    .unwrap()
                     .tree
                     .children(self.node_id)
                     .map(|children| children.cloned().collect());

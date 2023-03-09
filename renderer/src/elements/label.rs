@@ -15,22 +15,22 @@ pub fn render_label(
     node: &RenderData,
     children: &[NodeId],
 ) {
-    let font_size = node.get_state().font_style.font_size;
-    let font_family = &node.get_state().font_style.font_family;
-    let font_color = node.get_state().font_style.color;
-    let align = node.get_state().font_style.align;
-    let font_style = node.get_state().font_style.font_style;
+    let dioxus_node = node.get_node(dom);
+    let font_size = dioxus_node.state.font_style.font_size;
+    let font_family = &dioxus_node.state.font_style.font_family;
+    let font_color = dioxus_node.state.font_style.color;
+    let align = dioxus_node.state.font_style.align;
+    let font_style = dioxus_node.state.font_style.font_style;
 
     let mut paint = Paint::default();
 
     paint.set_anti_alias(true);
     paint.set_style(PaintStyle::StrokeAndFill);
-    paint.set_color(node.get_state().font_style.color);
+    paint.set_color(dioxus_node.state.font_style.color);
 
     let child_id = children.get(0);
 
     let text = if let Some(child_id) = child_id {
-        let dom = dom.lock().unwrap();
         if let Some(child) = dom.get(*child_id) {
             if let NodeType::Text { text } = &child.node_data.node_type {
                 Some(text.clone())

@@ -1,16 +1,17 @@
-use freya_layout::RenderData;
+use freya_layout::{RenderData, SafeDOM};
 use skia_safe::{BlurStyle, Canvas, MaskFilter, Paint, PaintStyle, Path, PathDirection, Rect};
 
 /// Render a `rect` or a `container` element
-pub fn render_rect_container(canvas: &mut Canvas, node: &RenderData) {
-    let shadow = &node.get_state().style.shadow;
+pub fn render_rect_container(canvas: &mut Canvas, node: &RenderData, rdom: &SafeDOM) {
+    let dioxus_node = node.get_node(rdom);
+    let shadow = &dioxus_node.state.style.shadow;
 
     let mut paint = Paint::default();
     paint.set_anti_alias(true);
     paint.set_style(PaintStyle::Fill);
-    paint.set_color(node.get_state().style.background);
+    paint.set_color(dioxus_node.state.style.background);
 
-    let radius = node.get_state().style.radius;
+    let radius = dioxus_node.state.style.radius;
     let radius = if radius < 0.0 { 0.0 } else { radius };
 
     let ((x, y), (x2, y2)) = node.node_area.get_rect();

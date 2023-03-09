@@ -1,8 +1,9 @@
-use freya_layout::RenderData;
+use freya_layout::{RenderData, SafeDOM};
 use skia_safe::{Canvas, Data, IRect, Image, Paint, Rect};
 
 /// Render an `image` element
-pub fn render_image(canvas: &mut Canvas, node: &RenderData) {
+pub fn render_image(canvas: &mut Canvas, node: &RenderData, dom: &SafeDOM) {
+    let dioxus_node = node.get_node(dom);
     let mut draw_img = |bytes: &[u8]| {
         let pic = Image::from_encoded(unsafe { Data::new_bytes(bytes) });
         if let Some(pic) = pic {
@@ -23,12 +24,12 @@ pub fn render_image(canvas: &mut Canvas, node: &RenderData) {
         }
     };
 
-    if let Some(image_ref) = &node.get_state().references.image_ref {
+    if let Some(image_ref) = &dioxus_node.state.references.image_ref {
         let image_data = image_ref.0.lock().unwrap();
         if let Some(image_data) = image_data.as_ref() {
             draw_img(image_data)
         }
-    } else if let Some(image_data) = &node.get_state().style.image_data {
+    } else if let Some(image_data) = &dioxus_node.state.style.image_data {
         draw_img(image_data)
     }
 }
