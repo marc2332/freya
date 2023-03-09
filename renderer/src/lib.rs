@@ -13,7 +13,6 @@ use glutin::event::{
     WindowEvent,
 };
 use glutin::event_loop::{ControlFlow, EventLoopBuilder, EventLoopProxy};
-use std::process::exit;
 use std::sync::{Arc, Mutex};
 use std::task::Waker;
 use tokio::select;
@@ -50,6 +49,7 @@ pub fn run<T: 'static + Clone>(
 
     #[cfg(debug_assertions)]
     {
+        use std::process::exit;
         let proxy = proxy.clone();
         dioxus_hot_reload::connect(move |msg| match msg {
             dioxus_hot_reload::HotReloadMsg::UpdateTemplate(template) => {
