@@ -146,7 +146,7 @@ impl TestUtils {
     /// Wait to process the internal Freya changes, like layout or events
     pub async fn wait_for_work(&mut self, sizes: (f32, f32)) {
         let (layers, viewports) = process_layout(
-            &self.rdom,
+            &self.rdom.lock().unwrap(),
             NodeArea {
                 width: sizes.0,
                 height: sizes.1,
@@ -160,7 +160,7 @@ impl TestUtils {
         *self.viewports.lock().unwrap() = viewports;
 
         process_events(
-            &self.rdom,
+            &self.rdom.lock().unwrap(),
             &self.layers.lock().unwrap(),
             &self.freya_events,
             &self.event_emitter,

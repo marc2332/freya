@@ -1,15 +1,12 @@
 use accesskit::NodeId as NodeIdKit;
 use dioxus_core::ElementId;
 use dioxus_native_core::tree::TreeView;
-use dioxus_native_core::{
-    node::{Node, NodeType},
-    NodeId,
-};
+use dioxus_native_core::{node::Node, NodeId};
 use freya_common::NodeArea;
 use freya_node_state::{CustomAttributeValues, NodeState};
 use rustc_hash::FxHashMap;
 
-use crate::SafeDOM;
+use crate::DioxusDOM;
 
 pub type DioxusNode = Node<NodeState, CustomAttributeValues>;
 
@@ -23,7 +20,7 @@ pub struct Layers {
 pub struct RenderData {
     pub node_area: NodeArea,
     pub element_id: Option<ElementId>,
-    pub node: DioxusNode,
+    pub node_id: NodeId,
     pub children: Option<Vec<NodeId>>,
 }
 
@@ -39,13 +36,8 @@ impl RenderData {
     }
 
     #[inline(always)]
-    pub fn get_type(&self) -> &NodeType<CustomAttributeValues> {
-        &self.node.node_data.node_type
-    }
-
-    #[inline(always)]
     pub fn get_id(&self) -> &NodeId {
-        &self.node.node_data.node_id
+        &self.node_id
     }
 
     #[inline(always)]
@@ -54,13 +46,12 @@ impl RenderData {
     }
 
     #[inline(always)]
-    pub fn get_state(&self) -> &NodeState {
-        &self.node.state
+    pub fn get_node<'a>(&'a self, rdom: &'a DioxusDOM) -> &DioxusNode {
+        rdom.get(self.node_id).unwrap()
     }
 
-    pub fn get_accessibility_children(&self, rdom: &SafeDOM) -> Option<Vec<NodeIdKit>> {
+    pub fn get_accessibility_children(&self, rdom: &DioxusDOM) -> Option<Vec<NodeIdKit>> {
         if let Some(children) = &self.children {
-            let rdom = rdom.lock().unwrap();
             Some(
                 children
                     .iter()
@@ -111,7 +102,7 @@ impl Layers {
             node.node_data.node_id,
             RenderData {
                 element_id: node.node_data.element_id,
-                node: node.clone(),
+                node_id: node.node_data.node_id,
                 node_area: *node_area,
                 children: node_children,
             },

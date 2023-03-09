@@ -19,4 +19,4 @@ Don't hesitate to contribute so other distros can be added here.
 
 ### MacOS
 
-I don't own a Mac, if you do, feel free to make a PR! 
+No setup required. But feel free to add more if we miss something.

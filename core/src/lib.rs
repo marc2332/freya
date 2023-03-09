@@ -1,10 +1,10 @@
-use dioxus_native_core::{node::NodeType, real_dom::RealDom, NodeId};
+use dioxus_native_core::{node::NodeType, NodeId};
 use euclid::{Length, Point2D};
 use freya_common::NodeArea;
 use freya_elements::events_data::{KeyboardData, MouseData, WheelData};
-use freya_layout::NodeLayoutMeasurer;
+use freya_layout::{DioxusDOM, NodeLayoutMeasurer};
 use freya_layout::{Layers, RenderData};
-use freya_node_state::{CustomAttributeValues, NodeState};
+
 use rustc_hash::FxHashMap;
 use skia_safe::{textlayout::FontCollection, Color};
 use std::{
@@ -13,11 +13,11 @@ use std::{
 };
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
+pub mod dom;
 pub mod events;
 
 use events::{DomEvent, DomEventData, EventsProcessor, FreyaEvent};
 
-pub type SharedRealDOM = Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>;
 pub type EventEmitter = UnboundedSender<DomEvent>;
 pub type EventReceiver = UnboundedReceiver<DomEvent>;
 pub type SharedFreyaEvents = Arc<Mutex<Vec<FreyaEvent>>>;
@@ -25,13 +25,17 @@ pub type ViewportsCollection = FxHashMap<NodeId, (Option<NodeArea>, Vec<NodeId>)
 pub type NodesEvents<'a> = FxHashMap<&'a str, Vec<(RenderData, FreyaEvent)>>;
 
 // Calculate all the applicable viewports for the given nodes
-pub fn calculate_viewports(layers_nums: &[&i16], layers: &Layers) -> ViewportsCollection {
+pub fn calculate_viewports(
+    layers_nums: &[&i16],
+    layers: &Layers,
+    rdom: &DioxusDOM,
+) -> ViewportsCollection {
     let mut viewports_collection = FxHashMap::default();
 
     for layer_num in layers_nums {
         let layer = layers.layers.get(layer_num).unwrap();
         for dom_element in layer.values() {
-            if let NodeType::Element { tag, .. } = &dom_element.get_type() {
+            if let NodeType::Element { tag, .. } = &dom_element.get_node(rdom).node_data.node_type {
                 if tag == "container" {
                     viewports_collection
                         .entry(*dom_element.get_id())
@@ -137,13 +141,12 @@ pub fn calculate_node_events<'a>(
 // Calculate events that can actually be triggered
 fn calculate_events_listeners(
     calculated_events: &mut NodesEvents,
-    dom: &SharedRealDOM,
+    dom: &DioxusDOM,
     event_emitter: &EventEmitter,
 ) -> Vec<DomEvent> {
     let mut new_events = Vec::new();
 
     for (event_name, event_nodes) in calculated_events.iter_mut() {
-        let dom = dom.lock().unwrap();
         let listeners = dom.get_listening_sorted(event_name);
 
         let mut found_nodes: Vec<(&RenderData, &FreyaEvent)> = Vec::new();
@@ -151,13 +154,13 @@ fn calculate_events_listeners(
         'event_nodes: for (node, request) in event_nodes.iter() {
             for listener in &listeners {
                 if listener.node_data.node_id == *node.get_id() {
-                    if node.get_state().style.background != Color::TRANSPARENT
+                    if node.get_node(dom).state.style.background != Color::TRANSPARENT
                         && event_name == &"wheel"
                     {
                         break 'event_nodes;
                     }
 
-                    if node.get_state().style.background != Color::TRANSPARENT
+                    if node.get_node(dom).state.style.background != Color::TRANSPARENT
                         && event_name == &"click"
                     {
                         found_nodes.clear();
@@ -219,12 +222,11 @@ fn calculate_events_listeners(
 /// Calculate global events to be triggered
 fn calculate_global_events_listeners(
     global_events: Vec<FreyaEvent>,
-    dom: &SharedRealDOM,
+    dom: &DioxusDOM,
     event_emitter: &EventEmitter,
 ) {
     for global_event in global_events {
         let event_name = global_event.get_name();
-        let dom = dom.lock().unwrap();
         let listeners = dom.get_listening_sorted(event_name);
 
         for listener in listeners {
@@ -261,14 +263,14 @@ fn calculate_global_events_listeners(
 
 /// Process the layout of the DOM
 pub fn process_layout(
-    dom: &SharedRealDOM,
+    dom: &DioxusDOM,
     area: NodeArea,
     font_collection: &mut FontCollection,
 ) -> (Layers, ViewportsCollection) {
     let mut layers = Layers::default();
 
     {
-        let root = dom.lock().unwrap().index(NodeId(0)).clone();
+        let root = dom.index(NodeId(0));
         let mut remaining_area = area;
         let mut root_node_measurer = NodeLayoutMeasurer::new(
             root,
@@ -287,14 +289,14 @@ pub fn process_layout(
     // Order the layers from top to bottom
     layers_nums.sort();
 
-    let viewports_collection = calculate_viewports(&layers_nums, &layers);
+    let viewports_collection = calculate_viewports(&layers_nums, &layers, dom);
 
     (layers, viewports_collection)
 }
 
 /// Process the events and emit them to the DOM
 pub fn process_events(
-    dom: &SharedRealDOM,
+    dom: &DioxusDOM,
     layers: &Layers,
     freya_events: &SharedFreyaEvents,
     event_emitter: &EventEmitter,
@@ -329,12 +331,12 @@ pub fn process_events(
 /// Render the layout
 pub fn process_render<HookOptions>(
     viewports_collection: &ViewportsCollection,
-    dom: &SharedRealDOM,
+    dom: &DioxusDOM,
     font_collection: &mut FontCollection,
     layers: &Layers,
     hook_options: &mut HookOptions,
     render_hook: impl Fn(
-        &SharedRealDOM,
+        &DioxusDOM,
         &RenderData,
         &mut FontCollection,
         &ViewportsCollection,
