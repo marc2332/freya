@@ -5,7 +5,7 @@ use freya_common::NodeArea;
 use freya_node_state::{CustomAttributeValues, NodeState};
 use rustc_hash::FxHashMap;
 
-use crate::SafeDOM;
+use crate::DioxusDOM;
 
 pub type DioxusNode = Node<NodeState, CustomAttributeValues>;
 
@@ -45,7 +45,7 @@ impl RenderData {
     }
 
     #[inline(always)]
-    pub fn get_node<'a>(&'a self, rdom: &'a SafeDOM) -> &DioxusNode {
+    pub fn get_node<'a>(&'a self, rdom: &'a DioxusDOM) -> &DioxusNode {
         rdom.get(self.node_id).unwrap()
     }
 }

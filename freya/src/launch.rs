@@ -154,14 +154,32 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
 /// }
 /// ```
 pub fn launch_cfg<T: 'static + Clone + Send>(root: Component, win_config: WindowConfig<T>) {
+    use std::sync::{Arc, Mutex};
+
     use dioxus_native_core::real_dom::RealDom;
+    use freya_core::dom::MaybeDOM;
     use freya_node_state::{CustomAttributeValues, NodeState};
 
-    let rdom = RealDom::<NodeState, CustomAttributeValues>::new();
+    let rdom = MaybeDOM::new(RealDom::<NodeState, CustomAttributeValues>::new());
     let (vdom, mutations_sender, hovered_node) = {
-        use dioxus_core::VirtualDom;
-        let vdom = VirtualDom::new(root);
-        (vdom, None, None)
+        #[cfg(feature = "devtools")]
+        #[cfg(debug_assertions)]
+        {
+            use freya_devtools::with_devtools;
+            use tokio::sync::mpsc::unbounded_channel;
+
+            let hovered_node = Some(Arc::new(Mutex::new(None)));
+            let (mutations_sender, mutations_receiver) = unbounded_channel::<()>();
+            let vdom = with_devtools(rdom.clone(), root, mutations_receiver, hovered_node.clone());
+            (vdom, Some(mutations_sender), hovered_node)
+        }
+
+        #[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
+        {
+            use dioxus_core::VirtualDom;
+            let vdom = VirtualDom::new(root);
+            (vdom, None, None)
+        }
     };
     run(vdom, rdom, win_config, mutations_sender, hovered_node);
 }

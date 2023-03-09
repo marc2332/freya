@@ -1,8 +1,8 @@
-use freya_layout::{RenderData, SafeDOM};
+use freya_layout::{DioxusDOM, RenderData};
 use skia_safe::{Canvas, Data, IRect, Image, Paint, Rect};
 
 /// Render an `image` element
-pub fn render_image(canvas: &mut Canvas, node: &RenderData, dom: &SafeDOM) {
+pub fn render_image(canvas: &mut Canvas, node: &RenderData, dom: &DioxusDOM) {
     let dioxus_node = node.get_node(dom);
     let mut draw_img = |bytes: &[u8]| {
         let pic = Image::from_encoded(unsafe { Data::new_bytes(bytes) });

@@ -6,11 +6,11 @@ use skia_safe::{textlayout::FontCollection, Canvas, ClipOp, Rect};
 use crate::elements::{
     render_image, render_label, render_paragraph, render_rect_container, render_svg,
 };
-use crate::SharedRealDOM;
+use crate::DioxusDOM;
 
 /// Render a node into the Skia canvas
 pub fn render_skia(
-    dom: &SharedRealDOM,
+    dom: &DioxusDOM,
     canvas: &mut Canvas,
     node: &RenderData,
     font_collection: &mut FontCollection,

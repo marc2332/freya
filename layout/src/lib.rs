@@ -14,8 +14,10 @@ use area_calc::calculate_area;
 pub use layers::*;
 pub use ops_calc::run_calculations;
 
+pub type DioxusDOM = RealDom<NodeState, CustomAttributeValues>;
+
 /// Collect all the texts and node states from a given array of children
-fn get_inner_texts(dom: &SafeDOM, node_id: &NodeId) -> Vec<(FontStyle, String)> {
+fn get_inner_texts(dom: &DioxusDOM, node_id: &NodeId) -> Vec<(FontStyle, String)> {
     let children: Vec<DioxusNode> = dom.tree.children(*node_id).unwrap().cloned().collect();
     children
         .iter()
@@ -58,8 +60,6 @@ fn get_cursor_reference(node: &DioxusNode) -> Option<(&CursorReference, usize, (
     }
 }
 
-pub type SafeDOM = RealDom<NodeState, CustomAttributeValues>;
-
 /// Measure the layout of a given Node and all it's children
 pub struct NodeLayoutMeasurer<'a> {
     node: DioxusNode,
@@ -67,7 +67,7 @@ pub struct NodeLayoutMeasurer<'a> {
     remaining_area: &'a mut NodeArea,
     parent_area: NodeArea,
     layers: &'a mut Layers,
-    dom: &'a SafeDOM,
+    dom: &'a DioxusDOM,
     inherited_relative_layer: i16,
     font_collection: &'a mut FontCollection,
 }
@@ -79,7 +79,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
         node: DioxusNode,
         remaining_area: &'a mut NodeArea,
         parent_area: NodeArea,
-        dom: &'a SafeDOM,
+        dom: &'a DioxusDOM,
         layers: &'a mut Layers,
         inherited_relative_layer: i16,
         font_collection: &'a mut FontCollection,

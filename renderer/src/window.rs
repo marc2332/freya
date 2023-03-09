@@ -1,7 +1,7 @@
 use freya_common::{EventMessage, NodeArea};
 use freya_core::{events::EventsProcessor, process_render, EventEmitter, SharedFreyaEvents};
 use freya_core::{process_events, process_layout, ViewportsCollection};
-use freya_layout::{Layers, SafeDOM};
+use freya_layout::{DioxusDOM, Layers};
 use gl::types::*;
 use glutin::dpi::PhysicalSize;
 use glutin::event_loop::EventLoop;
@@ -103,7 +103,7 @@ impl<T: Clone> WindowEnv<T> {
     }
 
     // Process the events and emit them to the DOM
-    pub fn process_events(&mut self, rdom: &SafeDOM) {
+    pub fn process_events(&mut self, rdom: &DioxusDOM) {
         process_events(
             rdom,
             &self.layers,
@@ -115,7 +115,7 @@ impl<T: Clone> WindowEnv<T> {
     }
 
     // Reprocess the layout
-    pub fn process_layout(&mut self, rdom: &SafeDOM) {
+    pub fn process_layout(&mut self, rdom: &DioxusDOM) {
         let window_size = self.windowed_context.window().inner_size();
         let (layers, viewports) = process_layout(
             rdom,
@@ -133,7 +133,7 @@ impl<T: Clone> WindowEnv<T> {
     }
 
     /// Redraw the window
-    pub fn render(&mut self, hovered_node: &HoveredNode, rdom: &SafeDOM) {
+    pub fn render(&mut self, hovered_node: &HoveredNode, rdom: &DioxusDOM) {
         let canvas = self.surface.canvas();
 
         canvas.clear(if self.window_config.decorations {

@@ -2,9 +2,11 @@ use dioxus_core::VirtualDom;
 use dioxus_native_core::real_dom::RealDom;
 use dioxus_native_core::{NodeId, SendAnyMap};
 use freya_common::EventMessage;
+use freya_core::dom::MaybeDOM;
+use freya_core::events::DomEvent;
 use freya_core::events::FreyaEvent;
-use freya_core::{events::DomEvent, SharedRealDOM};
 use freya_elements::{from_winit_to_code, get_modifiers, get_non_text_keys, Code, Key};
+use freya_layout::DioxusDOM;
 use freya_node_state::{CustomAttributeValues, NodeState};
 use futures::task::ArcWake;
 use futures::{pin_mut, task, FutureExt};
@@ -32,7 +34,7 @@ pub type HoveredNode = Option<Arc<Mutex<Option<NodeId>>>>;
 /// Start the winit event loop with the virtual dom polling
 pub fn run<T: 'static + Clone>(
     mut vdom: VirtualDom,
-    mut rdom: RealDom<NodeState, CustomAttributeValues>,
+    mut rdom: MaybeDOM,
     window_config: WindowConfig<T>,
     mutations_sender: Option<UnboundedSender<()>>,
     hovered_node: HoveredNode,
@@ -70,13 +72,13 @@ pub fn run<T: 'static + Clone>(
     vdom.base_scope().provide_context(proxy.clone());
 
     let muts = vdom.rebuild();
-    let (to_update, diff) = rdom.apply_mutations(muts);
+    let (to_update, diff) = rdom.dom_mut().apply_mutations(muts);
 
     if !diff.is_empty() {
         mutations_sender.as_ref().map(|s| s.send(()));
     }
 
-    rdom.update_state(to_update, SendAnyMap::new());
+    rdom.dom_mut().update_state(to_update, SendAnyMap::new());
 
     let waker = winit_waker(&proxy);
     let cursor_pos = Arc::new(Mutex::new((0.0, 0.0)));
@@ -95,7 +97,7 @@ pub fn run<T: 'static + Clone>(
                 window_env.windowed_context.window().request_redraw();
             }
             Event::UserEvent(EventMessage::RequestRelayout) => {
-                window_env.process_layout(&rdom);
+                window_env.process_layout(&rdom.dom());
             }
             Event::UserEvent(ev) => {
                 if let EventMessage::UpdateTemplate(template) = ev {
@@ -118,8 +120,8 @@ pub fn run<T: 'static + Clone>(
                 }
             }
             Event::RedrawRequested(_) => {
-                window_env.process_layout(&rdom);
-                window_env.render(&hovered_node, &rdom);
+                window_env.process_layout(&rdom.dom());
+                window_env.render(&hovered_node, &rdom.dom());
             }
             Event::WindowEvent { event, .. } => {
                 match event {
@@ -139,7 +141,7 @@ pub fn run<T: 'static + Clone>(
                                 cursor: *cursor_pos,
                                 button: Some(button),
                             });
-                        window_env.process_events(&rdom)
+                        window_env.process_events(&rdom.dom())
                     }
                     WindowEvent::MouseWheel { delta, phase, .. } => {
                         if TouchPhase::Moved == phase {
@@ -160,7 +162,7 @@ pub fn run<T: 'static + Clone>(
                                     scroll: scroll_data,
                                     cursor: *cursor_pos,
                                 });
-                            window_env.process_events(&rdom)
+                            window_env.process_events(&rdom.dom())
                         }
                     }
                     WindowEvent::ModifiersChanged(modifiers) => {
@@ -179,7 +181,7 @@ pub fn run<T: 'static + Clone>(
                                     code: last_code,
                                     modifiers: get_modifiers(modifiers_state),
                                 });
-                            window_env.process_events(&rdom)
+                            window_env.process_events(&rdom.dom())
                         }
                     }
                     WindowEvent::KeyboardInput {
@@ -238,7 +240,7 @@ pub fn run<T: 'static + Clone>(
                             // Uncache any key code
                             last_code = Code::Unidentified;
                         }
-                        window_env.process_events(&rdom)
+                        window_env.process_events(&rdom.dom())
                     }
                     WindowEvent::CursorMoved { position, .. } => {
                         let cursor_pos = {
@@ -258,7 +260,7 @@ pub fn run<T: 'static + Clone>(
                                 cursor: cursor_pos,
                                 button: None,
                             });
-                        window_env.process_events(&rdom)
+                        window_env.process_events(&rdom.dom())
                     }
                     WindowEvent::Resized(size) => {
                         let mut context = window_env.gr_context.clone();
@@ -300,7 +302,7 @@ pub fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
 fn poll_vdom<T: 'static + Clone>(
     waker: &Waker,
     vdom: &mut VirtualDom,
-    rdom: &mut RealDom<NodeState, CustomAttributeValues>,
+    rdom: &mut MaybeDOM,
     event_emitter_rx: &mut UnboundedReceiver<DomEvent>,
     state: &Option<T>,
     mutations_sender: &Option<UnboundedSender<()>>,
@@ -338,14 +340,14 @@ fn poll_vdom<T: 'static + Clone>(
         }
 
         let mutations = vdom.render_immediate();
-        let (to_update, diff) = rdom.apply_mutations(mutations);
+        let (to_update, diff) = rdom.dom_mut().apply_mutations(mutations);
 
         if !diff.is_empty() {
             mutations_sender.as_ref().map(|s| s.send(()));
         }
 
         let ctx = SendAnyMap::new();
-        rdom.update_state(to_update, ctx);
+        rdom.dom_mut().update_state(to_update, ctx);
 
         if !diff.is_empty() {
             window_env.windowed_context.window().request_redraw();

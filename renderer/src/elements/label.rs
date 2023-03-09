@@ -1,7 +1,6 @@
 use dioxus_native_core::tree::TreeView;
 use dioxus_native_core::{node::NodeType, NodeId};
-use freya_core::SharedRealDOM;
-use freya_layout::RenderData;
+use freya_layout::{DioxusDOM, RenderData};
 use skia_safe::{
     textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle},
     Canvas, Paint, PaintStyle,
@@ -9,7 +8,7 @@ use skia_safe::{
 
 /// Render a `label` element
 pub fn render_label(
-    dom: &SharedRealDOM,
+    dom: &DioxusDOM,
     canvas: &mut Canvas,
     font_collection: &mut FontCollection,
     node: &RenderData,
