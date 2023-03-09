@@ -1,7 +1,9 @@
+#[cfg(feature = "devtools")]
 use std::sync::{Arc, Mutex};
 
 use freya_layout::DioxusDOM;
 
+#[cfg(feature = "devtools")]
 use std::sync::MutexGuard;
 
 pub struct DioxusSafeDOM {
