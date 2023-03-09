@@ -4,7 +4,7 @@ use dioxus_native_core::tree::TreeView;
 use dioxus_native_core::NodeId;
 use dioxus_router::*;
 use freya_components::*;
-use freya_core::dom::MaybeDOM;
+use freya_core::dom::DioxusSafeDOM;
 use freya_elements as dioxus_elements;
 use freya_hooks::use_theme;
 
@@ -25,7 +25,7 @@ use tabs::{style::*, tree::*};
 
 /// Run the [VirtualDom] with a sidepanel where the devtools are located.
 pub fn with_devtools(
-    rdom: MaybeDOM,
+    rdom: DioxusSafeDOM,
     root: fn(cx: Scope) -> Element,
     mutations_receiver: UnboundedReceiver<()>,
     hovered_node: HoveredNode,
@@ -45,7 +45,7 @@ pub fn with_devtools(
 
 struct AppWithDevtoolsProps {
     root: fn(cx: Scope) -> Element,
-    rdom: MaybeDOM,
+    rdom: DioxusSafeDOM,
     mutations_receiver: Arc<Mutex<UnboundedReceiver<()>>>,
     hovered_node: HoveredNode,
 }
@@ -95,7 +95,7 @@ pub struct TreeNode {
 
 #[derive(Props)]
 pub struct DevToolsProps {
-    rdom: MaybeDOM,
+    rdom: DioxusSafeDOM,
     mutations_receiver: Arc<Mutex<UnboundedReceiver<()>>>,
     hovered_node: HoveredNode,
 }

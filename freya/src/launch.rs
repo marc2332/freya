@@ -155,15 +155,16 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
 /// ```
 pub fn launch_cfg<T: 'static + Clone + Send>(root: Component, win_config: WindowConfig<T>) {
     use dioxus_native_core::real_dom::RealDom;
-    use freya_core::dom::MaybeDOM;
+    use freya_core::dom::DioxusSafeDOM;
     use freya_node_state::{CustomAttributeValues, NodeState};
 
-    let rdom = MaybeDOM::new(RealDom::<NodeState, CustomAttributeValues>::new());
+    let rdom = DioxusSafeDOM::new(RealDom::<NodeState, CustomAttributeValues>::new());
     let (vdom, mutations_sender, hovered_node) = {
         #[cfg(feature = "devtools")]
         #[cfg(debug_assertions)]
         {
             use freya_devtools::with_devtools;
+            use std::sync::{Arc, Mutex};
             use tokio::sync::mpsc::unbounded_channel;
 
             let hovered_node = Some(Arc::new(Mutex::new(None)));

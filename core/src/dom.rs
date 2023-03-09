@@ -4,7 +4,7 @@ use freya_layout::DioxusDOM;
 
 use std::sync::MutexGuard;
 
-pub struct MaybeDOM {
+pub struct DioxusSafeDOM {
     #[cfg(not(feature = "devtools"))]
     pub dom: DioxusDOM,
 
@@ -13,7 +13,7 @@ pub struct MaybeDOM {
 }
 
 #[cfg(feature = "devtools")]
-impl Clone for MaybeDOM {
+impl Clone for DioxusSafeDOM {
     fn clone(&self) -> Self {
         Self {
             dom: self.dom.clone(),
@@ -21,7 +21,7 @@ impl Clone for MaybeDOM {
     }
 }
 
-impl MaybeDOM {
+impl DioxusSafeDOM {
     #[cfg(not(feature = "devtools"))]
     pub fn new(dom: DioxusDOM) -> Self {
         Self { dom }

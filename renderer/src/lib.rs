@@ -2,7 +2,7 @@ use dioxus_core::VirtualDom;
 
 use dioxus_native_core::{NodeId, SendAnyMap};
 use freya_common::EventMessage;
-use freya_core::dom::MaybeDOM;
+use freya_core::dom::DioxusSafeDOM;
 use freya_core::events::DomEvent;
 use freya_core::events::FreyaEvent;
 use freya_elements::{from_winit_to_code, get_modifiers, get_non_text_keys, Code, Key};
@@ -34,7 +34,7 @@ pub type HoveredNode = Option<Arc<Mutex<Option<NodeId>>>>;
 /// Start the winit event loop with the virtual dom polling
 pub fn run<T: 'static + Clone>(
     mut vdom: VirtualDom,
-    mut rdom: MaybeDOM,
+    mut rdom: DioxusSafeDOM,
     window_config: WindowConfig<T>,
     mutations_sender: Option<UnboundedSender<()>>,
     hovered_node: HoveredNode,
@@ -302,7 +302,7 @@ pub fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
 fn poll_vdom<T: 'static + Clone>(
     waker: &Waker,
     vdom: &mut VirtualDom,
-    rdom: &mut MaybeDOM,
+    rdom: &mut DioxusSafeDOM,
     event_emitter_rx: &mut UnboundedReceiver<DomEvent>,
     state: &Option<T>,
     mutations_sender: &Option<UnboundedSender<()>>,
