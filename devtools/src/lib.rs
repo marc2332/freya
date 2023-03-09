@@ -7,7 +7,7 @@ use freya_components::*;
 use freya_core::dom::MaybeDOM;
 use freya_elements as dioxus_elements;
 use freya_hooks::use_theme;
-use freya_layout::DioxusDOM;
+
 use freya_node_state::NodeState;
 use freya_renderer::HoveredNode;
 use std::sync::{Arc, Mutex};

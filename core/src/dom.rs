@@ -1,8 +1,7 @@
 use std::sync::{Arc, Mutex};
 
-use dioxus_native_core::real_dom::RealDom;
 use freya_layout::DioxusDOM;
-use freya_node_state::{CustomAttributeValues, NodeState};
+
 use std::sync::MutexGuard;
 
 pub struct MaybeDOM {

@@ -154,8 +154,6 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
 /// }
 /// ```
 pub fn launch_cfg<T: 'static + Clone + Send>(root: Component, win_config: WindowConfig<T>) {
-    use std::sync::{Arc, Mutex};
-
     use dioxus_native_core::real_dom::RealDom;
     use freya_core::dom::MaybeDOM;
     use freya_node_state::{CustomAttributeValues, NodeState};

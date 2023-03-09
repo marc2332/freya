@@ -1,5 +1,5 @@
 use dioxus_core::VirtualDom;
-use dioxus_native_core::real_dom::RealDom;
+
 use dioxus_native_core::{NodeId, SendAnyMap};
 use freya_common::EventMessage;
 use freya_core::dom::MaybeDOM;
@@ -7,7 +7,7 @@ use freya_core::events::DomEvent;
 use freya_core::events::FreyaEvent;
 use freya_elements::{from_winit_to_code, get_modifiers, get_non_text_keys, Code, Key};
 use freya_layout::DioxusDOM;
-use freya_node_state::{CustomAttributeValues, NodeState};
+
 use futures::task::ArcWake;
 use futures::{pin_mut, task, FutureExt};
 use glutin::event::{

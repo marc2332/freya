@@ -1,10 +1,10 @@
-use dioxus_native_core::{node::NodeType, real_dom::RealDom, NodeId};
+use dioxus_native_core::{node::NodeType, NodeId};
 use euclid::{Length, Point2D};
 use freya_common::NodeArea;
 use freya_elements::events_data::{KeyboardData, MouseData, WheelData};
 use freya_layout::{DioxusDOM, NodeLayoutMeasurer};
 use freya_layout::{Layers, RenderData};
-use freya_node_state::{CustomAttributeValues, NodeState};
+
 use rustc_hash::FxHashMap;
 use skia_safe::{textlayout::FontCollection, Color};
 use std::{
