@@ -52,7 +52,7 @@ fn percentage() {
     let mut layers = Layers::default();
     let mut fonts = FontCollection::new();
     let mut measurer = NodeLayoutMeasurer::new(
-        node,
+        &node,
         &mut remaining_area,
         NodeArea {
             x: 0.0,
@@ -93,7 +93,7 @@ fn manual() {
     let mut layers = Layers::default();
     let mut fonts = FontCollection::new();
     let mut measurer = NodeLayoutMeasurer::new(
-        node,
+        &node,
         &mut remaining_area,
         NodeArea {
             x: 0.0,
@@ -166,7 +166,7 @@ fn auto() {
     let mut layers = Layers::default();
     let mut fonts = FontCollection::new();
     let mut measurer = NodeLayoutMeasurer::new(
-        node,
+        &node,
         &mut remaining_area,
         NodeArea {
             x: 0.0,
@@ -228,7 +228,7 @@ fn x_y() {
     let mut layers = Layers::default();
     let mut fonts = FontCollection::new();
     let mut measurer = NodeLayoutMeasurer::new(
-        node,
+        &node,
         &mut remaining_area,
         NodeArea {
             x: 15.0,
