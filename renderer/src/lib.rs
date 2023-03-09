@@ -1,6 +1,7 @@
-use dioxus_core::{Template, VirtualDom};
+use dioxus_core::VirtualDom;
 use dioxus_native_core::real_dom::RealDom;
 use dioxus_native_core::{NodeId, SendAnyMap};
+use freya_common::EventMessage;
 use freya_core::events::FreyaEvent;
 use freya_core::{events::DomEvent, SharedRealDOM};
 use freya_elements::{from_winit_to_code, get_modifiers, get_non_text_keys, Code, Key};
@@ -12,7 +13,6 @@ use glutin::event::{
     WindowEvent,
 };
 use glutin::event_loop::{ControlFlow, EventLoopBuilder, EventLoopProxy};
-use skia_safe::{textlayout::FontCollection, FontMgr};
 use std::process::exit;
 use std::sync::{Arc, Mutex};
 use std::task::Waker;
@@ -45,27 +45,29 @@ pub fn run<T: 'static + Clone>(
 
     let _guard = rt.enter();
 
-    let event_loop = EventLoopBuilder::<Option<Template<'static>>>::with_user_event().build();
+    let event_loop = EventLoopBuilder::<EventMessage>::with_user_event().build();
+    let proxy = event_loop.create_proxy();
 
     #[cfg(debug_assertions)]
     {
-        let proxy = event_loop.create_proxy();
+        let proxy = proxy.clone();
         dioxus_hot_reload::connect(move |msg| match msg {
             dioxus_hot_reload::HotReloadMsg::UpdateTemplate(template) => {
-                let _ = proxy.send_event(Some(template));
+                let _ = proxy.send_event(EventMessage::UpdateTemplate(template));
             }
             dioxus_hot_reload::HotReloadMsg::Shutdown => exit(0),
         });
     }
 
     let (event_emitter, mut event_emitter_rx) = unbounded_channel::<DomEvent>();
-    let mut font_collection = FontCollection::new();
-    font_collection.set_default_font_manager(FontMgr::default(), "Fira Sans");
     let app_state = window_config.state.clone();
+
+    let mut window_env = WindowEnv::from_config(event_emitter, window_config, &event_loop);
 
     if let Some(state) = &app_state {
         vdom.base_scope().provide_context(state.clone());
     }
+    vdom.base_scope().provide_context(proxy.clone());
 
     let muts = vdom.rebuild();
     let (to_update, diff) = rdom.apply_mutations(muts);
@@ -74,13 +76,8 @@ pub fn run<T: 'static + Clone>(
         mutations_sender.as_ref().map(|s| s.send(()));
     }
 
-    let ctx = SendAnyMap::new();
-    rdom.update_state(to_update, ctx);
+    rdom.update_state(to_update, SendAnyMap::new());
 
-    let mut window_env =
-        WindowEnv::from_config(event_emitter, window_config, &event_loop, font_collection);
-
-    let proxy = event_loop.create_proxy();
     let waker = winit_waker(&proxy);
     let cursor_pos = Arc::new(Mutex::new((0.0, 0.0)));
 
@@ -89,26 +86,36 @@ pub fn run<T: 'static + Clone>(
     let mut modifiers_state = ModifiersState::empty();
 
     event_loop.run(move |event, _, control_flow| {
-        *control_flow = ControlFlow::Poll;
-
+        *control_flow = ControlFlow::Wait;
         match event {
             Event::NewEvents(StartCause::Init) => {
-                _ = proxy.send_event(None);
+                _ = proxy.send_event(EventMessage::PollVDOM);
+            }
+            Event::UserEvent(EventMessage::RequestRerender) => {
+                window_env.windowed_context.window().request_redraw();
+            }
+            Event::UserEvent(EventMessage::RequestRelayout) => {
+                window_env.process_layout(&rdom);
             }
             Event::UserEvent(ev) => {
-                if let Some(template) = ev {
+                if let EventMessage::UpdateTemplate(template) = ev {
                     vdom.replace_template(template);
                 }
-                poll_vdom(
-                    &waker,
-                    &mut vdom,
-                    &mut rdom,
-                    &mut event_emitter_rx,
-                    &app_state,
-                    &mutations_sender,
-                );
 
-                window_env.windowed_context.window().request_redraw();
+                if matches!(ev, EventMessage::PollVDOM)
+                    || matches!(ev, EventMessage::UpdateTemplate(_))
+                {
+                    poll_vdom(
+                        &waker,
+                        &mut vdom,
+                        &mut rdom,
+                        &mut event_emitter_rx,
+                        &app_state,
+                        &mutations_sender,
+                        &window_env,
+                        proxy.clone(),
+                    );
+                }
             }
             Event::RedrawRequested(_) => {
                 window_env.process_layout(&rdom);
@@ -272,8 +279,8 @@ pub fn run<T: 'static + Clone>(
     });
 }
 
-pub fn winit_waker(proxy: &EventLoopProxy<Option<Template<'static>>>) -> std::task::Waker {
-    struct DomHandle(EventLoopProxy<Option<Template<'static>>>);
+pub fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
+    struct DomHandle(EventLoopProxy<EventMessage>);
 
     // this should be implemented by most platforms, but ios is missing this until
     // https://github.com/tauri-apps/wry/issues/830 is resolved
@@ -282,13 +289,14 @@ pub fn winit_waker(proxy: &EventLoopProxy<Option<Template<'static>>>) -> std::ta
 
     impl ArcWake for DomHandle {
         fn wake_by_ref(arc_self: &Arc<Self>) {
-            _ = arc_self.0.send_event(None);
+            _ = arc_self.0.send_event(EventMessage::PollVDOM);
         }
     }
 
     task::waker(Arc::new(DomHandle(proxy.clone())))
 }
 
+#[allow(clippy::too_many_arguments)]
 fn poll_vdom<T: 'static + Clone>(
     waker: &Waker,
     vdom: &mut VirtualDom,
@@ -296,6 +304,8 @@ fn poll_vdom<T: 'static + Clone>(
     event_emitter_rx: &mut UnboundedReceiver<DomEvent>,
     state: &Option<T>,
     mutations_sender: &Option<UnboundedSender<()>>,
+    window_env: &WindowEnv<T>,
+    proxy: EventLoopProxy<EventMessage>,
 ) {
     let mut cx = std::task::Context::from_waker(waker);
 
@@ -303,6 +313,7 @@ fn poll_vdom<T: 'static + Clone>(
         if let Some(state) = state.clone() {
             vdom.base_scope().provide_context(state);
         }
+        vdom.base_scope().provide_context(proxy.clone());
 
         {
             let fut = async {
@@ -335,5 +346,9 @@ fn poll_vdom<T: 'static + Clone>(
 
         let ctx = SendAnyMap::new();
         rdom.update_state(to_update, ctx);
+
+        if !diff.is_empty() {
+            window_env.windowed_context.window().request_redraw();
+        }
     }
 }

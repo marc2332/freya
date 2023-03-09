@@ -11,7 +11,7 @@ fn main() {
 
 #[allow(non_snake_case)]
 fn TheOtherSwitch(cx: Scope) -> Element {
-    let theme = use_theme(&cx);
+    let theme = use_theme(cx);
 
     let is_enabled = theme.read().name == "dark";
 

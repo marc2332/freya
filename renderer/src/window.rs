@@ -1,5 +1,4 @@
-use dioxus_core::Template;
-use freya_common::NodeArea;
+use freya_common::{EventMessage, NodeArea};
 use freya_core::{events::EventsProcessor, process_render, EventEmitter, SharedFreyaEvents};
 use freya_core::{process_events, process_layout, ViewportsCollection};
 use freya_layout::{Layers, SafeDOM};
@@ -7,12 +6,12 @@ use gl::types::*;
 use glutin::dpi::PhysicalSize;
 use glutin::event_loop::EventLoop;
 use glutin::{window::WindowBuilder, GlProfile};
-use skia_safe::Color;
 use skia_safe::{gpu::DirectContext, textlayout::FontCollection};
 use skia_safe::{
     gpu::{gl::FramebufferInfo, BackendRenderTarget, SurfaceOrigin},
     ColorType, Surface,
 };
+use skia_safe::{Color, FontMgr};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
@@ -42,9 +41,10 @@ impl<T: Clone> WindowEnv<T> {
     pub fn from_config(
         event_emitter: EventEmitter,
         window_config: WindowConfig<T>,
-        event_loop: &EventLoop<Option<Template<'static>>>,
-        font_collection: FontCollection,
+        event_loop: &EventLoop<EventMessage>,
     ) -> Self {
+        let mut font_collection = FontCollection::new();
+        font_collection.set_default_font_manager(FontMgr::default(), "Fira Sans");
         let events_processor = EventsProcessor::default();
         let freya_events = Arc::new(Mutex::new(Vec::new()));
         let wb = WindowBuilder::new()

@@ -10,7 +10,7 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    use_init_focus(&cx);
+    use_init_focus(cx);
 
     let values = use_state(cx, || (String::new(), String::new()));
 

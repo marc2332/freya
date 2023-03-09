@@ -27,9 +27,6 @@
 //!
 //! ```
 
-#[cfg(feature = "devtools")]
-mod devtools;
-
 pub mod launch;
 
 pub use dioxus;
