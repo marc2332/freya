@@ -1,7 +1,6 @@
 use dioxus_native_core::tree::TreeView;
 use dioxus_native_core::{node::NodeType, NodeId};
-use freya_core::SharedRealDOM;
-use freya_layout::{DioxusNode, RenderData};
+use freya_layout::{DioxusDOM, DioxusNode, RenderData};
 use freya_node_state::NodeState;
 use skia_safe::{
     textlayout::{
@@ -13,14 +12,15 @@ use skia_safe::{
 
 /// Render a `paragraph` element
 pub fn render_paragraph(
-    dom: &SharedRealDOM,
+    dom: &DioxusDOM,
     canvas: &mut Canvas,
     font_collection: &mut FontCollection,
     node: &RenderData,
     children: &[NodeId],
 ) {
-    let align = node.get_state().font_style.align;
-    let max_lines = node.get_state().font_style.max_lines;
+    let dioxus_node = node.get_node(dom);
+    let align = dioxus_node.state.font_style.align;
+    let max_lines = dioxus_node.state.font_style.max_lines;
 
     let texts = get_inner_texts(children, dom);
 
@@ -47,7 +47,7 @@ pub fn render_paragraph(
         paragraph_builder.add_text(node_text.1.clone());
     }
 
-    if node.get_state().cursor_settings.position.is_some() {
+    if dioxus_node.state.cursor_settings.position.is_some() {
         // This is very tricky, but it works! It allows freya to render the cursor at the end of a line.
         paragraph_builder.add_text(" ");
     }
@@ -59,12 +59,18 @@ pub fn render_paragraph(
     paragraph.paint(canvas, (x, y));
 
     // Draw a cursor if specified
-    draw_cursor(node, paragraph, canvas);
+    draw_cursor(node, paragraph, canvas, dom);
 }
 
-fn draw_cursor(node: &RenderData, paragraph: Paragraph, canvas: &mut Canvas) -> Option<()> {
-    let cursor = node.get_state().cursor_settings.position?;
-    let cursor_color = node.get_state().cursor_settings.color;
+fn draw_cursor(
+    node: &RenderData,
+    paragraph: Paragraph,
+    canvas: &mut Canvas,
+    rdom: &DioxusDOM,
+) -> Option<()> {
+    let dioxus_node = node.get_node(rdom);
+    let cursor = dioxus_node.state.cursor_settings.position?;
+    let cursor_color = dioxus_node.state.cursor_settings.color;
     let cursor_position = cursor as usize;
 
     let cursor_rects = paragraph.get_rects_for_range(
@@ -90,12 +96,11 @@ fn draw_cursor(node: &RenderData, paragraph: Paragraph, canvas: &mut Canvas) -> 
     Some(())
 }
 
-fn get_inner_texts(children: &[NodeId], dom: &SharedRealDOM) -> Vec<(NodeState, String)> {
+fn get_inner_texts(children: &[NodeId], dom: &DioxusDOM) -> Vec<(NodeState, String)> {
     children
         .iter()
         .filter_map(|child_id| {
             let (child, children): (DioxusNode, Vec<NodeId>) = {
-                let dom = dom.lock().unwrap();
                 let children = dom.tree.children_ids(*child_id).map(|v| v.to_vec());
                 (dom.get(*child_id).cloned()?, children?)
             };
@@ -105,10 +110,7 @@ fn get_inner_texts(children: &[NodeId], dom: &SharedRealDOM) -> Vec<(NodeState, 
                     return None;
                 }
                 let child_text_id = children.get(0)?;
-                let child_text: DioxusNode = {
-                    let dom = dom.lock().unwrap();
-                    dom.get(*child_text_id).cloned()
-                }?;
+                let child_text: DioxusNode = { dom.get(*child_text_id).cloned() }?;
                 if let NodeType::Text { text } = &child_text.node_data.node_type {
                     Some((child.state, text.clone()))
                 } else {

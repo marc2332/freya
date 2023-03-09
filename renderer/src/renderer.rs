@@ -6,18 +6,18 @@ use skia_safe::{textlayout::FontCollection, Canvas, ClipOp, Rect};
 use crate::elements::{
     render_image, render_label, render_paragraph, render_rect_container, render_svg,
 };
-use crate::SharedRealDOM;
+use crate::DioxusDOM;
 
 /// Render a node into the Skia canvas
 pub fn render_skia(
-    dom: &SharedRealDOM,
+    dom: &DioxusDOM,
     canvas: &mut Canvas,
     node: &RenderData,
     font_collection: &mut FontCollection,
     viewports_collection: &ViewportsCollection,
     render_wireframe: bool,
 ) {
-    if let NodeType::Element { tag, .. } = &node.get_type() {
+    if let NodeType::Element { tag, .. } = &node.get_node(dom).node_data.node_type {
         let children = node.children.as_ref();
         let viewports = viewports_collection.get(node.get_id());
 
@@ -42,7 +42,7 @@ pub fn render_skia(
 
         match tag.as_str() {
             "rect" | "container" => {
-                render_rect_container(canvas, node);
+                render_rect_container(canvas, node, dom);
             }
             "label" => {
                 if let Some(children) = children {
@@ -55,10 +55,10 @@ pub fn render_skia(
                 }
             }
             "svg" => {
-                render_svg(canvas, node);
+                render_svg(canvas, node, dom);
             }
             "image" => {
-                render_image(canvas, node);
+                render_image(canvas, node, dom);
             }
             _ => {}
         }
