@@ -7,9 +7,9 @@ use dioxus_core::{AttributeValue, ScopeState};
 use dioxus_hooks::{to_owned, use_effect, use_state, UseState};
 use freya_common::EventMessage;
 use freya_node_state::{CustomAttributeValues, ImageReference};
+use glutin::event_loop::EventLoopProxy;
 use nokhwa::{pixel_format::RgbFormat, utils::RequestedFormat, Camera, NokhwaError};
 use tokio::time::sleep;
-use glutin::event_loop::EventLoopProxy;
 
 pub use nokhwa::utils::{CameraIndex, RequestedFormatType, Resolution};
 
@@ -102,7 +102,7 @@ pub fn use_camera(
                         let bts = frame.buffer_bytes();
                         // Send the frame to the renderer via the image reference
                         image_reference.lock().unwrap().replace(bts);
-                        
+
                         // Request the renderer to relayout
                         if let Some(event_loop_proxy) = &event_loop_proxy {
                             event_loop_proxy

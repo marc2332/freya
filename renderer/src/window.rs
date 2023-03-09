@@ -3,12 +3,10 @@ use accesskit::{
     TreeUpdate,
 };
 use accesskit_winit::Adapter;
-use freya_common::NodeArea;
-use freya_core::{
-    events::EventsProcessor, process_render, EventEmitter, SharedFreyaEvents, SharedRealDOM,
-};
+use freya_common::{EventMessage, NodeArea};
+use freya_core::{events::EventsProcessor, process_render, EventEmitter, SharedFreyaEvents};
 use freya_core::{process_events, process_layout, ViewportsCollection};
-use freya_layout::{Layers, RenderData};
+use freya_layout::{DioxusDOM, Layers};
 use gl::types::*;
 use glutin::dpi::PhysicalSize;
 use glutin::event_loop::EventLoop;
@@ -25,7 +23,7 @@ use std::sync::{Arc, Mutex};
 
 use crate::renderer::render_skia;
 use crate::window_config::WindowConfig;
-use crate::{EventMessage, HoveredNode};
+use crate::HoveredNode;
 
 pub type SharedAccessibilityState = Arc<Mutex<AccessibilityState>>;
 
@@ -107,7 +105,6 @@ pub struct WindowEnv<T: Clone> {
     pub(crate) gr_context: DirectContext,
     pub(crate) windowed_context: WindowedContext,
     pub(crate) fb_info: FramebufferInfo,
-    pub(crate) rdom: SharedRealDOM,
     pub(crate) freya_events: SharedFreyaEvents,
     pub(crate) event_emitter: EventEmitter,
     pub(crate) font_collection: FontCollection,
@@ -121,7 +118,6 @@ pub struct WindowEnv<T: Clone> {
 impl<T: Clone> WindowEnv<T> {
     /// Create a Window environment from a set of configuration
     pub fn from_config(
-        rdom: &SharedRealDOM,
         event_emitter: EventEmitter,
         window_config: WindowConfig<T>,
         event_loop: &EventLoop<EventMessage>,
@@ -176,7 +172,6 @@ impl<T: Clone> WindowEnv<T> {
             gr_context,
             windowed_context,
             fb_info,
-            rdom: rdom.clone(),
             freya_events,
             event_emitter,
             font_collection,
@@ -189,9 +184,9 @@ impl<T: Clone> WindowEnv<T> {
     }
 
     // Process the events and emit them to the DOM
-    pub fn process_events(&mut self) {
+    pub fn process_events(&mut self, rdom: &DioxusDOM) {
         process_events(
-            &self.rdom,
+            rdom,
             &self.layers,
             &self.freya_events,
             &self.event_emitter,
@@ -215,10 +210,10 @@ impl<T: Clone> WindowEnv<T> {
     }
 
     // Reprocess the layout
-    pub fn process_layout(&mut self) {
+    pub fn process_layout(&mut self, rdom: &DioxusDOM) {
         let window_size = self.windowed_context.window().inner_size();
         let (layers, viewports) = process_layout(
-            &self.rdom,
+            rdom,
             NodeArea {
                 width: window_size.width as f32,
                 height: window_size.height as f32,
@@ -235,7 +230,7 @@ impl<T: Clone> WindowEnv<T> {
     }
 
     /// Redraw the window
-    pub fn render(&mut self, hovered_node: &HoveredNode) {
+    pub fn render(&mut self, hovered_node: &HoveredNode, rdom: &DioxusDOM) {
         let canvas = self.surface.canvas();
 
         canvas.clear(if self.window_config.decorations {
@@ -246,7 +241,7 @@ impl<T: Clone> WindowEnv<T> {
 
         process_render(
             &self.viewports_collection,
-            &self.rdom,
+            rdom,
             &mut self.font_collection,
             &self.layers,
             canvas,
@@ -256,7 +251,7 @@ impl<T: Clone> WindowEnv<T> {
                     hovered_node
                         .lock()
                         .unwrap()
-                        .map(|id| id == element.node.node_data.node_id)
+                        .map(|id| id == element.node_id)
                         .unwrap_or_default()
                 } else {
                     false

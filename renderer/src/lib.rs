@@ -1,13 +1,15 @@
 use accesskit::NodeClassSet;
 use accesskit_winit::Adapter;
 use dioxus_core::VirtualDom;
-use dioxus_native_core::real_dom::RealDom;
+
 use dioxus_native_core::{NodeId, SendAnyMap};
 use freya_common::EventMessage;
+use freya_core::dom::DioxusSafeDOM;
+use freya_core::events::DomEvent;
 use freya_core::events::FreyaEvent;
-use freya_core::{events::DomEvent, SharedRealDOM};
 use freya_elements::{from_winit_to_code, get_modifiers, get_non_text_keys, Code, Key};
-use freya_node_state::{CustomAttributeValues, NodeState};
+use freya_layout::DioxusDOM;
+
 use futures::task::ArcWake;
 use futures::{pin_mut, task, FutureExt};
 use glutin::event::{
@@ -15,7 +17,6 @@ use glutin::event::{
     WindowEvent,
 };
 use glutin::event_loop::{ControlFlow, EventLoopBuilder, EventLoopProxy};
-use std::process::exit;
 use std::sync::{Arc, Mutex};
 use std::task::Waker;
 use tokio::select;
@@ -36,7 +37,7 @@ pub type HoveredNode = Option<Arc<Mutex<Option<NodeId>>>>;
 /// Start the winit event loop with the virtual dom polling
 pub fn run<T: 'static + Clone>(
     mut vdom: VirtualDom,
-    rdom: Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>,
+    mut rdom: DioxusSafeDOM,
     window_config: WindowConfig<T>,
     mutations_sender: Option<UnboundedSender<()>>,
     hovered_node: HoveredNode,
@@ -60,6 +61,7 @@ pub fn run<T: 'static + Clone>(
 
     #[cfg(debug_assertions)]
     {
+        use std::process::exit;
         let proxy = proxy.clone();
         dioxus_hot_reload::connect(move |msg| match msg {
             dioxus_hot_reload::HotReloadMsg::UpdateTemplate(template) => {
@@ -72,13 +74,7 @@ pub fn run<T: 'static + Clone>(
     let (event_emitter, mut event_emitter_rx) = unbounded_channel::<DomEvent>();
     let app_state = window_config.state.clone();
 
-    let mut window_env = WindowEnv::from_config(
-        &rdom,
-        event_emitter,
-        window_config,
-        &event_loop,
-        accessibility_state.clone(),
-    );
+    let mut window_env = WindowEnv::from_config(event_emitter, window_config, &event_loop, accessibility_state.clone());
 
     if let Some(state) = &app_state {
         vdom.base_scope().provide_context(state.clone());
@@ -88,15 +84,13 @@ pub fn run<T: 'static + Clone>(
     vdom.base_scope().provide_context(proxy.clone());
 
     let muts = vdom.rebuild();
-    let (to_update, diff) = rdom.lock().unwrap().apply_mutations(muts);
+    let (to_update, diff) = rdom.dom_mut().apply_mutations(muts);
 
     if !diff.is_empty() {
         mutations_sender.as_ref().map(|s| s.send(()));
     }
 
-    rdom.lock()
-        .unwrap()
-        .update_state(to_update, SendAnyMap::new());
+    rdom.dom_mut().update_state(to_update, SendAnyMap::new());
 
     let waker = winit_waker(&proxy);
     let cursor_pos = Arc::new(Mutex::new((0.0, 0.0)));
@@ -130,7 +124,7 @@ pub fn run<T: 'static + Clone>(
                 window_env.windowed_context.window().request_redraw();
             }
             Event::UserEvent(EventMessage::RequestRelayout) => {
-                window_env.process_layout();
+                window_env.process_layout(&rdom.dom());
             }
             Event::UserEvent(ev) => {
                 if let EventMessage::UpdateTemplate(template) = ev {
@@ -145,7 +139,7 @@ pub fn run<T: 'static + Clone>(
                     poll_vdom(
                         &waker,
                         &mut vdom,
-                        &rdom,
+                        &mut rdom,
                         &mut event_emitter_rx,
                         &app_state,
                         &mutations_sender,
@@ -156,8 +150,8 @@ pub fn run<T: 'static + Clone>(
             }
             Event::RedrawRequested(_) => {
                 accessibility_state.lock().unwrap().clear();
-                window_env.process_layout();
-                window_env.render(&hovered_node);
+                window_env.process_layout(&rdom.dom());
+                window_env.render(&hovered_node, &rdom.dom());
                 adapter.update(accessibility_state.lock().unwrap().process());
             }
             Event::WindowEvent { event, .. }
@@ -180,7 +174,7 @@ pub fn run<T: 'static + Clone>(
                                 cursor: *cursor_pos,
                                 button: Some(button),
                             });
-                        window_env.process_events()
+                        window_env.process_events(&rdom.dom())
                     }
                     WindowEvent::MouseWheel { delta, phase, .. } => {
                         if TouchPhase::Moved == phase {
@@ -201,7 +195,7 @@ pub fn run<T: 'static + Clone>(
                                     scroll: scroll_data,
                                     cursor: *cursor_pos,
                                 });
-                            window_env.process_events()
+                            window_env.process_events(&rdom.dom())
                         }
                     }
                     WindowEvent::ModifiersChanged(modifiers) => {
@@ -220,7 +214,7 @@ pub fn run<T: 'static + Clone>(
                                     code: last_code,
                                     modifiers: get_modifiers(modifiers_state),
                                 });
-                            window_env.process_events()
+                            window_env.process_events(&rdom.dom())
                         }
                     }
                     WindowEvent::KeyboardInput {
@@ -279,7 +273,7 @@ pub fn run<T: 'static + Clone>(
                             // Uncache any key code
                             last_code = Code::Unidentified;
                         }
-                        window_env.process_events()
+                        window_env.process_events(&rdom.dom())
                     }
                     WindowEvent::CursorMoved { position, .. } => {
                         let cursor_pos = {
@@ -299,7 +293,7 @@ pub fn run<T: 'static + Clone>(
                                 cursor: cursor_pos,
                                 button: None,
                             });
-                        window_env.process_events()
+                        window_env.process_events(&rdom.dom())
                     }
                     WindowEvent::Resized(size) => {
                         let mut context = window_env.gr_context.clone();
@@ -341,7 +335,7 @@ pub fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
 fn poll_vdom<T: 'static + Clone>(
     waker: &Waker,
     vdom: &mut VirtualDom,
-    rdom: &Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>,
+    rdom: &mut DioxusSafeDOM,
     event_emitter_rx: &mut UnboundedReceiver<DomEvent>,
     state: &Option<T>,
     mutations_sender: &Option<UnboundedSender<()>>,
@@ -381,14 +375,14 @@ fn poll_vdom<T: 'static + Clone>(
         }
 
         let mutations = vdom.render_immediate();
-        let (to_update, diff) = rdom.lock().unwrap().apply_mutations(mutations);
+        let (to_update, diff) = rdom.dom_mut().apply_mutations(mutations);
 
         if !diff.is_empty() {
             mutations_sender.as_ref().map(|s| s.send(()));
         }
 
         let ctx = SendAnyMap::new();
-        rdom.lock().unwrap().update_state(to_update, ctx);
+        rdom.dom_mut().update_state(to_update, ctx);
 
         if !diff.is_empty() {
             window_env.windowed_context.window().request_redraw();

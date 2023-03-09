@@ -12,7 +12,7 @@ keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
 [features]
-devtools = ["dep:freya-devtools"]
+devtools = ["dep:freya-devtools", "freya-core/devtools"]
 
 [target."cfg(target_os = \"linux\")".dependencies.skia-safe]
 version = "0.58.0"

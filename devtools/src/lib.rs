@@ -4,9 +4,10 @@ use dioxus_native_core::tree::TreeView;
 use dioxus_native_core::NodeId;
 use dioxus_router::*;
 use freya_components::*;
-use freya_core::SharedRealDOM;
+use freya_core::dom::DioxusSafeDOM;
 use freya_elements as dioxus_elements;
 use freya_hooks::use_theme;
+
 use freya_node_state::NodeState;
 use freya_renderer::HoveredNode;
 use std::sync::{Arc, Mutex};
@@ -24,7 +25,7 @@ use tabs::{style::*, tree::*};
 
 /// Run the [VirtualDom] with a sidepanel where the devtools are located.
 pub fn with_devtools(
-    rdom: SharedRealDOM,
+    rdom: DioxusSafeDOM,
     root: fn(cx: Scope) -> Element,
     mutations_receiver: UnboundedReceiver<()>,
     hovered_node: HoveredNode,
@@ -44,7 +45,7 @@ pub fn with_devtools(
 
 struct AppWithDevtoolsProps {
     root: fn(cx: Scope) -> Element,
-    rdom: SharedRealDOM,
+    rdom: DioxusSafeDOM,
     mutations_receiver: Arc<Mutex<UnboundedReceiver<()>>>,
     hovered_node: HoveredNode,
 }
@@ -94,7 +95,7 @@ pub struct TreeNode {
 
 #[derive(Props)]
 pub struct DevToolsProps {
-    rdom: SharedRealDOM,
+    rdom: DioxusSafeDOM,
     mutations_receiver: Arc<Mutex<UnboundedReceiver<()>>>,
     hovered_node: HoveredNode,
 }
@@ -117,13 +118,12 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
         let mutations_receiver = cx.props.mutations_receiver.clone();
         let children = children.clone();
         async move {
-            
             let mut mutations_receiver = mutations_receiver.lock().unwrap();
             loop {
                 if mutations_receiver.recv().await.is_some() {
                     sleep(Duration::from_millis(10)).await;
 
-                    let rdom = rdom.lock().unwrap();
+                    let rdom = rdom.dom();
                     let mut new_children = Vec::new();
 
                     let mut root_found = false;

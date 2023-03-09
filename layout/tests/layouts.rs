@@ -1,7 +1,4 @@
-use std::{
-    collections::HashSet,
-    sync::{Arc, Mutex},
-};
+use std::collections::HashSet;
 
 use dioxus_native_core::{
     node::{Node, NodeData, NodeType},
@@ -35,7 +32,7 @@ lazy_static! {
 
 #[test]
 fn percentage() {
-    let dom = Arc::new(Mutex::new(RealDom::new()));
+    let mut dom = RealDom::new();
 
     let mut node = TEST_NODE.clone();
     node.state = node.state.with_size(Size {
@@ -43,8 +40,8 @@ fn percentage() {
         height: SizeMode::Percentage(25.0),
         ..expanded_size()
     });
-    let root = dom.lock().unwrap().tree.create_node(node.clone());
-    dom.lock().unwrap().tree.add_child(NodeId(0), root);
+    let root = dom.tree.create_node(node.clone());
+    dom.tree.add_child(NodeId(0), root);
 
     let mut remaining_area = NodeArea {
         x: 0.0,
@@ -55,7 +52,7 @@ fn percentage() {
     let mut layers = Layers::default();
     let mut fonts = FontCollection::new();
     let mut measurer = NodeLayoutMeasurer::new(
-        node,
+        &node,
         &mut remaining_area,
         NodeArea {
             x: 0.0,
@@ -76,7 +73,7 @@ fn percentage() {
 
 #[test]
 fn manual() {
-    let dom = Arc::new(Mutex::new(RealDom::new()));
+    let mut dom = RealDom::new();
     let mut node = TEST_NODE.clone();
     node.state = node.state.with_size(Size {
         width: SizeMode::Manual(250.0),
@@ -84,8 +81,8 @@ fn manual() {
         ..expanded_size()
     });
 
-    let root = dom.lock().unwrap().tree.create_node(node.clone());
-    dom.lock().unwrap().tree.add_child(NodeId(0), root);
+    let root = dom.tree.create_node(node.clone());
+    dom.tree.add_child(NodeId(0), root);
 
     let mut remaining_area = NodeArea {
         x: 0.0,
@@ -96,7 +93,7 @@ fn manual() {
     let mut layers = Layers::default();
     let mut fonts = FontCollection::new();
     let mut measurer = NodeLayoutMeasurer::new(
-        node,
+        &node,
         &mut remaining_area,
         NodeArea {
             x: 0.0,
@@ -117,7 +114,7 @@ fn manual() {
 
 #[test]
 fn auto() {
-    let dom = Arc::new(Mutex::new(RealDom::new()));
+    let mut dom = RealDom::new();
     let node = Node {
         node_data: NodeData {
             node_id: NodeId(1),
@@ -136,8 +133,8 @@ fn auto() {
             ..expanded_size()
         }),
     };
-    let root = dom.lock().unwrap().tree.create_node(node.clone());
-    dom.lock().unwrap().tree.add_child(NodeId(0), root);
+    let root = dom.tree.create_node(node.clone());
+    dom.tree.add_child(NodeId(0), root);
 
     let root_child = Node {
         node_data: NodeData {
@@ -157,8 +154,8 @@ fn auto() {
         }),
     };
 
-    let root_child = dom.lock().unwrap().tree.create_node(root_child);
-    dom.lock().unwrap().tree.add_child(root, root_child);
+    let root_child = dom.tree.create_node(root_child);
+    dom.tree.add_child(root, root_child);
 
     let mut remaining_area = NodeArea {
         x: 0.0,
@@ -169,7 +166,7 @@ fn auto() {
     let mut layers = Layers::default();
     let mut fonts = FontCollection::new();
     let mut measurer = NodeLayoutMeasurer::new(
-        node,
+        &node,
         &mut remaining_area,
         NodeArea {
             x: 0.0,
@@ -190,7 +187,7 @@ fn auto() {
 
 #[test]
 fn x_y() {
-    let dom = Arc::new(Mutex::new(RealDom::new()));
+    let mut dom = RealDom::new();
     let mut node = TEST_NODE.clone();
     node.state = node.state.with_size(Size {
         width: SizeMode::Manual(250.0),
@@ -204,8 +201,8 @@ fn x_y() {
         width: 200.0,
     };
 
-    let root = dom.lock().unwrap().tree.create_node(node.clone());
-    dom.lock().unwrap().tree.add_child(NodeId(0), root);
+    let root = dom.tree.create_node(node.clone());
+    dom.tree.add_child(NodeId(0), root);
 
     let root_child = Node {
         node_data: NodeData {
@@ -225,13 +222,13 @@ fn x_y() {
         }),
     };
 
-    let root_child = dom.lock().unwrap().tree.create_node(root_child);
-    dom.lock().unwrap().tree.add_child(root, root_child);
+    let root_child = dom.tree.create_node(root_child);
+    dom.tree.add_child(root, root_child);
 
     let mut layers = Layers::default();
     let mut fonts = FontCollection::new();
     let mut measurer = NodeLayoutMeasurer::new(
-        node,
+        &node,
         &mut remaining_area,
         NodeArea {
             x: 15.0,
