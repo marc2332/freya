@@ -291,8 +291,9 @@ impl<State: 'static + Clone> App<State> {
 
     /// Process the accessibility nodes
     pub fn render_accessibility(&mut self) {
+        let tree = self.accessibility_state.lock().unwrap().process();
         self.adapter
-            .update(self.accessibility_state.lock().unwrap().process());
+            .update(tree);
     }
 
     /// Focus the next accessibility node
