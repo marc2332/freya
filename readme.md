@@ -73,8 +73,10 @@ dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc8221
 
 ### Features ✨
 - Support for Windows, Linux and MacOS
-- Text, containers, etc elements
-- Headless testing of components
+- Text, containers, images, svg, etc
+- Headless testing
+- Hot reload
+- Optional DevTools panel
 - Components crate (with theming support)
    - Scroll views 
    - Virtualized scroll views
@@ -84,10 +86,7 @@ dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc8221
    - Dropdown
    - and a few more
 - Keyboard and Mouse events
-- Hooks crate for text editing, animations, webcam, theming..
-- SVG and Images
-- DevTools panel (enabled via a feature)
-- Hot reload
+- Hooks crate for text editing, animating, theming..
 
 ### Goals 😁
 - Performant
