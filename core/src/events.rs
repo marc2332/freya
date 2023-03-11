@@ -81,7 +81,7 @@ struct ElementState {
     mouseover: bool,
 }
 
-/// `EventsProcessor` calculates new events based on past and new events.
+/// [`EventsProcessor`] calculates new events based on past and new events.
 ///
 /// For example, `mouseleave` indicates the user has left the hovering area of
 /// a particular element, which previously had to enter that area.

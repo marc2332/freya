@@ -24,7 +24,7 @@ fn Body(cx: Scope) -> Element {
     let theme = use_theme(cx);
     let theme = theme.read();
     let (text_editor, process_keyevent, process_clickevent, cursor_ref) = use_editable(
-        &cx,
+        cx,
         || {
             "Lorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet"
         },

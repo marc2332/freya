@@ -11,7 +11,7 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     let (text_editor, process_keyevent, process_clickevent, cursor_ref) = use_editable(
-        &cx,
+        cx,
         || {
             "Lorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet"
         },

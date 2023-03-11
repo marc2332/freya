@@ -21,7 +21,7 @@ async fn fetch_random_dog() -> Option<Url> {
         .await
         .ok()?;
     let data = res.json::<DogApiResponse>().await.ok()?;
-    Some(data.message.parse().ok()?)
+    data.message.parse().ok()
 }
 
 async fn fetch_image(url: Url) -> Option<Vec<u8>> {
@@ -30,7 +30,7 @@ async fn fetch_image(url: Url) -> Option<Vec<u8>> {
     Some(data.to_vec())
 }
 
-fn app<'a>(cx: Scope<'a>) -> Element<'a> {
+fn app(cx: Scope) -> Element {
     let bytes = use_state(cx, || None);
 
     let fetch = move || {

@@ -1,32 +1,28 @@
-use accesskit::NodeClassSet;
-use accesskit_winit::Adapter;
+use app::App;
 use dioxus_core::VirtualDom;
 
-use dioxus_native_core::{NodeId, SendAnyMap};
+use dioxus_native_core::NodeId;
 use freya_common::EventMessage;
 use freya_core::dom::DioxusSafeDOM;
-use freya_core::events::DomEvent;
+
 use freya_core::events::FreyaEvent;
 use freya_elements::{from_winit_to_code, get_modifiers, get_non_text_keys, Code, Key};
 use freya_layout::DioxusDOM;
 
-use futures::task::ArcWake;
-use futures::{pin_mut, task, FutureExt};
 use glutin::event::{
     ElementState, Event, KeyboardInput, ModifiersState, MouseScrollDelta, StartCause, TouchPhase,
     WindowEvent,
 };
-use glutin::event_loop::{ControlFlow, EventLoopBuilder, EventLoopProxy};
+use glutin::event_loop::{ControlFlow, EventLoopBuilder};
 use std::sync::{Arc, Mutex};
-use std::task::Waker;
-use tokio::select;
-use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
-use window::AccessibilityState;
+
+use tokio::sync::mpsc::UnboundedSender;
 pub use window::{create_surface, WindowEnv};
 pub use window_config::WindowConfig;
 
 mod wireframe;
 
+mod app;
 mod elements;
 mod renderer;
 mod window;
@@ -36,8 +32,8 @@ pub type HoveredNode = Option<Arc<Mutex<Option<NodeId>>>>;
 
 /// Start the winit event loop with the virtual dom polling
 pub fn run<T: 'static + Clone>(
-    mut vdom: VirtualDom,
-    mut rdom: DioxusSafeDOM,
+    vdom: VirtualDom,
+    rdom: DioxusSafeDOM,
     window_config: WindowConfig<T>,
     mutations_sender: Option<UnboundedSender<()>>,
     hovered_node: HoveredNode,
@@ -49,16 +45,10 @@ pub fn run<T: 'static + Clone>(
 
     let _guard = rt.enter();
 
-    let accessibility_state = AccessibilityState {
-        nodes: Vec::new(),
-        node_classes: NodeClassSet::new(),
-        focus: None,
-    }
-    .wrap();
-
     let event_loop = EventLoopBuilder::<EventMessage>::with_user_event().build();
     let proxy = event_loop.create_proxy();
 
+    // Hotreload
     #[cfg(debug_assertions)]
     {
         use std::process::exit;
@@ -71,50 +61,20 @@ pub fn run<T: 'static + Clone>(
         });
     }
 
-    let (event_emitter, mut event_emitter_rx) = unbounded_channel::<DomEvent>();
-    let app_state = window_config.state.clone();
-
-    let mut window_env = WindowEnv::from_config(
-        event_emitter,
-        window_config,
-        &event_loop,
-        accessibility_state.clone(),
+    let mut app = App::new(
+        rdom,
+        vdom,
+        &proxy,
+        mutations_sender,
+        WindowEnv::from_config(window_config, &event_loop),
     );
 
-    if let Some(state) = &app_state {
-        vdom.base_scope().provide_context(state.clone());
-    }
-    vdom.base_scope().provide_context(proxy.clone());
+    app.init_vdom();
 
-    vdom.base_scope().provide_context(proxy.clone());
-
-    let muts = vdom.rebuild();
-    let (to_update, diff) = rdom.dom_mut().apply_mutations(muts);
-
-    if !diff.is_empty() {
-        mutations_sender.as_ref().map(|s| s.send(()));
-    }
-
-    rdom.dom_mut().update_state(to_update, SendAnyMap::new());
-
-    let waker = winit_waker(&proxy);
-    let cursor_pos = Arc::new(Mutex::new((0.0, 0.0)));
-
+    let mut cursor_pos = (0.0, 0.0);
     let mut last_keydown = Key::Unidentified;
     let mut last_code = Code::Unidentified;
     let mut modifiers_state = ModifiersState::empty();
-
-    let adapter = {
-        let accessibility_state = accessibility_state.clone();
-        Adapter::new(
-            window_env.windowed_context.window(),
-            move || {
-                let mut accessibility_state = accessibility_state.lock().unwrap();
-                accessibility_state.process()
-            },
-            proxy.clone(),
-        )
-    };
 
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Wait;
@@ -123,45 +83,32 @@ pub fn run<T: 'static + Clone>(
                 _ = proxy.send_event(EventMessage::PollVDOM);
             }
             Event::UserEvent(EventMessage::FocusAccessibilityNode(id)) => {
-                accessibility_state.lock().unwrap().set_focus(&adapter, id);
+                app.set_accessibility_focus(id);
             }
             Event::UserEvent(EventMessage::RequestRerender) => {
-                window_env.windowed_context.window().request_redraw();
+                app.request_redraw();
             }
             Event::UserEvent(EventMessage::RequestRelayout) => {
-                window_env.process_layout(&rdom.dom());
+                app.process_layout();
             }
             Event::UserEvent(ev) => {
                 if let EventMessage::UpdateTemplate(template) = ev {
-                    vdom.replace_template(template);
-                } else if let EventMessage::ActionRequestEvent(_event) = &ev {
-                    // TODO
+                    app.vdom_replace_template(template);
                 }
 
                 if matches!(ev, EventMessage::PollVDOM)
                     || matches!(ev, EventMessage::UpdateTemplate(..))
                 {
-                    poll_vdom(
-                        &waker,
-                        &mut vdom,
-                        &mut rdom,
-                        &mut event_emitter_rx,
-                        &app_state,
-                        &mutations_sender,
-                        &window_env,
-                        &proxy,
-                    );
+                    app.poll_vdom();
                 }
             }
             Event::RedrawRequested(_) => {
-                accessibility_state.lock().unwrap().clear();
-                window_env.process_layout(&rdom.dom());
-                window_env.render(&hovered_node, &rdom.dom());
-                adapter.update(accessibility_state.lock().unwrap().process());
+                app.clear_accessibility();
+                app.process_layout();
+                app.render(&hovered_node);
+                app.render_accessibility();
             }
-            Event::WindowEvent { event, .. }
-                if adapter.on_event(window_env.windowed_context.window(), &event) =>
-            {
+            Event::WindowEvent { event, .. } if app.on_accessibility_window_event(&event) => {
                 match event {
                     WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
                     WindowEvent::MouseInput { state, button, .. } => {
@@ -169,21 +116,17 @@ pub fn run<T: 'static + Clone>(
                             ElementState::Pressed => "mousedown",
                             ElementState::Released => "click",
                         };
-                        let cursor_pos = cursor_pos.lock().unwrap();
-                        window_env
-                            .freya_events
-                            .lock()
-                            .unwrap()
-                            .push(FreyaEvent::Mouse {
-                                name: event_name,
-                                cursor: *cursor_pos,
-                                button: Some(button),
-                            });
-                        window_env.process_events(&rdom.dom())
+
+                        app.push_event(FreyaEvent::Mouse {
+                            name: event_name,
+                            cursor: cursor_pos,
+                            button: Some(button),
+                        });
+
+                        app.process_events();
                     }
                     WindowEvent::MouseWheel { delta, phase, .. } => {
                         if TouchPhase::Moved == phase {
-                            let cursor_pos = cursor_pos.lock().unwrap();
                             let scroll_data = {
                                 match delta {
                                     MouseScrollDelta::LineDelta(x, y) => (x as f64, y as f64),
@@ -191,16 +134,13 @@ pub fn run<T: 'static + Clone>(
                                 }
                             };
 
-                            window_env
-                                .freya_events
-                                .lock()
-                                .unwrap()
-                                .push(FreyaEvent::Wheel {
-                                    name: "wheel",
-                                    scroll: scroll_data,
-                                    cursor: *cursor_pos,
-                                });
-                            window_env.process_events(&rdom.dom())
+                            app.push_event(FreyaEvent::Wheel {
+                                name: "wheel",
+                                scroll: scroll_data,
+                                cursor: cursor_pos,
+                            });
+
+                            app.process_events();
                         }
                     }
                     WindowEvent::ModifiersChanged(modifiers) => {
@@ -209,17 +149,14 @@ pub fn run<T: 'static + Clone>(
                     WindowEvent::ReceivedCharacter(a) => {
                         // Emit the received character if the last pressed key wasn't text
                         if last_keydown == Key::Unidentified || !modifiers_state.is_empty() {
-                            window_env
-                                .freya_events
-                                .lock()
-                                .unwrap()
-                                .push(FreyaEvent::Keyboard {
-                                    name: "keydown",
-                                    key: Key::Character(a.to_string()),
-                                    code: last_code,
-                                    modifiers: get_modifiers(modifiers_state),
-                                });
-                            window_env.process_events(&rdom.dom())
+                            app.push_event(FreyaEvent::Keyboard {
+                                name: "keydown",
+                                key: Key::Character(a.to_string()),
+                                code: last_code,
+                                modifiers: get_modifiers(modifiers_state),
+                            });
+
+                            app.process_events();
                         }
                     }
                     WindowEvent::KeyboardInput {
@@ -257,16 +194,12 @@ pub fn run<T: 'static + Clone>(
                                 // Uncache any key
                                 last_keydown = Key::Unidentified;
                             }
-                            window_env
-                                .freya_events
-                                .lock()
-                                .unwrap()
-                                .push(FreyaEvent::Keyboard {
-                                    name: event_name,
-                                    key,
-                                    code: from_winit_to_code(&virtual_keycode),
-                                    modifiers: get_modifiers(modifiers_state),
-                                });
+                            app.push_event(FreyaEvent::Keyboard {
+                                name: event_name,
+                                key,
+                                code: from_winit_to_code(&virtual_keycode),
+                                modifiers: get_modifiers(modifiers_state),
+                            });
                         } else {
                             last_keydown = Key::Unidentified;
                         }
@@ -278,37 +211,22 @@ pub fn run<T: 'static + Clone>(
                             // Uncache any key code
                             last_code = Code::Unidentified;
                         }
-                        window_env.process_events(&rdom.dom())
+
+                        app.process_events();
                     }
                     WindowEvent::CursorMoved { position, .. } => {
-                        let cursor_pos = {
-                            let mut cursor_pos = cursor_pos.lock().unwrap();
-                            cursor_pos.0 = position.x;
-                            cursor_pos.1 = position.y;
+                        cursor_pos = (position.x, position.y);
 
-                            *cursor_pos
-                        };
+                        app.push_event(FreyaEvent::Mouse {
+                            name: "mouseover",
+                            cursor: cursor_pos,
+                            button: None,
+                        });
 
-                        window_env
-                            .freya_events
-                            .lock()
-                            .unwrap()
-                            .push(FreyaEvent::Mouse {
-                                name: "mouseover",
-                                cursor: cursor_pos,
-                                button: None,
-                            });
-                        window_env.process_events(&rdom.dom())
+                        app.process_events();
                     }
                     WindowEvent::Resized(size) => {
-                        let mut context = window_env.gr_context.clone();
-                        window_env.surface = create_surface(
-                            &window_env.windowed_context,
-                            &window_env.fb_info,
-                            &mut context,
-                        );
-                        window_env.windowed_context.resize(size);
-                        window_env.windowed_context.window().request_redraw();
+                        app.resize(size);
                     }
                     _ => {}
                 }
@@ -317,80 +235,4 @@ pub fn run<T: 'static + Clone>(
             _ => (),
         }
     });
-}
-
-pub fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
-    struct DomHandle(EventLoopProxy<EventMessage>);
-
-    // this should be implemented by most platforms, but ios is missing this until
-    // https://github.com/tauri-apps/wry/issues/830 is resolved
-    unsafe impl Send for DomHandle {}
-    unsafe impl Sync for DomHandle {}
-
-    impl ArcWake for DomHandle {
-        fn wake_by_ref(arc_self: &Arc<Self>) {
-            _ = arc_self.0.send_event(EventMessage::PollVDOM);
-        }
-    }
-
-    task::waker(Arc::new(DomHandle(proxy.clone())))
-}
-
-#[allow(clippy::too_many_arguments)]
-fn poll_vdom<T: 'static + Clone>(
-    waker: &Waker,
-    vdom: &mut VirtualDom,
-    rdom: &mut DioxusSafeDOM,
-    event_emitter_rx: &mut UnboundedReceiver<DomEvent>,
-    state: &Option<T>,
-    mutations_sender: &Option<UnboundedSender<()>>,
-    window_env: &WindowEnv<T>,
-    proxy: &EventLoopProxy<EventMessage>,
-) {
-    let mut cx = std::task::Context::from_waker(waker);
-
-    loop {
-        if let Some(state) = state.clone() {
-            vdom.base_scope().provide_context(state);
-        }
-        vdom.base_scope().provide_context(proxy.clone());
-
-        vdom.base_scope().provide_context(proxy.clone());
-
-        {
-            let fut = async {
-                select! {
-                    ev = event_emitter_rx.recv() => {
-                        if let Some(ev) = ev {
-                            let data = ev.data.any();
-                            vdom.handle_event(&ev.name, data, ev.element_id, false);
-
-                            vdom.process_events();
-                        }
-                    },
-                    _ = vdom.wait_for_work() => {},
-                }
-            };
-            pin_mut!(fut);
-
-            match fut.poll_unpin(&mut cx) {
-                std::task::Poll::Ready(_) => {}
-                std::task::Poll::Pending => break,
-            }
-        }
-
-        let mutations = vdom.render_immediate();
-        let (to_update, diff) = rdom.dom_mut().apply_mutations(mutations);
-
-        if !diff.is_empty() {
-            mutations_sender.as_ref().map(|s| s.send(()));
-        }
-
-        let ctx = SendAnyMap::new();
-        rdom.dom_mut().update_state(to_update, ctx);
-
-        if !diff.is_empty() {
-            window_env.windowed_context.window().request_redraw();
-        }
-    }
 }

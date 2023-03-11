@@ -62,7 +62,7 @@ struct LoadingBarProps {
 }
 
 #[allow(non_snake_case)]
-fn LoadingBar<'a>(cx: Scope<'a, LoadingBarProps>) -> Element {
+fn LoadingBar(cx: Scope<LoadingBarProps>) -> Element {
     render!(
         rect {
             width: "auto",

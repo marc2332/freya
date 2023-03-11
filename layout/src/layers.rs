@@ -51,23 +51,19 @@ impl RenderData {
     }
 
     pub fn get_accessibility_children(&self, rdom: &DioxusDOM) -> Option<Vec<NodeIdKit>> {
-        if let Some(children) = &self.children {
-            Some(
-                children
-                    .iter()
-                    .filter_map(|child| {
-                        let node = rdom.get(*child);
-                        if let Some(node) = &node {
-                            node.state.accessibility.accessibility_id
-                        } else {
-                            None
-                        }
-                    })
-                    .collect::<Vec<NodeIdKit>>(),
-            )
-        } else {
-            None
-        }
+        self.children.as_ref().map(|children| {
+            children
+                .iter()
+                .filter_map(|child| {
+                    let node = rdom.get(*child);
+                    if let Some(node) = &node {
+                        node.state.accessibility.accessibility_id
+                    } else {
+                        None
+                    }
+                })
+                .collect::<Vec<NodeIdKit>>()
+        })
     }
 }
 

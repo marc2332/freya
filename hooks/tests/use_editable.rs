@@ -7,7 +7,7 @@ use freya_testing::{launch_test, FreyaEvent, MouseButton};
 pub async fn multiple_lines_single_editor() {
     fn use_editable_app(cx: Scope) -> Element {
         let (text_editor, process_keyevent, process_clickevent, cursor_reference) = use_editable(
-            &cx,
+            cx,
             || "Hello Rustaceans",
             EditableMode::MultipleLinesSingleEditor,
         );
@@ -103,7 +103,7 @@ pub async fn multiple_lines_single_editor() {
 pub async fn single_line_mulitple_editors() {
     fn use_editable_app(cx: Scope) -> Element {
         let (text_editor, process_keyevent, process_clickevent, cursor_reference) = use_editable(
-            &cx,
+            cx,
             || "Hello Rustaceans\nHello World",
             EditableMode::SingleLineMultipleEditors,
         );
