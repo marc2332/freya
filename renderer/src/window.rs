@@ -35,6 +35,12 @@ pub struct AccessibilityState {
     pub focus: Option<NodeId>,
 }
 
+#[derive(PartialEq)]
+pub enum FocusDirection {
+    Forward,
+    Backward,
+}
+
 impl AccessibilityState {
     pub fn wrap(self) -> SharedAccessibilityState {
         Arc::new(Mutex::new(self))
@@ -101,6 +107,48 @@ impl AccessibilityState {
             tree: None,
             focus: self.focus,
         });
+    }
+
+    pub fn set_focus_on_next_node(&mut self, adapter: &Adapter, direction: FocusDirection) {
+        if let Some(focused_node_id) = self.focus {
+            let current_node = self
+                .nodes
+                .iter()
+                .enumerate()
+                .find(|(_, node)| node.0 == focused_node_id);
+
+            if let Some((node_index, _)) = current_node {
+                let target_node = if direction == FocusDirection::Forward {
+                    self.nodes
+                        .iter()
+                        .enumerate()
+                        .find(|(i, _)| *i == node_index + 1)
+                        .map(|(_, node)| node)
+                } else {
+                    self.nodes
+                        .iter()
+                        .enumerate()
+                        .find(|(i, _)| i + 1 == node_index)
+                        .map(|(_, node)| node)
+                };
+
+                if let Some((next_node_id, _)) = target_node {
+                    self.focus = Some(*next_node_id);
+                } else if direction == FocusDirection::Forward {
+                    self.focus = self.nodes.first().map(|(id, _)| *id)
+                } else if direction == FocusDirection::Backward {
+                    self.focus = self.nodes.last().map(|(id, _)| *id)
+                }
+            } else {
+                self.focus = self.nodes.first().map(|(id, _)| *id)
+            }
+
+            adapter.update(TreeUpdate {
+                nodes: Vec::new(),
+                tree: None,
+                focus: self.focus,
+            });
+        }
     }
 }
 

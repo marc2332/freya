@@ -11,10 +11,11 @@ use freya_layout::DioxusDOM;
 
 use glutin::event::{
     ElementState, Event, KeyboardInput, ModifiersState, MouseScrollDelta, StartCause, TouchPhase,
-    WindowEvent,
+    VirtualKeyCode, WindowEvent,
 };
 use glutin::event_loop::{ControlFlow, EventLoopBuilder};
 use std::sync::{Arc, Mutex};
+use window::FocusDirection;
 
 use tokio::sync::mpsc::UnboundedSender;
 pub use window::{create_surface, WindowEnv};
@@ -168,6 +169,19 @@ pub fn run<T: 'static + Clone>(
                             },
                         ..
                     } => {
+                        if state == ElementState::Pressed && virtual_keycode == VirtualKeyCode::Tab
+                        {
+                            let direction = if modifiers_state.shift() {
+                                FocusDirection::Backward
+                            } else {
+                                FocusDirection::Forward
+                            };
+
+                            app.focus_next_node(direction);
+
+                            return;
+                        }
+
                         let event_name = match state {
                             ElementState::Pressed => "keydown",
                             ElementState::Released => "keyup",

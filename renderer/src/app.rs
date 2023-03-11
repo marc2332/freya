@@ -26,7 +26,11 @@ use tokio::{
     sync::mpsc::{unbounded_channel, UnboundedSender},
 };
 
-use crate::{create_surface, window::AccessibilityState, HoveredNode, WindowEnv};
+use crate::{
+    create_surface,
+    window::{AccessibilityState, FocusDirection},
+    HoveredNode, WindowEnv,
+};
 
 pub fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
     struct DomHandle(EventLoopProxy<EventMessage>);
@@ -289,5 +293,13 @@ impl<State: 'static + Clone> App<State> {
     pub fn render_accessibility(&mut self) {
         self.adapter
             .update(self.accessibility_state.lock().unwrap().process());
+    }
+
+    /// Focus the next accessibility node
+    pub fn focus_next_node(&mut self, direction: FocusDirection) {
+        self.accessibility_state
+            .lock()
+            .unwrap()
+            .set_focus_on_next_node(&self.adapter, direction);
     }
 }
