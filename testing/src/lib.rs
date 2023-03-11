@@ -7,7 +7,7 @@ use dioxus_native_core::tree::TreeView;
 use dioxus_native_core::{NodeId, SendAnyMap};
 use freya_common::NodeArea;
 use freya_core::events::EventsProcessor;
-use freya_core::{events::DomEvent, EventEmitter, EventReceiver, SharedFreyaEvents};
+use freya_core::{events::DomEvent, EventEmitter, EventReceiver};
 use freya_core::{process_events, process_layout, ViewportsCollection};
 use freya_layout::DioxusNode;
 use freya_layout::Layers;
@@ -77,7 +77,7 @@ pub struct TestUtils {
     rdom: Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>,
     dom: Arc<Mutex<VirtualDom>>,
     layers: Arc<Mutex<Layers>>,
-    freya_events: SharedFreyaEvents,
+    freya_events: Arc<Mutex<Vec<FreyaEvent>>>,
     events_processor: Arc<Mutex<EventsProcessor>>,
     font_collection: FontCollection,
     event_emitter: EventEmitter,
@@ -162,7 +162,7 @@ impl TestUtils {
         process_events(
             &self.rdom.lock().unwrap(),
             &self.layers.lock().unwrap(),
-            &self.freya_events,
+            &mut self.freya_events.lock().unwrap(),
             &self.event_emitter,
             &mut self.events_processor.lock().unwrap(),
             &self.viewports.lock().unwrap(),
@@ -224,8 +224,10 @@ pub fn launch_test(root: Component<()>) -> TestUtils {
     let muts = dom.rebuild();
     let (to_update, _) = rdom.lock().unwrap().apply_mutations(muts);
 
-    let ctx = SendAnyMap::new();
-    rdom.lock().unwrap().update_state(to_update, ctx);
+    let _ctx = SendAnyMap::new();
+    rdom.lock()
+        .unwrap()
+        .update_state(to_update, SendAnyMap::new());
 
     TestUtils {
         rdom,

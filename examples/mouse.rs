@@ -26,7 +26,7 @@ fn app(cx: Scope) -> Element {
 }
 
 #[allow(non_snake_case)]
-fn Area<'a>(cx: Scope<'a>) -> Element {
+fn Area(cx: Scope) -> Element {
     let cursor_pos_over = use_state(cx, || (0f64, 0f64));
     let cursor_pos_click = use_state(cx, || (0f64, 0f64));
 

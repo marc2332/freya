@@ -18,7 +18,6 @@ fn app(cx: Scope) -> Element {
 
     let anim = move |_: MouseEvent| {
         if running {
-            return;
         } else if progress == 0.0 {
             run(AnimationMode::new_sine_in_out(0.0..=TARGET, TIME));
         } else if progress == TARGET {

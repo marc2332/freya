@@ -30,7 +30,10 @@ fn Space(cx: Scope) -> Element {
 #[inline_props]
 fn SectionHeader<'a>(cx: Scope<'a>, children: Element<'a>) -> Element {
     render!(
-        label { font_size: "20", &*children },
+        label {
+            font_size: "20",
+            children
+        },
         Space {}
     )
 }
@@ -65,7 +68,7 @@ fn Body(cx: Scope) -> Element {
 }
 
 fn app(cx: Scope) -> Element {
-    use_init_theme(&cx, DARK_THEME);
+    use_init_theme(cx, DARK_THEME);
 
     render!(Body {})
 }
