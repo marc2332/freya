@@ -15,8 +15,8 @@ fn app(cx: Scope) -> Element {
     let hovering = use_state(cx, || false);
     let canvas_pos = use_state(cx, || (0.0f64, 0.0f64));
     let nodes = use_state(cx, || vec![(0.0f64, 0.0f64)]);
-    let clicking = use_state::<Option<(f64, f64)>>(&cx, || None);
-    let clicking_drag = use_state::<Option<(usize, (f64, f64))>>(&cx, || None);
+    let clicking = use_state::<Option<(f64, f64)>>(cx, || None);
+    let clicking_drag = use_state::<Option<(usize, (f64, f64))>>(cx, || None);
 
     let onmouseleave = |_: MouseEvent| {
         if clicking.is_none() {
@@ -149,7 +149,7 @@ fn app(cx: Scope) -> Element {
 fn Editor(cx: Scope) -> Element {
     let (focused, focus_id, focus) = use_raw_focus(cx);
     let (text_editor, process_keyevent, process_clickevent, cursor_ref) = use_editable(
-        &cx,
+        cx,
         || {
             "Lorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet"
         },
@@ -178,14 +178,18 @@ fn Editor(cx: Scope) -> Element {
     };
 
     use_effect(cx, (), move |_| {
-        focus.map(|f| *f.write() = focus_id);
+        if let Some(focus) = focus {
+            *focus.write() = focus_id
+        }
         async move {}
     });
 
     render!(
         rect {
             onclick: move |_| {
-                focus.map(|f| *f.write() = focus_id);
+                if let Some(focus) = focus {
+                    *focus.write() = focus_id
+                }
             },
             width: "100%",
             height: "100%",

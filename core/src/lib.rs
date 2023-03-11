@@ -7,10 +7,7 @@ use freya_layout::{Layers, RenderData};
 
 use rustc_hash::FxHashMap;
 use skia_safe::{textlayout::FontCollection, Color};
-use std::{
-    ops::Index,
-    sync::{Arc, Mutex},
-};
+use std::ops::Index;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
 pub mod dom;
@@ -20,7 +17,7 @@ use events::{DomEvent, DomEventData, EventsProcessor, FreyaEvent};
 
 pub type EventEmitter = UnboundedSender<DomEvent>;
 pub type EventReceiver = UnboundedReceiver<DomEvent>;
-pub type SharedFreyaEvents = Arc<Mutex<Vec<FreyaEvent>>>;
+pub type EventsQueue = Vec<FreyaEvent>;
 pub type ViewportsCollection = FxHashMap<NodeId, (Option<NodeArea>, Vec<NodeId>)>;
 pub type NodesEvents<'a> = FxHashMap<&'a str, Vec<(RenderData, FreyaEvent)>>;
 
@@ -67,7 +64,7 @@ pub fn calculate_viewports(
 pub fn calculate_node_events<'a>(
     layers_nums: &[&i16],
     layers: &Layers,
-    freya_events: SharedFreyaEvents,
+    events: &EventsQueue,
     viewports_collection: &ViewportsCollection,
 ) -> (NodesEvents<'a>, Vec<FreyaEvent>) {
     let mut calculated_events = FxHashMap::default();
@@ -78,8 +75,6 @@ pub fn calculate_node_events<'a>(
         let layer = layers.layers.get(layer_num).unwrap();
 
         for element in layer.values() {
-            let events = freya_events.lock().unwrap();
-
             'events: for event in events.iter() {
                 let area = &element.node_area;
                 if let FreyaEvent::Keyboard { name, .. } = event {
@@ -298,7 +293,7 @@ pub fn process_layout(
 pub fn process_events(
     dom: &DioxusDOM,
     layers: &Layers,
-    freya_events: &SharedFreyaEvents,
+    events: &mut EventsQueue,
     event_emitter: &EventEmitter,
     events_processor: &mut EventsProcessor,
     viewports_collection: &ViewportsCollection,
@@ -308,12 +303,8 @@ pub fn process_events(
     // Order the layers from top to bottom
     layers_nums.sort();
 
-    let (mut node_events, global_events) = calculate_node_events(
-        &layers_nums,
-        layers,
-        freya_events.clone(),
-        viewports_collection,
-    );
+    let (mut node_events, global_events) =
+        calculate_node_events(&layers_nums, layers, events, viewports_collection);
 
     let emitted_events = calculate_events_listeners(&mut node_events, dom, event_emitter);
 
@@ -325,7 +316,7 @@ pub fn process_events(
         event_emitter.send(event).unwrap();
     }
 
-    freya_events.lock().unwrap().clear();
+    events.clear();
 }
 
 /// Render the layout

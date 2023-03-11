@@ -1,5 +1,6 @@
 use freya_common::{EventMessage, NodeArea};
-use freya_core::{events::EventsProcessor, process_render, EventEmitter, SharedFreyaEvents};
+
+use freya_core::{events::EventsProcessor, process_render, EventEmitter, EventsQueue};
 use freya_core::{process_events, process_layout, ViewportsCollection};
 use freya_layout::{DioxusDOM, Layers};
 use gl::types::*;
@@ -12,8 +13,6 @@ use skia_safe::{
     ColorType, Surface,
 };
 use skia_safe::{Color, FontMgr};
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
 
 use crate::renderer::render_skia;
 use crate::window_config::WindowConfig;
@@ -21,32 +20,25 @@ use crate::HoveredNode;
 
 type WindowedContext = glutin::ContextWrapper<glutin::PossiblyCurrent, glutin::window::Window>;
 
-/// Information related to a specific window
+/// Manager for a Window
 pub struct WindowEnv<T: Clone> {
     pub(crate) surface: Surface,
     pub(crate) gr_context: DirectContext,
     pub(crate) windowed_context: WindowedContext,
     pub(crate) fb_info: FramebufferInfo,
-    pub(crate) freya_events: SharedFreyaEvents,
-    pub(crate) event_emitter: EventEmitter,
     pub(crate) font_collection: FontCollection,
-    pub(crate) events_processor: EventsProcessor,
     pub(crate) window_config: WindowConfig<T>,
-    pub(crate) layers: Layers,
-    pub(crate) viewports_collection: ViewportsCollection,
 }
 
 impl<T: Clone> WindowEnv<T> {
     /// Create a Window environment from a set of configuration
     pub fn from_config(
-        event_emitter: EventEmitter,
         window_config: WindowConfig<T>,
         event_loop: &EventLoop<EventMessage>,
     ) -> Self {
         let mut font_collection = FontCollection::new();
         font_collection.set_default_font_manager(FontMgr::default(), "Fira Sans");
-        let events_processor = EventsProcessor::default();
-        let freya_events = Arc::new(Mutex::new(Vec::new()));
+
         let wb = WindowBuilder::new()
             .with_title(window_config.title)
             .with_decorations(window_config.decorations)
@@ -92,32 +84,35 @@ impl<T: Clone> WindowEnv<T> {
             gr_context,
             windowed_context,
             fb_info,
-            freya_events,
-            event_emitter,
             font_collection,
-            events_processor,
             window_config,
-            layers: Layers::default(),
-            viewports_collection: HashMap::default(),
         }
     }
 
-    // Process the events and emit them to the DOM
-    pub fn process_events(&mut self, rdom: &DioxusDOM) {
+    // Process the events and emit them to the RealDOM
+    pub fn process_events(
+        &mut self,
+        rdom: &DioxusDOM,
+        layers: &Layers,
+        events: &mut EventsQueue,
+        event_emitter: &EventEmitter,
+        events_processor: &mut EventsProcessor,
+        viewports_collection: &ViewportsCollection,
+    ) {
         process_events(
             rdom,
-            &self.layers,
-            &self.freya_events,
-            &self.event_emitter,
-            &mut self.events_processor,
-            &self.viewports_collection,
+            layers,
+            events,
+            event_emitter,
+            events_processor,
+            viewports_collection,
         );
     }
 
     // Reprocess the layout
-    pub fn process_layout(&mut self, rdom: &DioxusDOM) {
+    pub fn process_layout(&mut self, rdom: &DioxusDOM) -> (Layers, ViewportsCollection) {
         let window_size = self.windowed_context.window().inner_size();
-        let (layers, viewports) = process_layout(
+        process_layout(
             rdom,
             NodeArea {
                 width: window_size.width as f32,
@@ -126,14 +121,17 @@ impl<T: Clone> WindowEnv<T> {
                 y: 0.0,
             },
             &mut self.font_collection,
-        );
-
-        self.layers = layers;
-        self.viewports_collection = viewports;
+        )
     }
 
     /// Redraw the window
-    pub fn render(&mut self, hovered_node: &HoveredNode, rdom: &DioxusDOM) {
+    pub fn render(
+        &mut self,
+        layers: &Layers,
+        viewports_collection: &ViewportsCollection,
+        hovered_node: &HoveredNode,
+        rdom: &DioxusDOM,
+    ) {
         let canvas = self.surface.canvas();
 
         canvas.clear(if self.window_config.decorations {
@@ -143,10 +141,10 @@ impl<T: Clone> WindowEnv<T> {
         });
 
         process_render(
-            &self.viewports_collection,
+            viewports_collection,
             rdom,
             &mut self.font_collection,
-            &self.layers,
+            layers,
             canvas,
             |dom, element, font_collection, viewports_collection, canvas| {
                 canvas.save();
@@ -173,6 +171,10 @@ impl<T: Clone> WindowEnv<T> {
 
         self.gr_context.flush(None);
         self.windowed_context.swap_buffers().unwrap();
+    }
+
+    pub fn request_redraw(&self) {
+        self.windowed_context.window().request_redraw()
     }
 }
 

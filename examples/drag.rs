@@ -15,7 +15,7 @@ fn app(cx: Scope) -> Element {
     let clicking = use_state(cx, || false);
 
     let onmouseleave = |_: MouseEvent| {
-        if *clicking.get() == false {
+        if !(*clicking.get()) {
             hovering.set(false);
         }
     };
