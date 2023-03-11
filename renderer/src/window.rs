@@ -1,7 +1,6 @@
 use freya_common::{EventMessage, NodeArea};
-
-use freya_core::{events::EventsProcessor, process_render, EventEmitter, EventsQueue};
-use freya_core::{process_events, process_layout, ViewportsCollection};
+use freya_core::process_render;
+use freya_core::{process_layout, ViewportsCollection};
 use freya_layout::{DioxusDOM, Layers};
 use gl::types::*;
 use glutin::dpi::PhysicalSize;
@@ -87,26 +86,6 @@ impl<T: Clone> WindowEnv<T> {
             font_collection,
             window_config,
         }
-    }
-
-    // Process the events and emit them to the RealDOM
-    pub fn process_events(
-        &mut self,
-        rdom: &DioxusDOM,
-        layers: &Layers,
-        events: &mut EventsQueue,
-        event_emitter: &EventEmitter,
-        events_processor: &mut EventsProcessor,
-        viewports_collection: &ViewportsCollection,
-    ) {
-        process_events(
-            rdom,
-            layers,
-            events,
-            event_emitter,
-            events_processor,
-            viewports_collection,
-        );
     }
 
     // Reprocess the layout

@@ -6,7 +6,7 @@ use freya_common::EventMessage;
 use freya_core::{
     dom::DioxusSafeDOM,
     events::{DomEvent, EventsProcessor, FreyaEvent},
-    EventEmitter, EventReceiver, EventsQueue, ViewportsCollection,
+    process_events, EventEmitter, EventReceiver, EventsQueue, ViewportsCollection,
 };
 use freya_layout::Layers;
 use futures::FutureExt;
@@ -161,7 +161,7 @@ impl<State: 'static + Clone> App<State> {
 
     /// Process the events queue
     pub fn process_events(&mut self) {
-        self.window_env.process_events(
+        process_events(
             &self.rdom.dom(),
             &self.layers,
             &mut self.events,
@@ -183,7 +183,7 @@ impl<State: 'static + Clone> App<State> {
         self.events.push(event);
     }
 
-    /// Requrest a redraw
+    /// Request a redraw
     pub fn request_redraw(&self) {
         self.window_env.request_redraw();
     }
