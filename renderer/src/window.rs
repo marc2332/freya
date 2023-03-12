@@ -126,7 +126,6 @@ impl<T: Clone> WindowEnv<T> {
             layers,
             canvas,
             |dom, element, font_collection, viewports_collection, canvas| {
-                canvas.save();
                 let render_wireframe = if let Some(hovered_node) = &hovered_node {
                     hovered_node
                         .lock()
@@ -144,10 +143,10 @@ impl<T: Clone> WindowEnv<T> {
                     viewports_collection,
                     render_wireframe,
                 );
-                canvas.restore();
             },
         );
 
+        canvas.restore();
         self.gr_context.flush(None);
         self.windowed_context.swap_buffers().unwrap();
     }
