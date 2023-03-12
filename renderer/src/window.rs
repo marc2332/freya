@@ -7,6 +7,7 @@ use freya_core::{process_layout, ViewportsCollection};
 use freya_layout::{DioxusDOM, Layers};
 
 use gl::types::*;
+use glutin::context::GlProfile;
 use glutin::{
     config::{ConfigTemplateBuilder, GlConfig},
     context::{
@@ -94,9 +95,12 @@ impl<T: Clone> WindowEnv<T> {
         let mut window = window.expect("Could not create window with OpenGL context");
         let raw_window_handle = window.raw_window_handle();
 
-        let context_attributes = ContextAttributesBuilder::new().build(Some(raw_window_handle));
+        let context_attributes = ContextAttributesBuilder::new()
+            .with_profile(GlProfile::Core)
+            .build(Some(raw_window_handle));
 
         let fallback_context_attributes = ContextAttributesBuilder::new()
+            .with_profile(GlProfile::Core)
             .with_context_api(ContextApi::Gles(None))
             .build(Some(raw_window_handle));
 
@@ -162,13 +166,16 @@ impl<T: Clone> WindowEnv<T> {
         let num_samples = gl_config.num_samples() as usize;
         let stencil_size = gl_config.stencil_size() as usize;
 
-        let surface = create_surface(
+        let mut surface = create_surface(
             &mut window,
             fb_info,
             &mut gr_context,
             num_samples,
             stencil_size,
         );
+
+        let sf = window.scale_factor() as f32;
+        surface.canvas().scale((sf, sf));
 
         WindowEnv {
             surface,
@@ -244,10 +251,11 @@ impl<T: Clone> WindowEnv<T> {
             },
         );
 
-        self.gr_context.flush(None);
+        self.gr_context.flush_and_submit();
         self.gl_surface.swap_buffers(&self.gl_context).unwrap();
     }
 
+    /// Request a redraw
     pub fn request_redraw(&self) {
         self.window.request_redraw()
     }
@@ -261,11 +269,12 @@ impl<T: Clone> WindowEnv<T> {
             self.num_samples,
             self.stencil_size,
         );
-        self.gl_surface.resize(
-            &self.gl_context,
-            NonZeroU32::new(size.width).unwrap(),
-            NonZeroU32::new(size.height).unwrap(),
-        );
+
+        let (width, height): (u32, u32) = size.into();
+
+        if let Some((width, height)) = NonZeroU32::new(width).zip(NonZeroU32::new(height)) {
+            self.gl_surface.resize(&self.gl_context, width, height);
+        }
     }
 }
 
