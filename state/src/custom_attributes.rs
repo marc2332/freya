@@ -93,6 +93,6 @@ impl FromAnyValue for CustomAttributeValues {
 }
 
 /// Transform some bytes (e.g: raw image, raw svg) into attribute data
-pub fn bytes_to_data<'a>(cx: Scope<'a>, bytes: &[u8]) -> AttributeValue<'a> {
+pub fn bytes_to_data<'a, T>(cx: Scope<'a, T>, bytes: &[u8]) -> AttributeValue<'a> {
     cx.any_value(CustomAttributeValues::Bytes(bytes.to_vec()))
 }

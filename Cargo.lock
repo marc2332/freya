@@ -1376,6 +1376,7 @@ dependencies = [
  "freya-hooks",
  "freya-node-state",
  "open",
+ "reqwest",
 ]
 
 [[package]]
