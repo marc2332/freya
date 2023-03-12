@@ -7,9 +7,9 @@ use dioxus_core::{AttributeValue, ScopeState};
 use dioxus_hooks::{to_owned, use_effect, use_state, UseState};
 use freya_common::EventMessage;
 use freya_node_state::{CustomAttributeValues, ImageReference};
-use glutin::event_loop::EventLoopProxy;
 use nokhwa::{pixel_format::RgbFormat, utils::RequestedFormat, Camera, NokhwaError};
 use tokio::time::sleep;
+use winit::event_loop::EventLoopProxy;
 
 pub use nokhwa::utils::{CameraIndex, RequestedFormatType, Resolution};
 
