@@ -1,3 +1,4 @@
+use dioxus_native_core::NodeId;
 use freya_common::{EventMessage, NodeArea};
 use freya_core::process_render;
 use freya_core::{process_layout, ViewportsCollection};
@@ -11,7 +12,7 @@ use skia_safe::{
     gpu::{gl::FramebufferInfo, BackendRenderTarget, SurfaceOrigin},
     ColorType, Surface,
 };
-use skia_safe::{Color, FontMgr};
+use skia_safe::{Color, FontMgr, Matrix};
 
 use crate::renderer::render_skia;
 use crate::window_config::WindowConfig;
@@ -119,13 +120,15 @@ impl<T: Clone> WindowEnv<T> {
             Color::TRANSPARENT
         });
 
+        let mut matrixs: Vec<(Matrix, Vec<NodeId>)> = Vec::default();
+
         process_render(
             viewports_collection,
             rdom,
             &mut self.font_collection,
             layers,
-            canvas,
-            |dom, element, font_collection, viewports_collection, canvas| {
+            &mut (canvas, (&mut matrixs)),
+            |dom, element, font_collection, viewports_collection, (canvas, matrixs)| {
                 let render_wireframe = if let Some(hovered_node) = &hovered_node {
                     hovered_node
                         .lock()
@@ -142,9 +145,12 @@ impl<T: Clone> WindowEnv<T> {
                     font_collection,
                     viewports_collection,
                     render_wireframe,
+                    matrixs,
                 );
             },
         );
+
+        let canvas = self.surface.canvas();
 
         canvas.restore();
         self.gr_context.flush(None);
