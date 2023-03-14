@@ -12,6 +12,7 @@ mod slider;
 mod switch;
 mod theme;
 mod tooltip;
+mod loader;
 
 pub use accordion::*;
 pub use button::*;
@@ -24,3 +25,4 @@ pub use slider::*;
 pub use switch::*;
 pub use theme::*;
 pub use tooltip::*;
+pub use loader::*;

@@ -3,9 +3,12 @@
     windows_subsystem = "windows"
 )]
 
+use std::time::Duration;
+
 use freya::prelude::*;
 use reqwest::Url;
 use serde::Deserialize;
+use tokio::time::sleep;
 
 fn main() {
     launch(app);
@@ -30,16 +33,30 @@ async fn fetch_image(url: Url) -> Option<Vec<u8>> {
     Some(data.to_vec())
 }
 
+#[derive(PartialEq)]
+pub enum ImageStatus {
+    Loading,
+    Stopped,
+    Loaded,
+}
+
+
+
 fn app(cx: Scope) -> Element {
-    let mut degrees = use_state(cx, || 0);
-    let bytes = use_state(cx, || None);
+    let status = use_state(cx, || ImageStatus::Stopped);
+    let image_bytes = use_state::<Option<Vec<u8>>>(cx, || None);
 
     let fetch = move || {
-        to_owned![bytes];
+        to_owned![image_bytes, status];
         cx.spawn(async move {
             if let Some(url) = fetch_random_dog().await {
-                if let Some(doggo) = fetch_image(url).await {
-                    bytes.set(Some(doggo))
+                status.set(ImageStatus::Loading);
+                let img = fetch_image(url).await;
+                sleep(Duration::from_millis(1000)).await;
+                if let Some(img) = img {
+                    // Image loaded
+                    image_bytes.set(Some(img));
+                    status.set(ImageStatus::Loaded)
                 }
             }
         })
@@ -54,17 +71,26 @@ fn app(cx: Scope) -> Element {
                 width: "100%",
                 height: "calc(100% - 58)",
                 radius: "25",
-                rotate: "{degrees}",
-                bytes.as_ref().map(|bytes| {
-                    let image_data = bytes_to_data(cx, bytes);
-                    render!{
-                        image {
-                            width: "100%",
-                            height: "100%",
-                            image_data: image_data
-                        }
+                display: "center",
+                direction: "both",
+                if *status.get() == ImageStatus::Loading {
+                    rsx!(
+                        Loader {}
+                    )
+                }else if *status.get() == ImageStatus::Loaded {
+                    rsx!{
+                        image_bytes.as_ref().map(|bytes| {
+                            let image_data = bytes_to_data(cx, bytes);
+                            rsx!(
+                                image {
+                                    width: "100%",
+                                    height: "100%",
+                                    image_data: image_data
+                                }
+                            )
+                        })
                     }
-                })
+                }
             }
             container {
                 padding: "10",
@@ -75,18 +101,6 @@ fn app(cx: Scope) -> Element {
                     onclick: move |_|  fetch(),
                     label {
                         "Fetch random Doggo!"
-                    }
-                }
-                Button {
-                    onclick: move |_| degrees += 15,
-                    label {
-                        "Rotate right"
-                    }
-                }
-                Button {
-                    onclick: move |_| degrees -= 15,
-                    label {
-                        "Rotate left"
                     }
                 }
             }
