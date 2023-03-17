@@ -21,6 +21,8 @@ pub fn render_skia(
     matrixs: &mut Vec<(Matrix, Vec<NodeId>)>,
 ) {
     if let NodeType::Element { tag, .. } = &node.get_node(dom).node_data.node_type {
+        canvas.save();
+
         if let Some(rotate_degs) = node.get_node(dom).state.transform.rotate_degs {
             let area = node.get_area();
 
@@ -33,12 +35,12 @@ pub fn render_skia(
                 }),
             );
 
-            let mut nodes = vec![node.node_id];
-            nodes.extend(node.get_children().clone().unwrap_or_default());
-            matrixs.push((matrix, nodes));
-        }
+            if let Some(children) = node.get_children() {
+                matrixs.push((matrix, children.clone()));
+            }
 
-        canvas.save();
+            canvas.concat(&matrix);
+        }
 
         if let Some((matrix, _)) = matrixs
             .iter()
