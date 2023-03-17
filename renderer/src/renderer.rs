@@ -42,11 +42,14 @@ pub fn render_skia(
             canvas.concat(&matrix);
         }
 
-        if let Some((matrix, _)) = matrixs
-            .iter()
-            .find(|(_, nodes)| nodes.contains(&node.node_id))
-        {
-            canvas.concat(matrix);
+        for (matrix, nodes) in matrixs.iter_mut() {
+            if nodes.contains(&node.node_id) {
+                canvas.concat(matrix);
+
+                if let Some(children) = node.get_children() {
+                    nodes.extend(children)
+                }
+            }
         }
 
         let children = node.children.as_ref();
