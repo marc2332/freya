@@ -18,7 +18,7 @@ pub fn render_skia(
     font_collection: &mut FontCollection,
     viewports_collection: &ViewportsCollection,
     render_wireframe: bool,
-    matrixs: &mut Vec<(Matrix, Vec<NodeId>)>,
+    matrices: &mut Vec<(Matrix, Vec<NodeId>)>,
 ) {
     if let NodeType::Element { tag, .. } = &node.get_node(dom).node_data.node_type {
         canvas.save();
@@ -36,13 +36,13 @@ pub fn render_skia(
             );
 
             if let Some(children) = node.get_children() {
-                matrixs.push((matrix, children.clone()));
+                matrices.push((matrix, children.clone()));
             }
 
             canvas.concat(&matrix);
         }
 
-        for (matrix, nodes) in matrixs.iter_mut() {
+        for (matrix, nodes) in matrices.iter_mut() {
             if nodes.contains(&node.node_id) {
                 canvas.concat(matrix);
 
