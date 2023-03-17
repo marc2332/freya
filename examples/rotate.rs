@@ -56,7 +56,6 @@ fn app(cx: Scope) -> Element {
             rect {
                 rotate: "{degrees.0}",
                 background: "rgb(65, 53, 67)",
-                padding: "25",
                 width: "250",
                 height: "250",
                 direction: "both",
@@ -64,7 +63,6 @@ fn app(cx: Scope) -> Element {
                 rect {
                     rotate: "{degrees.1}",
                     background: "rgb(143, 67, 238)",
-                    padding: "25",
                     width: "180",
                     height: "180",
                     direction: "both",
@@ -72,7 +70,6 @@ fn app(cx: Scope) -> Element {
                     rect {
                         rotate: "{degrees.2}",
                         background: "rgb(240, 235, 141)",
-                        padding: "25",
                         width: "100",
                         height: "100"
                     }
