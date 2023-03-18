@@ -1,35 +1,43 @@
+use dioxus_native_core::exports::shipyard::Component;
 use dioxus_native_core::node::OwnedAttributeValue;
 use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
-use dioxus_native_core::state::ParentDepState;
-use dioxus_native_core_macro::sorted_str_slice;
+use dioxus_native_core::prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State};
+use dioxus_native_core::SendAnyMap;
+use dioxus_native_core_macro::partial_derive_state;
 use freya_common::NodeReferenceLayout;
 use tokio::sync::mpsc::UnboundedSender;
 
 use crate::{CursorReference, CustomAttributeValues, ImageReference};
 
-#[derive(Default, Clone, Debug)]
+#[derive(Default, Clone, Debug, Component)]
 pub struct References {
     pub image_ref: Option<ImageReference>,
     pub node_ref: Option<UnboundedSender<NodeReferenceLayout>>,
     pub cursor_ref: Option<CursorReference>,
 }
 
-impl ParentDepState<CustomAttributeValues> for References {
-    type Ctx = ();
-    type DepState = (Self,);
+#[partial_derive_state]
+impl State<CustomAttributeValues> for References {
+    type ParentDependencies = (Self,);
 
-    const NODE_MASK: NodeMask =
-        NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
+    type ChildDependencies = ();
+
+    type NodeDependencies = ();
+
+    const NODE_MASK: NodeMaskBuilder<'static> =
+        NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[
             "reference",
             "cursor_reference",
-            "image_reference"
-        ])));
+            "image_reference",
+        ]));
 
-    fn reduce(
+    fn update<'a>(
         &mut self,
-        node: NodeView<CustomAttributeValues>,
-        parent: Option<(&Self,)>,
-        _ctx: &Self::Ctx,
+        node_view: NodeView<()>,
+        _node: <Self::NodeDependencies as Dependancy>::ElementBorrowed<'a>,
+        parent: Option<<Self::ParentDependencies as Dependancy>::ElementBorrowed<'a>>,
+        children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
+        context: &SendAnyMap,
     ) -> bool {
         let mut node_ref = None;
         let mut cursor_ref = if let Some(parent) = parent {
@@ -39,7 +47,7 @@ impl ParentDepState<CustomAttributeValues> for References {
         };
         let mut image_ref = None;
 
-        if let Some(attributes) = node.attributes() {
+        if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
                 match attr.attribute.name.as_str() {
                     "reference" => {

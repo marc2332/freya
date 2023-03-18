@@ -18,10 +18,10 @@ freya-elements = { path = "../elements", version = "0.1.0" }
 freya-hooks = { path = "../hooks"}
 freya-core = { path = "../core", features=["devtools"]}
 freya-components ={ path = "../components"}
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519", features = ["macro", "hooks", "hot-reload"]}
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
+dioxus = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core", features = ["macro", "hooks", "hot-reload"]}
+dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
+dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
+dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
+dioxus-router = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
 tokio = { version = "1.23.0", features = ["sync", "rt-multi-thread", "time", "macros"] }
 skia-safe = { version = "0.58.0", features = ["gl", "textlayout", "svg"] }

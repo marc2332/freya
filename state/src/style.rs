@@ -1,14 +1,16 @@
 use std::fmt::Display;
 
+use dioxus_native_core::exports::shipyard::Component;
 use dioxus_native_core::node::OwnedAttributeValue;
 use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
-use dioxus_native_core::state::NodeDepState;
-use dioxus_native_core_macro::sorted_str_slice;
+use dioxus_native_core::prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State};
+use dioxus_native_core::SendAnyMap;
+use dioxus_native_core_macro::partial_derive_state;
 use skia_safe::Color;
 
 use crate::{parse_color, CustomAttributeValues};
 
-#[derive(Default, Clone, Debug)]
+#[derive(Default, Clone, Debug, Component)]
 pub struct Style {
     pub background: Color,
     pub relative_layer: i16,
@@ -19,12 +21,16 @@ pub struct Style {
     pub display: DisplayMode,
 }
 
-impl NodeDepState<CustomAttributeValues> for Style {
-    type DepState = ();
-    type Ctx = ();
+#[partial_derive_state]
+impl State<CustomAttributeValues> for Style {
+    type ParentDependencies = (Self,);
 
-    const NODE_MASK: NodeMask =
-        NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
+    type ChildDependencies = ();
+
+    type NodeDependencies = ();
+
+    const NODE_MASK: NodeMaskBuilder<'static> = NodeMaskBuilder::new()
+        .with_attrs(AttributeMaskBuilder::Some(&[
             "background",
             "layer",
             "shadow",
@@ -33,13 +39,16 @@ impl NodeDepState<CustomAttributeValues> for Style {
             "svg_data",
             "svg_content",
             "display",
-        ])));
+        ]))
+        .with_text();
 
-    fn reduce(
+    fn update<'a>(
         &mut self,
-        node: NodeView<CustomAttributeValues>,
-        _sibling: (),
-        _ctx: &Self::Ctx,
+        node_view: NodeView<()>,
+        _node: <Self::NodeDependencies as Dependancy>::ElementBorrowed<'a>,
+        parent: Option<<Self::ParentDependencies as Dependancy>::ElementBorrowed<'a>>,
+        children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
+        context: &SendAnyMap,
     ) -> bool {
         let mut background = Color::TRANSPARENT;
         let mut relative_layer = 0;
@@ -49,7 +58,7 @@ impl NodeDepState<CustomAttributeValues> for Style {
         let mut svg_data = None;
         let mut display = DisplayMode::Normal;
 
-        if let Some(attributes) = node.attributes() {
+        if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
                 match attr.attribute.name.as_str() {
                     "background" => {

@@ -12,9 +12,9 @@ keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
 [dependencies]
-dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
+dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
+dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
+dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
+dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
+dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
 
