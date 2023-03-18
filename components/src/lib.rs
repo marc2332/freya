@@ -1,6 +1,7 @@
 //! # Freya Components
 //! A collection of basic components to be used in Freya.
 
+mod accessibility_focus_provider;
 mod accordion;
 mod button;
 mod dropdown;
@@ -13,6 +14,7 @@ mod switch;
 mod theme;
 mod tooltip;
 
+pub use accessibility_focus_provider::*;
 pub use accordion::*;
 pub use button::*;
 pub use dropdown::*;

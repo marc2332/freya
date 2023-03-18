@@ -5,16 +5,20 @@ use freya_elements::events_data::{KeyboardData, MouseData, WheelData};
 use freya_layout::{DioxusDOM, NodeLayoutMeasurer};
 use freya_layout::{Layers, RenderData};
 
+use accesskit::NodeId as NodeIdKit;
 use rustc_hash::FxHashMap;
 use skia_safe::{textlayout::FontCollection, Color};
 use std::ops::Index;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
+use tokio::sync::watch;
 
 pub mod dom;
 pub mod events;
 
 use events::{DomEvent, DomEventData, EventsProcessor, FreyaEvent};
 
+pub type FocusSender = watch::Sender<Option<NodeIdKit>>;
+pub type FocusReceiver = watch::Receiver<Option<NodeIdKit>>;
 pub type EventEmitter = UnboundedSender<DomEvent>;
 pub type EventReceiver = UnboundedReceiver<DomEvent>;
 pub type EventsQueue = Vec<FreyaEvent>;

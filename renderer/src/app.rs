@@ -12,7 +12,8 @@ use freya_common::EventMessage;
 use freya_core::{
     dom::DioxusSafeDOM,
     events::{DomEvent, EventsProcessor, FreyaEvent},
-    process_events, EventEmitter, EventReceiver, EventsQueue, ViewportsCollection,
+    process_events, EventEmitter, EventReceiver, EventsQueue, FocusReceiver, FocusSender,
+    ViewportsCollection,
 };
 use freya_layout::Layers;
 use futures::FutureExt;
@@ -70,8 +71,8 @@ pub struct App<State: 'static + Clone> {
     events_processor: EventsProcessor,
     viewports_collection: ViewportsCollection,
 
-    focus_sender: watch::Sender<Option<NodeId>>,
-    focus_receiver: watch::Receiver<Option<NodeId>>,
+    focus_sender: FocusSender,
+    focus_receiver: FocusReceiver,
 
     accessibility_state: Arc<Mutex<AccessibilityState>>,
     adapter: Adapter,

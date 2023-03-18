@@ -34,3 +34,4 @@ rustc-hash = "1.1.0"
 euclid = "0.22.7"
 tracing = "0.1"
 tokio = { version = "1.23.0", features = ["sync", "rt-multi-thread", "time"] }
+accesskit = { git = "https://github.com/marc2332/accesskit", branch="downgrade-winit"}

@@ -1,19 +1,17 @@
 use std::num::NonZeroU128;
 
-use dioxus_core::{AttributeValue, Element, Scope, ScopeState};
-use dioxus_hooks::{
-    to_owned, use_effect, use_shared_state, use_shared_state_provider, use_state, UseSharedState,
-};
+use dioxus_core::{AttributeValue, Scope, ScopeState};
+use dioxus_hooks::{use_shared_state, use_shared_state_provider, UseSharedState};
 use freya_common::EventMessage;
 use freya_node_state::CustomAttributeValues;
 use glutin::event_loop::EventLoopProxy;
-use tokio::sync::watch;
 use uuid::Uuid;
 
 use accesskit::NodeId as NodeIdKit;
 
 pub type FocusId = NodeIdKit;
 
+/// Manage the focus operations of given Node
 #[derive(Clone, Copy)]
 pub struct FocusManager<'a> {
     id: NodeIdKit,
@@ -21,25 +19,30 @@ pub struct FocusManager<'a> {
 }
 
 impl FocusManager<'_> {
+    /// Focus this node
     pub fn focus(&self) {
         if let Some(focused_id) = self.focused_id {
             *focused_id.write() = Some(self.id)
         }
     }
 
+    /// Get the node focus ID
     pub fn id(&self) -> NodeIdKit {
         self.id
     }
 
+    /// Create a node focus ID attribute
     pub fn attribute<'b>(&self, cx: Scope<'b>) -> AttributeValue<'b> {
         cx.any_value(CustomAttributeValues::FocusId(self.id))
     }
 
+    /// Check if this node is currently focused
     pub fn is_focused(&self) -> bool {
         Some(Some(self.id)) == self.focused_id.map(|f| *f.read())
     }
 }
 
+/// Create a [`FocusManager`] for a component.
 pub fn use_focus(cx: &ScopeState) -> FocusManager {
     let id = *cx.use_hook(|| NodeIdKit(NonZeroU128::new(Uuid::new_v4().as_u128()).unwrap()));
     let focused_id = use_shared_state::<Option<FocusId>>(cx);
@@ -51,46 +54,14 @@ pub fn use_init_focus(cx: &ScopeState) {
     use_shared_state_provider::<Option<FocusId>>(cx, || None);
 }
 
-/// Propagate changes from the focus context to the renderer and viceversa
-#[allow(non_snake_case)]
-pub fn AccessibilityFocusProvider(cx: Scope) -> Element {
-    let focused_id = use_shared_state::<Option<FocusId>>(cx).unwrap();
-    let current_focused_id = *focused_id.read();
-    let focus = use_state::<Option<FocusId>>(cx, || None);
-
-    use_effect(cx, &(current_focused_id,), move |(focused_id,)| {
-        if let Some(focused_id) = focused_id {
-            let proxy = cx.consume_context::<EventLoopProxy<EventMessage>>();
-            if let Some(proxy) = &proxy {
-                proxy
-                    .send_event(EventMessage::FocusAccessibilityNode(focused_id))
-                    .unwrap();
-            }
-        }
-        async move {}
-    });
-
-    use_effect(cx, (), {
-        to_owned![focus];
-        move |_| {
-            let focus_id_listener = cx.consume_context::<watch::Receiver<Option<FocusId>>>();
-            async move {
-                let focus_id_listener = focus_id_listener.clone();
-                if let Some(mut focus_id_listener) = focus_id_listener {
-                    while focus_id_listener.changed().await.is_ok() {
-                        focus.set(*focus_id_listener.borrow())
-                    }
-                }
-            }
-        }
-    });
-
-    use_effect(cx, (&focus.get().clone(),), move |(focus,)| {
-        *focused_id.write() = focus;
-        async move {}
-    });
-
-    None
+/// Easily focus the given node focus ID
+pub fn focus_node_id(cx: Scope, id: FocusId) {
+    let proxy = cx.consume_context::<EventLoopProxy<EventMessage>>();
+    if let Some(proxy) = &proxy {
+        proxy
+            .send_event(EventMessage::FocusAccessibilityNode(id))
+            .unwrap();
+    }
 }
 
 #[cfg(test)]

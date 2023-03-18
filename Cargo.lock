@@ -1628,6 +1628,7 @@ dependencies = [
  "dioxus-router",
  "dioxus-rsx",
  "freya",
+ "freya-core",
  "freya-elements",
  "freya-hooks",
  "freya-node-state",
@@ -1638,6 +1639,7 @@ dependencies = [
 name = "freya-core"
 version = "0.1.0"
 dependencies = [
+ "accesskit",
  "dioxus-core",
  "dioxus-core-macro",
  "dioxus-hooks",
