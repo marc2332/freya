@@ -45,10 +45,10 @@ pub struct InputProps<'a> {
 pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     let theme = use_get_theme(cx);
     let button_theme = &theme.button;
-    let (focused, focus) = use_focus(cx);
+    let focus_manager = use_focus(cx);
     let text = cx.props.value;
     let onkeydown = move |e: Event<KeyboardData>| {
-        if focused {
+        if focus_manager.is_focused() {
             if let Key::Character(text_char) = &e.data.key {
                 // Add a new char
                 cx.props.onchange.call(format!("{text}{text_char}"));
@@ -65,7 +65,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
         container {
             onkeydown: onkeydown,
             onclick: move |_| {
-                focus();
+                focus_manager.focus();
             },
             width: "auto",
             height: "auto",

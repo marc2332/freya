@@ -20,6 +20,7 @@ use skia_safe::{
     ColorType, Surface,
 };
 use skia_safe::{Color, FontMgr};
+use tokio::sync::watch;
 
 use crate::renderer::render_skia;
 use crate::window_config::WindowConfig;
@@ -100,16 +101,28 @@ impl AccessibilityState {
         }
     }
 
-    pub fn set_focus(&mut self, adapter: &Adapter, id: NodeId) {
+    pub fn set_focus(
+        &mut self,
+        adapter: &Adapter,
+        id: NodeId,
+        focus_sender: &watch::Sender<Option<NodeId>>,
+    ) {
         self.focus = Some(id);
         adapter.update(TreeUpdate {
             nodes: Vec::new(),
             tree: None,
             focus: self.focus,
         });
+
+        focus_sender.send(self.focus).ok();
     }
 
-    pub fn set_focus_on_next_node(&mut self, adapter: &Adapter, direction: FocusDirection) {
+    pub fn set_focus_on_next_node(
+        &mut self,
+        adapter: &Adapter,
+        direction: FocusDirection,
+        focus_sender: &watch::Sender<Option<NodeId>>,
+    ) {
         if let Some(focused_node_id) = self.focus {
             let current_node = self
                 .nodes
@@ -148,6 +161,8 @@ impl AccessibilityState {
                 tree: None,
                 focus: self.focus,
             });
+
+            focus_sender.send(self.focus).ok();
         }
     }
 }

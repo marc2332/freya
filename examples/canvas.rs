@@ -147,7 +147,7 @@ fn app(cx: Scope) -> Element {
 
 #[allow(non_snake_case)]
 fn Editor(cx: Scope) -> Element {
-    let (focused, focus_id, focus) = use_raw_focus(cx);
+    let focus_manager = use_focus(cx);
     let (text_editor, process_keyevent, process_clickevent, cursor_ref) = use_editable(
         cx,
         || {
@@ -178,18 +178,14 @@ fn Editor(cx: Scope) -> Element {
     };
 
     use_effect(cx, (), move |_| {
-        if let Some(focus) = focus {
-            *focus.write() = focus_id
-        }
+        focus_manager.focus();
         async move {}
     });
 
     render!(
         rect {
             onclick: move |_| {
-                if let Some(focus) = focus {
-                    *focus.write() = focus_id
-                }
+                focus_manager.focus();
             },
             width: "100%",
             height: "100%",
@@ -296,7 +292,7 @@ fn Editor(cx: Scope) -> Element {
                 height: "calc(100% - 80)",
                 padding: "5",
                 onkeydown: move |e| {
-                    if focused {
+                    if focus_manager.is_focused() {
                         process_keyevent.send(e.data).unwrap();
                     }
                 },

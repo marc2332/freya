@@ -23,7 +23,10 @@ use futures::{
 use glutin::{dpi::PhysicalSize, event::WindowEvent, event_loop::EventLoopProxy};
 use tokio::{
     select,
-    sync::mpsc::{unbounded_channel, UnboundedSender},
+    sync::{
+        mpsc::{unbounded_channel, UnboundedSender},
+        watch,
+    },
 };
 
 use crate::{
@@ -67,6 +70,9 @@ pub struct App<State: 'static + Clone> {
     events_processor: EventsProcessor,
     viewports_collection: ViewportsCollection,
 
+    focus_sender: watch::Sender<Option<NodeId>>,
+    focus_receiver: watch::Receiver<Option<NodeId>>,
+
     accessibility_state: Arc<Mutex<AccessibilityState>>,
     adapter: Adapter,
 }
@@ -97,6 +103,7 @@ impl<State: 'static + Clone> App<State> {
             )
         };
         let (event_emitter, event_receiver) = unbounded_channel::<DomEvent>();
+        let (focus_sender, focus_receiver) = watch::channel(None);
         Self {
             rdom,
             vdom,
@@ -112,6 +119,8 @@ impl<State: 'static + Clone> App<State> {
             viewports_collection: HashMap::default(),
             adapter,
             accessibility_state,
+            focus_sender,
+            focus_receiver,
         }
     }
 
@@ -121,6 +130,9 @@ impl<State: 'static + Clone> App<State> {
             self.vdom.base_scope().provide_context(state);
         }
         self.vdom.base_scope().provide_context(self.proxy.clone());
+        self.vdom
+            .base_scope()
+            .provide_context(self.focus_receiver.clone());
     }
 
     /// Make an first build of the [VirtualDOM]
@@ -216,11 +228,8 @@ impl<State: 'static + Clone> App<State> {
         // TODO: move logic to core
         for layer in self.layers.layers.values() {
             for node in layer.values() {
-                if let Some(accessibility_id) = node
-                    .get_node(&self.rdom.dom())
-                    .state
-                    .accessibility
-                    .accessibility_id
+                if let Some(accessibility_id) =
+                    node.get_node(&self.rdom.dom()).state.accessibility.focus_id
                 {
                     let children = node.get_accessibility_children(&self.rdom.dom());
                     self.accessibility_state.lock().unwrap().add_element(
@@ -275,7 +284,7 @@ impl<State: 'static + Clone> App<State> {
         self.accessibility_state
             .lock()
             .unwrap()
-            .set_focus(&self.adapter, id);
+            .set_focus(&self.adapter, id, &self.focus_sender);
     }
 
     /// Validate a winit event for accessibility
@@ -292,8 +301,7 @@ impl<State: 'static + Clone> App<State> {
     /// Process the accessibility nodes
     pub fn render_accessibility(&mut self) {
         let tree = self.accessibility_state.lock().unwrap().process();
-        self.adapter
-            .update(tree);
+        self.adapter.update(tree);
     }
 
     /// Focus the next accessibility node
@@ -301,6 +309,6 @@ impl<State: 'static + Clone> App<State> {
         self.accessibility_state
             .lock()
             .unwrap()
-            .set_focus_on_next_node(&self.adapter, direction);
+            .set_focus_on_next_node(&self.adapter, direction, &self.focus_sender);
     }
 }

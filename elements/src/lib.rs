@@ -173,7 +173,7 @@ builder_constructors! {
         display: String,
         reference: Reference,
         cursor_reference: CursorReference,
-        accessibility_id: NodeIdKit,
+        focus_id: NodeIdKit,
     };
     container {
         padding: String,
@@ -194,6 +194,7 @@ builder_constructors! {
         display: String,
         reference: Reference,
         cursor_reference: CursorReference,
+        focus_id: NodeIdKit,
     };
     label {
         color: String,
@@ -205,7 +206,7 @@ builder_constructors! {
         align: String,
         max_lines: String,
         font_style: String,
-        accessibility_id: NodeIdKit,
+        focus_id: NodeIdKit,
     };
     paragraph {
         layer: String,

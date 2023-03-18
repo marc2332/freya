@@ -10,38 +10,37 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    let focus_a = use_focus_accessibility(cx);
-    let focus_b = use_focus_accessibility(cx);
-    let focus_c = use_focus_accessibility(cx);
-    let (id_a, attr_a) = use_accessibility(cx);
-    let (id_b, attr_b) = use_accessibility(cx);
-    let (id_c, attr_c) = use_accessibility(cx);
+    use_init_focus(cx);
+    let focus_a = use_focus(cx);
+    let focus_b = use_focus(cx);
+    let focus_c = use_focus(cx);
     render!(
+        AccessibilityFocusProvider {},
         rect {
-            accessibility_id: attr_a,
+            focus_id: focus_a.attribute(cx),
             background: "rgb(233, 196, 106)",
             padding: "25",
             width: "50%",
             height: "50%",
             onclick: move |_| {
-                focus_a(id_a);
+                focus_a.focus();
             },
             label {
-                accessibility_id: attr_c,
+                focus_id: focus_c.attribute(cx),
                 onclick: move |_| {
-                    focus_c(id_c);
+                    focus_c.focus();
                 },
                 "test"
             }
         }
         rect {
-            accessibility_id: attr_b,
+            focus_id: focus_b.attribute(cx),
             background: "rgb(150, 100, 231)",
             padding: "25",
             width: "50%",
             height: "50%",
             onclick: move |_| {
-                focus_b(id_b);
+                focus_b.focus();
             }
         }
     )

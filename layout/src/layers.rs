@@ -57,7 +57,7 @@ impl RenderData {
                 .filter_map(|child| {
                     let node = rdom.get(*child);
                     if let Some(node) = &node {
-                        node.state.accessibility.accessibility_id
+                        node.state.accessibility.focus_id
                     } else {
                         None
                     }

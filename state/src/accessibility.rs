@@ -8,7 +8,7 @@ use crate::CustomAttributeValues;
 
 #[derive(Clone, Debug, PartialEq, Eq, Default)]
 pub struct AccessibilitySettings {
-    pub accessibility_id: Option<NodeIdKit>,
+    pub focus_id: Option<NodeIdKit>,
 }
 
 impl ParentDepState<CustomAttributeValues> for AccessibilitySettings {
@@ -16,9 +16,7 @@ impl ParentDepState<CustomAttributeValues> for AccessibilitySettings {
     type DepState = (Self,);
 
     const NODE_MASK: NodeMask =
-        NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
-            "accessibility_id",
-        ])));
+        NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!(["focus_id",])));
 
     fn reduce(
         &mut self,
@@ -26,18 +24,17 @@ impl ParentDepState<CustomAttributeValues> for AccessibilitySettings {
         _parent: Option<(&Self,)>,
         _ctx: &Self::Ctx,
     ) -> bool {
-        let mut accessibility_id = None;
+        let mut focus_id = None;
 
         if let Some(attributes) = node.attributes() {
             for attr in attributes {
                 #[allow(clippy::single_match)]
                 match attr.attribute.name.as_str() {
-                    "accessibility_id" => {
-                        if let OwnedAttributeValue::Custom(
-                            CustomAttributeValues::AccessibilityId(id),
-                        ) = attr.value
+                    "focus_id" => {
+                        if let OwnedAttributeValue::Custom(CustomAttributeValues::FocusId(id)) =
+                            attr.value
                         {
-                            accessibility_id = Some(*id);
+                            focus_id = Some(*id);
                         }
                     }
                     _ => {}
@@ -45,7 +42,7 @@ impl ParentDepState<CustomAttributeValues> for AccessibilitySettings {
             }
         }
         let changed = false;
-        *self = Self { accessibility_id };
+        *self = Self { focus_id };
         changed
     }
 }
