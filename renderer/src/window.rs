@@ -120,15 +120,15 @@ impl<T: Clone> WindowEnv<T> {
             Color::TRANSPARENT
         });
 
-        let mut matrixs: Vec<(Matrix, Vec<NodeId>)> = Vec::default();
+        let mut matrices: Vec<(Matrix, Vec<NodeId>)> = Vec::default();
 
         process_render(
             viewports_collection,
             rdom,
             &mut self.font_collection,
             layers,
-            &mut (canvas, (&mut matrixs)),
-            |dom, element, font_collection, viewports_collection, (canvas, matrixs)| {
+            &mut (canvas, (&mut matrices)),
+            |dom, element, font_collection, viewports_collection, (canvas, matrices)| {
                 let render_wireframe = if let Some(hovered_node) = &hovered_node {
                     hovered_node
                         .lock()
@@ -145,7 +145,7 @@ impl<T: Clone> WindowEnv<T> {
                     font_collection,
                     viewports_collection,
                     render_wireframe,
-                    matrixs,
+                    matrices,
                 );
             },
         );

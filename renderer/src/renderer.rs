@@ -18,9 +18,11 @@ pub fn render_skia(
     font_collection: &mut FontCollection,
     viewports_collection: &ViewportsCollection,
     render_wireframe: bool,
-    matrixs: &mut Vec<(Matrix, Vec<NodeId>)>,
+    matrices: &mut Vec<(Matrix, Vec<NodeId>)>,
 ) {
     if let NodeType::Element { tag, .. } = &node.get_node(dom).node_data.node_type {
+        canvas.save();
+
         if let Some(rotate_degs) = node.get_node(dom).state.transform.rotate_degs {
             let area = node.get_area();
 
@@ -33,18 +35,21 @@ pub fn render_skia(
                 }),
             );
 
-            let mut nodes = vec![node.node_id];
-            nodes.extend(node.get_children().clone().unwrap_or_default());
-            matrixs.push((matrix, nodes));
+            if let Some(children) = node.get_children() {
+                matrices.push((matrix, children.clone()));
+            }
+
+            canvas.concat(&matrix);
         }
 
-        canvas.save();
+        for (matrix, nodes) in matrices.iter_mut() {
+            if nodes.contains(&node.node_id) {
+                canvas.concat(matrix);
 
-        if let Some((matrix, _)) = matrixs
-            .iter()
-            .find(|(_, nodes)| nodes.contains(&node.node_id))
-        {
-            canvas.concat(matrix);
+                if let Some(children) = node.get_children() {
+                    nodes.extend(children)
+                }
+            }
         }
 
         let children = node.children.as_ref();
