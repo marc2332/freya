@@ -43,7 +43,7 @@ impl State<CustomAttributeValues> for Size {
 
     fn update<'a>(
         &mut self,
-        node_view: NodeView<()>,
+        node_view: NodeView<CustomAttributeValues>,
         _node: <Self::NodeDependencies as Dependancy>::ElementBorrowed<'a>,
         parent: Option<<Self::ParentDependencies as Dependancy>::ElementBorrowed<'a>>,
         children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,

@@ -1,13 +1,14 @@
 use dioxus_core::ElementId;
-use dioxus_native_core::tree::TreeView;
-use dioxus_native_core::{node::Node, NodeId};
+use dioxus_native_core::real_dom::NodeRef;
+use dioxus_native_core::{NodeId};
 use freya_common::NodeArea;
-use freya_node_state::{CustomAttributeValues, NodeState};
+use freya_node_state::{CustomAttributeValues};
 use rustc_hash::FxHashMap;
+use dioxus_native_core::real_dom::NodeImmutable;
 
 use crate::DioxusDOM;
 
-pub type DioxusNode = Node<NodeState, CustomAttributeValues>;
+pub type DioxusNode<'a> = NodeRef<'a, CustomAttributeValues>;
 
 #[derive(Default, Clone)]
 pub struct Layers {
@@ -18,9 +19,8 @@ pub struct Layers {
 #[derive(Clone, Debug)]
 pub struct RenderData {
     pub node_area: NodeArea,
-    pub element_id: Option<ElementId>,
     pub node_id: NodeId,
-    pub children: Option<Vec<NodeId>>,
+    pub children: Vec<NodeId>,
 }
 
 impl RenderData {
@@ -30,22 +30,17 @@ impl RenderData {
     }
 
     #[inline(always)]
-    pub fn get_element_id(&self) -> &Option<ElementId> {
-        &self.element_id
-    }
-
-    #[inline(always)]
     pub fn get_id(&self) -> &NodeId {
         &self.node_id
     }
 
     #[inline(always)]
-    pub fn get_children(&self) -> &Option<Vec<NodeId>> {
+    pub fn get_children(&self) -> &Vec<NodeId> {
         &self.children
     }
 
     #[inline(always)]
-    pub fn get_node<'a>(&'a self, rdom: &'a DioxusDOM) -> &DioxusNode {
+    pub fn get_node<'a>(&'a self, rdom: &'a DioxusDOM) -> DioxusNode {
         rdom.get(self.node_id).unwrap()
     }
 }
@@ -68,7 +63,6 @@ impl Layers {
     pub fn add_element(
         &mut self,
         node: &DioxusNode,
-        node_children: Option<Vec<NodeId>>,
         node_area: &NodeArea,
         node_layer: i16,
     ) {
@@ -78,12 +72,11 @@ impl Layers {
             .or_insert_with(FxHashMap::default);
 
         layer.insert(
-            node.node_data.node_id,
+            node.id(),
             RenderData {
-                element_id: node.node_data.element_id,
-                node_id: node.node_data.node_id,
+                node_id: node.id(),
                 node_area: *node_area,
-                children: node_children,
+                children: node.child_ids(),
             },
         );
     }

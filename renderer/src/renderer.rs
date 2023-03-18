@@ -1,4 +1,6 @@
 use dioxus_native_core::node::NodeType;
+use dioxus_native_core::prelude::ElementNode;
+use dioxus_native_core::real_dom::NodeImmutable;
 use freya_core::ViewportsCollection;
 use freya_layout::RenderData;
 use skia_safe::{textlayout::FontCollection, Canvas, ClipOp, Rect};
@@ -17,8 +19,10 @@ pub fn render_skia(
     viewports_collection: &ViewportsCollection,
     render_wireframe: bool,
 ) {
-    if let NodeType::Element { tag, .. } = &node.get_node(dom).node_data.node_type {
-        let children = node.children.as_ref();
+    let node_ref = node.get_node(dom);
+    let node_type = &*node_ref.node_type();
+    if let NodeType::Element(ElementNode { tag, .. }) = node_type {
+        let children = node_ref.children();
         let viewports = viewports_collection.get(node.get_id());
 
         // Clip all elements with their corresponding viewports
@@ -45,14 +49,10 @@ pub fn render_skia(
                 render_rect_container(canvas, node, dom);
             }
             "label" => {
-                if let Some(children) = children {
-                    render_label(dom, canvas, font_collection, node, children);
-                }
+                render_label(dom, canvas, font_collection, node, children);
             }
             "paragraph" => {
-                if let Some(children) = children {
-                    render_paragraph(dom, canvas, font_collection, node, children);
-                }
+                render_paragraph(dom, canvas, font_collection, node, children);
             }
             "svg" => {
                 render_svg(canvas, node, dom);

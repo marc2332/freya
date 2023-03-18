@@ -1,3 +1,6 @@
+use dioxus_core::ElementId;
+use dioxus_native_core::prelude::{ElementNode, NodeImmutableDioxusExt};
+use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::{node::NodeType, NodeId};
 use euclid::{Length, Point2D};
 use freya_common::NodeArea;
@@ -5,6 +8,7 @@ use freya_elements::events_data::{KeyboardData, MouseData, WheelData};
 use freya_layout::{DioxusDOM, NodeLayoutMeasurer};
 use freya_layout::{Layers, RenderData};
 
+use freya_node_state::Style;
 use rustc_hash::FxHashMap;
 use skia_safe::{textlayout::FontCollection, Color};
 use std::ops::Index;
@@ -32,26 +36,26 @@ pub fn calculate_viewports(
     for layer_num in layers_nums {
         let layer = layers.layers.get(layer_num).unwrap();
         for dom_element in layer.values() {
-            if let NodeType::Element { tag, .. } = &dom_element.get_node(rdom).node_data.node_type {
+            let node = dom_element.get_node(rdom);
+            let node_type = &*node.node_type();
+            if let NodeType::Element(ElementNode { tag, .. }) = node_type {
                 if tag == "container" {
                     viewports_collection
                         .entry(*dom_element.get_id())
                         .or_insert_with(|| (None, Vec::new()))
                         .0 = Some(dom_element.node_area);
                 }
-                if let Some(children) = &dom_element.get_children() {
-                    for child in children {
-                        if viewports_collection.contains_key(dom_element.get_id()) {
-                            let mut inherited_viewports = viewports_collection
-                                .get(dom_element.get_id())
-                                .unwrap()
-                                .1
-                                .clone();
+                for child in node.children() {
+                    if viewports_collection.contains_key(dom_element.get_id()) {
+                        let mut inherited_viewports = viewports_collection
+                            .get(dom_element.get_id())
+                            .unwrap()
+                            .1
+                            .clone();
 
-                            inherited_viewports.push(*dom_element.get_id());
+                        inherited_viewports.push(*dom_element.get_id());
 
-                            viewports_collection.insert(*child, (None, inherited_viewports));
-                        }
+                        viewports_collection.insert(child.id(), (None, inherited_viewports));
                     }
                 }
             }
@@ -136,26 +140,29 @@ pub fn calculate_node_events<'a>(
 // Calculate events that can actually be triggered
 fn calculate_events_listeners(
     calculated_events: &mut NodesEvents,
-    dom: &DioxusDOM,
+    rdom: &DioxusDOM,
     event_emitter: &EventEmitter,
 ) -> Vec<DomEvent> {
     let mut new_events = Vec::new();
 
     for (event_name, event_nodes) in calculated_events.iter_mut() {
-        let listeners = dom.get_listening_sorted(event_name);
+        let listeners = rdom.get_listening_sorted(event_name);
 
         let mut found_nodes: Vec<(&RenderData, &FreyaEvent)> = Vec::new();
 
         'event_nodes: for (node, request) in event_nodes.iter() {
             for listener in &listeners {
-                if listener.node_data.node_id == *node.get_id() {
-                    if node.get_node(dom).state.style.background != Color::TRANSPARENT
+                if listener.id() == *node.get_id() {
+                    let node_ref = node.get_node(rdom);
+      
+                    let Style { background, .. } = &*node_ref.get::<Style>().unwrap();
+                    if background != &Color::TRANSPARENT
                         && event_name == &"wheel"
                     {
                         break 'event_nodes;
                     }
 
-                    if node.get_node(dom).state.style.background != Color::TRANSPARENT
+                    if  background != &Color::TRANSPARENT
                         && event_name == &"click"
                     {
                         found_nodes.clear();
@@ -176,9 +183,11 @@ fn calculate_events_listeners(
         }
 
         for (node, request) in found_nodes {
+            let node_ref = rdom.get(node.node_id).unwrap();
+            let element_id = node_ref.mounted_id().unwrap();
             let event = match request {
                 FreyaEvent::Mouse { cursor, button, .. } => DomEvent {
-                    element_id: node.element_id.unwrap(),
+                    element_id,
                     name: event_name.to_string(),
                     data: DomEventData::Mouse(MouseData::new(
                         Point2D::from_lengths(Length::new(cursor.0), Length::new(cursor.1)),
@@ -190,7 +199,7 @@ fn calculate_events_listeners(
                     )),
                 },
                 FreyaEvent::Wheel { scroll, .. } => DomEvent {
-                    element_id: node.element_id.unwrap(),
+                    element_id,
                     name: event_name.to_string(),
                     data: DomEventData::Wheel(WheelData::new(scroll.0, scroll.1)),
                 },
@@ -200,7 +209,7 @@ fn calculate_events_listeners(
                     modifiers,
                     ..
                 } => DomEvent {
-                    element_id: node.element_id.unwrap(),
+                    element_id,
                     name: event_name.to_string(),
                     data: DomEventData::Keyboard(KeyboardData::new(key.clone(), *code, *modifiers)),
                 },
@@ -225,9 +234,10 @@ fn calculate_global_events_listeners(
         let listeners = dom.get_listening_sorted(event_name);
 
         for listener in listeners {
+            let element_id = listener.mounted_id().unwrap();
             let event = match global_event {
                 FreyaEvent::Mouse { cursor, button, .. } => DomEvent {
-                    element_id: listener.node_data.element_id.unwrap(),
+                    element_id,
                     name: event_name.to_string(),
                     data: DomEventData::Mouse(MouseData::new(
                         Point2D::from_lengths(Length::new(cursor.0), Length::new(cursor.1)),
@@ -236,7 +246,7 @@ fn calculate_global_events_listeners(
                     )),
                 },
                 FreyaEvent::Wheel { scroll, .. } => DomEvent {
-                    element_id: listener.node_data.element_id.unwrap(),
+                    element_id,
                     name: event_name.to_string(),
                     data: DomEventData::Wheel(WheelData::new(scroll.0, scroll.1)),
                 },
@@ -246,7 +256,7 @@ fn calculate_global_events_listeners(
                     modifiers,
                     ..
                 } => DomEvent {
-                    element_id: listener.node_data.element_id.unwrap(),
+                    element_id,
                     name: event_name.to_string(),
                     data: DomEventData::Keyboard(KeyboardData::new(key.clone(), code, modifiers)),
                 },
@@ -265,7 +275,7 @@ pub fn process_layout(
     let mut layers = Layers::default();
 
     {
-        let root = dom.index(NodeId(0));
+        let root = dom.get(NodeId::new_from_index_and_gen(0, 0)).unwrap();
         let mut remaining_area = area;
         let mut root_node_measurer = NodeLayoutMeasurer::new(
             root,

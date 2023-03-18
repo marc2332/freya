@@ -58,7 +58,7 @@ pub fn use_editable<'a>(
     let cursor_ref = use_ref(cx, || CursorReference {
         agent: cursor_channels.0.clone(),
         positions: Arc::new(Mutex::new(None)),
-        id: Arc::new(Mutex::new(None)),
+        cursor_id: Arc::new(Mutex::new(None)),
     });
 
     // This will allow to pass the cursor reference as an attribute value
@@ -93,7 +93,7 @@ pub fn use_editable<'a>(
                 while let Some((e, id)) = rx.recv().await {
                     let points = e.get_element_coordinates();
                     let cursor_ref = cursor_ref.clone();
-                    cursor_ref.write().id.lock().unwrap().replace(id);
+                    cursor_ref.write().cursor_id.lock().unwrap().replace(id);
                     cursor_ref
                         .write()
                         .positions

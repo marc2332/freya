@@ -14,7 +14,7 @@ pub struct CursorSettings {
     pub position: Option<i32>,
     pub color: Color,
     pub mode: CursorMode,
-    pub id: Option<usize>,
+    pub cursor_id: Option<usize>,
 }
 
 #[partial_derive_state]
@@ -35,7 +35,7 @@ impl State<CustomAttributeValues> for CursorSettings {
 
     fn update<'a>(
         &mut self,
-        node_view: NodeView<()>,
+        node_view: NodeView<CustomAttributeValues>,
         _node: <Self::NodeDependencies as Dependancy>::ElementBorrowed<'a>,
         parent: Option<<Self::ParentDependencies as Dependancy>::ElementBorrowed<'a>>,
         children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
@@ -69,7 +69,7 @@ impl State<CustomAttributeValues> for CursorSettings {
                     "cursor_id" => {
                         if let Some(val) = attr.value.as_text() {
                             if let Ok(new_cursor_id) = val.parse() {
-                                cursor.id = Some(new_cursor_id);
+                                cursor.cursor_id = Some(new_cursor_id);
                             }
                         }
                     }
@@ -96,7 +96,7 @@ impl Default for CursorSettings {
             position: None,
             color: Color::WHITE,
             mode: CursorMode::None,
-            id: None,
+            cursor_id: None,
         }
     }
 }

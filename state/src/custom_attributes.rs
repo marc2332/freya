@@ -1,3 +1,4 @@
+use std::any::Any;
 use std::fmt::Debug;
 use std::fmt::Display;
 use std::sync::Arc;
@@ -48,7 +49,7 @@ impl Display for NodeReference {
 pub struct CursorReference {
     pub positions: Arc<Mutex<Option<(f32, f32)>>>,
     pub agent: UnboundedSender<(usize, usize)>,
-    pub id: Arc<Mutex<Option<usize>>>,
+    pub cursor_id: Arc<Mutex<Option<usize>>>,
 }
 
 impl PartialEq for CursorReference {
@@ -84,8 +85,8 @@ impl Debug for CustomAttributeValues {
 }
 
 impl FromAnyValue for CustomAttributeValues {
-    fn from_any_value(b: &dyn AnyValue) -> Self {
-        b.as_any()
+    fn from_any_value(b: &dyn Any) -> Self {
+        b
             .downcast_ref::<CustomAttributeValues>()
             .unwrap()
             .clone()

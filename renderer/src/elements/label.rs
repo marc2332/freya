@@ -1,6 +1,7 @@
+use dioxus_native_core::real_dom::NodeRef;
 use dioxus_native_core::tree::TreeView;
 use dioxus_native_core::{node::NodeType, NodeId};
-use freya_layout::{DioxusDOM, RenderData};
+use freya_layout::{DioxusDOM, RenderData, DioxusNode};
 use skia_safe::{
     textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle},
     Canvas, Paint, PaintStyle,
@@ -12,7 +13,7 @@ pub fn render_label(
     canvas: &mut Canvas,
     font_collection: &mut FontCollection,
     node: &RenderData,
-    children: &[NodeId],
+    children: Vec<DioxusNode>,
 ) {
     let dioxus_node = node.get_node(dom);
     let font_size = dioxus_node.state.font_style.font_size;

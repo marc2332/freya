@@ -19,7 +19,7 @@ pub fn use_focus(cx: &ScopeState) -> (bool, impl Fn() + '_) {
 }
 
 /// Subscribe and change the current focus but return the raw value and the caller focus ID.
-pub fn use_raw_focus(cx: &ScopeState) -> (bool, Uuid, Option<UseSharedState<Uuid>>) {
+pub fn use_raw_focus(cx: &ScopeState) -> (bool, Uuid, Option<&UseSharedState<Uuid>>) {
     let my_id = cx.use_hook(Uuid::new_v4);
     let focused_id = use_shared_state::<Uuid>(cx);
     let focused = Some(*my_id) == focused_id.map(|v| *v.read());
