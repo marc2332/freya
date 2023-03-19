@@ -150,9 +150,6 @@ impl<T: Clone> WindowEnv<T> {
             },
         );
 
-        let canvas = self.surface.canvas();
-
-        canvas.restore();
         self.gr_context.flush(None);
         self.windowed_context.swap_buffers().unwrap();
     }
