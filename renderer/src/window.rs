@@ -1,10 +1,10 @@
-use std::ffi::CString;
-use std::num::NonZeroU32;
-
+use dioxus_native_core::NodeId;
 use freya_common::{EventMessage, NodeArea};
 use freya_core::process_render;
 use freya_core::{process_layout, ViewportsCollection};
 use freya_layout::{DioxusDOM, Layers};
+use std::ffi::CString;
+use std::num::NonZeroU32;
 
 use gl::types::*;
 use glutin::context::GlProfile;
@@ -21,8 +21,6 @@ use glutin::{
 use glutin_winit::DisplayBuilder;
 use raw_window_handle::HasRawWindowHandle;
 
-use skia_safe::textlayout::FontCollection;
-use skia_safe::FontMgr;
 use winit::dpi::PhysicalSize;
 use winit::{
     event_loop::EventLoop,
@@ -31,7 +29,8 @@ use winit::{
 
 use skia_safe::{
     gpu::{gl::FramebufferInfo, BackendRenderTarget, SurfaceOrigin},
-    Color, ColorType, Surface,
+    textlayout::FontCollection,
+    Color, ColorType, FontMgr, Matrix, Surface,
 };
 
 use crate::renderer::render_skia;
@@ -222,14 +221,15 @@ impl<T: Clone> WindowEnv<T> {
             Color::TRANSPARENT
         });
 
+        let mut matrices: Vec<(Matrix, Vec<NodeId>)> = Vec::default();
+
         process_render(
             viewports_collection,
             rdom,
             &mut self.font_collection,
             layers,
-            canvas,
-            |dom, element, font_collection, viewports_collection, canvas| {
-                canvas.save();
+            &mut (canvas, (&mut matrices)),
+            |dom, element, font_collection, viewports_collection, (canvas, matrices)| {
                 let render_wireframe = if let Some(hovered_node) = &hovered_node {
                     hovered_node
                         .lock()
@@ -246,8 +246,8 @@ impl<T: Clone> WindowEnv<T> {
                     font_collection,
                     viewports_collection,
                     render_wireframe,
+                    matrices,
                 );
-                canvas.restore();
             },
         );
 
