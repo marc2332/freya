@@ -1,13 +1,21 @@
-use dioxus_native_core::{node::NodeType, real_dom::NodeImmutable, prelude::ElementNode};
+use dioxus_native_core::{node::NodeType, prelude::ElementNode, real_dom::NodeImmutable};
 use freya_common::NodeArea;
-use freya_node_state::{SizeMode, Size};
+use freya_node_state::{Size, SizeMode};
 
 use crate::{ops_calc::run_calculations, NodeLayoutMeasurer};
 
 pub fn calculate_area(node_measurer: &NodeLayoutMeasurer) -> NodeArea {
     let mut area = *node_measurer.remaining_area;
 
-    let Size { width, height, max_height, min_height, max_width, min_width, .. } = &*node_measurer.node.get::<Size>().unwrap();
+    let Size {
+        width,
+        height,
+        max_height,
+        min_height,
+        max_width,
+        min_width,
+        ..
+    } = &*node_measurer.node.get::<Size>().unwrap();
 
     let calculate = |value: &SizeMode, area_value: f32, parent_area_value: f32| -> f32 {
         match value {
@@ -76,16 +84,8 @@ pub fn calculate_area(node_measurer: &NodeLayoutMeasurer) -> NodeArea {
         }
     };
 
-    area.width = calculate(
-        &width,
-        area.width,
-        node_measurer.parent_area.width,
-    );
-    area.height = calculate(
-        &height,
-        area.height,
-        node_measurer.parent_area.height,
-    );
+    area.width = calculate(&width, area.width, node_measurer.parent_area.width);
+    area.height = calculate(&height, area.height, node_measurer.parent_area.height);
 
     if &SizeMode::Auto == height {
         if let NodeType::Element(ElementNode { tag, .. }) = &*node_measurer.node.node_type() {
@@ -95,27 +95,11 @@ pub fn calculate_area(node_measurer: &NodeLayoutMeasurer) -> NodeArea {
         }
     }
 
-    area.height = calculate_min(
-        &min_height,
-        area.height,
-        node_measurer.parent_area.height,
-    );
-    area.width = calculate_min(
-        &min_width,
-        area.width,
-        node_measurer.parent_area.width,
-    );
+    area.height = calculate_min(&min_height, area.height, node_measurer.parent_area.height);
+    area.width = calculate_min(&min_width, area.width, node_measurer.parent_area.width);
 
-    area.height = calculate_max(
-        &max_height,
-        area.height,
-        node_measurer.parent_area.height,
-    );
-    area.width = calculate_max(
-        &max_width,
-        area.width,
-        node_measurer.parent_area.width,
-    );
+    area.height = calculate_max(&max_height, area.height, node_measurer.parent_area.height);
+    area.width = calculate_max(&max_width, area.width, node_measurer.parent_area.width);
 
     area
 }

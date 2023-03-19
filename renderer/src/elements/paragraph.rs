@@ -1,7 +1,9 @@
-use dioxus_native_core::tree::TreeView;
+use dioxus_core::Element;
+use dioxus_native_core::prelude::{ElementNode, TextNode};
+use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::{node::NodeType, NodeId};
 use freya_layout::{DioxusDOM, DioxusNode, RenderData};
-use freya_node_state::NodeState;
+use freya_node_state::{CursorSettings, FontStyle};
 use skia_safe::{
     textlayout::{
         FontCollection, Paragraph, ParagraphBuilder, ParagraphStyle, RectHeightStyle,
@@ -12,42 +14,40 @@ use skia_safe::{
 
 /// Render a `paragraph` element
 pub fn render_paragraph(
-    dom: &DioxusDOM,
+    node: &RenderData,
+    node_ref: DioxusNode,
     canvas: &mut Canvas,
     font_collection: &mut FontCollection,
-    node: &RenderData,
-    children: &[NodeId],
 ) {
-    let dioxus_node = node.get_node(dom);
-    let align = dioxus_node.state.font_style.align;
-    let max_lines = dioxus_node.state.font_style.max_lines;
+    let node_font_style = &*node_ref.get::<FontStyle>().unwrap();
+    let node_cursor_settings = &*node_ref.get::<CursorSettings>().unwrap();
 
-    let texts = get_inner_texts(children, dom);
+    let texts = get_inner_texts(node_ref);
 
     let (x, y) = node.node_area.get_origin_points();
 
     let mut paragraph_style = ParagraphStyle::default();
-    paragraph_style.set_max_lines(max_lines);
-    paragraph_style.set_text_align(align);
+    paragraph_style.set_max_lines(node_font_style.max_lines);
+    paragraph_style.set_text_align(node_font_style.align);
     paragraph_style.set_replace_tab_characters(true);
     paragraph_style.set_text_height_behavior(TextHeightBehavior::DisableAll);
 
     let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection.clone());
 
-    for node_text in &texts {
+    for (font_style, text) in &texts {
         paragraph_builder.push_style(
             TextStyle::new()
-                .set_font_style(node_text.0.font_style.font_style)
+                .set_font_style(font_style.font_style)
                 .set_height_override(true)
-                .set_height(node_text.0.font_style.line_height)
-                .set_color(node_text.0.font_style.color)
-                .set_font_size(node_text.0.font_style.font_size)
-                .set_font_families(&node_text.0.font_style.font_family),
+                .set_height(font_style.line_height)
+                .set_color(font_style.color)
+                .set_font_size(font_style.font_size)
+                .set_font_families(&font_style.font_family),
         );
-        paragraph_builder.add_text(node_text.1.clone());
+        paragraph_builder.add_text(text);
     }
 
-    if dioxus_node.state.cursor_settings.position.is_some() {
+    if node_cursor_settings.position.is_some() {
         // This is very tricky, but it works! It allows freya to render the cursor at the end of a line.
         paragraph_builder.add_text(" ");
     }
@@ -59,18 +59,18 @@ pub fn render_paragraph(
     paragraph.paint(canvas, (x, y));
 
     // Draw a cursor if specified
-    draw_cursor(node, paragraph, canvas, dom);
+    draw_cursor(node, node_ref, paragraph, node_cursor_settings, canvas);
 }
 
 fn draw_cursor(
     node: &RenderData,
+    node_ref: DioxusNode,
     paragraph: Paragraph,
+    node_cursor_settings: &CursorSettings,
     canvas: &mut Canvas,
-    rdom: &DioxusDOM,
 ) -> Option<()> {
-    let dioxus_node = node.get_node(rdom);
-    let cursor = dioxus_node.state.cursor_settings.position?;
-    let cursor_color = dioxus_node.state.cursor_settings.color;
+    let cursor = node_cursor_settings.position?;
+    let cursor_color = node_cursor_settings.color;
     let cursor_position = cursor as usize;
 
     let cursor_rects = paragraph.get_rects_for_range(
@@ -96,23 +96,20 @@ fn draw_cursor(
     Some(())
 }
 
-fn get_inner_texts(children: &[NodeId], dom: &DioxusDOM) -> Vec<(NodeState, String)> {
-    children
+fn get_inner_texts(node_ref: DioxusNode) -> Vec<(FontStyle, String)> {
+    node_ref
+        .children()
         .iter()
-        .filter_map(|child_id| {
-            let (child, children): (DioxusNode, Vec<NodeId>) = {
-                let children = dom.tree.children_ids(*child_id).map(|v| v.to_vec());
-                (dom.get(*child_id).cloned()?, children?)
-            };
-
-            if let NodeType::Element { tag, .. } = child.node_data.node_type {
+        .filter_map(|child| {
+            if let NodeType::Element(ElementNode { tag, .. }) = &*child.node_type() {
+                let children = child.children();
                 if tag != "text" {
                     return None;
                 }
-                let child_text_id = children.get(0)?;
-                let child_text: DioxusNode = { dom.get(*child_text_id).cloned() }?;
-                if let NodeType::Text { text } = &child_text.node_data.node_type {
-                    Some((child.state, text.clone()))
+                let child_text = children.get(0)?;
+                if let NodeType::Text(TextNode { text, .. }) = &*child_text.node_type() {
+                    let child_font_style = child_text.get::<FontStyle>().unwrap().clone();
+                    Some((child_font_style, text.clone()))
                 } else {
                     None
                 }
@@ -120,5 +117,5 @@ fn get_inner_texts(children: &[NodeId], dom: &DioxusDOM) -> Vec<(NodeState, Stri
                 None
             }
         })
-        .collect::<Vec<(NodeState, String)>>()
+        .collect::<Vec<(FontStyle, String)>>()
 }

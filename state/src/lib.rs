@@ -17,7 +17,6 @@ pub use scroll::*;
 pub use size::*;
 pub use style::*;
 
-
 pub enum AttributeType<'a> {
     Color(&'a Color),
     Size(&'a SizeMode),
@@ -28,7 +27,6 @@ pub enum AttributeType<'a> {
     Shadow(&'a ShadowSettings),
     Text(String),
 }
-
 
 pub fn parse_rgb(color: &str) -> Option<Color> {
     let color = color.replace("rgb(", "").replace(')', "");

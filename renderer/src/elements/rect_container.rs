@@ -1,17 +1,18 @@
-use freya_layout::{DioxusDOM, RenderData};
+use dioxus_native_core::real_dom::NodeImmutable;
+use freya_layout::{DioxusDOM, DioxusNode, RenderData};
+use freya_node_state::{ShadowSettings, Style};
 use skia_safe::{BlurStyle, Canvas, MaskFilter, Paint, PaintStyle, Path, PathDirection, Rect};
 
 /// Render a `rect` or a `container` element
-pub fn render_rect_container(canvas: &mut Canvas, node: &RenderData, rdom: &DioxusDOM) {
-    let dioxus_node = node.get_node(rdom);
-    let shadow = &dioxus_node.state.style.shadow;
+pub fn render_rect_container(node: &RenderData, node_ref: DioxusNode, canvas: &mut Canvas) {
+    let node_style = &*node_ref.get::<Style>().unwrap();
 
     let mut paint = Paint::default();
     paint.set_anti_alias(true);
     paint.set_style(PaintStyle::Fill);
-    paint.set_color(dioxus_node.state.style.background);
+    paint.set_color(node_style.background);
 
-    let radius = dioxus_node.state.style.radius;
+    let radius = node_style.radius;
     let radius = if radius < 0.0 { 0.0 } else { radius };
 
     let ((x, y), (x2, y2)) = node.node_area.get_rect();
@@ -26,12 +27,16 @@ pub fn render_rect_container(canvas: &mut Canvas, node: &RenderData, rdom: &Diox
 
     // Shadow effect
     {
-        if shadow.intensity > 0 {
+        if node_style.shadow.intensity > 0 {
             let mut blur_paint = paint.clone();
 
-            blur_paint.set_color(shadow.color);
-            blur_paint.set_alpha(shadow.intensity);
-            blur_paint.set_mask_filter(MaskFilter::blur(BlurStyle::Normal, shadow.size, false));
+            blur_paint.set_color(node_style.shadow.color);
+            blur_paint.set_alpha(node_style.shadow.intensity);
+            blur_paint.set_mask_filter(MaskFilter::blur(
+                BlurStyle::Normal,
+                node_style.shadow.size,
+                false,
+            ));
             canvas.draw_path(&path, &blur_paint);
         }
     }

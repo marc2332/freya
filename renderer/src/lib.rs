@@ -1,6 +1,7 @@
 use app::App;
 use dioxus_core::VirtualDom;
 
+use dioxus_native_core::prelude::DioxusState;
 use dioxus_native_core::NodeId;
 use freya_common::EventMessage;
 use freya_core::dom::DioxusSafeDOM;
@@ -34,6 +35,7 @@ pub type HoveredNode = Option<Arc<Mutex<Option<NodeId>>>>;
 pub fn run<T: 'static + Clone>(
     vdom: VirtualDom,
     rdom: DioxusSafeDOM,
+    dioxus_integration_state: DioxusState,
     window_config: WindowConfig<T>,
     mutations_sender: Option<UnboundedSender<()>>,
     hovered_node: HoveredNode,
@@ -64,6 +66,7 @@ pub fn run<T: 'static + Clone>(
     let mut app = App::new(
         rdom,
         vdom,
+        dioxus_integration_state,
         &proxy,
         mutations_sender,
         WindowEnv::from_config(window_config, &event_loop),

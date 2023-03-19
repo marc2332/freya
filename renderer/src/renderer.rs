@@ -22,7 +22,6 @@ pub fn render_skia(
     let node_ref = node.get_node(dom);
     let node_type = &*node_ref.node_type();
     if let NodeType::Element(ElementNode { tag, .. }) = node_type {
-        let children = node_ref.children();
         let viewports = viewports_collection.get(node.get_id());
 
         // Clip all elements with their corresponding viewports
@@ -49,7 +48,7 @@ pub fn render_skia(
                 render_rect_container(canvas, node, dom);
             }
             "label" => {
-                render_label(dom, canvas, font_collection, node, children);
+                render_label(node, node_ref, canvas, font_collection);
             }
             "paragraph" => {
                 render_paragraph(dom, canvas, font_collection, node, children);

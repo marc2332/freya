@@ -86,10 +86,7 @@ impl Debug for CustomAttributeValues {
 
 impl FromAnyValue for CustomAttributeValues {
     fn from_any_value(b: &dyn Any) -> Self {
-        b
-            .downcast_ref::<CustomAttributeValues>()
-            .unwrap()
-            .clone()
+        b.downcast_ref::<CustomAttributeValues>().unwrap().clone()
     }
 }
 

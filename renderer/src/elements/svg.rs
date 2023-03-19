@@ -1,12 +1,15 @@
-use freya_layout::{DioxusDOM, RenderData};
+use dioxus_native_core::real_dom::NodeImmutable;
+use freya_layout::{DioxusDOM, DioxusNode, RenderData};
+use freya_node_state::Style;
 use skia_safe::{svg, Canvas};
 
 /// Render a `svg` element
-pub fn render_svg(canvas: &mut Canvas, node: &RenderData, dom: &DioxusDOM) {
-    let dioxus_node = node.get_node(dom);
+pub fn render_svg(node: &RenderData, node_ref: DioxusNode, canvas: &mut Canvas, dom: &DioxusDOM) {
+    let node_style = &*node_ref.get::<Style>().unwrap();
+
     let x = node.node_area.x;
     let y = node.node_area.y;
-    if let Some(svg_data) = &dioxus_node.state.style.svg_data {
+    if let Some(svg_data) = &node_style.svg_data {
         let svg_dom = svg::Dom::from_bytes(svg_data);
         if let Ok(mut svg_dom) = svg_dom {
             canvas.save();

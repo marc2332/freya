@@ -1,7 +1,7 @@
 use std::{collections::HashMap, sync::Arc, task::Waker};
 
 use dioxus_core::{Template, VirtualDom};
-use dioxus_native_core::SendAnyMap;
+use dioxus_native_core::{prelude::DioxusState, SendAnyMap};
 use freya_common::EventMessage;
 use freya_core::{
     dom::DioxusSafeDOM,
@@ -41,6 +41,7 @@ pub fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
 pub struct App<State: 'static + Clone> {
     rdom: DioxusSafeDOM,
     vdom: VirtualDom,
+    dioxus_integration_state: DioxusState,
 
     events: EventsQueue,
 
@@ -62,6 +63,7 @@ impl<State: 'static + Clone> App<State> {
     pub fn new(
         rdom: DioxusSafeDOM,
         vdom: VirtualDom,
+        dioxus_integration_state: DioxusState,
         proxy: &EventLoopProxy<EventMessage>,
         mutations_sender: Option<UnboundedSender<()>>,
         window_env: WindowEnv<State>,
@@ -70,6 +72,7 @@ impl<State: 'static + Clone> App<State> {
         Self {
             rdom,
             vdom,
+            dioxus_integration_state,
             events: Vec::new(),
             vdom_waker: winit_waker(proxy),
             proxy: proxy.clone(),
@@ -96,6 +99,9 @@ impl<State: 'static + Clone> App<State> {
         self.provide_vdom_contexts();
 
         let mutations = self.vdom.rebuild();
+        self.dioxus_integration_state
+            .apply_mutations(self.rdom.dom_mut(), mutations);
+
         let (to_update, diff) = self.rdom.dom_mut().apply_mutations(mutations);
 
         if !diff.is_empty() {

@@ -1,10 +1,16 @@
-use dioxus_native_core::{node::NodeType, real_dom::{RealDom, NodeImmutable}, NodeId, tree::TreeRef, prelude::ElementNode};
+use dioxus_native_core::{
+    node::NodeType,
+    prelude::ElementNode,
+    real_dom::{NodeImmutable, RealDom},
+    tree::TreeRef,
+    NodeId,
+};
 use freya_common::{NodeArea, NodeReferenceLayout};
 use freya_node_state::{
-    CursorMode, CursorReference, CustomAttributeValues, DirectionMode, DisplayMode, FontStyle,
-    SizeMode, References, CursorSettings, Size, Style, Scroll,
+    CursorMode, CursorReference, CursorSettings, CustomAttributeValues, DirectionMode, DisplayMode,
+    FontStyle, References, Scroll, Size, SizeMode, Style,
 };
-use skia_safe::{textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle}};
+use skia_safe::textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle};
 
 mod area_calc;
 mod layers;
@@ -18,12 +24,10 @@ pub type DioxusDOM = RealDom<CustomAttributeValues>;
 
 /// Collect all the texts and node states from a given array of children
 fn get_inner_texts(node: &DioxusNode) -> Vec<(FontStyle, String)> {
-    node
-        .children()
+    node.children()
         .iter()
         .filter_map(|child| {
-            if let NodeType::Element(ElementNode { tag, ..}) = &*child.node_type() {
-                
+            if let NodeType::Element(ElementNode { tag, .. }) = &*child.node_type() {
                 if tag != "text" {
                     return None;
                 }
@@ -46,10 +50,12 @@ fn get_inner_texts(node: &DioxusNode) -> Vec<(FontStyle, String)> {
 }
 
 /// Get the info related to a cursor reference
-fn get_cursor_reference<'a>(node: &'a DioxusNode<'a>) -> Option<(CursorReference, usize, (f32, f32))> {
+fn get_cursor_reference<'a>(
+    node: &'a DioxusNode<'a>,
+) -> Option<(CursorReference, usize, (f32, f32))> {
     let node_references = node.get::<References>().unwrap();
     let cursor_settings = node.get::<CursorSettings>().unwrap();
-    
+
     let cursor_ref = node_references.cursor_ref.clone()?;
     let cursor_id = cursor_settings.cursor_id.clone()?;
 
@@ -106,7 +112,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
 
         let node_references = self.node.get::<References>().unwrap().clone();
         let node_size = self.node.get::<Size>().unwrap().clone();
-        let node_style  = self.node.get::<Style>().unwrap().clone();
+        let node_style = self.node.get::<Style>().unwrap().clone();
         let node_scroll = self.node.get::<Scroll>().unwrap().clone();
 
         // Caculate the corresponding layer of this node
@@ -153,18 +159,22 @@ impl<'a> NodeLayoutMeasurer<'a> {
 
             match node_size.direction {
                 DirectionMode::Vertical => {
-                    remaining_inner_area.y = inner_area.y + space_left_vertically + node_size.padding.0;
+                    remaining_inner_area.y =
+                        inner_area.y + space_left_vertically + node_size.padding.0;
                     remaining_inner_area.height =
                         inner_area.height - space_left_vertically - node_size.padding.2;
                 }
                 DirectionMode::Horizontal => {
-                    remaining_inner_area.x = inner_area.x + space_left_horizontally + node_size.padding.1;
+                    remaining_inner_area.x =
+                        inner_area.x + space_left_horizontally + node_size.padding.1;
                     remaining_inner_area.width =
                         inner_area.width - space_left_horizontally - node_size.padding.3;
                 }
                 DirectionMode::Both => {
-                    remaining_inner_area.x = inner_area.x + space_left_horizontally + node_size.padding.1;
-                    remaining_inner_area.y = inner_area.y + space_left_vertically + node_size.padding.0;
+                    remaining_inner_area.x =
+                        inner_area.x + space_left_horizontally + node_size.padding.1;
+                    remaining_inner_area.y =
+                        inner_area.y + space_left_vertically + node_size.padding.0;
 
                     remaining_inner_area.width =
                         inner_area.width - space_left_horizontally - node_size.padding.3;
@@ -198,8 +208,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
 
         // Registers the element in the Layers handler
         if is_measuring {
-            self.layers
-                .add_element(&self.node, &node_area, node_layer);
+            self.layers.add_element(&self.node, &node_area, node_layer);
         }
 
         if is_measuring {
@@ -342,9 +351,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
                         }
                     }
 
-                    if child_node_area.width > remaining_area.width
-                        || remaining_area.width == 0.0
-                    {
+                    if child_node_area.width > remaining_area.width || remaining_area.width == 0.0 {
                         remaining_area.width = child_node_area.width;
                     }
 
@@ -361,7 +368,15 @@ impl<'a> NodeLayoutMeasurer<'a> {
                 }
             }
             NodeType::Text(text) => {
-                let FontStyle { font_family, font_size, line_height, align, max_lines, font_style, .. } = &*node.get::<FontStyle>().unwrap();
+                let FontStyle {
+                    font_family,
+                    font_size,
+                    line_height,
+                    align,
+                    max_lines,
+                    font_style,
+                    ..
+                } = &*node.get::<FontStyle>().unwrap();
 
                 let mut paragraph_style = ParagraphStyle::default();
                 paragraph_style.set_text_align(*align);

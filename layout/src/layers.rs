@@ -1,10 +1,10 @@
 use dioxus_core::ElementId;
-use dioxus_native_core::real_dom::NodeRef;
-use dioxus_native_core::{NodeId};
-use freya_common::NodeArea;
-use freya_node_state::{CustomAttributeValues};
-use rustc_hash::FxHashMap;
 use dioxus_native_core::real_dom::NodeImmutable;
+use dioxus_native_core::real_dom::NodeRef;
+use dioxus_native_core::NodeId;
+use freya_common::NodeArea;
+use freya_node_state::CustomAttributeValues;
+use rustc_hash::FxHashMap;
 
 use crate::DioxusDOM;
 
@@ -60,12 +60,7 @@ impl Layers {
     }
 
     /// Insert a Node into a layer
-    pub fn add_element(
-        &mut self,
-        node: &DioxusNode,
-        node_area: &NodeArea,
-        node_layer: i16,
-    ) {
+    pub fn add_element(&mut self, node: &DioxusNode, node_area: &NodeArea, node_layer: i16) {
         let layer = self
             .layers
             .entry(node_layer)

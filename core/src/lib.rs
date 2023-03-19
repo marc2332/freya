@@ -154,17 +154,13 @@ fn calculate_events_listeners(
             for listener in &listeners {
                 if listener.id() == *node.get_id() {
                     let node_ref = node.get_node(rdom);
-      
+
                     let Style { background, .. } = &*node_ref.get::<Style>().unwrap();
-                    if background != &Color::TRANSPARENT
-                        && event_name == &"wheel"
-                    {
+                    if background != &Color::TRANSPARENT && event_name == &"wheel" {
                         break 'event_nodes;
                     }
 
-                    if  background != &Color::TRANSPARENT
-                        && event_name == &"click"
-                    {
+                    if background != &Color::TRANSPARENT && event_name == &"click" {
                         found_nodes.clear();
                     }
 
