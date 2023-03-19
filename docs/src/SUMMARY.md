@@ -5,11 +5,10 @@
 # Getting Started
 
 - [Environment Setup](setup.md)
-- [Basic app](./basic_app.md)
+- [Hello World](./guides/hello_world.md)
 
 # Guides
-- [Hot reload](hotreload.md)
-- [Using the builtin themes]()
+- [Hot reload](./guides/hot_reload.md)
+- [Virtualizing](./guides/virtualizing.md)
+- [Themes]()
 
-# Advanced
-- [Everything is a component]()
