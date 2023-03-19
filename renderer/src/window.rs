@@ -2,10 +2,11 @@ use std::num::NonZeroU128;
 use std::sync::{Arc, Mutex};
 
 use accesskit::{
-    Action, DefaultActionVerb, Node, NodeBuilder, NodeClassSet, NodeId, Rect, Role, Tree,
+    Action, DefaultActionVerb, Node, NodeBuilder, NodeClassSet, NodeId as NodeIdKit, Rect, Role, Tree,
     TreeUpdate,
 };
 use accesskit_winit::Adapter;
+use dioxus_native_core::{NodeId};
 use freya_common::{EventMessage, NodeArea};
 use freya_core::process_render;
 use freya_core::{process_layout, ViewportsCollection};
@@ -18,9 +19,10 @@ use skia_safe::{gpu::DirectContext, textlayout::FontCollection};
 use skia_safe::{
     gpu::{gl::FramebufferInfo, BackendRenderTarget, SurfaceOrigin},
     ColorType, Surface,
+    Color, FontMgr, Matrix
 };
-use skia_safe::{Color, FontMgr};
 use tokio::sync::watch;
+
 
 use crate::renderer::render_skia;
 use crate::window_config::WindowConfig;
@@ -28,12 +30,12 @@ use crate::HoveredNode;
 
 pub type SharedAccessibilityState = Arc<Mutex<AccessibilityState>>;
 
-const WINDOW_ID: NodeId = NodeId(unsafe { NonZeroU128::new_unchecked(1) });
+const WINDOW_ID: NodeIdKit = NodeIdKit(unsafe { NonZeroU128::new_unchecked(1) });
 
 pub struct AccessibilityState {
-    pub nodes: Vec<(NodeId, Node)>,
+    pub nodes: Vec<(NodeIdKit, Node)>,
     pub node_classes: NodeClassSet,
-    pub focus: Option<NodeId>,
+    pub focus: Option<NodeIdKit>,
 }
 
 #[derive(PartialEq)]
@@ -54,8 +56,8 @@ impl AccessibilityState {
     pub fn add_element(
         &mut self,
         dioxus_node: &RenderData,
-        accessibility_id: NodeId,
-        children: Option<Vec<NodeId>>,
+        accessibility_id: NodeIdKit,
+        children: Option<Vec<NodeIdKit>>,
     ) {
         let mut builder = NodeBuilder::new(Role::Button);
 
@@ -82,7 +84,7 @@ impl AccessibilityState {
             self.nodes
                 .iter()
                 .map(|(id, _)| *id)
-                .collect::<Vec<NodeId>>(),
+                .collect::<Vec<NodeIdKit>>(),
         );
         builder.set_name("window");
 
@@ -104,8 +106,8 @@ impl AccessibilityState {
     pub fn set_focus(
         &mut self,
         adapter: &Adapter,
-        id: NodeId,
-        focus_sender: &watch::Sender<Option<NodeId>>,
+        id: NodeIdKit,
+        focus_sender: &watch::Sender<Option<NodeIdKit>>,
     ) {
         self.focus = Some(id);
         adapter.update(TreeUpdate {
@@ -121,7 +123,7 @@ impl AccessibilityState {
         &mut self,
         adapter: &Adapter,
         direction: FocusDirection,
-        focus_sender: &watch::Sender<Option<NodeId>>,
+        focus_sender: &watch::Sender<Option<NodeIdKit>>,
     ) {
         if let Some(focused_node_id) = self.focus {
             let current_node = self
@@ -269,14 +271,15 @@ impl<T: Clone> WindowEnv<T> {
             Color::TRANSPARENT
         });
 
+        let mut matrices: Vec<(Matrix, Vec<NodeId>)> = Vec::default();
+
         process_render(
             viewports_collection,
             rdom,
             &mut self.font_collection,
             layers,
-            canvas,
-            |dom, element, font_collection, viewports_collection, canvas| {
-                canvas.save();
+            &mut (canvas, (&mut matrices)),
+            |dom, element, font_collection, viewports_collection, (canvas, matrices)| {
                 let render_wireframe = if let Some(hovered_node) = &hovered_node {
                     hovered_node
                         .lock()
@@ -293,8 +296,8 @@ impl<T: Clone> WindowEnv<T> {
                     font_collection,
                     viewports_collection,
                     render_wireframe,
+                    matrices,
                 );
-                canvas.restore();
             },
         );
 
