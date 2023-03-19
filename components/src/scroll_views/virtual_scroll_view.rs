@@ -11,13 +11,13 @@ use crate::{
     SCROLLBAR_SIZE,
 };
 
-type BuilderFunction<'a, T> = dyn Fn((i32, i32, &'a Option<T>)) -> LazyNodes<'a, 'a>;
+type BuilderFunction<'a, T> = dyn Fn((usize, usize, &'a Option<T>)) -> LazyNodes<'a, 'a>;
 
 /// [`VirtualScrollView`] component properties.
 #[derive(Props)]
 pub struct VirtualScrollViewProps<'a, T: 'a> {
     /// Quantity of items in the VirtualScrollView.
-    length: i32,
+    length: usize,
     /// Size of the items, height for vertical direction and width for horizontal.
     item_size: f32,
     /// The item builder function.
@@ -47,7 +47,7 @@ fn get_render_range(
     scroll_position: f32,
     item_size: f32,
     item_length: f32,
-) -> Range<i32> {
+) -> Range<usize> {
     let render_index_start = (-scroll_position) / item_size;
     let potentially_visible_length = viewport_size / item_size;
     let remaining_length = item_length - render_index_start;
@@ -58,7 +58,7 @@ fn get_render_range(
         render_index_start + potentially_visible_length
     };
 
-    render_index_start as i32..(render_index_end as i32)
+    render_index_start as usize..(render_index_end as usize)
 }
 
 /// Virtual `Scrollable` container.
