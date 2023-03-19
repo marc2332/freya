@@ -1,8 +1,5 @@
-use dioxus_core::Element;
-use dioxus_native_core::prelude::{ElementNode, TextNode};
 use dioxus_native_core::real_dom::NodeImmutable;
-use dioxus_native_core::{node::NodeType, NodeId};
-use freya_layout::{get_inner_texts, DioxusDOM, DioxusNode, RenderData};
+use freya_layout::{get_inner_texts, DioxusNode, RenderData};
 use freya_node_state::{CursorSettings, FontStyle};
 use skia_safe::{
     textlayout::{

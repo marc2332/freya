@@ -171,7 +171,7 @@ pub fn launch_cfg<T: 'static + Clone + Send>(root: Component, win_config: Window
         Size::to_type_erased(),
         Style::to_type_erased(),
     ]));
-    let mut dioxus_integration_state = DioxusState::create(&mut rdom.dom_mut());
+    let dioxus_integration_state = DioxusState::create(&mut rdom.dom_mut());
     let (vdom, mutations_sender, hovered_node) = {
         #[cfg(feature = "devtools")]
         #[cfg(debug_assertions)]

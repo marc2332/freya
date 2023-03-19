@@ -1,4 +1,3 @@
-use dioxus_core::ElementId;
 use dioxus_native_core::prelude::{ElementNode, NodeImmutableDioxusExt};
 use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::{node::NodeType, NodeId};
@@ -11,7 +10,6 @@ use freya_layout::{Layers, RenderData};
 use freya_node_state::Style;
 use rustc_hash::FxHashMap;
 use skia_safe::{textlayout::FontCollection, Color};
-use std::ops::Index;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
 pub mod dom;

@@ -1,6 +1,6 @@
 use dioxus_native_core::real_dom::NodeImmutable;
-use freya_layout::{DioxusDOM, DioxusNode, RenderData};
-use freya_node_state::{ShadowSettings, Style};
+use freya_layout::{DioxusNode, RenderData};
+use freya_node_state::Style;
 use skia_safe::{BlurStyle, Canvas, MaskFilter, Paint, PaintStyle, Path, PathDirection, Rect};
 
 /// Render a `rect` or a `container` element

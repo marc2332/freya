@@ -1,5 +1,5 @@
 use dioxus_native_core::real_dom::NodeImmutable;
-use freya_layout::{DioxusDOM, DioxusNode, RenderData};
+use freya_layout::{DioxusNode, RenderData};
 use freya_node_state::Style;
 use skia_safe::{svg, Canvas};
 

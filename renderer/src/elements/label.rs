@@ -1,7 +1,7 @@
+use dioxus_native_core::node::NodeType;
 use dioxus_native_core::prelude::TextNode;
-use dioxus_native_core::real_dom::{NodeImmutable, NodeRef};
-use dioxus_native_core::{node::NodeType, NodeId};
-use freya_layout::{DioxusDOM, DioxusNode, RenderData};
+use dioxus_native_core::real_dom::NodeImmutable;
+use freya_layout::{DioxusNode, RenderData};
 use freya_node_state::FontStyle;
 use skia_safe::{
     textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle},

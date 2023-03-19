@@ -5,7 +5,6 @@ use std::sync::Arc;
 use std::sync::Mutex;
 
 use bytes::Bytes;
-use dioxus_core::AnyValue;
 use dioxus_core::AttributeValue;
 use dioxus_core::Scope;
 use dioxus_native_core::node::FromAnyValue;

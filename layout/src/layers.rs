@@ -1,4 +1,3 @@
-use dioxus_core::ElementId;
 use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::real_dom::NodeRef;
 use dioxus_native_core::NodeId;

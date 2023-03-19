@@ -38,8 +38,8 @@ impl State<CustomAttributeValues> for CursorSettings {
         node_view: NodeView<CustomAttributeValues>,
         _node: <Self::NodeDependencies as Dependancy>::ElementBorrowed<'a>,
         parent: Option<<Self::ParentDependencies as Dependancy>::ElementBorrowed<'a>>,
-        children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
-        context: &SendAnyMap,
+        _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
+        _context: &SendAnyMap,
     ) -> bool {
         let mut cursor = parent.map(|(p,)| p.clone()).unwrap_or_default();
 

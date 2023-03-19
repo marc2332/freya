@@ -1,6 +1,6 @@
 use dioxus_native_core::{
     node::NodeType,
-    prelude::ElementNode,
+    prelude::{ElementNode, TextNode},
     real_dom::{NodeImmutable, RealDom},
     tree::TreeRef,
     NodeId,
@@ -22,7 +22,7 @@ pub use ops_calc::run_calculations;
 
 pub type DioxusDOM = RealDom<CustomAttributeValues>;
 
-/// Collect all the texts and node states from a given array of children
+/// Collect all inner text nodes with their font styles from a given Node
 pub fn get_inner_texts(node: &DioxusNode) -> Vec<(FontStyle, String)> {
     node.children()
         .iter()
@@ -33,12 +33,12 @@ pub fn get_inner_texts(node: &DioxusNode) -> Vec<(FontStyle, String)> {
                 }
 
                 let children = child.children();
-                let child_text = children.first().unwrap().clone();
+                let child_text = *children.first().unwrap();
                 let child_text_type = &*child_text.node_type();
 
-                if let NodeType::Text(text) = child_text_type {
+                if let NodeType::Text(TextNode { text, .. }) = child_text_type {
                     let font_style = child.get::<FontStyle>().unwrap();
-                    Some((font_style.clone(), text.text.clone()))
+                    Some((font_style.clone(), text.to_owned()))
                 } else {
                     None
                 }
@@ -50,14 +50,12 @@ pub fn get_inner_texts(node: &DioxusNode) -> Vec<(FontStyle, String)> {
 }
 
 /// Get the info related to a cursor reference
-fn get_cursor_reference<'a>(
-    node: &'a DioxusNode<'a>,
-) -> Option<(CursorReference, usize, (f32, f32))> {
+fn get_cursor_reference(node: &DioxusNode) -> Option<(CursorReference, usize, (f32, f32))> {
     let node_references = node.get::<References>().unwrap();
     let cursor_settings = node.get::<CursorSettings>().unwrap();
 
     let cursor_ref = node_references.cursor_ref.clone()?;
-    let cursor_id = cursor_settings.cursor_id.clone()?;
+    let cursor_id = cursor_settings.cursor_id?;
 
     let positions = { *cursor_ref.positions.lock().unwrap().as_ref()? };
     let current_cursor_id = { *cursor_ref.cursor_id.lock().unwrap().as_ref()? };
@@ -253,7 +251,6 @@ impl<'a> NodeLayoutMeasurer<'a> {
         let texts = get_inner_texts(&self.node);
 
         for (font_style, text) in texts.into_iter() {
-            println!("? {:?}", font_style);
             paragraph_builder.push_style(
                 TextStyle::new()
                     .set_font_style(font_style.font_style)
@@ -364,7 +361,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
                 }
 
                 // Use SkParagraph to measure the layout of a `paragraph` and calculate the position of the cursor
-                if tag == "paragraph" {
+                if tag == "paragraph" && node_cursor_settings.mode == CursorMode::Editable {
                     self.notify_cursor_reference(node_area);
                 }
             }
@@ -391,7 +388,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
                     TextStyle::new()
                         .set_font_style(*font_style)
                         .set_font_size(*font_size)
-                        .set_font_families(&font_family),
+                        .set_font_families(font_family),
                 );
 
                 paragraph_builder.add_text(&text.text);

@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use dioxus_native_core::exports::shipyard::Component;
 use dioxus_native_core::node::OwnedAttributeValue;
-use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
+use dioxus_native_core::node_ref::NodeView;
 use dioxus_native_core::prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State};
 use dioxus_native_core::SendAnyMap;
 use dioxus_native_core_macro::partial_derive_state;
@@ -46,9 +46,9 @@ impl State<CustomAttributeValues> for Style {
         &mut self,
         node_view: NodeView<CustomAttributeValues>,
         _node: <Self::NodeDependencies as Dependancy>::ElementBorrowed<'a>,
-        parent: Option<<Self::ParentDependencies as Dependancy>::ElementBorrowed<'a>>,
-        children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
-        context: &SendAnyMap,
+        _parent: Option<<Self::ParentDependencies as Dependancy>::ElementBorrowed<'a>>,
+        _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
+        _context: &SendAnyMap,
     ) -> bool {
         let mut background = Color::TRANSPARENT;
         let mut relative_layer = 0;

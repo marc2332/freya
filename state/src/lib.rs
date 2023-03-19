@@ -1,5 +1,4 @@
 use skia_safe::Color;
-use std::fmt::Debug;
 
 mod cursor;
 mod custom_attributes;
