@@ -108,6 +108,13 @@ pub struct AccordionTheme {
     pub background: &'static str,
 }
 
+/// Theming properties for Loader component.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct LoaderTheme {
+    pub primary_color: &'static str,
+    pub secondary_color: &'static str,
+}
+
 /// Theming properties for Themes.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Theme {
@@ -122,6 +129,7 @@ pub struct Theme {
     pub dropdown: DropdownTheme,
     pub dropdown_item: DropdownItemTheme,
     pub accordion: AccordionTheme,
+    pub loader: LoaderTheme
 }
 
 /// `Light` theme
@@ -179,6 +187,10 @@ pub const LIGHT_THEME: Theme = Theme {
         color: "white",
         background: "rgb(30, 30, 30)",
     },
+    loader: LoaderTheme {
+        primary_color: "rgb(50, 50, 50)",
+        secondary_color: "rgb(150, 150, 150)"
+    }
 };
 
 /// `Dark` theme
@@ -230,4 +242,8 @@ pub const DARK_THEME: Theme = Theme {
         color: "black",
         background: "rgb(215, 215, 215)",
     },
+    loader: LoaderTheme {
+        primary_color: "rgb(150, 150, 150)",
+        secondary_color: "rgb(255, 255, 255)"
+    }
 };
