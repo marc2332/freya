@@ -173,6 +173,7 @@ builder_constructors! {
         display: String,
         reference: Reference,
         cursor_reference: CursorReference,
+        rotate: String,
     };
     container {
         padding: String,
@@ -193,6 +194,7 @@ builder_constructors! {
         display: String,
         reference: Reference,
         cursor_reference: CursorReference,
+        rotate: String,
     };
     label {
         color: String,
@@ -204,6 +206,7 @@ builder_constructors! {
         align: String,
         max_lines: String,
         font_style: String,
+        rotate: String,
     };
     paragraph {
         layer: String,
@@ -217,6 +220,7 @@ builder_constructors! {
         line_height: String,
         cursor_id: String,
         direction: String,
+        rotate: String,
     };
     text {
         color: String,
@@ -227,18 +231,21 @@ builder_constructors! {
         font_family: String,
         line_height: String,
         font_style: String,
+        rotate: String,
     };
     image {
         image_data: String,
         image_reference: String,
         width: String,
         height: String,
+        rotate: String,
     };
     svg {
         svg_data: String,
         svg_content: String,
         width: String,
         height: String,
+        rotate: String,
     };
 }
 

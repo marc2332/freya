@@ -7,6 +7,7 @@ mod references;
 mod scroll;
 mod size;
 mod style;
+mod transform;
 
 pub use cursor::*;
 pub use custom_attributes::*;
@@ -15,6 +16,7 @@ pub use references::*;
 pub use scroll::*;
 pub use size::*;
 pub use style::*;
+pub use transform::*;
 
 pub enum AttributeType<'a> {
     Color(&'a Color),
