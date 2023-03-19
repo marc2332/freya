@@ -45,19 +45,19 @@ pub fn render_skia(
 
         match tag.as_str() {
             "rect" | "container" => {
-                render_rect_container(canvas, node, dom);
+                render_rect_container(node, node_ref, canvas);
             }
             "label" => {
                 render_label(node, node_ref, canvas, font_collection);
             }
             "paragraph" => {
-                render_paragraph(dom, canvas, font_collection, node, children);
+                render_paragraph(node, node_ref, canvas, font_collection);
             }
             "svg" => {
-                render_svg(canvas, node, dom);
+                render_svg(node, node_ref, canvas);
             }
             "image" => {
-                render_image(canvas, node, dom);
+                render_image(node, node_ref, canvas);
             }
             _ => {}
         }

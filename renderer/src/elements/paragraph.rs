@@ -2,7 +2,7 @@ use dioxus_core::Element;
 use dioxus_native_core::prelude::{ElementNode, TextNode};
 use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::{node::NodeType, NodeId};
-use freya_layout::{DioxusDOM, DioxusNode, RenderData};
+use freya_layout::{get_inner_texts, DioxusDOM, DioxusNode, RenderData};
 use freya_node_state::{CursorSettings, FontStyle};
 use skia_safe::{
     textlayout::{
@@ -22,7 +22,7 @@ pub fn render_paragraph(
     let node_font_style = &*node_ref.get::<FontStyle>().unwrap();
     let node_cursor_settings = &*node_ref.get::<CursorSettings>().unwrap();
 
-    let texts = get_inner_texts(node_ref);
+    let texts = get_inner_texts(&node_ref);
 
     let (x, y) = node.node_area.get_origin_points();
 
@@ -59,12 +59,11 @@ pub fn render_paragraph(
     paragraph.paint(canvas, (x, y));
 
     // Draw a cursor if specified
-    draw_cursor(node, node_ref, paragraph, node_cursor_settings, canvas);
+    draw_cursor(node, paragraph, node_cursor_settings, canvas);
 }
 
 fn draw_cursor(
     node: &RenderData,
-    node_ref: DioxusNode,
     paragraph: Paragraph,
     node_cursor_settings: &CursorSettings,
     canvas: &mut Canvas,
@@ -94,28 +93,4 @@ fn draw_cursor(
     canvas.draw_rect(Rect::new(x, y, x2, y2), &paint);
 
     Some(())
-}
-
-fn get_inner_texts(node_ref: DioxusNode) -> Vec<(FontStyle, String)> {
-    node_ref
-        .children()
-        .iter()
-        .filter_map(|child| {
-            if let NodeType::Element(ElementNode { tag, .. }) = &*child.node_type() {
-                let children = child.children();
-                if tag != "text" {
-                    return None;
-                }
-                let child_text = children.get(0)?;
-                if let NodeType::Text(TextNode { text, .. }) = &*child_text.node_type() {
-                    let child_font_style = child_text.get::<FontStyle>().unwrap().clone();
-                    Some((child_font_style, text.clone()))
-                } else {
-                    None
-                }
-            } else {
-                None
-            }
-        })
-        .collect::<Vec<(FontStyle, String)>>()
 }

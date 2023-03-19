@@ -4,7 +4,7 @@ use freya_node_state::Style;
 use skia_safe::{svg, Canvas};
 
 /// Render a `svg` element
-pub fn render_svg(node: &RenderData, node_ref: DioxusNode, canvas: &mut Canvas, dom: &DioxusDOM) {
+pub fn render_svg(node: &RenderData, node_ref: DioxusNode, canvas: &mut Canvas) {
     let node_style = &*node_ref.get::<Style>().unwrap();
 
     let x = node.node_area.x;

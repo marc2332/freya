@@ -160,11 +160,10 @@ pub fn launch_cfg<T: 'static + Clone + Send>(root: Component, win_config: Window
     };
     use freya_core::dom::DioxusSafeDOM;
     use freya_node_state::{
-        CursorSettings, CustomAttributeValues, FontStyle, NodeState, References, Scroll, Size,
-        Style,
+        CursorSettings, CustomAttributeValues, FontStyle, References, Scroll, Size, Style,
     };
 
-    let rdom = DioxusSafeDOM::new(RealDom::<CustomAttributeValues>::new([
+    let mut rdom = DioxusSafeDOM::new(RealDom::<CustomAttributeValues>::new([
         CursorSettings::to_type_erased(),
         FontStyle::to_type_erased(),
         References::to_type_erased(),
@@ -172,7 +171,7 @@ pub fn launch_cfg<T: 'static + Clone + Send>(root: Component, win_config: Window
         Size::to_type_erased(),
         Style::to_type_erased(),
     ]));
-    let mut dioxus_integration_state = DioxusState::create(&mut rdom);
+    let mut dioxus_integration_state = DioxusState::create(&mut rdom.dom_mut());
     let (vdom, mutations_sender, hovered_node) = {
         #[cfg(feature = "devtools")]
         #[cfg(debug_assertions)]

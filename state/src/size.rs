@@ -39,6 +39,7 @@ impl State<CustomAttributeValues> for Size {
             "padding",
             "direction",
         ]))
+        .with_tag()
         .with_text();
 
     fn update<'a>(

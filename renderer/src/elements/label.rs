@@ -15,6 +15,7 @@ pub fn render_label(
     canvas: &mut Canvas,
     font_collection: &mut FontCollection,
 ) {
+    let node_children = node_ref.children();
     let node_font_style = &*node_ref.get::<FontStyle>().unwrap();
 
     let mut paint = Paint::default();
@@ -23,7 +24,7 @@ pub fn render_label(
     paint.set_style(PaintStyle::StrokeAndFill);
     paint.set_color(node_font_style.color);
 
-    let child = node_ref.children().first();
+    let child = node_children.first();
 
     let text = if let Some(child) = child {
         if let NodeType::Text(TextNode { text, .. }) = &*child.node_type() {

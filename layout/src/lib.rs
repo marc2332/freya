@@ -23,7 +23,7 @@ pub use ops_calc::run_calculations;
 pub type DioxusDOM = RealDom<CustomAttributeValues>;
 
 /// Collect all the texts and node states from a given array of children
-fn get_inner_texts(node: &DioxusNode) -> Vec<(FontStyle, String)> {
+pub fn get_inner_texts(node: &DioxusNode) -> Vec<(FontStyle, String)> {
     node.children()
         .iter()
         .filter_map(|child| {
@@ -37,7 +37,7 @@ fn get_inner_texts(node: &DioxusNode) -> Vec<(FontStyle, String)> {
                 let child_text_type = &*child_text.node_type();
 
                 if let NodeType::Text(text) = child_text_type {
-                    let font_style = child_text.get::<FontStyle>().unwrap();
+                    let font_style = child.get::<FontStyle>().unwrap();
                     Some((font_style.clone(), text.text.clone()))
                 } else {
                     None
@@ -253,6 +253,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
         let texts = get_inner_texts(&self.node);
 
         for (font_style, text) in texts.into_iter() {
+            println!("? {:?}", font_style);
             paragraph_builder.push_style(
                 TextStyle::new()
                     .set_font_style(font_style.font_style)
@@ -363,7 +364,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
                 }
 
                 // Use SkParagraph to measure the layout of a `paragraph` and calculate the position of the cursor
-                if tag == "paragraph" && CursorMode::Editable == node_cursor_settings.mode {
+                if tag == "paragraph" {
                     self.notify_cursor_reference(node_area);
                 }
             }

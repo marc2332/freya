@@ -99,34 +99,31 @@ impl<State: 'static + Clone> App<State> {
         self.provide_vdom_contexts();
 
         let mutations = self.vdom.rebuild();
+        let is_changed = !mutations.edits.is_empty();
         self.dioxus_integration_state
-            .apply_mutations(self.rdom.dom_mut(), mutations);
+            .apply_mutations(&mut self.rdom.dom_mut(), mutations);
 
-        let (to_update, diff) = self.rdom.dom_mut().apply_mutations(mutations);
+        self.rdom.dom_mut().update_state(SendAnyMap::new());
 
-        if !diff.is_empty() {
+        if is_changed {
             self.mutations_sender.as_ref().map(|s| s.send(()));
         }
-
-        self.rdom
-            .dom_mut()
-            .update_state(to_update, SendAnyMap::new());
     }
 
     /// Update the [RealDOM] with changes from the [VirtualDOM]
     pub fn apply_vdom_changes(&mut self) -> bool {
         let mutations = self.vdom.render_immediate();
-        let (to_update, diff) = self.rdom.dom_mut().apply_mutations(mutations);
+        let is_changed = !mutations.edits.is_empty();
+        self.dioxus_integration_state
+            .apply_mutations(&mut self.rdom.dom_mut(), mutations);
 
-        if !diff.is_empty() {
+        self.rdom.dom_mut().update_state(SendAnyMap::new());
+
+        if is_changed {
             self.mutations_sender.as_ref().map(|s| s.send(()));
         }
 
-        self.rdom
-            .dom_mut()
-            .update_state(to_update, SendAnyMap::new());
-
-        !diff.is_empty()
+        is_changed
     }
 
     /// Poll the [VirtualDOM] for any new change

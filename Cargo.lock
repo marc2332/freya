@@ -121,7 +121,7 @@ checksum = "86ea188f25f0255d8f92797797c97ebf5631fa88178beb1a46fdf5622c9a00e4"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.0",
+ "syn 2.0.2",
 ]
 
 [[package]]
@@ -802,7 +802,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "scratch",
- "syn 2.0.0",
+ "syn 2.0.2",
 ]
 
 [[package]]
@@ -819,7 +819,7 @@ checksum = "631569015d0d8d54e6c241733f944042623ab6df7bc3be7466874b05fcdb1c5f"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.0",
+ "syn 2.0.2",
 ]
 
 [[package]]
@@ -922,7 +922,7 @@ dependencies = [
 [[package]]
 name = "dioxus"
 version = "0.3.2"
-source = "git+https://github.com/Demonthos/dioxus?branch=simplify-native-core#9a16687bdcd3f569561caeb464b2295256774c48"
+source = "git+https://github.com/Demonthos/dioxus?branch=simplify-native-core#f0bcb3c2c602907e6d7a8e6e90efeff364876dd0"
 dependencies = [
  "dioxus-core",
  "dioxus-core-macro",
@@ -935,7 +935,7 @@ dependencies = [
 [[package]]
 name = "dioxus-core"
 version = "0.3.2"
-source = "git+https://github.com/Demonthos/dioxus?branch=simplify-native-core#9a16687bdcd3f569561caeb464b2295256774c48"
+source = "git+https://github.com/Demonthos/dioxus?branch=simplify-native-core#f0bcb3c2c602907e6d7a8e6e90efeff364876dd0"
 dependencies = [
  "bumpalo",
  "bumpslab",
@@ -953,7 +953,7 @@ dependencies = [
 [[package]]
 name = "dioxus-core-macro"
 version = "0.3.0"
-source = "git+https://github.com/Demonthos/dioxus?branch=simplify-native-core#9a16687bdcd3f569561caeb464b2295256774c48"
+source = "git+https://github.com/Demonthos/dioxus?branch=simplify-native-core#f0bcb3c2c602907e6d7a8e6e90efeff364876dd0"
 dependencies = [
  "dioxus-rsx",
  "proc-macro2",
@@ -964,7 +964,7 @@ dependencies = [
 [[package]]
 name = "dioxus-hooks"
 version = "0.3.0"
-source = "git+https://github.com/Demonthos/dioxus?branch=simplify-native-core#9a16687bdcd3f569561caeb464b2295256774c48"
+source = "git+https://github.com/Demonthos/dioxus?branch=simplify-native-core#f0bcb3c2c602907e6d7a8e6e90efeff364876dd0"
 dependencies = [
  "dioxus-core",
  "futures-channel",
@@ -974,7 +974,7 @@ dependencies = [
 [[package]]
 name = "dioxus-hot-reload"
 version = "0.1.1"
-source = "git+https://github.com/Demonthos/dioxus?branch=simplify-native-core#9a16687bdcd3f569561caeb464b2295256774c48"
+source = "git+https://github.com/Demonthos/dioxus?branch=simplify-native-core#f0bcb3c2c602907e6d7a8e6e90efeff364876dd0"
 dependencies = [
  "chrono",
  "dioxus-core",
@@ -992,7 +992,7 @@ dependencies = [
 [[package]]
 name = "dioxus-html"
 version = "0.3.1"
-source = "git+https://github.com/Demonthos/dioxus?branch=simplify-native-core#9a16687bdcd3f569561caeb464b2295256774c48"
+source = "git+https://github.com/Demonthos/dioxus?branch=simplify-native-core#f0bcb3c2c602907e6d7a8e6e90efeff364876dd0"
 dependencies = [
  "async-trait",
  "dioxus-core",
@@ -1008,7 +1008,7 @@ dependencies = [
 [[package]]
 name = "dioxus-native-core"
 version = "0.2.0"
-source = "git+https://github.com/Demonthos/dioxus?branch=simplify-native-core#9a16687bdcd3f569561caeb464b2295256774c48"
+source = "git+https://github.com/Demonthos/dioxus?branch=simplify-native-core#f0bcb3c2c602907e6d7a8e6e90efeff364876dd0"
 dependencies = [
  "anymap 1.0.0-beta.2",
  "crossbeam-deque",
@@ -1030,7 +1030,7 @@ dependencies = [
 [[package]]
 name = "dioxus-native-core-macro"
 version = "0.3.0"
-source = "git+https://github.com/Demonthos/dioxus?branch=simplify-native-core#9a16687bdcd3f569561caeb464b2295256774c48"
+source = "git+https://github.com/Demonthos/dioxus?branch=simplify-native-core#f0bcb3c2c602907e6d7a8e6e90efeff364876dd0"
 dependencies = [
  "quote",
  "syn 1.0.109",
@@ -1039,7 +1039,7 @@ dependencies = [
 [[package]]
 name = "dioxus-router"
 version = "0.3.0"
-source = "git+https://github.com/Demonthos/dioxus?branch=simplify-native-core#9a16687bdcd3f569561caeb464b2295256774c48"
+source = "git+https://github.com/Demonthos/dioxus?branch=simplify-native-core#f0bcb3c2c602907e6d7a8e6e90efeff364876dd0"
 dependencies = [
  "dioxus",
  "futures-channel",
@@ -1055,7 +1055,7 @@ dependencies = [
 [[package]]
 name = "dioxus-rsx"
 version = "0.0.3"
-source = "git+https://github.com/Demonthos/dioxus?branch=simplify-native-core#9a16687bdcd3f569561caeb464b2295256774c48"
+source = "git+https://github.com/Demonthos/dioxus?branch=simplify-native-core#f0bcb3c2c602907e6d7a8e6e90efeff364876dd0"
 dependencies = [
  "dioxus-core",
  "internment",
@@ -3631,7 +3631,7 @@ checksum = "78997f4555c22a7971214540c4a661291970619afd56de19f77e0de86296e1e5"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.0",
+ "syn 2.0.2",
 ]
 
 [[package]]
@@ -3653,7 +3653,7 @@ checksum = "bcec881020c684085e55a25f7fd888954d56609ef363479dc5a1305eb0d40cab"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.0",
+ "syn 2.0.2",
 ]
 
 [[package]]
@@ -3769,9 +3769,9 @@ checksum = "f27f6278552951f1f2b8cf9da965d10969b2efdea95a6ec47987ab46edfe263a"
 
 [[package]]
 name = "simple_logger"
-version = "4.0.0"
+version = "4.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e190a521c2044948158666916d9e872cbb9984f755e9bb3b5b75a836205affcd"
+checksum = "e78beb34673091ccf96a8816fce8bfd30d1292c7621ca2bcb5f2ba0fae4f558d"
 dependencies = [
  "atty",
  "colored",
@@ -3931,9 +3931,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "2.0.0"
+version = "2.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4cff13bb1732bccfe3b246f3fdb09edfd51c01d6f5299b7ccd9457c2e4e37774"
+checksum = "59d3276aee1fa0c33612917969b5172b5be2db051232a6e4826f1a1a9191b045"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -4010,7 +4010,7 @@ checksum = "f9456a42c5b0d803c8cd86e73dd7cc9edd429499f37a3550d286d5e86720569f"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.0",
+ "syn 2.0.2",
 ]
 
 [[package]]
