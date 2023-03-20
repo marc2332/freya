@@ -15,12 +15,12 @@ categories = ["GUI"]
 devtools = []
 
 [target."cfg(target_os = \"linux\")".dependencies.skia-safe]
-version = "0.58.0"
+version = "0.60.0"
 features = ["gl", "textlayout", "svg", "x11", "wayland"]
 
 [dependencies]
-glutin = { version = "0.29.0"}
-skia-safe = { version = "0.58.0", features = ["gl", "textlayout", "svg"] }
+winit = "0.28.2"
+skia-safe = { version = "0.60.0", features = ["gl", "textlayout", "svg"] }
 dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
 dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core", features = ["dioxus"]}
 dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}

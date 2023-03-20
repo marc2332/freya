@@ -24,4 +24,4 @@ dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="simpl
 dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
 dioxus-router = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
 tokio = { version = "1.23.0", features = ["sync", "rt-multi-thread", "time", "macros"] }
-skia-safe = { version = "0.58.0", features = ["gl", "textlayout", "svg"] }
+skia-safe = { version = "0.60.0", features = ["gl", "textlayout", "svg"] }

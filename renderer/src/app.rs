@@ -14,13 +14,13 @@ use futures::{
     pin_mut,
     task::{self, ArcWake},
 };
-use glutin::{dpi::PhysicalSize, event_loop::EventLoopProxy};
 use tokio::{
     select,
     sync::mpsc::{unbounded_channel, UnboundedSender},
 };
+use winit::{dpi::PhysicalSize, event_loop::EventLoopProxy};
 
-use crate::{create_surface, HoveredNode, WindowEnv};
+use crate::{HoveredNode, WindowEnv};
 
 pub fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
     struct DomHandle(EventLoopProxy<EventMessage>);
@@ -208,13 +208,6 @@ impl<State: 'static + Clone> App<State> {
 
     /// Resize the [Window]
     pub fn resize(&mut self, size: PhysicalSize<u32>) {
-        let mut context = self.window_env.gr_context.clone();
-        self.window_env.surface = create_surface(
-            &self.window_env.windowed_context,
-            &self.window_env.fb_info,
-            &mut context,
-        );
-        self.window_env.windowed_context.resize(size);
-        self.window_env.windowed_context.window().request_redraw();
+        self.window_env.resize(size);
     }
 }

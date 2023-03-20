@@ -26,7 +26,7 @@ pub fn NodesTree<'a>(
         builder_values: (nodes, selected_node_id, onselected, router),
         builder: Box::new(move |(_k, i, values)| {
             let (nodes, selected_node_id, onselected, router) = values.unwrap();
-            let node = nodes.get(i as usize).unwrap();
+            let node = nodes.get(i).unwrap();
             rsx! {
                 NodeElement {
                     key: "{node.id:?}",

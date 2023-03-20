@@ -20,7 +20,7 @@ dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch="simplify-n
 dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
 anymap = "0.12.1"
 fxhash = "0.2.1"
-skia-safe = { version = "0.58.0", features = ["gl", "textlayout", "svg"] }
+skia-safe = { version = "0.60.0", features = ["gl", "textlayout", "svg"] }
 freya-elements = { path = "../elements", version = "0.1.0"}
 freya-common = { path = "../common", version = "0.1.0" }
 tokio = { version = "1.23.0", features = ["sync"] }

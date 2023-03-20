@@ -4,8 +4,8 @@ use dioxus_core::ElementId;
 use euclid::Point2D;
 use freya_elements::{events_data::MouseData, Code, Key, KeyboardData, Modifiers, WheelData};
 use freya_layout::RenderData;
-use glutin::event::MouseButton;
 use rustc_hash::FxHashMap;
+use winit::event::MouseButton;
 
 /// Events emitted in Freya.
 #[derive(Clone, Debug)]
