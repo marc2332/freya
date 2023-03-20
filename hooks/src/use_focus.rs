@@ -4,8 +4,8 @@ use dioxus_core::{AttributeValue, Scope, ScopeState};
 use dioxus_hooks::{use_shared_state, use_shared_state_provider, UseSharedState};
 use freya_common::EventMessage;
 use freya_node_state::CustomAttributeValues;
-use glutin::event_loop::EventLoopProxy;
 use uuid::Uuid;
+use winit::event_loop::EventLoopProxy;
 
 use accesskit::NodeId as NodeIdKit;
 

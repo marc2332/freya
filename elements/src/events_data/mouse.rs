@@ -1,5 +1,5 @@
 use euclid::Point2D;
-pub use glutin::event::MouseButton;
+pub use winit::event::MouseButton;
 
 /// Data of a Mouse event.
 #[derive(Debug, Clone)]

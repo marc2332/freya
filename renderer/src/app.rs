@@ -21,7 +21,6 @@ use futures::{
     pin_mut,
     task::{self, ArcWake},
 };
-use glutin::{dpi::PhysicalSize, event::WindowEvent, event_loop::EventLoopProxy};
 use tokio::{
     select,
     sync::{
@@ -29,9 +28,9 @@ use tokio::{
         watch,
     },
 };
+use winit::{dpi::PhysicalSize, event::WindowEvent, event_loop::EventLoopProxy};
 
 use crate::{
-    create_surface,
     window::{AccessibilityState, FocusDirection},
     HoveredNode, WindowEnv,
 };
@@ -95,7 +94,7 @@ impl<State: 'static + Clone> App<State> {
         let adapter = {
             let accessibility_state = accessibility_state.clone();
             Adapter::new(
-                window_env.windowed_context.window(),
+                &window_env.window,
                 move || {
                     let mut accessibility_state = accessibility_state.lock().unwrap();
                     accessibility_state.process()
@@ -270,14 +269,7 @@ impl<State: 'static + Clone> App<State> {
 
     /// Resize the [Window]
     pub fn resize(&mut self, size: PhysicalSize<u32>) {
-        let mut context = self.window_env.gr_context.clone();
-        self.window_env.surface = create_surface(
-            &self.window_env.windowed_context,
-            &self.window_env.fb_info,
-            &mut context,
-        );
-        self.window_env.windowed_context.resize(size);
-        self.window_env.windowed_context.window().request_redraw();
+        self.window_env.resize(size);
     }
 
     /// Focus a new accessibility node
@@ -290,8 +282,7 @@ impl<State: 'static + Clone> App<State> {
 
     /// Validate a winit event for accessibility
     pub fn on_accessibility_window_event(&mut self, event: &WindowEvent) -> bool {
-        self.adapter
-            .on_event(self.window_env.windowed_context.window(), event)
+        self.adapter.on_event(&self.window_env.window, event)
     }
 
     /// Remove the accessibility nodes
