@@ -82,6 +82,9 @@ pub fn run<T: 'static + Clone>(
         match event {
             Event::NewEvents(StartCause::Init) => {
                 _ = proxy.send_event(EventMessage::PollVDOM);
+
+                // Forces to render when the app starts because with accesskit seems like there is no initial drawing for some reason
+                app.request_redraw();
             }
             Event::UserEvent(EventMessage::FocusAccessibilityNode(id)) => {
                 app.set_accessibility_focus(id);
