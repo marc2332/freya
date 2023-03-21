@@ -129,7 +129,7 @@ pub struct Theme {
     pub dropdown: DropdownTheme,
     pub dropdown_item: DropdownItemTheme,
     pub accordion: AccordionTheme,
-    pub loader: LoaderTheme
+    pub loader: LoaderTheme,
 }
 
 /// `Light` theme
@@ -189,8 +189,8 @@ pub const LIGHT_THEME: Theme = Theme {
     },
     loader: LoaderTheme {
         primary_color: "rgb(50, 50, 50)",
-        secondary_color: "rgb(150, 150, 150)"
-    }
+        secondary_color: "rgb(150, 150, 150)",
+    },
 };
 
 /// `Dark` theme
@@ -244,6 +244,6 @@ pub const DARK_THEME: Theme = Theme {
     },
     loader: LoaderTheme {
         primary_color: "rgb(150, 150, 150)",
-        secondary_color: "rgb(255, 255, 255)"
-    }
+        secondary_color: "rgb(255, 255, 255)",
+    },
 };

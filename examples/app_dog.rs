@@ -40,8 +40,6 @@ pub enum ImageStatus {
     Loaded,
 }
 
-
-
 fn app(cx: Scope) -> Element {
     let status = use_state(cx, || ImageStatus::Stopped);
     let image_bytes = use_state::<Option<Vec<u8>>>(cx, || None);
