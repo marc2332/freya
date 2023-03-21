@@ -1282,6 +1282,7 @@ dependencies = [
  "freya-hooks",
  "freya-node-state",
  "open",
+ "tokio",
 ]
 
 [[package]]
