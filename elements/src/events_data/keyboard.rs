@@ -1,5 +1,5 @@
-use glutin::event::{ModifiersState, VirtualKeyCode};
 pub use keyboard_types::{Code, Key, Modifiers};
+use winit::event::{ModifiersState, VirtualKeyCode};
 
 // Map winit modifiers to keyboard_types modifiers
 pub fn get_modifiers(modifiers: ModifiersState) -> Modifiers {

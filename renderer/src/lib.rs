@@ -9,15 +9,15 @@ use freya_core::events::FreyaEvent;
 use freya_elements::{from_winit_to_code, get_modifiers, get_non_text_keys, Code, Key};
 use freya_layout::DioxusDOM;
 
-use glutin::event::{
+use std::sync::{Arc, Mutex};
+use winit::event::{
     ElementState, Event, KeyboardInput, ModifiersState, MouseScrollDelta, StartCause, TouchPhase,
     WindowEvent,
 };
-use glutin::event_loop::{ControlFlow, EventLoopBuilder};
-use std::sync::{Arc, Mutex};
+use winit::event_loop::{ControlFlow, EventLoopBuilder};
 
 use tokio::sync::mpsc::UnboundedSender;
-pub use window::{create_surface, WindowEnv};
+pub use window::WindowEnv;
 pub use window_config::WindowConfig;
 
 mod wireframe;

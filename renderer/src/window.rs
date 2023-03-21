@@ -3,29 +3,50 @@ use freya_common::{EventMessage, NodeArea};
 use freya_core::process_render;
 use freya_core::{process_layout, ViewportsCollection};
 use freya_layout::{DioxusDOM, Layers};
+use std::ffi::CString;
+use std::num::NonZeroU32;
+
 use gl::types::*;
-use glutin::dpi::PhysicalSize;
-use glutin::event_loop::EventLoop;
-use glutin::{window::WindowBuilder, GlProfile};
-use skia_safe::{gpu::DirectContext, textlayout::FontCollection};
+use glutin::context::GlProfile;
+use glutin::{
+    config::{ConfigTemplateBuilder, GlConfig},
+    context::{
+        ContextApi, ContextAttributesBuilder, NotCurrentGlContextSurfaceAccessor,
+        PossiblyCurrentContext,
+    },
+    display::{GetGlDisplay, GlDisplay},
+    prelude::GlSurface,
+    surface::{Surface as GlutinSurface, SurfaceAttributesBuilder, WindowSurface},
+};
+use glutin_winit::DisplayBuilder;
+use raw_window_handle::HasRawWindowHandle;
+
+use winit::dpi::PhysicalSize;
+use winit::{
+    event_loop::EventLoop,
+    window::{Window, WindowBuilder},
+};
+
 use skia_safe::{
     gpu::{gl::FramebufferInfo, BackendRenderTarget, SurfaceOrigin},
-    ColorType, Surface,
+    textlayout::FontCollection,
+    Color, ColorType, FontMgr, Matrix, Surface,
 };
-use skia_safe::{Color, FontMgr, Matrix};
 
 use crate::renderer::render_skia;
 use crate::window_config::WindowConfig;
 use crate::HoveredNode;
 
-type WindowedContext = glutin::ContextWrapper<glutin::PossiblyCurrent, glutin::window::Window>;
-
 /// Manager for a Window
 pub struct WindowEnv<T: Clone> {
-    pub(crate) surface: Surface,
-    pub(crate) gr_context: DirectContext,
-    pub(crate) windowed_context: WindowedContext,
-    pub(crate) fb_info: FramebufferInfo,
+    surface: Surface,
+    gl_surface: GlutinSurface<WindowSurface>,
+    gr_context: skia_safe::gpu::DirectContext,
+    gl_context: PossiblyCurrentContext,
+    window: Window,
+    fb_info: FramebufferInfo,
+    num_samples: usize,
+    stencil_size: usize,
     pub(crate) font_collection: FontCollection,
     pub(crate) window_config: WindowConfig<T>,
 }
@@ -39,7 +60,7 @@ impl<T: Clone> WindowEnv<T> {
         let mut font_collection = FontCollection::new();
         font_collection.set_default_font_manager(FontMgr::default(), "Fira Sans");
 
-        let wb = WindowBuilder::new()
+        let window_builder = WindowBuilder::new()
             .with_title(window_config.title)
             .with_decorations(window_config.decorations)
             .with_transparent(window_config.transparent)
@@ -48,20 +69,88 @@ impl<T: Clone> WindowEnv<T> {
                 window_config.height,
             ));
 
-        let cb = glutin::ContextBuilder::new()
-            .with_depth_buffer(0)
-            .with_stencil_buffer(8)
-            .with_pixel_format(24, 8)
-            .with_gl_profile(GlProfile::Core);
+        let template = ConfigTemplateBuilder::new()
+            .with_alpha_size(8)
+            .with_transparency(window_config.transparent);
 
-        #[cfg(not(target_os = "linux"))]
-        let cb = cb.with_double_buffer(Some(true));
+        let display_builder = DisplayBuilder::new().with_window_builder(Some(window_builder));
+        let (window, gl_config) = display_builder
+            .build(event_loop, template, |configs| {
+                configs
+                    .reduce(|accum, config| {
+                        let transparency_check = config.supports_transparency().unwrap_or(false)
+                            & !accum.supports_transparency().unwrap_or(false);
 
-        let windowed_context = cb.build_windowed(wb, event_loop).unwrap();
+                        if transparency_check || config.num_samples() < accum.num_samples() {
+                            config
+                        } else {
+                            accum
+                        }
+                    })
+                    .unwrap()
+            })
+            .unwrap();
 
-        let windowed_context = unsafe { windowed_context.make_current().unwrap() };
+        let mut window = window.expect("Could not create window with OpenGL context");
+        let raw_window_handle = window.raw_window_handle();
 
-        gl::load_with(|s| windowed_context.get_proc_address(s));
+        let context_attributes = ContextAttributesBuilder::new()
+            .with_profile(GlProfile::Core)
+            .build(Some(raw_window_handle));
+
+        let fallback_context_attributes = ContextAttributesBuilder::new()
+            .with_profile(GlProfile::Core)
+            .with_context_api(ContextApi::Gles(None))
+            .build(Some(raw_window_handle));
+
+        let not_current_gl_context = unsafe {
+            gl_config
+                .display()
+                .create_context(&gl_config, &context_attributes)
+                .unwrap_or_else(|_| {
+                    gl_config
+                        .display()
+                        .create_context(&gl_config, &fallback_context_attributes)
+                        .expect("failed to create context")
+                })
+        };
+
+        let (width, height): (u32, u32) = window.inner_size().into();
+
+        let attrs = SurfaceAttributesBuilder::<WindowSurface>::new().build(
+            raw_window_handle,
+            NonZeroU32::new(width).unwrap(),
+            NonZeroU32::new(height).unwrap(),
+        );
+
+        let gl_surface = unsafe {
+            gl_config
+                .display()
+                .create_window_surface(&gl_config, &attrs)
+                .expect("Could not create gl window surface")
+        };
+
+        let gl_context = not_current_gl_context
+            .make_current(&gl_surface)
+            .expect("Could not make GL context current when setting up skia renderer");
+
+        gl::load_with(|s| {
+            gl_config
+                .display()
+                .get_proc_address(CString::new(s).unwrap().as_c_str())
+        });
+        let interface = skia_safe::gpu::gl::Interface::new_load_with(|name| {
+            if name == "eglGetCurrentDisplay" {
+                return std::ptr::null();
+            }
+            gl_config
+                .display()
+                .get_proc_address(CString::new(name).unwrap().as_c_str())
+        })
+        .expect("Could not create interface");
+
+        let mut gr_context = skia_safe::gpu::DirectContext::new_gl(Some(interface), None)
+            .expect("Could not create direct context");
 
         let fb_info = {
             let mut fboid: GLint = 0;
@@ -73,17 +162,29 @@ impl<T: Clone> WindowEnv<T> {
             }
         };
 
-        let mut gr_context = skia_safe::gpu::DirectContext::new_gl(None, None).unwrap();
+        let num_samples = gl_config.num_samples() as usize;
+        let stencil_size = gl_config.stencil_size() as usize;
 
-        let mut surface = create_surface(&windowed_context, &fb_info, &mut gr_context);
-        let sf = windowed_context.window().scale_factor() as f32;
+        let mut surface = create_surface(
+            &mut window,
+            fb_info,
+            &mut gr_context,
+            num_samples,
+            stencil_size,
+        );
+
+        let sf = window.scale_factor() as f32;
         surface.canvas().scale((sf, sf));
 
         WindowEnv {
             surface,
+            gl_surface,
+            gl_context,
             gr_context,
-            windowed_context,
             fb_info,
+            num_samples,
+            stencil_size,
+            window,
             font_collection,
             window_config,
         }
@@ -91,7 +192,7 @@ impl<T: Clone> WindowEnv<T> {
 
     // Reprocess the layout
     pub fn process_layout(&mut self, rdom: &DioxusDOM) -> (Layers, ViewportsCollection) {
-        let window_size = self.windowed_context.window().inner_size();
+        let window_size = self.window.inner_size();
         process_layout(
             rdom,
             NodeArea {
@@ -150,35 +251,49 @@ impl<T: Clone> WindowEnv<T> {
             },
         );
 
-        let canvas = self.surface.canvas();
-
-        canvas.restore();
-        self.gr_context.flush(None);
-        self.windowed_context.swap_buffers().unwrap();
+        self.gr_context.flush_and_submit();
+        self.gl_surface.swap_buffers(&self.gl_context).unwrap();
     }
 
+    /// Request a redraw
     pub fn request_redraw(&self) {
-        self.windowed_context.window().request_redraw()
+        self.window.request_redraw()
+    }
+
+    /// Resize the Window
+    pub fn resize(&mut self, size: PhysicalSize<u32>) {
+        self.surface = create_surface(
+            &mut self.window,
+            self.fb_info,
+            &mut self.gr_context,
+            self.num_samples,
+            self.stencil_size,
+        );
+
+        let (width, height): (u32, u32) = size.into();
+
+        if let Some((width, height)) = NonZeroU32::new(width).zip(NonZeroU32::new(height)) {
+            self.gl_surface.resize(&self.gl_context, width, height);
+        }
     }
 }
 
 /// Create the surface for Skia to render in
-pub fn create_surface(
-    windowed_context: &WindowedContext,
-    fb_info: &FramebufferInfo,
+fn create_surface(
+    window: &mut Window,
+    fb_info: FramebufferInfo,
     gr_context: &mut skia_safe::gpu::DirectContext,
+    num_samples: usize,
+    stencil_size: usize,
 ) -> Surface {
-    let pixel_format = windowed_context.get_pixel_format();
-    let size = windowed_context.window().inner_size();
-    let backend_render_target = BackendRenderTarget::new_gl(
-        (
-            size.width.try_into().unwrap(),
-            size.height.try_into().unwrap(),
-        ),
-        pixel_format.multisampling.map(|s| s.try_into().unwrap()),
-        pixel_format.stencil_bits.try_into().unwrap(),
-        *fb_info,
+    let size = window.inner_size();
+    let size = (
+        size.width.try_into().expect("Could not convert width"),
+        size.height.try_into().expect("Could not convert height"),
     );
+    let backend_render_target =
+        BackendRenderTarget::new_gl(size, num_samples, stencil_size, fb_info);
+
     Surface::from_backend_render_target(
         gr_context,
         &backend_render_target,
@@ -187,5 +302,5 @@ pub fn create_surface(
         None,
         None,
     )
-    .unwrap()
+    .expect("Could not create skia surface")
 }
