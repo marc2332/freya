@@ -18,7 +18,7 @@ dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5
 dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
 dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
 dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-glutin = { version = "0.29.0"}
+winit = "0.28.2"
 euclid = "0.22.7"
 tokio = { version = "1.23.0" }
 freya-common = { path = "../common"}

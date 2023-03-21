@@ -1,6 +1,6 @@
-# Basic app
+# Hello, World!
 
-Let's start by creating a simple project.
+Let's start by creating a hello world project.
 
 ### Creating the project
 

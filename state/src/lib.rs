@@ -10,6 +10,7 @@ mod references;
 mod scroll;
 mod size;
 mod style;
+mod transform;
 
 pub use cursor::*;
 pub use custom_attributes::*;
@@ -18,6 +19,7 @@ pub use references::*;
 pub use scroll::*;
 pub use size::*;
 pub use style::*;
+pub use transform::*;
 
 #[derive(Clone, State, Default, Debug)]
 #[state(custom_value = CustomAttributeValues)]
@@ -34,6 +36,8 @@ pub struct NodeState {
     pub style: Style,
     #[parent_dep_state(font_style)]
     pub font_style: FontStyle,
+    #[node_dep_state()]
+    pub transform: Transform,
 }
 
 impl NodeState {

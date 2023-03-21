@@ -21,12 +21,12 @@ pub fn NodesTree<'a>(
         height: "{height}",
         padding: "15",
         show_scrollbar: true,
-        length: nodes.len() as i32,
+        length: nodes.len(),
         item_size: 27.0,
         builder_values: (nodes, selected_node_id, onselected, router),
         builder: Box::new(move |(_k, i, values)| {
             let (nodes, selected_node_id, onselected, router) = values.unwrap();
-            let node = nodes.get(i as usize).unwrap();
+            let node = nodes.get(i).unwrap();
             rsx! {
                 NodeElement {
                     key: "{node.id:?}",

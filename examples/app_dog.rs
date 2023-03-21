@@ -49,6 +49,17 @@ fn app(cx: Scope) -> Element {
                 if let Some(dog_url) = dog_url.get() {
                    rsx!(
                         NetworkImage {
+                            loading: render!(
+                                render!(
+                                    rect {
+                                        width: "100%",
+                                        height: "100%",
+                                        display: "center",
+                                        direction: "both",
+                                        Loader {}
+                                    }
+                                )
+                            )
                             url: dog_url.clone()
                         }
                    )
@@ -58,6 +69,7 @@ fn app(cx: Scope) -> Element {
                 padding: "10",
                 height: "58",
                 width: "100%",
+                direction: "horizontal",
                 Button {
                     onclick: move |_|  fetch(),
                     label {
