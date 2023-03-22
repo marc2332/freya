@@ -31,7 +31,7 @@ use tokio::{
 use winit::{dpi::PhysicalSize, event::WindowEvent, event_loop::EventLoopProxy};
 
 use crate::{
-    window::{AccessibilityState, FocusDirection},
+    accessibility::{AccessibilityState, FocusDirection},
     HoveredNode, WindowEnv,
 };
 

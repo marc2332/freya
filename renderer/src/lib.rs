@@ -9,8 +9,8 @@ use freya_core::events::FreyaEvent;
 use freya_elements::{from_winit_to_code, get_modifiers, get_non_text_keys, Code, Key};
 use freya_layout::DioxusDOM;
 
+use accessibility::FocusDirection;
 use std::sync::{Arc, Mutex};
-use window::FocusDirection;
 use winit::event::{
     ElementState, Event, KeyboardInput, ModifiersState, MouseScrollDelta, StartCause, TouchPhase,
     VirtualKeyCode, WindowEvent,
@@ -23,6 +23,7 @@ pub use window_config::WindowConfig;
 
 mod wireframe;
 
+mod accessibility;
 mod app;
 mod elements;
 mod renderer;
