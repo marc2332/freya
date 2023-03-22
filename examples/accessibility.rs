@@ -14,6 +14,7 @@ fn app(cx: Scope) -> Element {
     let focus_a = use_focus(cx);
     let focus_b = use_focus(cx);
     let focus_c = use_focus(cx);
+    let focus_d = use_focus(cx);
     render!(
         AccessibilityFocusProvider {},
         rect {
@@ -41,6 +42,15 @@ fn app(cx: Scope) -> Element {
             height: "50%",
             onclick: move |_| {
                 focus_b.focus();
+            },
+            label {
+                role: "staticText",
+                focus_id: focus_d.attribute(cx),
+                onclick: move |_| {
+                    focus_d.focus();
+                },
+                color: "white",
+                "Hello, World! This is an example."
             }
         }
     )

@@ -1,5 +1,6 @@
 use accesskit::NodeId as NodeIdKit;
 use dioxus_core::ElementId;
+use dioxus_native_core::node::NodeType;
 use dioxus_native_core::tree::TreeView;
 use dioxus_native_core::{node::Node, NodeId};
 use freya_common::NodeArea;
@@ -48,6 +49,16 @@ impl RenderData {
     #[inline(always)]
     pub fn get_node<'a>(&'a self, rdom: &'a DioxusDOM) -> &DioxusNode {
         rdom.get(self.node_id).unwrap()
+    }
+
+    pub fn get_text(&self, rdom: &DioxusDOM) -> Option<String> {
+        let first_child = *self.children.clone()?.get(0)?;
+        let first_child_node: &DioxusNode = rdom.get(first_child)?;
+        if let NodeType::Text { text } = &first_child_node.node_data.node_type {
+            Some(text.to_owned())
+        } else {
+            None
+        }
     }
 
     pub fn get_accessibility_children(&self, rdom: &DioxusDOM) -> Option<Vec<NodeIdKit>> {

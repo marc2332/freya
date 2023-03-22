@@ -236,6 +236,7 @@ impl<State: 'static + Clone> App<State> {
                         node,
                         accessibility_id,
                         children,
+                        &self.rdom.dom(),
                     );
                 }
             }

@@ -76,11 +76,20 @@ impl AccessibilityState {
         dioxus_node: &RenderData,
         accessibility_id: NodeIdKit,
         children: Option<Vec<NodeIdKit>>,
+        rdom: &DioxusDOM,
     ) {
-        let mut builder = NodeBuilder::new(Role::Button);
+        let mut builder = NodeBuilder::new(Role::Unknown);
 
         if let Some(children) = children {
             builder.set_children(children);
+        }
+
+        if let Some(value) = dioxus_node.get_text(rdom) {
+            builder.set_value(value);
+        }
+
+        if let Some(role) = dioxus_node.get_node(rdom).state.accessibility.role {
+            builder.set_role(role);
         }
 
         builder.set_bounds(Rect {
@@ -89,9 +98,9 @@ impl AccessibilityState {
             y0: dioxus_node.node_area.y as f64,
             y1: (dioxus_node.node_area.y + dioxus_node.node_area.height) as f64,
         });
-        builder.add_action(Action::Focus);
+        builder.add_action(Action::Default);
         builder.set_default_action_verb(DefaultActionVerb::Click);
-        builder.set_name("Button");
+
         let node = builder.build(&mut self.node_classes);
         self.nodes.push((accessibility_id, node));
     }
