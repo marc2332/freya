@@ -49,17 +49,6 @@ fn app(cx: Scope) -> Element {
                 if let Some(dog_url) = dog_url.get() {
                    rsx!(
                         NetworkImage {
-                            loading: render!(
-                                render!(
-                                    rect {
-                                        width: "100%",
-                                        height: "100%",
-                                        display: "center",
-                                        direction: "both",
-                                        Loader {}
-                                    }
-                                )
-                            )
                             url: dog_url.clone()
                         }
                    )

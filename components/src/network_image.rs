@@ -1,3 +1,4 @@
+use crate::Loader;
 use dioxus::prelude::*;
 use freya_elements as dioxus_elements;
 use freya_node_state::bytes_to_data;
@@ -9,19 +10,33 @@ pub struct NetworkImageProps<'a> {
     /// URL of the image
     pub url: Url,
 
-    // Fallback element
+    /// Fallback element
     #[props(optional)]
     pub fallback: Option<Element<'a>>,
 
-    // Loading element
+    /// Loading element
     #[props(optional)]
     pub loading: Option<Element<'a>>,
+
+    /// Width of image, default is 100%
+    #[props(default = "100%".to_string())]
+    pub width: String,
+
+    /// Height of image, default is 100%
+    #[props(default = "100%".to_string())]
+    pub height: String,
 }
 
+/// Image status.
 #[derive(PartialEq)]
 pub enum ImageStatus {
+    /// Image is being fetched.
     Loading,
+
+    /// Image fetching threw an error.
     Errored,
+
+    /// Image has been fetched.
     Loaded,
 }
 
@@ -30,10 +45,24 @@ pub enum ImageStatus {
 /// # Props
 /// See [`NetworkImageProps`].
 ///
+/// # Example
+///  
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app(cx: Scope) -> Element {
+///     render!(
+///         NetworkImage {
+///             url: "https://raw.githubusercontent.com/jigsawpieces/dog-api-images/main/greyhound/Cordelia.jpg".parse().unwrap()
+///         }
+///     )
+/// }
+///
 #[allow(non_snake_case)]
 pub fn NetworkImage<'a>(cx: Scope<'a, NetworkImageProps<'a>>) -> Element<'a> {
     let status = use_state(cx, || ImageStatus::Loading);
     let image_bytes = use_state::<Option<Vec<u8>>>(cx, || None);
+
+    let NetworkImageProps { width, height, .. } = cx.props;
 
     use_effect(cx, &cx.props.url, move |url| {
         to_owned![image_bytes, status];
@@ -53,61 +82,52 @@ pub fn NetworkImage<'a>(cx: Scope<'a, NetworkImageProps<'a>>) -> Element<'a> {
         }
     });
 
-    render!(
-        image {
-            if *status.get() == ImageStatus::Loading {
-                if let Some(loading_element) =  &cx.props.loading {
-                    rsx!(
-                        loading_element
-                    )
-                } else {
-                    rsx!(
-                        rect {
-                            height: "100%",
-                            width: "100%",
-                            display: "center",
-                            direction: "both",
-                            label {
-                                align: "center",
-                                "..."
-                            }
-                        }
-                    )
+    if *status.get() == ImageStatus::Loading {
+        if let Some(loading_element) = &cx.props.loading {
+            render!(loading_element)
+        } else {
+            render!(
+                rect {
+                    height: "{height}",
+                    width: "{width}",
+                    display: "center",
+                    direction: "both",
+                    Loader {
+
+                    }
                 }
-            } else if *status.get() == ImageStatus::Errored {
-                if let Some(fallback_element) =  &cx.props.fallback {
-                    rsx!(
-                        fallback_element
-                    )
-                } else {
-                    rsx!(
-                        rect {
-                            height: "100%",
-                            width: "100%",
-                            display: "center",
-                            label {
-                                align: "center",
-                                "Error"
-                            }
-                        }
-                    )
-                }
-            } else if *status.get() == ImageStatus::Loaded {
-                rsx!{
-                    image_bytes.as_ref().map(|bytes| {
-                        let image_data = bytes_to_data(cx, bytes);
-                        rsx!(
-                            image {
-                                width: "100%",
-                                height: "100%",
-                                image_data: image_data
-                            }
-                        )
-                    })
-                }
-            }
+            )
         }
-    )
+    } else if *status.get() == ImageStatus::Errored {
+        if let Some(fallback_element) = &cx.props.fallback {
+            render!(fallback_element)
+        } else {
+            render!(
+                rect {
+                    height: "{height}",
+                    width: "{width}",
+                    display: "center",
+                    label {
+                        align: "center",
+                        "Error"
+                    }
+                }
+            )
+        }
+    } else {
+        render! {
+            image_bytes.as_ref().map(|bytes| {
+                let image_data = bytes_to_data(cx, bytes);
+                rsx!(
+                    image {
+                        height: "{height}",
+                        width: "{width}",
+                        image_data: image_data
+                    }
+                )
+            })
+        }
+    }
 }
 
 async fn fetch_image(url: Url) -> Result<Vec<u8>, reqwest::Error> {
