@@ -19,4 +19,4 @@ pub use use_node::*;
 pub use use_theme::*;
 
 #[cfg(feature = "use_camera")]
-pub use use_camera;
+pub use use_camera::*;
