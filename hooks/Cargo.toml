@@ -11,6 +11,9 @@ repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
+[features]
+use_camera = ["dep:nokhwa"]
+
 [dependencies]
 dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
 dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
@@ -24,7 +27,7 @@ uuid = { version =  "1.2.2", features = ["v4"]}
 ropey = "1.6.0"
 freya-node-state = { path = "../state", version = "0.1.0" }
 freya-common = { path = "../common", version = "0.1.0" }
-nokhwa = {version = "0.10.3", features = ["input-native"] }
+nokhwa = {version = "0.10.3", features = ["input-native"], optional = true }
 bytes = "1.3.0"
 winit = "0.28.2"
 

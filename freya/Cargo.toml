@@ -13,6 +13,7 @@ categories = ["GUI"]
 
 [features]
 devtools = ["dep:freya-devtools", "freya-core/devtools"]
+use_camera = ["freya-hooks/use_camera"]
 
 [target."cfg(target_os = \"linux\")".dependencies.skia-safe]
 version = "0.60.0"
