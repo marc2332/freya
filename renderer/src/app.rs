@@ -37,7 +37,7 @@ pub fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
     task::waker(Arc::new(DomHandle(proxy.clone())))
 }
 
-/// Manager for an Application
+/// Manages the Application lifecycle
 pub struct App<State: 'static + Clone> {
     rdom: DioxusSafeDOM,
     vdom: VirtualDom,
@@ -83,7 +83,7 @@ impl<State: 'static + Clone> App<State> {
         }
     }
 
-    /// Provide the launch state and few other utilities like the [EventLoopProxy]
+    /// Provide the launch state and few other utilities like the EventLoopProxy
     pub fn provide_vdom_contexts(&self) {
         if let Some(state) = self.window_env.window_config.state.clone() {
             self.vdom.base_scope().provide_context(state);
@@ -91,7 +91,7 @@ impl<State: 'static + Clone> App<State> {
         self.vdom.base_scope().provide_context(self.proxy.clone());
     }
 
-    /// Make an first build of the [VirtualDOM]
+    /// Make an first build of the VirtualDOM
     pub fn init_vdom(&mut self) {
         self.provide_vdom_contexts();
 
@@ -107,7 +107,7 @@ impl<State: 'static + Clone> App<State> {
             .update_state(to_update, SendAnyMap::new());
     }
 
-    /// Update the [RealDOM] with changes from the [VirtualDOM]
+    /// Update the RealDOM with changes from the VirtualDOM
     pub fn apply_vdom_changes(&mut self) -> bool {
         let mutations = self.vdom.render_immediate();
         let (to_update, diff) = self.rdom.dom_mut().apply_mutations(mutations);
@@ -123,7 +123,7 @@ impl<State: 'static + Clone> App<State> {
         !diff.is_empty()
     }
 
-    /// Poll the [VirtualDOM] for any new change
+    /// Poll the VirtualDOM for any new change
     pub fn poll_vdom(&mut self) {
         let waker = &self.vdom_waker.clone();
         let mut cx = std::task::Context::from_waker(waker);
@@ -188,12 +188,12 @@ impl<State: 'static + Clone> App<State> {
         self.window_env.request_redraw();
     }
 
-    /// Replace a [VirtualDOM] Template
+    /// Replace a VirtualDOM Template
     pub fn vdom_replace_template(&mut self, template: Template<'static>) {
         self.vdom.replace_template(template);
     }
 
-    /// Render the [RealDOM] into the [Window]
+    /// Render the RealDOM into the Window
     pub fn render(&mut self, hovered_node: &HoveredNode) {
         self.window_env.render(
             &self.layers,
@@ -203,7 +203,7 @@ impl<State: 'static + Clone> App<State> {
         );
     }
 
-    /// Resize the [Window]
+    /// Resize the Window
     pub fn resize(&mut self, size: PhysicalSize<u32>) {
         self.window_env.resize(size);
     }

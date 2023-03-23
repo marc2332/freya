@@ -190,7 +190,7 @@ impl<T: Clone> WindowEnv<T> {
         }
     }
 
-    // Reprocess the layout
+    /// Measure the layout
     pub fn process_layout(&mut self, rdom: &DioxusDOM) -> (Layers, ViewportsCollection) {
         let window_size = self.window.inner_size();
         process_layout(
@@ -205,7 +205,7 @@ impl<T: Clone> WindowEnv<T> {
         )
     }
 
-    /// Redraw the window
+    /// Render the RealDOM to Window
     pub fn render(
         &mut self,
         layers: &Layers,

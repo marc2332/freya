@@ -34,7 +34,7 @@ impl<T: Clone> WindowConfig<T> {
     }
 }
 
-/// Configuration Builder for A window.
+/// Configuration Builder for a window.
 #[derive(Clone)]
 pub struct WindowConfigBuilder<T> {
     pub width: u32,

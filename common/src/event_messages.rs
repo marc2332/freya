@@ -1,5 +1,6 @@
 use dioxus_core::Template;
 
+/// Custom EventLoop messages
 #[derive(Debug)]
 pub enum EventMessage {
     /// Update the given template

@@ -49,7 +49,7 @@ impl FreyaEvent {
     }
 }
 
-/// Events emitted to the DOM.
+/// Event emitted to the DOM.
 #[derive(Debug, Clone)]
 pub struct DomEvent {
     pub name: String,
