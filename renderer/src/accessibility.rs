@@ -94,20 +94,13 @@ impl AccessibilityState {
         }
     }
 
-    pub fn set_focus(
-        &mut self,
-        adapter: &Adapter,
-        id: NodeIdKit,
-        focus_sender: &watch::Sender<Option<NodeIdKit>>,
-    ) {
+    pub fn set_focus(&mut self, adapter: &Adapter, id: NodeIdKit) {
         self.focus = Some(id);
         adapter.update(TreeUpdate {
             nodes: Vec::new(),
             tree: None,
             focus: self.focus,
         });
-
-        focus_sender.send(self.focus).ok();
     }
 
     pub fn set_focus_on_next_node(

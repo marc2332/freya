@@ -278,7 +278,7 @@ impl<State: 'static + Clone> App<State> {
         self.accessibility_state
             .lock()
             .unwrap()
-            .set_focus(&self.adapter, id, &self.focus_sender);
+            .set_focus(&self.adapter, id);
     }
 
     /// Validate a winit event for accessibility
