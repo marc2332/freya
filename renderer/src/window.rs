@@ -272,9 +272,11 @@ impl<T: Clone> WindowEnv<T> {
 
         let (width, height): (u32, u32) = size.into();
 
-        if let Some((width, height)) = NonZeroU32::new(width).zip(NonZeroU32::new(height)) {
-            self.gl_surface.resize(&self.gl_context, width, height);
-        }
+        self.gl_surface.resize(
+            &self.gl_context,
+            NonZeroU32::new(width.max(1)).unwrap(),
+            NonZeroU32::new(height.max(1)).unwrap(),
+        );
     }
 }
 
