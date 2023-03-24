@@ -1,7 +1,8 @@
 use std::{any::Any, collections::HashMap, rc::Rc};
 
 use dioxus_core::ElementId;
-use euclid::Point2D;
+use euclid::{Length, Point2D};
+use freya_common::NodeArea;
 use freya_elements::{events_data::MouseData, Code, Key, KeyboardData, Modifiers, WheelData};
 use freya_layout::RenderData;
 use rustc_hash::FxHashMap;
@@ -55,6 +56,45 @@ pub struct DomEvent {
     pub name: String,
     pub element_id: ElementId,
     pub data: DomEventData,
+}
+
+impl DomEvent {
+    pub fn from_freya_event(
+        event_name: &str,
+        element_id: ElementId,
+        event: &FreyaEvent,
+        node_area: Option<NodeArea>,
+    ) -> Self {
+        match event {
+            FreyaEvent::Mouse { cursor, button, .. } => Self {
+                element_id,
+                name: event_name.to_string(),
+                data: DomEventData::Mouse(MouseData::new(
+                    Point2D::from_lengths(Length::new(cursor.0), Length::new(cursor.1)),
+                    Point2D::from_lengths(
+                        Length::new(cursor.0 - node_area.unwrap_or_default().x as f64),
+                        Length::new(cursor.1 - node_area.unwrap_or_default().y as f64),
+                    ),
+                    *button,
+                )),
+            },
+            FreyaEvent::Wheel { scroll, .. } => Self {
+                element_id,
+                name: event_name.to_string(),
+                data: DomEventData::Wheel(WheelData::new(scroll.0, scroll.1)),
+            },
+            FreyaEvent::Keyboard {
+                ref key,
+                code,
+                modifiers,
+                ..
+            } => Self {
+                element_id,
+                name: event_name.to_string(),
+                data: DomEventData::Keyboard(KeyboardData::new(key.clone(), *code, *modifiers)),
+            },
+        }
+    }
 }
 
 /// Data of a DOM event.
