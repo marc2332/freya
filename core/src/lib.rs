@@ -88,6 +88,7 @@ pub fn calculate_node_events<'a>(
                     let data = match event {
                         FreyaEvent::Mouse { name, cursor, .. } => Some((name, cursor)),
                         FreyaEvent::Wheel { name, cursor, .. } => Some((name, cursor)),
+                        FreyaEvent::Touch { name, location, .. } => Some((name, location)),
                         _ => None,
                     };
                     if let Some((name, cursor)) = data {
@@ -157,7 +158,9 @@ fn calculate_events_listeners(
                     }
 
                     if node.get_node(dom).state.style.background != Color::TRANSPARENT
-                        && event_name == &"click"
+                        && (event_name == &"click"
+                            || event_name == &"touchstart"
+                            || event_name == &"touchend")
                     {
                         found_nodes.clear();
                     }
@@ -166,6 +169,10 @@ fn calculate_events_listeners(
                         || event_name == &"click"
                         || event_name == &"keydown"
                         || event_name == &"keyup"
+                        || event_name == &"touchcancel"
+                        || event_name == &"touchend"
+                        || event_name == &"touchmove"
+                        || event_name == &"touchstart"
                     {
                         // Mouseover and click events can be stackked
                         found_nodes.push((node, request))
