@@ -1,7 +1,5 @@
 use dioxus_native_core::{node::NodeType, NodeId};
-use euclid::{Length, Point2D};
 use freya_common::NodeArea;
-use freya_elements::events_data::{KeyboardData, MouseData, WheelData};
 use freya_layout::{DioxusDOM, NodeLayoutMeasurer};
 use freya_layout::{Layers, RenderData};
 
@@ -13,7 +11,7 @@ use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 pub mod dom;
 pub mod events;
 
-use events::{DomEvent, DomEventData, EventsProcessor, FreyaEvent};
+use events::{DomEvent, EventsProcessor, FreyaEvent};
 
 pub type EventEmitter = UnboundedSender<DomEvent>;
 pub type EventReceiver = UnboundedReceiver<DomEvent>;
@@ -175,37 +173,13 @@ fn calculate_events_listeners(
             }
         }
 
-        for (node, request) in found_nodes {
-            let event = match request {
-                FreyaEvent::Mouse { cursor, button, .. } => DomEvent {
-                    element_id: node.element_id.unwrap(),
-                    name: event_name.to_string(),
-                    data: DomEventData::Mouse(MouseData::new(
-                        Point2D::from_lengths(Length::new(cursor.0), Length::new(cursor.1)),
-                        Point2D::from_lengths(
-                            Length::new(cursor.0 - node.node_area.x as f64),
-                            Length::new(cursor.1 - node.node_area.y as f64),
-                        ),
-                        *button,
-                    )),
-                },
-                FreyaEvent::Wheel { scroll, .. } => DomEvent {
-                    element_id: node.element_id.unwrap(),
-                    name: event_name.to_string(),
-                    data: DomEventData::Wheel(WheelData::new(scroll.0, scroll.1)),
-                },
-                FreyaEvent::Keyboard {
-                    key,
-                    code,
-                    modifiers,
-                    ..
-                } => DomEvent {
-                    element_id: node.element_id.unwrap(),
-                    name: event_name.to_string(),
-                    data: DomEventData::Keyboard(KeyboardData::new(key.clone(), *code, *modifiers)),
-                },
-            };
-
+        for (node, request_event) in found_nodes {
+            let event = DomEvent::from_freya_event(
+                event_name,
+                node.element_id.unwrap(),
+                request_event,
+                Some(node.node_area),
+            );
             new_events.push(event.clone());
             event_emitter.send(event).unwrap();
         }
@@ -225,32 +199,12 @@ fn calculate_global_events_listeners(
         let listeners = dom.get_listening_sorted(event_name);
 
         for listener in listeners {
-            let event = match global_event {
-                FreyaEvent::Mouse { cursor, button, .. } => DomEvent {
-                    element_id: listener.node_data.element_id.unwrap(),
-                    name: event_name.to_string(),
-                    data: DomEventData::Mouse(MouseData::new(
-                        Point2D::from_lengths(Length::new(cursor.0), Length::new(cursor.1)),
-                        Point2D::from_lengths(Length::new(cursor.0), Length::new(cursor.1)),
-                        button,
-                    )),
-                },
-                FreyaEvent::Wheel { scroll, .. } => DomEvent {
-                    element_id: listener.node_data.element_id.unwrap(),
-                    name: event_name.to_string(),
-                    data: DomEventData::Wheel(WheelData::new(scroll.0, scroll.1)),
-                },
-                FreyaEvent::Keyboard {
-                    ref key,
-                    code,
-                    modifiers,
-                    ..
-                } => DomEvent {
-                    element_id: listener.node_data.element_id.unwrap(),
-                    name: event_name.to_string(),
-                    data: DomEventData::Keyboard(KeyboardData::new(key.clone(), code, modifiers)),
-                },
-            };
+            let event = DomEvent::from_freya_event(
+                event_name,
+                listener.node_data.element_id.unwrap(),
+                &global_event,
+                None,
+            );
             event_emitter.send(event).unwrap();
         }
     }
