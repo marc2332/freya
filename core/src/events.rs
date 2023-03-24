@@ -2,7 +2,9 @@ use std::{any::Any, collections::HashMap, rc::Rc};
 
 use dioxus_core::ElementId;
 use euclid::Point2D;
-use freya_elements::{events_data::MouseData, Code, Key, KeyboardData, Modifiers, WheelData};
+use freya_elements::{
+    events_data::MouseData, Code, Key, KeyboardData, Modifiers, TouchData, WheelData,
+};
 use freya_layout::RenderData;
 use rustc_hash::FxHashMap;
 use winit::event::MouseButton;
@@ -29,6 +31,12 @@ pub enum FreyaEvent {
         code: Code,
         modifiers: Modifiers,
     },
+    /// A Touch event.
+    Touch {
+        name: &'static str,
+        location: (f64, f64),
+        finger_id: u64,
+    },
 }
 
 impl FreyaEvent {
@@ -37,6 +45,7 @@ impl FreyaEvent {
             Self::Mouse { name, .. } => name,
             Self::Wheel { name, .. } => name,
             Self::Keyboard { name, .. } => name,
+            Self::Touch { name, .. } => name,
         }
     }
 
@@ -45,6 +54,7 @@ impl FreyaEvent {
             Self::Mouse { name, .. } => *name = new_name,
             Self::Wheel { name, .. } => *name = new_name,
             Self::Keyboard { name, .. } => *name = new_name,
+            Self::Touch { name, .. } => *name = new_name,
         }
     }
 }
@@ -63,6 +73,7 @@ pub enum DomEventData {
     Mouse(MouseData),
     Keyboard(KeyboardData),
     Wheel(WheelData),
+    Touch(TouchData),
 }
 
 impl DomEventData {
@@ -71,6 +82,7 @@ impl DomEventData {
             DomEventData::Mouse(m) => Rc::new(m),
             DomEventData::Keyboard(k) => Rc::new(k),
             DomEventData::Wheel(w) => Rc::new(w),
+            DomEventData::Touch(w) => Rc::new(w),
         }
     }
 }

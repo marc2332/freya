@@ -2,6 +2,7 @@ use dioxus_native_core::{node::NodeType, NodeId};
 use euclid::{Length, Point2D};
 use freya_common::NodeArea;
 use freya_elements::events_data::{KeyboardData, MouseData, WheelData};
+use freya_elements::TouchData;
 use freya_layout::{DioxusDOM, NodeLayoutMeasurer};
 use freya_layout::{Layers, RenderData};
 
@@ -204,6 +205,22 @@ fn calculate_events_listeners(
                     name: event_name.to_string(),
                     data: DomEventData::Keyboard(KeyboardData::new(key.clone(), *code, *modifiers)),
                 },
+                FreyaEvent::Touch {
+                    location,
+                    finger_id,
+                    ..
+                } => DomEvent {
+                    element_id: node.element_id.unwrap(),
+                    name: event_name.to_string(),
+                    data: DomEventData::Touch(TouchData::new(
+                        Point2D::from_lengths(Length::new(location.0), Length::new(location.1)),
+                        Point2D::from_lengths(
+                            Length::new(location.0 - node.node_area.x as f64),
+                            Length::new(location.1 - node.node_area.y as f64),
+                        ),
+                        *finger_id,
+                    )),
+                },
             };
 
             new_events.push(event.clone());
@@ -249,6 +266,19 @@ fn calculate_global_events_listeners(
                     element_id: listener.node_data.element_id.unwrap(),
                     name: event_name.to_string(),
                     data: DomEventData::Keyboard(KeyboardData::new(key.clone(), code, modifiers)),
+                },
+                FreyaEvent::Touch {
+                    location,
+                    finger_id,
+                    ..
+                } => DomEvent {
+                    element_id: listener.node_data.element_id.unwrap(),
+                    name: event_name.to_string(),
+                    data: DomEventData::Touch(TouchData::new(
+                        Point2D::from_lengths(Length::new(location.0), Length::new(location.1)),
+                        Point2D::from_lengths(Length::new(location.0), Length::new(location.1)),
+                        finger_id,
+                    )),
                 },
             };
             event_emitter.send(event).unwrap();
