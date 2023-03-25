@@ -1,7 +1,7 @@
 use dioxus_core::{Element, LazyNodes, Scope};
 use dioxus_core_macro::{render, Props};
 use dioxus_elements::{Key, KeyboardEvent};
-use dioxus_hooks::{use_ref, use_state};
+use dioxus_hooks::use_ref;
 use freya_elements as dioxus_elements;
 use freya_elements::{MouseEvent, WheelEvent};
 use freya_hooks::{use_get_theme, use_node};
@@ -98,10 +98,10 @@ fn get_render_range(
 #[allow(non_snake_case)]
 pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) -> Element {
     let theme = use_get_theme(cx);
-    let clicking_scrollbar = use_state::<Option<(Axis, f64)>>(cx, || None);
+    let clicking_scrollbar = use_ref::<Option<(Axis, f64)>>(cx, || None);
     let clicking_shift = use_ref(cx, || false);
-    let scrolled_y = use_state(cx, || 0);
-    let scrolled_x = use_state(cx, || 0);
+    let scrolled_y = use_ref(cx, || 0);
+    let scrolled_x = use_ref(cx, || 0);
     let (node_ref, size) = use_node(cx);
 
     let scrollbar_theme = &theme.scrollbar;
@@ -143,7 +143,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
                 wheel_y as f32,
                 inner_size,
                 size.height,
-                *scrolled_y.get() as f32,
+                *scrolled_y.read() as f32,
             );
 
             scrolled_y.with_mut(|y| *y = scroll_position_y);
