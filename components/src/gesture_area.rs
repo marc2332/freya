@@ -7,7 +7,11 @@ use freya_elements::{TouchEvent, TouchPhase};
 
 const DOUBLE_TAP_DISTANCE: f64 = 100.0;
 
-const DOUBLE_TAP_DELAY: u128 = 40; // 40ms
+// Not sure about these numbers yet
+#[cfg(debug_assertions)]
+const DOUBLE_TAP_DELAY: u128 = 160; // 160ms
+#[cfg(not(debug_assertions))]
+const DOUBLE_TAP_DELAY: u128 = 40; // 40
 
 const MAX_EVENTS_QUEUE: usize = 20;
 
@@ -41,10 +45,12 @@ pub fn GestureArea<'a>(cx: Scope<'a, GestureAreaProps<'a>>) -> Element {
     use_effect(cx, touch_events, move |_| {
         // Keep the touch events queue under a certain size
         if touch_events.read().len() > MAX_EVENTS_QUEUE {
-            touch_events.write_silent().pop_back();
+            touch_events.write_silent().pop_front();
         }
 
         let mut last_event: Option<(Instant, TouchEvent)> = None;
+
+        let mut found_gesture = false;
 
         for (time, event) in touch_events.read().iter() {
             if TouchPhase::Started == event.get_touch_phase() {
@@ -56,36 +62,42 @@ pub fn GestureArea<'a>(cx: Scope<'a, GestureAreaProps<'a>>) -> Element {
                             < DOUBLE_TAP_DISTANCE
                         && last_time.elapsed().as_millis() <= DOUBLE_TAP_DELAY
                     {
-                        cx.props.ongesture.call(Gesture::DoubleTap)
+                        cx.props.ongesture.call(Gesture::DoubleTap);
+                        found_gesture = true;
+                        break;
                     }
                 }
             }
 
             last_event = Some((*time, event.clone()))
         }
+
+        if found_gesture {
+            touch_events.write_silent().clear();
+        }
         async move {}
     });
 
     let ontouchcancel = |e: TouchEvent| {
-        touch_events.write().push_front((Instant::now(), e));
+        touch_events.write().push_back((Instant::now(), e));
     };
 
     let ontouchend = |e: TouchEvent| {
-        touch_events.write().push_front((Instant::now(), e));
+        touch_events.write().push_back((Instant::now(), e));
     };
 
     let ontouchmove = |e: TouchEvent| {
-        touch_events.write().push_front((Instant::now(), e));
+        touch_events.write().push_back((Instant::now(), e));
     };
 
     let ontouchstart = |e: TouchEvent| {
-        touch_events.write().push_front((Instant::now(), e));
+        touch_events.write().push_back((Instant::now(), e));
     };
 
     render!(
         rect {
-            width: "auto",
-            height: "auto",
+            width: "100%",
+            height: "100%",
             ontouchcancel: ontouchcancel,
             ontouchend: ontouchend,
             ontouchmove: ontouchmove,
