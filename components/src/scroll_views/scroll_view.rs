@@ -1,6 +1,6 @@
 use dioxus_core::{Element, Scope};
 use dioxus_core_macro::{render, Props};
-use dioxus_hooks::use_state;
+use dioxus_hooks::use_ref;
 use freya_elements as dioxus_elements;
 use freya_elements::{MouseEvent, WheelEvent};
 use freya_hooks::{use_get_theme, use_node};
@@ -61,9 +61,9 @@ pub struct ScrollViewProps<'a> {
 #[allow(non_snake_case)]
 pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     let theme = use_get_theme(cx);
-    let clicking_scrollbar = use_state::<Option<(Axis, f64)>>(cx, || None);
-    let scrolled_y = use_state(cx, || 0);
-    let scrolled_x = use_state(cx, || 0);
+    let clicking_scrollbar = use_ref::<Option<(Axis, f64)>>(cx, || None);
+    let scrolled_y = use_ref(cx, || 0);
+    let scrolled_x = use_ref(cx, || 0);
     let (node_ref, size) = use_node(cx);
 
     let scrollbar_theme = &theme.scrollbar;
@@ -83,9 +83,9 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     let container_height = get_container_size(horizontal_scrollbar_is_visible);
 
     let corrected_scrolled_y =
-        get_corrected_scroll_position(size.inner_height, size.height, *scrolled_y.get() as f32);
+        get_corrected_scroll_position(size.inner_height, size.height, *scrolled_y.read() as f32);
     let corrected_scrolled_x =
-        get_corrected_scroll_position(size.inner_width, size.width, *scrolled_x.get() as f32);
+        get_corrected_scroll_position(size.inner_width, size.width, *scrolled_x.read() as f32);
 
     let (scrollbar_y, scrollbar_height) =
         get_scrollbar_pos_and_size(size.inner_height, size.height, corrected_scrolled_y);
@@ -100,7 +100,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
             wheel_y as f32,
             size.inner_height,
             size.height,
-            *scrolled_y.get() as f32,
+            *scrolled_y.read() as f32,
         );
 
         scrolled_y.with_mut(|y| *y = scroll_position);
@@ -108,7 +108,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
 
     // Drag the scrollbars
     let onmouseover = move |e: MouseEvent| {
-        if let Some((Axis::Y, y)) = clicking_scrollbar.get() {
+        if let Some((Axis::Y, y)) = *clicking_scrollbar.read() {
             let coordinates = e.get_element_coordinates();
             let cursor_y = coordinates.y - y;
 
@@ -116,7 +116,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
                 get_scroll_position_from_cursor(cursor_y as f32, size.inner_height, size.height);
 
             scrolled_y.with_mut(|y| *y = scroll_position);
-        } else if let Some((Axis::X, x)) = clicking_scrollbar.get() {
+        } else if let Some((Axis::X, x)) = *clicking_scrollbar.read() {
             let coordinates = e.get_element_coordinates();
             let cursor_x = coordinates.x - x;
 
