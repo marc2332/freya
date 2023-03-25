@@ -28,13 +28,13 @@ pub struct NodeState {
     pub cursor_settings: CursorSettings,
     #[parent_dep_state(references)]
     pub references: References,
-    #[parent_dep_state(size)]
+    #[parent_dep_state(size, LayoutNotifier)]
     pub size: Size,
-    #[node_dep_state(())]
+    #[node_dep_state((), LayoutNotifier)]
     pub scroll: Scroll,
-    #[node_dep_state()]
+    #[node_dep_state((), LayoutNotifier)]
     pub style: Style,
-    #[parent_dep_state(font_style)]
+    #[parent_dep_state(font_style, LayoutNotifier)]
     pub font_style: FontStyle,
     #[node_dep_state()]
     pub transform: Transform,
