@@ -224,6 +224,7 @@ pub fn run<T: 'static + Clone>(
                         location,
                         phase,
                         id,
+                        force,
                         ..
                     }) => {
                         cursor_pos = (location.x, location.y);
@@ -240,6 +241,7 @@ pub fn run<T: 'static + Clone>(
                             location: cursor_pos,
                             finger_id: id,
                             phase,
+                            force,
                         });
 
                         app.process_events();

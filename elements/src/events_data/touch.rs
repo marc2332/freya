@@ -1,5 +1,5 @@
 use euclid::Point2D;
-use winit::event::TouchPhase;
+use winit::event::{Force, TouchPhase};
 
 /// Data of a Touch event.
 #[derive(Debug, Clone)]
@@ -8,6 +8,7 @@ pub struct TouchData {
     pub element_coordinates: Point2D<f64, f64>,
     pub finger_id: u64,
     pub phase: TouchPhase,
+    pub force: Option<Force>,
 }
 
 impl TouchData {
@@ -16,12 +17,14 @@ impl TouchData {
         element_coordinates: Point2D<f64, f64>,
         finger_id: u64,
         phase: TouchPhase,
+        force: Option<Force>,
     ) -> Self {
         Self {
             screen_coordinates,
             element_coordinates,
             finger_id,
             phase,
+            force,
         }
     }
 
@@ -43,5 +46,10 @@ impl TouchData {
     /// Get the touch phase of this event.
     pub fn get_touch_phase(&self) -> TouchPhase {
         self.phase
+    }
+
+    /// Get the touch force of this event.
+    pub fn get_touch_force(&self) -> Option<Force> {
+        self.force
     }
 }
