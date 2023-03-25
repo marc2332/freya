@@ -169,18 +169,18 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
     // Mark the Y axis scrollbar as the one being dragged
     let onmousedown_y = |e: MouseEvent| {
         let coordinates = e.get_element_coordinates();
-        clicking_scrollbar.set(Some((Axis::Y, coordinates.y)));
+        *clicking_scrollbar.write_silent() = Some((Axis::Y, coordinates.y));
     };
 
     // Mark the X axis scrollbar as the one being dragged
     let onmousedown_x = |e: MouseEvent| {
         let coordinates = e.get_element_coordinates();
-        clicking_scrollbar.set(Some((Axis::X, coordinates.x)));
+        *clicking_scrollbar.write_silent() = Some((Axis::X, coordinates.x));
     };
 
     // Unmark any scrollbar
     let onclick = |_: MouseEvent| {
-        clicking_scrollbar.set(None);
+        *clicking_scrollbar.write_silent() = None;
     };
 
     let horizontal_scrollbar_size = if horizontal_scrollbar_is_visible {
