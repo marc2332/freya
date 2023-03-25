@@ -5,7 +5,7 @@ use dioxus_native_core::node::NodeType;
 use dioxus_native_core::real_dom::RealDom;
 use dioxus_native_core::tree::TreeView;
 use dioxus_native_core::{NodeId, SendAnyMap};
-use freya_common::NodeArea;
+use freya_common::{LayoutNotifier, NodeArea};
 use freya_core::events::EventsProcessor;
 use freya_core::{events::DomEvent, EventEmitter, EventReceiver};
 use freya_core::{process_events, process_layout, ViewportsCollection};
@@ -107,7 +107,8 @@ impl TestUtils {
 
         let (to_update, _) = self.rdom.lock().unwrap().apply_mutations(mutations);
 
-        let ctx = SendAnyMap::new();
+        let mut ctx = SendAnyMap::new();
+        ctx.insert(LayoutNotifier::default());
         self.rdom.lock().unwrap().update_state(to_update, ctx);
     }
 
@@ -133,7 +134,8 @@ impl TestUtils {
 
             let (to_update, diff) = self.rdom.lock().unwrap().apply_mutations(mutations);
 
-            let ctx = SendAnyMap::new();
+            let mut ctx = SendAnyMap::new();
+            ctx.insert(LayoutNotifier::default());
             self.rdom.lock().unwrap().update_state(to_update, ctx);
 
             if diff.is_empty() {
@@ -224,10 +226,9 @@ pub fn launch_test(root: Component<()>) -> TestUtils {
     let muts = dom.rebuild();
     let (to_update, _) = rdom.lock().unwrap().apply_mutations(muts);
 
-    let _ctx = SendAnyMap::new();
-    rdom.lock()
-        .unwrap()
-        .update_state(to_update, SendAnyMap::new());
+    let mut ctx = SendAnyMap::new();
+    ctx.insert(LayoutNotifier::default());
+    rdom.lock().unwrap().update_state(to_update, ctx);
 
     TestUtils {
         rdom,
