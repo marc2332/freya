@@ -1,3 +1,5 @@
+use std::sync::{Arc, Mutex};
+
 /// Layout info of a certain Node, used by `use_node`.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct NodeReferenceLayout {
@@ -8,3 +10,5 @@ pub struct NodeReferenceLayout {
     pub inner_height: f32,
     pub inner_width: f32,
 }
+
+pub type LayoutNotifier = Arc<Mutex<bool>>;

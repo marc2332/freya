@@ -4,6 +4,7 @@ use dioxus_native_core::node::OwnedAttributeValue;
 use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
 use dioxus_native_core::state::NodeDepState;
 use dioxus_native_core_macro::sorted_str_slice;
+use freya_common::LayoutNotifier;
 use skia_safe::Color;
 
 use crate::{parse_color, CustomAttributeValues};
@@ -21,7 +22,7 @@ pub struct Style {
 
 impl NodeDepState<CustomAttributeValues> for Style {
     type DepState = ();
-    type Ctx = ();
+    type Ctx = LayoutNotifier;
 
     const NODE_MASK: NodeMask =
         NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
@@ -39,7 +40,7 @@ impl NodeDepState<CustomAttributeValues> for Style {
         &mut self,
         node: NodeView<CustomAttributeValues>,
         _sibling: (),
-        _ctx: &Self::Ctx,
+        ctx: &Self::Ctx,
     ) -> bool {
         let mut background = Color::TRANSPARENT;
         let mut relative_layer = 0;
@@ -115,7 +116,15 @@ impl NodeDepState<CustomAttributeValues> for Style {
             || (relative_layer != self.relative_layer)
             || (shadow != self.shadow)
             || (radius != self.radius)
-            || (image_data != self.image_data);
+            || (image_data != self.image_data)
+            || (display != self.display)
+            || (svg_data != self.svg_data);
+
+        let changed_size = display != self.display;
+
+        if changed_size {
+            *ctx.lock().unwrap() = true;
+        }
 
         *self = Self {
             background,
