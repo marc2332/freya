@@ -8,7 +8,7 @@ use freya_elements::{
 };
 use freya_layout::RenderData;
 use rustc_hash::FxHashMap;
-use winit::event::MouseButton;
+use winit::event::{MouseButton, TouchPhase};
 
 /// Events emitted in Freya.
 #[derive(Clone, Debug)]
@@ -37,6 +37,7 @@ pub enum FreyaEvent {
         name: &'static str,
         location: (f64, f64),
         finger_id: u64,
+        phase: TouchPhase,
     },
 }
 
@@ -106,6 +107,7 @@ impl DomEvent {
             FreyaEvent::Touch {
                 location,
                 finger_id,
+                phase,
                 ..
             } => DomEvent {
                 element_id,
@@ -117,6 +119,7 @@ impl DomEvent {
                         Length::new(location.1 - node_area.unwrap_or_default().y as f64),
                     ),
                     *finger_id,
+                    *phase,
                 )),
             },
         }

@@ -239,6 +239,7 @@ pub fn run<T: 'static + Clone>(
                             name: event_name,
                             location: cursor_pos,
                             finger_id: id,
+                            phase,
                         });
 
                         app.process_events();
