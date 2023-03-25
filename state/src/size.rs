@@ -3,6 +3,7 @@ use std::fmt::Display;
 use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
 use dioxus_native_core::state::ParentDepState;
 use dioxus_native_core_macro::sorted_str_slice;
+use freya_common::LayoutNotifier;
 
 use crate::CustomAttributeValues;
 
@@ -19,7 +20,7 @@ pub struct Size {
 }
 
 impl ParentDepState<CustomAttributeValues> for Size {
-    type Ctx = ();
+    type Ctx = LayoutNotifier;
     type DepState = (Self,);
 
     const NODE_MASK: NodeMask =
@@ -40,7 +41,7 @@ impl ParentDepState<CustomAttributeValues> for Size {
         &mut self,
         node: NodeView<CustomAttributeValues>,
         _parent: Option<(&Self,)>,
-        _ctx: &Self::Ctx,
+        ctx: &Self::Ctx,
     ) -> bool {
         let mut width = SizeMode::default();
         let mut height = SizeMode::default();
@@ -147,6 +148,10 @@ impl ParentDepState<CustomAttributeValues> for Size {
             || (max_width != self.max_width)
             || (padding != self.padding)
             || (direction != self.direction);
+
+        if changed {
+            *ctx.lock().unwrap() = true;
+        }
 
         *self = Self {
             width,

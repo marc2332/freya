@@ -1,8 +1,12 @@
-use std::{collections::HashMap, sync::Arc, task::Waker};
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+    task::Waker,
+};
 
 use dioxus_core::{Template, VirtualDom};
 use dioxus_native_core::SendAnyMap;
-use freya_common::EventMessage;
+use freya_common::{EventMessage, LayoutNotifier};
 use freya_core::{
     dom::DioxusSafeDOM,
     events::{DomEvent, EventsProcessor, FreyaEvent},
@@ -56,6 +60,7 @@ pub struct App<State: 'static + Clone> {
     layers: Layers,
     events_processor: EventsProcessor,
     viewports_collection: ViewportsCollection,
+    layout_notifier: LayoutNotifier,
 }
 
 impl<State: 'static + Clone> App<State> {
@@ -80,6 +85,7 @@ impl<State: 'static + Clone> App<State> {
             layers: Layers::default(),
             events_processor: EventsProcessor::default(),
             viewports_collection: HashMap::default(),
+            layout_notifier: Arc::new(Mutex::new(false)),
         }
     }
 
@@ -102,13 +108,16 @@ impl<State: 'static + Clone> App<State> {
             self.mutations_sender.as_ref().map(|s| s.send(()));
         }
 
-        self.rdom
-            .dom_mut()
-            .update_state(to_update, SendAnyMap::new());
+        *self.layout_notifier.lock().unwrap() = false;
+
+        let mut ctx = SendAnyMap::new();
+        ctx.insert(self.layout_notifier.clone());
+
+        self.rdom.dom_mut().update_state(to_update, ctx);
     }
 
     /// Update the RealDOM with changes from the VirtualDOM
-    pub fn apply_vdom_changes(&mut self) -> bool {
+    pub fn apply_vdom_changes(&mut self) -> (bool, bool) {
         let mutations = self.vdom.render_immediate();
         let (to_update, diff) = self.rdom.dom_mut().apply_mutations(mutations);
 
@@ -116,11 +125,14 @@ impl<State: 'static + Clone> App<State> {
             self.mutations_sender.as_ref().map(|s| s.send(()));
         }
 
-        self.rdom
-            .dom_mut()
-            .update_state(to_update, SendAnyMap::new());
+        *self.layout_notifier.lock().unwrap() = false;
 
-        !diff.is_empty()
+        let mut ctx = SendAnyMap::new();
+        ctx.insert(self.layout_notifier.clone());
+
+        self.rdom.dom_mut().update_state(to_update, ctx);
+
+        (!diff.is_empty(), *self.layout_notifier.lock().unwrap())
     }
 
     /// Poll the VirtualDOM for any new change
@@ -153,8 +165,11 @@ impl<State: 'static + Clone> App<State> {
                 }
             }
 
-            if self.apply_vdom_changes() {
+            let (must_repaint, must_relayout) = self.apply_vdom_changes();
+            if must_relayout {
                 self.request_redraw();
+            } else if must_repaint {
+                self.request_rerender();
             }
         }
     }
@@ -186,6 +201,13 @@ impl<State: 'static + Clone> App<State> {
     /// Request a redraw
     pub fn request_redraw(&self) {
         self.window_env.request_redraw();
+    }
+
+    /// Request a rerender
+    pub fn request_rerender(&self) {
+        self.proxy
+            .send_event(EventMessage::RequestRerender)
+            .unwrap();
     }
 
     /// Replace a VirtualDOM Template
