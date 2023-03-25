@@ -1,5 +1,5 @@
 use euclid::Point2D;
-use winit::event::{Force, TouchPhase};
+pub use winit::event::{Force, TouchPhase};
 
 /// Data of a Touch event.
 #[derive(Debug, Clone)]
