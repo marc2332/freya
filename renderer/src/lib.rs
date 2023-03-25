@@ -83,7 +83,7 @@ pub fn run<T: 'static + Clone>(
                 _ = proxy.send_event(EventMessage::PollVDOM);
             }
             Event::UserEvent(EventMessage::RequestRerender) => {
-                app.request_redraw();
+                app.render(&hovered_node);
             }
             Event::UserEvent(EventMessage::RequestRelayout) => {
                 app.process_layout();
