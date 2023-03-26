@@ -109,6 +109,7 @@ impl Animation {
 /// Manage the lifecyle of an [Animation].
 #[derive(Clone)]
 pub struct AnimationManager<'a> {
+    init_value: f64,
     current_animation_id: &'a UseState<Option<Uuid>>,
     value: &'a UseState<f64>,
     cx: &'a ScopeState,
@@ -153,9 +154,10 @@ impl<'a> AnimationManager<'a> {
         });
     }
 
-    /// Stop the currently running [Animation].
-    pub fn stop(&self) {
+    /// Clear the currently running [Animation].
+    pub fn clear(&self) {
         self.current_animation_id.set(None);
+        self.set_value(self.init_value);
     }
 
     /// Check whether there is an [Animation] running or not.
@@ -187,6 +189,7 @@ pub fn use_animation(cx: &ScopeState, init_value: f64) -> AnimationManager {
         current_animation_id,
         value,
         cx,
+        init_value,
     }
 }
 
@@ -251,15 +254,13 @@ mod test {
             let restart = {
                 to_owned![animation];
                 move || {
-                    animation.stop();
+                    animation.clear();
                 }
             };
 
             use_effect(cx, (), move |_| {
-                to_owned![animation];
-                async move {
-                    animation.start(Animation::new_linear(10.0..=100.0, 50));
-                }
+                animation.start(Animation::new_linear(10.0..=100.0, 50));
+                async move {}
             });
 
             render!(rect {
