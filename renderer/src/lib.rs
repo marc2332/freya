@@ -11,8 +11,8 @@ use freya_layout::DioxusDOM;
 
 use std::sync::{Arc, Mutex};
 use winit::event::{
-    ElementState, Event, KeyboardInput, ModifiersState, MouseScrollDelta, StartCause, TouchPhase,
-    WindowEvent,
+    ElementState, Event, KeyboardInput, ModifiersState, MouseScrollDelta, StartCause, Touch,
+    TouchPhase, WindowEvent,
 };
 use winit::event_loop::{ControlFlow, EventLoopBuilder};
 
@@ -216,6 +216,32 @@ pub fn run<T: 'static + Clone>(
                             name: "mouseover",
                             cursor: cursor_pos,
                             button: None,
+                        });
+
+                        app.process_events();
+                    }
+                    WindowEvent::Touch(Touch {
+                        location,
+                        phase,
+                        id,
+                        force,
+                        ..
+                    }) => {
+                        cursor_pos = (location.x, location.y);
+
+                        let event_name = match phase {
+                            TouchPhase::Cancelled => "touchcancel",
+                            TouchPhase::Ended => "touchend",
+                            TouchPhase::Moved => "touchmove",
+                            TouchPhase::Started => "touchstart",
+                        };
+
+                        app.push_event(FreyaEvent::Touch {
+                            name: event_name,
+                            location: cursor_pos,
+                            finger_id: id,
+                            phase,
+                            force,
                         });
 
                         app.process_events();
