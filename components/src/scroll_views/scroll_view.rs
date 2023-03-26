@@ -1,8 +1,9 @@
 use dioxus_core::{Element, Scope};
 use dioxus_core_macro::{render, Props};
+use dioxus_elements::Key;
 use dioxus_hooks::use_ref;
 use freya_elements as dioxus_elements;
-use freya_elements::{MouseEvent, WheelEvent};
+use freya_elements::{KeyboardEvent, MouseEvent, WheelEvent};
 use freya_hooks::{use_get_theme, use_node};
 
 use crate::{
@@ -62,6 +63,7 @@ pub struct ScrollViewProps<'a> {
 pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     let theme = use_get_theme(cx);
     let clicking_scrollbar = use_ref::<Option<(Axis, f64)>>(cx, || None);
+    let clicking_shift = use_ref(cx, || false);
     let scrolled_y = use_ref(cx, || 0);
     let scrolled_x = use_ref(cx, || 0);
     let (node_ref, size) = use_node(cx);
@@ -94,16 +96,33 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
 
     // Moves the Y axis when the user scrolls in the container
     let onwheel = move |e: WheelEvent| {
-        let wheel_y = e.get_delta_y();
+        if !*clicking_shift.read() {
+            let wheel_y = e.get_delta_y();
 
-        let scroll_position = get_scroll_position_from_wheel(
-            wheel_y as f32,
-            size.inner_height,
-            size.height,
-            *scrolled_y.read() as f32,
+            let scroll_position_y = get_scroll_position_from_wheel(
+                wheel_y as f32,
+                size.inner_height,
+                size.height,
+                *scrolled_y.read() as f32,
+            );
+
+            scrolled_y.with_mut(|y| *y = scroll_position_y);
+        }
+
+        let wheel_x = if *clicking_shift.read() {
+            e.get_delta_y()
+        } else {
+            e.get_delta_x()
+        };
+
+        let scroll_position_x = get_scroll_position_from_wheel(
+            wheel_x as f32,
+            size.inner_width,
+            size.width,
+            *scrolled_x.read() as f32,
         );
 
-        scrolled_y.with_mut(|y| *y = scroll_position);
+        scrolled_x.with_mut(|x| *x = scroll_position_x);
     };
 
     // Drag the scrollbars
@@ -125,6 +144,18 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
 
             scrolled_x.with_mut(|x| *x = scroll_position);
         }
+    };
+
+    // Check if Shift is being pressed
+    let onkeydown = |e: KeyboardEvent| {
+        if e.key == Key::Shift {
+            clicking_shift.set(true);
+        }
+    };
+
+    // Unmark the pressed shft at any keyup
+    let onkeyup = |_: KeyboardEvent| {
+        clicking_shift.set(false);
     };
 
     // Mark the Y axis scrollbar as the one being dragged
@@ -162,6 +193,8 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
             height: "{user_container_height}",
             onclick: onclick, // TODO(marc2332): mouseup would be better
             onmouseover: onmouseover,
+            onkeydown: onkeydown,
+            onkeyup: onkeyup,
             rect {
                 direction: "vertical",
                 width: "{container_width}",
