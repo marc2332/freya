@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use freya_elements as dioxus_elements;
 use freya_elements::MouseEvent;
-use freya_hooks::{use_animation, use_get_theme, AnimationMode};
+use freya_hooks::{use_animation, use_get_theme, Animation};
 
 /// [`Switch`] component properties.
 #[derive(Props)]
@@ -40,10 +40,7 @@ pub struct SwitchProps<'a> {
 ///
 #[allow(non_snake_case)]
 pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
-    let (start_enabled, restart_enabled, progress_enabled) =
-        use_animation(cx, || AnimationMode::new_sine_in_out(0.0..=25.0, 200));
-    let (start_disabled, restart_disabled, progress_disabled) =
-        use_animation(cx, || AnimationMode::new_sine_in_out(25.0..=0.0, 200));
+    let animation = use_animation(cx, 0.0);
     let theme = use_get_theme(cx);
     let hovering = use_state(cx, || false);
     let clicking = use_state(cx, || false);
@@ -67,31 +64,30 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
         cx.props.ontoggled.call(());
     };
 
-    use_effect(cx, &cx.props.enabled, move |enabled| async move {
-        if enabled {
-            start_enabled();
-            restart_disabled();
-        } else {
-            start_disabled();
-            restart_enabled();
-        }
-    });
-
     let (scroll_x, border, circle) = {
         if cx.props.enabled {
             (
-                progress_enabled,
+                animation.value(),
                 theme.switch.enabled_background,
                 theme.switch.enabled_thumb_background,
             )
         } else {
             (
-                progress_disabled,
+                animation.value(),
                 theme.switch.background,
                 theme.switch.thumb_background,
             )
         }
     };
+
+    use_effect(cx, &cx.props.enabled, move |enabled| {
+        if enabled {
+            animation.start(Animation::new_sine_in_out(0.0..=25.0, 200));
+        } else {
+            animation.start(Animation::new_sine_in_out(25.0..=0.0, 200));
+        }
+        async move {}
+    });
 
     render!(
         container {

@@ -14,14 +14,16 @@ const TIME: i32 = 500;
 const TARGET: f64 = 500.0;
 
 fn app(cx: Scope) -> Element {
-    let (run, _, progress, running) = use_animation_managed(cx, 0.0);
+    let animation = use_animation(cx, 0.0);
+
+    let progress = animation.value();
 
     let anim = move |_: MouseEvent| {
-        if running {
+        if animation.is_animating() {
         } else if progress == 0.0 {
-            run(AnimationMode::new_sine_in_out(0.0..=TARGET, TIME));
+            animation.start(Animation::new_sine_in_out(0.0..=TARGET, TIME));
         } else if progress == TARGET {
-            run(AnimationMode::new_sine_in_out(TARGET..=0.0, TIME));
+            animation.start(Animation::new_sine_in_out(TARGET..=0.0, TIME));
         }
     };
 
