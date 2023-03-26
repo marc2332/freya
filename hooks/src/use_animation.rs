@@ -222,7 +222,7 @@ mod test {
         // Initial state
         utils.wait_for_update((500.0, 500.0)).await;
 
-        assert_eq!(utils.root().child(2).unwrap().layout().unwrap().width, 0.0);
+        assert_eq!(utils.root().child(0).unwrap().layout().unwrap().width, 0.0);
 
         // State somewhere in the middle
         utils.wait_for_update((500.0, 500.0)).await;
@@ -256,8 +256,10 @@ mod test {
             };
 
             use_effect(cx, (), move |_| {
-                animation.start(Animation::new_linear(10.0..=100.0, 50));
-                async move {}
+                to_owned![animation];
+                async move {
+                    animation.start(Animation::new_linear(10.0..=100.0, 50));
+                }
             });
 
             render!(rect {
