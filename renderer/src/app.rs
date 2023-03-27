@@ -166,7 +166,8 @@ impl<State: 'static + Clone> App<State> {
             }
 
             let (must_repaint, must_relayout) = self.apply_vdom_changes();
-            if must_relayout {
+            // TODO: Temp fix, I should probably handle the incremental mutations myself.
+            if must_relayout || must_repaint {
                 self.request_redraw();
             } else if must_repaint {
                 self.request_rerender();
