@@ -21,6 +21,7 @@ dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5
 dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519", features = ["macro", "hooks"]}
 freya-common = { path = "../common", version = "0.1.0" }
 freya-node-state = { path = "../state", version = "0.1.0" }
+freya-dom = { path = "../dom", version = "0.1.0" }
 tokio = { version = "1.23.0", features = ["sync", "rt-multi-thread", "time"] }
 freya-elements = { path = "../elements", version = "0.1.0"}
 skia-safe = { version = "0.60.0", features = ["gl", "textlayout", "svg"] }
@@ -38,3 +39,4 @@ rustc-hash = "1.1.0"
 anymap = "0.12.1"
 lazy_static = "1.4.0"
 freya-components ={ path = "../components"}
+freya-dom ={ path = "../dom"}

@@ -3,11 +3,10 @@ use dioxus_core::VirtualDom;
 
 use dioxus_native_core::NodeId;
 use freya_common::EventMessage;
-use freya_core::dom::DioxusSafeDOM;
 
 use freya_core::events::FreyaEvent;
+use freya_dom::SafeDOM;
 use freya_elements::{from_winit_to_code, get_modifiers, get_non_text_keys, Code, Key};
-use freya_layout::DioxusDOM;
 
 use std::sync::{Arc, Mutex};
 use winit::event::{
@@ -33,7 +32,7 @@ pub type HoveredNode = Option<Arc<Mutex<Option<NodeId>>>>;
 /// Start the winit event loop with the virtual dom polling
 pub fn run<T: 'static + Clone>(
     vdom: VirtualDom,
-    rdom: DioxusSafeDOM,
+    rdom: SafeDOM,
     window_config: WindowConfig<T>,
     mutations_sender: Option<UnboundedSender<()>>,
     hovered_node: HoveredNode,

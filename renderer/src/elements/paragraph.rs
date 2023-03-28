@@ -1,7 +1,5 @@
-use dioxus_native_core::tree::TreeView;
-use dioxus_native_core::{node::NodeType, NodeId};
-use freya_layout::{DioxusDOM, DioxusNode, RenderData};
-use freya_node_state::NodeState;
+use freya_dom::FreyaDOM;
+use freya_layout::{get_inner_texts, RenderData};
 use skia_safe::{
     textlayout::{
         FontCollection, Paragraph, ParagraphBuilder, ParagraphStyle, RectHeightStyle,
@@ -12,17 +10,16 @@ use skia_safe::{
 
 /// Render a `paragraph` element
 pub fn render_paragraph(
-    dom: &DioxusDOM,
+    dom: &FreyaDOM,
     canvas: &mut Canvas,
     font_collection: &mut FontCollection,
     node: &RenderData,
-    children: &[NodeId],
 ) {
     let dioxus_node = node.get_node(dom);
     let align = dioxus_node.state.font_style.align;
     let max_lines = dioxus_node.state.font_style.max_lines;
 
-    let texts = get_inner_texts(children, dom);
+    let texts = get_inner_texts(dom, &node.node_id);
 
     let (x, y) = node.node_area.get_origin_points();
 
@@ -34,17 +31,17 @@ pub fn render_paragraph(
 
     let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection.clone());
 
-    for node_text in &texts {
+    for (style, text) in &texts {
         paragraph_builder.push_style(
             TextStyle::new()
-                .set_font_style(node_text.0.font_style.font_style)
+                .set_font_style(style.font_style)
                 .set_height_override(true)
-                .set_height(node_text.0.font_style.line_height)
-                .set_color(node_text.0.font_style.color)
-                .set_font_size(node_text.0.font_style.font_size)
-                .set_font_families(&node_text.0.font_style.font_family),
+                .set_height(style.line_height)
+                .set_color(style.color)
+                .set_font_size(style.font_size)
+                .set_font_families(&style.font_family),
         );
-        paragraph_builder.add_text(node_text.1.clone());
+        paragraph_builder.add_text(text.clone());
     }
 
     if dioxus_node.state.cursor_settings.position.is_some() {
@@ -66,7 +63,7 @@ fn draw_cursor(
     node: &RenderData,
     paragraph: Paragraph,
     canvas: &mut Canvas,
-    rdom: &DioxusDOM,
+    rdom: &FreyaDOM,
 ) -> Option<()> {
     let dioxus_node = node.get_node(rdom);
     let cursor = dioxus_node.state.cursor_settings.position?;
@@ -94,31 +91,4 @@ fn draw_cursor(
     canvas.draw_rect(Rect::new(x, y, x2, y2), &paint);
 
     Some(())
-}
-
-fn get_inner_texts(children: &[NodeId], dom: &DioxusDOM) -> Vec<(NodeState, String)> {
-    children
-        .iter()
-        .filter_map(|child_id| {
-            let (child, children): (DioxusNode, Vec<NodeId>) = {
-                let children = dom.tree.children_ids(*child_id).map(|v| v.to_vec());
-                (dom.get(*child_id).cloned()?, children?)
-            };
-
-            if let NodeType::Element { tag, .. } = child.node_data.node_type {
-                if tag != "text" {
-                    return None;
-                }
-                let child_text_id = children.get(0)?;
-                let child_text: DioxusNode = { dom.get(*child_text_id).cloned() }?;
-                if let NodeType::Text { text } = &child_text.node_data.node_type {
-                    Some((child.state, text.clone()))
-                } else {
-                    None
-                }
-            } else {
-                None
-            }
-        })
-        .collect::<Vec<(NodeState, String)>>()
 }
