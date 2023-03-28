@@ -43,21 +43,25 @@ impl SafeDOM {
         }
     }
 
+    /// Get a reference to the DOM.
     #[cfg(not(feature = "shared"))]
     pub fn get(&self) -> &FreyaDOM {
         &self.dom
     }
 
+    /// Get a mutable reference to the DOM.
     #[cfg(not(feature = "shared"))]
     pub fn get_mut(&mut self) -> &mut FreyaDOM {
         &mut self.dom
     }
 
+    /// Get a reference to the DOM.
     #[cfg(feature = "shared")]
     pub fn get(&self) -> MutexGuard<FreyaDOM> {
         return self.dom.lock().unwrap();
     }
 
+    /// Get a mutable reference to the dom.
     #[cfg(feature = "shared")]
     pub fn get_mut(&self) -> MutexGuard<FreyaDOM> {
         return self.dom.lock().unwrap();
