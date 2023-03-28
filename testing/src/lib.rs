@@ -130,7 +130,7 @@ impl TestUtils {
 
             let (paint_changes, _) = self.dom.get_mut().apply_mutations(mutations);
 
-            if paint_changes {
+            if !paint_changes {
                 break;
             }
         }
