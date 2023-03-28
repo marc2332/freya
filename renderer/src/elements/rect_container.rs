@@ -1,8 +1,9 @@
-use freya_layout::{DioxusDOM, RenderData};
+use freya_dom::FreyaDOM;
+use freya_layout::RenderData;
 use skia_safe::{BlurStyle, Canvas, MaskFilter, Paint, PaintStyle, Path, PathDirection, Rect};
 
 /// Render a `rect` or a `container` element
-pub fn render_rect_container(canvas: &mut Canvas, node: &RenderData, rdom: &DioxusDOM) {
+pub fn render_rect_container(canvas: &mut Canvas, node: &RenderData, rdom: &FreyaDOM) {
     let dioxus_node = node.get_node(rdom);
     let shadow = &dioxus_node.state.style.shadow;
 

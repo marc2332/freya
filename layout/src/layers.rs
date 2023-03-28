@@ -1,13 +1,9 @@
 use dioxus_core::ElementId;
 use dioxus_native_core::tree::TreeView;
-use dioxus_native_core::{node::Node, NodeId};
+use dioxus_native_core::NodeId;
 use freya_common::NodeArea;
-use freya_node_state::{CustomAttributeValues, NodeState};
+use freya_dom::{DioxusNode, FreyaDOM};
 use rustc_hash::FxHashMap;
-
-use crate::DioxusDOM;
-
-pub type DioxusNode = Node<NodeState, CustomAttributeValues>;
 
 #[derive(Default, Clone)]
 pub struct Layers {
@@ -45,8 +41,8 @@ impl RenderData {
     }
 
     #[inline(always)]
-    pub fn get_node<'a>(&'a self, rdom: &'a DioxusDOM) -> &DioxusNode {
-        rdom.get(self.node_id).unwrap()
+    pub fn get_node<'a>(&'a self, rdom: &'a FreyaDOM) -> &DioxusNode {
+        rdom.dom().get(self.node_id).unwrap()
     }
 }
 
