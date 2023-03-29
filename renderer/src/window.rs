@@ -2,7 +2,8 @@ use dioxus_native_core::NodeId;
 use freya_common::{EventMessage, NodeArea};
 use freya_core::process_render;
 use freya_core::{process_layout, ViewportsCollection};
-use freya_layout::{DioxusDOM, Layers};
+use freya_dom::FreyaDOM;
+use freya_layout::Layers;
 use std::ffi::CString;
 use std::num::NonZeroU32;
 
@@ -191,7 +192,7 @@ impl<T: Clone> WindowEnv<T> {
     }
 
     /// Measure the layout
-    pub fn process_layout(&mut self, rdom: &DioxusDOM) -> (Layers, ViewportsCollection) {
+    pub fn process_layout(&mut self, rdom: &FreyaDOM) -> (Layers, ViewportsCollection) {
         let window_size = self.window.inner_size();
         process_layout(
             rdom,
@@ -211,7 +212,7 @@ impl<T: Clone> WindowEnv<T> {
         layers: &Layers,
         viewports_collection: &ViewportsCollection,
         hovered_node: &HoveredNode,
-        rdom: &DioxusDOM,
+        rdom: &FreyaDOM,
     ) {
         let canvas = self.surface.canvas();
 
