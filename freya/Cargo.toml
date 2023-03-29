@@ -29,6 +29,7 @@ freya-common = { path = "../common", version = "0.1.0" }
 freya-hooks = { path = "../hooks"}
 freya-core = { path = "../core"}
 freya-components ={ path = "../components"}
+
 dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519", features = ["macro", "hooks", "hot-reload"]}
 dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
 dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
@@ -37,6 +38,7 @@ dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16
 dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
 dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
 dioxus-hot-reload = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
+
 tokio = { version = "1.23.0", features = ["sync", "rt-multi-thread", "time", "macros"] }
 anymap = "0.12.1"
 fxhash = "0.2.1"

@@ -3,8 +3,9 @@ use std::{any::Any, collections::HashMap, rc::Rc};
 use dioxus_core::ElementId;
 use euclid::{Length, Point2D};
 use freya_common::NodeArea;
-use freya_elements::{
-    events_data::MouseData, Code, Key, KeyboardData, Modifiers, TouchData, WheelData,
+use freya_elements::events::{
+    keyboard::{Code, Key, Modifiers},
+    KeyboardData, MouseData, TouchData, WheelData,
 };
 use freya_layout::RenderData;
 use rustc_hash::FxHashMap;

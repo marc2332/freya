@@ -1,13 +1,13 @@
-mod keyboard;
-mod mouse;
-mod touch;
-mod wheel;
+pub mod keyboard;
+pub mod mouse;
+pub mod touch;
+pub mod wheel;
 
 use dioxus_core::Event;
-pub use keyboard::*;
-pub use mouse::*;
-pub use touch::*;
-pub use wheel::*;
+pub use keyboard::KeyboardData;
+pub use mouse::MouseData;
+pub use touch::TouchData;
+pub use wheel::WheelData;
 
 pub type KeyboardEvent = Event<KeyboardData>;
 pub type MouseEvent = Event<MouseData>;

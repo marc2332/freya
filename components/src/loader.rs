@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use dioxus::prelude::*;
-use freya_elements as dioxus_elements;
+use freya_elements::elements as dioxus_elements;
 use freya_hooks::use_get_theme;
 use tokio::time::interval;
 
