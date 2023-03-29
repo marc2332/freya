@@ -2,8 +2,8 @@ use std::collections::VecDeque;
 use std::time::Instant;
 
 use dioxus::prelude::*;
-use freya_elements as dioxus_elements;
-use freya_elements::{TouchEvent, TouchPhase};
+use freya_elements::elements as dioxus_elements;
+use freya_elements::events::{TouchEvent, touch::TouchPhase};
 
 const DOUBLE_TAP_DISTANCE: f64 = 100.0;
 
