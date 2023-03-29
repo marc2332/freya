@@ -110,7 +110,7 @@ pub fn GestureArea<'a>(cx: Scope<'a, GestureAreaProps<'a>>) -> Element {
 #[cfg(test)]
 mod test {
     use freya::prelude::*;
-    use freya_elements::TouchPhase;
+    use freya_elements::events::touch::TouchPhase;
     use freya_testing::{launch_test, FreyaEvent};
 
     #[tokio::test]
