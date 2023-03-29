@@ -176,10 +176,27 @@ impl<'a> AnimationManager<'a> {
     }
 }
 
-/// Animate the given [Animation].
+/// Run animations.
 ///
 /// ## Usage
-/// TODO
+/// ```rust
+/// fn app(cx: Scope) -> Element {
+///     let animation = use_animation(cx, 0.0);
+/// 
+///     let progress = animation.value();
+/// 
+///     use_effect(cx, (), move |_| {
+///         animation.start(Animation::new_linear(0.0..=100.0, 50));
+///         async move {}
+///     });
+/// 
+///     render!(
+///         rect {
+///             width: "{progress}",
+///         }
+///     )
+/// }
+/// ```
 ///
 pub fn use_animation(cx: &ScopeState, init_value: f64) -> AnimationManager {
     let current_animation_id = use_state(cx, || None);
