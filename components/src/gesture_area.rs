@@ -106,3 +106,63 @@ pub fn GestureArea<'a>(cx: Scope<'a, GestureAreaProps<'a>>) -> Element {
         }
     )
 }
+
+#[cfg(test)]
+mod test {
+    use freya::prelude::*;
+    use freya_elements::TouchPhase;
+    use freya_testing::{launch_test, FreyaEvent};
+
+    #[tokio::test]
+    pub async fn track_progress() {
+        fn use_animation_app(cx: Scope) -> Element {
+            let value = use_state(cx, || "EMPTY".to_string());
+
+            let ongesture = |e: Gesture| {
+                println!("{e:?}");
+                value.set(format!("{e:?}"));
+            };
+
+            render!(
+                GestureArea {
+                    ongesture: ongesture,
+                    "{value}"
+                }
+            )
+        }
+
+        let mut utils = launch_test(use_animation_app);
+
+        // Initial state
+        utils.wait_for_work((500.0, 500.0)).await;
+
+        assert_eq!(
+            utils.root().child(0).unwrap().child(0).unwrap().text(),
+            Some("EMPTY")
+        );
+
+        utils.send_event(FreyaEvent::Touch {
+            name: "touchend",
+            location: (1.0, 1.0),
+            phase: TouchPhase::Ended,
+            finger_id: 0,
+            force: None,
+        });
+
+        utils.send_event(FreyaEvent::Touch {
+            name: "touchstart",
+            location: (1.0, 1.0),
+            phase: TouchPhase::Started,
+            finger_id: 0,
+            force: None,
+        });
+
+        utils.wait_until_cleanup((500.0, 500.0)).await;
+        utils.wait_for_update((500.0, 500.0)).await;
+
+        assert_eq!(
+            utils.root().child(0).unwrap().child(0).unwrap().text(),
+            Some("DoubleTap")
+        );
+    }
+}
