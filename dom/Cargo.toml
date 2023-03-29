@@ -1,6 +1,5 @@
 [package]
-name = "freya-core"
-description = "Cross-platform GUI Library."
+name = "freya-dom"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
@@ -12,29 +11,13 @@ keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
 [features]
-devtools = []
-
-[target."cfg(target_os = \"linux\")".dependencies.skia-safe]
-version = "0.60.0"
-features = ["gl", "textlayout", "svg", "x11", "wayland"]
+shared = []
 
 [dependencies]
-winit = "0.28.2"
-skia-safe = { version = "0.60.0", features = ["gl", "textlayout", "svg"] }
-
 dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
 dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
 dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
 dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
 dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-
-freya-layout = { path = "../layout", version = "0.1.0" }
 freya-node-state = { path = "../state", version = "0.1.0" }
-freya-elements = { path = "../elements", version = "0.1.0" }
 freya-common = { path = "../common", version = "0.1.0" }
-freya-dom = { path = "../dom", version = "0.1.0" }
-
-rustc-hash = "1.1.0"
-euclid = "0.22.7"
-tracing = "0.1"
-tokio = { version = "1.23.0", features = ["sync", "rt-multi-thread", "time"] }

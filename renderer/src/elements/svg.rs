@@ -1,8 +1,9 @@
-use freya_layout::{DioxusDOM, RenderData};
+use freya_dom::FreyaDOM;
+use freya_layout::RenderData;
 use skia_safe::{svg, Canvas};
 
 /// Render a `svg` element
-pub fn render_svg(canvas: &mut Canvas, node: &RenderData, dom: &DioxusDOM) {
+pub fn render_svg(canvas: &mut Canvas, node: &RenderData, dom: &FreyaDOM) {
     let dioxus_node = node.get_node(dom);
     let x = node.node_area.x;
     let y = node.node_area.y;

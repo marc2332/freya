@@ -1,9 +1,6 @@
-use dioxus_core::{Element, Scope};
-use dioxus_core_macro::{render, Props};
-use dioxus_elements::Key;
-use dioxus_hooks::use_ref;
-use freya_elements as dioxus_elements;
-use freya_elements::{KeyboardEvent, MouseEvent, WheelEvent};
+use dioxus::prelude::*;
+use freya_elements::elements as dioxus_elements;
+use freya_elements::events::{keyboard::Key, KeyboardEvent, MouseEvent, WheelEvent};
 use freya_hooks::{use_get_theme, use_node};
 
 use crate::{

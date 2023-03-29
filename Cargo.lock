@@ -1243,6 +1243,7 @@ dependencies = [
  "freya-components",
  "freya-core",
  "freya-devtools",
+ "freya-dom",
  "freya-elements",
  "freya-hooks",
  "freya-layout",
@@ -1271,12 +1272,7 @@ name = "freya-components"
 version = "0.1.0"
 dependencies = [
  "dioxus",
- "dioxus-core",
- "dioxus-core-macro",
- "dioxus-hooks",
- "dioxus-native-core",
  "dioxus-router",
- "dioxus-rsx",
  "freya",
  "freya-elements",
  "freya-hooks",
@@ -1298,6 +1294,7 @@ dependencies = [
  "dioxus-rsx",
  "euclid",
  "freya-common",
+ "freya-dom",
  "freya-elements",
  "freya-layout",
  "freya-node-state",
@@ -1319,6 +1316,7 @@ dependencies = [
  "dioxus-router",
  "freya-components",
  "freya-core",
+ "freya-dom",
  "freya-elements",
  "freya-hooks",
  "freya-layout",
@@ -1326,6 +1324,19 @@ dependencies = [
  "freya-renderer",
  "skia-safe",
  "tokio",
+]
+
+[[package]]
+name = "freya-dom"
+version = "0.1.0"
+dependencies = [
+ "dioxus-core",
+ "dioxus-core-macro",
+ "dioxus-hooks",
+ "dioxus-native-core",
+ "dioxus-rsx",
+ "freya-common",
+ "freya-node-state",
 ]
 
 [[package]]
@@ -1383,6 +1394,7 @@ dependencies = [
  "dioxus-rsx",
  "freya-common",
  "freya-components",
+ "freya-dom",
  "freya-elements",
  "freya-node-state",
  "fxhash",
@@ -1424,6 +1436,7 @@ dependencies = [
  "dioxus-rsx",
  "freya-common",
  "freya-core",
+ "freya-dom",
  "freya-elements",
  "freya-layout",
  "freya-node-state",
@@ -1452,6 +1465,7 @@ dependencies = [
  "freya-common",
  "freya-components",
  "freya-core",
+ "freya-dom",
  "freya-elements",
  "freya-layout",
  "freya-node-state",

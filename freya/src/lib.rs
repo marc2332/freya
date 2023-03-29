@@ -26,27 +26,52 @@
 //! }
 //!
 //! ```
+//!
 
-pub mod launch;
-
+/// Dioxus library.
 pub use dioxus;
-pub use freya_components;
-pub use freya_elements as dioxus_elements;
-pub use freya_hooks;
+
 pub use freya_renderer::WindowConfig;
 
+/// Launch your application.
+pub mod launch;
+
+/// Collection of basic components.
+pub mod components {
+    pub use freya_components::*;
+}
+
+/// Useful utilities.
+pub mod hooks {
+    pub use freya_hooks::*;
+}
+
+/// Events and their data.
+pub use freya_elements::events;
+
+/// Elements namespace and attributes.
+pub use freya_elements::elements;
+
+/// Hotreload configuration.
+pub mod hotreload {
+    pub use freya_elements::elements::FreyaCtx;
+}
+
+/// Useful imports.
 pub mod prelude {
-    pub use crate::launch::*;
     pub use dioxus_core::prelude::*;
     pub use dioxus_core_macro::*;
     pub use dioxus_hooks::*;
     pub use dioxus_hot_reload::{self, hot_reload_init, Config};
+
+    pub use crate::launch::*;
     pub use freya_components::*;
-    pub use freya_elements as dioxus_elements;
-    pub use freya_elements::events_data::*;
+    pub use freya_elements::elements as dioxus_elements;
+    pub use freya_elements::events::*;
     pub use freya_elements::*;
     pub use freya_hooks::*;
     pub use freya_node_state::{bytes_to_data, CustomAttributeValues};
     pub use freya_renderer::WindowConfig;
+
     pub use tracing;
 }

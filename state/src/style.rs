@@ -18,6 +18,7 @@ pub struct Style {
     pub image_data: Option<Vec<u8>>,
     pub svg_data: Option<Vec<u8>>,
     pub display: DisplayMode,
+    pub text: Option<String>,
 }
 
 impl NodeDepState<CustomAttributeValues> for Style {
@@ -34,7 +35,8 @@ impl NodeDepState<CustomAttributeValues> for Style {
             "svg_data",
             "svg_content",
             "display",
-        ])));
+        ])))
+        .with_text();
 
     fn reduce(
         &mut self,
@@ -120,7 +122,8 @@ impl NodeDepState<CustomAttributeValues> for Style {
             || (display != self.display)
             || (svg_data != self.svg_data);
 
-        let changed_size = display != self.display;
+        let changed_size =
+            (display != self.display) || (node.text().map(|v| v.to_owned()) != self.text);
 
         if changed_size {
             *ctx.lock().unwrap() = true;
@@ -134,6 +137,7 @@ impl NodeDepState<CustomAttributeValues> for Style {
             image_data,
             svg_data,
             display,
+            text: node.text().map(|v| v.to_owned()),
         };
         changed
     }

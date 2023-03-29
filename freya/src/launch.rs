@@ -155,10 +155,12 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
 /// ```
 pub fn launch_cfg<T: 'static + Clone + Send>(root: Component, win_config: WindowConfig<T>) {
     use dioxus_native_core::real_dom::RealDom;
-    use freya_core::dom::DioxusSafeDOM;
+    use freya_dom::{FreyaDOM, SafeDOM};
     use freya_node_state::{CustomAttributeValues, NodeState};
 
-    let rdom = DioxusSafeDOM::new(RealDom::<NodeState, CustomAttributeValues>::new());
+    let rdom = SafeDOM::new(FreyaDOM::new(
+        RealDom::<NodeState, CustomAttributeValues>::new(),
+    ));
     let (vdom, mutations_sender, hovered_node) = {
         #[cfg(feature = "devtools")]
         #[cfg(debug_assertions)]
