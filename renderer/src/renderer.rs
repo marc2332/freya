@@ -1,6 +1,7 @@
 use dioxus_native_core::node::NodeType;
 use dioxus_native_core::NodeId;
 use freya_core::ViewportsCollection;
+use freya_dom::FreyaDOM;
 use freya_layout::RenderData;
 use skia_safe::{textlayout::FontCollection, Canvas, ClipOp, Rect};
 use skia_safe::{Matrix, Point};
@@ -8,11 +9,10 @@ use skia_safe::{Matrix, Point};
 use crate::elements::{
     render_image, render_label, render_paragraph, render_rect_container, render_svg,
 };
-use crate::DioxusDOM;
 
 /// Render a node into the Skia canvas
 pub fn render_skia(
-    dom: &DioxusDOM,
+    dom: &FreyaDOM,
     canvas: &mut Canvas,
     node: &RenderData,
     font_collection: &mut FontCollection,
@@ -52,7 +52,6 @@ pub fn render_skia(
             }
         }
 
-        let children = node.children.as_ref();
         let viewports = viewports_collection.get(node.get_id());
 
         // Clip all elements with their corresponding viewports
@@ -79,14 +78,10 @@ pub fn render_skia(
                 render_rect_container(canvas, node, dom);
             }
             "label" => {
-                if let Some(children) = children {
-                    render_label(dom, canvas, font_collection, node, children);
-                }
+                render_label(dom, canvas, font_collection, node);
             }
             "paragraph" => {
-                if let Some(children) = children {
-                    render_paragraph(dom, canvas, font_collection, node, children);
-                }
+                render_paragraph(dom, canvas, font_collection, node);
             }
             "svg" => {
                 render_svg(canvas, node, dom);

@@ -175,6 +175,7 @@ pub fn parse_color(color: &str) -> Option<Color> {
         "black" => Some(Color::BLACK),
         "gray" => Some(Color::GRAY),
         "white" => Some(Color::WHITE),
+        "orange" => Some(Color::from_rgb(255, 165, 0)),
         _ => parse_rgb(color),
     }
 }

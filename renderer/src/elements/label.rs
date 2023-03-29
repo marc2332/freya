@@ -1,6 +1,7 @@
+use dioxus_native_core::node::NodeType;
 use dioxus_native_core::tree::TreeView;
-use dioxus_native_core::{node::NodeType, NodeId};
-use freya_layout::{DioxusDOM, RenderData};
+use freya_dom::FreyaDOM;
+use freya_layout::RenderData;
 use skia_safe::{
     textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle},
     Canvas, Paint, PaintStyle,
@@ -8,11 +9,10 @@ use skia_safe::{
 
 /// Render a `label` element
 pub fn render_label(
-    dom: &DioxusDOM,
+    dom: &FreyaDOM,
     canvas: &mut Canvas,
     font_collection: &mut FontCollection,
     node: &RenderData,
-    children: &[NodeId],
 ) {
     let dioxus_node = node.get_node(dom);
     let font_size = dioxus_node.state.font_style.font_size;
@@ -27,18 +27,18 @@ pub fn render_label(
     paint.set_style(PaintStyle::StrokeAndFill);
     paint.set_color(dioxus_node.state.font_style.color);
 
-    let child_id = children.get(0);
+    let children = dom.dom().tree.children(node.node_id);
 
-    let text = if let Some(child_id) = child_id {
-        if let Some(child) = dom.get(*child_id) {
-            if let NodeType::Text { text } = &child.node_data.node_type {
-                Some(text.clone())
-            } else {
-                None
-            }
-        } else {
-            None
-        }
+    let text = if let Some(children) = children {
+        children
+            .filter_map(|child| {
+                if let NodeType::Text { text } = &child.node_data.node_type {
+                    Some(text)
+                } else {
+                    None
+                }
+            })
+            .next()
     } else {
         None
     };

@@ -30,6 +30,8 @@ fn TheOtherSwitch(cx: Scope) -> Element {
 fn app(cx: Scope) -> Element {
     let enabled = use_state(cx, || true);
 
+    let is_enabled = if *enabled.get() { "Yes" } else { "No" };
+
     render!(
         ThemeProvider {
             theme: LIGHT_THEME,
@@ -38,6 +40,9 @@ fn app(cx: Scope) -> Element {
                 ontoggled: |_| {
                     enabled.set(!enabled.get());
                 }
+            }
+            label {
+                "Is enabled? {is_enabled}"
             }
             TheOtherSwitch { }
         }

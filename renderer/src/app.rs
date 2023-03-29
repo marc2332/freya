@@ -1,17 +1,13 @@
-use std::{
-    collections::HashMap,
-    sync::{Arc, Mutex},
-    task::Waker,
-};
+use std::{collections::HashMap, sync::Arc, task::Waker};
 
 use dioxus_core::{Template, VirtualDom};
-use dioxus_native_core::SendAnyMap;
-use freya_common::{EventMessage, LayoutNotifier};
+
+use freya_common::EventMessage;
 use freya_core::{
-    dom::DioxusSafeDOM,
     events::{DomEvent, EventsProcessor, FreyaEvent},
     process_events, EventEmitter, EventReceiver, EventsQueue, ViewportsCollection,
 };
+use freya_dom::SafeDOM;
 use freya_layout::Layers;
 use futures::FutureExt;
 use futures::{
@@ -43,7 +39,7 @@ pub fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
 
 /// Manages the Application lifecycle
 pub struct App<State: 'static + Clone> {
-    rdom: DioxusSafeDOM,
+    rdom: SafeDOM,
     vdom: VirtualDom,
 
     events: EventsQueue,
@@ -60,12 +56,11 @@ pub struct App<State: 'static + Clone> {
     layers: Layers,
     events_processor: EventsProcessor,
     viewports_collection: ViewportsCollection,
-    layout_notifier: LayoutNotifier,
 }
 
 impl<State: 'static + Clone> App<State> {
     pub fn new(
-        rdom: DioxusSafeDOM,
+        rdom: SafeDOM,
         vdom: VirtualDom,
         proxy: &EventLoopProxy<EventMessage>,
         mutations_sender: Option<UnboundedSender<()>>,
@@ -85,7 +80,6 @@ impl<State: 'static + Clone> App<State> {
             layers: Layers::default(),
             events_processor: EventsProcessor::default(),
             viewports_collection: HashMap::default(),
-            layout_notifier: Arc::new(Mutex::new(false)),
         }
     }
 
@@ -97,42 +91,28 @@ impl<State: 'static + Clone> App<State> {
         self.vdom.base_scope().provide_context(self.proxy.clone());
     }
 
-    /// Make an first build of the VirtualDOM
+    /// Make the first build of the VirtualDOM.
     pub fn init_vdom(&mut self) {
         self.provide_vdom_contexts();
 
         let mutations = self.vdom.rebuild();
-        let (to_update, diff) = self.rdom.dom_mut().apply_mutations(mutations);
 
-        if !diff.is_empty() {
-            self.mutations_sender.as_ref().map(|s| s.send(()));
-        }
+        self.rdom.get_mut().init_dom(mutations);
 
-        *self.layout_notifier.lock().unwrap() = false;
-
-        let mut ctx = SendAnyMap::new();
-        ctx.insert(self.layout_notifier.clone());
-
-        self.rdom.dom_mut().update_state(to_update, ctx);
+        self.mutations_sender.as_ref().map(|s| s.send(()));
     }
 
-    /// Update the RealDOM with changes from the VirtualDOM
+    /// Update the DOM with the mutations from the VirtualDOM.
     pub fn apply_vdom_changes(&mut self) -> (bool, bool) {
         let mutations = self.vdom.render_immediate();
-        let (to_update, diff) = self.rdom.dom_mut().apply_mutations(mutations);
 
-        if !diff.is_empty() {
+        let (repaint, relayout) = self.rdom.get_mut().apply_mutations(mutations);
+
+        if repaint || relayout {
             self.mutations_sender.as_ref().map(|s| s.send(()));
         }
 
-        *self.layout_notifier.lock().unwrap() = false;
-
-        let mut ctx = SendAnyMap::new();
-        ctx.insert(self.layout_notifier.clone());
-
-        self.rdom.dom_mut().update_state(to_update, ctx);
-
-        (!diff.is_empty(), *self.layout_notifier.lock().unwrap())
+        (repaint, relayout)
     }
 
     /// Poll the VirtualDOM for any new change
@@ -166,6 +146,7 @@ impl<State: 'static + Clone> App<State> {
             }
 
             let (must_repaint, must_relayout) = self.apply_vdom_changes();
+
             if must_relayout {
                 self.request_redraw();
             } else if must_repaint {
@@ -177,7 +158,7 @@ impl<State: 'static + Clone> App<State> {
     /// Process the events queue
     pub fn process_events(&mut self) {
         process_events(
-            &self.rdom.dom(),
+            &self.rdom.get(),
             &self.layers,
             &mut self.events,
             &self.event_emitter,
@@ -188,7 +169,7 @@ impl<State: 'static + Clone> App<State> {
 
     /// Measure the layout
     pub fn process_layout(&mut self) {
-        let (layers, viewports) = self.window_env.process_layout(&self.rdom.dom());
+        let (layers, viewports) = self.window_env.process_layout(&self.rdom.get());
         self.layers = layers;
         self.viewports_collection = viewports;
     }
@@ -221,7 +202,7 @@ impl<State: 'static + Clone> App<State> {
             &self.layers,
             &self.viewports_collection,
             hovered_node,
-            &self.rdom.dom(),
+            &self.rdom.get(),
         );
     }
 

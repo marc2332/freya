@@ -1,8 +1,8 @@
 use dioxus::prelude::*;
 use freya_core::events::FreyaEvent;
-use freya_elements as dioxus_elements;
+use freya_elements::elements as dioxus_elements;
+use freya_elements::events::mouse::MouseButton;
 use freya_testing::launch_test;
-use winit::event::MouseButton;
 
 #[tokio::test]
 async fn no_state() {

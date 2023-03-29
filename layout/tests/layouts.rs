@@ -7,8 +7,9 @@ use dioxus_native_core::{
     NodeId,
 };
 use freya_common::NodeArea;
+use freya_dom::{DioxusNode, FreyaDOM};
+use freya_layout::Layers;
 use freya_layout::NodeLayoutMeasurer;
-use freya_layout::{DioxusNode, Layers};
 use freya_node_state::{DirectionMode, NodeState, Size, SizeMode};
 use lazy_static::lazy_static;
 use rustc_hash::FxHashMap;
@@ -32,7 +33,7 @@ lazy_static! {
 
 #[test]
 fn percentage() {
-    let mut dom = RealDom::new();
+    let mut dom = FreyaDOM::new(RealDom::new());
 
     let mut node = TEST_NODE.clone();
     node.state = node.state.with_size(Size {
@@ -40,8 +41,8 @@ fn percentage() {
         height: SizeMode::Percentage(25.0),
         ..expanded_size()
     });
-    let root = dom.tree.create_node(node.clone());
-    dom.tree.add_child(NodeId(0), root);
+    let root = dom.dom_mut().tree.create_node(node.clone());
+    dom.dom_mut().tree.add_child(NodeId(0), root);
 
     let mut remaining_area = NodeArea {
         x: 0.0,
@@ -73,7 +74,7 @@ fn percentage() {
 
 #[test]
 fn manual() {
-    let mut dom = RealDom::new();
+    let mut dom = FreyaDOM::new(RealDom::new());
     let mut node = TEST_NODE.clone();
     node.state = node.state.with_size(Size {
         width: SizeMode::Manual(250.0),
@@ -81,8 +82,8 @@ fn manual() {
         ..expanded_size()
     });
 
-    let root = dom.tree.create_node(node.clone());
-    dom.tree.add_child(NodeId(0), root);
+    let root = dom.dom_mut().tree.create_node(node.clone());
+    dom.dom_mut().tree.add_child(NodeId(0), root);
 
     let mut remaining_area = NodeArea {
         x: 0.0,
@@ -114,7 +115,7 @@ fn manual() {
 
 #[test]
 fn auto() {
-    let mut dom = RealDom::new();
+    let mut dom = FreyaDOM::new(RealDom::new());
     let node = Node {
         node_data: NodeData {
             node_id: NodeId(1),
@@ -133,8 +134,8 @@ fn auto() {
             ..expanded_size()
         }),
     };
-    let root = dom.tree.create_node(node.clone());
-    dom.tree.add_child(NodeId(0), root);
+    let root = dom.dom_mut().tree.create_node(node.clone());
+    dom.dom_mut().tree.add_child(NodeId(0), root);
 
     let root_child = Node {
         node_data: NodeData {
@@ -154,8 +155,8 @@ fn auto() {
         }),
     };
 
-    let root_child = dom.tree.create_node(root_child);
-    dom.tree.add_child(root, root_child);
+    let root_child = dom.dom_mut().tree.create_node(root_child);
+    dom.dom_mut().tree.add_child(root, root_child);
 
     let mut remaining_area = NodeArea {
         x: 0.0,
@@ -187,7 +188,7 @@ fn auto() {
 
 #[test]
 fn x_y() {
-    let mut dom = RealDom::new();
+    let mut dom = FreyaDOM::new(RealDom::new());
     let mut node = TEST_NODE.clone();
     node.state = node.state.with_size(Size {
         width: SizeMode::Manual(250.0),
@@ -201,8 +202,8 @@ fn x_y() {
         width: 200.0,
     };
 
-    let root = dom.tree.create_node(node.clone());
-    dom.tree.add_child(NodeId(0), root);
+    let root = dom.dom_mut().tree.create_node(node.clone());
+    dom.dom_mut().tree.add_child(NodeId(0), root);
 
     let root_child = Node {
         node_data: NodeData {
@@ -222,8 +223,8 @@ fn x_y() {
         }),
     };
 
-    let root_child = dom.tree.create_node(root_child);
-    dom.tree.add_child(root, root_child);
+    let root_child = dom.dom_mut().tree.create_node(root_child);
+    dom.dom_mut().tree.add_child(root, root_child);
 
     let mut layers = Layers::default();
     let mut fonts = FontCollection::new();

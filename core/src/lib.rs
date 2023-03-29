@@ -1,6 +1,7 @@
 use dioxus_native_core::{node::NodeType, NodeId};
 use freya_common::NodeArea;
-use freya_layout::{DioxusDOM, NodeLayoutMeasurer};
+use freya_dom::FreyaDOM;
+use freya_layout::NodeLayoutMeasurer;
 use freya_layout::{Layers, RenderData};
 
 use rustc_hash::FxHashMap;
@@ -8,7 +9,6 @@ use skia_safe::{textlayout::FontCollection, Color};
 use std::ops::Index;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
-pub mod dom;
 pub mod events;
 
 use events::{DomEvent, EventsProcessor, FreyaEvent};
@@ -23,7 +23,7 @@ pub type NodesEvents<'a> = FxHashMap<&'a str, Vec<(RenderData, FreyaEvent)>>;
 pub fn calculate_viewports(
     layers_nums: &[&i16],
     layers: &Layers,
-    rdom: &DioxusDOM,
+    rdom: &FreyaDOM,
 ) -> ViewportsCollection {
     let mut viewports_collection = FxHashMap::default();
 
@@ -85,6 +85,7 @@ pub fn calculate_node_events<'a>(
                     let data = match event {
                         FreyaEvent::Mouse { name, cursor, .. } => Some((name, cursor)),
                         FreyaEvent::Wheel { name, cursor, .. } => Some((name, cursor)),
+                        FreyaEvent::Touch { name, location, .. } => Some((name, location)),
                         _ => None,
                     };
                     if let Some((name, cursor)) = data {
@@ -134,13 +135,13 @@ pub fn calculate_node_events<'a>(
 // Calculate events that can actually be triggered
 fn calculate_events_listeners(
     calculated_events: &mut NodesEvents,
-    dom: &DioxusDOM,
+    dom: &FreyaDOM,
     event_emitter: &EventEmitter,
 ) -> Vec<DomEvent> {
     let mut new_events = Vec::new();
 
     for (event_name, event_nodes) in calculated_events.iter_mut() {
-        let listeners = dom.get_listening_sorted(event_name);
+        let listeners = dom.dom().get_listening_sorted(event_name);
 
         let mut found_nodes: Vec<(&RenderData, &FreyaEvent)> = Vec::new();
 
@@ -154,7 +155,9 @@ fn calculate_events_listeners(
                     }
 
                     if node.get_node(dom).state.style.background != Color::TRANSPARENT
-                        && event_name == &"click"
+                        && (event_name == &"click"
+                            || event_name == &"touchstart"
+                            || event_name == &"touchend")
                     {
                         found_nodes.clear();
                     }
@@ -163,6 +166,10 @@ fn calculate_events_listeners(
                         || event_name == &"click"
                         || event_name == &"keydown"
                         || event_name == &"keyup"
+                        || event_name == &"touchcancel"
+                        || event_name == &"touchend"
+                        || event_name == &"touchmove"
+                        || event_name == &"touchstart"
                     {
                         // Mouseover and click events can be stackked
                         found_nodes.push((node, request))
@@ -191,12 +198,12 @@ fn calculate_events_listeners(
 /// Calculate global events to be triggered
 fn calculate_global_events_listeners(
     global_events: Vec<FreyaEvent>,
-    dom: &DioxusDOM,
+    dom: &FreyaDOM,
     event_emitter: &EventEmitter,
 ) {
     for global_event in global_events {
         let event_name = global_event.get_name();
-        let listeners = dom.get_listening_sorted(event_name);
+        let listeners = dom.dom().get_listening_sorted(event_name);
 
         for listener in listeners {
             let event = DomEvent::from_freya_event(
@@ -212,14 +219,14 @@ fn calculate_global_events_listeners(
 
 /// Process the layout of the DOM
 pub fn process_layout(
-    dom: &DioxusDOM,
+    dom: &FreyaDOM,
     area: NodeArea,
     font_collection: &mut FontCollection,
 ) -> (Layers, ViewportsCollection) {
     let mut layers = Layers::default();
 
     {
-        let root = dom.index(NodeId(0));
+        let root = dom.dom().index(NodeId(0));
         let mut remaining_area = area;
         let mut root_node_measurer = NodeLayoutMeasurer::new(
             root,
@@ -245,7 +252,7 @@ pub fn process_layout(
 
 /// Process the events and emit them to the DOM
 pub fn process_events(
-    dom: &DioxusDOM,
+    dom: &FreyaDOM,
     layers: &Layers,
     events: &mut EventsQueue,
     event_emitter: &EventEmitter,
@@ -276,12 +283,12 @@ pub fn process_events(
 /// Render the layout
 pub fn process_render<HookOptions>(
     viewports_collection: &ViewportsCollection,
-    dom: &DioxusDOM,
+    dom: &FreyaDOM,
     font_collection: &mut FontCollection,
     layers: &Layers,
     hook_options: &mut HookOptions,
     render_hook: impl Fn(
-        &DioxusDOM,
+        &FreyaDOM,
         &RenderData,
         &mut FontCollection,
         &ViewportsCollection,
