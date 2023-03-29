@@ -18,7 +18,7 @@ use skia_safe::FontMgr;
 use tokio::sync::mpsc::unbounded_channel;
 
 pub use freya_core::events::FreyaEvent;
-pub use freya_elements::MouseButton;
+pub use freya_elements::events::mouse::MouseButton;
 
 /// Represents a `Node` in the DOM.
 #[allow(dead_code)]

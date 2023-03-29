@@ -1,6 +1,6 @@
-use dioxus::{core::Event, prelude::*};
-use dioxus_elements::events_data::{Key, KeyboardData};
-use freya_elements as dioxus_elements;
+use dioxus::prelude::*;
+use freya_elements::elements as dioxus_elements;
+use freya_elements::events::{keyboard::Key, KeyboardData};
 use freya_hooks::{use_focus, use_get_theme};
 
 /// [`Input`] component properties.

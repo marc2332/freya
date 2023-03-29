@@ -5,7 +5,7 @@ use dioxus_native_core::NodeId;
 use dioxus_router::*;
 use freya_components::*;
 use freya_dom::SafeDOM;
-use freya_elements as dioxus_elements;
+use freya_elements::elements as dioxus_elements;
 use freya_hooks::use_theme;
 
 use freya_node_state::NodeState;
