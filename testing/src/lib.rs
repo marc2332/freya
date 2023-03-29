@@ -140,7 +140,6 @@ impl TestingHandler {
     pub async fn wait_until_cleanup(&mut self, sizes: (f32, f32)) {
         loop {
             let must_repaint = self.wait_for_update(sizes).await;
-            println!("{}", must_repaint);
             if !must_repaint {
                 break;
             }
