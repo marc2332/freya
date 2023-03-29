@@ -1,4 +1,4 @@
-use freya::dioxus_elements::MouseEvent;
+use freya::events::MouseEvent;
 use freya::prelude::*;
 
 fn main() {

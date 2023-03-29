@@ -1,4 +1,3 @@
-use dioxus_native_core::node::NodeType;
 use freya_common::NodeArea;
 use freya_node_state::SizeMode;
 
@@ -84,14 +83,6 @@ pub fn calculate_area(node_measurer: &NodeLayoutMeasurer) -> NodeArea {
         area.height,
         node_measurer.parent_area.height,
     );
-
-    if SizeMode::Auto == node_measurer.node.state.size.height {
-        if let NodeType::Element { tag, .. } = &node_measurer.node.node_data.node_type {
-            if tag == "label" {
-                area.height = 18.0;
-            }
-        }
-    }
 
     area.height = calculate_min(
         &node_measurer.node.state.size.min_height,

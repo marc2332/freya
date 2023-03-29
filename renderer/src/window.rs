@@ -2,7 +2,8 @@ use dioxus_native_core::NodeId;
 use freya_common::{EventMessage, NodeArea};
 use freya_core::process_render;
 use freya_core::{process_layout, ViewportsCollection};
-use freya_layout::{DioxusDOM, Layers};
+use freya_dom::FreyaDOM;
+use freya_layout::Layers;
 use std::ffi::CString;
 use std::num::NonZeroU32;
 
@@ -190,8 +191,8 @@ impl<T: Clone> WindowEnv<T> {
         }
     }
 
-    // Reprocess the layout
-    pub fn process_layout(&mut self, rdom: &DioxusDOM) -> (Layers, ViewportsCollection) {
+    /// Measure the layout
+    pub fn process_layout(&mut self, rdom: &FreyaDOM) -> (Layers, ViewportsCollection) {
         let window_size = self.window.inner_size();
         process_layout(
             rdom,
@@ -205,13 +206,13 @@ impl<T: Clone> WindowEnv<T> {
         )
     }
 
-    /// Redraw the window
+    /// Render the RealDOM to Window
     pub fn render(
         &mut self,
         layers: &Layers,
         viewports_collection: &ViewportsCollection,
         hovered_node: &HoveredNode,
-        rdom: &DioxusDOM,
+        rdom: &FreyaDOM,
     ) {
         let canvas = self.surface.canvas();
 
@@ -272,9 +273,11 @@ impl<T: Clone> WindowEnv<T> {
 
         let (width, height): (u32, u32) = size.into();
 
-        if let Some((width, height)) = NonZeroU32::new(width).zip(NonZeroU32::new(height)) {
-            self.gl_surface.resize(&self.gl_context, width, height);
-        }
+        self.gl_surface.resize(
+            &self.gl_context,
+            NonZeroU32::new(width.max(1)).unwrap(),
+            NonZeroU32::new(height.max(1)).unwrap(),
+        );
     }
 }
 

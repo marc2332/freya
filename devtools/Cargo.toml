@@ -16,12 +16,15 @@ freya-layout = { path = "../layout", version = "0.1.0" }
 freya-renderer = { path = "../renderer", version = "0.1.0" }
 freya-elements = { path = "../elements", version = "0.1.0" }
 freya-hooks = { path = "../hooks"}
-freya-core = { path = "../core", features=["devtools"]}
+freya-core = { path = "../core" }
 freya-components ={ path = "../components"}
+freya-dom = { path = "../dom", version = "0.1.0", features=["shared"] }
+
 dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519", features = ["macro", "hooks", "hot-reload"]}
 dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
 dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
 dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
 dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
+
 tokio = { version = "1.23.0", features = ["sync", "rt-multi-thread", "time", "macros"] }
 skia-safe = { version = "0.60.0", features = ["gl", "textlayout", "svg"] }

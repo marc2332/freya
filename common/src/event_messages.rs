@@ -2,6 +2,7 @@ use accesskit::NodeId;
 use accesskit_winit::ActionRequestEvent;
 use dioxus_core::Template;
 
+/// Custom EventLoop messages
 #[derive(Debug)]
 pub enum EventMessage {
     /// Update the given template

@@ -4,10 +4,11 @@ version = "0.0.0"
 edition = "2021"
 
 [workspace]
-members = ["layout", "renderer", "state", "freya", "elements", "components", "hooks", "common", "core", "testing", "devtools"]
+members = ["layout", "renderer", "state", "freya", "elements", "components", "hooks", "common", "core", "testing", "devtools", "dom"]
 
 [features]
 devtools = ["freya/devtools"]
+use_camera = ["freya/use_camera"]
 
 [dev-dependencies]
 freya = { path = "./freya"}

@@ -3,17 +3,18 @@ use dioxus_core::VirtualDom;
 
 use dioxus_native_core::NodeId;
 use freya_common::EventMessage;
-use freya_core::dom::DioxusSafeDOM;
 
 use freya_core::events::FreyaEvent;
-use freya_elements::{from_winit_to_code, get_modifiers, get_non_text_keys, Code, Key};
-use freya_layout::DioxusDOM;
+use freya_dom::SafeDOM;
+use freya_elements::events::keyboard::{
+    from_winit_to_code, get_modifiers, get_non_text_keys, Code, Key,
+};
 
 use accessibility::FocusDirection;
 use std::sync::{Arc, Mutex};
 use winit::event::{
-    ElementState, Event, KeyboardInput, ModifiersState, MouseScrollDelta, StartCause, TouchPhase,
-    VirtualKeyCode, WindowEvent,
+    ElementState, Event, KeyboardInput, ModifiersState, MouseScrollDelta, StartCause, Touch,
+    TouchPhase, VirtualKeyCode, WindowEvent,
 };
 use winit::event_loop::{ControlFlow, EventLoopBuilder};
 
@@ -35,7 +36,7 @@ pub type HoveredNode = Option<Arc<Mutex<Option<NodeId>>>>;
 /// Start the winit event loop with the virtual dom polling
 pub fn run<T: 'static + Clone>(
     vdom: VirtualDom,
-    rdom: DioxusSafeDOM,
+    rdom: SafeDOM,
     window_config: WindowConfig<T>,
     mutations_sender: Option<UnboundedSender<()>>,
     hovered_node: HoveredNode,
@@ -91,7 +92,7 @@ pub fn run<T: 'static + Clone>(
                 app.set_accessibility_focus(id);
             }
             Event::UserEvent(EventMessage::RequestRerender) => {
-                app.request_redraw();
+                app.render(&hovered_node);
             }
             Event::UserEvent(EventMessage::RequestRelayout) => {
                 app.process_layout();
@@ -239,6 +240,32 @@ pub fn run<T: 'static + Clone>(
                             name: "mouseover",
                             cursor: cursor_pos,
                             button: None,
+                        });
+
+                        app.process_events();
+                    }
+                    WindowEvent::Touch(Touch {
+                        location,
+                        phase,
+                        id,
+                        force,
+                        ..
+                    }) => {
+                        cursor_pos = (location.x, location.y);
+
+                        let event_name = match phase {
+                            TouchPhase::Cancelled => "touchcancel",
+                            TouchPhase::Ended => "touchend",
+                            TouchPhase::Moved => "touchmove",
+                            TouchPhase::Started => "touchstart",
+                        };
+
+                        app.push_event(FreyaEvent::Touch {
+                            name: event_name,
+                            location: cursor_pos,
+                            finger_id: id,
+                            phase,
+                            force,
                         });
 
                         app.process_events();

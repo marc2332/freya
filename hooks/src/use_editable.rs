@@ -8,7 +8,7 @@ use std::{
 use dioxus_core::{AttributeValue, Event, ScopeState};
 use dioxus_hooks::{use_effect, use_ref, use_state, UseRef, UseState};
 use freya_common::EventMessage;
-use freya_elements::events_data::{KeyboardData, MouseData};
+use freya_elements::events::{KeyboardData, MouseData};
 use freya_node_state::{CursorReference, CustomAttributeValues};
 use ropey::iter::Lines;
 pub use ropey::Rope;

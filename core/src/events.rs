@@ -1,11 +1,15 @@
 use std::{any::Any, collections::HashMap, rc::Rc};
 
 use dioxus_core::ElementId;
-use euclid::Point2D;
-use freya_elements::{events_data::MouseData, Code, Key, KeyboardData, Modifiers, WheelData};
+use euclid::{Length, Point2D};
+use freya_common::NodeArea;
+use freya_elements::events::{
+    keyboard::{Code, Key, Modifiers},
+    KeyboardData, MouseData, TouchData, WheelData,
+};
 use freya_layout::RenderData;
 use rustc_hash::FxHashMap;
-use winit::event::MouseButton;
+use winit::event::{Force, MouseButton, TouchPhase};
 
 /// Events emitted in Freya.
 #[derive(Clone, Debug)]
@@ -29,6 +33,14 @@ pub enum FreyaEvent {
         code: Code,
         modifiers: Modifiers,
     },
+    /// A Touch event.
+    Touch {
+        name: &'static str,
+        location: (f64, f64),
+        finger_id: u64,
+        phase: TouchPhase,
+        force: Option<Force>,
+    },
 }
 
 impl FreyaEvent {
@@ -37,6 +49,7 @@ impl FreyaEvent {
             Self::Mouse { name, .. } => name,
             Self::Wheel { name, .. } => name,
             Self::Keyboard { name, .. } => name,
+            Self::Touch { name, .. } => name,
         }
     }
 
@@ -45,16 +58,76 @@ impl FreyaEvent {
             Self::Mouse { name, .. } => *name = new_name,
             Self::Wheel { name, .. } => *name = new_name,
             Self::Keyboard { name, .. } => *name = new_name,
+            Self::Touch { name, .. } => *name = new_name,
         }
     }
 }
 
-/// Events emitted to the DOM.
+/// Event emitted to the DOM.
 #[derive(Debug, Clone)]
 pub struct DomEvent {
     pub name: String,
     pub element_id: ElementId,
     pub data: DomEventData,
+}
+
+impl DomEvent {
+    pub fn from_freya_event(
+        event_name: &str,
+        element_id: ElementId,
+        event: &FreyaEvent,
+        node_area: Option<NodeArea>,
+    ) -> Self {
+        match event {
+            FreyaEvent::Mouse { cursor, button, .. } => Self {
+                element_id,
+                name: event_name.to_string(),
+                data: DomEventData::Mouse(MouseData::new(
+                    Point2D::from_lengths(Length::new(cursor.0), Length::new(cursor.1)),
+                    Point2D::from_lengths(
+                        Length::new(cursor.0 - node_area.unwrap_or_default().x as f64),
+                        Length::new(cursor.1 - node_area.unwrap_or_default().y as f64),
+                    ),
+                    *button,
+                )),
+            },
+            FreyaEvent::Wheel { scroll, .. } => Self {
+                element_id,
+                name: event_name.to_string(),
+                data: DomEventData::Wheel(WheelData::new(scroll.0, scroll.1)),
+            },
+            FreyaEvent::Keyboard {
+                ref key,
+                code,
+                modifiers,
+                ..
+            } => Self {
+                element_id,
+                name: event_name.to_string(),
+                data: DomEventData::Keyboard(KeyboardData::new(key.clone(), *code, *modifiers)),
+            },
+            FreyaEvent::Touch {
+                location,
+                finger_id,
+                phase,
+                force,
+                ..
+            } => DomEvent {
+                element_id,
+                name: event_name.to_string(),
+                data: DomEventData::Touch(TouchData::new(
+                    Point2D::from_lengths(Length::new(location.0), Length::new(location.1)),
+                    Point2D::from_lengths(
+                        Length::new(location.0 - node_area.unwrap_or_default().x as f64),
+                        Length::new(location.1 - node_area.unwrap_or_default().y as f64),
+                    ),
+                    *finger_id,
+                    *phase,
+                    *force,
+                )),
+            },
+        }
+    }
 }
 
 /// Data of a DOM event.
@@ -63,6 +136,7 @@ pub enum DomEventData {
     Mouse(MouseData),
     Keyboard(KeyboardData),
     Wheel(WheelData),
+    Touch(TouchData),
 }
 
 impl DomEventData {
@@ -71,6 +145,7 @@ impl DomEventData {
             DomEventData::Mouse(m) => Rc::new(m),
             DomEventData::Keyboard(k) => Rc::new(k),
             DomEventData::Wheel(w) => Rc::new(w),
+            DomEventData::Touch(w) => Rc::new(w),
         }
     }
 }

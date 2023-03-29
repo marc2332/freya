@@ -30,13 +30,13 @@ pub struct NodeState {
     pub cursor_settings: CursorSettings,
     #[parent_dep_state(references)]
     pub references: References,
-    #[parent_dep_state(size)]
+    #[parent_dep_state(size, LayoutNotifier)]
     pub size: Size,
-    #[node_dep_state(())]
+    #[node_dep_state((), LayoutNotifier)]
     pub scroll: Scroll,
-    #[node_dep_state()]
+    #[node_dep_state((), LayoutNotifier)]
     pub style: Style,
-    #[parent_dep_state(font_style)]
+    #[parent_dep_state(font_style, LayoutNotifier)]
     pub font_style: FontStyle,
     #[parent_dep_state(accessibility)]
     pub accessibility: AccessibilitySettings,
@@ -179,6 +179,7 @@ pub fn parse_color(color: &str) -> Option<Color> {
         "black" => Some(Color::BLACK),
         "gray" => Some(Color::GRAY),
         "white" => Some(Color::WHITE),
+        "orange" => Some(Color::from_rgb(255, 165, 0)),
         _ => parse_rgb(color),
     }
 }

@@ -3,7 +3,8 @@ use accesskit::{
     Tree, TreeUpdate,
 };
 use accesskit_winit::Adapter;
-use freya_layout::{DioxusDOM, RenderData};
+use freya_dom::FreyaDOM;
+use freya_layout::RenderData;
 use std::{
     num::NonZeroU128,
     sync::{Arc, Mutex},
@@ -40,7 +41,7 @@ impl AccessibilityState {
         dioxus_node: &RenderData,
         accessibility_id: NodeIdKit,
         children: Option<Vec<NodeIdKit>>,
-        rdom: &DioxusDOM,
+        rdom: &FreyaDOM,
     ) {
         let mut builder = NodeBuilder::new(Role::Unknown);
 

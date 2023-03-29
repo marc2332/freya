@@ -4,8 +4,8 @@ use dioxus_native_core::tree::TreeView;
 use dioxus_native_core::NodeId;
 use dioxus_router::*;
 use freya_components::*;
-use freya_core::dom::DioxusSafeDOM;
-use freya_elements as dioxus_elements;
+use freya_dom::SafeDOM;
+use freya_elements::elements as dioxus_elements;
 use freya_hooks::use_theme;
 
 use freya_node_state::NodeState;
@@ -25,7 +25,7 @@ use tabs::{style::*, tree::*};
 
 /// Run the [VirtualDom] with a sidepanel where the devtools are located.
 pub fn with_devtools(
-    rdom: DioxusSafeDOM,
+    rdom: SafeDOM,
     root: fn(cx: Scope) -> Element,
     mutations_receiver: UnboundedReceiver<()>,
     hovered_node: HoveredNode,
@@ -45,7 +45,7 @@ pub fn with_devtools(
 
 struct AppWithDevtoolsProps {
     root: fn(cx: Scope) -> Element,
-    rdom: DioxusSafeDOM,
+    rdom: SafeDOM,
     mutations_receiver: Arc<Mutex<UnboundedReceiver<()>>>,
     hovered_node: HoveredNode,
 }
@@ -95,7 +95,7 @@ pub struct TreeNode {
 
 #[derive(Props)]
 pub struct DevToolsProps {
-    rdom: DioxusSafeDOM,
+    rdom: SafeDOM,
     mutations_receiver: Arc<Mutex<UnboundedReceiver<()>>>,
     hovered_node: HoveredNode,
 }
@@ -121,9 +121,11 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
             let mut mutations_receiver = mutations_receiver.lock().unwrap();
             loop {
                 if mutations_receiver.recv().await.is_some() {
+                    println!("...");
                     sleep(Duration::from_millis(10)).await;
 
-                    let rdom = rdom.dom();
+                    let dom = rdom.get();
+                    let rdom = dom.dom();
                     let mut new_children = Vec::new();
 
                     let mut root_found = false;
@@ -140,22 +142,19 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                         }
 
                         if !devtools_found {
-                            let mut maybe_text = None;
-                            let tag = match &node.node_data.node_type {
+                            let (text, tag) = match &node.node_data.node_type {
                                 NodeType::Text { text, .. } => {
-                                    maybe_text = Some(text.clone());
-                                    "text"
+                                    (Some(text.to_string()), "text".to_string())
                                 }
-                                NodeType::Element { tag, .. } => tag,
-                                NodeType::Placeholder => "placeholder",
-                            }
-                            .to_string();
+                                NodeType::Element { tag, .. } => (None, tag.to_string()),
+                                NodeType::Placeholder => (None, "placeholder".to_string()),
+                            };
 
                             new_children.push(TreeNode {
                                 height,
                                 id: node.node_data.node_id,
                                 tag,
-                                text: maybe_text,
+                                text,
                                 state: node.state.clone(),
                             });
                         }

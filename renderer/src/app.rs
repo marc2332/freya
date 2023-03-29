@@ -7,14 +7,14 @@ use std::{
 use accesskit::{NodeClassSet, NodeId};
 use accesskit_winit::Adapter;
 use dioxus_core::{Template, VirtualDom};
-use dioxus_native_core::SendAnyMap;
+
 use freya_common::EventMessage;
 use freya_core::{
-    dom::DioxusSafeDOM,
     events::{DomEvent, EventsProcessor, FreyaEvent},
     process_events, EventEmitter, EventReceiver, EventsQueue, FocusReceiver, FocusSender,
     ViewportsCollection,
 };
+use freya_dom::SafeDOM;
 use freya_layout::Layers;
 use futures::FutureExt;
 use futures::{
@@ -50,9 +50,9 @@ pub fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
     task::waker(Arc::new(DomHandle(proxy.clone())))
 }
 
-/// Manager for an Application
+/// Manages the Application lifecycle
 pub struct App<State: 'static + Clone> {
-    rdom: DioxusSafeDOM,
+    rdom: SafeDOM,
     vdom: VirtualDom,
 
     events: EventsQueue,
@@ -79,7 +79,7 @@ pub struct App<State: 'static + Clone> {
 
 impl<State: 'static + Clone> App<State> {
     pub fn new(
-        rdom: DioxusSafeDOM,
+        rdom: SafeDOM,
         vdom: VirtualDom,
         proxy: &EventLoopProxy<EventMessage>,
         mutations_sender: Option<UnboundedSender<()>>,
@@ -124,7 +124,7 @@ impl<State: 'static + Clone> App<State> {
         }
     }
 
-    /// Provide the launch state and few other utilities like the [EventLoopProxy]
+    /// Provide the launch state and few other utilities like the EventLoopProxy
     pub fn provide_vdom_contexts(&self) {
         if let Some(state) = self.window_env.window_config.state.clone() {
             self.vdom.base_scope().provide_context(state);
@@ -135,39 +135,31 @@ impl<State: 'static + Clone> App<State> {
             .provide_context(self.focus_receiver.clone());
     }
 
-    /// Make an first build of the [VirtualDOM]
+    /// Make the first build of the VirtualDOM.
     pub fn init_vdom(&mut self) {
         self.provide_vdom_contexts();
 
         let mutations = self.vdom.rebuild();
-        let (to_update, diff) = self.rdom.dom_mut().apply_mutations(mutations);
 
-        if !diff.is_empty() {
-            self.mutations_sender.as_ref().map(|s| s.send(()));
-        }
+        self.rdom.get_mut().init_dom(mutations);
 
-        self.rdom
-            .dom_mut()
-            .update_state(to_update, SendAnyMap::new());
+        self.mutations_sender.as_ref().map(|s| s.send(()));
     }
 
-    /// Update the [RealDOM] with changes from the [VirtualDOM]
-    pub fn apply_vdom_changes(&mut self) -> bool {
+    /// Update the DOM with the mutations from the VirtualDOM.
+    pub fn apply_vdom_changes(&mut self) -> (bool, bool) {
         let mutations = self.vdom.render_immediate();
-        let (to_update, diff) = self.rdom.dom_mut().apply_mutations(mutations);
 
-        if !diff.is_empty() {
+        let (repaint, relayout) = self.rdom.get_mut().apply_mutations(mutations);
+
+        if repaint || relayout {
             self.mutations_sender.as_ref().map(|s| s.send(()));
         }
 
-        self.rdom
-            .dom_mut()
-            .update_state(to_update, SendAnyMap::new());
-
-        !diff.is_empty()
+        (repaint, relayout)
     }
 
-    /// Poll the [VirtualDOM] for any new change
+    /// Poll the VirtualDOM for any new change
     pub fn poll_vdom(&mut self) {
         let waker = &self.vdom_waker.clone();
         let mut cx = std::task::Context::from_waker(waker);
@@ -197,8 +189,12 @@ impl<State: 'static + Clone> App<State> {
                 }
             }
 
-            if self.apply_vdom_changes() {
+            let (must_repaint, must_relayout) = self.apply_vdom_changes();
+
+            if must_relayout {
                 self.request_redraw();
+            } else if must_repaint {
+                self.request_rerender();
             }
         }
     }
@@ -206,7 +202,7 @@ impl<State: 'static + Clone> App<State> {
     /// Process the events queue
     pub fn process_events(&mut self) {
         process_events(
-            &self.rdom.dom(),
+            &self.rdom.get(),
             &self.layers,
             &mut self.events,
             &self.event_emitter,
@@ -217,7 +213,7 @@ impl<State: 'static + Clone> App<State> {
 
     /// Measure the layout
     pub fn process_layout(&mut self) {
-        let (layers, viewports) = self.window_env.process_layout(&self.rdom.dom());
+        let (layers, viewports) = self.window_env.process_layout(&self.rdom.get());
         self.layers = layers;
         self.viewports_collection = viewports;
         self.process_accessibility();
@@ -229,14 +225,14 @@ impl<State: 'static + Clone> App<State> {
         for layer in self.layers.layers.values() {
             for node in layer.values() {
                 if let Some(accessibility_id) =
-                    node.get_node(&self.rdom.dom()).state.accessibility.focus_id
+                    node.get_node(&self.rdom.get()).state.accessibility.focus_id
                 {
-                    let children = node.get_accessibility_children(&self.rdom.dom());
+                    let children = node.get_accessibility_children(&self.rdom.get());
                     self.accessibility_state.lock().unwrap().add_element(
                         node,
                         accessibility_id,
                         children,
-                        &self.rdom.dom(),
+                        &self.rdom.get(),
                     );
                 }
             }
@@ -253,22 +249,29 @@ impl<State: 'static + Clone> App<State> {
         self.window_env.request_redraw();
     }
 
-    /// Replace a [VirtualDOM] Template
+    /// Request a rerender
+    pub fn request_rerender(&self) {
+        self.proxy
+            .send_event(EventMessage::RequestRerender)
+            .unwrap();
+    }
+
+    /// Replace a VirtualDOM Template
     pub fn vdom_replace_template(&mut self, template: Template<'static>) {
         self.vdom.replace_template(template);
     }
 
-    /// Render the [RealDOM] into the [Window]
+    /// Render the RealDOM into the Window
     pub fn render(&mut self, hovered_node: &HoveredNode) {
         self.window_env.render(
             &self.layers,
             &self.viewports_collection,
             hovered_node,
-            &self.rdom.dom(),
+            &self.rdom.get(),
         );
     }
 
-    /// Resize the [Window]
+    /// Resize the Window
     pub fn resize(&mut self, size: PhysicalSize<u32>) {
         self.window_env.resize(size);
     }

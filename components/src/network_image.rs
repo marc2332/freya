@@ -1,6 +1,6 @@
 use crate::Loader;
 use dioxus::prelude::*;
-use freya_elements as dioxus_elements;
+use freya_elements::elements as dioxus_elements;
 use freya_node_state::bytes_to_data;
 use reqwest::Url;
 

@@ -1,9 +1,10 @@
-use dioxus_native_core::{node::NodeType, real_dom::RealDom, tree::TreeView, NodeId};
+use dioxus_native_core::{node::NodeType, tree::TreeView, NodeId};
 use freya_common::{NodeArea, NodeReferenceLayout};
+use freya_dom::{DioxusNode, FreyaDOM};
 use freya_node_state::{
-    CursorMode, CursorReference, CustomAttributeValues, DirectionMode, DisplayMode, FontStyle,
-    NodeState, SizeMode,
+    CursorMode, CursorReference, DirectionMode, DisplayMode, FontStyle, SizeMode,
 };
+
 use skia_safe::textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle};
 
 mod area_calc;
@@ -14,11 +15,10 @@ use area_calc::calculate_area;
 pub use layers::*;
 pub use ops_calc::run_calculations;
 
-pub type DioxusDOM = RealDom<NodeState, CustomAttributeValues>;
-
 /// Collect all the texts and node states from a given array of children
-fn get_inner_texts(dom: &DioxusDOM, node_id: &NodeId) -> Vec<(FontStyle, String)> {
-    dom.tree
+pub fn get_inner_texts(dom: &FreyaDOM, node_id: &NodeId) -> Vec<(FontStyle, String)> {
+    dom.dom()
+        .tree
         .children(*node_id)
         .unwrap()
         .filter_map(|child| {
@@ -28,6 +28,7 @@ fn get_inner_texts(dom: &DioxusDOM, node_id: &NodeId) -> Vec<(FontStyle, String)
                 }
 
                 let child_text = dom
+                    .dom()
                     .tree
                     .children(child.node_data.node_id)
                     .unwrap()
@@ -67,7 +68,7 @@ pub struct NodeLayoutMeasurer<'a> {
     remaining_area: &'a mut NodeArea,
     parent_area: NodeArea,
     layers: &'a mut Layers,
-    dom: &'a DioxusDOM,
+    dom: &'a FreyaDOM,
     inherited_relative_layer: i16,
     font_collection: &'a mut FontCollection,
 }
@@ -79,7 +80,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
         node: &'a DioxusNode,
         remaining_area: &'a mut NodeArea,
         parent_area: NodeArea,
-        dom: &'a DioxusDOM,
+        dom: &'a FreyaDOM,
         layers: &'a mut Layers,
         inherited_relative_layer: i16,
         font_collection: &'a mut FontCollection,
@@ -98,7 +99,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
 
     /// Measure the area of a Node
     pub fn measure_area(&mut self, is_measuring: bool) -> NodeArea {
-        let node_height = self.dom.tree.height(self.node_id).unwrap();
+        let node_height = self.dom.dom().tree.height(self.node_id).unwrap();
 
         let direction = self.node.state.size.direction;
         let padding = self.node.state.size.padding;
@@ -195,7 +196,12 @@ impl<'a> NodeLayoutMeasurer<'a> {
 
         // Registers the element in the Layers handler
         if is_measuring {
-            let node_children = self.dom.tree.children_ids(self.node_id).map(|v| v.to_vec());
+            let node_children = self
+                .dom
+                .dom()
+                .tree
+                .children_ids(self.node_id)
+                .map(|v| v.to_vec());
             self.layers
                 .add_element(self.node, node_children, &node_area, node_layer);
         }
@@ -290,7 +296,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
         let cursor_settings = &node.state.cursor_settings;
         match &node.node_data.node_type {
             NodeType::Element { tag, .. } => {
-                if let Some(children) = self.dom.tree.children(self.node_id) {
+                if let Some(children) = self.dom.dom().tree.children(self.node_id) {
                     for child in children {
                         let child_node_area = {
                             let mut child_measurer = NodeLayoutMeasurer {

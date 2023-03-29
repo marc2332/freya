@@ -1,6 +1,6 @@
 use crate::{use_editable, EditableMode, TextEditor};
 use freya::prelude::*;
-use freya_elements::{Code, Key, Modifiers};
+use freya_elements::events::keyboard::{Code, Key, Modifiers};
 use freya_testing::{launch_test, FreyaEvent, MouseButton};
 
 #[tokio::test]

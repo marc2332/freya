@@ -1,6 +1,6 @@
 use std::{fmt::Display, ops::Range};
 
-use freya_elements::{Code, Key, Modifiers};
+use freya_elements::events::keyboard::{Code, Key, Modifiers};
 pub use ropey::Rope;
 
 /// Holds the position of a cursor in a text
@@ -169,13 +169,13 @@ pub trait TextEditor: Sized + Clone + Display {
                     let next_line = self.line(self.cursor_row() + 1).unwrap();
 
                     // Try to use the current cursor column, otherwise use the new line length
-                    let cursor_index = if self.cursor_col() <= next_line.len_chars() {
+                    let cursor_col = if self.cursor_col() <= next_line.len_chars() {
                         self.cursor_col()
                     } else {
-                        next_line.len_chars()
+                        next_line.len_chars() - 1
                     };
 
-                    self.cursor_mut().set_col(cursor_index);
+                    self.cursor_mut().set_col(cursor_col);
                     self.cursor_down();
 
                     event = TextEvent::CursorChanged
@@ -191,15 +191,15 @@ pub trait TextEditor: Sized + Clone + Display {
                     // Go one line up if there is no more characters on the left
                     let prev_line = self.line(self.cursor_row() - 1);
                     if let Some(prev_line) = prev_line {
-                        // Use the new line length as new cursor column, otherwise just set it to 0
-                        let len = if prev_line.len_chars() > 0 {
-                            prev_line.len_chars()
+                        // Use the prev line length as new cursor column, otherwise just set it to 0
+                        let cursor_col = if prev_line.len_chars() > 0 {
+                            prev_line.len_chars() - 1
                         } else {
                             0
                         };
 
                         self.cursor_up();
-                        self.cursor_mut().set_col(len - 1);
+                        self.cursor_mut().set_col(cursor_col);
 
                         event = TextEvent::CursorChanged
                     }
@@ -229,15 +229,15 @@ pub trait TextEditor: Sized + Clone + Display {
                 if self.cursor_row() > 0 {
                     let prev_line = self.line(self.cursor_row() - 1).unwrap();
 
-                    // Try to use the current cursor column, otherwise use the new line length
-                    let cursor_column = if self.cursor_col() <= prev_line.len_chars() {
+                    // Try to use the current cursor column, otherwise use the prev line length
+                    let cursor_col = if self.cursor_col() <= prev_line.len_chars() {
                         self.cursor_col()
                     } else {
-                        prev_line.len_chars()
+                        prev_line.len_chars() - 1
                     };
 
                     self.cursor_up();
-                    self.cursor_mut().set_col(cursor_column);
+                    self.cursor_mut().set_col(cursor_col);
 
                     event = TextEvent::CursorChanged
                 }

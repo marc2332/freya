@@ -4,6 +4,7 @@ use dioxus_native_core::node::OwnedAttributeValue;
 use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
 use dioxus_native_core::state::NodeDepState;
 use dioxus_native_core_macro::sorted_str_slice;
+use freya_common::LayoutNotifier;
 use skia_safe::Color;
 
 use crate::{parse_color, CustomAttributeValues};
@@ -17,11 +18,12 @@ pub struct Style {
     pub image_data: Option<Vec<u8>>,
     pub svg_data: Option<Vec<u8>>,
     pub display: DisplayMode,
+    pub text: Option<String>,
 }
 
 impl NodeDepState<CustomAttributeValues> for Style {
     type DepState = ();
-    type Ctx = ();
+    type Ctx = LayoutNotifier;
 
     const NODE_MASK: NodeMask =
         NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
@@ -33,13 +35,14 @@ impl NodeDepState<CustomAttributeValues> for Style {
             "svg_data",
             "svg_content",
             "display",
-        ])));
+        ])))
+        .with_text();
 
     fn reduce(
         &mut self,
         node: NodeView<CustomAttributeValues>,
         _sibling: (),
-        _ctx: &Self::Ctx,
+        ctx: &Self::Ctx,
     ) -> bool {
         let mut background = Color::TRANSPARENT;
         let mut relative_layer = 0;
@@ -115,7 +118,16 @@ impl NodeDepState<CustomAttributeValues> for Style {
             || (relative_layer != self.relative_layer)
             || (shadow != self.shadow)
             || (radius != self.radius)
-            || (image_data != self.image_data);
+            || (image_data != self.image_data)
+            || (display != self.display)
+            || (svg_data != self.svg_data);
+
+        let changed_size =
+            (display != self.display) || (node.text().map(|v| v.to_owned()) != self.text);
+
+        if changed_size {
+            *ctx.lock().unwrap() = true;
+        }
 
         *self = Self {
             background,
@@ -125,6 +137,7 @@ impl NodeDepState<CustomAttributeValues> for Style {
             image_data,
             svg_data,
             display,
+            text: node.text().map(|v| v.to_owned()),
         };
         changed
     }
