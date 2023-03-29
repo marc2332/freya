@@ -55,7 +55,7 @@ pub async fn multiple_lines_single_editor() {
     assert_eq!(content.text(), Some("Hello Rustaceans"));
 
     // Move cursor
-    utils.send_event(FreyaEvent::Mouse {
+    utils.push_event(FreyaEvent::Mouse {
         name: "click",
         cursor: (35.0, 3.0),
         button: Some(MouseButton::Left),
@@ -74,7 +74,7 @@ pub async fn multiple_lines_single_editor() {
     assert_eq!(cursor.text(), Some("4:0"));
 
     // Insert text
-    utils.send_event(FreyaEvent::Keyboard {
+    utils.push_event(FreyaEvent::Keyboard {
         name: "keydown",
         key: Key::Character("!".to_string()),
         code: Code::Unidentified,
@@ -157,7 +157,7 @@ pub async fn single_line_mulitple_editors() {
     assert_eq!(content.text(), Some("Hello Rustaceans\n"));
 
     // Move cursor
-    utils.send_event(FreyaEvent::Mouse {
+    utils.push_event(FreyaEvent::Mouse {
         name: "click",
         cursor: (35.0, 3.0),
         button: Some(MouseButton::Left),
@@ -176,7 +176,7 @@ pub async fn single_line_mulitple_editors() {
     assert_eq!(cursor.text(), Some("4:0"));
 
     // Insert text
-    utils.send_event(FreyaEvent::Keyboard {
+    utils.push_event(FreyaEvent::Keyboard {
         name: "keydown",
         key: Key::Character("!".to_string()),
         code: Code::Unidentified,

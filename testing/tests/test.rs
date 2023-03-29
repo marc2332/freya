@@ -61,7 +61,7 @@ async fn check_size() {
 
     let mut utils = launch_test(stateful_app);
 
-    utils.wait_for_work((500.0, 500.0)).await;
+    utils.wait_for_work((500.0, 500.0));
 
     let rect = utils.root().child(0).unwrap();
 
@@ -95,13 +95,13 @@ async fn simulate_events() {
     let label = rect.child(0).unwrap();
 
     // Render initial layout
-    utils.wait_for_work((500.0, 500.0)).await;
+    utils.wait_for_work((500.0, 500.0));
 
     let text = label.child(0).unwrap();
 
     assert_eq!(text.text(), Some("Is enabled? false"));
 
-    utils.send_event(FreyaEvent::Mouse {
+    utils.push_event(FreyaEvent::Mouse {
         name: "click",
         cursor: (5.0, 5.0),
         button: Some(MouseButton::Left),

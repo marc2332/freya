@@ -267,7 +267,7 @@ mod test {
         // State somewhere in the middle
         utils.wait_for_update((500.0, 500.0)).await;
         utils.wait_for_update((500.0, 500.0)).await;
-        utils.wait_for_work((500.0, 500.0)).await;
+        utils.wait_for_work((500.0, 500.0));
         let width = utils.root().child(0).unwrap().layout().unwrap().width;
         assert!(width > 0.0);
         assert!(width < 100.0);
@@ -276,7 +276,7 @@ mod test {
 
         // State in the end
         utils.wait_for_update((500.0, 500.0)).await;
-        utils.wait_for_work((500.0, 500.0)).await;
+        utils.wait_for_work((500.0, 500.0));
         let width = utils.root().child(0).unwrap().layout().unwrap().width;
         assert_eq!(width, 100.0);
     }
@@ -309,11 +309,11 @@ mod test {
         // State somewhere in the middle
         utils.wait_for_update((500.0, 500.0)).await;
         utils.wait_for_update((500.0, 500.0)).await;
-        utils.wait_for_work((500.0, 500.0)).await;
+        utils.wait_for_work((500.0, 500.0));
         let width = utils.root().child(0).unwrap().layout().unwrap().width;
         assert!(width > 10.0);
 
-        utils.send_event(FreyaEvent::Mouse {
+        utils.push_event(FreyaEvent::Mouse {
             name: "click",
             cursor: (5.0, 5.0),
             button: Some(MouseButton::Left),
@@ -321,7 +321,7 @@ mod test {
 
         // State has been restarted
         utils.wait_for_update((500.0, 500.0)).await;
-        utils.wait_for_work((500.0, 500.0)).await;
+        utils.wait_for_work((500.0, 500.0));
         let width = utils.root().child(0).unwrap().layout().unwrap().width;
         assert_eq!(width, 10.0);
     }
@@ -363,7 +363,6 @@ mod test {
 
         // State somewhere in the middle
         utils.wait_for_update((500.0, 500.0)).await;
-        utils.wait_for_work((500.0, 500.0)).await;
         let width = element.layout().unwrap().width;
         assert!(width > 0.0);
         assert!(width < 100.0);
