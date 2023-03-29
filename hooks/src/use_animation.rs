@@ -180,6 +180,7 @@ impl<'a> AnimationManager<'a> {
 ///
 /// ## Usage
 /// ```rust
+/// # use freya::prelude::*;
 /// fn app(cx: Scope) -> Element {
 ///     let animation = use_animation(cx, 0.0);
 /// 
