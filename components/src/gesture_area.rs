@@ -3,7 +3,7 @@ use std::time::Instant;
 
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_elements::events::{TouchEvent, touch::TouchPhase};
+use freya_elements::events::{touch::TouchPhase, TouchEvent};
 
 const DOUBLE_TAP_DISTANCE: f64 = 100.0;
 
@@ -134,14 +134,14 @@ mod test {
         let mut utils = launch_test(use_animation_app);
 
         // Initial state
-        utils.wait_for_work((500.0, 500.0)).await;
+        utils.wait_for_work((500.0, 500.0));
 
         assert_eq!(
             utils.root().child(0).unwrap().child(0).unwrap().text(),
             Some("EMPTY")
         );
 
-        utils.send_event(FreyaEvent::Touch {
+        utils.push_event(FreyaEvent::Touch {
             name: "touchend",
             location: (1.0, 1.0),
             phase: TouchPhase::Ended,
@@ -149,7 +149,7 @@ mod test {
             force: None,
         });
 
-        utils.send_event(FreyaEvent::Touch {
+        utils.push_event(FreyaEvent::Touch {
             name: "touchstart",
             location: (1.0, 1.0),
             phase: TouchPhase::Started,
@@ -157,7 +157,7 @@ mod test {
             force: None,
         });
 
-        utils.wait_until_cleanup((500.0, 500.0)).await;
+        utils.wait_for_update((500.0, 500.0)).await;
         utils.wait_for_update((500.0, 500.0)).await;
 
         assert_eq!(
