@@ -35,25 +35,25 @@ impl TestUtils {
         let child: &DioxusNode = rdom.get(node_id).unwrap();
         let height = rdom.tree.height(node_id).unwrap();
         let parent_id = rdom.tree.parent_id(node_id);
-        let children = rdom.tree.children_ids(node_id).map(|v| v.to_vec());
+        let children_ids = rdom.tree.children_ids(node_id).map(|v| v.to_vec());
         TestNode {
             node_id,
             utils: self.clone(),
             node: child.clone(),
             height,
             parent_id,
-            children,
+            children_ids,
         }
     }
 }
 
 /// Represents a `Node` in the DOM.
-#[allow(dead_code)]
+#[derive(Clone)]
 pub struct TestNode {
     node_id: NodeId,
     utils: TestUtils,
     height: u16,
-    children: Option<Vec<NodeId>>,
+    children_ids: Option<Vec<NodeId>>,
     node: DioxusNode,
     parent_id: Option<NodeId>,
 }
@@ -61,13 +61,10 @@ pub struct TestNode {
 impl TestNode {
     /// Get a child of the Node by the given index
     pub fn child(&self, child_index: usize) -> Option<Self> {
-        if let Some(children) = &self.children {
-            let child_id = children.get(child_index)?;
-            let child: TestNode = self.utils.get_node_by_id(*child_id);
-            Some(child)
-        } else {
-            None
-        }
+        let children_ids = self.children_ids.as_ref()?;
+        let child_id = children_ids.get(child_index)?;
+        let child: TestNode = self.utils.get_node_by_id(*child_id);
+        Some(child)
     }
 
     /// Get the Node text
@@ -95,6 +92,21 @@ impl TestNode {
             }
         }
         None
+    }
+
+    /// Get a mutable reference to the test utils.
+    pub fn utils(&mut self) -> &mut TestUtils {
+        &mut self.utils
+    }
+
+    /// Get the NodeId from the parent
+    pub fn parent_id(&self) -> Option<NodeId> {
+        self.parent_id
+    }
+
+    /// Get the Node height in the DOM
+    pub fn dom_height(&self) -> u16 {
+        self.height
     }
 }
 
@@ -146,7 +158,7 @@ impl TestingHandler {
         }
     }
 
-    /// Wait to process the internal Freya changes, like layout or events.
+    /// Wait for layout and events to be processed
     pub fn wait_for_work(&mut self, sizes: (f32, f32)) {
         let (layers, viewports) = process_layout(
             &self.utils.dom.get(),
@@ -183,22 +195,25 @@ impl TestingHandler {
         let rdom = dom.dom();
         let root_id = rdom.root_id();
         let root: &DioxusNode = rdom.get(root_id).unwrap();
-        let children = rdom.tree.children_ids(root_id).map(|v| v.to_vec());
+        let children_ids = rdom.tree.children_ids(root_id).map(|v| v.to_vec());
         TestNode {
             node_id: root_id,
             utils: self.utils.clone(),
             node: root.clone(),
             height: 0,
             parent_id: None,
-            children,
+            children_ids,
         }
     }
 }
 
-/// Run a component in a headless testing environment
+/// Run a Component in a headless testing environment
 pub fn launch_test(root: Component<()>) -> TestingHandler {
     let mut vdom = VirtualDom::new(root);
+    let mutations = vdom.rebuild();
+
     let dom = SafeDOM::new(FreyaDOM::new(RealDom::new()));
+    dom.get_mut().init_dom(mutations);
 
     let (event_emitter, event_receiver) = unbounded_channel::<DomEvent>();
     let layers = Arc::new(Mutex::new(Layers::default()));
@@ -206,10 +221,6 @@ pub fn launch_test(root: Component<()>) -> TestingHandler {
     let events_processor = EventsProcessor::default();
     let mut font_collection = FontCollection::new();
     font_collection.set_dynamic_font_manager(FontMgr::default());
-
-    let mutations = vdom.rebuild();
-
-    dom.get_mut().init_dom(mutations);
 
     TestingHandler {
         vdom,
