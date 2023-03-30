@@ -15,17 +15,20 @@ const DOUBLE_TAP_DELAY: u128 = 40; // 40
 
 const MAX_EVENTS_QUEUE: usize = 20;
 
+/// Gesture emitted by the `GestureArea` component.
 #[derive(Debug, PartialEq, Eq)]
 pub enum Gesture {
-    Tap,
+    TapUp,
+    TapDown,
     DoubleTap,
 }
 
 /// [`GestureArea`] component properties.
 #[derive(Props)]
 pub struct GestureAreaProps<'a> {
-    /// Inner children for the Button.
+    /// Inner children for the GestureArea.
     pub children: Element<'a>,
+
     /// Handler for the `ongesture` event.
     pub ongesture: EventHandler<'a, Gesture>,
 }
@@ -53,20 +56,36 @@ pub fn GestureArea<'a>(cx: Scope<'a, GestureAreaProps<'a>>) -> Element {
         let mut found_gesture = false;
 
         for (time, event) in touch_events.read().iter() {
-            if TouchPhase::Started == event.get_touch_phase() {
-                if let Some((last_time, last_event)) = last_event {
-                    if TouchPhase::Ended == last_event.get_touch_phase()
-                        && event
+            let phase = event.get_touch_phase();
+
+            #[allow(clippy::single_match)]
+            match phase {
+                TouchPhase::Started => {
+                    found_gesture = true;
+
+                    // TapDown
+                    cx.props.ongesture.call(Gesture::TapDown);
+
+                    // DoubleTap
+                    if let Some((last_time, last_event)) = last_event {
+                        let is_ended = TouchPhase::Ended == last_event.get_touch_phase();
+                        let is_close = event
                             .get_screen_coordinates()
                             .distance_to(last_event.get_screen_coordinates())
-                            < DOUBLE_TAP_DISTANCE
-                        && last_time.elapsed().as_millis() <= DOUBLE_TAP_DELAY
-                    {
-                        cx.props.ongesture.call(Gesture::DoubleTap);
-                        found_gesture = true;
-                        break;
+                            < DOUBLE_TAP_DISTANCE;
+                        let is_recent = last_time.elapsed().as_millis() <= DOUBLE_TAP_DELAY;
+
+                        if is_ended && is_close && is_recent {
+                            cx.props.ongesture.call(Gesture::DoubleTap);
+                        }
                     }
                 }
+                TouchPhase::Ended => {
+                    // TapUp
+                    found_gesture = true;
+                    cx.props.ongesture.call(Gesture::TapUp);
+                }
+                _ => {}
             }
 
             last_event = Some((*time, event.clone()))
@@ -75,6 +94,7 @@ pub fn GestureArea<'a>(cx: Scope<'a, GestureAreaProps<'a>>) -> Element {
         if found_gesture {
             touch_events.write_silent().clear();
         }
+
         async move {}
     });
 
@@ -114,12 +134,11 @@ mod test {
     use freya_testing::{launch_test, FreyaEvent};
 
     #[tokio::test]
-    pub async fn track_progress() {
-        fn use_animation_app(cx: Scope) -> Element {
+    pub async fn double_tap() {
+        fn dobule_tap_app(cx: Scope) -> Element {
             let value = use_state(cx, || "EMPTY".to_string());
 
             let ongesture = |e: Gesture| {
-                println!("{e:?}");
                 value.set(format!("{e:?}"));
             };
 
@@ -131,7 +150,7 @@ mod test {
             )
         }
 
-        let mut utils = launch_test(use_animation_app);
+        let mut utils = launch_test(dobule_tap_app);
 
         // Initial state
         utils.wait_for_work((500.0, 500.0));
@@ -163,6 +182,66 @@ mod test {
         assert_eq!(
             utils.root().child(0).unwrap().child(0).unwrap().text(),
             Some("DoubleTap")
+        );
+    }
+
+    #[tokio::test]
+    pub async fn tap_up_down() {
+        fn tap_up_down_app(cx: Scope) -> Element {
+            let value = use_state(cx, || "EMPTY".to_string());
+
+            let ongesture = |e: Gesture| {
+                value.set(format!("{e:?}"));
+            };
+
+            render!(
+                GestureArea {
+                    ongesture: ongesture,
+                    "{value}"
+                }
+            )
+        }
+
+        let mut utils = launch_test(tap_up_down_app);
+
+        // Initial state
+        utils.wait_for_work((500.0, 500.0));
+
+        assert_eq!(
+            utils.root().child(0).unwrap().child(0).unwrap().text(),
+            Some("EMPTY")
+        );
+
+        utils.push_event(FreyaEvent::Touch {
+            name: "touchstart",
+            location: (1.0, 1.0),
+            phase: TouchPhase::Started,
+            finger_id: 0,
+            force: None,
+        });
+
+        utils.wait_for_update((500.0, 500.0)).await;
+        utils.wait_for_update((500.0, 500.0)).await;
+
+        assert_eq!(
+            utils.root().child(0).unwrap().child(0).unwrap().text(),
+            Some("TapDown")
+        );
+
+        utils.push_event(FreyaEvent::Touch {
+            name: "touchend",
+            location: (1.0, 1.0),
+            phase: TouchPhase::Ended,
+            finger_id: 0,
+            force: None,
+        });
+
+        utils.wait_for_update((500.0, 500.0)).await;
+        utils.wait_for_update((500.0, 500.0)).await;
+
+        assert_eq!(
+            utils.root().child(0).unwrap().child(0).unwrap().text(),
+            Some("TapUp")
         );
     }
 }
