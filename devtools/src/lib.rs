@@ -121,7 +121,6 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
             let mut mutations_receiver = mutations_receiver.lock().unwrap();
             loop {
                 if mutations_receiver.recv().await.is_some() {
-                    println!("...");
                     sleep(Duration::from_millis(10)).await;
 
                     let dom = rdom.get();

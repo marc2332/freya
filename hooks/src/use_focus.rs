@@ -69,7 +69,7 @@ mod test {
         let mut utils = launch_test(use_focus_app);
 
         // Initial state
-        utils.wait_for_work((100.0, 100.0)).await;
+        utils.wait_for_work((100.0, 100.0));
         let root = utils.root().child(0).unwrap();
         assert_eq!(
             root.child(0).unwrap().child(0).unwrap().text(),
@@ -81,7 +81,7 @@ mod test {
         );
 
         // Click on the first rect
-        utils.send_event(FreyaEvent::Mouse {
+        utils.push_event(FreyaEvent::Mouse {
             name: "click",
             cursor: (5.0, 5.0),
             button: Some(MouseButton::Left),
@@ -99,7 +99,7 @@ mod test {
         );
 
         // Click on the second rect
-        utils.send_event(FreyaEvent::Mouse {
+        utils.push_event(FreyaEvent::Mouse {
             name: "click",
             cursor: (5.0, 75.0),
             button: Some(MouseButton::Left),
