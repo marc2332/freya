@@ -53,16 +53,18 @@ pub fn GestureArea<'a>(cx: Scope<'a, GestureAreaProps<'a>>) -> Element {
 
         let mut last_event: Option<(Instant, TouchEvent)> = None;
 
-        let mut found_gesture = false;
-
-        for (time, event) in touch_events.read().iter() {
+        for (i, (time, event)) in touch_events.read().iter().enumerate() {
             let phase = event.get_touch_phase();
+            let is_from_past = i != touch_events.read().len() - 1;
+
+            if is_from_past {
+                last_event = Some((*time, event.clone()));
+                continue;
+            }
 
             #[allow(clippy::single_match)]
             match phase {
                 TouchPhase::Started => {
-                    found_gesture = true;
-
                     // TapDown
                     cx.props.ongesture.call(Gesture::TapDown);
 
@@ -74,7 +76,6 @@ pub fn GestureArea<'a>(cx: Scope<'a, GestureAreaProps<'a>>) -> Element {
                             .distance_to(last_event.get_screen_coordinates())
                             < DOUBLE_TAP_DISTANCE;
                         let is_recent = last_time.elapsed().as_millis() <= DOUBLE_TAP_DELAY;
-
                         if is_ended && is_close && is_recent {
                             cx.props.ongesture.call(Gesture::DoubleTap);
                         }
@@ -82,17 +83,12 @@ pub fn GestureArea<'a>(cx: Scope<'a, GestureAreaProps<'a>>) -> Element {
                 }
                 TouchPhase::Ended => {
                     // TapUp
-                    found_gesture = true;
                     cx.props.ongesture.call(Gesture::TapUp);
                 }
                 _ => {}
             }
 
             last_event = Some((*time, event.clone()))
-        }
-
-        if found_gesture {
-            touch_events.write_silent().clear();
         }
 
         async move {}
