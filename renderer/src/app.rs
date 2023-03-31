@@ -224,21 +224,19 @@ impl<State: 'static + Clone> App<State> {
         // TODO: move logic to core
         for layer in self.layers.layers.values() {
             for render_node in layer.values() {
-                if let Some(accessibility_id) = render_node
-                    .get_node(&self.rdom.get())
-                    .state
-                    .accessibility
-                    .focus_id
-                {
-                    let dioxus_node = render_node.get_node(&self.rdom.get());
-                    let children = render_node.get_accessibility_children(&self.rdom.get());
-                    self.accessibility_state.lock().unwrap().add_element(
-                        dioxus_node,
-                        render_node,
-                        accessibility_id,
-                        children,
-                        &self.rdom.get(),
-                    );
+                let dom = &self.rdom.get();
+                let dioxus_node = render_node.get_node(dom);
+                if let Some(dioxus_node) = dioxus_node {
+                    if let Some(accessibility_id) = dioxus_node.state.accessibility.focus_id {
+                        let children = render_node.get_accessibility_children(&self.rdom.get());
+                        self.accessibility_state.lock().unwrap().add_element(
+                            dioxus_node,
+                            render_node,
+                            accessibility_id,
+                            children,
+                            &self.rdom.get(),
+                        );
+                    }
                 }
             }
         }

@@ -54,7 +54,7 @@ impl AccessibilityState {
             builder.set_value(value);
         }
 
-        if let Some(role) = render_node.get_node(rdom).state.accessibility.role {
+        if let Some(role) = dioxus_node.state.accessibility.role {
             builder.set_role(role);
         }
 
