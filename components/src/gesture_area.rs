@@ -5,14 +5,12 @@ use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{touch::TouchPhase, TouchEvent};
 
+/// Distance between the first tap and the second tap in `DoubleTap` gesture.
 const DOUBLE_TAP_DISTANCE: f64 = 100.0;
+/// Time between the first tap and second tap in a `DoubleTap` gesture.
+const DOUBLE_TAP_DELAY: u128 = 300;
 
-// Not sure about these numbers yet
-#[cfg(debug_assertions)]
-const DOUBLE_TAP_DELAY: u128 = 160; // 160ms
-#[cfg(not(debug_assertions))]
-const DOUBLE_TAP_DELAY: u128 = 40; // 40
-
+/// In-memory events queue maximum size.
 const MAX_EVENTS_QUEUE: usize = 20;
 
 /// Gesture emitted by the `GestureArea` component.

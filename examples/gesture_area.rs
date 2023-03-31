@@ -10,9 +10,10 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
+    let gesture = use_state(cx, || "Tap here".to_string());
     render!(
         GestureArea {
-            ongesture: |e| println!("{e:?}"),
+            ongesture: move |g| gesture.set(format!("{g:?}")),
             rect {
                 width: "100%",
                 height: "100%",
@@ -21,7 +22,8 @@ fn app(cx: Scope) -> Element {
                 label {
                     align: "center",
                     width: "100%",
-                    "Touch!"
+                    font_size: "70",
+                    "{gesture}"
                 }
             }
         }
