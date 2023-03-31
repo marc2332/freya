@@ -1,20 +1,21 @@
 use dioxus_core::ScopeState;
-use dioxus_hooks::{to_owned, use_effect, use_state};
+use dioxus_hooks::{use_state, UseState};
 use std::{cell::RefCell, ops::RangeInclusive, time::Duration};
 use tokio::time::interval;
 use tween::{BounceIn, Linear, SineIn, SineInOut, Tweener};
 use uuid::Uuid;
 
-/// Type of animation to use.
+/// Animation mode and configuration.
 #[derive(Clone)]
-pub enum AnimationMode {
+pub enum Animation {
     BounceIn(RefCell<Tweener<f64, i32, BounceIn>>),
     SineIn(RefCell<Tweener<f64, i32, SineIn>>),
     SineInOut(RefCell<Tweener<f64, i32, SineInOut>>),
     Linear(RefCell<Tweener<f64, i32, Linear>>),
 }
 
-impl AnimationMode {
+impl Animation {
+    /// New BounceIn [Animation]
     pub fn new_bounce_in(range: RangeInclusive<f64>, time: i32) -> Self {
         Self::BounceIn(RefCell::new(Tweener::bounce_in(
             *range.start(),
@@ -22,6 +23,8 @@ impl AnimationMode {
             time,
         )))
     }
+
+    /// New SineIn [Animation]
     pub fn new_sine_in(range: RangeInclusive<f64>, time: i32) -> Self {
         Self::SineIn(RefCell::new(Tweener::sine_in(
             *range.start(),
@@ -29,6 +32,8 @@ impl AnimationMode {
             time,
         )))
     }
+
+    /// New SineInOut [Animation]
     pub fn new_sine_in_out(range: RangeInclusive<f64>, time: i32) -> Self {
         Self::SineInOut(RefCell::new(Tweener::sine_in_out(
             *range.start(),
@@ -36,6 +41,8 @@ impl AnimationMode {
             time,
         )))
     }
+
+    /// New Linear [Animation]
     pub fn new_linear(range: RangeInclusive<f64>, time: i32) -> Self {
         Self::Linear(RefCell::new(Tweener::linear(
             *range.start(),
@@ -43,202 +50,173 @@ impl AnimationMode {
             time,
         )))
     }
-}
 
-impl AnimationMode {
-    /// Get the duration of the animation mode
+    /// Get the duration of the animation.
     fn duration(&self) -> i32 {
         match self {
-            AnimationMode::BounceIn(tween) => tween.borrow().duration,
-            AnimationMode::SineIn(tween) => tween.borrow().duration,
-            AnimationMode::SineInOut(tween) => tween.borrow().duration,
-            AnimationMode::Linear(tween) => tween.borrow().duration,
+            Animation::BounceIn(tween) => tween.borrow().duration,
+            Animation::SineIn(tween) => tween.borrow().duration,
+            Animation::SineInOut(tween) => tween.borrow().duration,
+            Animation::Linear(tween) => tween.borrow().duration,
         }
     }
 
-    /// Get the initial value of the animation mode
+    /// Get the initial value of the animation.
+    #[allow(dead_code)]
     fn initial_value(&self) -> f64 {
         match self {
-            AnimationMode::BounceIn(tween) => tween.borrow().initial_value(),
-            AnimationMode::SineIn(tween) => tween.borrow().initial_value(),
-            AnimationMode::SineInOut(tween) => tween.borrow().initial_value(),
-            AnimationMode::Linear(tween) => tween.borrow().initial_value(),
+            Animation::BounceIn(tween) => tween.borrow().initial_value(),
+            Animation::SineIn(tween) => tween.borrow().initial_value(),
+            Animation::SineInOut(tween) => tween.borrow().initial_value(),
+            Animation::Linear(tween) => tween.borrow().initial_value(),
         }
     }
 
-    /// Get the final value of the animation mode
+    /// Get the final value of the animation.
     #[allow(dead_code)]
     fn final_value(&self) -> f64 {
         match self {
-            AnimationMode::BounceIn(tween) => tween.borrow().final_value(),
-            AnimationMode::SineIn(tween) => tween.borrow().final_value(),
-            AnimationMode::SineInOut(tween) => tween.borrow().final_value(),
-            AnimationMode::Linear(tween) => tween.borrow().final_value(),
+            Animation::BounceIn(tween) => tween.borrow().final_value(),
+            Animation::SineIn(tween) => tween.borrow().final_value(),
+            Animation::SineInOut(tween) => tween.borrow().final_value(),
+            Animation::Linear(tween) => tween.borrow().final_value(),
+        }
+    }
+
+    /// Move the animation to the given index.
+    fn move_value(&mut self, index: i32) -> f64 {
+        match self {
+            Animation::BounceIn(ref mut tween) => {
+                let tween = tween.get_mut();
+                tween.move_to(index)
+            }
+            Animation::SineIn(ref mut tween) => {
+                let tween = tween.get_mut();
+                tween.move_to(index)
+            }
+            Animation::SineInOut(ref mut tween) => {
+                let tween = tween.get_mut();
+                tween.move_to(index)
+            }
+            Animation::Linear(ref mut tween) => {
+                let tween = tween.get_mut();
+                tween.move_to(index)
+            }
         }
     }
 }
 
-/// More flexible animation hook than `use_animation`
-pub fn use_animation_managed(
-    cx: &ScopeState,
+/// Manage the lifecyle of an [Animation].
+#[derive(Clone)]
+pub struct AnimationManager<'a> {
     init_value: f64,
-) -> (impl Fn(AnimationMode) + '_, impl Fn(f64) + '_, f64, bool) {
-    let current_anim_id = use_state(cx, || None);
-    let value = use_state(cx, || init_value);
+    current_animation_id: &'a UseState<Option<Uuid>>,
+    value: &'a UseState<f64>,
+    cx: &'a ScopeState,
+}
 
-    let start_anim = move |mut anim: AnimationMode| {
+impl<'a> AnimationManager<'a> {
+    /// Start the given [Animation].
+    pub fn start(&self, mut anim: Animation) {
         let new_id = Uuid::new_v4();
         let mut index = 0;
 
-        to_owned![value, current_anim_id];
+        let value = self.value.clone();
+        let current_animation_id = self.current_animation_id.clone();
 
         // Set as current this new animation
-        current_anim_id.set(Some(new_id));
+        current_animation_id.set(Some(new_id));
 
         let duration = anim.duration();
 
-        let mut run_with = move |index: i32| {
-            match anim {
-                AnimationMode::BounceIn(ref mut tween) => {
-                    let tween = tween.get_mut();
-                    let v = tween.move_to(index);
-                    value.set(v);
-                }
-                AnimationMode::SineIn(ref mut tween) => {
-                    let tween = tween.get_mut();
-                    let v = tween.move_to(index);
-                    value.set(v);
-                }
-                AnimationMode::SineInOut(ref mut tween) => {
-                    let tween = tween.get_mut();
-                    let v = tween.move_to(index);
-                    value.set(v);
-                }
-                AnimationMode::Linear(ref mut tween) => {
-                    let tween = tween.get_mut();
-                    let v = tween.move_to(index);
-                    value.set(v);
-                }
-            };
-        };
-
-        cx.spawn(async move {
+        // Spawn the animation that will run at 1ms speed
+        self.cx.spawn(async move {
             let mut ticker = interval(Duration::from_millis(1));
             loop {
-                if *current_anim_id.current() == Some(new_id) {
+                // Stop running the animation if it was removed
+                if *current_animation_id.current() == Some(new_id) {
+                    // Remove the current animation if it has finished
                     if index > duration {
-                        current_anim_id.set(None);
+                        current_animation_id.set(None);
                         break;
                     }
-                    run_with(index);
+
+                    // Advance one tick
+                    value.set(anim.move_value(index));
                     index += 1;
+
+                    // Wait 1m
                     ticker.tick().await;
                 } else {
                     break;
                 }
             }
         });
-    };
-
-    let set_value = move |new_value: f64| {
-        current_anim_id.set(None);
-        value.set(new_value);
-    };
-
-    let current_value = *value.get();
-
-    let is_animating = current_anim_id.is_some();
-
-    (start_anim, set_value, current_value, is_animating)
-}
-
-/// Create and configure an animation.
-pub fn use_animation(
-    cx: &ScopeState,
-    anim_mode: impl FnOnce() -> AnimationMode,
-) -> (impl Fn(), impl Fn(), f64) {
-    let anim = use_state(cx, anim_mode);
-    let initial_value = anim.get().initial_value();
-    let value = use_state(cx, || initial_value);
-    let started = use_state(cx, || false);
-
-    let started_setter = started.setter();
-    let value_setter = value.setter();
-
-    {
-        let started_setter = started_setter.clone();
-        let value_setter = value_setter.clone();
-        use_effect(cx, started, move |started| {
-            let mut index = 0;
-            let anim = anim.clone();
-
-            let duration = anim.duration();
-
-            let run_with = move |index: i32| {
-                anim.with_mut(|anim| {
-                    match anim {
-                        AnimationMode::BounceIn(ref mut tween) => {
-                            let tween = tween.get_mut();
-                            let v = tween.move_to(index);
-                            value_setter(v);
-                        }
-                        AnimationMode::SineIn(ref mut tween) => {
-                            let tween = tween.get_mut();
-                            let v = tween.move_to(index);
-                            value_setter(v);
-                        }
-                        AnimationMode::SineInOut(ref mut tween) => {
-                            let tween = tween.get_mut();
-                            let v = tween.move_to(index);
-                            value_setter(v);
-                        }
-                        AnimationMode::Linear(ref mut tween) => {
-                            let tween = tween.get_mut();
-                            let v = tween.move_to(index);
-                            value_setter(v);
-                        }
-                    };
-                });
-            };
-
-            async move {
-                let mut ticker = interval(Duration::from_millis(1));
-                loop {
-                    if *started.current() {
-                        if index > duration {
-                            started_setter(false);
-                            break;
-                        }
-                        run_with(index);
-                        index += 1;
-                        ticker.tick().await;
-                    } else {
-                        break;
-                    }
-                }
-            }
-        });
     }
 
-    (
-        {
-            let started_setter = started_setter.clone();
-            move || started_setter(true)
-        },
-        move || {
-            started_setter(false);
-            value_setter(initial_value);
-        },
-        *value.get(),
-    )
+    /// Clear the currently running [Animation].
+    pub fn clear(&self) {
+        self.current_animation_id.set(None);
+        self.set_value(self.init_value);
+    }
+
+    /// Check whether there is an [Animation] running or not.
+    pub fn is_animating(&self) -> bool {
+        self.current_animation_id.is_some()
+    }
+
+    /// Get the current value of the [Animation].
+    pub fn value(&self) -> f64 {
+        *self.value.current()
+    }
+
+    /// Set a new value for the [Animation].
+    pub fn set_value(&self, new_value: f64) {
+        self.value.set(new_value);
+    }
+}
+
+/// Run animations.
+///
+/// ## Usage
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app(cx: Scope) -> Element {
+///     let animation = use_animation(cx, 0.0);
+/// 
+///     let progress = animation.value();
+/// 
+///     use_effect(cx, (), move |_| {
+///         animation.start(Animation::new_linear(0.0..=100.0, 50));
+///         async move {}
+///     });
+/// 
+///     render!(
+///         rect {
+///             width: "{progress}",
+///         }
+///     )
+/// }
+/// ```
+///
+pub fn use_animation(cx: &ScopeState, init_value: f64) -> AnimationManager {
+    let current_animation_id = use_state(cx, || None);
+    let value = use_state(cx, || init_value);
+
+    AnimationManager {
+        current_animation_id,
+        value,
+        cx,
+        init_value,
+    }
 }
 
 #[cfg(test)]
 mod test {
     use std::time::Duration;
 
-    use crate::{use_animation, use_animation_managed, AnimationMode};
-    use dioxus_hooks::use_effect;
+    use crate::{use_animation, Animation};
+    use dioxus_hooks::{to_owned, use_effect};
     use freya::prelude::*;
     use freya_testing::{launch_test, FreyaEvent, MouseButton};
     use tokio::time::sleep;
@@ -246,10 +224,13 @@ mod test {
     #[tokio::test]
     pub async fn track_progress() {
         fn use_animation_app(cx: Scope) -> Element {
-            let (start, _, progress) =
-                use_animation(cx, || AnimationMode::new_linear(0.0..=100.0, 50));
-            use_effect(cx, (), move |_| async move {
-                start();
+            let animation = use_animation(cx, 0.0);
+
+            let progress = animation.value();
+
+            use_effect(cx, (), move |_| {
+                animation.start(Animation::new_linear(0.0..=100.0, 50));
+                async move {}
             });
 
             render!(rect {
@@ -284,11 +265,20 @@ mod test {
     #[tokio::test]
     pub async fn restart_progress() {
         fn use_animation_app(cx: Scope) -> Element {
-            let (start, restart, progress) =
-                use_animation(cx, || AnimationMode::new_linear(10.0..=100.0, 50));
+            let animation = use_animation(cx, 10.0);
 
-            use_effect(cx, (), move |_| async move {
-                start();
+            let progress = animation.value();
+
+            let restart = {
+                to_owned![animation];
+                move || {
+                    animation.clear();
+                }
+            };
+
+            use_effect(cx, (), move |_| {
+                animation.start(Animation::new_linear(10.0..=100.0, 50));
+                async move {}
             });
 
             render!(rect {
@@ -328,53 +318,9 @@ mod test {
 
     #[test]
     pub fn animation_mode_settings() {
-        let anim = AnimationMode::new_sine_in_out(7.0..=99.0, 500);
+        let anim = Animation::new_sine_in_out(7.0..=99.0, 500);
         assert_eq!(anim.duration(), 500);
         assert_eq!(anim.initial_value(), 7.0);
         assert_eq!(anim.final_value(), 99.0);
-    }
-
-    #[tokio::test]
-    pub async fn test_use_animation_managed() {
-        fn use_animation_app(cx: Scope) -> Element {
-            let (anim, _, progress, _) = use_animation_managed(cx, 0.0);
-
-            use_effect(cx, &(progress), move |v| {
-                if v == 0.0 {
-                    anim(AnimationMode::new_sine_in_out(0.0..=100.0, 50));
-                } else if v == 100.0 {
-                    anim(AnimationMode::new_sine_in_out(100.0..=0.0, 50));
-                }
-                async move {}
-            });
-
-            render!(rect {
-                width: "{progress}",
-            })
-        }
-
-        let mut utils = launch_test(use_animation_app);
-        let element = utils.root().child(0).unwrap();
-
-        // Initial state
-        utils.wait_for_update((500.0, 500.0)).await;
-
-        assert_eq!(element.layout().unwrap().width, 0.0);
-
-        // State somewhere in the middle
-        utils.wait_for_update((500.0, 500.0)).await;
-        let width = element.layout().unwrap().width;
-        assert!(width > 0.0);
-        assert!(width < 100.0);
-
-        // Reached 100.0
-        utils.wait_until_cleanup((500.0, 500.0)).await;
-        let width = element.layout().unwrap().width;
-        assert_eq!(width, 100.0);
-
-        // Back to 0.0
-        utils.wait_until_cleanup((500.0, 500.0)).await;
-        let width = element.layout().unwrap().width;
-        assert_eq!(width, 0.0);
     }
 }
