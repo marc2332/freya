@@ -1,10 +1,9 @@
-use freya_dom::FreyaDOM;
+use freya_dom::DioxusNode;
 use freya_layout::RenderData;
 use skia_safe::{Canvas, Data, IRect, Image, Paint, Rect};
 
 /// Render an `image` element
-pub fn render_image(canvas: &mut Canvas, node: &RenderData, dom: &FreyaDOM) {
-    let dioxus_node = node.get_node(dom);
+pub fn render_image(render_node: &RenderData, dioxus_node: &DioxusNode, canvas: &mut Canvas) {
     let mut draw_img = |bytes: &[u8]| {
         let pic = Image::from_encoded(unsafe { Data::new_bytes(bytes) });
         if let Some(pic) = pic {
@@ -14,10 +13,10 @@ pub fn render_image(canvas: &mut Canvas, node: &RenderData, dom: &FreyaDOM) {
                 pic,
                 IRect::new(0, 0, 0, 0),
                 Rect::new(
-                    node.node_area.x,
-                    node.node_area.y,
-                    node.node_area.x + node.node_area.width,
-                    node.node_area.y + node.node_area.height,
+                    render_node.node_area.x,
+                    render_node.node_area.y,
+                    render_node.node_area.x + render_node.node_area.width,
+                    render_node.node_area.y + render_node.node_area.height,
                 ),
                 skia_safe::FilterMode::Last,
                 Some(&paint),

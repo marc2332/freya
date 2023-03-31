@@ -1,7 +1,7 @@
 use dioxus_native_core::node::NodeType;
 use dioxus_native_core::NodeId;
 use freya_core::ViewportsCollection;
-use freya_dom::FreyaDOM;
+use freya_dom::{DioxusNode, FreyaDOM};
 use freya_layout::RenderData;
 use skia_safe::{textlayout::FontCollection, Canvas, ClipOp, Rect};
 use skia_safe::{Matrix, Point};
@@ -11,20 +11,22 @@ use crate::elements::{
 };
 
 /// Render a node into the Skia canvas
+#[allow(clippy::too_many_arguments)]
 pub fn render_skia(
     dom: &FreyaDOM,
     canvas: &mut Canvas,
-    node: &RenderData,
+    render_node: &RenderData,
+    dioxus_node: &DioxusNode,
     font_collection: &mut FontCollection,
     viewports_collection: &ViewportsCollection,
     render_wireframe: bool,
     matrices: &mut Vec<(Matrix, Vec<NodeId>)>,
 ) {
-    if let NodeType::Element { tag, .. } = &node.get_node(dom).node_data.node_type {
+    if let NodeType::Element { tag, .. } = &dioxus_node.node_data.node_type {
         canvas.save();
 
-        if let Some(rotate_degs) = node.get_node(dom).state.transform.rotate_degs {
-            let area = node.get_area();
+        if let Some(rotate_degs) = dioxus_node.state.transform.rotate_degs {
+            let area = render_node.get_area();
 
             let mut matrix = Matrix::new_identity();
             matrix.set_rotate(
@@ -35,7 +37,7 @@ pub fn render_skia(
                 }),
             );
 
-            if let Some(children) = node.get_children() {
+            if let Some(children) = render_node.get_children() {
                 matrices.push((matrix, children.clone()));
             }
 
@@ -43,16 +45,16 @@ pub fn render_skia(
         }
 
         for (matrix, nodes) in matrices.iter_mut() {
-            if nodes.contains(&node.node_id) {
+            if nodes.contains(&render_node.node_id) {
                 canvas.concat(matrix);
 
-                if let Some(children) = node.get_children() {
+                if let Some(children) = render_node.get_children() {
                     nodes.extend(children)
                 }
             }
         }
 
-        let viewports = viewports_collection.get(node.get_id());
+        let viewports = viewports_collection.get(render_node.get_id());
 
         // Clip all elements with their corresponding viewports
         if let Some((_, viewports)) = viewports {
@@ -75,25 +77,25 @@ pub fn render_skia(
 
         match tag.as_str() {
             "rect" | "container" => {
-                render_rect_container(canvas, node, dom);
+                render_rect_container(canvas, render_node, dioxus_node);
             }
             "label" => {
-                render_label(dom, canvas, font_collection, node);
+                render_label(render_node, dioxus_node, dom, canvas, font_collection);
             }
             "paragraph" => {
-                render_paragraph(dom, canvas, font_collection, node);
+                render_paragraph(render_node, dioxus_node, font_collection, dom, canvas);
             }
             "svg" => {
-                render_svg(canvas, node, dom);
+                render_svg(render_node, dioxus_node, canvas);
             }
             "image" => {
-                render_image(canvas, node, dom);
+                render_image(render_node, dioxus_node, canvas);
             }
             _ => {}
         }
 
         if render_wireframe {
-            crate::wireframe::render_wireframe(canvas, node);
+            crate::wireframe::render_wireframe(canvas, render_node);
         }
 
         canvas.restore();

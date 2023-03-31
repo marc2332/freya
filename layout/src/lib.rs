@@ -186,10 +186,18 @@ impl<'a> NodeLayoutMeasurer<'a> {
             NodeType::Text { .. } => {}
             _ => {
                 if let SizeMode::Auto = self.node.state.size.width {
-                    node_area.width = remaining_inner_area.x - node_area.x + padding.3;
+                    if DirectionMode::Vertical == direction {
+                        node_area.width = inner_width;
+                    } else {
+                        node_area.width = remaining_inner_area.x - node_area.x + padding.3;
+                    }
                 }
                 if let SizeMode::Auto = self.node.state.size.height {
-                    node_area.height = remaining_inner_area.y - node_area.y + padding.2;
+                    if DirectionMode::Vertical == direction {
+                        node_area.height = inner_height;
+                    } else {
+                        node_area.height = remaining_inner_area.y - node_area.y + padding.2;
+                    }
                 }
             }
         }

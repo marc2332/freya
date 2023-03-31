@@ -1,6 +1,6 @@
 use dioxus_native_core::node::NodeType;
 use dioxus_native_core::tree::TreeView;
-use freya_dom::FreyaDOM;
+use freya_dom::{DioxusNode, FreyaDOM};
 use freya_layout::RenderData;
 use skia_safe::{
     textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle},
@@ -9,12 +9,12 @@ use skia_safe::{
 
 /// Render a `label` element
 pub fn render_label(
+    render_node: &RenderData,
+    dioxus_node: &DioxusNode,
     dom: &FreyaDOM,
     canvas: &mut Canvas,
     font_collection: &mut FontCollection,
-    node: &RenderData,
 ) {
-    let dioxus_node = node.get_node(dom);
     let font_size = dioxus_node.state.font_style.font_size;
     let font_family = &dioxus_node.state.font_style.font_family;
     let font_color = dioxus_node.state.font_style.color;
@@ -27,7 +27,7 @@ pub fn render_label(
     paint.set_style(PaintStyle::StrokeAndFill);
     paint.set_color(dioxus_node.state.font_style.color);
 
-    let children = dom.dom().tree.children(node.node_id);
+    let children = dom.dom().tree.children(render_node.node_id);
 
     let text = if let Some(children) = children {
         children
@@ -44,8 +44,8 @@ pub fn render_label(
     };
 
     if let Some(text) = text {
-        let x = node.node_area.x;
-        let y = node.node_area.y;
+        let x = render_node.node_area.x;
+        let y = render_node.node_area.y;
 
         let mut paragraph_style = ParagraphStyle::default();
         paragraph_style.set_text_align(align);
@@ -63,7 +63,7 @@ pub fn render_label(
 
         let mut paragraph = paragraph_builder.build();
 
-        paragraph.layout(node.node_area.width + 1.0);
+        paragraph.layout(render_node.node_area.width + 1.0);
 
         paragraph.paint(canvas, (x, y));
     }
