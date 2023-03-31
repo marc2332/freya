@@ -20,7 +20,9 @@ fn app(cx: Scope) -> Element {
 
     let anim = move |_: MouseEvent| {
         if animation.is_animating() {
-        } else if progress == 0.0 {
+            return;
+        }
+        if progress == 0.0 {
             animation.start(Animation::new_sine_in_out(0.0..=TARGET, TIME));
         } else if progress == TARGET {
             animation.start(Animation::new_sine_in_out(TARGET..=0.0, TIME));
