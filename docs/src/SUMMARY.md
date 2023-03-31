@@ -10,5 +10,5 @@
 # Guides
 - [Hot reload](./guides/hot_reload.md)
 - [Virtualizing](./guides/virtualizing.md)
+- [Layout](./guides/layout.md)
 - [Theming](./guides/theming.md)
-
