@@ -43,8 +43,8 @@ impl RenderData {
     }
 
     #[inline(always)]
-    pub fn get_node<'a>(&'a self, rdom: &'a FreyaDOM) -> &DioxusNode {
-        rdom.dom().get(self.node_id).unwrap()
+    pub fn get_node<'a>(&'a self, rdom: &'a FreyaDOM) -> Option<&DioxusNode> {
+        rdom.dom().get(self.node_id)
     }
 
     pub fn get_text(&self, rdom: &FreyaDOM) -> Option<String> {
