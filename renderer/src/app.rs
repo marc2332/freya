@@ -223,13 +223,18 @@ impl<State: 'static + Clone> App<State> {
     pub fn process_accessibility(&mut self) {
         // TODO: move logic to core
         for layer in self.layers.layers.values() {
-            for node in layer.values() {
-                if let Some(accessibility_id) =
-                    node.get_node(&self.rdom.get()).state.accessibility.focus_id
+            for render_node in layer.values() {
+                if let Some(accessibility_id) = render_node
+                    .get_node(&self.rdom.get())
+                    .state
+                    .accessibility
+                    .focus_id
                 {
-                    let children = node.get_accessibility_children(&self.rdom.get());
+                    let dioxus_node = render_node.get_node(&self.rdom.get());
+                    let children = render_node.get_accessibility_children(&self.rdom.get());
                     self.accessibility_state.lock().unwrap().add_element(
-                        node,
+                        dioxus_node,
+                        render_node,
                         accessibility_id,
                         children,
                         &self.rdom.get(),

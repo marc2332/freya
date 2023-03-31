@@ -3,7 +3,7 @@ use accesskit::{
     Tree, TreeUpdate,
 };
 use accesskit_winit::Adapter;
-use freya_dom::FreyaDOM;
+use freya_dom::{DioxusNode, FreyaDOM};
 use freya_layout::RenderData;
 use std::{
     num::NonZeroU128,
@@ -38,7 +38,8 @@ impl AccessibilityState {
 
     pub fn add_element(
         &mut self,
-        dioxus_node: &RenderData,
+        dioxus_node: &DioxusNode,
+        render_node: &RenderData,
         accessibility_id: NodeIdKit,
         children: Option<Vec<NodeIdKit>>,
         rdom: &FreyaDOM,
@@ -49,19 +50,19 @@ impl AccessibilityState {
             builder.set_children(children);
         }
 
-        if let Some(value) = dioxus_node.get_text(rdom) {
+        if let Some(value) = render_node.get_text(rdom) {
             builder.set_value(value);
         }
 
-        if let Some(role) = dioxus_node.get_node(rdom).state.accessibility.role {
+        if let Some(role) = render_node.get_node(rdom).state.accessibility.role {
             builder.set_role(role);
         }
 
         builder.set_bounds(Rect {
-            x0: dioxus_node.node_area.x as f64,
-            x1: (dioxus_node.node_area.x + dioxus_node.node_area.width) as f64,
-            y0: dioxus_node.node_area.y as f64,
-            y1: (dioxus_node.node_area.y + dioxus_node.node_area.height) as f64,
+            x0: render_node.node_area.x as f64,
+            x1: (render_node.node_area.x + render_node.node_area.width) as f64,
+            y0: render_node.node_area.y as f64,
+            y1: (render_node.node_area.y + render_node.node_area.height) as f64,
         });
         builder.add_action(Action::Default);
         builder.set_default_action_verb(DefaultActionVerb::Click);
