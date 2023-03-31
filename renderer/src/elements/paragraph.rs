@@ -1,4 +1,4 @@
-use freya_dom::FreyaDOM;
+use freya_dom::{DioxusNode, FreyaDOM};
 use freya_layout::{get_inner_texts, RenderData};
 use skia_safe::{
     textlayout::{
@@ -10,18 +10,18 @@ use skia_safe::{
 
 /// Render a `paragraph` element
 pub fn render_paragraph(
+    render_node: &RenderData,
+    dioxus_node: &DioxusNode,
+    font_collection: &mut FontCollection,
     dom: &FreyaDOM,
     canvas: &mut Canvas,
-    font_collection: &mut FontCollection,
-    node: &RenderData,
 ) {
-    let dioxus_node = node.get_node(dom);
     let align = dioxus_node.state.font_style.align;
     let max_lines = dioxus_node.state.font_style.max_lines;
 
-    let texts = get_inner_texts(dom, &node.node_id);
+    let texts = get_inner_texts(dom, &render_node.node_id);
 
-    let (x, y) = node.node_area.get_origin_points();
+    let (x, y) = render_node.node_area.get_origin_points();
 
     let mut paragraph_style = ParagraphStyle::default();
     paragraph_style.set_max_lines(max_lines);
@@ -51,21 +51,20 @@ pub fn render_paragraph(
 
     let mut paragraph = paragraph_builder.build();
 
-    paragraph.layout(node.node_area.width);
+    paragraph.layout(render_node.node_area.width);
 
     paragraph.paint(canvas, (x, y));
 
     // Draw a cursor if specified
-    draw_cursor(node, paragraph, canvas, dom);
+    draw_cursor(render_node, paragraph, canvas, dioxus_node);
 }
 
 fn draw_cursor(
-    node: &RenderData,
+    render_node: &RenderData,
     paragraph: Paragraph,
     canvas: &mut Canvas,
-    rdom: &FreyaDOM,
+    dioxus_node: &DioxusNode,
 ) -> Option<()> {
-    let dioxus_node = node.get_node(rdom);
     let cursor = dioxus_node.state.cursor_settings.position?;
     let cursor_color = dioxus_node.state.cursor_settings.color;
     let cursor_position = cursor as usize;
@@ -77,8 +76,8 @@ fn draw_cursor(
     );
     let cursor_rect = cursor_rects.first()?;
 
-    let x = node.node_area.x + cursor_rect.rect.left;
-    let y = node.node_area.y + cursor_rect.rect.top;
+    let x = render_node.node_area.x + cursor_rect.rect.left;
+    let y = render_node.node_area.y + cursor_rect.rect.top;
 
     let x2 = x + 1.0;
     let y2 = y + (cursor_rect.rect.bottom - cursor_rect.rect.top);

@@ -1,10 +1,13 @@
-use freya_dom::FreyaDOM;
+use freya_dom::DioxusNode;
 use freya_layout::RenderData;
 use skia_safe::{BlurStyle, Canvas, MaskFilter, Paint, PaintStyle, Path, PathDirection, Rect};
 
 /// Render a `rect` or a `container` element
-pub fn render_rect_container(canvas: &mut Canvas, node: &RenderData, rdom: &FreyaDOM) {
-    let dioxus_node = node.get_node(rdom);
+pub fn render_rect_container(
+    canvas: &mut Canvas,
+    render_node: &RenderData,
+    dioxus_node: &DioxusNode,
+) {
     let shadow = &dioxus_node.state.style.shadow;
 
     let mut paint = Paint::default();
@@ -15,7 +18,7 @@ pub fn render_rect_container(canvas: &mut Canvas, node: &RenderData, rdom: &Frey
     let radius = dioxus_node.state.style.radius;
     let radius = if radius < 0.0 { 0.0 } else { radius };
 
-    let ((x, y), (x2, y2)) = node.node_area.get_rect();
+    let ((x, y), (x2, y2)) = render_node.node_area.get_rect();
 
     let mut path = Path::new();
     path.add_round_rect(
