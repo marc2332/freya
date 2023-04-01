@@ -30,25 +30,28 @@ pub fn calculate_viewports(
     for layer_num in layers_nums {
         let layer = layers.layers.get(layer_num).unwrap();
         for dom_element in layer.values() {
-            if let NodeType::Element { tag, .. } = &dom_element.get_node(rdom).node_data.node_type {
-                if tag == "container" {
-                    viewports_collection
-                        .entry(*dom_element.get_id())
-                        .or_insert_with(|| (None, Vec::new()))
-                        .0 = Some(dom_element.node_area);
-                }
-                if let Some(children) = &dom_element.get_children() {
-                    for child in children {
-                        if viewports_collection.contains_key(dom_element.get_id()) {
-                            let mut inherited_viewports = viewports_collection
-                                .get(dom_element.get_id())
-                                .unwrap()
-                                .1
-                                .clone();
+            let dioxus_node = dom_element.get_node(rdom);
+            if let Some(dioxus_node) = dioxus_node {
+                if let NodeType::Element { tag, .. } = &dioxus_node.node_data.node_type {
+                    if tag == "container" {
+                        viewports_collection
+                            .entry(*dom_element.get_id())
+                            .or_insert_with(|| (None, Vec::new()))
+                            .0 = Some(dom_element.node_area);
+                    }
+                    if let Some(children) = &dom_element.get_children() {
+                        for child in children {
+                            if viewports_collection.contains_key(dom_element.get_id()) {
+                                let mut inherited_viewports = viewports_collection
+                                    .get(dom_element.get_id())
+                                    .unwrap()
+                                    .1
+                                    .clone();
 
-                            inherited_viewports.push(*dom_element.get_id());
+                                inherited_viewports.push(*dom_element.get_id());
 
-                            viewports_collection.insert(*child, (None, inherited_viewports));
+                                viewports_collection.insert(*child, (None, inherited_viewports));
+                            }
                         }
                     }
                 }
@@ -148,13 +151,19 @@ fn calculate_events_listeners(
         'event_nodes: for (node, request) in event_nodes.iter() {
             for listener in &listeners {
                 if listener.node_data.node_id == *node.get_id() {
-                    if node.get_node(dom).state.style.background != Color::TRANSPARENT
+                    let dioxus_node = if let Some(node) = node.get_node(dom) {
+                        node
+                    } else {
+                        continue 'event_nodes;
+                    };
+
+                    if dioxus_node.state.style.background != Color::TRANSPARENT
                         && event_name == &"wheel"
                     {
                         break 'event_nodes;
                     }
 
-                    if node.get_node(dom).state.style.background != Color::TRANSPARENT
+                    if dioxus_node.state.style.background != Color::TRANSPARENT
                         && (event_name == &"click"
                             || event_name == &"touchstart"
                             || event_name == &"touchend")
