@@ -97,7 +97,6 @@ pub fn GestureArea<'a>(cx: Scope<'a, GestureAreaProps<'a>>) -> Element {
                             .distance_to(ended_event.get_screen_coordinates())
                             < DOUBLE_TAP_DISTANCE;
                         // Is the latest `touchend` mature enough?
-                        println!("-> {}", ended_time.elapsed().as_millis());
                         let is_ended_mature = ended_time.elapsed().as_millis() >= DOUBLE_TAP_MIN;
 
                         // Hast the latest `touchstart` event expired?
