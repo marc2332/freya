@@ -7,8 +7,10 @@ use freya_elements::events::{touch::TouchPhase, TouchEvent};
 
 /// Distance between the first tap and the second tap in `DoubleTap` gesture.
 const DOUBLE_TAP_DISTANCE: f64 = 100.0;
+
 /// Maximum time between the start of the first tap and the start of the second tap in a `DoubleTap` gesture.
 const DOUBLE_TAP_TIMEOUT: u128 = 300; // 300ms
+
 /// Minimum time between the end of the first time to the start of the second tap in a `DoubleTap` gesture.
 const DOUBLE_TAP_MIN: u128 = 40; // 40ms
 
@@ -51,6 +53,7 @@ pub fn GestureArea<'a>(cx: Scope<'a, GestureAreaProps<'a>>) -> Element {
             touch_events.write_silent().pop_front();
         }
 
+        // Find the first event with the `target_phase` that happened before the `start_time`
         let find_previous_event = |start_time: &Instant,
                                    events: &VecDeque<(Instant, TouchEvent)>,
                                    target_phase: TouchPhase|
@@ -68,24 +71,23 @@ pub fn GestureArea<'a>(cx: Scope<'a, GestureAreaProps<'a>>) -> Element {
             None
         };
 
-        for (i, (time, event)) in touch_events.read().iter().enumerate() {
+        let touch_events = touch_events.read();
+
+        // Process the most recent event
+        let event = touch_events.iter().last();
+
+        if let Some((time, event)) = event {
             let phase = event.get_touch_phase();
-            let is_from_past = i != touch_events.read().len() - 1;
 
-            if is_from_past {
-                continue;
-            }
-
-            #[allow(clippy::single_match)]
             match phase {
                 TouchPhase::Started => {
                     // TapDown
                     cx.props.ongesture.call(Gesture::TapDown);
 
                     let last_ended_event =
-                        find_previous_event(time, &touch_events.read(), TouchPhase::Ended);
+                        find_previous_event(time, &touch_events, TouchPhase::Ended);
                     let last_started_event =
-                        find_previous_event(time, &touch_events.read(), TouchPhase::Started);
+                        find_previous_event(time, &touch_events, TouchPhase::Started);
 
                     // DoubleTap
                     if let Some(((ended_time, ended_event), (started_time, _))) =
@@ -157,6 +159,11 @@ mod test {
 
     use crate::gesture_area::DOUBLE_TAP_MIN;
 
+    /// This test simulates a DoubleTap gesture in this order:
+    /// 1. Touch start
+    /// 2. Touch end
+    /// 3. Wait 40ms
+    /// 4. Touch start
     #[tokio::test]
     pub async fn double_tap() {
         fn dobule_tap_app(cx: Scope) -> Element {
