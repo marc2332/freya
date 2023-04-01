@@ -26,4 +26,4 @@ jobs:
         with:
           project: freya-docs
           entrypoint: https://deno.land/std/http/file_server.ts
-          root: target/doc/freya
+          root: target/doc
