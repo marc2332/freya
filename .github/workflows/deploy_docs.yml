@@ -1,4 +1,4 @@
-name: Deploy book
+name: Deploy docs
 on: [push]
 
 jobs:
