@@ -7,8 +7,10 @@ use freya_elements::events::{touch::TouchPhase, TouchEvent};
 
 /// Distance between the first tap and the second tap in `DoubleTap` gesture.
 const DOUBLE_TAP_DISTANCE: f64 = 100.0;
-/// Time between the first tap and second tap in a `DoubleTap` gesture.
-const DOUBLE_TAP_DELAY: u128 = 300;
+/// Maximum time between the start of the first tap and the start of the second tap in a `DoubleTap` gesture.
+const DOUBLE_TAP_TIMEOUT: u128 = 300; // 300ms
+/// Minimum time between the end of the first time to the start of the second tap in a `DoubleTap` gesture.
+const DOUBLE_TAP_MIN: u128 = 40; // 40ms
 
 /// In-memory events queue maximum size.
 const MAX_EVENTS_QUEUE: usize = 20;
@@ -49,14 +51,28 @@ pub fn GestureArea<'a>(cx: Scope<'a, GestureAreaProps<'a>>) -> Element {
             touch_events.write_silent().pop_front();
         }
 
-        let mut last_event: Option<(Instant, TouchEvent)> = None;
+        let find_previous_event = |start_time: &Instant,
+                                   events: &VecDeque<(Instant, TouchEvent)>,
+                                   target_phase: TouchPhase|
+         -> Option<(Instant, TouchEvent)> {
+            let mut start = false;
+            for (time, event) in events.iter().rev() {
+                if time == start_time {
+                    start = true;
+                    continue;
+                }
+                if event.phase == target_phase && start {
+                    return Some((*time, event.clone()));
+                }
+            }
+            None
+        };
 
         for (i, (time, event)) in touch_events.read().iter().enumerate() {
             let phase = event.get_touch_phase();
             let is_from_past = i != touch_events.read().len() - 1;
 
             if is_from_past {
-                last_event = Some((*time, event.clone()));
                 continue;
             }
 
@@ -66,15 +82,28 @@ pub fn GestureArea<'a>(cx: Scope<'a, GestureAreaProps<'a>>) -> Element {
                     // TapDown
                     cx.props.ongesture.call(Gesture::TapDown);
 
+                    let last_ended_event =
+                        find_previous_event(time, &touch_events.read(), TouchPhase::Ended);
+                    let last_started_event =
+                        find_previous_event(time, &touch_events.read(), TouchPhase::Started);
+
                     // DoubleTap
-                    if let Some((last_time, last_event)) = last_event {
-                        let is_ended = TouchPhase::Ended == last_event.get_touch_phase();
-                        let is_close = event
+                    if let Some(((ended_time, ended_event), (started_time, _))) =
+                        last_ended_event.zip(last_started_event)
+                    {
+                        // Has the latest `touchend` event went too far?
+                        let is_ended_close = event
                             .get_screen_coordinates()
-                            .distance_to(last_event.get_screen_coordinates())
+                            .distance_to(ended_event.get_screen_coordinates())
                             < DOUBLE_TAP_DISTANCE;
-                        let is_recent = last_time.elapsed().as_millis() <= DOUBLE_TAP_DELAY;
-                        if is_ended && is_close && is_recent {
+                        // Is the latest `touchend` mature enough?
+                        let is_ended_mature = ended_time.elapsed().as_millis() >= DOUBLE_TAP_MIN;
+
+                        // Hast the latest `touchstart` event expired?
+                        let is_started_recent =
+                            started_time.elapsed().as_millis() <= DOUBLE_TAP_TIMEOUT;
+
+                        if is_ended_close && is_ended_mature && is_started_recent {
                             cx.props.ongesture.call(Gesture::DoubleTap);
                         }
                     }
@@ -85,8 +114,6 @@ pub fn GestureArea<'a>(cx: Scope<'a, GestureAreaProps<'a>>) -> Element {
                 }
                 _ => {}
             }
-
-            last_event = Some((*time, event.clone()))
         }
 
         async move {}
@@ -110,8 +137,6 @@ pub fn GestureArea<'a>(cx: Scope<'a, GestureAreaProps<'a>>) -> Element {
 
     render!(
         rect {
-            width: "100%",
-            height: "100%",
             ontouchcancel: ontouchcancel,
             ontouchend: ontouchend,
             ontouchmove: ontouchmove,

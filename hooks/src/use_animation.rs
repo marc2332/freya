@@ -183,14 +183,14 @@ impl<'a> AnimationManager<'a> {
 /// # use freya::prelude::*;
 /// fn app(cx: Scope) -> Element {
 ///     let animation = use_animation(cx, 0.0);
-/// 
+///
 ///     let progress = animation.value();
-/// 
+///
 ///     use_effect(cx, (), move |_| {
 ///         animation.start(Animation::new_linear(0.0..=100.0, 50));
 ///         async move {}
 ///     });
-/// 
+///
 ///     render!(
 ///         rect {
 ///             width: "{progress}",
