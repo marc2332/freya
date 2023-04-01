@@ -97,6 +97,7 @@ pub fn GestureArea<'a>(cx: Scope<'a, GestureAreaProps<'a>>) -> Element {
                             .distance_to(ended_event.get_screen_coordinates())
                             < DOUBLE_TAP_DISTANCE;
                         // Is the latest `touchend` mature enough?
+                        println!("-> {}", ended_time.elapsed().as_millis());
                         let is_ended_mature = ended_time.elapsed().as_millis() >= DOUBLE_TAP_MIN;
 
                         // Hast the latest `touchstart` event expired?
@@ -148,9 +149,14 @@ pub fn GestureArea<'a>(cx: Scope<'a, GestureAreaProps<'a>>) -> Element {
 
 #[cfg(test)]
 mod test {
+    use std::time::Duration;
+
     use freya::prelude::*;
     use freya_elements::events::touch::TouchPhase;
     use freya_testing::{launch_test, FreyaEvent};
+    use tokio::time::sleep;
+
+    use crate::gesture_area::DOUBLE_TAP_MIN;
 
     #[tokio::test]
     pub async fn double_tap() {
@@ -180,12 +186,25 @@ mod test {
         );
 
         utils.push_event(FreyaEvent::Touch {
+            name: "touchstart",
+            location: (1.0, 1.0),
+            phase: TouchPhase::Started,
+            finger_id: 0,
+            force: None,
+        });
+
+        utils.push_event(FreyaEvent::Touch {
             name: "touchend",
             location: (1.0, 1.0),
             phase: TouchPhase::Ended,
             finger_id: 0,
             force: None,
         });
+
+        utils.wait_for_update((500.0, 500.0)).await;
+        utils.wait_for_update((500.0, 500.0)).await;
+
+        sleep(Duration::from_millis(DOUBLE_TAP_MIN as u64)).await;
 
         utils.push_event(FreyaEvent::Touch {
             name: "touchstart",
