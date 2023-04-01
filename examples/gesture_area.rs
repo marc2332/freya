@@ -17,7 +17,7 @@ fn app(cx: Scope) -> Element {
             rect {
                 width: "100%",
                 height: "100%",
-                direction: "both",
+                direction: "vertical",
                 display: "center",
                 label {
                     align: "center",
