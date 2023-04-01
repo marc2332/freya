@@ -3,10 +3,25 @@ use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
 use freya_hooks::{use_animation, use_get_theme, use_node, Animation};
 
+/// [`Accordion`] component properties.
+#[derive(Props)]
+pub struct AccordionProps<'a> {
+    /// Inner children for the Accordion.
+    children: Element<'a>,
+    /// Summary element.
+    summary: Element<'a>,
+}
+
 /// `Accordion` component.
-#[inline_props]
+///
+/// # Props
+/// See [`AccordionProps`].
+///
+/// # Styling
+/// Inherits the [`AccordionTheme`](freya_hooks::AccordionTheme)
+///
 #[allow(non_snake_case)]
-pub fn Accordion<'a>(cx: Scope<'a>, children: Element<'a>, summary: Element<'a>) -> Element<'a> {
+pub fn Accordion<'a>(cx: Scope<'a, AccordionProps<'a>>) -> Element<'a> {
     let theme = use_get_theme(cx);
     let accordion_theme = &theme.accordion;
     let animation = use_animation(cx, 0.0);
@@ -45,7 +60,7 @@ pub fn Accordion<'a>(cx: Scope<'a>, children: Element<'a>, summary: Element<'a>)
             height: "auto",
             background: "{accordion_theme.background}",
             onclick: onclick,
-            summary
+            &cx.props.summary
             container {
                 width: "100%",
                 height: "{animation_value}",
@@ -53,27 +68,47 @@ pub fn Accordion<'a>(cx: Scope<'a>, children: Element<'a>, summary: Element<'a>)
                     reference: node_ref,
                     height: "auto",
                     width: "100%",
-                    children
+                    &cx.props.children
                 }
             }
         }
     )
 }
 
+/// [`AccordionSummary`] component properties.
+#[derive(Props)]
+pub struct AccordionSummaryProps<'a> {
+    /// Inner children for the AccordionSummary.
+    children: Element<'a>,
+}
+
 /// `AccordionSummary` component.
-#[inline_props]
+///
+/// # Props
+/// See [`AccordionSummaryProps`].
+///
 #[allow(non_snake_case)]
-pub fn AccordionSummary<'a>(cx: Scope<'a>, children: Element<'a>) -> Element<'a> {
-    render!(children)
+pub fn AccordionSummary<'a>(cx: Scope<'a, AccordionSummaryProps<'a>>) -> Element<'a> {
+    render!(&cx.props.children)
+}
+
+/// [`AccordionBody`] component properties.
+#[derive(Props)]
+pub struct AccordionBodyProps<'a> {
+    /// Inner children for the AccordionBody.
+    children: Element<'a>,
 }
 
 /// `AccordionBody` component.
-#[inline_props]
+///
+/// # Props
+/// See [`AccordionBodyProps`].
+///
 #[allow(non_snake_case)]
-pub fn AccordionBody<'a>(cx: Scope<'a>, children: Element<'a>) -> Element<'a> {
+pub fn AccordionBody<'a>(cx: Scope<'a, AccordionBodyProps<'a>>) -> Element<'a> {
     render!(rect {
         width: "100%",
         padding: "15 0 0 0",
-        children
+        &cx.props.children
     })
 }
