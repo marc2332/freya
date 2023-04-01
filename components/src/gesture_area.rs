@@ -30,10 +30,11 @@ pub enum Gesture {
 pub struct GestureAreaProps<'a> {
     /// Inner children for the GestureArea.
     pub children: Element<'a>,
-
     /// Handler for the `ongesture` event.
     pub ongesture: EventHandler<'a, Gesture>,
 }
+
+type EventsQueue = VecDeque<(Instant, TouchEvent)>;
 
 /// `GestureArea` component.
 ///
@@ -42,10 +43,24 @@ pub struct GestureAreaProps<'a> {
 ///
 /// # Example
 ///
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app(cx: Scope) -> Element {
+///    let gesture = use_state(cx, || "Tap here".to_string());
+///    render!(
+///        GestureArea {
+///            ongesture: move |g| gesture.set(format!("{g:?}")),
+///            label {
+///                "{gesture}"
+///            }
+///        }
+///    )
+/// }
+/// ```
 ///
 #[allow(non_snake_case)]
 pub fn GestureArea<'a>(cx: Scope<'a, GestureAreaProps<'a>>) -> Element {
-    let touch_events = use_ref::<VecDeque<(Instant, TouchEvent)>>(cx, VecDeque::new);
+    let touch_events = use_ref::<EventsQueue>(cx, VecDeque::new);
 
     use_effect(cx, touch_events, move |_| {
         // Keep the touch events queue under a certain size
@@ -55,7 +70,7 @@ pub fn GestureArea<'a>(cx: Scope<'a, GestureAreaProps<'a>>) -> Element {
 
         // Find the first event with the `target_phase` that happened before the `start_time`
         let find_previous_event = |start_time: &Instant,
-                                   events: &VecDeque<(Instant, TouchEvent)>,
+                                   events: &EventsQueue,
                                    target_phase: TouchPhase|
          -> Option<(Instant, TouchEvent)> {
             let mut start = false;
@@ -159,7 +174,7 @@ mod test {
 
     use crate::gesture_area::DOUBLE_TAP_MIN;
 
-    /// This test simulates a DoubleTap gesture in this order:
+    /// This test simulates a `DoubleTap` gesture in this order:
     /// 1. Touch start
     /// 2. Touch end
     /// 3. Wait 40ms
@@ -229,6 +244,7 @@ mod test {
         );
     }
 
+    /// Simulates `TapUp` and `TapDown` gestures.
     #[tokio::test]
     pub async fn tap_up_down() {
         fn tap_up_down_app(cx: Scope) -> Element {
