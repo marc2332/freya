@@ -4,7 +4,7 @@ use std::{
     task::Waker,
 };
 
-use accesskit::{NodeClassSet, NodeId};
+use accesskit::NodeId;
 use accesskit_winit::Adapter;
 use dioxus_core::{Template, VirtualDom};
 
@@ -28,14 +28,14 @@ use tokio::{
         watch,
     },
 };
-use winit::{dpi::PhysicalSize, event::WindowEvent, event_loop::EventLoopProxy};
+use winit::{dpi::PhysicalSize, event::WindowEvent, event_loop::EventLoopProxy, window::Window};
 
 use crate::{
-    accessibility::{AccessibilityState, FocusDirection},
+    accessibility::{AccessibilityFocusDirection, AccessibilityState, SharedAccessibilityState},
     HoveredNode, WindowEnv,
 };
 
-pub fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
+fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
     struct DomHandle(EventLoopProxy<EventMessage>);
 
     unsafe impl Send for DomHandle {}
@@ -48,6 +48,22 @@ pub fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
     }
 
     task::waker(Arc::new(DomHandle(proxy.clone())))
+}
+
+fn create_accessibility_adapter(
+    window: &Window,
+    window_title: String,
+    accessibility_state: SharedAccessibilityState,
+    proxy: &EventLoopProxy<EventMessage>,
+) -> Adapter {
+    Adapter::new(
+        window,
+        move || {
+            let mut accessibility_state = accessibility_state.lock().unwrap();
+            accessibility_state.process(&window_title)
+        },
+        proxy.clone(),
+    )
 }
 
 /// Manages the Application lifecycle
@@ -74,7 +90,7 @@ pub struct App<State: 'static + Clone> {
     focus_receiver: FocusReceiver,
 
     accessibility_state: Arc<Mutex<AccessibilityState>>,
-    adapter: Adapter,
+    accessibility_adapter: Adapter,
 }
 
 impl<State: 'static + Clone> App<State> {
@@ -85,23 +101,14 @@ impl<State: 'static + Clone> App<State> {
         mutations_sender: Option<UnboundedSender<()>>,
         window_env: WindowEnv<State>,
     ) -> Self {
-        let accessibility_state = AccessibilityState {
-            nodes: Vec::new(),
-            node_classes: NodeClassSet::new(),
-            focus: None,
-        }
-        .wrap();
-        let adapter = {
-            let accessibility_state = accessibility_state.clone();
-            Adapter::new(
-                &window_env.window,
-                move || {
-                    let mut accessibility_state = accessibility_state.lock().unwrap();
-                    accessibility_state.process()
-                },
-                proxy.clone(),
-            )
-        };
+        let accessibility_state = AccessibilityState::new().wrap();
+        let accessibility_adapter = create_accessibility_adapter(
+            &window_env.window,
+            window_env.window_config.title.to_string(),
+            accessibility_state.clone(),
+            proxy,
+        );
+
         let (event_emitter, event_receiver) = unbounded_channel::<DomEvent>();
         let (focus_sender, focus_receiver) = watch::channel(None);
         Self {
@@ -117,7 +124,7 @@ impl<State: 'static + Clone> App<State> {
             layers: Layers::default(),
             events_processor: EventsProcessor::default(),
             viewports_collection: HashMap::default(),
-            adapter,
+            accessibility_adapter,
             accessibility_state,
             focus_sender,
             focus_receiver,
@@ -284,12 +291,13 @@ impl<State: 'static + Clone> App<State> {
         self.accessibility_state
             .lock()
             .unwrap()
-            .set_focus(&self.adapter, id);
+            .set_focus(&self.accessibility_adapter, id);
     }
 
     /// Validate a winit event for accessibility
     pub fn on_accessibility_window_event(&mut self, event: &WindowEvent) -> bool {
-        self.adapter.on_event(&self.window_env.window, event)
+        self.accessibility_adapter
+            .on_event(&self.window_env.window, event)
     }
 
     /// Remove the accessibility nodes
@@ -299,15 +307,19 @@ impl<State: 'static + Clone> App<State> {
 
     /// Process the accessibility nodes
     pub fn render_accessibility(&mut self) {
-        let tree = self.accessibility_state.lock().unwrap().process();
-        self.adapter.update(tree);
+        let tree = self
+            .accessibility_state
+            .lock()
+            .unwrap()
+            .process(self.window_env.window_config.title);
+        self.accessibility_adapter.update(tree);
     }
 
     /// Focus the next accessibility node
-    pub fn focus_next_node(&mut self, direction: FocusDirection) {
+    pub fn focus_next_node(&mut self, direction: AccessibilityFocusDirection) {
         self.accessibility_state
             .lock()
             .unwrap()
-            .set_focus_on_next_node(&self.adapter, direction, &self.focus_sender);
+            .set_focus_on_next_node(&self.accessibility_adapter, direction, &self.focus_sender);
     }
 }

@@ -7,15 +7,15 @@ use freya_node_state::CustomAttributeValues;
 use uuid::Uuid;
 use winit::event_loop::EventLoopProxy;
 
-use accesskit::NodeId as NodeIdKit;
+use accesskit::NodeId as AccessibilityId;
 
-pub type FocusId = NodeIdKit;
+pub type FocusId = AccessibilityId;
 
 /// Manage the focus operations of given Node
 #[derive(Clone, Copy)]
 pub struct FocusManager<'a> {
-    id: NodeIdKit,
-    focused_id: Option<UseSharedState<'a, Option<NodeIdKit>>>,
+    id: AccessibilityId,
+    focused_id: Option<UseSharedState<'a, Option<AccessibilityId>>>,
 }
 
 impl FocusManager<'_> {
@@ -27,7 +27,7 @@ impl FocusManager<'_> {
     }
 
     /// Get the node focus ID
-    pub fn id(&self) -> NodeIdKit {
+    pub fn id(&self) -> AccessibilityId {
         self.id
     }
 
@@ -44,7 +44,7 @@ impl FocusManager<'_> {
 
 /// Create a [`FocusManager`] for a component.
 pub fn use_focus(cx: &ScopeState) -> FocusManager {
-    let id = *cx.use_hook(|| NodeIdKit(NonZeroU128::new(Uuid::new_v4().as_u128()).unwrap()));
+    let id = *cx.use_hook(|| AccessibilityId(NonZeroU128::new(Uuid::new_v4().as_u128()).unwrap()));
     let focused_id = use_shared_state::<Option<FocusId>>(cx);
     FocusManager { id, focused_id }
 }

@@ -10,7 +10,7 @@ use freya_elements::events::keyboard::{
     from_winit_to_code, get_modifiers, get_non_text_keys, Code, Key,
 };
 
-use accessibility::FocusDirection;
+use accessibility::AccessibilityFocusDirection;
 use std::sync::{Arc, Mutex};
 use winit::event::{
     ElementState, Event, KeyboardInput, ModifiersState, MouseScrollDelta, StartCause, Touch,
@@ -177,9 +177,9 @@ pub fn run<T: 'static + Clone>(
                         if state == ElementState::Pressed && virtual_keycode == VirtualKeyCode::Tab
                         {
                             let direction = if modifiers_state.shift() {
-                                FocusDirection::Backward
+                                AccessibilityFocusDirection::Backward
                             } else {
-                                FocusDirection::Forward
+                                AccessibilityFocusDirection::Forward
                             };
 
                             app.focus_next_node(direction);

@@ -174,7 +174,7 @@ builder_constructors! {
         cursor_reference: CursorReference,
         rotate: String,
         role: String,
-        focus_id: NodeIdKit,
+        focus_id: AccessibilityId,
     };
     container {
         padding: String,
@@ -197,7 +197,7 @@ builder_constructors! {
         cursor_reference: CursorReference,
         rotate: String,
         role: String,
-        focus_id: NodeIdKit,
+        focus_id: AccessibilityId,
     };
     label {
         color: String,
@@ -211,7 +211,7 @@ builder_constructors! {
         font_style: String,
         rotate: String,
         role: String,
-        focus_id: NodeIdKit,
+        focus_id: AccessibilityId,
     };
     paragraph {
         layer: String,
@@ -227,7 +227,7 @@ builder_constructors! {
         direction: String,
         rotate: String,
         role: String,
-        focus_id: NodeIdKit,
+        focus_id: AccessibilityId,
     };
     text {
         color: String,
@@ -248,7 +248,7 @@ builder_constructors! {
         height: String,
         rotate: String,
         role: String,
-        focus_id: NodeIdKit,
+        focus_id: AccessibilityId,
     };
     svg {
         svg_data: String,
@@ -257,7 +257,7 @@ builder_constructors! {
         height: String,
         rotate: String,
         role: String,
-        focus_id: NodeIdKit,
+        focus_id: AccessibilityId,
     };
 }
 

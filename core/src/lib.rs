@@ -4,7 +4,7 @@ use freya_dom::FreyaDOM;
 use freya_layout::NodeLayoutMeasurer;
 use freya_layout::{Layers, RenderData};
 
-use accesskit::NodeId as NodeIdKit;
+use accesskit::NodeId as AccessibilityId;
 use rustc_hash::FxHashMap;
 use skia_safe::{textlayout::FontCollection, Color};
 use std::ops::Index;
@@ -15,8 +15,8 @@ pub mod events;
 
 use events::{DomEvent, EventsProcessor, FreyaEvent};
 
-pub type FocusSender = watch::Sender<Option<NodeIdKit>>;
-pub type FocusReceiver = watch::Receiver<Option<NodeIdKit>>;
+pub type FocusSender = watch::Sender<Option<AccessibilityId>>;
+pub type FocusReceiver = watch::Receiver<Option<AccessibilityId>>;
 pub type EventEmitter = UnboundedSender<DomEvent>;
 pub type EventReceiver = UnboundedReceiver<DomEvent>;
 pub type EventsQueue = Vec<FreyaEvent>;

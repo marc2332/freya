@@ -1,4 +1,4 @@
-use accesskit::{NodeId as NodeIdKit, Role};
+use accesskit::{NodeId as AccessibilityId, Role};
 use dioxus_native_core::node::OwnedAttributeValue;
 use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
 use dioxus_native_core::state::ParentDepState;
@@ -8,7 +8,7 @@ use crate::CustomAttributeValues;
 
 #[derive(Clone, Debug, PartialEq, Eq, Default)]
 pub struct AccessibilitySettings {
-    pub focus_id: Option<NodeIdKit>,
+    pub focus_id: Option<AccessibilityId>,
     pub role: Option<Role>,
 }
 

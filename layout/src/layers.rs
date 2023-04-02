@@ -1,4 +1,4 @@
-use accesskit::NodeId as NodeIdKit;
+use accesskit::NodeId as AccessibilityId;
 use dioxus_core::ElementId;
 use dioxus_native_core::node::NodeType;
 use dioxus_native_core::tree::TreeView;
@@ -57,7 +57,7 @@ impl RenderData {
         }
     }
 
-    pub fn get_accessibility_children(&self, rdom: &FreyaDOM) -> Option<Vec<NodeIdKit>> {
+    pub fn get_accessibility_children(&self, rdom: &FreyaDOM) -> Option<Vec<AccessibilityId>> {
         self.children.as_ref().map(|children| {
             children
                 .iter()
@@ -69,7 +69,7 @@ impl RenderData {
                         None
                     }
                 })
-                .collect::<Vec<NodeIdKit>>()
+                .collect::<Vec<AccessibilityId>>()
         })
     }
 }
