@@ -94,7 +94,7 @@ impl FreyaDOM {
         self.rdom.update_state(to_update, ctx);
     }
 
-    /// Process the given mutations from the [VirtualDOM]
+    /// Process the given mutations from the [`VirtualDOM`](dioxus_core::VirtualDom).
     /// This will notify the layout if it must recalculate
     /// or the renderer if it has to repaint.
     pub fn apply_mutations(&mut self, mutations: Mutations) -> (bool, bool) {
@@ -157,12 +157,12 @@ impl FreyaDOM {
         (paint_changes, layout_changes)
     }
 
-    /// Get a reference to the [RealDOM].
+    /// Get a reference to the [`DioxusDOM`].
     pub fn dom(&self) -> &DioxusDOM {
         &self.rdom
     }
 
-    /// Get a mutable reference to the [RealDOM].
+    /// Get a mutable reference to the [`DioxusDOM`].
     pub fn dom_mut(&mut self) -> &mut DioxusDOM {
         &mut self.rdom
     }
