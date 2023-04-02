@@ -1277,6 +1277,7 @@ dependencies = [
  "freya-elements",
  "freya-hooks",
  "freya-node-state",
+ "freya-testing",
  "open",
  "reqwest",
  "tokio",

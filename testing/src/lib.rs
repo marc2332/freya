@@ -15,7 +15,6 @@ use freya_node_state::NodeState;
 use rustc_hash::FxHashMap;
 use skia_safe::textlayout::FontCollection;
 use skia_safe::FontMgr;
-use tokio::select;
 use tokio::sync::mpsc::unbounded_channel;
 
 pub use freya_core::events::FreyaEvent;
@@ -129,17 +128,20 @@ impl TestingHandler {
     pub async fn wait_for_update(&mut self, sizes: (f32, f32)) -> bool {
         self.wait_for_work(sizes);
 
-        select! {
-            ev = self.event_receiver.recv() => {
-                if let Some(ev) = ev {
-                    let data = ev.data.any();
-                    self.vdom.handle_event(&ev.name, data, ev.element_id, false);
+        let vdom = &mut self.vdom;
 
-                    self.vdom.process_events();
-                }
-            },
-            _ = self.vdom.wait_for_work() => {},
+        loop {
+            let ev = self.event_receiver.try_recv();
+
+            if let Ok(ev) = ev {
+                vdom.handle_event(&ev.name, ev.data.any(), ev.element_id, false);
+                vdom.process_events();
+            } else {
+                break;
+            }
         }
+
+        vdom.wait_for_work().await;
 
         let mutations = self.vdom.render_immediate();
 
