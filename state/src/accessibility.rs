@@ -10,6 +10,7 @@ use crate::CustomAttributeValues;
 pub struct AccessibilitySettings {
     pub focus_id: Option<AccessibilityId>,
     pub role: Option<Role>,
+    pub alt: Option<String>,
 }
 
 impl ParentDepState<CustomAttributeValues> for AccessibilitySettings {
@@ -18,7 +19,7 @@ impl ParentDepState<CustomAttributeValues> for AccessibilitySettings {
 
     const NODE_MASK: NodeMask =
         NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
-            "focus_id", "role"
+            "focus_id", "role", "alt"
         ])));
 
     fn reduce(
@@ -29,6 +30,7 @@ impl ParentDepState<CustomAttributeValues> for AccessibilitySettings {
     ) -> bool {
         let mut focus_id = None;
         let mut role = None;
+        let mut alt = None;
 
         if let Some(attributes) = node.attributes() {
             for attr in attributes {
@@ -50,12 +52,21 @@ impl ParentDepState<CustomAttributeValues> for AccessibilitySettings {
                             }
                         }
                     }
+                    "alt" => {
+                        if let OwnedAttributeValue::Text(attr) = attr.value {
+                            alt = Some(attr.to_owned())
+                        }
+                    }
                     _ => {}
                 }
             }
         }
-        let changed = false;
-        *self = Self { focus_id, role };
+        let changed = self.focus_id != focus_id || self.role != role || self.alt != alt;
+        *self = Self {
+            focus_id,
+            role,
+            alt,
+        };
         changed
     }
 }

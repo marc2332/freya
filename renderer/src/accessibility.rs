@@ -61,7 +61,9 @@ impl AccessibilityState {
             builder.set_children(children);
         }
 
-        if let Some(value) = render_node.get_text(dom) {
+        if let Some(alt) = &dioxus_node.state.accessibility.alt {
+            builder.set_value(alt.to_owned());
+        } else if let Some(value) = render_node.get_text(dom) {
             builder.set_value(value);
         }
 

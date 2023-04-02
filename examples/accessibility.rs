@@ -45,6 +45,8 @@ fn app(cx: Scope) -> Element {
             padding: "25",
             width: "100%",
             height: "50%",
+            role: "staticText",
+            alt: "This is a rectangle",
             onclick: move |_| {
                 focus_b.focus();
             },
