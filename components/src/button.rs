@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
-use freya_hooks::use_get_theme;
+use freya_hooks::{use_focus, use_get_theme};
 
 /// [`Button`] component properties.
 #[derive(Props)]
@@ -39,8 +39,10 @@ pub struct ButtonProps<'a> {
 ///
 #[allow(non_snake_case)]
 pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
+    let focus = use_focus(cx);
     let theme = use_get_theme(cx);
     let button_theme = &theme.button;
+    let focus_id = focus.attribute(cx);
 
     let background = use_state(cx, || <&str>::clone(&button_theme.background));
     let set_background = background.setter();
@@ -49,18 +51,23 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
         set_background(button_theme.background);
     });
 
+    let onclick = move |ev: MouseEvent| {
+        focus.focus();
+        if let Some(onclick) = &cx.props.onclick {
+            onclick.call(ev)
+        }
+    };
+
     render!(
         container {
             width: "auto",
             height: "auto",
             direction: "both",
             padding: "2",
+            focus_id: focus_id,
+            role: "button",
             container {
-                onclick: move |ev| {
-                    if let Some(onclick) = &cx.props.onclick {
-                        onclick.call(ev)
-                    }
-                },
+                onclick: onclick,
                 onmouseover: move |_| {
                     background.set(theme.button.hover_background);
                 },

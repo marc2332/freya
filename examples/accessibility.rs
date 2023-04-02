@@ -33,12 +33,17 @@ fn app(cx: Scope) -> Element {
                 },
                 "test"
             }
+            Button {
+                label {
+                    "Button"
+                }
+            }
         }
         rect {
             focus_id: focus_b.attribute(cx),
             background: "rgb(150, 100, 231)",
             padding: "25",
-            width: "50%",
+            width: "100%",
             height: "50%",
             onclick: move |_| {
                 focus_b.focus();

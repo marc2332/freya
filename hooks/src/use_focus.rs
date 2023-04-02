@@ -32,7 +32,7 @@ impl FocusManager<'_> {
     }
 
     /// Create a node focus ID attribute
-    pub fn attribute<'b>(&self, cx: Scope<'b>) -> AttributeValue<'b> {
+    pub fn attribute<'b, T>(&self, cx: Scope<'b, T>) -> AttributeValue<'b> {
         cx.any_value(CustomAttributeValues::FocusId(self.id))
     }
 

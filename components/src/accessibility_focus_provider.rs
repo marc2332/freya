@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 use freya_core::FocusReceiver;
 use freya_hooks::{focus_node_id, FocusId};
 
-/// Propagate changes from the focus context to the renderer and viceversa
+/// Propagate changes from the Focus shared state to the AccessibilityState and viceversa
 #[allow(non_snake_case)]
 pub fn AccessibilityFocusProvider(cx: Scope) -> Element {
     let focused_id = use_shared_state::<Option<FocusId>>(cx).unwrap();
