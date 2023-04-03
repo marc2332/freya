@@ -119,47 +119,45 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
         let children = children.clone();
         async move {
             let mut mutations_receiver = mutations_receiver.lock().unwrap();
-            loop {
-                if mutations_receiver.recv().await.is_some() {
-                    sleep(Duration::from_millis(10)).await;
+            while mutations_receiver.recv().await.is_some() {
+                sleep(Duration::from_millis(10)).await;
 
-                    let dom = rdom.get();
-                    let rdom = dom.dom();
-                    let mut new_children = Vec::new();
+                let dom = rdom.get();
+                let rdom = dom.dom();
+                let mut new_children = Vec::new();
 
-                    let mut root_found = false;
-                    let mut devtools_found = false;
+                let mut root_found = false;
+                let mut devtools_found = false;
 
-                    rdom.traverse_depth_first(|node| {
-                        let height = rdom.tree.height(node.node_data.node_id).unwrap();
-                        if height == 2 {
-                            if !root_found {
-                                root_found = true;
-                            } else {
-                                devtools_found = true;
+                rdom.traverse_depth_first(|node| {
+                    let height = rdom.tree.height(node.node_data.node_id).unwrap();
+                    if height == 2 {
+                        if !root_found {
+                            root_found = true;
+                        } else {
+                            devtools_found = true;
+                        }
+                    }
+
+                    if !devtools_found {
+                        let (text, tag) = match &node.node_data.node_type {
+                            NodeType::Text { text, .. } => {
+                                (Some(text.to_string()), "text".to_string())
                             }
-                        }
+                            NodeType::Element { tag, .. } => (None, tag.to_string()),
+                            NodeType::Placeholder => (None, "placeholder".to_string()),
+                        };
 
-                        if !devtools_found {
-                            let (text, tag) = match &node.node_data.node_type {
-                                NodeType::Text { text, .. } => {
-                                    (Some(text.to_string()), "text".to_string())
-                                }
-                                NodeType::Element { tag, .. } => (None, tag.to_string()),
-                                NodeType::Placeholder => (None, "placeholder".to_string()),
-                            };
-
-                            new_children.push(TreeNode {
-                                height,
-                                id: node.node_data.node_id,
-                                tag,
-                                text,
-                                state: node.state.clone(),
-                            });
-                        }
-                    });
-                    children.set(new_children);
-                }
+                        new_children.push(TreeNode {
+                            height,
+                            id: node.node_data.node_id,
+                            tag,
+                            text,
+                            state: node.state.clone(),
+                        });
+                    }
+                });
+                children.set(new_children);
             }
         }
     });

@@ -33,15 +33,20 @@ fn DragZone<'a, T: 'static + Clone>(cx: Scope<'a, DragZoneProps<'a, T>>) -> Elem
     let drags = use_shared_state::<Option<T>>(cx);
     let dragging = use_state(cx, || false);
     let pos = use_state(cx, || (0.0, 0.0));
+    let (node_reference, size) = use_node_ref(cx);
 
-    let onglobalmouseover = |e: MouseEvent| {
+    let onglobalmouseover = move |e: MouseEvent| {
         if *dragging.get() {
-            pos.set(e.get_screen_coordinates().to_tuple());
+            let size = size.read();
+            let coord = e.get_screen_coordinates();
+            pos.set((coord.x - size.x as f64, coord.y - size.y as f64));
         }
     };
 
     let onmousedown = move |e: MouseEvent| {
-        pos.set(e.get_element_coordinates().to_tuple());
+        let size = size.read();
+        let coord = e.get_screen_coordinates();
+        pos.set((coord.x - size.x as f64, coord.y - size.y as f64));
         dragging.set(true);
         *drags.unwrap().write() = Some(cx.props.data.clone())
     };
@@ -55,12 +60,6 @@ fn DragZone<'a, T: 'static + Clone>(cx: Scope<'a, DragZoneProps<'a, T>>) -> Elem
     };
 
     render!(
-        rect {
-            onglobalclick: onglobalclick,
-            onglobalmouseover: onglobalmouseover,
-            onmousedown: onmousedown,
-            &cx.props.children
-        }
         if *dragging.get() {
             render!(
                 rect {
@@ -71,6 +70,13 @@ fn DragZone<'a, T: 'static + Clone>(cx: Scope<'a, DragZoneProps<'a, T>>) -> Elem
                     &cx.props.drag_element
                 }
             )
+        }
+        rect {
+            reference: node_reference,
+            onglobalclick: onglobalclick,
+            onglobalmouseover: onglobalmouseover,
+            onmousedown: onmousedown,
+            &cx.props.children
         }
     )
 }
@@ -104,6 +110,11 @@ fn DropZone<'a, T: 'static + Clone>(cx: Scope<'a, DropDoneProps<'a, T>>) -> Elem
     )
 }
 
+enum SwapDirection {
+    LeftToRight,
+    RightToLeft,
+}
+
 fn app(cx: Scope) -> Element {
     let data = use_state::<(Vec<String>, Vec<String>)>(cx, || {
         (
@@ -112,10 +123,18 @@ fn app(cx: Scope) -> Element {
         )
     });
 
-    let swap = |el: String| {
+    let swap = |el: String, direction: SwapDirection| {
         data.with_mut(|data| {
             data.0.retain(|e| e != &el);
-            data.1.push(el);
+            data.1.retain(|e| e != &el);
+            match direction {
+                SwapDirection::LeftToRight => {
+                    data.1.push(el);
+                }
+                SwapDirection::RightToLeft => {
+                    data.0.push(el);
+                }
+            }
         });
     };
 
@@ -125,44 +144,60 @@ fn app(cx: Scope) -> Element {
                 direction: "horizontal",
                 width: "100%",
                 height: "100%",
-                rect {
-                    width: "50%",
-                    height: "100%",
-                    background: "yellow",
-                    for el in data.get().0.iter() {
-                        rsx!(
-                            DragZone {
-                                data: el.to_string(),
-                                drag_element: render!(
-                                    label {
-                                        width: "200",
-                                        font_size: "20",
-                                       "Moving '{el}'"
-                                    }
-                                ),
-                                label {
-                                    font_size: "30",
-                                    "{el}"
-                                }
-                            }
-                        )
-                    }
-                }
                 DropZone::<String> {
                     ondrop: move |data: String| {
-                        swap(data);
+                        swap(data, SwapDirection::RightToLeft);
+                    }
+                    rect {
+                        width: "50%",
+                        height: "100%",
+                        background: "rgb(234, 226, 183)",
+                        for el in data.get().0.iter() {
+                            rsx!(
+                                DragZone {
+                                    data: el.to_string(),
+                                    drag_element: render!(
+                                        label {
+                                            width: "200",
+                                            font_size: "20",
+                                           "Moving '{el}'"
+                                        }
+                                    ),
+                                    label {
+                                        font_size: "30",
+                                        "{el}"
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+
+                DropZone::<String> {
+                    ondrop: move |data: String| {
+                        swap(data, SwapDirection::LeftToRight);
                     }
                     rect {
                         width: "100%",
                         height: "100%",
-                        background: "red",
+                        background: "rgb(0, 48, 73)",
                         direction: "vertical",
                         color: "white",
                         for el in data.get().1.iter() {
                             rsx!(
-                                label {
-                                    font_size: "30",
-                                    "{el}"
+                                DragZone {
+                                    data: el.to_string(),
+                                    drag_element: render!(
+                                        label {
+                                            width: "200",
+                                            font_size: "20",
+                                           "Moving '{el}'"
+                                        }
+                                    ),
+                                    label {
+                                        font_size: "30",
+                                        "{el}"
+                                    }
                                 }
                             )
                         }
