@@ -8,6 +8,7 @@ use dioxus_core::AnyValue;
 use dioxus_core::AttributeValue;
 use dioxus_core::Scope;
 use dioxus_native_core::node::FromAnyValue;
+use freya_common::CursorLayoutResponse;
 use freya_common::NodeReferenceLayout;
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -46,8 +47,10 @@ impl Display for NodeReference {
 /// Cursor reference
 #[derive(Clone, Debug)]
 pub struct CursorReference {
+    #[allow(clippy::type_complexity)]
+    pub highlights: Arc<Mutex<Option<((usize, usize), (usize, usize))>>>,
     pub positions: Arc<Mutex<Option<(f32, f32)>>>,
-    pub agent: UnboundedSender<(usize, usize)>,
+    pub agent: UnboundedSender<CursorLayoutResponse>,
     pub id: Arc<Mutex<Option<usize>>>,
 }
 
@@ -70,6 +73,7 @@ pub enum CustomAttributeValues {
     CursorReference(CursorReference),
     Bytes(Vec<u8>),
     ImageReference(ImageReference),
+    TextHighlights(Vec<(usize, usize)>),
 }
 
 impl Debug for CustomAttributeValues {
@@ -79,6 +83,7 @@ impl Debug for CustomAttributeValues {
             Self::CursorReference(_) => f.debug_tuple("CursorReference").finish(),
             Self::Bytes(_) => f.debug_tuple("Bytes").finish(),
             Self::ImageReference(_) => f.debug_tuple("ImageReference").finish(),
+            Self::TextHighlights(_) => f.debug_tuple("TextHighlights").finish(),
         }
     }
 }

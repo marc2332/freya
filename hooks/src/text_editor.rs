@@ -88,6 +88,10 @@ pub trait TextEditor: Sized + Clone + Display {
     where
         Self: 'a;
 
+    fn set_highlights(&mut self, highlights: Vec<(usize, usize)>, editor_num: usize);
+
+    fn highlights(&self, editor_num: usize) -> Option<Vec<(usize, usize)>>;
+
     /// Iterator over all the lines in the text.
     fn lines(&self) -> Self::LinesIterator<'_>;
 
@@ -172,7 +176,7 @@ pub trait TextEditor: Sized + Clone + Display {
                     let cursor_col = if self.cursor_col() <= next_line.len_chars() {
                         self.cursor_col()
                     } else {
-                        next_line.len_chars() - 1
+                        next_line.len_chars().max(1) - 1
                     };
 
                     self.cursor_mut().set_col(cursor_col);

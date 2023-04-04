@@ -1,4 +1,7 @@
-#![doc(html_logo_url = "https://freyaui.dev/logo.svg", html_favicon_url = "https://freyaui.dev/logo.svg")]
+#![doc(
+    html_logo_url = "https://freyaui.dev/logo.svg",
+    html_favicon_url = "https://freyaui.dev/logo.svg"
+)]
 //! # Freya
 //! Build native & cross-platform GUI applications using 🦀 Rust.
 //!

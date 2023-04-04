@@ -148,13 +148,22 @@ fn app(cx: Scope) -> Element {
 #[allow(non_snake_case)]
 fn Editor(cx: Scope) -> Element {
     let (focused, focus_id, focus) = use_raw_focus(cx);
-    let (text_editor, process_keyevent, process_clickevent, cursor_ref) = use_editable(
+
+    let editable = use_editable(
         cx,
         || {
-            "Lorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet"
+            "Lorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet".to_string()
         },
         EditableMode::SingleLineMultipleEditors,
     );
+    let UseEditable {
+        editor,
+        keypress_notifier,
+        click_notifier,
+        ..
+    } = editable.clone();
+    let editor = editor.get();
+
     let font_size_percentage = use_state(cx, || 15.0);
     let line_height_percentage = use_state(cx, || 0.0);
     let is_bold = use_state(cx, || false);
@@ -297,10 +306,10 @@ fn Editor(cx: Scope) -> Element {
                 padding: "5",
                 onkeydown: move |e| {
                     if focused {
-                        process_keyevent.send(e.data).unwrap();
+                        keypress_notifier.send(e.data).unwrap();
                     }
                 },
-                cursor_reference: cursor_ref,
+                cursor_reference: editable.cursor_attr(cx),
                 direction: "horizontal",
                 rect {
                     width: "100%",
@@ -310,14 +319,14 @@ fn Editor(cx: Scope) -> Element {
                         width: "100%",
                         height: "100%",
                         show_scrollbar: true,
-                        text_editor.lines().map(move |l| {
-                            let process_clickevent = process_clickevent.clone();
+                        editor.lines().map(move |l| {
+                            let click_notifier = click_notifier.clone();
 
-                            let is_line_selected = text_editor.cursor_row() == line_index;
+                            let is_line_selected = editor.cursor_row() == line_index;
 
                             // Only show the cursor in the active line
                             let character_index = if is_line_selected {
-                                text_editor.cursor_col().to_string()
+                                editor.cursor_col().to_string()
                             } else {
                                 "none".to_string()
                             };
@@ -329,8 +338,25 @@ fn Editor(cx: Scope) -> Element {
                                 ""
                             };
 
-                            let onmousedown = move |e: MouseEvent| {
-                                process_clickevent.send((e.data, line_index)).ok();
+                            let onmousedown = {
+                                to_owned![click_notifier];
+                                move |e: MouseEvent| {
+                                    click_notifier.send((e.data, line_index, EditableEvent::MouseDown)).ok();
+                                }
+                            };
+
+                            let onmouseover = {
+                                to_owned![click_notifier];
+                                move |e: MouseEvent| {
+                                    click_notifier.send((e.data, line_index, EditableEvent::MouseOver)).ok();
+                                }
+                            };
+
+                            let onclick = {
+                                to_owned![click_notifier];
+                                move |e: MouseEvent| {
+                                    click_notifier.send((e.data, line_index, EditableEvent::Click)).ok();
+                                }
                             };
 
                             let manual_line_height = font_size * line_height;
@@ -365,6 +391,8 @@ fn Editor(cx: Scope) -> Element {
                                         cursor_mode: "editable",
                                         cursor_id: "{cursor_id}",
                                         onmousedown: onmousedown,
+                                        onmouseover: onmouseover,
+                                        onclick: onclick,
                                         text {
                                             color: "rgb(240, 240, 240)",
                                             font_size: "{font_size}",

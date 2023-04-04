@@ -11,6 +11,7 @@ pub struct CursorSettings {
     pub color: Color,
     pub mode: CursorMode,
     pub id: Option<usize>,
+    pub highlights: Option<Vec<(usize, usize)>>,
 }
 
 impl ParentDepState<CustomAttributeValues> for CursorSettings {
@@ -23,6 +24,7 @@ impl ParentDepState<CustomAttributeValues> for CursorSettings {
             "cursor_color",
             "cursor_mode",
             "cursor_id",
+            "highlights"
         ])));
 
     fn reduce(
@@ -63,6 +65,13 @@ impl ParentDepState<CustomAttributeValues> for CursorSettings {
                             }
                         }
                     }
+                    "highlights" => {
+                        if let Some(CustomAttributeValues::TextHighlights(highlights)) =
+                            attr.value.as_custom()
+                        {
+                            cursor.highlights = Some(highlights.clone());
+                        }
+                    }
                     _ => {}
                 }
             }
@@ -87,6 +96,7 @@ impl Default for CursorSettings {
             color: Color::WHITE,
             mode: CursorMode::None,
             id: None,
+            highlights: None,
         }
     }
 }
