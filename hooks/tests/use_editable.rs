@@ -23,8 +23,8 @@ pub async fn multiple_lines_single_editor() {
                 height: "100%",
                 background: "white",
                 cursor_reference: cursor_attr,
-                onclick:  move |e: MouseEvent| {
-                    click_notifier.send((e.data, 0, EditableEvent::Click)).ok();
+                onmousedown:  move |e: MouseEvent| {
+                    click_notifier.send((e.data, 0, EditableEvent::MouseDown)).ok();
                 },
                 paragraph {
                     height: "50%",
@@ -61,7 +61,7 @@ pub async fn multiple_lines_single_editor() {
 
     // Move cursor
     utils.push_event(FreyaEvent::Mouse {
-        name: "click",
+        name: "mousedown",
         cursor: (35.0, 3.0),
         button: Some(MouseButton::Left),
     });
@@ -136,8 +136,8 @@ pub async fn single_line_mulitple_editors() {
                             cursor_index: "{i}",
                             cursor_color: "black",
                             cursor_mode: "editable",
-                            onclick:  move |e: MouseEvent| {
-                                click_notifier.send((e.data, i, EditableEvent::Click)).ok();
+                            onmousedown:  move |e: MouseEvent| {
+                                click_notifier.send((e.data, i, EditableEvent::MouseDown)).ok();
                             },
                             text {
                                 color: "black",
@@ -166,7 +166,7 @@ pub async fn single_line_mulitple_editors() {
 
     // Move cursor
     utils.push_event(FreyaEvent::Mouse {
-        name: "click",
+        name: "mousedown",
         cursor: (35.0, 3.0),
         button: Some(MouseButton::Left),
     });
