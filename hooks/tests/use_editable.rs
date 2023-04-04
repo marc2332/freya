@@ -6,40 +6,45 @@ use freya_testing::{launch_test, FreyaEvent, MouseButton};
 #[tokio::test]
 pub async fn multiple_lines_single_editor() {
     fn use_editable_app(cx: Scope) -> Element {
-        let (text_editor, process_keyevent, process_clickevent, cursor_reference) = use_editable(
+        let editable = use_editable(
             cx,
-            || "Hello Rustaceans",
+            || "Hello Rustaceans".to_string(),
             EditableMode::MultipleLinesSingleEditor,
         );
-        let cursor_char = text_editor.cursor_pos();
+        let keypress_notifier = editable.keypress_notifier().clone();
+        let click_notifier = editable.click_notifier().clone();
+        let cursor_attr = editable.cursor_attr(cx);
+        let editor = editable.editor();
+        let cursor = editor.cursor();
+        let cursor_pos = editor.cursor_pos();
         render!(
             rect {
                 width: "100%",
                 height: "100%",
                 background: "white",
-                cursor_reference: cursor_reference,
+                cursor_reference: cursor_attr,
                 onclick:  move |e: MouseEvent| {
-                    process_clickevent.send((e.data, 0)).ok();
+                    click_notifier.send((e.data, 0, EditableEvent::Click)).ok();
                 },
                 paragraph {
                     height: "50%",
                     width: "100%",
                     cursor_id: "0",
-                    cursor_index: "{cursor_char}",
+                    cursor_index: "{cursor_pos}",
                     cursor_color: "black",
                     cursor_mode: "editable",
                     onkeydown: move |e| {
-                        process_keyevent.send(e.data).unwrap();
+                        keypress_notifier.send(e.data).unwrap();
                     },
                     text {
                         color: "black",
-                        "{text_editor}"
+                        "{editor}"
                     }
                 }
                 label {
                     color: "black",
                     height: "50%",
-                    "{text_editor.cursor_col()}:{text_editor.cursor_row()}"
+                    "{cursor.col()}:{cursor.row()}"
                 }
             }
         )
@@ -102,23 +107,26 @@ pub async fn multiple_lines_single_editor() {
 #[tokio::test]
 pub async fn single_line_mulitple_editors() {
     fn use_editable_app(cx: Scope) -> Element {
-        let (text_editor, process_keyevent, process_clickevent, cursor_reference) = use_editable(
+        let editable = use_editable(
             cx,
-            || "Hello Rustaceans\nHello World",
+            || "Hello Rustaceans\nHello World".to_string(),
             EditableMode::SingleLineMultipleEditors,
         );
+        let keypress_notifier = editable.keypress_notifier().clone();
+        let click_notifier = editable.click_notifier().clone();
+        let cursor_attr = editable.cursor_attr(cx);
+        let editor = editable.editor();
         render!(
             rect {
                 width: "100%",
                 height: "100%",
                 background: "white",
-                cursor_reference: cursor_reference,
-
+                cursor_reference: cursor_attr,
                 onkeydown: move |e| {
-                    process_keyevent.send(e.data).unwrap();
+                    keypress_notifier.send(e.data).unwrap();
                 },
-                text_editor.lines().enumerate().map(move |(i, line)| {
-                    let process_clickevent = process_clickevent.clone();
+                editor.lines().enumerate().map(move |(i, line)| {
+                    let click_notifier = click_notifier.clone();
                     rsx!(
                         paragraph {
                             width: "100%",
@@ -129,7 +137,7 @@ pub async fn single_line_mulitple_editors() {
                             cursor_color: "black",
                             cursor_mode: "editable",
                             onclick:  move |e: MouseEvent| {
-                                process_clickevent.send((e.data, i)).ok();
+                                click_notifier.send((e.data, i, EditableEvent::Click)).ok();
                             },
                             text {
                                 color: "black",
@@ -141,7 +149,7 @@ pub async fn single_line_mulitple_editors() {
                 label {
                     color: "black",
                     height: "50%",
-                    "{text_editor.cursor_col()}:{text_editor.cursor_row()}"
+                    "{editor.cursor_col()}:{editor.cursor_row()}"
                 }
             }
         )

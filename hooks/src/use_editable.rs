@@ -1,4 +1,5 @@
 use std::{
+    cmp::Ordering,
     collections::HashMap,
     fmt::Display,
     ops::Range,
@@ -32,6 +33,7 @@ pub enum EditableEvent {
 }
 
 /// How the editable content must behave.
+#[derive(PartialEq, Eq)]
 pub enum EditableMode {
     /// Multiple editors of only one line.
     ///
@@ -233,7 +235,56 @@ pub fn use_editable(
                     }
                     CursorLayoutResponse::Highlight((highlights, editor_num)) => {
                         editor.with_mut(|text_editor| {
+                            text_editor.clear_highlights();
                             text_editor.set_highlights(vec![highlights], editor_num);
+
+                            if mode == EditableMode::SingleLineMultipleEditors {
+                                let row = text_editor.cursor_row();
+                                let lines = if editor_num > row {
+                                    row + 1..=editor_num.max(1) - 1
+                                } else {
+                                    editor_num + 1..=row.max(1) - 1
+                                };
+
+                                // Fill all lines in between the cursor and the pointer
+                                for row in lines {
+                                    let len = text_editor.line(row).unwrap().len_chars();
+                                    text_editor.set_highlights(vec![(0, len - 1)], row);
+                                }
+
+                                // Fill the selected line and the hovering line
+                                // TODO: Clean this.
+                                match editor_num.cmp(&row) {
+                                    Ordering::Greater => {
+                                        text_editor
+                                            .set_highlights(vec![(0, highlights.1)], editor_num);
+                                        text_editor.set_highlights(
+                                            vec![(
+                                                text_editor.cursor_col(),
+                                                text_editor
+                                                    .line(text_editor.cursor_row())
+                                                    .unwrap()
+                                                    .len_chars(),
+                                            )],
+                                            text_editor.cursor_row(),
+                                        );
+                                    }
+                                    Ordering::Less => {
+                                        text_editor.set_highlights(
+                                            vec![(
+                                                highlights.1,
+                                                text_editor.line(editor_num).unwrap().len_chars(),
+                                            )],
+                                            editor_num,
+                                        );
+                                        text_editor.set_highlights(
+                                            vec![(0, text_editor.cursor_col())],
+                                            text_editor.cursor_row(),
+                                        );
+                                    }
+                                    _ => {}
+                                }
+                            }
                         });
 
                         cursor_reference.highlights.lock().unwrap().take();

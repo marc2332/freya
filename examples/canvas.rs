@@ -163,6 +163,7 @@ fn Editor(cx: Scope) -> Element {
         ..
     } = editable.clone();
     let editor = editor.get();
+    let cursor_attr = editable.cursor_attr(cx);
 
     let font_size_percentage = use_state(cx, || 15.0);
     let line_height_percentage = use_state(cx, || 0.0);
@@ -309,7 +310,7 @@ fn Editor(cx: Scope) -> Element {
                         keypress_notifier.send(e.data).unwrap();
                     }
                 },
-                cursor_reference: editable.cursor_attr(cx),
+                cursor_reference: cursor_attr,
                 direction: "horizontal",
                 rect {
                     width: "100%",
@@ -362,6 +363,7 @@ fn Editor(cx: Scope) -> Element {
                             let manual_line_height = font_size * line_height;
 
                             let cursor_id = line_index;
+                            let highlights = editable.highlights_attr(cx, cursor_id);
 
                             line_index += 1;
                             rsx! {
@@ -393,6 +395,7 @@ fn Editor(cx: Scope) -> Element {
                                         onmousedown: onmousedown,
                                         onmouseover: onmouseover,
                                         onclick: onclick,
+                                        highlights: highlights,
                                         text {
                                             color: "rgb(240, 240, 240)",
                                             font_size: "{font_size}",
