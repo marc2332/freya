@@ -213,21 +213,21 @@ fn Body(cx: Scope) -> Element {
                             let onmousedown = {
                                 to_owned![click_notifier];
                                 move |e: MouseEvent| {
-                                    click_notifier.send((e.data, line_index, EditableEvent::MouseDown)).ok();
+                                    click_notifier.send(EditableEvent::MouseDown(e.data, line_index)).ok();
                                 }
                             };
 
                             let onmouseover = {
                                 to_owned![click_notifier];
                                 move |e: MouseEvent| {
-                                    click_notifier.send((e.data, line_index, EditableEvent::MouseOver)).ok();
+                                    click_notifier.send(EditableEvent::MouseOver(e.data, line_index)).ok();
                                 }
                             };
 
                             let onclick = {
                                 to_owned![click_notifier];
-                                move |e: MouseEvent| {
-                                    click_notifier.send((e.data, line_index, EditableEvent::Click)).ok();
+                                move |_: MouseEvent| {
+                                    click_notifier.send(EditableEvent::Click).ok();
                                 }
                             };
 

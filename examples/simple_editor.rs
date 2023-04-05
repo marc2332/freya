@@ -26,7 +26,7 @@ fn app(cx: Scope) -> Element {
         to_owned![click_notifier];
         move |e: MouseEvent| {
             click_notifier
-                .send((e.data, 0, EditableEvent::MouseDown))
+                .send(EditableEvent::MouseDown(e.data, 0))
                 .ok();
         }
     };
@@ -35,15 +35,15 @@ fn app(cx: Scope) -> Element {
         to_owned![click_notifier];
         move |e: MouseEvent| {
             click_notifier
-                .send((e.data, 0, EditableEvent::MouseOver))
+                .send(EditableEvent::MouseOver(e.data, 0))
                 .ok();
         }
     };
 
     let onclick = {
         to_owned![click_notifier];
-        move |e: MouseEvent| {
-            click_notifier.send((e.data, 0, EditableEvent::Click)).ok();
+        move |_: MouseEvent| {
+            click_notifier.send(EditableEvent::Click).ok();
         }
     };
 

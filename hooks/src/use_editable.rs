@@ -20,16 +20,15 @@ use winit::event_loop::EventLoopProxy;
 use crate::text_editor::*;
 
 pub type KeypressNotifier = UnboundedSender<Rc<KeyboardData>>;
-pub type ClickNotifier = UnboundedSender<(Rc<MouseData>, usize, EditableEvent)>;
+pub type ClickNotifier = UnboundedSender<EditableEvent>;
 pub type EditorState = UseState<RopeEditor>;
 pub type KeyboardEvent = Event<KeyboardData>;
 
 /// Events emitted to the [`UseEditable`].
-#[derive(PartialEq, Eq)]
 pub enum EditableEvent {
     Click,
-    MouseOver,
-    MouseDown,
+    MouseOver(Rc<MouseData>, usize),
+    MouseDown(Rc<MouseData>, usize),
 }
 
 /// How the editable content must behave.
@@ -71,14 +70,18 @@ impl UseEditable {
     }
 
     /// Create a cursor attribute.
-    pub fn cursor_attr<'a>(&self, cx: Scope<'a>) -> AttributeValue<'a> {
+    pub fn cursor_attr<'a, T>(&self, cx: Scope<'a, T>) -> AttributeValue<'a> {
         cx.any_value(CustomAttributeValues::CursorReference(
             self.cursor_reference.clone(),
         ))
     }
 
     /// Create a highlights attribute.
-    pub fn highlights_attr<'a>(&self, cx: Scope<'a>, editor_num: usize) -> AttributeValue<'a> {
+    pub fn highlights_attr<'a, T>(
+        &self,
+        cx: Scope<'a, T>,
+        editor_num: usize,
+    ) -> AttributeValue<'a> {
         cx.any_value(CustomAttributeValues::TextHighlights(
             self.editor.get().highlights(editor_num).unwrap_or_default(),
         ))
@@ -109,7 +112,7 @@ pub fn use_editable(
 
     // Move cursor with clicks
     let click_channel = cx.use_hook(|| {
-        let (tx, rx) = unbounded_channel::<(Rc<MouseData>, usize, EditableEvent)>();
+        let (tx, rx) = unbounded_channel::<EditableEvent>();
         (tx, Some(rx))
     });
 
@@ -137,14 +140,13 @@ pub fn use_editable(
                 let mut rx = rx.unwrap();
                 let mut current_dragging = None;
 
-                while let Some((e, id, edit_event)) = rx.recv().await {
-                    match edit_event {
-                        EditableEvent::MouseDown => {
+                while let Some(edit_event) = rx.recv().await {
+                    match &edit_event {
+                        EditableEvent::MouseDown(e, id) => {
                             let coords = e.get_element_coordinates();
                             current_dragging = Some(coords);
 
-                            let cursor_reference = cursor_reference.clone();
-                            cursor_reference.id.lock().unwrap().replace(id);
+                            cursor_reference.id.lock().unwrap().replace(*id);
                             cursor_reference
                                 .positions
                                 .lock()
@@ -155,13 +157,13 @@ pub fn use_editable(
                                 text_editor.clear_highlights();
                             });
                         }
-                        EditableEvent::MouseOver => {
-                            if let Some(initial_dragging) = current_dragging {
+                        EditableEvent::MouseOver(e, id) => {
+                            if let Some(current_dragging) = current_dragging {
                                 let coords = e.get_element_coordinates();
-                                let cursor_reference = cursor_reference.clone();
-                                cursor_reference.id.lock().unwrap().replace(id);
+
+                                cursor_reference.id.lock().unwrap().replace(*id);
                                 cursor_reference.highlights.lock().unwrap().replace((
-                                    initial_dragging.to_usize().to_tuple(),
+                                    current_dragging.to_usize().to_tuple(),
                                     coords.to_usize().to_tuple(),
                                 ));
                             }
@@ -171,7 +173,7 @@ pub fn use_editable(
                         }
                     }
 
-                    if edit_event != EditableEvent::Click {
+                    if !matches!(edit_event, EditableEvent::Click) {
                         if let Some(event_loop_proxy) = &event_loop_proxy {
                             event_loop_proxy
                                 .send_event(EventMessage::RequestRelayout)
@@ -240,35 +242,32 @@ pub fn use_editable(
 
                             if mode == EditableMode::SingleLineMultipleEditors {
                                 let row = text_editor.cursor_row();
+                                let col = text_editor.cursor_col();
+
+                                // Lines between the cursor and the pointer
                                 let lines = if editor_num > row {
                                     row + 1..=editor_num.max(1) - 1
                                 } else {
                                     editor_num + 1..=row.max(1) - 1
                                 };
 
-                                // Fill all lines in between the cursor and the pointer
+                                // Select completely all lines in between the cursor and the pointer
                                 for row in lines {
                                     let len = text_editor.line(row).unwrap().len_chars();
                                     text_editor.set_highlights(vec![(0, len - 1)], row);
                                 }
 
-                                // Fill the selected line and the hovering line
-                                // TODO: Clean this.
                                 match editor_num.cmp(&row) {
+                                    // Selection direction is from bottom -> top
                                     Ordering::Greater => {
                                         text_editor
                                             .set_highlights(vec![(0, highlights.1)], editor_num);
                                         text_editor.set_highlights(
-                                            vec![(
-                                                text_editor.cursor_col(),
-                                                text_editor
-                                                    .line(text_editor.cursor_row())
-                                                    .unwrap()
-                                                    .len_chars(),
-                                            )],
-                                            text_editor.cursor_row(),
+                                            vec![(col, text_editor.line(row).unwrap().len_chars())],
+                                            row,
                                         );
                                     }
+                                    // Selection direction is from top -> bottom
                                     Ordering::Less => {
                                         text_editor.set_highlights(
                                             vec![(
@@ -277,10 +276,7 @@ pub fn use_editable(
                                             )],
                                             editor_num,
                                         );
-                                        text_editor.set_highlights(
-                                            vec![(0, text_editor.cursor_col())],
-                                            text_editor.cursor_row(),
-                                        );
+                                        text_editor.set_highlights(vec![(0, col)], row);
                                     }
                                     _ => {}
                                 }

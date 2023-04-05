@@ -10,7 +10,14 @@ use crate::{
     SCROLLBAR_SIZE,
 };
 
-type BuilderFunction<'a, T> = dyn Fn((usize, usize, &'a Option<T>)) -> LazyNodes<'a, 'a>;
+type BuilderFunction<'a, T> = dyn Fn(
+    (
+        usize,
+        usize,
+        Scope<'a, VirtualScrollViewProps<'a, T>>,
+        &'a Option<T>,
+    ),
+) -> LazyNodes<'a, 'a>;
 
 /// [`VirtualScrollView`] component properties.
 #[derive(Props)]
@@ -79,7 +86,7 @@ fn get_render_range(
 ///             item_size: 80.0,
 ///             builder_values: (),
 ///             direction: "vertical",
-///             builder: Box::new(move |(k, i, _)| {
+///             builder: Box::new(move |(k, i, _, _)| {
 ///                 rsx! {
 ///                     label {
 ///                         key: "{k}",
@@ -238,7 +245,8 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
         items_length as f32,
     );
 
-    let children = render_range.map(|i| (cx.props.builder)((i + 1, i, &cx.props.builder_values)));
+    let children =
+        render_range.map(|i| (cx.props.builder)((i + 1, i, cx, &cx.props.builder_values)));
 
     render!(
         container {

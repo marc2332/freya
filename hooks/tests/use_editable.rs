@@ -24,7 +24,7 @@ pub async fn multiple_lines_single_editor() {
                 background: "white",
                 cursor_reference: cursor_attr,
                 onmousedown:  move |e: MouseEvent| {
-                    click_notifier.send((e.data, 0, EditableEvent::MouseDown)).ok();
+                    click_notifier.send(EditableEvent::MouseDown(e.data, 0)).ok();
                 },
                 paragraph {
                     height: "50%",
@@ -137,7 +137,7 @@ pub async fn single_line_mulitple_editors() {
                             cursor_color: "black",
                             cursor_mode: "editable",
                             onmousedown:  move |e: MouseEvent| {
-                                click_notifier.send((e.data, i, EditableEvent::MouseDown)).ok();
+                                click_notifier.send(EditableEvent::MouseDown(e.data, i)).ok();
                             },
                             text {
                                 color: "black",

@@ -31,7 +31,7 @@ fn app(cx: Scope) -> Element {
             length: values.get().len(),
             item_size: 25.0,
             builder_values: values.get(),
-            builder: Box::new(move |(key, index, values)| {
+            builder: Box::new(move |(key, index, _cx, values)| {
                 let values = values.unwrap();
                 let value = values[index];
                 rsx! {
