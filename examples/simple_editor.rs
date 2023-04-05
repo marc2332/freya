@@ -12,7 +12,9 @@ fn main() {
 fn app(cx: Scope) -> Element {
     let editable = use_editable(
         cx,
-        || "Hello Rustaceans Abcdefg12345\n".repeat(10),
+        || {
+            "Hello Rustaceans Abcdefg12345 Hello Rustaceans Abcdefg12345 Hello Rustaceans Abcdefg12345 \n".repeat(25)
+        },
         EditableMode::MultipleLinesSingleEditor,
     );
     let keypress_notifier = editable.keypress_notifier().clone();
@@ -40,11 +42,12 @@ fn app(cx: Scope) -> Element {
         }
     };
 
-    let onclick = {
-        to_owned![click_notifier];
-        move |_: MouseEvent| {
-            click_notifier.send(EditableEvent::Click).ok();
-        }
+    let onclick = move |_: MouseEvent| {
+        click_notifier.send(EditableEvent::Click).ok();
+    };
+
+    let onkeydown = move |e: KeyboardEvent| {
+        keypress_notifier.send(e.data).unwrap();
     };
 
     let cursor_char = editable.editor().cursor_pos();
@@ -52,7 +55,6 @@ fn app(cx: Scope) -> Element {
         rect {
             width: "100%",
             height: "100%",
-            background: "white",
             cursor_reference: cursor_attr,
             ScrollView {
                 show_scrollbar: true,
@@ -62,17 +64,13 @@ fn app(cx: Scope) -> Element {
                     width: "100%",
                     cursor_id: "0",
                     cursor_index: "{cursor_char}",
-                    cursor_color: "black",
                     cursor_mode: "editable",
                     highlights: highlights_attr,
                     onclick: onclick,
                     onmouseover: onmouseover,
                     onmousedown: onmousedown,
-                    onkeydown: move |e| {
-                        keypress_notifier.send(e.data).unwrap();
-                    },
+                    onkeydown: onkeydown,
                     text {
-                        color: "black",
                         "{editable.editor()}"
                     }
                 }
