@@ -284,7 +284,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
         let mut paragraph = paragraph_builder.build();
         paragraph.layout(node_area.width);
 
-        if let Some((cursor_ref, cursor_id, positions, highlights)) = get_cursor_reference(node) {
+        if let Some((cursor_ref, id, positions, highlights)) = get_cursor_reference(node) {
             if let Some(positions) = positions {
                 // Calculate the new cursor position
                 let char_position = paragraph
@@ -293,10 +293,10 @@ impl<'a> NodeLayoutMeasurer<'a> {
                 // Notify the cursor reference listener
                 cursor_ref
                     .agent
-                    .send(CursorLayoutResponse::CursorPosition((
-                        char_position.position as usize,
-                        cursor_id,
-                    )))
+                    .send(CursorLayoutResponse::CursorPosition {
+                        position: char_position.position as usize,
+                        id,
+                    })
                     .ok();
             }
 
@@ -308,10 +308,11 @@ impl<'a> NodeLayoutMeasurer<'a> {
 
                 cursor_ref
                     .agent
-                    .send(CursorLayoutResponse::Highlight((
-                        (origin_char.position as usize, dist_char.position as usize),
-                        cursor_id,
-                    )))
+                    .send(CursorLayoutResponse::TextSelection {
+                        from: origin_char.position as usize,
+                        to: dist_char.position as usize,
+                        id,
+                    })
                     .ok();
             }
         }

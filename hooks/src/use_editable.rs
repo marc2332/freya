@@ -197,21 +197,21 @@ pub fn use_editable(
 
             while let Some(message) = cursor_receiver.recv().await {
                 match message {
-                    CursorLayoutResponse::CursorPosition((new_index, editor_num)) => {
+                    CursorLayoutResponse::CursorPosition { position, id } => {
                         let text_editor = editor.current();
 
                         let new_cursor_row = match mode {
                             EditableMode::MultipleLinesSingleEditor => {
-                                text_editor.char_to_line(new_index)
+                                text_editor.char_to_line(position)
                             }
-                            EditableMode::SingleLineMultipleEditors => editor_num,
+                            EditableMode::SingleLineMultipleEditors => id,
                         };
 
                         let new_cursor_col = match mode {
                             EditableMode::MultipleLinesSingleEditor => {
-                                new_index - text_editor.line_to_char(new_cursor_row)
+                                position - text_editor.line_to_char(new_cursor_row)
                             }
-                            EditableMode::SingleLineMultipleEditors => new_index,
+                            EditableMode::SingleLineMultipleEditors => position,
                         };
 
                         let new_current_line = text_editor.line(new_cursor_row).unwrap();
@@ -235,20 +235,20 @@ pub fn use_editable(
                         // Remove the current calcutions so the layout engine doesn't try to calculate again
                         cursor_reference.positions.lock().unwrap().take();
                     }
-                    CursorLayoutResponse::Highlight((highlights, editor_num)) => {
+                    CursorLayoutResponse::TextSelection { from, to, id } => {
                         editor.with_mut(|text_editor| {
                             text_editor.clear_highlights();
-                            text_editor.set_highlights(vec![highlights], editor_num);
+                            text_editor.set_highlights(vec![(from, to)], id);
 
                             if mode == EditableMode::SingleLineMultipleEditors {
                                 let row = text_editor.cursor_row();
                                 let col = text_editor.cursor_col();
 
                                 // Lines between the cursor and the pointer
-                                let lines = if editor_num > row {
-                                    row + 1..=editor_num.max(1) - 1
+                                let lines = if id > row {
+                                    row + 1..=id.max(1) - 1
                                 } else {
-                                    editor_num + 1..=row.max(1) - 1
+                                    id + 1..=row.max(1) - 1
                                 };
 
                                 // Select completely all lines in between the cursor and the pointer
@@ -257,11 +257,10 @@ pub fn use_editable(
                                     text_editor.set_highlights(vec![(0, len - 1)], row);
                                 }
 
-                                match editor_num.cmp(&row) {
+                                match id.cmp(&row) {
                                     // Selection direction is from bottom -> top
                                     Ordering::Greater => {
-                                        text_editor
-                                            .set_highlights(vec![(0, highlights.1)], editor_num);
+                                        text_editor.set_highlights(vec![(0, to)], id);
                                         text_editor.set_highlights(
                                             vec![(col, text_editor.line(row).unwrap().len_chars())],
                                             row,
@@ -270,11 +269,8 @@ pub fn use_editable(
                                     // Selection direction is from top -> bottom
                                     Ordering::Less => {
                                         text_editor.set_highlights(
-                                            vec![(
-                                                highlights.1,
-                                                text_editor.line(editor_num).unwrap().len_chars(),
-                                            )],
-                                            editor_num,
+                                            vec![(to, text_editor.line(id).unwrap().len_chars())],
+                                            id,
                                         );
                                         text_editor.set_highlights(vec![(0, col)], row);
                                     }
