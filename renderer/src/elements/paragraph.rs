@@ -5,7 +5,7 @@ use skia_safe::{
         FontCollection, Paragraph, ParagraphBuilder, ParagraphStyle, RectHeightStyle,
         RectWidthStyle, TextHeightBehavior, TextStyle,
     },
-    Canvas, Color, Paint, PaintStyle, Rect,
+    Canvas, Paint, PaintStyle, Rect,
 };
 
 /// Render a `paragraph` element
@@ -64,6 +64,7 @@ fn draw_cursor_highlights(
     dioxus_node: &DioxusNode,
 ) -> Option<()> {
     let highlights = dioxus_node.state.cursor_settings.highlights.as_ref()?;
+    let highlight_color = dioxus_node.state.cursor_settings.highlight_color;
 
     for (from, to) in highlights.iter() {
         let (from, to) = {
@@ -88,8 +89,7 @@ fn draw_cursor_highlights(
             let mut paint = Paint::default();
             paint.set_anti_alias(true);
             paint.set_style(PaintStyle::Fill);
-            // TODO(marc2332): Add an attribute for this
-            paint.set_color(Color::from_rgb(176, 218, 255));
+            paint.set_color(highlight_color);
 
             canvas.draw_rect(Rect::new(x, y, x2, y2), &paint);
         }
