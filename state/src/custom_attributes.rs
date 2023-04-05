@@ -54,6 +54,23 @@ pub struct CursorReference {
     pub id: Arc<Mutex<Option<usize>>>,
 }
 
+impl CursorReference {
+    pub fn set_cursor_selections(
+        &self,
+        cursor_selections: Option<((usize, usize), (usize, usize))>,
+    ) {
+        *self.cursor_selections.lock().unwrap() = cursor_selections;
+    }
+
+    pub fn set_cursor_position(&self, cursor_position: Option<(f32, f32)>) {
+        *self.cursor_position.lock().unwrap() = cursor_position;
+    }
+
+    pub fn set_id(&self, id: Option<usize>) {
+        *self.id.lock().unwrap() = id;
+    }
+}
+
 impl PartialEq for CursorReference {
     fn eq(&self, _: &Self) -> bool {
         true

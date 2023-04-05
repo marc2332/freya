@@ -7,8 +7,8 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use dioxus_core::{AttributeValue, Event, Scope, ScopeState};
-use dioxus_hooks::{use_effect, use_state, UseState};
+use dioxus_core::{AttributeValue, Scope, ScopeState};
+use dioxus_hooks::{to_owned, use_effect, use_state, UseState};
 use freya_common::{CursorLayoutResponse, EventMessage};
 use freya_elements::events::{KeyboardData, MouseData};
 use freya_node_state::{CursorReference, CustomAttributeValues};
@@ -18,11 +18,6 @@ use tokio::sync::{mpsc::unbounded_channel, mpsc::UnboundedSender};
 use winit::event_loop::EventLoopProxy;
 
 use crate::text_editor::*;
-
-pub type KeypressNotifier = UnboundedSender<Rc<KeyboardData>>;
-pub type ClickNotifier = UnboundedSender<EditableEvent>;
-pub type EditorState = UseState<RopeEditor>;
-pub type KeyboardEvent = Event<KeyboardData>;
 
 /// Events emitted to the [`UseEditable`].
 pub enum EditableEvent {
@@ -43,6 +38,10 @@ pub enum EditableMode {
     /// A paragraph for example.
     MultipleLinesSingleEditor,
 }
+
+pub type KeypressNotifier = UnboundedSender<Rc<KeyboardData>>;
+pub type ClickNotifier = UnboundedSender<EditableEvent>;
+pub type EditorState = UseState<RopeEditor>;
 
 /// Manage an editable content.
 #[derive(Clone)]
@@ -77,13 +76,9 @@ impl UseEditable {
     }
 
     /// Create a highlights attribute.
-    pub fn highlights_attr<'a, T>(
-        &self,
-        cx: Scope<'a, T>,
-        editor_num: usize,
-    ) -> AttributeValue<'a> {
+    pub fn highlights_attr<'a, T>(&self, cx: Scope<'a, T>, editor_id: usize) -> AttributeValue<'a> {
         cx.any_value(CustomAttributeValues::TextHighlights(
-            self.editor.get().highlights(editor_num).unwrap_or_default(),
+            self.editor.get().highlights(editor_id).unwrap_or_default(),
         ))
     }
 }
@@ -94,8 +89,8 @@ pub fn use_editable(
     initializer: impl Fn() -> String,
     mode: EditableMode,
 ) -> UseEditable {
-    // Hold the text editor manager
-    let text_editor = use_state(cx, || RopeEditor::from(initializer()));
+    // Hold the text editor
+    let text_editor = use_state(cx, || RopeEditor::from_str(initializer()));
 
     let cursor_channels = cx.use_hook(|| {
         let (tx, rx) = unbounded_channel::<CursorLayoutResponse>();
@@ -130,9 +125,9 @@ pub fn use_editable(
     };
 
     // Listen for click events and pass them to the layout engine
-    {
-        let cursor_reference = cursor_reference.clone();
-        use_effect(cx, (), move |_| {
+    use_effect(cx, (), {
+        to_owned![cursor_reference];
+        move |_| {
             let editor = text_editor.clone();
             let rx = click_channel.1.take();
             let event_loop_proxy = cx.consume_context::<EventLoopProxy<EventMessage>>();
@@ -146,12 +141,9 @@ pub fn use_editable(
                             let coords = e.get_element_coordinates();
                             current_dragging = Some(coords);
 
-                            cursor_reference.id.lock().unwrap().replace(*id);
+                            cursor_reference.set_id(Some(*id));
                             cursor_reference
-                                .cursor_position
-                                .lock()
-                                .unwrap()
-                                .replace((coords.x as f32, coords.y as f32));
+                                .set_cursor_position(Some((coords.x as f32, coords.y as f32)));
 
                             editor.with_mut(|text_editor| {
                                 text_editor.clear_highlights();
@@ -161,11 +153,11 @@ pub fn use_editable(
                             if let Some(current_dragging) = current_dragging {
                                 let coords = e.get_element_coordinates();
 
-                                cursor_reference.id.lock().unwrap().replace(*id);
-                                cursor_reference.cursor_selections.lock().unwrap().replace((
+                                cursor_reference.set_id(Some(*id));
+                                cursor_reference.set_cursor_selections(Some((
                                     current_dragging.to_usize().to_tuple(),
                                     coords.to_usize().to_tuple(),
-                                ));
+                                )));
                             }
                         }
                         EditableEvent::Click => {
@@ -182,8 +174,8 @@ pub fn use_editable(
                     }
                 }
             }
-        });
-    }
+        }
+    });
 
     // Listen for new calculations from the layout engine
     use_effect(cx, (), move |_| {
@@ -193,10 +185,10 @@ pub fn use_editable(
 
         async move {
             let mut cursor_receiver = cursor_receiver.unwrap();
-            let cursor_reference = cursor_reference.clone();
 
             while let Some(message) = cursor_receiver.recv().await {
                 match message {
+                    // Update the cursor position calculated by the layout
                     CursorLayoutResponse::CursorPosition { position, id } => {
                         let text_editor = editor.current();
 
@@ -231,10 +223,8 @@ pub fn use_editable(
                                 text_editor.clear_highlights();
                             })
                         }
-
-                        // Remove the current calcutions so the layout engine doesn't try to calculate again
-                        cursor_reference.cursor_position.lock().unwrap().take();
                     }
+                    // Update the text selections calculated by the layout
                     CursorLayoutResponse::TextSelection { from, to, id } => {
                         editor.with_mut(|text_editor| {
                             text_editor.clear_highlights();
@@ -278,10 +268,11 @@ pub fn use_editable(
                                 }
                             }
                         });
-
-                        cursor_reference.cursor_selections.lock().unwrap().take();
                     }
                 }
+                // Remove the current calcutions so the layout engine doesn't try to calculate again
+                cursor_reference.set_cursor_position(None);
+                cursor_reference.set_cursor_selections(None);
             }
         }
     });
@@ -324,6 +315,16 @@ impl Display for RopeEditor {
 }
 
 impl RopeEditor {
+    // Create a [`RopeEditor`] given the text
+    fn from_str(text: String) -> Self {
+        Self {
+            rope: Rope::from_str(&text),
+            cursor: TextCursor::new(0, 0),
+            highlights: HashMap::new(),
+        }
+    }
+
+    // Remove any text selected text
     pub fn clear_highlights(&mut self) {
         if !self.highlights.is_empty() {
             self.highlights = HashMap::default()
@@ -404,15 +405,5 @@ impl<'a> Iterator for LinesIterator<'a> {
         line.map(|line| Line {
             text: line.as_str().unwrap_or(""),
         })
-    }
-}
-
-impl From<String> for RopeEditor {
-    fn from(value: String) -> Self {
-        Self {
-            rope: Rope::from_str(&value),
-            cursor: TextCursor::new(0, 0),
-            highlights: HashMap::new(),
-        }
     }
 }
