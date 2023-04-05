@@ -60,11 +60,11 @@ fn get_cursor_reference(
     let cursor_ref = node.state.references.cursor_ref.as_ref()?;
     let current_cursor_id = { *cursor_ref.id.lock().unwrap().as_ref()? };
     let cursor_id = node.state.cursor_settings.id.as_ref()?;
-    let highlights = *cursor_ref.highlights.lock().unwrap();
-    let positions = *cursor_ref.positions.lock().unwrap();
+    let cursor_selections = *cursor_ref.cursor_selections.lock().unwrap();
+    let cursor_position = *cursor_ref.cursor_position.lock().unwrap();
 
     if current_cursor_id == *cursor_id {
-        Some((cursor_ref, *cursor_id, positions, highlights))
+        Some((cursor_ref, *cursor_id, cursor_position, cursor_selections))
     } else {
         None
     }
@@ -284,11 +284,15 @@ impl<'a> NodeLayoutMeasurer<'a> {
         let mut paragraph = paragraph_builder.build();
         paragraph.layout(node_area.width);
 
-        if let Some((cursor_ref, id, positions, highlights)) = get_cursor_reference(node) {
-            if let Some(positions) = positions {
+        if let Some((cursor_ref, id, cursor_position, cursor_selections)) =
+            get_cursor_reference(node)
+        {
+            if let Some(cursor_position) = cursor_position {
                 // Calculate the new cursor position
-                let char_position = paragraph
-                    .get_glyph_position_at_coordinate((positions.0 as i32, positions.1 as i32));
+                let char_position = paragraph.get_glyph_position_at_coordinate((
+                    cursor_position.0 as i32,
+                    cursor_position.1 as i32,
+                ));
 
                 // Notify the cursor reference listener
                 cursor_ref
@@ -300,7 +304,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
                     .ok();
             }
 
-            if let Some((origin, dist)) = highlights {
+            if let Some((origin, dist)) = cursor_selections {
                 let origin_char =
                     paragraph.get_glyph_position_at_coordinate((origin.0 as i32, origin.1 as i32));
                 let dist_char =

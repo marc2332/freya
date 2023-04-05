@@ -105,9 +105,9 @@ pub fn use_editable(
     // Cursor reference passed to the layout engine
     let cursor_reference = cx.use_hook(|| CursorReference {
         agent: cursor_channels.0.clone(),
-        positions: Arc::new(Mutex::new(None)),
+        cursor_position: Arc::new(Mutex::new(None)),
         id: Arc::new(Mutex::new(None)),
-        highlights: Arc::new(Mutex::new(None)),
+        cursor_selections: Arc::new(Mutex::new(None)),
     });
 
     // Move cursor with clicks
@@ -148,7 +148,7 @@ pub fn use_editable(
 
                             cursor_reference.id.lock().unwrap().replace(*id);
                             cursor_reference
-                                .positions
+                                .cursor_position
                                 .lock()
                                 .unwrap()
                                 .replace((coords.x as f32, coords.y as f32));
@@ -162,7 +162,7 @@ pub fn use_editable(
                                 let coords = e.get_element_coordinates();
 
                                 cursor_reference.id.lock().unwrap().replace(*id);
-                                cursor_reference.highlights.lock().unwrap().replace((
+                                cursor_reference.cursor_selections.lock().unwrap().replace((
                                     current_dragging.to_usize().to_tuple(),
                                     coords.to_usize().to_tuple(),
                                 ));
@@ -233,7 +233,7 @@ pub fn use_editable(
                         }
 
                         // Remove the current calcutions so the layout engine doesn't try to calculate again
-                        cursor_reference.positions.lock().unwrap().take();
+                        cursor_reference.cursor_position.lock().unwrap().take();
                     }
                     CursorLayoutResponse::TextSelection { from, to, id } => {
                         editor.with_mut(|text_editor| {
@@ -279,7 +279,7 @@ pub fn use_editable(
                             }
                         });
 
-                        cursor_reference.highlights.lock().unwrap().take();
+                        cursor_reference.cursor_selections.lock().unwrap().take();
                     }
                 }
             }

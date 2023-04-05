@@ -48,8 +48,8 @@ impl Display for NodeReference {
 #[derive(Clone, Debug)]
 pub struct CursorReference {
     #[allow(clippy::type_complexity)]
-    pub highlights: Arc<Mutex<Option<((usize, usize), (usize, usize))>>>,
-    pub positions: Arc<Mutex<Option<(f32, f32)>>>,
+    pub cursor_selections: Arc<Mutex<Option<((usize, usize), (usize, usize))>>>,
+    pub cursor_position: Arc<Mutex<Option<(f32, f32)>>>,
     pub agent: UnboundedSender<CursorLayoutResponse>,
     pub id: Arc<Mutex<Option<usize>>>,
 }
