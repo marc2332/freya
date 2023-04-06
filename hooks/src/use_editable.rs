@@ -267,9 +267,13 @@ pub fn use_editable(
 pub struct RopeEditor {
     rope: Rope,
     cursor: TextCursor,
-    highlights: HashMap<usize, Vec<(usize, usize)>>,
     mode: EditableMode,
-    last_pos: Option<(usize, usize)>,
+
+    /// Highlights from selected text
+    highlights: HashMap<usize, Vec<(usize, usize)>>,
+
+    /// Where the text selection starts
+    text_selection_start: Option<(usize, usize)>,
 }
 
 impl Display for RopeEditor {
@@ -285,7 +289,7 @@ impl RopeEditor {
             rope: Rope::from_str(&text),
             cursor: TextCursor::new(0, 0),
             highlights: HashMap::new(),
-            last_pos: None,
+            text_selection_start: None,
             mode,
         }
     }
@@ -296,13 +300,9 @@ impl RopeEditor {
             rope: Rope::from_str(text),
             cursor: TextCursor::new(0, 0),
             highlights: HashMap::new(),
-            last_pos: None,
+            text_selection_start: None,
             mode,
         }
-    }
-
-    pub fn get_last_pos(&self) -> Option<(usize, usize)> {
-        self.last_pos
     }
 }
 
@@ -370,7 +370,7 @@ impl TextEditor for RopeEditor {
     }
 
     fn unhighlight(&mut self) {
-        self.last_pos = None;
+        self.text_selection_start = None;
     }
 
     fn clear_highlights(&mut self) {
@@ -382,29 +382,31 @@ impl TextEditor for RopeEditor {
     fn highlight_text(&mut self, from: usize, to: usize, id: usize) {
         self.clear_highlights();
 
-        if self.last_pos.is_none() {
-            self.last_pos = Some((id, to));
+        if self.text_selection_start.is_none() {
+            self.text_selection_start = Some((id, to));
         }
 
         if self.mode == EditableMode::SingleLineMultipleEditors {
-            // Use the latest highlighting position, if none use the cursor
-            let (row, col) = self.get_last_pos().unwrap();
+            // Highlight the requested text
+            self.set_highlights(vec![(from, to)], id);
 
-            // Lines between the cursor and the pointer
+            // Use the text selection start position, if none use the cursor
+            let (row, col) = self.text_selection_start.unwrap();
+
+            // Lines between the start and the cursor
             let lines = if id > row {
                 row + 1..=id.max(1) - 1
             } else {
                 id + 1..=row.max(1) - 1
             };
 
-            self.set_highlights(vec![(from, to)], id);
-
-            // Select completely all lines in between the cursor and the pointer
+            // Highlight all lines in between the selection start and the cursor
             for row in lines {
                 let len = self.line(row).unwrap().len_chars();
                 self.set_highlights(vec![(0, len - 1)], row);
             }
 
+            // Highlight the selection start line and the cursor line
             match id.cmp(&row) {
                 // Selection direction is from bottom -> top
                 Ordering::Greater => {
