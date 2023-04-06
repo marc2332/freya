@@ -88,6 +88,8 @@ pub trait TextEditor: Sized + Clone + Display {
     where
         Self: 'a;
 
+    fn set(&mut self, text: &str);
+
     fn set_highlights(&mut self, highlights: Vec<(usize, usize)>, editor_num: usize);
 
     fn highlights(&self, editor_num: usize) -> Option<Vec<(usize, usize)>>;

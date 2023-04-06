@@ -44,6 +44,11 @@ pub fn render_paragraph(
         paragraph_builder.add_text(text.clone());
     }
 
+    if dioxus_node.state.cursor_settings.position.is_some() {
+        // This is very tricky, but it works! It allows freya to render the cursor at the end of a line.
+        paragraph_builder.add_text(" ");
+    }
+
     let mut paragraph = paragraph_builder.build();
 
     paragraph.layout(render_node.node_area.width);

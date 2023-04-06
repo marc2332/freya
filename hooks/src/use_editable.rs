@@ -90,7 +90,7 @@ pub fn use_editable(
     mode: EditableMode,
 ) -> UseEditable {
     // Hold the text editor
-    let text_editor = use_state(cx, || RopeEditor::from_str(initializer()));
+    let text_editor = use_state(cx, || RopeEditor::from_string(initializer()));
 
     let cursor_channels = cx.use_hook(|| {
         let (tx, rx) = unbounded_channel::<CursorLayoutResponse>();
@@ -315,10 +315,19 @@ impl Display for RopeEditor {
 }
 
 impl RopeEditor {
-    // Create a [`RopeEditor`] given the text
-    fn from_str(text: String) -> Self {
+    // Create a [`RopeEditor`] given the String
+    pub fn from_string(text: String) -> Self {
         Self {
             rope: Rope::from_str(&text),
+            cursor: TextCursor::new(0, 0),
+            highlights: HashMap::new(),
+        }
+    }
+
+    // Create a [`RopeEditor`] given the text
+    pub fn from_text(text: &str) -> Self {
+        Self {
+            rope: Rope::from_str(text),
             cursor: TextCursor::new(0, 0),
             highlights: HashMap::new(),
         }
@@ -388,6 +397,11 @@ impl TextEditor for RopeEditor {
 
     fn highlights(&self, editor_id: usize) -> Option<Vec<(usize, usize)>> {
         self.highlights.get(&editor_id).cloned()
+    }
+
+    fn set(&mut self, text: &str) {
+        self.rope.remove(0..);
+        self.rope.insert(0, text);
     }
 }
 
