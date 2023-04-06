@@ -65,6 +65,7 @@ fn app(cx: Scope) -> Element {
                     cursor_id: "0",
                     cursor_index: "{cursor_char}",
                     cursor_mode: "editable",
+                    cursor_color: "black",
                     highlights: highlights_attr,
                     onclick: onclick,
                     onmouseover: onmouseover,

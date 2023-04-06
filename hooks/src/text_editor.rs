@@ -164,8 +164,26 @@ pub trait TextEditor: Sized + Clone + Display {
         line_begining + self.cursor_col()
     }
 
-    // Process a Key event
+    /// Set the cursor position
+    fn set_cursor_pos(&mut self, pos: usize) {
+        let row = self.char_to_line(pos);
+        let row_idx = self.line_to_char(row);
+        let col = pos - row_idx;
+        self.cursor_mut().move_to(col, row)
+    }
+
+    // Cancel highlight
+    fn unhighlight(&mut self);
+
+    // Remove any highlighted text
+    fn clear_highlights(&mut self);
+
+    // Highlight some text
+    fn highlight_text(&mut self, from: usize, to: usize, id: usize);
+
+    // Process a Keyboard event
     fn process_key(&mut self, key: &Key, code: &Code, _modifers: &Modifiers) -> TextEvent {
+        let clear_highlights = true;
         let mut event = TextEvent::None;
         match key {
             Key::ArrowDown => {
@@ -310,6 +328,10 @@ pub trait TextEditor: Sized + Clone + Display {
                 }
             }
             _ => {}
+        }
+
+        if clear_highlights {
+            self.clear_highlights();
         }
 
         event

@@ -27,7 +27,7 @@ pub enum EditableEvent {
 }
 
 /// How the editable content must behave.
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Clone, Copy)]
 pub enum EditableMode {
     /// Multiple editors of only one line.
     ///
@@ -90,7 +90,7 @@ pub fn use_editable(
     mode: EditableMode,
 ) -> UseEditable {
     // Hold the text editor
-    let text_editor = use_state(cx, || RopeEditor::from_string(initializer()));
+    let text_editor = use_state(cx, || RopeEditor::from_string(initializer(), mode));
 
     let cursor_channels = cx.use_hook(|| {
         let (tx, rx) = unbounded_channel::<CursorLayoutResponse>();
@@ -146,6 +146,7 @@ pub fn use_editable(
                                 .set_cursor_position(Some((coords.x as f32, coords.y as f32)));
 
                             editor.with_mut(|text_editor| {
+                                text_editor.unhighlight();
                                 text_editor.clear_highlights();
                             });
                         }
@@ -220,6 +221,7 @@ pub fn use_editable(
                             editor.with_mut(|text_editor| {
                                 text_editor.cursor_mut().set_col(new_cursor.0);
                                 text_editor.cursor_mut().set_row(new_cursor.1);
+                                text_editor.unhighlight();
                                 text_editor.clear_highlights();
                             })
                         }
@@ -227,46 +229,7 @@ pub fn use_editable(
                     // Update the text selections calculated by the layout
                     CursorLayoutResponse::TextSelection { from, to, id } => {
                         editor.with_mut(|text_editor| {
-                            text_editor.clear_highlights();
-                            text_editor.set_highlights(vec![(from, to)], id);
-
-                            if mode == EditableMode::SingleLineMultipleEditors {
-                                let row = text_editor.cursor_row();
-                                let col = text_editor.cursor_col();
-
-                                // Lines between the cursor and the pointer
-                                let lines = if id > row {
-                                    row + 1..=id.max(1) - 1
-                                } else {
-                                    id + 1..=row.max(1) - 1
-                                };
-
-                                // Select completely all lines in between the cursor and the pointer
-                                for row in lines {
-                                    let len = text_editor.line(row).unwrap().len_chars();
-                                    text_editor.set_highlights(vec![(0, len - 1)], row);
-                                }
-
-                                match id.cmp(&row) {
-                                    // Selection direction is from bottom -> top
-                                    Ordering::Greater => {
-                                        text_editor.set_highlights(vec![(0, to)], id);
-                                        text_editor.set_highlights(
-                                            vec![(col, text_editor.line(row).unwrap().len_chars())],
-                                            row,
-                                        );
-                                    }
-                                    // Selection direction is from top -> bottom
-                                    Ordering::Less => {
-                                        text_editor.set_highlights(
-                                            vec![(to, text_editor.line(id).unwrap().len_chars())],
-                                            id,
-                                        );
-                                        text_editor.set_highlights(vec![(0, col)], row);
-                                    }
-                                    _ => {}
-                                }
-                            }
+                            text_editor.highlight_text(from, to, id);
                         });
                     }
                 }
@@ -286,7 +249,6 @@ pub fn use_editable(
 
             while let Some(pressed_key) = rx.recv().await {
                 text_editor.with_mut(|text_editor| {
-                    text_editor.clear_highlights();
                     text_editor.process_key(
                         &pressed_key.key,
                         &pressed_key.code,
@@ -306,6 +268,8 @@ pub struct RopeEditor {
     rope: Rope,
     cursor: TextCursor,
     highlights: HashMap<usize, Vec<(usize, usize)>>,
+    mode: EditableMode,
+    last_pos: Option<(usize, usize)>,
 }
 
 impl Display for RopeEditor {
@@ -316,28 +280,29 @@ impl Display for RopeEditor {
 
 impl RopeEditor {
     // Create a [`RopeEditor`] given the String
-    pub fn from_string(text: String) -> Self {
+    pub fn from_string(text: String, mode: EditableMode) -> Self {
         Self {
             rope: Rope::from_str(&text),
             cursor: TextCursor::new(0, 0),
             highlights: HashMap::new(),
+            last_pos: None,
+            mode,
         }
     }
 
     // Create a [`RopeEditor`] given the text
-    pub fn from_text(text: &str) -> Self {
+    pub fn from_text(text: &str, mode: EditableMode) -> Self {
         Self {
             rope: Rope::from_str(text),
             cursor: TextCursor::new(0, 0),
             highlights: HashMap::new(),
+            last_pos: None,
+            mode,
         }
     }
 
-    // Remove any text selected text
-    pub fn clear_highlights(&mut self) {
-        if !self.highlights.is_empty() {
-            self.highlights = HashMap::default()
-        }
+    pub fn get_last_pos(&self) -> Option<(usize, usize)> {
+        self.last_pos
     }
 }
 
@@ -402,6 +367,64 @@ impl TextEditor for RopeEditor {
     fn set(&mut self, text: &str) {
         self.rope.remove(0..);
         self.rope.insert(0, text);
+    }
+
+    fn unhighlight(&mut self) {
+        self.last_pos = None;
+    }
+
+    fn clear_highlights(&mut self) {
+        if !self.highlights.is_empty() {
+            self.highlights = HashMap::default()
+        }
+    }
+
+    fn highlight_text(&mut self, from: usize, to: usize, id: usize) {
+        self.clear_highlights();
+
+        if self.last_pos.is_none() {
+            self.last_pos = Some((id, to));
+        }
+
+        if self.mode == EditableMode::SingleLineMultipleEditors {
+            // Use the latest highlighting position, if none use the cursor
+            let (row, col) = self.get_last_pos().unwrap();
+
+            // Lines between the cursor and the pointer
+            let lines = if id > row {
+                row + 1..=id.max(1) - 1
+            } else {
+                id + 1..=row.max(1) - 1
+            };
+
+            self.set_highlights(vec![(from, to)], id);
+
+            // Select completely all lines in between the cursor and the pointer
+            for row in lines {
+                let len = self.line(row).unwrap().len_chars();
+                self.set_highlights(vec![(0, len - 1)], row);
+            }
+
+            match id.cmp(&row) {
+                // Selection direction is from bottom -> top
+                Ordering::Greater => {
+                    self.set_highlights(vec![(0, to)], id);
+                    self.set_highlights(vec![(col, self.line(row).unwrap().len_chars())], row);
+                }
+                // Selection direction is from top -> bottom
+                Ordering::Less => {
+                    self.set_highlights(vec![(to, self.line(id).unwrap().len_chars())], id);
+                    self.set_highlights(vec![(0, col)], row);
+                }
+                _ => {}
+            }
+
+            self.cursor_mut().move_to(to, id);
+        } else {
+            self.clear_highlights();
+            self.set_highlights(vec![(from, to)], 0);
+            self.set_cursor_pos(to);
+        }
     }
 }
 

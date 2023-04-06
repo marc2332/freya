@@ -53,11 +53,11 @@ pub fn render_paragraph(
 
     paragraph.layout(render_node.node_area.width);
 
-    // Draw a cursor if specified
-    draw_cursor(render_node, &paragraph, canvas, dioxus_node);
-
     // Draw the highlights if specified
     draw_cursor_highlights(render_node, &paragraph, canvas, dioxus_node);
+
+    // Draw a cursor if specified
+    draw_cursor(render_node, &paragraph, canvas, dioxus_node);
 
     paragraph.paint(canvas, (x, y));
 }
