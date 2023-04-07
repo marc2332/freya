@@ -168,7 +168,7 @@ pub fn use_editable(
                         }
                     }
 
-                    if !matches!(edit_event, EditableEvent::Click) {
+                    if current_dragging.is_some() {
                         if let Some(event_loop_proxy) = &event_loop_proxy {
                             event_loop_proxy
                                 .send_event(EventMessage::RequestRelayout)
@@ -333,9 +333,7 @@ impl TextEditor for RopeEditor {
     fn line(&self, line_idx: usize) -> Option<Line<'_>> {
         let line = self.rope.get_line(line_idx);
 
-        line.map(|line| Line {
-            text: line.as_str().unwrap_or(""),
-        })
+        line.map(|line| Line { text: line.into() })
     }
 
     fn len_lines<'a>(&self) -> usize {
@@ -466,8 +464,6 @@ impl<'a> Iterator for LinesIterator<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         let line = self.lines.next();
 
-        line.map(|line| Line {
-            text: line.as_str().unwrap_or(""),
-        })
+        line.map(|line| Line { text: line.into() })
     }
 }

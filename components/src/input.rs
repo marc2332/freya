@@ -135,6 +135,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
                     cursor_id: "0",
                     cursor_index: "{cursor_char}",
                     cursor_mode: "editable",
+                    cursor_color: "white",
                     max_lines: "1",
                     onclick: onclick,
                     onmouseover: onmouseover,

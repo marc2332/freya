@@ -1,4 +1,4 @@
-use std::{fmt::Display, ops::Range};
+use std::{borrow::Cow, fmt::Display, ops::Range};
 
 use freya_elements::events::keyboard::{Code, Key, Modifiers};
 pub use ropey::Rope;
@@ -50,7 +50,7 @@ impl TextCursor {
 /// A text line from a [TextEditor]
 #[derive(Clone)]
 pub struct Line<'a> {
-    pub text: &'a str,
+    pub text: Cow<'a, str>,
 }
 
 impl Line<'_> {
@@ -61,13 +61,13 @@ impl Line<'_> {
 
     /// Get the text of the line
     fn as_str(&self) -> &str {
-        self.text
+        &self.text
     }
 }
 
 impl Display for Line<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(self.text)
+        f.write_str(&self.text)
     }
 }
 
@@ -263,7 +263,7 @@ pub trait TextEditor: Sized + Clone + Display {
 
                 // Go one line down if there isn't more characters on the right
                 if self.cursor_row() < total_lines
-                    && self.cursor_col() == current_line.len_chars() - 1
+                    && self.cursor_col() == current_line.len_chars().max(1) - 1
                 {
                     self.cursor_down();
                     self.cursor_mut().set_col(0);

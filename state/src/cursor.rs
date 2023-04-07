@@ -103,7 +103,7 @@ impl Default for CursorSettings {
     fn default() -> Self {
         Self {
             position: None,
-            color: Color::WHITE,
+            color: Color::BLACK,
             mode: CursorMode::None,
             id: None,
             highlights: None,

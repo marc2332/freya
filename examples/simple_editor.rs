@@ -13,7 +13,7 @@ fn app(cx: Scope) -> Element {
     let editable = use_editable(
         cx,
         || {
-            "Hello Rustaceans Abcdefg12345 Hello Rustaceans Abcdefg12345 Hello Rustaceans Abcdefg12345 \n".repeat(25)
+            "Hello Rustaceans Abcdefg12345 Hello Rustaceans Abcdefg12345 Hello Rustaceans Abcdefg12345\n".repeat(25).trim().to_string()
         },
         EditableMode::MultipleLinesSingleEditor,
     );
