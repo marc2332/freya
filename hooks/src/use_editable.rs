@@ -4,7 +4,8 @@ use std::{
 };
 
 use dioxus_core::{AttributeValue, Scope, ScopeState};
-use dioxus_hooks::{to_owned, use_effect, use_state, UseState};
+use dioxus_hooks::{use_effect, use_ref, use_state, UseRef, UseState};
+use euclid::Point2D;
 use freya_common::{CursorLayoutResponse, EventMessage};
 use freya_elements::events::{KeyboardData, MouseData};
 use freya_node_state::{CursorReference, CustomAttributeValues};
@@ -12,13 +13,14 @@ pub use ropey::Rope;
 use tokio::sync::{mpsc::unbounded_channel, mpsc::UnboundedSender};
 use winit::event_loop::EventLoopProxy;
 
-use crate::{RopeEditor, TextCursor, TextEditor};
+use crate::{RopeEditor, TextCursor, TextEditor, TextEvent};
 
 /// Events emitted to the [`UseEditable`].
 pub enum EditableEvent {
     Click,
     MouseOver(Rc<MouseData>, usize),
     MouseDown(Rc<MouseData>, usize),
+    KeyDown(Rc<KeyboardData>),
 }
 
 /// How the editable content must behave.
@@ -40,33 +42,22 @@ impl Default for EditableMode {
     }
 }
 
-pub type KeypressNotifier = UnboundedSender<Rc<KeyboardData>>;
 pub type ClickNotifier = UnboundedSender<EditableEvent>;
 pub type EditorState = UseState<RopeEditor>;
 
 /// Manage an editable content.
 #[derive(Clone)]
 pub struct UseEditable {
-    pub editor: EditorState,
-    pub keypress_notifier: KeypressNotifier,
-    pub click_notifier: ClickNotifier,
-    pub cursor_reference: CursorReference,
+    pub(crate) editor: EditorState,
+    pub(crate) cursor_reference: CursorReference,
+    pub(crate) selecting_text_with_mouse: UseRef<Option<Point2D<f64, f64>>>,
+    pub(crate) event_loop_proxy: Option<EventLoopProxy<EventMessage>>,
 }
 
 impl UseEditable {
     /// Reference to the editor.
     pub fn editor(&self) -> &EditorState {
         &self.editor
-    }
-
-    /// Reference to the Keypress notifier.
-    pub fn keypress_notifier(&self) -> &KeypressNotifier {
-        &self.keypress_notifier
-    }
-
-    /// Reference to the click notifier.
-    pub fn click_notifier(&self) -> &ClickNotifier {
-        &self.click_notifier
     }
 
     /// Create a cursor attribute.
@@ -86,14 +77,67 @@ impl UseEditable {
                 .unwrap_or_default(),
         ))
     }
+
+    /// Process a [`EditableEvent`] event.
+    pub fn process_event(&self, edit_event: &EditableEvent) {
+        match edit_event {
+            EditableEvent::MouseDown(e, id) => {
+                let coords = e.get_element_coordinates();
+                *self.selecting_text_with_mouse.write_silent() = Some(coords);
+
+                self.cursor_reference.set_id(Some(*id));
+                self.cursor_reference
+                    .set_cursor_position(Some((coords.x as f32, coords.y as f32)));
+
+                self.editor.with_mut(|editor| {
+                    editor.unhighlight();
+                });
+            }
+            EditableEvent::MouseOver(e, id) => {
+                self.selecting_text_with_mouse.with(|selecting_text| {
+                    if let Some(current_dragging) = selecting_text {
+                        let coords = e.get_element_coordinates();
+
+                        self.cursor_reference.set_id(Some(*id));
+                        self.cursor_reference.set_cursor_selections(Some((
+                            current_dragging.to_usize().to_tuple(),
+                            coords.to_usize().to_tuple(),
+                        )));
+                    }
+                });
+            }
+            EditableEvent::Click => {
+                *self.selecting_text_with_mouse.write_silent() = None;
+            }
+            EditableEvent::KeyDown(e) => {
+                self.editor.with_mut(|editor| {
+                    let event = editor.process_key(&e.key, &e.code, &e.modifiers);
+
+                    if event == TextEvent::TextChanged {
+                        *self.selecting_text_with_mouse.write_silent() = None;
+                    }
+                });
+            }
+        }
+
+        if self.selecting_text_with_mouse.read().is_some() {
+            if let Some(event_loop_proxy) = &self.event_loop_proxy {
+                event_loop_proxy
+                    .send_event(EventMessage::RequestRelayout)
+                    .unwrap();
+            }
+        }
+    }
 }
 
+/// Create a configuration for a [`UseEditable`].
 pub struct EditableConfig {
     pub(crate) content: String,
     pub(crate) cursor: TextCursor,
 }
 
 impl EditableConfig {
+    /// Create a [`EditableConfig`].
     pub fn new(content: String) -> Self {
         Self {
             content,
@@ -101,6 +145,7 @@ impl EditableConfig {
         }
     }
 
+    /// Specify a custom initial cursor positions.
     pub fn with_cursor(mut self, (row, col): (usize, usize)) -> Self {
         self.cursor = TextCursor::new(row, col);
         self
@@ -113,6 +158,8 @@ pub fn use_editable(
     initializer: impl Fn() -> EditableConfig,
     mode: EditableMode,
 ) -> UseEditable {
+    let event_loop_proxy = cx.consume_context::<EventLoopProxy<EventMessage>>();
+
     // Hold the text editor
     let text_editor = use_state(cx, || {
         let config = initializer();
@@ -124,6 +171,8 @@ pub fn use_editable(
         (tx, Some(rx))
     });
 
+    let selecting_text_with_mouse = use_ref(cx, || None);
+
     // Cursor reference passed to the layout engine
     let cursor_reference = cx.use_hook(|| CursorReference {
         agent: cursor_channels.0.clone(),
@@ -132,77 +181,12 @@ pub fn use_editable(
         cursor_selections: Arc::new(Mutex::new(None)),
     });
 
-    // Move cursor with clicks
-    let click_channel = cx.use_hook(|| {
-        let (tx, rx) = unbounded_channel::<EditableEvent>();
-        (tx, Some(rx))
-    });
-
-    // Write into the text
-    let keypress_channel = cx.use_hook(|| {
-        let (tx, rx) = unbounded_channel::<Rc<KeyboardData>>();
-        (tx, Some(rx))
-    });
-
     let use_editable = UseEditable {
         editor: text_editor.clone(),
-        keypress_notifier: keypress_channel.0.clone(),
-        click_notifier: click_channel.0.clone(),
         cursor_reference: cursor_reference.clone(),
+        selecting_text_with_mouse: selecting_text_with_mouse.clone(),
+        event_loop_proxy,
     };
-
-    // Listen for click events and pass them to the layout engine
-    use_effect(cx, (), {
-        to_owned![cursor_reference];
-        move |_| {
-            let editor = text_editor.clone();
-            let rx = click_channel.1.take();
-            let event_loop_proxy = cx.consume_context::<EventLoopProxy<EventMessage>>();
-            async move {
-                let mut rx = rx.unwrap();
-                let mut current_dragging = None;
-
-                while let Some(edit_event) = rx.recv().await {
-                    match &edit_event {
-                        EditableEvent::MouseDown(e, id) => {
-                            let coords = e.get_element_coordinates();
-                            current_dragging = Some(coords);
-
-                            cursor_reference.set_id(Some(*id));
-                            cursor_reference
-                                .set_cursor_position(Some((coords.x as f32, coords.y as f32)));
-
-                            editor.with_mut(|text_editor| {
-                                text_editor.unhighlight();
-                            });
-                        }
-                        EditableEvent::MouseOver(e, id) => {
-                            if let Some(current_dragging) = current_dragging {
-                                let coords = e.get_element_coordinates();
-
-                                cursor_reference.set_id(Some(*id));
-                                cursor_reference.set_cursor_selections(Some((
-                                    current_dragging.to_usize().to_tuple(),
-                                    coords.to_usize().to_tuple(),
-                                )));
-                            }
-                        }
-                        EditableEvent::Click => {
-                            current_dragging = None;
-                        }
-                    }
-
-                    if current_dragging.is_some() {
-                        if let Some(event_loop_proxy) = &event_loop_proxy {
-                            event_loop_proxy
-                                .send_event(EventMessage::RequestRelayout)
-                                .unwrap();
-                        }
-                    }
-                }
-            }
-        }
-    });
 
     // Listen for new calculations from the layout engine
     use_effect(cx, (), move |_| {
@@ -261,25 +245,6 @@ pub fn use_editable(
                 // Remove the current calcutions so the layout engine doesn't try to calculate again
                 cursor_reference.set_cursor_position(None);
                 cursor_reference.set_cursor_selections(None);
-            }
-        }
-    });
-
-    // Listen for keypresses
-    use_effect(cx, (), move |_| {
-        let rx = keypress_channel.1.take();
-        let text_editor = text_editor.clone();
-        async move {
-            let mut rx = rx.unwrap();
-
-            while let Some(pressed_key) = rx.recv().await {
-                text_editor.with_mut(|text_editor| {
-                    text_editor.process_key(
-                        &pressed_key.key,
-                        &pressed_key.code,
-                        &pressed_key.modifiers,
-                    );
-                });
             }
         }
     });

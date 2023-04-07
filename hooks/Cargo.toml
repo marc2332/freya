@@ -30,6 +30,7 @@ freya-common = { path = "../common", version = "0.1.0" }
 nokhwa = {version = "0.10.3", features = ["input-native"], optional = true }
 bytes = "1.3.0"
 winit = "0.28.2"
+euclid = "0.22.7"
 
 [dev-dependencies]
 dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519", features = ["macro", "hooks", "hot-reload"]}

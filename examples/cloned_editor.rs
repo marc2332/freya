@@ -31,15 +31,20 @@ fn Body(cx: Scope) -> Element {
         },
         EditableMode::SingleLineMultipleEditors,
     );
-    let click_notifier = editable.click_notifier().clone();
-    let keypress_notifier = editable.keypress_notifier().clone();
     let cursor_attr = editable.cursor_attr(cx);
-    let editor = editable.editor().get().clone();
+    let editor = editable.editor().clone();
 
     let onclick = {
-        to_owned![click_notifier];
+        to_owned![editable];
         move |_: MouseEvent| {
-            click_notifier.send(EditableEvent::Click).ok();
+            editable.process_event(&EditableEvent::Click);
+        }
+    };
+
+    let onkeydown = {
+        to_owned![editable];
+        move |e: KeyboardEvent| {
+            editable.process_event(&EditableEvent::KeyDown(e.data));
         }
     };
 
@@ -48,9 +53,7 @@ fn Body(cx: Scope) -> Element {
             width: "100%",
             height: "100%",
             padding: "10",
-            onkeydown: move |e| {
-                keypress_notifier.send(e.data).unwrap();
-            },
+            onkeydown: onkeydown,
             cursor_reference: cursor_attr,
             direction: "horizontal",
             onglobalclick: onclick,
@@ -61,9 +64,10 @@ fn Body(cx: Scope) -> Element {
                 show_scrollbar: true,
                 length: editor.len_lines(),
                 item_size: 35.0,
-                builder_values: (editor.clone(), click_notifier.clone(), editable.clone()),
+                builder_values: editable.clone(),
                 builder: Box::new(move |(key, line_index, cx, values)| {
-                    let (editor, click_notifier, editable) = values.as_ref().unwrap();
+                    let editable = values.as_ref().unwrap();
+                    let editor = editable.editor();
                     let line = editor.line(line_index).unwrap();
 
                     let is_line_selected = editor.cursor_row() == line_index;
@@ -83,16 +87,16 @@ fn Body(cx: Scope) -> Element {
                     };
 
                     let onmousedown = {
-                        to_owned![click_notifier];
+                        to_owned![editable];
                         move |e: MouseEvent| {
-                            click_notifier.send(EditableEvent::MouseDown(e.data, line_index)).ok();
+                            editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
                         }
                     };
 
                     let onmouseover = {
-                        to_owned![click_notifier];
+                        to_owned![editable];
                         move |e: MouseEvent| {
-                            click_notifier.send(EditableEvent::MouseOver(e.data, line_index)).ok();
+                            editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
                         }
                     };
 
@@ -143,9 +147,10 @@ fn Body(cx: Scope) -> Element {
                 show_scrollbar: true,
                 length: editor.len_lines(),
                 item_size: 35.0,
-                builder_values: (editor.clone(), click_notifier.clone(), editable.clone()),
+                builder_values: editable.clone(),
                 builder: Box::new(move |(key, line_index, cx, values)| {
-                    let (editor, click_notifier, editable) = values.as_ref().unwrap();
+                    let editable = values.as_ref().unwrap();
+                    let editor = editable.editor();
                     let line = editor.line(line_index).unwrap();
 
                     let is_line_selected = editor.cursor_row() == line_index;
@@ -165,18 +170,19 @@ fn Body(cx: Scope) -> Element {
                     };
 
                     let onmousedown = {
-                        to_owned![click_notifier];
+                        to_owned![editable];
                         move |e: MouseEvent| {
-                            click_notifier.send(EditableEvent::MouseDown(e.data, line_index)).ok();
+                            editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
                         }
                     };
 
                     let onmouseover = {
-                        to_owned![click_notifier];
+                        to_owned![editable];
                         move |e: MouseEvent| {
-                            click_notifier.send(EditableEvent::MouseOver(e.data, line_index)).ok();
+                            editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
                         }
                     };
+
 
                     let highlights = editable.highlights_attr(&cx, line_index);
 

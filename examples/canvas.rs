@@ -156,10 +156,8 @@ fn Editor(cx: Scope) -> Element {
         },
         EditableMode::SingleLineMultipleEditors,
     );
-    let click_notifier = editable.click_notifier().clone();
-    let keypress_notifier = editable.keypress_notifier().clone();
     let cursor_attr = editable.cursor_attr(cx);
-    let editor = editable.editor().get().clone();
+    let editor = editable.editor().clone();
     let cursor = editor.cursor().clone();
 
     let font_size_percentage = use_state(cx, || 15.0);
@@ -191,13 +189,24 @@ fn Editor(cx: Scope) -> Element {
         async move {}
     });
 
+    let onclick = move |_: MouseEvent| {
+        if let Some(focus) = focus {
+            *focus.write() = focus_id
+        }
+    };
+
+    let onkeydown = {
+        to_owned![editable];
+        move |e: KeyboardEvent| {
+            if focused {
+                editable.process_event(&EditableEvent::KeyDown(e.data));
+            }
+        }
+    };
+
     render!(
         rect {
-            onclick: move |_| {
-                if let Some(focus) = focus {
-                    *focus.write() = focus_id
-                }
-            },
+            onclick: onclick,
             width: "100%",
             height: "100%",
             rect {
@@ -302,11 +311,7 @@ fn Editor(cx: Scope) -> Element {
                 width: "100%",
                 height: "calc(100% - 80)",
                 padding: "5",
-                onkeydown: move |e| {
-                    if focused {
-                        keypress_notifier.send(e.data).unwrap();
-                    }
-                },
+                onkeydown: onkeydown,
                 cursor_reference: cursor_attr,
                 direction: "horizontal",
                 rect {
@@ -318,7 +323,7 @@ fn Editor(cx: Scope) -> Element {
                         height: "100%",
                         show_scrollbar: true,
                         editor.lines().map(move |l| {
-                            let click_notifier = click_notifier.clone();
+                            let editable = editable.clone();
 
                             let is_line_selected = cursor.row() == line_index;
 
@@ -337,23 +342,23 @@ fn Editor(cx: Scope) -> Element {
                             };
 
                             let onmousedown = {
-                                to_owned![click_notifier];
+                                to_owned![editable];
                                 move |e: MouseEvent| {
-                                    click_notifier.send(EditableEvent::MouseDown(e.data, line_index)).ok();
+                                    editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
                                 }
                             };
 
                             let onmouseover = {
-                                to_owned![click_notifier];
+                                to_owned![editable];
                                 move |e: MouseEvent| {
-                                    click_notifier.send(EditableEvent::MouseOver(e.data, line_index)).ok();
+                                    editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
                                 }
                             };
 
                             let onclick = {
-                                to_owned![click_notifier];
+                                to_owned![editable];
                                 move |_: MouseEvent| {
-                                    click_notifier.send(EditableEvent::Click).ok();
+                                    editable.process_event(&EditableEvent::Click);
                                 }
                             };
 

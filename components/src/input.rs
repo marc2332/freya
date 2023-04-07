@@ -53,23 +53,10 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     let theme = use_get_theme(cx);
     let (focused, focus) = use_focus(cx);
 
-    let click_notifier = editable.click_notifier().clone();
     let text = cx.props.value;
     let button_theme = &theme.button;
     let cursor_attr = editable.cursor_attr(cx);
     let highlights_attr = editable.highlights_attr(cx, 0);
-
-    let onkeydown = {
-        to_owned![editable];
-        move |e: Event<KeyboardData>| {
-            if focused {
-                editable.editor.with_mut(|editor| {
-                    editor.process_key(&e.data.key, &e.data.code, &e.data.modifiers);
-                    cx.props.onchange.call(editor.to_string());
-                });
-            }
-        }
-    };
 
     use_effect(cx, &(cx.props.value.to_string(),), {
         to_owned![editable];
@@ -81,26 +68,35 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
         }
     });
 
+    let onkeydown = {
+        to_owned![editable];
+        move |e: Event<KeyboardData>| {
+            if focused {
+                editable.process_event(&EditableEvent::KeyDown(e.data));
+                cx.props.onchange.call(editable.editor().to_string());
+            }
+        }
+    };
+
     let onmousedown = {
-        to_owned![click_notifier];
+        to_owned![editable];
         move |e: MouseEvent| {
-            click_notifier
-                .send(EditableEvent::MouseDown(e.data, 0))
-                .ok();
+            editable.process_event(&EditableEvent::MouseDown(e.data, 0));
         }
     };
 
     let onmouseover = {
-        to_owned![click_notifier];
+        to_owned![editable];
         move |e: MouseEvent| {
-            click_notifier
-                .send(EditableEvent::MouseOver(e.data, 0))
-                .ok();
+            editable.process_event(&EditableEvent::MouseOver(e.data, 0));
         }
     };
 
-    let onclick = move |_: MouseEvent| {
-        click_notifier.send(EditableEvent::Click).ok();
+    let onclick = {
+        to_owned![editable];
+        move |_: MouseEvent| {
+            editable.process_event(&EditableEvent::Click);
+        }
     };
 
     let cursor_char = if focused {

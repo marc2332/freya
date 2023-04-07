@@ -11,21 +11,32 @@ pub async fn multiple_lines_single_editor() {
             || EditableConfig::new("Hello Rustaceans".to_string()),
             EditableMode::MultipleLinesSingleEditor,
         );
-        let keypress_notifier = editable.keypress_notifier().clone();
-        let click_notifier = editable.click_notifier().clone();
         let cursor_attr = editable.cursor_attr(cx);
         let editor = editable.editor();
         let cursor = editor.cursor();
         let cursor_pos = editor.cursor_pos();
+
+        let onmousedown = {
+            to_owned![editable];
+            move |e: MouseEvent| {
+                editable.process_event(&EditableEvent::MouseDown(e.data, 0));
+            }
+        };
+
+        let onkeydown = {
+            to_owned![editable];
+            move |e: Event<KeyboardData>| {
+                editable.process_event(&EditableEvent::KeyDown(e.data));
+            }
+        };
+
         render!(
             rect {
                 width: "100%",
                 height: "100%",
                 background: "white",
                 cursor_reference: cursor_attr,
-                onmousedown:  move |e: MouseEvent| {
-                    click_notifier.send(EditableEvent::MouseDown(e.data, 0)).ok();
-                },
+                onmousedown: onmousedown,
                 paragraph {
                     height: "50%",
                     width: "100%",
@@ -33,9 +44,7 @@ pub async fn multiple_lines_single_editor() {
                     cursor_index: "{cursor_pos}",
                     cursor_color: "black",
                     cursor_mode: "editable",
-                    onkeydown: move |e| {
-                        keypress_notifier.send(e.data).unwrap();
-                    },
+                    onkeydown: onkeydown,
                     text {
                         color: "black",
                         "{editor}"
@@ -112,21 +121,32 @@ pub async fn single_line_mulitple_editors() {
             || EditableConfig::new("Hello Rustaceans\nHello World".to_string()),
             EditableMode::SingleLineMultipleEditors,
         );
-        let keypress_notifier = editable.keypress_notifier().clone();
-        let click_notifier = editable.click_notifier().clone();
         let cursor_attr = editable.cursor_attr(cx);
-        let editor = editable.editor();
+        let editor = editable.editor().clone();
+
+        let onkeydown = {
+            to_owned![editable];
+            move |e: Event<KeyboardData>| {
+                editable.process_event(&EditableEvent::KeyDown(e.data));
+            }
+        };
+
         render!(
             rect {
                 width: "100%",
                 height: "100%",
                 background: "white",
                 cursor_reference: cursor_attr,
-                onkeydown: move |e| {
-                    keypress_notifier.send(e.data).unwrap();
-                },
+                onkeydown: onkeydown,
                 editor.lines().enumerate().map(move |(i, line)| {
-                    let click_notifier = click_notifier.clone();
+
+                    let onmousedown = {
+                        to_owned![editable];
+                        move |e: MouseEvent| {
+                            editable.process_event(&EditableEvent::MouseDown(e.data, 0));
+                        }
+                    };
+
                     rsx!(
                         paragraph {
                             width: "100%",
@@ -136,9 +156,7 @@ pub async fn single_line_mulitple_editors() {
                             cursor_index: "{i}",
                             cursor_color: "black",
                             cursor_mode: "editable",
-                            onmousedown:  move |e: MouseEvent| {
-                                click_notifier.send(EditableEvent::MouseDown(e.data, i)).ok();
-                            },
+                            onmousedown:  onmousedown,
                             text {
                                 color: "black",
                                 "{line}"

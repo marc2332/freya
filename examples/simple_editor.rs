@@ -17,40 +17,40 @@ fn app(cx: Scope) -> Element {
         },
         EditableMode::MultipleLinesSingleEditor,
     );
-    let keypress_notifier = editable.keypress_notifier().clone();
-    let click_notifier = editable.click_notifier().clone();
     let cursor = editable.editor().cursor();
 
     let cursor_attr = editable.cursor_attr(cx);
     let highlights_attr = editable.highlights_attr(cx, 0);
+    let cursor_char = editable.editor().cursor_pos();
 
     let onmousedown = {
-        to_owned![click_notifier];
+        to_owned![editable];
         move |e: MouseEvent| {
-            click_notifier
-                .send(EditableEvent::MouseDown(e.data, 0))
-                .ok();
+            editable.process_event(&EditableEvent::MouseDown(e.data, 0));
         }
     };
 
     let onmouseover = {
-        to_owned![click_notifier];
+        to_owned![editable];
         move |e: MouseEvent| {
-            click_notifier
-                .send(EditableEvent::MouseOver(e.data, 0))
-                .ok();
+            editable.process_event(&EditableEvent::MouseOver(e.data, 0));
         }
     };
 
-    let onclick = move |_: MouseEvent| {
-        click_notifier.send(EditableEvent::Click).ok();
+    let onclick = {
+        to_owned![editable];
+        move |_: MouseEvent| {
+            editable.process_event(&EditableEvent::Click);
+        }
     };
 
-    let onkeydown = move |e: KeyboardEvent| {
-        keypress_notifier.send(e.data).unwrap();
+    let onkeydown = {
+        to_owned![editable];
+        move |e: KeyboardEvent| {
+            editable.process_event(&EditableEvent::KeyDown(e.data));
+        }
     };
 
-    let cursor_char = editable.editor().cursor_pos();
     render!(
         rect {
             width: "100%",
