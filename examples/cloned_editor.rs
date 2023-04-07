@@ -31,14 +31,10 @@ fn Body(cx: Scope) -> Element {
         },
         EditableMode::SingleLineMultipleEditors,
     );
-    let UseEditable {
-        editor,
-        keypress_notifier,
-        click_notifier,
-        ..
-    } = editable.clone();
-    let editor = editor.get().clone();
+    let click_notifier = editable.click_notifier().clone();
+    let keypress_notifier = editable.keypress_notifier().clone();
     let cursor_attr = editable.cursor_attr(cx);
+    let editor = editable.editor().get().clone();
 
     let onclick = {
         to_owned![click_notifier];
@@ -134,7 +130,7 @@ fn Body(cx: Scope) -> Element {
                                 text {
                                     color: "rgb(240, 240, 240)",
                                     font_size: "15",
-                                    "{line} "
+                                    "{line}"
                                 }
                             }
                         }
@@ -216,7 +212,7 @@ fn Body(cx: Scope) -> Element {
                                 text {
                                     color: "rgb(240, 240, 240)",
                                     font_size: "15",
-                                    "{line} "
+                                    "{line}"
                                 }
                             }
                         }

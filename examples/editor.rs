@@ -31,15 +31,12 @@ fn Body(cx: Scope) -> Element {
         },
         EditableMode::SingleLineMultipleEditors,
     );
-    let UseEditable {
-        editor,
-        keypress_notifier,
-        click_notifier,
-        ..
-    } = editable.clone();
-    let editor = editor.get();
-    let cursor_char = editor.cursor_pos();
+    let click_notifier = editable.click_notifier().clone();
+    let keypress_notifier = editable.keypress_notifier().clone();
     let cursor_attr = editable.cursor_attr(cx);
+    let editor = editable.editor().get().clone();
+    let cursor = editor.cursor().clone();
+    let cursor_char = editor.cursor_pos();
 
     let font_size_percentage = use_state(cx, || 15.0);
     let line_height_percentage = use_state(cx, || 0.0);
@@ -193,11 +190,11 @@ fn Body(cx: Scope) -> Element {
                         editor.lines().map(move |l| {
                             let click_notifier = click_notifier.clone();
 
-                            let is_line_selected = editor.cursor_row() == line_index;
+                            let is_line_selected = cursor.row() == line_index;
 
                             // Only show the cursor in the active line
                             let character_index = if is_line_selected {
-                                editor.cursor_col().to_string()
+                                cursor.col().to_string()
                             } else {
                                 "none".to_string()
                             };
