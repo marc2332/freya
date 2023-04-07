@@ -446,7 +446,7 @@ impl TextEditor for RopeEditor {
         }
 
         if self.mode == EditableMode::SingleLineMultipleEditors {
-            self.cursor_mut().move_to(to, editor_id);
+            self.cursor_mut().move_to(editor_id, to);
         } else {
             self.set_cursor_pos(to);
         }

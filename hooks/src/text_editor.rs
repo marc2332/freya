@@ -12,12 +12,12 @@ pub struct TextCursor {
 
 impl TextCursor {
     /// Construct a new [TextCursor] given a column and a row
-    pub fn new(col: usize, row: usize) -> Self {
+    pub fn new(row: usize, col: usize) -> Self {
         Self { col, row }
     }
 
-    /// Move the cursor to a new column and row
-    pub fn move_to(&mut self, col: usize, row: usize) {
+    /// Move the cursor to a new row and column
+    pub fn move_to(&mut self, row: usize, col: usize) {
         self.col = col;
         self.row = row;
     }
@@ -165,7 +165,7 @@ pub trait TextEditor: Sized + Clone + Display {
         let row = self.char_to_line(pos);
         let row_idx = self.line_to_char(row);
         let col = pos - row_idx;
-        self.cursor_mut().move_to(col, row)
+        self.cursor_mut().move_to(row, col)
     }
 
     // Return the highlighted text from a given editor Id
