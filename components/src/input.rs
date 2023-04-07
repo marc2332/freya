@@ -64,7 +64,6 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
         move |e: Event<KeyboardData>| {
             if focused {
                 editable.editor.with_mut(|editor| {
-                    editor.clear_highlights();
                     editor.process_key(&e.data.key, &e.data.code, &e.data.modifiers);
                     cx.props.onchange.call(editor.to_string());
                 });

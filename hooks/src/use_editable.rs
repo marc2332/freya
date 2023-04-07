@@ -1,6 +1,5 @@
 use std::{
     cmp::Ordering,
-    collections::HashMap,
     fmt::Display,
     ops::Range,
     rc::Rc,
@@ -78,7 +77,11 @@ impl UseEditable {
     /// Create a highlights attribute.
     pub fn highlights_attr<'a, T>(&self, cx: Scope<'a, T>, editor_id: usize) -> AttributeValue<'a> {
         cx.any_value(CustomAttributeValues::TextHighlights(
-            self.editor.get().highlights(editor_id).unwrap_or_default(),
+            self.editor
+                .get()
+                .highlights(editor_id)
+                .map(|v| vec![v])
+                .unwrap_or_default(),
         ))
     }
 }
@@ -147,7 +150,6 @@ pub fn use_editable(
 
                             editor.with_mut(|text_editor| {
                                 text_editor.unhighlight();
-                                text_editor.clear_highlights();
                             });
                         }
                         EditableEvent::MouseOver(e, id) => {
@@ -222,7 +224,6 @@ pub fn use_editable(
                                 text_editor.cursor_mut().set_col(new_cursor.0);
                                 text_editor.cursor_mut().set_row(new_cursor.1);
                                 text_editor.unhighlight();
-                                text_editor.clear_highlights();
                             })
                         }
                     }
@@ -269,11 +270,8 @@ pub struct RopeEditor {
     cursor: TextCursor,
     mode: EditableMode,
 
-    /// Highlights from selected text
-    highlights: HashMap<usize, Vec<(usize, usize)>>,
-
-    /// Where the text selection starts
-    text_selection_start: Option<(usize, usize)>,
+    /// Selected text range
+    selected: Option<(usize, usize)>,
 }
 
 impl Display for RopeEditor {
@@ -288,8 +286,7 @@ impl RopeEditor {
         Self {
             rope: Rope::from_str(&text),
             cursor: TextCursor::new(0, 0),
-            highlights: HashMap::new(),
-            text_selection_start: None,
+            selected: None,
             mode,
         }
     }
@@ -299,8 +296,7 @@ impl RopeEditor {
         Self {
             rope: Rope::from_str(text),
             cursor: TextCursor::new(0, 0),
-            highlights: HashMap::new(),
-            text_selection_start: None,
+            selected: None,
             mode,
         }
     }
@@ -354,14 +350,64 @@ impl TextEditor for RopeEditor {
         &mut self.cursor
     }
 
-    fn set_highlights(&mut self, highlights: Vec<(usize, usize)>, editor_id: usize) {
-        let entry = self.highlights.entry(editor_id).or_default();
-        entry.clear();
-        entry.extend(highlights);
-    }
+    fn highlights(&self, editor_id: usize) -> Option<(usize, usize)> {
+        let (selected_from, selected_to) = self.selected?;
 
-    fn highlights(&self, editor_id: usize) -> Option<Vec<(usize, usize)>> {
-        self.highlights.get(&editor_id).cloned()
+        if self.mode == EditableMode::SingleLineMultipleEditors {
+            let selected_to_row = self.char_to_line(selected_to);
+            let selected_from_row = self.char_to_line(selected_from);
+
+            // Between starting line and endling line
+            if (editor_id > selected_from_row && editor_id < selected_to_row)
+                || (editor_id < selected_from_row && editor_id > selected_to_row)
+            {
+                let len = self.line(editor_id).unwrap().len_chars();
+                return Some((0, len));
+            }
+
+            match selected_from_row.cmp(&selected_to_row) {
+                // Selection direction is from bottom -> top
+                Ordering::Greater => {
+                    if selected_from_row == editor_id {
+                        // Starting line
+                        let row = self.char_to_line(selected_from);
+                        let row_idx = self.line_to_char(row);
+                        let col = selected_from - row_idx;
+                        return Some((0, col));
+                    } else if selected_to_row == editor_id {
+                        // Ending line
+                        let row = self.char_to_line(selected_to);
+                        let row_idx = self.line_to_char(row);
+                        let col = selected_to - row_idx;
+                        return Some((0, col));
+                    }
+                }
+                // Selection direction is from top -> bottom
+                Ordering::Less => {
+                    if selected_from_row == editor_id {
+                        // Starting line
+                        let len = self.line(selected_from_row).unwrap().len_chars();
+                        return Some((selected_from, len));
+                    } else if selected_to_row == editor_id {
+                        // Ending line
+                        let row = self.char_to_line(selected_to);
+                        let row_idx = self.line_to_char(row);
+                        let col = selected_to - row_idx;
+                        return Some((0, col));
+                    }
+                }
+                Ordering::Equal => {
+                    // Starting and endline line are the same
+                    if selected_from_row == editor_id {
+                        return Some((selected_from, selected_to));
+                    }
+                }
+            }
+
+            None
+        } else {
+            Some((selected_from, selected_to))
+        }
     }
 
     fn set(&mut self, text: &str) {
@@ -370,61 +416,26 @@ impl TextEditor for RopeEditor {
     }
 
     fn unhighlight(&mut self) {
-        self.text_selection_start = None;
+        self.selected = None;
     }
 
-    fn clear_highlights(&mut self) {
-        if !self.highlights.is_empty() {
-            self.highlights = HashMap::default()
-        }
-    }
-
-    fn highlight_text(&mut self, from: usize, to: usize, id: usize) {
-        self.clear_highlights();
-
-        if self.text_selection_start.is_none() {
-            self.text_selection_start = Some((id, to));
+    fn highlight_text(&mut self, from: usize, to: usize, editor_id: usize) {
+        if self.mode == EditableMode::SingleLineMultipleEditors {
+            let row_idx = self.line_to_char(editor_id);
+            if self.selected.is_none() {
+                self.selected = Some((row_idx + from, row_idx + to));
+            } else {
+                self.selected.as_mut().unwrap().1 = row_idx + to;
+            }
+        } else if self.selected.is_none() {
+            self.selected = Some((from, to));
+        } else {
+            self.selected.as_mut().unwrap().1 = to;
         }
 
         if self.mode == EditableMode::SingleLineMultipleEditors {
-            // Highlight the requested text
-            self.set_highlights(vec![(from, to)], id);
-
-            // Use the text selection start position, if none use the cursor
-            let (row, col) = self.text_selection_start.unwrap();
-
-            // Lines between the start and the cursor
-            let lines = if id > row {
-                row + 1..=id.max(1) - 1
-            } else {
-                id + 1..=row.max(1) - 1
-            };
-
-            // Highlight all lines in between the selection start and the cursor
-            for row in lines {
-                let len = self.line(row).unwrap().len_chars();
-                self.set_highlights(vec![(0, len - 1)], row);
-            }
-
-            // Highlight the selection start line and the cursor line
-            match id.cmp(&row) {
-                // Selection direction is from bottom -> top
-                Ordering::Greater => {
-                    self.set_highlights(vec![(0, to)], id);
-                    self.set_highlights(vec![(col, self.line(row).unwrap().len_chars())], row);
-                }
-                // Selection direction is from top -> bottom
-                Ordering::Less => {
-                    self.set_highlights(vec![(to, self.line(id).unwrap().len_chars())], id);
-                    self.set_highlights(vec![(0, col)], row);
-                }
-                _ => {}
-            }
-
-            self.cursor_mut().move_to(to, id);
+            self.cursor_mut().move_to(to, editor_id);
         } else {
-            self.clear_highlights();
-            self.set_highlights(vec![(from, to)], 0);
             self.set_cursor_pos(to);
         }
     }

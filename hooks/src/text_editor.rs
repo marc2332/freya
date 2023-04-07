@@ -90,10 +90,6 @@ pub trait TextEditor: Sized + Clone + Display {
 
     fn set(&mut self, text: &str);
 
-    fn set_highlights(&mut self, highlights: Vec<(usize, usize)>, editor_num: usize);
-
-    fn highlights(&self, editor_num: usize) -> Option<Vec<(usize, usize)>>;
-
     /// Iterator over all the lines in the text.
     fn lines(&self) -> Self::LinesIterator<'_>;
 
@@ -172,20 +168,23 @@ pub trait TextEditor: Sized + Clone + Display {
         self.cursor_mut().move_to(col, row)
     }
 
+    // Return the highlighted text from a given editor Id
+    fn highlights(&self, editor_id: usize) -> Option<(usize, usize)>;
+
     // Cancel highlight
     fn unhighlight(&mut self);
 
-    // Remove any highlighted text
-    fn clear_highlights(&mut self);
-
     // Highlight some text
-    fn highlight_text(&mut self, from: usize, to: usize, id: usize);
+    fn highlight_text(&mut self, from: usize, to: usize, editor_id: usize);
 
     // Process a Keyboard event
     fn process_key(&mut self, key: &Key, code: &Code, _modifers: &Modifiers) -> TextEvent {
-        let clear_highlights = true;
         let mut event = TextEvent::None;
+        let mut unhighlight = true;
         match key {
+            Key::Escape => {
+                unhighlight = true;
+            }
             Key::ArrowDown => {
                 let total_lines = self.len_lines() - 1;
                 // Go one line down
@@ -330,8 +329,8 @@ pub trait TextEditor: Sized + Clone + Display {
             _ => {}
         }
 
-        if clear_highlights {
-            self.clear_highlights();
+        if unhighlight {
+            self.unhighlight();
         }
 
         event

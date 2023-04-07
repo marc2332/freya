@@ -271,7 +271,7 @@ fn Body(cx: Scope) -> Element {
                                             color: "rgb(240, 240, 240)",
                                             font_size: "{font_size}",
                                             font_style: "{font_style}",
-                                            "{l} "
+                                            "{l}"
                                         }
                                     }
                                 }
