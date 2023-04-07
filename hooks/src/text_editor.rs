@@ -177,15 +177,26 @@ pub trait TextEditor: Sized + Clone + Display {
     // Highlight some text
     fn highlight_text(&mut self, from: usize, to: usize, editor_id: usize);
 
+    fn move_highlight_to_cursor(&mut self);
+
     // Process a Keyboard event
-    fn process_key(&mut self, key: &Key, code: &Code, _modifers: &Modifiers) -> TextEvent {
+    fn process_key(&mut self, key: &Key, code: &Code, modifiers: &Modifiers) -> TextEvent {
         let mut event = TextEvent::None;
         let mut unhighlight = true;
+
         match key {
+            Key::Shift => {
+                unhighlight = false;
+            }
             Key::Escape => {
                 unhighlight = true;
             }
             Key::ArrowDown => {
+                if modifiers.contains(Modifiers::SHIFT) {
+                    unhighlight = false;
+                    self.move_highlight_to_cursor();
+                }
+
                 let total_lines = self.len_lines() - 1;
                 // Go one line down
                 if self.cursor_row() < total_lines {
@@ -203,8 +214,17 @@ pub trait TextEditor: Sized + Clone + Display {
 
                     event = TextEvent::CursorChanged
                 }
+
+                if modifiers.contains(Modifiers::SHIFT) {
+                    self.move_highlight_to_cursor();
+                }
             }
             Key::ArrowLeft => {
+                if modifiers.contains(Modifiers::SHIFT) {
+                    unhighlight = false;
+                    self.move_highlight_to_cursor();
+                }
+
                 // Go one character to the left
                 if self.cursor_col() > 0 {
                     self.cursor_left();
@@ -227,8 +247,17 @@ pub trait TextEditor: Sized + Clone + Display {
                         event = TextEvent::CursorChanged
                     }
                 }
+
+                if modifiers.contains(Modifiers::SHIFT) {
+                    self.move_highlight_to_cursor();
+                }
             }
             Key::ArrowRight => {
+                if modifiers.contains(Modifiers::SHIFT) {
+                    unhighlight = false;
+                    self.move_highlight_to_cursor();
+                }
+
                 let total_lines = self.len_lines() - 1;
                 let current_line = self.line(self.cursor_row()).unwrap();
 
@@ -246,8 +275,17 @@ pub trait TextEditor: Sized + Clone + Display {
 
                     event = TextEvent::CursorChanged
                 }
+
+                if modifiers.contains(Modifiers::SHIFT) {
+                    self.move_highlight_to_cursor();
+                }
             }
             Key::ArrowUp => {
+                if modifiers.contains(Modifiers::SHIFT) {
+                    unhighlight = false;
+                    self.move_highlight_to_cursor();
+                }
+
                 // Go one line up if there is any
                 if self.cursor_row() > 0 {
                     let prev_line = self.line(self.cursor_row() - 1).unwrap();
@@ -263,6 +301,10 @@ pub trait TextEditor: Sized + Clone + Display {
                     self.cursor_mut().set_col(cursor_col);
 
                     event = TextEvent::CursorChanged
+                }
+
+                if modifiers.contains(Modifiers::SHIFT) {
+                    self.move_highlight_to_cursor();
                 }
             }
             Key::Backspace => {

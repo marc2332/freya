@@ -350,6 +350,15 @@ impl TextEditor for RopeEditor {
         &mut self.cursor
     }
 
+    fn move_highlight_to_cursor(&mut self) {
+        let pos = self.cursor_pos();
+        if let Some(selected) = self.selected.as_mut() {
+            selected.1 = pos;
+        } else {
+            self.selected = Some((self.cursor_pos(), self.cursor_pos()))
+        }
+    }
+
     fn highlights(&self, editor_id: usize) -> Option<(usize, usize)> {
         let (selected_from, selected_to) = self.selected?;
 
@@ -387,7 +396,10 @@ impl TextEditor for RopeEditor {
                     if selected_from_row == editor_id {
                         // Starting line
                         let len = self.line(selected_from_row).unwrap().len_chars();
-                        return Some((selected_from, len));
+                        let row = self.char_to_line(selected_from);
+                        let row_idx = self.line_to_char(row);
+                        let col = selected_from - row_idx;
+                        return Some((col, len));
                     } else if selected_to_row == editor_id {
                         // Ending line
                         let row = self.char_to_line(selected_to);
@@ -399,7 +411,8 @@ impl TextEditor for RopeEditor {
                 Ordering::Equal => {
                     // Starting and endline line are the same
                     if selected_from_row == editor_id {
-                        return Some((selected_from, selected_to));
+                        let row_idx = self.line_to_char(editor_id);
+                        return Some((selected_from - row_idx, selected_to - row_idx));
                     }
                 }
             }
