@@ -366,6 +366,16 @@ impl TextEditor for RopeEditor {
             let selected_to_row = self.char_to_line(selected_to);
             let selected_from_row = self.char_to_line(selected_from);
 
+            let selected_to_line = self.char_to_line(selected_to);
+            let selected_from_line = self.char_to_line(selected_from);
+
+            let editor_row_idx = self.line_to_char(editor_id);
+            let selected_to_row_idx = self.line_to_char(selected_to_line);
+            let selected_from_row_idx = self.line_to_char(selected_from_line);
+
+            let selected_to_col_idx = selected_to - selected_to_row_idx;
+            let selected_from_col_idx = selected_from - selected_from_row_idx;
+
             // Between starting line and endling line
             if (editor_id > selected_from_row && editor_id < selected_to_row)
                 || (editor_id < selected_from_row && editor_id > selected_to_row)
@@ -379,17 +389,11 @@ impl TextEditor for RopeEditor {
                 Ordering::Greater => {
                     if selected_from_row == editor_id {
                         // Starting line
-                        let row = self.char_to_line(selected_from);
-                        let row_idx = self.line_to_char(row);
-                        let col = selected_from - row_idx;
-                        return Some((0, col));
+                        return Some((0, selected_from_col_idx));
                     } else if selected_to_row == editor_id {
                         // Ending line
                         let len = self.line(selected_to_row).unwrap().len_chars();
-                        let row = self.char_to_line(selected_to);
-                        let row_idx = self.line_to_char(row);
-                        let col = selected_to - row_idx;
-                        return Some((col, len));
+                        return Some((selected_to_col_idx, len));
                     }
                 }
                 // Selection direction is from top -> bottom
@@ -397,23 +401,19 @@ impl TextEditor for RopeEditor {
                     if selected_from_row == editor_id {
                         // Starting line
                         let len = self.line(selected_from_row).unwrap().len_chars();
-                        let row = self.char_to_line(selected_from);
-                        let row_idx = self.line_to_char(row);
-                        let col = selected_from - row_idx;
-                        return Some((col, len));
+                        return Some((selected_from_col_idx, len));
                     } else if selected_to_row == editor_id {
                         // Ending line
-                        let row = self.char_to_line(selected_to);
-                        let row_idx = self.line_to_char(row);
-                        let col = selected_to - row_idx;
-                        return Some((0, col));
+                        return Some((0, selected_to_col_idx));
                     }
                 }
                 Ordering::Equal => {
                     // Starting and endline line are the same
                     if selected_from_row == editor_id {
-                        let row_idx = self.line_to_char(editor_id);
-                        return Some((selected_from - row_idx, selected_to - row_idx));
+                        return Some((
+                            selected_from - editor_row_idx,
+                            selected_to - editor_row_idx,
+                        ));
                     }
                 }
             }
