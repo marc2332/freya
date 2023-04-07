@@ -174,7 +174,7 @@ pub fn parse_padding(padding: &str) -> Option<(f32, f32, f32, f32)> {
     match paddings.clone().count() {
         // Same in each directions
         1 => {
-            padding_config.0 = paddings.next()?.parse::<f32>().ok()?;
+            padding_config.0 = paddings.next()?.parse::<f32>().ok()? * 2.0;
             padding_config.1 = padding_config.0;
             padding_config.2 = padding_config.0;
             padding_config.3 = padding_config.0;
@@ -182,19 +182,19 @@ pub fn parse_padding(padding: &str) -> Option<(f32, f32, f32, f32)> {
         // By vertical and horizontal
         2 => {
             // Vertical
-            padding_config.0 = paddings.next()?.parse::<f32>().ok()?;
+            padding_config.0 = paddings.next()?.parse::<f32>().ok()? * 2.0;
             padding_config.2 = padding_config.0;
 
             // Horizontal
-            padding_config.1 = paddings.next()?.parse::<f32>().ok()?;
+            padding_config.1 = paddings.next()?.parse::<f32>().ok()? * 2.0;
             padding_config.3 = padding_config.1;
         }
         // Each directions
         4 => {
-            padding_config.0 = paddings.next()?.parse::<f32>().ok()?;
-            padding_config.1 = paddings.next()?.parse::<f32>().ok()?;
-            padding_config.2 = paddings.next()?.parse::<f32>().ok()?;
-            padding_config.3 = paddings.next()?.parse::<f32>().ok()?;
+            padding_config.0 = paddings.next()?.parse::<f32>().ok()? * 2.0;
+            padding_config.1 = paddings.next()?.parse::<f32>().ok()? * 2.0;
+            padding_config.2 = paddings.next()?.parse::<f32>().ok()? * 2.0;
+            padding_config.3 = paddings.next()?.parse::<f32>().ok()? * 2.0;
         }
         _ => {}
     }
@@ -214,7 +214,7 @@ pub fn parse_size(size: &str) -> Option<SizeMode> {
     } else if size.contains("calc") {
         Some(SizeMode::Calculation(parse_calc(size)?))
     } else {
-        Some(SizeMode::Manual(size.parse().ok()?))
+        Some(SizeMode::Manual((size.parse::<f32>().ok()?) * 2.0))
     }
 }
 
@@ -238,7 +238,7 @@ pub fn parse_calc(mut size: &str) -> Option<Vec<CalcType>> {
         } else if val == "*" {
             calcs.push(CalcType::Mul);
         } else {
-            calcs.push(CalcType::Manual(val.parse().ok()?));
+            calcs.push(CalcType::Manual(val.parse::<f32>().ok()? * 2.0));
         }
     }
 

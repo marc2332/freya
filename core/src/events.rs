@@ -83,10 +83,10 @@ impl DomEvent {
                 element_id,
                 name: event_name.to_string(),
                 data: DomEventData::Mouse(MouseData::new(
-                    Point2D::from_lengths(Length::new(cursor.0), Length::new(cursor.1)),
+                    Point2D::from_lengths(Length::new(cursor.0 / 2.0), Length::new(cursor.1 / 2.0)),
                     Point2D::from_lengths(
-                        Length::new(cursor.0 - node_area.unwrap_or_default().x as f64),
-                        Length::new(cursor.1 - node_area.unwrap_or_default().y as f64),
+                        Length::new((cursor.0 - node_area.unwrap_or_default().x as f64) / 2.0),
+                        Length::new((cursor.1 - node_area.unwrap_or_default().y as f64) / 2.0),
                     ),
                     *button,
                 )),

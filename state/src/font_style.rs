@@ -24,7 +24,7 @@ impl Default for FontStyle {
         Self {
             color: Color::BLACK,
             font_family: smallvec!["Fira Sans".to_string()],
-            font_size: 16.0,
+            font_size: 16.0 * 2.0,
             line_height: 1.2,
             align: TextAlign::default(),
             max_lines: None,
@@ -86,8 +86,8 @@ impl ParentDepState<CustomAttributeValues> for FontStyle {
                     "font_size" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
-                            if let Ok(font_size) = attr.parse() {
-                                font_style.font_size = font_size;
+                            if let Ok(font_size) = attr.parse::<f32>() {
+                                font_style.font_size = font_size * 2.0;
                                 changed_size = true;
                             }
                         }

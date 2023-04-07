@@ -38,14 +38,14 @@ impl NodeDepState<CustomAttributeValues> for Scroll {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
                             let scroll: f32 = attr.parse().unwrap();
-                            scroll_y = scroll;
+                            scroll_y = scroll * 2.0;
                         }
                     }
                     "scroll_x" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
                             let scroll: f32 = attr.parse().unwrap();
-                            scroll_x = scroll;
+                            scroll_x = scroll * 2.0;
                         }
                     }
                     _ => {

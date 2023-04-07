@@ -219,12 +219,12 @@ impl<'a> NodeLayoutMeasurer<'a> {
             if let Some(reference) = &self.node.state.references.node_ref {
                 reference
                     .send(NodeReferenceLayout {
-                        x: node_area.x,
-                        y: node_area.y,
-                        width: node_area.width,
-                        height: node_area.height,
-                        inner_height,
-                        inner_width,
+                        x: node_area.x / 2.0,
+                        y: node_area.y / 2.0,
+                        width: node_area.width / 2.0,
+                        height: node_area.height / 2.0,
+                        inner_height: inner_height / 2.0,
+                        inner_width: inner_width / 2.0,
                     })
                     .ok();
             }
