@@ -385,10 +385,11 @@ impl TextEditor for RopeEditor {
                         return Some((0, col));
                     } else if selected_to_row == editor_id {
                         // Ending line
+                        let len = self.line(selected_to_row).unwrap().len_chars();
                         let row = self.char_to_line(selected_to);
                         let row_idx = self.line_to_char(row);
                         let col = selected_to - row_idx;
-                        return Some((0, col));
+                        return Some((col, len));
                     }
                 }
                 // Selection direction is from top -> bottom
