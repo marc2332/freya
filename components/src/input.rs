@@ -9,7 +9,7 @@ use freya_hooks::{
 #[derive(Props)]
 pub struct InputProps<'a> {
     /// Current value of the Input
-    pub value: &'a str,
+    pub value: String,
     /// Handler for the `onchange` event.
     pub onchange: EventHandler<'a, String>,
 }
@@ -35,7 +35,7 @@ pub struct InputProps<'a> {
 ///             "Value: {value}"
 ///         }
 ///         Input {
-///             value: &value,
+///             value: value.get().clone(),
 ///             onchange: |e| {
 ///                  value.set(e)
 ///             }
@@ -53,7 +53,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     let theme = use_get_theme(cx);
     let (focused, focus) = use_focus(cx);
 
-    let text = cx.props.value;
+    let text = &cx.props.value;
     let button_theme = &theme.button;
     let cursor_attr = editable.cursor_attr(cx);
     let highlights_attr = editable.highlights_attr(cx, 0);
@@ -61,8 +61,8 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     use_effect(cx, &(cx.props.value.to_string(),), {
         to_owned![editable];
         move |(text,)| {
-            editable.editor().with_mut(|e| {
-                e.set(&text);
+            editable.editor().with_mut(|editor| {
+                editor.set(&text);
             });
             async move {}
         }
@@ -73,7 +73,9 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
         move |e: Event<KeyboardData>| {
             if focused {
                 editable.process_event(&EditableEvent::KeyDown(e.data));
-                cx.props.onchange.call(editable.editor().to_string());
+                cx.props
+                    .onchange
+                    .call(editable.editor().current().to_string());
             }
         }
     };
