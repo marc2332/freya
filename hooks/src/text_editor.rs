@@ -294,7 +294,7 @@ pub trait TextEditor: Sized + Clone + Display {
                     let cursor_col = if self.cursor_col() <= prev_line.len_chars() {
                         self.cursor_col()
                     } else {
-                        prev_line.len_chars() - 1
+                        prev_line.len_chars().max(1) - 1
                     };
 
                     self.cursor_up();
