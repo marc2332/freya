@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{KeyboardData, MouseEvent};
 use freya_hooks::{
-    use_editable, use_focus, use_get_theme, EditableEvent, EditableMode, TextEditor,
+    use_editable, use_focus, use_get_theme, EditableConfig, EditableEvent, EditableMode, TextEditor,
 };
 
 /// [`Input`] component properties.
@@ -47,7 +47,7 @@ pub struct InputProps<'a> {
 pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     let editable = use_editable(
         cx,
-        || cx.props.value.to_string(),
+        || EditableConfig::new(cx.props.value.to_string()),
         EditableMode::MultipleLinesSingleEditor,
     );
     let theme = use_get_theme(cx);

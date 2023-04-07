@@ -4,14 +4,14 @@ use freya_elements::events::keyboard::{Code, Key, Modifiers};
 pub use ropey::Rope;
 
 /// Holds the position of a cursor in a text
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct TextCursor {
     col: usize,
     row: usize,
 }
 
 impl TextCursor {
-    /// Construct a new [TextCursor] given a column and a row
+    /// Construct a new [TextCursor] given a row and a column
     pub fn new(row: usize, col: usize) -> Self {
         Self { col, row }
     }
@@ -82,7 +82,7 @@ pub enum TextEvent {
     None,
 }
 
-/// Editable text manager
+/// Common trait for editable texts
 pub trait TextEditor: Sized + Clone + Display {
     type LinesIterator<'a>: Iterator<Item = Line<'a>>
     where

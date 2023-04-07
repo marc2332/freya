@@ -8,7 +8,7 @@ pub async fn multiple_lines_single_editor() {
     fn use_editable_app(cx: Scope) -> Element {
         let editable = use_editable(
             cx,
-            || "Hello Rustaceans".to_string(),
+            || EditableConfig::new("Hello Rustaceans".to_string()),
             EditableMode::MultipleLinesSingleEditor,
         );
         let keypress_notifier = editable.keypress_notifier().clone();
@@ -109,7 +109,7 @@ pub async fn single_line_mulitple_editors() {
     fn use_editable_app(cx: Scope) -> Element {
         let editable = use_editable(
             cx,
-            || "Hello Rustaceans\nHello World".to_string(),
+            || EditableConfig::new("Hello Rustaceans\nHello World".to_string()),
             EditableMode::SingleLineMultipleEditors,
         );
         let keypress_notifier = editable.keypress_notifier().clone();

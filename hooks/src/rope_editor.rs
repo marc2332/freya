@@ -23,21 +23,11 @@ impl Display for RopeEditor {
 }
 
 impl RopeEditor {
-    // Create a [`RopeEditor`] given the String
-    pub fn from_string(text: String, mode: EditableMode) -> Self {
+    // Create a new [`RopeEditor`]
+    pub fn new(text: String, cursor: TextCursor, mode: EditableMode) -> Self {
         Self {
             rope: Rope::from_str(&text),
-            cursor: TextCursor::new(0, 0),
-            selected: None,
-            mode,
-        }
-    }
-
-    // Create a [`RopeEditor`] given the text
-    pub fn from_text(text: &str, mode: EditableMode) -> Self {
-        Self {
-            rope: Rope::from_str(text),
-            cursor: TextCursor::new(0, 0),
+            cursor,
             selected: None,
             mode,
         }

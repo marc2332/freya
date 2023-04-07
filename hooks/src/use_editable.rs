@@ -12,7 +12,7 @@ pub use ropey::Rope;
 use tokio::sync::{mpsc::unbounded_channel, mpsc::UnboundedSender};
 use winit::event_loop::EventLoopProxy;
 
-use crate::{RopeEditor, TextEditor};
+use crate::{RopeEditor, TextCursor, TextEditor};
 
 /// Events emitted to the [`UseEditable`].
 pub enum EditableEvent {
@@ -32,6 +32,12 @@ pub enum EditableMode {
     ///
     /// A paragraph for example.
     MultipleLinesSingleEditor,
+}
+
+impl Default for EditableMode {
+    fn default() -> Self {
+        Self::MultipleLinesSingleEditor
+    }
 }
 
 pub type KeypressNotifier = UnboundedSender<Rc<KeyboardData>>;
@@ -82,14 +88,36 @@ impl UseEditable {
     }
 }
 
+pub struct EditableConfig {
+    pub(crate) content: String,
+    pub(crate) cursor: TextCursor,
+}
+
+impl EditableConfig {
+    pub fn new(content: String) -> Self {
+        Self {
+            content,
+            cursor: TextCursor::default(),
+        }
+    }
+
+    pub fn with_cursor(mut self, (row, col): (usize, usize)) -> Self {
+        self.cursor = TextCursor::new(row, col);
+        self
+    }
+}
+
 /// Create a virtual text editor with it's own cursor and rope.
 pub fn use_editable(
     cx: &ScopeState,
-    initializer: impl Fn() -> String,
+    initializer: impl Fn() -> EditableConfig,
     mode: EditableMode,
 ) -> UseEditable {
     // Hold the text editor
-    let text_editor = use_state(cx, || RopeEditor::from_string(initializer(), mode));
+    let text_editor = use_state(cx, || {
+        let config = initializer();
+        RopeEditor::new(config.content, config.cursor, mode)
+    });
 
     let cursor_channels = cx.use_hook(|| {
         let (tx, rx) = unbounded_channel::<CursorLayoutResponse>();
