@@ -219,16 +219,16 @@ impl<'a> NodeLayoutMeasurer<'a> {
         if is_measuring {
             // Notify the node's reference about the new size layout
             if let Some(reference) = &self.node.state.references.node_ref {
-                reference
-                    .send(NodeReferenceLayout {
-                        x: node_area.x / scale_factor,
-                        y: node_area.y / scale_factor,
-                        width: node_area.width / scale_factor,
-                        height: node_area.height / scale_factor,
-                        inner_height: inner_height / scale_factor,
-                        inner_width: inner_width / scale_factor,
-                    })
-                    .ok();
+                let mut layout = NodeReferenceLayout {
+                    x: node_area.x,
+                    y: node_area.y,
+                    width: node_area.width,
+                    height: node_area.height,
+                    inner_height: inner_height,
+                    inner_width: inner_width,
+                };
+                layout.div(scale_factor);
+                reference.send(layout).ok();
             }
         }
 
