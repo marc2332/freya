@@ -42,7 +42,7 @@ impl NodeDepState<CustomAttributeValues> for Style {
         &mut self,
         node: NodeView<CustomAttributeValues>,
         _sibling: (),
-        (layout_notifier, _): &Self::Ctx,
+        (layout_notifier, scale_factor): &Self::Ctx,
     ) -> bool {
         let mut background = Color::TRANSPARENT;
         let mut relative_layer = 0;
@@ -85,7 +85,7 @@ impl NodeDepState<CustomAttributeValues> for Style {
                     "radius" => {
                         if let Some(attr) = attr.value.as_text() {
                             if let Ok(new_radius) = attr.parse::<f32>() {
-                                radius = new_radius;
+                                radius = new_radius * scale_factor;
                             }
                         }
                     }
