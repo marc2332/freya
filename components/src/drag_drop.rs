@@ -5,9 +5,15 @@ use freya_hooks::use_node_ref;
 
 #[derive(Props)]
 pub struct DragProviderProps<'a> {
+    /// Inner children of the DragProvider.
     children: Element<'a>,
 }
 
+/// Provide a common place for [`DragZone`]s and [`DropZone`]s to exchange their data.
+///
+/// # Props
+/// See [`DragProviderProps`].
+///
 #[allow(non_snake_case)]
 pub fn DragProvider<'a, T: 'static>(cx: Scope<'a, DragProviderProps<'a>>) -> Element<'a> {
     use_shared_state_provider::<Option<T>>(cx, || None);
@@ -17,11 +23,19 @@ pub fn DragProvider<'a, T: 'static>(cx: Scope<'a, DragProviderProps<'a>>) -> Ele
 #[derive(Props)]
 pub struct DragZoneProps<'a, T> {
     // TODO: Make this optional and fallback to `children`
+    /// Element visible when dragging the element. This follows the cursor.
     drag_element: Element<'a>,
+    /// Inner children for the DropZone.
     children: Element<'a>,
+    /// Data that will be handled to the destination [`DropZone`].
     data: T,
 }
 
+/// Make the inner children draggable to other [`DropZone`].
+///
+/// # Props
+/// See [`DragZoneProps`].
+///
 #[allow(non_snake_case)]
 pub fn DragZone<'a, T: 'static + Clone>(cx: Scope<'a, DragZoneProps<'a, T>>) -> Element<'a> {
     let drags = use_shared_state::<Option<T>>(cx);
@@ -77,10 +91,17 @@ pub fn DragZone<'a, T: 'static + Clone>(cx: Scope<'a, DragZoneProps<'a, T>>) -> 
 
 #[derive(Props)]
 pub struct DropDoneProps<'a, T> {
-    ondrop: EventHandler<'a, T>,
+    /// Inner children for the DropZone.
     children: Element<'a>,
+    /// Handler for the `ondrop` event.
+    ondrop: EventHandler<'a, T>,
 }
 
+/// Elements from [`DragZone`]s can be dropped here.
+///
+/// # Props
+/// See [`DropDoneProps`].
+///
 #[allow(non_snake_case)]
 pub fn DropZone<'a, T: 'static + Clone>(cx: Scope<'a, DropDoneProps<'a, T>>) -> Element<'a> {
     let drags = use_shared_state::<Option<T>>(cx);
