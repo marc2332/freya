@@ -231,3 +231,113 @@ pub async fn single_line_mulitple_editors() {
     let content = root.child(1).unwrap().child(0).unwrap().child(0).unwrap();
     assert_eq!(content.text(), Some("Hello World"));
 }
+
+#[tokio::test]
+pub async fn highlight_multiple_lines_single_editor() {
+    fn use_editable_app(cx: Scope) -> Element {
+        let editable = use_editable(
+            cx,
+            || EditableConfig::new("Hello Rustaceans".to_string()),
+            EditableMode::MultipleLinesSingleEditor,
+        );
+        let cursor_attr = editable.cursor_attr(cx);
+        let editor = editable.editor();
+        let cursor = editor.cursor();
+        let cursor_pos = editor.cursor_pos();
+        let highlights_attr = editable.highlights_attr(cx, 0);
+
+        let onmousedown = {
+            to_owned![editable];
+            move |e: MouseEvent| {
+                editable.process_event(&EditableEvent::MouseDown(e.data, 0));
+            }
+        };
+
+        let onmouseover = {
+            to_owned![editable];
+            move |e: MouseEvent| {
+                editable.process_event(&EditableEvent::MouseOver(e.data, 0));
+            }
+        };
+
+        let onkeydown = {
+            to_owned![editable];
+            move |e: Event<KeyboardData>| {
+                editable.process_event(&EditableEvent::KeyDown(e.data));
+            }
+        };
+
+        render!(
+            rect {
+                width: "100%",
+                height: "100%",
+                background: "white",
+                cursor_reference: cursor_attr,
+                paragraph {
+                    height: "50%",
+                    width: "100%",
+                    cursor_id: "0",
+                    cursor_index: "{cursor_pos}",
+                    cursor_color: "black",
+                    cursor_mode: "editable",
+                    highlights: highlights_attr,
+                    onkeydown: onkeydown,
+                    onmousedown: onmousedown,
+                    onmouseover: onmouseover,
+                    text {
+                        color: "black",
+                        "{editor}"
+                    }
+                }
+                label {
+                    color: "black",
+                    height: "50%",
+                    "{cursor.col()}:{cursor.row()}"
+                }
+            }
+        )
+    }
+
+    let mut utils = launch_test(use_editable_app);
+
+    let root = utils.root().child(0).unwrap();
+
+    // Click cursor
+    utils.push_event(FreyaEvent::Mouse {
+        name: "mousedown",
+        cursor: (35.0, 3.0),
+        button: Some(MouseButton::Left),
+    });
+
+    utils.wait_for_update((500.0, 500.0)).await;
+
+    // Move cursor
+    utils.push_event(FreyaEvent::Mouse {
+        name: "mouseover",
+        cursor: (80.0, 3.0),
+        button: Some(MouseButton::Left),
+    });
+
+    utils.wait_for_update((500.0, 500.0)).await;
+    utils.wait_for_update((500.0, 500.0)).await;
+
+    let highlights = root
+        .child(0)
+        .unwrap()
+        .state()
+        .cursor_settings
+        .highlights
+        .clone();
+
+    #[cfg(not(target_os = "linux"))]
+    let start = 5;
+    #[cfg(not(target_os = "linux"))]
+    let end = 11;
+
+    #[cfg(target_os = "linux")]
+    let start = 4;
+    #[cfg(target_os = "linux")]
+    let end = 10;
+
+    assert_eq!(highlights, Some(vec![(start, end)]))
+}

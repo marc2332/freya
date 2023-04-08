@@ -234,17 +234,18 @@ pub fn use_editable(
                                 text_editor.unhighlight();
                             })
                         }
+
+                        // Remove the current calcutions so the layout engine doesn't try to calculate again
+                        cursor_reference.set_cursor_position(None);
                     }
                     // Update the text selections calculated by the layout
                     CursorLayoutResponse::TextSelection { from, to, id } => {
                         editor.with_mut(|text_editor| {
                             text_editor.highlight_text(from, to, id);
                         });
+                        cursor_reference.set_cursor_selections(None);
                     }
                 }
-                // Remove the current calcutions so the layout engine doesn't try to calculate again
-                cursor_reference.set_cursor_position(None);
-                cursor_reference.set_cursor_selections(None);
             }
         }
     });
