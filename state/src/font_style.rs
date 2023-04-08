@@ -20,8 +20,11 @@ pub struct FontStyle {
 }
 
 impl FontStyle {
-    pub fn apply_scale_factor(&mut self, scale_factor: f32) {
-        self.font_size *= scale_factor;
+    fn default_with_scale_factor(scale_factor: f32) -> Self {
+        Self {
+            font_size: 16.0 * scale_factor,
+            ..FontStyle::default()
+        }
     }
 }
 
@@ -61,8 +64,9 @@ impl ParentDepState<CustomAttributeValues> for FontStyle {
         parent: Option<(&Self,)>,
         (layout_notifier, scale_factor): &Self::Ctx,
     ) -> bool {
-        let mut font_style = parent.map(|(v,)| v.clone()).unwrap_or_default();
-        font_style.apply_scale_factor(*scale_factor);
+        let mut font_style = parent
+            .map(|(v,)| v.clone())
+            .unwrap_or_else(|| FontStyle::default_with_scale_factor(*scale_factor));
         let mut changed_size = false;
 
         if let Some(attributes) = node.attributes() {
