@@ -23,7 +23,7 @@ pub struct Style {
 
 impl NodeDepState<CustomAttributeValues> for Style {
     type DepState = ();
-    type Ctx = LayoutNotifier;
+    type Ctx = (LayoutNotifier, f32);
 
     const NODE_MASK: NodeMask =
         NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
@@ -42,7 +42,7 @@ impl NodeDepState<CustomAttributeValues> for Style {
         &mut self,
         node: NodeView<CustomAttributeValues>,
         _sibling: (),
-        ctx: &Self::Ctx,
+        (layout_notifier, _): &Self::Ctx,
     ) -> bool {
         let mut background = Color::TRANSPARENT;
         let mut relative_layer = 0;
@@ -126,7 +126,7 @@ impl NodeDepState<CustomAttributeValues> for Style {
             (display != self.display) || (node.text().map(|v| v.to_owned()) != self.text);
 
         if changed_size {
-            *ctx.lock().unwrap() = true;
+            *layout_notifier.lock().unwrap() = true;
         }
 
         *self = Self {
