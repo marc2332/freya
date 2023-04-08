@@ -1462,6 +1462,7 @@ dependencies = [
  "dioxus-native-core",
  "dioxus-native-core-macro",
  "dioxus-rsx",
+ "euclid",
  "freya-common",
  "freya-components",
  "freya-core",
