@@ -15,6 +15,8 @@ use lazy_static::lazy_static;
 use rustc_hash::FxHashMap;
 use skia_safe::textlayout::FontCollection;
 
+const SCALE_FACTOR: f32 = 1.0;
+
 lazy_static! {
     static ref TEST_NODE: DioxusNode = Node {
         node_data: NodeData {
@@ -66,7 +68,7 @@ fn percentage() {
         0,
         &mut fonts,
     );
-    let result = measurer.measure_area(true);
+    let result = measurer.measure_area(true, SCALE_FACTOR);
 
     assert_eq!(result.height, 75.0);
     assert_eq!(result.width, 100.0);
@@ -107,7 +109,7 @@ fn manual() {
         0,
         &mut fonts,
     );
-    let result = measurer.measure_area(true);
+    let result = measurer.measure_area(true, SCALE_FACTOR);
 
     assert_eq!(result.height, 150.0);
     assert_eq!(result.width, 250.0);
@@ -180,7 +182,7 @@ fn auto() {
         0,
         &mut fonts,
     );
-    let result = measurer.measure_area(true);
+    let result = measurer.measure_area(true, SCALE_FACTOR);
 
     assert_eq!(result.height, 25.0);
     assert_eq!(result.width, 170.0);
@@ -243,7 +245,7 @@ fn x_y() {
         &mut fonts,
     );
 
-    let result = measurer.measure_area(true);
+    let result = measurer.measure_area(true, SCALE_FACTOR);
 
     assert_eq!(result.x, 15.0);
     assert_eq!(result.y, 25.0);
