@@ -1275,6 +1275,7 @@ dependencies = [
  "dioxus",
  "dioxus-router",
  "freya",
+ "freya-common",
  "freya-elements",
  "freya-hooks",
  "freya-node-state",

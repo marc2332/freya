@@ -32,8 +32,8 @@ pub fn render_skia(
             matrix.set_rotate(
                 rotate_degs,
                 Some(Point {
-                    x: area.max_x() / 2.0,
-                    y: area.max_y() / 2.0,
+                    x: area.min_x() + area.width() / 2.0,
+                    y: area.min_y() + area.height() / 2.0,
                 }),
             );
 

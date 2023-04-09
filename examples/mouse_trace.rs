@@ -5,7 +5,7 @@
 
 use std::time::Duration;
 
-use freya::prelude::*;
+use freya::{common::Point2D, prelude::*};
 use tokio::time::interval;
 
 fn main() {
@@ -89,20 +89,21 @@ fn Box(cx: Scope) -> Element {
 }
 
 fn app(cx: Scope) -> Element {
-    let positions = use_state(cx, Vec::new);
+    let positions = use_state::<Vec<Point2D>>(cx, Vec::new);
 
     let onmouseover = |e: MouseEvent| {
         let coordinates = e.get_screen_coordinates();
         positions.with_mut(|positions| {
-            if let Some((x, y)) = positions.first() {
-                if (*x + MOVEMENT_MARGIN < coordinates.x && *x - MOVEMENT_MARGIN > coordinates.x)
-                    && (*y + MOVEMENT_MARGIN < coordinates.y
-                        && *y - MOVEMENT_MARGIN > coordinates.y)
+            if let Some(pos) = positions.first() {
+                if (pos.x + MOVEMENT_MARGIN < coordinates.x
+                    && pos.x - MOVEMENT_MARGIN > coordinates.x)
+                    && (pos.y + MOVEMENT_MARGIN < coordinates.y
+                        && pos.y - MOVEMENT_MARGIN > coordinates.y)
                 {
                     return;
                 }
             }
-            positions.insert(0, (coordinates.x - 125.0, coordinates.y - 125.0));
+            positions.insert(0, (coordinates.x - 125.0, coordinates.y - 125.0).into());
             positions.truncate(BOX_COUNT);
         })
     };
@@ -116,8 +117,8 @@ fn app(cx: Scope) -> Element {
                 rect {
                     width: "0",
                     height: "0",
-                    scroll_x: "{pos.0}",
-                    scroll_y: "{pos.1}",
+                    scroll_x: "{pos.x}",
+                    scroll_y: "{pos.y}",
                     Box {}
                 }
             ))

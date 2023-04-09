@@ -50,6 +50,11 @@ pub mod hooks {
     pub use freya_hooks::*;
 }
 
+/// Common data structures and utils.
+pub mod common {
+    pub use freya_common::*;
+}
+
 /// Events and their data.
 pub use freya_elements::events;
 
