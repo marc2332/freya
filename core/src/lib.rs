@@ -71,6 +71,19 @@ pub fn calculate_node_events<'a>(
     let mut calculated_events = FxHashMap::default();
     let mut global_events = Vec::default();
 
+    for event in events {
+        let event_name = match event.get_name() {
+            "click" => Some("globalclick"),
+            "mouseover" => Some("globalmouseover"),
+            _ => None,
+        };
+        if let Some(event_name) = event_name {
+            let mut global_event = event.clone();
+            global_event.set_name(event_name);
+            global_events.push(global_event);
+        }
+    }
+
     // Propagate events from the top to the bottom
     for layer_num in layers_nums {
         let layer = layers.layers.get(layer_num).unwrap();
@@ -93,12 +106,6 @@ pub fn calculate_node_events<'a>(
                     };
                     if let Some((name, cursor)) = data {
                         let cursor_is_inside = area.contains(cursor.to_f32());
-
-                        if name == &"click" {
-                            let mut global_event = event.clone();
-                            global_event.set_name("globalclick");
-                            global_events.push(global_event);
-                        }
 
                         // Make sure the cursor is inside the node area
                         if cursor_is_inside {
