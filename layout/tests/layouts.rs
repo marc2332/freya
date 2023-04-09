@@ -48,7 +48,7 @@ fn percentage() {
 
     let mut remaining_area = Area {
         origin: (0.0, 0.0).into(),
-        size: (300.0, 200.0).into(),
+        size: (200.0, 300.0).into(),
     };
     let mut layers = Layers::default();
     let mut fonts = FontCollection::new();
@@ -57,7 +57,7 @@ fn percentage() {
         &mut remaining_area,
         Area {
             origin: (0.0, 0.0).into(),
-            size: (300.0, 200.0).into(),
+            size: (200.0, 300.0).into(),
         },
         &dom,
         &mut layers,
@@ -85,7 +85,7 @@ fn manual() {
 
     let mut remaining_area = Area {
         origin: (0.0, 0.0).into(),
-        size: (300.0, 200.0).into(),
+        size: (200.0, 300.0).into(),
     };
     let mut layers = Layers::default();
     let mut fonts = FontCollection::new();
@@ -94,7 +94,7 @@ fn manual() {
         &mut remaining_area,
         Area {
             origin: (0.0, 0.0).into(),
-            size: (300.0, 200.0).into(),
+            size: (200.0, 300.0).into(),
         },
         &dom,
         &mut layers,
@@ -154,7 +154,7 @@ fn auto() {
 
     let mut remaining_area = Area {
         origin: (0.0, 0.0).into(),
-        size: (300.0, 200.0).into(),
+        size: (200.0, 300.0).into(),
     };
     let mut layers = Layers::default();
     let mut fonts = FontCollection::new();
@@ -163,7 +163,7 @@ fn auto() {
         &mut remaining_area,
         Area {
             origin: (0.0, 0.0).into(),
-            size: (300.0, 200.0).into(),
+            size: (200.0, 300.0).into(),
         },
         &dom,
         &mut layers,
@@ -187,7 +187,7 @@ fn x_y() {
     });
     let mut remaining_area = Area {
         origin: (15.0, 25.0).into(),
-        size: (300.0, 200.0).into(),
+        size: (200.0, 300.0).into(),
     };
 
     let root = dom.dom_mut().tree.create_node(node.clone());
@@ -221,7 +221,7 @@ fn x_y() {
         &mut remaining_area,
         Area {
             origin: (15.0, 25.0).into(),
-            size: (300.0, 200.0).into(),
+            size: (200.0, 300.0).into(),
         },
         &dom,
         &mut layers,
