@@ -98,7 +98,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
     }
 
     /// Measure the area of a Node
-    pub fn measure_area(&mut self, is_measuring: bool) -> NodeArea {
+    pub fn measure_area(&mut self, is_measuring: bool, scale_factor: f32) -> NodeArea {
         let node_height = self.dom.dom().tree.height(self.node_id).unwrap();
 
         let direction = self.node.state.size.direction;
@@ -144,6 +144,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
                 &mut inner_height,
                 node_relative_layer,
                 false,
+                scale_factor,
             );
 
             let space_left_vertically = (inner_area.height - inner_height) / 2.0;
@@ -180,6 +181,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
             &mut inner_height,
             node_relative_layer,
             is_measuring,
+            scale_factor,
         );
 
         match &self.node.node_data.node_type {
@@ -217,16 +219,16 @@ impl<'a> NodeLayoutMeasurer<'a> {
         if is_measuring {
             // Notify the node's reference about the new size layout
             if let Some(reference) = &self.node.state.references.node_ref {
-                reference
-                    .send(NodeReferenceLayout {
-                        x: node_area.x,
-                        y: node_area.y,
-                        width: node_area.width,
-                        height: node_area.height,
-                        inner_height,
-                        inner_width,
-                    })
-                    .ok();
+                let mut layout = NodeReferenceLayout {
+                    x: node_area.x,
+                    y: node_area.y,
+                    width: node_area.width,
+                    height: node_area.height,
+                    inner_height: inner_height,
+                    inner_width: inner_width,
+                };
+                layout.div(scale_factor);
+                reference.send(layout).ok();
             }
         }
 
@@ -298,6 +300,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
         inner_height: &mut f32,
         node_relative_layer: i16,
         must_memorize_layout: bool,
+        scale_factor: f32,
     ) {
         let node = &self.node;
         let direction = node.state.size.direction;
@@ -317,7 +320,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
                                 inherited_relative_layer: node_relative_layer,
                                 font_collection: self.font_collection,
                             };
-                            child_measurer.measure_area(must_memorize_layout)
+                            child_measurer.measure_area(must_memorize_layout, scale_factor)
                         };
 
                         match direction {
