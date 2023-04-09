@@ -1,5 +1,5 @@
 use dioxus_native_core::{node::NodeType, tree::TreeView, NodeId};
-use freya_common::{Area, NodeReferenceLayout};
+use freya_common::{Area, CursorLayoutResponse, NodeReferenceLayout, Point2D};
 use freya_dom::{DioxusNode, FreyaDOM};
 use freya_node_state::{
     CursorMode, CursorReference, DirectionMode, DisplayMode, FontStyle, SizeMode,
@@ -48,14 +48,23 @@ pub fn get_inner_texts(dom: &FreyaDOM, node_id: &NodeId) -> Vec<(FontStyle, Stri
 }
 
 /// Get the info related to a cursor reference
-fn get_cursor_reference(node: &DioxusNode) -> Option<(&CursorReference, usize, (f32, f32))> {
+#[allow(clippy::type_complexity)]
+fn get_cursor_reference(
+    node: &DioxusNode,
+) -> Option<(
+    &CursorReference,
+    usize,
+    Option<Point2D>,
+    Option<(Point2D, Point2D)>,
+)> {
     let cursor_ref = node.state.references.cursor_ref.as_ref()?;
-    let positions = { *cursor_ref.positions.lock().unwrap().as_ref()? };
     let current_cursor_id = { *cursor_ref.id.lock().unwrap().as_ref()? };
     let cursor_id = node.state.cursor_settings.id.as_ref()?;
+    let cursor_selections = *cursor_ref.cursor_selections.lock().unwrap();
+    let cursor_position = *cursor_ref.cursor_position.lock().unwrap();
 
     if current_cursor_id == *cursor_id {
-        Some((cursor_ref, *cursor_id, positions))
+        Some((cursor_ref, *cursor_id, cursor_position, cursor_selections))
     } else {
         None
     }
@@ -276,15 +285,39 @@ impl<'a> NodeLayoutMeasurer<'a> {
         let mut paragraph = paragraph_builder.build();
         paragraph.layout(node_area.width());
 
-        if let Some((cursor_ref, cursor_id, positions)) = get_cursor_reference(node) {
-            // Calculate the new cursor position
-            let char_position = paragraph.get_glyph_position_at_coordinate(positions);
+        if let Some((cursor_ref, id, cursor_position, cursor_selections)) =
+            get_cursor_reference(node)
+        {
+            if let Some(cursor_position) = cursor_position {
+                // Calculate the new cursor position
+                let char_position =
+                    paragraph.get_glyph_position_at_coordinate(cursor_position.to_i32().to_tuple());
 
-            // Notify the cursor reference listener
-            cursor_ref
-                .agent
-                .send((char_position.position as usize, cursor_id))
-                .ok();
+                // Notify the cursor reference listener
+                cursor_ref
+                    .agent
+                    .send(CursorLayoutResponse::CursorPosition {
+                        position: char_position.position as usize,
+                        id,
+                    })
+                    .ok();
+            }
+
+            if let Some((origin, dist)) = cursor_selections {
+                let origin_char =
+                    paragraph.get_glyph_position_at_coordinate(origin.to_i32().to_tuple());
+                let dist_char =
+                    paragraph.get_glyph_position_at_coordinate(dist.to_i32().to_tuple());
+
+                cursor_ref
+                    .agent
+                    .send(CursorLayoutResponse::TextSelection {
+                        from: origin_char.position as usize,
+                        to: dist_char.position as usize,
+                        id,
+                    })
+                    .ok();
+            }
         }
     }
 

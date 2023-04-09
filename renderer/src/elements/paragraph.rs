@@ -53,15 +53,59 @@ pub fn render_paragraph(
 
     paragraph.layout(render_node.node_area.width());
 
-    paragraph.paint(canvas, (x, y));
+    // Draw the highlights if specified
+    draw_cursor_highlights(render_node, &paragraph, canvas, dioxus_node);
 
     // Draw a cursor if specified
-    draw_cursor(render_node, paragraph, canvas, dioxus_node);
+    draw_cursor(render_node, &paragraph, canvas, dioxus_node);
+
+    paragraph.paint(canvas, (x, y));
+}
+
+fn draw_cursor_highlights(
+    render_node: &RenderData,
+    paragraph: &Paragraph,
+    canvas: &mut Canvas,
+    dioxus_node: &DioxusNode,
+) -> Option<()> {
+    let highlights = dioxus_node.state.cursor_settings.highlights.as_ref()?;
+    let highlight_color = dioxus_node.state.cursor_settings.highlight_color;
+
+    for (from, to) in highlights.iter() {
+        let (from, to) = {
+            if from < to {
+                (from, to)
+            } else {
+                (to, from)
+            }
+        };
+        let cursor_rects = paragraph.get_rects_for_range(
+            *from..*to,
+            RectHeightStyle::Tight,
+            RectWidthStyle::Tight,
+        );
+        for cursor_rect in cursor_rects {
+            let x = render_node.node_area.min_x() + cursor_rect.rect.left;
+            let y = render_node.node_area.min_y() + cursor_rect.rect.top;
+
+            let x2 = x + (cursor_rect.rect.right - cursor_rect.rect.left);
+            let y2 = y + (cursor_rect.rect.bottom - cursor_rect.rect.top);
+
+            let mut paint = Paint::default();
+            paint.set_anti_alias(true);
+            paint.set_style(PaintStyle::Fill);
+            paint.set_color(highlight_color);
+
+            canvas.draw_rect(Rect::new(x, y, x2, y2), &paint);
+        }
+    }
+
+    Some(())
 }
 
 fn draw_cursor(
     render_node: &RenderData,
-    paragraph: Paragraph,
+    paragraph: &Paragraph,
     canvas: &mut Canvas,
     dioxus_node: &DioxusNode,
 ) -> Option<()> {

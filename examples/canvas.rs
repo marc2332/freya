@@ -148,13 +148,18 @@ fn app(cx: Scope) -> Element {
 #[allow(non_snake_case)]
 fn Editor(cx: Scope) -> Element {
     let (focused, focus_id, focus) = use_raw_focus(cx);
-    let (text_editor, process_keyevent, process_clickevent, cursor_ref) = use_editable(
+
+    let editable = use_editable(
         cx,
         || {
-            "Lorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet"
+            EditableConfig::new("Lorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet".to_string())
         },
         EditableMode::SingleLineMultipleEditors,
     );
+    let cursor_attr = editable.cursor_attr(cx);
+    let editor = editable.editor().clone();
+    let cursor = editor.cursor().clone();
+
     let font_size_percentage = use_state(cx, || 15.0);
     let line_height_percentage = use_state(cx, || 0.0);
     let is_bold = use_state(cx, || false);
@@ -184,13 +189,24 @@ fn Editor(cx: Scope) -> Element {
         async move {}
     });
 
+    let onclick = move |_: MouseEvent| {
+        if let Some(focus) = focus {
+            *focus.write() = focus_id
+        }
+    };
+
+    let onkeydown = {
+        to_owned![editable];
+        move |e: KeyboardEvent| {
+            if focused {
+                editable.process_event(&EditableEvent::KeyDown(e.data));
+            }
+        }
+    };
+
     render!(
         rect {
-            onclick: move |_| {
-                if let Some(focus) = focus {
-                    *focus.write() = focus_id
-                }
-            },
+            onclick: onclick,
             width: "100%",
             height: "100%",
             rect {
@@ -295,12 +311,8 @@ fn Editor(cx: Scope) -> Element {
                 width: "100%",
                 height: "calc(100% - 80)",
                 padding: "5",
-                onkeydown: move |e| {
-                    if focused {
-                        process_keyevent.send(e.data).unwrap();
-                    }
-                },
-                cursor_reference: cursor_ref,
+                onkeydown: onkeydown,
+                cursor_reference: cursor_attr,
                 direction: "horizontal",
                 rect {
                     width: "100%",
@@ -310,14 +322,14 @@ fn Editor(cx: Scope) -> Element {
                         width: "100%",
                         height: "100%",
                         show_scrollbar: true,
-                        text_editor.lines().map(move |l| {
-                            let process_clickevent = process_clickevent.clone();
+                        editor.lines().map(move |l| {
+                            let editable = editable.clone();
 
-                            let is_line_selected = text_editor.cursor_row() == line_index;
+                            let is_line_selected = cursor.row() == line_index;
 
                             // Only show the cursor in the active line
                             let character_index = if is_line_selected {
-                                text_editor.cursor_col().to_string()
+                                cursor.col().to_string()
                             } else {
                                 "none".to_string()
                             };
@@ -329,13 +341,31 @@ fn Editor(cx: Scope) -> Element {
                                 ""
                             };
 
-                            let onmousedown = move |e: MouseEvent| {
-                                process_clickevent.send((e.data, line_index)).ok();
+                            let onmousedown = {
+                                to_owned![editable];
+                                move |e: MouseEvent| {
+                                    editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
+                                }
+                            };
+
+                            let onmouseover = {
+                                to_owned![editable];
+                                move |e: MouseEvent| {
+                                    editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
+                                }
+                            };
+
+                            let onclick = {
+                                to_owned![editable];
+                                move |_: MouseEvent| {
+                                    editable.process_event(&EditableEvent::Click);
+                                }
                             };
 
                             let manual_line_height = font_size * line_height;
 
                             let cursor_id = line_index;
+                            let highlights = editable.highlights_attr(cx, cursor_id);
 
                             line_index += 1;
                             rsx! {
@@ -365,11 +395,14 @@ fn Editor(cx: Scope) -> Element {
                                         cursor_mode: "editable",
                                         cursor_id: "{cursor_id}",
                                         onmousedown: onmousedown,
+                                        onmouseover: onmouseover,
+                                        onclick: onclick,
+                                        highlights: highlights,
                                         text {
                                             color: "rgb(240, 240, 240)",
                                             font_size: "{font_size}",
                                             font_style: "{font_style}",
-                                            "{l} "
+                                            "{l}"
                                         }
                                     }
                                 }

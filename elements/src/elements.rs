@@ -220,6 +220,8 @@ builder_constructors! {
         cursor_id: String,
         direction: String,
         rotate: String,
+        highlights: String,
+        highlight_color: String,
     };
     text {
         color: String,

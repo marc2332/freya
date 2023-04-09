@@ -18,3 +18,10 @@ impl NodeReferenceLayout {
     }
 }
 pub type LayoutNotifier = Arc<Mutex<bool>>;
+
+/// Messages emitted from the layout library to the Nodes. Used in `use_editable`.
+#[derive(Debug)]
+pub enum CursorLayoutResponse {
+    CursorPosition { position: usize, id: usize },
+    TextSelection { from: usize, to: usize, id: usize },
+}

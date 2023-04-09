@@ -3,7 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use freya::{prelude::*, common::Point2D};
+use freya::{common::Point2D, prelude::*};
 
 fn main() {
     launch_cfg(
