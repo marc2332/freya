@@ -181,21 +181,27 @@ fn Editor(cx: Scope) -> Element {
         }
     };
 
-    use_effect(cx, (), move |_| {
-        focus_manager.focus();
-        async move {}
+    use_effect(cx, (), {
+        to_owned![focus_manager];
+        move |_| {
+            focus_manager.focus();
+            async move {}
+        }
     });
 
-    let onclick = move |_: MouseEvent| {
-        if let Some(focus) = focus {
-            focus_manager.focus();
+    let onclick = {
+        to_owned![focus_manager];
+        move |_: MouseEvent| {
+            if !focus_manager.is_focused() {
+                focus_manager.focus();
+            }
         }
     };
 
     let onkeydown = {
         to_owned![editable];
         move |e: KeyboardEvent| {
-            if focused {
+            if focus_manager.is_focused() {
                 editable.process_event(&EditableEvent::KeyDown(e.data));
             }
         }
