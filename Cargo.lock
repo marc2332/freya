@@ -1265,6 +1265,7 @@ dependencies = [
  "dioxus-hooks",
  "dioxus-native-core",
  "dioxus-rsx",
+ "euclid",
 ]
 
 [[package]]
@@ -1292,7 +1293,6 @@ dependencies = [
  "dioxus-hooks",
  "dioxus-native-core",
  "dioxus-rsx",
- "euclid",
  "freya-common",
  "freya-dom",
  "freya-elements",
@@ -1349,7 +1349,6 @@ dependencies = [
  "dioxus-hooks",
  "dioxus-native-core",
  "dioxus-rsx",
- "euclid",
  "freya-common",
  "keyboard-types",
  "tokio",
@@ -1462,7 +1461,6 @@ dependencies = [
  "dioxus-native-core",
  "dioxus-native-core-macro",
  "dioxus-rsx",
- "euclid",
  "freya-common",
  "freya-components",
  "freya-core",

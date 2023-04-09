@@ -32,8 +32,8 @@ pub fn render_skia(
             matrix.set_rotate(
                 rotate_degs,
                 Some(Point {
-                    x: area.x + area.width / 2.0,
-                    y: area.y + area.height / 2.0,
+                    x: area.max_x() / 2.0,
+                    y: area.max_y() / 2.0,
                 }),
             );
 
@@ -63,10 +63,10 @@ pub fn render_skia(
                 if let Some(viewport) = viewport {
                     canvas.clip_rect(
                         Rect::new(
-                            viewport.x,
-                            viewport.y,
-                            viewport.x + viewport.width,
-                            viewport.y + viewport.height,
+                            viewport.min_x(),
+                            viewport.min_y(),
+                            viewport.max_x(),
+                            viewport.max_y(),
                         ),
                         ClipOp::Intersect,
                         true,

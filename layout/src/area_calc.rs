@@ -1,9 +1,9 @@
-use freya_common::NodeArea;
+use freya_common::Area;
 use freya_node_state::SizeMode;
 
 use crate::{ops_calc::run_calculations, NodeLayoutMeasurer};
 
-pub fn calculate_area(node_measurer: &NodeLayoutMeasurer) -> NodeArea {
+pub fn calculate_area(node_measurer: &NodeLayoutMeasurer) -> Area {
     let mut area = *node_measurer.remaining_area;
 
     let calculate = |value: &SizeMode, area_value: f32, parent_area_value: f32| -> f32 {
@@ -73,37 +73,37 @@ pub fn calculate_area(node_measurer: &NodeLayoutMeasurer) -> NodeArea {
         }
     };
 
-    area.width = calculate(
+    area.size.width = calculate(
         &node_measurer.node.state.size.width,
-        area.width,
-        node_measurer.parent_area.width,
+        area.width(),
+        node_measurer.parent_area.width(),
     );
-    area.height = calculate(
+    area.size.height = calculate(
         &node_measurer.node.state.size.height,
-        area.height,
-        node_measurer.parent_area.height,
+        area.height(),
+        node_measurer.parent_area.height(),
     );
 
-    area.height = calculate_min(
+    area.size.height = calculate_min(
         &node_measurer.node.state.size.min_height,
-        area.height,
-        node_measurer.parent_area.height,
+        area.height(),
+        node_measurer.parent_area.height(),
     );
-    area.width = calculate_min(
+    area.size.width = calculate_min(
         &node_measurer.node.state.size.min_width,
-        area.width,
-        node_measurer.parent_area.width,
+        area.width(),
+        node_measurer.parent_area.width(),
     );
 
-    area.height = calculate_max(
+    area.size.height = calculate_max(
         &node_measurer.node.state.size.max_height,
-        area.height,
-        node_measurer.parent_area.height,
+        area.height(),
+        node_measurer.parent_area.height(),
     );
-    area.width = calculate_max(
+    area.size.width = calculate_max(
         &node_measurer.node.state.size.max_width,
-        area.width,
-        node_measurer.parent_area.width,
+        area.width(),
+        node_measurer.parent_area.width(),
     );
 
     area

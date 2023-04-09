@@ -1,7 +1,7 @@
 use dioxus_core::ElementId;
 use dioxus_native_core::tree::TreeView;
 use dioxus_native_core::NodeId;
-use freya_common::NodeArea;
+use freya_common::Area;
 use freya_dom::{DioxusNode, FreyaDOM};
 use rustc_hash::FxHashMap;
 
@@ -13,7 +13,7 @@ pub struct Layers {
 /// Collection of info about a specific Node to render
 #[derive(Clone, Debug)]
 pub struct RenderData {
-    pub node_area: NodeArea,
+    pub node_area: Area,
     pub element_id: Option<ElementId>,
     pub node_id: NodeId,
     pub children: Option<Vec<NodeId>>,
@@ -21,7 +21,7 @@ pub struct RenderData {
 
 impl RenderData {
     #[inline(always)]
-    pub fn get_area(&self) -> &NodeArea {
+    pub fn get_area(&self) -> &Area {
         &self.node_area
     }
 
@@ -65,7 +65,7 @@ impl Layers {
         &mut self,
         node: &DioxusNode,
         node_children: Option<Vec<NodeId>>,
-        node_area: &NodeArea,
+        node_area: &Area,
         node_layer: i16,
     ) {
         let layer = self

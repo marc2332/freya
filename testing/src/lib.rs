@@ -5,8 +5,7 @@ use dioxus_native_core::node::NodeType;
 use dioxus_native_core::real_dom::RealDom;
 use dioxus_native_core::tree::TreeView;
 use dioxus_native_core::NodeId;
-use euclid::Size2D;
-use freya_common::NodeArea;
+use freya_common::{Area, Size2D};
 use freya_core::events::EventsProcessor;
 use freya_core::{events::DomEvent, EventEmitter, EventReceiver};
 use freya_core::{process_events, process_layout, ViewportsCollection};
@@ -89,7 +88,7 @@ impl TestNode {
     }
 
     /// Get the Node layout
-    pub fn layout(&self) -> Option<NodeArea> {
+    pub fn layout(&self) -> Option<Area> {
         let layers = &self.utils.layers.lock().unwrap().layers;
         for layer in layers.values() {
             for (id, node) in layer {
@@ -172,14 +171,12 @@ impl TestingHandler {
     }
 
     /// Wait for layout and events to be processed
-    pub fn wait_for_work(&mut self, size: Size2D<f32, f32>) {
+    pub fn wait_for_work(&mut self, size: Size2D) {
         let (layers, viewports) = process_layout(
             &self.utils.dom.get(),
-            NodeArea {
-                width: size.width,
-                height: size.height,
-                x: 0.0,
-                y: 0.0,
+            Area {
+                origin: (0.0, 0.0).into(),
+                size,
             },
             &mut self.font_collection,
             SCALE_FACTOR as f32,

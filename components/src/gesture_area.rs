@@ -208,7 +208,7 @@ mod test {
 
         utils.push_event(FreyaEvent::Touch {
             name: "touchstart",
-            location: (1.0, 1.0),
+            location: (1.0, 1.0).into(),
             phase: TouchPhase::Started,
             finger_id: 0,
             force: None,
@@ -216,7 +216,7 @@ mod test {
 
         utils.push_event(FreyaEvent::Touch {
             name: "touchend",
-            location: (1.0, 1.0),
+            location: (1.0, 1.0).into(),
             phase: TouchPhase::Ended,
             finger_id: 0,
             force: None,
@@ -229,7 +229,7 @@ mod test {
 
         utils.push_event(FreyaEvent::Touch {
             name: "touchstart",
-            location: (1.0, 1.0),
+            location: (1.0, 1.0).into(),
             phase: TouchPhase::Started,
             finger_id: 0,
             force: None,
@@ -274,7 +274,7 @@ mod test {
 
         utils.push_event(FreyaEvent::Touch {
             name: "touchstart",
-            location: (1.0, 1.0),
+            location: (1.0, 1.0).into(),
             phase: TouchPhase::Started,
             finger_id: 0,
             force: None,
@@ -290,7 +290,7 @@ mod test {
 
         utils.push_event(FreyaEvent::Touch {
             name: "touchend",
-            location: (1.0, 1.0),
+            location: (1.0, 1.0).into(),
             phase: TouchPhase::Ended,
             finger_id: 0,
             force: None,

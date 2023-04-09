@@ -1,7 +1,7 @@
 mod event_messages;
+mod geometry;
 mod layout;
-mod node_area;
 
 pub use event_messages::*;
+pub use geometry::*;
 pub use layout::*;
-pub use node_area::*;

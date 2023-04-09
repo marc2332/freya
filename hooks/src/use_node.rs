@@ -51,7 +51,7 @@ mod test {
                     reference: reference,
                     width: "50%",
                     height: "25%",
-                    "{size.width}"
+                    "{size.area.width()}"
                 }
             )
         }

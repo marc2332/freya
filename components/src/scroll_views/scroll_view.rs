@@ -74,22 +74,31 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     let show_scrollbar = cx.props.show_scrollbar.unwrap_or_default();
 
     let vertical_scrollbar_is_visible =
-        is_scrollbar_visible(show_scrollbar, size.inner_height, size.height);
+        is_scrollbar_visible(show_scrollbar, size.inner.height(), size.area.height());
     let horizontal_scrollbar_is_visible =
-        is_scrollbar_visible(show_scrollbar, size.inner_width, size.width);
+        is_scrollbar_visible(show_scrollbar, size.inner.width(), size.area.width());
 
     let container_width = get_container_size(vertical_scrollbar_is_visible);
     let container_height = get_container_size(horizontal_scrollbar_is_visible);
 
-    let corrected_scrolled_y =
-        get_corrected_scroll_position(size.inner_height, size.height, *scrolled_y.read() as f32);
-    let corrected_scrolled_x =
-        get_corrected_scroll_position(size.inner_width, size.width, *scrolled_x.read() as f32);
+    let corrected_scrolled_y = get_corrected_scroll_position(
+        size.inner.height(),
+        size.area.height(),
+        *scrolled_y.read() as f32,
+    );
+    let corrected_scrolled_x = get_corrected_scroll_position(
+        size.inner.width(),
+        size.area.width(),
+        *scrolled_x.read() as f32,
+    );
 
-    let (scrollbar_y, scrollbar_height) =
-        get_scrollbar_pos_and_size(size.inner_height, size.height, corrected_scrolled_y);
+    let (scrollbar_y, scrollbar_height) = get_scrollbar_pos_and_size(
+        size.inner.height(),
+        size.area.height(),
+        corrected_scrolled_y,
+    );
     let (scrollbar_x, scrollbar_width) =
-        get_scrollbar_pos_and_size(size.inner_width, size.width, corrected_scrolled_x);
+        get_scrollbar_pos_and_size(size.inner.width(), size.area.width(), corrected_scrolled_x);
 
     // Moves the Y axis when the user scrolls in the container
     let onwheel = move |e: WheelEvent| {
@@ -98,8 +107,8 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
 
             let scroll_position_y = get_scroll_position_from_wheel(
                 wheel_y as f32,
-                size.inner_height,
-                size.height,
+                size.inner.height(),
+                size.area.height(),
                 *scrolled_y.read() as f32,
             );
 
@@ -114,8 +123,8 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
 
         let scroll_position_x = get_scroll_position_from_wheel(
             wheel_x as f32,
-            size.inner_width,
-            size.width,
+            size.inner.width(),
+            size.area.width(),
             *scrolled_x.read() as f32,
         );
 
@@ -128,16 +137,22 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
             let coordinates = e.get_element_coordinates();
             let cursor_y = coordinates.y - y;
 
-            let scroll_position =
-                get_scroll_position_from_cursor(cursor_y as f32, size.inner_height, size.height);
+            let scroll_position = get_scroll_position_from_cursor(
+                cursor_y as f32,
+                size.inner.height(),
+                size.area.height(),
+            );
 
             scrolled_y.with_mut(|y| *y = scroll_position);
         } else if let Some((Axis::X, x)) = *clicking_scrollbar.read() {
             let coordinates = e.get_element_coordinates();
             let cursor_x = coordinates.x - x;
 
-            let scroll_position =
-                get_scroll_position_from_cursor(cursor_x as f32, size.inner_width, size.width);
+            let scroll_position = get_scroll_position_from_cursor(
+                cursor_x as f32,
+                size.inner.width(),
+                size.area.width(),
+            );
 
             scrolled_x.with_mut(|x| *x = scroll_position);
         }
