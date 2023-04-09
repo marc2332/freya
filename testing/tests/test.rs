@@ -65,8 +65,8 @@ async fn check_size() {
 
     let rect = utils.root().child(0).unwrap();
 
-    assert_eq!(rect.layout().unwrap().width, 250.0);
-    assert_eq!(rect.layout().unwrap().height, 430.0);
+    assert_eq!(rect.layout().unwrap().width(), 250.0);
+    assert_eq!(rect.layout().unwrap().height(), 430.0);
 }
 
 #[tokio::test]
@@ -103,7 +103,7 @@ async fn simulate_events() {
 
     utils.push_event(FreyaEvent::Mouse {
         name: "click",
-        cursor: (5.0, 5.0),
+        cursor: (5.0, 5.0).into(),
         button: Some(MouseButton::Left),
     });
 

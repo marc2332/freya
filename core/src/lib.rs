@@ -1,5 +1,5 @@
 use dioxus_native_core::{node::NodeType, NodeId};
-use freya_common::NodeArea;
+use freya_common::Area;
 use freya_dom::FreyaDOM;
 use freya_layout::NodeLayoutMeasurer;
 use freya_layout::{Layers, RenderData};
@@ -16,7 +16,7 @@ use events::{DomEvent, EventsProcessor, FreyaEvent};
 pub type EventEmitter = UnboundedSender<DomEvent>;
 pub type EventReceiver = UnboundedReceiver<DomEvent>;
 pub type EventsQueue = Vec<FreyaEvent>;
-pub type ViewportsCollection = FxHashMap<NodeId, (Option<NodeArea>, Vec<NodeId>)>;
+pub type ViewportsCollection = FxHashMap<NodeId, (Option<Area>, Vec<NodeId>)>;
 pub type NodesEvents<'a> = FxHashMap<&'a str, Vec<(RenderData, FreyaEvent)>>;
 
 // Calculate all the applicable viewports for the given nodes
@@ -105,10 +105,7 @@ pub fn calculate_node_events<'a>(
                         _ => None,
                     };
                     if let Some((name, cursor)) = data {
-                        let ((x, y), (x2, y2)) = area.get_rect();
-
-                        let cursor_is_inside =
-                            cursor.0 > x && cursor.0 < x2 && cursor.1 > y && cursor.1 < y2;
+                        let cursor_is_inside = area.contains(cursor.to_f32());
 
                         // Make sure the cursor is inside the node area
                         if cursor_is_inside {
@@ -119,7 +116,7 @@ pub fn calculate_node_events<'a>(
                                 for viewport_id in viewports {
                                     let viewport = viewports_collection.get(viewport_id).unwrap().0;
                                     if let Some(viewport) = viewport {
-                                        if viewport.is_point_outside(*cursor) {
+                                        if !viewport.contains(cursor.to_f32()) {
                                             continue 'events;
                                         }
                                     }
@@ -240,7 +237,7 @@ fn calculate_global_events_listeners(
 /// Process the layout of the DOM
 pub fn process_layout(
     dom: &FreyaDOM,
-    area: NodeArea,
+    area: Area,
     font_collection: &mut FontCollection,
     scale_factor: f32,
 ) -> (Layers, ViewportsCollection) {
@@ -334,7 +331,7 @@ pub fn process_render<HookOptions>(
                 for viewport_id in viewports {
                     let viewport = viewports_collection.get(viewport_id).unwrap().0;
                     if let Some(viewport) = viewport {
-                        if viewport.is_area_outside(dom_element.node_area) {
+                        if !viewport.intersects(&dom_element.node_area) {
                             continue 'elements;
                         }
                     }

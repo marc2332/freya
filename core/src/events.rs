@@ -1,8 +1,7 @@
 use std::{any::Any, collections::HashMap, rc::Rc};
 
 use dioxus_core::ElementId;
-use euclid::{Length, Point2D};
-use freya_common::NodeArea;
+use freya_common::{Area, Point2D};
 use freya_elements::events::{
     keyboard::{Code, Key, Modifiers},
     KeyboardData, MouseData, TouchData, WheelData,
@@ -17,14 +16,14 @@ pub enum FreyaEvent {
     /// A Mouse Event.
     Mouse {
         name: &'static str,
-        cursor: (f64, f64),
+        cursor: Point2D,
         button: Option<MouseButton>,
     },
     /// A Wheel event.
     Wheel {
         name: &'static str,
-        scroll: (f64, f64),
-        cursor: (f64, f64),
+        scroll: Point2D,
+        cursor: Point2D,
     },
     /// A Keyboard event.
     Keyboard {
@@ -36,7 +35,7 @@ pub enum FreyaEvent {
     /// A Touch event.
     Touch {
         name: &'static str,
-        location: (f64, f64),
+        location: Point2D,
         finger_id: u64,
         phase: TouchPhase,
         force: Option<Force>,
@@ -76,7 +75,7 @@ impl DomEvent {
         event_name: &str,
         element_id: ElementId,
         event: &FreyaEvent,
-        node_area: Option<NodeArea>,
+        node_area: Option<Area>,
         scale_factor: f64,
     ) -> Self {
         match event {
@@ -84,25 +83,19 @@ impl DomEvent {
                 element_id,
                 name: event_name.to_string(),
                 data: DomEventData::Mouse(MouseData::new(
-                    Point2D::from_lengths(
-                        Length::new(cursor.0 / scale_factor),
-                        Length::new(cursor.1 / scale_factor),
-                    ),
-                    Point2D::from_lengths(
-                        Length::new(
-                            (cursor.0 - node_area.unwrap_or_default().x as f64) / scale_factor,
-                        ),
-                        Length::new(
-                            (cursor.1 - node_area.unwrap_or_default().y as f64) / scale_factor,
-                        ),
-                    ),
+                    *cursor / scale_factor,
+                    (
+                        (cursor.x - node_area.unwrap_or_default().min_x() as f64) / scale_factor,
+                        (cursor.y - node_area.unwrap_or_default().min_y() as f64) / scale_factor,
+                    )
+                        .into(),
                     *button,
                 )),
             },
             FreyaEvent::Wheel { scroll, .. } => Self {
                 element_id,
                 name: event_name.to_string(),
-                data: DomEventData::Wheel(WheelData::new(scroll.0, scroll.1)),
+                data: DomEventData::Wheel(WheelData::new(scroll.x, scroll.y)),
             },
             FreyaEvent::Keyboard {
                 ref key,
@@ -124,11 +117,12 @@ impl DomEvent {
                 element_id,
                 name: event_name.to_string(),
                 data: DomEventData::Touch(TouchData::new(
-                    Point2D::from_lengths(Length::new(location.0), Length::new(location.1)),
-                    Point2D::from_lengths(
-                        Length::new(location.0 - node_area.unwrap_or_default().x as f64),
-                        Length::new(location.1 - node_area.unwrap_or_default().y as f64),
-                    ),
+                    *location,
+                    (
+                        location.x - node_area.unwrap_or_default().min_x() as f64,
+                        location.y - node_area.unwrap_or_default().min_y() as f64,
+                    )
+                        .into(),
                     *finger_id,
                     *phase,
                     *force,

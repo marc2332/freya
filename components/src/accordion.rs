@@ -31,18 +31,26 @@ pub fn Accordion<'a>(cx: Scope<'a, AccordionProps<'a>>) -> Element<'a> {
     let animation_value = animation.value();
 
     // Adapt the accordion if the body size changes
-    use_effect(cx, &(size.width, size.height, animation.is_animating()), {
-        to_owned![animation];
-        move |(_, height, animating)| {
-            if (height as f64) < animation.value() && !animating {
-                animation.set_value(size.height as f64);
+    use_effect(
+        cx,
+        &(
+            size.area.width(),
+            size.area.height(),
+            animation.is_animating(),
+        ),
+        {
+            to_owned![animation];
+            move |(_, height, animating)| {
+                if (height as f64) < animation.value() && !animating {
+                    animation.set_value(size.area.height() as f64);
+                }
+                async move {}
             }
-            async move {}
-        }
-    });
+        },
+    );
 
     let onclick = move |_: MouseEvent| {
-        let bodyHeight = size.height as f64;
+        let bodyHeight = size.area.height() as f64;
         if *open.get() {
             animation.start(Animation::new_sine_in_out(bodyHeight..=0.0, 200));
         } else {

@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use freya_common::Point2D;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
 use freya_hooks::use_node_ref;
@@ -41,21 +42,33 @@ pub struct DragZoneProps<'a, T> {
 pub fn DragZone<'a, T: 'static + Clone>(cx: Scope<'a, DragZoneProps<'a, T>>) -> Element<'a> {
     let drags = use_shared_state::<Option<T>>(cx);
     let dragging = use_state(cx, || false);
-    let pos = use_state(cx, || (0.0, 0.0));
+    let pos = use_state(cx, || Point2D::default());
     let (node_reference, size) = use_node_ref(cx);
 
     let onglobalmouseover = move |e: MouseEvent| {
         if *dragging.get() {
             let size = size.read();
             let coord = e.get_screen_coordinates();
-            pos.set((coord.x - size.x as f64, coord.y - size.y as f64));
+            pos.set(
+                (
+                    coord.x - size.area.min_x() as f64,
+                    coord.y - size.area.min_y() as f64,
+                )
+                    .into(),
+            );
         }
     };
 
     let onmousedown = move |e: MouseEvent| {
         let size = size.read();
         let coord = e.get_screen_coordinates();
-        pos.set((coord.x - size.x as f64, coord.y - size.y as f64));
+        pos.set(
+            (
+                coord.x - size.area.min_x() as f64,
+                coord.y - size.area.min_y() as f64,
+            )
+                .into(),
+        );
         dragging.set(true);
         *drags.unwrap().write() = Some(cx.props.data.clone());
     };
@@ -63,7 +76,7 @@ pub fn DragZone<'a, T: 'static + Clone>(cx: Scope<'a, DragZoneProps<'a, T>>) -> 
     let onglobalclick = move |_: MouseEvent| {
         if *dragging.get() {
             dragging.set(false);
-            pos.set((0.0, 0.0));
+            pos.set((0.0, 0.0).into());
             *drags.unwrap().write() = None;
         }
     };
@@ -74,8 +87,8 @@ pub fn DragZone<'a, T: 'static + Clone>(cx: Scope<'a, DragZoneProps<'a, T>>) -> 
                 rect {
                     width: "0",
                     height: "0",
-                    scroll_x: "{pos.0}",
-                    scroll_y: "{pos.1}",
+                    scroll_x: "{pos.x}",
+                    scroll_y: "{pos.y}",
                     &cx.props.drag_element
                 }
             )

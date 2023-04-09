@@ -21,7 +21,7 @@ pub fn render_paragraph(
 
     let texts = get_inner_texts(dom, &render_node.node_id);
 
-    let (x, y) = render_node.node_area.get_origin_points();
+    let (x, y) = render_node.node_area.origin.to_tuple();
 
     let mut paragraph_style = ParagraphStyle::default();
     paragraph_style.set_max_lines(max_lines);
@@ -51,7 +51,7 @@ pub fn render_paragraph(
 
     let mut paragraph = paragraph_builder.build();
 
-    paragraph.layout(render_node.node_area.width);
+    paragraph.layout(render_node.node_area.width());
 
     paragraph.paint(canvas, (x, y));
 
@@ -76,8 +76,8 @@ fn draw_cursor(
     );
     let cursor_rect = cursor_rects.first()?;
 
-    let x = render_node.node_area.x + cursor_rect.rect.left;
-    let y = render_node.node_area.y + cursor_rect.rect.top;
+    let x = render_node.node_area.min_x() + cursor_rect.rect.left;
+    let y = render_node.node_area.min_y() + cursor_rect.rect.top;
 
     let x2 = x + 1.0;
     let y2 = y + (cursor_rect.rect.bottom - cursor_rect.rect.top);

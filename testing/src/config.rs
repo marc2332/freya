@@ -1,11 +1,11 @@
 use std::time::Duration;
 
-use euclid::Size2D;
+use freya_common::Size2D;
 
 /// Configuration for a [`TestingHandler`].
 pub struct TestingConfig {
     vdom_timeout: Duration,
-    size: Size2D<f32, f32>,
+    size: Size2D,
 }
 
 impl Default for TestingConfig {
@@ -23,7 +23,7 @@ impl TestingConfig {
     }
 
     /// Specify a custom canvas size.
-    pub fn with_size(mut self, size: Size2D<f32, f32>) -> Self {
+    pub fn with_size(mut self, size: Size2D) -> Self {
         self.size = size;
         self
     }
@@ -35,7 +35,7 @@ impl TestingConfig {
     }
 
     /// Get the canvas size.
-    pub fn size(&self) -> Size2D<f32, f32> {
+    pub fn size(&self) -> Size2D {
         self.size
     }
 
