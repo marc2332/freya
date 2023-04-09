@@ -12,7 +12,7 @@ pub struct Scroll {
 }
 
 impl NodeDepState<CustomAttributeValues> for Scroll {
-    type Ctx = LayoutNotifier;
+    type Ctx = (LayoutNotifier, f32);
     type DepState = ();
 
     const NODE_MASK: NodeMask =
@@ -26,7 +26,7 @@ impl NodeDepState<CustomAttributeValues> for Scroll {
         &mut self,
         node: NodeView<CustomAttributeValues>,
         _sibling: (),
-        ctx: &Self::Ctx,
+        (layout_notifier, scale_factor): &Self::Ctx,
     ) -> bool {
         let mut scroll_y = 0.0;
         let mut scroll_x = 0.0;
@@ -38,14 +38,14 @@ impl NodeDepState<CustomAttributeValues> for Scroll {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
                             let scroll: f32 = attr.parse().unwrap();
-                            scroll_y = scroll;
+                            scroll_y = scroll * scale_factor;
                         }
                     }
                     "scroll_x" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
                             let scroll: f32 = attr.parse().unwrap();
-                            scroll_x = scroll;
+                            scroll_x = scroll * scale_factor;
                         }
                     }
                     _ => {
@@ -58,7 +58,7 @@ impl NodeDepState<CustomAttributeValues> for Scroll {
         let changed = (scroll_x != self.scroll_x) || (scroll_y != self.scroll_y);
 
         if changed {
-            *ctx.lock().unwrap() = true;
+            *layout_notifier.lock().unwrap() = true;
         }
 
         *self = Self { scroll_y, scroll_x };

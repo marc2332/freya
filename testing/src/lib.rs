@@ -5,6 +5,7 @@ use dioxus_native_core::node::NodeType;
 use dioxus_native_core::real_dom::RealDom;
 use dioxus_native_core::tree::TreeView;
 use dioxus_native_core::NodeId;
+use euclid::Size2D;
 use freya_common::NodeArea;
 use freya_core::events::EventsProcessor;
 use freya_core::{events::DomEvent, EventEmitter, EventReceiver};
@@ -19,6 +20,13 @@ use tokio::sync::mpsc::unbounded_channel;
 
 pub use freya_core::events::FreyaEvent;
 pub use freya_elements::events::mouse::MouseButton;
+use tokio::time::timeout;
+
+pub use config::*;
+
+mod config;
+
+const SCALE_FACTOR: f64 = 1.0;
 
 #[derive(Clone)]
 pub struct TestUtils {
@@ -121,12 +129,19 @@ pub struct TestingHandler {
     events_processor: EventsProcessor,
     font_collection: FontCollection,
     viewports: ViewportsCollection,
+
+    config: TestingConfig,
 }
 
 impl TestingHandler {
+    /// Replace the current [`TestingConfig`].
+    pub fn set_config(&mut self, config: TestingConfig) {
+        self.config = config;
+    }
+
     /// Wait and apply new changes
-    pub async fn wait_for_update(&mut self, sizes: (f32, f32)) -> bool {
-        self.wait_for_work(sizes);
+    pub async fn wait_for_update(&mut self) -> bool {
+        self.wait_for_work(self.config.size());
 
         let vdom = &mut self.vdom;
 
@@ -141,36 +156,33 @@ impl TestingHandler {
             }
         }
 
-        vdom.wait_for_work().await;
+        timeout(self.config.vdom_timeout(), vdom.wait_for_work())
+            .await
+            .ok();
 
         let mutations = self.vdom.render_immediate();
 
-        let (must_repaint, _) = self.utils.dom.get_mut().apply_mutations(mutations);
-        self.wait_for_work(sizes);
+        let (must_repaint, _) = self
+            .utils
+            .dom
+            .get_mut()
+            .apply_mutations(mutations, SCALE_FACTOR as f32);
+        self.wait_for_work(self.config.size());
         must_repaint
     }
 
-    /// Wait until there are no more changes to be applied
-    pub async fn wait_until_cleanup(&mut self, sizes: (f32, f32)) {
-        loop {
-            let must_repaint = self.wait_for_update(sizes).await;
-            if !must_repaint {
-                break;
-            }
-        }
-    }
-
     /// Wait for layout and events to be processed
-    pub fn wait_for_work(&mut self, sizes: (f32, f32)) {
+    pub fn wait_for_work(&mut self, size: Size2D<f32, f32>) {
         let (layers, viewports) = process_layout(
             &self.utils.dom.get(),
             NodeArea {
-                width: sizes.0,
-                height: sizes.1,
+                width: size.width,
+                height: size.height,
                 x: 0.0,
                 y: 0.0,
             },
             &mut self.font_collection,
+            SCALE_FACTOR as f32,
         );
 
         *self.utils.layers.lock().unwrap() = layers;
@@ -183,6 +195,7 @@ impl TestingHandler {
             &self.event_emitter,
             &mut self.events_processor,
             &self.viewports,
+            SCALE_FACTOR,
         );
     }
 
@@ -211,11 +224,16 @@ impl TestingHandler {
 
 /// Run a Component in a headless testing environment
 pub fn launch_test(root: Component<()>) -> TestingHandler {
+    launch_test_with_config(root, TestingConfig::default())
+}
+
+/// Run a Component in a headless testing environment
+pub fn launch_test_with_config(root: Component<()>, config: TestingConfig) -> TestingHandler {
     let mut vdom = VirtualDom::new(root);
     let mutations = vdom.rebuild();
 
     let dom = SafeDOM::new(FreyaDOM::new(RealDom::new()));
-    dom.get_mut().init_dom(mutations);
+    dom.get_mut().init_dom(mutations, SCALE_FACTOR as f32);
 
     let (event_emitter, event_receiver) = unbounded_channel::<DomEvent>();
     let layers = Arc::new(Mutex::new(Layers::default()));
@@ -233,5 +251,6 @@ pub fn launch_test(root: Component<()>) -> TestingHandler {
         event_receiver,
         viewports: FxHashMap::default(),
         utils: TestUtils { dom, layers },
+        config,
     }
 }
