@@ -92,7 +92,7 @@ pub fn DragZone<'a, T: 'static + Clone>(cx: Scope<'a, DragZoneProps<'a, T>>) -> 
 
 /// Props for the [`DropZone`] component.
 #[derive(Props)]
-pub struct DropDoneProps<'a, T> {
+pub struct DropZoneProps<'a, T> {
     /// Inner children for the DropZone.
     children: Element<'a>,
     /// Handler for the `ondrop` event.
@@ -102,10 +102,10 @@ pub struct DropDoneProps<'a, T> {
 /// Elements from [`DragZone`]s can be dropped here.
 ///
 /// # Props
-/// See [`DropDoneProps`].
+/// See [`DropZoneProps`].
 ///
 #[allow(non_snake_case)]
-pub fn DropZone<'a, T: 'static + Clone>(cx: Scope<'a, DropDoneProps<'a, T>>) -> Element<'a> {
+pub fn DropZone<'a, T: 'static + Clone>(cx: Scope<'a, DropZoneProps<'a, T>>) -> Element<'a> {
     let drags = use_shared_state::<Option<T>>(cx);
 
     let onclick = move |_: MouseEvent| {
