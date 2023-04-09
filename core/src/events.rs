@@ -77,16 +77,24 @@ impl DomEvent {
         element_id: ElementId,
         event: &FreyaEvent,
         node_area: Option<NodeArea>,
+        scale_factor: f64,
     ) -> Self {
         match event {
             FreyaEvent::Mouse { cursor, button, .. } => Self {
                 element_id,
                 name: event_name.to_string(),
                 data: DomEventData::Mouse(MouseData::new(
-                    Point2D::from_lengths(Length::new(cursor.0), Length::new(cursor.1)),
                     Point2D::from_lengths(
-                        Length::new(cursor.0 - node_area.unwrap_or_default().x as f64),
-                        Length::new(cursor.1 - node_area.unwrap_or_default().y as f64),
+                        Length::new(cursor.0 / scale_factor),
+                        Length::new(cursor.1 / scale_factor),
+                    ),
+                    Point2D::from_lengths(
+                        Length::new(
+                            (cursor.0 - node_area.unwrap_or_default().x as f64) / scale_factor,
+                        ),
+                        Length::new(
+                            (cursor.1 - node_area.unwrap_or_default().y as f64) / scale_factor,
+                        ),
                     ),
                     *button,
                 )),

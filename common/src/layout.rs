@@ -11,4 +11,14 @@ pub struct NodeReferenceLayout {
     pub inner_width: f32,
 }
 
+impl NodeReferenceLayout {
+    pub fn div(&mut self, div_n: f32) {
+        self.x /= div_n;
+        self.y /= div_n;
+        self.width /= div_n;
+        self.height /= div_n;
+        self.inner_width /= div_n;
+        self.inner_height /= div_n;
+    }
+}
 pub type LayoutNotifier = Arc<Mutex<bool>>;

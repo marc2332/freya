@@ -20,7 +20,7 @@ pub struct Size {
 }
 
 impl ParentDepState<CustomAttributeValues> for Size {
-    type Ctx = LayoutNotifier;
+    type Ctx = (LayoutNotifier, f32);
     type DepState = (Self,);
 
     const NODE_MASK: NodeMask =
@@ -41,7 +41,7 @@ impl ParentDepState<CustomAttributeValues> for Size {
         &mut self,
         node: NodeView<CustomAttributeValues>,
         _parent: Option<(&Self,)>,
-        ctx: &Self::Ctx,
+        (layout_notifier, scale_factor): &Self::Ctx,
     ) -> bool {
         let mut width = SizeMode::default();
         let mut height = SizeMode::default();
@@ -68,7 +68,7 @@ impl ParentDepState<CustomAttributeValues> for Size {
                     "width" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
-                            if let Some(new_width) = parse_size(attr) {
+                            if let Some(new_width) = parse_size(attr, *scale_factor) {
                                 width = new_width;
                             }
                         }
@@ -76,7 +76,7 @@ impl ParentDepState<CustomAttributeValues> for Size {
                     "height" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
-                            if let Some(new_height) = parse_size(attr) {
+                            if let Some(new_height) = parse_size(attr, *scale_factor) {
                                 height = new_height;
                             }
                         }
@@ -84,7 +84,7 @@ impl ParentDepState<CustomAttributeValues> for Size {
                     "min_height" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
-                            if let Some(new_min_height) = parse_size(attr) {
+                            if let Some(new_min_height) = parse_size(attr, *scale_factor) {
                                 min_height = new_min_height;
                             }
                         }
@@ -92,7 +92,7 @@ impl ParentDepState<CustomAttributeValues> for Size {
                     "min_width" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
-                            if let Some(new_min_width) = parse_size(attr) {
+                            if let Some(new_min_width) = parse_size(attr, *scale_factor) {
                                 min_width = new_min_width;
                             }
                         }
@@ -100,7 +100,7 @@ impl ParentDepState<CustomAttributeValues> for Size {
                     "max_height" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
-                            if let Some(new_max_height) = parse_size(attr) {
+                            if let Some(new_max_height) = parse_size(attr, *scale_factor) {
                                 max_height = new_max_height;
                             }
                         }
@@ -108,7 +108,7 @@ impl ParentDepState<CustomAttributeValues> for Size {
                     "max_width" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
-                            if let Some(new_max_width) = parse_size(attr) {
+                            if let Some(new_max_width) = parse_size(attr, *scale_factor) {
                                 max_width = new_max_width;
                             }
                         }
@@ -116,7 +116,7 @@ impl ParentDepState<CustomAttributeValues> for Size {
                     "padding" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
-                            if let Some(paddings) = parse_padding(attr) {
+                            if let Some(paddings) = parse_padding(attr, *scale_factor) {
                                 padding = paddings;
                             }
                         }
@@ -150,7 +150,7 @@ impl ParentDepState<CustomAttributeValues> for Size {
             || (direction != self.direction);
 
         if changed {
-            *ctx.lock().unwrap() = true;
+            *layout_notifier.lock().unwrap() = true;
         }
 
         *self = Self {
@@ -167,14 +167,14 @@ impl ParentDepState<CustomAttributeValues> for Size {
     }
 }
 
-pub fn parse_padding(padding: &str) -> Option<(f32, f32, f32, f32)> {
+pub fn parse_padding(padding: &str, scale_factor: f32) -> Option<(f32, f32, f32, f32)> {
     let mut padding_config = (0.0, 0.0, 0.0, 0.0);
     let mut paddings = padding.split_ascii_whitespace();
 
     match paddings.clone().count() {
         // Same in each directions
         1 => {
-            padding_config.0 = paddings.next()?.parse::<f32>().ok()?;
+            padding_config.0 = paddings.next()?.parse::<f32>().ok()? * scale_factor;
             padding_config.1 = padding_config.0;
             padding_config.2 = padding_config.0;
             padding_config.3 = padding_config.0;
@@ -182,19 +182,19 @@ pub fn parse_padding(padding: &str) -> Option<(f32, f32, f32, f32)> {
         // By vertical and horizontal
         2 => {
             // Vertical
-            padding_config.0 = paddings.next()?.parse::<f32>().ok()?;
+            padding_config.0 = paddings.next()?.parse::<f32>().ok()? * scale_factor;
             padding_config.2 = padding_config.0;
 
             // Horizontal
-            padding_config.1 = paddings.next()?.parse::<f32>().ok()?;
+            padding_config.1 = paddings.next()?.parse::<f32>().ok()? * scale_factor;
             padding_config.3 = padding_config.1;
         }
         // Each directions
         4 => {
-            padding_config.0 = paddings.next()?.parse::<f32>().ok()?;
-            padding_config.1 = paddings.next()?.parse::<f32>().ok()?;
-            padding_config.2 = paddings.next()?.parse::<f32>().ok()?;
-            padding_config.3 = paddings.next()?.parse::<f32>().ok()?;
+            padding_config.0 = paddings.next()?.parse::<f32>().ok()? * scale_factor;
+            padding_config.1 = paddings.next()?.parse::<f32>().ok()? * scale_factor;
+            padding_config.2 = paddings.next()?.parse::<f32>().ok()? * scale_factor;
+            padding_config.3 = paddings.next()?.parse::<f32>().ok()? * scale_factor;
         }
         _ => {}
     }
@@ -202,23 +202,23 @@ pub fn parse_padding(padding: &str) -> Option<(f32, f32, f32, f32)> {
     Some(padding_config)
 }
 
-pub fn parse_size(size: &str) -> Option<SizeMode> {
+pub fn parse_size(size: &str, scale_factor: f32) -> Option<SizeMode> {
     if size == "stretch" {
         Some(SizeMode::Percentage(100.0))
     } else if size == "auto" {
         Some(SizeMode::Auto)
     } else if size.contains("calc") {
-        Some(SizeMode::Calculation(parse_calc(size)?))
+        Some(SizeMode::Calculation(parse_calc(size, scale_factor)?))
     } else if size.contains('%') {
         Some(SizeMode::Percentage(size.replace('%', "").parse().ok()?))
     } else if size.contains("calc") {
-        Some(SizeMode::Calculation(parse_calc(size)?))
+        Some(SizeMode::Calculation(parse_calc(size, scale_factor)?))
     } else {
-        Some(SizeMode::Manual(size.parse().ok()?))
+        Some(SizeMode::Manual((size.parse::<f32>().ok()?) * scale_factor))
     }
 }
 
-pub fn parse_calc(mut size: &str) -> Option<Vec<CalcType>> {
+pub fn parse_calc(mut size: &str, scale_factor: f32) -> Option<Vec<CalcType>> {
     let mut calcs = Vec::new();
 
     size = size.strip_prefix("calc(")?;
@@ -238,7 +238,7 @@ pub fn parse_calc(mut size: &str) -> Option<Vec<CalcType>> {
         } else if val == "*" {
             calcs.push(CalcType::Mul);
         } else {
-            calcs.push(CalcType::Manual(val.parse().ok()?));
+            calcs.push(CalcType::Manual(val.parse::<f32>().ok()? * scale_factor));
         }
     }
 

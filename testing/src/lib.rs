@@ -26,6 +26,8 @@ pub use config::*;
 
 mod config;
 
+const SCALE_FACTOR: f64 = 1.0;
+
 #[derive(Clone)]
 pub struct TestUtils {
     dom: SafeDOM,
@@ -160,7 +162,7 @@ impl TestingHandler {
 
         let mutations = self.vdom.render_immediate();
 
-        let (must_repaint, _) = self.utils.dom.get_mut().apply_mutations(mutations);
+        let (must_repaint, _) = self.utils.dom.get_mut().apply_mutations(mutations, SCALE_FACTOR as f32);
         self.wait_for_work(self.config.size());
         must_repaint
     }
@@ -176,6 +178,7 @@ impl TestingHandler {
                 y: 0.0,
             },
             &mut self.font_collection,
+            SCALE_FACTOR as f32,
         );
 
         *self.utils.layers.lock().unwrap() = layers;
@@ -188,6 +191,7 @@ impl TestingHandler {
             &self.event_emitter,
             &mut self.events_processor,
             &self.viewports,
+            SCALE_FACTOR,
         );
     }
 
@@ -225,7 +229,7 @@ pub fn launch_test_with_config(root: Component<()>, config: TestingConfig) -> Te
     let mutations = vdom.rebuild();
 
     let dom = SafeDOM::new(FreyaDOM::new(RealDom::new()));
-    dom.get_mut().init_dom(mutations);
+    dom.get_mut().init_dom(mutations, SCALE_FACTOR as f32);
 
     let (event_emitter, event_receiver) = unbounded_channel::<DomEvent>();
     let layers = Arc::new(Mutex::new(Layers::default()));
