@@ -44,7 +44,7 @@ pub struct WindowEnv<T: Clone> {
     gl_surface: GlutinSurface<WindowSurface>,
     gr_context: skia_safe::gpu::DirectContext,
     gl_context: PossiblyCurrentContext,
-    window: Window,
+    pub(crate) window: Window,
     fb_info: FramebufferInfo,
     num_samples: usize,
     stencil_size: usize,
@@ -194,6 +194,7 @@ impl<T: Clone> WindowEnv<T> {
     /// Measure the layout
     pub fn process_layout(&mut self, rdom: &FreyaDOM) -> (Layers, ViewportsCollection) {
         let window_size = self.window.inner_size();
+        let scale_factor = self.window.scale_factor() as f32;
         process_layout(
             rdom,
             NodeArea {
@@ -203,6 +204,7 @@ impl<T: Clone> WindowEnv<T> {
                 y: 0.0,
             },
             &mut self.font_collection,
+            scale_factor,
         )
     }
 

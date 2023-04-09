@@ -8,7 +8,7 @@
 
 You can join the [Discord](https://discord.gg/sYejxCdewG) server if you have any question or issue. 
 
-> You can also see the [API Reference](https://docs.rs/freya/latest/freya/).
+> You can also see the [API Reference](https://docs.freyaui.dev/freya/).
 
 <br>
 

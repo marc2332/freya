@@ -83,13 +83,13 @@ impl FreyaDOM {
     }
 
     /// Create the initial DOM from the given Mutations
-    pub fn init_dom(&mut self, mutations: Mutations) {
+    pub fn init_dom(&mut self, mutations: Mutations, scale_factor: f32) {
         let (to_update, _diff) = self.rdom.apply_mutations(mutations);
 
         *self.layout_notifier.lock().unwrap() = false;
 
         let mut ctx = SendAnyMap::new();
-        ctx.insert(self.layout_notifier.clone());
+        ctx.insert((self.layout_notifier.clone(), scale_factor));
 
         self.rdom.update_state(to_update, ctx);
     }
@@ -97,7 +97,7 @@ impl FreyaDOM {
     /// Process the given mutations from the [`VirtualDOM`](dioxus_core::VirtualDom).
     /// This will notify the layout if it must recalculate
     /// or the renderer if it has to repaint.
-    pub fn apply_mutations(&mut self, mutations: Mutations) -> (bool, bool) {
+    pub fn apply_mutations(&mut self, mutations: Mutations, scale_factor: f32) -> (bool, bool) {
         *self.layout_notifier.lock().unwrap() = false;
         let mut layout_changes = false;
 
@@ -145,7 +145,7 @@ impl FreyaDOM {
 
         // Update the Nodes states
         let mut ctx = SendAnyMap::new();
-        ctx.insert(self.layout_notifier.clone());
+        ctx.insert((self.layout_notifier.clone(), scale_factor));
         self.rdom.update_state(to_update, ctx);
 
         // Calculate whether it must repaint or relayout

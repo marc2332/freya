@@ -147,6 +147,7 @@ fn calculate_events_listeners(
     calculated_events: &mut NodesEvents,
     dom: &FreyaDOM,
     event_emitter: &EventEmitter,
+    scale_factor: f64,
 ) -> Vec<DomEvent> {
     let mut new_events = Vec::new();
 
@@ -202,6 +203,7 @@ fn calculate_events_listeners(
                 node.element_id.unwrap(),
                 request_event,
                 Some(node.node_area),
+                scale_factor,
             );
             new_events.push(event.clone());
             event_emitter.send(event).unwrap();
@@ -216,6 +218,7 @@ fn calculate_global_events_listeners(
     global_events: Vec<FreyaEvent>,
     dom: &FreyaDOM,
     event_emitter: &EventEmitter,
+    scale_factor: f64,
 ) {
     for global_event in global_events {
         let event_name = global_event.get_name();
@@ -227,6 +230,7 @@ fn calculate_global_events_listeners(
                 listener.node_data.element_id.unwrap(),
                 &global_event,
                 None,
+                scale_factor,
             );
             event_emitter.send(event).unwrap();
         }
@@ -238,6 +242,7 @@ pub fn process_layout(
     dom: &FreyaDOM,
     area: NodeArea,
     font_collection: &mut FontCollection,
+    scale_factor: f32,
 ) -> (Layers, ViewportsCollection) {
     let mut layers = Layers::default();
 
@@ -253,7 +258,7 @@ pub fn process_layout(
             0,
             font_collection,
         );
-        root_node_measurer.measure_area(true);
+        root_node_measurer.measure_area(true, scale_factor);
     }
 
     let mut layers_nums: Vec<&i16> = layers.layers.keys().collect();
@@ -274,6 +279,7 @@ pub fn process_events(
     event_emitter: &EventEmitter,
     events_processor: &mut EventsProcessor,
     viewports_collection: &ViewportsCollection,
+    scale_factor: f64,
 ) {
     let mut layers_nums: Vec<&i16> = layers.layers.keys().collect();
 
@@ -283,9 +289,10 @@ pub fn process_events(
     let (mut node_events, global_events) =
         calculate_node_events(&layers_nums, layers, events, viewports_collection);
 
-    let emitted_events = calculate_events_listeners(&mut node_events, dom, event_emitter);
+    let emitted_events =
+        calculate_events_listeners(&mut node_events, dom, event_emitter, scale_factor);
 
-    calculate_global_events_listeners(global_events, dom, event_emitter);
+    calculate_global_events_listeners(global_events, dom, event_emitter, scale_factor);
 
     let new_processed_events = events_processor.process_events_batch(emitted_events, node_events);
 

@@ -19,6 +19,15 @@ pub struct FontStyle {
     pub font_style: skia_safe::FontStyle,
 }
 
+impl FontStyle {
+    fn default_with_scale_factor(scale_factor: f32) -> Self {
+        Self {
+            font_size: 16.0 * scale_factor,
+            ..FontStyle::default()
+        }
+    }
+}
+
 impl Default for FontStyle {
     fn default() -> Self {
         Self {
@@ -35,7 +44,7 @@ impl Default for FontStyle {
 
 /// Font style are inherited by default if not specified otherwise by some of the supported attributes.
 impl ParentDepState<CustomAttributeValues> for FontStyle {
-    type Ctx = LayoutNotifier;
+    type Ctx = (LayoutNotifier, f32);
     type DepState = (Self,);
 
     const NODE_MASK: NodeMask =
@@ -53,9 +62,11 @@ impl ParentDepState<CustomAttributeValues> for FontStyle {
         &mut self,
         node: NodeView<CustomAttributeValues>,
         parent: Option<(&Self,)>,
-        ctx: &Self::Ctx,
+        (layout_notifier, scale_factor): &Self::Ctx,
     ) -> bool {
-        let mut font_style = parent.map(|(v,)| v.clone()).unwrap_or_default();
+        let mut font_style = parent
+            .map(|(v,)| v.clone())
+            .unwrap_or_else(|| FontStyle::default_with_scale_factor(*scale_factor));
         let mut changed_size = false;
 
         if let Some(attributes) = node.attributes() {
@@ -86,8 +97,8 @@ impl ParentDepState<CustomAttributeValues> for FontStyle {
                     "font_size" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
-                            if let Ok(font_size) = attr.parse() {
-                                font_style.font_size = font_size;
+                            if let Ok(font_size) = attr.parse::<f32>() {
+                                font_style.font_size = font_size * scale_factor;
                                 changed_size = true;
                             }
                         }
@@ -129,7 +140,7 @@ impl ParentDepState<CustomAttributeValues> for FontStyle {
         }
 
         if changed_size {
-            *ctx.lock().unwrap() = true;
+            *layout_notifier.lock().unwrap() = true;
         }
 
         let changed = &font_style != self;

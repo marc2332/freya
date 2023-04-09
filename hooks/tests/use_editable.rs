@@ -61,8 +61,8 @@ pub async fn multiple_lines_single_editor() {
         button: Some(MouseButton::Left),
     });
 
-    utils.wait_for_update((500.0, 500.0)).await;
-    utils.wait_for_update((500.0, 500.0)).await;
+    utils.wait_for_update().await;
+    utils.wait_for_update().await;
 
     // Cursor has been moved
     let root = utils.root().child(0).unwrap();
@@ -81,7 +81,7 @@ pub async fn multiple_lines_single_editor() {
         modifiers: Modifiers::empty(),
     });
 
-    utils.wait_for_update((500.0, 500.0)).await;
+    utils.wait_for_update().await;
 
     // Text and cursor have changed
     let cursor = root.child(1).unwrap().child(0).unwrap();
@@ -163,8 +163,8 @@ pub async fn single_line_mulitple_editors() {
         button: Some(MouseButton::Left),
     });
 
-    utils.wait_for_update((500.0, 500.0)).await;
-    utils.wait_for_update((500.0, 500.0)).await;
+    utils.wait_for_update().await;
+    utils.wait_for_update().await;
 
     // Cursor has been moved
     let root = utils.root().child(0).unwrap();
@@ -183,7 +183,7 @@ pub async fn single_line_mulitple_editors() {
         modifiers: Modifiers::empty(),
     });
 
-    utils.wait_for_update((500.0, 500.0)).await;
+    utils.wait_for_update().await;
 
     // Text and cursor have changed
     let cursor = root.child(2).unwrap().child(0).unwrap();
