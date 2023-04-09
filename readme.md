@@ -59,11 +59,13 @@ fn app(cx: Scope) -> Element {
 
 ⚠️ See [Environment setup](https://book.freyaui.dev/setup.html) first.
 
-Run:
+Clone this repo and run:
 
 ```shell
 cargo run --example counter
 ```
+
+You can also try [`freya-template`](https://github.com/marc2332/freya-template)
 
 ### Usage 📜
 Add Freya as a dependency via git (it's not published on [crates.io](https://crates.io/) yet) in your `Cargo.toml`:
