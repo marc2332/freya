@@ -3,7 +3,7 @@ use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
 use freya_hooks::use_node_ref;
 
-/// Props for the [`DragProvider`] component.
+/// [`DragProvider`] component properties.
 #[derive(Props)]
 pub struct DragProviderProps<'a> {
     /// Inner children of the DragProvider.
@@ -21,7 +21,7 @@ pub fn DragProvider<'a, T: 'static>(cx: Scope<'a, DragProviderProps<'a>>) -> Ele
     render!(&cx.props.children)
 }
 
-/// Props for the [`DragZone`] component.
+/// [`DragZone`] component properties.
 #[derive(Props)]
 pub struct DragZoneProps<'a, T> {
     /// Element visible when dragging the element. This follows the cursor.
@@ -90,7 +90,7 @@ pub fn DragZone<'a, T: 'static + Clone>(cx: Scope<'a, DragZoneProps<'a, T>>) -> 
     )
 }
 
-/// Props for the [`DropZone`] component.
+/// [`DropZone`] component properties.
 #[derive(Props)]
 pub struct DropZoneProps<'a, T> {
     /// Inner children for the DropZone.
