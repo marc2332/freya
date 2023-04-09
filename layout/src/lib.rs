@@ -233,8 +233,8 @@ impl<'a> NodeLayoutMeasurer<'a> {
                     y: node_area.y,
                     width: node_area.width,
                     height: node_area.height,
-                    inner_height: inner_height,
-                    inner_width: inner_width,
+                    inner_height,
+                    inner_width,
                 };
                 layout.div(scale_factor);
                 reference.send(layout).ok();

@@ -1,10 +1,7 @@
-use std::time::Duration;
-
 use crate::{use_editable, EditableMode, TextEditor};
 use freya::prelude::*;
 use freya_elements::events::keyboard::{Code, Key, Modifiers};
 use freya_testing::{launch_test, FreyaEvent, MouseButton};
-use tokio::time::timeout;
 
 #[tokio::test]
 pub async fn multiple_lines_single_editor() {
@@ -312,7 +309,7 @@ pub async fn highlight_multiple_lines_single_editor() {
         button: Some(MouseButton::Left),
     });
 
-    utils.wait_for_update((500.0, 500.0)).await;
+    utils.wait_for_update().await;
 
     // Move cursor
     utils.push_event(FreyaEvent::Mouse {
@@ -321,8 +318,8 @@ pub async fn highlight_multiple_lines_single_editor() {
         button: Some(MouseButton::Left),
     });
 
-    utils.wait_for_update((500.0, 500.0)).await;
-    utils.wait_for_update((500.0, 500.0)).await;
+    utils.wait_for_update().await;
+    utils.wait_for_update().await;
 
     let highlights = root
         .child(0)
@@ -437,7 +434,7 @@ pub async fn highlights_single_line_mulitple_editors() {
         button: Some(MouseButton::Left),
     });
 
-    utils.wait_for_update((500.0, 500.0)).await;
+    utils.wait_for_update().await;
 
     // Move cursor
     utils.push_event(FreyaEvent::Mouse {
@@ -446,8 +443,8 @@ pub async fn highlights_single_line_mulitple_editors() {
         button: Some(MouseButton::Left),
     });
 
-    utils.wait_for_update((500.0, 500.0)).await;
-    utils.wait_for_update((500.0, 500.0)).await;
+    utils.wait_for_update().await;
+    utils.wait_for_update().await;
 
     // Move cursor
     utils.push_event(FreyaEvent::Mouse {
@@ -456,13 +453,8 @@ pub async fn highlights_single_line_mulitple_editors() {
         button: Some(MouseButton::Left),
     });
 
-    timeout(
-        Duration::from_millis(100),
-        utils.wait_for_update((500.0, 500.0)),
-    )
-    .await
-    .ok();
-    utils.wait_for_update((500.0, 500.0)).await;
+    utils.wait_for_update().await;
+    utils.wait_for_update().await;
 
     let highlights_1 = root
         .child(0)
