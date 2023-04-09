@@ -57,7 +57,7 @@ pub fn DragZone<'a, T: 'static + Clone>(cx: Scope<'a, DragZoneProps<'a, T>>) -> 
         let coord = e.get_screen_coordinates();
         pos.set((coord.x - size.x as f64, coord.y - size.y as f64));
         dragging.set(true);
-        *drags.unwrap().write() = Some(cx.props.data.clone())
+        *drags.unwrap().write() = Some(cx.props.data.clone());
     };
 
     let onglobalclick = move |_: MouseEvent| {
@@ -125,4 +125,106 @@ pub fn DropZone<'a, T: 'static + Clone>(cx: Scope<'a, DropDoneProps<'a, T>>) -> 
             &cx.props.children
         }
     )
+}
+
+#[cfg(test)]
+mod test {
+    use std::time::Duration;
+
+    use freya::prelude::*;
+
+    use freya_elements::events::{MouseData, MouseEvent};
+    use freya_testing::{launch_test, FreyaEvent, MouseButton};
+    use tokio::time::sleep;
+
+    #[tokio::test]
+    pub async fn drag_drop() {
+        fn drop_app(cx: Scope) -> Element {
+            let state = use_state::<bool>(cx, || false);
+
+            render!(
+                DragProvider::<bool> {
+                    rect {
+                        height: "50%",
+                        width: "100%",
+                        DragZone {
+                            data: true,
+                            drag_element: render!(
+                                label {
+                                    width: "200",
+                                    "Moving"
+                                }
+                            ),
+                            label {
+                                "Move"
+                            }
+                        }
+                    }
+                    DropZone {
+                        ondrop: move |data: bool| {
+                            state.set(true);
+                        }
+                        rect {
+                            height: "50%",
+                            width: "100%",
+                            label {
+                                "Enabled: {state}"
+                            }
+                        }
+                    }
+                }
+            )
+        }
+
+        let mut utils = launch_test(drop_app);
+
+        utils.wait_for_update().await;
+
+        utils.push_event(FreyaEvent::Mouse {
+            name: "mousedown",
+            cursor: (5.0, 5.0).into(),
+            button: Some(MouseButton::Left),
+        });
+
+        utils.wait_for_update().await;
+
+        utils.push_event(FreyaEvent::Mouse {
+            name: "mouseover",
+            cursor: (5.0, 5.0).into(),
+            button: Some(MouseButton::Left),
+        });
+
+        utils.wait_for_update().await;
+
+        utils.push_event(FreyaEvent::Mouse {
+            name: "mouseover",
+            cursor: (5.0, 300.0).into(),
+            button: Some(MouseButton::Left),
+        });
+
+        utils.wait_for_update().await;
+
+        utils.push_event(FreyaEvent::Mouse {
+            name: "click",
+            cursor: (5.0, 300.0).into(),
+            button: Some(MouseButton::Left),
+        });
+
+        utils.wait_for_update().await;
+
+        assert_eq!(
+            utils
+                .root()
+                .child(1)
+                .unwrap()
+                .child(0)
+                .unwrap()
+                .child(0)
+                .unwrap()
+                .child(0)
+                .unwrap()
+                .text(),
+            Some("Enabled: true")
+        );
+    }
 }
