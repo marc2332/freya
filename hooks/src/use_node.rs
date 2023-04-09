@@ -39,7 +39,7 @@ pub fn use_node(cx: &ScopeState) -> (AttributeValue, NodeReferenceLayout) {
 mod test {
     use crate::use_node;
     use freya::prelude::*;
-    use freya_testing::launch_test;
+    use freya_testing::{launch_test_with_config, TestingConfig};
 
     #[tokio::test]
     pub async fn track_size() {
@@ -56,16 +56,20 @@ mod test {
             )
         }
 
-        let mut utils = launch_test(use_node_app);
+        let mut utils = launch_test_with_config(
+            use_node_app,
+            TestingConfig::default().with_size((500.0, 800.0).into()),
+        );
 
-        utils.wait_for_update((500.0, 800.0)).await;
+        utils.wait_for_update().await;
         let root = utils.root().child(0).unwrap();
         assert_eq!(
             root.child(0).unwrap().text().unwrap().parse::<f32>(),
             Ok(500.0 * 0.5)
         );
 
-        utils.wait_for_update((300.0, 800.0)).await;
+        utils.set_config(TestingConfig::default().with_size((300.0, 800.0).into()));
+        utils.wait_for_update().await;
 
         let root = utils.root().child(0).unwrap();
         assert_eq!(

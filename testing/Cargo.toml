@@ -33,6 +33,7 @@ futures = "0.3.25"
 rustc-hash = "1.1.0"
 anymap = "0.12.1"
 skia-safe = { version = "0.60.0", features = ["gl", "textlayout", "svg"] }
+euclid = "0.22.7"
 
 [dev-dependencies]
 freya-components ={ path = "../components"}

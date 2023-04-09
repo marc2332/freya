@@ -241,14 +241,14 @@ mod test {
         let mut utils = launch_test(use_animation_app);
 
         // Initial state
-        utils.wait_for_update((500.0, 500.0)).await;
+        utils.wait_for_update().await;
 
         assert_eq!(utils.root().child(0).unwrap().layout().unwrap().width, 0.0);
 
         // State somewhere in the middle
-        utils.wait_for_update((500.0, 500.0)).await;
-        utils.wait_for_update((500.0, 500.0)).await;
-        utils.wait_for_work((500.0, 500.0));
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+
         let width = utils.root().child(0).unwrap().layout().unwrap().width;
         assert!(width > 0.0);
         assert!(width < 100.0);
@@ -256,8 +256,8 @@ mod test {
         sleep(Duration::from_millis(50)).await;
 
         // State in the end
-        utils.wait_for_update((500.0, 500.0)).await;
-        utils.wait_for_work((500.0, 500.0));
+        utils.wait_for_update().await;
+
         let width = utils.root().child(0).unwrap().layout().unwrap().width;
         assert_eq!(width, 100.0);
     }
@@ -292,14 +292,14 @@ mod test {
         let mut utils = launch_test(use_animation_app);
 
         // Initial state
-        utils.wait_for_update((500.0, 500.0)).await;
+        utils.wait_for_update().await;
 
         assert_eq!(utils.root().child(0).unwrap().layout().unwrap().width, 10.0);
 
         // State somewhere in the middle
-        utils.wait_for_update((500.0, 500.0)).await;
-        utils.wait_for_update((500.0, 500.0)).await;
-        utils.wait_for_work((500.0, 500.0));
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+
         let width = utils.root().child(0).unwrap().layout().unwrap().width;
         assert!(width > 10.0);
 
@@ -310,8 +310,8 @@ mod test {
         });
 
         // State has been restarted
-        utils.wait_for_update((500.0, 500.0)).await;
-        utils.wait_for_work((500.0, 500.0));
+        utils.wait_for_update().await;
+
         let width = utils.root().child(0).unwrap().layout().unwrap().width;
         assert_eq!(width, 10.0);
     }

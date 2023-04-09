@@ -45,7 +45,7 @@ async fn with_state() {
 
     assert_eq!(label.child(0).unwrap().text(), Some("Is enabled? false"));
 
-    utils.wait_for_update((300.0, 300.0)).await;
+    utils.wait_for_update().await;
 
     assert_eq!(label.child(0).unwrap().text(), Some("Is enabled? true"));
 }
@@ -61,7 +61,7 @@ async fn check_size() {
 
     let mut utils = launch_test(stateful_app);
 
-    utils.wait_for_work((500.0, 500.0));
+    utils.wait_for_update().await;
 
     let rect = utils.root().child(0).unwrap();
 
@@ -95,7 +95,7 @@ async fn simulate_events() {
     let label = rect.child(0).unwrap();
 
     // Render initial layout
-    utils.wait_for_work((500.0, 500.0));
+    utils.wait_for_update().await;
 
     let text = label.child(0).unwrap();
 
@@ -108,7 +108,7 @@ async fn simulate_events() {
     });
 
     // Render new layout after having it clicked
-    utils.wait_for_update((500.0, 500.0)).await;
+    utils.wait_for_update().await;
 
     let text = label.child(0).unwrap();
 
