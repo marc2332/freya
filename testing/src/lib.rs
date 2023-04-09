@@ -162,7 +162,11 @@ impl TestingHandler {
 
         let mutations = self.vdom.render_immediate();
 
-        let (must_repaint, _) = self.utils.dom.get_mut().apply_mutations(mutations, SCALE_FACTOR as f32);
+        let (must_repaint, _) = self
+            .utils
+            .dom
+            .get_mut()
+            .apply_mutations(mutations, SCALE_FACTOR as f32);
         self.wait_for_work(self.config.size());
         must_repaint
     }
