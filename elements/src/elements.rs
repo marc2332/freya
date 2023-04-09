@@ -283,6 +283,7 @@ pub mod events {
         onglobalclick
         onmousedown
         onmouseover
+        onglobalmouseover
         onmouseleave
     ];
 

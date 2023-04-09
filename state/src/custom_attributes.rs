@@ -10,6 +10,7 @@ use dioxus_core::Scope;
 use dioxus_native_core::node::FromAnyValue;
 use freya_common::CursorLayoutResponse;
 use freya_common::NodeReferenceLayout;
+use freya_common::Point2D;
 use tokio::sync::mpsc::UnboundedSender;
 
 /// Image Reference
@@ -48,21 +49,18 @@ impl Display for NodeReference {
 #[derive(Clone, Debug)]
 pub struct CursorReference {
     #[allow(clippy::type_complexity)]
-    pub cursor_selections: Arc<Mutex<Option<((usize, usize), (usize, usize))>>>,
-    pub cursor_position: Arc<Mutex<Option<(f32, f32)>>>,
+    pub cursor_selections: Arc<Mutex<Option<(Point2D, Point2D)>>>,
+    pub cursor_position: Arc<Mutex<Option<Point2D>>>,
     pub agent: UnboundedSender<CursorLayoutResponse>,
     pub id: Arc<Mutex<Option<usize>>>,
 }
 
 impl CursorReference {
-    pub fn set_cursor_selections(
-        &self,
-        cursor_selections: Option<((usize, usize), (usize, usize))>,
-    ) {
+    pub fn set_cursor_selections(&self, cursor_selections: Option<(Point2D, Point2D)>) {
         *self.cursor_selections.lock().unwrap() = cursor_selections;
     }
 
-    pub fn set_cursor_position(&self, cursor_position: Option<(f32, f32)>) {
+    pub fn set_cursor_position(&self, cursor_position: Option<Point2D>) {
         *self.cursor_position.lock().unwrap() = cursor_position;
     }
 

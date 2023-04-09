@@ -1,5 +1,5 @@
 use dioxus_native_core::{node::NodeType, tree::TreeView, NodeId};
-use freya_common::{CursorLayoutResponse, NodeArea, NodeReferenceLayout};
+use freya_common::{Area, CursorLayoutResponse, NodeReferenceLayout, Point2D};
 use freya_dom::{DioxusNode, FreyaDOM};
 use freya_node_state::{
     CursorMode, CursorReference, DirectionMode, DisplayMode, FontStyle, SizeMode,
@@ -54,8 +54,8 @@ fn get_cursor_reference(
 ) -> Option<(
     &CursorReference,
     usize,
-    Option<(f32, f32)>,
-    Option<((usize, usize), (usize, usize))>,
+    Option<Point2D>,
+    Option<(Point2D, Point2D)>,
 )> {
     let cursor_ref = node.state.references.cursor_ref.as_ref()?;
     let current_cursor_id = { *cursor_ref.id.lock().unwrap().as_ref()? };
@@ -74,8 +74,8 @@ fn get_cursor_reference(
 pub struct NodeLayoutMeasurer<'a> {
     node: &'a DioxusNode,
     node_id: NodeId,
-    remaining_area: &'a mut NodeArea,
-    parent_area: NodeArea,
+    remaining_area: &'a mut Area,
+    parent_area: Area,
     layers: &'a mut Layers,
     dom: &'a FreyaDOM,
     inherited_relative_layer: i16,
@@ -87,8 +87,8 @@ impl<'a> NodeLayoutMeasurer<'a> {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         node: &'a DioxusNode,
-        remaining_area: &'a mut NodeArea,
-        parent_area: NodeArea,
+        remaining_area: &'a mut Area,
+        parent_area: Area,
         dom: &'a FreyaDOM,
         layers: &'a mut Layers,
         inherited_relative_layer: i16,
@@ -107,7 +107,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
     }
 
     /// Measure the area of a Node
-    pub fn measure_area(&mut self, is_measuring: bool, scale_factor: f32) -> NodeArea {
+    pub fn measure_area(&mut self, is_measuring: bool, scale_factor: f32) -> Area {
         let node_height = self.dom.dom().tree.height(self.node_id).unwrap();
 
         let direction = self.node.state.size.direction;
@@ -125,23 +125,24 @@ impl<'a> NodeLayoutMeasurer<'a> {
 
         let mut node_area = calculate_area(self);
 
-        let mut inner_width = padding.1 + padding.3;
-        let mut inner_height = padding.0 + padding.2;
+        let mut inner_size = Area::from_size((padding.1 + padding.3, padding.0 + padding.2).into());
 
         // Area that is available consideing the parent area
-        let mut remaining_inner_area = NodeArea {
-            x: node_area.x + padding.3,
-            y: node_area.y + padding.0,
-            width: node_area.width - inner_width,
-            height: node_area.height - inner_height,
+        let mut remaining_inner_area = Area {
+            origin: (node_area.min_x() + padding.3, node_area.min_y() + padding.0).into(),
+            size: (
+                node_area.width() - inner_size.width(),
+                node_area.height() - inner_size.height(),
+            )
+                .into(),
         };
 
         // Visible area occupied by the child elements
         let inner_area = remaining_inner_area;
 
         // Increase the x and y axis with the node's scroll attributes
-        remaining_inner_area.y += scroll_y;
-        remaining_inner_area.x += scroll_x;
+        remaining_inner_area.origin.x += scroll_x;
+        remaining_inner_area.origin.y += scroll_y;
 
         // Calculate the children layouts  for the first time without the size and axis adjusted.
         if DisplayMode::Center == self.node.state.style.display {
@@ -149,35 +150,38 @@ impl<'a> NodeLayoutMeasurer<'a> {
                 &mut node_area,
                 inner_area,
                 &mut remaining_inner_area,
-                &mut inner_width,
-                &mut inner_height,
+                &mut inner_size,
                 node_relative_layer,
                 false,
                 scale_factor,
             );
 
-            let space_left_vertically = (inner_area.height - inner_height) / 2.0;
-            let space_left_horizontally = (inner_area.width - inner_width) / 2.0;
+            let space_left_horizontally = (inner_area.width() - inner_size.width()) / 2.0;
+            let space_left_vertically = (inner_area.height() - inner_size.height()) / 2.0;
 
             match direction {
                 DirectionMode::Vertical => {
-                    remaining_inner_area.y = inner_area.y + space_left_vertically + padding.0;
-                    remaining_inner_area.height =
-                        inner_area.height - space_left_vertically - padding.2;
+                    remaining_inner_area.origin.y =
+                        inner_area.min_y() + space_left_vertically + padding.0;
+                    remaining_inner_area.size.height =
+                        inner_area.height() - space_left_vertically - padding.2;
                 }
                 DirectionMode::Horizontal => {
-                    remaining_inner_area.x = inner_area.x + space_left_horizontally + padding.1;
-                    remaining_inner_area.width =
-                        inner_area.width - space_left_horizontally - padding.3;
+                    remaining_inner_area.origin.x =
+                        inner_area.min_x() + space_left_horizontally + padding.1;
+                    remaining_inner_area.size.width =
+                        inner_area.width() - space_left_horizontally - padding.3;
                 }
                 DirectionMode::Both => {
-                    remaining_inner_area.x = inner_area.x + space_left_horizontally + padding.1;
-                    remaining_inner_area.y = inner_area.y + space_left_vertically + padding.0;
+                    remaining_inner_area.origin.x =
+                        inner_area.min_x() + space_left_horizontally + padding.1;
+                    remaining_inner_area.origin.y =
+                        inner_area.min_y() + space_left_vertically + padding.0;
 
-                    remaining_inner_area.width =
-                        inner_area.width - space_left_horizontally - padding.3;
-                    remaining_inner_area.height =
-                        inner_area.height - space_left_vertically - padding.2;
+                    remaining_inner_area.size.width =
+                        inner_area.width() - space_left_horizontally - padding.3;
+                    remaining_inner_area.size.height =
+                        inner_area.height() - space_left_vertically - padding.2;
                 }
             }
         }
@@ -186,8 +190,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
             &mut node_area,
             inner_area,
             &mut remaining_inner_area,
-            &mut inner_width,
-            &mut inner_height,
+            &mut inner_size,
             node_relative_layer,
             is_measuring,
             scale_factor,
@@ -198,23 +201,25 @@ impl<'a> NodeLayoutMeasurer<'a> {
             _ => {
                 if let SizeMode::Auto = self.node.state.size.width {
                     if DirectionMode::Vertical == direction {
-                        node_area.width = inner_width;
+                        node_area.size.width = inner_size.width();
                     } else {
-                        node_area.width = remaining_inner_area.x - node_area.x + padding.3;
+                        node_area.size.width =
+                            remaining_inner_area.min_x() - node_area.min_x() + padding.3;
                     }
                 }
                 if let SizeMode::Auto = self.node.state.size.height {
                     if DirectionMode::Vertical == direction {
-                        node_area.height = inner_height;
+                        node_area.size.height = inner_size.height();
                     } else {
-                        node_area.height = remaining_inner_area.y - node_area.y + padding.2;
+                        node_area.size.height =
+                            remaining_inner_area.min_y() - node_area.min_y() + padding.2;
                     }
                 }
             }
         }
 
-        // Registers the element in the Layers handler
         if is_measuring {
+            // Registers the element in the Layers handler
             let node_children = self
                 .dom
                 .dom()
@@ -223,18 +228,12 @@ impl<'a> NodeLayoutMeasurer<'a> {
                 .map(|v| v.to_vec());
             self.layers
                 .add_element(self.node, node_children, &node_area, node_layer);
-        }
 
-        if is_measuring {
             // Notify the node's reference about the new size layout
             if let Some(reference) = &self.node.state.references.node_ref {
                 let mut layout = NodeReferenceLayout {
-                    x: node_area.x,
-                    y: node_area.y,
-                    width: node_area.width,
-                    height: node_area.height,
-                    inner_height,
-                    inner_width,
+                    area: node_area,
+                    inner: inner_size,
                 };
                 layout.div(scale_factor);
                 reference.send(layout).ok();
@@ -246,7 +245,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
 
     /// Construct a paragraph with all it's inner texts and notify
     /// the cursor reference where the positions are located in the text
-    fn notify_cursor_reference(&self, node: &DioxusNode, node_area: &NodeArea) {
+    fn notify_cursor_reference(&self, node: &DioxusNode, node_area: &Area) {
         let font_size = node.state.font_style.font_size;
         let font_family = &node.state.font_style.font_family;
         let align = node.state.font_style.align;
@@ -284,17 +283,15 @@ impl<'a> NodeLayoutMeasurer<'a> {
         }
 
         let mut paragraph = paragraph_builder.build();
-        paragraph.layout(node_area.width);
+        paragraph.layout(node_area.width());
 
         if let Some((cursor_ref, id, cursor_position, cursor_selections)) =
             get_cursor_reference(node)
         {
             if let Some(cursor_position) = cursor_position {
                 // Calculate the new cursor position
-                let char_position = paragraph.get_glyph_position_at_coordinate((
-                    cursor_position.0 as i32,
-                    cursor_position.1 as i32,
-                ));
+                let char_position =
+                    paragraph.get_glyph_position_at_coordinate(cursor_position.to_i32().to_tuple());
 
                 // Notify the cursor reference listener
                 cursor_ref
@@ -308,9 +305,9 @@ impl<'a> NodeLayoutMeasurer<'a> {
 
             if let Some((origin, dist)) = cursor_selections {
                 let origin_char =
-                    paragraph.get_glyph_position_at_coordinate((origin.0 as i32, origin.1 as i32));
+                    paragraph.get_glyph_position_at_coordinate(origin.to_i32().to_tuple());
                 let dist_char =
-                    paragraph.get_glyph_position_at_coordinate((dist.0 as i32, dist.1 as i32));
+                    paragraph.get_glyph_position_at_coordinate(dist.to_i32().to_tuple());
 
                 cursor_ref
                     .agent
@@ -328,11 +325,10 @@ impl<'a> NodeLayoutMeasurer<'a> {
     #[allow(clippy::too_many_arguments)]
     pub fn measure_inner_children(
         &mut self,
-        node_area: &mut NodeArea,
-        inner_area: NodeArea,
-        remaining_area: &mut NodeArea,
-        inner_width: &mut f32,
-        inner_height: &mut f32,
+        node_area: &mut Area,
+        inner_area: Area,
+        remaining_area: &mut Area,
+        inner_size: &mut Area,
         node_relative_layer: i16,
         must_memorize_layout: bool,
         scale_factor: f32,
@@ -360,51 +356,55 @@ impl<'a> NodeLayoutMeasurer<'a> {
 
                         match direction {
                             DirectionMode::Vertical => {
-                                remaining_area.height -= child_node_area.height;
-                                remaining_area.y = child_node_area.y + child_node_area.height;
+                                remaining_area.size.height -= child_node_area.height();
+                                remaining_area.origin.y =
+                                    child_node_area.origin.y + child_node_area.height();
 
                                 // Accumulate all heights
-                                *inner_height += child_node_area.height;
+                                inner_size.size.height += child_node_area.height();
 
                                 // Only save the biggest width
-                                if *inner_width < child_node_area.width {
-                                    *inner_width = child_node_area.width;
+                                if inner_size.size.width < child_node_area.width() {
+                                    inner_size.size.width = child_node_area.width();
                                 }
                             }
                             DirectionMode::Horizontal => {
-                                remaining_area.width -= child_node_area.width;
-                                remaining_area.x = child_node_area.x + child_node_area.width;
+                                remaining_area.size.width -= child_node_area.width();
+                                remaining_area.origin.x =
+                                    child_node_area.min_x() + child_node_area.width();
 
                                 // Accumulate all widths
-                                *inner_width += child_node_area.width;
+                                inner_size.size.width += child_node_area.width();
 
                                 // Only save the biggest height
-                                if *inner_height < child_node_area.height {
-                                    *inner_height = child_node_area.height;
+                                if inner_size.size.width < child_node_area.height() {
+                                    inner_size.size.width = child_node_area.height();
                                 }
                             }
                             DirectionMode::Both => {
-                                remaining_area.height -= child_node_area.height;
-                                remaining_area.width -= child_node_area.width;
-                                remaining_area.y = child_node_area.y + child_node_area.height;
-                                remaining_area.x = child_node_area.x + child_node_area.width;
+                                remaining_area.size.height -= child_node_area.height();
+                                remaining_area.size.width -= child_node_area.width();
+                                remaining_area.origin.y =
+                                    child_node_area.min_y() + child_node_area.height();
+                                remaining_area.origin.x =
+                                    child_node_area.min_x() + child_node_area.width();
 
                                 // Accumulate all heights and widths
-                                *inner_height += child_node_area.height;
-                                *inner_width += child_node_area.width;
+                                inner_size.size.height += child_node_area.height();
+                                inner_size.size.width += child_node_area.width();
                             }
                         }
 
-                        if child_node_area.width > remaining_area.width
-                            || remaining_area.width == 0.0
+                        if child_node_area.width() > remaining_area.width()
+                            || remaining_area.size.width == 0.0
                         {
-                            remaining_area.width = child_node_area.width;
+                            remaining_area.size.width = child_node_area.width();
                         }
 
-                        if child_node_area.height > remaining_area.height
-                            || remaining_area.height == 0.0
+                        if child_node_area.height() > remaining_area.height()
+                            || remaining_area.size.height == 0.0
                         {
-                            remaining_area.height = child_node_area.height;
+                            remaining_area.size.height = child_node_area.height();
                         }
                     }
 
@@ -440,11 +440,11 @@ impl<'a> NodeLayoutMeasurer<'a> {
                 paragraph_builder.add_text(text);
 
                 let mut paragraph = paragraph_builder.build();
-                paragraph.layout(node_area.width);
+                paragraph.layout(node_area.width());
 
                 let lines_count = paragraph.line_number() as f32;
-                node_area.width = paragraph.longest_line();
-                node_area.height = (line_height * font_size) * lines_count;
+                node_area.size.width = paragraph.longest_line();
+                node_area.size.height = (line_height * font_size) * lines_count;
             }
             NodeType::Placeholder => {}
         }

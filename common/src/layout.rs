@@ -1,24 +1,20 @@
-use std::sync::{Arc, Mutex};
+use crate::Area;
+use std::{
+    ops::Div,
+    sync::{Arc, Mutex},
+};
 
 /// Layout info of a certain Node, used by `use_node`.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct NodeReferenceLayout {
-    pub x: f32,
-    pub y: f32,
-    pub width: f32,
-    pub height: f32,
-    pub inner_height: f32,
-    pub inner_width: f32,
+    pub area: Area,
+    pub inner: Area,
 }
 
 impl NodeReferenceLayout {
-    pub fn div(&mut self, div_n: f32) {
-        self.x /= div_n;
-        self.y /= div_n;
-        self.width /= div_n;
-        self.height /= div_n;
-        self.inner_width /= div_n;
-        self.inner_height /= div_n;
+    pub fn div(&mut self, rhs: f32) {
+        self.area = self.area.div(rhs);
+        self.inner = self.inner.div(rhs);
     }
 }
 pub type LayoutNotifier = Arc<Mutex<bool>>;

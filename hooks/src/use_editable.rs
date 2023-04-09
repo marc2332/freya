@@ -5,8 +5,7 @@ use std::{
 
 use dioxus_core::{AttributeValue, Scope, ScopeState};
 use dioxus_hooks::{use_effect, use_ref, use_state, UseRef, UseState};
-use euclid::Point2D;
-use freya_common::{CursorLayoutResponse, EventMessage};
+use freya_common::{CursorLayoutResponse, EventMessage, Point2D};
 use freya_elements::events::{KeyboardData, MouseData};
 use freya_node_state::{CursorReference, CustomAttributeValues};
 pub use ropey::Rope;
@@ -50,7 +49,7 @@ pub type EditorState = UseState<RopeEditor>;
 pub struct UseEditable {
     pub(crate) editor: EditorState,
     pub(crate) cursor_reference: CursorReference,
-    pub(crate) selecting_text_with_mouse: UseRef<Option<Point2D<f64, f64>>>,
+    pub(crate) selecting_text_with_mouse: UseRef<Option<Point2D>>,
     pub(crate) event_loop_proxy: Option<EventLoopProxy<EventMessage>>,
 }
 
@@ -86,8 +85,7 @@ impl UseEditable {
                 *self.selecting_text_with_mouse.write_silent() = Some(coords);
 
                 self.cursor_reference.set_id(Some(*id));
-                self.cursor_reference
-                    .set_cursor_position(Some((coords.x as f32, coords.y as f32)));
+                self.cursor_reference.set_cursor_position(Some(coords));
 
                 self.editor.with_mut(|editor| {
                     editor.unhighlight();
@@ -99,10 +97,8 @@ impl UseEditable {
                         let coords = e.get_element_coordinates();
 
                         self.cursor_reference.set_id(Some(*id));
-                        self.cursor_reference.set_cursor_selections(Some((
-                            current_dragging.to_usize().to_tuple(),
-                            coords.to_usize().to_tuple(),
-                        )));
+                        self.cursor_reference
+                            .set_cursor_selections(Some((*current_dragging, coords)));
                     }
                 });
             }

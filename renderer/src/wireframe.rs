@@ -9,14 +9,14 @@ pub fn render_wireframe(canvas: &mut Canvas, render_node: &RenderData) {
     paint.set_style(PaintStyle::Fill);
     paint.set_color(Color::MAGENTA);
 
-    let x = render_node.node_area.x;
-    let y = render_node.node_area.y;
+    let x = render_node.node_area.min_x();
+    let y = render_node.node_area.min_y();
 
-    let x2 = x + render_node.node_area.width;
-    let y2 = if render_node.node_area.height < 0.0 {
+    let x2 = x + render_node.node_area.width();
+    let y2 = if render_node.node_area.height() < 0.0 {
         y
     } else {
-        y + render_node.node_area.height
+        y + render_node.node_area.height()
     };
 
     canvas.draw_line((x, y), (x2, y), &paint);

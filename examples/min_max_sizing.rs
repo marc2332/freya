@@ -24,7 +24,7 @@ fn app(cx: Scope) -> Element {
             paragraph {
                 width: "100%",
                 label {
-                    "Size: {size.width / 2.0}x{size.height}"
+                    "Size: {size.area.width() / 2.0}x{size.area.height()}"
                 }
             }
         }

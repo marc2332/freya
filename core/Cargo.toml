@@ -35,6 +35,5 @@ freya-common = { path = "../common", version = "0.1.0" }
 freya-dom = { path = "../dom", version = "0.1.0" }
 
 rustc-hash = "1.1.0"
-euclid = "0.22.7"
 tracing = "0.1"
 tokio = { version = "1.23.0", features = ["sync", "rt-multi-thread", "time"] }
