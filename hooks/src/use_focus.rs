@@ -68,7 +68,7 @@ pub fn focus_node_id(cx: Scope, id: FocusId) {
 mod test {
     use crate::{use_focus, use_init_focus};
     use freya::prelude::*;
-    use freya_testing::{launch_test, FreyaEvent, MouseButton};
+    use freya_testing::{launch_test_with_config, FreyaEvent, MouseButton, TestingConfig};
 
     #[tokio::test]
     pub async fn track_focus() {
@@ -99,10 +99,13 @@ mod test {
             )
         }
 
-        let mut utils = launch_test(use_focus_app);
+        let mut utils = launch_test_with_config(
+            use_focus_app,
+            TestingConfig::default().with_size((100.0, 100.0).into()),
+        );
 
         // Initial state
-        utils.wait_for_work((100.0, 100.0));
+        utils.wait_for_update().await;
         let root = utils.root().child(0).unwrap();
         assert_eq!(
             root.child(0).unwrap().child(0).unwrap().text(),
@@ -116,12 +119,12 @@ mod test {
         // Click on the first rect
         utils.push_event(FreyaEvent::Mouse {
             name: "click",
-            cursor: (5.0, 5.0),
+            cursor: (5.0, 5.0).into(),
             button: Some(MouseButton::Left),
         });
 
         // First rect is now focused
-        utils.wait_for_update((100.0, 100.0)).await;
+        utils.wait_for_update().await;
         assert_eq!(
             root.child(0).unwrap().child(0).unwrap().text(),
             Some("true")
@@ -134,12 +137,12 @@ mod test {
         // Click on the second rect
         utils.push_event(FreyaEvent::Mouse {
             name: "click",
-            cursor: (5.0, 75.0),
+            cursor: (5.0, 75.0).into(),
             button: Some(MouseButton::Left),
         });
 
         // Second rect is now focused
-        utils.wait_for_update((100.0, 100.0)).await;
+        utils.wait_for_update().await;
         assert_eq!(
             root.child(0).unwrap().child(0).unwrap().text(),
             Some("false")

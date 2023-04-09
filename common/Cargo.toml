@@ -17,6 +17,7 @@ dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5
 dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
 dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
 dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
+
 accesskit = "0.10.1"
 accesskit_winit = "0.12.4"
-
+euclid = "0.22.7"

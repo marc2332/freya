@@ -241,24 +241,27 @@ mod test {
         let mut utils = launch_test(use_animation_app);
 
         // Initial state
-        utils.wait_for_update((500.0, 500.0)).await;
+        utils.wait_for_update().await;
 
-        assert_eq!(utils.root().child(0).unwrap().layout().unwrap().width, 0.0);
+        assert_eq!(
+            utils.root().child(0).unwrap().layout().unwrap().width(),
+            0.0
+        );
 
         // State somewhere in the middle
-        utils.wait_for_update((500.0, 500.0)).await;
-        utils.wait_for_update((500.0, 500.0)).await;
-        utils.wait_for_work((500.0, 500.0));
-        let width = utils.root().child(0).unwrap().layout().unwrap().width;
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+
+        let width = utils.root().child(0).unwrap().layout().unwrap().width();
         assert!(width > 0.0);
         assert!(width < 100.0);
 
         sleep(Duration::from_millis(50)).await;
 
         // State in the end
-        utils.wait_for_update((500.0, 500.0)).await;
-        utils.wait_for_work((500.0, 500.0));
-        let width = utils.root().child(0).unwrap().layout().unwrap().width;
+        utils.wait_for_update().await;
+
+        let width = utils.root().child(0).unwrap().layout().unwrap().width();
         assert_eq!(width, 100.0);
     }
 
@@ -292,27 +295,30 @@ mod test {
         let mut utils = launch_test(use_animation_app);
 
         // Initial state
-        utils.wait_for_update((500.0, 500.0)).await;
+        utils.wait_for_update().await;
 
-        assert_eq!(utils.root().child(0).unwrap().layout().unwrap().width, 10.0);
+        assert_eq!(
+            utils.root().child(0).unwrap().layout().unwrap().width(),
+            10.0
+        );
 
         // State somewhere in the middle
-        utils.wait_for_update((500.0, 500.0)).await;
-        utils.wait_for_update((500.0, 500.0)).await;
-        utils.wait_for_work((500.0, 500.0));
-        let width = utils.root().child(0).unwrap().layout().unwrap().width;
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+
+        let width = utils.root().child(0).unwrap().layout().unwrap().width();
         assert!(width > 10.0);
 
         utils.push_event(FreyaEvent::Mouse {
             name: "click",
-            cursor: (5.0, 5.0),
+            cursor: (5.0, 5.0).into(),
             button: Some(MouseButton::Left),
         });
 
         // State has been restarted
-        utils.wait_for_update((500.0, 500.0)).await;
-        utils.wait_for_work((500.0, 500.0));
-        let width = utils.root().child(0).unwrap().layout().unwrap().width;
+        utils.wait_for_update().await;
+
+        let width = utils.root().child(0).unwrap().layout().unwrap().width();
         assert_eq!(width, 10.0);
     }
 

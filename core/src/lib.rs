@@ -1,5 +1,5 @@
 use dioxus_native_core::{node::NodeType, NodeId};
-use freya_common::NodeArea;
+use freya_common::Area;
 use freya_dom::FreyaDOM;
 use freya_layout::NodeLayoutMeasurer;
 use freya_layout::{Layers, RenderData};
@@ -20,7 +20,7 @@ pub type FocusReceiver = watch::Receiver<Option<AccessibilityId>>;
 pub type EventEmitter = UnboundedSender<DomEvent>;
 pub type EventReceiver = UnboundedReceiver<DomEvent>;
 pub type EventsQueue = Vec<FreyaEvent>;
-pub type ViewportsCollection = FxHashMap<NodeId, (Option<NodeArea>, Vec<NodeId>)>;
+pub type ViewportsCollection = FxHashMap<NodeId, (Option<Area>, Vec<NodeId>)>;
 pub type NodesEvents<'a> = FxHashMap<&'a str, Vec<(RenderData, FreyaEvent)>>;
 
 // Calculate all the applicable viewports for the given nodes
@@ -75,6 +75,19 @@ pub fn calculate_node_events<'a>(
     let mut calculated_events = FxHashMap::default();
     let mut global_events = Vec::default();
 
+    for event in events {
+        let event_name = match event.get_name() {
+            "click" => Some("globalclick"),
+            "mouseover" => Some("globalmouseover"),
+            _ => None,
+        };
+        if let Some(event_name) = event_name {
+            let mut global_event = event.clone();
+            global_event.set_name(event_name);
+            global_events.push(global_event);
+        }
+    }
+
     // Propagate events from the top to the bottom
     for layer_num in layers_nums {
         let layer = layers.layers.get(layer_num).unwrap();
@@ -96,16 +109,7 @@ pub fn calculate_node_events<'a>(
                         _ => None,
                     };
                     if let Some((name, cursor)) = data {
-                        let ((x, y), (x2, y2)) = area.get_rect();
-
-                        let cursor_is_inside =
-                            cursor.0 > x && cursor.0 < x2 && cursor.1 > y && cursor.1 < y2;
-
-                        if name == &"click" {
-                            let mut global_event = event.clone();
-                            global_event.set_name("globalclick");
-                            global_events.push(global_event);
-                        }
+                        let cursor_is_inside = area.contains(cursor.to_f32());
 
                         // Make sure the cursor is inside the node area
                         if cursor_is_inside {
@@ -116,7 +120,7 @@ pub fn calculate_node_events<'a>(
                                 for viewport_id in viewports {
                                     let viewport = viewports_collection.get(viewport_id).unwrap().0;
                                     if let Some(viewport) = viewport {
-                                        if viewport.is_point_outside(*cursor) {
+                                        if !viewport.contains(cursor.to_f32()) {
                                             continue 'events;
                                         }
                                     }
@@ -144,6 +148,7 @@ fn calculate_events_listeners(
     calculated_events: &mut NodesEvents,
     dom: &FreyaDOM,
     event_emitter: &EventEmitter,
+    scale_factor: f64,
 ) -> Vec<DomEvent> {
     let mut new_events = Vec::new();
 
@@ -199,6 +204,7 @@ fn calculate_events_listeners(
                 node.element_id.unwrap(),
                 request_event,
                 Some(node.node_area),
+                scale_factor,
             );
             new_events.push(event.clone());
             event_emitter.send(event).unwrap();
@@ -213,6 +219,7 @@ fn calculate_global_events_listeners(
     global_events: Vec<FreyaEvent>,
     dom: &FreyaDOM,
     event_emitter: &EventEmitter,
+    scale_factor: f64,
 ) {
     for global_event in global_events {
         let event_name = global_event.get_name();
@@ -224,6 +231,7 @@ fn calculate_global_events_listeners(
                 listener.node_data.element_id.unwrap(),
                 &global_event,
                 None,
+                scale_factor,
             );
             event_emitter.send(event).unwrap();
         }
@@ -233,8 +241,9 @@ fn calculate_global_events_listeners(
 /// Process the layout of the DOM
 pub fn process_layout(
     dom: &FreyaDOM,
-    area: NodeArea,
+    area: Area,
     font_collection: &mut FontCollection,
+    scale_factor: f32,
 ) -> (Layers, ViewportsCollection) {
     let mut layers = Layers::default();
 
@@ -250,7 +259,7 @@ pub fn process_layout(
             0,
             font_collection,
         );
-        root_node_measurer.measure_area(true);
+        root_node_measurer.measure_area(true, scale_factor);
     }
 
     let mut layers_nums: Vec<&i16> = layers.layers.keys().collect();
@@ -271,6 +280,7 @@ pub fn process_events(
     event_emitter: &EventEmitter,
     events_processor: &mut EventsProcessor,
     viewports_collection: &ViewportsCollection,
+    scale_factor: f64,
 ) {
     let mut layers_nums: Vec<&i16> = layers.layers.keys().collect();
 
@@ -280,9 +290,10 @@ pub fn process_events(
     let (mut node_events, global_events) =
         calculate_node_events(&layers_nums, layers, events, viewports_collection);
 
-    let emitted_events = calculate_events_listeners(&mut node_events, dom, event_emitter);
+    let emitted_events =
+        calculate_events_listeners(&mut node_events, dom, event_emitter, scale_factor);
 
-    calculate_global_events_listeners(global_events, dom, event_emitter);
+    calculate_global_events_listeners(global_events, dom, event_emitter, scale_factor);
 
     let new_processed_events = events_processor.process_events_batch(emitted_events, node_events);
 
@@ -324,7 +335,7 @@ pub fn process_render<HookOptions>(
                 for viewport_id in viewports {
                     let viewport = viewports_collection.get(viewport_id).unwrap().0;
                     if let Some(viewport) = viewport {
-                        if viewport.is_area_outside(dom_element.node_area) {
+                        if !viewport.intersects(&dom_element.node_area) {
                             continue 'elements;
                         }
                     }

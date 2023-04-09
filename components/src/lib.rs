@@ -4,6 +4,7 @@
 mod accessibility_focus_provider;
 mod accordion;
 mod button;
+mod drag_drop;
 mod dropdown;
 mod external_link;
 mod gesture_area;
@@ -20,6 +21,7 @@ mod tooltip;
 pub use accessibility_focus_provider::*;
 pub use accordion::*;
 pub use button::*;
+pub use drag_drop::*;
 pub use dropdown::*;
 pub use external_link::*;
 pub use gesture_area::*;

@@ -44,8 +44,8 @@ pub fn render_label(
     };
 
     if let Some(text) = text {
-        let x = render_node.node_area.x;
-        let y = render_node.node_area.y;
+        let x = render_node.node_area.min_x();
+        let y = render_node.node_area.min_y();
 
         let mut paragraph_style = ParagraphStyle::default();
         paragraph_style.set_text_align(align);
@@ -63,7 +63,7 @@ pub fn render_label(
 
         let mut paragraph = paragraph_builder.build();
 
-        paragraph.layout(render_node.node_area.width + 1.0);
+        paragraph.layout(render_node.node_area.width() + 1.0);
 
         paragraph.paint(canvas, (x, y));
     }

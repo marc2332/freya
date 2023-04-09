@@ -1,18 +1,20 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_elements::events::{keyboard::Key, KeyboardData};
-use freya_hooks::{use_focus, use_get_theme};
+use freya_elements::events::{KeyboardData, MouseEvent};
+use freya_hooks::{
+    use_editable, use_focus, use_get_theme, EditableConfig, EditableEvent, EditableMode, TextEditor,
+};
 
 /// [`Input`] component properties.
 #[derive(Props)]
 pub struct InputProps<'a> {
     /// Current value of the Input
-    pub value: &'a str,
+    pub value: String,
     /// Handler for the `onchange` event.
     pub onchange: EventHandler<'a, String>,
 }
 
-/// Controlled `Input` component.
+/// `Input` component.
 ///
 /// # Props
 /// See [`InputProps`].
@@ -33,7 +35,7 @@ pub struct InputProps<'a> {
 ///             "Value: {value}"
 ///         }
 ///         Input {
-///             value: &value,
+///             value: value.get().clone(),
 ///             onchange: |e| {
 ///                  value.set(e)
 ///             }
@@ -43,22 +45,66 @@ pub struct InputProps<'a> {
 /// ```
 #[allow(non_snake_case)]
 pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
+    let editable = use_editable(
+        cx,
+        || EditableConfig::new(cx.props.value.to_string()),
+        EditableMode::MultipleLinesSingleEditor,
+    );
     let theme = use_get_theme(cx);
-    let button_theme = &theme.button;
     let focus_manager = use_focus(cx);
-    let text = cx.props.value;
-    let onkeydown = move |e: Event<KeyboardData>| {
-        if focus_manager.is_focused() {
-            if let Key::Character(text_char) = &e.data.key {
-                // Add a new char
-                cx.props.onchange.call(format!("{text}{text_char}"));
-            } else if let Key::Backspace = e.data.key {
-                // Remove the last character
-                let mut content = text.to_string();
-                content.pop();
-                cx.props.onchange.call(content);
+
+    let text = &cx.props.value;
+    let button_theme = &theme.button;
+    let cursor_attr = editable.cursor_attr(cx);
+    let highlights_attr = editable.highlights_attr(cx, 0);
+
+    use_effect(cx, &(cx.props.value.to_string(),), {
+        to_owned![editable];
+        move |(text,)| {
+            editable.editor().with_mut(|editor| {
+                editor.set(&text);
+            });
+            async move {}
+        }
+    });
+
+    let onkeydown = {
+        to_owned![editable, focus_manager];
+        move |e: Event<KeyboardData>| {
+            if focus_manager.is_focused() {
+                editable.process_event(&EditableEvent::KeyDown(e.data));
+                cx.props
+                    .onchange
+                    .call(editable.editor().current().to_string());
             }
         }
+    };
+
+    let onmousedown = {
+        to_owned![editable];
+        move |e: MouseEvent| {
+            editable.process_event(&EditableEvent::MouseDown(e.data, 0));
+        }
+    };
+
+    let onmouseover = {
+        to_owned![editable];
+        move |e: MouseEvent| {
+            editable.process_event(&EditableEvent::MouseOver(e.data, 0));
+        }
+    };
+
+    let onclick = {
+        to_owned![editable];
+        move |_: MouseEvent| {
+            editable.process_event(&EditableEvent::Click);
+        }
+    };
+
+    let cursor_char = if focus_manager.is_focused() {
+        editable.editor().cursor_pos().to_string()
+    } else {
+        "none".to_string()
     };
 
     render!(
@@ -80,8 +126,22 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
                 radius: "5",
                 padding: "8",
                 background: "{button_theme.background}",
-                label {
-                    "{text}"
+                cursor_reference: cursor_attr,
+                color: "white",
+                paragraph {
+                    width: "100%",
+                    cursor_id: "0",
+                    cursor_index: "{cursor_char}",
+                    cursor_mode: "editable",
+                    cursor_color: "white",
+                    max_lines: "1",
+                    onclick: onclick,
+                    onmouseover: onmouseover,
+                    onmousedown: onmousedown,
+                    highlights: highlights_attr,
+                    text {
+                        "{text}"
+                    }
                 }
             }
         }

@@ -10,7 +10,14 @@ use crate::{
     SCROLLBAR_SIZE,
 };
 
-type BuilderFunction<'a, T> = dyn Fn((usize, usize, &'a Option<T>)) -> LazyNodes<'a, 'a>;
+type BuilderFunction<'a, T> = dyn Fn(
+    (
+        usize,
+        usize,
+        Scope<'a, VirtualScrollViewProps<'a, T>>,
+        &'a Option<T>,
+    ),
+) -> LazyNodes<'a, 'a>;
 
 /// [`VirtualScrollView`] component properties.
 #[derive(Props)]
@@ -79,7 +86,7 @@ fn get_render_range(
 ///             item_size: 80.0,
 ///             builder_values: (),
 ///             direction: "vertical",
-///             builder: Box::new(move |(k, i, _)| {
+///             builder: Box::new(move |(k, i, _, _)| {
 ///                 rsx! {
 ///                     label {
 ///                         key: "{k}",
@@ -114,22 +121,22 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
     let inner_size = items_size + (items_size * items_length as f32);
 
     let vertical_scrollbar_is_visible = user_direction != "horizontal"
-        && is_scrollbar_visible(show_scrollbar, inner_size, size.height);
+        && is_scrollbar_visible(show_scrollbar, inner_size, size.area.height());
     let horizontal_scrollbar_is_visible = user_direction != "vertical"
-        && is_scrollbar_visible(show_scrollbar, inner_size, size.width);
+        && is_scrollbar_visible(show_scrollbar, inner_size, size.area.width());
 
     let container_width = get_container_size(vertical_scrollbar_is_visible);
     let container_height = get_container_size(horizontal_scrollbar_is_visible);
 
     let corrected_scrolled_y =
-        get_corrected_scroll_position(inner_size, size.height, *scrolled_y.read() as f32);
+        get_corrected_scroll_position(inner_size, size.area.height(), *scrolled_y.read() as f32);
     let corrected_scrolled_x =
-        get_corrected_scroll_position(inner_size, size.width, *scrolled_x.read() as f32);
+        get_corrected_scroll_position(inner_size, size.area.width(), *scrolled_x.read() as f32);
 
     let (scrollbar_y, scrollbar_height) =
-        get_scrollbar_pos_and_size(inner_size, size.height, corrected_scrolled_y);
+        get_scrollbar_pos_and_size(inner_size, size.area.height(), corrected_scrolled_y);
     let (scrollbar_x, scrollbar_width) =
-        get_scrollbar_pos_and_size(inner_size, size.width, corrected_scrolled_x);
+        get_scrollbar_pos_and_size(inner_size, size.area.width(), corrected_scrolled_x);
 
     // Moves the Y axis when the user scrolls in the container
     let onwheel = move |e: WheelEvent| {
@@ -139,7 +146,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
             let scroll_position_y = get_scroll_position_from_wheel(
                 wheel_y as f32,
                 inner_size,
-                size.height,
+                size.area.height(),
                 *scrolled_y.read() as f32,
             );
 
@@ -155,7 +162,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
         let scroll_position_x = get_scroll_position_from_wheel(
             wheel_x as f32,
             inner_size,
-            size.width,
+            size.area.width(),
             *scrolled_x.read() as f32,
         );
 
@@ -169,7 +176,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
             let cursor_y = coordinates.y - y;
 
             let scroll_position =
-                get_scroll_position_from_cursor(cursor_y as f32, inner_size, size.height);
+                get_scroll_position_from_cursor(cursor_y as f32, inner_size, size.area.height());
 
             scrolled_y.with_mut(|y| *y = scroll_position);
         } else if let Some((Axis::X, x)) = *clicking_scrollbar.read() {
@@ -177,7 +184,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
             let cursor_x = coordinates.x - x;
 
             let scroll_position =
-                get_scroll_position_from_cursor(cursor_x as f32, inner_size, size.width);
+                get_scroll_position_from_cursor(cursor_x as f32, inner_size, size.area.width());
 
             scrolled_x.with_mut(|x| *x = scroll_position);
         }
@@ -225,9 +232,9 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
     };
 
     let (viewport_size, scroll_position) = if user_direction == "vertical" {
-        (size.height, corrected_scrolled_y)
+        (size.area.height(), corrected_scrolled_y)
     } else {
-        (size.width, corrected_scrolled_x)
+        (size.area.width(), corrected_scrolled_x)
     };
 
     // Calculate from what to what items must be rendered
@@ -238,7 +245,8 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
         items_length as f32,
     );
 
-    let children = render_range.map(|i| (cx.props.builder)((i + 1, i, &cx.props.builder_values)));
+    let children =
+        render_range.map(|i| (cx.props.builder)((i + 1, i, cx, &cx.props.builder_values)));
 
     render!(
         container {

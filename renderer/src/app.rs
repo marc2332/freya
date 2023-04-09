@@ -144,20 +144,22 @@ impl<State: 'static + Clone> App<State> {
 
     /// Make the first build of the VirtualDOM.
     pub fn init_vdom(&mut self) {
+        let scale_factor = self.window_env.window.scale_factor() as f32;
         self.provide_vdom_contexts();
 
         let mutations = self.vdom.rebuild();
 
-        self.rdom.get_mut().init_dom(mutations);
+        self.rdom.get_mut().init_dom(mutations, scale_factor);
 
         self.mutations_sender.as_ref().map(|s| s.send(()));
     }
 
     /// Update the DOM with the mutations from the VirtualDOM.
     pub fn apply_vdom_changes(&mut self) -> (bool, bool) {
+        let scale_factor = self.window_env.window.scale_factor() as f32;
         let mutations = self.vdom.render_immediate();
 
-        let (repaint, relayout) = self.rdom.get_mut().apply_mutations(mutations);
+        let (repaint, relayout) = self.rdom.get_mut().apply_mutations(mutations, scale_factor);
 
         if repaint || relayout {
             self.mutations_sender.as_ref().map(|s| s.send(()));
@@ -208,6 +210,7 @@ impl<State: 'static + Clone> App<State> {
 
     /// Process the events queue
     pub fn process_events(&mut self) {
+        let scale_factor = self.window_env.window.scale_factor();
         process_events(
             &self.rdom.get(),
             &self.layers,
@@ -215,6 +218,7 @@ impl<State: 'static + Clone> App<State> {
             &self.event_emitter,
             &mut self.events_processor,
             &self.viewports_collection,
+            scale_factor,
         )
     }
 

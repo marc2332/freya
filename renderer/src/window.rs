@@ -1,5 +1,5 @@
 use dioxus_native_core::NodeId;
-use freya_common::{EventMessage, NodeArea};
+use freya_common::{Area, EventMessage, Size2D};
 use freya_core::process_render;
 use freya_core::{process_layout, ViewportsCollection};
 use freya_dom::FreyaDOM;
@@ -194,15 +194,15 @@ impl<T: Clone> WindowEnv<T> {
     /// Measure the layout
     pub fn process_layout(&mut self, rdom: &FreyaDOM) -> (Layers, ViewportsCollection) {
         let window_size = self.window.inner_size();
+        let scale_factor = self.window.scale_factor() as f32;
         process_layout(
             rdom,
-            NodeArea {
-                width: window_size.width as f32,
-                height: window_size.height as f32,
-                x: 0.0,
-                y: 0.0,
-            },
+            Area::from_size(Size2D::from((
+                window_size.width as f32,
+                window_size.height as f32,
+            ))),
             &mut self.font_collection,
+            scale_factor,
         )
     }
 

@@ -71,11 +71,13 @@ impl AccessibilityState {
             builder.set_role(role);
         }
 
+        let area = render_node.node_area.to_f64();
+
         builder.set_bounds(Rect {
-            x0: render_node.node_area.x as f64,
-            x1: (render_node.node_area.x + render_node.node_area.width) as f64,
-            y0: render_node.node_area.y as f64,
-            y1: (render_node.node_area.y + render_node.node_area.height) as f64,
+            x0: area.min_x(),
+            x1: area.max_x(),
+            y0: area.min_y(),
+            y1: area.max_y(),
         });
         builder.add_action(Action::Default);
         builder.set_default_action_verb(DefaultActionVerb::Click);

@@ -230,6 +230,8 @@ builder_constructors! {
         rotate: String,
         role: String,
         focus_id: AccessibilityId,
+        highlights: String,
+        highlight_color: String,
     };
     text {
         color: String,
@@ -297,6 +299,7 @@ pub mod events {
         onglobalclick
         onmousedown
         onmouseover
+        onglobalmouseover
         onmouseleave
     ];
 

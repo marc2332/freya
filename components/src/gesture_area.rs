@@ -199,7 +199,7 @@ mod test {
         let mut utils = launch_test(dobule_tap_app);
 
         // Initial state
-        utils.wait_for_work((500.0, 500.0));
+        utils.wait_for_update().await;
 
         assert_eq!(
             utils.root().child(0).unwrap().child(0).unwrap().text(),
@@ -208,7 +208,7 @@ mod test {
 
         utils.push_event(FreyaEvent::Touch {
             name: "touchstart",
-            location: (1.0, 1.0),
+            location: (1.0, 1.0).into(),
             phase: TouchPhase::Started,
             finger_id: 0,
             force: None,
@@ -216,27 +216,27 @@ mod test {
 
         utils.push_event(FreyaEvent::Touch {
             name: "touchend",
-            location: (1.0, 1.0),
+            location: (1.0, 1.0).into(),
             phase: TouchPhase::Ended,
             finger_id: 0,
             force: None,
         });
 
-        utils.wait_for_update((500.0, 500.0)).await;
-        utils.wait_for_update((500.0, 500.0)).await;
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
 
         sleep(Duration::from_millis(DOUBLE_TAP_MIN as u64)).await;
 
         utils.push_event(FreyaEvent::Touch {
             name: "touchstart",
-            location: (1.0, 1.0),
+            location: (1.0, 1.0).into(),
             phase: TouchPhase::Started,
             finger_id: 0,
             force: None,
         });
 
-        utils.wait_for_update((500.0, 500.0)).await;
-        utils.wait_for_update((500.0, 500.0)).await;
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
 
         assert_eq!(
             utils.root().child(0).unwrap().child(0).unwrap().text(),
@@ -265,7 +265,7 @@ mod test {
         let mut utils = launch_test(tap_up_down_app);
 
         // Initial state
-        utils.wait_for_work((500.0, 500.0));
+        utils.wait_for_update().await;
 
         assert_eq!(
             utils.root().child(0).unwrap().child(0).unwrap().text(),
@@ -274,14 +274,14 @@ mod test {
 
         utils.push_event(FreyaEvent::Touch {
             name: "touchstart",
-            location: (1.0, 1.0),
+            location: (1.0, 1.0).into(),
             phase: TouchPhase::Started,
             finger_id: 0,
             force: None,
         });
 
-        utils.wait_for_update((500.0, 500.0)).await;
-        utils.wait_for_update((500.0, 500.0)).await;
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
 
         assert_eq!(
             utils.root().child(0).unwrap().child(0).unwrap().text(),
@@ -290,14 +290,14 @@ mod test {
 
         utils.push_event(FreyaEvent::Touch {
             name: "touchend",
-            location: (1.0, 1.0),
+            location: (1.0, 1.0).into(),
             phase: TouchPhase::Ended,
             finger_id: 0,
             force: None,
         });
 
-        utils.wait_for_update((500.0, 500.0)).await;
-        utils.wait_for_update((500.0, 500.0)).await;
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
 
         assert_eq!(
             utils.root().child(0).unwrap().child(0).unwrap().text(),
