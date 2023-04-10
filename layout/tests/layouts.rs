@@ -1,14 +1,28 @@
 use std::collections::{HashMap, HashSet};
 
+use dioxus_native_core::real_dom::NodeMut;
 use dioxus_native_core::{node::NodeType, prelude::ElementNode, real_dom::NodeImmutable};
 use freya_common::Area;
 use freya_dom::FreyaDOM;
 use freya_layout::Layers;
 use freya_layout::NodeLayoutMeasurer;
-use freya_node_state::{DirectionMode, Size, SizeMode};
+use freya_node_state::{
+    CursorSettings, CustomAttributeValues, DirectionMode, FontStyle, References, Scroll, Size,
+    SizeMode, Style, Transform,
+};
 use skia_safe::textlayout::FontCollection;
 
 const SCALE_FACTOR: f32 = 1.0;
+
+fn default_node_state(node: &mut NodeMut<CustomAttributeValues>) {
+    node.insert(CursorSettings::default());
+    node.insert(FontStyle::default());
+    node.insert(References::default());
+    node.insert(Scroll::default());
+    node.insert(Size::default());
+    node.insert(Style::default());
+    node.insert(Transform::default());
+}
 
 #[test]
 fn percentage() {
@@ -22,9 +36,11 @@ fn percentage() {
             listeners: HashSet::default(),
         }));
 
+        default_node_state(&mut node);
+
         node.insert(Size {
-            width: SizeMode::Manual(250.0),
-            height: SizeMode::Manual(150.0),
+            width: SizeMode::Percentage(50.0),
+            height: SizeMode::Percentage(25.0),
             ..expanded_size()
         });
 
@@ -68,6 +84,8 @@ fn manual() {
             attributes: HashMap::default(),
             listeners: HashSet::default(),
         }));
+
+        default_node_state(&mut node);
 
         node.insert(Size {
             width: SizeMode::Manual(250.0),
@@ -116,6 +134,8 @@ fn auto() {
             listeners: HashSet::default(),
         }));
 
+        default_node_state(&mut child_node);
+
         child_node.insert(Size {
             width: SizeMode::Manual(170.0),
             height: SizeMode::Manual(25.0),
@@ -133,6 +153,8 @@ fn auto() {
             attributes: HashMap::default(),
             listeners: HashSet::default(),
         }));
+
+        default_node_state(&mut node);
 
         node.insert(Size {
             width: SizeMode::Auto,
@@ -187,6 +209,8 @@ fn x_y() {
                 listeners: HashSet::default(),
             }));
 
+            default_node_state(&mut child_node);
+
             child_node.insert(Size {
                 width: SizeMode::Manual(170.0),
                 height: SizeMode::Manual(25.0),
@@ -203,6 +227,8 @@ fn x_y() {
             attributes: HashMap::default(),
             listeners: HashSet::default(),
         }));
+
+        default_node_state(&mut node);
 
         node.insert(Size {
             width: SizeMode::Auto,
