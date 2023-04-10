@@ -8,11 +8,14 @@ use dioxus_native_core::tree::TreeRef;
 use dioxus_native_core::NodeId;
 use freya_common::{Area, Size2D};
 use freya_core::events::EventsProcessor;
-use freya_core::{events::DomEvent, EventEmitter, EventReceiver};
+use freya_core::{
+    events::DomEvent,
+    node::{get_node_state, NodeState},
+    EventEmitter, EventReceiver,
+};
 use freya_core::{process_events, process_layout, ViewportsCollection};
 use freya_dom::{DioxusNode, FreyaDOM, SafeDOM};
 use freya_layout::Layers;
-use freya_node_state::{CursorSettings, FontStyle, References, Scroll, Size, Style, Transform};
 use rustc_hash::FxHashMap;
 use skia_safe::textlayout::FontCollection;
 use skia_safe::FontMgr;
@@ -46,7 +49,7 @@ impl TestUtils {
         let children_ids = rdom.tree_ref().children_ids(node_id);
         let child: DioxusNode = rdom.get(node_id).unwrap();
 
-        let state = self.get_node_state_by_id(child);
+        let state = get_node_state(&child);
 
         TestNode {
             node_id,
@@ -56,38 +59,6 @@ impl TestUtils {
             state,
         }
     }
-
-    pub fn get_node_state_by_id(&self, node: DioxusNode) -> NodeState {
-        let cursor = node.get::<CursorSettings>().unwrap().clone();
-        let font_style = node.get::<FontStyle>().unwrap().clone();
-        let references = node.get::<References>().unwrap().clone();
-        let scroll = node.get::<Scroll>().unwrap().clone();
-        let size = node.get::<Size>().unwrap().clone();
-        let style = node.get::<Style>().unwrap().clone();
-        let transform = node.get::<Transform>().unwrap().clone();
-
-        NodeState {
-            cursor,
-            font_style,
-            references,
-            scroll,
-            size,
-            style,
-            transform,
-        }
-    }
-}
-
-#[allow(dead_code)]
-#[derive(Clone)]
-pub struct NodeState {
-    pub cursor: CursorSettings,
-    pub font_style: FontStyle,
-    pub references: References,
-    pub scroll: Scroll,
-    pub size: Size,
-    pub style: Style,
-    pub transform: Transform,
 }
 
 /// Represents a `Node` in the DOM.

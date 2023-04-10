@@ -12,6 +12,7 @@ use skia_safe::{textlayout::FontCollection, Color};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
 pub mod events;
+pub mod node;
 
 use events::{DomEvent, EventsProcessor, FreyaEvent};
 

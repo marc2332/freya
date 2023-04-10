@@ -18,17 +18,6 @@ pub use size::*;
 pub use style::*;
 pub use transform::*;
 
-pub enum AttributeType<'a> {
-    Color(&'a Color),
-    Size(&'a SizeMode),
-    Measure(f32),
-    Measures((f32, f32, f32, f32)),
-    Direction(&'a DirectionMode),
-    Display(&'a DisplayMode),
-    Shadow(&'a ShadowSettings),
-    Text(String),
-}
-
 pub fn parse_rgb(color: &str) -> Option<Color> {
     let color = color.replace("rgb(", "").replace(')', "");
     let mut colors = color.split(',');

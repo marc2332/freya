@@ -6,6 +6,7 @@ use dioxus_native_core::tree::TreeRef;
 use dioxus_native_core::NodeId;
 use dioxus_router::*;
 use freya_components::*;
+use freya_core::node::{get_node_state, NodeState};
 use freya_dom::SafeDOM;
 use freya_elements::elements as dioxus_elements;
 use freya_hooks::use_theme;
@@ -91,6 +92,7 @@ pub struct TreeNode {
     height: u16,
     #[allow(dead_code)]
     text: Option<String>,
+    state: NodeState,
 }
 
 #[derive(Props)]
@@ -151,11 +153,14 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                                 NodeType::Placeholder => (None, "placeholder".to_string()),
                             };
 
+                            let state = get_node_state(&node);
+
                             new_children.push(TreeNode {
                                 height,
                                 id: node.id(),
                                 tag,
                                 text,
+                                state,
                             });
                         }
                     });
@@ -213,7 +218,7 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                     selected_node.map(|selected_node| {
                         rsx!(
                             NodeInspectorStyle {
-                                _node: selected_node
+                                node: selected_node
                             }
                         )
                     })
