@@ -11,15 +11,15 @@ devtools = ["freya/devtools"]
 use_camera = ["freya/use_camera"]
 
 [workspace.dependencies]
-dioxus = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling", features = ["macro", "hooks", "hot-reload"]}
-dioxus-native-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling" }
-dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
-dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
-dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
-dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
-dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
-dioxus-hot-reload = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
-dioxus-router = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events", features = ["macro", "hooks", "hot-reload"]}
+dioxus-native-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events" }
+dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events"}
+dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events", features=["dioxus"]}
+dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events"}
+dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events"}
+dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events"}
+dioxus-hot-reload = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events"}
+dioxus-router = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events"}
 
 skia-safe = { version = "0.60.0", features = ["gl", "textlayout", "svg"] }
 
