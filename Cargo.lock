@@ -1157,6 +1157,7 @@ dependencies = [
  "freya",
  "reqwest",
  "serde",
+ "tokio",
  "tracing-subscriber",
 ]
 

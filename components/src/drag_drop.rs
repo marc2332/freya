@@ -42,7 +42,7 @@ pub struct DragZoneProps<'a, T> {
 pub fn DragZone<'a, T: 'static + Clone>(cx: Scope<'a, DragZoneProps<'a, T>>) -> Element<'a> {
     let drags = use_shared_state::<Option<T>>(cx);
     let dragging = use_state(cx, || false);
-    let pos = use_state(cx, || Point2D::default());
+    let pos = use_state(cx, Point2D::default);
     let (node_reference, size) = use_node_ref(cx);
 
     let onglobalmouseover = move |e: MouseEvent| {
@@ -222,7 +222,7 @@ mod test {
                 .child(0)
                 .unwrap()
                 .text(),
-            Some("Moving")
+            Some("Moving".to_string())
         );
 
         utils.push_event(FreyaEvent::Mouse {
@@ -243,7 +243,7 @@ mod test {
                 .child(0)
                 .unwrap()
                 .text(),
-            Some("Enabled: true")
+            Some("Enabled: true".to_string())
         );
     }
 }

@@ -52,6 +52,7 @@ pub fn get_inner_texts(node: &DioxusNode) -> Vec<(FontStyle, String)> {
 }
 
 /// Get the info related to a cursor reference
+#[allow(clippy::type_complexity)]
 fn get_cursor_reference(
     node: &DioxusNode,
 ) -> Option<(
@@ -338,14 +339,12 @@ impl<'a> NodeLayoutMeasurer<'a> {
         must_memorize_layout: bool,
         scale_factor: f32,
     ) {
-        let node = &self.node;
-
         let node_size = &*self.node.get::<Size>().unwrap();
         let node_cursor_settings = &*self.node.get::<CursorSettings>().unwrap();
 
-        match &*node.node_type() {
+        match &*self.node.node_type() {
             NodeType::Element(ElementNode { tag, .. }) => {
-                for child in node.children() {
+                for child in self.node.children() {
                     let child_node_area = {
                         let mut child_measurer = NodeLayoutMeasurer {
                             node_id: child.id(),
@@ -420,19 +419,11 @@ impl<'a> NodeLayoutMeasurer<'a> {
                 }
             }
             NodeType::Text(TextNode { text, .. }) => {
-                let FontStyle {
-                    font_family,
-                    font_size,
-                    line_height,
-                    align,
-                    max_lines,
-                    font_style,
-                    ..
-                } = &*node.get::<FontStyle>().unwrap();
+                let font_style = self.node.get::<FontStyle>().unwrap().clone();
 
                 let mut paragraph_style = ParagraphStyle::default();
-                paragraph_style.set_text_align(*align);
-                paragraph_style.set_max_lines(*max_lines);
+                paragraph_style.set_text_align(font_style.align);
+                paragraph_style.set_max_lines(font_style.max_lines);
                 paragraph_style.set_replace_tab_characters(true);
 
                 let mut paragraph_builder =
@@ -440,9 +431,9 @@ impl<'a> NodeLayoutMeasurer<'a> {
 
                 paragraph_builder.push_style(
                     TextStyle::new()
-                        .set_font_style(*font_style)
-                        .set_font_size(*font_size)
-                        .set_font_families(font_family),
+                        .set_font_style(font_style.font_style)
+                        .set_font_size(font_style.font_size)
+                        .set_font_families(&font_style.font_family),
                 );
 
                 paragraph_builder.add_text(text);
@@ -452,7 +443,8 @@ impl<'a> NodeLayoutMeasurer<'a> {
 
                 let lines_count = paragraph.line_number() as f32;
                 node_area.size.width = paragraph.longest_line();
-                node_area.size.height = (line_height * font_size) * lines_count;
+                node_area.size.height =
+                    (font_style.line_height * font_style.font_size) * lines_count;
             }
             NodeType::Placeholder => {}
         }

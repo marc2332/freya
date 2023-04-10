@@ -203,7 +203,7 @@ mod test {
 
         assert_eq!(
             utils.root().child(0).unwrap().child(0).unwrap().text(),
-            Some("EMPTY")
+            Some("EMPTY".to_string())
         );
 
         utils.push_event(FreyaEvent::Touch {
@@ -240,7 +240,7 @@ mod test {
 
         assert_eq!(
             utils.root().child(0).unwrap().child(0).unwrap().text(),
-            Some("DoubleTap")
+            Some("DoubleTap".to_string())
         );
     }
 
@@ -269,7 +269,7 @@ mod test {
 
         assert_eq!(
             utils.root().child(0).unwrap().child(0).unwrap().text(),
-            Some("EMPTY")
+            Some("EMPTY".to_string())
         );
 
         utils.push_event(FreyaEvent::Touch {
@@ -285,7 +285,7 @@ mod test {
 
         assert_eq!(
             utils.root().child(0).unwrap().child(0).unwrap().text(),
-            Some("TapDown")
+            Some("TapDown".to_string())
         );
 
         utils.push_event(FreyaEvent::Touch {
@@ -301,7 +301,7 @@ mod test {
 
         assert_eq!(
             utils.root().child(0).unwrap().child(0).unwrap().text(),
-            Some("TapUp")
+            Some("TapUp".to_string())
         );
     }
 }

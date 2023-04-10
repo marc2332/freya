@@ -43,6 +43,7 @@ pub fn render_label(
 
         let mut paragraph_style = ParagraphStyle::default();
         paragraph_style.set_text_align(node_font_style.align);
+
         paragraph_style.set_text_style(
             TextStyle::new()
                 .set_font_style(node_font_style.font_style)

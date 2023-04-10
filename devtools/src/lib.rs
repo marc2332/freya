@@ -1,6 +1,8 @@
 use dioxus::prelude::*;
 use dioxus_native_core::node::NodeType;
-use dioxus_native_core::tree::TreeView;
+use dioxus_native_core::prelude::{ElementNode, TextNode};
+use dioxus_native_core::real_dom::NodeImmutable;
+use dioxus_native_core::tree::TreeRef;
 use dioxus_native_core::NodeId;
 use dioxus_router::*;
 use freya_components::*;
@@ -8,7 +10,6 @@ use freya_dom::SafeDOM;
 use freya_elements::elements as dioxus_elements;
 use freya_hooks::use_theme;
 
-use freya_node_state::NodeState;
 use freya_renderer::HoveredNode;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -90,7 +91,6 @@ pub struct TreeNode {
     height: u16,
     #[allow(dead_code)]
     text: Option<String>,
-    state: NodeState,
 }
 
 #[derive(Props)]
@@ -131,7 +131,7 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                     let mut devtools_found = false;
 
                     rdom.traverse_depth_first(|node| {
-                        let height = rdom.tree.height(node.node_data.node_id).unwrap();
+                        let height = rdom.tree_ref().height(node.id()).unwrap();
                         if height == 2 {
                             if !root_found {
                                 root_found = true;
@@ -141,20 +141,21 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                         }
 
                         if !devtools_found {
-                            let (text, tag) = match &node.node_data.node_type {
-                                NodeType::Text { text, .. } => {
+                            let (text, tag) = match &*node.node_type() {
+                                NodeType::Text(TextNode { text, .. }) => {
                                     (Some(text.to_string()), "text".to_string())
                                 }
-                                NodeType::Element { tag, .. } => (None, tag.to_string()),
+                                NodeType::Element(ElementNode { tag, .. }) => {
+                                    (None, tag.to_string())
+                                }
                                 NodeType::Placeholder => (None, "placeholder".to_string()),
                             };
 
                             new_children.push(TreeNode {
                                 height,
-                                id: node.node_data.node_id,
+                                id: node.id(),
                                 tag,
                                 text,
-                                state: node.state.clone(),
                             });
                         }
                     });
@@ -212,7 +213,7 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                     selected_node.map(|selected_node| {
                         rsx!(
                             NodeInspectorStyle {
-                                node: selected_node
+                                _node: selected_node
                             }
                         )
                     })

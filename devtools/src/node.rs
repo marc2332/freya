@@ -40,7 +40,7 @@ pub fn NodeElement<'a>(
             label {
                 font_size: "14",
                 color: "{color}",
-                "{node.tag} #{node.id.0}"
+                "{node.tag} #{node.id:?}"
             }
         }
     )

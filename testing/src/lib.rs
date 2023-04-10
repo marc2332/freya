@@ -2,8 +2,8 @@ use std::sync::{Arc, Mutex};
 
 use dioxus_core::{Component, VirtualDom};
 use dioxus_native_core::node::NodeType;
-use dioxus_native_core::prelude::{DioxusState, State, TextNode};
-use dioxus_native_core::real_dom::{NodeImmutable, RealDom};
+use dioxus_native_core::prelude::TextNode;
+use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::tree::TreeRef;
 use dioxus_native_core::NodeId;
 use freya_common::{Area, Size2D};
@@ -12,9 +12,7 @@ use freya_core::{events::DomEvent, EventEmitter, EventReceiver};
 use freya_core::{process_events, process_layout, ViewportsCollection};
 use freya_dom::{DioxusNode, FreyaDOM, SafeDOM};
 use freya_layout::Layers;
-use freya_node_state::{
-    CursorSettings, CustomAttributeValues, FontStyle, References, Scroll, Size, Style, Transform,
-};
+use freya_node_state::{CursorSettings, FontStyle, References, Scroll, Size, Style, Transform};
 use rustc_hash::FxHashMap;
 use skia_safe::textlayout::FontCollection;
 use skia_safe::FontMgr;
@@ -46,7 +44,7 @@ impl TestUtils {
 
         let height = rdom.tree_ref().height(node_id).unwrap();
         let children_ids = rdom.tree_ref().children_ids(node_id);
-        let child: DioxusNode = rdom.get(node_id).unwrap().clone();
+        let child: DioxusNode = rdom.get(node_id).unwrap();
 
         let state = self.get_node_state_by_id(child);
 
@@ -80,6 +78,7 @@ impl TestUtils {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Clone)]
 pub struct NodeState {
     cursor: CursorSettings,
