@@ -81,13 +81,13 @@ impl TestUtils {
 #[allow(dead_code)]
 #[derive(Clone)]
 pub struct NodeState {
-    cursor: CursorSettings,
-    font_style: FontStyle,
-    references: References,
-    scroll: Scroll,
-    size: Size,
-    style: Style,
-    transform: Transform,
+    pub cursor: CursorSettings,
+    pub font_style: FontStyle,
+    pub references: References,
+    pub scroll: Scroll,
+    pub size: Size,
+    pub style: Style,
+    pub transform: Transform,
 }
 
 /// Represents a `Node` in the DOM.
