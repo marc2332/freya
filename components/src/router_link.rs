@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use dioxus_router::use_router;
-use freya_elements as dioxus_elements;
+use freya_elements::elements as dioxus_elements;
 
 /// [`RouterLink`] component properties.
 #[derive(Props)]

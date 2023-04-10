@@ -1,11 +1,14 @@
 use std::{any::Any, collections::HashMap, rc::Rc};
 
 use dioxus_core::ElementId;
-use euclid::Point2D;
-use freya_elements::{events_data::MouseData, Code, Key, KeyboardData, Modifiers, WheelData};
+use freya_common::{Area, Point2D};
+use freya_elements::events::{
+    keyboard::{Code, Key, Modifiers},
+    KeyboardData, MouseData, TouchData, WheelData,
+};
 use freya_layout::RenderData;
 use rustc_hash::FxHashMap;
-use winit::event::MouseButton;
+use winit::event::{Force, MouseButton, TouchPhase};
 
 /// Events emitted in Freya.
 #[derive(Clone, Debug)]
@@ -13,14 +16,14 @@ pub enum FreyaEvent {
     /// A Mouse Event.
     Mouse {
         name: &'static str,
-        cursor: (f64, f64),
+        cursor: Point2D,
         button: Option<MouseButton>,
     },
     /// A Wheel event.
     Wheel {
         name: &'static str,
-        scroll: (f64, f64),
-        cursor: (f64, f64),
+        scroll: Point2D,
+        cursor: Point2D,
     },
     /// A Keyboard event.
     Keyboard {
@@ -28,6 +31,14 @@ pub enum FreyaEvent {
         key: Key,
         code: Code,
         modifiers: Modifiers,
+    },
+    /// A Touch event.
+    Touch {
+        name: &'static str,
+        location: Point2D,
+        finger_id: u64,
+        phase: TouchPhase,
+        force: Option<Force>,
     },
 }
 
@@ -37,6 +48,7 @@ impl FreyaEvent {
             Self::Mouse { name, .. } => name,
             Self::Wheel { name, .. } => name,
             Self::Keyboard { name, .. } => name,
+            Self::Touch { name, .. } => name,
         }
     }
 
@@ -45,16 +57,79 @@ impl FreyaEvent {
             Self::Mouse { name, .. } => *name = new_name,
             Self::Wheel { name, .. } => *name = new_name,
             Self::Keyboard { name, .. } => *name = new_name,
+            Self::Touch { name, .. } => *name = new_name,
         }
     }
 }
 
-/// Events emitted to the DOM.
+/// Event emitted to the DOM.
 #[derive(Debug, Clone)]
 pub struct DomEvent {
     pub name: String,
     pub element_id: ElementId,
     pub data: DomEventData,
+}
+
+impl DomEvent {
+    pub fn from_freya_event(
+        event_name: &str,
+        element_id: ElementId,
+        event: &FreyaEvent,
+        node_area: Option<Area>,
+        scale_factor: f64,
+    ) -> Self {
+        match event {
+            FreyaEvent::Mouse { cursor, button, .. } => Self {
+                element_id,
+                name: event_name.to_string(),
+                data: DomEventData::Mouse(MouseData::new(
+                    *cursor / scale_factor,
+                    (
+                        (cursor.x - node_area.unwrap_or_default().min_x() as f64) / scale_factor,
+                        (cursor.y - node_area.unwrap_or_default().min_y() as f64) / scale_factor,
+                    )
+                        .into(),
+                    *button,
+                )),
+            },
+            FreyaEvent::Wheel { scroll, .. } => Self {
+                element_id,
+                name: event_name.to_string(),
+                data: DomEventData::Wheel(WheelData::new(scroll.x, scroll.y)),
+            },
+            FreyaEvent::Keyboard {
+                ref key,
+                code,
+                modifiers,
+                ..
+            } => Self {
+                element_id,
+                name: event_name.to_string(),
+                data: DomEventData::Keyboard(KeyboardData::new(key.clone(), *code, *modifiers)),
+            },
+            FreyaEvent::Touch {
+                location,
+                finger_id,
+                phase,
+                force,
+                ..
+            } => DomEvent {
+                element_id,
+                name: event_name.to_string(),
+                data: DomEventData::Touch(TouchData::new(
+                    *location,
+                    (
+                        location.x - node_area.unwrap_or_default().min_x() as f64,
+                        location.y - node_area.unwrap_or_default().min_y() as f64,
+                    )
+                        .into(),
+                    *finger_id,
+                    *phase,
+                    *force,
+                )),
+            },
+        }
+    }
 }
 
 /// Data of a DOM event.
@@ -63,6 +138,7 @@ pub enum DomEventData {
     Mouse(MouseData),
     Keyboard(KeyboardData),
     Wheel(WheelData),
+    Touch(TouchData),
 }
 
 impl DomEventData {
@@ -71,6 +147,7 @@ impl DomEventData {
             DomEventData::Mouse(m) => Rc::new(m),
             DomEventData::Keyboard(k) => Rc::new(k),
             DomEventData::Wheel(w) => Rc::new(w),
+            DomEventData::Touch(w) => Rc::new(w),
         }
     }
 }

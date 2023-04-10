@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use freya_components::*;
-use freya_elements as dioxus_elements;
+use freya_elements::elements as dioxus_elements;
 use freya_hooks::use_theme;
 
 #[derive(Props)]

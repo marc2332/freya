@@ -24,7 +24,7 @@ fn app(cx: Scope) -> Element {
                 "Your name:"
             }
             Input {
-                value: &values.0,
+                value: values.0.clone(),
                 onchange: |e| {
                     values.set((e, values.1.clone()))
                 }
@@ -34,7 +34,7 @@ fn app(cx: Scope) -> Element {
                 "Your age:"
             }
             Input {
-                value: &values.1,
+                value: values.1.clone(),
                 onchange: |e| {
                     values.set((values.0.clone(), e))
                 }

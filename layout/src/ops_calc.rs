@@ -1,6 +1,6 @@
 use freya_node_state::CalcType;
 
-/// Calculate a some chained operations given a certain value.
+/// Calculate some chained operations with a given value.
 /// This value could be for example the width of a node's parent area.
 pub fn run_calculations(calcs: &Vec<CalcType>, value: f32) -> f32 {
     let mut prev_number: Option<f32> = None;

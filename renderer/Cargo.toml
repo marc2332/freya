@@ -24,17 +24,18 @@ raw-window-handle = "0.5.1"
 
 skia-safe = { version = "0.60.0", features = ["gl", "textlayout", "svg"] }
 
-dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
-dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
-dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
-dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
-dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
-dioxus-hot-reload = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
+dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus-hot-reload = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
 freya-layout = { path = "../layout", version = "0.1.0" }
 freya-node-state = { path = "../state", version = "0.1.0" }
 freya-elements = { path = "../elements", version = "0.1.0" }
 freya-common = { path = "../common", version = "0.1.0" }
 freya-core = { path = "../core", version = "0.1.0" }
+freya-dom = { path = "../dom", version = "0.1.0" }
 
 futures = "0.3.25"
 tokio = { version = "1.23.0", features = ["sync", "rt-multi-thread", "time", "macros"] }

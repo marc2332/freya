@@ -1,8 +1,8 @@
 use dioxus::prelude::*;
 use freya_core::events::FreyaEvent;
-use freya_elements as dioxus_elements;
+use freya_elements::elements as dioxus_elements;
+use freya_elements::events::mouse::MouseButton;
 use freya_testing::launch_test;
-use winit::event::MouseButton;
 
 #[tokio::test]
 async fn no_state() {
@@ -45,7 +45,7 @@ async fn with_state() {
 
     assert_eq!(label.child(0).unwrap().text(), Some("Is enabled? false"));
 
-    utils.wait_for_update((300.0, 300.0)).await;
+    utils.wait_for_update().await;
 
     assert_eq!(label.child(0).unwrap().text(), Some("Is enabled? true"));
 }
@@ -61,12 +61,12 @@ async fn check_size() {
 
     let mut utils = launch_test(stateful_app);
 
-    utils.wait_for_work((500.0, 500.0)).await;
+    utils.wait_for_update().await;
 
     let rect = utils.root().child(0).unwrap();
 
-    assert_eq!(rect.layout().unwrap().width, 250.0);
-    assert_eq!(rect.layout().unwrap().height, 430.0);
+    assert_eq!(rect.layout().unwrap().width(), 250.0);
+    assert_eq!(rect.layout().unwrap().height(), 430.0);
 }
 
 #[tokio::test]
@@ -95,20 +95,20 @@ async fn simulate_events() {
     let label = rect.child(0).unwrap();
 
     // Render initial layout
-    utils.wait_for_work((500.0, 500.0)).await;
+    utils.wait_for_update().await;
 
     let text = label.child(0).unwrap();
 
     assert_eq!(text.text(), Some("Is enabled? false"));
 
-    utils.send_event(FreyaEvent::Mouse {
+    utils.push_event(FreyaEvent::Mouse {
         name: "click",
-        cursor: (5.0, 5.0),
+        cursor: (5.0, 5.0).into(),
         button: Some(MouseButton::Left),
     });
 
     // Render new layout after having it clicked
-    utils.wait_for_update((500.0, 500.0)).await;
+    utils.wait_for_update().await;
 
     let text = label.child(0).unwrap();
 

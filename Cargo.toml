@@ -4,25 +4,26 @@ version = "0.0.0"
 edition = "2021"
 
 [workspace]
-members = ["layout", "renderer", "state", "freya", "elements", "components", "hooks", "common", "core", "testing", "devtools"]
+members = ["layout", "renderer", "state", "freya", "elements", "components", "hooks", "common", "core", "testing", "devtools", "dom"]
 
 [features]
 devtools = ["freya/devtools"]
+use_camera = ["freya/use_camera"]
 
 [dev-dependencies]
 freya = { path = "./freya"}
-dioxus-native-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core" }
-dioxus = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core", features = ["macro", "hooks", "hot-reload"]}
-dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
-dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
-dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
-dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
-dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
+dioxus-native-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling" }
+dioxus = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling", features = ["macro", "hooks", "hot-reload"]}
+dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
 tokio = "1.23.0"
 reqwest = {version = "0.11.13", features = ["json"] }
 serde = "1.0.152"
 tracing-subscriber = "0.2.25"
-dioxus-router = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
+dioxus-router = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
 
 [profile.release]
 lto = true

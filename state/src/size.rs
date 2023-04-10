@@ -5,6 +5,7 @@ use dioxus_native_core::node_ref::NodeView;
 use dioxus_native_core::prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State};
 use dioxus_native_core::SendAnyMap;
 use dioxus_native_core_macro::partial_derive_state;
+use freya_common::LayoutNotifier;
 
 use crate::CustomAttributeValues;
 
@@ -48,8 +49,11 @@ impl State<CustomAttributeValues> for Size {
         _node: <Self::NodeDependencies as Dependancy>::ElementBorrowed<'a>,
         _parent: Option<<Self::ParentDependencies as Dependancy>::ElementBorrowed<'a>>,
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
-        _context: &SendAnyMap,
+        context: &SendAnyMap,
     ) -> bool {
+        let layout_notifier = context.get::<LayoutNotifier>().unwrap();
+        let scale_factor = context.get::<f32>().unwrap();
+
         let mut width = SizeMode::default();
         let mut height = SizeMode::default();
         let mut min_height = SizeMode::default();
@@ -75,7 +79,7 @@ impl State<CustomAttributeValues> for Size {
                     "width" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
-                            if let Some(new_width) = parse_size(attr) {
+                            if let Some(new_width) = parse_size(attr, *scale_factor) {
                                 width = new_width;
                             }
                         }
@@ -83,7 +87,7 @@ impl State<CustomAttributeValues> for Size {
                     "height" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
-                            if let Some(new_height) = parse_size(attr) {
+                            if let Some(new_height) = parse_size(attr, *scale_factor) {
                                 height = new_height;
                             }
                         }
@@ -91,7 +95,7 @@ impl State<CustomAttributeValues> for Size {
                     "min_height" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
-                            if let Some(new_min_height) = parse_size(attr) {
+                            if let Some(new_min_height) = parse_size(attr, *scale_factor) {
                                 min_height = new_min_height;
                             }
                         }
@@ -99,7 +103,7 @@ impl State<CustomAttributeValues> for Size {
                     "min_width" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
-                            if let Some(new_min_width) = parse_size(attr) {
+                            if let Some(new_min_width) = parse_size(attr, *scale_factor) {
                                 min_width = new_min_width;
                             }
                         }
@@ -107,7 +111,7 @@ impl State<CustomAttributeValues> for Size {
                     "max_height" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
-                            if let Some(new_max_height) = parse_size(attr) {
+                            if let Some(new_max_height) = parse_size(attr, *scale_factor) {
                                 max_height = new_max_height;
                             }
                         }
@@ -115,7 +119,7 @@ impl State<CustomAttributeValues> for Size {
                     "max_width" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
-                            if let Some(new_max_width) = parse_size(attr) {
+                            if let Some(new_max_width) = parse_size(attr, *scale_factor) {
                                 max_width = new_max_width;
                             }
                         }
@@ -123,7 +127,7 @@ impl State<CustomAttributeValues> for Size {
                     "padding" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
-                            if let Some(paddings) = parse_padding(attr) {
+                            if let Some(paddings) = parse_padding(attr, *scale_factor) {
                                 padding = paddings;
                             }
                         }
@@ -156,6 +160,10 @@ impl State<CustomAttributeValues> for Size {
             || (padding != self.padding)
             || (direction != self.direction);
 
+        if changed {
+            *layout_notifier.lock().unwrap() = true;
+        }
+
         *self = Self {
             width,
             height,
@@ -170,14 +178,14 @@ impl State<CustomAttributeValues> for Size {
     }
 }
 
-pub fn parse_padding(padding: &str) -> Option<(f32, f32, f32, f32)> {
+pub fn parse_padding(padding: &str, scale_factor: f32) -> Option<(f32, f32, f32, f32)> {
     let mut padding_config = (0.0, 0.0, 0.0, 0.0);
     let mut paddings = padding.split_ascii_whitespace();
 
     match paddings.clone().count() {
         // Same in each directions
         1 => {
-            padding_config.0 = paddings.next()?.parse::<f32>().ok()?;
+            padding_config.0 = paddings.next()?.parse::<f32>().ok()? * scale_factor;
             padding_config.1 = padding_config.0;
             padding_config.2 = padding_config.0;
             padding_config.3 = padding_config.0;
@@ -185,19 +193,19 @@ pub fn parse_padding(padding: &str) -> Option<(f32, f32, f32, f32)> {
         // By vertical and horizontal
         2 => {
             // Vertical
-            padding_config.0 = paddings.next()?.parse::<f32>().ok()?;
+            padding_config.0 = paddings.next()?.parse::<f32>().ok()? * scale_factor;
             padding_config.2 = padding_config.0;
 
             // Horizontal
-            padding_config.1 = paddings.next()?.parse::<f32>().ok()?;
+            padding_config.1 = paddings.next()?.parse::<f32>().ok()? * scale_factor;
             padding_config.3 = padding_config.1;
         }
         // Each directions
         4 => {
-            padding_config.0 = paddings.next()?.parse::<f32>().ok()?;
-            padding_config.1 = paddings.next()?.parse::<f32>().ok()?;
-            padding_config.2 = paddings.next()?.parse::<f32>().ok()?;
-            padding_config.3 = paddings.next()?.parse::<f32>().ok()?;
+            padding_config.0 = paddings.next()?.parse::<f32>().ok()? * scale_factor;
+            padding_config.1 = paddings.next()?.parse::<f32>().ok()? * scale_factor;
+            padding_config.2 = paddings.next()?.parse::<f32>().ok()? * scale_factor;
+            padding_config.3 = paddings.next()?.parse::<f32>().ok()? * scale_factor;
         }
         _ => {}
     }
@@ -205,23 +213,23 @@ pub fn parse_padding(padding: &str) -> Option<(f32, f32, f32, f32)> {
     Some(padding_config)
 }
 
-pub fn parse_size(size: &str) -> Option<SizeMode> {
+pub fn parse_size(size: &str, scale_factor: f32) -> Option<SizeMode> {
     if size == "stretch" {
         Some(SizeMode::Percentage(100.0))
     } else if size == "auto" {
         Some(SizeMode::Auto)
     } else if size.contains("calc") {
-        Some(SizeMode::Calculation(parse_calc(size)?))
+        Some(SizeMode::Calculation(parse_calc(size, scale_factor)?))
     } else if size.contains('%') {
         Some(SizeMode::Percentage(size.replace('%', "").parse().ok()?))
     } else if size.contains("calc") {
-        Some(SizeMode::Calculation(parse_calc(size)?))
+        Some(SizeMode::Calculation(parse_calc(size, scale_factor)?))
     } else {
-        Some(SizeMode::Manual(size.parse().ok()?))
+        Some(SizeMode::Manual((size.parse::<f32>().ok()?) * scale_factor))
     }
 }
 
-pub fn parse_calc(mut size: &str) -> Option<Vec<CalcType>> {
+pub fn parse_calc(mut size: &str, scale_factor: f32) -> Option<Vec<CalcType>> {
     let mut calcs = Vec::new();
 
     size = size.strip_prefix("calc(")?;
@@ -241,7 +249,7 @@ pub fn parse_calc(mut size: &str) -> Option<Vec<CalcType>> {
         } else if val == "*" {
             calcs.push(CalcType::Mul);
         } else {
-            calcs.push(CalcType::Manual(val.parse().ok()?));
+            calcs.push(CalcType::Manual(val.parse::<f32>().ok()? * scale_factor));
         }
     }
 

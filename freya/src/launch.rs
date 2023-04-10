@@ -154,17 +154,15 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
 /// }
 /// ```
 pub fn launch_cfg<T: 'static + Clone + Send>(root: Component, win_config: WindowConfig<T>) {
-    use dioxus_native_core::{
-        prelude::{DioxusState, State},
-        real_dom::RealDom,
-    };
-    use freya_core::dom::DioxusSafeDOM;
+    use dioxus_native_core::prelude::State;
+    use dioxus_native_core::{prelude::DioxusState, real_dom::RealDom};
+    use freya_dom::{FreyaDOM, SafeDOM};
     use freya_node_state::{
         CursorSettings, CustomAttributeValues, FontStyle, References, Scroll, Size, Style,
         Transform,
     };
 
-    let mut rdom = DioxusSafeDOM::new(RealDom::<CustomAttributeValues>::new([
+    let mut rdom = RealDom::<CustomAttributeValues>::new([
         CursorSettings::to_type_erased(),
         FontStyle::to_type_erased(),
         References::to_type_erased(),
@@ -172,8 +170,11 @@ pub fn launch_cfg<T: 'static + Clone + Send>(root: Component, win_config: Window
         Size::to_type_erased(),
         Style::to_type_erased(),
         Transform::to_type_erased(),
-    ]));
-    let dioxus_integration_state = DioxusState::create(&mut rdom.dom_mut());
+    ]);
+    let dioxus_integration_state = DioxusState::create(&mut rdom);
+    let fdom = FreyaDOM::new(rdom, dioxus_integration_state);
+    let sdom = SafeDOM::new(fdom);
+
     let (vdom, mutations_sender, hovered_node) = {
         #[cfg(feature = "devtools")]
         #[cfg(debug_assertions)]
@@ -195,12 +196,5 @@ pub fn launch_cfg<T: 'static + Clone + Send>(root: Component, win_config: Window
             (vdom, None, None)
         }
     };
-    run(
-        vdom,
-        rdom,
-        dioxus_integration_state,
-        win_config,
-        mutations_sender,
-        hovered_node,
-    );
+    run(vdom, sdom, win_config, mutations_sender, hovered_node);
 }

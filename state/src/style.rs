@@ -6,6 +6,7 @@ use dioxus_native_core::node_ref::NodeView;
 use dioxus_native_core::prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State};
 use dioxus_native_core::SendAnyMap;
 use dioxus_native_core_macro::partial_derive_state;
+use freya_common::LayoutNotifier;
 use skia_safe::Color;
 
 use crate::{parse_color, CustomAttributeValues};
@@ -19,6 +20,7 @@ pub struct Style {
     pub image_data: Option<Vec<u8>>,
     pub svg_data: Option<Vec<u8>>,
     pub display: DisplayMode,
+    pub text: Option<String>,
 }
 
 #[partial_derive_state]
@@ -48,8 +50,11 @@ impl State<CustomAttributeValues> for Style {
         _node: <Self::NodeDependencies as Dependancy>::ElementBorrowed<'a>,
         _parent: Option<<Self::ParentDependencies as Dependancy>::ElementBorrowed<'a>>,
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
-        _context: &SendAnyMap,
+        context: &SendAnyMap,
     ) -> bool {
+        let layout_notifier = context.get::<LayoutNotifier>().unwrap();
+        let scale_factor = context.get::<f32>().unwrap();
+
         let mut background = Color::TRANSPARENT;
         let mut relative_layer = 0;
         let mut shadow = ShadowSettings::default();
@@ -91,7 +96,7 @@ impl State<CustomAttributeValues> for Style {
                     "radius" => {
                         if let Some(attr) = attr.value.as_text() {
                             if let Ok(new_radius) = attr.parse::<f32>() {
-                                radius = new_radius;
+                                radius = new_radius * scale_factor;
                             }
                         }
                     }
@@ -124,7 +129,16 @@ impl State<CustomAttributeValues> for Style {
             || (relative_layer != self.relative_layer)
             || (shadow != self.shadow)
             || (radius != self.radius)
-            || (image_data != self.image_data);
+            || (image_data != self.image_data)
+            || (display != self.display)
+            || (svg_data != self.svg_data);
+
+        let changed_size =
+            (display != self.display) || (node_view.text().map(|v| v.to_owned()) != self.text);
+
+        if changed_size {
+            *layout_notifier.lock().unwrap() = true;
+        }
 
         *self = Self {
             background,
@@ -134,6 +148,7 @@ impl State<CustomAttributeValues> for Style {
             image_data,
             svg_data,
             display,
+            text: node_view.text().map(|v| v.to_owned()),
         };
         changed
     }

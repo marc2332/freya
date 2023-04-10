@@ -13,13 +13,12 @@ categories = ["GUI"]
 
 [dependencies]
 bumpalo = "3.11.1"
-dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
-dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
-dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
-dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
-dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
+dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
 winit = "0.28.2"
-euclid = "0.22.7"
 tokio = { version = "1.23.0" }
 freya-common = { path = "../common"}
 keyboard-types = "0.6.2"

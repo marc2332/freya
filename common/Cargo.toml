@@ -12,9 +12,9 @@ keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
 [dependencies]
-dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
-dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
-dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
-dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
-dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
-
+dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+euclid = "0.22.7"

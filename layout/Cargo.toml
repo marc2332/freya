@@ -16,25 +16,27 @@ version = "0.60.0"
 features = ["gl", "textlayout", "svg", "x11", "wayland"]
 
 [dependencies]
-dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
-dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
-dioxus = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core", features = ["macro", "hooks"]}
+dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling", features = ["macro", "hooks"]}
 freya-common = { path = "../common", version = "0.1.0" }
 freya-node-state = { path = "../state", version = "0.1.0" }
+freya-dom = { path = "../dom", version = "0.1.0" }
 tokio = { version = "1.23.0", features = ["sync", "rt-multi-thread", "time"] }
 freya-elements = { path = "../elements", version = "0.1.0"}
 skia-safe = { version = "0.60.0", features = ["gl", "textlayout", "svg"] }
 rustc-hash = "1.1.0"
 
 [dev-dependencies]
-dioxus-native-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
-dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
-dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
-dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
-dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
-dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core"}
+dioxus-native-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
 fxhash = "0.2.1"
 rustc-hash = "1.1.0"
 anymap = "0.12.1"
 lazy_static = "1.4.0"
 freya-components ={ path = "../components"}
+freya-dom ={ path = "../dom"}

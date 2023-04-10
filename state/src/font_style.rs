@@ -3,6 +3,7 @@ use dioxus_native_core::node_ref::NodeView;
 use dioxus_native_core::prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State};
 use dioxus_native_core::SendAnyMap;
 use dioxus_native_core_macro::partial_derive_state;
+use freya_common::LayoutNotifier;
 use skia_safe::textlayout::TextAlign;
 use skia_safe::Color;
 use smallvec::{smallvec, SmallVec};
@@ -18,6 +19,15 @@ pub struct FontStyle {
     pub align: TextAlign,
     pub max_lines: Option<usize>,
     pub font_style: skia_safe::FontStyle,
+}
+
+impl FontStyle {
+    fn default_with_scale_factor(scale_factor: f32) -> Self {
+        Self {
+            font_size: 16.0 * scale_factor,
+            ..FontStyle::default()
+        }
+    }
 }
 
 impl Default for FontStyle {
@@ -59,9 +69,15 @@ impl State<CustomAttributeValues> for FontStyle {
         _node: <Self::NodeDependencies as Dependancy>::ElementBorrowed<'a>,
         parent: Option<<Self::ParentDependencies as Dependancy>::ElementBorrowed<'a>>,
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
-        _context: &SendAnyMap,
+        context: &SendAnyMap,
     ) -> bool {
-        let mut font_style = parent.map(|(v,)| v.clone()).unwrap_or_default();
+        let layout_notifier = context.get::<LayoutNotifier>().unwrap();
+        let scale_factor = context.get::<f32>().unwrap();
+
+        let mut font_style = parent
+            .map(|(v,)| v.clone())
+            .unwrap_or_else(|| FontStyle::default_with_scale_factor(*scale_factor));
+        let mut changed_size = false;
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
@@ -85,13 +101,15 @@ impl State<CustomAttributeValues> for FontStyle {
                                     .map(|f| f.trim().to_string())
                                     .collect::<Vec<String>>(),
                             );
+                            changed_size = true;
                         }
                     }
                     "font_size" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
-                            if let Ok(font_size) = attr.parse() {
-                                font_style.font_size = font_size;
+                            if let Ok(font_size) = attr.parse::<f32>() {
+                                font_style.font_size = font_size * scale_factor;
+                                changed_size = true;
                             }
                         }
                     }
@@ -100,6 +118,7 @@ impl State<CustomAttributeValues> for FontStyle {
                         if let Some(attr) = attr {
                             if let Ok(line_height) = attr.parse() {
                                 font_style.line_height = line_height;
+                                changed_size = true;
                             }
                         }
                     }
@@ -114,6 +133,7 @@ impl State<CustomAttributeValues> for FontStyle {
                         if let Some(attr) = attr {
                             if let Ok(max_lines) = attr.parse() {
                                 font_style.max_lines = Some(max_lines);
+                                changed_size = true;
                             }
                         }
                     }
@@ -121,11 +141,16 @@ impl State<CustomAttributeValues> for FontStyle {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
                             font_style.font_style = parse_font_style(attr);
+                            changed_size = true;
                         }
                     }
                     _ => {}
                 }
             }
+        }
+
+        if changed_size {
+            *layout_notifier.lock().unwrap() = true;
         }
 
         let changed = &font_style != self;

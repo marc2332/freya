@@ -3,6 +3,7 @@ use dioxus_native_core::node_ref::NodeView;
 use dioxus_native_core::prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State};
 use dioxus_native_core::SendAnyMap;
 use dioxus_native_core_macro::partial_derive_state;
+use freya_common::LayoutNotifier;
 
 use crate::CustomAttributeValues;
 
@@ -29,8 +30,11 @@ impl State<CustomAttributeValues> for Scroll {
         _node: <Self::NodeDependencies as Dependancy>::ElementBorrowed<'a>,
         _parent: Option<<Self::ParentDependencies as Dependancy>::ElementBorrowed<'a>>,
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
-        _context: &SendAnyMap,
+        context: &SendAnyMap,
     ) -> bool {
+        let layout_notifier = context.get::<LayoutNotifier>().unwrap();
+        let scale_factor = context.get::<f32>().unwrap();
+
         let mut scroll_y = 0.0;
         let mut scroll_x = 0.0;
 
@@ -41,14 +45,14 @@ impl State<CustomAttributeValues> for Scroll {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
                             let scroll: f32 = attr.parse().unwrap();
-                            scroll_y = scroll;
+                            scroll_y = scroll * scale_factor;
                         }
                     }
                     "scroll_x" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
                             let scroll: f32 = attr.parse().unwrap();
-                            scroll_x = scroll;
+                            scroll_x = scroll * scale_factor;
                         }
                     }
                     _ => {
@@ -59,6 +63,10 @@ impl State<CustomAttributeValues> for Scroll {
         }
 
         let changed = (scroll_x != self.scroll_x) || (scroll_y != self.scroll_y);
+
+        if changed {
+            *layout_notifier.lock().unwrap() = true;
+        }
 
         *self = Self { scroll_y, scroll_x };
         changed

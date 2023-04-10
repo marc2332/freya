@@ -8,7 +8,9 @@ use bytes::Bytes;
 use dioxus_core::AttributeValue;
 use dioxus_core::Scope;
 use dioxus_native_core::node::FromAnyValue;
+use freya_common::CursorLayoutResponse;
 use freya_common::NodeReferenceLayout;
+use freya_common::Point2D;
 use tokio::sync::mpsc::UnboundedSender;
 
 /// Image Reference
@@ -46,9 +48,25 @@ impl Display for NodeReference {
 /// Cursor reference
 #[derive(Clone, Debug)]
 pub struct CursorReference {
-    pub positions: Arc<Mutex<Option<(f32, f32)>>>,
-    pub agent: UnboundedSender<(usize, usize)>,
+    #[allow(clippy::type_complexity)]
+    pub cursor_selections: Arc<Mutex<Option<(Point2D, Point2D)>>>,
+    pub cursor_position: Arc<Mutex<Option<Point2D>>>,
+    pub agent: UnboundedSender<CursorLayoutResponse>,
     pub cursor_id: Arc<Mutex<Option<usize>>>,
+}
+
+impl CursorReference {
+    pub fn set_cursor_selections(&self, cursor_selections: Option<(Point2D, Point2D)>) {
+        *self.cursor_selections.lock().unwrap() = cursor_selections;
+    }
+
+    pub fn set_cursor_position(&self, cursor_position: Option<Point2D>) {
+        *self.cursor_position.lock().unwrap() = cursor_position;
+    }
+
+    pub fn set_id(&self, id: Option<usize>) {
+        *self.cursor_id.lock().unwrap() = id;
+    }
 }
 
 impl PartialEq for CursorReference {
@@ -70,6 +88,7 @@ pub enum CustomAttributeValues {
     CursorReference(CursorReference),
     Bytes(Vec<u8>),
     ImageReference(ImageReference),
+    TextHighlights(Vec<(usize, usize)>),
 }
 
 impl Debug for CustomAttributeValues {
@@ -79,6 +98,7 @@ impl Debug for CustomAttributeValues {
             Self::CursorReference(_) => f.debug_tuple("CursorReference").finish(),
             Self::Bytes(_) => f.debug_tuple("Bytes").finish(),
             Self::ImageReference(_) => f.debug_tuple("ImageReference").finish(),
+            Self::TextHighlights(_) => f.debug_tuple("TextHighlights").finish(),
         }
     }
 }
@@ -90,6 +110,6 @@ impl FromAnyValue for CustomAttributeValues {
 }
 
 /// Transform some bytes (e.g: raw image, raw svg) into attribute data
-pub fn bytes_to_data<'a>(cx: Scope<'a>, bytes: &[u8]) -> AttributeValue<'a> {
+pub fn bytes_to_data<'a, T>(cx: Scope<'a, T>, bytes: &[u8]) -> AttributeValue<'a> {
     cx.any_value(CustomAttributeValues::Bytes(bytes.to_vec()))
 }

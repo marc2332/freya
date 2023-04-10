@@ -1,10 +1,10 @@
-use dioxus_native_core::{node::NodeType, prelude::ElementNode, real_dom::NodeImmutable};
-use freya_common::NodeArea;
+use dioxus_native_core::real_dom::NodeImmutable;
+use freya_common::Area;
 use freya_node_state::{Size, SizeMode};
 
 use crate::{ops_calc::run_calculations, NodeLayoutMeasurer};
 
-pub fn calculate_area(node_measurer: &NodeLayoutMeasurer) -> NodeArea {
+pub fn calculate_area(node_measurer: &NodeLayoutMeasurer) -> Area {
     let mut area = *node_measurer.remaining_area;
 
     let Size {
@@ -84,22 +84,22 @@ pub fn calculate_area(node_measurer: &NodeLayoutMeasurer) -> NodeArea {
         }
     };
 
-    area.width = calculate(width, area.width, node_measurer.parent_area.width);
-    area.height = calculate(height, area.height, node_measurer.parent_area.height);
+    area.size.width = calculate(width, area.width(), node_measurer.parent_area.width());
+    area.size.height = calculate(height, area.height(), node_measurer.parent_area.height());
 
-    if &SizeMode::Auto == height {
-        if let NodeType::Element(ElementNode { tag, .. }) = &*node_measurer.node.node_type() {
-            if tag == "label" {
-                area.height = 18.0;
-            }
-        }
-    }
+    area.size.height = calculate_min(
+        min_height,
+        area.height(),
+        node_measurer.parent_area.height(),
+    );
+    area.size.width = calculate_min(min_width, area.width(), node_measurer.parent_area.width());
 
-    area.height = calculate_min(min_height, area.height, node_measurer.parent_area.height);
-    area.width = calculate_min(min_width, area.width, node_measurer.parent_area.width);
-
-    area.height = calculate_max(max_height, area.height, node_measurer.parent_area.height);
-    area.width = calculate_max(max_width, area.width, node_measurer.parent_area.width);
+    area.size.height = calculate_max(
+        max_height,
+        area.height(),
+        node_measurer.parent_area.height(),
+    );
+    area.size.width = calculate_max(max_width, area.width(), node_measurer.parent_area.width());
 
     area
 }

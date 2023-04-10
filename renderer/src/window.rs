@@ -1,8 +1,9 @@
 use dioxus_native_core::NodeId;
-use freya_common::{EventMessage, NodeArea};
+use freya_common::{Area, EventMessage, Size2D};
 use freya_core::process_render;
 use freya_core::{process_layout, ViewportsCollection};
-use freya_layout::{DioxusDOM, Layers};
+use freya_dom::FreyaDOM;
+use freya_layout::Layers;
 use std::ffi::CString;
 use std::num::NonZeroU32;
 
@@ -43,7 +44,7 @@ pub struct WindowEnv<T: Clone> {
     gl_surface: GlutinSurface<WindowSurface>,
     gr_context: skia_safe::gpu::DirectContext,
     gl_context: PossiblyCurrentContext,
-    window: Window,
+    pub(crate) window: Window,
     fb_info: FramebufferInfo,
     num_samples: usize,
     stencil_size: usize,
@@ -190,28 +191,28 @@ impl<T: Clone> WindowEnv<T> {
         }
     }
 
-    // Reprocess the layout
-    pub fn process_layout(&mut self, rdom: &DioxusDOM) -> (Layers, ViewportsCollection) {
+    /// Measure the layout
+    pub fn process_layout(&mut self, rdom: &FreyaDOM) -> (Layers, ViewportsCollection) {
         let window_size = self.window.inner_size();
+        let scale_factor = self.window.scale_factor() as f32;
         process_layout(
             rdom,
-            NodeArea {
-                width: window_size.width as f32,
-                height: window_size.height as f32,
-                x: 0.0,
-                y: 0.0,
-            },
+            Area::from_size(Size2D::from((
+                window_size.width as f32,
+                window_size.height as f32,
+            ))),
             &mut self.font_collection,
+            scale_factor,
         )
     }
 
-    /// Redraw the window
+    /// Render the RealDOM to Window
     pub fn render(
         &mut self,
         layers: &Layers,
         viewports_collection: &ViewportsCollection,
         hovered_node: &HoveredNode,
-        rdom: &DioxusDOM,
+        rdom: &FreyaDOM,
     ) {
         let canvas = self.surface.canvas();
 
@@ -229,25 +230,27 @@ impl<T: Clone> WindowEnv<T> {
             &mut self.font_collection,
             layers,
             &mut (canvas, (&mut matrices)),
-            |dom, element, font_collection, viewports_collection, (canvas, matrices)| {
+            |dom, render_node, font_collection, viewports_collection, (canvas, matrices)| {
                 let render_wireframe = if let Some(hovered_node) = &hovered_node {
                     hovered_node
                         .lock()
                         .unwrap()
-                        .map(|id| id == element.node_id)
+                        .map(|id| id == *render_node.get_id())
                         .unwrap_or_default()
                 } else {
                     false
                 };
-                render_skia(
-                    dom,
-                    canvas,
-                    element,
-                    font_collection,
-                    viewports_collection,
-                    render_wireframe,
-                    matrices,
-                );
+                if let Some(dioxus_node) = render_node.get_node(dom) {
+                    render_skia(
+                        canvas,
+                        render_node,
+                        &dioxus_node,
+                        font_collection,
+                        viewports_collection,
+                        render_wireframe,
+                        matrices,
+                    );
+                }
             },
         );
 
@@ -272,9 +275,11 @@ impl<T: Clone> WindowEnv<T> {
 
         let (width, height): (u32, u32) = size.into();
 
-        if let Some((width, height)) = NonZeroU32::new(width).zip(NonZeroU32::new(height)) {
-            self.gl_surface.resize(&self.gl_context, width, height);
-        }
+        self.gl_surface.resize(
+            &self.gl_context,
+            NonZeroU32::new(width.max(1)).unwrap(),
+            NonZeroU32::new(height.max(1)).unwrap(),
+        );
     }
 }
 

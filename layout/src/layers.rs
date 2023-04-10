@@ -1,13 +1,8 @@
 use dioxus_native_core::real_dom::NodeImmutable;
-use dioxus_native_core::real_dom::NodeRef;
 use dioxus_native_core::NodeId;
-use freya_common::NodeArea;
-use freya_node_state::CustomAttributeValues;
+use freya_common::Area;
+use freya_dom::{DioxusNode, FreyaDOM};
 use rustc_hash::FxHashMap;
-
-use crate::DioxusDOM;
-
-pub type DioxusNode<'a> = NodeRef<'a, CustomAttributeValues>;
 
 #[derive(Default, Clone)]
 pub struct Layers {
@@ -17,14 +12,14 @@ pub struct Layers {
 /// Collection of info about a specific Node to render
 #[derive(Clone, Debug)]
 pub struct RenderData {
-    pub node_area: NodeArea,
+    pub node_area: Area,
     pub node_id: NodeId,
     pub children: Vec<NodeId>,
 }
 
 impl RenderData {
     #[inline(always)]
-    pub fn get_area(&self) -> &NodeArea {
+    pub fn get_area(&self) -> &Area {
         &self.node_area
     }
 
@@ -39,8 +34,8 @@ impl RenderData {
     }
 
     #[inline(always)]
-    pub fn get_node<'a>(&'a self, rdom: &'a DioxusDOM) -> DioxusNode {
-        rdom.get(self.node_id).unwrap()
+    pub fn get_node<'a>(&'a self, rdom: &'a FreyaDOM) -> Option<DioxusNode> {
+        rdom.dom().get(self.node_id)
     }
 }
 
@@ -59,7 +54,7 @@ impl Layers {
     }
 
     /// Insert a Node into a layer
-    pub fn add_element(&mut self, node: &DioxusNode, node_area: &NodeArea, node_layer: i16) {
+    pub fn add_element(&mut self, node: &DioxusNode, node_area: &Area, node_layer: i16) {
         let layer = self
             .layers
             .entry(node_layer)

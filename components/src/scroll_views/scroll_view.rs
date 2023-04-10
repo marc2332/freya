@@ -1,8 +1,6 @@
-use dioxus_core::{Element, Scope};
-use dioxus_core_macro::{render, Props};
-use dioxus_hooks::use_state;
-use freya_elements as dioxus_elements;
-use freya_elements::{MouseEvent, WheelEvent};
+use dioxus::prelude::*;
+use freya_elements::elements as dioxus_elements;
+use freya_elements::events::{keyboard::Key, KeyboardEvent, MouseEvent, WheelEvent};
 use freya_hooks::{use_get_theme, use_node};
 
 use crate::{
@@ -61,9 +59,10 @@ pub struct ScrollViewProps<'a> {
 #[allow(non_snake_case)]
 pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     let theme = use_get_theme(cx);
-    let clicking_scrollbar = use_state::<Option<(Axis, f64)>>(cx, || None);
-    let scrolled_y = use_state(cx, || 0);
-    let scrolled_x = use_state(cx, || 0);
+    let clicking_scrollbar = use_ref::<Option<(Axis, f64)>>(cx, || None);
+    let clicking_shift = use_ref(cx, || false);
+    let scrolled_y = use_ref(cx, || 0);
+    let scrolled_x = use_ref(cx, || 0);
     let (node_ref, size) = use_node(cx);
 
     let scrollbar_theme = &theme.scrollbar;
@@ -75,73 +74,117 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     let show_scrollbar = cx.props.show_scrollbar.unwrap_or_default();
 
     let vertical_scrollbar_is_visible =
-        is_scrollbar_visible(show_scrollbar, size.inner_height, size.height);
+        is_scrollbar_visible(show_scrollbar, size.inner.height(), size.area.height());
     let horizontal_scrollbar_is_visible =
-        is_scrollbar_visible(show_scrollbar, size.inner_width, size.width);
+        is_scrollbar_visible(show_scrollbar, size.inner.width(), size.area.width());
 
     let container_width = get_container_size(vertical_scrollbar_is_visible);
     let container_height = get_container_size(horizontal_scrollbar_is_visible);
 
-    let corrected_scrolled_y =
-        get_corrected_scroll_position(size.inner_height, size.height, *scrolled_y.get() as f32);
-    let corrected_scrolled_x =
-        get_corrected_scroll_position(size.inner_width, size.width, *scrolled_x.get() as f32);
+    let corrected_scrolled_y = get_corrected_scroll_position(
+        size.inner.height(),
+        size.area.height(),
+        *scrolled_y.read() as f32,
+    );
+    let corrected_scrolled_x = get_corrected_scroll_position(
+        size.inner.width(),
+        size.area.width(),
+        *scrolled_x.read() as f32,
+    );
 
-    let (scrollbar_y, scrollbar_height) =
-        get_scrollbar_pos_and_size(size.inner_height, size.height, corrected_scrolled_y);
+    let (scrollbar_y, scrollbar_height) = get_scrollbar_pos_and_size(
+        size.inner.height(),
+        size.area.height(),
+        corrected_scrolled_y,
+    );
     let (scrollbar_x, scrollbar_width) =
-        get_scrollbar_pos_and_size(size.inner_width, size.width, corrected_scrolled_x);
+        get_scrollbar_pos_and_size(size.inner.width(), size.area.width(), corrected_scrolled_x);
 
     // Moves the Y axis when the user scrolls in the container
     let onwheel = move |e: WheelEvent| {
-        let wheel_y = e.get_delta_y();
+        if !*clicking_shift.read() {
+            let wheel_y = e.get_delta_y();
 
-        let scroll_position = get_scroll_position_from_wheel(
-            wheel_y as f32,
-            size.inner_height,
-            size.height,
-            *scrolled_y.get() as f32,
+            let scroll_position_y = get_scroll_position_from_wheel(
+                wheel_y as f32,
+                size.inner.height(),
+                size.area.height(),
+                *scrolled_y.read() as f32,
+            );
+
+            scrolled_y.with_mut(|y| *y = scroll_position_y);
+        }
+
+        let wheel_x = if *clicking_shift.read() {
+            e.get_delta_y()
+        } else {
+            e.get_delta_x()
+        };
+
+        let scroll_position_x = get_scroll_position_from_wheel(
+            wheel_x as f32,
+            size.inner.width(),
+            size.area.width(),
+            *scrolled_x.read() as f32,
         );
 
-        scrolled_y.with_mut(|y| *y = scroll_position);
+        scrolled_x.with_mut(|x| *x = scroll_position_x);
     };
 
     // Drag the scrollbars
     let onmouseover = move |e: MouseEvent| {
-        if let Some((Axis::Y, y)) = clicking_scrollbar.get() {
+        if let Some((Axis::Y, y)) = *clicking_scrollbar.read() {
             let coordinates = e.get_element_coordinates();
             let cursor_y = coordinates.y - y;
 
-            let scroll_position =
-                get_scroll_position_from_cursor(cursor_y as f32, size.inner_height, size.height);
+            let scroll_position = get_scroll_position_from_cursor(
+                cursor_y as f32,
+                size.inner.height(),
+                size.area.height(),
+            );
 
             scrolled_y.with_mut(|y| *y = scroll_position);
-        } else if let Some((Axis::X, x)) = clicking_scrollbar.get() {
+        } else if let Some((Axis::X, x)) = *clicking_scrollbar.read() {
             let coordinates = e.get_element_coordinates();
             let cursor_x = coordinates.x - x;
 
-            let scroll_position =
-                get_scroll_position_from_cursor(cursor_x as f32, size.inner_width, size.width);
+            let scroll_position = get_scroll_position_from_cursor(
+                cursor_x as f32,
+                size.inner.width(),
+                size.area.width(),
+            );
 
             scrolled_x.with_mut(|x| *x = scroll_position);
         }
     };
 
+    // Check if Shift is being pressed
+    let onkeydown = |e: KeyboardEvent| {
+        if e.key == Key::Shift {
+            clicking_shift.set(true);
+        }
+    };
+
+    // Unmark the pressed shft at any keyup
+    let onkeyup = |_: KeyboardEvent| {
+        clicking_shift.set(false);
+    };
+
     // Mark the Y axis scrollbar as the one being dragged
     let onmousedown_y = |e: MouseEvent| {
         let coordinates = e.get_element_coordinates();
-        clicking_scrollbar.set(Some((Axis::Y, coordinates.y)));
+        *clicking_scrollbar.write_silent() = Some((Axis::Y, coordinates.y));
     };
 
     // Mark the X axis scrollbar as the one being dragged
     let onmousedown_x = |e: MouseEvent| {
         let coordinates = e.get_element_coordinates();
-        clicking_scrollbar.set(Some((Axis::X, coordinates.x)));
+        *clicking_scrollbar.write_silent() = Some((Axis::X, coordinates.x));
     };
 
     // Unmark any scrollbar
     let onclick = |_: MouseEvent| {
-        clicking_scrollbar.set(None);
+        *clicking_scrollbar.write_silent() = None;
     };
 
     let horizontal_scrollbar_size = if horizontal_scrollbar_is_visible {
@@ -162,6 +205,8 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
             height: "{user_container_height}",
             onclick: onclick, // TODO(marc2332): mouseup would be better
             onmouseover: onmouseover,
+            onkeydown: onkeydown,
+            onkeyup: onkeyup,
             rect {
                 direction: "vertical",
                 width: "{container_width}",

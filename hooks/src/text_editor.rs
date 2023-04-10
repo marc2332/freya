@@ -1,23 +1,23 @@
-use std::{fmt::Display, ops::Range};
+use std::{borrow::Cow, fmt::Display, ops::Range};
 
-use freya_elements::{Code, Key, Modifiers};
+use freya_elements::events::keyboard::{Code, Key, Modifiers};
 pub use ropey::Rope;
 
 /// Holds the position of a cursor in a text
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct TextCursor {
     col: usize,
     row: usize,
 }
 
 impl TextCursor {
-    /// Construct a new [TextCursor] given a column and a row
-    pub fn new(col: usize, row: usize) -> Self {
+    /// Construct a new [TextCursor] given a row and a column
+    pub fn new(row: usize, col: usize) -> Self {
         Self { col, row }
     }
 
-    /// Move the cursor to a new column and row
-    pub fn move_to(&mut self, col: usize, row: usize) {
+    /// Move the cursor to a new row and column
+    pub fn move_to(&mut self, row: usize, col: usize) {
         self.col = col;
         self.row = row;
     }
@@ -50,7 +50,7 @@ impl TextCursor {
 /// A text line from a [TextEditor]
 #[derive(Clone)]
 pub struct Line<'a> {
-    pub text: &'a str,
+    pub text: Cow<'a, str>,
 }
 
 impl Line<'_> {
@@ -61,13 +61,13 @@ impl Line<'_> {
 
     /// Get the text of the line
     fn as_str(&self) -> &str {
-        self.text
+        &self.text
     }
 }
 
 impl Display for Line<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(self.text)
+        f.write_str(&self.text)
     }
 }
 
@@ -82,11 +82,13 @@ pub enum TextEvent {
     None,
 }
 
-/// Editable text manager
+/// Common trait for editable texts
 pub trait TextEditor: Sized + Clone + Display {
     type LinesIterator<'a>: Iterator<Item = Line<'a>>
     where
         Self: 'a;
+
+    fn set(&mut self, text: &str);
 
     /// Iterator over all the lines in the text.
     fn lines(&self) -> Self::LinesIterator<'_>;
@@ -158,30 +160,71 @@ pub trait TextEditor: Sized + Clone + Display {
         line_begining + self.cursor_col()
     }
 
-    // Process a Key event
-    fn process_key(&mut self, key: &Key, code: &Code, _modifers: &Modifiers) -> TextEvent {
+    /// Set the cursor position
+    fn set_cursor_pos(&mut self, pos: usize) {
+        let row = self.char_to_line(pos);
+        let row_idx = self.line_to_char(row);
+        let col = pos - row_idx;
+        self.cursor_mut().move_to(row, col)
+    }
+
+    // Return the highlighted text from a given editor Id
+    fn highlights(&self, editor_id: usize) -> Option<(usize, usize)>;
+
+    // Cancel highlight
+    fn unhighlight(&mut self);
+
+    // Highlight some text
+    fn highlight_text(&mut self, from: usize, to: usize, editor_id: usize);
+
+    fn move_highlight_to_cursor(&mut self);
+
+    // Process a Keyboard event
+    fn process_key(&mut self, key: &Key, code: &Code, modifiers: &Modifiers) -> TextEvent {
         let mut event = TextEvent::None;
+        let mut unhighlight = true;
+
         match key {
+            Key::Shift => {
+                unhighlight = false;
+            }
+            Key::Escape => {
+                unhighlight = true;
+            }
             Key::ArrowDown => {
+                if modifiers.contains(Modifiers::SHIFT) {
+                    unhighlight = false;
+                    self.move_highlight_to_cursor();
+                }
+
                 let total_lines = self.len_lines() - 1;
                 // Go one line down
                 if self.cursor_row() < total_lines {
                     let next_line = self.line(self.cursor_row() + 1).unwrap();
 
                     // Try to use the current cursor column, otherwise use the new line length
-                    let cursor_index = if self.cursor_col() <= next_line.len_chars() {
+                    let cursor_col = if self.cursor_col() <= next_line.len_chars() {
                         self.cursor_col()
                     } else {
-                        next_line.len_chars()
+                        next_line.len_chars().max(1) - 1
                     };
 
-                    self.cursor_mut().set_col(cursor_index);
+                    self.cursor_mut().set_col(cursor_col);
                     self.cursor_down();
 
                     event = TextEvent::CursorChanged
                 }
+
+                if modifiers.contains(Modifiers::SHIFT) {
+                    self.move_highlight_to_cursor();
+                }
             }
             Key::ArrowLeft => {
+                if modifiers.contains(Modifiers::SHIFT) {
+                    unhighlight = false;
+                    self.move_highlight_to_cursor();
+                }
+
                 // Go one character to the left
                 if self.cursor_col() > 0 {
                     self.cursor_left();
@@ -191,27 +234,36 @@ pub trait TextEditor: Sized + Clone + Display {
                     // Go one line up if there is no more characters on the left
                     let prev_line = self.line(self.cursor_row() - 1);
                     if let Some(prev_line) = prev_line {
-                        // Use the new line length as new cursor column, otherwise just set it to 0
-                        let len = if prev_line.len_chars() > 0 {
-                            prev_line.len_chars()
+                        // Use the prev line length as new cursor column, otherwise just set it to 0
+                        let cursor_col = if prev_line.len_chars() > 0 {
+                            prev_line.len_chars() - 1
                         } else {
                             0
                         };
 
                         self.cursor_up();
-                        self.cursor_mut().set_col(len - 1);
+                        self.cursor_mut().set_col(cursor_col);
 
                         event = TextEvent::CursorChanged
                     }
                 }
+
+                if modifiers.contains(Modifiers::SHIFT) {
+                    self.move_highlight_to_cursor();
+                }
             }
             Key::ArrowRight => {
+                if modifiers.contains(Modifiers::SHIFT) {
+                    unhighlight = false;
+                    self.move_highlight_to_cursor();
+                }
+
                 let total_lines = self.len_lines() - 1;
                 let current_line = self.line(self.cursor_row()).unwrap();
 
                 // Go one line down if there isn't more characters on the right
                 if self.cursor_row() < total_lines
-                    && self.cursor_col() == current_line.len_chars() - 1
+                    && self.cursor_col() == current_line.len_chars().max(1) - 1
                 {
                     self.cursor_down();
                     self.cursor_mut().set_col(0);
@@ -223,23 +275,36 @@ pub trait TextEditor: Sized + Clone + Display {
 
                     event = TextEvent::CursorChanged
                 }
+
+                if modifiers.contains(Modifiers::SHIFT) {
+                    self.move_highlight_to_cursor();
+                }
             }
             Key::ArrowUp => {
+                if modifiers.contains(Modifiers::SHIFT) {
+                    unhighlight = false;
+                    self.move_highlight_to_cursor();
+                }
+
                 // Go one line up if there is any
                 if self.cursor_row() > 0 {
                     let prev_line = self.line(self.cursor_row() - 1).unwrap();
 
-                    // Try to use the current cursor column, otherwise use the new line length
-                    let cursor_column = if self.cursor_col() <= prev_line.len_chars() {
+                    // Try to use the current cursor column, otherwise use the prev line length
+                    let cursor_col = if self.cursor_col() <= prev_line.len_chars() {
                         self.cursor_col()
                     } else {
-                        prev_line.len_chars()
+                        prev_line.len_chars().max(1) - 1
                     };
 
                     self.cursor_up();
-                    self.cursor_mut().set_col(cursor_column);
+                    self.cursor_mut().set_col(cursor_col);
 
                     event = TextEvent::CursorChanged
+                }
+
+                if modifiers.contains(Modifiers::SHIFT) {
+                    self.move_highlight_to_cursor();
                 }
             }
             Key::Backspace => {
@@ -304,6 +369,10 @@ pub trait TextEditor: Sized + Clone + Display {
                 }
             }
             _ => {}
+        }
+
+        if unhighlight {
+            self.unhighlight();
         }
 
         event

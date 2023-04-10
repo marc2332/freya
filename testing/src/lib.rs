@@ -4,29 +4,62 @@ use dioxus_core::{Component, VirtualDom};
 use dioxus_native_core::node::NodeType;
 use dioxus_native_core::real_dom::RealDom;
 use dioxus_native_core::tree::TreeView;
-use dioxus_native_core::{NodeId, SendAnyMap};
-use freya_common::NodeArea;
+use dioxus_native_core::NodeId;
+use freya_common::{Area, Size2D};
 use freya_core::events::EventsProcessor;
 use freya_core::{events::DomEvent, EventEmitter, EventReceiver};
 use freya_core::{process_events, process_layout, ViewportsCollection};
-use freya_layout::DioxusNode;
+use freya_dom::{DioxusNode, FreyaDOM, SafeDOM};
 use freya_layout::Layers;
-use freya_node_state::{CustomAttributeValues, NodeState};
+use freya_node_state::NodeState;
 use rustc_hash::FxHashMap;
 use skia_safe::textlayout::FontCollection;
 use skia_safe::FontMgr;
 use tokio::sync::mpsc::unbounded_channel;
 
 pub use freya_core::events::FreyaEvent;
-pub use freya_elements::MouseButton;
+pub use freya_elements::events::mouse::MouseButton;
+use tokio::time::timeout;
+
+pub use config::*;
+
+mod config;
+
+const SCALE_FACTOR: f64 = 1.0;
+
+#[derive(Clone)]
+pub struct TestUtils {
+    dom: SafeDOM,
+    layers: Arc<Mutex<Layers>>,
+}
+
+impl TestUtils {
+    /// Get a Node by the given ID
+    pub fn get_node_by_id(&self, node_id: NodeId) -> TestNode {
+        let dom = self.dom.get();
+        let rdom = dom.dom();
+        let child: &DioxusNode = rdom.get(node_id).unwrap();
+        let height = rdom.tree.height(node_id).unwrap();
+        let parent_id = rdom.tree.parent_id(node_id);
+        let children_ids = rdom.tree.children_ids(node_id).map(|v| v.to_vec());
+        TestNode {
+            node_id,
+            utils: self.clone(),
+            node: child.clone(),
+            height,
+            parent_id,
+            children_ids,
+        }
+    }
+}
 
 /// Represents a `Node` in the DOM.
-#[allow(dead_code)]
+#[derive(Clone)]
 pub struct TestNode {
     node_id: NodeId,
     utils: TestUtils,
     height: u16,
-    children: Option<Vec<NodeId>>,
+    children_ids: Option<Vec<NodeId>>,
     node: DioxusNode,
     parent_id: Option<NodeId>,
 }
@@ -34,31 +67,28 @@ pub struct TestNode {
 impl TestNode {
     /// Get a child of the Node by the given index
     pub fn child(&self, child_index: usize) -> Option<Self> {
-        if let Some(children) = &self.children {
-            let child_id = children.get(child_index)?;
-            let child: TestNode = self.utils.get_node_by_id(*child_id);
-            Some(child)
-        } else {
-            None
-        }
+        let children_ids = self.children_ids.as_ref()?;
+        let child_id = children_ids.get(child_index)?;
+        let child: TestNode = self.utils.get_node_by_id(*child_id);
+        Some(child)
     }
 
-    /// Get the node's text
+    /// Get the Node text
     pub fn text(&self) -> Option<&str> {
         if let NodeType::Text { text } = &self.node.node_data.node_type {
-            Some(text)
+            Some(text.as_str())
         } else {
             None
         }
     }
 
-    /// Get the node's state
+    /// Get the Node state
     pub fn state(&self) -> &NodeState {
         &self.node.state
     }
 
-    /// Get the node's layout
-    pub fn layout(&self) -> Option<NodeArea> {
+    /// Get the Node layout
+    pub fn layout(&self) -> Option<Area> {
         let layers = &self.utils.layers.lock().unwrap().layers;
         for layer in layers.values() {
             for (id, node) in layer {
@@ -69,175 +99,155 @@ impl TestNode {
         }
         None
     }
-}
 
-/// Collection of utils to test a Freya Component
-#[derive(Clone)]
-pub struct TestUtils {
-    rdom: Arc<Mutex<RealDom<NodeState, CustomAttributeValues>>>,
-    dom: Arc<Mutex<VirtualDom>>,
-    layers: Arc<Mutex<Layers>>,
-    freya_events: Arc<Mutex<Vec<FreyaEvent>>>,
-    events_processor: Arc<Mutex<EventsProcessor>>,
-    font_collection: FontCollection,
-    event_emitter: EventEmitter,
-    event_receiver: Arc<Mutex<EventReceiver>>,
-    viewports: Arc<Mutex<ViewportsCollection>>,
-}
-
-impl TestUtils {
-    /// Wait for internal changes
-    // TODO Remove this warning
-    #[allow(clippy::await_holding_lock)]
-    pub async fn wait_for_update(&mut self, sizes: (f32, f32)) {
-        self.wait_for_work(sizes).await;
-
-        let ev = self.event_receiver.lock().unwrap().try_recv();
-
-        let mut dom = self.dom.lock().unwrap();
-
-        if let Ok(ev) = ev {
-            dom.handle_event(&ev.name, ev.data.any(), ev.element_id, false);
-            dom.process_events();
-        }
-
-        dom.wait_for_work().await;
-
-        let mutations = dom.render_immediate();
-
-        let (to_update, _) = self.rdom.lock().unwrap().apply_mutations(mutations);
-
-        let ctx = SendAnyMap::new();
-        self.rdom.lock().unwrap().update_state(to_update, ctx);
+    /// Get a mutable reference to the test utils.
+    pub fn utils(&mut self) -> &mut TestUtils {
+        &mut self.utils
     }
 
-    /// Wait for all changes to have been applied
-    #[allow(clippy::await_holding_lock)]
-    pub async fn wait_until_cleanup(&mut self, sizes: (f32, f32)) {
-        self.wait_for_update(sizes).await;
+    /// Get the NodeId from the parent
+    pub fn parent_id(&self) -> Option<NodeId> {
+        self.parent_id
+    }
+
+    /// Get the Node height in the DOM
+    pub fn dom_height(&self) -> u16 {
+        self.height
+    }
+}
+
+/// Manages the lifecycle of your tests.
+pub struct TestingHandler {
+    vdom: VirtualDom,
+    utils: TestUtils,
+
+    event_emitter: EventEmitter,
+    event_receiver: EventReceiver,
+
+    events_queue: Vec<FreyaEvent>,
+    events_processor: EventsProcessor,
+    font_collection: FontCollection,
+    viewports: ViewportsCollection,
+
+    config: TestingConfig,
+}
+
+impl TestingHandler {
+    /// Replace the current [`TestingConfig`].
+    pub fn set_config(&mut self, config: TestingConfig) {
+        self.config = config;
+    }
+
+    /// Wait and apply new changes
+    pub async fn wait_for_update(&mut self) -> bool {
+        self.wait_for_work(self.config.size());
+
+        let vdom = &mut self.vdom;
+
         loop {
-            self.wait_for_work(sizes).await;
-
-            let ev = self.event_receiver.lock().unwrap().try_recv();
-
-            let mut dom = self.dom.lock().unwrap();
+            let ev = self.event_receiver.try_recv();
 
             if let Ok(ev) = ev {
-                dom.handle_event(&ev.name, ev.data.any(), ev.element_id, false);
-                dom.process_events();
-            }
-
-            dom.wait_for_work().await;
-
-            let mutations = dom.render_immediate();
-
-            let (to_update, diff) = self.rdom.lock().unwrap().apply_mutations(mutations);
-
-            let ctx = SendAnyMap::new();
-            self.rdom.lock().unwrap().update_state(to_update, ctx);
-
-            if diff.is_empty() {
+                vdom.handle_event(&ev.name, ev.data.any(), ev.element_id, false);
+                vdom.process_events();
+            } else {
                 break;
             }
         }
-        self.wait_for_work(sizes).await;
+
+        timeout(self.config.vdom_timeout(), vdom.wait_for_work())
+            .await
+            .ok();
+
+        let mutations = self.vdom.render_immediate();
+
+        let (must_repaint, _) = self
+            .utils
+            .dom
+            .get_mut()
+            .apply_mutations(mutations, SCALE_FACTOR as f32);
+        self.wait_for_work(self.config.size());
+        must_repaint
     }
 
-    /// Wait to process the internal Freya changes, like layout or events
-    pub async fn wait_for_work(&mut self, sizes: (f32, f32)) {
+    /// Wait for layout and events to be processed
+    pub fn wait_for_work(&mut self, size: Size2D) {
         let (layers, viewports) = process_layout(
-            &self.rdom.lock().unwrap(),
-            NodeArea {
-                width: sizes.0,
-                height: sizes.1,
-                x: 0.0,
-                y: 0.0,
+            &self.utils.dom.get(),
+            Area {
+                origin: (0.0, 0.0).into(),
+                size,
             },
             &mut self.font_collection,
+            SCALE_FACTOR as f32,
         );
 
-        *self.layers.lock().unwrap() = layers;
-        *self.viewports.lock().unwrap() = viewports;
+        *self.utils.layers.lock().unwrap() = layers;
+        self.viewports = viewports;
 
         process_events(
-            &self.rdom.lock().unwrap(),
-            &self.layers.lock().unwrap(),
-            &mut self.freya_events.lock().unwrap(),
+            &self.utils.dom.get(),
+            &self.utils.layers.lock().unwrap(),
+            &mut self.events_queue,
             &self.event_emitter,
-            &mut self.events_processor.lock().unwrap(),
-            &self.viewports.lock().unwrap(),
+            &mut self.events_processor,
+            &self.viewports,
+            SCALE_FACTOR,
         );
     }
 
-    /// Emit an event
-    pub fn send_event(&mut self, event: FreyaEvent) {
-        self.freya_events.lock().unwrap().push(event);
+    /// Push an event to the events queue
+    pub fn push_event(&mut self, event: FreyaEvent) {
+        self.events_queue.push(event);
     }
 
+    /// Get the root node
     pub fn root(&mut self) -> TestNode {
-        let rdom = self.rdom.lock().unwrap();
+        let dom = self.utils.dom.get();
+        let rdom = dom.dom();
         let root_id = rdom.root_id();
         let root: &DioxusNode = rdom.get(root_id).unwrap();
-        let children = rdom.tree.children_ids(root_id).map(|v| v.to_vec());
+        let children_ids = rdom.tree.children_ids(root_id).map(|v| v.to_vec());
         TestNode {
             node_id: root_id,
-            utils: self.clone(),
+            utils: self.utils.clone(),
             node: root.clone(),
             height: 0,
             parent_id: None,
-            children,
-        }
-    }
-
-    /// Get a Node by the given ID
-    pub fn get_node_by_id(&self, node_id: NodeId) -> TestNode {
-        let rdom = self.rdom.lock().unwrap();
-        let child: &DioxusNode = rdom.get(node_id).unwrap();
-        let height = rdom.tree.height(node_id).unwrap();
-        let parent_id = rdom.tree.parent_id(node_id);
-        let children = rdom.tree.children_ids(node_id).map(|v| v.to_vec());
-        TestNode {
-            node_id,
-            utils: self.clone(),
-            node: child.clone(),
-            height,
-            parent_id,
-            children,
+            children_ids,
         }
     }
 }
 
-/// Run a component in a headless testing environment
-pub fn launch_test(root: Component<()>) -> TestUtils {
-    let mut dom = VirtualDom::new(root);
-    let rdom = Arc::new(Mutex::new(
-        RealDom::<NodeState, CustomAttributeValues>::new(),
-    ));
+/// Run a Component in a headless testing environment
+pub fn launch_test(root: Component<()>) -> TestingHandler {
+    launch_test_with_config(root, TestingConfig::default())
+}
+
+/// Run a Component in a headless testing environment
+pub fn launch_test_with_config(root: Component<()>, config: TestingConfig) -> TestingHandler {
+    let mut vdom = VirtualDom::new(root);
+    let mutations = vdom.rebuild();
+
+    let dom = SafeDOM::new(FreyaDOM::new(RealDom::new()));
+    dom.get_mut().init_dom(mutations, SCALE_FACTOR as f32);
 
     let (event_emitter, event_receiver) = unbounded_channel::<DomEvent>();
     let layers = Arc::new(Mutex::new(Layers::default()));
-    let freya_events = Arc::new(Mutex::new(Vec::new()));
-    let events_processor = Arc::new(Mutex::new(EventsProcessor::default()));
+    let freya_events = Vec::new();
+    let events_processor = EventsProcessor::default();
     let mut font_collection = FontCollection::new();
     font_collection.set_dynamic_font_manager(FontMgr::default());
 
-    let muts = dom.rebuild();
-    let (to_update, _) = rdom.lock().unwrap().apply_mutations(muts);
-
-    let _ctx = SendAnyMap::new();
-    rdom.lock()
-        .unwrap()
-        .update_state(to_update, SendAnyMap::new());
-
-    TestUtils {
-        rdom,
-        dom: Arc::new(Mutex::new(dom)),
-        layers,
-        freya_events,
+    TestingHandler {
+        vdom,
+        events_queue: freya_events,
         events_processor,
         font_collection,
         event_emitter,
-        event_receiver: Arc::new(Mutex::new(event_receiver)),
-        viewports: Arc::new(Mutex::new(FxHashMap::default())),
+        event_receiver,
+        viewports: FxHashMap::default(),
+        utils: TestUtils { dom, layers },
+        config,
     }
 }

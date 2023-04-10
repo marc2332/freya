@@ -6,6 +6,8 @@
 [![Github Sponsors](https://img.shields.io/github/sponsors/marc2332?style=social)](https://github.com/sponsors/marc2332)
 [![codecov](https://codecov.io/github/marc2332/freya/branch/main/graph/badge.svg?token=APSGEC84B8)](https://codecov.io/github/marc2332/freya)
 
+[Website](https://freyaui.dev) | [Docs](https://docs.freyaui.dev/freya) | [Book](https://book.freyaui.dev) | [Discord](https://discord.gg/sYejxCdewG)
+
 **Freya** is native GUI library for Rust powered by 🧬 [Dioxus](https://dioxuslabs.com) and 🎨 [Skia](https://skia.org/). 
 
 ⚠️ It's currently work in progress and not usable for production, but you can already play with it! You can join the [Discord](https://discord.gg/sYejxCdewG) server if you have any question or issue. 
@@ -57,18 +59,20 @@ fn app(cx: Scope) -> Element {
 
 ⚠️ See [Environment setup](https://book.freyaui.dev/setup.html) first.
 
-Run:
+Clone this repo and run:
 
 ```shell
 cargo run --example counter
 ```
+
+You can also try [`freya-template`](https://github.com/marc2332/freya-template)
 
 ### Usage 📜
 Add Freya as a dependency via git (it's not published on [crates.io](https://crates.io/) yet) in your `Cargo.toml`:
 
 ```toml
 freya = { git = "https://github.com/marc2332/freya" }
-dioxus = { git = "https://github.com/Demonthos/dioxus", branch="simplify-native-core", features = ["macro", "hooks"]}
+dioxus = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling", features = ["macro", "hooks"]}
 ```
 
 ### Features ✨

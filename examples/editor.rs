@@ -1,4 +1,4 @@
-use freya::dioxus_elements::MouseEvent;
+use freya::events::MouseEvent;
 use freya::prelude::*;
 
 fn main() {
@@ -23,13 +23,19 @@ fn app(cx: Scope) -> Element {
 fn Body(cx: Scope) -> Element {
     let theme = use_theme(cx);
     let theme = theme.read();
-    let (text_editor, process_keyevent, process_clickevent, cursor_ref) = use_editable(
+
+    let editable = use_editable(
         cx,
         || {
-            "Lorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet"
+            EditableConfig::new("Lorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet".to_string())
         },
         EditableMode::SingleLineMultipleEditors,
     );
+    let cursor_attr = editable.cursor_attr(cx);
+    let editor = editable.editor().clone();
+    let cursor = editor.cursor().clone();
+    let cursor_char = editor.cursor_pos();
+
     let font_size_percentage = use_state(cx, || 15.0);
     let line_height_percentage = use_state(cx, || 0.0);
     let is_bold = use_state(cx, || false);
@@ -39,9 +45,6 @@ fn Body(cx: Scope) -> Element {
     let font_size = font_size_percentage + 5.0;
     let line_height = (line_height_percentage / 25.0) + 1.2;
     let mut line_index = 0;
-
-    let cursor_char = text_editor.cursor_pos();
-
     let font_style = {
         if *is_bold.get() && *is_italic.get() {
             "bold-italic"
@@ -51,6 +54,13 @@ fn Body(cx: Scope) -> Element {
             "bold"
         } else {
             "normal"
+        }
+    };
+
+    let onkeydown = {
+        to_owned![editable];
+        move |e: KeyboardEvent| {
+            editable.process_event(&EditableEvent::KeyDown(e.data));
         }
     };
 
@@ -97,7 +107,6 @@ fn Body(cx: Scope) -> Element {
                                 "Font size"
                             }
                         }
-
                     }
                     rect {
                         height: "40%",
@@ -169,10 +178,8 @@ fn Body(cx: Scope) -> Element {
                 width: "100%",
                 height: "calc(100% - 90)",
                 padding: "10",
-                onkeydown: move |e| {
-                   process_keyevent.send(e.data).unwrap();
-                },
-                cursor_reference: cursor_ref,
+                onkeydown: onkeydown,
+                cursor_reference: cursor_attr,
                 direction: "horizontal",
                 background: "{theme.body.background}",
                 rect {
@@ -183,14 +190,13 @@ fn Body(cx: Scope) -> Element {
                         width: "100%",
                         height: "100%",
                         show_scrollbar: true,
-                        text_editor.lines().map(move |l| {
-                            let process_clickevent = process_clickevent.clone();
+                        editor.lines().map(move |l| {
 
-                            let is_line_selected = text_editor.cursor_row() == line_index;
+                            let is_line_selected = cursor.row() == line_index;
 
                             // Only show the cursor in the active line
                             let character_index = if is_line_selected {
-                                text_editor.cursor_col().to_string()
+                                cursor.col().to_string()
                             } else {
                                 "none".to_string()
                             };
@@ -202,13 +208,32 @@ fn Body(cx: Scope) -> Element {
                                 ""
                             };
 
-                            let onmousedown = move |e: MouseEvent| {
-                                process_clickevent.send((e.data, line_index)).ok();
+
+                            let onmousedown = {
+                                to_owned![editable];
+                                move |e: MouseEvent| {
+                                    editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
+                                }
+                            };
+
+                            let onmouseover = {
+                                to_owned![editable];
+                                move |e: MouseEvent| {
+                                    editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
+                                }
+                            };
+
+                            let onclick = {
+                                to_owned![editable];
+                                move |_: MouseEvent| {
+                                    editable.process_event(&EditableEvent::Click);
+                                }
                             };
 
                             let manual_line_height = font_size * line_height;
 
                             let cursor_id = line_index;
+                            let highlights = editable.highlights_attr(cx, cursor_id);
 
                             line_index += 1;
                             rsx! {
@@ -238,11 +263,14 @@ fn Body(cx: Scope) -> Element {
                                         cursor_mode: "editable",
                                         cursor_id: "{cursor_id}",
                                         onmousedown: onmousedown,
+                                        onmouseover: onmouseover,
+                                        onclick: onclick,
+                                        highlights: highlights,
                                         text {
                                             color: "rgb(240, 240, 240)",
                                             font_size: "{font_size}",
                                             font_style: "{font_style}",
-                                            "{l} "
+                                            "{l}"
                                         }
                                     }
                                 }
@@ -269,7 +297,7 @@ fn Body(cx: Scope) -> Element {
                             text {
                                 color: "white",
                                 font_size: "{font_size}",
-                                "{text_editor}"
+                                "{editor}"
                             }
                         }
                     }
@@ -283,7 +311,7 @@ fn Body(cx: Scope) -> Element {
                 padding: "5",
                 label {
                     color: "rgb(200, 200, 200)",
-                    "Ln {text_editor.cursor_row() + 1}, Col {text_editor.cursor_col() + 1}"
+                    "Ln {editor.cursor_row() + 1}, Col {editor.cursor_col() + 1}"
                 }
             }
         }

@@ -13,11 +13,10 @@ impl WheelData {
 }
 
 impl WheelData {
-    /*
+    /// Get the X delta.
     pub fn get_delta_x(&self) -> f64 {
-
+        self.delta_x
     }
-    */
 
     /// Get the Y delta.
     pub fn get_delta_y(&self) -> f64 {

@@ -1,0 +1,24 @@
+[package]
+name = "freya-dom"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../readme.md"
+homepage = "https://github.com/marc2332/freya"
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
+categories = ["GUI"]
+
+[features]
+shared = []
+
+[dependencies]
+dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+
+freya-node-state = { path = "../state", version = "0.1.0" }
+freya-common = { path = "../common", version = "0.1.0" }
