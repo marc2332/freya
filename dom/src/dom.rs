@@ -2,12 +2,14 @@ use std::sync::{Arc, Mutex};
 
 use dioxus_core::{Mutation, Mutations};
 use dioxus_native_core::{
-    prelude::DioxusState,
+    prelude::{DioxusState, State},
     real_dom::{NodeRef, RealDom},
     SendAnyMap,
 };
 use freya_common::LayoutNotifier;
-use freya_node_state::CustomAttributeValues;
+use freya_node_state::{
+    CursorSettings, CustomAttributeValues, FontStyle, References, Scroll, Size, Style, Transform,
+};
 
 #[cfg(feature = "shared")]
 use std::sync::MutexGuard;
@@ -77,6 +79,26 @@ pub struct FreyaDOM {
     rdom: DioxusDOM,
     dioxus_integration_state: DioxusState,
     layout_notifier: LayoutNotifier,
+}
+
+impl Default for FreyaDOM {
+    fn default() -> Self {
+        let mut rdom = RealDom::<CustomAttributeValues>::new([
+            CursorSettings::to_type_erased(),
+            FontStyle::to_type_erased(),
+            References::to_type_erased(),
+            Scroll::to_type_erased(),
+            Size::to_type_erased(),
+            Style::to_type_erased(),
+            Transform::to_type_erased(),
+        ]);
+        let dioxus_integration_state = DioxusState::create(&mut rdom);
+        Self {
+            rdom,
+            dioxus_integration_state,
+            layout_notifier: Arc::new(Mutex::new(false)),
+        }
+    }
 }
 
 impl FreyaDOM {

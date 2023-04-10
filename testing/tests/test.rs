@@ -18,7 +18,7 @@ async fn no_state() {
 
     assert_eq!(
         utils.root().child(0).unwrap().child(0).unwrap().text(),
-        Some("Hello")
+        Some("Hello".to_string())
     );
 }
 
@@ -43,11 +43,17 @@ async fn with_state() {
 
     let label = utils.root().child(0).unwrap();
 
-    assert_eq!(label.child(0).unwrap().text(), Some("Is enabled? false"));
+    assert_eq!(
+        label.child(0).unwrap().text(),
+        Some("Is enabled? false".to_string())
+    );
 
     utils.wait_for_update().await;
 
-    assert_eq!(label.child(0).unwrap().text(), Some("Is enabled? true"));
+    assert_eq!(
+        label.child(0).unwrap().text(),
+        Some("Is enabled? true".to_string())
+    );
 }
 
 #[tokio::test]
@@ -99,7 +105,7 @@ async fn simulate_events() {
 
     let text = label.child(0).unwrap();
 
-    assert_eq!(text.text(), Some("Is enabled? false"));
+    assert_eq!(text.text(), Some("Is enabled? false".to_string()));
 
     utils.push_event(FreyaEvent::Mouse {
         name: "click",
@@ -112,5 +118,5 @@ async fn simulate_events() {
 
     let text = label.child(0).unwrap();
 
-    assert_eq!(text.text(), Some("Is enabled? true"));
+    assert_eq!(text.text(), Some("Is enabled? true".to_string()));
 }

@@ -162,17 +162,7 @@ pub fn launch_cfg<T: 'static + Clone + Send>(root: Component, win_config: Window
         Transform,
     };
 
-    let mut rdom = RealDom::<CustomAttributeValues>::new([
-        CursorSettings::to_type_erased(),
-        FontStyle::to_type_erased(),
-        References::to_type_erased(),
-        Scroll::to_type_erased(),
-        Size::to_type_erased(),
-        Style::to_type_erased(),
-        Transform::to_type_erased(),
-    ]);
-    let dioxus_integration_state = DioxusState::create(&mut rdom);
-    let fdom = FreyaDOM::new(rdom, dioxus_integration_state);
+    let fdom = FreyaDOM::default();
     let sdom = SafeDOM::new(fdom);
 
     let (vdom, mutations_sender, hovered_node) = {

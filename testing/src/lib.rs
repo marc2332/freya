@@ -2,8 +2,9 @@ use std::sync::{Arc, Mutex};
 
 use dioxus_core::{Component, VirtualDom};
 use dioxus_native_core::node::NodeType;
-use dioxus_native_core::real_dom::RealDom;
-use dioxus_native_core::tree::TreeView;
+use dioxus_native_core::prelude::{DioxusState, State, TextNode};
+use dioxus_native_core::real_dom::{NodeImmutable, RealDom};
+use dioxus_native_core::tree::TreeRef;
 use dioxus_native_core::NodeId;
 use freya_common::{Area, Size2D};
 use freya_core::events::EventsProcessor;
@@ -11,7 +12,9 @@ use freya_core::{events::DomEvent, EventEmitter, EventReceiver};
 use freya_core::{process_events, process_layout, ViewportsCollection};
 use freya_dom::{DioxusNode, FreyaDOM, SafeDOM};
 use freya_layout::Layers;
-use freya_node_state::NodeState;
+use freya_node_state::{
+    CursorSettings, CustomAttributeValues, FontStyle, References, Scroll, Size, Style, Transform,
+};
 use rustc_hash::FxHashMap;
 use skia_safe::textlayout::FontCollection;
 use skia_safe::FontMgr;
@@ -29,28 +32,63 @@ const SCALE_FACTOR: f64 = 1.0;
 
 #[derive(Clone)]
 pub struct TestUtils {
-    dom: SafeDOM,
+    sdom: SafeDOM,
     layers: Arc<Mutex<Layers>>,
 }
 
 impl TestUtils {
     /// Get a Node by the given ID
     pub fn get_node_by_id(&self, node_id: NodeId) -> TestNode {
-        let dom = self.dom.get();
+        let utils = self.clone();
+
+        let dom = self.sdom.get();
         let rdom = dom.dom();
-        let child: &DioxusNode = rdom.get(node_id).unwrap();
-        let height = rdom.tree.height(node_id).unwrap();
-        let parent_id = rdom.tree.parent_id(node_id);
-        let children_ids = rdom.tree.children_ids(node_id).map(|v| v.to_vec());
+
+        let height = rdom.tree_ref().height(node_id).unwrap();
+        let children_ids = rdom.tree_ref().children_ids(node_id);
+        let child: DioxusNode = rdom.get(node_id).unwrap().clone();
+
+        let state = self.get_node_state_by_id(child);
+
         TestNode {
             node_id,
-            utils: self.clone(),
-            node: child.clone(),
-            height,
-            parent_id,
+            utils,
             children_ids,
+            height,
+            state,
         }
     }
+
+    pub fn get_node_state_by_id(&self, node: DioxusNode) -> NodeState {
+        let cursor = node.get::<CursorSettings>().unwrap().clone();
+        let font_style = node.get::<FontStyle>().unwrap().clone();
+        let references = node.get::<References>().unwrap().clone();
+        let scroll = node.get::<Scroll>().unwrap().clone();
+        let size = node.get::<Size>().unwrap().clone();
+        let style = node.get::<Style>().unwrap().clone();
+        let transform = node.get::<Transform>().unwrap().clone();
+
+        NodeState {
+            cursor,
+            font_style,
+            references,
+            scroll,
+            size,
+            style,
+            transform,
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct NodeState {
+    cursor: CursorSettings,
+    font_style: FontStyle,
+    references: References,
+    scroll: Scroll,
+    size: Size,
+    style: Style,
+    transform: Transform,
 }
 
 /// Represents a `Node` in the DOM.
@@ -59,24 +97,27 @@ pub struct TestNode {
     node_id: NodeId,
     utils: TestUtils,
     height: u16,
-    children_ids: Option<Vec<NodeId>>,
-    node: DioxusNode,
-    parent_id: Option<NodeId>,
+    children_ids: Vec<NodeId>,
+    state: NodeState,
 }
 
 impl TestNode {
     /// Get a child of the Node by the given index
     pub fn child(&self, child_index: usize) -> Option<Self> {
-        let children_ids = self.children_ids.as_ref()?;
-        let child_id = children_ids.get(child_index)?;
+        let child_id = self.children_ids.get(child_index)?;
         let child: TestNode = self.utils.get_node_by_id(*child_id);
         Some(child)
     }
 
     /// Get the Node text
-    pub fn text(&self) -> Option<&str> {
-        if let NodeType::Text { text } = &self.node.node_data.node_type {
-            Some(text.as_str())
+    pub fn text(&self) -> Option<String> {
+        let fdom = self.utils().sdom.get();
+        let dom = fdom.dom();
+        let node = dom.get(self.node_id).unwrap();
+        let node_type = node.node_type();
+
+        if let NodeType::Text(TextNode { text, .. }) = &*node_type {
+            Some(text.clone())
         } else {
             None
         }
@@ -84,7 +125,7 @@ impl TestNode {
 
     /// Get the Node state
     pub fn state(&self) -> &NodeState {
-        &self.node.state
+        &self.state
     }
 
     /// Get the Node layout
@@ -101,13 +142,16 @@ impl TestNode {
     }
 
     /// Get a mutable reference to the test utils.
-    pub fn utils(&mut self) -> &mut TestUtils {
-        &mut self.utils
+    pub fn utils(&self) -> &TestUtils {
+        &self.utils
     }
 
     /// Get the NodeId from the parent
     pub fn parent_id(&self) -> Option<NodeId> {
-        self.parent_id
+        let fdom = self.utils().sdom.get();
+        let dom = fdom.dom();
+        let node = dom.get(self.node_id).unwrap();
+        node.parent_id()
     }
 
     /// Get the Node height in the DOM
@@ -163,7 +207,7 @@ impl TestingHandler {
 
         let (must_repaint, _) = self
             .utils
-            .dom
+            .sdom
             .get_mut()
             .apply_mutations(mutations, SCALE_FACTOR as f32);
         self.wait_for_work(self.config.size());
@@ -173,7 +217,7 @@ impl TestingHandler {
     /// Wait for layout and events to be processed
     pub fn wait_for_work(&mut self, size: Size2D) {
         let (layers, viewports) = process_layout(
-            &self.utils.dom.get(),
+            &self.utils.sdom.get(),
             Area {
                 origin: (0.0, 0.0).into(),
                 size,
@@ -186,7 +230,7 @@ impl TestingHandler {
         self.viewports = viewports;
 
         process_events(
-            &self.utils.dom.get(),
+            &self.utils.sdom.get(),
             &self.utils.layers.lock().unwrap(),
             &mut self.events_queue,
             &self.event_emitter,
@@ -203,19 +247,13 @@ impl TestingHandler {
 
     /// Get the root node
     pub fn root(&mut self) -> TestNode {
-        let dom = self.utils.dom.get();
-        let rdom = dom.dom();
-        let root_id = rdom.root_id();
-        let root: &DioxusNode = rdom.get(root_id).unwrap();
-        let children_ids = rdom.tree.children_ids(root_id).map(|v| v.to_vec());
-        TestNode {
-            node_id: root_id,
-            utils: self.utils.clone(),
-            node: root.clone(),
-            height: 0,
-            parent_id: None,
-            children_ids,
-        }
+        let root_id = {
+            let dom = self.utils.sdom.get();
+            let rdom = dom.dom();
+            rdom.root_id()
+        };
+
+        self.utils.get_node_by_id(root_id)
     }
 }
 
@@ -229,8 +267,11 @@ pub fn launch_test_with_config(root: Component<()>, config: TestingConfig) -> Te
     let mut vdom = VirtualDom::new(root);
     let mutations = vdom.rebuild();
 
-    let dom = SafeDOM::new(FreyaDOM::new(RealDom::new()));
-    dom.get_mut().init_dom(mutations, SCALE_FACTOR as f32);
+    let mut fdom = FreyaDOM::default();
+
+    fdom.init_dom(mutations, SCALE_FACTOR as f32);
+
+    let sdom = SafeDOM::new(fdom);
 
     let (event_emitter, event_receiver) = unbounded_channel::<DomEvent>();
     let layers = Arc::new(Mutex::new(Layers::default()));
@@ -247,7 +288,7 @@ pub fn launch_test_with_config(root: Component<()>, config: TestingConfig) -> Te
         event_emitter,
         event_receiver,
         viewports: FxHashMap::default(),
-        utils: TestUtils { dom, layers },
+        utils: TestUtils { sdom, layers },
         config,
     }
 }

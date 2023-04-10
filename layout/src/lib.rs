@@ -115,7 +115,6 @@ impl<'a> NodeLayoutMeasurer<'a> {
 
     /// Measure the area of a Node
     pub fn measure_area(&mut self, is_measuring: bool, scale_factor: f32) -> Area {
-        let node = self.dom.dom().get(self.node_id).unwrap();
         let node_height = self.dom.dom().tree_ref().height(self.node_id).unwrap();
 
         let node_references = self.node.get::<References>().unwrap().clone();
@@ -213,7 +212,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
             scale_factor,
         );
 
-        match *node.node_type() {
+        match *self.node.node_type() {
             NodeType::Text { .. } => {}
             _ => {
                 if let SizeMode::Auto = node_size.width {
