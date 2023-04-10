@@ -15,11 +15,11 @@ categories = ["GUI"]
 use_camera = ["dep:nokhwa"]
 
 [dependencies]
-dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
-dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
-dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
-dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
-dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus-rsx = { workspace = true }
+dioxus-native-core = { workspace = true }
+dioxus-core-macro = { workspace = true }
+dioxus-hooks = { workspace = true }
+dioxus-core = { workspace = true }
 tween = "2.0.0"
 tokio = { version = "1.23.0" }
 freya-elements = { path = "../elements", version = "0.1.0" }

@@ -13,7 +13,7 @@ categories = ["GUI"]
 
 [dependencies]
 dioxus = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling", features = ["macro", "hooks", "hot-reload"]}
-dioxus-router = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus-router = { workspace = true }
 
 freya-elements = { path = "../elements", version = "0.1.0" }
 freya-node-state = { path = "../state", version = "0.1.0" }

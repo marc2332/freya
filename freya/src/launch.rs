@@ -154,13 +154,7 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
 /// }
 /// ```
 pub fn launch_cfg<T: 'static + Clone + Send>(root: Component, win_config: WindowConfig<T>) {
-    use dioxus_native_core::prelude::State;
-    use dioxus_native_core::{prelude::DioxusState, real_dom::RealDom};
     use freya_dom::{FreyaDOM, SafeDOM};
-    use freya_node_state::{
-        CursorSettings, CustomAttributeValues, FontStyle, References, Scroll, Size, Style,
-        Transform,
-    };
 
     let fdom = FreyaDOM::default();
     let sdom = SafeDOM::new(fdom);

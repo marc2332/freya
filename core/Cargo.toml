@@ -20,13 +20,13 @@ features = ["gl", "textlayout", "svg", "x11", "wayland"]
 
 [dependencies]
 winit = "0.28.2"
-skia-safe = { version = "0.60.0", features = ["gl", "textlayout", "svg"] }
+skia-safe = { workspace = true }
 
-dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus-rsx = { workspace = true }
 dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling", features = ["dioxus"]}
-dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
-dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
-dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus-core-macro = { workspace = true }
+dioxus-hooks = { workspace = true }
+dioxus-core = { workspace = true }
 
 freya-layout = { path = "../layout", version = "0.1.0" }
 freya-node-state = { path = "../state", version = "0.1.0" }

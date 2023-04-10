@@ -22,14 +22,15 @@ glutin-winit = "0.3.0"
 winit = "0.28.2"
 raw-window-handle = "0.5.1"
 
-skia-safe = { version = "0.60.0", features = ["gl", "textlayout", "svg"] }
+skia-safe = { workspace = true }
 
-dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
-dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
-dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
-dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
-dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
-dioxus-hot-reload = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling"}
+dioxus-rsx = { workspace = true }
+dioxus-native-core = { workspace = true }
+dioxus-core-macro = { workspace = true }
+dioxus-hooks = { workspace = true }
+dioxus-core = { workspace = true }
+dioxus-hot-reload = { workspace = true }
+
 freya-layout = { path = "../layout", version = "0.1.0" }
 freya-node-state = { path = "../state", version = "0.1.0" }
 freya-elements = { path = "../elements", version = "0.1.0" }

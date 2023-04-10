@@ -1149,6 +1149,7 @@ dependencies = [
  "dioxus-core",
  "dioxus-core-macro",
  "dioxus-hooks",
+ "dioxus-hot-reload",
  "dioxus-native-core",
  "dioxus-native-core-macro",
  "dioxus-router",
@@ -1156,7 +1157,6 @@ dependencies = [
  "freya",
  "reqwest",
  "serde",
- "tokio",
  "tracing-subscriber",
 ]
 
