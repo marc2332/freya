@@ -23,7 +23,7 @@ winit = "0.28.2"
 skia-safe = { workspace = true }
 
 dioxus-rsx = { workspace = true }
-dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling", features = ["dioxus"]}
+dioxus-native-core = { workspace = true }
 dioxus-core-macro = { workspace = true }
 dioxus-hooks = { workspace = true }
 dioxus-core = { workspace = true }

@@ -20,7 +20,7 @@ freya-core = { path = "../core" }
 freya-components ={ path = "../components"}
 freya-dom = { path = "../dom", version = "0.1.0", features=["shared"] }
 
-dioxus = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling", features = ["macro", "hooks", "hot-reload"]}
+dioxus = { workspace = true }
 dioxus-native-core = { workspace = true }
 dioxus-core-macro = { workspace = true }
 dioxus-core = { workspace = true }

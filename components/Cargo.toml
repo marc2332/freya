@@ -12,7 +12,7 @@ keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
 [dependencies]
-dioxus = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling", features = ["macro", "hooks", "hot-reload"]}
+dioxus = { workspace = true }
 dioxus-router = { workspace = true }
 
 freya-elements = { path = "../elements", version = "0.1.0" }

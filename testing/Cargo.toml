@@ -36,4 +36,4 @@ skia-safe = { workspace = true }
 
 [dev-dependencies]
 freya-components ={ path = "../components"}
-dioxus = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling", features = ["macro", "hooks", "hot-reload"]}
+dioxus = { workspace = true }

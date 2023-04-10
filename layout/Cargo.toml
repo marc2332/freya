@@ -18,7 +18,7 @@ features = ["gl", "textlayout", "svg", "x11", "wayland"]
 [dependencies]
 dioxus-core = { workspace = true }
 dioxus-native-core = { workspace = true }
-dioxus = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling", features = ["macro", "hooks"]}
+dioxus = { workspace = true }
 freya-common = { path = "../common", version = "0.1.0" }
 freya-node-state = { path = "../state", version = "0.1.0" }
 freya-dom = { path = "../dom", version = "0.1.0" }

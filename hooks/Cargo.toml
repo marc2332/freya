@@ -33,6 +33,6 @@ winit = "0.28.2"
 euclid = "0.22.7"
 
 [dev-dependencies]
-dioxus = { git = "https://github.com/Demonthos/dioxus", branch="fix-event-bubling", features = ["macro", "hooks", "hot-reload"]}
+dioxus = { workspace = true }
 freya = { path = "../freya"}
 freya-testing = { path = "../testing"}

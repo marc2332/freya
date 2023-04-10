@@ -961,7 +961,6 @@ dependencies = [
  "anymap 1.0.0-beta.2",
  "crossbeam-deque",
  "dashmap",
- "dioxus-core",
  "hashbrown 0.13.2",
  "keyboard-types",
  "lightningcss",
