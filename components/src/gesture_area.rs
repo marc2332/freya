@@ -46,7 +46,7 @@ type EventsQueue = VecDeque<(Instant, TouchEvent)>;
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app(cx: Scope) -> Element {
-///    let gesture = use_state(cx, || "Tap here");
+///    let gesture = use_state(cx, || "Tap here".to_string());
 ///    render!(
 ///        GestureArea {
 ///            ongesture: move |g| gesture.set(format!("{g:?}")),
