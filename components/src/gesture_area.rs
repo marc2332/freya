@@ -46,7 +46,7 @@ type EventsQueue = VecDeque<(Instant, TouchEvent)>;
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app(cx: Scope) -> Element {
-///    let gesture = use_state(cx, || "Tap here".to_string());
+///    let gesture = use_state(cx, || "Tap here");
 ///    render!(
 ///        GestureArea {
 ///            ongesture: move |g| gesture.set(format!("{g:?}")),
@@ -203,7 +203,7 @@ mod test {
 
         assert_eq!(
             utils.root().child(0).unwrap().child(0).unwrap().text(),
-            Some("EMPTY".to_string())
+            Some("EMPTY")
         );
 
         utils.push_event(FreyaEvent::Touch {
@@ -240,7 +240,7 @@ mod test {
 
         assert_eq!(
             utils.root().child(0).unwrap().child(0).unwrap().text(),
-            Some("DoubleTap".to_string())
+            Some("DoubleTap")
         );
     }
 
@@ -269,7 +269,7 @@ mod test {
 
         assert_eq!(
             utils.root().child(0).unwrap().child(0).unwrap().text(),
-            Some("EMPTY".to_string())
+            Some("EMPTY")
         );
 
         utils.push_event(FreyaEvent::Touch {
@@ -285,7 +285,7 @@ mod test {
 
         assert_eq!(
             utils.root().child(0).unwrap().child(0).unwrap().text(),
-            Some("TapDown".to_string())
+            Some("TapDown")
         );
 
         utils.push_event(FreyaEvent::Touch {
@@ -301,7 +301,7 @@ mod test {
 
         assert_eq!(
             utils.root().child(0).unwrap().child(0).unwrap().text(),
-            Some("TapUp".to_string())
+            Some("TapUp")
         );
     }
 }

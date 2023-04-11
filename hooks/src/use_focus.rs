@@ -76,11 +76,11 @@ mod test {
         let root = utils.root().child(0).unwrap();
         assert_eq!(
             root.child(0).unwrap().child(0).unwrap().text(),
-            Some("false".to_string())
+            Some("false")
         );
         assert_eq!(
             root.child(1).unwrap().child(0).unwrap().text(),
-            Some("false".to_string())
+            Some("false")
         );
 
         // Click on the first rect
@@ -94,11 +94,11 @@ mod test {
         utils.wait_for_update().await;
         assert_eq!(
             root.child(0).unwrap().child(0).unwrap().text(),
-            Some("true".to_string())
+            Some("true")
         );
         assert_eq!(
             root.child(1).unwrap().child(0).unwrap().text(),
-            Some("false".to_string())
+            Some("false")
         );
 
         // Click on the second rect
@@ -112,11 +112,11 @@ mod test {
         utils.wait_for_update().await;
         assert_eq!(
             root.child(0).unwrap().child(0).unwrap().text(),
-            Some("false".to_string())
+            Some("false")
         );
         assert_eq!(
             root.child(1).unwrap().child(0).unwrap().text(),
-            Some("true".to_string())
+            Some("true")
         );
     }
 }

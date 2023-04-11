@@ -222,7 +222,7 @@ mod test {
                 .child(0)
                 .unwrap()
                 .text(),
-            Some("Moving".to_string())
+            Some("Moving")
         );
 
         utils.push_event(FreyaEvent::Mouse {
@@ -243,7 +243,7 @@ mod test {
                 .child(0)
                 .unwrap()
                 .text(),
-            Some("Enabled: true".to_string())
+            Some("Enabled: true")
         );
     }
 }

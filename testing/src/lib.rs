@@ -16,6 +16,7 @@ use freya_core::{
 use freya_core::{process_events, process_layout, ViewportsCollection};
 use freya_dom::{DioxusNode, FreyaDOM, SafeDOM};
 use freya_layout::Layers;
+use freya_node_state::CustomAttributeValues;
 use rustc_hash::FxHashMap;
 use skia_safe::textlayout::FontCollection;
 use skia_safe::FontMgr;
@@ -47,9 +48,10 @@ impl TestUtils {
 
         let height = rdom.tree_ref().height(node_id).unwrap();
         let children_ids = rdom.tree_ref().children_ids(node_id);
-        let child: DioxusNode = rdom.get(node_id).unwrap();
+        let node: DioxusNode = rdom.get(node_id).unwrap();
 
-        let state = get_node_state(&child);
+        let state = get_node_state(&node);
+        let node_type = node.node_type().clone();
 
         TestNode {
             node_id,
@@ -57,6 +59,7 @@ impl TestUtils {
             children_ids,
             height,
             state,
+            node_type,
         }
     }
 }
@@ -69,6 +72,7 @@ pub struct TestNode {
     height: u16,
     children_ids: Vec<NodeId>,
     state: NodeState,
+    node_type: NodeType<CustomAttributeValues>,
 }
 
 impl TestNode {
@@ -80,14 +84,9 @@ impl TestNode {
     }
 
     /// Get the Node text
-    pub fn text(&self) -> Option<String> {
-        let fdom = self.utils().sdom.get();
-        let dom = fdom.dom();
-        let node = dom.get(self.node_id).unwrap();
-        let node_type = node.node_type();
-
-        if let NodeType::Text(TextNode { text, .. }) = &*node_type {
-            Some(text.clone())
+    pub fn text(&self) -> Option<&str> {
+        if let NodeType::Text(TextNode { text, .. }) = &self.node_type {
+            Some(text)
         } else {
             None
         }

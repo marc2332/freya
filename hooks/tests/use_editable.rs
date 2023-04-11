@@ -65,8 +65,8 @@ pub async fn multiple_lines_single_editor() {
     let root = utils.root().child(0).unwrap();
     let cursor = root.child(1).unwrap().child(0).unwrap();
     let content = root.child(0).unwrap().child(0).unwrap().child(0).unwrap();
-    assert_eq!(cursor.text(), Some("0:0".to_string()));
-    assert_eq!(content.text(), Some("Hello Rustaceans".to_string()));
+    assert_eq!(cursor.text(), Some("0:0"));
+    assert_eq!(content.text(), Some("Hello Rustaceans"));
 
     // Move cursor
     utils.push_event(FreyaEvent::Mouse {
@@ -82,10 +82,10 @@ pub async fn multiple_lines_single_editor() {
     let root = utils.root().child(0).unwrap();
     let cursor = root.child(1).unwrap().child(0).unwrap();
     #[cfg(not(target_os = "linux"))]
-    assert_eq!(cursor.text(), Some("5:0".to_string()));
+    assert_eq!(cursor.text(), Some("5:0"));
 
     #[cfg(target_os = "linux")]
-    assert_eq!(cursor.text(), Some("4:0".to_string()));
+    assert_eq!(cursor.text(), Some("4:0"));
 
     // Insert text
     utils.push_event(FreyaEvent::Keyboard {
@@ -102,14 +102,14 @@ pub async fn multiple_lines_single_editor() {
     let content = root.child(0).unwrap().child(0).unwrap().child(0).unwrap();
     #[cfg(not(target_os = "linux"))]
     {
-        assert_eq!(content.text(), Some("Hello! Rustaceans".to_string()));
-        assert_eq!(cursor.text(), Some("6:0".to_string()));
+        assert_eq!(content.text(), Some("Hello! Rustaceans"));
+        assert_eq!(cursor.text(), Some("6:0"));
     }
 
     #[cfg(target_os = "linux")]
     {
-        assert_eq!(content.text(), Some("Hell!o Rustaceans".to_string()));
-        assert_eq!(cursor.text(), Some("5:0".to_string()));
+        assert_eq!(content.text(), Some("Hell!o Rustaceans"));
+        assert_eq!(cursor.text(), Some("5:0"));
     }
 }
 
@@ -179,8 +179,8 @@ pub async fn single_line_mulitple_editors() {
     let root = utils.root().child(0).unwrap();
     let cursor = root.child(2).unwrap().child(0).unwrap();
     let content = root.child(0).unwrap().child(0).unwrap().child(0).unwrap();
-    assert_eq!(cursor.text(), Some("0:0".to_string()));
-    assert_eq!(content.text(), Some("Hello Rustaceans\n".to_string()));
+    assert_eq!(cursor.text(), Some("0:0"));
+    assert_eq!(content.text(), Some("Hello Rustaceans\n"));
 
     // Move cursor
     utils.push_event(FreyaEvent::Mouse {
@@ -196,10 +196,10 @@ pub async fn single_line_mulitple_editors() {
     let root = utils.root().child(0).unwrap();
     let cursor = root.child(2).unwrap().child(0).unwrap();
     #[cfg(not(target_os = "linux"))]
-    assert_eq!(cursor.text(), Some("5:0".to_string()));
+    assert_eq!(cursor.text(), Some("5:0"));
 
     #[cfg(target_os = "linux")]
-    assert_eq!(cursor.text(), Some("4:0".to_string()));
+    assert_eq!(cursor.text(), Some("4:0"));
 
     // Insert text
     utils.push_event(FreyaEvent::Keyboard {
@@ -217,19 +217,19 @@ pub async fn single_line_mulitple_editors() {
 
     #[cfg(not(target_os = "linux"))]
     {
-        assert_eq!(content.text(), Some("Hello! Rustaceans\n".to_string()));
-        assert_eq!(cursor.text(), Some("6:0".to_string()));
+        assert_eq!(content.text(), Some("Hello! Rustaceans\n"));
+        assert_eq!(cursor.text(), Some("6:0"));
     }
 
     #[cfg(target_os = "linux")]
     {
-        assert_eq!(content.text(), Some("Hell!o Rustaceans\n".to_string()));
-        assert_eq!(cursor.text(), Some("5:0".to_string()));
+        assert_eq!(content.text(), Some("Hell!o Rustaceans\n"));
+        assert_eq!(cursor.text(), Some("5:0"));
     }
 
     // Second line
     let content = root.child(1).unwrap().child(0).unwrap().child(0).unwrap();
-    assert_eq!(content.text(), Some("Hello World".to_string()));
+    assert_eq!(content.text(), Some("Hello World"));
 }
 
 #[tokio::test]
