@@ -8,9 +8,11 @@ use dioxus_core::AnyValue;
 use dioxus_core::AttributeValue;
 use dioxus_core::Scope;
 use dioxus_native_core::node::FromAnyValue;
+use freya_common::Area;
 use freya_common::CursorLayoutResponse;
 use freya_common::NodeReferenceLayout;
 use freya_common::Point2D;
+use skia_safe::Canvas;
 use tokio::sync::mpsc::UnboundedSender;
 
 /// Image Reference
@@ -44,6 +46,29 @@ impl Display for NodeReference {
         f.debug_struct("NodeReference").finish_non_exhaustive()
     }
 }
+
+type CanvasRunner = dyn Fn(&mut Canvas, Area);
+
+/// Canvas Reference
+#[derive(Clone)]
+pub struct CanvasReference {
+    pub runner: Arc<Box<CanvasRunner>>,
+}
+
+impl PartialEq for CanvasReference {
+    fn eq(&self, _other: &Self) -> bool {
+        true
+    }
+}
+
+impl Debug for CanvasReference {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CanvasReference").finish_non_exhaustive()
+    }
+}
+
+unsafe impl Sync for CanvasReference {}
+unsafe impl Send for CanvasReference {}
 
 /// Cursor reference
 #[derive(Clone, Debug)]
@@ -82,13 +107,28 @@ impl Display for CursorReference {
 }
 
 /// Group all the custom attribute types
-#[derive(Clone, PartialEq)]
+#[derive(Clone)]
 pub enum CustomAttributeValues {
     Reference(NodeReference),
     CursorReference(CursorReference),
     Bytes(Vec<u8>),
     ImageReference(ImageReference),
     TextHighlights(Vec<(usize, usize)>),
+    Canvas(CanvasReference),
+}
+
+impl PartialEq for CustomAttributeValues {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Reference(l0), Self::Reference(r0)) => l0 == r0,
+            (Self::CursorReference(l0), Self::CursorReference(r0)) => l0 == r0,
+            (Self::Bytes(l0), Self::Bytes(r0)) => l0 == r0,
+            (Self::ImageReference(l0), Self::ImageReference(r0)) => l0 == r0,
+            (Self::TextHighlights(l0), Self::TextHighlights(r0)) => l0 == r0,
+            (Self::Canvas(_), Self::Canvas(_)) => true,
+            _ => false,
+        }
+    }
 }
 
 impl Debug for CustomAttributeValues {
@@ -99,6 +139,7 @@ impl Debug for CustomAttributeValues {
             Self::Bytes(_) => f.debug_tuple("Bytes").finish(),
             Self::ImageReference(_) => f.debug_tuple("ImageReference").finish(),
             Self::TextHighlights(_) => f.debug_tuple("TextHighlights").finish(),
+            Self::Canvas(_) => f.debug_tuple("Canvas").finish(),
         }
     }
 }

@@ -41,4 +41,8 @@ pub fn render_rect_container(
     }
 
     canvas.draw_path(&path, &paint);
+
+    if let Some(c) = &dioxus_node.state.transform.canvas {
+        (c.runner)(canvas, area);
+    }
 }
