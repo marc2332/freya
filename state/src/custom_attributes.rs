@@ -107,7 +107,7 @@ impl Display for CursorReference {
 }
 
 /// Group all the custom attribute types
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub enum CustomAttributeValues {
     Reference(NodeReference),
     CursorReference(CursorReference),
@@ -115,20 +115,6 @@ pub enum CustomAttributeValues {
     ImageReference(ImageReference),
     TextHighlights(Vec<(usize, usize)>),
     Canvas(CanvasReference),
-}
-
-impl PartialEq for CustomAttributeValues {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (Self::Reference(l0), Self::Reference(r0)) => l0 == r0,
-            (Self::CursorReference(l0), Self::CursorReference(r0)) => l0 == r0,
-            (Self::Bytes(l0), Self::Bytes(r0)) => l0 == r0,
-            (Self::ImageReference(l0), Self::ImageReference(r0)) => l0 == r0,
-            (Self::TextHighlights(l0), Self::TextHighlights(r0)) => l0 == r0,
-            (Self::Canvas(_), Self::Canvas(_)) => true,
-            _ => false,
-        }
-    }
 }
 
 impl Debug for CustomAttributeValues {

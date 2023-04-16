@@ -77,7 +77,7 @@ fn Canvas(cx: Scope<CanvasProps>) -> Element {
 
 fn app(cx: Scope) -> Element {
     let event_loop_proxy = cx.consume_context::<EventLoopProxy<EventMessage>>();
-    let state = use_state(cx, || 0);
+    let mut state = use_state(cx, || 0);
 
     use_effect(cx, (state,), move |_| async move {
         if let Some(event_loop_proxy) = &event_loop_proxy {
@@ -111,10 +111,17 @@ fn app(cx: Scope) -> Element {
         })
     });
 
-    render!(Canvas {
-        canvas: canvas,
-        background: "black",
-        width: "100%",
-        height: "100%"
-    })
+    render!(
+        rect {
+            onclick: move |_| {
+                state += 1;
+            },
+            Canvas {
+                canvas: canvas,
+                background: "black",
+                width: "100%",
+                height: "100%"
+            }
+        }
+    )
 }
