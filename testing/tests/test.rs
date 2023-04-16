@@ -60,7 +60,7 @@ async fn check_size() {
 
     utils.wait_for_update().await;
 
-    let rect = utils.get(0);
+    let rect = utils.root();
 
     assert_eq!(rect.layout().unwrap().width(), 250.0);
     assert_eq!(rect.layout().unwrap().height(), 430.0);
