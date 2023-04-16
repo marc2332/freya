@@ -969,16 +969,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dioxus-utils"
-version = "0.1.0"
-source = "git+https://github.com/marc2332/dioxus-utils#13bd766974931eb09089bc34e528533b32e987ad"
-dependencies = [
- "dioxus",
- "tokio",
- "uuid",
-]
-
-[[package]]
 name = "dispatch"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1118,7 +1108,6 @@ dependencies = [
  "dioxus-native-core-macro",
  "dioxus-router",
  "dioxus-rsx",
- "dioxus-utils",
  "freya",
  "freya-node-state",
  "reqwest",
@@ -1126,6 +1115,7 @@ dependencies = [
  "skia-safe",
  "tokio",
  "tracing-subscriber",
+ "uuid",
  "winit",
 ]
 

@@ -27,7 +27,7 @@ dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a1
 skia-safe = { version = "0.60.0", features = ["gl", "textlayout", "svg"] }
 freya-node-state = { path = "./state"}
 winit = "0.28.2"
-dioxus-utils = { git = "https://github.com/marc2332/dioxus-utils"}
+uuid = { version =  "1.2.2", features = ["v4"]}
 
 [profile.release]
 lto = true
