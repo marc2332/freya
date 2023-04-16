@@ -67,8 +67,8 @@ struct CanvasProps {
 
 #[allow(non_snake_case)]
 fn Canvas(cx: Scope<CanvasProps>) -> Element {
-    render!(rect {
-        canvas: cx.props.canvas.attribute(cx),
+    render!(container {
+        canvas_reference: cx.props.canvas.attribute(cx),
         background: "{cx.props.background}",
         width: "{cx.props.width}",
         height: "{cx.props.height}",
