@@ -3,7 +3,11 @@
     windows_subsystem = "windows"
 )]
 
-use std::{sync::{Arc, Mutex}, collections::HashMap, time::Duration};
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+    time::{Duration, Instant},
+};
 
 use dioxus_core::AttributeValue;
 use dioxus_utils::use_channel::{use_channel, use_listen_channel};
@@ -12,11 +16,8 @@ use freya::{
     prelude::*,
 };
 use freya_node_state::CanvasReference;
-use skia_safe::{
-    runtime_effect::{Uniform, ChildPtr}, Canvas, Color, Data, DataTable, Font, FontStyle, Paint, Rect,
-    RuntimeEffect, Shader, Typeface, V3, V4, V2, Image, SamplingOptions,
-};
-use tokio::time::{Interval, interval, sleep};
+use skia_safe::{Canvas, Color, Data, Paint, Rect, RuntimeEffect};
+use tokio::time::sleep;
 use uuid::Uuid;
 use winit::event_loop::EventLoopProxy;
 
@@ -90,18 +91,17 @@ vec4 main(vec2 test) {
 
 #[derive(Default)]
 struct UniformsBuilder {
-    uniforms: HashMap<String, UniformValue>
+    uniforms: HashMap<String, UniformValue>,
 }
 
 enum UniformValue {
-    FloatVec(Vec<f32>),
-    Float3(V3),
     Float(f32),
-    Float4(V4),
+    #[allow(dead_code)]
+    FloatVec(Vec<f32>),
 }
 
 impl UniformsBuilder {
-    pub fn set(&mut self, name: &str, value: UniformValue){
+    pub fn set(&mut self, name: &str, value: UniformValue) {
         self.uniforms.insert(name.to_string(), value);
     }
 
@@ -112,50 +112,27 @@ impl UniformsBuilder {
             let value = self.uniforms.get(uniform.name()).unwrap();
             match &value {
                 UniformValue::Float(f) => {
-                    val.extend(f.to_be_bytes());
+                    val.extend(f.to_le_bytes());
                 }
                 UniformValue::FloatVec(f) => {
                     for n in f {
-                        val.extend(n.to_be_bytes());
-                    }
-                   
-                }
-                UniformValue::Float3(f) => {
-                    let data = f.as_array();
-                    for n in data {
-                        val.extend(n.to_be_bytes());
-                    }
-                   
-                }
-                UniformValue::Float4(f) => {
-                    let data = f.as_array();
-                    for n in data {
-                        val.extend(n.to_be_bytes());
+                        val.extend(n.to_le_bytes());
                     }
                 }
             }
-            
-           
-            let offset_end = uniform.offset() + uniform.size_in_bytes();
-            println!(">>> {:?} to {:?} of type {:?}", uniform.offset(), offset_end, uniform.ty());
-            /* if val.len() < offset_end {
-                val.extend(vec![0; offset_end - val.len() - 1])
-            } */
-
         }
-        println!("{:?}", val);
         val
     }
 }
 
 fn app(cx: Scope) -> Element {
     let event_loop_proxy = cx.consume_context::<EventLoopProxy<EventMessage>>();
-    let channel = use_channel::<()>(cx, 5);
+    let render_channel = use_channel::<()>(cx, 5);
 
-    use_listen_channel(cx, &channel , move |_| {
+    use_listen_channel(cx, &render_channel, move |_| {
         to_owned![event_loop_proxy];
         async move {
-            sleep(Duration::from_millis(100)).await;
+            sleep(Duration::from_millis(25)).await;
             if let Some(event_loop_proxy) = &event_loop_proxy {
                 event_loop_proxy
                     .send_event(EventMessage::RequestRerender)
@@ -165,20 +142,24 @@ fn app(cx: Scope) -> Element {
     });
 
     let canvas = use_canvas(cx, || {
-        let channel = channel.clone();
         let shader = RuntimeEffect::make_for_shader(SHADER, None).unwrap();
         let shader = Arc::new(Mutex::new(shader));
-        let counter = Arc::new(Mutex::new(0.0));
+        let instant = Instant::now();
+        to_owned![render_channel];
         Box::new(move |canvas, region| {
-
             let mut builder = UniformsBuilder::default();
-            builder.set("u_time", UniformValue::Float(*counter.lock().unwrap()));
-
-            *counter.lock().unwrap() += 0.1;
+            builder.set(
+                "u_time",
+                UniformValue::Float(instant.elapsed().as_secs_f32()),
+            );
 
             let uniforms = Data::new_copy(&builder.build(&shader.lock().unwrap()));
 
-            let shader = shader.lock().unwrap().make_shader(uniforms, &[], None).unwrap();
+            let shader = shader
+                .lock()
+                .unwrap()
+                .make_shader(uniforms, &[], None)
+                .unwrap();
 
             let mut paint = Paint::default();
             paint.set_anti_alias(true);
@@ -195,7 +176,7 @@ fn app(cx: Scope) -> Element {
                 &paint,
             );
 
-            channel.send(()).unwrap();
+            render_channel.send(()).unwrap();
         })
     });
 
