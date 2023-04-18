@@ -3,15 +3,20 @@
     windows_subsystem = "windows"
 )]
 
-use std::sync::Arc;
+use std::{sync::{Arc, Mutex}, collections::HashMap, time::Duration};
 
 use dioxus_core::AttributeValue;
+use dioxus_utils::use_channel::{use_channel, use_listen_channel};
 use freya::{
     common::{Area, EventMessage},
     prelude::*,
 };
 use freya_node_state::CanvasReference;
-use skia_safe::{Canvas, Color, Font, FontStyle, Paint, Typeface};
+use skia_safe::{
+    runtime_effect::{Uniform, ChildPtr}, Canvas, Color, Data, DataTable, Font, FontStyle, Paint, Rect,
+    RuntimeEffect, Shader, Typeface, V3, V4, V2, Image, SamplingOptions,
+};
+use tokio::time::{Interval, interval, sleep};
 use uuid::Uuid;
 use winit::event_loop::EventLoopProxy;
 
@@ -75,47 +80,127 @@ fn Canvas(cx: Scope<CanvasProps>) -> Element {
     })
 }
 
+const SHADER: &str = "
+uniform float u_time;
+
+vec4 main(vec2 test) {
+	return vec4(abs(sin(u_time)),0.0,0.0,1.0);
+}
+";
+
+#[derive(Default)]
+struct UniformsBuilder {
+    uniforms: HashMap<String, UniformValue>
+}
+
+enum UniformValue {
+    FloatVec(Vec<f32>),
+    Float3(V3),
+    Float(f32),
+    Float4(V4),
+}
+
+impl UniformsBuilder {
+    pub fn set(&mut self, name: &str, value: UniformValue){
+        self.uniforms.insert(name.to_string(), value);
+    }
+
+    pub fn build(&self, shader: &RuntimeEffect) -> Vec<u8> {
+        let mut val = Vec::new();
+
+        for uniform in shader.uniforms().iter() {
+            let value = self.uniforms.get(uniform.name()).unwrap();
+            match &value {
+                UniformValue::Float(f) => {
+                    val.extend(f.to_be_bytes());
+                }
+                UniformValue::FloatVec(f) => {
+                    for n in f {
+                        val.extend(n.to_be_bytes());
+                    }
+                   
+                }
+                UniformValue::Float3(f) => {
+                    let data = f.as_array();
+                    for n in data {
+                        val.extend(n.to_be_bytes());
+                    }
+                   
+                }
+                UniformValue::Float4(f) => {
+                    let data = f.as_array();
+                    for n in data {
+                        val.extend(n.to_be_bytes());
+                    }
+                }
+            }
+            
+           
+            let offset_end = uniform.offset() + uniform.size_in_bytes();
+            println!(">>> {:?} to {:?} of type {:?}", uniform.offset(), offset_end, uniform.ty());
+            /* if val.len() < offset_end {
+                val.extend(vec![0; offset_end - val.len() - 1])
+            } */
+
+        }
+        println!("{:?}", val);
+        val
+    }
+}
+
 fn app(cx: Scope) -> Element {
     let event_loop_proxy = cx.consume_context::<EventLoopProxy<EventMessage>>();
-    let mut state = use_state(cx, || 0);
+    let channel = use_channel::<()>(cx, 5);
 
-    use_effect(cx, (state,), move |_| async move {
-        if let Some(event_loop_proxy) = &event_loop_proxy {
-            event_loop_proxy
-                .send_event(EventMessage::RequestRerender)
-                .unwrap();
+    use_listen_channel(cx, &channel , move |_| {
+        to_owned![event_loop_proxy];
+        async move {
+            sleep(Duration::from_millis(100)).await;
+            if let Some(event_loop_proxy) = &event_loop_proxy {
+                event_loop_proxy
+                    .send_event(EventMessage::RequestRerender)
+                    .unwrap();
+            }
         }
     });
 
     let canvas = use_canvas(cx, || {
-        to_owned![state];
+        let channel = channel.clone();
+        let shader = RuntimeEffect::make_for_shader(SHADER, None).unwrap();
+        let shader = Arc::new(Mutex::new(shader));
+        let counter = Arc::new(Mutex::new(0.0));
         Box::new(move |canvas, region| {
-            canvas.translate((region.min_x(), region.min_y()));
 
-            let mut text_paint = Paint::default();
-            text_paint.set_anti_alias(true);
-            text_paint.set_color(Color::WHITE);
-            let font = Font::new(
-                Typeface::from_name("Inter", FontStyle::default()).unwrap(),
-                50.0,
+            let mut builder = UniformsBuilder::default();
+            builder.set("u_time", UniformValue::Float(*counter.lock().unwrap()));
+
+            *counter.lock().unwrap() += 0.1;
+
+            let uniforms = Data::new_copy(&builder.build(&shader.lock().unwrap()));
+
+            let shader = shader.lock().unwrap().make_shader(uniforms, &[], None).unwrap();
+
+            let mut paint = Paint::default();
+            paint.set_anti_alias(true);
+            paint.set_color(Color::WHITE);
+            paint.set_shader(shader);
+
+            canvas.draw_rect(
+                Rect::new(
+                    region.min_x(),
+                    region.min_y(),
+                    region.width(),
+                    region.height(),
+                ),
+                &paint,
             );
 
-            canvas.draw_str(
-                format!("value is {}", state.current()),
-                ((region.max_x() / 2.0 - 120.0), region.max_y() / 2.0),
-                &font,
-                &text_paint,
-            );
-
-            canvas.restore();
+            channel.send(()).unwrap();
         })
     });
 
     render!(
         rect {
-            onclick: move |_| {
-                state += 1;
-            },
             Canvas {
                 canvas: canvas,
                 background: "black",
