@@ -16,10 +16,7 @@ async fn no_state() {
 
     let mut utils = launch_test(no_state_app);
 
-    assert_eq!(
-        utils.root().child(0).unwrap().child(0).unwrap().text(),
-        Some("Hello")
-    );
+    assert_eq!(utils.root().get(0).get(0).text(), Some("Hello"));
 }
 
 #[tokio::test]
@@ -41,13 +38,13 @@ async fn with_state() {
 
     let mut utils = launch_test(stateful_app);
 
-    let label = utils.root().child(0).unwrap();
+    let label = utils.root().get(0);
 
-    assert_eq!(label.child(0).unwrap().text(), Some("Is enabled? false"));
+    assert_eq!(label.get(0).text(), Some("Is enabled? false"));
 
     utils.wait_for_update().await;
 
-    assert_eq!(label.child(0).unwrap().text(), Some("Is enabled? true"));
+    assert_eq!(label.get(0).text(), Some("Is enabled? true"));
 }
 
 #[tokio::test]
@@ -63,7 +60,7 @@ async fn check_size() {
 
     utils.wait_for_update().await;
 
-    let rect = utils.root().child(0).unwrap();
+    let rect = utils.root();
 
     assert_eq!(rect.layout().unwrap().width(), 250.0);
     assert_eq!(rect.layout().unwrap().height(), 430.0);
@@ -91,13 +88,13 @@ async fn simulate_events() {
 
     let mut utils = launch_test(stateful_app);
 
-    let rect = utils.root().child(0).unwrap();
-    let label = rect.child(0).unwrap();
+    let rect = utils.root().get(0);
+    let label = rect.get(0);
 
     // Render initial layout
     utils.wait_for_update().await;
 
-    let text = label.child(0).unwrap();
+    let text = label.get(0);
 
     assert_eq!(text.text(), Some("Is enabled? false"));
 
@@ -110,7 +107,7 @@ async fn simulate_events() {
     // Render new layout after having it clicked
     utils.wait_for_update().await;
 
-    let text = label.child(0).unwrap();
+    let text = label.get(0);
 
     assert_eq!(text.text(), Some("Is enabled? true"));
 }
