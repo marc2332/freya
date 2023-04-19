@@ -15,24 +15,27 @@ categories = ["GUI"]
 use_camera = ["dep:nokhwa"]
 
 [dependencies]
-dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
+freya-elements = { workspace = true }
+freya-node-state = { workspace = true }
+freya-common = { workspace = true }
+
+dioxus-rsx = { workspace = true }
+dioxus-native-core = { workspace = true }
+dioxus-core-macro = { workspace = true }
+dioxus-hooks = { workspace = true }
+dioxus-core = { workspace = true }
+
+tokio = { workspace = true }
+winit = { workspace = true }
+
+euclid = { workspace = true }
 tween = "2.0.0"
-tokio = { version = "1.23.0" }
-freya-elements = { path = "../elements", version = "0.1.0" }
-uuid = { version =  "1.2.2", features = ["v4"]}
+uuid = { version =  "1.2.2", features = ["v4"] }
 ropey = "1.6.0"
-freya-node-state = { path = "../state", version = "0.1.0" }
-freya-common = { path = "../common", version = "0.1.0" }
-nokhwa = {version = "0.10.3", features = ["input-native"], optional = true }
+nokhwa = { version = "0.10.3", features = ["input-native"], optional = true }
 bytes = "1.3.0"
-winit = "0.28.2"
-euclid = "0.22.7"
 
 [dev-dependencies]
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519", features = ["macro", "hooks", "hot-reload"]}
+dioxus = { workspace = true }
 freya = { path = "../freya"}
 freya-testing = { path = "../testing"}

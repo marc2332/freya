@@ -16,27 +16,32 @@ version = "0.60.0"
 features = ["gl", "textlayout", "svg", "x11", "wayland"]
 
 [dependencies]
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519", features = ["macro", "hooks"]}
-freya-common = { path = "../common", version = "0.1.0" }
-freya-node-state = { path = "../state", version = "0.1.0" }
-freya-dom = { path = "../dom", version = "0.1.0" }
-tokio = { version = "1.23.0", features = ["sync", "rt-multi-thread", "time"] }
-freya-elements = { path = "../elements", version = "0.1.0"}
-skia-safe = { version = "0.60.0", features = ["gl", "textlayout", "svg"] }
+freya-common = { workspace = true }
+freya-node-state = { workspace = true }
+freya-dom = { workspace = true }
+freya-elements = { workspace = true }
+
+dioxus-core = { workspace = true }
+dioxus-native-core = { workspace = true }
+dioxus = { workspace = true }
+
+tokio = { workspace = true }
+skia-safe = { workspace = true }
+
 rustc-hash = "1.1.0"
 
 [dev-dependencies]
-dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
+freya-components = { workspace = true }
+freya-dom = { workspace = true }
+
+dioxus-native-core-macro = { workspace = true }
+dioxus-rsx = { workspace = true }
+dioxus-native-core = { workspace = true }
+dioxus-core-macro = { workspace = true }
+dioxus-hooks = { workspace = true }
+dioxus-core = { workspace = true }
+
 fxhash = "0.2.1"
 rustc-hash = "1.1.0"
 anymap = "0.12.1"
 lazy_static = "1.4.0"
-freya-components ={ path = "../components"}
-freya-dom ={ path = "../dom"}

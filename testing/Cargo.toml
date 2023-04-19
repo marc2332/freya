@@ -12,28 +12,29 @@ keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
 [dependencies]
-winit = "0.28.2"
+freya-elements = { workspace = true }
+freya-common = { workspace = true }
+freya-layout = { workspace = true }
+freya-node-state = { workspace = true }
+freya-core = { workspace = true }
+freya-dom = { workspace = true }
 
-dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
+dioxus-rsx = { workspace = true }
+dioxus-native-core = { workspace = true }
+dioxus-core-macro = { workspace = true }
+dioxus-hooks = { workspace = true }
+dioxus-core = { workspace = true }
+dioxus-native-core-macro = { workspace = true }
 
-freya-elements = { path = "../elements", version = "0.1.0"}
-freya-common = { path = "../common", version = "0.1.0" }
-freya-layout = { path = "../layout", version = "0.1.0" }
-freya-node-state = { path = "../state", version = "0.1.0" }
-freya-core = { path = "../core", version = "0.1.0" }
-freya-dom = { path = "../dom", version = "0.1.0", features = ["shared"]}
+winit = { workspace = true }
+tokio = { workspace = true }
+skia-safe = { workspace = true }
 
-tokio = { version = "1.23.0", features = ["macros", "sync", "rt", "time"]}
 futures = "0.3.25"
 rustc-hash = "1.1.0"
 anymap = "0.12.1"
-skia-safe = { version = "0.60.0", features = ["gl", "textlayout", "svg"] }
+
 
 [dev-dependencies]
-freya-components ={ path = "../components"}
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519", features = ["macro", "hooks", "hot-reload"]}
+freya-components = { workspace = true }
+dioxus = { workspace = true }
