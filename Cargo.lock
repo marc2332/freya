@@ -1379,6 +1379,7 @@ dependencies = [
  "freya-testing",
  "nokhwa",
  "ropey",
+ "skia-safe",
  "tokio",
  "tween",
  "uuid",
