@@ -65,6 +65,13 @@ pub struct TestNode {
 }
 
 impl TestNode {
+    /// Quickly get a child of the Node by the given index, if the child is not found it will panic
+    pub fn get(&self, child_index: usize) -> Self {
+        self.child(child_index).unwrap_or_else(|| {
+            panic!("Child by index {} not found", child_index);
+        })
+    }
+
     /// Get a child of the Node by the given index
     pub fn child(&self, child_index: usize) -> Option<Self> {
         let children_ids = self.children_ids.as_ref()?;
