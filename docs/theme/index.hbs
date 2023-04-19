@@ -19,6 +19,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff" />
 
+        <link rel="preload" as="image" href="{{ path_to_root }}freya.svg">
         {{#if favicon_svg}}
         <link rel="icon" href="{{ path_to_root }}favicon.svg">
         {{/if}}
@@ -104,7 +105,7 @@
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
                 <div id="logo">
-                    <img src="{{ path_to_root }}freya.svg">
+                    <img width="200" height="90" src="{{ path_to_root }}freya.svg">
                 </div>
                 {{#toc}}{{/toc}}
             </div>
