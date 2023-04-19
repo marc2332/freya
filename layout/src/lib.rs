@@ -253,10 +253,11 @@ impl<'a> NodeLayoutMeasurer<'a> {
         node_area
     }
 
-    /// Construct a paragraph with all it's inner texts and notify
-    /// the cursor reference where the positions are located in the text
-    fn notify_cursor_reference(&self, node_area: &Area) {
+    /// Use SkParagraph to measure the text
+    fn measure_paragraph(&self, node: &DioxusNode, node_area: &Area, remaining_area: &mut Area) {
         let font_style = self.node.get::<FontStyle>().unwrap();
+
+        let cursor_settings = self.node.get::<CursorSettings>().unwrap();
 
         let mut paragraph_style = ParagraphStyle::default();
         paragraph_style.set_text_align(font_style.align);
@@ -291,38 +292,46 @@ impl<'a> NodeLayoutMeasurer<'a> {
         let mut paragraph = paragraph_builder.build();
         paragraph.layout(node_area.width());
 
-        if let Some((cursor_ref, id, cursor_position, cursor_selections)) =
-            get_cursor_reference(&self.node)
-        {
-            if let Some(cursor_position) = cursor_position {
-                // Calculate the new cursor position
-                let char_position =
-                    paragraph.get_glyph_position_at_coordinate(cursor_position.to_i32().to_tuple());
+        remaining_area.size.height -= paragraph.height();
+        remaining_area.origin.y = node_area.origin.y + paragraph.height();
 
-                // Notify the cursor reference listener
-                cursor_ref
-                    .agent
-                    .send(CursorLayoutResponse::CursorPosition {
-                        position: char_position.position as usize,
-                        id,
-                    })
-                    .ok();
-            }
+        remaining_area.size.width -= paragraph.min_intrinsic_width();
+        remaining_area.origin.x = node_area.origin.x + paragraph.min_intrinsic_width();
 
-            if let Some((origin, dist)) = cursor_selections {
-                let origin_char =
-                    paragraph.get_glyph_position_at_coordinate(origin.to_i32().to_tuple());
-                let dist_char =
-                    paragraph.get_glyph_position_at_coordinate(dist.to_i32().to_tuple());
+        if CursorMode::Editable == cursor_settings.mode {
+            if let Some((cursor_ref, id, cursor_position, cursor_selections)) =
+                get_cursor_reference(node)
+            {
+                if let Some(cursor_position) = cursor_position {
+                    // Calculate the new cursor position
+                    let char_position = paragraph
+                        .get_glyph_position_at_coordinate(cursor_position.to_i32().to_tuple());
 
-                cursor_ref
-                    .agent
-                    .send(CursorLayoutResponse::TextSelection {
-                        from: origin_char.position as usize,
-                        to: dist_char.position as usize,
-                        id,
-                    })
-                    .ok();
+                    // Notify the cursor reference listener
+                    cursor_ref
+                        .agent
+                        .send(CursorLayoutResponse::CursorPosition {
+                            position: char_position.position as usize,
+                            id,
+                        })
+                        .ok();
+                }
+
+                if let Some((origin, dist)) = cursor_selections {
+                    let origin_char =
+                        paragraph.get_glyph_position_at_coordinate(origin.to_i32().to_tuple());
+                    let dist_char =
+                        paragraph.get_glyph_position_at_coordinate(dist.to_i32().to_tuple());
+
+                    cursor_ref
+                        .agent
+                        .send(CursorLayoutResponse::TextSelection {
+                            from: origin_char.position as usize,
+                            to: dist_char.position as usize,
+                            id,
+                        })
+                        .ok();
+                }
             }
         }
     }
@@ -339,11 +348,14 @@ impl<'a> NodeLayoutMeasurer<'a> {
         must_memorize_layout: bool,
         scale_factor: f32,
     ) {
+        let node = &self.node;
         let node_size = &*self.node.get::<Size>().unwrap();
-        let node_cursor_settings = &*self.node.get::<CursorSettings>().unwrap();
-
-        match &*self.node.node_type() {
+        match &*node.node_type() {
             NodeType::Element(ElementNode { tag, .. }) => {
+                if tag == "paragraph" {
+                    self.measure_paragraph(node, node_area, remaining_area);
+                    return;
+                }
                 for child in self.node.children() {
                     let child_node_area = {
                         let mut child_measurer = NodeLayoutMeasurer {
@@ -399,23 +411,6 @@ impl<'a> NodeLayoutMeasurer<'a> {
                             inner_size.size.width += child_node_area.width();
                         }
                     }
-
-                    if child_node_area.width() > remaining_area.width()
-                        || remaining_area.width() == 0.0
-                    {
-                        remaining_area.size.width = child_node_area.width();
-                    }
-
-                    if child_node_area.height() > remaining_area.height()
-                        || remaining_area.height() == 0.0
-                    {
-                        remaining_area.size.height = child_node_area.height();
-                    }
-                }
-
-                // Use SkParagraph to measure the layout of a `paragraph` and calculate the position of the cursor
-                if tag == "paragraph" && node_cursor_settings.mode == CursorMode::Editable {
-                    self.notify_cursor_reference(node_area);
                 }
             }
             NodeType::Text(TextNode { text, .. }) => {
