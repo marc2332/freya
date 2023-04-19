@@ -82,10 +82,16 @@ fn Canvas(cx: Scope<CanvasProps>) -> Element {
 }
 
 const SHADER: &str = "
+uniform vec2 u_resolution;
 uniform float u_time;
 
-vec4 main(vec2 test) {
-	return vec4(abs(sin(u_time)),0.0,0.0,1.0);
+vec4 main(vec2 cords) {
+    vec2 st = cords.xy/u_resolution.xy;
+    st.x *= u_resolution.x/u_resolution.y;
+
+    vec3 color = vec3(0.);
+    color = vec3(st.x,st.y,abs(sin(u_time)));
+	return vec4(color,1.0);
 }
 ";
 
@@ -148,6 +154,10 @@ fn app(cx: Scope) -> Element {
         to_owned![render_channel];
         Box::new(move |canvas, region| {
             let mut builder = UniformsBuilder::default();
+            builder.set(
+                "u_resolution",
+                UniformValue::FloatVec(vec![region.max_x(), region.max_y()]),
+            );
             builder.set(
                 "u_time",
                 UniformValue::Float(instant.elapsed().as_secs_f32()),
