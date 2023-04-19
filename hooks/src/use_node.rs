@@ -93,19 +93,13 @@ mod test {
         );
 
         utils.wait_for_update().await;
-        let root = utils.root().child(0).unwrap();
-        assert_eq!(
-            root.child(0).unwrap().text().unwrap().parse::<f32>(),
-            Ok(500.0 * 0.5)
-        );
+        let root = utils.root().get(0);
+        assert_eq!(root.get(0).text().unwrap().parse::<f32>(), Ok(500.0 * 0.5));
 
         utils.set_config(TestingConfig::default().with_size((300.0, 800.0).into()));
         utils.wait_for_update().await;
 
-        let root = utils.root().child(0).unwrap();
-        assert_eq!(
-            root.child(0).unwrap().text().unwrap().parse::<f32>(),
-            Ok(300.0 * 0.5)
-        );
+        let root = utils.root().get(0);
+        assert_eq!(root.get(0).text().unwrap().parse::<f32>(), Ok(300.0 * 0.5));
     }
 }

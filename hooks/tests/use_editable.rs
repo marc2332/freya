@@ -62,9 +62,9 @@ pub async fn multiple_lines_single_editor() {
     let mut utils = launch_test(use_editable_app);
 
     // Initial state
-    let root = utils.root().child(0).unwrap();
-    let cursor = root.child(1).unwrap().child(0).unwrap();
-    let content = root.child(0).unwrap().child(0).unwrap().child(0).unwrap();
+    let root = utils.root().get(0);
+    let cursor = root.get(1).get(0);
+    let content = root.get(0).get(0).get(0);
     assert_eq!(cursor.text(), Some("0:0"));
     assert_eq!(content.text(), Some("Hello Rustaceans"));
 
@@ -79,8 +79,8 @@ pub async fn multiple_lines_single_editor() {
     utils.wait_for_update().await;
 
     // Cursor has been moved
-    let root = utils.root().child(0).unwrap();
-    let cursor = root.child(1).unwrap().child(0).unwrap();
+    let root = utils.root().get(0);
+    let cursor = root.get(1).get(0);
     #[cfg(not(target_os = "linux"))]
     assert_eq!(cursor.text(), Some("5:0"));
 
@@ -98,8 +98,8 @@ pub async fn multiple_lines_single_editor() {
     utils.wait_for_update().await;
 
     // Text and cursor have changed
-    let cursor = root.child(1).unwrap().child(0).unwrap();
-    let content = root.child(0).unwrap().child(0).unwrap().child(0).unwrap();
+    let cursor = root.get(1).get(0);
+    let content = root.get(0).get(0).get(0);
     #[cfg(not(target_os = "linux"))]
     {
         assert_eq!(content.text(), Some("Hello! Rustaceans"));
@@ -176,9 +176,9 @@ pub async fn single_line_mulitple_editors() {
     let mut utils = launch_test(use_editable_app);
 
     // Initial state
-    let root = utils.root().child(0).unwrap();
-    let cursor = root.child(2).unwrap().child(0).unwrap();
-    let content = root.child(0).unwrap().child(0).unwrap().child(0).unwrap();
+    let root = utils.root().get(0);
+    let cursor = root.get(2).get(0);
+    let content = root.get(0).get(0).get(0);
     assert_eq!(cursor.text(), Some("0:0"));
     assert_eq!(content.text(), Some("Hello Rustaceans\n"));
 
@@ -193,8 +193,8 @@ pub async fn single_line_mulitple_editors() {
     utils.wait_for_update().await;
 
     // Cursor has been moved
-    let root = utils.root().child(0).unwrap();
-    let cursor = root.child(2).unwrap().child(0).unwrap();
+    let root = utils.root().get(0);
+    let cursor = root.get(2).get(0);
     #[cfg(not(target_os = "linux"))]
     assert_eq!(cursor.text(), Some("5:0"));
 
@@ -212,8 +212,8 @@ pub async fn single_line_mulitple_editors() {
     utils.wait_for_update().await;
 
     // Text and cursor have changed
-    let cursor = root.child(2).unwrap().child(0).unwrap();
-    let content = root.child(0).unwrap().child(0).unwrap().child(0).unwrap();
+    let cursor = root.get(2).get(0);
+    let content = root.get(0).get(0).get(0);
 
     #[cfg(not(target_os = "linux"))]
     {
@@ -228,7 +228,7 @@ pub async fn single_line_mulitple_editors() {
     }
 
     // Second line
-    let content = root.child(1).unwrap().child(0).unwrap().child(0).unwrap();
+    let content = root.get(1).get(0).get(0);
     assert_eq!(content.text(), Some("Hello World"));
 }
 
@@ -300,7 +300,7 @@ pub async fn highlight_multiple_lines_single_editor() {
 
     let mut utils = launch_test(use_editable_app);
 
-    let root = utils.root().child(0).unwrap();
+    let root = utils.root().get(0);
 
     // Click cursor
     utils.push_event(FreyaEvent::Mouse {
@@ -425,7 +425,7 @@ pub async fn highlights_single_line_mulitple_editors() {
 
     let mut utils = launch_test(use_editable_app);
 
-    let root = utils.root().child(0).unwrap();
+    let root = utils.root().get(0);
 
     // Click cursor
     utils.push_event(FreyaEvent::Mouse {

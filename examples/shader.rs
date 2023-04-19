@@ -9,86 +9,22 @@ use std::{
     time::{Duration, Instant},
 };
 
-use dioxus_core::AttributeValue;
 use dioxus_utils::use_channel::{use_channel, use_listen_channel};
-use freya::{
-    common::{Area, EventMessage},
-    prelude::*,
-};
-use freya_node_state::CanvasReference;
-use skia_safe::{Canvas, Color, Data, Paint, Rect, RuntimeEffect};
+use freya::{common::EventMessage, prelude::*};
+use skia_safe::{Color, Data, Paint, Rect, RuntimeEffect};
 use tokio::time::sleep;
-use uuid::Uuid;
 use winit::event_loop::EventLoopProxy;
 
 fn main() {
     launch(app);
 }
 
-struct UseCanvas {
-    id: Uuid,
-    renderer: Arc<Box<dyn Fn(&mut Canvas, Area) -> ()>>,
-}
-
-impl PartialEq for UseCanvas {
-    fn eq(&self, other: &Self) -> bool {
-        self.id == other.id
-    }
-}
-
-impl UseCanvas {
-    pub fn attribute<'a, T>(&self, cx: Scope<'a, T>) -> AttributeValue<'a> {
-        cx.any_value(CustomAttributeValues::Canvas(CanvasReference {
-            runner: self.renderer.clone(),
-        }))
-    }
-}
-
-fn use_canvas(
-    cx: &ScopeState,
-    renderer: impl FnOnce() -> Box<dyn Fn(&mut Canvas, Area) -> ()>,
-) -> UseCanvas {
-    let id = cx.use_hook(Uuid::new_v4);
-    let renderer = cx.use_hook(|| Arc::new(renderer()));
-
-    UseCanvas {
-        id: id.clone(),
-        renderer: renderer.clone(),
-    }
-}
-
-#[derive(Props, PartialEq)]
-struct CanvasProps {
-    #[props(default = "300".to_string(), into)]
-    width: String,
-
-    #[props(default = "150".to_string(), into)]
-    height: String,
-
-    #[props(default = "white".to_string(), into)]
-    background: String,
-
-    canvas: UseCanvas,
-}
-
-#[allow(non_snake_case)]
-fn Canvas(cx: Scope<CanvasProps>) -> Element {
-    render!(container {
-        canvas_reference: cx.props.canvas.attribute(cx),
-        background: "{cx.props.background}",
-        width: "{cx.props.width}",
-        height: "{cx.props.height}",
-    })
-}
-
 const SHADER: &str = "
 uniform vec2 u_resolution;
 uniform float u_time;
-
 vec4 main(vec2 cords) {
     vec2 st = cords.xy/u_resolution.xy;
     st.x *= u_resolution.x/u_resolution.y;
-
     vec3 color = vec3(0.);
     color = vec3(st.x,st.y,abs(sin(u_time)));
 	return vec4(color,1.0);
