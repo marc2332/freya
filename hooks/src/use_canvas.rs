@@ -6,6 +6,7 @@ use freya_node_state::{CanvasReference, CustomAttributeValues};
 use skia_safe::Canvas;
 use uuid::Uuid;
 
+/// Holds the rendering hook ID.
 pub struct UseCanvas {
     id: Uuid,
     renderer: Arc<Box<dyn Fn(&mut Canvas, Area) -> ()>>,
@@ -25,6 +26,25 @@ impl UseCanvas {
     }
 }
 
+/// Register a rendering hook to gain access to the Canvas.
+///
+/// ## Usage
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app(cx: Scope) -> Element {
+///     let canvas = use_canvas(cx, || {
+///         Box::new(|canvas, area| {
+///             # Draw using the canvas !
+///         })
+///     });
+///
+///     render!(
+///         Canvas {
+///             canvas: canvas
+///         }
+///     )
+/// }
+/// ```
 pub fn use_canvas(
     cx: &ScopeState,
     renderer: impl FnOnce() -> Box<dyn Fn(&mut Canvas, Area) -> ()>,
