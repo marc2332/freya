@@ -18,6 +18,7 @@ use tokio::{
     select,
     sync::mpsc::{unbounded_channel, UnboundedSender},
 };
+use uuid::Uuid;
 use winit::{dpi::PhysicalSize, event_loop::EventLoopProxy};
 
 use crate::{HoveredNode, WindowEnv};
@@ -213,5 +214,10 @@ impl<State: 'static + Clone> App<State> {
     /// Resize the Window
     pub fn resize(&mut self, size: PhysicalSize<u32>) {
         self.window_env.resize(size);
+    }
+
+    pub fn measure_text_group(&self, text_id: &Uuid) {
+        self.layers
+            .measure_text_group(text_id, &self.rdom.get(), &self.window_env.font_collection);
     }
 }

@@ -1266,6 +1266,7 @@ dependencies = [
  "dioxus-native-core",
  "dioxus-rsx",
  "euclid",
+ "uuid",
 ]
 
 [[package]]
@@ -1403,6 +1404,7 @@ dependencies = [
  "rustc-hash",
  "skia-safe",
  "tokio",
+ "uuid",
 ]
 
 [[package]]
@@ -1423,6 +1425,7 @@ dependencies = [
  "skia-safe",
  "smallvec",
  "tokio",
+ "uuid",
 ]
 
 [[package]]
@@ -1448,6 +1451,7 @@ dependencies = [
  "raw-window-handle",
  "skia-safe",
  "tokio",
+ "uuid",
  "winit",
 ]
 

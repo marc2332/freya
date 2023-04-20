@@ -1,4 +1,5 @@
 use dioxus_core::Template;
+use uuid::Uuid;
 
 /// Custom EventLoop messages
 #[derive(Debug)]
@@ -11,4 +12,6 @@ pub enum EventMessage {
     RequestRelayout,
     /// Request a rerender
     RequestRerender,
+    /// Remeasure a text elements group
+    RemeasureTextGroup(Uuid),
 }

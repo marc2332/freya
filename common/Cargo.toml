@@ -18,3 +18,4 @@ dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a50
 dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
 dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
 euclid = "0.22.7"
+uuid = { version =  "1.2.2", features = ["v4"]}
