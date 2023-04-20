@@ -53,6 +53,8 @@ tracing = "0.1"
 rustc-hash = "1.1.0"
 
 [dev-dependencies]
+skia-safe = { workspace = true }
+winit = { workspace = true }
 tokio = { workspace = true }
 dioxus = { workspace = true }
 freya = { path = "./freya"}

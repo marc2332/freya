@@ -1105,8 +1105,10 @@ dependencies = [
  "freya",
  "reqwest",
  "serde",
+ "skia-safe",
  "tokio",
  "tracing-subscriber",
+ "winit",
 ]
 
 [[package]]
