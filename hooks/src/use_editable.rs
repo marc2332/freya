@@ -10,6 +10,7 @@ use freya_elements::events::{KeyboardData, MouseData};
 use freya_node_state::{CursorReference, CustomAttributeValues};
 pub use ropey::Rope;
 use tokio::sync::{mpsc::unbounded_channel, mpsc::UnboundedSender};
+use uuid::Uuid;
 use winit::event_loop::EventLoopProxy;
 
 use crate::{RopeEditor, TextCursor, TextEditor, TextEvent};
@@ -119,7 +120,9 @@ impl UseEditable {
         if self.selecting_text_with_mouse.read().is_some() {
             if let Some(event_loop_proxy) = &self.event_loop_proxy {
                 event_loop_proxy
-                    .send_event(EventMessage::RequestRelayout)
+                    .send_event(EventMessage::RemeasureTextGroup(
+                        self.cursor_reference.text_id,
+                    ))
                     .unwrap();
             }
         }
@@ -154,6 +157,7 @@ pub fn use_editable(
     initializer: impl Fn() -> EditableConfig,
     mode: EditableMode,
 ) -> UseEditable {
+    let id = cx.use_hook(Uuid::new_v4);
     let event_loop_proxy = cx.consume_context::<EventLoopProxy<EventMessage>>();
 
     // Hold the text editor
@@ -171,6 +175,7 @@ pub fn use_editable(
 
     // Cursor reference passed to the layout engine
     let cursor_reference = cx.use_hook(|| CursorReference {
+        text_id: *id,
         agent: cursor_channels.0.clone(),
         cursor_position: Arc::new(Mutex::new(None)),
         id: Arc::new(Mutex::new(None)),

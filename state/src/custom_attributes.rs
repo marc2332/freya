@@ -14,6 +14,7 @@ use freya_common::NodeReferenceLayout;
 use freya_common::Point2D;
 use skia_safe::Canvas;
 use tokio::sync::mpsc::UnboundedSender;
+use uuid::Uuid;
 
 /// Image Reference
 #[derive(Clone, Debug)]
@@ -73,6 +74,7 @@ unsafe impl Send for CanvasReference {}
 /// Cursor reference
 #[derive(Clone, Debug)]
 pub struct CursorReference {
+    pub text_id: Uuid,
     #[allow(clippy::type_complexity)]
     pub cursor_selections: Arc<Mutex<Option<(Point2D, Point2D)>>>,
     pub cursor_position: Arc<Mutex<Option<Point2D>>>,
