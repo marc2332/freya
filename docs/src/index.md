@@ -1,15 +1,12 @@
 # Introduction
 
-<img align="right" src="./logo.svg" alt="Freya logo" width="110"/>
-
 **Freya** is native GUI library built on top of 🧬 [Dioxus](https://dioxuslabs.com) and powered by 🎨 [Skia](https://skia.org/), for 🦀 Rust. 
 
-⚠️ It's currently work in progress and not usable for production, but you can already play with it! 
+You can check the check [API References](https://docs.freyaui.dev/freya/) or join the [Discord](https://discord.gg/sYejxCdewG) server if you have any question or issue. 
 
-You can join the [Discord](https://discord.gg/sYejxCdewG) server if you have any question or issue. 
+> It's currently work in progress and not usable for production, but you can already play with it! 
 
-> You can also see the [API Reference](https://docs.freyaui.dev/freya/).
-
+Example
 <br>
 
 ```rust no_run
@@ -37,9 +34,7 @@ Check out the examples in the Freya [repository](https://github.com/marc2332/fre
 
 ### Why 🧬 Dioxus?
 
-Dioxus is heavily influenced by React, resulting in a streamlined process for creating complex components without the need for excessive code. 
-
-This sets it apart from other Rust libraries, where equivalent components often require a significant amount of additional code.
+Dioxus is a React-like library for Rust. It's component and hooks model make it simple to use and scale complex apps.
 
 ### Why 🎨 Skia?
 
