@@ -43,7 +43,7 @@ dioxus-hot-reload = { workspace = true }
 skia-safe = { workspace = true }
 tokio = { workspace = true }
 
-anymap = "0.12.1"
-fxhash = "0.2.1"
-tracing = "0.1"
-futures = "0.3.25"
+anymap = { workspace = true }
+fxhash = { workspace = true }
+tracing = { workspace = true }
+

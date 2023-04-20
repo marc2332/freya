@@ -28,7 +28,8 @@ dioxus = { workspace = true }
 tokio = { workspace = true }
 skia-safe = { workspace = true }
 
-rustc-hash = "1.1.0"
+rustc-hash= { workspace = true }
+uuid = { version =  "1.2.2", features = ["v4"]}
 
 [dev-dependencies]
 freya-components = { workspace = true }
@@ -41,7 +42,7 @@ dioxus-core-macro = { workspace = true }
 dioxus-hooks = { workspace = true }
 dioxus-core = { workspace = true }
 
-fxhash = "0.2.1"
-rustc-hash = "1.1.0"
-anymap = "0.12.1"
+fxhash = { workspace = true }
+rustc-hash= { workspace = true }
+anymap = { workspace = true }
 lazy_static = "1.4.0"

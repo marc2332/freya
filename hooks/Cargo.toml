@@ -25,17 +25,18 @@ dioxus-core-macro = { workspace = true }
 dioxus-hooks = { workspace = true }
 dioxus-core = { workspace = true }
 
+skia-safe = { workspace = true }
 tokio = { workspace = true }
 winit = { workspace = true }
 
 euclid = { workspace = true }
+uuid = { workspace = true }
 tween = "2.0.0"
-uuid = { version =  "1.2.2", features = ["v4"] }
 ropey = "1.6.0"
 nokhwa = { version = "0.10.3", features = ["input-native"], optional = true }
 bytes = "1.3.0"
 
 [dev-dependencies]
 dioxus = { workspace = true }
-freya = { path = "../freya"}
-freya-testing = { path = "../testing"}
+freya = { workspace = true }
+freya-testing = { workspace = true }

@@ -13,6 +13,7 @@ use_camera = ["freya/use_camera"]
 
 
 [workspace.dependencies]
+freya = { path = "freya", version = "0.1.0" }
 freya-devtools = { path = "devtools", version = "0.1.0" }
 freya-node-state = { path = "state", version = "0.1.0" }
 freya-layout = { path = "layout", version = "0.1.0" }
@@ -23,6 +24,7 @@ freya-hooks = { path = "hooks"}
 freya-core = { path = "core"}
 freya-components = { path = "components"}
 freya-dom = { path = "dom", version = "0.1.0" }
+freya-testing = { path = "testing", version = "0.1.0" }
 
 dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
 dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
@@ -43,6 +45,12 @@ skia-safe = { version = "0.60.0", features = ["gl", "textlayout", "svg"] }
 tokio = { version = "1.23.0", features = ["sync", "rt-multi-thread", "time", "macros"] }
 
 euclid = "0.22.7"
+uuid = { version = "1.2.2", features = ["v4"]}
+futures = "0.3.25"
+anymap = "0.12.1"
+fxhash = "0.2.1"
+tracing = "0.1"
+rustc-hash = "1.1.0"
 
 [dev-dependencies]
 tokio = { workspace = true }

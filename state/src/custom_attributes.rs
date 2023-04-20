@@ -8,10 +8,13 @@ use dioxus_core::AnyValue;
 use dioxus_core::AttributeValue;
 use dioxus_core::Scope;
 use dioxus_native_core::node::FromAnyValue;
+use freya_common::Area;
 use freya_common::CursorLayoutResponse;
 use freya_common::NodeReferenceLayout;
 use freya_common::Point2D;
+use skia_safe::Canvas;
 use tokio::sync::mpsc::UnboundedSender;
+use uuid::Uuid;
 
 /// Image Reference
 #[derive(Clone, Debug)]
@@ -45,9 +48,33 @@ impl Display for NodeReference {
     }
 }
 
+type CanvasRunner = dyn Fn(&mut Canvas, Area);
+
+/// Canvas Reference
+#[derive(Clone)]
+pub struct CanvasReference {
+    pub runner: Arc<Box<CanvasRunner>>,
+}
+
+impl PartialEq for CanvasReference {
+    fn eq(&self, _other: &Self) -> bool {
+        true
+    }
+}
+
+impl Debug for CanvasReference {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CanvasReference").finish_non_exhaustive()
+    }
+}
+
+unsafe impl Sync for CanvasReference {}
+unsafe impl Send for CanvasReference {}
+
 /// Cursor reference
 #[derive(Clone, Debug)]
 pub struct CursorReference {
+    pub text_id: Uuid,
     #[allow(clippy::type_complexity)]
     pub cursor_selections: Arc<Mutex<Option<(Point2D, Point2D)>>>,
     pub cursor_position: Arc<Mutex<Option<Point2D>>>,
@@ -89,6 +116,7 @@ pub enum CustomAttributeValues {
     Bytes(Vec<u8>),
     ImageReference(ImageReference),
     TextHighlights(Vec<(usize, usize)>),
+    Canvas(CanvasReference),
 }
 
 impl Debug for CustomAttributeValues {
@@ -99,6 +127,7 @@ impl Debug for CustomAttributeValues {
             Self::Bytes(_) => f.debug_tuple("Bytes").finish(),
             Self::ImageReference(_) => f.debug_tuple("ImageReference").finish(),
             Self::TextHighlights(_) => f.debug_tuple("TextHighlights").finish(),
+            Self::Canvas(_) => f.debug_tuple("Canvas").finish(),
         }
     }
 }

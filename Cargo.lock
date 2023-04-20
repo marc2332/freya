@@ -1252,7 +1252,6 @@ dependencies = [
  "freya-layout",
  "freya-node-state",
  "freya-renderer",
- "futures",
  "fxhash",
  "skia-safe",
  "tokio",
@@ -1269,6 +1268,7 @@ dependencies = [
  "dioxus-native-core",
  "dioxus-rsx",
  "euclid",
+ "uuid",
 ]
 
 [[package]]
@@ -1378,6 +1378,7 @@ dependencies = [
  "freya-testing",
  "nokhwa",
  "ropey",
+ "skia-safe",
  "tokio",
  "tween",
  "uuid",
@@ -1406,6 +1407,7 @@ dependencies = [
  "rustc-hash",
  "skia-safe",
  "tokio",
+ "uuid",
 ]
 
 [[package]]
@@ -1426,6 +1428,7 @@ dependencies = [
  "skia-safe",
  "smallvec",
  "tokio",
+ "uuid",
 ]
 
 [[package]]
@@ -1451,6 +1454,7 @@ dependencies = [
  "raw-window-handle",
  "skia-safe",
  "tokio",
+ "uuid",
  "winit",
 ]
 
@@ -1473,7 +1477,6 @@ dependencies = [
  "freya-elements",
  "freya-layout",
  "freya-node-state",
- "futures",
  "rustc-hash",
  "skia-safe",
  "tokio",
@@ -2118,9 +2121,9 @@ checksum = "830d08ce1d1d941e6b30645f1a0eb5643013d835ce3779a5fc208261dbe10f55"
 
 [[package]]
 name = "libc"
-version = "0.2.141"
+version = "0.2.142"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3304a64d199bb964be99741b7a14d26972741915b3649639149b2479bb46f4b5"
+checksum = "6a987beff54b60ffa6d51982e1aa1146bc42f19bd26be28b0586f252fccf5317"
 
 [[package]]
 name = "libloading"
@@ -2344,9 +2347,9 @@ dependencies = [
 
 [[package]]
 name = "nasm-rs"
-version = "0.2.4"
+version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ce095842aee9aa3ecbda7a5d2a4df680375fd128a8596b6b56f8e497e231f483"
+checksum = "fe4d98d0065f4b1daf164b3eafb11974c94662e5e2396cf03f32d0bb5c17da51"
 
 [[package]]
 name = "native-tls"
@@ -3213,9 +3216,9 @@ dependencies = [
 
 [[package]]
 name = "rustix"
-version = "0.37.12"
+version = "0.37.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "722529a737f5a942fdbac3a46cee213053196737c5eaa3386d52e85b786f2659"
+checksum = "f79bef90eb6d984c72722595b5b1348ab39275a5e5123faca6863bf07d75a4e0"
 dependencies = [
  "bitflags",
  "errno",

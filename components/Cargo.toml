@@ -12,13 +12,13 @@ keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
 [dependencies]
-dioxus = { workspace = true }
-dioxus-router = { workspace = true }
-
 freya-elements = { workspace = true }
 freya-node-state = { workspace = true }
 freya-hooks = { workspace = true }
 freya-common = { workspace = true }
+
+dioxus = { workspace = true }
+dioxus-router = { workspace = true }
 
 tokio = { workspace = true }
 
@@ -26,5 +26,5 @@ open = "1"
 reqwest = { version = "0.11.13", features = ["json"] }
 
 [dev-dependencies]
-freya = { path = "../freya", version = "0.1.0" }
-freya-testing = { path = "../testing", version = "0.1.0" }
+freya = { workspace = true }
+freya-testing = { workspace = true }

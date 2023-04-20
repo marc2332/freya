@@ -30,10 +30,8 @@ winit = { workspace = true }
 tokio = { workspace = true }
 skia-safe = { workspace = true }
 
-futures = "0.3.25"
-rustc-hash = "1.1.0"
-anymap = "0.12.1"
-
+rustc-hash= { workspace = true }
+anymap = { workspace = true }
 
 [dev-dependencies]
 freya-components = { workspace = true }
