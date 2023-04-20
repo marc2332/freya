@@ -34,7 +34,7 @@ impl UseCanvas {
 /// fn app(cx: Scope) -> Element {
 ///     let canvas = use_canvas(cx, || {
 ///         Box::new(|canvas, area| {
-///             # Draw using the canvas !
+///             // Draw using the canvas !
 ///         })
 ///     });
 ///
