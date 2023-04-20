@@ -5,7 +5,9 @@ use freya_node_state::{
     CursorMode, CursorReference, DirectionMode, DisplayMode, FontStyle, SizeMode,
 };
 
-use skia_safe::textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle};
+use skia_safe::textlayout::{
+    FontCollection, Paragraph, ParagraphBuilder, ParagraphStyle, TextStyle,
+};
 
 mod area_calc;
 mod layers;
@@ -243,6 +245,24 @@ impl<'a> NodeLayoutMeasurer<'a> {
         node_area
     }
 
+    pub fn measure_text(&mut self, node: &DioxusNode, node_area: &Area, remaining_area: &mut Area) {
+        let cursor_settings = &node.state.cursor_settings;
+        let is_editable = CursorMode::Editable == cursor_settings.mode;
+
+        if is_editable {
+            self.layers.insert_paragraph_element(node, node_area);
+        }
+
+        let paragraph =
+            process_paragraph(node, node_area, self.dom, self.font_collection, is_editable);
+
+        remaining_area.size.height -= paragraph.height();
+        remaining_area.origin.y = node_area.origin.y + paragraph.height();
+
+        remaining_area.size.width -= paragraph.min_intrinsic_width();
+        remaining_area.origin.x = node_area.origin.x + paragraph.min_intrinsic_width();
+    }
+
     /// Measure the node of the inner children
     #[allow(clippy::too_many_arguments)]
     pub fn measure_inner_children(
@@ -260,14 +280,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
         match &node.node_data.node_type {
             NodeType::Element { tag, .. } => {
                 if tag == "paragraph" {
-                    self.layers.insert_text_element(node, node_area);
-                    measure_paragraph(
-                        node,
-                        node_area,
-                        remaining_area,
-                        self.dom,
-                        self.font_collection,
-                    );
+                    self.measure_text(node, node_area, remaining_area);
                     return;
                 }
                 if let Some(children) = self.dom.dom().tree.children(self.node_id) {
@@ -378,21 +391,18 @@ impl<'a> NodeLayoutMeasurer<'a> {
     }
 }
 
-/// Use SkParagraph to measure the text
-fn measure_paragraph(
+fn process_paragraph(
     node: &DioxusNode,
     node_area: &Area,
-    remaining_area: &mut Area,
     dom: &FreyaDOM,
     font_collection: &FontCollection,
-) {
+    is_editable: bool,
+) -> Paragraph {
     let font_size = node.state.font_style.font_size;
     let font_family = &node.state.font_style.font_family;
     let align = node.state.font_style.align;
     let max_lines = node.state.font_style.max_lines;
     let font_style = node.state.font_style.font_style;
-
-    let cursor_settings = &node.state.cursor_settings;
 
     let mut paragraph_style = ParagraphStyle::default();
     paragraph_style.set_text_align(align);
@@ -426,13 +436,7 @@ fn measure_paragraph(
     let mut paragraph = paragraph_builder.build();
     paragraph.layout(node_area.width());
 
-    remaining_area.size.height -= paragraph.height();
-    remaining_area.origin.y = node_area.origin.y + paragraph.height();
-
-    remaining_area.size.width -= paragraph.min_intrinsic_width();
-    remaining_area.origin.x = node_area.origin.x + paragraph.min_intrinsic_width();
-
-    if CursorMode::Editable == cursor_settings.mode {
+    if is_editable {
         if let Some((cursor_ref, id, cursor_position, cursor_selections)) =
             get_cursor_reference(node)
         {
@@ -452,8 +456,10 @@ fn measure_paragraph(
             }
 
             if let Some((origin, dist)) = cursor_selections {
+                // Calculate the start of the highlighting
                 let origin_char =
                     paragraph.get_glyph_position_at_coordinate(origin.to_i32().to_tuple());
+                // Calculate the end of the highlighting
                 let dist_char =
                     paragraph.get_glyph_position_at_coordinate(dist.to_i32().to_tuple());
 
@@ -468,4 +474,6 @@ fn measure_paragraph(
             }
         }
     }
+
+    paragraph
 }

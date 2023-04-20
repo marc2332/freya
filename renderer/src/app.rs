@@ -217,7 +217,10 @@ impl<State: 'static + Clone> App<State> {
     }
 
     pub fn measure_text_group(&self, text_id: &Uuid) {
-        self.layers
-            .measure_text_group(text_id, &self.rdom.get(), &self.window_env.font_collection);
+        self.layers.measure_paragraph_elements(
+            text_id,
+            &self.rdom.get(),
+            &self.window_env.font_collection,
+        );
     }
 }
