@@ -1,9 +1,8 @@
 # Summary
 
-- [Introduction](./index.md)
-
 # Getting Started
 
+- [Introduction](./index.md)
 - [Environment Setup](setup.md)
 - [Hello World](./guides/hello_world.md)
 

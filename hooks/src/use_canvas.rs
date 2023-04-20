@@ -6,9 +6,12 @@ use freya_node_state::{CanvasReference, CustomAttributeValues};
 use skia_safe::Canvas;
 use uuid::Uuid;
 
+pub type RenderCallback = Box<dyn Fn(&mut Canvas, Area)>;
+
+/// Holds the rendering hook ID.
 pub struct UseCanvas {
     id: Uuid,
-    renderer: Arc<Box<dyn Fn(&mut Canvas, Area) -> ()>>,
+    renderer: Arc<RenderCallback>,
 }
 
 impl PartialEq for UseCanvas {
@@ -25,15 +28,31 @@ impl UseCanvas {
     }
 }
 
-pub fn use_canvas(
-    cx: &ScopeState,
-    renderer: impl FnOnce() -> Box<dyn Fn(&mut Canvas, Area) -> ()>,
-) -> UseCanvas {
+/// Register a rendering hook to gain access to the Canvas.
+///
+/// ## Usage
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app(cx: Scope) -> Element {
+///     let canvas = use_canvas(cx, || {
+///         Box::new(|canvas, area| {
+///             // Draw using the canvas !
+///         })
+///     });
+///
+///     render!(
+///         Canvas {
+///             canvas: canvas
+///         }
+///     )
+/// }
+/// ```
+pub fn use_canvas(cx: &ScopeState, renderer: impl FnOnce() -> RenderCallback) -> UseCanvas {
     let id = cx.use_hook(Uuid::new_v4);
     let renderer = cx.use_hook(|| Arc::new(renderer()));
 
     UseCanvas {
-        id: id.clone(),
+        id: *id,
         renderer: renderer.clone(),
     }
 }
