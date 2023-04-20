@@ -4,7 +4,6 @@
 )]
 
 use std::{
-    collections::HashMap,
     sync::{Arc, Mutex},
     time::{Duration, Instant},
 };
@@ -36,42 +35,6 @@ const SHADER: &str = "
  }
  ";
 
-#[derive(Default)]
-struct UniformsBuilder {
-    uniforms: HashMap<String, UniformValue>,
-}
-
-enum UniformValue {
-    Float(f32),
-    #[allow(dead_code)]
-    FloatVec(Vec<f32>),
-}
-
-impl UniformsBuilder {
-    pub fn set(&mut self, name: &str, value: UniformValue) {
-        self.uniforms.insert(name.to_string(), value);
-    }
-
-    pub fn build(&self, shader: &RuntimeEffect) -> Vec<u8> {
-        let mut val = Vec::new();
-
-        for uniform in shader.uniforms().iter() {
-            let value = self.uniforms.get(uniform.name()).unwrap();
-            match &value {
-                UniformValue::Float(f) => {
-                    val.extend(f.to_le_bytes());
-                }
-                UniformValue::FloatVec(f) => {
-                    for n in f {
-                        val.extend(n.to_le_bytes());
-                    }
-                }
-            }
-        }
-        val
-    }
-}
-
 fn app(cx: Scope) -> Element {
     let event_loop_proxy = cx.consume_context::<EventLoopProxy<EventMessage>>();
     let render_channel = use_channel::<()>(cx, 5);
@@ -97,7 +60,7 @@ fn app(cx: Scope) -> Element {
             let mut builder = UniformsBuilder::default();
             builder.set(
                 "u_resolution",
-                UniformValue::FloatVec(vec![region.max_x(), region.max_y()]),
+                UniformValue::FloatVec(vec![region.width(), region.height()]),
             );
             builder.set(
                 "u_time",

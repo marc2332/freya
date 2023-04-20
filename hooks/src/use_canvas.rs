@@ -1,9 +1,9 @@
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 use dioxus_core::{AttributeValue, Scope, ScopeState};
 use freya_common::Area;
 use freya_node_state::{CanvasReference, CustomAttributeValues};
-use skia_safe::Canvas;
+use skia_safe::{Canvas, RuntimeEffect};
 use uuid::Uuid;
 
 pub type RenderCallback = Box<dyn Fn(&mut Canvas, Area)>;
@@ -54,5 +54,42 @@ pub fn use_canvas(cx: &ScopeState, renderer: impl FnOnce() -> RenderCallback) ->
     UseCanvas {
         id: *id,
         renderer: renderer.clone(),
+    }
+}
+
+#[derive(Default)]
+pub struct UniformsBuilder {
+    uniforms: HashMap<String, UniformValue>,
+}
+
+pub enum UniformValue {
+    Float(f32),
+    #[allow(dead_code)]
+    FloatVec(Vec<f32>),
+}
+
+impl UniformsBuilder {
+    pub fn set(&mut self, name: &str, value: UniformValue) {
+        self.uniforms.insert(name.to_string(), value);
+    }
+
+    pub fn build(&self, shader: &RuntimeEffect) -> Vec<u8> {
+        let mut values = Vec::new();
+
+        for uniform in shader.uniforms().iter() {
+            let value = self.uniforms.get(uniform.name()).unwrap();
+            match &value {
+                UniformValue::Float(f) => {
+                    values.extend(f.to_le_bytes());
+                }
+                UniformValue::FloatVec(f) => {
+                    for n in f {
+                        values.extend(n.to_le_bytes());
+                    }
+                }
+            }
+        }
+
+        values
     }
 }
