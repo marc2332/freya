@@ -26,6 +26,7 @@ tracing-subscriber = "0.2.25"
 dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
 skia-safe = { version = "0.60.0", features = ["gl", "textlayout", "svg"] }
 freya-node-state = { path = "./state"}
+dioxus-utils = { git = "https://github.com/marc2332/dioxus-utils"}
 winit = "0.28.2"
 uuid = { version =  "1.2.2", features = ["v4"]}
 
