@@ -15,7 +15,7 @@ categories = ["GUI"]
 devtools = []
 
 [target."cfg(target_os = \"linux\")".dependencies.skia-safe]
-version = "0.60.0"
+workspace = true
 features = ["gl", "textlayout", "svg", "x11", "wayland"]
 
 [dependencies]

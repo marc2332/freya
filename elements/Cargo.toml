@@ -23,5 +23,4 @@ dioxus-core = { workspace = true }
 winit = { workspace = true }
 tokio = { workspace = true }
 
-bumpalo = "3.11.1"
 keyboard-types = "0.6.2"

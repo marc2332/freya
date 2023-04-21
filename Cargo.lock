@@ -1360,7 +1360,6 @@ dependencies = [
 name = "freya-elements"
 version = "0.1.0"
 dependencies = [
- "bumpalo",
  "dioxus-core",
  "dioxus-core-macro",
  "dioxus-hooks",
