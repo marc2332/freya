@@ -10,25 +10,56 @@ members = ["layout", "renderer", "state", "freya", "elements", "components", "ho
 devtools = ["freya/devtools"]
 use_camera = ["freya/use_camera"]
 
+[workspace.dependencies]
+freya = { path = "freya", version = "0.1.0" }
+freya-devtools = { path = "devtools", version = "0.1.0" }
+freya-node-state = { path = "state", version = "0.1.0" }
+freya-layout = { path = "layout", version = "0.1.0" }
+freya-renderer = { path = "renderer", version = "0.1.0" }
+freya-elements = { path = "elements", version = "0.1.0" }
+freya-common = { path = "common", version = "0.1.0" }
+freya-hooks = { path = "hooks" }
+freya-core = { path = "core" }
+freya-components = { path = "components" }
+freya-dom = { path = "dom", version = "0.1.0" }
+freya-testing = { path = "testing", version = "0.1.0" }
+
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "49c5a5043a16fc82210af146c345793dd448e519" }
+dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "49c5a5043a16fc82210af146c345793dd448e519" }
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev = "49c5a5043a16fc82210af146c345793dd448e519" }
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev = "49c5a5043a16fc82210af146c345793dd448e519" }
+dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "49c5a5043a16fc82210af146c345793dd448e519" }
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev = "49c5a5043a16fc82210af146c345793dd448e519" }
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev = "49c5a5043a16fc82210af146c345793dd448e519" }
+dioxus-hot-reload = { git = "https://github.com/DioxusLabs/dioxus", rev = "49c5a5043a16fc82210af146c345793dd448e519" }
+dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev = "49c5a5043a16fc82210af146c345793dd448e519" }
+
+gl = "0.14.0"
+glutin = "0.30.6"
+glutin-winit = "0.3.0"
+raw-window-handle = "0.5.1"
+winit = "0.28.2"
+skia-safe = { version = "0.60.0", features = ["gl", "textlayout", "svg"] }
+tokio = { version = "1.23.0", features = ["sync", "rt-multi-thread", "time", "macros"] }
+
+euclid = "0.22.7"
+uuid = { version = "1.2.2", features = ["v4"]}
+futures = "0.3.25"
+anymap = "0.12.1"
+fxhash = "0.2.1"
+tracing = "0.1"
+rustc-hash = "1.1.0"
+
 [dev-dependencies]
-freya = { path = "./freya"}
-dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519" }
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519", features = ["macro", "hooks", "hot-reload"]}
-dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-tokio = "1.27.0"
-reqwest = {version = "0.11.13", features = ["json"] }
+skia-safe = { workspace = true }
+winit = { workspace = true }
+tokio = { workspace = true }
+dioxus = { workspace = true }
+freya = { workspace = true }
+reqwest = { version = "0.11.13", features = ["json"] }
 serde = "1.0.152"
 tracing-subscriber = "0.2.25"
-dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-skia-safe = { version = "0.60.0", features = ["gl", "textlayout", "svg"] }
-freya-node-state = { path = "./state"}
-dioxus-utils = { git = "https://github.com/marc2332/dioxus-utils"}
-winit = "0.28.2"
-uuid = { version =  "1.2.2", features = ["v4"]}
+dioxus-utils = { git = "https://github.com/marc2332/dioxus-utils" }
 
 [profile.release]
 lto = true

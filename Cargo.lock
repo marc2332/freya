@@ -1112,22 +1112,13 @@ name = "examples"
 version = "0.0.0"
 dependencies = [
  "dioxus",
- "dioxus-core",
- "dioxus-core-macro",
- "dioxus-hooks",
- "dioxus-native-core",
- "dioxus-native-core-macro",
- "dioxus-router",
- "dioxus-rsx",
  "dioxus-utils",
  "freya",
- "freya-node-state",
  "reqwest",
  "serde",
  "skia-safe",
  "tokio",
  "tracing-subscriber",
- "uuid",
  "winit",
 ]
 
@@ -1274,7 +1265,6 @@ dependencies = [
  "freya-layout",
  "freya-node-state",
  "freya-renderer",
- "futures",
  "fxhash",
  "skia-safe",
  "tokio",
@@ -1370,7 +1360,6 @@ dependencies = [
 name = "freya-elements"
 version = "0.1.0"
 dependencies = [
- "bumpalo",
  "dioxus-core",
  "dioxus-core-macro",
  "dioxus-hooks",
@@ -1500,7 +1489,6 @@ dependencies = [
  "freya-elements",
  "freya-layout",
  "freya-node-state",
- "futures",
  "rustc-hash",
  "skia-safe",
  "tokio",

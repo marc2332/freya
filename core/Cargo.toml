@@ -15,25 +15,25 @@ categories = ["GUI"]
 devtools = []
 
 [target."cfg(target_os = \"linux\")".dependencies.skia-safe]
-version = "0.60.0"
+workspace = true
 features = ["gl", "textlayout", "svg", "x11", "wayland"]
 
 [dependencies]
-winit = "0.28.2"
-skia-safe = { version = "0.60.0", features = ["gl", "textlayout", "svg"] }
+freya-layout = { workspace = true }
+freya-node-state = { workspace = true }
+freya-elements = { workspace = true }
+freya-common = { workspace = true }
+freya-dom = { workspace = true }
 
-dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
+dioxus-rsx = { workspace = true }
+dioxus-native-core = { workspace = true }
+dioxus-core-macro = { workspace = true }
+dioxus-hooks = { workspace = true }
+dioxus-core = { workspace = true }
 
-freya-layout = { path = "../layout", version = "0.1.0" }
-freya-node-state = { path = "../state", version = "0.1.0" }
-freya-elements = { path = "../elements", version = "0.1.0" }
-freya-common = { path = "../common", version = "0.1.0" }
-freya-dom = { path = "../dom", version = "0.1.0" }
+tokio = { workspace = true }
+winit = { workspace = true }
+skia-safe = { workspace = true }
 
-rustc-hash = "1.1.0"
-tracing = "0.1"
-tokio = { version = "1.23.0", features = ["sync", "rt-multi-thread", "time"] }
+rustc-hash= { workspace = true }
+tracing = { workspace = true }
