@@ -12,7 +12,12 @@ keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
 [dependencies]
-winit = "0.28.2"
+freya-elements = { workspace = true }
+freya-common = { workspace = true }
+freya-layout = { workspace = true }
+freya-node-state = { workspace = true }
+freya-core = { workspace = true }
+freya-dom = { workspace = true }
 
 dioxus-rsx = { workspace = true }
 dioxus-native-core = { workspace = true }
@@ -21,19 +26,13 @@ dioxus-hooks = { workspace = true }
 dioxus-core = { workspace = true }
 dioxus-native-core-macro = { workspace = true }
 
-freya-elements = { path = "../elements", version = "0.1.0"}
-freya-common = { path = "../common", version = "0.1.0" }
-freya-layout = { path = "../layout", version = "0.1.0" }
-freya-node-state = { path = "../state", version = "0.1.0" }
-freya-core = { path = "../core", version = "0.1.0" }
-freya-dom = { path = "../dom", version = "0.1.0", features = ["shared"]}
-
-tokio = { version = "1.23.0", features = ["macros", "sync", "rt", "time"]}
-futures = "0.3.25"
-rustc-hash = "1.1.0"
-anymap = "0.12.1"
+winit = { workspace = true }
+tokio = { workspace = true }
 skia-safe = { workspace = true }
 
+rustc-hash= { workspace = true }
+anymap = { workspace = true }
+
 [dev-dependencies]
-freya-components ={ path = "../components"}
+freya-components = { workspace = true }
 dioxus = { workspace = true }

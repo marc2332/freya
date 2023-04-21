@@ -1,7 +1,7 @@
 use dioxus_native_core::real_dom::NodeImmutable;
 use freya_dom::DioxusNode;
 use freya_layout::RenderData;
-use freya_node_state::Style;
+use freya_node_state::{References, Style};
 use skia_safe::{BlurStyle, Canvas, MaskFilter, Paint, PaintStyle, Path, PathDirection, Rect};
 
 /// Render a `rect` or a `container` element
@@ -43,4 +43,10 @@ pub fn render_rect_container(render_node: &RenderData, node_ref: &DioxusNode, ca
     }
 
     canvas.draw_path(&path, &paint);
+
+    let references = node_ref.get::<References>().unwrap();
+
+    if let Some(canvas_ref) = &references.canvas_ref {
+        (canvas_ref.runner)(canvas, area);
+    }
 }

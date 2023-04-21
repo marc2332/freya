@@ -16,13 +16,12 @@ version = "0.60.0"
 features = ["gl", "textlayout", "svg", "x11", "wayland"]
 
 [dependencies]
-gl = "*"
-glutin = "0.30.6"
-glutin-winit = "0.3.0"
-winit = "0.28.2"
-raw-window-handle = "0.5.1"
-
-skia-safe = { workspace = true }
+freya-layout = { workspace = true }
+freya-node-state = { workspace = true }
+freya-elements = { workspace = true }
+freya-common = { workspace = true }
+freya-core = { workspace = true }
+freya-dom = { workspace = true }
 
 dioxus-rsx = { workspace = true }
 dioxus-native-core = { workspace = true }
@@ -31,12 +30,13 @@ dioxus-hooks = { workspace = true }
 dioxus-core = { workspace = true }
 dioxus-hot-reload = { workspace = true }
 
-freya-layout = { path = "../layout", version = "0.1.0" }
-freya-node-state = { path = "../state", version = "0.1.0" }
-freya-elements = { path = "../elements", version = "0.1.0" }
-freya-common = { path = "../common", version = "0.1.0" }
-freya-core = { path = "../core", version = "0.1.0" }
-freya-dom = { path = "../dom", version = "0.1.0" }
+tokio = { workspace = true }
+skia-safe = { workspace = true }
+gl = { workspace = true }
+glutin = { workspace = true }
+glutin-winit = { workspace = true }
+raw-window-handle = { workspace = true }
+winit = { workspace = true }
 
-futures = "0.3.25"
-tokio = { version = "1.23.0", features = ["sync", "rt-multi-thread", "time", "macros"] }
+uuid = { workspace = true }
+futures = { workspace = true }

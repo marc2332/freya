@@ -12,13 +12,15 @@ keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
 [dependencies]
-bumpalo = "3.11.1"
+freya-common = { workspace = true }
+
 dioxus-rsx = { workspace = true }
 dioxus-native-core = { workspace = true }
 dioxus-core-macro = { workspace = true }
 dioxus-hooks = { workspace = true }
 dioxus-core = { workspace = true }
-winit = "0.28.2"
-tokio = { version = "1.23.0" }
-freya-common = { path = "../common"}
+
+winit = { workspace = true }
+tokio = { workspace = true }
+
 keyboard-types = "0.6.2"

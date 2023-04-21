@@ -7,13 +7,14 @@ use dioxus_native_core_macro::partial_derive_state;
 use freya_common::NodeReferenceLayout;
 use tokio::sync::mpsc::UnboundedSender;
 
-use crate::{CursorReference, CustomAttributeValues, ImageReference};
+use crate::{CanvasReference, CursorReference, CustomAttributeValues, ImageReference};
 
 #[derive(Default, Clone, Debug, Component)]
 pub struct References {
     pub image_ref: Option<ImageReference>,
     pub node_ref: Option<UnboundedSender<NodeReferenceLayout>>,
     pub cursor_ref: Option<CursorReference>,
+    pub canvas_ref: Option<CanvasReference>,
 }
 
 #[partial_derive_state]
@@ -29,6 +30,7 @@ impl State<CustomAttributeValues> for References {
             "reference",
             "cursor_reference",
             "image_reference",
+            "canvas_reference",
         ]));
 
     fn update<'a>(
@@ -46,6 +48,7 @@ impl State<CustomAttributeValues> for References {
             None
         };
         let mut image_ref = None;
+        let mut canvas_ref = None;
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
@@ -74,6 +77,14 @@ impl State<CustomAttributeValues> for References {
                             image_ref = Some(reference.clone());
                         }
                     }
+                    "canvas_reference" => {
+                        if let OwnedAttributeValue::Custom(CustomAttributeValues::Canvas(
+                            new_canvas,
+                        )) = attr.value
+                        {
+                            canvas_ref = Some(new_canvas.clone());
+                        }
+                    }
                     _ => {
                         println!("Unsupported attribute <{}>", attr.attribute.name);
                     }
@@ -86,6 +97,7 @@ impl State<CustomAttributeValues> for References {
             node_ref,
             cursor_ref,
             image_ref,
+            canvas_ref,
         };
         changed
     }

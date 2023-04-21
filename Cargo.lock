@@ -4,9 +4,9 @@ version = 3
 
 [[package]]
 name = "ab_glyph"
-version = "0.2.20"
+version = "0.2.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fe21446ad43aa56417a767f3e2f3d7c4ca522904de1dd640529a76e9c5c3b33c"
+checksum = "5110f1c78cf582855d895ecd0746b653db010cec6d9f5575293f27934d980a39"
 dependencies = [
  "ab_glyph_rasterizer",
  "owned_ttf_parser",
@@ -30,7 +30,7 @@ version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fcb51a0695d8f838b1ee009b3fbf66bda078cd64590202a864a8f3e8c4315c47"
 dependencies = [
- "getrandom 0.2.9",
+ "getrandom",
  "once_cell",
  "version_check",
 ]
@@ -51,6 +51,15 @@ name = "aho-corasick"
 version = "0.7.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cc936419f96fa211c1b9166887b38e5e40b19958e5b895be7c1f93adec7071ac"
+dependencies = [
+ "memchr",
+]
+
+[[package]]
+name = "aho-corasick"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "67fc08ce920c31afb70f013dcce1bfc3a3195de6a228474e45e1f145b36f8d04"
 dependencies = [
  "memchr",
 ]
@@ -155,7 +164,7 @@ checksum = "b9ccdd8f2a161be9bd5c023df56f1b2a0bd1d83872ae53b71a84a12c9bf6e842"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.13",
+ "syn 2.0.15",
 ]
 
 [[package]]
@@ -744,7 +753,7 @@ dependencies = [
  "dtoa-short",
  "itoa",
  "matches",
- "phf 0.10.1",
+ "phf",
  "proc-macro2",
  "quote",
  "smallvec",
@@ -785,7 +794,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "scratch",
- "syn 2.0.13",
+ "syn 2.0.15",
 ]
 
 [[package]]
@@ -802,7 +811,7 @@ checksum = "2345488264226bf682893e25de0769f3360aac9957980ec49361b083ddaa5bc5"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.13",
+ "syn 2.0.15",
 ]
 
 [[package]]
@@ -870,20 +879,51 @@ dependencies = [
 [[package]]
 name = "dioxus"
 version = "0.3.2"
-source = "git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events#d005f3481fda98e50bb107d1cd699c2bd88e23a9"
+source = "git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events#20e7b9b65b7cd05a653eb396e5d59e9290c523dd"
 dependencies = [
- "dioxus-core",
- "dioxus-core-macro",
- "dioxus-hooks",
- "dioxus-hot-reload",
- "dioxus-html",
- "dioxus-rsx",
+ "dioxus-core 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-core-macro 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-hooks 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-hot-reload 0.1.1 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-html 0.3.1 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-rsx 0.0.3 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+]
+
+[[package]]
+name = "dioxus"
+version = "0.3.2"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519#49c5a5043a16fc82210af146c345793dd448e519"
+dependencies = [
+ "dioxus-core 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519)",
+ "dioxus-core-macro 0.3.0 (git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519)",
+ "dioxus-hooks 0.3.0 (git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519)",
+ "dioxus-hot-reload 0.1.1 (git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519)",
+ "dioxus-html 0.3.1 (git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519)",
+ "dioxus-rsx 0.0.3 (git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519)",
 ]
 
 [[package]]
 name = "dioxus-core"
 version = "0.3.2"
-source = "git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events#d005f3481fda98e50bb107d1cd699c2bd88e23a9"
+source = "git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events#20e7b9b65b7cd05a653eb396e5d59e9290c523dd"
+dependencies = [
+ "bumpalo",
+ "bumpslab",
+ "futures-channel",
+ "futures-util",
+ "indexmap",
+ "log",
+ "longest-increasing-subsequence",
+ "rustc-hash",
+ "serde",
+ "slab",
+ "smallbox",
+]
+
+[[package]]
+name = "dioxus-core"
+version = "0.3.2"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519#49c5a5043a16fc82210af146c345793dd448e519"
 dependencies = [
  "bumpalo",
  "bumpslab",
@@ -901,9 +941,20 @@ dependencies = [
 [[package]]
 name = "dioxus-core-macro"
 version = "0.3.0"
-source = "git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events#d005f3481fda98e50bb107d1cd699c2bd88e23a9"
+source = "git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events#20e7b9b65b7cd05a653eb396e5d59e9290c523dd"
 dependencies = [
- "dioxus-rsx",
+ "dioxus-rsx 0.0.3 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "dioxus-core-macro"
+version = "0.3.0"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519#49c5a5043a16fc82210af146c345793dd448e519"
+dependencies = [
+ "dioxus-rsx 0.0.3 (git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519)",
  "proc-macro2",
  "quote",
  "syn 1.0.109",
@@ -912,9 +963,19 @@ dependencies = [
 [[package]]
 name = "dioxus-hooks"
 version = "0.3.0"
-source = "git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events#d005f3481fda98e50bb107d1cd699c2bd88e23a9"
+source = "git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events#20e7b9b65b7cd05a653eb396e5d59e9290c523dd"
 dependencies = [
- "dioxus-core",
+ "dioxus-core 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "futures-channel",
+ "log",
+]
+
+[[package]]
+name = "dioxus-hooks"
+version = "0.3.0"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519#49c5a5043a16fc82210af146c345793dd448e519"
+dependencies = [
+ "dioxus-core 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519)",
  "futures-channel",
  "log",
 ]
@@ -922,12 +983,30 @@ dependencies = [
 [[package]]
 name = "dioxus-hot-reload"
 version = "0.1.1"
-source = "git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events#d005f3481fda98e50bb107d1cd699c2bd88e23a9"
+source = "git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events#20e7b9b65b7cd05a653eb396e5d59e9290c523dd"
 dependencies = [
  "chrono",
- "dioxus-core",
- "dioxus-html",
- "dioxus-rsx",
+ "dioxus-core 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-html 0.3.1 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-rsx 0.0.3 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "execute",
+ "ignore",
+ "interprocess",
+ "notify",
+ "once_cell",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "dioxus-hot-reload"
+version = "0.1.1"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519#49c5a5043a16fc82210af146c345793dd448e519"
+dependencies = [
+ "chrono",
+ "dioxus-core 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519)",
+ "dioxus-html 0.3.1 (git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519)",
+ "dioxus-rsx 0.0.3 (git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519)",
  "execute",
  "ignore",
  "interprocess",
@@ -940,11 +1019,27 @@ dependencies = [
 [[package]]
 name = "dioxus-html"
 version = "0.3.1"
-source = "git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events#d005f3481fda98e50bb107d1cd699c2bd88e23a9"
+source = "git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events#20e7b9b65b7cd05a653eb396e5d59e9290c523dd"
 dependencies = [
  "async-trait",
- "dioxus-core",
- "dioxus-rsx",
+ "dioxus-core 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-rsx 0.0.3 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "enumset",
+ "euclid",
+ "keyboard-types",
+ "serde",
+ "serde-value",
+ "serde_repr",
+]
+
+[[package]]
+name = "dioxus-html"
+version = "0.3.1"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519#49c5a5043a16fc82210af146c345793dd448e519"
+dependencies = [
+ "async-trait",
+ "dioxus-core 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519)",
+ "dioxus-rsx 0.0.3 (git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519)",
  "enumset",
  "euclid",
  "keyboard-types",
@@ -956,12 +1051,12 @@ dependencies = [
 [[package]]
 name = "dioxus-native-core"
 version = "0.2.0"
-source = "git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events#d005f3481fda98e50bb107d1cd699c2bd88e23a9"
+source = "git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events#20e7b9b65b7cd05a653eb396e5d59e9290c523dd"
 dependencies = [
  "anymap 1.0.0-beta.2",
  "crossbeam-deque",
  "dashmap",
- "dioxus-core",
+ "dioxus-core 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
  "hashbrown 0.13.2",
  "keyboard-types",
  "lightningcss",
@@ -978,7 +1073,7 @@ dependencies = [
 [[package]]
 name = "dioxus-native-core-macro"
 version = "0.3.0"
-source = "git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events#d005f3481fda98e50bb107d1cd699c2bd88e23a9"
+source = "git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events#20e7b9b65b7cd05a653eb396e5d59e9290c523dd"
 dependencies = [
  "quote",
  "syn 1.0.109",
@@ -987,9 +1082,9 @@ dependencies = [
 [[package]]
 name = "dioxus-router"
 version = "0.3.0"
-source = "git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events#d005f3481fda98e50bb107d1cd699c2bd88e23a9"
+source = "git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events#20e7b9b65b7cd05a653eb396e5d59e9290c523dd"
 dependencies = [
- "dioxus",
+ "dioxus 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
  "futures-channel",
  "futures-util",
  "log",
@@ -1002,15 +1097,38 @@ dependencies = [
 [[package]]
 name = "dioxus-rsx"
 version = "0.0.3"
-source = "git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events#d005f3481fda98e50bb107d1cd699c2bd88e23a9"
+source = "git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events#20e7b9b65b7cd05a653eb396e5d59e9290c523dd"
 dependencies = [
- "dioxus-core",
+ "dioxus-core 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
  "internment",
  "krates",
  "proc-macro2",
  "quote",
  "serde",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "dioxus-rsx"
+version = "0.0.3"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519#49c5a5043a16fc82210af146c345793dd448e519"
+dependencies = [
+ "dioxus-core 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519)",
+ "internment",
+ "proc-macro2",
+ "quote",
+ "serde",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "dioxus-utils"
+version = "0.1.0"
+source = "git+https://github.com/marc2332/dioxus-utils#31532f3775135838f0f06a031e69230496df9a1f"
+dependencies = [
+ "dioxus 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519)",
+ "tokio",
+ "uuid",
 ]
 
 [[package]]
@@ -1051,9 +1169,9 @@ dependencies = [
 
 [[package]]
 name = "dunce"
-version = "1.0.3"
+version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0bd4b30a6560bbd9b4620f4de34c3f14f60848e58a9b7216801afcb4c7b31c3c"
+checksum = "56ce8c6da7551ec6c462cbaf3bfbc75131ebbfa1c944aeaa9dab51ca1c5f0c3b"
 
 [[package]]
 name = "either"
@@ -1145,20 +1263,15 @@ checksum = "0206175f82b8d6bf6652ff7d71a1e27fd2e4efde587fd368662814d6ec1d9ce0"
 name = "examples"
 version = "0.0.0"
 dependencies = [
- "dioxus",
- "dioxus-core",
- "dioxus-core-macro",
- "dioxus-hooks",
- "dioxus-hot-reload",
- "dioxus-native-core",
- "dioxus-native-core-macro",
- "dioxus-router",
- "dioxus-rsx",
+ "dioxus 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-utils",
  "freya",
  "reqwest",
  "serde",
+ "skia-safe",
  "tokio",
  "tracing-subscriber",
+ "winit",
 ]
 
 [[package]]
@@ -1183,13 +1296,13 @@ dependencies = [
 
 [[package]]
 name = "execute-command-macro-impl"
-version = "0.1.8"
+version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5109f6bc9cd57feda665da326f3f6c57e0498c8fe9f7d12d7b8abc96719ca91b"
+checksum = "55a9a55d1dab3b07854648d48e366f684aefe2ac78ae28cec3bf65e3cd53d9a3"
 dependencies = [
  "execute-command-tokens",
  "quote",
- "syn 1.0.109",
+ "syn 2.0.15",
 ]
 
 [[package]]
@@ -1205,6 +1318,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e51093e27b0797c359783294ca4f0a911c270184cb10f85783b118614a1501be"
 dependencies = [
  "instant",
+]
+
+[[package]]
+name = "fdeflate"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d329bdeac514ee06249dabc27877490f17f5d371ec693360768b838e19f3ae10"
+dependencies = [
+ "simd-adler32",
 ]
 
 [[package]]
@@ -1232,7 +1354,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a8a2db397cb1c8772f31494cb8917e48cd1e64f0fa7efac59fbd741a0a8ce841"
 dependencies = [
  "crc32fast",
- "miniz_oxide",
+ "miniz_oxide 0.6.2",
 ]
 
 [[package]]
@@ -1283,14 +1405,14 @@ name = "freya"
 version = "0.1.0"
 dependencies = [
  "anymap 0.12.1",
- "dioxus",
- "dioxus-core",
- "dioxus-core-macro",
- "dioxus-hooks",
- "dioxus-hot-reload",
+ "dioxus 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-core 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-core-macro 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-hooks 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-hot-reload 0.1.1 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
  "dioxus-native-core",
  "dioxus-router",
- "dioxus-rsx",
+ "dioxus-rsx 0.0.3 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
  "freya-common",
  "freya-components",
  "freya-core",
@@ -1301,7 +1423,6 @@ dependencies = [
  "freya-layout",
  "freya-node-state",
  "freya-renderer",
- "futures",
  "fxhash",
  "skia-safe",
  "tokio",
@@ -1312,19 +1433,20 @@ dependencies = [
 name = "freya-common"
 version = "0.1.0"
 dependencies = [
- "dioxus-core",
- "dioxus-core-macro",
- "dioxus-hooks",
+ "dioxus-core 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-core-macro 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-hooks 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
  "dioxus-native-core",
- "dioxus-rsx",
+ "dioxus-rsx 0.0.3 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
  "euclid",
+ "uuid",
 ]
 
 [[package]]
 name = "freya-components"
 version = "0.1.0"
 dependencies = [
- "dioxus",
+ "dioxus 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
  "dioxus-router",
  "freya",
  "freya-common",
@@ -1341,11 +1463,11 @@ dependencies = [
 name = "freya-core"
 version = "0.1.0"
 dependencies = [
- "dioxus-core",
- "dioxus-core-macro",
- "dioxus-hooks",
+ "dioxus-core 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-core-macro 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-hooks 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
  "dioxus-native-core",
- "dioxus-rsx",
+ "dioxus-rsx 0.0.3 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
  "freya-common",
  "freya-dom",
  "freya-elements",
@@ -1362,9 +1484,9 @@ dependencies = [
 name = "freya-devtools"
 version = "0.1.0"
 dependencies = [
- "dioxus",
- "dioxus-core",
- "dioxus-core-macro",
+ "dioxus 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-core 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-core-macro 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
  "dioxus-native-core",
  "dioxus-router",
  "freya-components",
@@ -1383,11 +1505,11 @@ dependencies = [
 name = "freya-dom"
 version = "0.1.0"
 dependencies = [
- "dioxus-core",
- "dioxus-core-macro",
- "dioxus-hooks",
+ "dioxus-core 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-core-macro 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-hooks 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
  "dioxus-native-core",
- "dioxus-rsx",
+ "dioxus-rsx 0.0.3 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
  "freya-common",
  "freya-node-state",
 ]
@@ -1396,12 +1518,11 @@ dependencies = [
 name = "freya-elements"
 version = "0.1.0"
 dependencies = [
- "bumpalo",
- "dioxus-core",
- "dioxus-core-macro",
- "dioxus-hooks",
+ "dioxus-core 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-core-macro 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-hooks 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
  "dioxus-native-core",
- "dioxus-rsx",
+ "dioxus-rsx 0.0.3 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
  "freya-common",
  "keyboard-types",
  "tokio",
@@ -1413,12 +1534,12 @@ name = "freya-hooks"
 version = "0.1.0"
 dependencies = [
  "bytes",
- "dioxus",
- "dioxus-core",
- "dioxus-core-macro",
- "dioxus-hooks",
+ "dioxus 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-core 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-core-macro 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-hooks 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
  "dioxus-native-core",
- "dioxus-rsx",
+ "dioxus-rsx 0.0.3 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
  "euclid",
  "freya",
  "freya-common",
@@ -1427,6 +1548,7 @@ dependencies = [
  "freya-testing",
  "nokhwa",
  "ropey",
+ "skia-safe",
  "tokio",
  "tween",
  "uuid",
@@ -1438,13 +1560,13 @@ name = "freya-layout"
 version = "0.1.0"
 dependencies = [
  "anymap 0.12.1",
- "dioxus",
- "dioxus-core",
- "dioxus-core-macro",
- "dioxus-hooks",
+ "dioxus 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-core 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-core-macro 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-hooks 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
  "dioxus-native-core",
  "dioxus-native-core-macro",
- "dioxus-rsx",
+ "dioxus-rsx 0.0.3 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
  "freya-common",
  "freya-components",
  "freya-dom",
@@ -1455,6 +1577,7 @@ dependencies = [
  "rustc-hash",
  "skia-safe",
  "tokio",
+ "uuid",
 ]
 
 [[package]]
@@ -1463,12 +1586,12 @@ version = "0.1.0"
 dependencies = [
  "anymap 0.12.1",
  "bytes",
- "dioxus-core",
- "dioxus-core-macro",
- "dioxus-hooks",
+ "dioxus-core 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-core-macro 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-hooks 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
  "dioxus-native-core",
  "dioxus-native-core-macro",
- "dioxus-rsx",
+ "dioxus-rsx 0.0.3 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
  "freya-common",
  "freya-elements",
  "fxhash",
@@ -1476,18 +1599,19 @@ dependencies = [
  "skia-safe",
  "smallvec",
  "tokio",
+ "uuid",
 ]
 
 [[package]]
 name = "freya-renderer"
 version = "0.1.0"
 dependencies = [
- "dioxus-core",
- "dioxus-core-macro",
- "dioxus-hooks",
- "dioxus-hot-reload",
+ "dioxus-core 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-core-macro 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-hooks 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-hot-reload 0.1.1 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
  "dioxus-native-core",
- "dioxus-rsx",
+ "dioxus-rsx 0.0.3 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
  "freya-common",
  "freya-core",
  "freya-dom",
@@ -1501,6 +1625,7 @@ dependencies = [
  "raw-window-handle",
  "skia-safe",
  "tokio",
+ "uuid",
  "winit",
 ]
 
@@ -1509,13 +1634,13 @@ name = "freya-testing"
 version = "0.1.0"
 dependencies = [
  "anymap 0.12.1",
- "dioxus",
- "dioxus-core",
- "dioxus-core-macro",
- "dioxus-hooks",
+ "dioxus 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-core 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-core-macro 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
+ "dioxus-hooks 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
  "dioxus-native-core",
  "dioxus-native-core-macro",
- "dioxus-rsx",
+ "dioxus-rsx 0.0.3 (git+https://github.com/Demonthos/dioxus?branch=fix-non-bubbling-events)",
  "freya-common",
  "freya-components",
  "freya-core",
@@ -1523,7 +1648,6 @@ dependencies = [
  "freya-elements",
  "freya-layout",
  "freya-node-state",
- "futures",
  "rustc-hash",
  "skia-safe",
  "tokio",
@@ -1610,7 +1734,7 @@ checksum = "89ca545a94061b6365f2c7355b4b32bd20df3ff95f02da9329b34ccc3bd6ee72"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.13",
+ "syn 2.0.15",
 ]
 
 [[package]]
@@ -1664,17 +1788,6 @@ dependencies = [
 
 [[package]]
 name = "getrandom"
-version = "0.1.16"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8fc3cb4d91f53b50155bdcfd23f6a4c39ae1969c2ae85982b135750cccaf5fce"
-dependencies = [
- "cfg-if 1.0.0",
- "libc",
- "wasi 0.9.0+wasi-snapshot-preview1",
-]
-
-[[package]]
-name = "getrandom"
 version = "0.2.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c85e1d9ab2eadba7e5040d4e09cbd6d072b76a557ad64e797c2cb9d4da21d7e4"
@@ -1718,7 +1831,7 @@ version = "0.4.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "029d74589adefde59de1a0c4f4732695c32805624aec7b68d91503d4dba79afc"
 dependencies = [
- "aho-corasick",
+ "aho-corasick 0.7.20",
  "bstr",
  "fnv",
  "log",
@@ -1791,9 +1904,9 @@ dependencies = [
 
 [[package]]
 name = "h2"
-version = "0.3.16"
+version = "0.3.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5be7b54589b581f624f566bf5d8eb2bab1db736c51528720b6bd36b96b55924d"
+checksum = "17f8a914c2987b688368b5138aa05321db91f4090cf26118185672ad588bce21"
 dependencies = [
  "bytes",
  "fnv",
@@ -1898,9 +2011,9 @@ checksum = "9a3a5bfb195931eeb336b2a7b4d761daec841b97f947d34394601737a7bba5e4"
 
 [[package]]
 name = "hyper"
-version = "0.14.25"
+version = "0.14.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cc5e554ff619822309ffd57d8734d77cd5ce6238bc956f037ea06c58238c9899"
+checksum = "ab302d72a6f11a3b910431ff93aae7e773078c769f0a3ef15fb9ec692ed147d4"
 dependencies = [
  "bytes",
  "futures-channel",
@@ -2200,9 +2313,9 @@ checksum = "830d08ce1d1d941e6b30645f1a0eb5643013d835ce3779a5fc208261dbe10f55"
 
 [[package]]
 name = "libc"
-version = "0.2.141"
+version = "0.2.142"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3304a64d199bb964be99741b7a14d26972741915b3649639149b2479bb46f4b5"
+checksum = "6a987beff54b60ffa6d51982e1aa1146bc42f19bd26be28b0586f252fccf5317"
 
 [[package]]
 name = "libloading"
@@ -2216,10 +2329,11 @@ dependencies = [
 
 [[package]]
 name = "lightningcss"
-version = "1.0.0-alpha.40"
+version = "1.0.0-alpha.41"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6338806873ab8053fa9aac727f603fdd2fe4d8bec192faab114183f8483c67f8"
+checksum = "05745e54889965f22e544ccf6d8182656275eece23355e13550e76d48ad42bc1"
 dependencies = [
+ "ahash 0.7.6",
  "bitflags",
  "const-str",
  "cssparser",
@@ -2246,9 +2360,9 @@ dependencies = [
 
 [[package]]
 name = "linux-raw-sys"
-version = "0.3.1"
+version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d59d8c75012853d2e872fb56bc8a2e53718e2cafe1a4c823143141c6d90c322f"
+checksum = "9b085a4f2cde5781fc4b1717f2e86c62f5cda49de7ba99a7c2eae02b61c9064c"
 
 [[package]]
 name = "lock_api"
@@ -2369,6 +2483,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "miniz_oxide"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e7810e0be55b428ada41041c41f32c9f1a42817901b4ccf45fa3d4b6561e74c7"
+dependencies = [
+ "adler",
+ "simd-adler32",
+]
+
+[[package]]
 name = "mio"
 version = "0.8.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2410,14 +2534,14 @@ version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6a51313c5820b0b02bd422f4b44776fbf47961755c74ce64afc73bfad10226c3"
 dependencies = [
- "getrandom 0.2.9",
+ "getrandom",
 ]
 
 [[package]]
 name = "nasm-rs"
-version = "0.2.4"
+version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ce095842aee9aa3ecbda7a5d2a4df680375fd128a8596b6b56f8e497e231f483"
+checksum = "fe4d98d0065f4b1daf164b3eafb11974c94662e5e2396cf03f32d0bb5c17da51"
 
 [[package]]
 name = "native-tls"
@@ -2719,9 +2843,9 @@ dependencies = [
 
 [[package]]
 name = "openssl"
-version = "0.10.50"
+version = "0.10.51"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7e30d8bc91859781f0a943411186324d580f2bbeb71b452fe91ae344806af3f1"
+checksum = "97ea2d98598bf9ada7ea6ee8a30fb74f9156b63bbe495d64ec2b87c269d2dda3"
 dependencies = [
  "bitflags",
  "cfg-if 1.0.0",
@@ -2740,7 +2864,7 @@ checksum = "a948666b637a0f465e8564c73e89d4dde00d72d4d473cc972f390fc3dcee7d9c"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.13",
+ "syn 2.0.15",
 ]
 
 [[package]]
@@ -2751,9 +2875,9 @@ checksum = "ff011a302c396a5197692431fc1948019154afc178baf7d8e37367442a4601cf"
 
 [[package]]
 name = "openssl-sys"
-version = "0.9.85"
+version = "0.9.86"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0d3d193fb1488ad46ffe3aaabc912cc931d02ee8518fe2959aea8ef52718b0c0"
+checksum = "992bac49bdbab4423199c654a5515bd2a6c6a23bf03f2dd3bdb7e5ae6259bc69"
 dependencies = [
  "cc",
  "libc",
@@ -2790,24 +2914,24 @@ checksum = "7f222829ae9293e33a9f5e9f440c6760a3d450a64affe1846486b140db81c1f4"
 
 [[package]]
 name = "owned_ttf_parser"
-version = "0.18.1"
+version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e25e9fb15717794fae58ab55c26e044103aad13186fbb625893f9a3bbcc24228"
+checksum = "706de7e2214113d63a8238d1910463cfce781129a6f263d13fdb09ff64355ba4"
 dependencies = [
  "ttf-parser",
 ]
 
 [[package]]
 name = "parcel_selectors"
-version = "0.25.1"
+version = "0.25.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a215f11d4e3b505238167f6dbe47e7d809dcf452319506328d904d62c4eb8da5"
+checksum = "537fd75055e0ed78c7820d0ac8f6407dd813d760995cd2252022a5514df7aecd"
 dependencies = [
  "bitflags",
  "cssparser",
  "fxhash",
  "log",
- "phf 0.8.0",
+ "phf",
  "phf_codegen",
  "precomputed-hash",
  "smallvec",
@@ -2892,42 +3016,23 @@ dependencies = [
 
 [[package]]
 name = "phf"
-version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3dfb61232e34fcb633f43d12c58f83c1df82962dcdfa565a4e866ffc17dafe12"
-dependencies = [
- "phf_shared 0.8.0",
-]
-
-[[package]]
-name = "phf"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fabbf1ead8a5bcbc20f5f8b939ee3f5b0f6f281b6ad3468b84656b658b455259"
 dependencies = [
  "phf_macros",
- "phf_shared 0.10.0",
+ "phf_shared",
  "proc-macro-hack",
 ]
 
 [[package]]
 name = "phf_codegen"
-version = "0.8.0"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cbffee61585b0411840d3ece935cce9cb6321f01c45477d30066498cd5e1a815"
+checksum = "4fb1c3a8bc4dd4e5cfce29b44ffc14bedd2ee294559a294e2a4d4c9e9a6a13cd"
 dependencies = [
- "phf_generator 0.8.0",
- "phf_shared 0.8.0",
-]
-
-[[package]]
-name = "phf_generator"
-version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "17367f0cc86f2d25802b2c26ee58a7b23faeccf78a396094c13dced0d0182526"
-dependencies = [
- "phf_shared 0.8.0",
- "rand 0.7.3",
+ "phf_generator",
+ "phf_shared",
 ]
 
 [[package]]
@@ -2936,8 +3041,8 @@ version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5d5285893bb5eb82e6aaf5d59ee909a06a16737a8970984dd7746ba9283498d6"
 dependencies = [
- "phf_shared 0.10.0",
- "rand 0.8.5",
+ "phf_shared",
+ "rand",
 ]
 
 [[package]]
@@ -2946,21 +3051,12 @@ version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "58fdf3184dd560f160dd73922bea2d5cd6e8f064bf4b13110abd81b03697b4e0"
 dependencies = [
- "phf_generator 0.10.0",
- "phf_shared 0.10.0",
+ "phf_generator",
+ "phf_shared",
  "proc-macro-hack",
  "proc-macro2",
  "quote",
  "syn 1.0.109",
-]
-
-[[package]]
-name = "phf_shared"
-version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c00cf8b9eafe68dde5e9eaa2cef8ee84a9336a47d566ec55ca16589633b65af7"
-dependencies = [
- "siphasher",
 ]
 
 [[package]]
@@ -3012,14 +3108,15 @@ checksum = "6ac9a59f73473f1b8d852421e59e64809f025994837ef743615c6d0c5b305160"
 
 [[package]]
 name = "png"
-version = "0.17.7"
+version = "0.17.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5d708eaf860a19b19ce538740d2b4bdeeb8337fa53f7738455e706623ad5c638"
+checksum = "aaeebc51f9e7d2c150d3f3bfeb667f2aa985db5ef1e3d212847bdedb488beeaa"
 dependencies = [
  "bitflags",
  "crc32fast",
+ "fdeflate",
  "flate2",
- "miniz_oxide",
+ "miniz_oxide 0.7.1",
 ]
 
 [[package]]
@@ -3090,37 +3187,13 @@ dependencies = [
 
 [[package]]
 name = "rand"
-version = "0.7.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6a6b1679d49b24bbfe0c803429aa1874472f50d9b363131f0e89fc356b544d03"
-dependencies = [
- "getrandom 0.1.16",
- "libc",
- "rand_chacha 0.2.2",
- "rand_core 0.5.1",
- "rand_hc",
- "rand_pcg",
-]
-
-[[package]]
-name = "rand"
 version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "34af8d1a0e25924bc5b7c43c079c942339d8f0a8b57c39049bef581b46327404"
 dependencies = [
  "libc",
- "rand_chacha 0.3.1",
- "rand_core 0.6.4",
-]
-
-[[package]]
-name = "rand_chacha"
-version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f4c8ed856279c9737206bf725bf36935d8666ead7aa69b52be55af369d193402"
-dependencies = [
- "ppv-lite86",
- "rand_core 0.5.1",
+ "rand_chacha",
+ "rand_core",
 ]
 
 [[package]]
@@ -3130,16 +3203,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e6c10a63a0fa32252be49d21e7709d4d4baf8d231c2dbce1eaa8141b9b127d88"
 dependencies = [
  "ppv-lite86",
- "rand_core 0.6.4",
-]
-
-[[package]]
-name = "rand_core"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "90bde5296fc891b0cef12a6d03ddccc162ce7b2aff54160af9338f8d40df6d19"
-dependencies = [
- "getrandom 0.1.16",
+ "rand_core",
 ]
 
 [[package]]
@@ -3148,25 +3212,7 @@ version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
 dependencies = [
- "getrandom 0.2.9",
-]
-
-[[package]]
-name = "rand_hc"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ca3129af7b92a17112d59ad498c6f81eaf463253766b90396d39ea7a39d6613c"
-dependencies = [
- "rand_core 0.5.1",
-]
-
-[[package]]
-name = "rand_pcg"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "16abd0c1b639e9eb4d7c50c0b8100b0d0f849be2349829c740fe8e6eb4816429"
-dependencies = [
- "rand_core 0.5.1",
+ "getrandom",
 ]
 
 [[package]]
@@ -3217,13 +3263,13 @@ dependencies = [
 
 [[package]]
 name = "regex"
-version = "1.7.3"
+version = "1.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8b1f693b24f6ac912f4893ef08244d70b6067480d2f1a46e950c9691e6749d1d"
+checksum = "af83e617f331cc6ae2da5443c602dfa5af81e517212d9d611a5b3ba1777b5370"
 dependencies = [
- "aho-corasick",
+ "aho-corasick 1.0.1",
  "memchr",
- "regex-syntax",
+ "regex-syntax 0.7.1",
 ]
 
 [[package]]
@@ -3232,7 +3278,7 @@ version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6c230d73fb8d8c1b9c0b3135c5142a8acee3a0558fb8db5cf1cb65f8d7862132"
 dependencies = [
- "regex-syntax",
+ "regex-syntax 0.6.29",
 ]
 
 [[package]]
@@ -3240,6 +3286,12 @@ name = "regex-syntax"
 version = "0.6.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f162c6dd7b008981e4d40210aca20b4bd0f9b60ca9271061b07f78537722f2e1"
+
+[[package]]
+name = "regex-syntax"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a5996294f19bd3aae0453a862ad728f60e6600695733dd5df01da90c54363a3c"
 
 [[package]]
 name = "rend"
@@ -3363,9 +3415,9 @@ dependencies = [
 
 [[package]]
 name = "rustix"
-version = "0.37.11"
+version = "0.37.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "85597d61f83914ddeba6a47b3b8ffe7365107221c2e557ed94426489fefb5f77"
+checksum = "f79bef90eb6d984c72722595b5b1348ab39275a5e5123faca6863bf07d75a4e0"
 dependencies = [
  "bitflags",
  "errno",
@@ -3492,9 +3544,9 @@ dependencies = [
 
 [[package]]
 name = "serde"
-version = "1.0.159"
+version = "1.0.160"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3c04e8343c3daeec41f58990b9d77068df31209f2af111e059e9fe9646693065"
+checksum = "bb2f3770c8bce3bcda7e149193a069a0f4365bda1fa5cd88e03bca26afc1216c"
 dependencies = [
  "serde_derive",
 ]
@@ -3511,20 +3563,20 @@ dependencies = [
 
 [[package]]
 name = "serde_derive"
-version = "1.0.159"
+version = "1.0.160"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4c614d17805b093df4b147b51339e7e44bf05ef59fba1e45d83500bcfb4d8585"
+checksum = "291a097c63d8497e00160b166a967a4a79c64f3facdd01cbd7502231688d77df"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.13",
+ "syn 2.0.15",
 ]
 
 [[package]]
 name = "serde_json"
-version = "1.0.95"
+version = "1.0.96"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d721eca97ac802aa7777b701877c8004d950fc142651367300d21c1cc0194744"
+checksum = "057d394a50403bcac12672b2b18fb387ab6d289d957dab67dd201875391e52f1"
 dependencies = [
  "itoa",
  "ryu",
@@ -3539,7 +3591,7 @@ checksum = "bcec881020c684085e55a25f7fd888954d56609ef363479dc5a1305eb0d40cab"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.13",
+ "syn 2.0.15",
 ]
 
 [[package]]
@@ -3624,6 +3676,12 @@ checksum = "9cadb29c57caadc51ff8346233b5cec1d240b68ce55cf1afc764818791876987"
 dependencies = [
  "outref",
 ]
+
+[[package]]
+name = "simd-adler32"
+version = "0.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "238abfbb77c1915110ad968465608b68e869e0772622c9656714e73e5a1a522f"
 
 [[package]]
 name = "simdutf8"
@@ -3782,9 +3840,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "2.0.13"
+version = "2.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4c9da457c5285ac1f936ebd076af6dac17a61cfe7826f2076b4d015cf47bc8ec"
+checksum = "a34fcf3e8b60f57e6a14301a2e916d323af98b0ea63c599441eec8558660c822"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3861,7 +3919,7 @@ checksum = "f9456a42c5b0d803c8cd86e73dd7cc9edd429499f37a3550d286d5e86720569f"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.13",
+ "syn 2.0.15",
 ]
 
 [[package]]
@@ -3956,7 +4014,7 @@ checksum = "61a573bdc87985e9d6ddeed1b3d864e8a302c847e40d647746df2f1de209d1ce"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.13",
+ "syn 2.0.15",
 ]
 
 [[package]]
@@ -4107,9 +4165,9 @@ checksum = "3528ecfd12c466c6f163363caf2d02a71161dd5e1cc6ae7b34207ea2d42d81ed"
 
 [[package]]
 name = "ttf-parser"
-version = "0.18.1"
+version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0609f771ad9c6155384897e1df4d948e692667cc0588548b68eb44d052b27633"
+checksum = "44dcf002ae3b32cd25400d6df128c5babec3927cd1eb7ce813cfff20eb6c3746"
 
 [[package]]
 name = "tween"
@@ -4195,7 +4253,7 @@ version = "1.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5b55a3fef2a1e3b3a00ce878640918820d3c51081576ac657d23af9fc7928fdb"
 dependencies = [
- "getrandom 0.2.9",
+ "getrandom",
 ]
 
 [[package]]
@@ -4273,12 +4331,6 @@ dependencies = [
  "log",
  "try-lock",
 ]
-
-[[package]]
-name = "wasi"
-version = "0.9.0+wasi-snapshot-preview1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cccddf32554fecc6acb585f82a32a72e28b48f8c4c1883ddfeeeaa96f7d8e519"
 
 [[package]]
 name = "wasi"

@@ -11,34 +11,55 @@ devtools = ["freya/devtools"]
 use_camera = ["freya/use_camera"]
 
 [workspace.dependencies]
-dioxus = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events", features = ["macro", "hooks", "hot-reload"]}
-dioxus-native-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events" }
-dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events"}
-dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events", features=["dioxus"]}
-dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events"}
-dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events"}
-dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events"}
-dioxus-hot-reload = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events"}
-dioxus-router = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events"}
+freya = { path = "freya", version = "0.1.0" }
+freya-devtools = { path = "devtools", version = "0.1.0" }
+freya-node-state = { path = "state", version = "0.1.0" }
+freya-layout = { path = "layout", version = "0.1.0" }
+freya-renderer = { path = "renderer", version = "0.1.0" }
+freya-elements = { path = "elements", version = "0.1.0" }
+freya-common = { path = "common", version = "0.1.0" }
+freya-hooks = { path = "hooks" }
+freya-core = { path = "core" }
+freya-components = { path = "components" }
+freya-dom = { path = "dom", version = "0.1.0" }
+freya-testing = { path = "testing", version = "0.1.0" }
 
+dioxus = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events" }
+dioxus-native-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events" }
+dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events" }
+dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events", features=["dioxus"] }
+dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events" }
+dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events" }
+dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events" }
+dioxus-hot-reload = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events" }
+dioxus-router = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events" }
+
+gl = "0.14.0"
+glutin = "0.30.6"
+glutin-winit = "0.3.0"
+raw-window-handle = "0.5.1"
+winit = "0.28.2"
 skia-safe = { version = "0.60.0", features = ["gl", "textlayout", "svg"] }
+tokio = { version = "1.23.0", features = ["sync", "rt-multi-thread", "time", "macros"] }
+
+euclid = "0.22.7"
+uuid = { version = "1.2.2", features = ["v4"]}
+futures = "0.3.25"
+anymap = "0.12.1"
+fxhash = "0.2.1"
+tracing = "0.1"
+rustc-hash = "1.1.0"
 
 [dev-dependencies]
-freya = { path = "./freya"}
-reqwest = {version = "0.11.13", features = ["json"] }
+skia-safe = { workspace = true }
+winit = { workspace = true }
+tokio = { workspace = true }
+dioxus = { workspace = true }
+freya = { workspace = true }
+reqwest = { version = "0.11.13", features = ["json"] }
 serde = "1.0.152"
 tracing-subscriber = "0.2.25"
-tokio = "1.23.0"
-
-dioxus-router = { workspace = true }
-dioxus = { workspace = true }
-dioxus-native-core-macro = { workspace = true }
-dioxus-rsx = { workspace = true }
-dioxus-native-core = { workspace = true }
-dioxus-core-macro = { workspace = true }
-dioxus-hooks = { workspace = true }
-dioxus-core = { workspace = true }
-dioxus-hot-reload = { workspace = true }
+dioxus-utils = { git = "https://github.com/marc2332/dioxus-utils" }
 
 [profile.release]
 lto = true
