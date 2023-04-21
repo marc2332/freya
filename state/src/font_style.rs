@@ -67,7 +67,6 @@ impl ParentDepState<CustomAttributeValues> for FontStyle {
         let mut font_style = parent
             .map(|(v,)| v.clone())
             .unwrap_or_else(|| FontStyle::default_with_scale_factor(*scale_factor));
-        let mut changed_size = false;
 
         if let Some(attributes) = node.attributes() {
             for attr in attributes {
@@ -91,7 +90,6 @@ impl ParentDepState<CustomAttributeValues> for FontStyle {
                                     .map(|f| f.trim().to_string())
                                     .collect::<Vec<String>>(),
                             );
-                            changed_size = true;
                         }
                     }
                     "font_size" => {
@@ -99,7 +97,6 @@ impl ParentDepState<CustomAttributeValues> for FontStyle {
                         if let Some(attr) = attr {
                             if let Ok(font_size) = attr.parse::<f32>() {
                                 font_style.font_size = font_size * scale_factor;
-                                changed_size = true;
                             }
                         }
                     }
@@ -108,7 +105,6 @@ impl ParentDepState<CustomAttributeValues> for FontStyle {
                         if let Some(attr) = attr {
                             if let Ok(line_height) = attr.parse() {
                                 font_style.line_height = line_height;
-                                changed_size = true;
                             }
                         }
                     }
@@ -123,7 +119,6 @@ impl ParentDepState<CustomAttributeValues> for FontStyle {
                         if let Some(attr) = attr {
                             if let Ok(max_lines) = attr.parse() {
                                 font_style.max_lines = Some(max_lines);
-                                changed_size = true;
                             }
                         }
                     }
@@ -131,13 +126,18 @@ impl ParentDepState<CustomAttributeValues> for FontStyle {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
                             font_style.font_style = parse_font_style(attr);
-                            changed_size = true;
                         }
                     }
                     _ => {}
                 }
             }
         }
+
+        let changed_size = self.font_style != font_style.font_style
+            || self.max_lines != font_style.max_lines
+            || self.line_height != font_style.line_height
+            || self.font_size != font_style.font_size
+            || self.font_family != font_style.font_family;
 
         if changed_size {
             *layout_notifier.lock().unwrap() = true;

@@ -12,19 +12,20 @@ keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
 [dependencies]
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519", features = ["macro", "hooks", "hot-reload"]}
-dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-
-freya-elements = { path = "../elements", version = "0.1.0" }
-freya-node-state = { path = "../state", version = "0.1.0" }
-freya-hooks = { path = "../hooks", version = "0.1.0" }
+freya-elements = { workspace = true }
+freya-node-state = { workspace = true }
+freya-hooks = { workspace = true }
+freya-common = { workspace = true }
 freya-core = { path = "../core", version = "0.1.0" }
-freya-common = { path = "../common", version = "0.1.0" }
+
+dioxus = { workspace = true }
+dioxus-router = { workspace = true }
+
+tokio = { workspace = true }
 
 open = "1"
-reqwest = {version = "0.11.13", features = ["json"] }
-tokio = { version = "1.23.0", features = ["sync", "rt-multi-thread", "time"] }
+reqwest = { version = "0.11.13", features = ["json"] }
 
 [dev-dependencies]
-freya = { path = "../freya", version = "0.1.0" }
-freya-testing = { path = "../testing", version = "0.1.0" }
+freya = { workspace = true }
+freya-testing = { workspace = true }

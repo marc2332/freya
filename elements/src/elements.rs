@@ -176,6 +176,7 @@ builder_constructors! {
         role: String,
         focus_id: AccessibilityId,
         alt: String,
+        canvas_reference: String,
     };
     container {
         padding: String,
@@ -200,6 +201,7 @@ builder_constructors! {
         role: String,
         focus_id: AccessibilityId,
         alt: String,
+        canvas_reference: String,
     };
     label {
         color: String,

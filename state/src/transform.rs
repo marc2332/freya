@@ -14,7 +14,7 @@ impl NodeDepState<CustomAttributeValues> for Transform {
     type Ctx = ();
 
     const NODE_MASK: NodeMask =
-        NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!(["rotate",])));
+        NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!(["rotate"])));
 
     fn reduce(
         &mut self,

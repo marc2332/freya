@@ -12,14 +12,16 @@ keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
 [dependencies]
-bumpalo = "3.11.1"
-dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-winit = "0.28.2"
-tokio = { version = "1.23.0" }
-freya-common = { path = "../common"}
+freya-common = { workspace = true }
+
+dioxus-rsx = { workspace = true }
+dioxus-native-core = { workspace = true }
+dioxus-core-macro = { workspace = true }
+dioxus-hooks = { workspace = true }
+dioxus-core = { workspace = true }
+
+winit = { workspace = true }
+tokio = { workspace = true }
+accesskit = { workspace = true }
+
 keyboard-types = "0.6.2"
-accesskit = "0.10.1"

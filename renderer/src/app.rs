@@ -28,6 +28,7 @@ use tokio::{
         watch,
     },
 };
+use uuid::Uuid;
 use winit::{dpi::PhysicalSize, event::WindowEvent, event_loop::EventLoopProxy, window::Window};
 
 use crate::{
@@ -325,5 +326,13 @@ impl<State: 'static + Clone> App<State> {
             .lock()
             .unwrap()
             .set_focus_on_next_node(&self.accessibility_adapter, direction, &self.focus_sender);
+    }
+
+    pub fn measure_text_group(&self, text_id: &Uuid) {
+        self.layers.measure_paragraph_elements(
+            text_id,
+            &self.rdom.get(),
+            &self.window_env.font_collection,
+        );
     }
 }

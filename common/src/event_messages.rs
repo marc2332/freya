@@ -1,6 +1,7 @@
 use accesskit::NodeId;
 use accesskit_winit::ActionRequestEvent;
 use dioxus_core::Template;
+use uuid::Uuid;
 
 /// Custom EventLoop messages
 #[derive(Debug)]
@@ -13,6 +14,8 @@ pub enum EventMessage {
     RequestRelayout,
     /// Request a rerender
     RequestRerender,
+    /// Remeasure a text elements group
+    RemeasureTextGroup(Uuid),
     /// Accessibility action request event
     ActionRequestEvent(ActionRequestEvent),
     /// Focus the given accessibility NodeID

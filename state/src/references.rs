@@ -5,13 +5,14 @@ use dioxus_native_core_macro::sorted_str_slice;
 use freya_common::NodeReferenceLayout;
 use tokio::sync::mpsc::UnboundedSender;
 
-use crate::{CursorReference, CustomAttributeValues, ImageReference};
+use crate::{CanvasReference, CursorReference, CustomAttributeValues, ImageReference};
 
 #[derive(Default, Clone, Debug)]
 pub struct References {
     pub image_ref: Option<ImageReference>,
     pub node_ref: Option<UnboundedSender<NodeReferenceLayout>>,
     pub cursor_ref: Option<CursorReference>,
+    pub canvas_ref: Option<CanvasReference>,
 }
 
 impl ParentDepState<CustomAttributeValues> for References {
@@ -22,7 +23,8 @@ impl ParentDepState<CustomAttributeValues> for References {
         NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
             "reference",
             "cursor_reference",
-            "image_reference"
+            "image_reference",
+            "canvas_reference"
         ])));
 
     fn reduce(
@@ -38,6 +40,7 @@ impl ParentDepState<CustomAttributeValues> for References {
             None
         };
         let mut image_ref = None;
+        let mut canvas_ref = None;
 
         if let Some(attributes) = node.attributes() {
             for attr in attributes {
@@ -66,6 +69,14 @@ impl ParentDepState<CustomAttributeValues> for References {
                             image_ref = Some(reference.clone());
                         }
                     }
+                    "canvas_reference" => {
+                        if let OwnedAttributeValue::Custom(CustomAttributeValues::Canvas(
+                            new_canvas,
+                        )) = attr.value
+                        {
+                            canvas_ref = Some(new_canvas.clone());
+                        }
+                    }
                     _ => {
                         println!("Unsupported attribute <{}>", attr.attribute.name);
                     }
@@ -78,6 +89,7 @@ impl ParentDepState<CustomAttributeValues> for References {
             node_ref,
             cursor_ref,
             image_ref,
+            canvas_ref,
         };
         changed
     }

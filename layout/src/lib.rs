@@ -5,7 +5,9 @@ use freya_node_state::{
     CursorMode, CursorReference, DirectionMode, DisplayMode, FontStyle, SizeMode,
 };
 
-use skia_safe::textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle};
+use skia_safe::textlayout::{
+    FontCollection, Paragraph, ParagraphBuilder, ParagraphStyle, TextStyle,
+};
 
 mod area_calc;
 mod layers;
@@ -243,91 +245,22 @@ impl<'a> NodeLayoutMeasurer<'a> {
         node_area
     }
 
-    /// Use SkParagraph to measure the text
-    fn measure_paragraph(&self, node: &DioxusNode, node_area: &Area, remaining_area: &mut Area) {
-        let font_size = node.state.font_style.font_size;
-        let font_family = &node.state.font_style.font_family;
-        let align = node.state.font_style.align;
-        let max_lines = node.state.font_style.max_lines;
-        let font_style = node.state.font_style.font_style;
-
+    pub fn measure_text(&mut self, node: &DioxusNode, node_area: &Area, remaining_area: &mut Area) {
         let cursor_settings = &node.state.cursor_settings;
+        let is_editable = CursorMode::Editable == cursor_settings.mode;
 
-        let mut paragraph_style = ParagraphStyle::default();
-        paragraph_style.set_text_align(align);
-        paragraph_style.set_max_lines(max_lines);
-        paragraph_style.set_replace_tab_characters(true);
-
-        let mut paragraph_builder =
-            ParagraphBuilder::new(&paragraph_style, self.font_collection.clone());
-
-        paragraph_builder.push_style(
-            TextStyle::new()
-                .set_font_style(font_style)
-                .set_font_size(font_size)
-                .set_font_families(font_family),
-        );
-
-        let texts = get_inner_texts(self.dom, &self.node_id);
-
-        for (font_style, text) in texts.into_iter() {
-            paragraph_builder.push_style(
-                TextStyle::new()
-                    .set_font_style(font_style.font_style)
-                    .set_height_override(true)
-                    .set_height(font_style.line_height)
-                    .set_color(font_style.color)
-                    .set_font_size(font_style.font_size)
-                    .set_font_families(&font_style.font_family),
-            );
-            paragraph_builder.add_text(text);
+        if is_editable {
+            self.layers.insert_paragraph_element(node, node_area);
         }
 
-        let mut paragraph = paragraph_builder.build();
-        paragraph.layout(node_area.width());
+        let paragraph =
+            process_paragraph(node, node_area, self.dom, self.font_collection, is_editable);
 
         remaining_area.size.height -= paragraph.height();
         remaining_area.origin.y = node_area.origin.y + paragraph.height();
 
         remaining_area.size.width -= paragraph.min_intrinsic_width();
         remaining_area.origin.x = node_area.origin.x + paragraph.min_intrinsic_width();
-
-        if CursorMode::Editable == cursor_settings.mode {
-            if let Some((cursor_ref, id, cursor_position, cursor_selections)) =
-                get_cursor_reference(node)
-            {
-                if let Some(cursor_position) = cursor_position {
-                    // Calculate the new cursor position
-                    let char_position = paragraph
-                        .get_glyph_position_at_coordinate(cursor_position.to_i32().to_tuple());
-
-                    // Notify the cursor reference listener
-                    cursor_ref
-                        .agent
-                        .send(CursorLayoutResponse::CursorPosition {
-                            position: char_position.position as usize,
-                            id,
-                        })
-                        .ok();
-                }
-
-                if let Some((origin, dist)) = cursor_selections {
-                    let origin_char =
-                        paragraph.get_glyph_position_at_coordinate(origin.to_i32().to_tuple());
-                    let dist_char =
-                        paragraph.get_glyph_position_at_coordinate(dist.to_i32().to_tuple());
-
-                    cursor_ref
-                        .agent
-                        .send(CursorLayoutResponse::TextSelection {
-                            from: origin_char.position as usize,
-                            to: dist_char.position as usize,
-                            id,
-                        })
-                        .ok();
-                }
-            }
-        }
     }
 
     /// Measure the node of the inner children
@@ -347,7 +280,7 @@ impl<'a> NodeLayoutMeasurer<'a> {
         match &node.node_data.node_type {
             NodeType::Element { tag, .. } => {
                 if tag == "paragraph" {
-                    self.measure_paragraph(node, node_area, remaining_area);
+                    self.measure_text(node, node_area, remaining_area);
                     return;
                 }
                 if let Some(children) = self.dom.dom().tree.children(self.node_id) {
@@ -456,4 +389,91 @@ impl<'a> NodeLayoutMeasurer<'a> {
             NodeType::Placeholder => {}
         }
     }
+}
+
+fn process_paragraph(
+    node: &DioxusNode,
+    node_area: &Area,
+    dom: &FreyaDOM,
+    font_collection: &FontCollection,
+    is_editable: bool,
+) -> Paragraph {
+    let font_size = node.state.font_style.font_size;
+    let font_family = &node.state.font_style.font_family;
+    let align = node.state.font_style.align;
+    let max_lines = node.state.font_style.max_lines;
+    let font_style = node.state.font_style.font_style;
+
+    let mut paragraph_style = ParagraphStyle::default();
+    paragraph_style.set_text_align(align);
+    paragraph_style.set_max_lines(max_lines);
+    paragraph_style.set_replace_tab_characters(true);
+
+    let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
+
+    paragraph_builder.push_style(
+        TextStyle::new()
+            .set_font_style(font_style)
+            .set_font_size(font_size)
+            .set_font_families(font_family),
+    );
+
+    let texts = get_inner_texts(dom, &node.node_data.node_id);
+
+    for (font_style, text) in texts.into_iter() {
+        paragraph_builder.push_style(
+            TextStyle::new()
+                .set_font_style(font_style.font_style)
+                .set_height_override(true)
+                .set_height(font_style.line_height)
+                .set_color(font_style.color)
+                .set_font_size(font_style.font_size)
+                .set_font_families(&font_style.font_family),
+        );
+        paragraph_builder.add_text(text);
+    }
+
+    let mut paragraph = paragraph_builder.build();
+    paragraph.layout(node_area.width());
+
+    if is_editable {
+        if let Some((cursor_ref, id, cursor_position, cursor_selections)) =
+            get_cursor_reference(node)
+        {
+            if let Some(cursor_position) = cursor_position {
+                // Calculate the new cursor position
+                let char_position =
+                    paragraph.get_glyph_position_at_coordinate(cursor_position.to_i32().to_tuple());
+
+                // Notify the cursor reference listener
+                cursor_ref
+                    .agent
+                    .send(CursorLayoutResponse::CursorPosition {
+                        position: char_position.position as usize,
+                        id,
+                    })
+                    .ok();
+            }
+
+            if let Some((origin, dist)) = cursor_selections {
+                // Calculate the start of the highlighting
+                let origin_char =
+                    paragraph.get_glyph_position_at_coordinate(origin.to_i32().to_tuple());
+                // Calculate the end of the highlighting
+                let dist_char =
+                    paragraph.get_glyph_position_at_coordinate(dist.to_i32().to_tuple());
+
+                cursor_ref
+                    .agent
+                    .send(CursorLayoutResponse::TextSelection {
+                        from: origin_char.position as usize,
+                        to: dist_char.position as usize,
+                        id,
+                    })
+                    .ok();
+            }
+        }
+    }
+
+    paragraph
 }

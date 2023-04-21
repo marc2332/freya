@@ -14,10 +14,11 @@ categories = ["GUI"]
 shared = []
 
 [dependencies]
-dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-freya-node-state = { path = "../state", version = "0.1.0" }
-freya-common = { path = "../common", version = "0.1.0" }
+freya-node-state = { workspace = true }
+freya-common = { workspace = true }
+
+dioxus-rsx = { workspace = true }
+dioxus-native-core = { workspace = true }
+dioxus-core-macro = { workspace = true }
+dioxus-hooks = { workspace = true }
+dioxus-core = { workspace = true }

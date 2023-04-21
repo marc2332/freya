@@ -4,6 +4,7 @@
 mod accessibility_focus_provider;
 mod accordion;
 mod button;
+mod canvas;
 mod drag_drop;
 mod dropdown;
 mod external_link;
@@ -21,6 +22,7 @@ mod tooltip;
 pub use accessibility_focus_provider::*;
 pub use accordion::*;
 pub use button::*;
+pub use canvas::*;
 pub use drag_drop::*;
 pub use dropdown::*;
 pub use external_link::*;

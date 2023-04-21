@@ -41,4 +41,8 @@ pub fn render_rect_container(
     }
 
     canvas.draw_path(&path, &paint);
+
+    if let Some(canvas_ref) = &dioxus_node.state.references.canvas_ref {
+        (canvas_ref.runner)(canvas, area);
+    }
 }

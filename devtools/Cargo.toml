@@ -11,20 +11,20 @@ keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
 [dependencies]
-freya-node-state = { path = "../state", version = "0.1.0" }
-freya-layout = { path = "../layout", version = "0.1.0" }
-freya-renderer = { path = "../renderer", version = "0.1.0" }
-freya-elements = { path = "../elements", version = "0.1.0" }
-freya-hooks = { path = "../hooks"}
-freya-core = { path = "../core" }
-freya-components ={ path = "../components"}
-freya-dom = { path = "../dom", version = "0.1.0", features=["shared"] }
+freya-node-state = { workspace = true }
+freya-layout = { workspace = true }
+freya-renderer = { workspace = true }
+freya-elements = { workspace = true }
+freya-hooks = { workspace = true }
+freya-core = { workspace = true }
+freya-components = { workspace = true }
+freya-dom = { workspace = true, features = ["shared"] }
 
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519", features = ["macro", "hooks", "hot-reload"]}
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
-dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev="49c5a5043a16fc82210af146c345793dd448e519"}
+dioxus = { workspace = true }
+dioxus-native-core = { workspace = true }
+dioxus-core-macro = { workspace = true }
+dioxus-core = { workspace = true }
+dioxus-router = { workspace = true }
 
-tokio = { version = "1.23.0", features = ["sync", "rt-multi-thread", "time", "macros"] }
-skia-safe = { version = "0.60.0", features = ["gl", "textlayout", "svg"] }
+tokio = { workspace = true }
+skia-safe = { workspace = true }
