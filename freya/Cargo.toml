@@ -16,6 +16,7 @@ devtools = ["dep:freya-devtools", "freya-dom/shared"]
 use_camera = ["freya-hooks/use_camera"]
 
 [target."cfg(target_os = \"linux\")".dependencies.skia-safe]
+workspace = true
 features = ["gl", "textlayout", "svg", "x11", "wayland"]
 
 [dependencies]
