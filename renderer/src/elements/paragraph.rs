@@ -16,8 +16,11 @@ pub fn render_paragraph(
     dom: &FreyaDOM,
     canvas: &mut Canvas,
 ) {
+    let font_size = dioxus_node.state.font_style.font_size;
+    let font_family = &dioxus_node.state.font_style.font_family;
     let align = dioxus_node.state.font_style.align;
     let max_lines = dioxus_node.state.font_style.max_lines;
+    let font_style = dioxus_node.state.font_style.font_style;
 
     let texts = get_inner_texts(dom, &render_node.node_id);
 
@@ -30,6 +33,13 @@ pub fn render_paragraph(
     paragraph_style.set_text_height_behavior(TextHeightBehavior::DisableAll);
 
     let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection.clone());
+
+    paragraph_builder.push_style(
+        TextStyle::new()
+            .set_font_style(font_style)
+            .set_font_size(font_size)
+            .set_font_families(font_family),
+    );
 
     for (style, text) in &texts {
         paragraph_builder.push_style(
