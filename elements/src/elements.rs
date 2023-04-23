@@ -224,6 +224,8 @@ builder_constructors! {
         rotate: String,
         highlights: String,
         highlight_color: String,
+        font_size: String,
+        font_family: String,
     };
     text {
         color: String,
