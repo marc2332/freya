@@ -57,7 +57,6 @@ impl<T: Clone> WindowEnv<T> {
     pub fn from_config(
         window_config: WindowConfig<T>,
         event_loop: &EventLoop<EventMessage>,
-        scale_factor: f64,
     ) -> Self {
         let mut font_collection = FontCollection::new();
         font_collection.set_default_font_manager(FontMgr::default(), "Fira Sans");
@@ -67,8 +66,8 @@ impl<T: Clone> WindowEnv<T> {
             .with_decorations(window_config.decorations)
             .with_transparent(window_config.transparent)
             .with_inner_size(LogicalSize::<f64>::new(
-                window_config.width * scale_factor,
-                window_config.height * scale_factor,
+                window_config.width,
+                window_config.height,
             ));
 
         let template = ConfigTemplateBuilder::new()
