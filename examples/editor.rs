@@ -5,8 +5,8 @@ fn main() {
     launch_cfg(
         app,
         WindowConfig::<()>::builder()
-            .with_width(900)
-            .with_height(500)
+            .with_width(900.0)
+            .with_height(500.0)
             .with_decorations(true)
             .with_transparency(false)
             .with_title("Editor")

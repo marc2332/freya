@@ -4,8 +4,8 @@ use freya_renderer::WindowConfig;
 
 #[cfg(not(doctest))]
 /// Launch a new Window with the default config.
-/// - Width: `400`
-/// - Height: `300`
+/// - Width: `600.0`
+/// - Height: `600.0`
 /// - Decorations enabled
 /// - Transparency disabled
 /// - Window title: `Freya`
@@ -32,8 +32,8 @@ pub fn launch(app: Component<()>) {
     launch_cfg(
         app,
         WindowConfig::<()> {
-            width: 400,
-            height: 300,
+            width: 600.0,
+            height: 600.0,
             decorations: true,
             transparent: false,
             title: "Freya",
@@ -71,8 +71,8 @@ pub fn launch_with_title(app: Component<()>, title: &'static str) {
     launch_cfg(
         app,
         WindowConfig::<()> {
-            width: 400,
-            height: 300,
+            width: 400.0,
+            height: 300.0,
             decorations: true,
             transparent: false,
             title,
@@ -104,7 +104,7 @@ pub fn launch_with_title(app: Component<()>, title: &'static str) {
 ///     )
 /// }
 /// ```
-pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height): (u32, u32)) {
+pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height): (f64, f64)) {
     launch_cfg(
         app,
         WindowConfig::<()> {
@@ -133,8 +133,8 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
 /// launch_cfg(
 ///     app,
 ///     WindowConfig::<()>::builder()
-///         .with_width(500)
-///         .with_height(400)
+///         .with_width(500.0)
+///         .with_height(400.0)
 ///         .with_decorations(true)
 ///         .with_transparency(false)
 ///         .with_title("Freya App")

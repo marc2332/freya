@@ -7,7 +7,7 @@ use freya::events::MouseEvent;
 use freya::prelude::*;
 
 fn main() {
-    launch_with_props(app, "Animation", (700, 250));
+    launch_with_props(app, "Animation", (700.0, 250.0));
 }
 
 const TIME: i32 = 500;
