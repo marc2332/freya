@@ -88,7 +88,7 @@ pub fn get_scroll_position_from_wheel(
         return 0;
     }
 
-    let new_position = scroll_position + (wheel_movement * 20.0);
+    let new_position = scroll_position + wheel_movement;
 
     if new_position >= 0.0 && wheel_movement > 0.0 {
         return 0;

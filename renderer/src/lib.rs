@@ -128,7 +128,7 @@ pub fn run<T: 'static + Clone>(
                         if TouchPhase::Moved == phase {
                             let scroll_data = {
                                 match delta {
-                                    MouseScrollDelta::LineDelta(x, y) => (x as f64, y as f64),
+                                    MouseScrollDelta::LineDelta(x, y) => (x as f64 * 20.0, y as f64  * 20.),
                                     MouseScrollDelta::PixelDelta(pos) => (pos.x, pos.y),
                                 }
                             };
