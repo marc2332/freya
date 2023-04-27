@@ -18,8 +18,8 @@ pub struct WindowConfig<T: Clone> {
 impl<T: Clone> Default for WindowConfig<T> {
     fn default() -> Self {
         Self {
-            width: 350.0,
-            height: 350.0,
+            width: 600.0,
+            height: 600.0,
             decorations: true,
             title: "Freya app",
             transparent: false,

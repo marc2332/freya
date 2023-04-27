@@ -4,8 +4,8 @@ use freya_renderer::WindowConfig;
 
 #[cfg(not(doctest))]
 /// Launch a new Window with the default config.
-/// - Width: `400.0`
-/// - Height: `300.0`
+/// - Width: `600.0`
+/// - Height: `600.0`
 /// - Decorations enabled
 /// - Transparency disabled
 /// - Window title: `Freya`
@@ -32,8 +32,8 @@ pub fn launch(app: Component<()>) {
     launch_cfg(
         app,
         WindowConfig::<()> {
-            width: 400.0,
-            height: 300.0,
+            width: 600.0,
+            height: 600.0,
             decorations: true,
             transparent: false,
             title: "Freya",
