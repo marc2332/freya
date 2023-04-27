@@ -6,7 +6,7 @@
 use freya::prelude::*;
 
 fn main() {
-    launch_with_props(app, "touch", (600, 500));
+    launch_with_props(app, "touch", (600.0, 500.0));
 }
 
 fn app(cx: Scope) -> Element {

@@ -2,9 +2,9 @@
 #[derive(Clone)]
 pub struct WindowConfig<T: Clone> {
     /// Width of the Window.
-    pub width: u32,
+    pub width: f64,
     /// Height of the window.
-    pub height: u32,
+    pub height: f64,
     /// Enable Window decorations.
     pub decorations: bool,
     /// Title for the Window.
@@ -18,8 +18,8 @@ pub struct WindowConfig<T: Clone> {
 impl<T: Clone> Default for WindowConfig<T> {
     fn default() -> Self {
         Self {
-            width: 350,
-            height: 350,
+            width: 350.0,
+            height: 350.0,
             decorations: true,
             title: "Freya app",
             transparent: false,
@@ -37,8 +37,8 @@ impl<T: Clone> WindowConfig<T> {
 /// Configuration Builder for a window.
 #[derive(Clone)]
 pub struct WindowConfigBuilder<T> {
-    pub width: u32,
-    pub height: u32,
+    pub width: f64,
+    pub height: f64,
     pub decorations: bool,
     pub title: &'static str,
     pub transparent: bool,
@@ -48,8 +48,8 @@ pub struct WindowConfigBuilder<T> {
 impl<T> Default for WindowConfigBuilder<T> {
     fn default() -> Self {
         Self {
-            width: 350,
-            height: 350,
+            width: 350.0,
+            height: 350.0,
             decorations: true,
             title: "Freya app",
             transparent: false,
@@ -60,13 +60,13 @@ impl<T> Default for WindowConfigBuilder<T> {
 
 impl<T: Clone> WindowConfigBuilder<T> {
     /// Specify a Window width.
-    pub fn with_width(mut self, width: u32) -> Self {
+    pub fn with_width(mut self, width: f64) -> Self {
         self.width = width;
         self
     }
 
     /// Specify a Window height.
-    pub fn with_height(mut self, height: u32) -> Self {
+    pub fn with_height(mut self, height: f64) -> Self {
         self.height = height;
         self
     }

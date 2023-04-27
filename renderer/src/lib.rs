@@ -47,6 +47,10 @@ pub fn run<T: 'static + Clone>(
     let _guard = rt.enter();
 
     let event_loop = EventLoopBuilder::<EventMessage>::with_user_event().build();
+    let scale_factor = event_loop
+        .primary_monitor()
+        .map(|monitor| monitor.scale_factor())
+        .unwrap_or(1.0);
     let proxy = event_loop.create_proxy();
 
     // Hotreload
@@ -67,7 +71,7 @@ pub fn run<T: 'static + Clone>(
         vdom,
         &proxy,
         mutations_sender,
-        WindowEnv::from_config(window_config, &event_loop),
+        WindowEnv::from_config(window_config, &event_loop, scale_factor),
     );
 
     app.init_vdom();

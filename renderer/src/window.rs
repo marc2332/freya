@@ -22,7 +22,7 @@ use glutin::{
 use glutin_winit::DisplayBuilder;
 use raw_window_handle::HasRawWindowHandle;
 
-use winit::dpi::PhysicalSize;
+use winit::dpi::{LogicalSize, PhysicalSize};
 use winit::{
     event_loop::EventLoop,
     window::{Window, WindowBuilder},
@@ -57,6 +57,7 @@ impl<T: Clone> WindowEnv<T> {
     pub fn from_config(
         window_config: WindowConfig<T>,
         event_loop: &EventLoop<EventMessage>,
+        scale_factor: f64,
     ) -> Self {
         let mut font_collection = FontCollection::new();
         font_collection.set_default_font_manager(FontMgr::default(), "Fira Sans");
@@ -65,9 +66,9 @@ impl<T: Clone> WindowEnv<T> {
             .with_title(window_config.title)
             .with_decorations(window_config.decorations)
             .with_transparent(window_config.transparent)
-            .with_inner_size(PhysicalSize::<u32>::new(
-                window_config.width,
-                window_config.height,
+            .with_inner_size(LogicalSize::<f64>::new(
+                window_config.width * scale_factor,
+                window_config.height * scale_factor,
             ));
 
         let template = ConfigTemplateBuilder::new()

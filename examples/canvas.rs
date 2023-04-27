@@ -7,7 +7,7 @@ use freya::events::MouseEvent;
 use freya::prelude::*;
 
 fn main() {
-    launch_with_props(app, "Freya canvas experiment", (700, 570));
+    launch_with_props(app, "Freya canvas experiment", (700.0, 570.0));
 }
 
 fn app(cx: Scope) -> Element {
