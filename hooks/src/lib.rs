@@ -2,6 +2,7 @@
 //! A collection of hooks to be used in Freya.
 
 mod rope_editor;
+mod shader_uniforms;
 mod text_editor;
 
 mod use_animation;
@@ -15,6 +16,7 @@ mod use_theme;
 mod use_camera;
 
 pub use rope_editor::*;
+pub use shader_uniforms::*;
 pub use text_editor::*;
 
 pub use use_animation::*;

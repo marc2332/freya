@@ -56,7 +56,7 @@ pub struct Line<'a> {
 impl Line<'_> {
     /// Get the length of the line
     pub fn len_chars(&self) -> usize {
-        self.text.len()
+        self.text.chars().filter(|c| c != &'\r').count()
     }
 
     /// Get the text of the line

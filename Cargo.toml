@@ -24,15 +24,15 @@ freya-components = { path = "components" }
 freya-dom = { path = "dom", version = "0.1.0" }
 freya-testing = { path = "testing", version = "0.1.0" }
 
-dioxus = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events" }
-dioxus-native-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events" }
-dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events" }
-dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events", features=["dioxus"] }
-dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events" }
-dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events" }
-dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events" }
-dioxus-hot-reload = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events" }
-dioxus-router = { git = "https://github.com/Demonthos/dioxus", branch="fix-non-bubbling-events" }
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="c9044111908338c347b2b00bb48f579e5d9e1877" }
+dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="c9044111908338c347b2b00bb48f579e5d9e1877" }
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="c9044111908338c347b2b00bb48f579e5d9e1877" }
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="c9044111908338c347b2b00bb48f579e5d9e1877", features=["dioxus"] }
+dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="c9044111908338c347b2b00bb48f579e5d9e1877" }
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="c9044111908338c347b2b00bb48f579e5d9e1877" }
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="c9044111908338c347b2b00bb48f579e5d9e1877" }
+dioxus-hot-reload = { git = "https://github.com/DioxusLabs/dioxus", rev="c9044111908338c347b2b00bb48f579e5d9e1877" }
+dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev="c9044111908338c347b2b00bb48f579e5d9e1877" }
 
 gl = "0.14.0"
 glutin = "0.30.6"
