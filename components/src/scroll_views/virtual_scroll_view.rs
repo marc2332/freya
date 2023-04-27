@@ -253,7 +253,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
             direction: "horizontal",
             width: "{user_container_width}",
             height: "{user_container_height}",
-            onclick: onclick, // TODO(marc2332): mouseup would be better
+            onglobalclick: onclick, // TODO(marc2332): mouseup would be better
             onmouseover: onmouseover,
             onkeydown: onkeydown,
             onkeyup: onkeyup,
