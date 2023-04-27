@@ -1,6 +1,8 @@
-use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
-use dioxus_native_core::state::ParentDepState;
-use dioxus_native_core_macro::sorted_str_slice;
+use dioxus_native_core::exports::shipyard::Component;
+use dioxus_native_core::node_ref::NodeView;
+use dioxus_native_core::prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State};
+use dioxus_native_core::SendAnyMap;
+use dioxus_native_core_macro::partial_derive_state;
 use freya_common::LayoutNotifier;
 use skia_safe::textlayout::TextAlign;
 use skia_safe::Color;
@@ -8,7 +10,7 @@ use smallvec::{smallvec, SmallVec};
 
 use crate::{parse_color, CustomAttributeValues};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Component)]
 pub struct FontStyle {
     pub color: Color,
     pub font_family: SmallVec<[String; 2]>,
@@ -42,33 +44,41 @@ impl Default for FontStyle {
     }
 }
 
-/// Font style are inherited by default if not specified otherwise by some of the supported attributes.
-impl ParentDepState<CustomAttributeValues> for FontStyle {
-    type Ctx = (LayoutNotifier, f32);
-    type DepState = (Self,);
+#[partial_derive_state]
+impl State<CustomAttributeValues> for FontStyle {
+    type ParentDependencies = (Self,);
 
-    const NODE_MASK: NodeMask =
-        NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
+    type ChildDependencies = ();
+
+    type NodeDependencies = ();
+
+    const NODE_MASK: NodeMaskBuilder<'static> =
+        NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[
             "color",
             "font_size",
             "font_family",
             "line_height",
             "align",
             "max_lines",
-            "font_style"
-        ])));
+            "font_style",
+        ]));
 
-    fn reduce(
+    fn update<'a>(
         &mut self,
-        node: NodeView<CustomAttributeValues>,
-        parent: Option<(&Self,)>,
-        (layout_notifier, scale_factor): &Self::Ctx,
+        node_view: NodeView<CustomAttributeValues>,
+        _node: <Self::NodeDependencies as Dependancy>::ElementBorrowed<'a>,
+        parent: Option<<Self::ParentDependencies as Dependancy>::ElementBorrowed<'a>>,
+        _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
+        context: &SendAnyMap,
     ) -> bool {
+        let layout_notifier = context.get::<LayoutNotifier>().unwrap();
+        let scale_factor = context.get::<f32>().unwrap();
+
         let mut font_style = parent
             .map(|(v,)| v.clone())
             .unwrap_or_else(|| FontStyle::default_with_scale_factor(*scale_factor));
 
-        if let Some(attributes) = node.attributes() {
+        if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
                 match attr.attribute.name.as_str() {
                     "color" => {

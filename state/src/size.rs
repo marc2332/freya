@@ -1,13 +1,15 @@
 use std::fmt::Display;
 
-use dioxus_native_core::node_ref::{AttributeMask, NodeMask, NodeView};
-use dioxus_native_core::state::ParentDepState;
-use dioxus_native_core_macro::sorted_str_slice;
+use dioxus_native_core::exports::shipyard::Component;
+use dioxus_native_core::node_ref::NodeView;
+use dioxus_native_core::prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State};
+use dioxus_native_core::SendAnyMap;
+use dioxus_native_core_macro::partial_derive_state;
 use freya_common::LayoutNotifier;
 
 use crate::CustomAttributeValues;
 
-#[derive(Default, Clone, Debug)]
+#[derive(Default, Clone, Debug, Component)]
 pub struct Size {
     pub width: SizeMode,
     pub height: SizeMode,
@@ -19,12 +21,16 @@ pub struct Size {
     pub direction: DirectionMode,
 }
 
-impl ParentDepState<CustomAttributeValues> for Size {
-    type Ctx = (LayoutNotifier, f32);
-    type DepState = (Self,);
+#[partial_derive_state]
+impl State<CustomAttributeValues> for Size {
+    type ParentDependencies = (Self,);
 
-    const NODE_MASK: NodeMask =
-        NodeMask::new_with_attrs(AttributeMask::Static(&sorted_str_slice!([
+    type ChildDependencies = ();
+
+    type NodeDependencies = ();
+
+    const NODE_MASK: NodeMaskBuilder<'static> = NodeMaskBuilder::new()
+        .with_attrs(AttributeMaskBuilder::Some(&[
             "width",
             "height",
             "min_height",
@@ -33,16 +39,21 @@ impl ParentDepState<CustomAttributeValues> for Size {
             "max_width",
             "padding",
             "direction",
-        ])))
-        .with_text()
-        .with_tag();
+        ]))
+        .with_tag()
+        .with_text();
 
-    fn reduce(
+    fn update<'a>(
         &mut self,
-        node: NodeView<CustomAttributeValues>,
-        _parent: Option<(&Self,)>,
-        (layout_notifier, scale_factor): &Self::Ctx,
+        node_view: NodeView<CustomAttributeValues>,
+        _node: <Self::NodeDependencies as Dependancy>::ElementBorrowed<'a>,
+        _parent: Option<<Self::ParentDependencies as Dependancy>::ElementBorrowed<'a>>,
+        _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
+        context: &SendAnyMap,
     ) -> bool {
+        let layout_notifier = context.get::<LayoutNotifier>().unwrap();
+        let scale_factor = context.get::<f32>().unwrap();
+
         let mut width = SizeMode::default();
         let mut height = SizeMode::default();
         let mut min_height = SizeMode::default();
@@ -50,19 +61,19 @@ impl ParentDepState<CustomAttributeValues> for Size {
         let mut max_height = SizeMode::default();
         let mut max_width = SizeMode::default();
         let mut padding = (0.0, 0.0, 0.0, 0.0);
-        let mut direction = if let Some("label") = node.tag() {
+        let mut direction = if let Some("label") = node_view.tag() {
             DirectionMode::Both
-        } else if let Some("paragraph") = node.tag() {
+        } else if let Some("paragraph") = node_view.tag() {
             DirectionMode::Both
-        } else if let Some("text") = node.tag() {
+        } else if let Some("text") = node_view.tag() {
             DirectionMode::Both
-        } else if node.text().is_some() {
+        } else if node_view.text().is_some() {
             DirectionMode::Both
         } else {
             DirectionMode::Vertical
         };
 
-        if let Some(attributes) = node.attributes() {
+        if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
                 match attr.attribute.name.as_str() {
                     "width" => {

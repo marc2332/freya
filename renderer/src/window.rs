@@ -242,10 +242,9 @@ impl<T: Clone> WindowEnv<T> {
                 };
                 if let Some(dioxus_node) = render_node.get_node(dom) {
                     render_skia(
-                        dom,
                         canvas,
                         render_node,
-                        dioxus_node,
+                        &dioxus_node,
                         font_collection,
                         viewports_collection,
                         render_wireframe,

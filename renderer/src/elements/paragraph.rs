@@ -1,5 +1,7 @@
-use freya_dom::{DioxusNode, FreyaDOM};
+use dioxus_native_core::real_dom::NodeImmutable;
+use freya_dom::DioxusNode;
 use freya_layout::{get_inner_texts, RenderData};
+use freya_node_state::{CursorSettings, FontStyle};
 use skia_safe::{
     textlayout::{
         FontCollection, Paragraph, ParagraphBuilder, ParagraphStyle, RectHeightStyle,
@@ -12,49 +14,38 @@ use skia_safe::{
 pub fn render_paragraph(
     render_node: &RenderData,
     dioxus_node: &DioxusNode,
-    font_collection: &mut FontCollection,
-    dom: &FreyaDOM,
     canvas: &mut Canvas,
+    font_collection: &mut FontCollection,
 ) {
-    let font_size = dioxus_node.state.font_style.font_size;
-    let font_family = &dioxus_node.state.font_style.font_family;
-    let align = dioxus_node.state.font_style.align;
-    let max_lines = dioxus_node.state.font_style.max_lines;
-    let font_style = dioxus_node.state.font_style.font_style;
+    let node_font_style = &*dioxus_node.get::<FontStyle>().unwrap();
+    let node_cursor_settings = &*dioxus_node.get::<CursorSettings>().unwrap();
 
-    let texts = get_inner_texts(dom, &render_node.node_id);
+    let texts = get_inner_texts(dioxus_node);
 
     let (x, y) = render_node.node_area.origin.to_tuple();
 
     let mut paragraph_style = ParagraphStyle::default();
-    paragraph_style.set_max_lines(max_lines);
-    paragraph_style.set_text_align(align);
+    paragraph_style.set_max_lines(node_font_style.max_lines);
+    paragraph_style.set_text_align(node_font_style.align);
     paragraph_style.set_replace_tab_characters(true);
     paragraph_style.set_text_height_behavior(TextHeightBehavior::DisableAll);
 
     let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection.clone());
 
-    paragraph_builder.push_style(
-        TextStyle::new()
-            .set_font_style(font_style)
-            .set_font_size(font_size)
-            .set_font_families(font_family),
-    );
-
-    for (style, text) in &texts {
+    for (font_style, text) in &texts {
         paragraph_builder.push_style(
             TextStyle::new()
-                .set_font_style(style.font_style)
+                .set_font_style(font_style.font_style)
                 .set_height_override(true)
-                .set_height(style.line_height)
-                .set_color(style.color)
-                .set_font_size(style.font_size)
-                .set_font_families(&style.font_family),
+                .set_height(font_style.line_height)
+                .set_color(font_style.color)
+                .set_font_size(font_style.font_size)
+                .set_font_families(&font_style.font_family),
         );
-        paragraph_builder.add_text(text.clone());
+        paragraph_builder.add_text(text);
     }
 
-    if dioxus_node.state.cursor_settings.position.is_some() {
+    if node_cursor_settings.position.is_some() {
         // This is very tricky, but it works! It allows freya to render the cursor at the end of a line.
         paragraph_builder.add_text(" ");
     }
@@ -78,8 +69,10 @@ fn draw_cursor_highlights(
     canvas: &mut Canvas,
     dioxus_node: &DioxusNode,
 ) -> Option<()> {
-    let highlights = dioxus_node.state.cursor_settings.highlights.as_ref()?;
-    let highlight_color = dioxus_node.state.cursor_settings.highlight_color;
+    let node_cursor_settings = &*dioxus_node.get::<CursorSettings>().unwrap();
+
+    let highlights = node_cursor_settings.highlights.as_ref()?;
+    let highlight_color = node_cursor_settings.highlight_color;
 
     for (from, to) in highlights.iter() {
         let (from, to) = {
@@ -119,8 +112,10 @@ fn draw_cursor(
     canvas: &mut Canvas,
     dioxus_node: &DioxusNode,
 ) -> Option<()> {
-    let cursor = dioxus_node.state.cursor_settings.position?;
-    let cursor_color = dioxus_node.state.cursor_settings.color;
+    let node_cursor_settings = &*dioxus_node.get::<CursorSettings>().unwrap();
+
+    let cursor = node_cursor_settings.position?;
+    let cursor_color = node_cursor_settings.color;
     let cursor_position = cursor as usize;
 
     let cursor_rects = paragraph.get_rects_for_range(

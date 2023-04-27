@@ -1,7 +1,6 @@
 use std::{collections::HashMap, sync::Arc, task::Waker};
 
 use dioxus_core::{Template, VirtualDom};
-
 use freya_common::EventMessage;
 use freya_core::{
     events::{DomEvent, EventsProcessor, FreyaEvent},

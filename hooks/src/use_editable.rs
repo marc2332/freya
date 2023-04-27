@@ -178,7 +178,7 @@ pub fn use_editable(
         text_id: *id,
         agent: cursor_channels.0.clone(),
         cursor_position: Arc::new(Mutex::new(None)),
-        id: Arc::new(Mutex::new(None)),
+        cursor_id: Arc::new(Mutex::new(None)),
         cursor_selections: Arc::new(Mutex::new(None)),
     });
 

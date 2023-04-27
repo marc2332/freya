@@ -1,10 +1,21 @@
+use dioxus_native_core::real_dom::NodeImmutable;
 use freya_common::Area;
-use freya_node_state::SizeMode;
+use freya_node_state::{Size, SizeMode};
 
 use crate::{ops_calc::run_calculations, NodeLayoutMeasurer};
 
 pub fn calculate_area(node_measurer: &NodeLayoutMeasurer) -> Area {
     let mut area = *node_measurer.remaining_area;
+
+    let Size {
+        width,
+        height,
+        max_height,
+        min_height,
+        max_width,
+        min_width,
+        ..
+    } = &*node_measurer.node.get::<Size>().unwrap();
 
     let calculate = |value: &SizeMode, area_value: f32, parent_area_value: f32| -> f32 {
         match value {
@@ -73,38 +84,22 @@ pub fn calculate_area(node_measurer: &NodeLayoutMeasurer) -> Area {
         }
     };
 
-    area.size.width = calculate(
-        &node_measurer.node.state.size.width,
-        area.width(),
-        node_measurer.parent_area.width(),
-    );
-    area.size.height = calculate(
-        &node_measurer.node.state.size.height,
-        area.height(),
-        node_measurer.parent_area.height(),
-    );
+    area.size.width = calculate(width, area.width(), node_measurer.parent_area.width());
+    area.size.height = calculate(height, area.height(), node_measurer.parent_area.height());
 
     area.size.height = calculate_min(
-        &node_measurer.node.state.size.min_height,
+        min_height,
         area.height(),
         node_measurer.parent_area.height(),
     );
-    area.size.width = calculate_min(
-        &node_measurer.node.state.size.min_width,
-        area.width(),
-        node_measurer.parent_area.width(),
-    );
+    area.size.width = calculate_min(min_width, area.width(), node_measurer.parent_area.width());
 
     area.size.height = calculate_max(
-        &node_measurer.node.state.size.max_height,
+        max_height,
         area.height(),
         node_measurer.parent_area.height(),
     );
-    area.size.width = calculate_max(
-        &node_measurer.node.state.size.max_width,
-        area.width(),
-        node_measurer.parent_area.width(),
-    );
+    area.size.width = calculate_max(max_width, area.width(), node_measurer.parent_area.width());
 
     area
 }
