@@ -879,45 +879,14 @@ dependencies = [
 [[package]]
 name = "dioxus"
 version = "0.3.2"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519#49c5a5043a16fc82210af146c345793dd448e519"
-dependencies = [
- "dioxus-core 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519)",
- "dioxus-core-macro 0.3.0 (git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519)",
- "dioxus-hooks 0.3.0 (git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519)",
- "dioxus-hot-reload 0.1.1 (git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519)",
- "dioxus-html 0.3.1 (git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519)",
- "dioxus-rsx 0.0.3 (git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519)",
-]
-
-[[package]]
-name = "dioxus"
-version = "0.3.2"
 source = "git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877#c9044111908338c347b2b00bb48f579e5d9e1877"
 dependencies = [
- "dioxus-core 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-core-macro 0.3.0 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-hooks 0.3.0 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-hot-reload 0.1.1 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-html 0.3.1 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-rsx 0.0.3 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
-]
-
-[[package]]
-name = "dioxus-core"
-version = "0.3.2"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519#49c5a5043a16fc82210af146c345793dd448e519"
-dependencies = [
- "bumpalo",
- "bumpslab",
- "futures-channel",
- "futures-util",
- "indexmap",
- "log",
- "longest-increasing-subsequence",
- "rustc-hash",
- "serde",
- "slab",
- "smallbox",
+ "dioxus-core",
+ "dioxus-core-macro",
+ "dioxus-hooks",
+ "dioxus-hot-reload",
+ "dioxus-html",
+ "dioxus-rsx",
 ]
 
 [[package]]
@@ -941,20 +910,9 @@ dependencies = [
 [[package]]
 name = "dioxus-core-macro"
 version = "0.3.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519#49c5a5043a16fc82210af146c345793dd448e519"
-dependencies = [
- "dioxus-rsx 0.0.3 (git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519)",
- "proc-macro2",
- "quote",
- "syn 1.0.109",
-]
-
-[[package]]
-name = "dioxus-core-macro"
-version = "0.3.0"
 source = "git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877#c9044111908338c347b2b00bb48f579e5d9e1877"
 dependencies = [
- "dioxus-rsx 0.0.3 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
+ "dioxus-rsx",
  "proc-macro2",
  "quote",
  "syn 1.0.109",
@@ -963,39 +921,11 @@ dependencies = [
 [[package]]
 name = "dioxus-hooks"
 version = "0.3.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519#49c5a5043a16fc82210af146c345793dd448e519"
-dependencies = [
- "dioxus-core 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519)",
- "futures-channel",
- "log",
-]
-
-[[package]]
-name = "dioxus-hooks"
-version = "0.3.0"
 source = "git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877#c9044111908338c347b2b00bb48f579e5d9e1877"
 dependencies = [
- "dioxus-core 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
+ "dioxus-core",
  "futures-channel",
  "log",
-]
-
-[[package]]
-name = "dioxus-hot-reload"
-version = "0.1.1"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519#49c5a5043a16fc82210af146c345793dd448e519"
-dependencies = [
- "chrono",
- "dioxus-core 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519)",
- "dioxus-html 0.3.1 (git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519)",
- "dioxus-rsx 0.0.3 (git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519)",
- "execute",
- "ignore",
- "interprocess",
- "notify",
- "once_cell",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -1004,9 +934,9 @@ version = "0.1.1"
 source = "git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877#c9044111908338c347b2b00bb48f579e5d9e1877"
 dependencies = [
  "chrono",
- "dioxus-core 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-html 0.3.1 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-rsx 0.0.3 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
+ "dioxus-core",
+ "dioxus-html",
+ "dioxus-rsx",
  "execute",
  "ignore",
  "interprocess",
@@ -1019,27 +949,11 @@ dependencies = [
 [[package]]
 name = "dioxus-html"
 version = "0.3.1"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519#49c5a5043a16fc82210af146c345793dd448e519"
-dependencies = [
- "async-trait",
- "dioxus-core 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519)",
- "dioxus-rsx 0.0.3 (git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519)",
- "enumset",
- "euclid",
- "keyboard-types",
- "serde",
- "serde-value",
- "serde_repr",
-]
-
-[[package]]
-name = "dioxus-html"
-version = "0.3.1"
 source = "git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877#c9044111908338c347b2b00bb48f579e5d9e1877"
 dependencies = [
  "async-trait",
- "dioxus-core 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-rsx 0.0.3 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
+ "dioxus-core",
+ "dioxus-rsx",
  "enumset",
  "euclid",
  "keyboard-types",
@@ -1056,7 +970,7 @@ dependencies = [
  "anymap 1.0.0-beta.2",
  "crossbeam-deque",
  "dashmap",
- "dioxus-core 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
+ "dioxus-core",
  "hashbrown 0.13.2",
  "keyboard-types",
  "lightningcss",
@@ -1083,7 +997,7 @@ name = "dioxus-router"
 version = "0.3.0"
 source = "git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877#c9044111908338c347b2b00bb48f579e5d9e1877"
 dependencies = [
- "dioxus 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
+ "dioxus",
  "futures-channel",
  "futures-util",
  "log",
@@ -1096,22 +1010,9 @@ dependencies = [
 [[package]]
 name = "dioxus-rsx"
 version = "0.0.3"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519#49c5a5043a16fc82210af146c345793dd448e519"
-dependencies = [
- "dioxus-core 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519)",
- "internment",
- "proc-macro2",
- "quote",
- "serde",
- "syn 1.0.109",
-]
-
-[[package]]
-name = "dioxus-rsx"
-version = "0.0.3"
 source = "git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877#c9044111908338c347b2b00bb48f579e5d9e1877"
 dependencies = [
- "dioxus-core 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
+ "dioxus-core",
  "internment",
  "krates",
  "proc-macro2",
@@ -1123,9 +1024,9 @@ dependencies = [
 [[package]]
 name = "dioxus-utils"
 version = "0.1.0"
-source = "git+https://github.com/marc2332/dioxus-utils#31532f3775135838f0f06a031e69230496df9a1f"
+source = "git+https://github.com/marc2332/dioxus-utils?rev=b277db0b8c57bd4041bb552bf3e16870c1f33567#b277db0b8c57bd4041bb552bf3e16870c1f33567"
 dependencies = [
- "dioxus 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=49c5a5043a16fc82210af146c345793dd448e519)",
+ "dioxus",
  "tokio",
  "uuid",
 ]
@@ -1262,7 +1163,7 @@ checksum = "0206175f82b8d6bf6652ff7d71a1e27fd2e4efde587fd368662814d6ec1d9ce0"
 name = "examples"
 version = "0.0.0"
 dependencies = [
- "dioxus 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
+ "dioxus",
  "dioxus-utils",
  "freya",
  "reqwest",
@@ -1404,14 +1305,14 @@ name = "freya"
 version = "0.1.0"
 dependencies = [
  "anymap 0.12.1",
- "dioxus 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-core 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-core-macro 0.3.0 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-hooks 0.3.0 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-hot-reload 0.1.1 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
+ "dioxus",
+ "dioxus-core",
+ "dioxus-core-macro",
+ "dioxus-hooks",
+ "dioxus-hot-reload",
  "dioxus-native-core",
  "dioxus-router",
- "dioxus-rsx 0.0.3 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
+ "dioxus-rsx",
  "freya-common",
  "freya-components",
  "freya-core",
@@ -1432,11 +1333,11 @@ dependencies = [
 name = "freya-common"
 version = "0.1.0"
 dependencies = [
- "dioxus-core 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-core-macro 0.3.0 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-hooks 0.3.0 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
+ "dioxus-core",
+ "dioxus-core-macro",
+ "dioxus-hooks",
  "dioxus-native-core",
- "dioxus-rsx 0.0.3 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
+ "dioxus-rsx",
  "euclid",
  "uuid",
 ]
@@ -1445,7 +1346,7 @@ dependencies = [
 name = "freya-components"
 version = "0.1.0"
 dependencies = [
- "dioxus 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
+ "dioxus",
  "dioxus-router",
  "freya",
  "freya-common",
@@ -1462,11 +1363,11 @@ dependencies = [
 name = "freya-core"
 version = "0.1.0"
 dependencies = [
- "dioxus-core 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-core-macro 0.3.0 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-hooks 0.3.0 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
+ "dioxus-core",
+ "dioxus-core-macro",
+ "dioxus-hooks",
  "dioxus-native-core",
- "dioxus-rsx 0.0.3 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
+ "dioxus-rsx",
  "freya-common",
  "freya-dom",
  "freya-elements",
@@ -1483,9 +1384,9 @@ dependencies = [
 name = "freya-devtools"
 version = "0.1.0"
 dependencies = [
- "dioxus 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-core 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-core-macro 0.3.0 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
+ "dioxus",
+ "dioxus-core",
+ "dioxus-core-macro",
  "dioxus-native-core",
  "dioxus-router",
  "freya-components",
@@ -1504,11 +1405,11 @@ dependencies = [
 name = "freya-dom"
 version = "0.1.0"
 dependencies = [
- "dioxus-core 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-core-macro 0.3.0 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-hooks 0.3.0 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
+ "dioxus-core",
+ "dioxus-core-macro",
+ "dioxus-hooks",
  "dioxus-native-core",
- "dioxus-rsx 0.0.3 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
+ "dioxus-rsx",
  "freya-common",
  "freya-node-state",
 ]
@@ -1517,11 +1418,11 @@ dependencies = [
 name = "freya-elements"
 version = "0.1.0"
 dependencies = [
- "dioxus-core 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-core-macro 0.3.0 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-hooks 0.3.0 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
+ "dioxus-core",
+ "dioxus-core-macro",
+ "dioxus-hooks",
  "dioxus-native-core",
- "dioxus-rsx 0.0.3 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
+ "dioxus-rsx",
  "freya-common",
  "keyboard-types",
  "tokio",
@@ -1533,12 +1434,12 @@ name = "freya-hooks"
 version = "0.1.0"
 dependencies = [
  "bytes",
- "dioxus 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-core 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-core-macro 0.3.0 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-hooks 0.3.0 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
+ "dioxus",
+ "dioxus-core",
+ "dioxus-core-macro",
+ "dioxus-hooks",
  "dioxus-native-core",
- "dioxus-rsx 0.0.3 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
+ "dioxus-rsx",
  "euclid",
  "freya",
  "freya-common",
@@ -1559,13 +1460,13 @@ name = "freya-layout"
 version = "0.1.0"
 dependencies = [
  "anymap 0.12.1",
- "dioxus 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-core 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-core-macro 0.3.0 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-hooks 0.3.0 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
+ "dioxus",
+ "dioxus-core",
+ "dioxus-core-macro",
+ "dioxus-hooks",
  "dioxus-native-core",
  "dioxus-native-core-macro",
- "dioxus-rsx 0.0.3 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
+ "dioxus-rsx",
  "freya-common",
  "freya-components",
  "freya-dom",
@@ -1585,12 +1486,12 @@ version = "0.1.0"
 dependencies = [
  "anymap 0.12.1",
  "bytes",
- "dioxus-core 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-core-macro 0.3.0 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-hooks 0.3.0 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
+ "dioxus-core",
+ "dioxus-core-macro",
+ "dioxus-hooks",
  "dioxus-native-core",
  "dioxus-native-core-macro",
- "dioxus-rsx 0.0.3 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
+ "dioxus-rsx",
  "freya-common",
  "freya-elements",
  "fxhash",
@@ -1605,12 +1506,12 @@ dependencies = [
 name = "freya-renderer"
 version = "0.1.0"
 dependencies = [
- "dioxus-core 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-core-macro 0.3.0 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-hooks 0.3.0 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-hot-reload 0.1.1 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
+ "dioxus-core",
+ "dioxus-core-macro",
+ "dioxus-hooks",
+ "dioxus-hot-reload",
  "dioxus-native-core",
- "dioxus-rsx 0.0.3 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
+ "dioxus-rsx",
  "freya-common",
  "freya-core",
  "freya-dom",
@@ -1633,13 +1534,13 @@ name = "freya-testing"
 version = "0.1.0"
 dependencies = [
  "anymap 0.12.1",
- "dioxus 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-core 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-core-macro 0.3.0 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
- "dioxus-hooks 0.3.0 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
+ "dioxus",
+ "dioxus-core",
+ "dioxus-core-macro",
+ "dioxus-hooks",
  "dioxus-native-core",
  "dioxus-native-core-macro",
- "dioxus-rsx 0.0.3 (git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877)",
+ "dioxus-rsx",
  "freya-common",
  "freya-components",
  "freya-core",
