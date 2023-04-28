@@ -18,5 +18,7 @@ dioxus-core-macro = { workspace = true }
 dioxus-hooks = { workspace = true }
 dioxus-core = { workspace = true }
 
+winit = { workspace = true }
+
 euclid = { workspace = true }
 uuid = { workspace = true }

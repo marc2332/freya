@@ -1340,6 +1340,7 @@ dependencies = [
  "dioxus-rsx",
  "euclid",
  "uuid",
+ "winit",
 ]
 
 [[package]]
@@ -1357,6 +1358,7 @@ dependencies = [
  "open",
  "reqwest",
  "tokio",
+ "winit",
 ]
 
 [[package]]
