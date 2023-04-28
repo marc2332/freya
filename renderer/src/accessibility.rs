@@ -62,8 +62,10 @@ impl AccessibilityState {
         }
 
         if let Some(alt) = &dioxus_node.state.accessibility.alt {
+            builder.set_name(alt.to_owned());
             builder.set_value(alt.to_owned());
         } else if let Some(value) = render_node.get_text(dom) {
+            builder.set_name(value.clone());
             builder.set_value(value);
         }
 
@@ -105,6 +107,7 @@ impl AccessibilityState {
         let root = self.build_root(root_name);
         let mut nodes = vec![(WINDOW_ID, root)];
         nodes.extend(self.nodes.clone());
+        nodes.reverse();
 
         TreeUpdate {
             nodes,
