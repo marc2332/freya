@@ -31,7 +31,7 @@ fn app(cx: Scope) -> Element {
                 onclick: move |_| {
                     focus_c.focus();
                 },
-                "test"
+                "What is this?"
             }
             Button {
                 label {

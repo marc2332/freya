@@ -9,7 +9,7 @@ use freya::prelude::*;
 use tokio::time::interval;
 
 fn main() {
-    launch_with_props(app, "Rotate", (350, 350));
+    launch_with_props(app, "Rotate", (350.0, 350.0));
 }
 
 const SPEEDS: (i16, i16, i16) = (2, 3, 6);

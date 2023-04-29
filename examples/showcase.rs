@@ -12,8 +12,8 @@ fn main() {
     launch_cfg(
         app,
         WindowConfig::<()>::builder()
-            .with_width(550)
-            .with_height(700)
+            .with_width(550.0)
+            .with_height(700.0)
             .with_decorations(true)
             .with_transparency(false)
             .with_title("Freya showcase!")

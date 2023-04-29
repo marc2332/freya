@@ -1,21 +1,19 @@
+use dioxus_native_core::real_dom::NodeImmutable;
 use freya_dom::DioxusNode;
 use freya_layout::RenderData;
+use freya_node_state::{References, Style};
 use skia_safe::{BlurStyle, Canvas, MaskFilter, Paint, PaintStyle, Path, PathDirection, Rect};
 
 /// Render a `rect` or a `container` element
-pub fn render_rect_container(
-    canvas: &mut Canvas,
-    render_node: &RenderData,
-    dioxus_node: &DioxusNode,
-) {
-    let shadow = &dioxus_node.state.style.shadow;
+pub fn render_rect_container(render_node: &RenderData, node_ref: &DioxusNode, canvas: &mut Canvas) {
+    let node_style = &*node_ref.get::<Style>().unwrap();
 
     let mut paint = Paint::default();
     paint.set_anti_alias(true);
     paint.set_style(PaintStyle::Fill);
-    paint.set_color(dioxus_node.state.style.background);
+    paint.set_color(node_style.background);
 
-    let radius = dioxus_node.state.style.radius;
+    let radius = node_style.radius;
     let radius = if radius < 0.0 { 0.0 } else { radius };
 
     let area = render_node.node_area.to_f32();
@@ -30,19 +28,25 @@ pub fn render_rect_container(
 
     // Shadow effect
     {
-        if shadow.intensity > 0 {
+        if node_style.shadow.intensity > 0 {
             let mut blur_paint = paint.clone();
 
-            blur_paint.set_color(shadow.color);
-            blur_paint.set_alpha(shadow.intensity);
-            blur_paint.set_mask_filter(MaskFilter::blur(BlurStyle::Normal, shadow.size, false));
+            blur_paint.set_color(node_style.shadow.color);
+            blur_paint.set_alpha(node_style.shadow.intensity);
+            blur_paint.set_mask_filter(MaskFilter::blur(
+                BlurStyle::Normal,
+                node_style.shadow.size,
+                false,
+            ));
             canvas.draw_path(&path, &blur_paint);
         }
     }
 
     canvas.draw_path(&path, &paint);
 
-    if let Some(canvas_ref) = &dioxus_node.state.references.canvas_ref {
+    let references = node_ref.get::<References>().unwrap();
+
+    if let Some(canvas_ref) = &references.canvas_ref {
         (canvas_ref.runner)(canvas, area);
     }
 }

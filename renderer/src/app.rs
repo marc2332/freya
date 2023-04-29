@@ -7,7 +7,7 @@ use std::{
 use accesskit::NodeId;
 use accesskit_winit::Adapter;
 use dioxus_core::{Template, VirtualDom};
-
+use dioxus_native_core::real_dom::NodeImmutable;
 use freya_common::EventMessage;
 use freya_core::{
     events::{DomEvent, EventsProcessor, FreyaEvent},
@@ -16,6 +16,7 @@ use freya_core::{
 };
 use freya_dom::SafeDOM;
 use freya_layout::Layers;
+use freya_node_state::AccessibilitySettings;
 use futures::FutureExt;
 use futures::{
     pin_mut,
@@ -233,19 +234,19 @@ impl<State: 'static + Clone> App<State> {
 
     /// Create the Accessibility tree
     pub fn process_accessibility(&mut self) {
+        let dom = &self.rdom.get();
+
         // TODO: move logic to core
         for layer in self.layers.layers.values() {
             for render_node in layer.values() {
-                let dom = &self.rdom.get();
                 let dioxus_node = render_node.get_node(dom);
                 if let Some(dioxus_node) = dioxus_node {
-                    if let Some(accessibility_id) = dioxus_node.state.accessibility.focus_id {
-                        let children = render_node.get_accessibility_children(dom);
+                    let node_accessibility = &*dioxus_node.get::<AccessibilitySettings>().unwrap();
+                    if let Some(accessibility_id) = node_accessibility.focus_id {
                         self.accessibility_state.lock().unwrap().add_element(
-                            dioxus_node,
                             render_node,
                             accessibility_id,
-                            children,
+                            node_accessibility,
                             dom,
                         );
                     }

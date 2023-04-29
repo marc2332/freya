@@ -3,8 +3,9 @@ use accesskit::{
     Role, Tree, TreeUpdate,
 };
 use accesskit_winit::Adapter;
-use freya_dom::{DioxusNode, FreyaDOM};
+use freya_dom::FreyaDOM;
 use freya_layout::RenderData;
+use freya_node_state::AccessibilitySettings;
 use std::{
     num::NonZeroU128,
     sync::{Arc, Mutex},
@@ -49,39 +50,46 @@ impl AccessibilityState {
     /// Add an Accessibility Node to the Tree.
     pub fn add_element(
         &mut self,
-        dioxus_node: &DioxusNode,
         render_node: &RenderData,
         accessibility_id: AccessibilityId,
-        children: Option<Vec<AccessibilityId>>,
+        node_accessibility: &AccessibilitySettings,
         dom: &FreyaDOM,
     ) {
         let mut builder = NodeBuilder::new(Role::Unknown);
 
-        if let Some(children) = children {
+        // Set children
+        let children = render_node.get_accessibility_children(dom);
+
+        if !children.is_empty() {
             builder.set_children(children);
         }
 
-        if let Some(alt) = &dioxus_node.state.accessibility.alt {
+        // Set text value
+        if let Some(alt) = &node_accessibility.alt {
             builder.set_value(alt.to_owned());
         } else if let Some(value) = render_node.get_text(dom) {
             builder.set_value(value);
         }
 
-        if let Some(role) = dioxus_node.state.accessibility.role {
+        // Set role
+        if let Some(role) = node_accessibility.role {
             builder.set_role(role);
         }
 
+        // Set the area
         let area = render_node.node_area.to_f64();
-
         builder.set_bounds(Rect {
             x0: area.min_x(),
             x1: area.max_x(),
             y0: area.min_y(),
             y1: area.max_y(),
         });
+
+        // Set the action
         builder.add_action(Action::Default);
         builder.set_default_action_verb(DefaultActionVerb::Click);
 
+        // Insert the node into the Tree
         let node = builder.build(&mut self.node_classes);
         self.nodes.push((accessibility_id, node));
     }

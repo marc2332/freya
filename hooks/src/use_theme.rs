@@ -13,7 +13,7 @@ pub fn use_init_default_theme(cx: &ScopeState) -> Theme {
 }
 
 /// Subscribe to [`Theme`] changes.
-pub fn use_theme(cx: &ScopeState) -> UseSharedState<Theme> {
+pub fn use_theme(cx: &ScopeState) -> &UseSharedState<Theme> {
     use_shared_state::<Theme>(cx).unwrap()
 }
 

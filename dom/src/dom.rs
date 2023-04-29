@@ -1,15 +1,22 @@
 use std::sync::{Arc, Mutex};
 
 use dioxus_core::{Mutation, Mutations};
-use dioxus_native_core::{node::Node, real_dom::RealDom, SendAnyMap};
+use dioxus_native_core::{
+    prelude::{DioxusState, State},
+    real_dom::{NodeRef, RealDom},
+    SendAnyMap,
+};
 use freya_common::LayoutNotifier;
-use freya_node_state::{CustomAttributeValues, NodeState};
+use freya_node_state::{
+    AccessibilitySettings, CursorSettings, CustomAttributeValues, FontStyle, References, Scroll,
+    Size, Style, Transform,
+};
 
 #[cfg(feature = "shared")]
 use std::sync::MutexGuard;
 
-pub type DioxusDOM = RealDom<NodeState, CustomAttributeValues>;
-pub type DioxusNode = Node<NodeState, CustomAttributeValues>;
+pub type DioxusDOM = RealDom<CustomAttributeValues>;
+pub type DioxusNode<'a> = NodeRef<'a, CustomAttributeValues>;
 
 /// Tiny wrapper over [FreyaDOM] to make it thread-safe if desired.
 /// This is primarily used by the Devtools and Testing renderer.
@@ -71,27 +78,52 @@ impl SafeDOM {
 /// Manages the application DOM.
 pub struct FreyaDOM {
     rdom: DioxusDOM,
+    dioxus_integration_state: DioxusState,
     layout_notifier: LayoutNotifier,
 }
 
-impl FreyaDOM {
-    pub fn new(rdom: DioxusDOM) -> Self {
+impl Default for FreyaDOM {
+    fn default() -> Self {
+        let mut rdom = RealDom::<CustomAttributeValues>::new([
+            CursorSettings::to_type_erased(),
+            FontStyle::to_type_erased(),
+            References::to_type_erased(),
+            Scroll::to_type_erased(),
+            Size::to_type_erased(),
+            Style::to_type_erased(),
+            Transform::to_type_erased(),
+            AccessibilitySettings::to_type_erased(),
+        ]);
+        let dioxus_integration_state = DioxusState::create(&mut rdom);
         Self {
             rdom,
+            dioxus_integration_state,
+            layout_notifier: Arc::new(Mutex::new(false)),
+        }
+    }
+}
+
+impl FreyaDOM {
+    pub fn new(rdom: DioxusDOM, dioxus_integration_state: DioxusState) -> Self {
+        Self {
+            rdom,
+            dioxus_integration_state,
             layout_notifier: Arc::new(Mutex::new(false)),
         }
     }
 
     /// Create the initial DOM from the given Mutations
     pub fn init_dom(&mut self, mutations: Mutations, scale_factor: f32) {
-        let (to_update, _diff) = self.rdom.apply_mutations(mutations);
+        self.dioxus_integration_state
+            .apply_mutations(&mut self.rdom, mutations);
 
         *self.layout_notifier.lock().unwrap() = false;
 
         let mut ctx = SendAnyMap::new();
-        ctx.insert((self.layout_notifier.clone(), scale_factor));
+        ctx.insert(self.layout_notifier.clone());
+        ctx.insert(scale_factor);
 
-        self.rdom.update_state(to_update, ctx);
+        self.rdom.update_state(ctx);
     }
 
     /// Process the given mutations from the [`VirtualDOM`](dioxus_core::VirtualDom).
@@ -141,12 +173,18 @@ impl FreyaDOM {
         }
 
         // Apply the mutations to the RealDOM
-        let (to_update, diff) = self.rdom.apply_mutations(mutations);
+
+        if !mutations.edits.is_empty() {
+            self.dioxus_integration_state
+                .apply_mutations(&mut self.rdom, mutations);
+        }
 
         // Update the Nodes states
         let mut ctx = SendAnyMap::new();
-        ctx.insert((self.layout_notifier.clone(), scale_factor));
-        self.rdom.update_state(to_update, ctx);
+        ctx.insert(self.layout_notifier.clone());
+        ctx.insert(scale_factor);
+
+        let (_, diff) = self.rdom.update_state(ctx);
 
         // Calculate whether it must repaint or relayout
         let paint_changes = !diff.is_empty();

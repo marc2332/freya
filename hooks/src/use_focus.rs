@@ -15,7 +15,7 @@ pub type FocusId = AccessibilityId;
 #[derive(Clone, Copy)]
 pub struct FocusManager<'a> {
     id: AccessibilityId,
-    focused_id: Option<UseSharedState<'a, Option<AccessibilityId>>>,
+    focused_id: Option<&'a UseSharedState<Option<AccessibilityId>>>,
 }
 
 impl FocusManager<'_> {

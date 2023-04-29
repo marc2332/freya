@@ -1,3 +1,5 @@
+use dioxus_native_core::prelude::{ElementNode, NodeImmutableDioxusExt};
+use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::{node::NodeType, NodeId};
 use freya_common::Area;
 use freya_dom::FreyaDOM;
@@ -5,13 +7,14 @@ use freya_layout::NodeLayoutMeasurer;
 use freya_layout::{Layers, RenderData};
 
 use accesskit::NodeId as AccessibilityId;
+use freya_node_state::Style;
 use rustc_hash::FxHashMap;
 use skia_safe::{textlayout::FontCollection, Color};
-use std::ops::Index;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tokio::sync::watch;
 
 pub mod events;
+pub mod node;
 
 use events::{DomEvent, EventsProcessor, FreyaEvent};
 
@@ -34,28 +37,27 @@ pub fn calculate_viewports(
     for layer_num in layers_nums {
         let layer = layers.layers.get(layer_num).unwrap();
         for dom_element in layer.values() {
-            let dioxus_node = dom_element.get_node(rdom);
-            if let Some(dioxus_node) = dioxus_node {
-                if let NodeType::Element { tag, .. } = &dioxus_node.node_data.node_type {
+            let node = dom_element.get_node(rdom);
+            if let Some(node) = node {
+                let node_type = &*node.node_type();
+                if let NodeType::Element(ElementNode { tag, .. }) = node_type {
                     if tag == "container" {
                         viewports_collection
                             .entry(*dom_element.get_id())
                             .or_insert_with(|| (None, Vec::new()))
                             .0 = Some(dom_element.node_area);
                     }
-                    if let Some(children) = &dom_element.get_children() {
-                        for child in children {
-                            if viewports_collection.contains_key(dom_element.get_id()) {
-                                let mut inherited_viewports = viewports_collection
-                                    .get(dom_element.get_id())
-                                    .unwrap()
-                                    .1
-                                    .clone();
+                    for child in node.children() {
+                        if viewports_collection.contains_key(dom_element.get_id()) {
+                            let mut inherited_viewports = viewports_collection
+                                .get(dom_element.get_id())
+                                .unwrap()
+                                .1
+                                .clone();
 
-                                inherited_viewports.push(*dom_element.get_id());
+                            inherited_viewports.push(*dom_element.get_id());
 
-                                viewports_collection.insert(*child, (None, inherited_viewports));
-                            }
+                            viewports_collection.insert(child.id(), (None, inherited_viewports));
                         }
                     }
                 }
@@ -159,20 +161,25 @@ fn calculate_events_listeners(
 
         'event_nodes: for (node, request) in event_nodes.iter() {
             for listener in &listeners {
-                if listener.node_data.node_id == *node.get_id() {
-                    let dioxus_node = if let Some(node) = node.get_node(dom) {
-                        node
+                if listener.id() == *node.get_id() {
+                    let node_ref = node.get_node(dom);
+
+                    let node_ref = if let Some(node_ref) = node_ref {
+                        node_ref
                     } else {
                         continue 'event_nodes;
                     };
 
-                    if dioxus_node.state.style.background != Color::TRANSPARENT
-                        && event_name == &"wheel"
-                    {
+                    let Style { background, .. } = &*node_ref.get::<Style>().unwrap();
+                    if background != &Color::TRANSPARENT && event_name == &"wheel" {
                         break 'event_nodes;
                     }
 
-                    if dioxus_node.state.style.background != Color::TRANSPARENT
+                    if background != &Color::TRANSPARENT && event_name == &"wheel" {
+                        break 'event_nodes;
+                    }
+
+                    if background != &Color::TRANSPARENT
                         && (event_name == &"click"
                             || event_name == &"touchstart"
                             || event_name == &"touchend")
@@ -199,9 +206,11 @@ fn calculate_events_listeners(
         }
 
         for (node, request_event) in found_nodes {
+            let node_ref = dom.dom().get(node.node_id).unwrap();
+            let element_id = node_ref.mounted_id().unwrap();
             let event = DomEvent::from_freya_event(
                 event_name,
-                node.element_id.unwrap(),
+                element_id,
                 request_event,
                 Some(node.node_area),
                 scale_factor,
@@ -226,9 +235,10 @@ fn calculate_global_events_listeners(
         let listeners = dom.dom().get_listening_sorted(event_name);
 
         for listener in listeners {
+            let element_id = listener.mounted_id().unwrap();
             let event = DomEvent::from_freya_event(
                 event_name,
-                listener.node_data.element_id.unwrap(),
+                element_id,
                 &global_event,
                 None,
                 scale_factor,
@@ -248,7 +258,7 @@ pub fn process_layout(
     let mut layers = Layers::default();
 
     {
-        let root = dom.dom().index(NodeId(0));
+        let root = dom.dom().get(NodeId::new_from_index_and_gen(0, 0)).unwrap();
         let mut remaining_area = area;
         let mut root_node_measurer = NodeLayoutMeasurer::new(
             root,

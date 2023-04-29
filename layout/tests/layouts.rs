@@ -1,50 +1,53 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
-use dioxus_native_core::{
-    node::{Node, NodeData, NodeType},
-    real_dom::RealDom,
-    tree::TreeLike,
-    NodeId,
-};
+use dioxus_native_core::real_dom::NodeMut;
+use dioxus_native_core::{node::NodeType, prelude::ElementNode, real_dom::NodeImmutable};
 use freya_common::Area;
-use freya_dom::{DioxusNode, FreyaDOM};
+use freya_dom::FreyaDOM;
 use freya_layout::Layers;
 use freya_layout::NodeLayoutMeasurer;
-use freya_node_state::{DirectionMode, NodeState, Size, SizeMode};
-use lazy_static::lazy_static;
-use rustc_hash::FxHashMap;
+use freya_node_state::{
+    CursorSettings, CustomAttributeValues, DirectionMode, FontStyle, References, Scroll, Size,
+    SizeMode, Style, Transform,
+};
 use skia_safe::textlayout::FontCollection;
 
 const SCALE_FACTOR: f32 = 1.0;
 
-lazy_static! {
-    static ref TEST_NODE: DioxusNode = Node {
-        node_data: NodeData {
-            node_id: NodeId(1),
-            element_id: None,
-            node_type: NodeType::Element {
-                tag: "rect".to_string(),
-                namespace: None,
-                attributes: FxHashMap::default(),
-                listeners: HashSet::default(),
-            }
-        },
-        state: NodeState::default(),
-    };
+fn default_node_state(node: &mut NodeMut<CustomAttributeValues>) {
+    node.insert(CursorSettings::default());
+    node.insert(FontStyle::default());
+    node.insert(References::default());
+    node.insert(Scroll::default());
+    node.insert(Size::default());
+    node.insert(Style::default());
+    node.insert(Transform::default());
 }
 
 #[test]
 fn percentage() {
-    let mut dom = FreyaDOM::new(RealDom::new());
+    let mut dom = FreyaDOM::default();
 
-    let mut node = TEST_NODE.clone();
-    node.state = node.state.with_size(Size {
-        width: SizeMode::Percentage(50.0),
-        height: SizeMode::Percentage(25.0),
-        ..expanded_size()
-    });
-    let root = dom.dom_mut().tree.create_node(node.clone());
-    dom.dom_mut().tree.add_child(NodeId(0), root);
+    let node_id = {
+        let mut node = dom.dom_mut().create_node(NodeType::Element(ElementNode {
+            tag: "rect".to_owned(),
+            namespace: Some("rect".to_owned()),
+            attributes: HashMap::default(),
+            listeners: HashSet::default(),
+        }));
+
+        default_node_state(&mut node);
+
+        node.insert(Size {
+            width: SizeMode::Percentage(50.0),
+            height: SizeMode::Percentage(25.0),
+            ..expanded_size()
+        });
+
+        node.id()
+    };
+
+    let node = dom.dom().get(node_id).unwrap();
 
     let mut remaining_area = Area {
         origin: (0.0, 0.0).into(),
@@ -53,7 +56,7 @@ fn percentage() {
     let mut layers = Layers::default();
     let mut fonts = FontCollection::new();
     let mut measurer = NodeLayoutMeasurer::new(
-        &node,
+        node,
         &mut remaining_area,
         Area {
             origin: (0.0, 0.0).into(),
@@ -72,16 +75,28 @@ fn percentage() {
 
 #[test]
 fn manual() {
-    let mut dom = FreyaDOM::new(RealDom::new());
-    let mut node = TEST_NODE.clone();
-    node.state = node.state.with_size(Size {
-        width: SizeMode::Manual(250.0),
-        height: SizeMode::Manual(150.0),
-        ..expanded_size()
-    });
+    let mut dom = FreyaDOM::default();
 
-    let root = dom.dom_mut().tree.create_node(node.clone());
-    dom.dom_mut().tree.add_child(NodeId(0), root);
+    let node_id = {
+        let mut node = dom.dom_mut().create_node(NodeType::Element(ElementNode {
+            tag: "rect".to_owned(),
+            namespace: Some("rect".to_owned()),
+            attributes: HashMap::default(),
+            listeners: HashSet::default(),
+        }));
+
+        default_node_state(&mut node);
+
+        node.insert(Size {
+            width: SizeMode::Manual(250.0),
+            height: SizeMode::Manual(150.0),
+            ..expanded_size()
+        });
+
+        node.id()
+    };
+
+    let node = dom.dom().get(node_id).unwrap();
 
     let mut remaining_area = Area {
         origin: (0.0, 0.0).into(),
@@ -90,7 +105,7 @@ fn manual() {
     let mut layers = Layers::default();
     let mut fonts = FontCollection::new();
     let mut measurer = NodeLayoutMeasurer::new(
-        &node,
+        node,
         &mut remaining_area,
         Area {
             origin: (0.0, 0.0).into(),
@@ -109,48 +124,51 @@ fn manual() {
 
 #[test]
 fn auto() {
-    let mut dom = FreyaDOM::new(RealDom::new());
-    let node = Node {
-        node_data: NodeData {
-            node_id: NodeId(1),
-            element_id: None,
-            node_type: NodeType::Element {
-                tag: "rect".to_string(),
-                namespace: None,
-                attributes: FxHashMap::default(),
-                listeners: HashSet::default(),
-            },
-        },
-        state: NodeState::default().with_size(Size {
+    let mut dom = FreyaDOM::default();
+
+    let child_node_id = {
+        let mut child_node = dom.dom_mut().create_node(NodeType::Element(ElementNode {
+            tag: "rect".to_owned(),
+            namespace: Some("rect".to_owned()),
+            attributes: HashMap::default(),
+            listeners: HashSet::default(),
+        }));
+
+        default_node_state(&mut child_node);
+
+        child_node.insert(Size {
+            width: SizeMode::Manual(170.0),
+            height: SizeMode::Manual(25.0),
+            direction: DirectionMode::Both,
+            ..expanded_size()
+        });
+
+        child_node.id()
+    };
+
+    let node_id = {
+        let mut node = dom.dom_mut().create_node(NodeType::Element(ElementNode {
+            tag: "rect".to_owned(),
+            namespace: Some("rect".to_owned()),
+            attributes: HashMap::default(),
+            listeners: HashSet::default(),
+        }));
+
+        default_node_state(&mut node);
+
+        node.insert(Size {
             width: SizeMode::Auto,
             height: SizeMode::Auto,
             direction: DirectionMode::Both,
             ..expanded_size()
-        }),
-    };
-    let root = dom.dom_mut().tree.create_node(node.clone());
-    dom.dom_mut().tree.add_child(NodeId(0), root);
+        });
 
-    let root_child = Node {
-        node_data: NodeData {
-            node_id: NodeId(2),
-            element_id: None,
-            node_type: NodeType::Element {
-                tag: "rect".to_string(),
-                namespace: None,
-                attributes: FxHashMap::default(),
-                listeners: HashSet::default(),
-            },
-        },
-        state: NodeState::default().with_size(Size {
-            width: SizeMode::Manual(170.0),
-            height: SizeMode::Manual(25.0),
-            ..expanded_size()
-        }),
+        node.add_child(child_node_id);
+
+        node.id()
     };
 
-    let root_child = dom.dom_mut().tree.create_node(root_child);
-    dom.dom_mut().tree.add_child(root, root_child);
+    let node = dom.dom().get(node_id).unwrap();
 
     let mut remaining_area = Area {
         origin: (0.0, 0.0).into(),
@@ -159,7 +177,7 @@ fn auto() {
     let mut layers = Layers::default();
     let mut fonts = FontCollection::new();
     let mut measurer = NodeLayoutMeasurer::new(
-        &node,
+        node,
         &mut remaining_area,
         Area {
             origin: (0.0, 0.0).into(),
@@ -178,52 +196,69 @@ fn auto() {
 
 #[test]
 fn x_y() {
-    let mut dom = FreyaDOM::new(RealDom::new());
-    let mut node = TEST_NODE.clone();
-    node.state = node.state.with_size(Size {
-        width: SizeMode::Manual(250.0),
-        height: SizeMode::Manual(150.0),
-        ..expanded_size()
-    });
+    let mut fdom = FreyaDOM::default();
+
+    let node_id = {
+        let dom = fdom.dom_mut();
+
+        let child_node_id = {
+            let mut child_node = dom.create_node(NodeType::Element(ElementNode {
+                tag: "rect".to_owned(),
+                namespace: Some("rect".to_owned()),
+                attributes: HashMap::default(),
+                listeners: HashSet::default(),
+            }));
+
+            default_node_state(&mut child_node);
+
+            child_node.insert(Size {
+                width: SizeMode::Manual(170.0),
+                height: SizeMode::Manual(25.0),
+                direction: DirectionMode::Both,
+                ..expanded_size()
+            });
+
+            child_node.id()
+        };
+
+        let mut node = dom.create_node(NodeType::Element(ElementNode {
+            tag: "rect".to_owned(),
+            namespace: Some("rect".to_owned()),
+            attributes: HashMap::default(),
+            listeners: HashSet::default(),
+        }));
+
+        default_node_state(&mut node);
+
+        node.insert(Size {
+            width: SizeMode::Auto,
+            height: SizeMode::Auto,
+            direction: DirectionMode::Both,
+            ..expanded_size()
+        });
+
+        node.add_child(child_node_id);
+
+        node.id()
+    };
+
+    let node = fdom.dom().get(node_id).unwrap();
+
     let mut remaining_area = Area {
         origin: (15.0, 25.0).into(),
         size: (200.0, 300.0).into(),
     };
 
-    let root = dom.dom_mut().tree.create_node(node.clone());
-    dom.dom_mut().tree.add_child(NodeId(0), root);
-
-    let root_child = Node {
-        node_data: NodeData {
-            node_id: NodeId(2),
-            element_id: None,
-            node_type: NodeType::Element {
-                tag: "rect".to_string(),
-                namespace: None,
-                attributes: FxHashMap::default(),
-                listeners: HashSet::default(),
-            },
-        },
-        state: NodeState::default().with_size(Size {
-            width: SizeMode::Manual(170.0),
-            height: SizeMode::Manual(25.0),
-            ..expanded_size()
-        }),
-    };
-
-    let root_child = dom.dom_mut().tree.create_node(root_child);
-    dom.dom_mut().tree.add_child(root, root_child);
-
     let mut layers = Layers::default();
     let mut fonts = FontCollection::new();
     let mut measurer = NodeLayoutMeasurer::new(
-        &node,
+        node,
         &mut remaining_area,
         Area {
             origin: (15.0, 25.0).into(),
             size: (200.0, 300.0).into(),
         },
-        &dom,
+        &fdom,
         &mut layers,
         0,
         &mut fonts,

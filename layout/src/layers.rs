@@ -1,10 +1,10 @@
 use accesskit::NodeId as AccessibilityId;
-use dioxus_core::ElementId;
-use dioxus_native_core::node::NodeType;
-use dioxus_native_core::tree::TreeView;
+use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::NodeId;
+use dioxus_native_core::{node::NodeType, prelude::TextNode};
 use freya_common::Area;
 use freya_dom::{DioxusNode, FreyaDOM};
+use freya_node_state::{AccessibilitySettings, References};
 use rustc_hash::FxHashMap;
 use skia_safe::textlayout::FontCollection;
 use uuid::Uuid;
@@ -21,9 +21,8 @@ pub struct Layers {
 #[derive(Clone, Debug)]
 pub struct RenderData {
     pub node_area: Area,
-    pub element_id: Option<ElementId>,
     pub node_id: NodeId,
-    pub children: Option<Vec<NodeId>>,
+    pub children: Vec<NodeId>,
 }
 
 impl RenderData {
@@ -33,49 +32,46 @@ impl RenderData {
     }
 
     #[inline(always)]
-    pub fn get_element_id(&self) -> &Option<ElementId> {
-        &self.element_id
-    }
-
-    #[inline(always)]
     pub fn get_id(&self) -> &NodeId {
         &self.node_id
     }
 
     #[inline(always)]
-    pub fn get_children(&self) -> &Option<Vec<NodeId>> {
+    pub fn get_children(&self) -> &Vec<NodeId> {
         &self.children
     }
 
     #[inline(always)]
-    pub fn get_node<'a>(&'a self, rdom: &'a FreyaDOM) -> Option<&DioxusNode> {
+    pub fn get_node<'a>(&'a self, rdom: &'a FreyaDOM) -> Option<DioxusNode> {
         rdom.dom().get(self.node_id)
     }
 
+    /// Return the first TextNode from this Node
     pub fn get_text(&self, rdom: &FreyaDOM) -> Option<String> {
-        let first_child = *self.children.clone()?.get(0)?;
-        let first_child_node: &DioxusNode = rdom.dom().get(first_child)?;
-        if let NodeType::Text { text } = &first_child_node.node_data.node_type {
+        let first_child = *self.children.get(0)?;
+        let first_child_node: DioxusNode = rdom.dom().get(first_child)?;
+        let node_type = first_child_node.node_type();
+        if let NodeType::Text(TextNode { text, .. }) = &*node_type {
             Some(text.to_owned())
         } else {
             None
         }
     }
 
-    pub fn get_accessibility_children(&self, rdom: &FreyaDOM) -> Option<Vec<AccessibilityId>> {
-        self.children.as_ref().map(|children| {
-            children
-                .iter()
-                .filter_map(|child| {
-                    let node = rdom.dom().get(*child);
-                    if let Some(node) = &node {
-                        node.state.accessibility.focus_id
-                    } else {
-                        None
-                    }
-                })
-                .collect::<Vec<AccessibilityId>>()
-        })
+    /// Collect all the AccessibilityIDs from a Node's children
+    pub fn get_accessibility_children(&self, rdom: &FreyaDOM) -> Vec<AccessibilityId> {
+        self.children
+            .iter()
+            .filter_map(|child| {
+                let dioxus_node = rdom.dom().get(*child);
+                if let Some(dioxus_node) = &dioxus_node {
+                    let node_accessibility = &*dioxus_node.get::<AccessibilitySettings>().unwrap();
+                    node_accessibility.focus_id
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<AccessibilityId>>()
     }
 }
 
@@ -93,7 +89,7 @@ impl Layers {
             for (id, area) in group {
                 let node = dom.dom().get(*id);
                 if let Some(node) = node {
-                    process_paragraph(node, area, dom, font_collection, true);
+                    process_paragraph(&node, area, font_collection, true);
                 }
             }
         }
@@ -101,14 +97,14 @@ impl Layers {
 
     /// Register a paragraph element under it's configured TextId
     pub fn insert_paragraph_element(&mut self, node: &DioxusNode, area: &Area) {
-        let references = &node.state.references;
+        let references = node.get::<References>().unwrap();
         if let Some(cursor_ref) = &references.cursor_ref {
             let text_group = self
                 .paragraph_elements
                 .entry(cursor_ref.text_id)
                 .or_insert_with(FxHashMap::default);
 
-            text_group.insert(node.node_data.node_id, *area);
+            text_group.insert(node.id(), *area);
         }
     }
 
@@ -126,25 +122,18 @@ impl Layers {
     }
 
     /// Insert a Node into a layer
-    pub fn add_element(
-        &mut self,
-        node: &DioxusNode,
-        node_children: Option<Vec<NodeId>>,
-        node_area: &Area,
-        node_layer: i16,
-    ) {
+    pub fn add_element(&mut self, node: &DioxusNode, node_area: &Area, node_layer: i16) {
         let layer = self
             .layers
             .entry(node_layer)
             .or_insert_with(FxHashMap::default);
 
         layer.insert(
-            node.node_data.node_id,
+            node.id(),
             RenderData {
-                element_id: node.node_data.element_id,
-                node_id: node.node_data.node_id,
+                node_id: node.id(),
                 node_area: *node_area,
-                children: node_children,
+                children: node.child_ids(),
             },
         );
     }

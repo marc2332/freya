@@ -321,13 +321,7 @@ pub async fn highlight_multiple_lines_single_editor() {
     utils.wait_for_update().await;
     utils.wait_for_update().await;
 
-    let highlights = root
-        .child(0)
-        .unwrap()
-        .state()
-        .cursor_settings
-        .highlights
-        .clone();
+    let highlights = root.child(0).unwrap().state().cursor.highlights.clone();
 
     #[cfg(not(target_os = "linux"))]
     let start = 5;
@@ -456,13 +450,7 @@ pub async fn highlights_single_line_mulitple_editors() {
     utils.wait_for_update().await;
     utils.wait_for_update().await;
 
-    let highlights_1 = root
-        .child(0)
-        .unwrap()
-        .state()
-        .cursor_settings
-        .highlights
-        .clone();
+    let highlights_1 = root.child(0).unwrap().state().cursor.highlights.clone();
 
     #[cfg(not(target_os = "linux"))]
     let start = 5;
@@ -476,13 +464,7 @@ pub async fn highlights_single_line_mulitple_editors() {
 
     assert_eq!(highlights_1, Some(vec![(start, end)]));
 
-    let highlights_2 = root
-        .child(1)
-        .unwrap()
-        .state()
-        .cursor_settings
-        .highlights
-        .clone();
+    let highlights_2 = root.child(1).unwrap().state().cursor.highlights.clone();
 
     #[cfg(not(target_os = "linux"))]
     let start = 0;

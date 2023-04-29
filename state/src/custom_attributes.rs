@@ -1,3 +1,4 @@
+use std::any::Any;
 use std::fmt::Debug;
 use std::fmt::Display;
 use std::sync::Arc;
@@ -5,7 +6,6 @@ use std::sync::Mutex;
 
 use accesskit::NodeId as AccessibilityId;
 use bytes::Bytes;
-use dioxus_core::AnyValue;
 use dioxus_core::AttributeValue;
 use dioxus_core::Scope;
 use dioxus_native_core::node::FromAnyValue;
@@ -80,7 +80,7 @@ pub struct CursorReference {
     pub cursor_selections: Arc<Mutex<Option<(Point2D, Point2D)>>>,
     pub cursor_position: Arc<Mutex<Option<Point2D>>>,
     pub agent: UnboundedSender<CursorLayoutResponse>,
-    pub id: Arc<Mutex<Option<usize>>>,
+    pub cursor_id: Arc<Mutex<Option<usize>>>,
 }
 
 impl CursorReference {
@@ -93,7 +93,7 @@ impl CursorReference {
     }
 
     pub fn set_id(&self, id: Option<usize>) {
-        *self.id.lock().unwrap() = id;
+        *self.cursor_id.lock().unwrap() = id;
     }
 }
 
@@ -136,11 +136,8 @@ impl Debug for CustomAttributeValues {
 }
 
 impl FromAnyValue for CustomAttributeValues {
-    fn from_any_value(b: &dyn AnyValue) -> Self {
-        b.as_any()
-            .downcast_ref::<CustomAttributeValues>()
-            .unwrap()
-            .clone()
+    fn from_any_value(b: &dyn Any) -> Self {
+        b.downcast_ref::<CustomAttributeValues>().unwrap().clone()
     }
 }
 

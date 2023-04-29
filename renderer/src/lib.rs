@@ -33,6 +33,8 @@ mod window_config;
 
 pub type HoveredNode = Option<Arc<Mutex<Option<NodeId>>>>;
 
+const SPEED_MODIFIER: f32 = 20.0;
+
 /// Start the winit event loop with the virtual dom polling
 pub fn run<T: 'static + Clone>(
     vdom: VirtualDom,
@@ -138,7 +140,9 @@ pub fn run<T: 'static + Clone>(
                         if TouchPhase::Moved == phase {
                             let scroll_data = {
                                 match delta {
-                                    MouseScrollDelta::LineDelta(x, y) => (x as f64, y as f64),
+                                    MouseScrollDelta::LineDelta(x, y) => {
+                                        ((x * SPEED_MODIFIER) as f64, (y * SPEED_MODIFIER) as f64)
+                                    }
                                     MouseScrollDelta::PixelDelta(pos) => (pos.x, pos.y),
                                 }
                             };

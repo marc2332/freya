@@ -22,7 +22,7 @@ use glutin::{
 use glutin_winit::DisplayBuilder;
 use raw_window_handle::HasRawWindowHandle;
 
-use winit::dpi::PhysicalSize;
+use winit::dpi::{LogicalSize, PhysicalSize};
 use winit::{
     event_loop::EventLoop,
     window::{Window, WindowBuilder},
@@ -65,7 +65,7 @@ impl<T: Clone> WindowEnv<T> {
             .with_title(window_config.title)
             .with_decorations(window_config.decorations)
             .with_transparent(window_config.transparent)
-            .with_inner_size(PhysicalSize::<u32>::new(
+            .with_inner_size(LogicalSize::<f64>::new(
                 window_config.width,
                 window_config.height,
             ));
@@ -242,10 +242,9 @@ impl<T: Clone> WindowEnv<T> {
                 };
                 if let Some(dioxus_node) = render_node.get_node(dom) {
                     render_skia(
-                        dom,
                         canvas,
                         render_node,
-                        dioxus_node,
+                        &dioxus_node,
                         font_collection,
                         viewports_collection,
                         render_wireframe,
