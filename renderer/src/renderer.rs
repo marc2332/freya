@@ -2,9 +2,9 @@ use dioxus_native_core::node::NodeType;
 use dioxus_native_core::prelude::ElementNode;
 use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::NodeId;
+use freya_common::Area;
 use freya_core::ViewportsCollection;
 use freya_dom::DioxusNode;
-use freya_layout::RenderData;
 use freya_node_state::Transform;
 use skia_safe::{textlayout::FontCollection, Canvas, ClipOp, Rect};
 use skia_safe::{Matrix, Point};
@@ -17,7 +17,7 @@ use crate::elements::{
 #[allow(clippy::too_many_arguments)]
 pub fn render_skia(
     canvas: &mut Canvas,
-    render_node: &RenderData,
+    area: &Area,
     dioxus_node: &DioxusNode,
     font_collection: &mut FontCollection,
     viewports_collection: &ViewportsCollection,
@@ -31,8 +31,6 @@ pub fn render_skia(
         let node_transform = &*dioxus_node.get::<Transform>().unwrap();
 
         if let Some(rotate_degs) = node_transform.rotate_degs {
-            let area = render_node.get_area();
-
             let mut matrix = Matrix::new_identity();
             matrix.set_rotate(
                 rotate_degs,
@@ -48,7 +46,7 @@ pub fn render_skia(
         }
 
         for (matrix, nodes) in matrices.iter_mut() {
-            if nodes.contains(&render_node.node_id) {
+            if nodes.contains(&dioxus_node.id()) {
                 canvas.concat(matrix);
 
                 nodes.extend(dioxus_node.child_ids());
@@ -78,25 +76,25 @@ pub fn render_skia(
 
         match tag.as_str() {
             "rect" | "container" => {
-                render_rect_container(render_node, dioxus_node, canvas);
+                render_rect_container(area, dioxus_node, canvas);
             }
             "label" => {
-                render_label(render_node, dioxus_node, canvas, font_collection);
+                render_label(area, dioxus_node, canvas, font_collection);
             }
             "paragraph" => {
-                render_paragraph(render_node, dioxus_node, canvas, font_collection);
+                render_paragraph(area, dioxus_node, canvas, font_collection);
             }
             "svg" => {
-                render_svg(render_node, dioxus_node, canvas);
+                render_svg(area, dioxus_node, canvas);
             }
             "image" => {
-                render_image(render_node, dioxus_node, canvas);
+                render_image(area, dioxus_node, canvas);
             }
             _ => {}
         }
 
         if render_wireframe {
-            crate::wireframe::render_wireframe(canvas, render_node);
+            crate::wireframe::render_wireframe(canvas, area);
         }
 
         canvas.restore();

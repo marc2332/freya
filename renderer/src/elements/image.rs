@@ -1,11 +1,11 @@
 use dioxus_native_core::real_dom::NodeImmutable;
+use freya_common::Area;
 use freya_dom::DioxusNode;
-use freya_layout::RenderData;
 use freya_node_state::{References, Style};
 use skia_safe::{Canvas, Data, IRect, Image, Paint, Rect};
 
 /// Render an `image` element
-pub fn render_image(render_node: &RenderData, node_ref: &DioxusNode, canvas: &mut Canvas) {
+pub fn render_image(area: &Area, node_ref: &DioxusNode, canvas: &mut Canvas) {
     let node_style = node_ref.get::<Style>().unwrap();
     let node_references = node_ref.get::<References>().unwrap();
 
@@ -17,12 +17,7 @@ pub fn render_image(render_node: &RenderData, node_ref: &DioxusNode, canvas: &mu
             canvas.draw_image_nine(
                 pic,
                 IRect::new(0, 0, 0, 0),
-                Rect::new(
-                    render_node.node_area.min_x(),
-                    render_node.node_area.min_y(),
-                    render_node.node_area.max_x(),
-                    render_node.node_area.max_y(),
-                ),
+                Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
                 skia_safe::FilterMode::Last,
                 Some(&paint),
             );

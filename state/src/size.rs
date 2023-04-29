@@ -1,31 +1,34 @@
-use std::fmt::Display;
+use std::sync::{Arc, Mutex};
 
 use dioxus_native_core::exports::shipyard::Component;
 use dioxus_native_core::node_ref::NodeView;
 use dioxus_native_core::prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State};
-use dioxus_native_core::SendAnyMap;
+use dioxus_native_core::{NodeId, SendAnyMap};
 use dioxus_native_core_macro::partial_derive_state;
-use freya_common::LayoutNotifier;
+use torin::{Direction, DynamicCalculation, EmbeddedData, Length, Node, Paddings, Torin};
 
 use crate::CustomAttributeValues;
 
 #[derive(Default, Clone, Debug, Component)]
 pub struct Size {
-    pub width: SizeMode,
-    pub height: SizeMode,
-    pub min_height: SizeMode,
-    pub min_width: SizeMode,
-    pub max_height: SizeMode,
-    pub max_width: SizeMode,
-    pub padding: (f32, f32, f32, f32),
-    pub direction: DirectionMode,
+    pub width: torin::Size,
+    pub height: torin::Size,
+    pub min_height: torin::Size,
+    pub min_width: torin::Size,
+    pub max_height: torin::Size,
+    pub max_width: torin::Size,
+    pub padding: torin::Paddings,
+    pub direction: torin::Direction,
+    pub node_id: NodeId,
+    pub scroll_y: f32,
+    pub scroll_x: f32,
 }
 
 #[partial_derive_state]
 impl State<CustomAttributeValues> for Size {
     type ParentDependencies = (Self,);
 
-    type ChildDependencies = ();
+    type ChildDependencies = (Self,);
 
     type NodeDependencies = ();
 
@@ -39,6 +42,8 @@ impl State<CustomAttributeValues> for Size {
             "max_width",
             "padding",
             "direction",
+            "scroll_y",
+            "scroll_x",
         ]))
         .with_tag()
         .with_text();
@@ -47,30 +52,35 @@ impl State<CustomAttributeValues> for Size {
         &mut self,
         node_view: NodeView<CustomAttributeValues>,
         _node: <Self::NodeDependencies as Dependancy>::ElementBorrowed<'a>,
-        _parent: Option<<Self::ParentDependencies as Dependancy>::ElementBorrowed<'a>>,
-        _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
+        parent: Option<<Self::ParentDependencies as Dependancy>::ElementBorrowed<'a>>,
+        children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
         context: &SendAnyMap,
     ) -> bool {
-        let layout_notifier = context.get::<LayoutNotifier>().unwrap();
         let scale_factor = context.get::<f32>().unwrap();
+        let torin_layout = context
+            .get::<Arc<Mutex<Torin<NodeId, EmbeddedData>>>>()
+            .unwrap();
 
-        let mut width = SizeMode::default();
-        let mut height = SizeMode::default();
-        let mut min_height = SizeMode::default();
-        let mut min_width = SizeMode::default();
-        let mut max_height = SizeMode::default();
-        let mut max_width = SizeMode::default();
-        let mut padding = (0.0, 0.0, 0.0, 0.0);
+        let mut width = torin::Size::default();
+        let mut height = torin::Size::default();
+        let mut min_height = torin::Size::default();
+        let mut min_width = torin::Size::default();
+        let mut max_height = torin::Size::default();
+        let mut max_width = torin::Size::default();
+        let mut padding = torin::Paddings::default();
+        let mut scroll_y = 0.0;
+        let mut scroll_x = 0.0;
+
         let mut direction = if let Some("label") = node_view.tag() {
-            DirectionMode::Both
+            Direction::Horizontal
         } else if let Some("paragraph") = node_view.tag() {
-            DirectionMode::Both
+            Direction::Horizontal
         } else if let Some("text") = node_view.tag() {
-            DirectionMode::Both
+            Direction::Horizontal
         } else if node_view.text().is_some() {
-            DirectionMode::Both
+            Direction::Horizontal
         } else {
-            DirectionMode::Vertical
+            Direction::Vertical
         };
 
         if let Some(attributes) = node_view.attributes() {
@@ -136,12 +146,26 @@ impl State<CustomAttributeValues> for Size {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
                             direction = if attr == "horizontal" {
-                                DirectionMode::Horizontal
+                                Direction::Horizontal
                             } else if attr == "both" {
-                                DirectionMode::Both
+                                Direction::Vertical
                             } else {
-                                DirectionMode::Vertical
+                                Direction::Vertical
                             };
+                        }
+                    }
+                    "scroll_y" => {
+                        let attr = attr.value.as_text();
+                        if let Some(attr) = attr {
+                            let scroll: f32 = attr.parse().unwrap();
+                            scroll_y = scroll * scale_factor;
+                        }
+                    }
+                    "scroll_x" => {
+                        let attr = attr.value.as_text();
+                        if let Some(attr) = attr {
+                            let scroll: f32 = attr.parse().unwrap();
+                            scroll_x = scroll * scale_factor;
                         }
                     }
                     _ => {
@@ -158,10 +182,50 @@ impl State<CustomAttributeValues> for Size {
             || (max_height != self.max_height)
             || (max_width != self.max_width)
             || (padding != self.padding)
-            || (direction != self.direction);
+            || (node_view.node_id() != self.node_id)
+            || (direction != self.direction)
+            || (scroll_x != self.scroll_x)
+            || (scroll_y != self.scroll_y);
 
         if changed {
-            *layout_notifier.lock().unwrap() = true;
+            let node = Node {
+                width: width.clone(),
+                height: height.clone(),
+                direction: direction.clone(),
+                padding,
+                display: torin::Display::Normal,
+                scroll_x: Length::new(scroll_x),
+                scroll_y: Length::new(scroll_y),
+            };
+
+            if torin_layout.lock().unwrap().has(node_view.node_id()) {
+                torin_layout
+                    .lock()
+                    .unwrap()
+                    .set_node(node_view.node_id(), node)
+            } else if let Some((parent_id,)) = parent {
+                torin_layout.lock().unwrap().insert(
+                    node_view.node_id(),
+                    parent_id.node_id,
+                    node,
+                    EmbeddedData::default(),
+                    children
+                        .iter()
+                        .map(|(c,)| c.node_id)
+                        .collect::<Vec<NodeId>>(),
+                )
+            } else {
+                torin_layout.lock().unwrap().add(
+                    node_view.node_id(),
+                    node,
+                    EmbeddedData::default(),
+                    None,
+                    children
+                        .iter()
+                        .map(|(c,)| c.node_id)
+                        .collect::<Vec<NodeId>>(),
+                );
+            }
         }
 
         *self = Self {
@@ -173,19 +237,27 @@ impl State<CustomAttributeValues> for Size {
             max_width,
             padding,
             direction,
+            node_id: node_view.node_id(),
+            scroll_x,
+            scroll_y,
         };
         changed
     }
 }
 
-pub fn parse_padding(padding: &str, scale_factor: f32) -> Option<(f32, f32, f32, f32)> {
-    let mut padding_config = (0.0, 0.0, 0.0, 0.0);
+pub fn parse_padding(padding: &str, scale_factor: f32) -> Option<Paddings> {
+    let mut padding_config = (
+        Length::new(0.0),
+        Length::new(0.0),
+        Length::new(0.0),
+        Length::new(0.0),
+    );
     let mut paddings = padding.split_ascii_whitespace();
 
     match paddings.clone().count() {
         // Same in each directions
         1 => {
-            padding_config.0 = paddings.next()?.parse::<f32>().ok()? * scale_factor;
+            padding_config.0 = Length::new(paddings.next()?.parse::<f32>().ok()? * scale_factor);
             padding_config.1 = padding_config.0;
             padding_config.2 = padding_config.0;
             padding_config.3 = padding_config.0;
@@ -193,19 +265,19 @@ pub fn parse_padding(padding: &str, scale_factor: f32) -> Option<(f32, f32, f32,
         // By vertical and horizontal
         2 => {
             // Vertical
-            padding_config.0 = paddings.next()?.parse::<f32>().ok()? * scale_factor;
+            padding_config.0 = Length::new(paddings.next()?.parse::<f32>().ok()? * scale_factor);
             padding_config.2 = padding_config.0;
 
             // Horizontal
-            padding_config.1 = paddings.next()?.parse::<f32>().ok()? * scale_factor;
+            padding_config.1 = Length::new(paddings.next()?.parse::<f32>().ok()? * scale_factor);
             padding_config.3 = padding_config.1;
         }
         // Each directions
         4 => {
-            padding_config.0 = paddings.next()?.parse::<f32>().ok()? * scale_factor;
-            padding_config.1 = paddings.next()?.parse::<f32>().ok()? * scale_factor;
-            padding_config.2 = paddings.next()?.parse::<f32>().ok()? * scale_factor;
-            padding_config.3 = paddings.next()?.parse::<f32>().ok()? * scale_factor;
+            padding_config.0 = Length::new(paddings.next()?.parse::<f32>().ok()? * scale_factor);
+            padding_config.1 = Length::new(paddings.next()?.parse::<f32>().ok()? * scale_factor);
+            padding_config.2 = Length::new(paddings.next()?.parse::<f32>().ok()? * scale_factor);
+            padding_config.3 = Length::new(paddings.next()?.parse::<f32>().ok()? * scale_factor);
         }
         _ => {}
     }
@@ -213,23 +285,27 @@ pub fn parse_padding(padding: &str, scale_factor: f32) -> Option<(f32, f32, f32,
     Some(padding_config)
 }
 
-pub fn parse_size(size: &str, scale_factor: f32) -> Option<SizeMode> {
+pub fn parse_size(size: &str, scale_factor: f32) -> Option<torin::Size> {
     if size == "stretch" {
-        Some(SizeMode::Percentage(100.0))
+        Some(torin::Size::Percentage(Length::new(100.0)))
     } else if size == "auto" {
-        Some(SizeMode::Auto)
+        Some(torin::Size::Inner)
     } else if size.contains("calc") {
-        Some(SizeMode::Calculation(parse_calc(size, scale_factor)?))
+        Some(torin::Size::DynamicCalculations(parse_calc(
+            size,
+            scale_factor,
+        )?))
     } else if size.contains('%') {
-        Some(SizeMode::Percentage(size.replace('%', "").parse().ok()?))
-    } else if size.contains("calc") {
-        Some(SizeMode::Calculation(parse_calc(size, scale_factor)?))
+        Some(torin::Size::Percentage(Length::new(
+            size.replace('%', "").parse().ok()?,
+        )))
     } else {
-        Some(SizeMode::Manual((size.parse::<f32>().ok()?) * scale_factor))
+        Some(torin::Size::Pixels(Length::new(
+            (size.parse::<f32>().ok()?) * scale_factor,
+        )))
     }
 }
-
-pub fn parse_calc(mut size: &str, scale_factor: f32) -> Option<Vec<CalcType>> {
+pub fn parse_calc(mut size: &str, scale_factor: f32) -> Option<Vec<DynamicCalculation>> {
     let mut calcs = Vec::new();
 
     size = size.strip_prefix("calc(")?;
@@ -239,87 +315,23 @@ pub fn parse_calc(mut size: &str, scale_factor: f32) -> Option<Vec<CalcType>> {
 
     for val in vals {
         if val.contains('%') {
-            calcs.push(CalcType::Percentage(val.replace('%', "").parse().ok()?));
+            calcs.push(DynamicCalculation::Percentage(
+                val.replace('%', "").parse().ok()?,
+            ));
         } else if val == "+" {
-            calcs.push(CalcType::Add);
+            calcs.push(DynamicCalculation::Add);
         } else if val == "-" {
-            calcs.push(CalcType::Sub);
+            calcs.push(DynamicCalculation::Sub);
         } else if val == "/" {
-            calcs.push(CalcType::Div);
+            calcs.push(DynamicCalculation::Div);
         } else if val == "*" {
-            calcs.push(CalcType::Mul);
+            calcs.push(DynamicCalculation::Mul);
         } else {
-            calcs.push(CalcType::Manual(val.parse::<f32>().ok()? * scale_factor));
+            calcs.push(DynamicCalculation::Pixels(
+                val.parse::<f32>().ok()? * scale_factor,
+            ));
         }
     }
 
     Some(calcs)
-}
-
-#[derive(Default, Copy, Clone, Debug, PartialEq, Eq)]
-pub enum DirectionMode {
-    #[default]
-    Vertical,
-    Horizontal,
-    Both,
-}
-
-impl Display for DirectionMode {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            DirectionMode::Vertical => f.write_str("vertical"),
-            DirectionMode::Horizontal => f.write_str("horizontal"),
-            DirectionMode::Both => f.write_str("both"),
-        }
-    }
-}
-
-#[derive(Default, Clone, Debug, PartialEq)]
-pub enum SizeMode {
-    #[default]
-    Auto,
-    Calculation(Vec<CalcType>),
-    Percentage(f32),
-    Manual(f32),
-}
-
-impl Display for SizeMode {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            SizeMode::Auto => f.write_str("auto"),
-            SizeMode::Manual(s) => f.write_fmt(format_args!("{s}")),
-            SizeMode::Calculation(calcs) => f.write_fmt(format_args!(
-                "calc({})",
-                calcs
-                    .iter()
-                    .map(|c| c.to_string())
-                    .collect::<Vec<String>>()
-                    .join(" ")
-            )),
-            SizeMode::Percentage(p) => f.write_fmt(format_args!("{p}%")),
-        }
-    }
-}
-
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub enum CalcType {
-    Sub,
-    Mul,
-    Div,
-    Add,
-    Percentage(f32),
-    Manual(f32),
-}
-
-impl Display for CalcType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            CalcType::Sub => f.write_str("-"),
-            CalcType::Mul => f.write_str("*"),
-            CalcType::Div => f.write_str("/"),
-            CalcType::Add => f.write_str("+"),
-            CalcType::Percentage(p) => f.write_fmt(format_args!("{p}%")),
-            CalcType::Manual(s) => f.write_fmt(format_args!("{s}")),
-        }
-    }
 }

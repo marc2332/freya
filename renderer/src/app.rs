@@ -104,17 +104,17 @@ impl<State: 'static + Clone> App<State> {
     }
 
     /// Update the DOM with the mutations from the VirtualDOM.
-    pub fn apply_vdom_changes(&mut self) -> (bool, bool) {
+    pub fn apply_vdom_changes(&mut self) -> bool {
         let scale_factor = self.window_env.window.scale_factor() as f32;
         let mutations = self.vdom.render_immediate();
 
-        let (repaint, relayout) = self.rdom.get_mut().apply_mutations(mutations, scale_factor);
+        let repaint = self.rdom.get_mut().apply_mutations(mutations, scale_factor);
 
-        if repaint || relayout {
+        if repaint {
             self.mutations_sender.as_ref().map(|s| s.send(()));
         }
 
-        (repaint, relayout)
+        repaint
     }
 
     /// Poll the VirtualDOM for any new change
@@ -147,12 +147,12 @@ impl<State: 'static + Clone> App<State> {
                 }
             }
 
-            let (must_repaint, must_relayout) = self.apply_vdom_changes();
+            let must_repaint = self.apply_vdom_changes();
 
-            if must_relayout {
-                self.request_redraw();
-            } else if must_repaint {
-                self.request_rerender();
+            self.process_layout();
+
+            if must_repaint {
+                self.render(&None);
             }
         }
     }
@@ -173,26 +173,16 @@ impl<State: 'static + Clone> App<State> {
 
     /// Measure the layout
     pub fn process_layout(&mut self) {
-        let (layers, viewports) = self.window_env.process_layout(&self.rdom.get());
-        self.layers = layers;
-        self.viewports_collection = viewports;
+        if self.rdom.get().layout().is_dirty() {
+            let (layers, viewports) = self.window_env.process_layout(&self.rdom.get());
+            self.layers = layers;
+            self.viewports_collection = viewports;
+        }
     }
 
     /// Push an event to the events queue
     pub fn push_event(&mut self, event: FreyaEvent) {
         self.events.push(event);
-    }
-
-    /// Request a redraw
-    pub fn request_redraw(&self) {
-        self.window_env.request_redraw();
-    }
-
-    /// Request a rerender
-    pub fn request_rerender(&self) {
-        self.proxy
-            .send_event(EventMessage::RequestRerender)
-            .unwrap();
     }
 
     /// Replace a VirtualDOM Template
@@ -212,6 +202,7 @@ impl<State: 'static + Clone> App<State> {
 
     /// Resize the Window
     pub fn resize(&mut self, size: PhysicalSize<u32>) {
+        self.rdom.get().layout().clear();
         self.window_env.resize(size);
     }
 

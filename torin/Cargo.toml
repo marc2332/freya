@@ -1,0 +1,10 @@
+[package]
+name = "torin"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+euclid = "0.22.9"
+fxhash = "0.2.1"
+dioxus-native-core = { workspace = true }
+

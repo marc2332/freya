@@ -73,6 +73,7 @@ pub fn run<T: 'static + Clone>(
     );
 
     app.init_vdom();
+    app.process_layout();
 
     let mut cursor_pos = Point2D::default();
     let mut last_keydown = Key::Unidentified;

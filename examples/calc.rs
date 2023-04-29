@@ -10,18 +10,9 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    let mut font_size = use_state(cx, || 30f32);
-
-    let onwheel = move |e: WheelEvent| {
-        let y = e.get_delta_y();
-        font_size += (y as f32) * 5.0;
-    };
-
-    render!(
-        label {
-            onwheel: onwheel,
-            font_size: "{font_size}",
-            "hello world"
-        }
-    )
+    render!(rect {
+        background: "red",
+        width: "100%",
+        height: "100%",
+    })
 }

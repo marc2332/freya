@@ -1,8 +1,7 @@
 use dioxus_native_core::real_dom::NodeImmutable;
 use freya_dom::DioxusNode;
 use freya_node_state::{
-    CursorSettings, DirectionMode, DisplayMode, FontStyle, References, Scroll, ShadowSettings,
-    Size, SizeMode, Style, Transform,
+    CursorSettings, FontStyle, References, ShadowSettings, Size, Style, Transform,
 };
 use skia_safe::Color;
 
@@ -12,7 +11,6 @@ pub struct NodeState {
     pub cursor: CursorSettings,
     pub font_style: FontStyle,
     pub references: References,
-    pub scroll: Scroll,
     pub size: Size,
     pub style: Style,
     pub transform: Transform,
@@ -22,7 +20,6 @@ pub fn get_node_state(node: &DioxusNode) -> NodeState {
     let cursor = node.get::<CursorSettings>().unwrap().clone();
     let font_style = node.get::<FontStyle>().unwrap().clone();
     let references = node.get::<References>().unwrap().clone();
-    let scroll = node.get::<Scroll>().unwrap().clone();
     let size = node.get::<Size>().unwrap().clone();
     let style = node.get::<Style>().unwrap().clone();
     let transform = node.get::<Transform>().unwrap().clone();
@@ -31,7 +28,6 @@ pub fn get_node_state(node: &DioxusNode) -> NodeState {
         cursor,
         font_style,
         references,
-        scroll,
         size,
         style,
         transform,
@@ -78,7 +74,7 @@ impl<'a> Iterator for NodeStateIterator<'a> {
                 "background",
                 AttributeType::Color(&self.state.style.background),
             )),
-            9 => Some(("display", AttributeType::Display(&self.state.style.display))),
+            //9 => Some(("display", AttributeType::Display(&self.state.style.display))),
             10 => Some(("radius", AttributeType::Measure(self.state.style.radius))),
             11 => Some(("shadow", AttributeType::Shadow(&self.state.style.shadow))),
             12 => Some(("color", AttributeType::Color(&self.state.font_style.color))),
@@ -94,14 +90,8 @@ impl<'a> Iterator for NodeStateIterator<'a> {
                 "line_height",
                 AttributeType::Measure(self.state.font_style.line_height),
             )),
-            16 => Some((
-                "scroll_x",
-                AttributeType::Measure(self.state.scroll.scroll_x),
-            )),
-            17 => Some((
-                "scroll_y",
-                AttributeType::Measure(self.state.scroll.scroll_y),
-            )),
+            16 => Some(("scroll_x", AttributeType::Measure(self.state.size.scroll_x))),
+            17 => Some(("scroll_y", AttributeType::Measure(self.state.size.scroll_y))),
             _ => None,
         }
     }
@@ -116,11 +106,11 @@ impl<'a> Iterator for NodeStateIterator<'a> {
 
 pub enum AttributeType<'a> {
     Color(&'a Color),
-    Size(&'a SizeMode),
+    Size(&'a torin::Size),
     Measure(f32),
-    Measures((f32, f32, f32, f32)),
-    Direction(&'a DirectionMode),
-    Display(&'a DisplayMode),
+    Measures(torin::Paddings),
+    Direction(&'a torin::Direction),
+    Display(&'a torin::Display),
     Shadow(&'a ShadowSettings),
     Text(String),
 }

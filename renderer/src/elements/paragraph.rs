@@ -1,6 +1,7 @@
 use dioxus_native_core::real_dom::NodeImmutable;
+use freya_common::Area;
 use freya_dom::DioxusNode;
-use freya_layout::{get_inner_texts, RenderData};
+use freya_layout::get_inner_texts;
 use freya_node_state::{CursorSettings, FontStyle};
 use skia_safe::{
     textlayout::{
@@ -12,7 +13,7 @@ use skia_safe::{
 
 /// Render a `paragraph` element
 pub fn render_paragraph(
-    render_node: &RenderData,
+    area: &Area,
     dioxus_node: &DioxusNode,
     canvas: &mut Canvas,
     font_collection: &mut FontCollection,
@@ -22,7 +23,7 @@ pub fn render_paragraph(
 
     let texts = get_inner_texts(dioxus_node);
 
-    let (x, y) = render_node.node_area.origin.to_tuple();
+    let (x, y) = area.origin.to_tuple();
 
     let mut paragraph_style = ParagraphStyle::default();
     paragraph_style.set_max_lines(node_font_style.max_lines);
@@ -52,19 +53,19 @@ pub fn render_paragraph(
 
     let mut paragraph = paragraph_builder.build();
 
-    paragraph.layout(render_node.node_area.width());
+    paragraph.layout(area.width());
 
     // Draw the highlights if specified
-    draw_cursor_highlights(render_node, &paragraph, canvas, dioxus_node);
+    draw_cursor_highlights(area, &paragraph, canvas, dioxus_node);
 
     // Draw a cursor if specified
-    draw_cursor(render_node, &paragraph, canvas, dioxus_node);
+    draw_cursor(area, &paragraph, canvas, dioxus_node);
 
     paragraph.paint(canvas, (x, y));
 }
 
 fn draw_cursor_highlights(
-    render_node: &RenderData,
+    area: &Area,
     paragraph: &Paragraph,
     canvas: &mut Canvas,
     dioxus_node: &DioxusNode,
@@ -88,8 +89,8 @@ fn draw_cursor_highlights(
             RectWidthStyle::Tight,
         );
         for cursor_rect in cursor_rects {
-            let x = render_node.node_area.min_x() + cursor_rect.rect.left;
-            let y = render_node.node_area.min_y() + cursor_rect.rect.top;
+            let x = area.min_x() + cursor_rect.rect.left;
+            let y = area.min_y() + cursor_rect.rect.top;
 
             let x2 = x + (cursor_rect.rect.right - cursor_rect.rect.left);
             let y2 = y + (cursor_rect.rect.bottom - cursor_rect.rect.top);
@@ -107,7 +108,7 @@ fn draw_cursor_highlights(
 }
 
 fn draw_cursor(
-    render_node: &RenderData,
+    area: &Area,
     paragraph: &Paragraph,
     canvas: &mut Canvas,
     dioxus_node: &DioxusNode,
@@ -125,8 +126,8 @@ fn draw_cursor(
     );
     let cursor_rect = cursor_rects.first()?;
 
-    let x = render_node.node_area.min_x() + cursor_rect.rect.left;
-    let y = render_node.node_area.min_y() + cursor_rect.rect.top;
+    let x = area.min_x() + cursor_rect.rect.left;
+    let y = area.min_y() + cursor_rect.rect.top;
 
     let x2 = x + 1.0;
     let y2 = y + (cursor_rect.rect.bottom - cursor_rect.rect.top);

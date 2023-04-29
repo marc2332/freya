@@ -1339,6 +1339,7 @@ dependencies = [
  "dioxus-native-core",
  "dioxus-rsx",
  "euclid",
+ "torin",
  "uuid",
 ]
 
@@ -1376,6 +1377,7 @@ dependencies = [
  "rustc-hash",
  "skia-safe",
  "tokio",
+ "torin",
  "tracing",
  "winit",
 ]
@@ -1412,6 +1414,7 @@ dependencies = [
  "dioxus-rsx",
  "freya-common",
  "freya-node-state",
+ "torin",
 ]
 
 [[package]]
@@ -1477,6 +1480,7 @@ dependencies = [
  "rustc-hash",
  "skia-safe",
  "tokio",
+ "torin",
  "uuid",
 ]
 
@@ -1499,6 +1503,7 @@ dependencies = [
  "skia-safe",
  "smallvec",
  "tokio",
+ "torin",
  "uuid",
 ]
 
@@ -3964,6 +3969,15 @@ dependencies = [
  "serde_spanned",
  "toml_datetime",
  "winnow",
+]
+
+[[package]]
+name = "torin"
+version = "0.1.0"
+dependencies = [
+ "dioxus-native-core",
+ "euclid",
+ "fxhash",
 ]
 
 [[package]]

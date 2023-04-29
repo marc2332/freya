@@ -1,12 +1,12 @@
 use std::{any::Any, collections::HashMap, rc::Rc};
 
 use dioxus_core::ElementId;
+use dioxus_native_core::NodeId;
 use freya_common::{Area, Point2D};
 use freya_elements::events::{
     keyboard::{Code, Key, Modifiers},
     KeyboardData, MouseData, TouchData, WheelData,
 };
-use freya_layout::RenderData;
 use rustc_hash::FxHashMap;
 use winit::event::{Force, MouseButton, TouchPhase};
 
@@ -173,7 +173,7 @@ impl EventsProcessor {
     pub fn process_events_batch(
         &mut self,
         events_to_emit: Vec<DomEvent>,
-        events_filtered: FxHashMap<&str, Vec<(RenderData, FreyaEvent)>>,
+        events_filtered: FxHashMap<&str, Vec<(NodeId, FreyaEvent)>>,
     ) -> Vec<DomEvent> {
         let mut new_events = Vec::new();
 

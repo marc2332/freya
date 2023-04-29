@@ -1,8 +1,5 @@
 use crate::Area;
-use std::{
-    ops::Div,
-    sync::{Arc, Mutex},
-};
+use std::ops::Div;
 
 /// Layout info of a certain Node, used by `use_node`.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -17,7 +14,6 @@ impl NodeReferenceLayout {
         self.inner = self.inner.div(rhs);
     }
 }
-pub type LayoutNotifier = Arc<Mutex<bool>>;
 
 /// Messages emitted from the layout library to the Nodes. Used in `use_editable`.
 #[derive(Debug)]

@@ -4,15 +4,13 @@ use dioxus_core::{Mutation, Mutations};
 use dioxus_native_core::{
     prelude::{DioxusState, State},
     real_dom::{NodeRef, RealDom},
-    SendAnyMap,
+    NodeId, SendAnyMap,
 };
-use freya_common::LayoutNotifier;
 use freya_node_state::{
-    CursorSettings, CustomAttributeValues, FontStyle, References, Scroll, Size, Style, Transform,
+    CursorSettings, CustomAttributeValues, FontStyle, References, Size, Style, Transform,
 };
-
-#[cfg(feature = "shared")]
 use std::sync::MutexGuard;
+use torin::*;
 
 pub type DioxusDOM = RealDom<CustomAttributeValues>;
 pub type DioxusNode<'a> = NodeRef<'a, CustomAttributeValues>;
@@ -78,7 +76,7 @@ impl SafeDOM {
 pub struct FreyaDOM {
     rdom: DioxusDOM,
     dioxus_integration_state: DioxusState,
-    layout_notifier: LayoutNotifier,
+    torin: Arc<Mutex<Torin<NodeId, EmbeddedData>>>,
 }
 
 impl Default for FreyaDOM {
@@ -87,7 +85,6 @@ impl Default for FreyaDOM {
             CursorSettings::to_type_erased(),
             FontStyle::to_type_erased(),
             References::to_type_erased(),
-            Scroll::to_type_erased(),
             Size::to_type_erased(),
             Style::to_type_erased(),
             Transform::to_type_erased(),
@@ -96,7 +93,7 @@ impl Default for FreyaDOM {
         Self {
             rdom,
             dioxus_integration_state,
-            layout_notifier: Arc::new(Mutex::new(false)),
+            torin: Arc::new(Mutex::new(Torin::new())),
         }
     }
 }
@@ -106,8 +103,12 @@ impl FreyaDOM {
         Self {
             rdom,
             dioxus_integration_state,
-            layout_notifier: Arc::new(Mutex::new(false)),
+            torin: Arc::new(Mutex::new(Torin::new())),
         }
+    }
+
+    pub fn layout(&self) -> MutexGuard<torin::Torin<NodeId, EmbeddedData>> {
+        self.torin.lock().unwrap()
     }
 
     /// Create the initial DOM from the given Mutations
@@ -115,11 +116,9 @@ impl FreyaDOM {
         self.dioxus_integration_state
             .apply_mutations(&mut self.rdom, mutations);
 
-        *self.layout_notifier.lock().unwrap() = false;
-
         let mut ctx = SendAnyMap::new();
-        ctx.insert(self.layout_notifier.clone());
         ctx.insert(scale_factor);
+        ctx.insert(self.torin.clone());
 
         self.rdom.update_state(ctx);
     }
@@ -127,46 +126,16 @@ impl FreyaDOM {
     /// Process the given mutations from the [`VirtualDOM`](dioxus_core::VirtualDom).
     /// This will notify the layout if it must recalculate
     /// or the renderer if it has to repaint.
-    pub fn apply_mutations(&mut self, mutations: Mutations, scale_factor: f32) -> (bool, bool) {
-        *self.layout_notifier.lock().unwrap() = false;
-        let mut layout_changes = false;
-
-        // Notify the layout of any major layout change
-        // TODO: Implement granual layout changes
+    pub fn apply_mutations(&mut self, mutations: Mutations, scale_factor: f32) -> bool {
         for mutation in &mutations.edits {
             match mutation {
-                Mutation::AssignId { .. } => {}
-                Mutation::SetAttribute { .. } => {}
-                Mutation::NewEventListener { .. } => {}
-                Mutation::RemoveEventListener { .. } => {}
-                Mutation::InsertAfter { m, .. } => {
-                    if *m > 0 {
-                        layout_changes = true;
-                    }
+                Mutation::Remove { id } => {
+                    self.torin
+                        .lock()
+                        .unwrap()
+                        .remove(self.dioxus_integration_state.element_to_node_id(*id));
                 }
-                Mutation::InsertBefore { m, .. } => {
-                    if *m > 0 {
-                        layout_changes = true;
-                    }
-                }
-                Mutation::ReplacePlaceholder { m, .. } => {
-                    if *m > 0 {
-                        layout_changes = true;
-                    }
-                }
-                Mutation::ReplaceWith { m, .. } => {
-                    if *m > 0 {
-                        layout_changes = true;
-                    }
-                }
-                Mutation::AppendChildren { m, .. } => {
-                    if *m > 0 {
-                        layout_changes = true;
-                    }
-                }
-                _ => {
-                    layout_changes = true;
-                }
+                _ => {}
             }
         }
 
@@ -179,18 +148,14 @@ impl FreyaDOM {
 
         // Update the Nodes states
         let mut ctx = SendAnyMap::new();
-        ctx.insert(self.layout_notifier.clone());
         ctx.insert(scale_factor);
+        ctx.insert(self.torin.clone());
 
         let (_, diff) = self.rdom.update_state(ctx);
 
-        // Calculate whether it must repaint or relayout
         let paint_changes = !diff.is_empty();
-        if *self.layout_notifier.lock().unwrap() {
-            layout_changes = true;
-        }
 
-        (paint_changes, layout_changes)
+        paint_changes
     }
 
     /// Get a reference to the [`DioxusDOM`].
@@ -201,5 +166,19 @@ impl FreyaDOM {
     /// Get a mutable reference to the [`DioxusDOM`].
     pub fn dom_mut(&mut self) -> &mut DioxusDOM {
         &mut self.rdom
+    }
+}
+
+pub struct SkiaTextMeasurer;
+
+impl LayoutMeasurer<NodeId, EmbeddedData> for SkiaTextMeasurer {
+    fn measure(
+        &mut self,
+        _node: &NodeData<NodeId, EmbeddedData>,
+        _area: &Rect<f32, Measure>,
+        _parent_size: &Rect<f32, Measure>,
+        _available_parent_size: &Rect<f32, Measure>,
+    ) -> Option<Rect<f32, Measure>> {
+        None
     }
 }

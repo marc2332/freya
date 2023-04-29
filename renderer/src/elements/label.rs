@@ -1,8 +1,8 @@
 use dioxus_native_core::node::NodeType;
 use dioxus_native_core::prelude::TextNode;
 use dioxus_native_core::real_dom::NodeImmutable;
+use freya_common::Area;
 use freya_dom::DioxusNode;
-use freya_layout::RenderData;
 use freya_node_state::FontStyle;
 use skia_safe::{
     textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle},
@@ -11,7 +11,7 @@ use skia_safe::{
 
 /// Render a `label` element
 pub fn render_label(
-    render_node: &RenderData,
+    area: &Area,
     node_ref: &DioxusNode,
     canvas: &mut Canvas,
     font_collection: &mut FontCollection,
@@ -38,8 +38,8 @@ pub fn render_label(
     };
 
     if let Some(text) = text {
-        let x = render_node.node_area.min_x();
-        let y = render_node.node_area.min_y();
+        let x = area.min_x();
+        let y = area.min_y();
 
         let mut paragraph_style = ParagraphStyle::default();
         paragraph_style.set_text_align(node_font_style.align);
@@ -58,7 +58,7 @@ pub fn render_label(
 
         let mut paragraph = paragraph_builder.build();
 
-        paragraph.layout(render_node.node_area.width() + 1.0);
+        paragraph.layout(area.width() + 1.0);
 
         paragraph.paint(canvas, (x, y));
     }

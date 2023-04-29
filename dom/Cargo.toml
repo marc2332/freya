@@ -16,6 +16,7 @@ shared = []
 [dependencies]
 freya-node-state = { workspace = true }
 freya-common = { workspace = true }
+torin = { workspace = true }
 
 dioxus-rsx = { workspace = true }
 dioxus-native-core = { workspace = true }

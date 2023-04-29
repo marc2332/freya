@@ -230,20 +230,20 @@ impl<T: Clone> WindowEnv<T> {
             &mut self.font_collection,
             layers,
             &mut (canvas, (&mut matrices)),
-            |dom, render_node, font_collection, viewports_collection, (canvas, matrices)| {
+            |dom, node_id, area, font_collection, viewports_collection, (canvas, matrices)| {
                 let render_wireframe = if let Some(hovered_node) = &hovered_node {
                     hovered_node
                         .lock()
                         .unwrap()
-                        .map(|id| id == *render_node.get_id())
+                        .map(|id| id == *node_id)
                         .unwrap_or_default()
                 } else {
                     false
                 };
-                if let Some(dioxus_node) = render_node.get_node(dom) {
+                if let Some(dioxus_node) = dom.dom().get(*node_id) {
                     render_skia(
                         canvas,
-                        render_node,
+                        area,
                         &dioxus_node,
                         font_collection,
                         viewports_collection,

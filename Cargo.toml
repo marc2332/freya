@@ -4,7 +4,7 @@ version = "0.0.0"
 edition = "2021"
 
 [workspace]
-members = ["layout", "renderer", "state", "freya", "elements", "components", "hooks", "common", "core", "testing", "devtools", "dom"]
+members = ["layout", "renderer", "state", "freya", "elements", "components", "hooks", "common", "core", "testing", "devtools", "dom", "torin"]
 
 [features]
 devtools = ["freya/devtools"]
@@ -23,6 +23,7 @@ freya-core = { path = "core" }
 freya-components = { path = "components" }
 freya-dom = { path = "dom", version = "0.1.0" }
 freya-testing = { path = "testing", version = "0.1.0" }
+torin = { path = "torin", version = "0.1.0" }
 
 dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="c9044111908338c347b2b00bb48f579e5d9e1877" }
 dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="c9044111908338c347b2b00bb48f579e5d9e1877" }

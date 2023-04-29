@@ -6,7 +6,6 @@ use dioxus_native_core::node_ref::NodeView;
 use dioxus_native_core::prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State};
 use dioxus_native_core::SendAnyMap;
 use dioxus_native_core_macro::partial_derive_state;
-use freya_common::LayoutNotifier;
 use skia_safe::Color;
 
 use crate::{parse_color, CustomAttributeValues};
@@ -52,7 +51,6 @@ impl State<CustomAttributeValues> for Style {
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
         context: &SendAnyMap,
     ) -> bool {
-        let layout_notifier = context.get::<LayoutNotifier>().unwrap();
         let scale_factor = context.get::<f32>().unwrap();
 
         let mut background = Color::TRANSPARENT;
@@ -132,13 +130,6 @@ impl State<CustomAttributeValues> for Style {
             || (image_data != self.image_data)
             || (display != self.display)
             || (svg_data != self.svg_data);
-
-        let changed_size =
-            (display != self.display) || (node_view.text().map(|v| v.to_owned()) != self.text);
-
-        if changed_size {
-            *layout_notifier.lock().unwrap() = true;
-        }
 
         *self = Self {
             background,
