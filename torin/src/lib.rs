@@ -579,6 +579,15 @@ impl Default for DirectionMode {
     }
 }
 
+impl DirectionMode {
+    pub fn pretty(&self) -> String {
+        match self {
+            DirectionMode::Horizontal => "Horizontal".to_string(),
+            DirectionMode::Vertical => "Vertical".to_string(),
+        }
+    }
+}
+
 #[derive(PartialEq)]
 pub struct Measure;
 
@@ -593,6 +602,24 @@ pub enum Size {
 impl Default for Size {
     fn default() -> Self {
         Self::Inner
+    }
+}
+
+impl Size {
+    pub fn pretty(&self) -> String {
+        match self {
+            Size::Inner => "inner".to_string(),
+            Size::Pixels(s) => format!("{}", s.get()),
+            Size::DynamicCalculations(calcs) => format!(
+                "calc({})",
+                calcs
+                    .iter()
+                    .map(|c| c.to_string())
+                    .collect::<Vec<String>>()
+                    .join(" ")
+            ),
+            Size::Percentage(p) => format!("{}%", p.get()),
+        }
     }
 }
 
@@ -652,12 +679,31 @@ impl Paddings {
     pub fn left(&self) -> f32 {
         self.left.get()
     }
+
+    pub fn pretty(&self) -> String {
+        format!(
+            "({}, {}, {}, {})",
+            self.top(),
+            self.right(),
+            self.bottom(),
+            self.left()
+        )
+    }
 }
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum DisplayMode {
     Normal,
     Center,
+}
+
+impl DisplayMode {
+    pub fn pretty(&self) -> String {
+        match self {
+            DisplayMode::Normal => "Normal".to_string(),
+            DisplayMode::Center => "Center".to_string(),
+        }
+    }
 }
 
 #[derive(PartialEq, Clone, Debug)]
