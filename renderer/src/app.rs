@@ -6,7 +6,7 @@ use freya_core::{
     events::{DomEvent, EventsProcessor, FreyaEvent},
     process_events, EventEmitter, EventReceiver, EventsQueue, ViewportsCollection,
 };
-use freya_dom::SafeDOM;
+use freya_dom::{DioxusNodeResolver, SafeDOM};
 use freya_layout::Layers;
 use futures::FutureExt;
 use futures::{
@@ -149,9 +149,9 @@ impl<State: 'static + Clone> App<State> {
 
             let must_repaint = self.apply_vdom_changes();
 
-            self.process_layout();
+            let layouted = self.process_layout();
 
-            if must_repaint {
+            if must_repaint || layouted {
                 self.render(&None);
             }
         }
@@ -172,11 +172,16 @@ impl<State: 'static + Clone> App<State> {
     }
 
     /// Measure the layout
-    pub fn process_layout(&mut self) {
-        if self.rdom.get().layout().is_dirty() {
-            let (layers, viewports) = self.window_env.process_layout(&self.rdom.get());
+    pub fn process_layout(&mut self) -> bool {
+        let dom = self.rdom.get();
+        let node_resolver = &DioxusNodeResolver::new(dom.dom());
+        if dom.layout().calculate_tallest_dirty_node(node_resolver) {
+            let (layers, viewports) = self.window_env.process_layout(&dom);
             self.layers = layers;
             self.viewports_collection = viewports;
+            true
+        } else {
+            false
         }
     }
 
@@ -202,7 +207,7 @@ impl<State: 'static + Clone> App<State> {
 
     /// Resize the Window
     pub fn resize(&mut self, size: PhysicalSize<u32>) {
-        self.rdom.get().layout().clear();
+        self.rdom.get().layout().reset();
         self.window_env.resize(size);
     }
 

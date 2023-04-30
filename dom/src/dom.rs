@@ -2,13 +2,15 @@ use std::sync::{Arc, Mutex};
 
 use dioxus_core::{Mutation, Mutations};
 use dioxus_native_core::{
-    prelude::{DioxusState, State},
-    real_dom::{NodeRef, RealDom},
+    prelude::{DioxusState, ElementNode, NodeType, State, TextNode},
+    real_dom::{NodeImmutable, NodeRef, RealDom},
+    tree::TreeRef,
     NodeId, SendAnyMap,
 };
 use freya_node_state::{
-    CursorSettings, CustomAttributeValues, FontStyle, References, Size, Style, Transform,
+    CursorSettings, CustomAttributeValues, FontStyle, References, SizeState, Style, Transform,
 };
+use skia_safe::textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle};
 use std::sync::MutexGuard;
 use torin::*;
 
@@ -76,7 +78,7 @@ impl SafeDOM {
 pub struct FreyaDOM {
     rdom: DioxusDOM,
     dioxus_integration_state: DioxusState,
-    torin: Arc<Mutex<Torin<NodeId, EmbeddedData>>>,
+    torin: Arc<Mutex<Torin<NodeId>>>,
 }
 
 impl Default for FreyaDOM {
@@ -85,7 +87,7 @@ impl Default for FreyaDOM {
             CursorSettings::to_type_erased(),
             FontStyle::to_type_erased(),
             References::to_type_erased(),
-            Size::to_type_erased(),
+            SizeState::to_type_erased(),
             Style::to_type_erased(),
             Transform::to_type_erased(),
         ]);
@@ -107,7 +109,7 @@ impl FreyaDOM {
         }
     }
 
-    pub fn layout(&self) -> MutexGuard<torin::Torin<NodeId, EmbeddedData>> {
+    pub fn layout(&self) -> MutexGuard<Torin<NodeId>> {
         self.torin.lock().unwrap()
     }
 
@@ -124,16 +126,22 @@ impl FreyaDOM {
     }
 
     /// Process the given mutations from the [`VirtualDOM`](dioxus_core::VirtualDom).
-    /// This will notify the layout if it must recalculate
-    /// or the renderer if it has to repaint.
     pub fn apply_mutations(&mut self, mutations: Mutations, scale_factor: f32) -> bool {
         for mutation in &mutations.edits {
+            #[allow(clippy::single_match)]
             match mutation {
-                Mutation::Remove { id } => {
+                Mutation::SetText { id, .. } => {
                     self.torin
                         .lock()
                         .unwrap()
-                        .remove(self.dioxus_integration_state.element_to_node_id(*id));
+                        .invalidate(self.dioxus_integration_state.element_to_node_id(*id));
+                }
+                Mutation::Remove { id } => {
+                    let node_resolver = DioxusNodeResolver::new(self.dom());
+                    self.torin.lock().unwrap().remove(
+                        self.dioxus_integration_state.element_to_node_id(*id),
+                        &node_resolver,
+                    );
                 }
                 _ => {}
             }
@@ -153,9 +161,7 @@ impl FreyaDOM {
 
         let (_, diff) = self.rdom.update_state(ctx);
 
-        let paint_changes = !diff.is_empty();
-
-        paint_changes
+        !diff.is_empty()
     }
 
     /// Get a reference to the [`DioxusDOM`].
@@ -169,16 +175,113 @@ impl FreyaDOM {
     }
 }
 
-pub struct SkiaTextMeasurer;
+pub struct DioxusNodeResolver<'a> {
+    pub rdom: &'a DioxusDOM,
+}
 
-impl LayoutMeasurer<NodeId, EmbeddedData> for SkiaTextMeasurer {
+impl<'a> DioxusNodeResolver<'a> {
+    pub fn new(rdom: &'a DioxusDOM) -> Self {
+        Self { rdom }
+    }
+}
+
+impl NodeResolver<NodeId> for DioxusNodeResolver<'_> {
+    fn height(&self, node_id: &NodeId) -> u16 {
+        self.rdom.tree_ref().height(*node_id).unwrap()
+    }
+
+    fn parent_of(&self, node_id: &NodeId) -> Option<NodeId> {
+        self.rdom.tree_ref().parent_id(*node_id)
+    }
+
+    fn children_of(&self, node_id: &NodeId) -> Vec<NodeId> {
+        self.rdom.tree_ref().children_ids(*node_id)
+    }
+}
+
+/// Provides Text measurements using Skia SkParagraph
+pub struct SkiaMeasurer<'a> {
+    pub font_collection: &'a FontCollection,
+    pub rdom: &'a DioxusDOM,
+}
+
+impl<'a> SkiaMeasurer<'a> {
+    pub fn new(rdom: &'a DioxusDOM, font_collection: &'a FontCollection) -> Self {
+        Self {
+            font_collection,
+            rdom,
+        }
+    }
+}
+
+impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
     fn measure(
         &mut self,
-        _node: &NodeData<NodeId, EmbeddedData>,
-        _area: &Rect<f32, Measure>,
+        node_id: NodeId,
+        _node: &NodeData,
+        area: &Rect<f32, Measure>,
         _parent_size: &Rect<f32, Measure>,
-        _available_parent_size: &Rect<f32, Measure>,
+        available_parent_size: &Rect<f32, Measure>,
     ) -> Option<Rect<f32, Measure>> {
-        None
+        let node = self.rdom.get(node_id).unwrap();
+        let node_type = node.node_type();
+
+        if let NodeType::Text(TextNode { text, .. }) = &*node_type {
+            let font_style = node.get::<FontStyle>().unwrap();
+
+            let mut paragraph_style = ParagraphStyle::default();
+            paragraph_style.set_text_align(font_style.align);
+            paragraph_style.set_max_lines(font_style.max_lines);
+            paragraph_style.set_replace_tab_characters(true);
+
+            let mut paragraph_builder =
+                ParagraphBuilder::new(&paragraph_style, self.font_collection);
+
+            paragraph_builder.push_style(
+                TextStyle::new()
+                    .set_font_style(font_style.font_style)
+                    .set_font_size(font_style.font_size)
+                    .set_font_families(&font_style.font_family),
+            );
+
+            paragraph_builder.add_text(text);
+
+            let mut paragraph = paragraph_builder.build();
+            paragraph.layout(available_parent_size.width());
+
+            Some(Area::new(
+                area.origin,
+                Size2D::new(paragraph.longest_line(), paragraph.height()),
+            ))
+        } else {
+            None
+        }
     }
+}
+
+/// Collect all the texts and node states from a given array of children
+pub fn get_inner_texts(node: &DioxusNode) -> Vec<(FontStyle, String)> {
+    node.children()
+        .iter()
+        .filter_map(|child| {
+            if let NodeType::Element(ElementNode { tag, .. }) = &*child.node_type() {
+                if tag != "text" {
+                    return None;
+                }
+
+                let children = child.children();
+                let child_text = *children.first().unwrap();
+                let child_text_type = &*child_text.node_type();
+
+                if let NodeType::Text(TextNode { text, .. }) = child_text_type {
+                    let font_style = child.get::<FontStyle>().unwrap();
+                    Some((font_style.clone(), text.to_owned()))
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        })
+        .collect()
 }

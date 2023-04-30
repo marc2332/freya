@@ -16,6 +16,7 @@ use skia_safe::textlayout::{
 };
 pub type DioxusDOM = RealDom<CustomAttributeValues>;
 
+#[allow(dead_code)]
 fn process_paragraph(
     node: &DioxusNode,
     node_area: &Area,

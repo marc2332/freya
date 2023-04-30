@@ -23,3 +23,5 @@ dioxus-native-core = { workspace = true }
 dioxus-core-macro = { workspace = true }
 dioxus-hooks = { workspace = true }
 dioxus-core = { workspace = true }
+
+skia-safe = { workspace = true }

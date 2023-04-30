@@ -71,7 +71,7 @@ fn LoadingBar(cx: Scope<LoadingBarProps>) -> Element {
             background: "white",
             rect {
                 width: "{&cx.props.progress}%",
-                height: "stretch",
+                height: "100%",
                 background: "blue",
             }
         }

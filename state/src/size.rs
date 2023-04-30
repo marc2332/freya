@@ -5,30 +5,30 @@ use dioxus_native_core::node_ref::NodeView;
 use dioxus_native_core::prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State};
 use dioxus_native_core::{NodeId, SendAnyMap};
 use dioxus_native_core_macro::partial_derive_state;
-use torin::{Direction, DynamicCalculation, EmbeddedData, Length, Node, Paddings, Torin};
+use torin::*;
 
 use crate::CustomAttributeValues;
 
 #[derive(Default, Clone, Debug, Component)]
-pub struct Size {
-    pub width: torin::Size,
-    pub height: torin::Size,
-    pub min_height: torin::Size,
-    pub min_width: torin::Size,
-    pub max_height: torin::Size,
-    pub max_width: torin::Size,
-    pub padding: torin::Paddings,
-    pub direction: torin::Direction,
+pub struct SizeState {
+    pub width: Size,
+    pub height: Size,
+    pub min_height: Size,
+    pub min_width: Size,
+    pub max_height: Size,
+    pub max_width: Size,
+    pub padding: Paddings,
+    pub direction: DirectionMode,
     pub node_id: NodeId,
     pub scroll_y: f32,
     pub scroll_x: f32,
 }
 
 #[partial_derive_state]
-impl State<CustomAttributeValues> for Size {
-    type ParentDependencies = (Self,);
+impl State<CustomAttributeValues> for SizeState {
+    type ParentDependencies = ();
 
-    type ChildDependencies = (Self,);
+    type ChildDependencies = ();
 
     type NodeDependencies = ();
 
@@ -52,35 +52,32 @@ impl State<CustomAttributeValues> for Size {
         &mut self,
         node_view: NodeView<CustomAttributeValues>,
         _node: <Self::NodeDependencies as Dependancy>::ElementBorrowed<'a>,
-        parent: Option<<Self::ParentDependencies as Dependancy>::ElementBorrowed<'a>>,
-        children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
+        _parent: Option<<Self::ParentDependencies as Dependancy>::ElementBorrowed<'a>>,
+        _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
         context: &SendAnyMap,
     ) -> bool {
         let scale_factor = context.get::<f32>().unwrap();
-        let torin_layout = context
-            .get::<Arc<Mutex<Torin<NodeId, EmbeddedData>>>>()
-            .unwrap();
-
-        let mut width = torin::Size::default();
-        let mut height = torin::Size::default();
-        let mut min_height = torin::Size::default();
-        let mut min_width = torin::Size::default();
-        let mut max_height = torin::Size::default();
-        let mut max_width = torin::Size::default();
-        let mut padding = torin::Paddings::default();
+        let torin_layout = context.get::<Arc<Mutex<Torin<NodeId>>>>().unwrap();
+        let mut width = Size::default();
+        let mut height = Size::default();
+        let mut min_height = Size::default();
+        let mut min_width = Size::default();
+        let mut max_height = Size::default();
+        let mut max_width = Size::default();
+        let mut padding = Paddings::default();
         let mut scroll_y = 0.0;
         let mut scroll_x = 0.0;
 
         let mut direction = if let Some("label") = node_view.tag() {
-            Direction::Horizontal
+            DirectionMode::Horizontal
         } else if let Some("paragraph") = node_view.tag() {
-            Direction::Horizontal
+            DirectionMode::Horizontal
         } else if let Some("text") = node_view.tag() {
-            Direction::Horizontal
+            DirectionMode::Horizontal
         } else if node_view.text().is_some() {
-            Direction::Horizontal
+            DirectionMode::Horizontal
         } else {
-            Direction::Vertical
+            DirectionMode::Vertical
         };
 
         if let Some(attributes) = node_view.attributes() {
@@ -146,11 +143,9 @@ impl State<CustomAttributeValues> for Size {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
                             direction = if attr == "horizontal" {
-                                Direction::Horizontal
-                            } else if attr == "both" {
-                                Direction::Vertical
+                                DirectionMode::Horizontal
                             } else {
-                                Direction::Vertical
+                                DirectionMode::Vertical
                             };
                         }
                     }
@@ -193,7 +188,7 @@ impl State<CustomAttributeValues> for Size {
                 height: height.clone(),
                 direction: direction.clone(),
                 padding,
-                display: torin::Display::Normal,
+                display: DisplayMode::Normal,
                 scroll_x: Length::new(scroll_x),
                 scroll_y: Length::new(scroll_y),
             };
@@ -203,28 +198,8 @@ impl State<CustomAttributeValues> for Size {
                     .lock()
                     .unwrap()
                     .set_node(node_view.node_id(), node)
-            } else if let Some((parent_id,)) = parent {
-                torin_layout.lock().unwrap().insert(
-                    node_view.node_id(),
-                    parent_id.node_id,
-                    node,
-                    EmbeddedData::default(),
-                    children
-                        .iter()
-                        .map(|(c,)| c.node_id)
-                        .collect::<Vec<NodeId>>(),
-                )
             } else {
-                torin_layout.lock().unwrap().add(
-                    node_view.node_id(),
-                    node,
-                    EmbeddedData::default(),
-                    None,
-                    children
-                        .iter()
-                        .map(|(c,)| c.node_id)
-                        .collect::<Vec<NodeId>>(),
-                );
+                torin_layout.lock().unwrap().add(node_view.node_id(), node);
             }
         }
 
@@ -246,38 +221,30 @@ impl State<CustomAttributeValues> for Size {
 }
 
 pub fn parse_padding(padding: &str, scale_factor: f32) -> Option<Paddings> {
-    let mut padding_config = (
-        Length::new(0.0),
-        Length::new(0.0),
-        Length::new(0.0),
-        Length::new(0.0),
-    );
+    let mut padding_config = Paddings::default();
     let mut paddings = padding.split_ascii_whitespace();
 
     match paddings.clone().count() {
         // Same in each directions
         1 => {
-            padding_config.0 = Length::new(paddings.next()?.parse::<f32>().ok()? * scale_factor);
-            padding_config.1 = padding_config.0;
-            padding_config.2 = padding_config.0;
-            padding_config.3 = padding_config.0;
+            padding_config.fill_all(paddings.next()?.parse::<f32>().ok()? * scale_factor);
         }
         // By vertical and horizontal
         2 => {
             // Vertical
-            padding_config.0 = Length::new(paddings.next()?.parse::<f32>().ok()? * scale_factor);
-            padding_config.2 = padding_config.0;
+            padding_config.fill_vertical(paddings.next()?.parse::<f32>().ok()? * scale_factor);
 
             // Horizontal
-            padding_config.1 = Length::new(paddings.next()?.parse::<f32>().ok()? * scale_factor);
-            padding_config.3 = padding_config.1;
+            padding_config.fill_horizontal(paddings.next()?.parse::<f32>().ok()? * scale_factor)
         }
         // Each directions
         4 => {
-            padding_config.0 = Length::new(paddings.next()?.parse::<f32>().ok()? * scale_factor);
-            padding_config.1 = Length::new(paddings.next()?.parse::<f32>().ok()? * scale_factor);
-            padding_config.2 = Length::new(paddings.next()?.parse::<f32>().ok()? * scale_factor);
-            padding_config.3 = Length::new(paddings.next()?.parse::<f32>().ok()? * scale_factor);
+            padding_config = Paddings::new(
+                paddings.next()?.parse::<f32>().ok()? * scale_factor,
+                paddings.next()?.parse::<f32>().ok()? * scale_factor,
+                paddings.next()?.parse::<f32>().ok()? * scale_factor,
+                paddings.next()?.parse::<f32>().ok()? * scale_factor,
+            );
         }
         _ => {}
     }
@@ -285,22 +252,19 @@ pub fn parse_padding(padding: &str, scale_factor: f32) -> Option<Paddings> {
     Some(padding_config)
 }
 
-pub fn parse_size(size: &str, scale_factor: f32) -> Option<torin::Size> {
+pub fn parse_size(size: &str, scale_factor: f32) -> Option<Size> {
     if size == "stretch" {
-        Some(torin::Size::Percentage(Length::new(100.0)))
+        Some(Size::Percentage(Length::new(100.0)))
     } else if size == "auto" {
-        Some(torin::Size::Inner)
+        Some(Size::Inner)
     } else if size.contains("calc") {
-        Some(torin::Size::DynamicCalculations(parse_calc(
-            size,
-            scale_factor,
-        )?))
+        Some(Size::DynamicCalculations(parse_calc(size, scale_factor)?))
     } else if size.contains('%') {
-        Some(torin::Size::Percentage(Length::new(
+        Some(Size::Percentage(Length::new(
             size.replace('%', "").parse().ok()?,
         )))
     } else {
-        Some(torin::Size::Pixels(Length::new(
+        Some(Size::Pixels(Length::new(
             (size.parse::<f32>().ok()?) * scale_factor,
         )))
     }

@@ -1166,6 +1166,7 @@ dependencies = [
  "dioxus",
  "dioxus-utils",
  "freya",
+ "rand",
  "reqwest",
  "serde",
  "skia-safe",
@@ -1414,6 +1415,7 @@ dependencies = [
  "dioxus-rsx",
  "freya-common",
  "freya-node-state",
+ "skia-safe",
  "torin",
 ]
 

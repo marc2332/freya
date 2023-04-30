@@ -16,10 +16,10 @@ impl Layers {
     pub fn measure_paragraph_elements(
         &self,
         text_id: &Uuid,
-        dom: &FreyaDOM,
-        font_collection: &FontCollection,
+        _dom: &FreyaDOM,
+        _font_collection: &FontCollection,
     ) {
-        let group = self.paragraph_elements.get(text_id);
+        let _group = self.paragraph_elements.get(text_id);
 
         /*if let Some(group) = group {
             for (id, area) in group {
@@ -32,7 +32,7 @@ impl Layers {
     }
 
     /// Register a paragraph element under it's configured TextId
-    pub fn insert_paragraph_element(&mut self, node: &DioxusNode, area: &Area) {
+    pub fn insert_paragraph_element(&mut self, _node: &DioxusNode, _area: &Area) {
         /*let references = node.get::<References>().unwrap();
         if let Some(cursor_ref) = &references.cursor_ref {
             let text_group = self

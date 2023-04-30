@@ -2,7 +2,7 @@ use dioxus_native_core::prelude::{ElementNode, NodeImmutableDioxusExt};
 use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::{node::NodeType, NodeId};
 use freya_common::Area;
-use freya_dom::{FreyaDOM, SkiaTextMeasurer};
+use freya_dom::{DioxusNodeResolver, FreyaDOM, SkiaMeasurer};
 use freya_layout::Layers;
 
 use freya_node_state::Style;
@@ -255,18 +255,19 @@ fn calculate_global_events_listeners(
 pub fn process_layout(
     dom: &FreyaDOM,
     area: Area,
-    _font_collection: &mut FontCollection,
+    font_collection: &mut FontCollection,
     _scale_factor: f32,
 ) -> (Layers, ViewportsCollection) {
     let mut layers = Layers::default();
 
-    println!("REMEASURE -> {:?}", dom.layout().get_dirty_nodes().len());
+    let rdom = dom.dom();
+    let node_resolver = DioxusNodeResolver::new(rdom);
+    let skia_measurer = SkiaMeasurer::new(rdom, font_collection);
 
     let root_id = dom.dom().root_id();
-    dom.layout()
-        .measure(root_id, area, &mut Some(SkiaTextMeasurer));
 
-    let rdom = dom.dom();
+    dom.layout()
+        .measure(root_id, area, &mut Some(skia_measurer), &node_resolver);
 
     let mut inherit_layers = FxHashMap::default();
 
