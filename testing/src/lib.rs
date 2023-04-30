@@ -106,15 +106,12 @@ impl TestNode {
 
     /// Get the Node layout
     pub fn layout(&self) -> Option<Area> {
-        let layers = &self.utils.layers.lock().unwrap().layers;
-        for layer in layers.values() {
-            for (id, node) in layer {
-                if id == &self.node_id {
-                    return Some(node.node_area);
-                }
-            }
-        }
-        None
+        self.utils()
+            .sdom
+            .get()
+            .layout()
+            .get_size(self.node_id)
+            .map(|l| l.area)
     }
 
     /// Get a mutable reference to the test utils.
@@ -181,12 +178,14 @@ impl TestingHandler {
 
         let mutations = self.vdom.render_immediate();
 
-        let (must_repaint, _) = self
+        let must_repaint = self
             .utils
             .sdom
             .get_mut()
             .apply_mutations(mutations, SCALE_FACTOR as f32);
+
         self.wait_for_work(self.config.size());
+
         must_repaint
     }
 

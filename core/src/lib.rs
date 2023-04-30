@@ -258,8 +258,6 @@ pub fn process_layout(
     font_collection: &mut FontCollection,
     _scale_factor: f32,
 ) -> (Layers, ViewportsCollection) {
-    let mut layers = Layers::default();
-
     let rdom = dom.dom();
     let node_resolver = DioxusNodeResolver::new(rdom);
     let skia_measurer = SkiaMeasurer::new(rdom, font_collection);
@@ -269,25 +267,7 @@ pub fn process_layout(
     dom.layout()
         .measure(root_id, area, &mut Some(skia_measurer), &node_resolver);
 
-    let mut inherit_layers = FxHashMap::default();
-
-    rdom.traverse_depth_first(|node| {
-        let node_style = node.get::<Style>().unwrap();
-
-        let inherited_relative_layer = node
-            .parent_id()
-            .map(|p| *inherit_layers.get(&p).unwrap())
-            .unwrap_or(0);
-
-        let (node_layer, node_relative_layer) = Layers::calculate_layer(
-            node_style.relative_layer,
-            node.height() as i16,
-            inherited_relative_layer,
-        );
-
-        inherit_layers.insert(node.id(), node_relative_layer);
-        layers.add_element(node.id(), node_layer)
-    });
+    let layers = Layers::new(&rdom);
 
     let mut layers_nums: Vec<&i16> = layers.layers.keys().collect();
 

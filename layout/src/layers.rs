@@ -1,9 +1,12 @@
-use dioxus_native_core::NodeId;
+use dioxus_native_core::{real_dom::NodeImmutable, NodeId};
 use freya_common::Area;
 use freya_dom::{DioxusNode, FreyaDOM};
+use freya_node_state::Style;
 use rustc_hash::{FxHashMap, FxHashSet};
 use skia_safe::textlayout::FontCollection;
 use uuid::Uuid;
+
+use crate::DioxusDOM;
 
 #[derive(Default, Clone)]
 pub struct Layers {
@@ -12,6 +15,31 @@ pub struct Layers {
 }
 
 impl Layers {
+    pub fn new(rdom: &DioxusDOM) -> Self {
+        let mut layers = Layers::default();
+        let mut inherit_layers = FxHashMap::default();
+
+        rdom.traverse_depth_first(|node| {
+            let node_style = node.get::<Style>().unwrap();
+
+            let inherited_relative_layer = node
+                .parent_id()
+                .map(|p| *inherit_layers.get(&p).unwrap())
+                .unwrap_or(0);
+
+            let (node_layer, node_relative_layer) = Layers::calculate_layer(
+                node_style.relative_layer,
+                node.height() as i16,
+                inherited_relative_layer,
+            );
+
+            inherit_layers.insert(node.id(), node_relative_layer);
+            layers.add_element(node.id(), node_layer)
+        });
+
+        layers
+    }
+
     /// Measure all the paragraphs registered under the given TextId
     pub fn measure_paragraph_elements(
         &self,
