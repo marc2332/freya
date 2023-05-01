@@ -479,12 +479,25 @@ fn measure_inner_nodes<Key: NodeKey>(
             );
 
             // TODO: Should I also reduce the width and heights?
-            if node.node.direction == DirectionMode::Horizontal {
-                let new_origin_x = (inner_area.width() / 2.0) - (child_areas.area.width() / 2.0);
-                available_area.origin.x = inner_area.min_x() + new_origin_x;
-            } else {
-                let new_origin_y = (inner_area.height() / 2.0) - (child_areas.area.height() / 2.0);
-                available_area.origin.y = inner_area.min_y() + new_origin_y;
+            match node.node.direction {
+                DirectionMode::Horizontal => {
+                    let new_origin_x =
+                        (inner_area.width() / 2.0) - (child_areas.area.width() / 2.0);
+                    available_area.origin.x = inner_area.min_x() + new_origin_x;
+                }
+                DirectionMode::Vertical => {
+                    let new_origin_y =
+                        (inner_area.height() / 2.0) - (child_areas.area.height() / 2.0);
+                    available_area.origin.y = inner_area.min_y() + new_origin_y;
+                }
+                DirectionMode::Both => {
+                    let new_origin_x =
+                        (inner_area.width() / 2.0) - (child_areas.area.width() / 2.0);
+                    let new_origin_y =
+                        (inner_area.height() / 2.0) - (child_areas.area.height() / 2.0);
+                    available_area.origin.x = inner_area.min_x() + new_origin_x;
+                    available_area.origin.y = inner_area.min_y() + new_origin_y;
+                }
             }
         }
     }
@@ -567,23 +580,20 @@ fn measure_inner_nodes<Key: NodeKey>(
     }
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Default)]
 pub enum DirectionMode {
-    Horizontal,
+    #[default]
     Vertical,
-}
-
-impl Default for DirectionMode {
-    fn default() -> Self {
-        Self::Vertical
-    }
+    Horizontal,
+    Both,
 }
 
 impl DirectionMode {
     pub fn pretty(&self) -> String {
         match self {
-            DirectionMode::Horizontal => "Horizontal".to_string(),
-            DirectionMode::Vertical => "Vertical".to_string(),
+            DirectionMode::Horizontal => "horizontal".to_string(),
+            DirectionMode::Vertical => "vertical".to_string(),
+            DirectionMode::Both => "both".to_string(),
         }
     }
 }
@@ -691,8 +701,9 @@ impl Paddings {
     }
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Copy, Default)]
 pub enum DisplayMode {
+    #[default]
     Normal,
     Center,
 }

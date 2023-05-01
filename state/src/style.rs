@@ -18,7 +18,6 @@ pub struct Style {
     pub radius: f32,
     pub image_data: Option<Vec<u8>>,
     pub svg_data: Option<Vec<u8>>,
-    pub display: DisplayMode,
     pub text: Option<String>,
 }
 
@@ -39,7 +38,6 @@ impl State<CustomAttributeValues> for Style {
             "image_data",
             "svg_data",
             "svg_content",
-            "display",
         ]))
         .with_text();
 
@@ -59,7 +57,6 @@ impl State<CustomAttributeValues> for Style {
         let mut radius = 0.0;
         let mut image_data = None;
         let mut svg_data = None;
-        let mut display = DisplayMode::Normal;
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
@@ -70,11 +67,6 @@ impl State<CustomAttributeValues> for Style {
                             if let Some(new_back) = new_back {
                                 background = new_back;
                             }
-                        }
-                    }
-                    "display" => {
-                        if let Some(new_display) = attr.value.as_text() {
-                            display = parse_display(new_display)
                         }
                     }
                     "layer" => {
@@ -128,7 +120,6 @@ impl State<CustomAttributeValues> for Style {
             || (shadow != self.shadow)
             || (radius != self.radius)
             || (image_data != self.image_data)
-            || (display != self.display)
             || (svg_data != self.svg_data);
 
         *self = Self {
@@ -138,7 +129,6 @@ impl State<CustomAttributeValues> for Style {
             radius,
             image_data,
             svg_data,
-            display,
             text: node_view.text().map(|v| v.to_owned()),
         };
         changed
@@ -155,13 +145,6 @@ pub fn parse_shadow(value: &str) -> Option<ShadowSettings> {
         size: shadow_values.next()?.parse().ok()?,
         color: parse_color(shadow_values.next()?)?,
     })
-}
-
-pub fn parse_display(value: &str) -> DisplayMode {
-    match value {
-        "center" => DisplayMode::Center,
-        _ => DisplayMode::Normal,
-    }
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Eq)]

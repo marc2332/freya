@@ -22,6 +22,7 @@ pub struct SizeState {
     pub node_id: NodeId,
     pub scroll_y: f32,
     pub scroll_x: f32,
+    pub display: DisplayMode,
 }
 
 #[partial_derive_state]
@@ -44,6 +45,7 @@ impl State<CustomAttributeValues> for SizeState {
             "direction",
             "scroll_y",
             "scroll_x",
+            "display",
         ]))
         .with_tag()
         .with_text();
@@ -67,6 +69,7 @@ impl State<CustomAttributeValues> for SizeState {
         let mut padding = Paddings::default();
         let mut scroll_y = 0.0;
         let mut scroll_x = 0.0;
+        let mut display = DisplayMode::Normal;
 
         let mut direction = if let Some("label") = node_view.tag() {
             DirectionMode::Horizontal
@@ -144,6 +147,8 @@ impl State<CustomAttributeValues> for SizeState {
                         if let Some(attr) = attr {
                             direction = if attr == "horizontal" {
                                 DirectionMode::Horizontal
+                            } else if attr == "both" {
+                                DirectionMode::Both
                             } else {
                                 DirectionMode::Vertical
                             };
@@ -163,6 +168,11 @@ impl State<CustomAttributeValues> for SizeState {
                             scroll_x = scroll * scale_factor;
                         }
                     }
+                    "display" => {
+                        if let Some(new_display) = attr.value.as_text() {
+                            display = parse_display(new_display)
+                        }
+                    }
                     _ => {
                         println!("Unsupported attribute <{}>", attr.attribute.name);
                     }
@@ -180,7 +190,8 @@ impl State<CustomAttributeValues> for SizeState {
             || (node_view.node_id() != self.node_id)
             || (direction != self.direction)
             || (scroll_x != self.scroll_x)
-            || (scroll_y != self.scroll_y);
+            || (scroll_y != self.scroll_y)
+            || (display != self.display);
 
         if changed {
             let node = Node {
@@ -188,7 +199,7 @@ impl State<CustomAttributeValues> for SizeState {
                 height: height.clone(),
                 direction: direction.clone(),
                 padding,
-                display: DisplayMode::Normal,
+                display,
                 scroll_x: Length::new(scroll_x),
                 scroll_y: Length::new(scroll_y),
             };
@@ -215,8 +226,16 @@ impl State<CustomAttributeValues> for SizeState {
             node_id: node_view.node_id(),
             scroll_x,
             scroll_y,
+            display,
         };
         changed
+    }
+}
+
+pub fn parse_display(value: &str) -> DisplayMode {
+    match value {
+        "center" => DisplayMode::Center,
+        _ => DisplayMode::Normal,
     }
 }
 
