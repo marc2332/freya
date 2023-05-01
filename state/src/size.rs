@@ -1,10 +1,13 @@
 use std::sync::{Arc, Mutex};
 
 use dioxus_native_core::exports::shipyard::Component;
+use dioxus_native_core::node::OwnedAttributeValue;
 use dioxus_native_core::node_ref::NodeView;
 use dioxus_native_core::prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State};
 use dioxus_native_core::{NodeId, SendAnyMap};
 use dioxus_native_core_macro::partial_derive_state;
+use freya_common::NodeReferenceLayout;
+use tokio::sync::mpsc::UnboundedSender;
 use torin::*;
 
 use crate::CustomAttributeValues;
@@ -23,6 +26,7 @@ pub struct SizeState {
     pub scroll_y: f32,
     pub scroll_x: f32,
     pub display: DisplayMode,
+    pub node_ref: Option<UnboundedSender<NodeReferenceLayout>>,
 }
 
 #[partial_derive_state]
@@ -46,6 +50,7 @@ impl State<CustomAttributeValues> for SizeState {
             "scroll_y",
             "scroll_x",
             "display",
+            "reference",
         ]))
         .with_tag()
         .with_text();
@@ -70,6 +75,7 @@ impl State<CustomAttributeValues> for SizeState {
         let mut scroll_y = 0.0;
         let mut scroll_x = 0.0;
         let mut display = DisplayMode::Normal;
+        let mut node_ref = None;
 
         let mut direction = if let Some("label") = node_view.tag() {
             DirectionMode::Horizontal
@@ -173,6 +179,14 @@ impl State<CustomAttributeValues> for SizeState {
                             display = parse_display(new_display)
                         }
                     }
+                    "reference" => {
+                        if let OwnedAttributeValue::Custom(CustomAttributeValues::Reference(
+                            reference,
+                        )) = attr.value
+                        {
+                            node_ref = Some(reference.0.clone());
+                        }
+                    }
                     _ => {
                         println!("Unsupported attribute <{}>", attr.attribute.name);
                     }
@@ -202,6 +216,7 @@ impl State<CustomAttributeValues> for SizeState {
                 display,
                 scroll_x: Length::new(scroll_x),
                 scroll_y: Length::new(scroll_y),
+                has_layout_references: node_ref.is_some(),
             };
 
             if torin_layout.lock().unwrap().has(node_view.node_id()) {
@@ -227,6 +242,7 @@ impl State<CustomAttributeValues> for SizeState {
             scroll_x,
             scroll_y,
             display,
+            node_ref,
         };
         changed
     }

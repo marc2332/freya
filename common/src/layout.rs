@@ -1,11 +1,11 @@
-use crate::Area;
+use crate::{Area, Size2D};
 use std::ops::Div;
 
 /// Layout info of a certain Node, used by `use_node`.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct NodeReferenceLayout {
     pub area: Area,
-    pub inner: Area,
+    pub inner: Size2D,
 }
 
 impl NodeReferenceLayout {

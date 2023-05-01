@@ -267,7 +267,7 @@ pub fn process_layout(
     dom.layout()
         .measure(root_id, area, &mut Some(skia_measurer), &node_resolver);
 
-    let layers = Layers::new(rdom);
+    let layers = Layers::new(rdom, &dom.layout());
 
     let mut layers_nums: Vec<&i16> = layers.layers.keys().collect();
 

@@ -1,4 +1,5 @@
-use freya_node_state::{parse_display, DisplayMode};
+use freya_node_state::parse_display;
+use torin::DisplayMode;
 
 #[test]
 fn parse_normal_display() {

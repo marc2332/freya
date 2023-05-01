@@ -1,9 +1,10 @@
 use dioxus_native_core::{real_dom::NodeImmutable, NodeId};
-use freya_common::Area;
+use freya_common::{Area, NodeReferenceLayout};
 use freya_dom::{DioxusNode, FreyaDOM};
-use freya_node_state::Style;
+use freya_node_state::{SizeState, Style};
 use rustc_hash::{FxHashMap, FxHashSet};
 use skia_safe::textlayout::FontCollection;
+use torin::Torin;
 use uuid::Uuid;
 
 use crate::DioxusDOM;
@@ -15,11 +16,12 @@ pub struct Layers {
 }
 
 impl Layers {
-    pub fn new(rdom: &DioxusDOM) -> Self {
+    pub fn new(rdom: &DioxusDOM, layout: &Torin<NodeId>) -> Self {
         let mut layers = Layers::default();
         let mut inherit_layers = FxHashMap::default();
 
         rdom.traverse_depth_first(|node| {
+            // Add the Node to a Layer
             let node_style = node.get::<Style>().unwrap();
 
             let inherited_relative_layer = node
@@ -34,7 +36,21 @@ impl Layers {
             );
 
             inherit_layers.insert(node.id(), node_relative_layer);
-            layers.add_element(node.id(), node_layer)
+            layers.add_element(node.id(), node_layer);
+
+            // Notify layout references
+
+            let size_state = &*node.get::<SizeState>().unwrap();
+
+            if let Some(reference) = &size_state.node_ref {
+                let areas = layout.get_size(node.id()).unwrap();
+                let node_layout = NodeReferenceLayout {
+                    area: areas.area,
+                    inner: areas.inner_sizes,
+                };
+                //node_layout.div(1.0);
+                reference.send(node_layout).ok();
+            }
         });
 
         layers

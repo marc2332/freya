@@ -11,6 +11,7 @@ pub type Area = Rect<f32, Measure>;
 pub struct NodeAreas {
     pub area: Rect<f32, Measure>,
     pub inner_area: Rect<f32, Measure>,
+    pub inner_sizes: Size2D<f32, Measure>,
 }
 
 pub trait NodeKey: Clone + PartialEq + Eq + std::hash::Hash + Copy + std::fmt::Debug {}
@@ -35,7 +36,9 @@ pub struct NodeData {
 impl NodeData {
     /// Has properties that depend on the inner Nodes?
     pub fn does_depend_on_inner(&self) -> bool {
-        Size::Inner == self.node.width || Size::Inner == self.node.height
+        Size::Inner == self.node.width
+            || Size::Inner == self.node.height
+            || self.node.has_layout_references
     }
 
     /// Has properties that depend on the parent Node?
@@ -263,6 +266,7 @@ impl<Key: NodeKey> Torin<Key> {
             .unwrap_or(NodeAreas {
                 area: root_area,
                 inner_area: root_area,
+                inner_sizes: Size2D::default(),
             });
 
         let root = self.nodes.get(&root_id).unwrap();
@@ -353,6 +357,8 @@ fn measure_node<Key: NodeKey>(
         let horizontal_padding = node.node.padding.horizontal_paddings();
         let vertical_padding = node.node.padding.vertical_paddings();
 
+        let mut inner_sizes = Size2D::default();
+
         // Node's inner area
         let mut inner_area = {
             let mut inner_area = area;
@@ -390,16 +396,25 @@ fn measure_node<Key: NodeKey>(
             &node,
             layout,
             &mut available_area,
+            &mut inner_sizes,
             measurer,
             must_cache,
             &mut measurement_mode,
             node_resolver,
         );
 
-        (must_cache, NodeAreas { area, inner_area })
+        (
+            must_cache,
+            NodeAreas {
+                area,
+                inner_area,
+                inner_sizes,
+            },
+        )
     } else {
         let areas = layout.get_size(node_id).unwrap().clone();
 
+        let mut inner_sizes = areas.inner_sizes;
         let mut available_area = areas.inner_area;
 
         // TODO(marc2332): Should I also cache these?
@@ -415,6 +430,7 @@ fn measure_node<Key: NodeKey>(
             &node,
             layout,
             &mut available_area,
+            &mut inner_sizes,
             measurer,
             must_cache,
             &mut measurement_mode,
@@ -456,6 +472,7 @@ fn measure_inner_nodes<Key: NodeKey>(
     node: &NodeData,
     layout: &mut Torin<Key>,
     available_area: &mut Rect<f32, Measure>,
+    inner_sizes: &mut Size2D<f32, Measure>,
     measurer: &mut Option<impl LayoutMeasurer<Key>>,
     must_cache: bool,
     mode: &mut MeasureMode,
@@ -523,58 +540,102 @@ fn measure_inner_nodes<Key: NodeKey>(
             node_resolver,
         );
 
-        if node.node.direction == DirectionMode::Horizontal {
-            // Move the available area
-            available_area.origin.x = child_areas.area.max_x();
-            available_area.size.width -= child_areas.area.size.width;
+        match node.node.direction {
+            DirectionMode::Horizontal => {
+                // Move the available area
+                available_area.origin.x = child_areas.area.max_x();
+                available_area.size.width -= child_areas.area.size.width;
 
-            if let MeasureMode::ParentIsNotCached {
-                area,
-                vertical_padding,
-                horizontal_padding,
-                ..
-            } = mode
-            {
-                // Keep the biggest height
-                if node.node.height == Size::Inner {
-                    area.size.height =
-                        area.size.height.max(child_areas.area.size.height) + *vertical_padding;
-                    // Keep the inner area in sync
-                    inner_area.size.height = area.size.height - *vertical_padding;
-                }
+                if let MeasureMode::ParentIsNotCached {
+                    area,
+                    vertical_padding,
+                    horizontal_padding,
+                    ..
+                } = mode
+                {
+                    inner_sizes.height = child_areas.area.height();
+                    inner_sizes.width += child_areas.area.width();
 
-                // Accumulate width
-                if node.node.width == Size::Inner {
-                    area.size.width += child_areas.area.size.width + *horizontal_padding;
-                    // Keep the inner area in sync
-                    inner_area.size.width = area.size.width - *horizontal_padding;
+                    // Keep the biggest height
+                    if node.node.height == Size::Inner {
+                        area.size.height =
+                            area.size.height.max(child_areas.area.size.height) + *vertical_padding;
+                        // Keep the inner area in sync
+                        inner_area.size.height = area.size.height - *vertical_padding;
+                        inner_sizes.height = inner_area.height();
+                    }
+
+                    // Accumulate width
+                    if node.node.width == Size::Inner {
+                        area.size.width += child_areas.area.size.width + *horizontal_padding;
+                        // Keep the inner area in sync
+                        inner_area.size.width = area.size.width - *horizontal_padding;
+                        inner_sizes.width += child_areas.area.width();
+                    }
                 }
             }
-        } else {
-            // Move the available area
-            available_area.origin.y = child_areas.area.max_y();
-            available_area.size.height -= child_areas.area.size.height;
+            DirectionMode::Vertical => {
+                // Move the available area
+                available_area.origin.y = child_areas.area.max_y();
+                available_area.size.height -= child_areas.area.size.height;
 
-            if let MeasureMode::ParentIsNotCached {
-                area,
-                vertical_padding,
-                horizontal_padding,
-                ..
-            } = mode
-            {
-                // Keep the biggest height
-                if node.node.width == Size::Inner {
-                    area.size.width =
-                        area.size.width.max(child_areas.area.size.width) + *horizontal_padding;
-                    // Keep the inner area in sync
-                    inner_area.size.width = area.size.width - *horizontal_padding;
+                if let MeasureMode::ParentIsNotCached {
+                    area,
+                    vertical_padding,
+                    horizontal_padding,
+                    ..
+                } = mode
+                {
+                    inner_sizes.width = child_areas.area.width();
+                    inner_sizes.height += child_areas.area.height();
+
+                    // Keep the biggest width
+                    if node.node.width == Size::Inner {
+                        area.size.width =
+                            area.size.width.max(child_areas.area.size.width) + *horizontal_padding;
+                        // Keep the inner area in sync
+                        inner_area.size.width = area.size.width - *horizontal_padding;
+                    }
+
+                    // Accumulate height
+                    if node.node.height == Size::Inner {
+                        area.size.height += child_areas.area.size.height + *vertical_padding;
+                        // Keep the inner area in sync
+                        inner_area.size.height = area.size.height - *vertical_padding;
+                    }
                 }
+            }
+            DirectionMode::Both => {
+                // Move the available area
+                available_area.origin.x = child_areas.area.max_x();
+                available_area.origin.y = child_areas.area.max_y();
 
-                // Accumulate height
-                if node.node.height == Size::Inner {
-                    area.size.height += child_areas.area.size.height + *vertical_padding;
-                    // Keep the inner area in sync
-                    inner_area.size.height = area.size.height - *vertical_padding;
+                available_area.size.width -= child_areas.area.size.width;
+                available_area.size.height -= child_areas.area.size.height;
+
+                if let MeasureMode::ParentIsNotCached {
+                    area,
+                    vertical_padding,
+                    horizontal_padding,
+                    ..
+                } = mode
+                {
+                    inner_sizes.width += child_areas.area.width();
+                    inner_sizes.height += child_areas.area.height();
+
+                    // Accumulate width
+                    if node.node.width == Size::Inner {
+                        area.size.width += child_areas.area.size.width + *horizontal_padding;
+                        // Keep the inner area in sync
+                        inner_area.size.width = area.size.width - *horizontal_padding;
+                    }
+
+                    // Accumulate height
+                    if node.node.height == Size::Inner {
+                        area.size.height += child_areas.area.size.height + *vertical_padding;
+                        // Keep the inner area in sync
+                        inner_area.size.height = area.size.height - *vertical_padding;
+                    }
                 }
             }
         }
@@ -724,18 +785,25 @@ impl DisplayMode {
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct Node {
+    /// Dimentions
     pub width: Size,
     pub height: Size,
 
+    /// Inner layout mode
     pub display: DisplayMode,
 
+    /// Inner padding
     pub padding: Paddings,
 
+    /// Inner position offsets
     pub scroll_x: Length<f32, Measure>,
     pub scroll_y: Length<f32, Measure>,
 
     /// Direction in which it's inner Nodes will be stacked
     pub direction: DirectionMode,
+
+    /// A Node might depend on inner sizes but have a fixed position, like scroll views.
+    pub has_layout_references: bool,
 }
 
 impl Default for Node {
@@ -755,6 +823,7 @@ impl Node {
             scroll_y: Length::new(0.0),
             padding: Paddings::default(),
             display: DisplayMode::Normal,
+            has_layout_references: false,
         }
     }
 
