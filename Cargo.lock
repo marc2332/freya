@@ -1415,8 +1415,10 @@ dependencies = [
  "dioxus-rsx",
  "freya-common",
  "freya-node-state",
+ "rustc-hash",
  "skia-safe",
  "torin",
+ "uuid",
 ]
 
 [[package]]

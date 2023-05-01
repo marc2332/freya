@@ -55,8 +55,7 @@ fn process_paragraph(
     }
 
     let mut paragraph = paragraph_builder.build();
-    paragraph.layout(node_area.width());
-
+    paragraph.layout(node_area.width() + 1.0);
     if is_editable {
         if let Some((cursor_ref, id, cursor_position, cursor_selections)) =
             get_cursor_reference(node)

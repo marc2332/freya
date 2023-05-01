@@ -224,7 +224,8 @@ impl<Key: NodeKey> Torin<Key> {
         self.tallest_dirty_node
     }
 
-    pub fn calculate_tallest_dirty_node(&mut self, node_resolver: &impl NodeResolver<Key>) -> bool {
+    /// Check if there are pending measurements
+    pub fn has_pending_measurements(&mut self, node_resolver: &impl NodeResolver<Key>) -> bool {
         if TallestDirtyNode::None != self.tallest_dirty_node {
             return true;
         }
@@ -261,7 +262,7 @@ impl<Key: NodeKey> Torin<Key> {
 
         // Use the parent of the root Node otherwise just use the node
         let root_parent = node_resolver.parent_of(&root_id);
-        let mut root_parent_areas = root_parent
+        let root_parent_areas = root_parent
             .and_then(|root_parent| self.get_size(root_parent).cloned())
             .unwrap_or(NodeAreas {
                 area: root_area,
@@ -276,7 +277,7 @@ impl<Key: NodeKey> Torin<Key> {
             root.clone(),
             self,
             &root_parent_areas.area,
-            &mut root_parent_areas.inner_area,
+            &root_parent_areas.inner_area,
             measurer,
             true,
             node_resolver,
@@ -310,7 +311,7 @@ fn measure_node<Key: NodeKey>(
     node: NodeData,
     layout: &mut Torin<Key>,
     parent_area: &Rect<f32, Measure>,
-    available_parent_size: &mut Rect<f32, Measure>, // TODO(marc2332): Does it make sense this to be an area or should just be an origin pointer?
+    available_parent_size: &Rect<f32, Measure>,
     measurer: &mut Option<impl LayoutMeasurer<Key>>,
     must_cache: bool,
     node_resolver: &impl NodeResolver<Key>,
@@ -346,13 +347,16 @@ fn measure_node<Key: NodeKey>(
         }
 
         // Custom measure
-        if let Some(measurer) = measurer {
+        let skip_inner = if let Some(measurer) = measurer {
             let custom_measure =
                 measurer.measure(node_id, &node, &area, parent_area, available_parent_size);
             if let Some(res) = custom_measure {
                 area = res;
             }
-        }
+            custom_measure.is_some()
+        } else {
+            false
+        };
 
         let horizontal_padding = node.node.padding.horizontal_paddings();
         let vertical_padding = node.node.padding.vertical_paddings();
@@ -391,17 +395,19 @@ fn measure_node<Key: NodeKey>(
             horizontal_padding,
         };
 
-        measure_inner_nodes(
-            &node_id,
-            &node,
-            layout,
-            &mut available_area,
-            &mut inner_sizes,
-            measurer,
-            must_cache,
-            &mut measurement_mode,
-            node_resolver,
-        );
+        if !skip_inner {
+            measure_inner_nodes(
+                &node_id,
+                &node,
+                layout,
+                &mut available_area,
+                &mut inner_sizes,
+                measurer,
+                must_cache,
+                &mut measurement_mode,
+                node_resolver,
+            );
+        }
 
         (
             must_cache,

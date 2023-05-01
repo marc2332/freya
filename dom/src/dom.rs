@@ -8,11 +8,16 @@ use dioxus_native_core::{
     NodeId, SendAnyMap,
 };
 use freya_node_state::{
-    CursorSettings, CustomAttributeValues, FontStyle, References, SizeState, Style, Transform,
+    CursorMode, CursorSettings, CustomAttributeValues, FontStyle, References, SizeState, Style,
+    Transform,
 };
-use skia_safe::textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle};
+use rustc_hash::{FxHashMap, FxHashSet};
+use skia_safe::textlayout::{
+    FontCollection, ParagraphBuilder, ParagraphStyle, TextHeightBehavior, TextStyle,
+};
 use std::sync::MutexGuard;
 use torin::*;
+use uuid::Uuid;
 
 pub type DioxusDOM = RealDom<CustomAttributeValues>;
 pub type DioxusNode<'a> = NodeRef<'a, CustomAttributeValues>;
@@ -128,9 +133,20 @@ impl FreyaDOM {
     /// Process the given mutations from the [`VirtualDOM`](dioxus_core::VirtualDom).
     pub fn apply_mutations(&mut self, mutations: Mutations, scale_factor: f32) -> bool {
         for mutation in &mutations.edits {
-            #[allow(clippy::single_match)]
             match mutation {
                 Mutation::SetText { id, .. } => {
+                    self.torin
+                        .lock()
+                        .unwrap()
+                        .invalidate(self.dioxus_integration_state.element_to_node_id(*id));
+                }
+                Mutation::InsertAfter { id, .. } => {
+                    self.torin
+                        .lock()
+                        .unwrap()
+                        .invalidate(self.dioxus_integration_state.element_to_node_id(*id));
+                }
+                Mutation::InsertBefore { id, .. } => {
                     self.torin
                         .lock()
                         .unwrap()
@@ -203,13 +219,19 @@ impl NodeResolver<NodeId> for DioxusNodeResolver<'_> {
 pub struct SkiaMeasurer<'a> {
     pub font_collection: &'a FontCollection,
     pub rdom: &'a DioxusDOM,
+    pub paragraph_elements: &'a mut FxHashMap<Uuid, FxHashSet<NodeId>>,
 }
 
 impl<'a> SkiaMeasurer<'a> {
-    pub fn new(rdom: &'a DioxusDOM, font_collection: &'a FontCollection) -> Self {
+    pub fn new(
+        rdom: &'a DioxusDOM,
+        font_collection: &'a FontCollection,
+        paragraph_elements: &'a mut FxHashMap<Uuid, FxHashSet<NodeId>>,
+    ) -> Self {
         Self {
             font_collection,
             rdom,
+            paragraph_elements,
         }
     }
 }
@@ -220,41 +242,99 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
         node_id: NodeId,
         _node: &NodeData,
         area: &Rect<f32, Measure>,
-        _parent_size: &Rect<f32, Measure>,
-        available_parent_size: &Rect<f32, Measure>,
+        _parent_area: &Rect<f32, Measure>,
+        available_parent_area: &Rect<f32, Measure>,
     ) -> Option<Rect<f32, Measure>> {
         let node = self.rdom.get(node_id).unwrap();
         let node_type = node.node_type();
 
-        if let NodeType::Text(TextNode { text, .. }) = &*node_type {
-            let font_style = node.get::<FontStyle>().unwrap();
+        match &*node_type {
+            NodeType::Text(TextNode { text, .. }) => {
+                let font_style = node.get::<FontStyle>().unwrap();
 
-            let mut paragraph_style = ParagraphStyle::default();
-            paragraph_style.set_text_align(font_style.align);
-            paragraph_style.set_max_lines(font_style.max_lines);
-            paragraph_style.set_replace_tab_characters(true);
+                let mut paragraph_style = ParagraphStyle::default();
+                paragraph_style.set_text_align(font_style.align);
+                paragraph_style.set_max_lines(font_style.max_lines);
+                paragraph_style.set_replace_tab_characters(true);
 
-            let mut paragraph_builder =
-                ParagraphBuilder::new(&paragraph_style, self.font_collection);
+                let mut paragraph_builder =
+                    ParagraphBuilder::new(&paragraph_style, self.font_collection);
 
-            paragraph_builder.push_style(
-                TextStyle::new()
-                    .set_font_style(font_style.font_style)
-                    .set_font_size(font_style.font_size)
-                    .set_font_families(&font_style.font_family),
-            );
+                paragraph_builder.push_style(
+                    TextStyle::new()
+                        .set_font_style(font_style.font_style)
+                        .set_font_size(font_style.font_size)
+                        .set_font_families(&font_style.font_family),
+                );
 
-            paragraph_builder.add_text(text);
+                paragraph_builder.add_text(text);
 
-            let mut paragraph = paragraph_builder.build();
-            paragraph.layout(available_parent_size.width());
+                let mut paragraph = paragraph_builder.build();
+                paragraph.layout(available_parent_area.width());
 
-            Some(Area::new(
-                area.origin,
-                Size2D::new(paragraph.longest_line(), paragraph.height()),
-            ))
-        } else {
-            None
+                Some(Area::new(
+                    area.origin,
+                    Size2D::new(paragraph.longest_line(), paragraph.height()),
+                ))
+            }
+            NodeType::Element(ElementNode { tag, .. }) if tag == "paragraph" => {
+                let font_style = node.get::<FontStyle>().unwrap();
+
+                let mut paragraph_style = ParagraphStyle::default();
+                paragraph_style.set_text_align(font_style.align);
+                paragraph_style.set_max_lines(font_style.max_lines);
+                paragraph_style.set_replace_tab_characters(true);
+                paragraph_style.set_text_height_behavior(TextHeightBehavior::DisableAll);
+
+                let mut paragraph_builder =
+                    ParagraphBuilder::new(&paragraph_style, self.font_collection);
+
+                paragraph_builder.push_style(
+                    TextStyle::new()
+                        .set_font_style(font_style.font_style)
+                        .set_font_size(font_style.font_size)
+                        .set_font_families(&font_style.font_family),
+                );
+
+                let texts = get_inner_texts(&node);
+
+                for (font_style, text) in texts.into_iter() {
+                    paragraph_builder.push_style(
+                        TextStyle::new()
+                            .set_font_style(font_style.font_style)
+                            .set_height(font_style.line_height)
+                            .set_color(font_style.color)
+                            .set_font_size(font_style.font_size)
+                            .set_font_families(&font_style.font_family),
+                    );
+                    paragraph_builder.add_text(text);
+                }
+
+                let mut paragraph = paragraph_builder.build();
+
+                paragraph.layout(available_parent_area.width());
+
+                let cursor_settings = node.get::<CursorSettings>().unwrap();
+                let is_editable = CursorMode::Editable == cursor_settings.mode;
+
+                let references = node.get::<References>().unwrap();
+                if is_editable {
+                    if let Some(cursor_ref) = &references.cursor_ref {
+                        let text_group = self
+                            .paragraph_elements
+                            .entry(cursor_ref.text_id)
+                            .or_insert_with(FxHashSet::default);
+
+                        text_group.insert(node_id);
+                    }
+                }
+
+                Some(Area::new(
+                    available_parent_area.origin,
+                    Size2D::new(paragraph.longest_line(), paragraph.height()),
+                ))
+            }
+            _ => None,
         }
     }
 }

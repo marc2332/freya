@@ -53,7 +53,7 @@ pub fn render_paragraph(
 
     let mut paragraph = paragraph_builder.build();
 
-    paragraph.layout(area.width());
+    paragraph.layout(area.width() + 1.0); // `+ 1.0`: Skia won't render the last word properly otherwise
 
     // Draw the highlights if specified
     draw_cursor_highlights(area, &paragraph, canvas, dioxus_node);

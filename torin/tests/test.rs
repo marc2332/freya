@@ -104,7 +104,7 @@ pub fn root_100per_children_50per50per() {
         ),
     );
 
-    layout.calculate_tallest_dirty_node(&tree_mapper);
+    layout.has_pending_measurements(&tree_mapper);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
@@ -164,7 +164,7 @@ pub fn root_200px_children_50per50per() {
         ),
     );
 
-    layout.calculate_tallest_dirty_node(&tree_mapper);
+    layout.has_pending_measurements(&tree_mapper);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
@@ -369,7 +369,7 @@ pub fn direction() {
         ),
     );
 
-    layout.calculate_tallest_dirty_node(&tree_mapper);
+    layout.has_pending_measurements(&tree_mapper);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
@@ -425,7 +425,7 @@ pub fn scroll() {
         ),
     );
 
-    layout.calculate_tallest_dirty_node(&tree_mapper);
+    layout.has_pending_measurements(&tree_mapper);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
@@ -660,7 +660,7 @@ pub fn node_removal() {
     layout.remove(2, &tree_mapper);
     tree_mapper.remove(2);
 
-    layout.calculate_tallest_dirty_node(&tree_mapper);
+    layout.has_pending_measurements(&tree_mapper);
 
     assert_eq!(layout.get_dirty_nodes(), &HashSet::from([1, 3]));
 
@@ -769,7 +769,7 @@ pub fn display_vertical_with_inner_children() {
         ),
     );
 
-    layout.calculate_tallest_dirty_node(&tree_mapper);
+    layout.has_pending_measurements(&tree_mapper);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
@@ -860,7 +860,7 @@ pub fn deep_tree() {
         ),
     );
 
-    layout.calculate_tallest_dirty_node(&tree_mapper);
+    layout.has_pending_measurements(&tree_mapper);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
@@ -877,7 +877,7 @@ pub fn deep_tree() {
         ),
     );
 
-    layout.calculate_tallest_dirty_node(&tree_mapper);
+    layout.has_pending_measurements(&tree_mapper);
     assert_eq!(layout.get_tallest_dirty_node(), TallestDirtyNode::Valid(4));
 
     layout.measure(
@@ -952,7 +952,7 @@ pub fn stacked() {
         ),
     );
 
-    layout.calculate_tallest_dirty_node(&tree_mapper);
+    layout.has_pending_measurements(&tree_mapper);
 
     layout.measure(
         0,

@@ -175,14 +175,15 @@ impl<State: 'static + Clone> App<State> {
     pub fn process_layout(&mut self) -> bool {
         let dom = self.rdom.get();
         let node_resolver = &DioxusNodeResolver::new(dom.dom());
-        if dom.layout().calculate_tallest_dirty_node(node_resolver) {
+        let needs_layout = dom.layout().has_pending_measurements(node_resolver);
+
+        if needs_layout {
             let (layers, viewports) = self.window_env.process_layout(&dom);
             self.layers = layers;
             self.viewports_collection = viewports;
-            true
-        } else {
-            false
         }
+
+        needs_layout
     }
 
     /// Push an event to the events queue
