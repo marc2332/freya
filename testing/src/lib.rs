@@ -191,6 +191,10 @@ impl TestingHandler {
 
     /// Wait for layout and events to be processed
     pub fn wait_for_work(&mut self, size: Size2D) {
+        // Clear cached results
+        self.utils.sdom.get_mut().layout().reset();
+
+        // Measure layout
         let (layers, viewports) = process_layout(
             &self.utils.sdom.get(),
             Area {
