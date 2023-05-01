@@ -92,7 +92,7 @@ impl<Key: NodeKey> Torin<Key> {
 
     /// Reset the layout
     pub fn reset(&mut self) {
-        self.tallest_dirty_node = TallestDirtyNode::None;
+        self.tallest_dirty_node = TallestDirtyNode::Invalid;
         self.results.clear();
         self.dirty.clear();
     }
@@ -255,10 +255,15 @@ impl<Key: NodeKey> Torin<Key> {
         } else {
             root_id
         };
+
+        // Use the parent of the root Node otherwise just use the node
         let root_parent = node_resolver.parent_of(&root_id);
-        let root_area = root_parent
-            .and_then(|root_parent| self.get_size(root_parent).map(|areas| areas.area))
-            .unwrap_or(root_area);
+        let mut root_parent_areas = root_parent
+            .and_then(|root_parent| self.get_size(root_parent).cloned())
+            .unwrap_or(NodeAreas {
+                area: root_area,
+                inner_area: root_area,
+            });
 
         let root = self.nodes.get(&root_id).unwrap();
 
@@ -266,8 +271,8 @@ impl<Key: NodeKey> Torin<Key> {
             root_id,
             root.clone(),
             self,
-            &root_area,
-            &mut root_area.clone(),
+            &root_parent_areas.area,
+            &mut root_parent_areas.inner_area,
             measurer,
             true,
             node_resolver,
