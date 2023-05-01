@@ -72,6 +72,9 @@ pub struct Torin<Key: NodeKey> {
     /// Invalid registered nodes since previous layout measurement
     pub dirty: HashSet<Key>,
 
+    /// Removed registered nodes since previous layout measurement
+    pub removed: HashSet<Key>,
+
     /// Closes dirty Node to the Root
     pub tallest_dirty_node: TallestDirtyNode<Key>,
 }
@@ -89,6 +92,7 @@ impl<Key: NodeKey> Torin<Key> {
             nodes: FxHashMap::default(),
             results: HashMap::default(),
             dirty: HashSet::new(),
+            removed: HashSet::new(),
             tallest_dirty_node: TallestDirtyNode::None,
         }
     }
@@ -115,24 +119,26 @@ impl<Key: NodeKey> Torin<Key> {
     pub fn raw_remove(&mut self, node_id: Key) {
         self.results.remove(&node_id);
         self.nodes.remove(&node_id);
-        self.dirty.retain(|n| n != &node_id);
+        self.dirty.remove(&node_id);
     }
 
     /// Remove a Node from the layout
     pub fn remove(&mut self, node_id: Key, node_resolver: &impl NodeResolver<Key>) {
-        // Remove all it's children
-        for child_id in node_resolver.children_of(&node_id) {
-            self.raw_remove(child_id);
-        }
-
-        self.check_dirty_dependants(node_id, node_resolver, false);
-
         // Remove itself
         self.raw_remove(node_id);
+        self.removed.insert(node_id);
+
+        // Remove all it's children
+        for child_id in node_resolver.children_of(&node_id) {
+            self.remove(child_id, node_resolver);
+        }
     }
 
+    /// Mark dirty a Node
     pub fn invalidate(&mut self, node_id: Key) {
-        self.dirty.insert(node_id);
+        if !self.removed.contains(&node_id) {
+            self.dirty.insert(node_id);
+        }
     }
 
     /// Add a node to the layout without a parent
@@ -161,6 +167,33 @@ impl<Key: NodeKey> Torin<Key> {
         self.add(node_id, node);
     }
 
+    // Mark as dirty all the parent nodes that depend on it
+    pub fn check_parent_dirty_dependants(
+        &mut self,
+        node_id: Key,
+        node_resolver: &impl NodeResolver<Key>,
+    ) {
+        // Mark this Node's parent if it is affected
+        let parent_id = node_resolver.parent_of(&node_id);
+
+        if let Some(parent_id) = parent_id {
+            let parent = self.safe_get(parent_id);
+
+            if let Some(parent) = parent {
+                // Mark parent
+                if parent.does_depend_on_inner() {
+                    self.check_dirty_dependants(parent_id, node_resolver, true);
+                } else {
+                    // Mark siblings
+                    // TODO: Only mark those who come before this node.
+                    for child_id in node_resolver.children_of(&parent_id) {
+                        self.check_dirty_dependants(child_id, node_resolver, true)
+                    }
+                }
+            }
+        }
+    }
+
     // Mark as dirty the given Node and all the nodes that depend on it
     pub fn check_dirty_dependants(
         &mut self,
@@ -173,7 +206,7 @@ impl<Key: NodeKey> Torin<Key> {
         }
 
         // Mark this node as dirty
-        self.dirty.insert(node_id);
+        self.invalidate(node_id);
 
         // Save the tallest dirty Node
         if TallestDirtyNode::None == self.tallest_dirty_node {
@@ -206,13 +239,13 @@ impl<Key: NodeKey> Torin<Key> {
                 // Mark parent
                 if parent.does_depend_on_inner() {
                     self.check_dirty_dependants(parent_id, node_resolver, true);
-                }
-
-                // Mark siblings
-                // TODO: Only mark those who come before this node.
-                for child_id in node_resolver.children_of(&parent_id) {
-                    if child_id != node_id {
-                        self.check_dirty_dependants(child_id, node_resolver, true)
+                } else {
+                    // Mark siblings
+                    // TODO: Only mark those who come before this node.
+                    for child_id in node_resolver.children_of(&parent_id) {
+                        if child_id != node_id {
+                            self.check_dirty_dependants(child_id, node_resolver, true)
+                        }
                     }
                 }
             }
@@ -228,6 +261,10 @@ impl<Key: NodeKey> Torin<Key> {
     pub fn has_pending_measurements(&mut self, node_resolver: &impl NodeResolver<Key>) -> bool {
         if TallestDirtyNode::None != self.tallest_dirty_node {
             return true;
+        }
+
+        for removed in &self.removed.clone() {
+            self.check_parent_dirty_dependants(*removed, node_resolver);
         }
 
         for dirty in &self.dirty.clone() {
@@ -287,6 +324,7 @@ impl<Key: NodeKey> Torin<Key> {
             self.save(root_id, root_areas);
         }
 
+        self.removed.clear();
         self.dirty.clear();
         self.tallest_dirty_node = TallestDirtyNode::None;
     }
@@ -350,8 +388,13 @@ fn measure_node<Key: NodeKey>(
         let skip_inner = if let Some(measurer) = measurer {
             let custom_measure =
                 measurer.measure(node_id, &node, &area, parent_area, available_parent_size);
-            if let Some(res) = custom_measure {
-                area = res;
+            if let Some(new_area) = custom_measure {
+                if Size::Inner == node.node.width {
+                    area.size.width = new_area.width()
+                }
+                if Size::Inner == node.node.height {
+                    area.size.height = new_area.height()
+                }
             }
             custom_measure.is_some()
         } else {

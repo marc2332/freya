@@ -658,9 +658,10 @@ pub fn node_removal() {
     );
 
     layout.remove(2, &tree_mapper);
-    tree_mapper.remove(2);
 
     layout.has_pending_measurements(&tree_mapper);
+
+    tree_mapper.remove(2);
 
     assert_eq!(layout.get_dirty_nodes(), &HashSet::from([1, 3]));
 

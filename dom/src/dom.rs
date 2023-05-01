@@ -132,34 +132,28 @@ impl FreyaDOM {
 
     /// Process the given mutations from the [`VirtualDOM`](dioxus_core::VirtualDom).
     pub fn apply_mutations(&mut self, mutations: Mutations, scale_factor: f32) -> bool {
-        for mutation in &mutations.edits {
-            match mutation {
-                Mutation::SetText { id, .. } => {
-                    self.torin
-                        .lock()
-                        .unwrap()
-                        .invalidate(self.dioxus_integration_state.element_to_node_id(*id));
+        {
+            let mut torin = self.torin.lock().unwrap();
+            for mutation in &mutations.edits {
+                match mutation {
+                    Mutation::SetText { id, .. } => {
+                        torin.invalidate(self.dioxus_integration_state.element_to_node_id(*id));
+                    }
+                    Mutation::InsertAfter { id, .. } => {
+                        torin.invalidate(self.dioxus_integration_state.element_to_node_id(*id));
+                    }
+                    Mutation::InsertBefore { id, .. } => {
+                        torin.invalidate(self.dioxus_integration_state.element_to_node_id(*id));
+                    }
+                    Mutation::Remove { id } => {
+                        let node_resolver = DioxusNodeResolver::new(self.dom());
+                        torin.remove(
+                            self.dioxus_integration_state.element_to_node_id(*id),
+                            &node_resolver,
+                        );
+                    }
+                    _ => {}
                 }
-                Mutation::InsertAfter { id, .. } => {
-                    self.torin
-                        .lock()
-                        .unwrap()
-                        .invalidate(self.dioxus_integration_state.element_to_node_id(*id));
-                }
-                Mutation::InsertBefore { id, .. } => {
-                    self.torin
-                        .lock()
-                        .unwrap()
-                        .invalidate(self.dioxus_integration_state.element_to_node_id(*id));
-                }
-                Mutation::Remove { id } => {
-                    let node_resolver = DioxusNodeResolver::new(self.dom());
-                    self.torin.lock().unwrap().remove(
-                        self.dioxus_integration_state.element_to_node_id(*id),
-                        &node_resolver,
-                    );
-                }
-                _ => {}
             }
         }
 
