@@ -8,16 +8,13 @@ use dioxus_native_core::{
     NodeId, SendAnyMap,
 };
 use freya_node_state::{
-    CursorMode, CursorSettings, CustomAttributeValues, FontStyle, References, SizeState, Style,
-    Transform,
+    CursorSettings, CustomAttributeValues, FontStyle, References, SizeState, Style, Transform,
 };
-use rustc_hash::{FxHashMap, FxHashSet};
 use skia_safe::textlayout::{
     FontCollection, ParagraphBuilder, ParagraphStyle, TextHeightBehavior, TextStyle,
 };
 use std::sync::MutexGuard;
 use torin::*;
-use uuid::Uuid;
 
 pub type DioxusDOM = RealDom<CustomAttributeValues>;
 pub type DioxusNode<'a> = NodeRef<'a, CustomAttributeValues>;
@@ -222,19 +219,13 @@ impl NodeResolver<NodeId> for DioxusNodeResolver<'_> {
 pub struct SkiaMeasurer<'a> {
     pub font_collection: &'a FontCollection,
     pub rdom: &'a DioxusDOM,
-    pub paragraph_elements: &'a mut FxHashMap<Uuid, FxHashSet<NodeId>>,
 }
 
 impl<'a> SkiaMeasurer<'a> {
-    pub fn new(
-        rdom: &'a DioxusDOM,
-        font_collection: &'a FontCollection,
-        paragraph_elements: &'a mut FxHashMap<Uuid, FxHashSet<NodeId>>,
-    ) -> Self {
+    pub fn new(rdom: &'a DioxusDOM, font_collection: &'a FontCollection) -> Self {
         Self {
             font_collection,
             rdom,
-            paragraph_elements,
         }
     }
 }
@@ -316,21 +307,6 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
                 let mut paragraph = paragraph_builder.build();
 
                 paragraph.layout(available_parent_area.width());
-
-                let cursor_settings = node.get::<CursorSettings>().unwrap();
-                let is_editable = CursorMode::Editable == cursor_settings.mode;
-
-                let references = node.get::<References>().unwrap();
-                if is_editable {
-                    if let Some(cursor_ref) = &references.cursor_ref {
-                        let text_group = self
-                            .paragraph_elements
-                            .entry(cursor_ref.text_id)
-                            .or_insert_with(FxHashSet::default);
-
-                        text_group.insert(node_id);
-                    }
-                }
 
                 Some(Area::new(
                     available_parent_area.origin,

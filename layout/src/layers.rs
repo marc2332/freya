@@ -1,7 +1,11 @@
-use dioxus_native_core::{real_dom::NodeImmutable, NodeId};
+use dioxus_native_core::{
+    prelude::{ElementNode, NodeType},
+    real_dom::NodeImmutable,
+    NodeId,
+};
 use freya_common::NodeReferenceLayout;
 use freya_dom::FreyaDOM;
-use freya_node_state::{SizeState, Style};
+use freya_node_state::{CursorMode, CursorSettings, References, SizeState, Style};
 use rustc_hash::{FxHashMap, FxHashSet};
 use skia_safe::textlayout::FontCollection;
 use torin::Torin;
@@ -19,14 +23,10 @@ impl Layers {
     pub fn new(
         rdom: &DioxusDOM,
         layout: &Torin<NodeId>,
-        paragraph_elements: FxHashMap<Uuid, FxHashSet<NodeId>>,
         font_collection: &FontCollection,
         scale_factor: f32,
     ) -> Self {
-        let mut layers = Layers {
-            paragraph_elements,
-            ..Default::default()
-        };
+        let mut layers = Layers::default();
         let mut inherit_layers = FxHashMap::default();
 
         rdom.traverse_depth_first(|node| {
@@ -46,6 +46,27 @@ impl Layers {
 
             inherit_layers.insert(node.id(), node_relative_layer);
             layers.add_element(node.id(), node_layer);
+
+            // Register paragraph elements
+
+            if let NodeType::Element(ElementNode { tag, .. }) = &*node.node_type() {
+                if tag == "paragraph" {
+                    let cursor_settings = node.get::<CursorSettings>().unwrap();
+                    let is_editable = CursorMode::Editable == cursor_settings.mode;
+
+                    let references = node.get::<References>().unwrap();
+                    if is_editable {
+                        if let Some(cursor_ref) = &references.cursor_ref {
+                            let text_group = layers
+                                .paragraph_elements
+                                .entry(cursor_ref.text_id)
+                                .or_insert_with(FxHashSet::default);
+
+                            text_group.insert(node.id());
+                        }
+                    }
+                }
+            }
 
             // Notify layout references
 

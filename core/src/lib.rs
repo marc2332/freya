@@ -261,21 +261,14 @@ pub fn process_layout(
 ) -> (Layers, ViewportsCollection) {
     let rdom = fdom.rdom();
     let node_resolver = DioxusNodeResolver::new(rdom);
-    let mut paragraph_elements = FxHashMap::default();
-    let skia_measurer = SkiaMeasurer::new(rdom, font_collection, &mut paragraph_elements);
+    let skia_measurer = SkiaMeasurer::new(rdom, font_collection);
 
     let root_id = fdom.rdom().root_id();
 
     fdom.layout()
         .measure(root_id, area, &mut Some(skia_measurer), &node_resolver);
 
-    let layers = Layers::new(
-        rdom,
-        &fdom.layout(),
-        paragraph_elements,
-        font_collection,
-        scale_factor,
-    );
+    let layers = Layers::new(rdom, &fdom.layout(), font_collection, scale_factor);
 
     let mut layers_nums: Vec<&i16> = layers.layers.keys().collect();
 
