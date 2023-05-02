@@ -172,7 +172,7 @@ impl<State: 'static + Clone> App<State> {
     /// Measure the layout
     pub fn process_layout(&mut self) -> bool {
         let dom = self.rdom.get();
-        let node_resolver = &DioxusNodeResolver::new(dom.dom());
+        let node_resolver = &DioxusNodeResolver::new(dom.rdom());
         let needs_layout = dom.layout().has_pending_measurements(node_resolver);
 
         if needs_layout {

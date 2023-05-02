@@ -26,56 +26,56 @@ pub type DioxusNode<'a> = NodeRef<'a, CustomAttributeValues>;
 /// This is primarily used by the Devtools and Testing renderer.
 pub struct SafeDOM {
     #[cfg(not(feature = "shared"))]
-    pub dom: FreyaDOM,
+    pub fdom: FreyaDOM,
 
     #[cfg(feature = "shared")]
-    pub dom: Arc<Mutex<FreyaDOM>>,
+    pub fdom: Arc<Mutex<FreyaDOM>>,
 }
 
 #[cfg(feature = "shared")]
 impl Clone for SafeDOM {
     fn clone(&self) -> Self {
         Self {
-            dom: self.dom.clone(),
+            fdom: self.fdom.clone(),
         }
     }
 }
 
 impl SafeDOM {
     #[cfg(not(feature = "shared"))]
-    pub fn new(dom: FreyaDOM) -> Self {
-        Self { dom }
+    pub fn new(fdom: FreyaDOM) -> Self {
+        Self { fdom }
     }
 
     #[cfg(feature = "shared")]
-    pub fn new(dom: FreyaDOM) -> Self {
+    pub fn new(fdom: FreyaDOM) -> Self {
         Self {
-            dom: Arc::new(Mutex::new(dom)),
+            fdom: Arc::new(Mutex::new(fdom)),
         }
     }
 
     /// Get a reference to the DOM.
     #[cfg(not(feature = "shared"))]
     pub fn get(&self) -> &FreyaDOM {
-        &self.dom
+        &self.fdom
     }
 
     /// Get a mutable reference to the DOM.
     #[cfg(not(feature = "shared"))]
     pub fn get_mut(&mut self) -> &mut FreyaDOM {
-        &mut self.dom
+        &mut self.fdom
     }
 
     /// Get a reference to the DOM.
     #[cfg(feature = "shared")]
     pub fn get(&self) -> MutexGuard<FreyaDOM> {
-        return self.dom.lock().unwrap();
+        return self.fdom.lock().unwrap();
     }
 
     /// Get a mutable reference to the dom.
     #[cfg(feature = "shared")]
     pub fn get_mut(&self) -> MutexGuard<FreyaDOM> {
-        return self.dom.lock().unwrap();
+        return self.fdom.lock().unwrap();
     }
 }
 
@@ -154,7 +154,7 @@ impl FreyaDOM {
                             .invalidate(self.dioxus_integration_state.element_to_node_id(*id));
                     }
                     Mutation::Remove { id } => {
-                        let node_resolver = DioxusNodeResolver::new(self.dom());
+                        let node_resolver = DioxusNodeResolver::new(self.rdom());
                         self.torin.lock().unwrap().remove(
                             self.dioxus_integration_state.element_to_node_id(*id),
                             &node_resolver,
@@ -184,12 +184,12 @@ impl FreyaDOM {
     }
 
     /// Get a reference to the [`DioxusDOM`].
-    pub fn dom(&self) -> &DioxusDOM {
+    pub fn rdom(&self) -> &DioxusDOM {
         &self.rdom
     }
 
     /// Get a mutable reference to the [`DioxusDOM`].
-    pub fn dom_mut(&mut self) -> &mut DioxusDOM {
+    pub fn rdom_mut(&mut self) -> &mut DioxusDOM {
         &mut self.rdom
     }
 }

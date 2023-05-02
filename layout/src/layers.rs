@@ -96,7 +96,7 @@ impl Layers {
         let layout = dom.layout();
         if let Some(group) = group {
             for node_id in group {
-                let node = dom.dom().get(*node_id);
+                let node = dom.rdom().get(*node_id);
                 let areas = layout.get_size(*node_id);
 
                 if let Some((node, areas)) = node.zip(areas) {

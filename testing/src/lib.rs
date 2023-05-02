@@ -44,7 +44,7 @@ impl TestUtils {
         let utils = self.clone();
 
         let dom = self.sdom.get();
-        let rdom = dom.dom();
+        let rdom = dom.rdom();
 
         let height = rdom.tree_ref().height(node_id).unwrap();
         let children_ids = rdom.tree_ref().children_ids(node_id);
@@ -122,7 +122,7 @@ impl TestNode {
     /// Get the NodeId from the parent
     pub fn parent_id(&self) -> Option<NodeId> {
         let fdom = self.utils().sdom.get();
-        let dom = fdom.dom();
+        let dom = fdom.rdom();
         let node = dom.get(self.node_id).unwrap();
         node.parent_id()
     }
@@ -228,7 +228,7 @@ impl TestingHandler {
     pub fn root(&mut self) -> TestNode {
         let root_id = {
             let dom = self.utils.sdom.get();
-            let rdom = dom.dom();
+            let rdom = dom.rdom();
             rdom.root_id()
         };
 

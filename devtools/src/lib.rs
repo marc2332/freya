@@ -126,7 +126,7 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                     sleep(Duration::from_millis(10)).await;
 
                     let dom = rdom.get();
-                    let rdom = dom.dom();
+                    let rdom = dom.rdom();
                     let mut new_children = Vec::new();
 
                     let mut root_found = false;

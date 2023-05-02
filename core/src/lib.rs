@@ -25,15 +25,16 @@ pub type NodesEvents<'a> = FxHashMap<&'a str, Vec<(NodeId, FreyaEvent)>>;
 pub fn calculate_viewports(
     layers_nums: &[&i16],
     layers: &Layers,
-    rdom: &FreyaDOM,
+    fdom: &FreyaDOM,
 ) -> ViewportsCollection {
     let mut viewports_collection = FxHashMap::default();
-    let layout = rdom.layout();
+    let layout = fdom.layout();
+    let rdom = fdom.rdom();
 
     for layer_num in layers_nums {
         let layer = layers.layers.get(layer_num).unwrap();
         for node_id in layer {
-            let node = rdom.dom().get(*node_id);
+            let node = rdom.get(*node_id);
             let node_areas = layout.get_size(*node_id);
 
             if let Some((node, node_areas)) = node.zip(node_areas) {
@@ -69,7 +70,7 @@ pub fn calculate_node_events<'a>(
     layers: &Layers,
     events: &EventsQueue,
     viewports_collection: &ViewportsCollection,
-    rdom: &FreyaDOM,
+    fdom: &FreyaDOM,
 ) -> (NodesEvents<'a>, Vec<FreyaEvent>) {
     let mut calculated_events = FxHashMap::default();
     let mut global_events = Vec::default();
@@ -87,7 +88,7 @@ pub fn calculate_node_events<'a>(
         }
     }
 
-    let layout = rdom.layout();
+    let layout = fdom.layout();
 
     // Propagate events from the top to the bottom
     for layer_num in layers_nums {
@@ -150,21 +151,21 @@ pub fn calculate_node_events<'a>(
 // Calculate events that can actually be triggered
 fn calculate_events_listeners(
     calculated_events: &mut NodesEvents,
-    dom: &FreyaDOM,
+    fdom: &FreyaDOM,
     event_emitter: &EventEmitter,
     scale_factor: f64,
 ) -> Vec<DomEvent> {
     let mut new_events = Vec::new();
 
     for (event_name, event_nodes) in calculated_events.iter_mut() {
-        let listeners = dom.dom().get_listening_sorted(event_name);
+        let listeners = fdom.rdom().get_listening_sorted(event_name);
 
         let mut found_nodes: Vec<(&NodeId, &FreyaEvent)> = Vec::new();
 
         'event_nodes: for (node_id, request) in event_nodes.iter() {
             for listener in &listeners {
                 if listener.id() == *node_id {
-                    let node_ref = dom.dom().get(*node_id);
+                    let node_ref = fdom.rdom().get(*node_id);
 
                     let node_ref = if let Some(node_ref) = node_ref {
                         node_ref
@@ -208,8 +209,8 @@ fn calculate_events_listeners(
         }
 
         for (node_id, request_event) in found_nodes {
-            let areas = dom.layout().get_size(*node_id).unwrap().clone();
-            let node_ref = dom.dom().get(*node_id).unwrap();
+            let areas = fdom.layout().get_size(*node_id).unwrap().clone();
+            let node_ref = fdom.rdom().get(*node_id).unwrap();
             let element_id = node_ref.mounted_id().unwrap();
             let event = DomEvent::from_freya_event(
                 event_name,
@@ -229,13 +230,13 @@ fn calculate_events_listeners(
 /// Calculate global events to be triggered
 fn calculate_global_events_listeners(
     global_events: Vec<FreyaEvent>,
-    dom: &FreyaDOM,
+    fdom: &FreyaDOM,
     event_emitter: &EventEmitter,
     scale_factor: f64,
 ) {
     for global_event in global_events {
         let event_name = global_event.get_name();
-        let listeners = dom.dom().get_listening_sorted(event_name);
+        let listeners = fdom.rdom().get_listening_sorted(event_name);
 
         for listener in listeners {
             let element_id = listener.mounted_id().unwrap();
@@ -253,24 +254,24 @@ fn calculate_global_events_listeners(
 
 /// Process the layout of the DOM
 pub fn process_layout(
-    dom: &FreyaDOM,
+    fdom: &FreyaDOM,
     area: Area,
     font_collection: &mut FontCollection,
     scale_factor: f32,
 ) -> (Layers, ViewportsCollection) {
-    let rdom = dom.dom();
+    let rdom = fdom.rdom();
     let node_resolver = DioxusNodeResolver::new(rdom);
     let mut paragraph_elements = FxHashMap::default();
     let skia_measurer = SkiaMeasurer::new(rdom, font_collection, &mut paragraph_elements);
 
-    let root_id = dom.dom().root_id();
+    let root_id = fdom.rdom().root_id();
 
-    dom.layout()
+    fdom.layout()
         .measure(root_id, area, &mut Some(skia_measurer), &node_resolver);
 
     let layers = Layers::new(
         rdom,
-        &dom.layout(),
+        &fdom.layout(),
         paragraph_elements,
         font_collection,
         scale_factor,
@@ -281,7 +282,7 @@ pub fn process_layout(
     // Order the layers from top to bottom
     layers_nums.sort();
 
-    let viewports_collection = calculate_viewports(&layers_nums, &layers, dom);
+    let viewports_collection = calculate_viewports(&layers_nums, &layers, fdom);
 
     (layers, viewports_collection)
 }

@@ -240,7 +240,7 @@ impl<T: Clone> WindowEnv<T> {
                 } else {
                     false
                 };
-                if let Some(dioxus_node) = dom.dom().get(*node_id) {
+                if let Some(dioxus_node) = dom.rdom().get(*node_id) {
                     render_skia(
                         canvas,
                         area,
