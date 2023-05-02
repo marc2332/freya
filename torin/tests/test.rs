@@ -72,10 +72,10 @@ fn test_utils() -> (Torin<usize>, Option<TestingMeasurer>) {
 pub fn root_100per_children_50per50per() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut tree_mapper = TreeMapper::default();
-    tree_mapper.add(0, None, vec![1, 2]);
-    tree_mapper.add(1, Some(0), vec![]);
-    tree_mapper.add(2, Some(0), vec![]);
+    let mut mocked_dom = TreeMapper::default();
+    mocked_dom.add(0, None, vec![1, 2]);
+    mocked_dom.add(1, Some(0), vec![]);
+    mocked_dom.add(2, Some(0), vec![]);
 
     layout.add(
         0,
@@ -104,12 +104,12 @@ pub fn root_100per_children_50per50per() {
         ),
     );
 
-    layout.has_pending_measurements(&tree_mapper);
+    layout.has_pending_measurements(&mocked_dom);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &tree_mapper,
+        &mocked_dom,
     );
 
     assert_eq!(
@@ -132,10 +132,10 @@ pub fn root_100per_children_50per50per() {
 pub fn root_200px_children_50per50per() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut tree_mapper = TreeMapper::default();
-    tree_mapper.add(0, None, vec![1, 2]);
-    tree_mapper.add(1, Some(0), vec![]);
-    tree_mapper.add(2, Some(0), vec![]);
+    let mut mocked_dom = TreeMapper::default();
+    mocked_dom.add(0, None, vec![1, 2]);
+    mocked_dom.add(1, Some(0), vec![]);
+    mocked_dom.add(2, Some(0), vec![]);
 
     layout.add(
         0,
@@ -164,12 +164,12 @@ pub fn root_200px_children_50per50per() {
         ),
     );
 
-    layout.has_pending_measurements(&tree_mapper);
+    layout.has_pending_measurements(&mocked_dom);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &tree_mapper,
+        &mocked_dom,
     );
 
     assert_eq!(
@@ -192,10 +192,10 @@ pub fn root_200px_children_50per50per() {
 pub fn layout_dirty_nodes() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut tree_mapper = TreeMapper::default();
-    tree_mapper.add(0, None, vec![1]);
-    tree_mapper.add(1, None, vec![2]);
-    tree_mapper.add(2, Some(1), vec![]);
+    let mut mocked_dom = TreeMapper::default();
+    mocked_dom.add(0, None, vec![1]);
+    mocked_dom.add(1, None, vec![2]);
+    mocked_dom.add(2, Some(1), vec![]);
 
     layout.add(
         0,
@@ -228,7 +228,7 @@ pub fn layout_dirty_nodes() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &tree_mapper,
+        &mocked_dom,
     );
 
     // CASE 1
@@ -309,10 +309,10 @@ pub fn layout_dirty_nodes() {
 pub fn direction() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut tree_mapper = TreeMapper::default();
-    tree_mapper.add(0, None, vec![1, 2]);
-    tree_mapper.add(1, None, vec![2]);
-    tree_mapper.add(2, Some(1), vec![]);
+    let mut mocked_dom = TreeMapper::default();
+    mocked_dom.add(0, None, vec![1, 2]);
+    mocked_dom.add(1, None, vec![2]);
+    mocked_dom.add(2, Some(1), vec![]);
 
     layout.add(
         0,
@@ -345,7 +345,7 @@ pub fn direction() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &tree_mapper,
+        &mocked_dom,
     );
 
     assert_eq!(
@@ -369,12 +369,12 @@ pub fn direction() {
         ),
     );
 
-    layout.has_pending_measurements(&tree_mapper);
+    layout.has_pending_measurements(&mocked_dom);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &tree_mapper,
+        &mocked_dom,
     );
 
     assert_eq!(
@@ -392,10 +392,10 @@ pub fn direction() {
 pub fn scroll() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut tree_mapper = TreeMapper::default();
-    tree_mapper.add(0, None, vec![1, 2]);
-    tree_mapper.add(1, Some(0), vec![]);
-    tree_mapper.add(2, Some(0), vec![]);
+    let mut mocked_dom = TreeMapper::default();
+    mocked_dom.add(0, None, vec![1, 2]);
+    mocked_dom.add(1, Some(0), vec![]);
+    mocked_dom.add(2, Some(0), vec![]);
 
     layout.add(
         0,
@@ -425,12 +425,12 @@ pub fn scroll() {
         ),
     );
 
-    layout.has_pending_measurements(&tree_mapper);
+    layout.has_pending_measurements(&mocked_dom);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &tree_mapper,
+        &mocked_dom,
     );
 
     assert_eq!(
@@ -448,9 +448,9 @@ pub fn scroll() {
 pub fn padding() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut tree_mapper = TreeMapper::default();
-    tree_mapper.add(0, None, vec![1]);
-    tree_mapper.add(1, Some(0), vec![]);
+    let mut mocked_dom = TreeMapper::default();
+    mocked_dom.add(0, None, vec![1]);
+    mocked_dom.add(1, Some(0), vec![]);
 
     layout.add(
         0,
@@ -474,7 +474,7 @@ pub fn padding() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &tree_mapper,
+        &mocked_dom,
     );
 
     assert_eq!(
@@ -487,9 +487,9 @@ pub fn padding() {
 pub fn caching() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut tree_mapper = TreeMapper::default();
-    tree_mapper.add(0, None, vec![1]);
-    tree_mapper.add(1, Some(0), vec![]);
+    let mut mocked_dom = TreeMapper::default();
+    mocked_dom.add(0, None, vec![1]);
+    mocked_dom.add(1, Some(0), vec![]);
 
     layout.add(
         0,
@@ -513,7 +513,7 @@ pub fn caching() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &tree_mapper,
+        &mocked_dom,
     );
 
     assert_eq!(
@@ -534,7 +534,7 @@ pub fn caching() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &tree_mapper,
+        &mocked_dom,
     );
 
     assert_eq!(
@@ -547,10 +547,10 @@ pub fn caching() {
 pub fn sibling_increments_area() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut tree_mapper = TreeMapper::default();
-    tree_mapper.add(0, None, vec![1, 2]);
-    tree_mapper.add(1, Some(0), vec![]);
-    tree_mapper.add(2, Some(0), vec![]);
+    let mut mocked_dom = TreeMapper::default();
+    mocked_dom.add(0, None, vec![1, 2]);
+    mocked_dom.add(1, Some(0), vec![]);
+    mocked_dom.add(2, Some(0), vec![]);
 
     layout.add(
         0,
@@ -579,7 +579,7 @@ pub fn sibling_increments_area() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &tree_mapper,
+        &mocked_dom,
     );
 
     assert_eq!(
@@ -597,11 +597,11 @@ pub fn sibling_increments_area() {
 pub fn node_removal() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut tree_mapper = TreeMapper::default();
-    tree_mapper.add(0, None, vec![1]);
-    tree_mapper.add(1, Some(0), vec![2, 3]);
-    tree_mapper.add(2, Some(1), vec![]);
-    tree_mapper.add(3, Some(1), vec![]);
+    let mut mocked_dom = TreeMapper::default();
+    mocked_dom.add(0, None, vec![1]);
+    mocked_dom.add(1, Some(0), vec![2, 3]);
+    mocked_dom.add(2, Some(1), vec![]);
+    mocked_dom.add(3, Some(1), vec![]);
 
     layout.add(
         0,
@@ -639,7 +639,7 @@ pub fn node_removal() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &tree_mapper,
+        &mocked_dom,
     );
 
     assert_eq!(
@@ -657,11 +657,11 @@ pub fn node_removal() {
         Rect::new(Point2D::new(0.0, 200.0), Size2D::new(200.0, 200.0)),
     );
 
-    layout.remove(2, &tree_mapper, true);
+    layout.remove(2, &mocked_dom, true);
 
-    tree_mapper.remove(2);
+    mocked_dom.remove(2);
 
-    layout.has_pending_measurements(&tree_mapper);
+    layout.has_pending_measurements(&mocked_dom);
 
     assert_eq!(layout.get_dirty_nodes(), &HashSet::from([1, 3]));
 
@@ -669,7 +669,7 @@ pub fn node_removal() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &tree_mapper,
+        &mocked_dom,
     );
 
     assert_eq!(
@@ -692,9 +692,9 @@ pub fn node_removal() {
 pub fn display_horizontal() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut tree_mapper = TreeMapper::default();
-    tree_mapper.add(0, None, vec![1]);
-    tree_mapper.add(1, Some(0), vec![]);
+    let mut mocked_dom = TreeMapper::default();
+    mocked_dom.add(0, None, vec![1]);
+    mocked_dom.add(1, Some(0), vec![]);
 
     layout.add(
         0,
@@ -719,7 +719,7 @@ pub fn display_horizontal() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &tree_mapper,
+        &mocked_dom,
     );
 
     assert_eq!(
@@ -737,10 +737,10 @@ pub fn display_horizontal() {
 pub fn display_vertical_with_inner_children() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut tree_mapper = TreeMapper::default();
-    tree_mapper.add(0, None, vec![1]);
-    tree_mapper.add(1, Some(0), vec![2]);
-    tree_mapper.add(2, Some(1), vec![]);
+    let mut mocked_dom = TreeMapper::default();
+    mocked_dom.add(0, None, vec![1]);
+    mocked_dom.add(1, Some(0), vec![2]);
+    mocked_dom.add(2, Some(1), vec![]);
 
     layout.add(
         0,
@@ -770,12 +770,12 @@ pub fn display_vertical_with_inner_children() {
         ),
     );
 
-    layout.has_pending_measurements(&tree_mapper);
+    layout.has_pending_measurements(&mocked_dom);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &tree_mapper,
+        &mocked_dom,
     );
 
     assert_eq!(
@@ -798,13 +798,13 @@ pub fn display_vertical_with_inner_children() {
 pub fn deep_tree() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut tree_mapper = TreeMapper::default();
-    tree_mapper.add(0, None, vec![1]);
-    tree_mapper.add(1, Some(0), vec![2]);
-    tree_mapper.add(2, Some(1), vec![3]);
-    tree_mapper.add(3, Some(2), vec![4]);
-    tree_mapper.add(4, Some(3), vec![5]);
-    tree_mapper.add(5, Some(4), vec![]);
+    let mut mocked_dom = TreeMapper::default();
+    mocked_dom.add(0, None, vec![1]);
+    mocked_dom.add(1, Some(0), vec![2]);
+    mocked_dom.add(2, Some(1), vec![3]);
+    mocked_dom.add(3, Some(2), vec![4]);
+    mocked_dom.add(4, Some(3), vec![5]);
+    mocked_dom.add(5, Some(4), vec![]);
 
     layout.add(
         0,
@@ -861,12 +861,12 @@ pub fn deep_tree() {
         ),
     );
 
-    layout.has_pending_measurements(&tree_mapper);
+    layout.has_pending_measurements(&mocked_dom);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &tree_mapper,
+        &mocked_dom,
     );
 
     layout.set_node(
@@ -878,14 +878,14 @@ pub fn deep_tree() {
         ),
     );
 
-    layout.has_pending_measurements(&tree_mapper);
+    layout.has_pending_measurements(&mocked_dom);
     assert_eq!(layout.get_tallest_dirty_node(), TallestDirtyNode::Valid(4));
 
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &tree_mapper,
+        &mocked_dom,
     );
 
     assert_eq!(layout.get_tallest_dirty_node(), TallestDirtyNode::None);
@@ -895,10 +895,10 @@ pub fn deep_tree() {
 pub fn stacked() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut tree_mapper = TreeMapper::default();
-    tree_mapper.add(0, None, vec![1, 2]);
-    tree_mapper.add(1, Some(0), vec![]);
-    tree_mapper.add(2, Some(0), vec![]);
+    let mut mocked_dom = TreeMapper::default();
+    mocked_dom.add(0, None, vec![1, 2]);
+    mocked_dom.add(1, Some(0), vec![]);
+    mocked_dom.add(2, Some(0), vec![]);
 
     layout.add(
         0,
@@ -931,7 +931,7 @@ pub fn stacked() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &tree_mapper,
+        &mocked_dom,
     );
 
     assert_eq!(
@@ -953,13 +953,13 @@ pub fn stacked() {
         ),
     );
 
-    layout.has_pending_measurements(&tree_mapper);
+    layout.has_pending_measurements(&mocked_dom);
 
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &tree_mapper,
+        &mocked_dom,
     );
 
     assert_eq!(
