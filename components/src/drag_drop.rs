@@ -1,8 +1,8 @@
 use dioxus::prelude::*;
-use freya_common::Point2D;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
 use freya_hooks::use_node_ref;
+use torin::CursorPoint;
 
 /// [`DragProvider`] component properties.
 #[derive(Props)]
@@ -42,7 +42,7 @@ pub struct DragZoneProps<'a, T> {
 pub fn DragZone<'a, T: 'static + Clone>(cx: Scope<'a, DragZoneProps<'a, T>>) -> Element<'a> {
     let drags = use_shared_state::<Option<T>>(cx);
     let dragging = use_state(cx, || false);
-    let pos = use_state(cx, Point2D::default);
+    let pos = use_state(cx, CursorPoint::default);
     let (node_reference, size) = use_node_ref(cx);
 
     let onglobalmouseover = move |e: MouseEvent| {

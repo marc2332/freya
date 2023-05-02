@@ -1,11 +1,12 @@
 use dioxus_native_core::NodeId;
-use freya_common::{Area, EventMessage, Size2D};
+use freya_common::EventMessage;
 use freya_core::process_render;
 use freya_core::{process_layout, ViewportsCollection};
 use freya_dom::FreyaDOM;
 use freya_layout::Layers;
 use std::ffi::CString;
 use std::num::NonZeroU32;
+use torin::{Area, Size2D};
 
 use gl::types::*;
 use glutin::context::GlProfile;

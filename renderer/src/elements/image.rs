@@ -1,8 +1,8 @@
 use dioxus_native_core::real_dom::NodeImmutable;
-use freya_common::Area;
 use freya_dom::DioxusNode;
 use freya_node_state::{References, Style};
 use skia_safe::{Canvas, Data, IRect, Image, Paint, Rect};
+use torin::Area;
 
 /// Render an `image` element
 pub fn render_image(area: &Area, node_ref: &DioxusNode, canvas: &mut Canvas) {

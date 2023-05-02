@@ -5,7 +5,6 @@ use freya_node_state::{
 };
 use skia_safe::Color;
 
-#[allow(dead_code)]
 #[derive(Clone)]
 pub struct NodeState {
     pub cursor: CursorSettings,
@@ -70,11 +69,11 @@ impl<'a> Iterator for NodeStateIterator<'a> {
                 AttributeType::Direction(&self.state.size.direction),
             )),
             7 => Some(("padding", AttributeType::Measures(self.state.size.padding))),
-            8 => Some((
+            8 => Some(("display", AttributeType::Display(&self.state.size.display))),
+            9 => Some((
                 "background",
                 AttributeType::Color(&self.state.style.background),
             )),
-            //9 => Some(("display", AttributeType::Display(&self.state.style.display))),
             10 => Some(("radius", AttributeType::Measure(self.state.style.radius))),
             11 => Some(("shadow", AttributeType::Shadow(&self.state.style.shadow))),
             12 => Some(("color", AttributeType::Color(&self.state.font_style.color))),

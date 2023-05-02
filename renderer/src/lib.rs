@@ -2,13 +2,14 @@ use app::App;
 use dioxus_core::VirtualDom;
 
 use dioxus_native_core::NodeId;
-use freya_common::{EventMessage, Point2D};
+use freya_common::EventMessage;
 
 use freya_core::events::FreyaEvent;
 use freya_dom::SafeDOM;
 use freya_elements::events::keyboard::{
     from_winit_to_code, get_modifiers, get_non_text_keys, Code, Key,
 };
+use torin::CursorPoint;
 
 use std::sync::{Arc, Mutex};
 use winit::event::{
@@ -75,7 +76,7 @@ pub fn run<T: 'static + Clone>(
     app.init_vdom();
     app.process_layout();
 
-    let mut cursor_pos = Point2D::default();
+    let mut cursor_pos = CursorPoint::default();
     let mut last_keydown = Key::Unidentified;
     let mut last_code = Code::Unidentified;
     let mut modifiers_state = ModifiersState::empty();
@@ -140,7 +141,7 @@ pub fn run<T: 'static + Clone>(
 
                             app.push_event(FreyaEvent::Wheel {
                                 name: "wheel",
-                                scroll: Point2D::from(scroll_data),
+                                scroll: CursorPoint::from(scroll_data),
                                 cursor: cursor_pos,
                             });
 
@@ -219,7 +220,7 @@ pub fn run<T: 'static + Clone>(
                         app.process_events();
                     }
                     WindowEvent::CursorMoved { position, .. } => {
-                        cursor_pos = Point2D::from((position.x, position.y));
+                        cursor_pos = CursorPoint::from((position.x, position.y));
 
                         app.push_event(FreyaEvent::Mouse {
                             name: "mouseover",
@@ -236,7 +237,7 @@ pub fn run<T: 'static + Clone>(
                         force,
                         ..
                     }) => {
-                        cursor_pos = Point2D::from((location.x, location.y));
+                        cursor_pos = CursorPoint::from((location.x, location.y));
 
                         let event_name = match phase {
                             TouchPhase::Cancelled => "touchcancel",

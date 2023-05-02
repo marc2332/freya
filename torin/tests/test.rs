@@ -1,6 +1,5 @@
 use std::collections::{HashMap, HashSet};
 
-use euclid::*;
 use torin::*;
 
 struct TestingMeasurer;
@@ -10,10 +9,10 @@ impl LayoutMeasurer<usize> for TestingMeasurer {
         &mut self,
         _node_id: usize,
         _node: &NodeData,
-        _area: &Rect<f32, Measure>,
-        _parent_size: &Rect<f32, Measure>,
-        _available_parent_size: &Rect<f32, Measure>,
-    ) -> Option<Rect<f32, Measure>> {
+        _area: &Area,
+        _parent_size: &Area,
+        _available_parent_size: &Area,
+    ) -> Option<Area> {
         None
     }
 }

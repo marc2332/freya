@@ -1,17 +1,27 @@
 use std::collections::{HashMap, HashSet};
 
 use dioxus_native_core::NodeId;
-pub use euclid::{Length, Rect, Size2D};
+pub use euclid::Rect;
 use fxhash::FxHashMap;
 
+#[derive(PartialEq)]
+pub struct Measure;
+
 pub type Area = Rect<f32, Measure>;
+pub type Size2D = euclid::Size2D<f32, Measure>;
+pub type Point2D = euclid::Point2D<f32, Measure>;
+pub type CursorPoint = euclid::Point2D<f64, Measure>;
+pub type Length = euclid::Length<f32, Measure>;
 
 /// Cached layout results of a Node
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct NodeAreas {
-    pub area: Rect<f32, Measure>,
-    pub inner_area: Rect<f32, Measure>,
-    pub inner_sizes: Size2D<f32, Measure>,
+    /// Area that ocuppies this node
+    pub area: Area,
+    /// Available area inside this Node
+    pub inner_area: Area,
+    /// Ocuppied sizes from the inner children in this Node
+    pub inner_sizes: Size2D,
 }
 
 pub trait NodeKey: Clone + PartialEq + Eq + std::hash::Hash + Copy + std::fmt::Debug {}
@@ -20,10 +30,13 @@ impl NodeKey for usize {}
 impl NodeKey for NodeId {}
 
 pub trait NodeResolver<NodeKey> {
+    /// Get the height in the DOM of the given Node
     fn height(&self, node_id: &NodeKey) -> Option<u16>;
 
+    /// Get the parent's Node ID from the given Node
     fn parent_of(&self, node_id: &NodeKey) -> Option<NodeKey>;
 
+    /// Get a list of IDs of all the Nodes from the given Node
     fn children_of(&self, node_id: &NodeKey) -> Vec<NodeKey>;
 }
 
@@ -50,15 +63,16 @@ impl NodeData {
     }
 }
 
-#[derive(Clone, Default, Debug)]
-pub struct EmbeddedData {
-    pub id: NodeId,
-}
-
+/// Indicates what's the closest Node to the root from which start measuring the dirty Nodes
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub enum TallestDirtyNode<Key: NodeKey> {
+    /// A valid Node ID
     Valid(Key),
+
+    /// Coudln't decide
     Invalid,
+
+    /// Not decided yet
     None,
 }
 
@@ -105,10 +119,25 @@ impl<Key: NodeKey> Torin<Key> {
         &self.dirty
     }
 
+    /// Add a node to the layout without a parent
+    pub fn add(&mut self, node_id: Key, node: Node) {
+        self.nodes.insert(node_id, NodeData { node });
+        self.dirty.insert(node_id);
+    }
+
     // Update a Node
     pub fn set_node(&mut self, node_id: Key, node: Node) {
         *self.nodes.get_mut(&node_id).unwrap() = NodeData { node };
         self.dirty.insert(node_id);
+    }
+
+    /// Add a Node, or update it if it already exists
+    pub fn set_or_add(&mut self, node_id: Key, node: Node) {
+        if self.has(node_id) {
+            self.set_node(node_id, node);
+        } else {
+            self.add(node_id, node);
+        }
     }
 
     /// Remove a Node's result and data
@@ -139,41 +168,22 @@ impl<Key: NodeKey> Torin<Key> {
         }
     }
 
-    /// Mark dirty a Node
+    /// Mark as dirty a Node
     pub fn invalidate(&mut self, node_id: Key) {
         self.dirty.insert(node_id);
     }
 
-    /// Add a node to the layout without a parent
-    pub fn add(&mut self, node_id: Key, node: Node) {
-        self.nodes.insert(node_id, NodeData { node });
-        self.dirty.insert(node_id);
-    }
-
-    pub fn set_or_add(&mut self, node_id: Key, node: Node) {
-        if self.has(node_id) {
-            self.set_node(node_id, node);
-        } else {
-            self.add(node_id, node);
-        }
-    }
-
-    /// Has a Node
+    /// Check if a Node is registered
     pub fn has(&self, node_id: Key) -> bool {
         self.nodes.get(&node_id).is_some()
     }
 
     /// Get a Node's data
-    pub fn get(&self, node_id: Key) -> NodeData {
-        self.nodes.get(&node_id).unwrap().clone()
-    }
-
-    /// Get a Node's data
-    pub fn safe_get(&self, node_id: Key) -> Option<&NodeData> {
+    pub fn get(&self, node_id: Key) -> Option<&NodeData> {
         self.nodes.get(&node_id)
     }
 
-    /// Add a Node to the layout under the given parent
+    /// Add a Node to the layout
     pub fn insert(&mut self, node_id: Key, node: Node) {
         self.add(node_id, node);
     }
@@ -200,9 +210,15 @@ impl<Key: NodeKey> Torin<Key> {
             let current_height = node_resolver.height(&tallest_dirty_node);
 
             match node_height.cmp(&current_height) {
+                // Update the tallest node if this node is dirty and is taller than the current tallest node
                 std::cmp::Ordering::Less => {
                     self.tallest_dirty_node = TallestDirtyNode::Valid(node_id);
                 }
+                // If both this node and the tallest Node are in the same height, we set the tallest node as invalid
+                // as we can't figure out which is one is the tallest
+                //
+                // Improvements idea:
+                // It could try finding the closest common parent Node from these two and set it as tallest Node
                 std::cmp::Ordering::Equal => self.tallest_dirty_node = TallestDirtyNode::Invalid,
                 _ => {}
             }
@@ -217,14 +233,15 @@ impl<Key: NodeKey> Torin<Key> {
         let parent_id = node_resolver.parent_of(&node_id);
 
         if let Some(parent_id) = parent_id {
-            let parent = self.safe_get(parent_id);
+            let parent = self.get(parent_id);
 
             if let Some(parent) = parent {
-                // Mark parent
+                // Mark parent if it depeneds on it's inner children
                 if parent.does_depend_on_inner() {
                     self.check_dirty_dependants(parent_id, node_resolver, true);
-                } else {
-                    // Mark siblings
+                }
+                // Otherwise we simply mark this Node siblings
+                else {
                     // TODO: Only mark those who come before this node.
                     for child_id in node_resolver.children_of(&parent_id) {
                         if child_id != node_id {
@@ -236,7 +253,7 @@ impl<Key: NodeKey> Torin<Key> {
         }
     }
 
-    /// Get the closes dirty node to the root
+    /// Get the closest dirty node to the root
     pub fn get_tallest_dirty_node(&self) -> TallestDirtyNode<Key> {
         self.tallest_dirty_node
     }
@@ -259,25 +276,25 @@ impl<Key: NodeKey> Torin<Key> {
     pub fn measure(
         &mut self,
         root_id: Key,
-        root_area: Rect<f32, Measure>,
+        root_area: Area,
         measurer: &mut Option<impl LayoutMeasurer<Key>>,
         node_resolver: &impl NodeResolver<Key>,
     ) {
         // If there are previosuly cached results
         // But no dirty nodes, we can simply skip the measurement
+        // as this means no changes has been made to the layout
         if self.dirty.is_empty() && !self.results.is_empty() {
             return;
         }
 
-        // Try to find the closest dirty Node to the root,
-        // otherwise just use the give root_id
+        // Try using the closest Node to the root that is dirty, otherwise use the root
         let root_id = if let TallestDirtyNode::Valid(id) = self.tallest_dirty_node {
             id
         } else {
             root_id
         };
 
-        // Use the parent of the root Node otherwise just use the node
+        // Use the parent of the root Node otherwise just use the root node
         let root_parent = node_resolver.parent_of(&root_id);
         let root_parent_areas = root_parent
             .and_then(|root_parent| self.get_size(root_parent).cloned())
@@ -291,7 +308,7 @@ impl<Key: NodeKey> Torin<Key> {
 
         let (root_revalidated, root_areas) = measure_node(
             root_id,
-            root.clone(),
+            &root.clone(),
             self,
             &root_parent_areas.area,
             &root_parent_areas.inner_area,
@@ -300,8 +317,9 @@ impl<Key: NodeKey> Torin<Key> {
             node_resolver,
         );
 
+        // Cache the root results if it was modified
         if root_revalidated {
-            self.save(root_id, root_areas);
+            self.cache_node(root_id, root_areas);
         }
 
         self.dirty.clear();
@@ -314,7 +332,7 @@ impl<Key: NodeKey> Torin<Key> {
     }
 
     /// Cache a Node's areas
-    pub fn save(&mut self, node_id: Key, areas: NodeAreas) {
+    pub fn cache_node(&mut self, node_id: Key, areas: NodeAreas) {
         self.results.insert(node_id, areas);
     }
 }
@@ -325,10 +343,10 @@ impl<Key: NodeKey> Torin<Key> {
 #[inline(always)]
 fn measure_node<Key: NodeKey>(
     node_id: Key,
-    node: NodeData,
+    node: &NodeData,
     layout: &mut Torin<Key>,
-    parent_area: &Rect<f32, Measure>,
-    available_parent_size: &Rect<f32, Measure>,
+    parent_area: &Area,
+    available_parent_size: &Area,
     measurer: &mut Option<impl LayoutMeasurer<Key>>,
     must_cache: bool,
     node_resolver: &impl NodeResolver<Key>,
@@ -366,7 +384,7 @@ fn measure_node<Key: NodeKey>(
         // Custom measure
         let skip_inner = if let Some(measurer) = measurer {
             let custom_measure =
-                measurer.measure(node_id, &node, &area, parent_area, available_parent_size);
+                measurer.measure(node_id, node, &area, parent_area, available_parent_size);
             if let Some(new_area) = custom_measure {
                 if Size::Inner == node.node.width {
                     area.size.width = new_area.width()
@@ -420,7 +438,7 @@ fn measure_node<Key: NodeKey>(
         if !skip_inner {
             measure_inner_nodes(
                 &node_id,
-                &node,
+                node,
                 layout,
                 &mut available_area,
                 &mut inner_sizes,
@@ -455,7 +473,7 @@ fn measure_node<Key: NodeKey>(
 
         measure_inner_nodes(
             &node_id,
-            &node,
+            node,
             layout,
             &mut available_area,
             &mut inner_sizes,
@@ -472,11 +490,11 @@ fn measure_node<Key: NodeKey>(
 /// Measurement data for the inner Nodes of a Node
 enum MeasureMode<'a> {
     ParentIsCached {
-        inner_area: &'a Rect<f32, Measure>,
+        inner_area: &'a Area,
     },
     ParentIsNotCached {
-        area: &'a mut Rect<f32, Measure>,
-        inner_area: &'a mut Rect<f32, Measure>,
+        area: &'a mut Area,
+        inner_area: &'a mut Area,
         vertical_padding: f32,
         horizontal_padding: f32,
     },
@@ -484,7 +502,7 @@ enum MeasureMode<'a> {
 
 impl<'a> MeasureMode<'a> {
     /// Get a reference to the inner area
-    pub fn inner_area(&'a self) -> &'a Rect<f32, Measure> {
+    pub fn inner_area(&'a self) -> &'a Area {
         match self {
             Self::ParentIsCached { inner_area } => inner_area,
             Self::ParentIsNotCached { inner_area, .. } => inner_area,
@@ -499,8 +517,8 @@ fn measure_inner_nodes<Key: NodeKey>(
     node_id: &Key,
     node: &NodeData,
     layout: &mut Torin<Key>,
-    available_area: &mut Rect<f32, Measure>,
-    inner_sizes: &mut Size2D<f32, Measure>,
+    available_area: &mut Area,
+    inner_sizes: &mut Size2D,
     measurer: &mut Option<impl LayoutMeasurer<Key>>,
     must_cache: bool,
     mode: &mut MeasureMode,
@@ -515,11 +533,11 @@ fn measure_inner_nodes<Key: NodeKey>(
         let child_id = children.first();
 
         if let Some(child_id) = child_id {
-            let child_data = layout.get(*child_id);
+            let child_data = layout.get(*child_id).unwrap().clone();
 
             let (_, child_areas) = measure_node(
                 *child_id,
-                child_data,
+                &child_data,
                 layout,
                 &inner_area,
                 available_area,
@@ -555,11 +573,11 @@ fn measure_inner_nodes<Key: NodeKey>(
     // Normal display
 
     for child_id in children {
-        let child_data = layout.get(child_id);
+        let child_data = layout.get(child_id).unwrap().clone();
 
         let (child_revalidated, child_areas) = measure_node(
             child_id,
-            child_data,
+            &child_data,
             layout,
             &inner_area,
             available_area,
@@ -669,7 +687,7 @@ fn measure_inner_nodes<Key: NodeKey>(
         }
 
         if child_revalidated && must_cache {
-            layout.save(child_id, child_areas);
+            layout.cache_node(child_id, child_areas);
         }
     }
 }
@@ -692,14 +710,11 @@ impl DirectionMode {
     }
 }
 
-#[derive(PartialEq)]
-pub struct Measure;
-
 #[derive(PartialEq, Clone, Debug)]
 pub enum Size {
     Inner,
-    Percentage(Length<f32, Measure>),
-    Pixels(Length<f32, Measure>),
+    Percentage(Length),
+    Pixels(Length),
     DynamicCalculations(Vec<DynamicCalculation>),
 }
 
@@ -729,10 +744,10 @@ impl Size {
 
 #[derive(PartialEq, Clone, Debug, Default, Copy)]
 pub struct Paddings {
-    top: Length<f32, Measure>,
-    right: Length<f32, Measure>,
-    bottom: Length<f32, Measure>,
-    left: Length<f32, Measure>,
+    top: Length,
+    right: Length,
+    bottom: Length,
+    left: Length,
 }
 
 impl Paddings {
@@ -811,6 +826,7 @@ impl DisplayMode {
     }
 }
 
+/// Node layout configuration
 #[derive(PartialEq, Clone, Debug)]
 pub struct Node {
     /// Dimentions
@@ -824,8 +840,8 @@ pub struct Node {
     pub padding: Paddings,
 
     /// Inner position offsets
-    pub scroll_x: Length<f32, Measure>,
-    pub scroll_y: Length<f32, Measure>,
+    pub scroll_x: Length,
+    pub scroll_y: Length,
 
     /// Direction in which it's inner Nodes will be stacked
     pub direction: DirectionMode,
@@ -869,8 +885,8 @@ impl Node {
     pub fn from_size_and_scroll(
         width: Size,
         height: Size,
-        scroll_x: Length<f32, Measure>,
-        scroll_y: Length<f32, Measure>,
+        scroll_x: Length,
+        scroll_y: Length,
     ) -> Self {
         Self {
             width,
@@ -913,10 +929,10 @@ pub trait LayoutMeasurer<Key: NodeKey> {
         &mut self,
         node_id: Key,
         node: &NodeData,
-        area: &Rect<f32, Measure>,
-        parent_area: &Rect<f32, Measure>,
-        available_parent_size: &Rect<f32, Measure>,
-    ) -> Option<Rect<f32, Measure>>;
+        area: &Area,
+        parent_area: &Area,
+        available_parent_size: &Area,
+    ) -> Option<Area>;
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]

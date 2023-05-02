@@ -1,5 +1,3 @@
-use std::fmt::Display;
-
 use dioxus_native_core::exports::shipyard::Component;
 use dioxus_native_core::node::OwnedAttributeValue;
 use dioxus_native_core::node_ref::NodeView;
@@ -18,7 +16,6 @@ pub struct Style {
     pub radius: f32,
     pub image_data: Option<Vec<u8>>,
     pub svg_data: Option<Vec<u8>>,
-    pub text: Option<String>,
 }
 
 #[partial_derive_state]
@@ -29,8 +26,8 @@ impl State<CustomAttributeValues> for Style {
 
     type NodeDependencies = ();
 
-    const NODE_MASK: NodeMaskBuilder<'static> = NodeMaskBuilder::new()
-        .with_attrs(AttributeMaskBuilder::Some(&[
+    const NODE_MASK: NodeMaskBuilder<'static> =
+        NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[
             "background",
             "layer",
             "shadow",
@@ -38,8 +35,7 @@ impl State<CustomAttributeValues> for Style {
             "image_data",
             "svg_data",
             "svg_content",
-        ]))
-        .with_text();
+        ]));
 
     fn update<'a>(
         &mut self,
@@ -129,7 +125,6 @@ impl State<CustomAttributeValues> for Style {
             radius,
             image_data,
             svg_data,
-            text: node_view.text().map(|v| v.to_owned()),
         };
         changed
     }
@@ -145,22 +140,6 @@ pub fn parse_shadow(value: &str) -> Option<ShadowSettings> {
         size: shadow_values.next()?.parse().ok()?,
         color: parse_color(shadow_values.next()?)?,
     })
-}
-
-#[derive(Default, Clone, Debug, PartialEq, Eq)]
-pub enum DisplayMode {
-    #[default]
-    Normal,
-    Center,
-}
-
-impl Display for DisplayMode {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            DisplayMode::Normal => f.write_str("normal"),
-            DisplayMode::Center => f.write_str("center"),
-        }
-    }
 }
 
 #[derive(Default, Clone, Debug, PartialEq)]

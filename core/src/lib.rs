@@ -1,9 +1,9 @@
 use dioxus_native_core::prelude::{ElementNode, NodeImmutableDioxusExt};
 use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::{node::NodeType, NodeId};
-use freya_common::Area;
 use freya_dom::{DioxusNodeResolver, FreyaDOM, SkiaMeasurer};
 use freya_layout::Layers;
+use torin::Area;
 
 use freya_node_state::Style;
 use rustc_hash::FxHashMap;

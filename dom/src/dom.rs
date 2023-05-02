@@ -244,10 +244,10 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
         &mut self,
         node_id: NodeId,
         _node: &NodeData,
-        area: &Rect<f32, Measure>,
-        _parent_area: &Rect<f32, Measure>,
-        available_parent_area: &Rect<f32, Measure>,
-    ) -> Option<Rect<f32, Measure>> {
+        area: &Area,
+        _parent_area: &Area,
+        available_parent_area: &Area,
+    ) -> Option<Area> {
         let node = self.rdom.get(node_id).unwrap();
         let node_type = node.node_type();
 

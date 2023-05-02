@@ -4,7 +4,7 @@ use dioxus_native_core::{
     prelude::{ElementNode, NodeType, TextNode},
     real_dom::{NodeImmutable, RealDom},
 };
-use freya_common::{Area, CursorLayoutResponse, Point2D};
+use freya_common::CursorLayoutResponse;
 use freya_dom::DioxusNode;
 use freya_node_state::{
     CursorReference, CursorSettings, CustomAttributeValues, FontStyle, References,
@@ -14,6 +14,7 @@ pub use layers::*;
 use skia_safe::textlayout::{
     FontCollection, Paragraph, ParagraphBuilder, ParagraphStyle, TextStyle,
 };
+use torin::{Area, CursorPoint};
 pub type DioxusDOM = RealDom<CustomAttributeValues>;
 
 #[allow(dead_code)]
@@ -132,8 +133,8 @@ fn get_cursor_reference(
 ) -> Option<(
     CursorReference,
     usize,
-    Option<Point2D>,
-    Option<(Point2D, Point2D)>,
+    Option<CursorPoint>,
+    Option<(CursorPoint, CursorPoint)>,
 )> {
     let node_references = node.get::<References>().unwrap();
     let cursor_settings = node.get::<CursorSettings>().unwrap();

@@ -66,6 +66,8 @@ pub mod hotreload {
     pub use freya_elements::elements::FreyaCtx;
 }
 
+pub use torin;
+
 /// Useful imports.
 pub mod prelude {
     pub use dioxus_core::prelude::*;
@@ -81,6 +83,7 @@ pub mod prelude {
     pub use freya_hooks::*;
     pub use freya_node_state::{bytes_to_data, CustomAttributeValues};
     pub use freya_renderer::WindowConfig;
+    pub use torin;
 
     pub use tracing;
 }

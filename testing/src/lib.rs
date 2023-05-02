@@ -6,7 +6,6 @@ use dioxus_native_core::prelude::TextNode;
 use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::tree::TreeRef;
 use dioxus_native_core::NodeId;
-use freya_common::{Area, Size2D};
 use freya_core::events::EventsProcessor;
 use freya_core::{
     events::DomEvent,
@@ -21,6 +20,7 @@ use rustc_hash::FxHashMap;
 use skia_safe::textlayout::FontCollection;
 use skia_safe::FontMgr;
 use tokio::sync::mpsc::unbounded_channel;
+use torin::{Area, Size2D};
 
 pub use freya_core::events::FreyaEvent;
 pub use freya_elements::events::mouse::MouseButton;

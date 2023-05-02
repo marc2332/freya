@@ -1,5 +1,4 @@
 use dioxus_native_core::real_dom::NodeImmutable;
-use freya_common::Area;
 use freya_dom::DioxusNode;
 use freya_layout::get_inner_texts;
 use freya_node_state::{CursorSettings, FontStyle};
@@ -10,6 +9,7 @@ use skia_safe::{
     },
     Canvas, Paint, PaintStyle, Rect,
 };
+use torin::Area;
 
 /// Render a `paragraph` element
 pub fn render_paragraph(

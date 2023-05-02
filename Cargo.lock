@@ -1327,6 +1327,7 @@ dependencies = [
  "fxhash",
  "skia-safe",
  "tokio",
+ "torin",
  "tracing",
 ]
 
@@ -1359,6 +1360,7 @@ dependencies = [
  "open",
  "reqwest",
  "tokio",
+ "torin",
 ]
 
 [[package]]
@@ -1433,6 +1435,7 @@ dependencies = [
  "freya-common",
  "keyboard-types",
  "tokio",
+ "torin",
  "winit",
 ]
 
@@ -1457,6 +1460,7 @@ dependencies = [
  "ropey",
  "skia-safe",
  "tokio",
+ "torin",
  "tween",
  "uuid",
  "winit",
@@ -1534,6 +1538,7 @@ dependencies = [
  "raw-window-handle",
  "skia-safe",
  "tokio",
+ "torin",
  "uuid",
  "winit",
 ]
@@ -1560,6 +1565,7 @@ dependencies = [
  "rustc-hash",
  "skia-safe",
  "tokio",
+ "torin",
  "winit",
 ]
 
