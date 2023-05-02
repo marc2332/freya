@@ -21,6 +21,7 @@ impl Layers {
         layout: &Torin<NodeId>,
         paragraph_elements: FxHashMap<Uuid, FxHashSet<NodeId>>,
         font_collection: &FontCollection,
+        scale_factor: f32,
     ) -> Self {
         let mut layers = Layers {
             paragraph_elements,
@@ -52,10 +53,11 @@ impl Layers {
 
             if let Some(reference) = &size_state.node_ref {
                 let areas = layout.get_size(node.id()).unwrap();
-                let node_layout = NodeReferenceLayout {
+                let mut node_layout = NodeReferenceLayout {
                     area: areas.area,
                     inner: areas.inner_sizes,
                 };
+                node_layout.div(scale_factor);
                 reference.send(node_layout).ok();
             }
         });

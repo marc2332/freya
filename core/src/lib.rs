@@ -256,7 +256,7 @@ pub fn process_layout(
     dom: &FreyaDOM,
     area: Area,
     font_collection: &mut FontCollection,
-    _scale_factor: f32,
+    scale_factor: f32,
 ) -> (Layers, ViewportsCollection) {
     let rdom = dom.dom();
     let node_resolver = DioxusNodeResolver::new(rdom);
@@ -268,7 +268,13 @@ pub fn process_layout(
     dom.layout()
         .measure(root_id, area, &mut Some(skia_measurer), &node_resolver);
 
-    let layers = Layers::new(rdom, &dom.layout(), paragraph_elements, font_collection);
+    let layers = Layers::new(
+        rdom,
+        &dom.layout(),
+        paragraph_elements,
+        font_collection,
+        scale_factor,
+    );
 
     let mut layers_nums: Vec<&i16> = layers.layers.keys().collect();
 

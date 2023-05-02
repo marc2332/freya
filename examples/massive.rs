@@ -9,8 +9,19 @@ fn main() {
     launch(app);
 }
 
-fn app(cx: Scope) -> Element {
+#[allow(non_snake_case)]
+fn StatefulSwitch(cx: Scope) -> Element {
     let enabled = use_state(cx, || false);
+
+    render!(Switch {
+        enabled: *enabled.get(),
+        ontoggled: |_| {
+            enabled.set(!enabled.get());
+        }
+    })
+}
+
+fn app(cx: Scope) -> Element {
     let cols = 40;
     let rows = 40;
 
@@ -31,12 +42,8 @@ fn app(cx: Scope) -> Element {
                             height: "100%",
                             (0..rows).map(|row| {
                                 rsx! {
-                                    Switch {
+                                    StatefulSwitch {
                                         key: "{row}{col}",
-                                        enabled: *enabled.get(),
-                                        ontoggled: |_| {
-                                            enabled.set(!enabled.get());
-                                        }
                                     }
                                 }
                             })

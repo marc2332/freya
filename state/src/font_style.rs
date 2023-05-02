@@ -1,11 +1,15 @@
+use std::sync::{Arc, Mutex};
+
 use dioxus_native_core::exports::shipyard::Component;
 use dioxus_native_core::node_ref::NodeView;
 use dioxus_native_core::prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State};
+use dioxus_native_core::NodeId;
 use dioxus_native_core::SendAnyMap;
 use dioxus_native_core_macro::partial_derive_state;
 use skia_safe::textlayout::TextAlign;
 use skia_safe::Color;
 use smallvec::{smallvec, SmallVec};
+use torin::Torin;
 
 use crate::{parse_color, CustomAttributeValues};
 
@@ -70,6 +74,7 @@ impl State<CustomAttributeValues> for FontStyle {
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
         context: &SendAnyMap,
     ) -> bool {
+        let torin_layout = context.get::<Arc<Mutex<Torin<NodeId>>>>().unwrap();
         let scale_factor = context.get::<f32>().unwrap();
 
         let mut font_style = parent
@@ -139,6 +144,16 @@ impl State<CustomAttributeValues> for FontStyle {
                     _ => {}
                 }
             }
+        }
+
+        let changed_size = self.font_style != font_style.font_style
+            || self.max_lines != font_style.max_lines
+            || self.line_height != font_style.line_height
+            || self.font_size != font_style.font_size
+            || self.font_family != font_style.font_family;
+
+        if changed_size {
+            torin_layout.lock().unwrap().invalidate(node_view.node_id());
         }
 
         let changed = &font_style != self;

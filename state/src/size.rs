@@ -63,8 +63,9 @@ impl State<CustomAttributeValues> for SizeState {
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
         context: &SendAnyMap,
     ) -> bool {
-        let scale_factor = context.get::<f32>().unwrap();
         let torin_layout = context.get::<Arc<Mutex<Torin<NodeId>>>>().unwrap();
+        let scale_factor = context.get::<f32>().unwrap();
+
         let mut width = Size::default();
         let mut height = Size::default();
         let mut min_height = Size::default();
@@ -219,14 +220,10 @@ impl State<CustomAttributeValues> for SizeState {
                 has_layout_references: node_ref.is_some(),
             };
 
-            if torin_layout.lock().unwrap().has(node_view.node_id()) {
-                torin_layout
-                    .lock()
-                    .unwrap()
-                    .set_node(node_view.node_id(), node)
-            } else {
-                torin_layout.lock().unwrap().add(node_view.node_id(), node);
-            }
+            torin_layout
+                .lock()
+                .unwrap()
+                .set_or_add(node_view.node_id(), node);
         }
 
         *self = Self {

@@ -56,8 +56,8 @@ impl NodeResolver<usize> for TreeMapper {
         self.mapper.get(node_id).map(|c| c.0).flatten()
     }
 
-    fn height(&self, node_id: &usize) -> u16 {
-        self.mapper.get(node_id).map(|c| c.2).unwrap()
+    fn height(&self, node_id: &usize) -> Option<u16> {
+        self.mapper.get(node_id).map(|c| c.2)
     }
 }
 
@@ -657,7 +657,7 @@ pub fn node_removal() {
         Rect::new(Point2D::new(0.0, 200.0), Size2D::new(200.0, 200.0)),
     );
 
-    layout.remove(2, &tree_mapper);
+    layout.remove(2, &tree_mapper, true);
 
     layout.has_pending_measurements(&tree_mapper);
 

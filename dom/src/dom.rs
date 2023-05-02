@@ -133,23 +133,32 @@ impl FreyaDOM {
     /// Process the given mutations from the [`VirtualDOM`](dioxus_core::VirtualDom).
     pub fn apply_mutations(&mut self, mutations: Mutations, scale_factor: f32) -> bool {
         {
-            let mut torin = self.torin.lock().unwrap();
             for mutation in &mutations.edits {
                 match mutation {
                     Mutation::SetText { id, .. } => {
-                        torin.invalidate(self.dioxus_integration_state.element_to_node_id(*id));
+                        self.torin
+                            .lock()
+                            .unwrap()
+                            .invalidate(self.dioxus_integration_state.element_to_node_id(*id));
                     }
                     Mutation::InsertAfter { id, .. } => {
-                        torin.invalidate(self.dioxus_integration_state.element_to_node_id(*id));
+                        self.torin
+                            .lock()
+                            .unwrap()
+                            .invalidate(self.dioxus_integration_state.element_to_node_id(*id));
                     }
                     Mutation::InsertBefore { id, .. } => {
-                        torin.invalidate(self.dioxus_integration_state.element_to_node_id(*id));
+                        self.torin
+                            .lock()
+                            .unwrap()
+                            .invalidate(self.dioxus_integration_state.element_to_node_id(*id));
                     }
                     Mutation::Remove { id } => {
                         let node_resolver = DioxusNodeResolver::new(self.dom());
-                        torin.remove(
+                        self.torin.lock().unwrap().remove(
                             self.dioxus_integration_state.element_to_node_id(*id),
                             &node_resolver,
+                            true,
                         );
                     }
                     _ => {}
@@ -196,8 +205,8 @@ impl<'a> DioxusNodeResolver<'a> {
 }
 
 impl NodeResolver<NodeId> for DioxusNodeResolver<'_> {
-    fn height(&self, node_id: &NodeId) -> u16 {
-        self.rdom.tree_ref().height(*node_id).unwrap()
+    fn height(&self, node_id: &NodeId) -> Option<u16> {
+        self.rdom.tree_ref().height(*node_id)
     }
 
     fn parent_of(&self, node_id: &NodeId) -> Option<NodeId> {

@@ -149,10 +149,8 @@ impl<State: 'static + Clone> App<State> {
 
             let must_repaint = self.apply_vdom_changes();
 
-            let layouted = self.process_layout();
-
-            if must_repaint || layouted {
-                self.render(&None);
+            if must_repaint {
+                self.window_env.window.request_redraw();
             }
         }
     }

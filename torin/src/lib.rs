@@ -20,7 +20,7 @@ impl NodeKey for usize {}
 impl NodeKey for NodeId {}
 
 pub trait NodeResolver<NodeKey> {
-    fn height(&self, node_id: &NodeKey) -> u16;
+    fn height(&self, node_id: &NodeKey) -> Option<u16>;
 
     fn parent_of(&self, node_id: &NodeKey) -> Option<NodeKey>;
 
@@ -72,9 +72,6 @@ pub struct Torin<Key: NodeKey> {
     /// Invalid registered nodes since previous layout measurement
     pub dirty: HashSet<Key>,
 
-    /// Removed registered nodes since previous layout measurement
-    pub removed: HashSet<Key>,
-
     /// Closes dirty Node to the Root
     pub tallest_dirty_node: TallestDirtyNode<Key>,
 }
@@ -92,7 +89,6 @@ impl<Key: NodeKey> Torin<Key> {
             nodes: FxHashMap::default(),
             results: HashMap::default(),
             dirty: HashSet::new(),
-            removed: HashSet::new(),
             tallest_dirty_node: TallestDirtyNode::None,
         }
     }
@@ -123,28 +119,43 @@ impl<Key: NodeKey> Torin<Key> {
     }
 
     /// Remove a Node from the layout
-    pub fn remove(&mut self, node_id: Key, node_resolver: &impl NodeResolver<Key>) {
+    pub fn remove(
+        &mut self,
+        node_id: Key,
+        node_resolver: &impl NodeResolver<Key>,
+        invalidate_parent: bool,
+    ) {
         // Remove itself
         self.raw_remove(node_id);
-        self.removed.insert(node_id);
+
+        // Mark as dirty the Node's parent
+        if invalidate_parent {
+            self.invalidate(node_resolver.parent_of(&node_id).unwrap());
+        }
 
         // Remove all it's children
         for child_id in node_resolver.children_of(&node_id) {
-            self.remove(child_id, node_resolver);
+            self.remove(child_id, node_resolver, false);
         }
     }
 
     /// Mark dirty a Node
     pub fn invalidate(&mut self, node_id: Key) {
-        if !self.removed.contains(&node_id) {
-            self.dirty.insert(node_id);
-        }
+        self.dirty.insert(node_id);
     }
 
     /// Add a node to the layout without a parent
     pub fn add(&mut self, node_id: Key, node: Node) {
         self.nodes.insert(node_id, NodeData { node });
         self.dirty.insert(node_id);
+    }
+
+    pub fn set_or_add(&mut self, node_id: Key, node: Node) {
+        if self.has(node_id) {
+            self.set_node(node_id, node);
+        } else {
+            self.add(node_id, node);
+        }
     }
 
     /// Has a Node
@@ -165,33 +176,6 @@ impl<Key: NodeKey> Torin<Key> {
     /// Add a Node to the layout under the given parent
     pub fn insert(&mut self, node_id: Key, node: Node) {
         self.add(node_id, node);
-    }
-
-    // Mark as dirty all the parent nodes that depend on it
-    pub fn check_parent_dirty_dependants(
-        &mut self,
-        node_id: Key,
-        node_resolver: &impl NodeResolver<Key>,
-    ) {
-        // Mark this Node's parent if it is affected
-        let parent_id = node_resolver.parent_of(&node_id);
-
-        if let Some(parent_id) = parent_id {
-            let parent = self.safe_get(parent_id);
-
-            if let Some(parent) = parent {
-                // Mark parent
-                if parent.does_depend_on_inner() {
-                    self.check_dirty_dependants(parent_id, node_resolver, true);
-                } else {
-                    // Mark siblings
-                    // TODO: Only mark those who come before this node.
-                    for child_id in node_resolver.children_of(&parent_id) {
-                        self.check_dirty_dependants(child_id, node_resolver, true)
-                    }
-                }
-            }
-        }
     }
 
     // Mark as dirty the given Node and all the nodes that depend on it
@@ -263,10 +247,6 @@ impl<Key: NodeKey> Torin<Key> {
             return true;
         }
 
-        for removed in &self.removed.clone() {
-            self.check_parent_dirty_dependants(*removed, node_resolver);
-        }
-
         for dirty in &self.dirty.clone() {
             self.check_dirty_dependants(*dirty, node_resolver, false);
         }
@@ -324,7 +304,6 @@ impl<Key: NodeKey> Torin<Key> {
             self.save(root_id, root_areas);
         }
 
-        self.removed.clear();
         self.dirty.clear();
         self.tallest_dirty_node = TallestDirtyNode::None;
     }
