@@ -149,8 +149,12 @@ impl<State: 'static + Clone> App<State> {
 
             let must_repaint = self.apply_vdom_changes();
 
-            if must_repaint {
+            if self.check_layout() {
                 self.window_env.window.request_redraw();
+            } else if must_repaint {
+                self.proxy
+                    .send_event(EventMessage::RequestRerender)
+                    .unwrap();
             }
         }
     }
@@ -167,6 +171,13 @@ impl<State: 'static + Clone> App<State> {
             &self.viewports_collection,
             scale_factor,
         )
+    }
+
+    pub fn check_layout(&mut self) -> bool {
+        let dom = self.rdom.get();
+        let mut layout = dom.layout();
+        let node_resolver = &DioxusNodeResolver::new(dom.rdom());
+        layout.has_pending_measurements(node_resolver)
     }
 
     /// Measure the layout

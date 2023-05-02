@@ -8,7 +8,7 @@ impl LayoutMeasurer<usize> for TestingMeasurer {
     fn measure(
         &mut self,
         _node_id: usize,
-        _node: &NodeData,
+        _node: &Node,
         _area: &Area,
         _parent_size: &Area,
         _available_parent_size: &Area,
@@ -19,19 +19,24 @@ impl LayoutMeasurer<usize> for TestingMeasurer {
 
 #[derive(Default)]
 struct TreeMapper {
-    mapper: HashMap<usize, (Option<usize>, Vec<usize>, u16)>,
+    mapper: HashMap<usize, (Option<usize>, Vec<usize>, u16, Node)>,
 }
 
 impl TreeMapper {
-    fn add(&mut self, node_id: usize, parent: Option<usize>, children: Vec<usize>) {
+    fn add(&mut self, node_id: usize, parent: Option<usize>, children: Vec<usize>, node: Node) {
         let depth = parent.map(|p| self.mapper.get(&p).unwrap().2).unwrap_or(0) + 1;
-        self.mapper.insert(node_id, (parent, children, depth));
+        self.mapper.insert(node_id, (parent, children, depth, node));
+    }
+
+    fn set_node(&mut self, node_id: usize, node: Node) {
+        self.mapper.get_mut(&node_id).unwrap().3 = node;
     }
 
     fn remove(&mut self, node_id: usize) {
         let node = self.mapper.get(&node_id).unwrap().clone();
 
-        if let Some((_, parent_children, _)) = node.0.map(|p| self.mapper.get_mut(&p)).flatten() {
+        if let Some((_, parent_children, _, _)) = node.0.map(|p| self.mapper.get_mut(&p)).flatten()
+        {
             parent_children.retain(|c| *c != node_id);
         }
 
@@ -58,6 +63,10 @@ impl NodeResolver<usize> for TreeMapper {
     fn height(&self, node_id: &usize) -> Option<u16> {
         self.mapper.get(node_id).map(|c| c.2)
     }
+
+    fn get_node(&self, node_id: &usize) -> Option<Node> {
+        self.mapper.get(node_id).map(|c| c.3.clone())
+    }
 }
 
 fn test_utils() -> (Torin<usize>, Option<TestingMeasurer>) {
@@ -72,30 +81,30 @@ pub fn root_100per_children_50per50per() {
     let (mut layout, mut measurer) = test_utils();
 
     let mut mocked_dom = TreeMapper::default();
-    mocked_dom.add(0, None, vec![1, 2]);
-    mocked_dom.add(1, Some(0), vec![]);
-    mocked_dom.add(2, Some(0), vec![]);
-
-    layout.add(
+    mocked_dom.add(
         0,
+        None,
+        vec![1, 2],
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(100.0)),
             DirectionMode::Vertical,
         ),
     );
-
-    layout.insert(
+    mocked_dom.add(
         1,
+        Some(0),
+        vec![],
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(50.0)),
-            DirectionMode::Horizontal,
+            DirectionMode::Vertical,
         ),
     );
-
-    layout.insert(
+    mocked_dom.add(
         2,
+        Some(0),
+        vec![],
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(50.0)),
@@ -132,30 +141,30 @@ pub fn root_200px_children_50per50per() {
     let (mut layout, mut measurer) = test_utils();
 
     let mut mocked_dom = TreeMapper::default();
-    mocked_dom.add(0, None, vec![1, 2]);
-    mocked_dom.add(1, Some(0), vec![]);
-    mocked_dom.add(2, Some(0), vec![]);
-
-    layout.add(
+    mocked_dom.add(
         0,
+        None,
+        vec![1, 2],
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
             DirectionMode::Vertical,
         ),
     );
-
-    layout.insert(
+    mocked_dom.add(
         1,
+        Some(0),
+        vec![],
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(50.0)),
             DirectionMode::Horizontal,
         ),
     );
-
-    layout.insert(
+    mocked_dom.add(
         2,
+        Some(0),
+        vec![],
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(50.0)),
@@ -192,30 +201,30 @@ pub fn layout_dirty_nodes() {
     let (mut layout, mut measurer) = test_utils();
 
     let mut mocked_dom = TreeMapper::default();
-    mocked_dom.add(0, None, vec![1]);
-    mocked_dom.add(1, None, vec![2]);
-    mocked_dom.add(2, Some(1), vec![]);
-
-    layout.add(
+    mocked_dom.add(
         0,
+        None,
+        vec![1],
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
             DirectionMode::Vertical,
         ),
     );
-
-    layout.insert(
+    mocked_dom.add(
         1,
+        None,
+        vec![2],
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Pixels(Length::new(100.0)),
             DirectionMode::Vertical,
         ),
     );
-
-    layout.insert(
+    mocked_dom.add(
         2,
+        Some(1),
+        vec![],
         Node::from_size_and_direction(
             Size::Pixels(Length::new(50.0)),
             Size::Pixels(Length::new(50.0)),
@@ -250,7 +259,7 @@ pub fn layout_dirty_nodes() {
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(50.0, 50.0)),
     );
 
-    layout.set_node(
+    mocked_dom.set_node(
         2,
         Node::from_size_and_direction(
             Size::Pixels(Length::new(10.0)),
@@ -258,13 +267,14 @@ pub fn layout_dirty_nodes() {
             DirectionMode::Vertical,
         ),
     );
+    layout.invalidate(2);
 
     assert_eq!(layout.get_dirty_nodes(), &HashSet::from([2]));
 
     // CASE 2
     // Same as Case 1 but we make Child A depend on Child A[0]'s size
 
-    layout.set_node(
+    mocked_dom.set_node(
         1,
         Node::from_size_and_direction(
             Size::Inner,
@@ -272,13 +282,14 @@ pub fn layout_dirty_nodes() {
             DirectionMode::Vertical,
         ),
     );
+    layout.invalidate(1);
 
     assert_eq!(layout.get_dirty_nodes(), &HashSet::from([2, 1]));
 
     // CASE 3
     // Same as Case 2, but triggers a change in Child A[0]
 
-    layout.set_node(
+    mocked_dom.set_node(
         2,
         Node::from_size_and_direction(
             Size::Pixels(Length::new(50.0)),
@@ -286,13 +297,14 @@ pub fn layout_dirty_nodes() {
             DirectionMode::Vertical,
         ),
     );
+    layout.invalidate(2);
 
     assert_eq!(layout.get_dirty_nodes(), &HashSet::from([2, 1]));
 
     // CASE 4
     // Same as Case 3, but triggers a change in the root
 
-    layout.set_node(
+    mocked_dom.set_node(
         0,
         Node::from_size_and_direction(
             Size::Pixels(Length::new(150.0)),
@@ -300,6 +312,7 @@ pub fn layout_dirty_nodes() {
             DirectionMode::Vertical,
         ),
     );
+    layout.invalidate(0);
 
     assert_eq!(layout.get_dirty_nodes(), &HashSet::from([2, 1, 0]));
 }
@@ -309,30 +322,30 @@ pub fn direction() {
     let (mut layout, mut measurer) = test_utils();
 
     let mut mocked_dom = TreeMapper::default();
-    mocked_dom.add(0, None, vec![1, 2]);
-    mocked_dom.add(1, None, vec![2]);
-    mocked_dom.add(2, Some(1), vec![]);
-
-    layout.add(
+    mocked_dom.add(
         0,
+        None,
+        vec![1, 2],
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
             DirectionMode::Vertical,
         ),
     );
-
-    layout.insert(
+    mocked_dom.add(
         1,
+        Some(0),
+        vec![],
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Pixels(Length::new(100.0)),
             DirectionMode::Vertical,
         ),
     );
-
-    layout.insert(
+    mocked_dom.add(
         2,
+        Some(0),
+        vec![],
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Pixels(Length::new(100.0)),
@@ -359,7 +372,7 @@ pub fn direction() {
 
     // Change the direction from vertical to horizontal
 
-    layout.set_node(
+    mocked_dom.set_node(
         0,
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
@@ -367,6 +380,7 @@ pub fn direction() {
             DirectionMode::Horizontal,
         ),
     );
+    layout.invalidate(0);
 
     layout.has_pending_measurements(&mocked_dom);
     layout.measure(
@@ -392,12 +406,10 @@ pub fn scroll() {
     let (mut layout, mut measurer) = test_utils();
 
     let mut mocked_dom = TreeMapper::default();
-    mocked_dom.add(0, None, vec![1, 2]);
-    mocked_dom.add(1, Some(0), vec![]);
-    mocked_dom.add(2, Some(0), vec![]);
-
-    layout.add(
+    mocked_dom.add(
         0,
+        None,
+        vec![1, 2],
         Node::from_size_and_scroll(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
@@ -405,18 +417,20 @@ pub fn scroll() {
             Length::new(0.0),
         ),
     );
-
-    layout.insert(
+    mocked_dom.add(
         1,
+        Some(0),
+        vec![],
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Pixels(Length::new(100.0)),
             DirectionMode::Vertical,
         ),
     );
-
-    layout.insert(
+    mocked_dom.add(
         2,
+        Some(0),
+        vec![],
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Pixels(Length::new(100.0)),
@@ -448,20 +462,20 @@ pub fn padding() {
     let (mut layout, mut measurer) = test_utils();
 
     let mut mocked_dom = TreeMapper::default();
-    mocked_dom.add(0, None, vec![1]);
-    mocked_dom.add(1, Some(0), vec![]);
-
-    layout.add(
+    mocked_dom.add(
         0,
+        None,
+        vec![1],
         Node::from_size_and_padding(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
             Paddings::new(5.0, 10.0, 15.0, 20.0),
         ),
     );
-
-    layout.insert(
+    mocked_dom.add(
         1,
+        Some(0),
+        vec![],
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(100.0)),
@@ -487,20 +501,20 @@ pub fn caching() {
     let (mut layout, mut measurer) = test_utils();
 
     let mut mocked_dom = TreeMapper::default();
-    mocked_dom.add(0, None, vec![1]);
-    mocked_dom.add(1, Some(0), vec![]);
-
-    layout.add(
+    mocked_dom.add(
         0,
+        None,
+        vec![1],
         Node::from_size_and_padding(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
             Paddings::new(5.0, 0.0, 0.0, 0.0),
         ),
     );
-
-    layout.insert(
+    mocked_dom.add(
         1,
+        Some(0),
+        vec![],
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(100.0)),
@@ -520,7 +534,7 @@ pub fn caching() {
         Rect::new(Point2D::new(0.0, 5.0), Size2D::new(200.0, 195.0)),
     );
 
-    layout.set_node(
+    mocked_dom.set_node(
         1,
         Node::from_size_and_direction(
             Size::Percentage(Length::new(50.0)),
@@ -528,6 +542,7 @@ pub fn caching() {
             DirectionMode::Vertical,
         ),
     );
+    layout.invalidate(1);
 
     layout.measure(
         0,
@@ -547,26 +562,26 @@ pub fn sibling_increments_area() {
     let (mut layout, mut measurer) = test_utils();
 
     let mut mocked_dom = TreeMapper::default();
-    mocked_dom.add(0, None, vec![1, 2]);
-    mocked_dom.add(1, Some(0), vec![]);
-    mocked_dom.add(2, Some(0), vec![]);
-
-    layout.add(
+    mocked_dom.add(
         0,
+        None,
+        vec![1, 2],
         Node::from_size_and_direction(Size::Inner, Size::Inner, DirectionMode::Vertical),
     );
-
-    layout.insert(
+    mocked_dom.add(
         1,
+        Some(0),
+        vec![],
         Node::from_size_and_direction(
             Size::Pixels(Length::new(300.0)),
             Size::Pixels(Length::new(100.0)),
             DirectionMode::Vertical,
         ),
     );
-
-    layout.insert(
+    mocked_dom.add(
         2,
+        Some(0),
+        vec![],
         Node::from_size_and_direction(
             Size::Percentage(Length::new(50.0)),
             Size::Pixels(Length::new(100.0)),
@@ -597,36 +612,36 @@ pub fn node_removal() {
     let (mut layout, mut measurer) = test_utils();
 
     let mut mocked_dom = TreeMapper::default();
-    mocked_dom.add(0, None, vec![1]);
-    mocked_dom.add(1, Some(0), vec![2, 3]);
-    mocked_dom.add(2, Some(1), vec![]);
-    mocked_dom.add(3, Some(1), vec![]);
-
-    layout.add(
+    mocked_dom.add(
         0,
+        None,
+        vec![1],
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
             DirectionMode::Vertical,
         ),
     );
-
-    layout.insert(
+    mocked_dom.add(
         1,
+        Some(0),
+        vec![2, 3],
         Node::from_size_and_direction(Size::Inner, Size::Inner, DirectionMode::Vertical),
     );
-
-    layout.insert(
+    mocked_dom.add(
         2,
+        Some(1),
+        vec![],
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
             DirectionMode::Vertical,
         ),
     );
-
-    layout.insert(
+    mocked_dom.add(
         3,
+        Some(1),
+        vec![],
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
@@ -692,11 +707,10 @@ pub fn display_horizontal() {
     let (mut layout, mut measurer) = test_utils();
 
     let mut mocked_dom = TreeMapper::default();
-    mocked_dom.add(0, None, vec![1]);
-    mocked_dom.add(1, Some(0), vec![]);
-
-    layout.add(
+    mocked_dom.add(
         0,
+        None,
+        vec![1],
         Node::from_size_and_display_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
@@ -704,9 +718,10 @@ pub fn display_horizontal() {
             DirectionMode::Horizontal,
         ),
     );
-
-    layout.insert(
+    mocked_dom.add(
         1,
+        Some(0),
+        vec![],
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Pixels(Length::new(100.0)),
@@ -737,12 +752,10 @@ pub fn display_vertical_with_inner_children() {
     let (mut layout, mut measurer) = test_utils();
 
     let mut mocked_dom = TreeMapper::default();
-    mocked_dom.add(0, None, vec![1]);
-    mocked_dom.add(1, Some(0), vec![2]);
-    mocked_dom.add(2, Some(1), vec![]);
-
-    layout.add(
+    mocked_dom.add(
         0,
+        None,
+        vec![1],
         Node::from_size_and_display_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
@@ -750,18 +763,20 @@ pub fn display_vertical_with_inner_children() {
             DirectionMode::Vertical,
         ),
     );
-
-    layout.insert(
+    mocked_dom.add(
         1,
+        Some(0),
+        vec![2],
         Node::from_size_and_padding(
             Size::Pixels(Length::new(100.0)),
             Size::Pixels(Length::new(100.0)),
             Paddings::new(5.0, 5.0, 5.0, 5.0),
         ),
     );
-
-    layout.insert(
+    mocked_dom.add(
         2,
+        Some(1),
+        vec![],
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(100.0)),
@@ -798,15 +813,10 @@ pub fn deep_tree() {
     let (mut layout, mut measurer) = test_utils();
 
     let mut mocked_dom = TreeMapper::default();
-    mocked_dom.add(0, None, vec![1]);
-    mocked_dom.add(1, Some(0), vec![2]);
-    mocked_dom.add(2, Some(1), vec![3]);
-    mocked_dom.add(3, Some(2), vec![4]);
-    mocked_dom.add(4, Some(3), vec![5]);
-    mocked_dom.add(5, Some(4), vec![]);
-
-    layout.add(
+    mocked_dom.add(
         0,
+        None,
+        vec![1],
         Node::from_size_and_display_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
@@ -814,45 +824,50 @@ pub fn deep_tree() {
             DirectionMode::Vertical,
         ),
     );
-
-    layout.insert(
+    mocked_dom.add(
         1,
+        Some(0),
+        vec![2],
         Node::from_size_and_direction(
             Size::Pixels(Length::new(100.0)),
             Size::Pixels(Length::new(100.0)),
             DirectionMode::Vertical,
         ),
     );
-
-    layout.insert(
+    mocked_dom.add(
         2,
+        Some(1),
+        vec![3],
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(100.0)),
             DirectionMode::Vertical,
         ),
     );
-
-    layout.insert(
+    mocked_dom.add(
         3,
+        Some(2),
+        vec![4],
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(100.0)),
             DirectionMode::Vertical,
         ),
     );
-
-    layout.insert(
+    mocked_dom.add(
         4,
+        Some(3),
+        vec![5],
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(100.0)),
             DirectionMode::Vertical,
         ),
     );
-
-    layout.insert(
+    mocked_dom.add(
         5,
+        Some(4),
+        vec![],
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(100.0)),
@@ -868,7 +883,7 @@ pub fn deep_tree() {
         &mocked_dom,
     );
 
-    layout.set_node(
+    mocked_dom.set_node(
         4,
         Node::from_size_and_direction(
             Size::Percentage(Length::new(200.0)),
@@ -876,6 +891,7 @@ pub fn deep_tree() {
             DirectionMode::Vertical,
         ),
     );
+    layout.invalidate(4);
 
     layout.has_pending_measurements(&mocked_dom);
     assert_eq!(layout.get_tallest_dirty_node(), TallestDirtyNode::Valid(4));
@@ -895,30 +911,30 @@ pub fn stacked() {
     let (mut layout, mut measurer) = test_utils();
 
     let mut mocked_dom = TreeMapper::default();
-    mocked_dom.add(0, None, vec![1, 2]);
-    mocked_dom.add(1, Some(0), vec![]);
-    mocked_dom.add(2, Some(0), vec![]);
-
-    layout.add(
+    mocked_dom.add(
         0,
+        None,
+        vec![1, 2],
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
             DirectionMode::Vertical,
         ),
     );
-
-    layout.insert(
+    mocked_dom.add(
         1,
+        Some(0),
+        vec![],
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(50.0)),
             DirectionMode::Vertical,
         ),
     );
-
-    layout.insert(
+    mocked_dom.add(
         2,
+        Some(0),
+        vec![],
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(50.0)),
@@ -943,7 +959,7 @@ pub fn stacked() {
         Rect::new(Point2D::new(0.0, 100.0), Size2D::new(200.0, 100.0)),
     );
 
-    layout.set_node(
+    mocked_dom.set_node(
         2,
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
@@ -951,6 +967,7 @@ pub fn stacked() {
             DirectionMode::Vertical,
         ),
     );
+    layout.invalidate(2);
 
     layout.has_pending_measurements(&mocked_dom);
 

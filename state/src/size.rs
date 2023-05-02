@@ -209,21 +209,7 @@ impl State<CustomAttributeValues> for SizeState {
             || (display != self.display);
 
         if changed {
-            let node = Node {
-                width: width.clone(),
-                height: height.clone(),
-                direction: direction.clone(),
-                padding,
-                display,
-                scroll_x: Length::new(scroll_x),
-                scroll_y: Length::new(scroll_y),
-                has_layout_references: node_ref.is_some(),
-            };
-
-            torin_layout
-                .lock()
-                .unwrap()
-                .set_or_add(node_view.node_id(), node);
+            torin_layout.lock().unwrap().invalidate(node_view.node_id());
         }
 
         *self = Self {

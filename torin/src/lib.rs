@@ -30,6 +30,8 @@ impl NodeKey for usize {}
 impl NodeKey for NodeId {}
 
 pub trait NodeResolver<NodeKey> {
+    fn get_node(&self, node_id: &NodeKey) -> Option<Node>;
+
     /// Get the height in the DOM of the given Node
     fn height(&self, node_id: &NodeKey) -> Option<u16>;
 
@@ -38,29 +40,6 @@ pub trait NodeResolver<NodeKey> {
 
     /// Get a list of IDs of all the Nodes from the given Node
     fn children_of(&self, node_id: &NodeKey) -> Vec<NodeKey>;
-}
-
-/// Node's data for the layout algorithm
-#[derive(PartialEq, Clone, Debug)]
-pub struct NodeData {
-    pub node: Node,
-}
-
-impl NodeData {
-    /// Has properties that depend on the inner Nodes?
-    pub fn does_depend_on_inner(&self) -> bool {
-        Size::Inner == self.node.width
-            || Size::Inner == self.node.height
-            || self.node.has_layout_references
-    }
-
-    /// Has properties that depend on the parent Node?
-    pub fn does_depend_on_parent(&self) -> bool {
-        matches!(self.node.width, Size::Percentage(_))
-            || matches!(self.node.height, Size::Percentage(_))
-            || matches!(self.node.height, Size::DynamicCalculations(_))
-            || matches!(self.node.height, Size::DynamicCalculations(_))
-    }
 }
 
 /// Indicates what's the closest Node to the root from which start measuring the dirty Nodes
@@ -77,9 +56,6 @@ pub enum TallestDirtyNode<Key: NodeKey> {
 }
 
 pub struct Torin<Key: NodeKey> {
-    /// Registered Nodes
-    pub nodes: FxHashMap<Key, NodeData>,
-
     /// Layout results of the registered Nodes
     pub results: FxHashMap<Key, NodeAreas>,
 
@@ -100,7 +76,6 @@ impl<Key: NodeKey> Torin<Key> {
     /// Create a new Layout
     pub fn new() -> Self {
         Self {
-            nodes: FxHashMap::default(),
             results: HashMap::default(),
             dirty: HashSet::new(),
             tallest_dirty_node: TallestDirtyNode::None,
@@ -119,32 +94,15 @@ impl<Key: NodeKey> Torin<Key> {
         &self.dirty
     }
 
-    /// Add a node to the layout without a parent
-    pub fn add(&mut self, node_id: Key, node: Node) {
-        self.nodes.insert(node_id, NodeData { node });
-        self.dirty.insert(node_id);
-    }
-
-    // Update a Node
-    pub fn set_node(&mut self, node_id: Key, node: Node) {
-        *self.nodes.get_mut(&node_id).unwrap() = NodeData { node };
-        self.dirty.insert(node_id);
-    }
-
-    /// Add a Node, or update it if it already exists
-    pub fn set_or_add(&mut self, node_id: Key, node: Node) {
-        if self.has(node_id) {
-            self.set_node(node_id, node);
-        } else {
-            self.add(node_id, node);
-        }
-    }
-
     /// Remove a Node's result and data
     pub fn raw_remove(&mut self, node_id: Key) {
         self.results.remove(&node_id);
-        self.nodes.remove(&node_id);
         self.dirty.remove(&node_id);
+        if let TallestDirtyNode::Valid(id) = self.tallest_dirty_node {
+            if id == node_id {
+                self.tallest_dirty_node = TallestDirtyNode::None
+            }
+        }
     }
 
     /// Remove a Node from the layout
@@ -171,21 +129,6 @@ impl<Key: NodeKey> Torin<Key> {
     /// Mark as dirty a Node
     pub fn invalidate(&mut self, node_id: Key) {
         self.dirty.insert(node_id);
-    }
-
-    /// Check if a Node is registered
-    pub fn has(&self, node_id: Key) -> bool {
-        self.nodes.get(&node_id).is_some()
-    }
-
-    /// Get a Node's data
-    pub fn get(&self, node_id: Key) -> Option<&NodeData> {
-        self.nodes.get(&node_id)
-    }
-
-    /// Add a Node to the layout
-    pub fn insert(&mut self, node_id: Key, node: Node) {
-        self.add(node_id, node);
     }
 
     // Mark as dirty the given Node and all the nodes that depend on it
@@ -233,12 +176,12 @@ impl<Key: NodeKey> Torin<Key> {
         let parent_id = node_resolver.parent_of(&node_id);
 
         if let Some(parent_id) = parent_id {
-            let parent = self.get(parent_id);
+            let parent = node_resolver.get_node(&parent_id);
 
             if let Some(parent) = parent {
                 // Mark parent if it depeneds on it's inner children
                 if parent.does_depend_on_inner() {
-                    self.check_dirty_dependants(parent_id, node_resolver, true);
+                    self.check_dirty_dependants(parent_id, node_resolver, false);
                 }
                 // Otherwise we simply mark this Node siblings
                 else {
@@ -304,11 +247,11 @@ impl<Key: NodeKey> Torin<Key> {
                 inner_sizes: Size2D::default(),
             });
 
-        let root = self.nodes.get(&root_id).unwrap();
+        let root = node_resolver.get_node(&root_id).unwrap();
 
         let (root_revalidated, root_areas) = measure_node(
             root_id,
-            &root.clone(),
+            &root,
             self,
             &root_parent_areas.area,
             &root_parent_areas.inner_area,
@@ -343,7 +286,7 @@ impl<Key: NodeKey> Torin<Key> {
 #[inline(always)]
 fn measure_node<Key: NodeKey>(
     node_id: Key,
-    node: &NodeData,
+    node: &Node,
     layout: &mut Torin<Key>,
     parent_area: &Area,
     available_parent_size: &Area,
@@ -355,7 +298,7 @@ fn measure_node<Key: NodeKey>(
     if must_run {
         let mut area = Rect::new(available_parent_size.origin, Size2D::default());
 
-        match &node.node.width {
+        match &node.width {
             Size::Pixels(px) => {
                 area.size.width += px.get();
             }
@@ -368,7 +311,7 @@ fn measure_node<Key: NodeKey>(
             _ => {}
         }
 
-        match &node.node.height {
+        match &node.height {
             Size::Pixels(px) => {
                 area.size.height += px.get();
             }
@@ -386,10 +329,10 @@ fn measure_node<Key: NodeKey>(
             let custom_measure =
                 measurer.measure(node_id, node, &area, parent_area, available_parent_size);
             if let Some(new_area) = custom_measure {
-                if Size::Inner == node.node.width {
+                if Size::Inner == node.width {
                     area.size.width = new_area.width()
                 }
-                if Size::Inner == node.node.height {
+                if Size::Inner == node.height {
                     area.size.height = new_area.height()
                 }
             }
@@ -398,26 +341,26 @@ fn measure_node<Key: NodeKey>(
             false
         };
 
-        let horizontal_padding = node.node.padding.horizontal_paddings();
-        let vertical_padding = node.node.padding.vertical_paddings();
+        let horizontal_padding = node.padding.horizontal_paddings();
+        let vertical_padding = node.padding.vertical_paddings();
 
         let mut inner_sizes = Size2D::default();
 
         // Node's inner area
         let mut inner_area = {
             let mut inner_area = area;
-            if Size::Inner == node.node.width {
+            if Size::Inner == node.width {
                 inner_area.size.width = available_parent_size.width()
             }
-            if Size::Inner == node.node.height {
+            if Size::Inner == node.height {
                 inner_area.size.height = available_parent_size.height()
             }
             inner_area
         };
 
         // Apply padding
-        inner_area.origin.x += node.node.padding.left();
-        inner_area.origin.y += node.node.padding.top();
+        inner_area.origin.x += node.padding.left();
+        inner_area.origin.y += node.padding.top();
         inner_area.size.width -= horizontal_padding;
         inner_area.size.height -= vertical_padding;
 
@@ -425,8 +368,8 @@ fn measure_node<Key: NodeKey>(
         let mut available_area = inner_area;
 
         // Apply scroll
-        available_area.origin.x += node.node.scroll_x.get();
-        available_area.origin.y += node.node.scroll_y.get();
+        available_area.origin.x += node.scroll_x.get();
+        available_area.origin.y += node.scroll_y.get();
 
         let mut measurement_mode = MeasureMode::ParentIsNotCached {
             area: &mut area,
@@ -464,8 +407,8 @@ fn measure_node<Key: NodeKey>(
         let mut available_area = areas.inner_area;
 
         // TODO(marc2332): Should I also cache these?
-        available_area.origin.x += node.node.scroll_x.get();
-        available_area.origin.y += node.node.scroll_y.get();
+        available_area.origin.x += node.scroll_x.get();
+        available_area.origin.y += node.scroll_y.get();
 
         let mut measurement_mode = MeasureMode::ParentIsCached {
             inner_area: &areas.inner_area,
@@ -515,7 +458,7 @@ impl<'a> MeasureMode<'a> {
 #[inline(always)]
 fn measure_inner_nodes<Key: NodeKey>(
     node_id: &Key,
-    node: &NodeData,
+    node: &Node,
     layout: &mut Torin<Key>,
     available_area: &mut Area,
     inner_sizes: &mut Size2D,
@@ -529,11 +472,11 @@ fn measure_inner_nodes<Key: NodeKey>(
 
     // Center display
 
-    if node.node.display == DisplayMode::Center {
+    if node.display == DisplayMode::Center {
         let child_id = children.first();
 
         if let Some(child_id) = child_id {
-            let child_data = layout.get(*child_id).unwrap().clone();
+            let child_data = node_resolver.get_node(child_id).unwrap();
 
             let (_, child_areas) = measure_node(
                 *child_id,
@@ -547,7 +490,7 @@ fn measure_inner_nodes<Key: NodeKey>(
             );
 
             // TODO: Should I also reduce the width and heights?
-            match node.node.direction {
+            match node.direction {
                 DirectionMode::Horizontal => {
                     let new_origin_x =
                         (inner_area.width() / 2.0) - (child_areas.area.width() / 2.0);
@@ -573,7 +516,7 @@ fn measure_inner_nodes<Key: NodeKey>(
     // Normal display
 
     for child_id in children {
-        let child_data = layout.get(child_id).unwrap().clone();
+        let child_data = node_resolver.get_node(&child_id).unwrap().clone();
 
         let (child_revalidated, child_areas) = measure_node(
             child_id,
@@ -586,7 +529,7 @@ fn measure_inner_nodes<Key: NodeKey>(
             node_resolver,
         );
 
-        match node.node.direction {
+        match node.direction {
             DirectionMode::Horizontal => {
                 // Move the available area
                 available_area.origin.x = child_areas.area.max_x();
@@ -603,7 +546,7 @@ fn measure_inner_nodes<Key: NodeKey>(
                     inner_sizes.width += child_areas.area.width();
 
                     // Keep the biggest height
-                    if node.node.height == Size::Inner {
+                    if node.height == Size::Inner {
                         area.size.height =
                             area.size.height.max(child_areas.area.size.height) + *vertical_padding;
                         // Keep the inner area in sync
@@ -612,7 +555,7 @@ fn measure_inner_nodes<Key: NodeKey>(
                     }
 
                     // Accumulate width
-                    if node.node.width == Size::Inner {
+                    if node.width == Size::Inner {
                         area.size.width += child_areas.area.size.width + *horizontal_padding;
                         // Keep the inner area in sync
                         inner_area.size.width = area.size.width - *horizontal_padding;
@@ -636,7 +579,7 @@ fn measure_inner_nodes<Key: NodeKey>(
                     inner_sizes.height += child_areas.area.height();
 
                     // Keep the biggest width
-                    if node.node.width == Size::Inner {
+                    if node.width == Size::Inner {
                         area.size.width =
                             area.size.width.max(child_areas.area.size.width) + *horizontal_padding;
                         // Keep the inner area in sync
@@ -644,7 +587,7 @@ fn measure_inner_nodes<Key: NodeKey>(
                     }
 
                     // Accumulate height
-                    if node.node.height == Size::Inner {
+                    if node.height == Size::Inner {
                         area.size.height += child_areas.area.size.height + *vertical_padding;
                         // Keep the inner area in sync
                         inner_area.size.height = area.size.height - *vertical_padding;
@@ -670,14 +613,14 @@ fn measure_inner_nodes<Key: NodeKey>(
                     inner_sizes.height += child_areas.area.height();
 
                     // Accumulate width
-                    if node.node.width == Size::Inner {
+                    if node.width == Size::Inner {
                         area.size.width += child_areas.area.size.width + *horizontal_padding;
                         // Keep the inner area in sync
                         inner_area.size.width = area.size.width - *horizontal_padding;
                     }
 
                     // Accumulate height
-                    if node.node.height == Size::Inner {
+                    if node.height == Size::Inner {
                         area.size.height += child_areas.area.size.height + *vertical_padding;
                         // Keep the inner area in sync
                         inner_area.size.height = area.size.height - *vertical_padding;
@@ -922,13 +865,26 @@ impl Node {
             ..Default::default()
         }
     }
+
+    /// Has properties that depend on the inner Nodes?
+    pub fn does_depend_on_inner(&self) -> bool {
+        Size::Inner == self.width || Size::Inner == self.height || self.has_layout_references
+    }
+
+    /// Has properties that depend on the parent Node?
+    pub fn does_depend_on_parent(&self) -> bool {
+        matches!(self.width, Size::Percentage(_))
+            || matches!(self.height, Size::Percentage(_))
+            || matches!(self.height, Size::DynamicCalculations(_))
+            || matches!(self.height, Size::DynamicCalculations(_))
+    }
 }
 
 pub trait LayoutMeasurer<Key: NodeKey> {
     fn measure(
         &mut self,
         node_id: Key,
-        node: &NodeData,
+        node: &Node,
         area: &Area,
         parent_area: &Area,
         available_parent_size: &Area,

@@ -10,7 +10,7 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    let values = use_state(cx, || vec!["Hello World"].repeat(400));
+    let values = use_state(cx, || vec!["Hello World"].repeat(4000));
 
     render!(VirtualScrollView {
         width: "100%",
@@ -24,10 +24,12 @@ fn app(cx: Scope) -> Element {
             let values = values.unwrap();
             let value = values[index];
             rsx! {
-                label {
+                paragraph {
                     key: "{key}",
                     height: "25",
-                    "{index} {value}"
+                    text {
+                        "{index} {value}"
+                    }
                 }
             }
         })

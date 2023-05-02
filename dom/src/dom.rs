@@ -129,53 +129,52 @@ impl FreyaDOM {
 
     /// Process the given mutations from the [`VirtualDOM`](dioxus_core::VirtualDom).
     pub fn apply_mutations(&mut self, mutations: Mutations, scale_factor: f32) -> bool {
-        {
-            for mutation in &mutations.edits {
-                match mutation {
-                    Mutation::SetText { id, .. } => {
-                        self.torin
-                            .lock()
-                            .unwrap()
-                            .invalidate(self.dioxus_integration_state.element_to_node_id(*id));
-                    }
-                    Mutation::InsertAfter { id, .. } => {
-                        self.torin
-                            .lock()
-                            .unwrap()
-                            .invalidate(self.dioxus_integration_state.element_to_node_id(*id));
-                    }
-                    Mutation::InsertBefore { id, .. } => {
-                        self.torin
-                            .lock()
-                            .unwrap()
-                            .invalidate(self.dioxus_integration_state.element_to_node_id(*id));
-                    }
-                    Mutation::Remove { id } => {
-                        let node_resolver = DioxusNodeResolver::new(self.rdom());
-                        self.torin.lock().unwrap().remove(
-                            self.dioxus_integration_state.element_to_node_id(*id),
-                            &node_resolver,
-                            true,
-                        );
-                    }
-                    _ => {}
+        for mutation in &mutations.edits {
+            match mutation {
+                Mutation::SetText { id, .. } => {
+                    self.torin
+                        .lock()
+                        .unwrap()
+                        .invalidate(self.dioxus_integration_state.element_to_node_id(*id));
                 }
+                Mutation::InsertAfter { id, m } => {
+                    if *m > 0 {
+                        self.torin
+                            .lock()
+                            .unwrap()
+                            .invalidate(self.dioxus_integration_state.element_to_node_id(*id));
+                    }
+                }
+                Mutation::InsertBefore { id, m } => {
+                    if *m > 0 {
+                        self.torin
+                            .lock()
+                            .unwrap()
+                            .invalidate(self.dioxus_integration_state.element_to_node_id(*id));
+                    }
+                }
+                Mutation::Remove { id } => {
+                    let node_resolver = DioxusNodeResolver::new(self.rdom());
+                    self.torin.lock().unwrap().remove(
+                        self.dioxus_integration_state.element_to_node_id(*id),
+                        &node_resolver,
+                        true,
+                    );
+                }
+                _ => {}
             }
         }
 
-        // Apply the mutations to the RealDOM
-
-        if !mutations.edits.is_empty() {
-            self.dioxus_integration_state
-                .apply_mutations(&mut self.rdom, mutations);
-        }
+        // Apply the mutations
+        self.dioxus_integration_state
+            .apply_mutations(&mut self.rdom, mutations);
 
         // Update the Nodes states
         let mut ctx = SendAnyMap::new();
         ctx.insert(scale_factor);
         ctx.insert(self.torin.clone());
 
-        let (_, diff) = self.rdom.update_state(ctx);
+        let (_dirty, diff) = self.rdom.update_state(ctx);
 
         !diff.is_empty()
     }
@@ -202,6 +201,21 @@ impl<'a> DioxusNodeResolver<'a> {
 }
 
 impl NodeResolver<NodeId> for DioxusNodeResolver<'_> {
+    fn get_node(&self, node_id: &NodeId) -> Option<Node> {
+        let node = self.rdom.get(*node_id)?;
+        let size = node.get::<SizeState>().unwrap().clone();
+        Some(Node {
+            width: size.width,
+            height: size.height,
+            direction: size.direction,
+            padding: size.padding,
+            display: size.display,
+            scroll_x: Length::new(size.scroll_x),
+            scroll_y: Length::new(size.scroll_y),
+            has_layout_references: size.node_ref.is_some(),
+        })
+    }
+
     fn height(&self, node_id: &NodeId) -> Option<u16> {
         self.rdom.tree_ref().height(*node_id)
     }
@@ -234,7 +248,7 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
     fn measure(
         &mut self,
         node_id: NodeId,
-        _node: &NodeData,
+        _node: &Node,
         area: &Area,
         _parent_area: &Area,
         available_parent_area: &Area,
