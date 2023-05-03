@@ -13,19 +13,17 @@ fn app(cx: Scope) -> Element {
     let (node_ref, size) = use_node(cx);
     render!(
         rect {
-            height: "50%",
             width: "50%",
-            min_height: "100",
+            height: "50%",
             min_width: "200",
+            min_height: "100",
             max_width: "300",
             max_height: "250",
             background: "black",
             reference: node_ref,
-            paragraph {
-                width: "100%",
-                label {
-                    "Size: {size.area.width() / 2.0}x{size.area.height()}"
-                }
+            label {
+                color: "white",
+                "Size: {size.area.width()}x{size.area.height()}"
             }
         }
     )
