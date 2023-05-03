@@ -529,6 +529,8 @@ pub fn caching() {
         &mocked_dom,
     );
 
+    println!("{:?}", layout.results);
+
     assert_eq!(
         layout.get_size(1).unwrap().area,
         Rect::new(Point2D::new(0.0, 5.0), Size2D::new(200.0, 195.0)),

@@ -232,34 +232,20 @@ impl<Key: NodeKey> Torin<Key> {
         }
 
         // Try using the closest Node to the root that is dirty, otherwise use the root
-        let (root_id, areas, root) = if let TallestDirtyNode::Valid(id) = self.tallest_dirty_node {
-            let root_parent = node_resolver.parent_of(&id);
-            let root_parent_areas = root_parent
-                .and_then(|root_parent| self.get_size(root_parent).cloned())
-                .unwrap_or(NodeAreas {
-                    area: root_area,
-                    inner_area: root_area,
-                    inner_sizes: Size2D::default(),
-                });
-            let root = node_resolver.get_node(&id).unwrap();
-            (id, root_parent_areas, root)
+        let root_id = if let TallestDirtyNode::Valid(id) = self.tallest_dirty_node {
+            id
         } else {
-            (
-                root_id,
-                NodeAreas {
-                    area: root_area,
-                    inner_area: root_area,
-                    inner_sizes: Size2D::default(),
-                },
-                Node {
-                    width: Size::Percentage(Length::new(100.0)),
-                    height: Size::Percentage(Length::new(100.0)),
-                    ..Default::default()
-                },
-            )
+            root_id
         };
-
-        // Use the parent of the root Node otherwise just use the root node
+        let root_parent = node_resolver.parent_of(&root_id);
+        let areas = root_parent
+            .and_then(|root_parent| self.get_size(root_parent).cloned())
+            .unwrap_or(NodeAreas {
+                area: root_area,
+                inner_area: root_area,
+                inner_sizes: Size2D::default(),
+            });
+        let root = node_resolver.get_node(&root_id).unwrap();
 
         let (root_revalidated, root_areas) = measure_node(
             root_id,

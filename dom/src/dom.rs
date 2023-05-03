@@ -217,7 +217,14 @@ impl<'a> DioxusNodeResolver<'a> {
 impl NodeResolver<NodeId> for DioxusNodeResolver<'_> {
     fn get_node(&self, node_id: &NodeId) -> Option<Node> {
         let node = self.rdom.get(*node_id)?;
-        let size = node.get::<SizeState>().unwrap().clone();
+        let mut size = node.get::<SizeState>().unwrap().clone();
+
+        // The root node expands by default
+        if *node_id == self.rdom.root_id() {
+            size.width = Size::Percentage(Length::new(100.0));
+            size.height = Size::Percentage(Length::new(100.0));
+        }
+
         Some(Node {
             width: size.width,
             height: size.height,
