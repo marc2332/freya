@@ -156,18 +156,22 @@ impl<Key: NodeKey> Torin<Key> {
             let node_height = node_resolver.height(&node_id);
             let current_height = node_resolver.height(&tallest_dirty_node);
 
-            match node_height.cmp(&current_height) {
-                // Update the tallest node if this node is dirty and is taller than the current tallest node
-                std::cmp::Ordering::Less => {
-                    self.tallest_dirty_node = TallestDirtyNode::Valid(node_id);
+            if node_id != tallest_dirty_node {
+                match node_height.cmp(&current_height) {
+                    // Update the tallest node if this node is dirty and is taller than the current tallest node
+                    std::cmp::Ordering::Less => {
+                        self.tallest_dirty_node = TallestDirtyNode::Valid(node_id);
+                    }
+                    // If both this node and the tallest Node are in the same height, we set the tallest node as invalid
+                    // as we can't figure out which is one is the tallest
+                    //
+                    // Improvements idea:
+                    // It could try finding the closest common parent Node from these two and set it as tallest Node
+                    std::cmp::Ordering::Equal => {
+                        self.tallest_dirty_node = TallestDirtyNode::Invalid
+                    }
+                    _ => {}
                 }
-                // If both this node and the tallest Node are in the same height, we set the tallest node as invalid
-                // as we can't figure out which is one is the tallest
-                //
-                // Improvements idea:
-                // It could try finding the closest common parent Node from these two and set it as tallest Node
-                std::cmp::Ordering::Equal => self.tallest_dirty_node = TallestDirtyNode::Invalid,
-                _ => {}
             }
         }
 
@@ -871,29 +875,7 @@ impl Node {
 
     /// Has properties that depend on the inner Nodes?
     pub fn does_depend_on_inner(&self) -> bool {
-        Size::Inner == self.width
-            || Size::Inner == self.height
-            || self.has_layout_references
-            || Size::Inner == self.minimum_width
-            || Size::Inner == self.minimum_height
-            || Size::Inner == self.maximum_width
-            || Size::Inner == self.maximum_height
-    }
-
-    /// Has properties that depend on the parent Node?
-    pub fn does_depend_on_parent(&self) -> bool {
-        matches!(self.width, Size::Percentage(_))
-            || matches!(self.height, Size::Percentage(_))
-            || matches!(self.minimum_width, Size::Percentage(_))
-            || matches!(self.minimum_height, Size::Percentage(_))
-            || matches!(self.maximum_width, Size::Percentage(_))
-            || matches!(self.maximum_height, Size::Percentage(_))
-            || matches!(self.width, Size::DynamicCalculations(_))
-            || matches!(self.height, Size::DynamicCalculations(_))
-            || matches!(self.minimum_width, Size::DynamicCalculations(_))
-            || matches!(self.minimum_height, Size::DynamicCalculations(_))
-            || matches!(self.maximum_width, Size::DynamicCalculations(_))
-            || matches!(self.maximum_height, Size::DynamicCalculations(_))
+        Size::Inner == self.width || Size::Inner == self.height || self.has_layout_references
     }
 }
 
