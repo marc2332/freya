@@ -161,6 +161,16 @@ impl FreyaDOM {
                         true,
                     );
                 }
+                Mutation::ReplaceWith { id, m } => {
+                    if *m > 0 {
+                        let node_resolver = DioxusNodeResolver::new(self.rdom());
+                        self.torin.lock().unwrap().remove(
+                            self.dioxus_integration_state.element_to_node_id(*id),
+                            &node_resolver,
+                            true,
+                        );
+                    }
+                }
                 _ => {}
             }
         }
@@ -174,6 +184,7 @@ impl FreyaDOM {
         ctx.insert(scale_factor);
         ctx.insert(self.torin.clone());
 
+        // Update the Node's states
         let (_, diff) = self.rdom.update_state(ctx);
 
         let must_repaint = !diff.is_empty();
@@ -335,7 +346,7 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
     }
 }
 
-/// Collect all the texts and node states from a given array of children
+/// Collect all the texts and FontStyles from all the given Node's children
 pub fn get_inner_texts(node: &DioxusNode) -> Vec<(FontStyle, String)> {
     node.children()
         .iter()

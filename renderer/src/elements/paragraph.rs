@@ -1,6 +1,5 @@
 use dioxus_native_core::real_dom::NodeImmutable;
-use freya_dom::DioxusNode;
-use freya_layout::get_inner_texts;
+use freya_dom::{get_inner_texts, DioxusNode};
 use freya_node_state::{CursorSettings, FontStyle};
 use skia_safe::{
     textlayout::{

@@ -1,11 +1,8 @@
 mod layers;
 
-use dioxus_native_core::{
-    prelude::{ElementNode, NodeType, TextNode},
-    real_dom::{NodeImmutable, RealDom},
-};
+use dioxus_native_core::real_dom::{NodeImmutable, RealDom};
 use freya_common::CursorLayoutResponse;
-use freya_dom::DioxusNode;
+use freya_dom::{get_inner_texts, DioxusNode};
 use freya_node_state::{
     CursorReference, CursorSettings, CustomAttributeValues, FontStyle, References,
 };
@@ -97,33 +94,6 @@ fn process_paragraph(
     }
 
     paragraph
-}
-
-/// Collect all the texts and node states from a given array of children
-pub fn get_inner_texts(node: &DioxusNode) -> Vec<(FontStyle, String)> {
-    node.children()
-        .iter()
-        .filter_map(|child| {
-            if let NodeType::Element(ElementNode { tag, .. }) = &*child.node_type() {
-                if tag != "text" {
-                    return None;
-                }
-
-                let children = child.children();
-                let child_text = *children.first().unwrap();
-                let child_text_type = &*child_text.node_type();
-
-                if let NodeType::Text(TextNode { text, .. }) = child_text_type {
-                    let font_style = child.get::<FontStyle>().unwrap();
-                    Some((font_style.clone(), text.to_owned()))
-                } else {
-                    None
-                }
-            } else {
-                None
-            }
-        })
-        .collect()
 }
 
 /// Get the info related to a cursor reference

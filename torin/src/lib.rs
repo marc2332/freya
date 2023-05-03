@@ -30,6 +30,7 @@ impl NodeKey for usize {}
 impl NodeKey for NodeId {}
 
 pub trait NodeResolver<NodeKey> {
+    /// Get a Node's Size configuration
     fn get_node(&self, node_id: &NodeKey) -> Option<Node>;
 
     /// Get the height in the DOM of the given Node
