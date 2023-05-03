@@ -3988,6 +3988,7 @@ dependencies = [
  "dioxus-native-core",
  "euclid",
  "fxhash",
+ "tracing",
 ]
 
 [[package]]

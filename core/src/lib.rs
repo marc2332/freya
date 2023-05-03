@@ -35,7 +35,7 @@ pub fn calculate_viewports(
         let layer = layers.layers.get(layer_num).unwrap();
         for node_id in layer {
             let node = rdom.get(*node_id);
-            let node_areas = layout.get_size(*node_id);
+            let node_areas = layout.get(*node_id);
 
             if let Some((node, node_areas)) = node.zip(node_areas) {
                 let node_type = &*node.node_type();
@@ -95,7 +95,7 @@ pub fn calculate_node_events<'a>(
         let layer = layers.layers.get(layer_num).unwrap();
 
         for node_id in layer {
-            let areas = layout.get_size(*node_id);
+            let areas = layout.get(*node_id);
             if let Some(areas) = areas {
                 'events: for event in events.iter() {
                     if let FreyaEvent::Keyboard { name, .. } = event {
@@ -209,7 +209,7 @@ fn calculate_events_listeners(
         }
 
         for (node_id, request_event) in found_nodes {
-            let areas = fdom.layout().get_size(*node_id).unwrap().clone();
+            let areas = fdom.layout().get(*node_id).unwrap().clone();
             let node_ref = fdom.rdom().get(*node_id).unwrap();
             let element_id = node_ref.mounted_id().unwrap();
             let event = DomEvent::from_freya_event(
@@ -341,7 +341,7 @@ pub fn process_render<HookOptions>(
         'elements: for node_id in layer {
             let viewports = viewports_collection.get(node_id);
             let layout = dom.layout();
-            let areas = layout.get_size(*node_id);
+            let areas = layout.get(*node_id);
 
             if let Some(areas) = areas {
                 // Skip elements that are completely out of any their parent's viewport

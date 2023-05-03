@@ -110,7 +110,7 @@ impl TestNode {
             .sdom
             .get()
             .layout()
-            .get_size(self.node_id)
+            .get(self.node_id)
             .map(|l| l.area)
     }
 

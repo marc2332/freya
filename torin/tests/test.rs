@@ -11,7 +11,7 @@ impl LayoutMeasurer<usize> for TestingMeasurer {
         _node: &Node,
         _area: &Area,
         _parent_size: &Area,
-        _available_parent_size: &Area,
+        _available_parent_area: &Area,
     ) -> Option<Area> {
         None
     }
@@ -121,17 +121,17 @@ pub fn root_100per_children_50per50per() {
     );
 
     assert_eq!(
-        layout.get_size(0).unwrap().area,
+        layout.get(0).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
     );
 
     assert_eq!(
-        layout.get_size(1).unwrap().area,
+        layout.get(1).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 500.0)),
     );
 
     assert_eq!(
-        layout.get_size(2).unwrap().area,
+        layout.get(2).unwrap().area,
         Rect::new(Point2D::new(0.0, 500.0), Size2D::new(1000.0, 500.0)),
     );
 }
@@ -181,17 +181,17 @@ pub fn root_200px_children_50per50per() {
     );
 
     assert_eq!(
-        layout.get_size(0).unwrap().area,
+        layout.get(0).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
     );
 
     assert_eq!(
-        layout.get_size(1).unwrap().area,
+        layout.get(1).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 100.0)),
     );
 
     assert_eq!(
-        layout.get_size(2).unwrap().area,
+        layout.get(2).unwrap().area,
         Rect::new(Point2D::new(0.0, 100.0), Size2D::new(200.0, 100.0)),
     );
 }
@@ -245,17 +245,17 @@ pub fn layout_dirty_nodes() {
     // - Child A[0] is fixed
 
     assert_eq!(
-        layout.get_size(0).unwrap().area,
+        layout.get(0).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
     );
 
     assert_eq!(
-        layout.get_size(1).unwrap().area,
+        layout.get(1).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 100.0)),
     );
 
     assert_eq!(
-        layout.get_size(2).unwrap().area,
+        layout.get(2).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(50.0, 50.0)),
     );
 
@@ -361,12 +361,12 @@ pub fn direction() {
     );
 
     assert_eq!(
-        layout.get_size(1).unwrap().area,
+        layout.get(1).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 100.0)),
     );
 
     assert_eq!(
-        layout.get_size(2).unwrap().area,
+        layout.get(2).unwrap().area,
         Rect::new(Point2D::new(0.0, 100.0), Size2D::new(100.0, 100.0)),
     );
 
@@ -391,12 +391,12 @@ pub fn direction() {
     );
 
     assert_eq!(
-        layout.get_size(1).unwrap().area,
+        layout.get(1).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(100.0, 100.0)),
     );
 
     assert_eq!(
-        layout.get_size(2).unwrap().area,
+        layout.get(2).unwrap().area,
         Rect::new(Point2D::new(100.0, 0.0), Size2D::new(100.0, 100.0)),
     );
 }
@@ -447,12 +447,12 @@ pub fn scroll() {
     );
 
     assert_eq!(
-        layout.get_size(1).unwrap().area,
+        layout.get(1).unwrap().area,
         Rect::new(Point2D::new(50.0, 0.0), Size2D::new(100.0, 100.0)),
     );
 
     assert_eq!(
-        layout.get_size(2).unwrap().area,
+        layout.get(2).unwrap().area,
         Rect::new(Point2D::new(50.0, 100.0), Size2D::new(100.0, 100.0)),
     );
 }
@@ -491,7 +491,7 @@ pub fn padding() {
     );
 
     assert_eq!(
-        layout.get_size(1).unwrap().area,
+        layout.get(1).unwrap().area,
         Rect::new(Point2D::new(20.0, 5.0), Size2D::new(170.0, 180.0)),
     );
 }
@@ -532,7 +532,7 @@ pub fn caching() {
     println!("{:?}", layout.results);
 
     assert_eq!(
-        layout.get_size(1).unwrap().area,
+        layout.get(1).unwrap().area,
         Rect::new(Point2D::new(0.0, 5.0), Size2D::new(200.0, 195.0)),
     );
 
@@ -554,7 +554,7 @@ pub fn caching() {
     );
 
     assert_eq!(
-        layout.get_size(1).unwrap().area,
+        layout.get(1).unwrap().area,
         Rect::new(Point2D::new(0.0, 5.0), Size2D::new(100.0, 195.0)),
     );
 }
@@ -599,12 +599,12 @@ pub fn sibling_increments_area() {
     );
 
     assert_eq!(
-        layout.get_size(0).unwrap().area,
+        layout.get(0).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(300.0, 200.0)),
     );
 
     assert_eq!(
-        layout.get_size(2).unwrap().area,
+        layout.get(2).unwrap().area,
         Rect::new(Point2D::new(0.0, 100.0), Size2D::new(150.0, 100.0)),
     );
 }
@@ -659,17 +659,17 @@ pub fn node_removal() {
     );
 
     assert_eq!(
-        layout.get_size(0).unwrap().area,
+        layout.get(0).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
     );
 
     assert_eq!(
-        layout.get_size(1).unwrap().area,
+        layout.get(1).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 400.0)),
     );
 
     assert_eq!(
-        layout.get_size(3).unwrap().area,
+        layout.get(3).unwrap().area,
         Rect::new(Point2D::new(0.0, 200.0), Size2D::new(200.0, 200.0)),
     );
 
@@ -689,17 +689,17 @@ pub fn node_removal() {
     );
 
     assert_eq!(
-        layout.get_size(0).unwrap().area,
+        layout.get(0).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
     );
 
     assert_eq!(
-        layout.get_size(1).unwrap().area,
+        layout.get(1).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
     );
 
     assert_eq!(
-        layout.get_size(3).unwrap().area,
+        layout.get(3).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
     );
 }
@@ -739,12 +739,12 @@ pub fn display_horizontal() {
     );
 
     assert_eq!(
-        layout.get_size(0).unwrap().area,
+        layout.get(0).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
     );
 
     assert_eq!(
-        layout.get_size(1).unwrap().area,
+        layout.get(1).unwrap().area,
         Rect::new(Point2D::new(50.0, 0.0), Size2D::new(100.0, 100.0)),
     );
 }
@@ -795,17 +795,17 @@ pub fn display_vertical_with_inner_children() {
     );
 
     assert_eq!(
-        layout.get_size(0).unwrap().area,
+        layout.get(0).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
     );
 
     assert_eq!(
-        layout.get_size(1).unwrap().area,
+        layout.get(1).unwrap().area,
         Rect::new(Point2D::new(0.0, 50.0), Size2D::new(100.0, 100.0)),
     );
 
     assert_eq!(
-        layout.get_size(2).unwrap().area,
+        layout.get(2).unwrap().area,
         Rect::new(Point2D::new(5.0, 55.0), Size2D::new(90.0, 90.0)),
     );
 }
@@ -952,12 +952,12 @@ pub fn stacked() {
     );
 
     assert_eq!(
-        layout.get_size(1).unwrap().area,
+        layout.get(1).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 100.0)),
     );
 
     assert_eq!(
-        layout.get_size(2).unwrap().area,
+        layout.get(2).unwrap().area,
         Rect::new(Point2D::new(0.0, 100.0), Size2D::new(200.0, 100.0)),
     );
 
@@ -981,12 +981,12 @@ pub fn stacked() {
     );
 
     assert_eq!(
-        layout.get_size(1).unwrap().area,
+        layout.get(1).unwrap().area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 100.0)),
     );
 
     assert_eq!(
-        layout.get_size(2).unwrap().area,
+        layout.get(2).unwrap().area,
         Rect::new(Point2D::new(0.0, 100.0), Size2D::new(200.0, 100.0)),
     );
 }

@@ -73,7 +73,7 @@ impl Layers {
             let size_state = &*node.get::<SizeState>().unwrap();
 
             if let Some(reference) = &size_state.node_ref {
-                let areas = layout.get_size(node.id()).unwrap();
+                let areas = layout.get(node.id()).unwrap();
                 let mut node_layout = NodeReferenceLayout {
                     area: areas.area,
                     inner: areas.inner_sizes,
@@ -98,7 +98,7 @@ impl Layers {
         for group in self.paragraph_elements.values() {
             for node_id in group {
                 let node = rdom.get(*node_id);
-                let areas = layout.get_size(*node_id);
+                let areas = layout.get(*node_id);
                 if let Some((node, areas)) = node.zip(areas) {
                     process_paragraph(&node, &areas.area, font_collection, true);
                 }
@@ -118,7 +118,7 @@ impl Layers {
         if let Some(group) = group {
             for node_id in group {
                 let node = dom.rdom().get(*node_id);
-                let areas = layout.get_size(*node_id);
+                let areas = layout.get(*node_id);
 
                 if let Some((node, areas)) = node.zip(areas) {
                     process_paragraph(&node, &areas.area, font_collection, true);

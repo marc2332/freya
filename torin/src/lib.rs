@@ -3,6 +3,7 @@ use std::collections::{HashMap, HashSet};
 use dioxus_native_core::NodeId;
 pub use euclid::Rect;
 use fxhash::FxHashMap;
+use tracing::info;
 
 #[derive(PartialEq)]
 pub struct Measure;
@@ -18,8 +19,10 @@ pub type Length = euclid::Length<f32, Measure>;
 pub struct NodeAreas {
     /// Area that ocuppies this node
     pub area: Area,
-    /// Available area inside this Node
+
+    /// Area inside this Node
     pub inner_area: Area,
+
     /// Ocuppied sizes from the inner children in this Node
     pub inner_sizes: Size2D,
 }
@@ -168,7 +171,7 @@ impl<Key: NodeKey> Torin<Key> {
             }
         }
 
-        // Mark the children
+        // Mark as dirty this Node's children
         for child in node_resolver.children_of(&node_id) {
             self.check_dirty_dependants(child, node_resolver, true)
         }
@@ -186,7 +189,7 @@ impl<Key: NodeKey> Torin<Key> {
                 }
                 // Otherwise we simply mark this Node siblings
                 else {
-                    // TODO: Only mark those who come before this node.
+                    // TODO(marc2332): Only mark those who come before this node.
                     for child_id in node_resolver.children_of(&parent_id) {
                         if child_id != node_id {
                             self.check_dirty_dependants(child_id, node_resolver, true)
@@ -202,25 +205,22 @@ impl<Key: NodeKey> Torin<Key> {
         self.tallest_dirty_node
     }
 
-    /// Find the best root Node from where to measure
-    pub fn find_best_root(&mut self, node_resolver: &impl NodeResolver<Key>) -> bool {
+    /// Find the best root Node from where to start measuring
+    pub fn find_best_root(&mut self, node_resolver: &impl NodeResolver<Key>) {
         if TallestDirtyNode::None != self.tallest_dirty_node {
-            return true;
+            return;
         }
 
         for dirty in self.dirty.clone() {
             self.check_dirty_dependants(dirty, node_resolver, false);
         }
-
-        self.tallest_dirty_node != TallestDirtyNode::None
-            || (self.results.is_empty() && self.dirty.is_empty())
     }
 
-    /// Measure a root Node
+    /// Measure dirty Nodes
     pub fn measure(
         &mut self,
-        root_id: Key,
-        root_area: Area,
+        suggested_root_id: Key,
+        suggested_root_area: Area,
         measurer: &mut Option<impl LayoutMeasurer<Key>>,
         node_resolver: &impl NodeResolver<Key>,
     ) {
@@ -231,18 +231,24 @@ impl<Key: NodeKey> Torin<Key> {
             return;
         }
 
-        // Try using the closest Node to the root that is dirty, otherwise use the root
+        info!(
+            "Found {} dirty nodes and {} cached nodes",
+            self.dirty.len(),
+            self.results.len()
+        );
+
+        // Try using the closest Node to the root that is dirty, otherwise use the provided Root
         let root_id = if let TallestDirtyNode::Valid(id) = self.tallest_dirty_node {
             id
         } else {
-            root_id
+            suggested_root_id
         };
         let root_parent = node_resolver.parent_of(&root_id);
         let areas = root_parent
-            .and_then(|root_parent| self.get_size(root_parent).cloned())
+            .and_then(|root_parent| self.get(root_parent).cloned())
             .unwrap_or(NodeAreas {
-                area: root_area,
-                inner_area: root_area,
+                area: suggested_root_area,
+                inner_area: suggested_root_area,
                 inner_sizes: Size2D::default(),
             });
         let root = node_resolver.get_node(&root_id).unwrap();
@@ -258,7 +264,7 @@ impl<Key: NodeKey> Torin<Key> {
             node_resolver,
         );
 
-        // Cache the root results if it was modified
+        // Cache the root Node results if it was modified
         if root_revalidated {
             self.cache_node(root_id, root_areas);
         }
@@ -267,8 +273,8 @@ impl<Key: NodeKey> Torin<Key> {
         self.tallest_dirty_node = TallestDirtyNode::None;
     }
 
-    /// Get the size of a Node
-    pub fn get_size(&self, node_id: Key) -> Option<&NodeAreas> {
+    /// Get the areas of a Node
+    pub fn get(&self, node_id: Key) -> Option<&NodeAreas> {
         self.results.get(&node_id)
     }
 
@@ -296,14 +302,14 @@ fn measure_node<Key: NodeKey>(
     node: &Node,
     layout: &mut Torin<Key>,
     parent_area: &Area,
-    available_parent_size: &Area,
+    available_parent_area: &Area,
     measurer: &mut Option<impl LayoutMeasurer<Key>>,
     must_cache: bool,
     node_resolver: &impl NodeResolver<Key>,
 ) -> (bool, NodeAreas) {
     let must_run = layout.dirty.contains(&node_id) || layout.results.get(&node_id).is_none();
     if must_run {
-        let mut area = Rect::new(available_parent_size.origin, Size2D::default());
+        let mut area = Rect::new(available_parent_area.origin, Size2D::default());
 
         area.size.width = eval_size(&node.width, area.size.width, parent_area.size.width);
         area.size.height = eval_size(&node.height, area.size.height, parent_area.size.height);
@@ -328,7 +334,7 @@ fn measure_node<Key: NodeKey>(
         // Custom measure
         let skip_inner = if let Some(measurer) = measurer {
             let custom_measure =
-                measurer.measure(node_id, node, &area, parent_area, available_parent_size);
+                measurer.measure(node_id, node, &area, parent_area, available_parent_area);
             if let Some(new_area) = custom_measure {
                 if Size::Inner == node.width {
                     area.size.width = new_area.width()
@@ -351,10 +357,10 @@ fn measure_node<Key: NodeKey>(
         let mut inner_area = {
             let mut inner_area = area;
             if Size::Inner == node.width {
-                inner_area.size.width = available_parent_size.width()
+                inner_area.size.width = available_parent_area.width()
             }
             if Size::Inner == node.height {
-                inner_area.size.height = available_parent_size.height()
+                inner_area.size.height = available_parent_area.height()
             }
             inner_area
         };
@@ -402,7 +408,7 @@ fn measure_node<Key: NodeKey>(
             },
         )
     } else {
-        let areas = layout.get_size(node_id).unwrap().clone();
+        let areas = layout.get(node_id).unwrap().clone();
 
         let mut inner_sizes = areas.inner_sizes;
         let mut available_area = areas.inner_area;
@@ -491,7 +497,7 @@ fn measure_inner_nodes<Key: NodeKey>(
                 node_resolver,
             );
 
-            // TODO: Should I also reduce the width and heights?
+            // TODO(marc2332): Should I also reduce the width and heights?
             match node.direction {
                 DirectionMode::Horizontal => {
                     let new_origin_x =
@@ -774,7 +780,7 @@ impl DisplayMode {
 }
 
 /// Node layout configuration
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Default)]
 pub struct Node {
     /// Dimentions
     pub width: Size,
@@ -805,29 +811,10 @@ pub struct Node {
     pub has_layout_references: bool,
 }
 
-impl Default for Node {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl Node {
     /// Create a Node with the default values
     pub fn new() -> Self {
-        Self {
-            width: Size::default(),
-            height: Size::default(),
-            minimum_width: Size::default(),
-            minimum_height: Size::default(),
-            maximum_width: Size::default(),
-            maximum_height: Size::default(),
-            direction: DirectionMode::Vertical,
-            scroll_x: Length::new(0.0),
-            scroll_y: Length::new(0.0),
-            padding: Paddings::default(),
-            display: DisplayMode::Normal,
-            has_layout_references: false,
-        }
+        Self::default()
     }
 
     /// Construct a new Node given a size and a direction
@@ -884,15 +871,29 @@ impl Node {
 
     /// Has properties that depend on the inner Nodes?
     pub fn does_depend_on_inner(&self) -> bool {
-        Size::Inner == self.width || Size::Inner == self.height || self.has_layout_references
+        Size::Inner == self.width
+            || Size::Inner == self.height
+            || self.has_layout_references
+            || Size::Inner == self.minimum_width
+            || Size::Inner == self.minimum_height
+            || Size::Inner == self.maximum_width
+            || Size::Inner == self.maximum_height
     }
 
     /// Has properties that depend on the parent Node?
     pub fn does_depend_on_parent(&self) -> bool {
         matches!(self.width, Size::Percentage(_))
             || matches!(self.height, Size::Percentage(_))
+            || matches!(self.minimum_width, Size::Percentage(_))
+            || matches!(self.minimum_height, Size::Percentage(_))
+            || matches!(self.maximum_width, Size::Percentage(_))
+            || matches!(self.maximum_height, Size::Percentage(_))
+            || matches!(self.width, Size::DynamicCalculations(_))
             || matches!(self.height, Size::DynamicCalculations(_))
-            || matches!(self.height, Size::DynamicCalculations(_))
+            || matches!(self.minimum_width, Size::DynamicCalculations(_))
+            || matches!(self.minimum_height, Size::DynamicCalculations(_))
+            || matches!(self.maximum_width, Size::DynamicCalculations(_))
+            || matches!(self.maximum_height, Size::DynamicCalculations(_))
     }
 }
 
@@ -903,7 +904,7 @@ pub trait LayoutMeasurer<Key: NodeKey> {
         node: &Node,
         area: &Area,
         parent_area: &Area,
-        available_parent_size: &Area,
+        available_parent_area: &Area,
     ) -> Option<Area>;
 }
 
