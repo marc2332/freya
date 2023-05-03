@@ -201,14 +201,14 @@ impl<Key: NodeKey> Torin<Key> {
         self.tallest_dirty_node
     }
 
-    /// Check if there are pending measurements
-    pub fn has_pending_measurements(&mut self, node_resolver: &impl NodeResolver<Key>) -> bool {
+    /// Find the best root Node from where to measure
+    pub fn find_best_root(&mut self, node_resolver: &impl NodeResolver<Key>) -> bool {
         if TallestDirtyNode::None != self.tallest_dirty_node {
             return true;
         }
 
-        for dirty in &self.dirty.clone() {
-            self.check_dirty_dependants(*dirty, node_resolver, false);
+        for dirty in self.dirty.clone() {
+            self.check_dirty_dependants(dirty, node_resolver, false);
         }
 
         self.tallest_dirty_node != TallestDirtyNode::None
@@ -231,30 +231,41 @@ impl<Key: NodeKey> Torin<Key> {
         }
 
         // Try using the closest Node to the root that is dirty, otherwise use the root
-        let root_id = if let TallestDirtyNode::Valid(id) = self.tallest_dirty_node {
-            id
+        let (root_id, areas, root) = if let TallestDirtyNode::Valid(id) = self.tallest_dirty_node {
+            let root_parent = node_resolver.parent_of(&id);
+            let root_parent_areas = root_parent
+                .and_then(|root_parent| self.get_size(root_parent).cloned())
+                .unwrap_or(NodeAreas {
+                    area: root_area,
+                    inner_area: root_area,
+                    inner_sizes: Size2D::default(),
+                });
+            let root = node_resolver.get_node(&id).unwrap();
+            (id, root_parent_areas, root)
         } else {
-            root_id
+            (
+                root_id,
+                NodeAreas {
+                    area: root_area,
+                    inner_area: root_area,
+                    inner_sizes: Size2D::default(),
+                },
+                Node {
+                    width: Size::Percentage(Length::new(100.0)),
+                    height: Size::Percentage(Length::new(100.0)),
+                    ..Default::default()
+                },
+            )
         };
 
         // Use the parent of the root Node otherwise just use the root node
-        let root_parent = node_resolver.parent_of(&root_id);
-        let root_parent_areas = root_parent
-            .and_then(|root_parent| self.get_size(root_parent).cloned())
-            .unwrap_or(NodeAreas {
-                area: root_area,
-                inner_area: root_area,
-                inner_sizes: Size2D::default(),
-            });
-
-        let root = node_resolver.get_node(&root_id).unwrap();
 
         let (root_revalidated, root_areas) = measure_node(
             root_id,
             &root,
             self,
-            &root_parent_areas.area,
-            &root_parent_areas.inner_area,
+            &areas.area,
+            &areas.inner_area,
             measurer,
             true,
             node_resolver,
@@ -431,6 +442,7 @@ fn measure_node<Key: NodeKey>(
 }
 
 /// Measurement data for the inner Nodes of a Node
+#[derive(Debug)]
 enum MeasureMode<'a> {
     ParentIsCached {
         inner_area: &'a Area,
@@ -467,7 +479,6 @@ fn measure_inner_nodes<Key: NodeKey>(
     mode: &mut MeasureMode,
     node_resolver: &impl NodeResolver<Key>,
 ) {
-    let mut inner_area = *mode.inner_area();
     let children = node_resolver.children_of(node_id);
 
     // Center display
@@ -476,6 +487,7 @@ fn measure_inner_nodes<Key: NodeKey>(
         let child_id = children.first();
 
         if let Some(child_id) = child_id {
+            let inner_area = *mode.inner_area();
             let child_data = node_resolver.get_node(child_id).unwrap();
 
             let (_, child_areas) = measure_node(
@@ -516,6 +528,8 @@ fn measure_inner_nodes<Key: NodeKey>(
     // Normal display
 
     for child_id in children {
+        let inner_area = *mode.inner_area();
+
         let child_data = node_resolver.get_node(&child_id).unwrap().clone();
 
         let (child_revalidated, child_areas) = measure_node(
@@ -539,7 +553,7 @@ fn measure_inner_nodes<Key: NodeKey>(
                     area,
                     vertical_padding,
                     horizontal_padding,
-                    ..
+                    inner_area,
                 } = mode
                 {
                     inner_sizes.height = child_areas.area.height();
@@ -572,7 +586,7 @@ fn measure_inner_nodes<Key: NodeKey>(
                     area,
                     vertical_padding,
                     horizontal_padding,
-                    ..
+                    inner_area,
                 } = mode
                 {
                     inner_sizes.width = child_areas.area.width();
@@ -606,7 +620,7 @@ fn measure_inner_nodes<Key: NodeKey>(
                     area,
                     vertical_padding,
                     horizontal_padding,
-                    ..
+                    inner_area,
                 } = mode
                 {
                     inner_sizes.width += child_areas.area.width();

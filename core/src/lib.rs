@@ -265,6 +265,8 @@ pub fn process_layout(
 
     let root_id = fdom.rdom().root_id();
 
+    fdom.layout().find_best_root(&node_resolver);
+
     fdom.layout()
         .measure(root_id, area, &mut Some(skia_measurer), &node_resolver);
 

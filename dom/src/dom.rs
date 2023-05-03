@@ -128,7 +128,7 @@ impl FreyaDOM {
     }
 
     /// Process the given mutations from the [`VirtualDOM`](dioxus_core::VirtualDom).
-    pub fn apply_mutations(&mut self, mutations: Mutations, scale_factor: f32) -> bool {
+    pub fn apply_mutations(&mut self, mutations: Mutations, scale_factor: f32) -> (bool, bool) {
         for mutation in &mutations.edits {
             match mutation {
                 Mutation::SetText { id, .. } => {
@@ -174,9 +174,12 @@ impl FreyaDOM {
         ctx.insert(scale_factor);
         ctx.insert(self.torin.clone());
 
-        let (_dirty, diff) = self.rdom.update_state(ctx);
+        let (_, diff) = self.rdom.update_state(ctx);
 
-        !diff.is_empty()
+        let must_repaint = !diff.is_empty();
+        let must_relayout = !self.layout().get_dirty_nodes().is_empty();
+
+        (must_repaint, must_relayout)
     }
 
     /// Get a reference to the [`DioxusDOM`].

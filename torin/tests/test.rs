@@ -112,7 +112,7 @@ pub fn root_100per_children_50per50per() {
         ),
     );
 
-    layout.has_pending_measurements(&mocked_dom);
+    layout.find_best_root(&mocked_dom);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
@@ -172,7 +172,7 @@ pub fn root_200px_children_50per50per() {
         ),
     );
 
-    layout.has_pending_measurements(&mocked_dom);
+    layout.find_best_root(&mocked_dom);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
@@ -382,7 +382,7 @@ pub fn direction() {
     );
     layout.invalidate(0);
 
-    layout.has_pending_measurements(&mocked_dom);
+    layout.find_best_root(&mocked_dom);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
@@ -438,7 +438,7 @@ pub fn scroll() {
         ),
     );
 
-    layout.has_pending_measurements(&mocked_dom);
+    layout.find_best_root(&mocked_dom);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
@@ -675,7 +675,7 @@ pub fn node_removal() {
 
     mocked_dom.remove(2);
 
-    layout.has_pending_measurements(&mocked_dom);
+    layout.find_best_root(&mocked_dom);
 
     assert_eq!(layout.get_dirty_nodes(), &HashSet::from([1, 3]));
 
@@ -784,7 +784,7 @@ pub fn display_vertical_with_inner_children() {
         ),
     );
 
-    layout.has_pending_measurements(&mocked_dom);
+    layout.find_best_root(&mocked_dom);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
@@ -875,7 +875,7 @@ pub fn deep_tree() {
         ),
     );
 
-    layout.has_pending_measurements(&mocked_dom);
+    layout.find_best_root(&mocked_dom);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
@@ -893,7 +893,7 @@ pub fn deep_tree() {
     );
     layout.invalidate(4);
 
-    layout.has_pending_measurements(&mocked_dom);
+    layout.find_best_root(&mocked_dom);
     assert_eq!(layout.get_tallest_dirty_node(), TallestDirtyNode::Valid(4));
 
     layout.measure(
@@ -969,7 +969,7 @@ pub fn stacked() {
     );
     layout.invalidate(2);
 
-    layout.has_pending_measurements(&mocked_dom);
+    layout.find_best_root(&mocked_dom);
 
     layout.measure(
         0,

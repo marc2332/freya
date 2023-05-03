@@ -156,7 +156,7 @@ impl TestingHandler {
     }
 
     /// Wait and apply new changes
-    pub async fn wait_for_update(&mut self) -> bool {
+    pub async fn wait_for_update(&mut self) -> (bool, bool) {
         self.wait_for_work(self.config.size());
 
         let vdom = &mut self.vdom;
@@ -178,7 +178,7 @@ impl TestingHandler {
 
         let mutations = self.vdom.render_immediate();
 
-        let must_repaint = self
+        let (must_repaint, must_relayout) = self
             .utils
             .sdom
             .get_mut()
@@ -186,7 +186,7 @@ impl TestingHandler {
 
         self.wait_for_work(self.config.size());
 
-        must_repaint
+        (must_repaint, must_relayout)
     }
 
     /// Wait for layout and events to be processed

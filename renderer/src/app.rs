@@ -6,7 +6,7 @@ use freya_core::{
     events::{DomEvent, EventsProcessor, FreyaEvent},
     process_events, EventEmitter, EventReceiver, EventsQueue, ViewportsCollection,
 };
-use freya_dom::{DioxusNodeResolver, SafeDOM};
+use freya_dom::SafeDOM;
 use freya_layout::Layers;
 use futures::FutureExt;
 use futures::{
@@ -104,17 +104,17 @@ impl<State: 'static + Clone> App<State> {
     }
 
     /// Update the DOM with the mutations from the VirtualDOM.
-    pub fn apply_vdom_changes(&mut self) -> bool {
+    pub fn apply_vdom_changes(&mut self) -> (bool, bool) {
         let scale_factor = self.window_env.window.scale_factor() as f32;
         let mutations = self.vdom.render_immediate();
 
-        let repaint = self.rdom.get_mut().apply_mutations(mutations, scale_factor);
+        let (repaint, relayout) = self.rdom.get_mut().apply_mutations(mutations, scale_factor);
 
         if repaint {
             self.mutations_sender.as_ref().map(|s| s.send(()));
         }
 
-        repaint
+        (repaint, relayout)
     }
 
     /// Poll the VirtualDOM for any new change
@@ -147,9 +147,9 @@ impl<State: 'static + Clone> App<State> {
                 }
             }
 
-            let must_repaint = self.apply_vdom_changes();
+            let (must_repaint, must_relayout) = self.apply_vdom_changes();
 
-            if self.check_layout() {
+            if must_relayout {
                 self.window_env.window.request_redraw();
             } else if must_repaint {
                 self.proxy
@@ -173,26 +173,12 @@ impl<State: 'static + Clone> App<State> {
         )
     }
 
-    pub fn check_layout(&mut self) -> bool {
-        let dom = self.rdom.get();
-        let mut layout = dom.layout();
-        let node_resolver = &DioxusNodeResolver::new(dom.rdom());
-        layout.has_pending_measurements(node_resolver)
-    }
-
     /// Measure the layout
-    pub fn process_layout(&mut self) -> bool {
+    pub fn process_layout(&mut self) {
         let dom = self.rdom.get();
-        let node_resolver = &DioxusNodeResolver::new(dom.rdom());
-        let needs_layout = dom.layout().has_pending_measurements(node_resolver);
-
-        if needs_layout {
-            let (layers, viewports) = self.window_env.process_layout(&dom);
-            self.layers = layers;
-            self.viewports_collection = viewports;
-        }
-
-        needs_layout
+        let (layers, viewports) = self.window_env.process_layout(&dom);
+        self.layers = layers;
+        self.viewports_collection = viewports;
     }
 
     /// Push an event to the events queue
