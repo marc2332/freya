@@ -72,4 +72,4 @@ Used to calculate how many elements can be fit in the viewport.
 Any data that you might need in the `builder` function
 
 #### `builder`
-This is a function that dinamically creates an element for the given index in the list. It receives 3 arguments, a `key` for the element, the `index` of the element and the `builder_values`.
+This is a function that dinamically creates an element for the given index in the list. It receives 4 arguments, a `key` for the element, the `index` of the element, the Scope (`cx`) and the `builder_values` you previously passed.
