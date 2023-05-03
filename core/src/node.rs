@@ -54,15 +54,21 @@ impl<'a> Iterator for NodeStateIterator<'a> {
         match n {
             0 => Some(("width", AttributeType::Size(&self.state.size.width))),
             1 => Some(("height", AttributeType::Size(&self.state.size.height))),
-            2 => Some(("min_width", AttributeType::Size(&self.state.size.min_width))),
+            2 => Some((
+                "min_width",
+                AttributeType::Size(&self.state.size.minimum_width),
+            )),
             3 => Some((
                 "min_height",
-                AttributeType::Size(&self.state.size.min_height),
+                AttributeType::Size(&self.state.size.minimum_height),
             )),
-            4 => Some(("max_width", AttributeType::Size(&self.state.size.max_width))),
+            4 => Some((
+                "max_width",
+                AttributeType::Size(&self.state.size.maximum_width),
+            )),
             5 => Some((
                 "max_height",
-                AttributeType::Size(&self.state.size.max_height),
+                AttributeType::Size(&self.state.size.maximum_height),
             )),
             6 => Some((
                 "direction",

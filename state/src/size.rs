@@ -16,10 +16,10 @@ use crate::CustomAttributeValues;
 pub struct SizeState {
     pub width: Size,
     pub height: Size,
-    pub min_height: Size,
-    pub min_width: Size,
-    pub max_height: Size,
-    pub max_width: Size,
+    pub minimum_width: Size,
+    pub minimum_height: Size,
+    pub maximum_height: Size,
+    pub maximum_width: Size,
     pub padding: Paddings,
     pub direction: DirectionMode,
     pub node_id: NodeId,
@@ -68,10 +68,10 @@ impl State<CustomAttributeValues> for SizeState {
 
         let mut width = Size::default();
         let mut height = Size::default();
-        let mut min_height = Size::default();
-        let mut min_width = Size::default();
-        let mut max_height = Size::default();
-        let mut max_width = Size::default();
+        let mut minimum_height = Size::default();
+        let mut minimum_width = Size::default();
+        let mut maximum_height = Size::default();
+        let mut maximum_width = Size::default();
         let mut padding = Paddings::default();
         let mut scroll_y = 0.0;
         let mut scroll_x = 0.0;
@@ -113,7 +113,7 @@ impl State<CustomAttributeValues> for SizeState {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
                             if let Some(new_min_height) = parse_size(attr, *scale_factor) {
-                                min_height = new_min_height;
+                                minimum_height = new_min_height;
                             }
                         }
                     }
@@ -121,7 +121,7 @@ impl State<CustomAttributeValues> for SizeState {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
                             if let Some(new_min_width) = parse_size(attr, *scale_factor) {
-                                min_width = new_min_width;
+                                minimum_width = new_min_width;
                             }
                         }
                     }
@@ -129,7 +129,7 @@ impl State<CustomAttributeValues> for SizeState {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
                             if let Some(new_max_height) = parse_size(attr, *scale_factor) {
-                                max_height = new_max_height;
+                                maximum_height = new_max_height;
                             }
                         }
                     }
@@ -137,7 +137,7 @@ impl State<CustomAttributeValues> for SizeState {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
                             if let Some(new_max_width) = parse_size(attr, *scale_factor) {
-                                max_width = new_max_width;
+                                maximum_width = new_max_width;
                             }
                         }
                     }
@@ -197,10 +197,10 @@ impl State<CustomAttributeValues> for SizeState {
 
         let changed = (width != self.width)
             || (height != self.height)
-            || (min_height != self.min_height)
-            || (min_width != self.min_width)
-            || (max_height != self.max_height)
-            || (max_width != self.max_width)
+            || (minimum_width != self.minimum_width)
+            || (minimum_height != self.minimum_height)
+            || (maximum_width != self.maximum_width)
+            || (maximum_height != self.maximum_height)
             || (padding != self.padding)
             || (node_view.node_id() != self.node_id)
             || (direction != self.direction)
@@ -215,10 +215,10 @@ impl State<CustomAttributeValues> for SizeState {
         *self = Self {
             width,
             height,
-            min_height,
-            min_width,
-            max_height,
-            max_width,
+            minimum_height,
+            minimum_width,
+            maximum_height,
+            maximum_width,
             padding,
             direction,
             node_id: node_view.node_id(),

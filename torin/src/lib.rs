@@ -278,6 +278,15 @@ impl<Key: NodeKey> Torin<Key> {
     }
 }
 
+fn eval_size(size: &Size, size_value: f32, parent_value: f32) -> f32 {
+    match size {
+        Size::Pixels(px) => px.get(),
+        Size::Percentage(per) => parent_value / 100.0 * per.get(),
+        Size::DynamicCalculations(calculations) => run_calculations(calculations, parent_value),
+        _ => size_value,
+    }
+}
+
 /// Measure this node and all it's children
 /// The caller of this function is responsible of caching the Node's layout results
 #[allow(clippy::too_many_arguments)]
@@ -296,31 +305,25 @@ fn measure_node<Key: NodeKey>(
     if must_run {
         let mut area = Rect::new(available_parent_size.origin, Size2D::default());
 
-        match &node.width {
-            Size::Pixels(px) => {
-                area.size.width += px.get();
-            }
-            Size::Percentage(per) => {
-                area.size.width += parent_area.size.width / 100.0 * per.get();
-            }
-            Size::DynamicCalculations(calculations) => {
-                area.size.width += run_calculations(calculations, parent_area.size.width);
-            }
-            _ => {}
-        }
+        area.size.width = eval_size(&node.width, area.size.width, parent_area.size.width);
+        area.size.height = eval_size(&node.height, area.size.height, parent_area.size.height);
 
-        match &node.height {
-            Size::Pixels(px) => {
-                area.size.height += px.get();
-            }
-            Size::Percentage(per) => {
-                area.size.height += parent_area.size.height / 100.0 * per.get();
-            }
-            Size::DynamicCalculations(calculations) => {
-                area.size.height += run_calculations(calculations, parent_area.size.height)
-            }
-            _ => {}
-        }
+        area.size.width = area.size.width.clamp(
+            eval_size(&node.minimum_width, area.size.width, parent_area.size.width),
+            eval_size(&node.maximum_width, area.size.width, parent_area.size.width),
+        );
+        area.size.height = area.size.height.clamp(
+            eval_size(
+                &node.minimum_height,
+                area.size.height,
+                parent_area.size.height,
+            ),
+            eval_size(
+                &node.maximum_height,
+                area.size.height,
+                parent_area.size.height,
+            ),
+        );
 
         // Custom measure
         let skip_inner = if let Some(measurer) = measurer {
@@ -777,6 +780,14 @@ pub struct Node {
     pub width: Size,
     pub height: Size,
 
+    // Minimum dimensions
+    pub minimum_width: Size,
+    pub minimum_height: Size,
+
+    // Maximum dimensions
+    pub maximum_width: Size,
+    pub maximum_height: Size,
+
     /// Inner layout mode
     pub display: DisplayMode,
 
@@ -806,6 +817,10 @@ impl Node {
         Self {
             width: Size::default(),
             height: Size::default(),
+            minimum_width: Size::default(),
+            minimum_height: Size::default(),
+            maximum_width: Size::default(),
+            maximum_height: Size::default(),
             direction: DirectionMode::Vertical,
             scroll_x: Length::new(0.0),
             scroll_y: Length::new(0.0),

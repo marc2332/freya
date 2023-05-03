@@ -228,6 +228,10 @@ impl NodeResolver<NodeId> for DioxusNodeResolver<'_> {
         Some(Node {
             width: size.width,
             height: size.height,
+            minimum_width: size.minimum_width,
+            minimum_height: size.minimum_height,
+            maximum_width: size.maximum_width,
+            maximum_height: size.maximum_height,
             direction: size.direction,
             padding: size.padding,
             display: size.display,
