@@ -7,7 +7,7 @@ use skia_safe::{
     textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle},
     Canvas, Paint, PaintStyle,
 };
-use torin::Area;
+use torin::geometry::Area;
 
 /// Render a `label` element
 pub fn render_label(

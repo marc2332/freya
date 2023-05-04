@@ -14,7 +14,7 @@ use skia_safe::textlayout::{
     FontCollection, ParagraphBuilder, ParagraphStyle, TextHeightBehavior, TextStyle,
 };
 use std::sync::MutexGuard;
-use torin::*;
+use torin::prelude::*;
 
 pub type DioxusDOM = RealDom<CustomAttributeValues>;
 pub type DioxusNode<'a> = NodeRef<'a, CustomAttributeValues>;

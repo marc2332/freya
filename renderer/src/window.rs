@@ -6,7 +6,7 @@ use freya_dom::FreyaDOM;
 use freya_layout::Layers;
 use std::ffi::CString;
 use std::num::NonZeroU32;
-use torin::{Area, Size2D};
+use torin::geometry::{Area, Size2D};
 
 use gl::types::*;
 use glutin::context::GlProfile;

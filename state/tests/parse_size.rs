@@ -1,5 +1,6 @@
 use freya_node_state::parse_size;
-use torin::{DynamicCalculation, Length, Size};
+use torin::geometry::Length;
+use torin::size::{DynamicCalculation, Size};
 
 const SCALE_FACTOR: f32 = 1.0;
 

@@ -1,5 +1,5 @@
 use freya_node_state::parse_padding;
-use torin::Paddings;
+use torin::padding::Paddings;
 
 const SCALE_FACTOR: f32 = 1.0;
 

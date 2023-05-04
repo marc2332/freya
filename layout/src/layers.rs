@@ -8,7 +8,7 @@ use freya_dom::FreyaDOM;
 use freya_node_state::{CursorMode, CursorSettings, References, SizeState, Style};
 use rustc_hash::{FxHashMap, FxHashSet};
 use skia_safe::textlayout::FontCollection;
-use torin::Torin;
+use torin::torin::Torin;
 use uuid::Uuid;
 
 use crate::{process_paragraph, DioxusDOM};

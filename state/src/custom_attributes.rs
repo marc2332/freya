@@ -12,8 +12,7 @@ use freya_common::CursorLayoutResponse;
 use freya_common::NodeReferenceLayout;
 use skia_safe::Canvas;
 use tokio::sync::mpsc::UnboundedSender;
-use torin::Area;
-use torin::CursorPoint;
+use torin::geometry::{Area, CursorPoint};
 use uuid::Uuid;
 
 /// Image Reference

@@ -1,4 +1,4 @@
-use torin::CursorPoint;
+use torin::geometry::CursorPoint;
 pub use winit::event::MouseButton;
 
 /// Data of a Mouse event.

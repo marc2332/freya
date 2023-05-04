@@ -3,7 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use freya::{prelude::*, torin::CursorPoint};
+use freya::prelude::*;
 
 fn main() {
     launch_cfg(

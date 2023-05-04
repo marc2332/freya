@@ -7,7 +7,7 @@ use freya_dom::DioxusNode;
 use freya_node_state::Transform;
 use skia_safe::{textlayout::FontCollection, Canvas, ClipOp, Rect};
 use skia_safe::{Matrix, Point};
-use torin::Area;
+use torin::geometry::Area;
 
 use crate::elements::{
     render_image, render_label, render_paragraph, render_rect_container, render_svg,

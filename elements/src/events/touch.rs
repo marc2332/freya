@@ -1,4 +1,4 @@
-use torin::CursorPoint;
+use torin::geometry::CursorPoint;
 pub use winit::event::{Force, TouchPhase};
 
 /// Data of a Touch event.

@@ -7,7 +7,7 @@ use freya_elements::events::{
     KeyboardData, MouseData, TouchData, WheelData,
 };
 use rustc_hash::FxHashMap;
-use torin::{Area, CursorPoint};
+use torin::geometry::{Area, CursorPoint};
 use winit::event::{Force, MouseButton, TouchPhase};
 
 /// Events emitted in Freya.

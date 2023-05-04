@@ -3,7 +3,7 @@ use std::sync::Arc;
 use dioxus_core::{AttributeValue, Scope, ScopeState};
 use freya_node_state::{CanvasReference, CustomAttributeValues};
 use skia_safe::Canvas;
-use torin::Area;
+use torin::geometry::Area;
 use uuid::Uuid;
 
 pub type RenderCallback = Box<dyn Fn(&mut Canvas, Area)>;

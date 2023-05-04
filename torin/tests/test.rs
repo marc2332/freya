@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use torin::*;
+use torin::prelude::*;
 
 struct TestingMeasurer;
 

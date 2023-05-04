@@ -8,7 +8,7 @@ use dioxus_native_core::{NodeId, SendAnyMap};
 use dioxus_native_core_macro::partial_derive_state;
 use freya_common::NodeReferenceLayout;
 use tokio::sync::mpsc::UnboundedSender;
-use torin::*;
+use torin::prelude::*;
 
 use crate::CustomAttributeValues;
 

@@ -9,7 +9,7 @@ use dioxus_native_core_macro::partial_derive_state;
 use skia_safe::textlayout::TextAlign;
 use skia_safe::Color;
 use smallvec::{smallvec, SmallVec};
-use torin::Torin;
+use torin::torin::Torin;
 
 use crate::{parse_color, CustomAttributeValues};
 

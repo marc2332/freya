@@ -11,7 +11,7 @@ pub use layers::*;
 use skia_safe::textlayout::{
     FontCollection, Paragraph, ParagraphBuilder, ParagraphStyle, TextStyle,
 };
-use torin::{Area, CursorPoint};
+use torin::geometry::{Area, CursorPoint};
 pub type DioxusDOM = RealDom<CustomAttributeValues>;
 
 #[allow(dead_code)]

@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
 use freya_hooks::use_node_ref;
-use torin::CursorPoint;
+use torin::prelude::CursorPoint;
 
 /// [`DragProvider`] component properties.
 #[derive(Props)]

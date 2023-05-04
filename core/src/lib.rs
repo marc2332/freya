@@ -3,7 +3,7 @@ use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::{node::NodeType, NodeId};
 use freya_dom::{DioxusNodeResolver, FreyaDOM, SkiaMeasurer};
 use freya_layout::Layers;
-use torin::Area;
+use torin::geometry::Area;
 
 use freya_node_state::Style;
 use rustc_hash::FxHashMap;
@@ -18,7 +18,7 @@ use events::{DomEvent, EventsProcessor, FreyaEvent};
 pub type EventEmitter = UnboundedSender<DomEvent>;
 pub type EventReceiver = UnboundedReceiver<DomEvent>;
 pub type EventsQueue = Vec<FreyaEvent>;
-pub type ViewportsCollection = FxHashMap<NodeId, (Option<torin::Area>, Vec<NodeId>)>;
+pub type ViewportsCollection = FxHashMap<NodeId, (Option<Area>, Vec<NodeId>)>;
 pub type NodesEvents<'a> = FxHashMap<&'a str, Vec<(NodeId, FreyaEvent)>>;
 
 // Calculate all the applicable viewports for the given nodes

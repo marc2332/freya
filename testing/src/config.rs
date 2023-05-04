@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use torin::Size2D;
+use torin::geometry::Size2D;
 
 /// Configuration for a [`TestingHandler`].
 pub struct TestingConfig {

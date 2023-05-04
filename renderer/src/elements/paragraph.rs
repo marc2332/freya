@@ -8,7 +8,7 @@ use skia_safe::{
     },
     Canvas, Paint, PaintStyle, Rect,
 };
-use torin::Area;
+use torin::geometry::Area;
 
 /// Render a `paragraph` element
 pub fn render_paragraph(

@@ -1,5 +1,5 @@
 use skia_safe::{Canvas, Color, Paint, PaintStyle};
-use torin::Area;
+use torin::geometry::Area;
 
 /// Render a wireframe around the given node
 pub fn render_wireframe(canvas: &mut Canvas, area: &Area) {

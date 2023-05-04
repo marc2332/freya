@@ -4,6 +4,7 @@ use freya_node_state::{
     CursorSettings, FontStyle, References, ShadowSettings, SizeState, Style, Transform,
 };
 use skia_safe::Color;
+use torin::{direction::DirectionMode, display::DisplayMode, padding::Paddings, size::Size};
 
 #[derive(Clone)]
 pub struct NodeState {
@@ -111,11 +112,11 @@ impl<'a> Iterator for NodeStateIterator<'a> {
 
 pub enum AttributeType<'a> {
     Color(&'a Color),
-    Size(&'a torin::Size),
+    Size(&'a Size),
     Measure(f32),
-    Measures(torin::Paddings),
-    Direction(&'a torin::DirectionMode),
-    Display(&'a torin::DisplayMode),
+    Measures(Paddings),
+    Direction(&'a DirectionMode),
+    Display(&'a DisplayMode),
     Shadow(&'a ShadowSettings),
     Text(String),
 }
