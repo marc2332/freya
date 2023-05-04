@@ -271,9 +271,7 @@ pub fn parse_padding(padding: &str, scale_factor: f32) -> Option<Paddings> {
 }
 
 pub fn parse_size(size: &str, scale_factor: f32) -> Option<Size> {
-    if size == "stretch" {
-        Some(Size::Percentage(Length::new(100.0)))
-    } else if size == "auto" {
+    if size == "auto" {
         Some(Size::Inner)
     } else if size.contains("calc") {
         Some(Size::DynamicCalculations(parse_calc(size, scale_factor)?))

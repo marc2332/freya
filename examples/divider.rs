@@ -14,18 +14,18 @@ fn app(cx: Scope) -> Element {
 
     render!(
         rect {
-            height: "stretch",
-            width: "stretch",
+            height: "100%",
+            width: "100%",
             direction: "horizontal",
             padding: "15",
             color: "white",
             rect {
                 width: "{sizes.0}%",
-                height: "stretch",
+                height: "100%",
                 rect {
                     background: "red",
                     height: "{sizes.2}%",
-                    width: "stretch",
+                    width: "100%",
                     padding: "15",
                     onclick: |_| sizes.with_mut(|v| {
                         v.0 += 5;
@@ -40,7 +40,7 @@ fn app(cx: Scope) -> Element {
                 rect {
                     background: "green",
                     height: "{sizes.3}%",
-                    width: "stretch",
+                    width: "100%",
                     padding: "15",
                     onclick: |_| sizes.with_mut(|v| {
                         v.0 += 5;
@@ -55,11 +55,11 @@ fn app(cx: Scope) -> Element {
             }
             rect {
                 width: "{sizes.1}%",
-                height: "stretch",
+                height: "100%",
                 rect {
                     background: "blue",
                     height: "{sizes.2}%",
-                    width: "stretch",
+                    width: "100%",
                     padding: "15",
                     onclick: |_| sizes.with_mut(|v| {
                         v.0 -= 5;
@@ -74,7 +74,7 @@ fn app(cx: Scope) -> Element {
                 rect {
                     background: "black",
                     height: "{sizes.3}%",
-                    width: "stretch",
+                    width: "100%",
                     padding: "15",
                     onclick: |_| sizes.with_mut(|v| {
                         v.0 -= 5;
