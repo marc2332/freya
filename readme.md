@@ -81,6 +81,7 @@ dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="c9044111908338c347
 - Headless testing
 - Hot reload
 - Optional DevTools panel
+- Easy multiline text editing
 - Components crate (with theming support)
    - Scroll views 
    - Virtualized scroll views
