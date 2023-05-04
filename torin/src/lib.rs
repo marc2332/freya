@@ -288,12 +288,14 @@ impl<Key: NodeKey> Torin<Key> {
     }
 }
 
-fn eval_size(size: &Size, size_value: f32, parent_value: f32) -> f32 {
+fn eval_size(size: &Size, parent_value: f32) -> Option<f32> {
     match size {
-        Size::Pixels(px) => px.get(),
-        Size::Percentage(per) => parent_value / 100.0 * per.get(),
-        Size::DynamicCalculations(calculations) => run_calculations(calculations, parent_value),
-        _ => size_value,
+        Size::Pixels(px) => Some(px.get()),
+        Size::Percentage(per) => Some(parent_value / 100.0 * per.get()),
+        Size::DynamicCalculations(calculations) => {
+            Some(run_calculations(calculations, parent_value))
+        }
+        _ => None,
     }
 }
 
@@ -315,24 +317,23 @@ fn measure_node<Key: NodeKey>(
     if must_run {
         let mut area = Rect::new(available_parent_area.origin, Size2D::default());
 
-        area.size.width = eval_size(&node.width, area.size.width, parent_area.size.width);
-        area.size.height = eval_size(&node.height, area.size.height, parent_area.size.height);
+        area.size.width = eval_size(&node.width, parent_area.size.width).unwrap_or(area.size.width);
+        area.size.height =
+            eval_size(&node.height, parent_area.size.height).unwrap_or(area.size.width);
+
+        let minimum_width = eval_size(&node.minimum_width, parent_area.size.width);
+        let maximum_width = eval_size(&node.maximum_width, parent_area.size.width);
+
+        let minimum_height = eval_size(&node.minimum_height, parent_area.size.height);
+        let maximum_height = eval_size(&node.maximum_height, parent_area.size.height);
 
         area.size.width = area.size.width.clamp(
-            eval_size(&node.minimum_width, area.size.width, parent_area.size.width),
-            eval_size(&node.maximum_width, area.size.width, parent_area.size.width),
+            minimum_width.unwrap_or(area.size.width),
+            maximum_width.unwrap_or(area.size.width),
         );
         area.size.height = area.size.height.clamp(
-            eval_size(
-                &node.minimum_height,
-                area.size.height,
-                parent_area.size.height,
-            ),
-            eval_size(
-                &node.maximum_height,
-                area.size.height,
-                parent_area.size.height,
-            ),
+            minimum_height.unwrap_or(area.size.height),
+            maximum_height.unwrap_or(area.size.height),
         );
 
         // Custom measure
@@ -341,10 +342,16 @@ fn measure_node<Key: NodeKey>(
                 measurer.measure(node_id, node, &area, parent_area, available_parent_area);
             if let Some(new_area) = custom_measure {
                 if Size::Inner == node.width {
-                    area.size.width = new_area.width()
+                    area.size.width = new_area.width().clamp(
+                        minimum_width.unwrap_or(new_area.width()),
+                        maximum_width.unwrap_or(new_area.width()),
+                    );
                 }
                 if Size::Inner == node.height {
-                    area.size.height = new_area.height()
+                    area.size.height = new_area.height().clamp(
+                        minimum_height.unwrap_or(new_area.height()),
+                        maximum_height.unwrap_or(new_area.height()),
+                    );
                 }
             }
             custom_measure.is_some()
