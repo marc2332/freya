@@ -25,15 +25,16 @@ impl NodeKey for usize {}
 impl NodeKey for NodeId {}
 
 pub trait NodeResolver<NodeKey> {
-    /// Get a Node's Size configuration
+    /// Get the Node size
     fn get_node(&self, node_id: &NodeKey) -> Option<Node>;
 
     /// Get the height in the DOM of the given Node
     fn height(&self, node_id: &NodeKey) -> Option<u16>;
 
-    /// Get the parent's Node ID from the given Node
+    /// Get the parent of a Node
     fn parent_of(&self, node_id: &NodeKey) -> Option<NodeKey>;
 
-    /// Get a list of IDs of all the Nodes from the given Node
+    /// Get the children of a Node
     fn children_of(&self, node_id: &NodeKey) -> Vec<NodeKey>;
 }
+
