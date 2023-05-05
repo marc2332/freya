@@ -5,11 +5,35 @@ use winit::{event_loop::EventLoopProxy, window::CursorIcon};
 
 #[derive(Props)]
 pub struct CursorAreaProps<'a> {
+    /// Cursor icon that will be used when hovering this area.
     icon: CursorIcon,
-
+    /// Inner children for the CursorArea.
     children: Element<'a>,
 }
 
+/// `CursorArea` component.
+///
+/// # Props
+/// See [`CursorAreaProps`].
+///
+/// # Example
+///
+/// ```no_run
+/// # use freya::prelude::*;
+/// fn app(cx: Scope) -> Element {
+///     render!(
+///         CursorArea {
+///             icon: CursorIcon::Progress,
+///             label {
+///                 height: "100%",
+///                 width: "100%",
+///                 "Loading"
+///             }
+///         }
+///     )
+/// }
+/// ```
+///
 #[allow(non_snake_case)]
 pub fn CursorArea<'a>(cx: Scope<'a, CursorAreaProps<'a>>) -> Element<'a> {
     let event_loop_proxy = cx.consume_context::<EventLoopProxy<EventMessage>>();
