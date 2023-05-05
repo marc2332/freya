@@ -3,6 +3,7 @@ use freya_common::EventMessage;
 use freya_elements::elements as dioxus_elements;
 use winit::{event_loop::EventLoopProxy, window::CursorIcon};
 
+/// [`CursorArea`] component properties.
 #[derive(Props)]
 pub struct CursorAreaProps<'a> {
     /// Cursor icon that will be used when hovering this area.
