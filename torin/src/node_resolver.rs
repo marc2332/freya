@@ -37,4 +37,3 @@ pub trait NodeResolver<NodeKey> {
     /// Get the children of a Node
     fn children_of(&self, node_id: &NodeKey) -> Vec<NodeKey>;
 }
-

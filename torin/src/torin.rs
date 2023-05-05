@@ -281,7 +281,7 @@ fn measure_node<Key: NodeKey>(
         area.size.height = node
             .height
             .eval(parent_area.size.height)
-            .unwrap_or(area.size.width);
+            .unwrap_or(area.size.height);
 
         let minimum_width = node.minimum_width.eval(parent_area.size.width);
         let maximum_width = node.maximum_width.eval(parent_area.size.width);
