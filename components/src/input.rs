@@ -1,9 +1,11 @@
+use crate::CursorArea;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{KeyboardData, MouseEvent};
 use freya_hooks::{
     use_editable, use_focus, use_get_theme, EditableConfig, EditableEvent, EditableMode, TextEditor,
 };
+use winit::window::CursorIcon;
 
 /// [`Input`] component properties.
 #[derive(Props)]
@@ -108,39 +110,42 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     };
 
     render!(
-        container {
-            onkeydown: onkeydown,
-            onclick: move |_| {
-                focus();
-            },
-            width: "auto",
-            height: "auto",
-            direction: "both",
-            padding: "1.5",
+        CursorArea {
+            icon: CursorIcon::Text,
             container {
-                width: "100",
-                height: "35",
+                onkeydown: onkeydown,
+                onclick: move |_| {
+                    focus();
+                },
+                width: "auto",
+                height: "auto",
                 direction: "both",
-                color: "{button_theme.font_theme.color}",
-                shadow: "0 5 15 10 black",
-                radius: "5",
-                padding: "8",
-                background: "{button_theme.background}",
-                cursor_reference: cursor_attr,
-                color: "white",
-                paragraph {
-                    width: "100%",
-                    cursor_id: "0",
-                    cursor_index: "{cursor_char}",
-                    cursor_mode: "editable",
-                    cursor_color: "white",
-                    max_lines: "1",
-                    onclick: onclick,
-                    onmouseover: onmouseover,
-                    onmousedown: onmousedown,
-                    highlights: highlights_attr,
-                    text {
-                        "{text}"
+                padding: "1.5",
+                container {
+                    width: "100",
+                    height: "35",
+                    direction: "both",
+                    color: "{button_theme.font_theme.color}",
+                    shadow: "0 5 15 10 black",
+                    radius: "5",
+                    padding: "8",
+                    background: "{button_theme.background}",
+                    cursor_reference: cursor_attr,
+                    color: "white",
+                    paragraph {
+                        width: "100%",
+                        cursor_id: "0",
+                        cursor_index: "{cursor_char}",
+                        cursor_mode: "editable",
+                        cursor_color: "white",
+                        max_lines: "1",
+                        onclick: onclick,
+                        onmouseover: onmouseover,
+                        onmousedown: onmousedown,
+                        highlights: highlights_attr,
+                        text {
+                            "{text}"
+                        }
                     }
                 }
             }

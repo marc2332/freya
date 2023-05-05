@@ -4,6 +4,7 @@
 mod accordion;
 mod button;
 mod canvas;
+mod cursor_area;
 mod drag_drop;
 mod dropdown;
 mod external_link;
@@ -21,6 +22,7 @@ mod tooltip;
 pub use accordion::*;
 pub use button::*;
 pub use canvas::*;
+pub use cursor_area::*;
 pub use drag_drop::*;
 pub use dropdown::*;
 pub use external_link::*;
