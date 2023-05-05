@@ -20,6 +20,7 @@ pub struct CursorAreaProps<'a> {
 ///
 /// ```no_run
 /// # use freya::prelude::*;
+/// # use winit::window::CursorIcon;
 /// fn app(cx: Scope) -> Element {
 ///     render!(
 ///         CursorArea {
