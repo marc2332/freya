@@ -222,4 +222,8 @@ impl<State: 'static + Clone> App<State> {
             &self.window_env.font_collection,
         );
     }
+
+    pub fn window_env(&mut self) -> &mut WindowEnv<State> {
+        &mut self.window_env
+    }
 }
