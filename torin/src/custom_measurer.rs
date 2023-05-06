@@ -1,4 +1,4 @@
-use crate::{geometry::Area, node::Node, node_resolver::NodeKey};
+use crate::{dom_adapter::NodeKey, geometry::Area, node::Node};
 
 pub trait LayoutMeasurer<Key: NodeKey> {
     fn measure(

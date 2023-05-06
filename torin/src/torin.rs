@@ -8,9 +8,9 @@ use crate::{
     custom_measurer::LayoutMeasurer,
     direction::DirectionMode,
     display::DisplayMode,
+    dom_adapter::{DOMAdapter, NodeAreas, NodeKey},
     geometry::{Area, Size2D},
     node::Node,
-    node_resolver::{NodeAreas, NodeKey, NodeResolver},
     size::Size,
 };
 
@@ -81,7 +81,7 @@ impl<Key: NodeKey> Torin<Key> {
     pub fn remove(
         &mut self,
         node_id: Key,
-        node_resolver: &impl NodeResolver<Key>,
+        node_resolver: &impl DOMAdapter<Key>,
         invalidate_parent: bool,
     ) {
         // Remove itself
@@ -104,7 +104,7 @@ impl<Key: NodeKey> Torin<Key> {
     }
 
     /// Mark as dirty a Node
-    pub fn safe_invalidate(&mut self, node_id: Key, node_resolver: &impl NodeResolver<Key>) {
+    pub fn safe_invalidate(&mut self, node_id: Key, node_resolver: &impl DOMAdapter<Key>) {
         if node_resolver.is_node_valid(&node_id) {
             self.dirty.insert(node_id);
         }
@@ -114,7 +114,7 @@ impl<Key: NodeKey> Torin<Key> {
     pub fn check_dirty_dependants(
         &mut self,
         node_id: Key,
-        node_resolver: &impl NodeResolver<Key>,
+        node_resolver: &impl DOMAdapter<Key>,
         ignore: bool,
     ) {
         if self.dirty.contains(&node_id) && ignore {
@@ -185,7 +185,7 @@ impl<Key: NodeKey> Torin<Key> {
     }
 
     /// Find the best root Node from where to start measuring
-    pub fn find_best_root(&mut self, node_resolver: &impl NodeResolver<Key>) {
+    pub fn find_best_root(&mut self, node_resolver: &impl DOMAdapter<Key>) {
         for dirty in self.dirty.clone() {
             if node_resolver.is_node_valid(&dirty) {
                 self.check_dirty_dependants(dirty, node_resolver, false);
@@ -199,7 +199,7 @@ impl<Key: NodeKey> Torin<Key> {
         suggested_root_id: Key,
         suggested_root_area: Area,
         measurer: &mut Option<impl LayoutMeasurer<Key>>,
-        node_resolver: &impl NodeResolver<Key>,
+        node_resolver: &impl DOMAdapter<Key>,
     ) {
         // If there are previosuly cached results
         // But no dirty nodes, we can simply skip the measurement
@@ -273,7 +273,7 @@ fn measure_node<Key: NodeKey>(
     available_parent_area: &Area,
     measurer: &mut Option<impl LayoutMeasurer<Key>>,
     must_cache: bool,
-    node_resolver: &impl NodeResolver<Key>,
+    node_resolver: &impl DOMAdapter<Key>,
 ) -> (bool, NodeAreas) {
     let must_run = layout.dirty.contains(&node_id) || layout.results.get(&node_id).is_none();
     if must_run {
@@ -451,7 +451,7 @@ fn measure_inner_nodes<Key: NodeKey>(
     measurer: &mut Option<impl LayoutMeasurer<Key>>,
     must_cache: bool,
     mode: &mut MeasureMode,
-    node_resolver: &impl NodeResolver<Key>,
+    node_resolver: &impl DOMAdapter<Key>,
 ) {
     let children = node_resolver.children_of(node_id);
 

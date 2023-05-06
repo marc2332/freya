@@ -11,9 +11,13 @@ repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
+[features]
+dioxus = ["dep:dioxus-native-core"]
+default = ["dioxus"]
+
 [dependencies]
 tracing = { workspace = true }
 euclid = { workspace = true }
 fxhash = { workspace = true }
-dioxus-native-core = { workspace = true }
+dioxus-native-core = { workspace = true, optional = true }
 

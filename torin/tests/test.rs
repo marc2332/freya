@@ -18,11 +18,11 @@ impl LayoutMeasurer<usize> for TestingMeasurer {
 }
 
 #[derive(Default)]
-struct TreeMapper {
+struct TestingDOM {
     mapper: HashMap<usize, (Option<usize>, Vec<usize>, u16, Node)>,
 }
 
-impl TreeMapper {
+impl TestingDOM {
     fn add(&mut self, node_id: usize, parent: Option<usize>, children: Vec<usize>, node: Node) {
         let depth = parent.map(|p| self.mapper.get(&p).unwrap().2).unwrap_or(0) + 1;
         self.mapper.insert(node_id, (parent, children, depth, node));
@@ -48,7 +48,7 @@ impl TreeMapper {
     }
 }
 
-impl NodeResolver<usize> for TreeMapper {
+impl DOMAdapter<usize> for TestingDOM {
     fn children_of(&self, node_id: &usize) -> Vec<usize> {
         self.mapper
             .get(node_id)
@@ -84,7 +84,7 @@ fn test_utils() -> (Torin<usize>, Option<TestingMeasurer>) {
 pub fn root_100per_children_50per50per() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TreeMapper::default();
+    let mut mocked_dom = TestingDOM::default();
     mocked_dom.add(
         0,
         None,
@@ -144,7 +144,7 @@ pub fn root_100per_children_50per50per() {
 pub fn root_200px_children_50per50per() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TreeMapper::default();
+    let mut mocked_dom = TestingDOM::default();
     mocked_dom.add(
         0,
         None,
@@ -204,7 +204,7 @@ pub fn root_200px_children_50per50per() {
 pub fn layout_dirty_nodes() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TreeMapper::default();
+    let mut mocked_dom = TestingDOM::default();
     mocked_dom.add(
         0,
         None,
@@ -325,7 +325,7 @@ pub fn layout_dirty_nodes() {
 pub fn direction() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TreeMapper::default();
+    let mut mocked_dom = TestingDOM::default();
     mocked_dom.add(
         0,
         None,
@@ -409,7 +409,7 @@ pub fn direction() {
 pub fn scroll() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TreeMapper::default();
+    let mut mocked_dom = TestingDOM::default();
     mocked_dom.add(
         0,
         None,
@@ -465,7 +465,7 @@ pub fn scroll() {
 pub fn padding() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TreeMapper::default();
+    let mut mocked_dom = TestingDOM::default();
     mocked_dom.add(
         0,
         None,
@@ -504,7 +504,7 @@ pub fn padding() {
 pub fn caching() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TreeMapper::default();
+    let mut mocked_dom = TestingDOM::default();
     mocked_dom.add(
         0,
         None,
@@ -565,7 +565,7 @@ pub fn caching() {
 pub fn sibling_increments_area() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TreeMapper::default();
+    let mut mocked_dom = TestingDOM::default();
     mocked_dom.add(
         0,
         None,
@@ -615,7 +615,7 @@ pub fn sibling_increments_area() {
 pub fn node_removal() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TreeMapper::default();
+    let mut mocked_dom = TestingDOM::default();
     mocked_dom.add(
         0,
         None,
@@ -710,7 +710,7 @@ pub fn node_removal() {
 pub fn display_horizontal() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TreeMapper::default();
+    let mut mocked_dom = TestingDOM::default();
     mocked_dom.add(
         0,
         None,
@@ -755,7 +755,7 @@ pub fn display_horizontal() {
 pub fn display_vertical_with_inner_children() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TreeMapper::default();
+    let mut mocked_dom = TestingDOM::default();
     mocked_dom.add(
         0,
         None,
@@ -816,7 +816,7 @@ pub fn display_vertical_with_inner_children() {
 pub fn deep_tree() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TreeMapper::default();
+    let mut mocked_dom = TestingDOM::default();
     mocked_dom.add(
         0,
         None,
@@ -914,7 +914,7 @@ pub fn deep_tree() {
 pub fn stacked() {
     let (mut layout, mut measurer) = test_utils();
 
-    let mut mocked_dom = TreeMapper::default();
+    let mut mocked_dom = TestingDOM::default();
     mocked_dom.add(
         0,
         None,

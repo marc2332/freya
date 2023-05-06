@@ -1,4 +1,3 @@
-use dioxus_native_core::NodeId;
 pub use euclid::Rect;
 
 use crate::{
@@ -22,9 +21,11 @@ pub struct NodeAreas {
 pub trait NodeKey: Clone + PartialEq + Eq + std::hash::Hash + Copy + std::fmt::Debug {}
 
 impl NodeKey for usize {}
-impl NodeKey for NodeId {}
 
-pub trait NodeResolver<NodeKey> {
+#[cfg(feature = "dioxus")]
+impl NodeKey for dioxus_native_core::NodeId {}
+
+pub trait DOMAdapter<NodeKey> {
     /// Get the Node size
     fn get_node(&self, node_id: &NodeKey) -> Option<Node>;
 

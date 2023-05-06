@@ -214,7 +214,7 @@ impl<'a> DioxusNodeResolver<'a> {
     }
 }
 
-impl NodeResolver<NodeId> for DioxusNodeResolver<'_> {
+impl DOMAdapter<NodeId> for DioxusNodeResolver<'_> {
     fn get_node(&self, node_id: &NodeId) -> Option<Node> {
         let node = self.rdom.get(*node_id)?;
         let mut size = node.get::<SizeState>().unwrap().clone();
@@ -260,7 +260,7 @@ impl NodeResolver<NodeId> for DioxusNodeResolver<'_> {
             // Must not be a Placeholder
             if matches!(*node.node_type(), NodeType::Placeholder) {
                 false
-            } 
+            }
             // And not be an unconnected Node
             else {
                 !(node.parent_id().is_none() && *node_id != self.rdom.root_id())
