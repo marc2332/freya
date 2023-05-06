@@ -280,7 +280,13 @@ fn measure_node<Key: NodeKey>(
 ) -> (bool, NodeAreas) {
     let must_run = layout.dirty.contains(&node_id) || layout.results.get(&node_id).is_none();
     if must_run {
-        let mut area = Rect::new(available_parent_area.origin, Size2D::default());
+        let horizontal_padding = node.padding.horizontal_paddings();
+        let vertical_padding = node.padding.vertical_paddings();
+
+        let mut area = Rect::new(
+            available_parent_area.origin,
+            Size2D::new(horizontal_padding, vertical_padding),
+        );
 
         area.size.width = node
             .width
@@ -328,9 +334,6 @@ fn measure_node<Key: NodeKey>(
         } else {
             false
         };
-
-        let horizontal_padding = node.padding.horizontal_paddings();
-        let vertical_padding = node.padding.vertical_paddings();
 
         let mut inner_sizes = Size2D::default();
 
@@ -529,8 +532,8 @@ fn measure_inner_nodes<Key: NodeKey>(
                 if let MeasureMode::ParentIsNotCached {
                     area,
                     vertical_padding,
-                    horizontal_padding,
                     inner_area,
+                    ..
                 } = mode
                 {
                     inner_sizes.height = child_areas.area.height();
@@ -538,15 +541,17 @@ fn measure_inner_nodes<Key: NodeKey>(
 
                     // Keep the biggest height
                     if node.height == Size::Inner {
-                        area.size.height =
-                            area.size.height.max(child_areas.area.size.height) + *vertical_padding;
+                        area.size.height = area
+                            .size
+                            .height
+                            .max(child_areas.area.size.height + *vertical_padding);
                         // Keep the inner area in sync
                         inner_area.size.height = area.size.height - *vertical_padding;
                     }
 
                     // Accumulate width
                     if node.width == Size::Inner {
-                        area.size.width += child_areas.area.size.width + *horizontal_padding;
+                        area.size.width += child_areas.area.size.width;
                     }
                 }
             }
@@ -557,9 +562,9 @@ fn measure_inner_nodes<Key: NodeKey>(
 
                 if let MeasureMode::ParentIsNotCached {
                     area,
-                    vertical_padding,
                     horizontal_padding,
                     inner_area,
+                    ..
                 } = mode
                 {
                     inner_sizes.width = child_areas.area.width();
@@ -567,15 +572,17 @@ fn measure_inner_nodes<Key: NodeKey>(
 
                     // Keep the biggest width
                     if node.width == Size::Inner {
-                        area.size.width =
-                            area.size.width.max(child_areas.area.size.width) + *horizontal_padding;
+                        area.size.width = area
+                            .size
+                            .width
+                            .max(child_areas.area.size.width + *horizontal_padding);
                         // Keep the inner area in sync
                         inner_area.size.width = area.size.width - *horizontal_padding;
                     }
 
                     // Accumulate height
                     if node.height == Size::Inner {
-                        area.size.height += child_areas.area.size.height + *vertical_padding;
+                        area.size.height += child_areas.area.size.height;
                     }
                 }
             }
@@ -587,24 +594,18 @@ fn measure_inner_nodes<Key: NodeKey>(
                 available_area.size.width -= child_areas.area.size.width;
                 available_area.size.height -= child_areas.area.size.height;
 
-                if let MeasureMode::ParentIsNotCached {
-                    area,
-                    vertical_padding,
-                    horizontal_padding,
-                    ..
-                } = mode
-                {
+                if let MeasureMode::ParentIsNotCached { area, .. } = mode {
                     inner_sizes.width += child_areas.area.width();
                     inner_sizes.height += child_areas.area.height();
 
                     // Accumulate width
                     if node.width == Size::Inner {
-                        area.size.width += child_areas.area.size.width + *horizontal_padding;
+                        area.size.width += child_areas.area.size.width;
                     }
 
                     // Accumulate height
                     if node.height == Size::Inner {
-                        area.size.height += child_areas.area.size.height + *vertical_padding;
+                        area.size.height += child_areas.area.size.height;
                     }
                 }
             }
