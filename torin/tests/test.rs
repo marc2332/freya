@@ -992,3 +992,63 @@ pub fn stacked() {
         Rect::new(Point2D::new(0.0, 100.0), Size2D::new(200.0, 100.0)),
     );
 }
+
+#[test]
+pub fn two_cols_auto() {
+    let (mut layout, mut measurer) = test_utils();
+
+    let mut mocked_dom = TestingDOM::default();
+    mocked_dom.add(
+        0,
+        None,
+        vec![1, 2],
+        Node::from_size_and_direction(
+            Size::Inner,
+            Size::Pixels(Length::new(400.0)),
+            DirectionMode::Horizontal,
+        ),
+    );
+    mocked_dom.add(
+        1,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Percentage(Length::new(50.0)),
+            Size::Pixels(Length::new(200.0)),
+            DirectionMode::Vertical,
+        ),
+    );
+    mocked_dom.add(
+        2,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Percentage(Length::new(50.0)),
+            Size::Pixels(Length::new(200.0)),
+            DirectionMode::Vertical,
+        ),
+    );
+
+    layout.find_best_root(&mocked_dom);
+    layout.measure(
+        0,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(400.0, 400.0)),
+        &mut measurer,
+        &mocked_dom,
+    );
+
+    assert_eq!(
+        layout.get(0).unwrap().area,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(400.0, 400.0)),
+    );
+
+    assert_eq!(
+        layout.get(1).unwrap().area,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
+    );
+
+    assert_eq!(
+        layout.get(2).unwrap().area,
+        Rect::new(Point2D::new(200.0, 0.0), Size2D::new(200.0, 200.0)),
+    );
+}

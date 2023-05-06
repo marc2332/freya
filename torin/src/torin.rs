@@ -542,15 +542,11 @@ fn measure_inner_nodes<Key: NodeKey>(
                             area.size.height.max(child_areas.area.size.height) + *vertical_padding;
                         // Keep the inner area in sync
                         inner_area.size.height = area.size.height - *vertical_padding;
-                        inner_sizes.height = inner_area.height();
                     }
 
                     // Accumulate width
                     if node.width == Size::Inner {
                         area.size.width += child_areas.area.size.width + *horizontal_padding;
-                        // Keep the inner area in sync
-                        inner_area.size.width = area.size.width - *horizontal_padding;
-                        inner_sizes.width += child_areas.area.width();
                     }
                 }
             }
@@ -580,8 +576,6 @@ fn measure_inner_nodes<Key: NodeKey>(
                     // Accumulate height
                     if node.height == Size::Inner {
                         area.size.height += child_areas.area.size.height + *vertical_padding;
-                        // Keep the inner area in sync
-                        inner_area.size.height = area.size.height - *vertical_padding;
                     }
                 }
             }
@@ -597,7 +591,7 @@ fn measure_inner_nodes<Key: NodeKey>(
                     area,
                     vertical_padding,
                     horizontal_padding,
-                    inner_area,
+                    ..
                 } = mode
                 {
                     inner_sizes.width += child_areas.area.width();
@@ -606,15 +600,11 @@ fn measure_inner_nodes<Key: NodeKey>(
                     // Accumulate width
                     if node.width == Size::Inner {
                         area.size.width += child_areas.area.size.width + *horizontal_padding;
-                        // Keep the inner area in sync
-                        inner_area.size.width = area.size.width - *horizontal_padding;
                     }
 
                     // Accumulate height
                     if node.height == Size::Inner {
                         area.size.height += child_areas.area.size.height + *vertical_padding;
-                        // Keep the inner area in sync
-                        inner_area.size.height = area.size.height - *vertical_padding;
                     }
                 }
             }
