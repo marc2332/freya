@@ -236,7 +236,6 @@ impl<State: 'static + Clone> App<State> {
     pub fn process_accessibility(&mut self) {
         let dom = &self.rdom.get();
 
-        // TODO: move logic to core
         for layer in self.layers.layers.values() {
             for render_node in layer.values() {
                 let dioxus_node = render_node.get_node(dom);

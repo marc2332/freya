@@ -108,12 +108,19 @@ impl AccessibilityState {
         builder.build(&mut self.node_classes)
     }
 
+    pub fn get_nodes(&self) -> Vec<(AccessibilityId, Node)> {
+        self.nodes
+            .iter()
+            .rev()
+            .cloned()
+            .collect::<Vec<(AccessibilityId, Node)>>()
+    }
+
     /// Process the Nodes accessibility Tree
     pub fn process(&mut self, root_name: &str) -> TreeUpdate {
         let root = self.build_root(root_name);
         let mut nodes = vec![(WINDOW_ID, root)];
-        nodes.extend(self.nodes.clone());
-        nodes.reverse();
+        nodes.extend(self.get_nodes());
 
         TreeUpdate {
             nodes,
@@ -151,22 +158,22 @@ impl AccessibilityState {
                     self.nodes
                         .iter()
                         .enumerate()
-                        .find(|(i, _)| *i == node_index + 1)
+                        .find(|(i, _)| i + 1 == node_index)
                         .map(|(_, node)| node)
                 } else {
                     self.nodes
                         .iter()
                         .enumerate()
-                        .find(|(i, _)| i + 1 == node_index)
+                        .find(|(i, _)| *i == node_index + 1)
                         .map(|(_, node)| node)
                 };
 
                 if let Some((next_node_id, _)) = target_node {
                     self.focus = Some(*next_node_id);
                 } else if direction == AccessibilityFocusDirection::Forward {
-                    self.focus = self.nodes.first().map(|(id, _)| *id)
-                } else if direction == AccessibilityFocusDirection::Backward {
                     self.focus = self.nodes.last().map(|(id, _)| *id)
+                } else if direction == AccessibilityFocusDirection::Backward {
+                    self.focus = self.nodes.first().map(|(id, _)| *id)
                 }
             } else {
                 self.focus = self.nodes.first().map(|(id, _)| *id)
