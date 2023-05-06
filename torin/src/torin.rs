@@ -186,6 +186,9 @@ impl<Key: NodeKey> Torin<Key> {
 
     /// Find the best root Node from where to start measuring
     pub fn find_best_root(&mut self, node_resolver: &impl DOMAdapter<Key>) {
+        if self.results.is_empty() {
+            return;
+        }
         for dirty in self.dirty.clone() {
             if node_resolver.is_node_valid(&dirty) {
                 self.check_dirty_dependants(dirty, node_resolver, false);
