@@ -67,6 +67,10 @@ impl NodeResolver<usize> for TreeMapper {
     fn get_node(&self, node_id: &usize) -> Option<Node> {
         self.mapper.get(node_id).map(|c| c.3.clone())
     }
+
+    fn is_node_valid(&self, _node_id: &usize) -> bool {
+        true
+    }
 }
 
 fn test_utils() -> (Torin<usize>, Option<TestingMeasurer>) {
@@ -528,8 +532,6 @@ pub fn caching() {
         &mut measurer,
         &mocked_dom,
     );
-
-    println!("{:?}", layout.results);
 
     assert_eq!(
         layout.get(1).unwrap().area,

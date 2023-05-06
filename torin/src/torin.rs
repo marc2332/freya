@@ -103,6 +103,13 @@ impl<Key: NodeKey> Torin<Key> {
         self.dirty.insert(node_id);
     }
 
+    /// Mark as dirty a Node
+    pub fn safe_invalidate(&mut self, node_id: Key, node_resolver: &impl NodeResolver<Key>) {
+        if node_resolver.is_node_valid(&node_id) {
+            self.dirty.insert(node_id);
+        }
+    }
+
     // Mark as dirty the given Node and all the nodes that depend on it
     pub fn check_dirty_dependants(
         &mut self,
@@ -179,12 +186,10 @@ impl<Key: NodeKey> Torin<Key> {
 
     /// Find the best root Node from where to start measuring
     pub fn find_best_root(&mut self, node_resolver: &impl NodeResolver<Key>) {
-        if TallestDirtyNode::None != self.tallest_dirty_node {
-            return;
-        }
-
         for dirty in self.dirty.clone() {
-            self.check_dirty_dependants(dirty, node_resolver, false);
+            if node_resolver.is_node_valid(&dirty) {
+                self.check_dirty_dependants(dirty, node_resolver, false);
+            }
         }
     }
 

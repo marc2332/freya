@@ -252,6 +252,23 @@ impl NodeResolver<NodeId> for DioxusNodeResolver<'_> {
     fn children_of(&self, node_id: &NodeId) -> Vec<NodeId> {
         self.rdom.tree_ref().children_ids(*node_id)
     }
+
+    fn is_node_valid(&self, node_id: &NodeId) -> bool {
+        let node = self.rdom.get(*node_id);
+
+        if let Some(node) = node {
+            // Must not be a Placeholder
+            if matches!(*node.node_type(), NodeType::Placeholder) {
+                false
+            } 
+            // And not be an unconnected Node
+            else {
+                !(node.parent_id().is_none() && *node_id != self.rdom.root_id())
+            }
+        } else {
+            false
+        }
+    }
 }
 
 /// Provides Text measurements using Skia SkParagraph
