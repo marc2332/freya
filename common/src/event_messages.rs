@@ -2,6 +2,7 @@ use accesskit::NodeId;
 use accesskit_winit::ActionRequestEvent;
 use dioxus_core::Template;
 use uuid::Uuid;
+use winit::window::CursorIcon;
 
 /// Custom EventLoop messages
 #[derive(Debug)]
@@ -16,6 +17,8 @@ pub enum EventMessage {
     RequestRerender,
     /// Remeasure a text elements group
     RemeasureTextGroup(Uuid),
+    /// Change the cursor icon
+    SetCursorIcon(CursorIcon),
     /// Accessibility action request event
     ActionRequestEvent(ActionRequestEvent),
     /// Focus the given accessibility NodeID

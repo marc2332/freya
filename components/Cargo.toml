@@ -21,6 +21,7 @@ freya-core = { path = "../core", version = "0.1.0" }
 dioxus = { workspace = true }
 dioxus-router = { workspace = true }
 
+winit = { workspace = true }
 tokio = { workspace = true }
 
 open = "1"

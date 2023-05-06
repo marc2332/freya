@@ -174,10 +174,8 @@ impl FreyaDOM {
 
         // Apply the mutations to the RealDOM
 
-        if !mutations.edits.is_empty() {
-            self.dioxus_integration_state
-                .apply_mutations(&mut self.rdom, mutations);
-        }
+        self.dioxus_integration_state
+            .apply_mutations(&mut self.rdom, mutations);
 
         // Update the Nodes states
         let mut ctx = SendAnyMap::new();

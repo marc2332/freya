@@ -20,6 +20,7 @@ dioxus-core = { workspace = true }
 
 accesskit = { workspace = true }
 accesskit_winit = { workspace = true }
+winit = { workspace = true }
 
 euclid = { workspace = true }
 uuid = { workspace = true }

@@ -102,6 +102,9 @@ pub fn run<T: 'static + Clone>(
             Event::UserEvent(EventMessage::RemeasureTextGroup(text_id)) => {
                 app.measure_text_group(&text_id);
             }
+            Event::UserEvent(EventMessage::SetCursorIcon(icon)) => {
+                app.window_env().window.set_cursor_icon(icon)
+            }
             Event::UserEvent(ev) => {
                 if let EventMessage::UpdateTemplate(template) = ev {
                     app.vdom_replace_template(template);
