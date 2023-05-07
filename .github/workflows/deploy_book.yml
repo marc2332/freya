@@ -17,11 +17,11 @@ jobs:
         uses: peaceiris/actions-mdbook@v1
       
       - run: mdbook build
-        working-directory: docs
+        working-directory: book
 
       - name: Upload to Deno Deploy
         uses: denoland/deployctl@v1
         with:
           project: freya-book
           entrypoint: https://deno.land/std/http/file_server.ts
-          root: docs/book
+          root: book/book
