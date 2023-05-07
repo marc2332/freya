@@ -10,11 +10,11 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    let mut radius = use_state(cx, || 30f32);
+    let radius = use_state(cx, || 30f32);
 
     let onwheel = move |e: WheelEvent| {
-        let y = e.get_delta_y();
-        radius += (y as f32) * 20.0;
+        let y = e.get_delta_y() as f32;
+        radius.set((*radius.get() + y).clamp(0.0, 300.0));
     };
 
     render!(
