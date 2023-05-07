@@ -41,8 +41,8 @@ raw-window-handle = "0.5.1"
 winit = "0.28.2"
 skia-safe = { version = "0.62.0", features = ["gl", "textlayout", "svg"] }
 tokio = { version = "1.23.0", features = ["sync", "rt-multi-thread", "time", "macros"] }
-accesskit = { version = "0.10.1", features = ["serde"]}
-accesskit_winit = "0.12.4"
+accesskit = { version = "0.11.0", features = ["serde"]}
+accesskit_winit = "0.13.0"
 
 euclid = "0.22.7"
 uuid = { version = "1.2.2", features = ["v4"]}

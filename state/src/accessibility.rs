@@ -71,7 +71,7 @@ impl State<CustomAttributeValues> for AccessibilitySettings {
                     }
                     "name" => {
                         if let OwnedAttributeValue::Text(attr) = attr.value {
-                            alt = Some(attr.to_owned())
+                            name = Some(attr.to_owned())
                         }
                     }
                     _ => {}
