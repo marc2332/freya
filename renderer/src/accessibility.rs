@@ -19,8 +19,12 @@ const WINDOW_ID: AccessibilityId = AccessibilityId(unsafe { NonZeroU128::new_unc
 /// Manages the Accessibility integration.
 #[derive(Default)]
 pub struct AccessibilityState {
+    /// Accessibility Nodes
     pub nodes: Vec<(AccessibilityId, Node)>,
+
+    /// Accessibility tree
     pub node_classes: NodeClassSet,
+
     /// Current focused Accessibility Node.
     pub focus: Option<AccessibilityId>,
 }
@@ -59,7 +63,6 @@ impl AccessibilityState {
 
         // Set children
         let children = render_node.get_accessibility_children(dom);
-
         if !children.is_empty() {
             builder.set_children(children);
         }
@@ -69,6 +72,11 @@ impl AccessibilityState {
             builder.set_value(alt.to_owned());
         } else if let Some(value) = render_node.get_text(dom) {
             builder.set_value(value);
+        }
+
+        // Set name
+        if let Some(name) = &node_accessibility.name {
+            builder.set_name(name.to_owned());
         }
 
         // Set role
@@ -108,6 +116,7 @@ impl AccessibilityState {
         builder.build(&mut self.node_classes)
     }
 
+    /// Get a list of all the nodes
     pub fn get_nodes(&self) -> Vec<(AccessibilityId, Node)> {
         self.nodes
             .iter()
@@ -139,7 +148,7 @@ impl AccessibilityState {
         });
     }
 
-    /// Focus the next/previous node starting from the currently focused Noed.
+    /// Focus the next/previous Node starting from the currently focused Node.
     pub fn set_focus_on_next_node(
         &mut self,
         adapter: &Adapter,
@@ -155,12 +164,14 @@ impl AccessibilityState {
 
             if let Some((node_index, _)) = current_node {
                 let target_node = if direction == AccessibilityFocusDirection::Forward {
+                    // Find the next Node
                     self.nodes
                         .iter()
                         .enumerate()
                         .find(|(i, _)| i + 1 == node_index)
                         .map(|(_, node)| node)
                 } else {
+                    // Find the previous Node
                     self.nodes
                         .iter()
                         .enumerate()
@@ -171,11 +182,14 @@ impl AccessibilityState {
                 if let Some((next_node_id, _)) = target_node {
                     self.focus = Some(*next_node_id);
                 } else if direction == AccessibilityFocusDirection::Forward {
+                    // Select the last Node
                     self.focus = self.nodes.last().map(|(id, _)| *id)
                 } else if direction == AccessibilityFocusDirection::Backward {
+                    // Select the first Node
                     self.focus = self.nodes.first().map(|(id, _)| *id)
                 }
             } else {
+                // Select the first Node
                 self.focus = self.nodes.first().map(|(id, _)| *id)
             }
 

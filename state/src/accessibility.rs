@@ -15,6 +15,7 @@ pub struct AccessibilitySettings {
     pub focus_id: Option<AccessibilityId>,
     pub role: Option<Role>,
     pub alt: Option<String>,
+    pub name: Option<String>,
 }
 
 #[partial_derive_state]
@@ -26,7 +27,9 @@ impl State<CustomAttributeValues> for AccessibilitySettings {
     type NodeDependencies = ();
 
     const NODE_MASK: NodeMaskBuilder<'static> =
-        NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&["focus_id", "role", "alt"]));
+        NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[
+            "focus_id", "role", "alt", "name",
+        ]));
 
     fn update<'a>(
         &mut self,
@@ -39,6 +42,7 @@ impl State<CustomAttributeValues> for AccessibilitySettings {
         let mut focus_id = None;
         let mut role = None;
         let mut alt = None;
+        let mut name = None;
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
@@ -65,6 +69,11 @@ impl State<CustomAttributeValues> for AccessibilitySettings {
                             alt = Some(attr.to_owned())
                         }
                     }
+                    "name" => {
+                        if let OwnedAttributeValue::Text(attr) = attr.value {
+                            alt = Some(attr.to_owned())
+                        }
+                    }
                     _ => {}
                 }
             }
@@ -74,6 +83,7 @@ impl State<CustomAttributeValues> for AccessibilitySettings {
             focus_id,
             role,
             alt,
+            name,
         };
         changed
     }

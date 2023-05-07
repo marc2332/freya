@@ -177,6 +177,7 @@ builder_constructors! {
         focus_id: AccessibilityId,
         alt: String,
         canvas_reference: String,
+        name: String,
     };
     container {
         padding: String,
@@ -202,6 +203,7 @@ builder_constructors! {
         focus_id: AccessibilityId,
         alt: String,
         canvas_reference: String,
+        name: String,
     };
     label {
         color: String,
@@ -215,7 +217,9 @@ builder_constructors! {
         font_style: String,
         rotate: String,
         role: String,
+        alt: String,
         focus_id: AccessibilityId,
+        name: String,
     };
     paragraph {
         layer: String,
@@ -236,6 +240,8 @@ builder_constructors! {
         highlight_color: String,
         font_size: String,
         font_family: String,
+        alt: String,
+        name: String,
     };
     text {
         color: String,
@@ -257,6 +263,7 @@ builder_constructors! {
         role: String,
         focus_id: AccessibilityId,
         alt: String,
+        name: String,
     };
     svg {
         svg_data: String,
@@ -267,6 +274,7 @@ builder_constructors! {
         role: String,
         focus_id: AccessibilityId,
         alt: String,
+        name: String,
     };
 }
 
