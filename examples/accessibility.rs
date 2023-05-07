@@ -3,7 +3,10 @@
     windows_subsystem = "windows"
 )]
 
+use std::str::FromStr;
+
 use freya::prelude::*;
+use reqwest::Url;
 
 fn main() {
     launch(app);
@@ -15,6 +18,9 @@ fn app(cx: Scope) -> Element {
     let focus_b = use_focus(cx);
     let focus_c = use_focus(cx);
     let focus_d = use_focus(cx);
+
+    let url = Url::from_str("https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/PNG_transparency_demonstration_1.png/420px-PNG_transparency_demonstration_1.png").unwrap();
+
     render!(
         AccessibilityFocusProvider {},
         rect {
@@ -58,6 +64,12 @@ fn app(cx: Scope) -> Element {
                 },
                 color: "white",
                 "Hello, World! This is an example."
+            }
+            NetworkImage {
+                url: url,
+                width: "100",
+                height: "100",
+                alt: "This is an image"
             }
         }
     )
