@@ -103,13 +103,6 @@ impl<Key: NodeKey> Torin<Key> {
         self.dirty.insert(node_id);
     }
 
-    /// Mark as dirty a Node
-    pub fn safe_invalidate(&mut self, node_id: Key, node_resolver: &impl DOMAdapter<Key>) {
-        if node_resolver.is_node_valid(&node_id) {
-            self.dirty.insert(node_id);
-        }
-    }
-
     // Mark as dirty the given Node and all the nodes that depend on it
     pub fn check_dirty_dependants(
         &mut self,
@@ -117,7 +110,7 @@ impl<Key: NodeKey> Torin<Key> {
         node_resolver: &impl DOMAdapter<Key>,
         ignore: bool,
     ) {
-        if self.dirty.contains(&node_id) && ignore {
+        if (self.dirty.contains(&node_id) && ignore) || !node_resolver.is_node_valid(&node_id) {
             return;
         }
 
@@ -190,9 +183,7 @@ impl<Key: NodeKey> Torin<Key> {
             return;
         }
         for dirty in self.dirty.clone() {
-            if node_resolver.is_node_valid(&dirty) {
-                self.check_dirty_dependants(dirty, node_resolver, false);
-            }
+            self.check_dirty_dependants(dirty, node_resolver, false);
         }
     }
 

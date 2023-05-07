@@ -257,14 +257,10 @@ impl DOMAdapter<NodeId> for DioxusNodeResolver<'_> {
         let node = self.rdom.get(*node_id);
 
         if let Some(node) = node {
-            // Must not be a Placeholder
-            if matches!(*node.node_type(), NodeType::Placeholder) {
-                false
-            }
-            // And not be an unconnected Node
-            else {
-                !(node.parent_id().is_none() && *node_id != self.rdom.root_id())
-            }
+            let is_placeholder = matches!(*node.node_type(), NodeType::Placeholder);
+            let tries_to_be_root = node.parent_id().is_none() && *node_id != self.rdom.root_id();
+
+            !(is_placeholder || tries_to_be_root)
         } else {
             false
         }
