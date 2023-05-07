@@ -14,7 +14,7 @@ pub struct ButtonProps<'a> {
 }
 
 /// Identifies the current status of the Button.
-#[derive(Debug, Default)]
+#[derive(Debug, Default, PartialEq)]
 enum ButtonStatus {
     /// Default state.
     #[default]
@@ -59,7 +59,9 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
     };
 
     let onmouseover = move |_| {
-        status.set(ButtonStatus::Hovering);
+        if *status.get() != ButtonStatus::Hovering {
+            status.set(ButtonStatus::Hovering);
+        }
     };
 
     let onmouseleave = move |_| {
