@@ -66,12 +66,11 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
         status.set(ButtonStatus::default());
     };
 
-    let button_theme = &theme.button;
     let background = match *status.get() {
         ButtonStatus::Hovering => theme.button.hover_background,
         ButtonStatus::Idle => theme.button.background,
     };
-    let color = button_theme.font_theme.color;
+    let color = theme.button.font_theme.color;
 
     render!(
         container {
