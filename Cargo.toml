@@ -40,7 +40,7 @@ glutin = "0.30.6"
 glutin-winit = "0.3.0"
 raw-window-handle = "0.5.1"
 winit = "0.28.2"
-skia-safe = { version = "0.60.0", features = ["gl", "textlayout", "svg"] }
+skia-safe = { version = "0.62.0", features = ["gl", "textlayout", "svg"] }
 tokio = { version = "1.23.0", features = ["sync", "rt-multi-thread", "time", "macros"] }
 
 euclid = "0.22.7"

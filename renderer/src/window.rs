@@ -218,7 +218,7 @@ impl<T: Clone> WindowEnv<T> {
         let canvas = self.surface.canvas();
 
         canvas.clear(if self.window_config.decorations {
-            Color::WHITE
+            self.window_config.background
         } else {
             Color::TRANSPARENT
         });
