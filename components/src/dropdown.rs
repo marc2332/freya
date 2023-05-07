@@ -31,21 +31,32 @@ where
 {
     let selected = use_shared_state::<T>(cx).unwrap();
     let theme = use_get_theme(cx);
-    let dropdownitem_theme = &theme.dropdown_item;
+    let is_hovering = use_state(cx, || false);
 
-    let background = if *selected.read() == cx.props.value {
-        dropdownitem_theme.hover_background
+    let is_selected = *selected.read() == cx.props.value;
+    let dropdown_item_theme = &theme.dropdown_item;
+
+    let background = if is_selected || *is_hovering.get() {
+        dropdown_item_theme.hover_background
     } else {
-        dropdownitem_theme.background
+        dropdown_item_theme.background
     };
 
     render!(rect {
-        color: "{dropdownitem_theme.font_theme.color}",
+        color: "{dropdown_item_theme.font_theme.color}",
         width: "100%",
         height: "35",
         background: background,
         padding: "6",
         radius: "3",
+        onmouseover: move |_| {
+            if !*is_hovering.get() {
+                is_hovering.set(true);
+            }
+        },
+        onmouseleave: move |_| {
+            is_hovering.set(false);
+        },
         onclick: move |_| {
             if let Some(onclick) = &cx.props.onclick {
                 onclick.call(());
@@ -75,32 +86,22 @@ pub struct DropdownProps<'a, T: 'static> {
 /// # Example
 /// ```no_run
 /// # use freya::prelude::*;
-/// # use std::fmt::Display;
-/// #[derive(PartialEq, Clone)]
-/// enum Values {
-///     A,
-///     B,
-///     C,
-/// }
-///
-/// impl Display for Values {
-///     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-///         match self {
-///             Values::A => f.write_str("Value A"),
-///             Values::C => f.write_str("Value C"),
-///             Values::B => f.write_str("Value B"),
-///         }
-///     }
-/// }
 ///
 /// fn app(cx: Scope) -> Element {
-///     let selected_dropdown = use_state(cx, || Values::A);
+///     let values = cx.use_hook(|| vec!["A".to_string(), "B".to_string(), "C".to_string()]);
+///     let selected_dropdown = use_state(cx, || "A".to_string());
 ///     render!(
 ///         Dropdown {
 ///             value: selected_dropdown.get().clone(),
-///             DropdownItem { onclick: move |_| selected_dropdown.set(Values::A), value: Values::A, label { "A" } }
-///             DropdownItem { onclick: move |_| selected_dropdown.set(Values::B), value: Values::B, label { "B" } }
-///             DropdownItem { onclick: move |_| selected_dropdown.set(Values::C), value: Values::C, label { "C" } }
+///             values.iter().map(|ch| {
+///                 rsx!(
+///                     DropdownItem {
+///                         value: ch.to_string(),
+///                         onclick: move |_| selected_dropdown.set(ch.to_string()),
+///                         label { "{ch}" }
+///                     }
+///                 )
+///             })
 ///         }
 ///     )
 /// }

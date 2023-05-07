@@ -9,6 +9,7 @@ use freya_renderer::WindowConfig;
 /// - Decorations enabled
 /// - Transparency disabled
 /// - Window title: `Freya`
+/// - Window background: white
 ///
 /// # Example
 /// ```rust
@@ -37,7 +38,7 @@ pub fn launch(app: Component<()>) {
             decorations: true,
             transparent: false,
             title: "Freya",
-            state: None,
+            ..Default::default()
         },
     )
 }
@@ -48,6 +49,7 @@ pub fn launch(app: Component<()>) {
 /// - Height: `300`
 /// - Decorations enabled
 /// - Transparency disabled
+/// - Window background: white
 ///
 /// # Example
 /// ```rust
@@ -76,7 +78,7 @@ pub fn launch_with_title(app: Component<()>, title: &'static str) {
             decorations: true,
             transparent: false,
             title,
-            state: None,
+            ..Default::default()
         },
     )
 }
@@ -85,6 +87,7 @@ pub fn launch_with_title(app: Component<()>, title: &'static str) {
 /// Launch a new Window with a custom title, width and height and the default config.
 /// - Decorations enabled
 /// - Transparency disabled
+/// - Window background: white
 ///
 /// # Example
 /// ```rust
@@ -113,7 +116,7 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
             decorations: true,
             transparent: false,
             title,
-            state: None,
+            ..Default::default()
         },
     )
 }
@@ -125,6 +128,7 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
 /// - Decorations
 /// - Transparency
 /// - Window title
+/// - Window background color
 ///
 /// # Example
 /// ```rust
@@ -138,6 +142,7 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
 ///         .with_decorations(true)
 ///         .with_transparency(false)
 ///         .with_title("Freya App")
+///         .with_background("rgb(150, 100, 200")
 ///         .build()
 /// );
 ///
