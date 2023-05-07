@@ -1,8 +1,8 @@
 use dioxus_native_core::prelude::{ElementNode, NodeImmutableDioxusExt};
 use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::{node::NodeType, NodeId};
-use freya_dom::{DioxusNodeResolver, FreyaDOM, SkiaMeasurer};
-use freya_layout::Layers;
+use freya_dom::{DioxusNodeResolver, FreyaDOM};
+use freya_layout::{Layers, SkiaMeasurer};
 use torin::geometry::Area;
 
 use freya_node_state::Style;
@@ -265,6 +265,7 @@ pub fn process_layout(
 
     let root_id = fdom.rdom().root_id();
 
+    // Finds the best Node from where to start measuring
     fdom.layout().find_best_root(&node_resolver);
 
     fdom.layout()

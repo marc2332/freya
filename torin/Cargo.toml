@@ -12,7 +12,7 @@ keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
 [features]
-dioxus = ["dep:dioxus-native-core"]
+dioxus = ["dep:dioxus-native-core", "dep:dioxus-core"]
 default = ["dioxus"]
 
 [dependencies]
@@ -20,4 +20,5 @@ tracing = { workspace = true }
 euclid = { workspace = true }
 fxhash = { workspace = true }
 dioxus-native-core = { workspace = true, optional = true }
+dioxus-core = { workspace = true, optional = true }
 

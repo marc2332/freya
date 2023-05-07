@@ -11,7 +11,7 @@ use skia_safe::textlayout::FontCollection;
 use torin::torin::Torin;
 use uuid::Uuid;
 
-use crate::{process_paragraph, DioxusDOM};
+use crate::{measure_paragraph, DioxusDOM};
 
 #[derive(Default, Clone)]
 pub struct Layers {
@@ -100,7 +100,7 @@ impl Layers {
                 let node = rdom.get(*node_id);
                 let areas = layout.get(*node_id);
                 if let Some((node, areas)) = node.zip(areas) {
-                    process_paragraph(&node, &areas.area, font_collection, true);
+                    measure_paragraph(&node, &areas.area, font_collection, true);
                 }
             }
         }
@@ -121,7 +121,7 @@ impl Layers {
                 let areas = layout.get(*node_id);
 
                 if let Some((node, areas)) = node.zip(areas) {
-                    process_paragraph(&node, &areas.area, font_collection, true);
+                    measure_paragraph(&node, &areas.area, font_collection, true);
                 }
             }
         }

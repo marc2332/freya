@@ -1,11 +1,9 @@
 use dioxus_native_core::real_dom::NodeImmutable;
-use freya_dom::{get_inner_texts, DioxusNode};
-use freya_node_state::{CursorSettings, FontStyle};
+use freya_dom::DioxusNode;
+use freya_layout::create_paragraph;
+use freya_node_state::CursorSettings;
 use skia_safe::{
-    textlayout::{
-        FontCollection, Paragraph, ParagraphBuilder, ParagraphStyle, RectHeightStyle,
-        RectWidthStyle, TextHeightBehavior, TextStyle,
-    },
+    textlayout::{FontCollection, Paragraph, RectHeightStyle, RectWidthStyle},
     Canvas, Paint, PaintStyle, Rect,
 };
 use torin::geometry::Area;
@@ -17,42 +15,8 @@ pub fn render_paragraph(
     canvas: &mut Canvas,
     font_collection: &mut FontCollection,
 ) {
-    let node_font_style = &*dioxus_node.get::<FontStyle>().unwrap();
-    let node_cursor_settings = &*dioxus_node.get::<CursorSettings>().unwrap();
-
-    let texts = get_inner_texts(dioxus_node);
-
     let (x, y) = area.origin.to_tuple();
-
-    let mut paragraph_style = ParagraphStyle::default();
-    paragraph_style.set_max_lines(node_font_style.max_lines);
-    paragraph_style.set_text_align(node_font_style.align);
-    paragraph_style.set_replace_tab_characters(true);
-    paragraph_style.set_text_height_behavior(TextHeightBehavior::DisableAll);
-
-    let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection.clone());
-
-    for (font_style, text) in &texts {
-        paragraph_builder.push_style(
-            TextStyle::new()
-                .set_font_style(font_style.font_style)
-                .set_height_override(true)
-                .set_height(font_style.line_height)
-                .set_color(font_style.color)
-                .set_font_size(font_style.font_size)
-                .set_font_families(&font_style.font_family),
-        );
-        paragraph_builder.add_text(text);
-    }
-
-    if node_cursor_settings.position.is_some() {
-        // This is very tricky, but it works! It allows freya to render the cursor at the end of a line.
-        paragraph_builder.add_text(" ");
-    }
-
-    let mut paragraph = paragraph_builder.build();
-
-    paragraph.layout(area.width() + 1.0); // `+ 1.0`: Skia won't render the last word properly otherwise
+    let paragraph = create_paragraph(dioxus_node, area, font_collection, true);
 
     // Draw the highlights if specified
     draw_cursor_highlights(area, &paragraph, canvas, dioxus_node);

@@ -1,17 +1,14 @@
 use std::sync::{Arc, Mutex};
 
-use dioxus_core::{Mutation, Mutations};
+use dioxus_core::Mutations;
 use dioxus_native_core::{
-    prelude::{DioxusState, ElementNode, NodeType, State, TextNode},
+    prelude::{DioxusState, NodeType, State},
     real_dom::{NodeImmutable, NodeRef, RealDom},
     tree::TreeRef,
     NodeId, SendAnyMap,
 };
 use freya_node_state::{
     CursorSettings, CustomAttributeValues, FontStyle, References, SizeState, Style, Transform,
-};
-use skia_safe::textlayout::{
-    FontCollection, ParagraphBuilder, ParagraphStyle, TextHeightBehavior, TextStyle,
 };
 use std::sync::MutexGuard;
 use torin::prelude::*;
@@ -129,53 +126,12 @@ impl FreyaDOM {
 
     /// Process the given mutations from the [`VirtualDOM`](dioxus_core::VirtualDom).
     pub fn apply_mutations(&mut self, mutations: Mutations, scale_factor: f32) -> (bool, bool) {
-        for mutation in &mutations.edits {
-            match mutation {
-                Mutation::SetText { id, .. } => {
-                    self.torin
-                        .lock()
-                        .unwrap()
-                        .invalidate(self.dioxus_integration_state.element_to_node_id(*id));
-                }
-                Mutation::InsertAfter { id, m } => {
-                    if *m > 0 {
-                        self.torin
-                            .lock()
-                            .unwrap()
-                            .invalidate(self.dioxus_integration_state.element_to_node_id(*id));
-                    }
-                }
-                Mutation::InsertBefore { id, m } => {
-                    if *m > 0 {
-                        self.torin
-                            .lock()
-                            .unwrap()
-                            .invalidate(self.dioxus_integration_state.element_to_node_id(*id));
-                    }
-                }
-                Mutation::Remove { id } => {
-                    let node_resolver = DioxusNodeResolver::new(self.rdom());
-                    self.torin.lock().unwrap().remove(
-                        self.dioxus_integration_state.element_to_node_id(*id),
-                        &node_resolver,
-                        true,
-                    );
-                }
-                Mutation::ReplaceWith { id, m } => {
-                    if *m > 0 {
-                        let node_resolver = DioxusNodeResolver::new(self.rdom());
-                        self.torin.lock().unwrap().remove(
-                            self.dioxus_integration_state.element_to_node_id(*id),
-                            &node_resolver,
-                            true,
-                        );
-                    }
-                }
-                _ => {}
-            }
-        }
+        let node_resolver = DioxusNodeResolver::new(self.rdom());
+        // Apply the mutations to the layout
+        self.layout()
+            .apply_mutations(&mutations, &self.dioxus_integration_state, &node_resolver);
 
-        // Apply the mutations
+        // Apply the mutations the integration state
         self.dioxus_integration_state
             .apply_mutations(&mut self.rdom, mutations);
 
@@ -265,134 +221,4 @@ impl DOMAdapter<NodeId> for DioxusNodeResolver<'_> {
             false
         }
     }
-}
-
-/// Provides Text measurements using Skia SkParagraph
-pub struct SkiaMeasurer<'a> {
-    pub font_collection: &'a FontCollection,
-    pub rdom: &'a DioxusDOM,
-}
-
-impl<'a> SkiaMeasurer<'a> {
-    pub fn new(rdom: &'a DioxusDOM, font_collection: &'a FontCollection) -> Self {
-        Self {
-            font_collection,
-            rdom,
-        }
-    }
-}
-
-impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
-    fn measure(
-        &mut self,
-        node_id: NodeId,
-        _node: &Node,
-        area: &Area,
-        _parent_area: &Area,
-        available_parent_area: &Area,
-    ) -> Option<Area> {
-        let node = self.rdom.get(node_id).unwrap();
-        let node_type = node.node_type();
-
-        match &*node_type {
-            NodeType::Text(TextNode { text, .. }) => {
-                let font_style = node.get::<FontStyle>().unwrap();
-
-                let mut paragraph_style = ParagraphStyle::default();
-                paragraph_style.set_text_align(font_style.align);
-                paragraph_style.set_max_lines(font_style.max_lines);
-                paragraph_style.set_replace_tab_characters(true);
-
-                let mut paragraph_builder =
-                    ParagraphBuilder::new(&paragraph_style, self.font_collection);
-
-                paragraph_builder.push_style(
-                    TextStyle::new()
-                        .set_font_style(font_style.font_style)
-                        .set_font_size(font_style.font_size)
-                        .set_font_families(&font_style.font_family),
-                );
-
-                paragraph_builder.add_text(text);
-
-                let mut paragraph = paragraph_builder.build();
-                paragraph.layout(available_parent_area.width());
-
-                Some(Area::new(
-                    area.origin,
-                    Size2D::new(paragraph.longest_line(), paragraph.height()),
-                ))
-            }
-            NodeType::Element(ElementNode { tag, .. }) if tag == "paragraph" => {
-                let font_style = node.get::<FontStyle>().unwrap();
-
-                let mut paragraph_style = ParagraphStyle::default();
-                paragraph_style.set_text_align(font_style.align);
-                paragraph_style.set_max_lines(font_style.max_lines);
-                paragraph_style.set_replace_tab_characters(true);
-                paragraph_style.set_text_height_behavior(TextHeightBehavior::DisableAll);
-
-                let mut paragraph_builder =
-                    ParagraphBuilder::new(&paragraph_style, self.font_collection);
-
-                paragraph_builder.push_style(
-                    TextStyle::new()
-                        .set_font_style(font_style.font_style)
-                        .set_font_size(font_style.font_size)
-                        .set_font_families(&font_style.font_family),
-                );
-
-                let texts = get_inner_texts(&node);
-
-                for (font_style, text) in texts.into_iter() {
-                    paragraph_builder.push_style(
-                        TextStyle::new()
-                            .set_font_style(font_style.font_style)
-                            .set_height(font_style.line_height)
-                            .set_color(font_style.color)
-                            .set_font_size(font_style.font_size)
-                            .set_font_families(&font_style.font_family),
-                    );
-                    paragraph_builder.add_text(text);
-                }
-
-                let mut paragraph = paragraph_builder.build();
-
-                paragraph.layout(available_parent_area.width());
-
-                Some(Area::new(
-                    available_parent_area.origin,
-                    Size2D::new(paragraph.longest_line(), paragraph.height()),
-                ))
-            }
-            _ => None,
-        }
-    }
-}
-
-/// Collect all the texts and FontStyles from all the given Node's children
-pub fn get_inner_texts(node: &DioxusNode) -> Vec<(FontStyle, String)> {
-    node.children()
-        .iter()
-        .filter_map(|child| {
-            if let NodeType::Element(ElementNode { tag, .. }) = &*child.node_type() {
-                if tag != "text" {
-                    return None;
-                }
-
-                let children = child.children();
-                let child_text = *children.first().unwrap();
-                let child_text_type = &*child_text.node_type();
-
-                if let NodeType::Text(TextNode { text, .. }) = child_text_type {
-                    let font_style = child.get::<FontStyle>().unwrap();
-                    Some((font_style.clone(), text.to_owned()))
-                } else {
-                    None
-                }
-            } else {
-                None
-            }
-        })
-        .collect()
 }

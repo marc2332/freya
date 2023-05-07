@@ -3975,6 +3975,7 @@ dependencies = [
 name = "torin"
 version = "0.1.0"
 dependencies = [
+ "dioxus-core",
  "dioxus-native-core",
  "euclid",
  "fxhash",
