@@ -71,6 +71,10 @@ impl DOMAdapter<usize> for TestingDOM {
     fn is_node_valid(&self, _node_id: &usize) -> bool {
         true
     }
+
+    fn closest_common_parent(&self, node_id_a: &usize, _node_id_b: &usize) -> Option<usize> {
+        Some(self.parent_of(node_id_a)?)
+    }
 }
 
 fn test_utils() -> (Torin<usize>, Option<TestingMeasurer>) {
