@@ -1,8 +1,3 @@
-#![cfg_attr(
-    all(not(debug_assertions), target_os = "windows"),
-    windows_subsystem = "windows"
-)]
-
 use freya::prelude::*;
 
 fn main() {
@@ -22,8 +17,8 @@ fn StatefulSwitch(cx: Scope) -> Element {
 }
 
 fn app(cx: Scope) -> Element {
-    let cols = 40;
-    let rows = 40;
+    let cols = 100;
+    let rows = 100;
 
     render!(
         container {

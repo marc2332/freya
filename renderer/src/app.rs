@@ -108,7 +108,15 @@ impl<State: 'static + Clone> App<State> {
         let scale_factor = self.window_env.window.scale_factor() as f32;
         let mutations = self.vdom.render_immediate();
 
-        let (repaint, relayout) = self.rdom.get_mut().apply_mutations(mutations, scale_factor);
+        let is_empty = mutations.dirty_scopes.is_empty()
+            && mutations.edits.is_empty()
+            && mutations.templates.is_empty();
+
+        let (repaint, relayout) = if !is_empty {
+            self.rdom.get_mut().apply_mutations(mutations, scale_factor)
+        } else {
+            (false, false)
+        };
 
         if repaint {
             self.mutations_sender.as_ref().map(|s| s.send(()));

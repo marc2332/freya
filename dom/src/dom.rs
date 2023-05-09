@@ -160,6 +160,68 @@ impl FreyaDOM {
     }
 }
 
+fn balance_heights(rdom: &DioxusDOM, base: NodeId, target: NodeId) -> Option<NodeId> {
+    let tree = rdom.tree_ref();
+    let target_height = tree.height(target)?;
+    let mut current = base;
+    loop {
+        if tree.height(current)? == target_height {
+            break;
+        }
+
+        let parent_current = tree.parent_id(current);
+        if let Some(parent_current) = parent_current {
+            current = parent_current;
+        }
+    }
+    Some(current)
+}
+
+fn find_common_parent(rdom: &DioxusDOM, node_a: NodeId, node_b: NodeId) -> Option<NodeId> {
+    let tree = rdom.tree_ref();
+    let height_a = tree.height(node_a)?;
+    let height_b = tree.height(node_b)?;
+
+    let (node_a, node_b) = match height_a.cmp(&height_b) {
+        std::cmp::Ordering::Less => (
+            node_a,
+            balance_heights(rdom, node_b, node_a).unwrap_or(node_b),
+        ),
+        std::cmp::Ordering::Equal => (node_a, node_b),
+        std::cmp::Ordering::Greater => (
+            balance_heights(rdom, node_a, node_b).unwrap_or(node_a),
+            node_b,
+        ),
+    };
+
+    let mut currents = (node_a, node_b);
+
+    loop {
+        // Common parent of node_a and node_b
+        if currents.0 == currents.1 {
+            return Some(currents.0);
+        }
+
+        let parent_a = tree.parent_id(currents.0);
+        if let Some(parent_a) = parent_a {
+            currents.0 = parent_a;
+        } else if rdom.root_id() != currents.0 {
+            // Skip unconected nodes
+            break;
+        }
+
+        let parent_b = tree.parent_id(currents.1);
+        if let Some(parent_b) = parent_b {
+            currents.1 = parent_b;
+        } else if rdom.root_id() != currents.1 {
+            // Skip unconected nodes
+            break;
+        }
+    }
+
+    None
+}
+
 pub struct DioxusNodeResolver<'a> {
     pub rdom: &'a DioxusDOM,
 }
@@ -171,6 +233,10 @@ impl<'a> DioxusNodeResolver<'a> {
 }
 
 impl DOMAdapter<NodeId> for DioxusNodeResolver<'_> {
+    fn closest_common_parent(&self, node_id_a: &NodeId, node_id_b: &NodeId) -> Option<NodeId> {
+        find_common_parent(self.rdom, *node_id_a, *node_id_b)
+    }
+
     fn get_node(&self, node_id: &NodeId) -> Option<Node> {
         let node = self.rdom.get(*node_id)?;
         let mut size = node.get::<SizeState>().unwrap().clone();

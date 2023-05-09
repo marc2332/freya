@@ -20,9 +20,6 @@ pub enum TallestDirtyNode<Key: NodeKey> {
     /// A valid Node ID
     Valid(Key),
 
-    /// Coudln't decide
-    Invalid,
-
     /// Not decided yet
     None,
 }
@@ -108,7 +105,7 @@ impl<Key: NodeKey> Torin<Key> {
 
     /// Reset the layout
     pub fn reset(&mut self) {
-        self.tallest_dirty_node = TallestDirtyNode::Invalid;
+        self.tallest_dirty_node = TallestDirtyNode::None;
         self.results.clear();
         self.dirty.clear();
     }
@@ -173,24 +170,12 @@ impl<Key: NodeKey> Torin<Key> {
         if TallestDirtyNode::None == self.tallest_dirty_node {
             self.tallest_dirty_node = TallestDirtyNode::Valid(node_id);
         } else if let TallestDirtyNode::Valid(tallest_dirty_node) = self.tallest_dirty_node {
-            let node_height = node_resolver.height(&node_id);
-            let current_height = node_resolver.height(&tallest_dirty_node);
-
             if node_id != tallest_dirty_node {
-                match node_height.cmp(&current_height) {
-                    // Update the tallest node if this node is dirty and is taller than the current tallest node
-                    std::cmp::Ordering::Less => {
-                        self.tallest_dirty_node = TallestDirtyNode::Valid(node_id);
-                    }
-                    // If both this node and the tallest Node are in the same height, we set the tallest node as invalid
-                    // as we can't figure out which is one is the tallest
-                    //
-                    // Improvements idea:
-                    // It could try finding the closest common parent Node from these two and set it as tallest Node
-                    std::cmp::Ordering::Equal => {
-                        self.tallest_dirty_node = TallestDirtyNode::Invalid
-                    }
-                    _ => {}
+                let closest_parent =
+                    node_resolver.closest_common_parent(&node_id, &tallest_dirty_node);
+
+                if let Some(closest_parent) = closest_parent {
+                    self.tallest_dirty_node = TallestDirtyNode::Valid(closest_parent);
                 }
             }
         }
