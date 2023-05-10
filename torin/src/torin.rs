@@ -14,13 +14,13 @@ use crate::{
     size::Size,
 };
 
-/// Indicates what's the closest Node to the root from which start measuring the dirty Nodes
+/// Contains the best Root node candidate from where to start measuring
 #[derive(PartialEq, Debug, Clone, Copy)]
-pub enum TallestDirtyNode<Key: NodeKey> {
+pub enum RootNodeCandidate<Key: NodeKey> {
     /// A valid Node ID
     Valid(Key),
 
-    /// Not decided yet
+    /// None
     None,
 }
 
@@ -31,8 +31,8 @@ pub struct Torin<Key: NodeKey> {
     /// Invalid registered nodes since previous layout measurement
     pub dirty: HashSet<Key>,
 
-    /// Closes dirty Node to the Root
-    pub tallest_dirty_node: TallestDirtyNode<Key>,
+    /// Best Root node candidate from where to start measuring
+    pub root_node_candidate: RootNodeCandidate<Key>,
 }
 
 impl<Key: NodeKey> Default for Torin<Key> {
@@ -99,13 +99,13 @@ impl<Key: NodeKey> Torin<Key> {
         Self {
             results: HashMap::default(),
             dirty: HashSet::new(),
-            tallest_dirty_node: TallestDirtyNode::None,
+            root_node_candidate: RootNodeCandidate::None,
         }
     }
 
     /// Reset the layout
     pub fn reset(&mut self) {
-        self.tallest_dirty_node = TallestDirtyNode::None;
+        self.root_node_candidate = RootNodeCandidate::None;
         self.results.clear();
         self.dirty.clear();
     }
@@ -119,9 +119,9 @@ impl<Key: NodeKey> Torin<Key> {
     pub fn raw_remove(&mut self, node_id: Key) {
         self.results.remove(&node_id);
         self.dirty.remove(&node_id);
-        if let TallestDirtyNode::Valid(id) = self.tallest_dirty_node {
+        if let RootNodeCandidate::Valid(id) = self.root_node_candidate {
             if id == node_id {
-                self.tallest_dirty_node = TallestDirtyNode::None
+                self.root_node_candidate = RootNodeCandidate::None
             }
         }
     }
@@ -166,16 +166,14 @@ impl<Key: NodeKey> Torin<Key> {
         // Mark this node as dirty
         self.invalidate(node_id);
 
-        // Save the tallest dirty Node
-        if TallestDirtyNode::None == self.tallest_dirty_node {
-            self.tallest_dirty_node = TallestDirtyNode::Valid(node_id);
-        } else if let TallestDirtyNode::Valid(tallest_dirty_node) = self.tallest_dirty_node {
-            if node_id != tallest_dirty_node {
-                let closest_parent =
-                    node_resolver.closest_common_parent(&node_id, &tallest_dirty_node);
+        if RootNodeCandidate::None == self.root_node_candidate {
+            self.root_node_candidate = RootNodeCandidate::Valid(node_id);
+        } else if let RootNodeCandidate::Valid(root_candidate) = self.root_node_candidate {
+            if node_id != root_candidate {
+                let closest_parent = node_resolver.closest_common_parent(&node_id, &root_candidate);
 
                 if let Some(closest_parent) = closest_parent {
-                    self.tallest_dirty_node = TallestDirtyNode::Valid(closest_parent);
+                    self.root_node_candidate = RootNodeCandidate::Valid(closest_parent);
                 }
             }
         }
@@ -209,9 +207,9 @@ impl<Key: NodeKey> Torin<Key> {
         }
     }
 
-    /// Get the closest dirty node to the root
-    pub fn get_tallest_dirty_node(&self) -> TallestDirtyNode<Key> {
-        self.tallest_dirty_node
+    /// Get the Root Node candidate
+    pub fn get_root_candidate(&self) -> RootNodeCandidate<Key> {
+        self.root_node_candidate
     }
 
     /// Find the best root Node from where to start measuring
@@ -245,8 +243,8 @@ impl<Key: NodeKey> Torin<Key> {
             self.results.len()
         );
 
-        // Try using the closest Node to the root that is dirty, otherwise use the provided Root
-        let root_id = if let TallestDirtyNode::Valid(id) = self.tallest_dirty_node {
+        // Try the Root candidate otherwise use the provided Root
+        let root_id = if let RootNodeCandidate::Valid(id) = self.root_node_candidate {
             id
         } else {
             suggested_root_id
@@ -278,7 +276,7 @@ impl<Key: NodeKey> Torin<Key> {
         }
 
         self.dirty.clear();
-        self.tallest_dirty_node = TallestDirtyNode::None;
+        self.root_node_candidate = RootNodeCandidate::None;
     }
 
     /// Get the areas of a Node

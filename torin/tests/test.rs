@@ -902,7 +902,7 @@ pub fn deep_tree() {
     layout.invalidate(4);
 
     layout.find_best_root(&mocked_dom);
-    assert_eq!(layout.get_tallest_dirty_node(), TallestDirtyNode::Valid(4));
+    assert_eq!(layout.get_root_candidate(), RootNodeCandidate::Valid(4));
 
     layout.measure(
         0,
@@ -911,7 +911,7 @@ pub fn deep_tree() {
         &mocked_dom,
     );
 
-    assert_eq!(layout.get_tallest_dirty_node(), TallestDirtyNode::None);
+    assert_eq!(layout.get_root_candidate(), RootNodeCandidate::None);
 }
 
 #[test]

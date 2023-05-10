@@ -160,6 +160,7 @@ impl FreyaDOM {
     }
 }
 
+/// Walk an the ancestor of `base` with the same height of `target`
 fn balance_heights(rdom: &DioxusDOM, base: NodeId, target: NodeId) -> Option<NodeId> {
     let tree = rdom.tree_ref();
     let target_height = tree.height(target)?;
@@ -177,6 +178,7 @@ fn balance_heights(rdom: &DioxusDOM, base: NodeId, target: NodeId) -> Option<Nod
     Some(current)
 }
 
+/// Return the closest common ancestor of both Nodes
 fn find_common_parent(rdom: &DioxusDOM, node_a: NodeId, node_b: NodeId) -> Option<NodeId> {
     let tree = rdom.tree_ref();
     let height_a = tree.height(node_a)?;
@@ -222,6 +224,7 @@ fn find_common_parent(rdom: &DioxusDOM, node_a: NodeId, node_b: NodeId) -> Optio
     None
 }
 
+/// Maps some common operations to the RealDOM
 pub struct DioxusNodeResolver<'a> {
     pub rdom: &'a DioxusDOM,
 }
@@ -233,10 +236,6 @@ impl<'a> DioxusNodeResolver<'a> {
 }
 
 impl DOMAdapter<NodeId> for DioxusNodeResolver<'_> {
-    fn closest_common_parent(&self, node_id_a: &NodeId, node_id_b: &NodeId) -> Option<NodeId> {
-        find_common_parent(self.rdom, *node_id_a, *node_id_b)
-    }
-
     fn get_node(&self, node_id: &NodeId) -> Option<Node> {
         let node = self.rdom.get(*node_id)?;
         let mut size = node.get::<SizeState>().unwrap().clone();
@@ -286,5 +285,9 @@ impl DOMAdapter<NodeId> for DioxusNodeResolver<'_> {
         } else {
             false
         }
+    }
+
+    fn closest_common_parent(&self, node_id_a: &NodeId, node_id_b: &NodeId) -> Option<NodeId> {
+        find_common_parent(self.rdom, *node_id_a, *node_id_b)
     }
 }
