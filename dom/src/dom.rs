@@ -126,10 +126,10 @@ impl FreyaDOM {
 
     /// Process the given mutations from the [`VirtualDOM`](dioxus_core::VirtualDom).
     pub fn apply_mutations(&mut self, mutations: Mutations, scale_factor: f32) -> (bool, bool) {
-        let node_resolver = DioxusNodeResolver::new(self.rdom());
+        let dom_adapter = DioxusDOMAdapter::new(self.rdom());
         // Apply the mutations to the layout
         self.layout()
-            .apply_mutations(&mutations, &self.dioxus_integration_state, &node_resolver);
+            .apply_mutations(&mutations, &self.dioxus_integration_state, &dom_adapter);
 
         // Apply the mutations the integration state
         self.dioxus_integration_state
@@ -160,7 +160,7 @@ impl FreyaDOM {
     }
 }
 
-/// Walk an the ancestor of `base` with the same height of `target`
+/// Walk to the ancestor of `base` with the same height of `target`
 fn balance_heights(rdom: &DioxusDOM, base: NodeId, target: NodeId) -> Option<NodeId> {
     let tree = rdom.tree_ref();
     let target_height = tree.height(target)?;
@@ -224,18 +224,55 @@ fn find_common_parent(rdom: &DioxusDOM, node_a: NodeId, node_b: NodeId) -> Optio
     None
 }
 
+/// Check is the given Node is valid or not, this means not being a placeholder or an unconnected Node.
+fn is_node_valid(rdom: &DioxusDOM, node_id: &NodeId) -> bool {
+    let node = rdom.get(*node_id);
+
+    if let Some(node) = node {
+        let is_placeholder = matches!(*node.node_type(), NodeType::Placeholder);
+
+        // Placeholders can't be measured
+        if is_placeholder {
+            return false;
+        }
+
+        // Make sure this Node isn't part of an unconnected Node
+        // This walkes up to the ancestor that has a height of 0 and checks if it has the same ID as the root Node
+        // If it has the same ID, it means that is not an unconnected ID, otherwise, it is and should be skipped.
+        let tree = rdom.tree_ref();
+        let mut current = *node_id;
+        loop {
+            let height = tree.height(current);
+            if let Some(height) = height {
+                if height == 0 {
+                    break;
+                }
+            }
+
+            let parent_current = tree.parent_id(current);
+            if let Some(parent_current) = parent_current {
+                current = parent_current;
+            }
+        }
+
+        current == rdom.root_id()
+    } else {
+        false
+    }
+}
+
 /// Maps some common operations to the RealDOM
-pub struct DioxusNodeResolver<'a> {
+pub struct DioxusDOMAdapter<'a> {
     pub rdom: &'a DioxusDOM,
 }
 
-impl<'a> DioxusNodeResolver<'a> {
+impl<'a> DioxusDOMAdapter<'a> {
     pub fn new(rdom: &'a DioxusDOM) -> Self {
         Self { rdom }
     }
 }
 
-impl DOMAdapter<NodeId> for DioxusNodeResolver<'_> {
+impl DOMAdapter<NodeId> for DioxusDOMAdapter<'_> {
     fn get_node(&self, node_id: &NodeId) -> Option<Node> {
         let node = self.rdom.get(*node_id)?;
         let mut size = node.get::<SizeState>().unwrap().clone();
@@ -275,16 +312,7 @@ impl DOMAdapter<NodeId> for DioxusNodeResolver<'_> {
     }
 
     fn is_node_valid(&self, node_id: &NodeId) -> bool {
-        let node = self.rdom.get(*node_id);
-
-        if let Some(node) = node {
-            let is_placeholder = matches!(*node.node_type(), NodeType::Placeholder);
-            let tries_to_be_root = node.parent_id().is_none() && *node_id != self.rdom.root_id();
-
-            !(is_placeholder || tries_to_be_root)
-        } else {
-            false
-        }
+        is_node_valid(self.rdom, node_id)
     }
 
     fn closest_common_parent(&self, node_id_a: &NodeId, node_id_b: &NodeId) -> Option<NodeId> {

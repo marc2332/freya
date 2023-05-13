@@ -2,14 +2,12 @@ mod layers;
 
 use dioxus_native_core::{
     prelude::{ElementNode, NodeType, TextNode},
-    real_dom::{NodeImmutable, RealDom},
+    real_dom::NodeImmutable,
     NodeId,
 };
 use freya_common::CursorLayoutResponse;
-use freya_dom::DioxusNode;
-use freya_node_state::{
-    CursorReference, CursorSettings, CustomAttributeValues, FontStyle, References,
-};
+use freya_dom::{DioxusDOM, DioxusNode};
+use freya_node_state::{CursorReference, CursorSettings, FontStyle, References};
 
 pub use layers::*;
 use skia_safe::textlayout::{
@@ -19,7 +17,6 @@ use torin::{
     geometry::{Area, CursorPoint},
     prelude::{LayoutMeasurer, Node, Size2D},
 };
-pub type DioxusDOM = RealDom<CustomAttributeValues>;
 
 /// Provides Text measurements using Skia APIs like SkParagraph
 pub struct SkiaMeasurer<'a> {

@@ -1,12 +1,13 @@
 use dioxus_native_core::prelude::{ElementNode, NodeImmutableDioxusExt};
 use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::{node::NodeType, NodeId};
-use freya_dom::{DioxusNodeResolver, FreyaDOM};
+use freya_common::NodeReferenceLayout;
+use freya_dom::{DioxusDOM, DioxusDOMAdapter, FreyaDOM};
 use freya_layout::{Layers, SkiaMeasurer};
 use torin::geometry::Area;
 
-use freya_node_state::Style;
-use rustc_hash::FxHashMap;
+use freya_node_state::{CursorMode, CursorSettings, References, SizeState, Style};
+use rustc_hash::{FxHashMap, FxHashSet};
 use skia_safe::{textlayout::FontCollection, Color};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
@@ -14,6 +15,7 @@ pub mod events;
 pub mod node;
 
 use events::{DomEvent, EventsProcessor, FreyaEvent};
+use torin::torin::Torin;
 
 pub type EventEmitter = UnboundedSender<DomEvent>;
 pub type EventReceiver = UnboundedReceiver<DomEvent>;
@@ -252,6 +254,72 @@ fn calculate_global_events_listeners(
     }
 }
 
+pub fn process_layers(
+    layers: &mut Layers,
+    rdom: &DioxusDOM,
+    layout: &Torin<NodeId>,
+    font_collection: &FontCollection,
+    scale_factor: f32,
+) {
+    let mut inherit_layers = FxHashMap::default();
+
+    rdom.traverse_depth_first(|node| {
+        // Add the Node to a Layer
+        let node_style = node.get::<Style>().unwrap();
+
+        let inherited_relative_layer = node
+            .parent_id()
+            .map(|p| *inherit_layers.get(&p).unwrap())
+            .unwrap_or(0);
+
+        let (node_layer, node_relative_layer) = Layers::calculate_layer(
+            node_style.relative_layer,
+            node.height() as i16,
+            inherited_relative_layer,
+        );
+
+        inherit_layers.insert(node.id(), node_relative_layer);
+        layers.add_element(node.id(), node_layer);
+
+        // Register paragraph elements
+
+        if let NodeType::Element(ElementNode { tag, .. }) = &*node.node_type() {
+            if tag == "paragraph" {
+                let cursor_settings = node.get::<CursorSettings>().unwrap();
+                let is_editable = CursorMode::Editable == cursor_settings.mode;
+
+                let references = node.get::<References>().unwrap();
+                if is_editable {
+                    if let Some(cursor_ref) = &references.cursor_ref {
+                        let text_group = layers
+                            .paragraph_elements
+                            .entry(cursor_ref.text_id)
+                            .or_insert_with(FxHashSet::default);
+
+                        text_group.insert(node.id());
+                    }
+                }
+            }
+        }
+
+        // Notify layout references
+
+        let size_state = &*node.get::<SizeState>().unwrap();
+
+        if let Some(reference) = &size_state.node_ref {
+            let areas = layout.get(node.id()).unwrap();
+            let mut node_layout = NodeReferenceLayout {
+                area: areas.area,
+                inner: areas.inner_sizes,
+            };
+            node_layout.div(scale_factor);
+            reference.send(node_layout).ok();
+        }
+    });
+
+    layers.measure_all_paragraph_elements(rdom, layout, font_collection);
+}
+
 /// Process the layout of the DOM
 pub fn process_layout(
     fdom: &FreyaDOM,
@@ -260,18 +328,27 @@ pub fn process_layout(
     scale_factor: f32,
 ) -> (Layers, ViewportsCollection) {
     let rdom = fdom.rdom();
-    let node_resolver = DioxusNodeResolver::new(rdom);
+    let dom_adapter = DioxusDOMAdapter::new(rdom);
     let skia_measurer = SkiaMeasurer::new(rdom, font_collection);
+
+    // Finds the best Node from where to start measuring
+    fdom.layout().find_best_root(&dom_adapter);
 
     let root_id = fdom.rdom().root_id();
 
-    // Finds the best Node from where to start measuring
-    fdom.layout().find_best_root(&node_resolver);
-
+    // Measure the layout
     fdom.layout()
-        .measure(root_id, area, &mut Some(skia_measurer), &node_resolver);
+        .measure(root_id, area, &mut Some(skia_measurer), &dom_adapter);
 
-    let layers = Layers::new(rdom, &fdom.layout(), font_collection, scale_factor);
+    // Create the layers
+    let mut layers = Layers::default();
+    process_layers(
+        &mut layers,
+        rdom,
+        &fdom.layout(),
+        font_collection,
+        scale_factor,
+    );
 
     let mut layers_nums: Vec<&i16> = layers.layers.keys().collect();
 

@@ -1,11 +1,5 @@
-use dioxus_native_core::{
-    prelude::{ElementNode, NodeType},
-    real_dom::NodeImmutable,
-    NodeId,
-};
-use freya_common::NodeReferenceLayout;
+use dioxus_native_core::NodeId;
 use freya_dom::FreyaDOM;
-use freya_node_state::{CursorMode, CursorSettings, References, SizeState, Style};
 use rustc_hash::{FxHashMap, FxHashSet};
 use skia_safe::textlayout::FontCollection;
 use torin::torin::Torin;
@@ -20,74 +14,6 @@ pub struct Layers {
 }
 
 impl Layers {
-    pub fn new(
-        rdom: &DioxusDOM,
-        layout: &Torin<NodeId>,
-        font_collection: &FontCollection,
-        scale_factor: f32,
-    ) -> Self {
-        let mut layers = Layers::default();
-        let mut inherit_layers = FxHashMap::default();
-
-        rdom.traverse_depth_first(|node| {
-            // Add the Node to a Layer
-            let node_style = node.get::<Style>().unwrap();
-
-            let inherited_relative_layer = node
-                .parent_id()
-                .map(|p| *inherit_layers.get(&p).unwrap())
-                .unwrap_or(0);
-
-            let (node_layer, node_relative_layer) = Layers::calculate_layer(
-                node_style.relative_layer,
-                node.height() as i16,
-                inherited_relative_layer,
-            );
-
-            inherit_layers.insert(node.id(), node_relative_layer);
-            layers.add_element(node.id(), node_layer);
-
-            // Register paragraph elements
-
-            if let NodeType::Element(ElementNode { tag, .. }) = &*node.node_type() {
-                if tag == "paragraph" {
-                    let cursor_settings = node.get::<CursorSettings>().unwrap();
-                    let is_editable = CursorMode::Editable == cursor_settings.mode;
-
-                    let references = node.get::<References>().unwrap();
-                    if is_editable {
-                        if let Some(cursor_ref) = &references.cursor_ref {
-                            let text_group = layers
-                                .paragraph_elements
-                                .entry(cursor_ref.text_id)
-                                .or_insert_with(FxHashSet::default);
-
-                            text_group.insert(node.id());
-                        }
-                    }
-                }
-            }
-
-            // Notify layout references
-
-            let size_state = &*node.get::<SizeState>().unwrap();
-
-            if let Some(reference) = &size_state.node_ref {
-                let areas = layout.get(node.id()).unwrap();
-                let mut node_layout = NodeReferenceLayout {
-                    area: areas.area,
-                    inner: areas.inner_sizes,
-                };
-                node_layout.div(scale_factor);
-                reference.send(node_layout).ok();
-            }
-        });
-
-        layers.measure_all_paragraph_elements(rdom, layout, font_collection);
-
-        layers
-    }
-
     /// Measure all the paragraphs
     pub fn measure_all_paragraph_elements(
         &self,

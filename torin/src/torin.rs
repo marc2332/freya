@@ -52,7 +52,7 @@ impl Torin<NodeId> {
         &mut self,
         mutations: &Mutations,
         dioxus_integration_state: &DioxusState,
-        node_resolver: &impl DOMAdapter<NodeId>,
+        dom_adapter: &impl DOMAdapter<NodeId>,
     ) {
         use dioxus_core::Mutation;
 
@@ -74,7 +74,7 @@ impl Torin<NodeId> {
                 Mutation::Remove { id } => {
                     self.remove(
                         dioxus_integration_state.element_to_node_id(*id),
-                        node_resolver,
+                        dom_adapter,
                         true,
                     );
                 }
@@ -82,7 +82,7 @@ impl Torin<NodeId> {
                     if *m > 0 {
                         self.remove(
                             dioxus_integration_state.element_to_node_id(*id),
-                            node_resolver,
+                            dom_adapter,
                             true,
                         );
                     }
@@ -130,7 +130,7 @@ impl<Key: NodeKey> Torin<Key> {
     pub fn remove(
         &mut self,
         node_id: Key,
-        node_resolver: &impl DOMAdapter<Key>,
+        dom_adapter: &impl DOMAdapter<Key>,
         invalidate_parent: bool,
     ) {
         // Remove itself
@@ -138,12 +138,12 @@ impl<Key: NodeKey> Torin<Key> {
 
         // Mark as dirty the Node's parent
         if invalidate_parent {
-            self.invalidate(node_resolver.parent_of(&node_id).unwrap());
+            self.invalidate(dom_adapter.parent_of(&node_id).unwrap());
         }
 
         // Remove all it's children
-        for child_id in node_resolver.children_of(&node_id) {
-            self.remove(child_id, node_resolver, false);
+        for child_id in dom_adapter.children_of(&node_id) {
+            self.remove(child_id, dom_adapter, false);
         }
     }
 
@@ -152,14 +152,20 @@ impl<Key: NodeKey> Torin<Key> {
         self.dirty.insert(node_id);
     }
 
+    pub fn safe_invalidate(&mut self, node_id: Key, dom_adapter: &impl DOMAdapter<Key>) {
+        if dom_adapter.is_node_valid(&node_id) {
+            self.invalidate(node_id)
+        }
+    }
+
     // Mark as dirty the given Node and all the nodes that depend on it
     pub fn check_dirty_dependants(
         &mut self,
         node_id: Key,
-        node_resolver: &impl DOMAdapter<Key>,
+        dom_adapter: &impl DOMAdapter<Key>,
         ignore: bool,
     ) {
-        if (self.dirty.contains(&node_id) && ignore) || !node_resolver.is_node_valid(&node_id) {
+        if (self.dirty.contains(&node_id) && ignore) || !dom_adapter.is_node_valid(&node_id) {
             return;
         }
 
@@ -170,7 +176,7 @@ impl<Key: NodeKey> Torin<Key> {
             self.root_node_candidate = RootNodeCandidate::Valid(node_id);
         } else if let RootNodeCandidate::Valid(root_candidate) = self.root_node_candidate {
             if node_id != root_candidate {
-                let closest_parent = node_resolver.closest_common_parent(&node_id, &root_candidate);
+                let closest_parent = dom_adapter.closest_common_parent(&node_id, &root_candidate);
 
                 if let Some(closest_parent) = closest_parent {
                     self.root_node_candidate = RootNodeCandidate::Valid(closest_parent);
@@ -179,27 +185,27 @@ impl<Key: NodeKey> Torin<Key> {
         }
 
         // Mark as dirty this Node's children
-        for child in node_resolver.children_of(&node_id) {
-            self.check_dirty_dependants(child, node_resolver, true)
+        for child in dom_adapter.children_of(&node_id) {
+            self.check_dirty_dependants(child, dom_adapter, true)
         }
 
         // Mark this Node's parent if it is affected
-        let parent_id = node_resolver.parent_of(&node_id);
+        let parent_id = dom_adapter.parent_of(&node_id);
 
         if let Some(parent_id) = parent_id {
-            let parent = node_resolver.get_node(&parent_id);
+            let parent = dom_adapter.get_node(&parent_id);
 
             if let Some(parent) = parent {
                 // Mark parent if it depeneds on it's inner children
                 if parent.does_depend_on_inner() {
-                    self.check_dirty_dependants(parent_id, node_resolver, false);
+                    self.check_dirty_dependants(parent_id, dom_adapter, false);
                 }
                 // Otherwise we simply mark this Node siblings
                 else {
                     // TODO(marc2332): Only mark those who come before this node.
-                    for child_id in node_resolver.children_of(&parent_id) {
+                    for child_id in dom_adapter.children_of(&parent_id) {
                         if child_id != node_id {
-                            self.check_dirty_dependants(child_id, node_resolver, true)
+                            self.check_dirty_dependants(child_id, dom_adapter, true)
                         }
                     }
                 }
@@ -213,12 +219,12 @@ impl<Key: NodeKey> Torin<Key> {
     }
 
     /// Find the best root Node from where to start measuring
-    pub fn find_best_root(&mut self, node_resolver: &impl DOMAdapter<Key>) {
+    pub fn find_best_root(&mut self, dom_adapter: &impl DOMAdapter<Key>) {
         if self.results.is_empty() {
             return;
         }
         for dirty in self.dirty.clone() {
-            self.check_dirty_dependants(dirty, node_resolver, false);
+            self.check_dirty_dependants(dirty, dom_adapter, false);
         }
     }
 
@@ -228,7 +234,7 @@ impl<Key: NodeKey> Torin<Key> {
         suggested_root_id: Key,
         suggested_root_area: Area,
         measurer: &mut Option<impl LayoutMeasurer<Key>>,
-        node_resolver: &impl DOMAdapter<Key>,
+        dom_adapter: &impl DOMAdapter<Key>,
     ) {
         // If there are previosuly cached results
         // But no dirty nodes, we can simply skip the measurement
@@ -249,7 +255,7 @@ impl<Key: NodeKey> Torin<Key> {
         } else {
             suggested_root_id
         };
-        let root_parent = node_resolver.parent_of(&root_id);
+        let root_parent = dom_adapter.parent_of(&root_id);
         let areas = root_parent
             .and_then(|root_parent| self.get(root_parent).cloned())
             .unwrap_or(NodeAreas {
@@ -257,7 +263,7 @@ impl<Key: NodeKey> Torin<Key> {
                 inner_area: suggested_root_area,
                 inner_sizes: Size2D::default(),
             });
-        let root = node_resolver.get_node(&root_id).unwrap();
+        let root = dom_adapter.get_node(&root_id).unwrap();
 
         let (root_revalidated, root_areas) = measure_node(
             root_id,
@@ -267,7 +273,7 @@ impl<Key: NodeKey> Torin<Key> {
             &areas.inner_area,
             measurer,
             true,
-            node_resolver,
+            dom_adapter,
         );
 
         // Cache the root Node results if it was modified
@@ -302,7 +308,7 @@ fn measure_node<Key: NodeKey>(
     available_parent_area: &Area,
     measurer: &mut Option<impl LayoutMeasurer<Key>>,
     must_cache: bool,
-    node_resolver: &impl DOMAdapter<Key>,
+    dom_adapter: &impl DOMAdapter<Key>,
 ) -> (bool, NodeAreas) {
     let must_run = layout.dirty.contains(&node_id) || layout.results.get(&node_id).is_none();
     if must_run {
@@ -405,7 +411,7 @@ fn measure_node<Key: NodeKey>(
                 measurer,
                 must_cache,
                 &mut measurement_mode,
-                node_resolver,
+                dom_adapter,
             );
         }
 
@@ -440,7 +446,7 @@ fn measure_node<Key: NodeKey>(
             measurer,
             must_cache,
             &mut measurement_mode,
-            node_resolver,
+            dom_adapter,
         );
 
         (false, areas)
@@ -483,9 +489,9 @@ fn measure_inner_nodes<Key: NodeKey>(
     measurer: &mut Option<impl LayoutMeasurer<Key>>,
     must_cache: bool,
     mode: &mut MeasureMode,
-    node_resolver: &impl DOMAdapter<Key>,
+    dom_adapter: &impl DOMAdapter<Key>,
 ) {
-    let children = node_resolver.children_of(node_id);
+    let children = dom_adapter.children_of(node_id);
 
     // Center display
 
@@ -494,7 +500,7 @@ fn measure_inner_nodes<Key: NodeKey>(
 
         if let Some(child_id) = child_id {
             let inner_area = *mode.inner_area();
-            let child_data = node_resolver.get_node(child_id).unwrap();
+            let child_data = dom_adapter.get_node(child_id).unwrap();
 
             let (_, child_areas) = measure_node(
                 *child_id,
@@ -504,7 +510,7 @@ fn measure_inner_nodes<Key: NodeKey>(
                 available_area,
                 measurer,
                 false,
-                node_resolver,
+                dom_adapter,
             );
 
             // TODO(marc2332): Should I also reduce the width and heights?
@@ -536,7 +542,7 @@ fn measure_inner_nodes<Key: NodeKey>(
     for child_id in children {
         let inner_area = *mode.inner_area();
 
-        let child_data = node_resolver.get_node(&child_id).unwrap().clone();
+        let child_data = dom_adapter.get_node(&child_id).unwrap().clone();
 
         let (child_revalidated, child_areas) = measure_node(
             child_id,
@@ -546,7 +552,7 @@ fn measure_inner_nodes<Key: NodeKey>(
             available_area,
             measurer,
             must_cache,
-            node_resolver,
+            dom_adapter,
         );
 
         match node.direction {
