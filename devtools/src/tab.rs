@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use freya_components::*;
+use dioxus_router::use_router;
 use freya_elements::elements as dioxus_elements;
 use freya_hooks::use_theme;
 
@@ -32,6 +32,8 @@ pub struct TabButtonProps<'a> {
 
 #[allow(non_snake_case)]
 pub fn TabButton<'a>(cx: Scope<'a, TabButtonProps<'a>>) -> Element<'a> {
+    let router = use_router(cx);
+
     let theme = use_theme(cx);
     let button_theme = &theme.read().button;
 
@@ -46,6 +48,9 @@ pub fn TabButton<'a>(cx: Scope<'a, TabButtonProps<'a>>) -> Element<'a> {
     render!(
         container {
             background: "{background}",
+            onclick: move |_| {
+                router.replace_route(cx.props.to, None, None);
+            },
             onmouseover: move |_| {
                     background.set(theme.read().button.hover_background);
             },
@@ -56,19 +61,12 @@ pub fn TabButton<'a>(cx: Scope<'a, TabButtonProps<'a>>) -> Element<'a> {
             radius: "7",
             height: "100%",
             color: "{button_theme.font_theme.color}",
-            RouterLink {
-                to: cx.props.to,
-                container {
-                    width: "100%",
-                    height: "100%",
-                    padding: "7.5",
-                    label {
-                        align: "center",
-                        height: "100%",
-                        width: "100%",
-                        content
-                    }
-                }
+            padding: "7.5",
+            label {
+                align: "center",
+                height: "100%",
+                width: "100%",
+                content
             }
         }
     )
