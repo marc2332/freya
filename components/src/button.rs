@@ -14,8 +14,8 @@ pub struct ButtonProps<'a> {
 }
 
 /// Identifies the current status of the Button.
-#[derive(Debug, Default, PartialEq)]
-enum ButtonStatus {
+#[derive(Debug, Default, PartialEq, Clone, Copy)]
+pub enum ButtonStatus {
     /// Default state.
     #[default]
     Idle,
