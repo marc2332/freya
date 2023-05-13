@@ -13,6 +13,7 @@ use futures::{
     pin_mut,
     task::{self, ArcWake},
 };
+use skia_safe::{textlayout::FontCollection, FontMgr};
 use tokio::{
     select,
     sync::mpsc::{unbounded_channel, UnboundedSender},
@@ -56,6 +57,8 @@ pub struct App<State: 'static + Clone> {
     layers: Layers,
     events_processor: EventsProcessor,
     viewports_collection: ViewportsCollection,
+
+    font_collection: FontCollection,
 }
 
 impl<State: 'static + Clone> App<State> {
@@ -66,6 +69,8 @@ impl<State: 'static + Clone> App<State> {
         mutations_sender: Option<UnboundedSender<()>>,
         window_env: WindowEnv<State>,
     ) -> Self {
+        let mut font_collection = FontCollection::new();
+        font_collection.set_default_font_manager(FontMgr::default(), "Fira Sans");
         let (event_emitter, event_receiver) = unbounded_channel::<DomEvent>();
         Self {
             rdom,
@@ -80,6 +85,7 @@ impl<State: 'static + Clone> App<State> {
             layers: Layers::default(),
             events_processor: EventsProcessor::default(),
             viewports_collection: HashMap::default(),
+            font_collection,
         }
     }
 
@@ -184,7 +190,9 @@ impl<State: 'static + Clone> App<State> {
     /// Measure the layout
     pub fn process_layout(&mut self) {
         let dom = self.rdom.get();
-        let (layers, viewports) = self.window_env.process_layout(&dom);
+        let (layers, viewports) = self
+            .window_env
+            .process_layout(&dom, &mut self.font_collection);
         self.layers = layers;
         self.viewports_collection = viewports;
     }
@@ -204,6 +212,7 @@ impl<State: 'static + Clone> App<State> {
         self.window_env.render(
             &self.layers,
             &self.viewports_collection,
+            &mut self.font_collection,
             hovered_node,
             &self.rdom.get(),
         );
@@ -216,11 +225,8 @@ impl<State: 'static + Clone> App<State> {
     }
 
     pub fn measure_text_group(&self, text_id: &Uuid) {
-        self.layers.measure_paragraph_elements(
-            text_id,
-            &self.rdom.get(),
-            &self.window_env.font_collection,
-        );
+        self.layers
+            .measure_paragraph_elements(text_id, &self.rdom.get(), &self.font_collection);
     }
 
     pub fn window_env(&mut self) -> &mut WindowEnv<State> {
