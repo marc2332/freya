@@ -9,8 +9,8 @@ fn main() {
     launch_cfg(
         app,
         WindowConfig::<()>::builder()
-            .with_width(100.0)
-            .with_height(100.0)
+            .with_width(400.0)
+            .with_height(200.0)
             .with_decorations(false)
             .with_transparency(true)
             .with_title("Floating window")
@@ -25,12 +25,12 @@ fn app(cx: Scope) -> Element {
             padding: "10",
             display: "center",
             direction: "both",
-            width: "100",
-            height: "100",
-            radius: "50",
+            width: "100%",
+            height: "100%",
+            radius: "15",
             label {
                 color: "black",
-                "Whoooah"
+                "A frameless window"
             }
         }
     )
