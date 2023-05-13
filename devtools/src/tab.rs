@@ -1,7 +1,8 @@
 use dioxus::prelude::*;
 use dioxus_router::use_router;
+use freya_components::ButtonStatus;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::use_theme;
+use freya_hooks::use_get_theme;
 
 #[derive(Props)]
 pub struct TabsBarProps<'a> {
@@ -10,15 +11,17 @@ pub struct TabsBarProps<'a> {
 
 #[allow(non_snake_case)]
 pub fn TabsBar<'a>(cx: Scope<'a, TabsBarProps<'a>>) -> Element<'a> {
-    let theme = use_theme(cx);
-    let button_theme = &theme.read().button;
+    let theme = use_get_theme(cx);
+    let background = theme.button.background;
+    let color = theme.button.font_theme.color;
+
     render!(
         container {
-            background: "{button_theme.background}",
+            background: "{background}",
             direction: "horizontal",
             height: "35",
             width: "100%",
-            color: "{button_theme.font_theme.color}",
+            color: "{color}",
             &cx.props.children
         }
     )
@@ -33,34 +36,40 @@ pub struct TabButtonProps<'a> {
 #[allow(non_snake_case)]
 pub fn TabButton<'a>(cx: Scope<'a, TabButtonProps<'a>>) -> Element<'a> {
     let router = use_router(cx);
+    let theme = use_get_theme(cx);
+    let status = use_state(cx, ButtonStatus::default);
 
-    let theme = use_theme(cx);
-    let button_theme = &theme.read().button;
+    let onclick = move |_| {
+        router.replace_route(cx.props.to, None, None);
+    };
 
-    let background = use_state(cx, || <&str>::clone(&button_theme.background));
-    let set_background = background.setter();
+    let onmouseover = move |_| {
+        if *status.get() != ButtonStatus::Hovering {
+            status.set(ButtonStatus::Hovering);
+        }
+    };
 
-    use_effect(cx, &button_theme.clone(), move |button_theme| async move {
-        set_background(button_theme.background);
-    });
+    let onmouseleave = move |_| {
+        status.set(ButtonStatus::default());
+    };
 
+    let background = match *status.get() {
+        ButtonStatus::Hovering => theme.button.hover_background,
+        ButtonStatus::Idle => theme.button.background,
+    };
+    let color = theme.button.font_theme.color;
     let content = cx.props.label;
+
     render!(
         container {
             background: "{background}",
-            onclick: move |_| {
-                router.replace_route(cx.props.to, None, None);
-            },
-            onmouseover: move |_| {
-                    background.set(theme.read().button.hover_background);
-            },
-            onmouseleave: move |_| {
-                background.set(theme.read().button.background);
-            },
+            onclick: onclick,
+            onmouseover: onmouseover,
+            onmouseleave: onmouseleave,
             width: "125",
             radius: "7",
             height: "100%",
-            color: "{button_theme.font_theme.color}",
+            color: "{color}",
             padding: "7.5",
             label {
                 align: "center",
