@@ -1,3 +1,6 @@
+use freya_node_state::parse_color;
+use skia_safe::Color;
+
 /// Configuration for a Window.
 #[derive(Clone)]
 pub struct WindowConfig<T: Clone> {
@@ -13,6 +16,8 @@ pub struct WindowConfig<T: Clone> {
     pub transparent: bool,
     /// A custom value to consume from your app.
     pub state: Option<T>,
+    /// Background color of the Window.
+    pub background: Color,
 }
 
 impl<T: Clone> Default for WindowConfig<T> {
@@ -24,6 +29,7 @@ impl<T: Clone> Default for WindowConfig<T> {
             title: "Freya app",
             transparent: false,
             state: None,
+            background: Color::WHITE,
         }
     }
 }
@@ -43,6 +49,7 @@ pub struct WindowConfigBuilder<T> {
     pub title: &'static str,
     pub transparent: bool,
     pub state: Option<T>,
+    pub background: Color,
 }
 
 impl<T> Default for WindowConfigBuilder<T> {
@@ -54,6 +61,7 @@ impl<T> Default for WindowConfigBuilder<T> {
             title: "Freya app",
             transparent: false,
             state: None,
+            background: Color::WHITE,
         }
     }
 }
@@ -95,6 +103,12 @@ impl<T: Clone> WindowConfigBuilder<T> {
         self
     }
 
+    /// Specify the Window background color.
+    pub fn with_background(mut self, background: &str) -> Self {
+        self.background = parse_color(background).unwrap_or(Color::WHITE);
+        self
+    }
+
     /// Build the Window.
     pub fn build(self) -> WindowConfig<T> {
         WindowConfig {
@@ -104,6 +118,7 @@ impl<T: Clone> WindowConfigBuilder<T> {
             decorations: self.decorations,
             transparent: self.transparent,
             state: self.state,
+            background: self.background,
         }
     }
 }
