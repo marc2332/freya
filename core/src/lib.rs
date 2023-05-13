@@ -355,6 +355,7 @@ pub fn process_layout(
     // Order the layers from top to bottom
     layers_nums.sort();
 
+    // Calculate the viewports
     let viewports_collection = calculate_viewports(&layers_nums, &layers, fdom);
 
     (layers, viewports_collection)
