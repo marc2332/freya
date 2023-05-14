@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use freya_components::ButtonStatus;
 use freya_elements::elements as dioxus_elements;
 
 use crate::TreeNode;
@@ -11,16 +12,34 @@ pub fn NodeElement<'a>(
     is_selected: bool,
     onselected: EventHandler<'a, &'a TreeNode>,
 ) -> Element<'a> {
-    let text_color = use_state(cx, || "white");
+    let status = use_state(cx, ButtonStatus::default);
 
-    let mut color = *text_color.get();
-    let margin_left = (node.height * 10) as f32 + 16.5;
-    let mut background = "transparent";
+    let onmousedown = move |_| onselected.call(node);
 
-    if *is_selected {
-        color = "white";
-        background = "rgb(100, 100, 100)";
+    let onmouseover = move |_| {
+        if *status.get() != ButtonStatus::Hovering {
+            status.set(ButtonStatus::Hovering);
+        }
     };
+
+    let onmouseleave = move |_| {
+        status.set(ButtonStatus::default());
+    };
+
+    let background = if *is_selected {
+        "rgb(100, 100, 100)"
+    } else {
+        "transparent"
+    };
+    let color = if *is_selected {
+        "white"
+    } else {
+        match *status.get() {
+            ButtonStatus::Idle => "white",
+            ButtonStatus::Hovering => "rgb(150, 150, 150)",
+        }
+    };
+    let margin_left = (node.height * 10) as f32 + 16.5;
 
     render!(
         rect {
@@ -30,13 +49,9 @@ pub fn NodeElement<'a>(
             width: "100%",
             height: "27",
             scroll_x: "{margin_left}",
-            onmousedown: |_| onselected.call(node),
-            onmouseover: move |_| {
-                text_color.set("rgb(150, 150, 150)");
-            },
-            onmouseleave: move |_| {
-                text_color.set("white");
-            },
+            onmousedown: onmousedown,
+            onmouseover: onmouseover,
+            onmouseleave: onmouseleave,
             label {
                 font_size: "14",
                 color: "{color}",

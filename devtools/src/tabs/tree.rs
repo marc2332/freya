@@ -33,7 +33,7 @@ pub fn NodesTree<'a>(
                     is_selected: Some(node.id) == **selected_node_id,
                     onselected: |node: &TreeNode| {
                         onselected.call(node);
-                        router.push_route("/elements/style", None, None)
+                        router.replace_route("/elements/style", None, None)
                     }
                     node: node
                 }
