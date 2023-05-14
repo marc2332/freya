@@ -2,6 +2,45 @@ use std::{cell::RefCell, ops::RangeInclusive};
 
 use tween::{BounceIn, Linear, SineIn, SineInOut, Tweener};
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum TransitionAnimation {
+    BounceIn(i32),
+    SineIn(i32),
+    SineInOut(i32),
+    Linear(i32),
+}
+
+impl TransitionAnimation {
+    /// New BounceIn [Animation]
+    pub fn new_bounce_in(time: i32) -> Self {
+        Self::BounceIn(time)
+    }
+
+    /// New SineIn [Animation]
+    pub fn new_sine_in(time: i32) -> Self {
+        Self::SineIn(time)
+    }
+
+    /// New SineInOut [Animation]
+    pub fn new_sine_in_out(time: i32) -> Self {
+        Self::SineInOut(time)
+    }
+
+    /// New Linear [Animation]
+    pub fn new_linear(time: i32) -> Self {
+        Self::Linear(time)
+    }
+
+    pub fn to_animation(self, range: RangeInclusive<f64>) -> Animation {
+        match self {
+            TransitionAnimation::BounceIn(time) => Animation::new_bounce_in(range, time),
+            TransitionAnimation::SineIn(time) => Animation::new_sine_in(range, time),
+            TransitionAnimation::SineInOut(time) => Animation::new_sine_in_out(range, time),
+            TransitionAnimation::Linear(time) => Animation::new_linear(range, time),
+        }
+    }
+}
+
 /// Animation mode and configuration.
 #[derive(Clone)]
 pub enum Animation {

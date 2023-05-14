@@ -27,8 +27,6 @@ impl<'a> AnimationManager<'a> {
         // Set as current this new animation
         current_animation_id.set(Some(new_id));
 
-        let duration = anim.duration();
-
         // Spawn the animation that will run at 1ms speed
         self.cx.spawn(async move {
             let mut ticker = interval(Duration::from_millis(1));
@@ -36,7 +34,7 @@ impl<'a> AnimationManager<'a> {
                 // Stop running the animation if it was removed
                 if *current_animation_id.current() == Some(new_id) {
                     // Remove the current animation if it has finished
-                    if index > duration {
+                    if anim.is_finished() {
                         current_animation_id.set(None);
                         break;
                     }

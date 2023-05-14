@@ -6,7 +6,7 @@ use std::time::Duration;
 use tokio::time::interval;
 use uuid::Uuid;
 
-use crate::Animation;
+use crate::{Animation, TransitionAnimation};
 
 #[derive(Clone, Debug, Copy, PartialEq)]
 pub enum Animate {
@@ -52,14 +52,22 @@ impl Animate {
         }
     }
 
-    pub fn as_size(&self) -> Option<f64> {
+    pub fn as_size(&self) -> f64 {
+        self.to_size().unwrap()
+    }
+
+    pub fn as_color(&self) -> String {
+        self.to_color().unwrap()
+    }
+
+    pub fn to_size(&self) -> Option<f64> {
         match self {
             Self::Size(_, _, current) => Some(*current),
             _ => None,
         }
     }
 
-    pub fn as_color(&self) -> Option<String> {
+    pub fn to_color(&self) -> Option<String> {
         match self {
             Self::Color(_, _, current) => Some(format!(
                 "rgb({}, {}, {})",
@@ -89,17 +97,17 @@ pub struct AnimationTransitionManager<'a> {
     current_animation_id: &'a UseState<Option<Uuid>>,
     animations: &'a UseState<Vec<Animate>>,
     cx: &'a ScopeState,
-    duration: i32,
+    transition: TransitionAnimation,
 }
 
 impl<'a> AnimationTransitionManager<'a> {
     pub fn reverse(&self) {
-        let anim = Animation::new_sine_in_out(100.0..=0.0, self.duration);
+        let anim = self.transition.to_animation(100.0..=0.0);
         self.run_with(anim);
     }
 
     pub fn start(&self) {
-        let anim = Animation::new_sine_in_out(0.0..=100.0, self.duration);
+        let anim = self.transition.to_animation(0.0..=100.0);
         self.run_with(anim);
     }
 
@@ -165,9 +173,34 @@ impl<'a> AnimationTransitionManager<'a> {
     }
 }
 
+/// Run a group of animated transitions.
+///
+/// ## Usage
+/// ```rust
+/// # use freya::prelude::*;
+/// fn app(cx: Scope) -> Element {
+///     let animation = use_animation_transition(cx, TransitionAnimation::new_linear(50), || vec![
+///         Animate::new_size(0.0, 100.0)
+///     ]);
+///
+///     let progress = animation.get(0).unwrap().as_size();
+///
+///     use_effect(cx, (), move |_| {
+///         animation.start();
+///         async move {}
+///     });
+///
+///     render!(
+///         rect {
+///             width: "{progress}",
+///         }
+///     )
+/// }
+/// ```
+///
 pub fn use_animation_transition(
     cx: &ScopeState,
-    duration: i32,
+    transition: TransitionAnimation,
     init: impl FnOnce() -> Vec<Animate>,
 ) -> AnimationTransitionManager {
     let current_animation_id = use_state(cx, || None);
@@ -177,6 +210,61 @@ pub fn use_animation_transition(
         current_animation_id,
         animations,
         cx,
-        duration,
+        transition,
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use std::time::Duration;
+
+    use crate::{use_animation_transition, Animate, TransitionAnimation};
+    use dioxus_hooks::use_effect;
+    use freya::prelude::*;
+    use freya_testing::launch_test;
+    use tokio::time::sleep;
+
+    #[tokio::test]
+    pub async fn track_progress() {
+        fn use_animation_transition_app(cx: Scope) -> Element {
+            let animation =
+                use_animation_transition(cx, TransitionAnimation::new_linear(50), || {
+                    vec![Animate::new_size(0.0, 100.0)]
+                });
+
+            let progress = animation.get(0).unwrap().as_size();
+
+            use_effect(cx, (), move |_| {
+                animation.start();
+                async move {}
+            });
+
+            render!(rect {
+                width: "{progress}",
+            })
+        }
+
+        let mut utils = launch_test(use_animation_transition_app);
+
+        // Initial state
+        utils.wait_for_update().await;
+
+        assert_eq!(utils.root().get(0).layout().unwrap().width(), 0.0);
+
+        // State somewhere in the middle
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+
+        let width = utils.root().get(0).layout().unwrap().width();
+        assert!(width > 0.0);
+        assert!(width < 100.0);
+
+        sleep(Duration::from_millis(50)).await;
+
+        // State in the end
+        utils.wait_for_update().await;
+
+        let width = utils.root().get(0).layout().unwrap().width();
+        assert_eq!(width, 100.0);
     }
 }
