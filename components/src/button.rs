@@ -8,9 +8,19 @@ use freya_hooks::{use_focus, use_get_theme};
 pub struct ButtonProps<'a> {
     /// Inner children for the Button.
     pub children: Element<'a>,
-    #[props(optional)]
     /// Handler for the `onclick` event.
+    #[props(optional)]
     pub onclick: Option<EventHandler<'a, MouseEvent>>,
+}
+
+/// Identifies the current status of the Button.
+#[derive(Debug, Default, PartialEq, Clone, Copy)]
+pub enum ButtonStatus {
+    /// Default state.
+    #[default]
+    Idle,
+    /// Mouse is hovering the button.
+    Hovering,
 }
 
 /// `Button` component.
@@ -41,22 +51,31 @@ pub struct ButtonProps<'a> {
 pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
     let focus = use_focus(cx);
     let theme = use_get_theme(cx);
-    let button_theme = &theme.button;
+    let status = use_state(cx, ButtonStatus::default);
+
     let focus_id = focus.attribute(cx);
 
-    let background = use_state(cx, || <&str>::clone(&button_theme.background));
-    let set_background = background.setter();
-
-    use_effect(cx, &button_theme.clone(), move |button_theme| async move {
-        set_background(button_theme.background);
-    });
-
-    let onclick = move |ev: MouseEvent| {
-        focus.focus();
+    let onclick = move |ev| {
         if let Some(onclick) = &cx.props.onclick {
             onclick.call(ev)
         }
     };
+
+    let onmouseover = move |_| {
+        if *status.get() != ButtonStatus::Hovering {
+            status.set(ButtonStatus::Hovering);
+        }
+    };
+
+    let onmouseleave = move |_| {
+        status.set(ButtonStatus::default());
+    };
+
+    let background = match *status.get() {
+        ButtonStatus::Hovering => theme.button.hover_background,
+        ButtonStatus::Idle => theme.button.background,
+    };
+    let color = theme.button.font_theme.color;
 
     render!(
         container {
@@ -68,16 +87,12 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
             role: "button",
             container {
                 onclick: onclick,
-                onmouseover: move |_| {
-                    background.set(theme.button.hover_background);
-                },
-                onmouseleave: move |_| {
-                    background.set(theme.button.background);
-                },
+                onmouseover: onmouseover,
+                onmouseleave: onmouseleave,
                 width: "auto",
                 height: "auto",
                 direction: "both",
-                color: "{button_theme.font_theme.color}",
+                color: "{color}",
                 shadow: "0 5 15 10 black",
                 radius: "5",
                 padding: "8",

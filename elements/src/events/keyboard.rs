@@ -98,7 +98,7 @@ pub fn get_non_text_keys(key: &VirtualKeyCode) -> Key {
         VirtualKeyCode::Down => Key::ArrowDown,
         VirtualKeyCode::Back => Key::Backspace,
         VirtualKeyCode::Return => Key::Enter,
-        VirtualKeyCode::Space => Key::Character(" ".to_string()),
+        VirtualKeyCode::Space => Key::Unidentified,
         VirtualKeyCode::Compose => Key::Compose,
         VirtualKeyCode::Caret => Key::Unidentified,
         VirtualKeyCode::Numlock => Key::NumLock,

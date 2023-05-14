@@ -31,7 +31,7 @@ use winit::{
 use skia_safe::{
     gpu::{gl::FramebufferInfo, BackendRenderTarget, SurfaceOrigin},
     textlayout::FontCollection,
-    Color, ColorType, FontMgr, Matrix, Surface,
+    Color, ColorType, Matrix, Surface,
 };
 
 use crate::renderer::render_skia;
@@ -48,7 +48,6 @@ pub struct WindowEnv<T: Clone> {
     fb_info: FramebufferInfo,
     num_samples: usize,
     stencil_size: usize,
-    pub(crate) font_collection: FontCollection,
     pub(crate) window_config: WindowConfig<T>,
 }
 
@@ -58,9 +57,6 @@ impl<T: Clone> WindowEnv<T> {
         window_config: WindowConfig<T>,
         event_loop: &EventLoop<EventMessage>,
     ) -> Self {
-        let mut font_collection = FontCollection::new();
-        font_collection.set_default_font_manager(FontMgr::default(), "Fira Sans");
-
         let window_builder = WindowBuilder::new()
             .with_title(window_config.title)
             .with_decorations(window_config.decorations)
@@ -186,13 +182,16 @@ impl<T: Clone> WindowEnv<T> {
             num_samples,
             stencil_size,
             window,
-            font_collection,
             window_config,
         }
     }
 
     /// Measure the layout
-    pub fn process_layout(&mut self, rdom: &FreyaDOM) -> (Layers, ViewportsCollection) {
+    pub fn process_layout(
+        &mut self,
+        rdom: &FreyaDOM,
+        font_collection: &mut FontCollection,
+    ) -> (Layers, ViewportsCollection) {
         let window_size = self.window.inner_size();
         let scale_factor = self.window.scale_factor() as f32;
         process_layout(
@@ -201,7 +200,7 @@ impl<T: Clone> WindowEnv<T> {
                 window_size.width as f32,
                 window_size.height as f32,
             ))),
-            &mut self.font_collection,
+            font_collection,
             scale_factor,
         )
     }
@@ -211,6 +210,7 @@ impl<T: Clone> WindowEnv<T> {
         &mut self,
         layers: &Layers,
         viewports_collection: &ViewportsCollection,
+        font_collection: &mut FontCollection,
         hovered_node: &HoveredNode,
         rdom: &FreyaDOM,
     ) {
@@ -227,7 +227,7 @@ impl<T: Clone> WindowEnv<T> {
         process_render(
             viewports_collection,
             rdom,
-            &mut self.font_collection,
+            font_collection,
             layers,
             &mut (canvas, (&mut matrices)),
             |dom, render_node, font_collection, viewports_collection, (canvas, matrices)| {

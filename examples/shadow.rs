@@ -10,11 +10,11 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    let mut shadow_size = use_state(cx, || 30f32);
+    let shadow_size = use_state(cx, || 30f32);
 
     let onwheel = move |e: WheelEvent| {
-        let y = e.get_delta_y();
-        shadow_size += (y as f32) * 7.0;
+        let y = e.get_delta_y() as f32;
+        shadow_size.set((*shadow_size.get() + y).clamp(0.0, 100.0));
     };
 
     render!(

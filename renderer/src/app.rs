@@ -22,6 +22,7 @@ use futures::{
     pin_mut,
     task::{self, ArcWake},
 };
+use skia_safe::{textlayout::FontCollection, FontMgr};
 use tokio::{
     select,
     sync::{
@@ -93,6 +94,8 @@ pub struct App<State: 'static + Clone> {
 
     accessibility_state: Arc<Mutex<AccessibilityState>>,
     accessibility_adapter: Adapter,
+
+    font_collection: FontCollection,
 }
 
 impl<State: 'static + Clone> App<State> {
@@ -111,8 +114,12 @@ impl<State: 'static + Clone> App<State> {
             proxy,
         );
 
+        let mut font_collection = FontCollection::new();
+        font_collection.set_default_font_manager(FontMgr::default(), "Fira Sans");
+
         let (event_emitter, event_receiver) = unbounded_channel::<DomEvent>();
         let (focus_sender, focus_receiver) = watch::channel(None);
+
         Self {
             rdom,
             vdom,
@@ -130,6 +137,7 @@ impl<State: 'static + Clone> App<State> {
             accessibility_state,
             focus_sender,
             focus_receiver,
+            font_collection,
         }
     }
 
@@ -226,7 +234,9 @@ impl<State: 'static + Clone> App<State> {
 
     /// Measure the layout
     pub fn process_layout(&mut self) {
-        let (layers, viewports) = self.window_env.process_layout(&self.rdom.get());
+        let (layers, viewports) = self
+            .window_env
+            .process_layout(&self.rdom.get(), &mut self.font_collection);
         self.layers = layers;
         self.viewports_collection = viewports;
         self.process_accessibility();
@@ -281,6 +291,7 @@ impl<State: 'static + Clone> App<State> {
         self.window_env.render(
             &self.layers,
             &self.viewports_collection,
+            &mut self.font_collection,
             hovered_node,
             &self.rdom.get(),
         );
@@ -329,11 +340,8 @@ impl<State: 'static + Clone> App<State> {
     }
 
     pub fn measure_text_group(&self, text_id: &Uuid) {
-        self.layers.measure_paragraph_elements(
-            text_id,
-            &self.rdom.get(),
-            &self.window_env.font_collection,
-        );
+        self.layers
+            .measure_paragraph_elements(text_id, &self.rdom.get(), &self.font_collection);
     }
 
     pub fn window_env(&mut self) -> &mut WindowEnv<State> {
