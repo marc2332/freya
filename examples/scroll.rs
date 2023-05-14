@@ -6,7 +6,7 @@
 use freya::prelude::*;
 
 fn main() {
-    launch(app);
+    launch_with_props(app, "Scroll example", (400.0, 400.0));
 }
 
 fn app(cx: Scope) -> Element {
@@ -29,7 +29,7 @@ fn app(cx: Scope) -> Element {
                         width: "100%",
                         background: "rgb(27, 38, 59)",
                         padding: "15",
-                        label {  "Scrollbar support!!!" }
+                        label {  "Scroll support :)" }
                     }
                 }
                 rect {
@@ -42,7 +42,7 @@ fn app(cx: Scope) -> Element {
                         width: "100%",
                         background: "rgb(27, 38, 59)",
                         padding: "15",
-                        label { "Scrollbar support!!!" }
+                        label { "Scroll support :-)" }
                     }
                 }
                 rect {
@@ -55,7 +55,7 @@ fn app(cx: Scope) -> Element {
                         width: "100%",
                         background: "rgb(27, 38, 59)",
                         padding: "15",
-                        label { "Scrollbar support!!!" }
+                        label { "Scroll support >:D" }
                     }
                 }
             }
