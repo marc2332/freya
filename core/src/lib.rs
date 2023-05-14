@@ -2,7 +2,7 @@ use dioxus_native_core::prelude::{ElementNode, NodeImmutableDioxusExt};
 use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::{node::NodeType, NodeId};
 use freya_common::NodeReferenceLayout;
-use freya_dom::{DioxusDOM, DioxusDOMAdapter, FreyaDOM};
+use freya_dom::prelude::{DioxusDOM, DioxusDOMAdapter, FreyaDOM};
 use freya_layout::{Layers, SkiaMeasurer};
 use torin::geometry::Area;
 

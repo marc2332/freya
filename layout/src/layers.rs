@@ -1,5 +1,5 @@
 use dioxus_native_core::NodeId;
-use freya_dom::FreyaDOM;
+use freya_dom::prelude::FreyaDOM;
 use rustc_hash::{FxHashMap, FxHashSet};
 use skia_safe::textlayout::FontCollection;
 use torin::torin::Torin;

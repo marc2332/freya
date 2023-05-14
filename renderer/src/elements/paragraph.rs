@@ -1,5 +1,5 @@
 use dioxus_native_core::real_dom::NodeImmutable;
-use freya_dom::DioxusNode;
+use freya_dom::prelude::DioxusNode;
 use freya_layout::create_paragraph;
 use freya_node_state::CursorSettings;
 use skia_safe::{

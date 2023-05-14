@@ -13,7 +13,7 @@ use freya_core::{
     EventEmitter, EventReceiver,
 };
 use freya_core::{process_events, process_layout, ViewportsCollection};
-use freya_dom::{DioxusNode, FreyaDOM, SafeDOM};
+use freya_dom::prelude::{DioxusNode, FreyaDOM, SafeDOM};
 use freya_layout::Layers;
 use freya_node_state::CustomAttributeValues;
 use rustc_hash::FxHashMap;

@@ -6,7 +6,7 @@ use dioxus_native_core::{
     NodeId,
 };
 use freya_common::CursorLayoutResponse;
-use freya_dom::{DioxusDOM, DioxusNode};
+use freya_dom::prelude::{DioxusDOM, DioxusNode};
 use freya_node_state::{CursorReference, CursorSettings, FontStyle, References};
 
 pub use layers::*;

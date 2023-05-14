@@ -5,7 +5,7 @@ use dioxus_native_core::NodeId;
 use freya_common::EventMessage;
 
 use freya_core::events::FreyaEvent;
-use freya_dom::SafeDOM;
+use freya_dom::prelude::SafeDOM;
 use freya_elements::events::keyboard::{
     from_winit_to_code, get_modifiers, get_non_text_keys, Code, Key,
 };

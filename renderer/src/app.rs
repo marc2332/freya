@@ -6,7 +6,7 @@ use freya_core::{
     events::{DomEvent, EventsProcessor, FreyaEvent},
     process_events, EventEmitter, EventReceiver, EventsQueue, ViewportsCollection,
 };
-use freya_dom::SafeDOM;
+use freya_dom::prelude::SafeDOM;
 use freya_layout::Layers;
 use futures::FutureExt;
 use futures::{

@@ -1,5 +1,5 @@
 use dioxus_native_core::real_dom::NodeImmutable;
-use freya_dom::DioxusNode;
+use freya_dom::prelude::DioxusNode;
 use freya_node_state::{References, Style};
 use skia_safe::{Canvas, Data, IRect, Image, Paint, Rect};
 use torin::geometry::Area;
