@@ -1172,6 +1172,7 @@ dependencies = [
  "skia-safe",
  "tokio",
  "tracing-subscriber",
+ "uuid",
  "winit",
 ]
 

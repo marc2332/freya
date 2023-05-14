@@ -60,6 +60,7 @@ reqwest = { version = "0.11.13", features = ["json"] }
 serde = "1.0.152"
 tracing-subscriber = "0.2.25"
 dioxus-utils = { git = "https://github.com/marc2332/dioxus-utils", rev = "b277db0b8c57bd4041bb552bf3e16870c1f33567" }
+uuid = { workspace = true }
 
 [profile.release]
 lto = true

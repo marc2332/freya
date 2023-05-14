@@ -7,55 +7,53 @@ use freya::events::MouseEvent;
 use freya::prelude::*;
 
 fn main() {
-    launch_with_props(app, "Animation", (700.0, 250.0));
+    launch_with_props(app, "Animation", (700.0, 400.0));
 }
 
-const TIME: i32 = 500;
 const TARGET: f64 = 500.0;
 
 fn app(cx: Scope) -> Element {
-    let animation = use_animation(cx, 0.0);
+    let animation = use_animation_transition(cx, 700, || {
+        vec![
+            Animate::new_size(0.0, TARGET),
+            Animate::new_color("rgb(33, 158, 188)", "white"),
+            Animate::new_color("rgb(30, 15, 25)", "orange"),
+        ]
+    });
 
-    let progress = animation.value();
+    let size = animation.get(0).unwrap().as_size().unwrap();
+    let background = animation.get(1).unwrap().as_color().unwrap();
+    let text = animation.get(2).unwrap().as_color().unwrap();
 
     let anim = move |_: MouseEvent| {
-        if animation.is_animating() {
-            return;
-        }
-        if progress == 0.0 {
-            animation.start(Animation::new_sine_in_out(0.0..=TARGET, TIME));
-        } else if progress == TARGET {
-            animation.start(Animation::new_sine_in_out(TARGET..=0.0, TIME));
+        if size == 0.0 {
+            animation.start();
+        } else if size == TARGET {
+            animation.reverse();
         }
     };
 
     render!(
         container {
             background: "black",
-            direction: "both",
+            display: "center",
             width: "100%",
             height: "100%",
-            scroll_x: "{progress}",
+            scroll_x: "{size}",
             rect {
-                display: "center",
-                direction: "both",
-                height: "100%",
+                height: "200",
                 width: "200",
-                rect {
-                    height: "200",
+                background: "{background}",
+                padding: "25",
+                radius: "100",
+                display: "center",
+                onclick: anim,
+                label {
                     width: "100%",
-                    background: "rgb(100, 100, 100)",
-                    padding: "25",
-                    radius: "100",
-                    display: "center",
-                    direction: "both",
-                    onclick: anim,
-                    label {
-                        font_size: "30",
-                        align: "center",
-                        color: "white",
-                        "Click to move"
-                    }
+                    font_size: "30",
+                    align: "center",
+                    color: "{text}",
+                    "Click to move"
                 }
             }
         }
