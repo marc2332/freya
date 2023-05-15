@@ -64,8 +64,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
     );
 
     use_effect(cx, status, {
-        to_owned![transition];
-        move |status| {
+        |status| {
             match status.get() {
                 ButtonStatus::Hovering => transition.start(),
                 ButtonStatus::Idle => {
