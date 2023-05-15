@@ -1167,6 +1167,7 @@ dependencies = [
  "dioxus",
  "dioxus-utils",
  "freya",
+ "freya-node-state",
  "reqwest",
  "serde",
  "skia-safe",

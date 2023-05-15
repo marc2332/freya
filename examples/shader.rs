@@ -56,7 +56,7 @@ fn app(cx: Scope) -> Element {
         let shader = Arc::new(Mutex::new(shader));
         let instant = Instant::now();
         to_owned![render_channel];
-        Box::new(move |canvas, region| {
+        Box::new(move |canvas, _, region| {
             let mut builder = UniformsBuilder::default();
             builder.set(
                 "u_resolution",

@@ -12,6 +12,7 @@ use freya_common::Area;
 use freya_common::CursorLayoutResponse;
 use freya_common::NodeReferenceLayout;
 use freya_common::Point2D;
+use skia_safe::textlayout::FontCollection;
 use skia_safe::Canvas;
 use tokio::sync::mpsc::UnboundedSender;
 use uuid::Uuid;
@@ -48,7 +49,7 @@ impl Display for NodeReference {
     }
 }
 
-type CanvasRunner = dyn Fn(&mut Canvas, Area);
+type CanvasRunner = dyn Fn(&mut Canvas, &FontCollection, Area);
 
 /// Canvas Reference
 #[derive(Clone)]

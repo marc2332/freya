@@ -3,10 +3,10 @@ use std::sync::Arc;
 use dioxus_core::{AttributeValue, Scope, ScopeState};
 use freya_common::Area;
 use freya_node_state::{CanvasReference, CustomAttributeValues};
-use skia_safe::Canvas;
+use skia_safe::{textlayout::FontCollection, Canvas};
 use uuid::Uuid;
 
-pub type RenderCallback = Box<dyn Fn(&mut Canvas, Area)>;
+pub type RenderCallback = Box<dyn Fn(&mut Canvas, &FontCollection, Area)>;
 
 /// Holds a rendering hook callback that allows to render to the Canvas.
 pub struct UseCanvas {
