@@ -35,7 +35,7 @@ impl UseCanvas {
 /// # use freya::prelude::*;
 /// fn app(cx: Scope) -> Element {
 ///     let canvas = use_canvas(cx, || {
-///         Box::new(|canvas, area| {
+///         Box::new(|canvas, font_collection, area| {
 ///             // Draw using the canvas !
 ///         })
 ///     });
