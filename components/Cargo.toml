@@ -20,6 +20,7 @@ freya-common = { workspace = true }
 dioxus = { workspace = true }
 dioxus-router = { workspace = true }
 
+skia-safe = { workspace = true }
 winit = { workspace = true }
 tokio = { workspace = true }
 

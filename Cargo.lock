@@ -1359,6 +1359,7 @@ dependencies = [
  "freya-testing",
  "open",
  "reqwest",
+ "skia-safe",
  "tokio",
  "winit",
 ]
