@@ -231,7 +231,7 @@ impl<'a> TransitionsManager<'a> {
 /// # use freya::prelude::*;
 /// fn app(cx: Scope) -> Element {
 ///     let animation = use_animation_transition(cx, TransitionAnimation::new_linear(50), (), |_| vec![
-///         Animate::new_size(0.0, 100.0)
+///         Transition::new_size(0.0, 100.0)
 ///     ]);
 ///
 ///     let progress = animation.get(0).unwrap().as_size();
