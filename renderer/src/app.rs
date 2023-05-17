@@ -3,7 +3,7 @@ use std::{collections::HashMap, sync::Arc, task::Waker};
 use dioxus_core::{Template, VirtualDom};
 use freya_common::EventMessage;
 use freya_core::{
-    events::{DomEvent, EventsProcessor, FreyaEvent},
+    events::{EventsProcessor, FreyaEvent},
     process_events, EventEmitter, EventReceiver, EventsQueue, ViewportsCollection,
 };
 use freya_dom::SafeDOM;
@@ -71,7 +71,7 @@ impl<State: 'static + Clone> App<State> {
     ) -> Self {
         let mut font_collection = FontCollection::new();
         font_collection.set_default_font_manager(FontMgr::default(), "Fira Sans");
-        let (event_emitter, event_receiver) = unbounded_channel::<DomEvent>();
+        let (event_emitter, event_receiver) = unbounded_channel();
         Self {
             rdom,
             vdom,
@@ -134,10 +134,12 @@ impl<State: 'static + Clone> App<State> {
             {
                 let fut = async {
                     select! {
-                        ev = self.event_receiver.recv() => {
-                            if let Some(ev) = ev {
-                                let data = ev.data.any();
-                                self.vdom.handle_event(&ev.name, data, ev.element_id, false);
+                        events = self.event_receiver.recv() => {
+                            if let Some(events) = events {
+                                for event in events {
+                                    let data = event.data.any();
+                                    self.vdom.handle_event(&event.name, data, event.element_id, false);
+                                }
 
                                 self.vdom.process_events();
                             }

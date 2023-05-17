@@ -16,8 +16,8 @@ pub mod node;
 
 use events::{DomEvent, EventsProcessor, FreyaEvent};
 
-pub type EventEmitter = UnboundedSender<DomEvent>;
-pub type EventReceiver = UnboundedReceiver<DomEvent>;
+pub type EventEmitter = UnboundedSender<Vec<DomEvent>>;
+pub type EventReceiver = UnboundedReceiver<Vec<DomEvent>>;
 pub type EventsQueue = Vec<FreyaEvent>;
 pub type ViewportsCollection = FxHashMap<NodeId, (Option<Area>, Vec<NodeId>)>;
 pub type NodesEvents<'a> = FxHashMap<&'a str, Vec<(RenderData, FreyaEvent)>>;
@@ -145,7 +145,6 @@ pub fn calculate_node_events<'a>(
 fn calculate_events_listeners(
     calculated_events: &mut NodesEvents,
     dom: &FreyaDOM,
-    event_emitter: &EventEmitter,
     scale_factor: f64,
 ) -> Vec<DomEvent> {
     let mut new_events = Vec::new();
@@ -212,7 +211,6 @@ fn calculate_events_listeners(
                 scale_factor,
             );
             new_events.push(event.clone());
-            event_emitter.send(event).unwrap();
         }
     }
 
@@ -223,7 +221,7 @@ fn calculate_events_listeners(
 fn calculate_global_events_listeners(
     global_events: Vec<FreyaEvent>,
     dom: &FreyaDOM,
-    event_emitter: &EventEmitter,
+    evs: &mut Vec<DomEvent>,
     scale_factor: f64,
 ) {
     for global_event in global_events {
@@ -239,7 +237,7 @@ fn calculate_global_events_listeners(
                 None,
                 scale_factor,
             );
-            event_emitter.send(event).unwrap();
+            evs.push(event);
         }
     }
 }
@@ -293,19 +291,19 @@ pub fn process_events(
     // Order the layers from top to bottom
     layers_nums.sort();
 
+    let mut emitted_events = Vec::new();
+
     let (mut node_events, global_events) =
         calculate_node_events(&layers_nums, layers, events, viewports_collection);
 
-    let emitted_events =
-        calculate_events_listeners(&mut node_events, dom, event_emitter, scale_factor);
+    let new_events = calculate_events_listeners(&mut node_events, dom, scale_factor);
 
-    calculate_global_events_listeners(global_events, dom, event_emitter, scale_factor);
+    calculate_global_events_listeners(global_events, dom, &mut emitted_events, scale_factor);
 
-    let new_processed_events = events_processor.process_events_batch(emitted_events, node_events);
+    events_processor.process_events_batch(&new_events, node_events, &mut emitted_events);
 
-    for event in new_processed_events {
-        event_emitter.send(event).unwrap();
-    }
+    emitted_events.extend(new_events);
+    event_emitter.send(emitted_events).unwrap();
 
     events.clear();
 }

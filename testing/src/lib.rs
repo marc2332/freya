@@ -9,7 +9,6 @@ use dioxus_native_core::NodeId;
 use freya_common::{Area, Size2D};
 use freya_core::events::EventsProcessor;
 use freya_core::{
-    events::DomEvent,
     node::{get_node_state, NodeState},
     EventEmitter, EventReceiver,
 };
@@ -167,8 +166,10 @@ impl TestingHandler {
         loop {
             let ev = self.event_receiver.try_recv();
 
-            if let Ok(ev) = ev {
-                vdom.handle_event(&ev.name, ev.data.any(), ev.element_id, false);
+            if let Ok(events) = ev {
+                for event in events {
+                    vdom.handle_event(&event.name, event.data.any(), event.element_id, false);
+                }
                 vdom.process_events();
             } else {
                 break;
@@ -249,7 +250,7 @@ pub fn launch_test_with_config(root: Component<()>, config: TestingConfig) -> Te
 
     let sdom = SafeDOM::new(fdom);
 
-    let (event_emitter, event_receiver) = unbounded_channel::<DomEvent>();
+    let (event_emitter, event_receiver) = unbounded_channel();
     let layers = Arc::new(Mutex::new(Layers::default()));
     let freya_events = Vec::new();
     let events_processor = EventsProcessor::default();

@@ -172,18 +172,17 @@ impl EventsProcessor {
     /// Calculate new events according to the last leap and this one
     pub fn process_events_batch(
         &mut self,
-        events_to_emit: Vec<DomEvent>,
+        new_events: &Vec<DomEvent>,
         events_filtered: FxHashMap<&str, Vec<(RenderData, FreyaEvent)>>,
-    ) -> Vec<DomEvent> {
-        let mut new_events = Vec::new();
-
+        emitted_events: &mut Vec<DomEvent>,
+    ) {
         for (element, state) in self.states.iter_mut() {
             // Process mouseover events
             {
                 let mut no_recent_mouseover = true;
 
                 // Check any mouse event at all
-                for event in &events_to_emit {
+                for event in new_events {
                     if event.name == "mouseover" && &event.element_id == element {
                         no_recent_mouseover = false;
                         break;
@@ -201,7 +200,7 @@ impl EventsProcessor {
 
                 if no_recent_mouseover && state.mouseover && cursor_was_moved {
                     // And also at least one mouseover event ocurred
-                    new_events.push(DomEvent {
+                    emitted_events.push(DomEvent {
                         element_id: *element,
                         name: "mouseleave".to_string(),
                         data: DomEventData::Mouse(MouseData::new(
@@ -217,7 +216,7 @@ impl EventsProcessor {
             }
         }
 
-        for event in &events_to_emit {
+        for event in new_events {
             if event.name == "mouseover" {
                 let id = &event.element_id;
                 if !self.states.contains_key(id) {
@@ -228,7 +227,5 @@ impl EventsProcessor {
                 node_state.mouseover = true;
             }
         }
-
-        new_events
     }
 }
