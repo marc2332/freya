@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
-use freya_hooks::{use_animation_transition, use_get_theme, Transition, TransitionAnimation};
+use freya_hooks::use_get_theme;
 
 /// [`Button`] component properties.
 #[derive(Props)]
@@ -51,31 +51,6 @@ pub enum ButtonStatus {
 pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
     let theme = use_get_theme(cx);
     let status = use_state(cx, ButtonStatus::default);
-    let transition = use_animation_transition(
-        cx,
-        TransitionAnimation::Linear(100),
-        (&theme.button,),
-        |(theme,)| {
-            vec![Transition::new_color(
-                theme.background,
-                theme.hover_background,
-            )]
-        },
-    );
-
-    use_effect(cx, status, {
-        |status| {
-            match status.get() {
-                ButtonStatus::Hovering => transition.start(),
-                ButtonStatus::Idle => {
-                    if !transition.is_at_start() {
-                        transition.reverse()
-                    }
-                }
-            };
-            async move {}
-        }
-    });
 
     let onclick = move |ev| {
         if let Some(onclick) = &cx.props.onclick {
@@ -93,7 +68,10 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
         status.set(ButtonStatus::default());
     };
 
-    let background = transition.get(0).unwrap().as_color();
+    let background = match *status.get() {
+        ButtonStatus::Hovering => theme.button.hover_background,
+        ButtonStatus::Idle => theme.button.background,
+    };
     let color = theme.button.font_theme.color;
 
     render!(
