@@ -159,6 +159,8 @@ struct ElementState {
 }
 
 /// [`EventsProcessor`] stores the elements events states.
+/// 
+/// TODO(marc2332): Remove deleted Elements
 #[derive(Default)]
 pub struct EventsProcessor {
     states: HashMap<ElementId, ElementState>,
