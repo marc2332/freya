@@ -205,7 +205,7 @@ impl EventsProcessor {
             }
         }
 
-        for event in &events_to_emit {
+        for event in events_to_emit {
             if event.name == "mouseover" {
                 let id = &event.element_id;
                 if !self.states.contains_key(id) {
@@ -219,7 +219,7 @@ impl EventsProcessor {
                         .send(DomEvent {
                             element_id: *id,
                             name: "mouseenter".to_string(),
-                            data: event.data.clone(),
+                            data: event.data,
                         })
                         .unwrap();
                 }
@@ -227,10 +227,6 @@ impl EventsProcessor {
                 // Mark the element as being hovered
                 node_state.mouseover = true;
             }
-        }
-
-        for event in events_to_emit {
-            event_emitter.send(event).unwrap();
         }
     }
 }

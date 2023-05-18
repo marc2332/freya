@@ -145,6 +145,7 @@ pub fn calculate_node_events<'a>(
 fn calculate_events_listeners(
     calculated_events: &mut NodesEvents,
     fdom: &FreyaDOM,
+    event_emitter: &EventEmitter,
     scale_factor: f64,
 ) -> Vec<DomEvent> {
     let mut new_events = Vec::new();
@@ -206,7 +207,8 @@ fn calculate_events_listeners(
                 Some(node.node_area),
                 scale_factor,
             );
-            new_events.push(event);
+            new_events.push(event.clone());
+            event_emitter.send(event).unwrap();
         }
     }
 
@@ -290,7 +292,8 @@ pub fn process_events(
     let (mut node_events, global_events) =
         calculate_node_events(&layers_nums, layers, events, viewports_collection);
 
-    let emitted_events = calculate_events_listeners(&mut node_events, dom, scale_factor);
+    let emitted_events =
+        calculate_events_listeners(&mut node_events, dom, event_emitter, scale_factor);
 
     calculate_global_events_listeners(global_events, dom, event_emitter, scale_factor);
 
