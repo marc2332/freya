@@ -6,9 +6,9 @@ use freya_elements::events::{
     keyboard::{Code, Key, Modifiers},
     KeyboardData, MouseData, TouchData, WheelData,
 };
-use freya_layout::RenderData;
-use rustc_hash::FxHashMap;
 use winit::event::{Force, MouseButton, TouchPhase};
+
+use crate::EventEmitter;
 
 /// Events emitted in Freya.
 #[derive(Clone, Debug)]
@@ -43,7 +43,7 @@ pub enum FreyaEvent {
 }
 
 impl FreyaEvent {
-    pub fn get_name(&self) -> &'static str {
+    pub fn get_name(&self) -> &str {
         match self {
             Self::Mouse { name, .. } => name,
             Self::Wheel { name, .. } => name,
@@ -158,31 +158,27 @@ struct ElementState {
     mouseover: bool,
 }
 
-/// [`EventsProcessor`] calculates new events based on past and new events.
-///
-/// For example, `mouseleave` indicates the user has left the hovering area of
-/// a particular element, which previously had to enter that area.
-/// At the moment, whether if it has entered or not is defined by the `mouseover` event.
+/// [`EventsProcessor`] stores the elements events states.
 #[derive(Default)]
 pub struct EventsProcessor {
     states: HashMap<ElementId, ElementState>,
 }
 
 impl EventsProcessor {
-    /// Calculate new events according to the last leap and this one
-    pub fn process_events_batch(
+    /// Update the Element states given the new events
+    pub fn process_events(
         &mut self,
         events_to_emit: Vec<DomEvent>,
-        events_filtered: FxHashMap<&str, Vec<(RenderData, FreyaEvent)>>,
-    ) -> Vec<DomEvent> {
-        let mut new_events = Vec::new();
+        events: &[FreyaEvent],
+        event_emitter: &EventEmitter,
+    ) {
+        let cursor_was_moved = events.iter().any(|e| e.get_name() == "mouseover");
 
         for (element, state) in self.states.iter_mut() {
-            // Process mouseover events
             {
                 let mut no_recent_mouseover = true;
 
-                // Check any mouse event at all
+                // Check if the element has been hovered
                 for event in &events_to_emit {
                     if event.name == "mouseover" && &event.element_id == element {
                         no_recent_mouseover = false;
@@ -190,28 +186,20 @@ impl EventsProcessor {
                     }
                 }
 
-                let mouseover_events = events_filtered.get("mouseover");
-
-                let cursor_was_moved = mouseover_events.is_some();
-
-                // `no_recent_mouseover` means that the element was not hovered in the latest check
-                // and `cursor_was_moved` indicates the mouse was moved in the latest check
-                // therefore proving the mouse has moved outside the element area, therefore
-                // the `mouseleave` event must be thrown
-
                 if no_recent_mouseover && state.mouseover && cursor_was_moved {
-                    // And also at least one mouseover event ocurred
-                    new_events.push(DomEvent {
-                        element_id: *element,
-                        name: "mouseleave".to_string(),
-                        data: DomEventData::Mouse(MouseData::new(
-                            Point2D::default(),
-                            Point2D::default(),
-                            Some(MouseButton::Left),
-                        )),
-                    });
+                    event_emitter
+                        .send(DomEvent {
+                            element_id: *element,
+                            name: "mouseleave".to_string(),
+                            data: DomEventData::Mouse(MouseData::new(
+                                Point2D::default(), // TODO: Use actual locations
+                                Point2D::default(), // TODO: Use actual locations
+                                Some(MouseButton::Left),
+                            )),
+                        })
+                        .unwrap();
 
-                    // Indicate the element is no longer being hovered
+                    // Mark the element as no longer being hovered
                     state.mouseover = false;
                 }
             }
@@ -225,10 +213,24 @@ impl EventsProcessor {
                 }
 
                 let node_state = self.states.get_mut(&event.element_id).unwrap();
+
+                if !node_state.mouseover {
+                    event_emitter
+                        .send(DomEvent {
+                            element_id: *id,
+                            name: "mouseenter".to_string(),
+                            data: event.data.clone(),
+                        })
+                        .unwrap();
+                }
+
+                // Mark the element as being hovered
                 node_state.mouseover = true;
             }
         }
 
-        new_events
+        for event in events_to_emit {
+            event_emitter.send(event).unwrap();
+        }
     }
 }

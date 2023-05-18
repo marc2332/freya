@@ -144,65 +144,60 @@ pub fn calculate_node_events<'a>(
 // Calculate events that can actually be triggered
 fn calculate_events_listeners(
     calculated_events: &mut NodesEvents,
-    dom: &FreyaDOM,
-    event_emitter: &EventEmitter,
+    fdom: &FreyaDOM,
     scale_factor: f64,
 ) -> Vec<DomEvent> {
     let mut new_events = Vec::new();
+    let dom = fdom.dom();
 
     for (event_name, event_nodes) in calculated_events.iter_mut() {
-        let listeners = dom.dom().get_listening_sorted(event_name);
+        let derivated_events = if event_name == &"mouseover" {
+            vec![&"mouseover", &"mouseenter"]
+        } else {
+            vec![event_name]
+        };
 
         let mut found_nodes: Vec<(&RenderData, &FreyaEvent)> = Vec::new();
+        for event_name in derivated_events {
+            let listeners = dom.get_listening_sorted(event_name);
+            'event_nodes: for (node, request) in event_nodes.iter() {
+                for listener in &listeners {
+                    if listener.id() == *node.get_id() {
+                        let Style { background, .. } = &*listener.get::<Style>().unwrap();
 
-        'event_nodes: for (node, request) in event_nodes.iter() {
-            for listener in &listeners {
-                if listener.id() == *node.get_id() {
-                    let node_ref = node.get_node(dom);
+                        if background != &Color::TRANSPARENT && event_name == &"wheel" {
+                            break 'event_nodes;
+                        }
 
-                    let node_ref = if let Some(node_ref) = node_ref {
-                        node_ref
-                    } else {
-                        continue 'event_nodes;
-                    };
+                        if background != &Color::TRANSPARENT
+                            && (event_name == &"click"
+                                || event_name == &"touchstart"
+                                || event_name == &"touchend")
+                        {
+                            found_nodes.clear();
+                        }
 
-                    let Style { background, .. } = &*node_ref.get::<Style>().unwrap();
-                    if background != &Color::TRANSPARENT && event_name == &"wheel" {
-                        break 'event_nodes;
-                    }
-
-                    if background != &Color::TRANSPARENT && event_name == &"wheel" {
-                        break 'event_nodes;
-                    }
-
-                    if background != &Color::TRANSPARENT
-                        && (event_name == &"click"
+                        if event_name == &"mouseover"
+                            || event_name == &"mouseenter"
+                            || event_name == &"click"
+                            || event_name == &"keydown"
+                            || event_name == &"keyup"
+                            || event_name == &"touchcancel"
+                            || event_name == &"touchend"
+                            || event_name == &"touchmove"
                             || event_name == &"touchstart"
-                            || event_name == &"touchend")
-                    {
-                        found_nodes.clear();
-                    }
-
-                    if event_name == &"mouseover"
-                        || event_name == &"click"
-                        || event_name == &"keydown"
-                        || event_name == &"keyup"
-                        || event_name == &"touchcancel"
-                        || event_name == &"touchend"
-                        || event_name == &"touchmove"
-                        || event_name == &"touchstart"
-                    {
-                        // Mouseover and click events can be stackked
-                        found_nodes.push((node, request))
-                    } else {
-                        found_nodes = vec![(node, request)]
+                        {
+                            found_nodes.push((node, request))
+                        } else {
+                            found_nodes = vec![(node, request)]
+                        }
                     }
                 }
             }
         }
 
         for (node, request_event) in found_nodes {
-            let node_ref = dom.dom().get(node.node_id).unwrap();
+            let node_ref = dom.get(node.node_id).unwrap();
             let element_id = node_ref.mounted_id().unwrap();
             let event = DomEvent::from_freya_event(
                 event_name,
@@ -211,8 +206,7 @@ fn calculate_events_listeners(
                 Some(node.node_area),
                 scale_factor,
             );
-            new_events.push(event.clone());
-            event_emitter.send(event).unwrap();
+            new_events.push(event);
         }
     }
 
@@ -296,16 +290,11 @@ pub fn process_events(
     let (mut node_events, global_events) =
         calculate_node_events(&layers_nums, layers, events, viewports_collection);
 
-    let emitted_events =
-        calculate_events_listeners(&mut node_events, dom, event_emitter, scale_factor);
+    let emitted_events = calculate_events_listeners(&mut node_events, dom, scale_factor);
 
     calculate_global_events_listeners(global_events, dom, event_emitter, scale_factor);
 
-    let new_processed_events = events_processor.process_events_batch(emitted_events, node_events);
-
-    for event in new_processed_events {
-        event_emitter.send(event).unwrap();
-    }
+    events_processor.process_events(emitted_events, events, event_emitter);
 
     events.clear();
 }
