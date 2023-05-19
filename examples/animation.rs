@@ -13,13 +13,14 @@ fn main() {
 const TARGET: f64 = 500.0;
 
 fn app(cx: Scope) -> Element {
-    let animation = use_animation_transition(cx, TransitionAnimation::new_sine_in_out(700), || {
-        vec![
-            Animate::new_size(0.0, TARGET),
-            Animate::new_color("rgb(33, 158, 188)", "white"),
-            Animate::new_color("rgb(30, 15, 25)", "orange"),
-        ]
-    });
+    let animation =
+        use_animation_transition(cx, TransitionAnimation::new_sine_in_out(700), (), |_| {
+            vec![
+                Transition::new_size(0.0, TARGET),
+                Transition::new_color("rgb(33, 158, 188)", "white"),
+                Transition::new_color("rgb(30, 15, 25)", "orange"),
+            ]
+        });
 
     let size = animation.get(0).unwrap().as_size();
     let background = animation.get(1).unwrap().as_color();

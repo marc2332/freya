@@ -1,32 +1,30 @@
-#![cfg_attr(
-    all(not(debug_assertions), target_os = "windows"),
-    windows_subsystem = "windows"
-)]
-
 use freya::prelude::*;
 
 fn main() {
     launch(app);
 }
 
-fn app(cx: Scope) -> Element {
+#[allow(non_snake_case)]
+fn StatefulSwitch(cx: Scope) -> Element {
     let enabled = use_state(cx, || false);
 
-    let is_enabled = if *enabled.get() { "Yes" } else { "No" };
+    render!(Switch {
+        enabled: *enabled.get(),
+        ontoggled: |_| {
+            enabled.set(!enabled.get());
+        }
+    })
+}
 
-    let cols = 40;
-    let rows = 40;
+fn app(cx: Scope) -> Element {
+    let cols = 100;
+    let rows = 100;
 
     render!(
         container {
             width: "100%",
             height: "100%",
             padding: "2.5",
-            label {
-                height: "35",
-                color: "black",
-                "Is enabled? {is_enabled}"
-            }
             rect {
                 direction: "horizontal",
                 width: "100%",
@@ -39,12 +37,8 @@ fn app(cx: Scope) -> Element {
                             height: "100%",
                             (0..rows).map(|row| {
                                 rsx! {
-                                    Switch {
+                                    StatefulSwitch {
                                         key: "{row}{col}",
-                                        enabled: *enabled.get(),
-                                        ontoggled: |_| {
-                                            enabled.set(!enabled.get());
-                                        }
                                     }
                                 }
                             })

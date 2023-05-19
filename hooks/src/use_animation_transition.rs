@@ -1,5 +1,5 @@
 use dioxus_core::ScopeState;
-use dioxus_hooks::{use_state, UseState};
+use dioxus_hooks::{use_effect, use_memo, use_state, UseFutureDep, UseState};
 use freya_node_state::parse_color;
 use skia_safe::Color;
 use std::time::Duration;
@@ -8,32 +8,51 @@ use uuid::Uuid;
 
 use crate::{Animation, TransitionAnimation};
 
+/// Configure a `Transition` animation.
 #[derive(Clone, Debug, Copy, PartialEq)]
-pub enum Animate {
-    Size(f64, f64, f64),
-    Color(Color, Color, Color),
+pub enum Transition {
+    Size(f64, f64),
+    Color(Color, Color),
 }
 
-impl Animate {
-    pub fn new_size(origin: f64, end: f64) -> Self {
-        Self::Size(origin, end, origin)
+impl Transition {
+    pub fn new_size(start: f64, end: f64) -> Self {
+        Self::Size(start, end)
     }
 
-    pub fn new_color(origin: &str, end: &str) -> Self {
-        let origin = parse_color(origin).unwrap();
+    pub fn new_color(start: &str, end: &str) -> Self {
+        let start = parse_color(start).unwrap();
         let end = parse_color(end).unwrap();
 
-        Self::Color(origin, end, origin)
+        Self::Color(start, end)
     }
+}
 
-    pub fn set_value(&mut self, value: f64) {
-        match self {
-            Self::Size(origin, end, current) => {
-                let road = *end - *origin;
+/// Stores the current state for a [`Transition`].
+#[derive(Clone, Debug, Copy, PartialEq)]
+pub enum TransitionState {
+    Size(f64),
+    Color(Color),
+}
+
+impl From<&Transition> for TransitionState {
+    fn from(value: &Transition) -> Self {
+        match *value {
+            Transition::Size(start, _) => Self::Size(start),
+            Transition::Color(start, _) => Self::Color(start),
+        }
+    }
+}
+
+impl TransitionState {
+    pub fn set_value(&mut self, animate: &Transition, value: f64) {
+        match (self, animate) {
+            (Self::Size(current), Transition::Size(start, end)) => {
+                let road = *end - *start;
                 let walked = (road / 100.0) * value;
                 *current = walked;
             }
-            Self::Color(origin, end, current) => {
+            (Self::Color(current), Transition::Color(start, end)) => {
                 let apply_index = |v: u8, d: u8, value: f64| -> u8 {
                     let road = if d > v { d - v } else { v - d };
                     let walked = (road as f64 / 100.0) * value;
@@ -44,11 +63,12 @@ impl Animate {
                         v - walked.round() as u8
                     }
                 };
-                let r = apply_index(origin.r(), end.r(), value);
-                let g = apply_index(origin.g(), end.g(), value);
-                let b = apply_index(origin.b(), end.b(), value);
+                let r = apply_index(start.r(), end.r(), value);
+                let g = apply_index(start.g(), end.g(), value);
+                let b = apply_index(start.b(), end.b(), value);
                 *current = Color::from_rgb(r, g, b)
             }
+            _ => {}
         }
     }
 
@@ -62,14 +82,14 @@ impl Animate {
 
     pub fn to_size(&self) -> Option<f64> {
         match self {
-            Self::Size(_, _, current) => Some(*current),
+            Self::Size(current) => Some(*current),
             _ => None,
         }
     }
 
     pub fn to_color(&self) -> Option<String> {
         match self {
-            Self::Color(_, _, current) => Some(format!(
+            Self::Color(current) => Some(format!(
                 "rgb({}, {}, {})",
                 current.r(),
                 current.g(),
@@ -79,34 +99,47 @@ impl Animate {
         }
     }
 
-    pub fn clear(&mut self) {
+    pub fn to_raw_color(&self) -> Option<Color> {
         match self {
-            Self::Size(origin, _, current) => {
-                *current = *origin;
+            Self::Color(current) => Some(*current),
+            _ => None,
+        }
+    }
+
+    pub fn clear(&mut self, animate: &Transition) {
+        match (self, animate) {
+            (Self::Size(current), Transition::Size(start, _)) => {
+                *current = *start;
             }
-            Self::Color(origin, _, current) => {
-                *current = *origin;
+            (Self::Color(current), Transition::Color(start, _)) => {
+                *current = *start;
             }
+            _ => {}
         }
     }
 }
 
-/// Manage the lifecyle of an [Animation].
+/// Manage the lifecyle of an [AnimationTransitionManager].
 #[derive(Clone)]
-pub struct AnimationTransitionManager<'a> {
+pub struct TransitionsManager<'a> {
     current_animation_id: &'a UseState<Option<Uuid>>,
-    animations: &'a UseState<Vec<Animate>>,
+    animations: &'a Vec<Transition>,
+    storage: &'a UseState<Vec<TransitionState>>,
     cx: &'a ScopeState,
     transition: TransitionAnimation,
 }
 
-impl<'a> AnimationTransitionManager<'a> {
+impl<'a> TransitionsManager<'a> {
+    /// Animate from the end to the start.
     pub fn reverse(&self) {
+        self.clear();
         let anim = self.transition.to_animation(100.0..=0.0);
         self.run_with(anim);
     }
 
+    /// Animate from the start to the end.
     pub fn start(&self) {
+        self.clear();
         let anim = self.transition.to_animation(0.0..=100.0);
         self.run_with(anim);
     }
@@ -116,6 +149,7 @@ impl<'a> AnimationTransitionManager<'a> {
         let mut index = 0;
 
         let animations = self.animations.clone();
+        let storage = self.storage.clone();
         let current_animation_id = self.current_animation_id.clone();
 
         // Set as current this new animation
@@ -135,9 +169,11 @@ impl<'a> AnimationTransitionManager<'a> {
 
                     // Advance one tick
                     let value = anim.move_value(index);
-                    animations.with_mut(|animations| {
-                        for animation in animations {
-                            animation.set_value(value);
+                    storage.with_mut(|storage| {
+                        for (i, storage) in storage.iter_mut().enumerate() {
+                            if let Some(conf) = animations.get(i) {
+                                storage.set_value(conf, value);
+                            }
                         }
                     });
 
@@ -152,24 +188,39 @@ impl<'a> AnimationTransitionManager<'a> {
         });
     }
 
-    /// Clear the currently running [Animation].
+    /// Clear all the currently running [Transition]
     pub fn clear(&self) {
         self.current_animation_id.set(None);
-        self.animations.with_mut(|animations| {
-            for animation in animations {
-                animation.clear()
+        self.storage.with_mut(|storage| {
+            for (i, storage) in storage.iter_mut().enumerate() {
+                if let Some(conf) = self.animations.get(i) {
+                    storage.clear(conf);
+                }
             }
         })
     }
 
-    /// Check whether there is an [Animation] running or not.
+    /// Check whether there are [Transition]s running or not.
     pub fn is_animating(&self) -> bool {
         self.current_animation_id.is_some()
     }
 
-    /// Get an animation
-    pub fn get(&self, index: usize) -> Option<Animate> {
-        self.animations.current().get(index).copied()
+    /// Check whether the [Transition]s are at the start or at the end.
+    pub fn is_at_start(&self) -> bool {
+        if let Some(storage) = self.get(0) {
+            let anim = self.animations[0];
+            match anim {
+                Transition::Size(start, _) => start == storage.to_size().unwrap_or(start),
+                Transition::Color(start, _) => start == storage.to_raw_color().unwrap_or(start),
+            }
+        } else {
+            true
+        }
+    }
+
+    /// Get an [TransitionState]
+    pub fn get(&self, index: usize) -> Option<TransitionState> {
+        self.storage.current().get(index).copied()
     }
 }
 
@@ -179,8 +230,8 @@ impl<'a> AnimationTransitionManager<'a> {
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app(cx: Scope) -> Element {
-///     let animation = use_animation_transition(cx, TransitionAnimation::new_linear(50), || vec![
-///         Animate::new_size(0.0, 100.0)
+///     let animation = use_animation_transition(cx, TransitionAnimation::new_linear(50), (), |_| vec![
+///         Transition::new_size(0.0, 100.0)
 ///     ]);
 ///
 ///     let progress = animation.get(0).unwrap().as_size();
@@ -198,27 +249,46 @@ impl<'a> AnimationTransitionManager<'a> {
 /// }
 /// ```
 ///
-pub fn use_animation_transition(
+pub fn use_animation_transition<D>(
     cx: &ScopeState,
     transition: TransitionAnimation,
-    init: impl FnOnce() -> Vec<Animate>,
-) -> AnimationTransitionManager {
+    dependencies: D,
+    mut init: impl Fn(D::Out) -> Vec<Transition>,
+) -> TransitionsManager
+where
+    D: UseFutureDep,
+{
     let current_animation_id = use_state(cx, || None);
-    let animations = use_state(cx, init);
+    let animations = use_memo(cx, dependencies.clone(), &mut init);
+    let storage = use_state(cx, || animations_map(animations));
+    let storage_setter = storage.setter();
 
-    AnimationTransitionManager {
+    use_effect(cx, dependencies, move |v| {
+        storage_setter(animations_map(&init(v)));
+        async move {}
+    });
+
+    TransitionsManager {
         current_animation_id,
         animations,
+        storage,
         cx,
         transition,
     }
+}
+
+fn animations_map(animations: &[Transition]) -> Vec<TransitionState> {
+    animations
+        .iter()
+        .map(TransitionState::from)
+        .collect::<Vec<TransitionState>>()
 }
 
 #[cfg(test)]
 mod test {
     use std::time::Duration;
 
-    use crate::{use_animation_transition, Animate, TransitionAnimation};
+    use crate::{use_animation_transition, Transition, TransitionAnimation};
     use dioxus_hooks::use_effect;
     use freya::prelude::*;
     use freya_testing::launch_test;
@@ -228,8 +298,8 @@ mod test {
     pub async fn track_progress() {
         fn use_animation_transition_app(cx: Scope) -> Element {
             let animation =
-                use_animation_transition(cx, TransitionAnimation::new_linear(50), || {
-                    vec![Animate::new_size(0.0, 100.0)]
+                use_animation_transition(cx, TransitionAnimation::new_linear(50), (), |_| {
+                    vec![Transition::new_size(0.0, 100.0)]
                 });
 
             let progress = animation.get(0).unwrap().as_size();

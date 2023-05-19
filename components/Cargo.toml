@@ -16,6 +16,7 @@ freya-elements = { workspace = true }
 freya-node-state = { workspace = true }
 freya-hooks = { workspace = true }
 freya-common = { workspace = true }
+torin = { workspace = true }
 
 dioxus = { workspace = true }
 dioxus-router = { workspace = true }

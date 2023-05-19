@@ -31,12 +31,12 @@ pub fn NodeInspectorStyle<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> 
                                 }
                             }
                         }
-                        AttributeType::Measures((a, b, c, d)) => {
+                        AttributeType::Measures(paddings) => {
                             rsx!{
                                 Property {
                                     key: "{i}",
                                     name: "{name}",
-                                    value: format!("({a}, {b}, {c}, {d})")
+                                    value: paddings.pretty()
                                 }
                             }
                         }
@@ -45,7 +45,7 @@ pub fn NodeInspectorStyle<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> 
                                 Property {
                                     key: "{i}",
                                     name: "{name}",
-                                    value: size.to_string()
+                                    value: size.pretty()
                                 }
                             }
                         }
@@ -72,7 +72,7 @@ pub fn NodeInspectorStyle<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> 
                                 Property {
                                     key: "{i}",
                                     name: "{name}",
-                                    value: direction.to_string()
+                                    value: direction.pretty()
                                 }
                             }
                         }
@@ -81,7 +81,7 @@ pub fn NodeInspectorStyle<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> 
                                 Property {
                                     key: "{i}",
                                     name: "{name}",
-                                    value: display.to_string()
+                                    value: display.pretty()
                                 }
                             }
                         }
