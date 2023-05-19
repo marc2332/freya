@@ -22,6 +22,7 @@ freya-elements = { workspace = true }
 freya-common = { workspace = true }
 freya-core = { workspace = true }
 freya-dom = { workspace = true }
+torin = { workspace = true }
 
 dioxus-rsx = { workspace = true }
 dioxus-native-core = { workspace = true }

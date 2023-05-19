@@ -90,7 +90,7 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
     });
 
     render!(
-        container {
+        rect {
             width: "auto",
             height: "auto",
             direction: "both",

@@ -1,51 +1,37 @@
-use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::NodeId;
-use freya_common::Area;
-use freya_dom::{DioxusNode, FreyaDOM};
-use freya_node_state::References;
-use rustc_hash::FxHashMap;
+use freya_dom::prelude::FreyaDOM;
+use rustc_hash::{FxHashMap, FxHashSet};
 use skia_safe::textlayout::FontCollection;
+use torin::torin::Torin;
 use uuid::Uuid;
 
-use crate::process_paragraph;
+use crate::{measure_paragraph, DioxusDOM};
 
 #[derive(Default, Clone)]
 pub struct Layers {
-    pub layers: FxHashMap<i16, FxHashMap<NodeId, RenderData>>,
-    pub paragraph_elements: FxHashMap<Uuid, FxHashMap<NodeId, Area>>,
-}
-
-/// Collection of info about a specific Node to render
-#[derive(Clone, Debug)]
-pub struct RenderData {
-    pub node_area: Area,
-    pub node_id: NodeId,
-    pub children: Vec<NodeId>,
-}
-
-impl RenderData {
-    #[inline(always)]
-    pub fn get_area(&self) -> &Area {
-        &self.node_area
-    }
-
-    #[inline(always)]
-    pub fn get_id(&self) -> &NodeId {
-        &self.node_id
-    }
-
-    #[inline(always)]
-    pub fn get_children(&self) -> &Vec<NodeId> {
-        &self.children
-    }
-
-    #[inline(always)]
-    pub fn get_node<'a>(&'a self, rdom: &'a FreyaDOM) -> Option<DioxusNode> {
-        rdom.dom().get(self.node_id)
-    }
+    pub layers: FxHashMap<i16, FxHashSet<NodeId>>,
+    pub paragraph_elements: FxHashMap<Uuid, FxHashSet<NodeId>>,
 }
 
 impl Layers {
+    /// Measure all the paragraphs
+    pub fn measure_all_paragraph_elements(
+        &self,
+        rdom: &DioxusDOM,
+        layout: &Torin<NodeId>,
+        font_collection: &FontCollection,
+    ) {
+        for group in self.paragraph_elements.values() {
+            for node_id in group {
+                let node = rdom.get(*node_id);
+                let areas = layout.get(*node_id);
+                if let Some((node, areas)) = node.zip(areas) {
+                    measure_paragraph(&node, &areas.area, font_collection, true);
+                }
+            }
+        }
+    }
+
     /// Measure all the paragraphs registered under the given TextId
     pub fn measure_paragraph_elements(
         &self,
@@ -54,27 +40,16 @@ impl Layers {
         font_collection: &FontCollection,
     ) {
         let group = self.paragraph_elements.get(text_id);
-
+        let layout = dom.layout();
         if let Some(group) = group {
-            for (id, area) in group {
-                let node = dom.dom().get(*id);
-                if let Some(node) = node {
-                    process_paragraph(&node, area, font_collection, true);
+            for node_id in group {
+                let node = dom.rdom().get(*node_id);
+                let areas = layout.get(*node_id);
+
+                if let Some((node, areas)) = node.zip(areas) {
+                    measure_paragraph(&node, &areas.area, font_collection, true);
                 }
             }
-        }
-    }
-
-    /// Register a paragraph element under it's configured TextId
-    pub fn insert_paragraph_element(&mut self, node: &DioxusNode, area: &Area) {
-        let references = node.get::<References>().unwrap();
-        if let Some(cursor_ref) = &references.cursor_ref {
-            let text_group = self
-                .paragraph_elements
-                .entry(cursor_ref.text_id)
-                .or_insert_with(FxHashMap::default);
-
-            text_group.insert(node.id(), *area);
         }
     }
 
@@ -82,7 +57,6 @@ impl Layers {
     /// and the defined layer via the `layer` attribute,
     /// calculate it's corresponding layer and it's relative layer for it's children to inherit
     pub fn calculate_layer(
-        &mut self,
         relative_layer: i16,
         height: i16,
         inherited_relative_layer: i16,
@@ -92,19 +66,12 @@ impl Layers {
     }
 
     /// Insert a Node into a layer
-    pub fn add_element(&mut self, node: &DioxusNode, node_area: &Area, node_layer: i16) {
+    pub fn add_element(&mut self, node_id: NodeId, node_layer: i16) {
         let layer = self
             .layers
             .entry(node_layer)
-            .or_insert_with(FxHashMap::default);
+            .or_insert_with(FxHashSet::default);
 
-        layer.insert(
-            node.id(),
-            RenderData {
-                node_id: node.id(),
-                node_area: *node_area,
-                children: node.child_ids(),
-            },
-        );
+        layer.insert(node_id);
     }
 }
