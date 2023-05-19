@@ -1,13 +1,13 @@
 use std::{any::Any, collections::HashMap, rc::Rc};
 
 use dioxus_core::ElementId;
-use freya_common::{Area, Point2D};
+use dioxus_native_core::NodeId;
 use freya_elements::events::{
     keyboard::{Code, Key, Modifiers},
     KeyboardData, MouseData, TouchData, WheelData,
 };
-use freya_layout::RenderData;
 use rustc_hash::FxHashMap;
+use torin::geometry::{Area, CursorPoint};
 use winit::event::{Force, MouseButton, TouchPhase};
 
 /// Events emitted in Freya.
@@ -16,14 +16,14 @@ pub enum FreyaEvent {
     /// A Mouse Event.
     Mouse {
         name: &'static str,
-        cursor: Point2D,
+        cursor: CursorPoint,
         button: Option<MouseButton>,
     },
     /// A Wheel event.
     Wheel {
         name: &'static str,
-        scroll: Point2D,
-        cursor: Point2D,
+        scroll: CursorPoint,
+        cursor: CursorPoint,
     },
     /// A Keyboard event.
     Keyboard {
@@ -35,7 +35,7 @@ pub enum FreyaEvent {
     /// A Touch event.
     Touch {
         name: &'static str,
-        location: Point2D,
+        location: CursorPoint,
         finger_id: u64,
         phase: TouchPhase,
         force: Option<Force>,
@@ -173,7 +173,7 @@ impl EventsProcessor {
     pub fn process_events_batch(
         &mut self,
         events_to_emit: Vec<DomEvent>,
-        events_filtered: FxHashMap<&str, Vec<(RenderData, FreyaEvent)>>,
+        events_filtered: FxHashMap<&str, Vec<(NodeId, FreyaEvent)>>,
     ) -> Vec<DomEvent> {
         let mut new_events = Vec::new();
 
@@ -205,8 +205,8 @@ impl EventsProcessor {
                         element_id: *element,
                         name: "mouseleave".to_string(),
                         data: DomEventData::Mouse(MouseData::new(
-                            Point2D::default(),
-                            Point2D::default(),
+                            CursorPoint::default(),
+                            CursorPoint::default(),
                             Some(MouseButton::Left),
                         )),
                     });

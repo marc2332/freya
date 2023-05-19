@@ -1,29 +1,37 @@
-use std::fmt::Display;
+use std::sync::{Arc, Mutex};
 
 use dioxus_native_core::exports::shipyard::Component;
+use dioxus_native_core::node::OwnedAttributeValue;
 use dioxus_native_core::node_ref::NodeView;
 use dioxus_native_core::prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State};
-use dioxus_native_core::SendAnyMap;
+use dioxus_native_core::{NodeId, SendAnyMap};
 use dioxus_native_core_macro::partial_derive_state;
-use freya_common::LayoutNotifier;
+use freya_common::NodeReferenceLayout;
+use tokio::sync::mpsc::UnboundedSender;
+use torin::prelude::*;
 
 use crate::CustomAttributeValues;
 
 #[derive(Default, Clone, Debug, Component)]
-pub struct Size {
-    pub width: SizeMode,
-    pub height: SizeMode,
-    pub min_height: SizeMode,
-    pub min_width: SizeMode,
-    pub max_height: SizeMode,
-    pub max_width: SizeMode,
-    pub padding: (f32, f32, f32, f32),
+pub struct SizeState {
+    pub width: Size,
+    pub height: Size,
+    pub minimum_width: Size,
+    pub minimum_height: Size,
+    pub maximum_height: Size,
+    pub maximum_width: Size,
+    pub padding: Paddings,
     pub direction: DirectionMode,
+    pub node_id: NodeId,
+    pub scroll_y: f32,
+    pub scroll_x: f32,
+    pub display: DisplayMode,
+    pub node_ref: Option<UnboundedSender<NodeReferenceLayout>>,
 }
 
 #[partial_derive_state]
-impl State<CustomAttributeValues> for Size {
-    type ParentDependencies = (Self,);
+impl State<CustomAttributeValues> for SizeState {
+    type ParentDependencies = ();
 
     type ChildDependencies = ();
 
@@ -39,6 +47,10 @@ impl State<CustomAttributeValues> for Size {
             "max_width",
             "padding",
             "direction",
+            "scroll_y",
+            "scroll_x",
+            "display",
+            "reference",
         ]))
         .with_tag()
         .with_text();
@@ -51,24 +63,29 @@ impl State<CustomAttributeValues> for Size {
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
         context: &SendAnyMap,
     ) -> bool {
-        let layout_notifier = context.get::<LayoutNotifier>().unwrap();
+        let torin_layout = context.get::<Arc<Mutex<Torin<NodeId>>>>().unwrap();
         let scale_factor = context.get::<f32>().unwrap();
 
-        let mut width = SizeMode::default();
-        let mut height = SizeMode::default();
-        let mut min_height = SizeMode::default();
-        let mut min_width = SizeMode::default();
-        let mut max_height = SizeMode::default();
-        let mut max_width = SizeMode::default();
-        let mut padding = (0.0, 0.0, 0.0, 0.0);
+        let mut width = Size::default();
+        let mut height = Size::default();
+        let mut minimum_height = Size::default();
+        let mut minimum_width = Size::default();
+        let mut maximum_height = Size::default();
+        let mut maximum_width = Size::default();
+        let mut padding = Paddings::default();
+        let mut scroll_y = 0.0;
+        let mut scroll_x = 0.0;
+        let mut display = DisplayMode::Normal;
+        let mut node_ref = None;
+
         let mut direction = if let Some("label") = node_view.tag() {
-            DirectionMode::Both
+            DirectionMode::Horizontal
         } else if let Some("paragraph") = node_view.tag() {
-            DirectionMode::Both
+            DirectionMode::Horizontal
         } else if let Some("text") = node_view.tag() {
-            DirectionMode::Both
+            DirectionMode::Horizontal
         } else if node_view.text().is_some() {
-            DirectionMode::Both
+            DirectionMode::Horizontal
         } else {
             DirectionMode::Vertical
         };
@@ -96,7 +113,7 @@ impl State<CustomAttributeValues> for Size {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
                             if let Some(new_min_height) = parse_size(attr, *scale_factor) {
-                                min_height = new_min_height;
+                                minimum_height = new_min_height;
                             }
                         }
                     }
@@ -104,7 +121,7 @@ impl State<CustomAttributeValues> for Size {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
                             if let Some(new_min_width) = parse_size(attr, *scale_factor) {
-                                min_width = new_min_width;
+                                minimum_width = new_min_width;
                             }
                         }
                     }
@@ -112,7 +129,7 @@ impl State<CustomAttributeValues> for Size {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
                             if let Some(new_max_height) = parse_size(attr, *scale_factor) {
-                                max_height = new_max_height;
+                                maximum_height = new_max_height;
                             }
                         }
                     }
@@ -120,7 +137,7 @@ impl State<CustomAttributeValues> for Size {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
                             if let Some(new_max_width) = parse_size(attr, *scale_factor) {
-                                max_width = new_max_width;
+                                maximum_width = new_max_width;
                             }
                         }
                     }
@@ -144,6 +161,33 @@ impl State<CustomAttributeValues> for Size {
                             };
                         }
                     }
+                    "scroll_y" => {
+                        let attr = attr.value.as_text();
+                        if let Some(attr) = attr {
+                            let scroll: f32 = attr.parse().unwrap();
+                            scroll_y = scroll * scale_factor;
+                        }
+                    }
+                    "scroll_x" => {
+                        let attr = attr.value.as_text();
+                        if let Some(attr) = attr {
+                            let scroll: f32 = attr.parse().unwrap();
+                            scroll_x = scroll * scale_factor;
+                        }
+                    }
+                    "display" => {
+                        if let Some(new_display) = attr.value.as_text() {
+                            display = parse_display(new_display)
+                        }
+                    }
+                    "reference" => {
+                        if let OwnedAttributeValue::Custom(CustomAttributeValues::Reference(
+                            reference,
+                        )) = attr.value
+                        {
+                            node_ref = Some(reference.0.clone());
+                        }
+                    }
                     _ => {
                         println!("Unsupported attribute <{}>", attr.attribute.name);
                     }
@@ -153,59 +197,72 @@ impl State<CustomAttributeValues> for Size {
 
         let changed = (width != self.width)
             || (height != self.height)
-            || (min_height != self.min_height)
-            || (min_width != self.min_width)
-            || (max_height != self.max_height)
-            || (max_width != self.max_width)
+            || (minimum_width != self.minimum_width)
+            || (minimum_height != self.minimum_height)
+            || (maximum_width != self.maximum_width)
+            || (maximum_height != self.maximum_height)
             || (padding != self.padding)
-            || (direction != self.direction);
+            || (node_view.node_id() != self.node_id)
+            || (direction != self.direction)
+            || (scroll_x != self.scroll_x)
+            || (scroll_y != self.scroll_y)
+            || (display != self.display);
 
         if changed {
-            *layout_notifier.lock().unwrap() = true;
+            torin_layout.lock().unwrap().invalidate(node_view.node_id());
         }
 
         *self = Self {
             width,
             height,
-            min_height,
-            min_width,
-            max_height,
-            max_width,
+            minimum_height,
+            minimum_width,
+            maximum_height,
+            maximum_width,
             padding,
             direction,
+            node_id: node_view.node_id(),
+            scroll_x,
+            scroll_y,
+            display,
+            node_ref,
         };
         changed
     }
 }
 
-pub fn parse_padding(padding: &str, scale_factor: f32) -> Option<(f32, f32, f32, f32)> {
-    let mut padding_config = (0.0, 0.0, 0.0, 0.0);
+pub fn parse_display(value: &str) -> DisplayMode {
+    match value {
+        "center" => DisplayMode::Center,
+        _ => DisplayMode::Normal,
+    }
+}
+
+pub fn parse_padding(padding: &str, scale_factor: f32) -> Option<Paddings> {
+    let mut padding_config = Paddings::default();
     let mut paddings = padding.split_ascii_whitespace();
 
     match paddings.clone().count() {
         // Same in each directions
         1 => {
-            padding_config.0 = paddings.next()?.parse::<f32>().ok()? * scale_factor;
-            padding_config.1 = padding_config.0;
-            padding_config.2 = padding_config.0;
-            padding_config.3 = padding_config.0;
+            padding_config.fill_all(paddings.next()?.parse::<f32>().ok()? * scale_factor);
         }
         // By vertical and horizontal
         2 => {
             // Vertical
-            padding_config.0 = paddings.next()?.parse::<f32>().ok()? * scale_factor;
-            padding_config.2 = padding_config.0;
+            padding_config.fill_vertical(paddings.next()?.parse::<f32>().ok()? * scale_factor);
 
             // Horizontal
-            padding_config.1 = paddings.next()?.parse::<f32>().ok()? * scale_factor;
-            padding_config.3 = padding_config.1;
+            padding_config.fill_horizontal(paddings.next()?.parse::<f32>().ok()? * scale_factor)
         }
         // Each directions
         4 => {
-            padding_config.0 = paddings.next()?.parse::<f32>().ok()? * scale_factor;
-            padding_config.1 = paddings.next()?.parse::<f32>().ok()? * scale_factor;
-            padding_config.2 = paddings.next()?.parse::<f32>().ok()? * scale_factor;
-            padding_config.3 = paddings.next()?.parse::<f32>().ok()? * scale_factor;
+            padding_config = Paddings::new(
+                paddings.next()?.parse::<f32>().ok()? * scale_factor,
+                paddings.next()?.parse::<f32>().ok()? * scale_factor,
+                paddings.next()?.parse::<f32>().ok()? * scale_factor,
+                paddings.next()?.parse::<f32>().ok()? * scale_factor,
+            );
         }
         _ => {}
     }
@@ -213,23 +270,22 @@ pub fn parse_padding(padding: &str, scale_factor: f32) -> Option<(f32, f32, f32,
     Some(padding_config)
 }
 
-pub fn parse_size(size: &str, scale_factor: f32) -> Option<SizeMode> {
-    if size == "stretch" {
-        Some(SizeMode::Percentage(100.0))
-    } else if size == "auto" {
-        Some(SizeMode::Auto)
+pub fn parse_size(size: &str, scale_factor: f32) -> Option<Size> {
+    if size == "auto" {
+        Some(Size::Inner)
     } else if size.contains("calc") {
-        Some(SizeMode::Calculation(parse_calc(size, scale_factor)?))
+        Some(Size::DynamicCalculations(parse_calc(size, scale_factor)?))
     } else if size.contains('%') {
-        Some(SizeMode::Percentage(size.replace('%', "").parse().ok()?))
-    } else if size.contains("calc") {
-        Some(SizeMode::Calculation(parse_calc(size, scale_factor)?))
+        Some(Size::Percentage(Length::new(
+            size.replace('%', "").parse().ok()?,
+        )))
     } else {
-        Some(SizeMode::Manual((size.parse::<f32>().ok()?) * scale_factor))
+        Some(Size::Pixels(Length::new(
+            (size.parse::<f32>().ok()?) * scale_factor,
+        )))
     }
 }
-
-pub fn parse_calc(mut size: &str, scale_factor: f32) -> Option<Vec<CalcType>> {
+pub fn parse_calc(mut size: &str, scale_factor: f32) -> Option<Vec<DynamicCalculation>> {
     let mut calcs = Vec::new();
 
     size = size.strip_prefix("calc(")?;
@@ -239,87 +295,23 @@ pub fn parse_calc(mut size: &str, scale_factor: f32) -> Option<Vec<CalcType>> {
 
     for val in vals {
         if val.contains('%') {
-            calcs.push(CalcType::Percentage(val.replace('%', "").parse().ok()?));
+            calcs.push(DynamicCalculation::Percentage(
+                val.replace('%', "").parse().ok()?,
+            ));
         } else if val == "+" {
-            calcs.push(CalcType::Add);
+            calcs.push(DynamicCalculation::Add);
         } else if val == "-" {
-            calcs.push(CalcType::Sub);
+            calcs.push(DynamicCalculation::Sub);
         } else if val == "/" {
-            calcs.push(CalcType::Div);
+            calcs.push(DynamicCalculation::Div);
         } else if val == "*" {
-            calcs.push(CalcType::Mul);
+            calcs.push(DynamicCalculation::Mul);
         } else {
-            calcs.push(CalcType::Manual(val.parse::<f32>().ok()? * scale_factor));
+            calcs.push(DynamicCalculation::Pixels(
+                val.parse::<f32>().ok()? * scale_factor,
+            ));
         }
     }
 
     Some(calcs)
-}
-
-#[derive(Default, Copy, Clone, Debug, PartialEq, Eq)]
-pub enum DirectionMode {
-    #[default]
-    Vertical,
-    Horizontal,
-    Both,
-}
-
-impl Display for DirectionMode {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            DirectionMode::Vertical => f.write_str("vertical"),
-            DirectionMode::Horizontal => f.write_str("horizontal"),
-            DirectionMode::Both => f.write_str("both"),
-        }
-    }
-}
-
-#[derive(Default, Clone, Debug, PartialEq)]
-pub enum SizeMode {
-    #[default]
-    Auto,
-    Calculation(Vec<CalcType>),
-    Percentage(f32),
-    Manual(f32),
-}
-
-impl Display for SizeMode {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            SizeMode::Auto => f.write_str("auto"),
-            SizeMode::Manual(s) => f.write_fmt(format_args!("{s}")),
-            SizeMode::Calculation(calcs) => f.write_fmt(format_args!(
-                "calc({})",
-                calcs
-                    .iter()
-                    .map(|c| c.to_string())
-                    .collect::<Vec<String>>()
-                    .join(" ")
-            )),
-            SizeMode::Percentage(p) => f.write_fmt(format_args!("{p}%")),
-        }
-    }
-}
-
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub enum CalcType {
-    Sub,
-    Mul,
-    Div,
-    Add,
-    Percentage(f32),
-    Manual(f32),
-}
-
-impl Display for CalcType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            CalcType::Sub => f.write_str("-"),
-            CalcType::Mul => f.write_str("*"),
-            CalcType::Div => f.write_str("/"),
-            CalcType::Add => f.write_str("+"),
-            CalcType::Percentage(p) => f.write_fmt(format_args!("{p}%")),
-            CalcType::Manual(s) => f.write_fmt(format_args!("{s}")),
-        }
-    }
 }

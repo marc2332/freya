@@ -16,9 +16,15 @@ shared = []
 [dependencies]
 freya-node-state = { workspace = true }
 freya-common = { workspace = true }
+torin = { workspace = true }
 
 dioxus-rsx = { workspace = true }
 dioxus-native-core = { workspace = true }
 dioxus-core-macro = { workspace = true }
 dioxus-hooks = { workspace = true }
 dioxus-core = { workspace = true }
+
+skia-safe = { workspace = true }
+
+uuid = { version =  "1.2.2", features = ["v4"]}
+rustc-hash = { workspace = true }

@@ -1,11 +1,12 @@
 use dioxus_native_core::NodeId;
-use freya_common::{Area, EventMessage, Size2D};
+use freya_common::EventMessage;
 use freya_core::process_render;
 use freya_core::{process_layout, ViewportsCollection};
-use freya_dom::FreyaDOM;
+use freya_dom::prelude::FreyaDOM;
 use freya_layout::Layers;
 use std::ffi::CString;
 use std::num::NonZeroU32;
+use torin::geometry::{Area, Size2D};
 
 use gl::types::*;
 use glutin::context::GlProfile;
@@ -230,20 +231,20 @@ impl<T: Clone> WindowEnv<T> {
             font_collection,
             layers,
             &mut (canvas, (&mut matrices)),
-            |dom, render_node, font_collection, viewports_collection, (canvas, matrices)| {
+            |dom, node_id, area, font_collection, viewports_collection, (canvas, matrices)| {
                 let render_wireframe = if let Some(hovered_node) = &hovered_node {
                     hovered_node
                         .lock()
                         .unwrap()
-                        .map(|id| id == *render_node.get_id())
+                        .map(|id| id == *node_id)
                         .unwrap_or_default()
                 } else {
                     false
                 };
-                if let Some(dioxus_node) = render_node.get_node(dom) {
+                if let Some(dioxus_node) = dom.rdom().get(*node_id) {
                     render_skia(
                         canvas,
-                        render_node,
+                        area,
                         &dioxus_node,
                         font_collection,
                         viewports_collection,
