@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
 use dioxus_core::{AttributeValue, Scope, ScopeState};
-use freya_common::Area;
 use freya_node_state::{CanvasReference, CustomAttributeValues};
 use skia_safe::{textlayout::FontCollection, Canvas};
+use torin::geometry::Area;
 use uuid::Uuid;
 
 pub type RenderCallback = Box<dyn Fn(&mut Canvas, &FontCollection, Area)>;

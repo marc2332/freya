@@ -8,13 +8,12 @@ use bytes::Bytes;
 use dioxus_core::AttributeValue;
 use dioxus_core::Scope;
 use dioxus_native_core::node::FromAnyValue;
-use freya_common::Area;
 use freya_common::CursorLayoutResponse;
 use freya_common::NodeReferenceLayout;
-use freya_common::Point2D;
 use skia_safe::textlayout::FontCollection;
 use skia_safe::Canvas;
 use tokio::sync::mpsc::UnboundedSender;
+use torin::geometry::{Area, CursorPoint};
 use uuid::Uuid;
 
 /// Image Reference
@@ -77,18 +76,18 @@ unsafe impl Send for CanvasReference {}
 pub struct CursorReference {
     pub text_id: Uuid,
     #[allow(clippy::type_complexity)]
-    pub cursor_selections: Arc<Mutex<Option<(Point2D, Point2D)>>>,
-    pub cursor_position: Arc<Mutex<Option<Point2D>>>,
+    pub cursor_selections: Arc<Mutex<Option<(CursorPoint, CursorPoint)>>>,
+    pub cursor_position: Arc<Mutex<Option<CursorPoint>>>,
     pub agent: UnboundedSender<CursorLayoutResponse>,
     pub cursor_id: Arc<Mutex<Option<usize>>>,
 }
 
 impl CursorReference {
-    pub fn set_cursor_selections(&self, cursor_selections: Option<(Point2D, Point2D)>) {
+    pub fn set_cursor_selections(&self, cursor_selections: Option<(CursorPoint, CursorPoint)>) {
         *self.cursor_selections.lock().unwrap() = cursor_selections;
     }
 
-    pub fn set_cursor_position(&self, cursor_position: Option<Point2D>) {
+    pub fn set_cursor_position(&self, cursor_position: Option<CursorPoint>) {
         *self.cursor_position.lock().unwrap() = cursor_position;
     }
 

@@ -6,7 +6,7 @@ use freya_core::{
     events::{DomEvent, EventsProcessor, FreyaEvent},
     process_events, EventEmitter, EventReceiver, EventsQueue, ViewportsCollection,
 };
-use freya_dom::SafeDOM;
+use freya_dom::prelude::SafeDOM;
 use freya_layout::Layers;
 use futures::FutureExt;
 use futures::{
@@ -114,9 +114,17 @@ impl<State: 'static + Clone> App<State> {
         let scale_factor = self.window_env.window.scale_factor() as f32;
         let mutations = self.vdom.render_immediate();
 
-        let (repaint, relayout) = self.rdom.get_mut().apply_mutations(mutations, scale_factor);
+        let is_empty = mutations.dirty_scopes.is_empty()
+            && mutations.edits.is_empty()
+            && mutations.templates.is_empty();
 
-        if repaint || relayout {
+        let (repaint, relayout) = if !is_empty {
+            self.rdom.get_mut().apply_mutations(mutations, scale_factor)
+        } else {
+            (false, false)
+        };
+
+        if repaint {
             self.mutations_sender.as_ref().map(|s| s.send(()));
         }
 
@@ -129,8 +137,6 @@ impl<State: 'static + Clone> App<State> {
         let mut cx = std::task::Context::from_waker(waker);
 
         loop {
-            self.provide_vdom_contexts();
-
             {
                 let fut = async {
                     select! {
@@ -156,9 +162,11 @@ impl<State: 'static + Clone> App<State> {
             let (must_repaint, must_relayout) = self.apply_vdom_changes();
 
             if must_relayout {
-                self.request_redraw();
+                self.window_env.window.request_redraw();
             } else if must_repaint {
-                self.request_rerender();
+                self.proxy
+                    .send_event(EventMessage::RequestRerender)
+                    .unwrap();
             }
         }
     }
@@ -179,9 +187,10 @@ impl<State: 'static + Clone> App<State> {
 
     /// Measure the layout
     pub fn process_layout(&mut self) {
+        let dom = self.rdom.get();
         let (layers, viewports) = self
             .window_env
-            .process_layout(&self.rdom.get(), &mut self.font_collection);
+            .process_layout(&dom, &mut self.font_collection);
         self.layers = layers;
         self.viewports_collection = viewports;
     }
@@ -189,18 +198,6 @@ impl<State: 'static + Clone> App<State> {
     /// Push an event to the events queue
     pub fn push_event(&mut self, event: FreyaEvent) {
         self.events.push(event);
-    }
-
-    /// Request a redraw
-    pub fn request_redraw(&self) {
-        self.window_env.request_redraw();
-    }
-
-    /// Request a rerender
-    pub fn request_rerender(&self) {
-        self.proxy
-            .send_event(EventMessage::RequestRerender)
-            .unwrap();
     }
 
     /// Replace a VirtualDOM Template
@@ -221,6 +218,7 @@ impl<State: 'static + Clone> App<State> {
 
     /// Resize the Window
     pub fn resize(&mut self, size: PhysicalSize<u32>) {
+        self.rdom.get().layout().reset();
         self.window_env.resize(size);
     }
 

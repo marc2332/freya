@@ -1,11 +1,11 @@
-use freya_common::Point2D;
+use torin::geometry::CursorPoint;
 pub use winit::event::{Force, TouchPhase};
 
 /// Data of a Touch event.
 #[derive(Debug, Clone)]
 pub struct TouchData {
-    pub screen_coordinates: Point2D,
-    pub element_coordinates: Point2D,
+    pub screen_coordinates: CursorPoint,
+    pub element_coordinates: CursorPoint,
     pub finger_id: u64,
     pub phase: TouchPhase,
     pub force: Option<Force>,
@@ -13,8 +13,8 @@ pub struct TouchData {
 
 impl TouchData {
     pub fn new(
-        screen_coordinates: Point2D,
-        element_coordinates: Point2D,
+        screen_coordinates: CursorPoint,
+        element_coordinates: CursorPoint,
         finger_id: u64,
         phase: TouchPhase,
         force: Option<Force>,
@@ -29,12 +29,12 @@ impl TouchData {
     }
 
     /// Get the touch coordinates relative to the window bounds.
-    pub fn get_screen_coordinates(&self) -> Point2D {
+    pub fn get_screen_coordinates(&self) -> CursorPoint {
         self.screen_coordinates
     }
 
     /// Get the touch coordinates relatives to the element bounds.
-    pub fn get_element_coordinates(&self) -> Point2D {
+    pub fn get_element_coordinates(&self) -> CursorPoint {
         self.element_coordinates
     }
 

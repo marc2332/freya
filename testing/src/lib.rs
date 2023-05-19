@@ -6,7 +6,6 @@ use dioxus_native_core::prelude::TextNode;
 use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::tree::TreeRef;
 use dioxus_native_core::NodeId;
-use freya_common::{Area, Size2D};
 use freya_core::events::EventsProcessor;
 use freya_core::{
     events::DomEvent,
@@ -14,13 +13,14 @@ use freya_core::{
     EventEmitter, EventReceiver,
 };
 use freya_core::{process_events, process_layout, ViewportsCollection};
-use freya_dom::{DioxusNode, FreyaDOM, SafeDOM};
+use freya_dom::prelude::{DioxusNode, FreyaDOM, SafeDOM};
 use freya_layout::Layers;
 use freya_node_state::CustomAttributeValues;
 use rustc_hash::FxHashMap;
 use skia_safe::textlayout::FontCollection;
 use skia_safe::FontMgr;
 use tokio::sync::mpsc::unbounded_channel;
+use torin::geometry::{Area, Size2D};
 
 pub use freya_core::events::FreyaEvent;
 pub use freya_elements::events::mouse::MouseButton;
@@ -44,7 +44,7 @@ impl TestUtils {
         let utils = self.clone();
 
         let dom = self.sdom.get();
-        let rdom = dom.dom();
+        let rdom = dom.rdom();
 
         let height = rdom.tree_ref().height(node_id).unwrap();
         let children_ids = rdom.tree_ref().children_ids(node_id);
@@ -106,15 +106,12 @@ impl TestNode {
 
     /// Get the Node layout
     pub fn layout(&self) -> Option<Area> {
-        let layers = &self.utils.layers.lock().unwrap().layers;
-        for layer in layers.values() {
-            for (id, node) in layer {
-                if id == &self.node_id {
-                    return Some(node.node_area);
-                }
-            }
-        }
-        None
+        self.utils()
+            .sdom
+            .get()
+            .layout()
+            .get(self.node_id)
+            .map(|l| l.area)
     }
 
     /// Get a mutable reference to the test utils.
@@ -125,7 +122,7 @@ impl TestNode {
     /// Get the NodeId from the parent
     pub fn parent_id(&self) -> Option<NodeId> {
         let fdom = self.utils().sdom.get();
-        let dom = fdom.dom();
+        let dom = fdom.rdom();
         let node = dom.get(self.node_id).unwrap();
         node.parent_id()
     }
@@ -159,7 +156,7 @@ impl TestingHandler {
     }
 
     /// Wait and apply new changes
-    pub async fn wait_for_update(&mut self) -> bool {
+    pub async fn wait_for_update(&mut self) -> (bool, bool) {
         self.wait_for_work(self.config.size());
 
         let vdom = &mut self.vdom;
@@ -181,17 +178,23 @@ impl TestingHandler {
 
         let mutations = self.vdom.render_immediate();
 
-        let (must_repaint, _) = self
+        let (must_repaint, must_relayout) = self
             .utils
             .sdom
             .get_mut()
             .apply_mutations(mutations, SCALE_FACTOR as f32);
+
         self.wait_for_work(self.config.size());
-        must_repaint
+
+        (must_repaint, must_relayout)
     }
 
     /// Wait for layout and events to be processed
     pub fn wait_for_work(&mut self, size: Size2D) {
+        // Clear cached results
+        self.utils.sdom.get_mut().layout().reset();
+
+        // Measure layout
         let (layers, viewports) = process_layout(
             &self.utils.sdom.get(),
             Area {
@@ -225,7 +228,7 @@ impl TestingHandler {
     pub fn root(&mut self) -> TestNode {
         let root_id = {
             let dom = self.utils.sdom.get();
-            let rdom = dom.dom();
+            let rdom = dom.rdom();
             rdom.root_id()
         };
 

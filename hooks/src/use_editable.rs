@@ -5,11 +5,12 @@ use std::{
 
 use dioxus_core::{AttributeValue, Scope, ScopeState};
 use dioxus_hooks::{use_effect, use_ref, use_state, UseRef, UseState};
-use freya_common::{CursorLayoutResponse, EventMessage, Point2D};
+use freya_common::{CursorLayoutResponse, EventMessage};
 use freya_elements::events::{KeyboardData, MouseData};
 use freya_node_state::{CursorReference, CustomAttributeValues};
 pub use ropey::Rope;
 use tokio::sync::{mpsc::unbounded_channel, mpsc::UnboundedSender};
+use torin::geometry::CursorPoint;
 use uuid::Uuid;
 use winit::event_loop::EventLoopProxy;
 
@@ -50,7 +51,7 @@ pub type EditorState = UseState<RopeEditor>;
 pub struct UseEditable {
     pub(crate) editor: EditorState,
     pub(crate) cursor_reference: CursorReference,
-    pub(crate) selecting_text_with_mouse: UseRef<Option<Point2D>>,
+    pub(crate) selecting_text_with_mouse: UseRef<Option<CursorPoint>>,
     pub(crate) event_loop_proxy: Option<EventLoopProxy<EventMessage>>,
 }
 

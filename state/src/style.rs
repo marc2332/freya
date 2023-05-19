@@ -1,12 +1,9 @@
-use std::fmt::Display;
-
 use dioxus_native_core::exports::shipyard::Component;
 use dioxus_native_core::node::OwnedAttributeValue;
 use dioxus_native_core::node_ref::NodeView;
 use dioxus_native_core::prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State};
 use dioxus_native_core::SendAnyMap;
 use dioxus_native_core_macro::partial_derive_state;
-use freya_common::LayoutNotifier;
 use skia_safe::Color;
 
 use crate::{parse_color, CustomAttributeValues};
@@ -19,8 +16,6 @@ pub struct Style {
     pub radius: f32,
     pub image_data: Option<Vec<u8>>,
     pub svg_data: Option<Vec<u8>>,
-    pub display: DisplayMode,
-    pub text: Option<String>,
 }
 
 #[partial_derive_state]
@@ -31,8 +26,8 @@ impl State<CustomAttributeValues> for Style {
 
     type NodeDependencies = ();
 
-    const NODE_MASK: NodeMaskBuilder<'static> = NodeMaskBuilder::new()
-        .with_attrs(AttributeMaskBuilder::Some(&[
+    const NODE_MASK: NodeMaskBuilder<'static> =
+        NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[
             "background",
             "layer",
             "shadow",
@@ -40,9 +35,7 @@ impl State<CustomAttributeValues> for Style {
             "image_data",
             "svg_data",
             "svg_content",
-            "display",
-        ]))
-        .with_text();
+        ]));
 
     fn update<'a>(
         &mut self,
@@ -52,7 +45,6 @@ impl State<CustomAttributeValues> for Style {
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
         context: &SendAnyMap,
     ) -> bool {
-        let layout_notifier = context.get::<LayoutNotifier>().unwrap();
         let scale_factor = context.get::<f32>().unwrap();
 
         let mut background = Color::TRANSPARENT;
@@ -61,7 +53,6 @@ impl State<CustomAttributeValues> for Style {
         let mut radius = 0.0;
         let mut image_data = None;
         let mut svg_data = None;
-        let mut display = DisplayMode::Normal;
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
@@ -72,11 +63,6 @@ impl State<CustomAttributeValues> for Style {
                             if let Some(new_back) = new_back {
                                 background = new_back;
                             }
-                        }
-                    }
-                    "display" => {
-                        if let Some(new_display) = attr.value.as_text() {
-                            display = parse_display(new_display)
                         }
                     }
                     "layer" => {
@@ -130,15 +116,7 @@ impl State<CustomAttributeValues> for Style {
             || (shadow != self.shadow)
             || (radius != self.radius)
             || (image_data != self.image_data)
-            || (display != self.display)
             || (svg_data != self.svg_data);
-
-        let changed_size =
-            (display != self.display) || (node_view.text().map(|v| v.to_owned()) != self.text);
-
-        if changed_size {
-            *layout_notifier.lock().unwrap() = true;
-        }
 
         *self = Self {
             background,
@@ -147,8 +125,6 @@ impl State<CustomAttributeValues> for Style {
             radius,
             image_data,
             svg_data,
-            display,
-            text: node_view.text().map(|v| v.to_owned()),
         };
         changed
     }
@@ -164,29 +140,6 @@ pub fn parse_shadow(value: &str) -> Option<ShadowSettings> {
         size: shadow_values.next()?.parse().ok()?,
         color: parse_color(shadow_values.next()?)?,
     })
-}
-
-pub fn parse_display(value: &str) -> DisplayMode {
-    match value {
-        "center" => DisplayMode::Center,
-        _ => DisplayMode::Normal,
-    }
-}
-
-#[derive(Default, Clone, Debug, PartialEq, Eq)]
-pub enum DisplayMode {
-    #[default]
-    Normal,
-    Center,
-}
-
-impl Display for DisplayMode {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            DisplayMode::Normal => f.write_str("normal"),
-            DisplayMode::Center => f.write_str("center"),
-        }
-    }
 }
 
 #[derive(Default, Clone, Debug, PartialEq)]
