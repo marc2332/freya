@@ -56,15 +56,14 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
     let focus_id = focus.attribute(cx);
 
     let onclick = move |ev| {
+        focus.focus();
         if let Some(onclick) = &cx.props.onclick {
             onclick.call(ev)
         }
     };
 
-    let onmouseover = move |_| {
-        if *status.get() != ButtonStatus::Hovering {
-            status.set(ButtonStatus::Hovering);
-        }
+    let onmouseenter = move |_| {
+        status.set(ButtonStatus::Hovering);
     };
 
     let onmouseleave = move |_| {
@@ -78,7 +77,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
     let color = theme.button.font_theme.color;
 
     render!(
-        container {
+        rect {
             width: "auto",
             height: "auto",
             direction: "both",
@@ -87,7 +86,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
             role: "button",
             container {
                 onclick: onclick,
-                onmouseover: onmouseover,
+                onmouseenter: onmouseenter,
                 onmouseleave: onmouseleave,
                 width: "auto",
                 height: "auto",

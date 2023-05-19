@@ -1,11 +1,11 @@
 use dioxus_native_core::real_dom::NodeImmutable;
-use freya_dom::DioxusNode;
-use freya_layout::RenderData;
+use freya_dom::prelude::DioxusNode;
 use freya_node_state::{References, Style};
 use skia_safe::{BlurStyle, Canvas, MaskFilter, Paint, PaintStyle, Path, PathDirection, Rect};
+use torin::geometry::Area;
 
 /// Render a `rect` or a `container` element
-pub fn render_rect_container(render_node: &RenderData, node_ref: &DioxusNode, canvas: &mut Canvas) {
+pub fn render_rect_container(area: &Area, node_ref: &DioxusNode, canvas: &mut Canvas) {
     let node_style = &*node_ref.get::<Style>().unwrap();
 
     let mut paint = Paint::default();
@@ -16,7 +16,7 @@ pub fn render_rect_container(render_node: &RenderData, node_ref: &DioxusNode, ca
     let radius = node_style.radius;
     let radius = if radius < 0.0 { 0.0 } else { radius };
 
-    let area = render_node.node_area.to_f32();
+    let area = area.to_f32();
 
     let mut path = Path::new();
     path.add_round_rect(

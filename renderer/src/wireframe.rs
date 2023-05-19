@@ -1,22 +1,22 @@
-use freya_layout::RenderData;
 use skia_safe::{Canvas, Color, Paint, PaintStyle};
+use torin::geometry::Area;
 
 /// Render a wireframe around the given node
-pub fn render_wireframe(canvas: &mut Canvas, render_node: &RenderData) {
+pub fn render_wireframe(canvas: &mut Canvas, area: &Area) {
     let mut paint = Paint::default();
 
     paint.set_anti_alias(true);
     paint.set_style(PaintStyle::Fill);
     paint.set_color(Color::MAGENTA);
 
-    let x = render_node.node_area.min_x();
-    let y = render_node.node_area.min_y();
+    let x = area.min_x();
+    let y = area.min_y();
 
-    let x2 = x + render_node.node_area.width();
-    let y2 = if render_node.node_area.height() < 0.0 {
+    let x2 = x + area.width();
+    let y2 = if area.height() < 0.0 {
         y
     } else {
-        y + render_node.node_area.height()
+        y + area.height()
     };
 
     canvas.draw_line((x, y), (x2, y), &paint);

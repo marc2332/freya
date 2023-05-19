@@ -12,6 +12,7 @@ keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
 [dependencies]
+torin = { workspace = true }
 freya-common = { workspace = true }
 
 dioxus-rsx = { workspace = true }

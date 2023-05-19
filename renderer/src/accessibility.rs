@@ -3,14 +3,18 @@ use accesskit::{
     Role, Tree, TreeUpdate,
 };
 use accesskit_winit::Adapter;
-use freya_dom::FreyaDOM;
-use freya_layout::RenderData;
+use dioxus_native_core::{
+    prelude::{NodeType, TextNode},
+    real_dom::NodeImmutable,
+};
+use freya_dom::prelude::DioxusNode;
 use freya_node_state::AccessibilitySettings;
 use std::{
     num::NonZeroU128,
     sync::{Arc, Mutex},
 };
 use tokio::sync::watch;
+use torin::prelude::NodeAreas;
 
 pub type SharedAccessibilityState = Arc<Mutex<AccessibilityState>>;
 
@@ -54,15 +58,15 @@ impl AccessibilityState {
     /// Add an Accessibility Node to the Tree.
     pub fn add_element(
         &mut self,
-        render_node: &RenderData,
+        dioxus_node: &DioxusNode,
+        node_areas: &NodeAreas,
         accessibility_id: AccessibilityId,
         node_accessibility: &AccessibilitySettings,
-        dom: &FreyaDOM,
     ) {
         let mut builder = NodeBuilder::new(Role::Unknown);
 
         // Set children
-        let children = render_node.get_accessibility_children(dom);
+        let children = dioxus_node.get_accessibility_children();
         if !children.is_empty() {
             builder.set_children(children);
         }
@@ -70,7 +74,7 @@ impl AccessibilityState {
         // Set text value
         if let Some(alt) = &node_accessibility.alt {
             builder.set_value(alt.to_owned());
-        } else if let Some(value) = render_node.get_text(dom) {
+        } else if let Some(value) = dioxus_node.get_inner_texts() {
             builder.set_value(value);
         }
 
@@ -85,7 +89,7 @@ impl AccessibilityState {
         }
 
         // Set the area
-        let area = render_node.node_area.to_f64();
+        let area = node_areas.area.to_f64();
         builder.set_bounds(Rect {
             x0: area.min_x(),
             x1: area.max_x(),
@@ -201,5 +205,38 @@ impl AccessibilityState {
 
             focus_sender.send(self.focus).ok();
         }
+    }
+}
+
+trait NodeAccessibility {
+    /// Return the first TextNode from this Node
+    fn get_inner_texts(&self) -> Option<String>;
+
+    /// Collect all the AccessibilityIDs from a Node's children
+    fn get_accessibility_children(&self) -> Vec<AccessibilityId>;
+}
+
+impl NodeAccessibility for DioxusNode<'_> {
+    /// Return the first TextNode from this Node
+    fn get_inner_texts(&self) -> Option<String> {
+        let children = self.children();
+        let first_child = children.first()?;
+        let node_type = first_child.node_type();
+        if let NodeType::Text(TextNode { text, .. }) = &*node_type {
+            Some(text.to_owned())
+        } else {
+            None
+        }
+    }
+
+    /// Collect all the AccessibilityIDs from a Node's children
+    fn get_accessibility_children(&self) -> Vec<AccessibilityId> {
+        self.children()
+            .iter()
+            .filter_map(|child| {
+                let node_accessibility = &*child.get::<AccessibilitySettings>().unwrap();
+                node_accessibility.focus_id
+            })
+            .collect::<Vec<AccessibilityId>>()
     }
 }

@@ -12,6 +12,8 @@ keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
 [dependencies]
+torin = { workspace = true }
+
 dioxus-rsx = { workspace = true }
 dioxus-native-core = { workspace = true }
 dioxus-core-macro = { workspace = true }

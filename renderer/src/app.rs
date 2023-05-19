@@ -14,7 +14,7 @@ use freya_core::{
     process_events, EventEmitter, EventReceiver, EventsQueue, FocusReceiver, FocusSender,
     ViewportsCollection,
 };
-use freya_dom::SafeDOM;
+use freya_dom::prelude::SafeDOM;
 use freya_layout::Layers;
 use freya_node_state::AccessibilitySettings;
 use futures::FutureExt;
@@ -71,7 +71,7 @@ fn create_accessibility_adapter(
 
 /// Manages the Application lifecycle
 pub struct App<State: 'static + Clone> {
-    rdom: SafeDOM,
+    sdom: SafeDOM,
     vdom: VirtualDom,
 
     events: EventsQueue,
@@ -121,7 +121,7 @@ impl<State: 'static + Clone> App<State> {
         let (focus_sender, focus_receiver) = watch::channel(None);
 
         Self {
-            rdom,
+            sdom: rdom,
             vdom,
             events: Vec::new(),
             vdom_waker: winit_waker(proxy),
@@ -159,7 +159,7 @@ impl<State: 'static + Clone> App<State> {
 
         let mutations = self.vdom.rebuild();
 
-        self.rdom.get_mut().init_dom(mutations, scale_factor);
+        self.sdom.get_mut().init_dom(mutations, scale_factor);
 
         self.mutations_sender.as_ref().map(|s| s.send(()));
     }
@@ -169,9 +169,17 @@ impl<State: 'static + Clone> App<State> {
         let scale_factor = self.window_env.window.scale_factor() as f32;
         let mutations = self.vdom.render_immediate();
 
-        let (repaint, relayout) = self.rdom.get_mut().apply_mutations(mutations, scale_factor);
+        let is_empty = mutations.dirty_scopes.is_empty()
+            && mutations.edits.is_empty()
+            && mutations.templates.is_empty();
 
-        if repaint || relayout {
+        let (repaint, relayout) = if !is_empty {
+            self.sdom.get_mut().apply_mutations(mutations, scale_factor)
+        } else {
+            (false, false)
+        };
+
+        if repaint {
             self.mutations_sender.as_ref().map(|s| s.send(()));
         }
 
@@ -184,8 +192,6 @@ impl<State: 'static + Clone> App<State> {
         let mut cx = std::task::Context::from_waker(waker);
 
         loop {
-            self.provide_vdom_contexts();
-
             {
                 let fut = async {
                     select! {
@@ -211,9 +217,11 @@ impl<State: 'static + Clone> App<State> {
             let (must_repaint, must_relayout) = self.apply_vdom_changes();
 
             if must_relayout {
-                self.request_redraw();
+                self.window_env.window.request_redraw();
             } else if must_repaint {
-                self.request_rerender();
+                self.proxy
+                    .send_event(EventMessage::RequestRerender)
+                    .unwrap();
             }
         }
     }
@@ -222,7 +230,7 @@ impl<State: 'static + Clone> App<State> {
     pub fn process_events(&mut self) {
         let scale_factor = self.window_env.window.scale_factor();
         process_events(
-            &self.rdom.get(),
+            &self.sdom.get(),
             &self.layers,
             &mut self.events,
             &self.event_emitter,
@@ -234,31 +242,34 @@ impl<State: 'static + Clone> App<State> {
 
     /// Measure the layout
     pub fn process_layout(&mut self) {
-        let (layers, viewports) = self
-            .window_env
-            .process_layout(&self.rdom.get(), &mut self.font_collection);
-        self.layers = layers;
-        self.viewports_collection = viewports;
+        {
+            let dom = self.sdom.get();
+            let (layers, viewports) = self
+                .window_env
+                .process_layout(&dom, &mut self.font_collection);
+            self.layers = layers;
+            self.viewports_collection = viewports;
+        }
         self.process_accessibility();
     }
 
     /// Create the Accessibility tree
     pub fn process_accessibility(&mut self) {
-        let dom = &self.rdom.get();
+        let fdom = &self.sdom.get();
+        let layout = fdom.layout();
+        let rdom = fdom.rdom();
 
-        for layer in self.layers.layers.values() {
-            for render_node in layer.values() {
-                let dioxus_node = render_node.get_node(dom);
-                if let Some(dioxus_node) = dioxus_node {
-                    let node_accessibility = &*dioxus_node.get::<AccessibilitySettings>().unwrap();
-                    if let Some(accessibility_id) = node_accessibility.focus_id {
-                        self.accessibility_state.lock().unwrap().add_element(
-                            render_node,
-                            accessibility_id,
-                            node_accessibility,
-                            dom,
-                        );
-                    }
+        for (node_id, node_areas) in &layout.results {
+            let dioxus_node = rdom.get(*node_id);
+            if let Some(dioxus_node) = dioxus_node {
+                let node_accessibility = &*dioxus_node.get::<AccessibilitySettings>().unwrap();
+                if let Some(accessibility_id) = node_accessibility.focus_id {
+                    self.accessibility_state.lock().unwrap().add_element(
+                        &dioxus_node,
+                        node_areas,
+                        accessibility_id,
+                        node_accessibility,
+                    );
                 }
             }
         }
@@ -267,18 +278,6 @@ impl<State: 'static + Clone> App<State> {
     /// Push an event to the events queue
     pub fn push_event(&mut self, event: FreyaEvent) {
         self.events.push(event);
-    }
-
-    /// Request a redraw
-    pub fn request_redraw(&self) {
-        self.window_env.request_redraw();
-    }
-
-    /// Request a rerender
-    pub fn request_rerender(&self) {
-        self.proxy
-            .send_event(EventMessage::RequestRerender)
-            .unwrap();
     }
 
     /// Replace a VirtualDOM Template
@@ -293,12 +292,13 @@ impl<State: 'static + Clone> App<State> {
             &self.viewports_collection,
             &mut self.font_collection,
             hovered_node,
-            &self.rdom.get(),
+            &self.sdom.get(),
         );
     }
 
     /// Resize the Window
     pub fn resize(&mut self, size: PhysicalSize<u32>) {
+        self.sdom.get().layout().reset();
         self.window_env.resize(size);
     }
 
@@ -341,7 +341,7 @@ impl<State: 'static + Clone> App<State> {
 
     pub fn measure_text_group(&self, text_id: &Uuid) {
         self.layers
-            .measure_paragraph_elements(text_id, &self.rdom.get(), &self.font_collection);
+            .measure_paragraph_elements(text_id, &self.sdom.get(), &self.font_collection);
     }
 
     pub fn window_env(&mut self) -> &mut WindowEnv<State> {

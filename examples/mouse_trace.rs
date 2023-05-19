@@ -3,7 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use freya::{common::Point2D, prelude::*};
+use freya::prelude::*;
 
 fn main() {
     launch_cfg(
@@ -18,8 +18,8 @@ fn main() {
     );
 }
 
-const MOVEMENT_MARGIN: f64 = 100.0;
-const BOX_COUNT: usize = 20;
+const MOVEMENT_MARGIN: f64 = 75.0;
+const BOX_COUNT: usize = 80;
 
 #[allow(non_snake_case)]
 fn Box(cx: Scope) -> Element {
@@ -50,7 +50,7 @@ fn Box(cx: Scope) -> Element {
 }
 
 fn app(cx: Scope) -> Element {
-    let positions = use_state::<Vec<Point2D>>(cx, Vec::new);
+    let positions = use_state::<Vec<CursorPoint>>(cx, Vec::new);
 
     let onmouseover = |e: MouseEvent| {
         let coordinates = e.get_screen_coordinates();

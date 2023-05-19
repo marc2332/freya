@@ -91,6 +91,8 @@ fn app(cx: Scope) -> Element {
                             rect {
                                 scroll_x: "{node.0}",
                                 scroll_y: "{node.1}",
+                                width: "0",
+                                height: "0",
                                 container {
                                     background: "rgb(20, 20, 20)",
                                     width: "600",
@@ -242,7 +244,6 @@ fn Editor(cx: Scope) -> Element {
                                 "Font size"
                             }
                         }
-
                     }
                     rect {
                         height: "40%",
