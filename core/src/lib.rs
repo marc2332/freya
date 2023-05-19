@@ -161,6 +161,7 @@ fn calculate_events_listeners(
     let rdom = fdom.rdom();
 
     for (event_name, event_nodes) in calculated_events.iter_mut() {
+        // `mouseover` events might also derive into other events such as `mouseenter` so we must also check these.
         let derivated_events = if event_name == &"mouseover" {
             vec![&"mouseover", &"mouseenter"]
         } else {
