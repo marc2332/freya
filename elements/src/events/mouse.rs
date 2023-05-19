@@ -1,18 +1,18 @@
-use freya_common::Point2D;
+use torin::geometry::CursorPoint;
 pub use winit::event::MouseButton;
 
 /// Data of a Mouse event.
 #[derive(Debug, Clone)]
 pub struct MouseData {
-    pub screen_coordinates: Point2D,
-    pub element_coordinates: Point2D,
+    pub screen_coordinates: CursorPoint,
+    pub element_coordinates: CursorPoint,
     pub trigger_button: Option<MouseButton>,
 }
 
 impl MouseData {
     pub fn new(
-        screen_coordinates: Point2D,
-        element_coordinates: Point2D,
+        screen_coordinates: CursorPoint,
+        element_coordinates: CursorPoint,
         trigger_button: Option<MouseButton>,
     ) -> Self {
         Self {
@@ -25,12 +25,12 @@ impl MouseData {
 
 impl MouseData {
     /// Get the mouse coordinates relative to the window bounds.
-    pub fn get_screen_coordinates(&self) -> Point2D {
+    pub fn get_screen_coordinates(&self) -> CursorPoint {
         self.screen_coordinates
     }
 
     /// Get the mouse coordinates relatives to the element bounds.
-    pub fn get_element_coordinates(&self) -> Point2D {
+    pub fn get_element_coordinates(&self) -> CursorPoint {
         self.element_coordinates
     }
 

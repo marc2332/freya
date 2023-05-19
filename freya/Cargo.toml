@@ -30,6 +30,7 @@ freya-hooks = { workspace = true }
 freya-core = { workspace = true }
 freya-components = { workspace = true }
 freya-dom = { workspace = true }
+torin = { workspace = true }
 
 dioxus = { workspace = true }
 dioxus-rsx = { workspace = true }

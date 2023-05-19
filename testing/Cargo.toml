@@ -17,7 +17,8 @@ freya-common = { workspace = true }
 freya-layout = { workspace = true }
 freya-node-state = { workspace = true }
 freya-core = { workspace = true }
-freya-dom = { workspace = true, features = ["shared"] }
+freya-dom = { workspace = true, features = ["shared"]}
+torin = { workspace = true }
 
 dioxus-rsx = { workspace = true }
 dioxus-native-core = { workspace = true }
