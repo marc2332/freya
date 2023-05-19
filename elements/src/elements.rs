@@ -289,6 +289,7 @@ pub mod events {
         onmouseover
         onglobalmouseover
         onmouseleave
+        onmouseenter
     ];
 
     impl_event! [

@@ -137,8 +137,6 @@ impl<State: 'static + Clone> App<State> {
         let mut cx = std::task::Context::from_waker(waker);
 
         loop {
-            self.provide_vdom_contexts();
-
             {
                 let fut = async {
                     select! {
