@@ -128,8 +128,6 @@ pub fn DropZone<'a, T: 'static + Clone>(cx: Scope<'a, DropZoneProps<'a, T>>) -> 
             }
             if drags.read().is_some() {
                 *drags.write() = None;
-            } else {
-                println!("empty");
             }
         }
     };
