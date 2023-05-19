@@ -1,11 +1,11 @@
 use std::{any::Any, collections::HashMap, rc::Rc};
 
 use dioxus_core::ElementId;
-use freya_common::{Area, Point2D};
 use freya_elements::events::{
     keyboard::{Code, Key, Modifiers},
     KeyboardData, MouseData, TouchData, WheelData,
 };
+use torin::prelude::*;
 use winit::event::{Force, MouseButton, TouchPhase};
 
 use crate::EventEmitter;
@@ -16,14 +16,14 @@ pub enum FreyaEvent {
     /// A Mouse Event.
     Mouse {
         name: &'static str,
-        cursor: Point2D,
+        cursor: CursorPoint,
         button: Option<MouseButton>,
     },
     /// A Wheel event.
     Wheel {
         name: &'static str,
-        scroll: Point2D,
-        cursor: Point2D,
+        scroll: CursorPoint,
+        cursor: CursorPoint,
     },
     /// A Keyboard event.
     Keyboard {
@@ -35,7 +35,7 @@ pub enum FreyaEvent {
     /// A Touch event.
     Touch {
         name: &'static str,
-        location: Point2D,
+        location: CursorPoint,
         finger_id: u64,
         phase: TouchPhase,
         force: Option<Force>,
@@ -159,7 +159,7 @@ struct ElementState {
 }
 
 /// [`EventsProcessor`] stores the elements events states.
-/// 
+///
 /// TODO(marc2332): Remove deleted Elements
 #[derive(Default)]
 pub struct EventsProcessor {
@@ -194,8 +194,8 @@ impl EventsProcessor {
                             element_id: *element,
                             name: "mouseleave".to_string(),
                             data: DomEventData::Mouse(MouseData::new(
-                                Point2D::default(), // TODO: Use actual locations
-                                Point2D::default(), // TODO: Use actual locations
+                                CursorPoint::default(), // TODO: Use actual locations
+                                CursorPoint::default(), // TODO: Use actual locations
                                 Some(MouseButton::Left),
                             )),
                         })

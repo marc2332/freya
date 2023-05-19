@@ -1,18 +1,18 @@
 use std::sync::{Arc, Mutex};
 
-use dioxus_core::{Mutation, Mutations};
+use dioxus_core::Mutations;
 use dioxus_native_core::{
     prelude::{DioxusState, State},
     real_dom::{NodeRef, RealDom},
-    SendAnyMap,
+    NodeId, SendAnyMap,
 };
-use freya_common::LayoutNotifier;
 use freya_node_state::{
-    CursorSettings, CustomAttributeValues, FontStyle, References, Scroll, Size, Style, Transform,
+    CursorSettings, CustomAttributeValues, FontStyle, References, SizeState, Style, Transform,
 };
-
-#[cfg(feature = "shared")]
 use std::sync::MutexGuard;
+use torin::prelude::*;
+
+use crate::dom_adapter::DioxusDOMAdapter;
 
 pub type DioxusDOM = RealDom<CustomAttributeValues>;
 pub type DioxusNode<'a> = NodeRef<'a, CustomAttributeValues>;
@@ -21,56 +21,56 @@ pub type DioxusNode<'a> = NodeRef<'a, CustomAttributeValues>;
 /// This is primarily used by the Devtools and Testing renderer.
 pub struct SafeDOM {
     #[cfg(not(feature = "shared"))]
-    pub dom: FreyaDOM,
+    pub fdom: FreyaDOM,
 
     #[cfg(feature = "shared")]
-    pub dom: Arc<Mutex<FreyaDOM>>,
+    pub fdom: Arc<Mutex<FreyaDOM>>,
 }
 
 #[cfg(feature = "shared")]
 impl Clone for SafeDOM {
     fn clone(&self) -> Self {
         Self {
-            dom: self.dom.clone(),
+            fdom: self.fdom.clone(),
         }
     }
 }
 
 impl SafeDOM {
     #[cfg(not(feature = "shared"))]
-    pub fn new(dom: FreyaDOM) -> Self {
-        Self { dom }
+    pub fn new(fdom: FreyaDOM) -> Self {
+        Self { fdom }
     }
 
     #[cfg(feature = "shared")]
-    pub fn new(dom: FreyaDOM) -> Self {
+    pub fn new(fdom: FreyaDOM) -> Self {
         Self {
-            dom: Arc::new(Mutex::new(dom)),
+            fdom: Arc::new(Mutex::new(fdom)),
         }
     }
 
     /// Get a reference to the DOM.
     #[cfg(not(feature = "shared"))]
     pub fn get(&self) -> &FreyaDOM {
-        &self.dom
+        &self.fdom
     }
 
     /// Get a mutable reference to the DOM.
     #[cfg(not(feature = "shared"))]
     pub fn get_mut(&mut self) -> &mut FreyaDOM {
-        &mut self.dom
+        &mut self.fdom
     }
 
     /// Get a reference to the DOM.
     #[cfg(feature = "shared")]
     pub fn get(&self) -> MutexGuard<FreyaDOM> {
-        return self.dom.lock().unwrap();
+        return self.fdom.lock().unwrap();
     }
 
     /// Get a mutable reference to the dom.
     #[cfg(feature = "shared")]
     pub fn get_mut(&self) -> MutexGuard<FreyaDOM> {
-        return self.dom.lock().unwrap();
+        return self.fdom.lock().unwrap();
     }
 }
 
@@ -78,7 +78,7 @@ impl SafeDOM {
 pub struct FreyaDOM {
     rdom: DioxusDOM,
     dioxus_integration_state: DioxusState,
-    layout_notifier: LayoutNotifier,
+    torin: Arc<Mutex<Torin<NodeId>>>,
 }
 
 impl Default for FreyaDOM {
@@ -87,8 +87,7 @@ impl Default for FreyaDOM {
             CursorSettings::to_type_erased(),
             FontStyle::to_type_erased(),
             References::to_type_erased(),
-            Scroll::to_type_erased(),
-            Size::to_type_erased(),
+            SizeState::to_type_erased(),
             Style::to_type_erased(),
             Transform::to_type_erased(),
         ]);
@@ -96,7 +95,7 @@ impl Default for FreyaDOM {
         Self {
             rdom,
             dioxus_integration_state,
-            layout_notifier: Arc::new(Mutex::new(false)),
+            torin: Arc::new(Mutex::new(Torin::new())),
         }
     }
 }
@@ -106,8 +105,12 @@ impl FreyaDOM {
         Self {
             rdom,
             dioxus_integration_state,
-            layout_notifier: Arc::new(Mutex::new(false)),
+            torin: Arc::new(Mutex::new(Torin::new())),
         }
+    }
+
+    pub fn layout(&self) -> MutexGuard<Torin<NodeId>> {
+        self.torin.lock().unwrap()
     }
 
     /// Create the initial DOM from the given Mutations
@@ -115,89 +118,45 @@ impl FreyaDOM {
         self.dioxus_integration_state
             .apply_mutations(&mut self.rdom, mutations);
 
-        *self.layout_notifier.lock().unwrap() = false;
-
         let mut ctx = SendAnyMap::new();
-        ctx.insert(self.layout_notifier.clone());
         ctx.insert(scale_factor);
+        ctx.insert(self.torin.clone());
 
         self.rdom.update_state(ctx);
     }
 
     /// Process the given mutations from the [`VirtualDOM`](dioxus_core::VirtualDom).
-    /// This will notify the layout if it must recalculate
-    /// or the renderer if it has to repaint.
     pub fn apply_mutations(&mut self, mutations: Mutations, scale_factor: f32) -> (bool, bool) {
-        *self.layout_notifier.lock().unwrap() = false;
-        let mut layout_changes = false;
+        let dom_adapter = DioxusDOMAdapter::new(self.rdom());
+        // Apply the mutations to the layout
+        self.layout()
+            .apply_mutations(&mutations, &self.dioxus_integration_state, &dom_adapter);
 
-        // Notify the layout of any major layout change
-        // TODO: Implement granual layout changes
-        for mutation in &mutations.edits {
-            match mutation {
-                Mutation::AssignId { .. } => {}
-                Mutation::SetAttribute { .. } => {}
-                Mutation::NewEventListener { .. } => {}
-                Mutation::RemoveEventListener { .. } => {}
-                Mutation::InsertAfter { m, .. } => {
-                    if *m > 0 {
-                        layout_changes = true;
-                    }
-                }
-                Mutation::InsertBefore { m, .. } => {
-                    if *m > 0 {
-                        layout_changes = true;
-                    }
-                }
-                Mutation::ReplacePlaceholder { m, .. } => {
-                    if *m > 0 {
-                        layout_changes = true;
-                    }
-                }
-                Mutation::ReplaceWith { m, .. } => {
-                    if *m > 0 {
-                        layout_changes = true;
-                    }
-                }
-                Mutation::AppendChildren { m, .. } => {
-                    if *m > 0 {
-                        layout_changes = true;
-                    }
-                }
-                _ => {
-                    layout_changes = true;
-                }
-            }
-        }
-
-        // Apply the mutations to the RealDOM
-
+        // Apply the mutations the integration state
         self.dioxus_integration_state
             .apply_mutations(&mut self.rdom, mutations);
 
         // Update the Nodes states
         let mut ctx = SendAnyMap::new();
-        ctx.insert(self.layout_notifier.clone());
         ctx.insert(scale_factor);
+        ctx.insert(self.torin.clone());
 
+        // Update the Node's states
         let (_, diff) = self.rdom.update_state(ctx);
 
-        // Calculate whether it must repaint or relayout
-        let paint_changes = !diff.is_empty();
-        if *self.layout_notifier.lock().unwrap() {
-            layout_changes = true;
-        }
+        let must_repaint = !diff.is_empty();
+        let must_relayout = !self.layout().get_dirty_nodes().is_empty();
 
-        (paint_changes, layout_changes)
+        (must_repaint, must_relayout)
     }
 
     /// Get a reference to the [`DioxusDOM`].
-    pub fn dom(&self) -> &DioxusDOM {
+    pub fn rdom(&self) -> &DioxusDOM {
         &self.rdom
     }
 
     /// Get a mutable reference to the [`DioxusDOM`].
-    pub fn dom_mut(&mut self) -> &mut DioxusDOM {
+    pub fn rdom_mut(&mut self) -> &mut DioxusDOM {
         &mut self.rdom
     }
 }

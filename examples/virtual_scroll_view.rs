@@ -23,11 +23,20 @@ fn app(cx: Scope) -> Element {
         builder: Box::new(move |(key, index, _, values)| {
             let values = values.unwrap();
             let value = values[index];
+            let background = if index % 2 == 0 {
+                "rgb(200, 200, 200)"
+            } else {
+                "white"
+            };
             rsx! {
-                label {
+                rect {
                     key: "{key}",
-                    height: "25",
-                    "{index} {value}"
+                    background: "{background}",
+                    label {
+                        height: "25",
+                        width: "100%",
+                        "{index} {value}"
+                    }
                 }
             }
         })

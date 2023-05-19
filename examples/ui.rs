@@ -101,7 +101,7 @@ fn Navbar<'a>(cx: Scope<'a, NavbarProps<'a>>) -> Element {
     render!(
         container {
             height: "75",
-            width: "stretch",
+            width: "100%",
             background: "rgb(20, 20, 20)",
             padding: "15",
             label {
@@ -124,11 +124,11 @@ fn App<'a>(cx: Scope<'a, AppProps<'a>>) -> Element {
     render!(
         rect {
             color: "white",
-            width: "stretch",
-            height: "stretch",
+            width: "100%",
+            height: "100%",
             rect {
-                width: "stretch",
-                height: "stretch",
+                width: "100%",
+                height: "100%",
                 &cx.props.navbar,
                 &cx.props.body
             }
@@ -146,12 +146,12 @@ struct CardProps<'a> {
 fn Card<'a>(cx: Scope<'a, CardProps<'a>>) -> Element {
     render!(
         rect {
-            width: "stretch",
+            width: "100%",
             height: "200",
             padding: "10",
             background: "rgb(45, 45, 45)",
             rect {
-                width: "stretch",
+                width: "100%",
                 height: "50%",
                 padding: "5",
                 radius: "10",
