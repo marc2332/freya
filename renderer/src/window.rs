@@ -32,7 +32,7 @@ use winit::{
 use skia_safe::{
     gpu::{gl::FramebufferInfo, BackendRenderTarget, SurfaceOrigin},
     textlayout::FontCollection,
-    Color, ColorType, Matrix, Surface,
+    ColorType, Matrix, Surface,
 };
 
 use crate::renderer::render_skia;
@@ -217,11 +217,7 @@ impl<T: Clone> WindowEnv<T> {
     ) {
         let canvas = self.surface.canvas();
 
-        canvas.clear(if self.window_config.decorations {
-            self.window_config.background
-        } else {
-            Color::TRANSPARENT
-        });
+        canvas.clear(self.window_config.background);
 
         let mut matrices: Vec<(Matrix, Vec<NodeId>)> = Vec::default();
 
