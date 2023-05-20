@@ -37,6 +37,10 @@ fn app(cx: Scope) -> Element {
                 "rgb(210, 83, 128)",
                 vec![Some(20), Some(50), Some(80), Some(110), Some(140)],
             ),
+            GraphLine::new(
+                "rgb(90, 5, 180)",
+                vec![None, None, Some(5), Some(60), Some(100)],
+            ),
         ]
     });
 

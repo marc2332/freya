@@ -32,15 +32,18 @@ pub struct GraphProps {
     labels: Vec<String>,
     /// Y axis data.
     data: Vec<GraphLine>,
-    /// Width of the canvas.
+    /// Width of the Graph. Default 100%.
     #[props(default = "100%".to_string(), into)]
     width: String,
-    /// Height of the canvas.
+    /// Height of the Graph. Default 100%.
     #[props(default = "100%".to_string(), into)]
     height: String,
 }
 
 /// Graph component.
+///
+/// # Props
+/// See [`GraphProps`].
 ///
 #[allow(non_snake_case)]
 pub fn Graph(cx: Scope<GraphProps>) -> Element {
@@ -68,20 +71,21 @@ pub fn Graph(cx: Scope<GraphProps>) -> Element {
 
             let mut paragraph_style = ParagraphStyle::default();
             paragraph_style.set_text_align(TextAlign::Center);
+
             let mut text_style = TextStyle::new();
             text_style.set_color(Color::BLACK);
             paragraph_style.set_text_style(&text_style);
 
             let x_labels = &state.labels;
-
             let x_height: f32 = 50.0;
 
             let start_x = region.min_x();
-            let start_y = region.max_y() - x_height;
+            let start_y = region.height() - x_height;
             let height = region.height() - x_height;
 
             let space_x = region.width() / x_labels.len() as f32;
 
+            // Calculate the smallest and biggest items
             let (smallest_y, biggest_y) = {
                 let mut smallest_y = 0;
                 let mut biggest_y = 0;
@@ -104,9 +108,12 @@ pub fn Graph(cx: Scope<GraphProps>) -> Element {
                 (smallest_y, biggest_y)
             };
 
-            let y_len = biggest_y - smallest_y;
-            let space_y = height / y_len as f32;
+            // Difference between the smalles and biggest Y Axis item
+            let y_axis_len = biggest_y - smallest_y;
+            // Space between items in the Y axis
+            let space_y = height / y_axis_len as f32;
 
+            // Draw the lines
             for line in &state.data {
                 let mut paint = Paint::default();
 
@@ -119,17 +126,24 @@ pub fn Graph(cx: Scope<GraphProps>) -> Element {
                 let mut previous_y = None;
 
                 for (i, y_point) in line.points.iter().enumerate() {
-                    let x = (space_x * i as f32) + start_x + (space_x / 2.0);
-                    let new_previous_x = previous_x.unwrap_or(x);
+                    let line_x = (space_x * i as f32) + start_x + (space_x / 2.0);
+                    // Save the position where the last point drawed
+                    let new_previous_x = previous_x.unwrap_or(line_x);
 
                     if let Some(y_point) = y_point {
-                        let y = start_y - (space_y * ((y_point - smallest_y) as f32));
-                        let new_previous_y = previous_y.unwrap_or(y);
+                        let line_y = start_y - (space_y * ((y_point - smallest_y) as f32));
+                        let new_previous_y = previous_y.unwrap_or(line_y);
 
-                        canvas.draw_circle((x, y), 5.0, &paint);
-                        canvas.draw_line((new_previous_x, new_previous_y), (x, y), &paint);
-                        previous_y = Some(y);
-                        previous_x = Some(x);
+                        // Draw the line and circle
+                        canvas.draw_circle((line_x, line_y), 5.0, &paint);
+                        canvas.draw_line(
+                            (new_previous_x, new_previous_y),
+                            (line_x, line_y),
+                            &paint,
+                        );
+
+                        previous_y = Some(line_y);
+                        previous_x = Some(line_x);
                     } else {
                         previous_y = None;
                         previous_x = None;
@@ -137,14 +151,17 @@ pub fn Graph(cx: Scope<GraphProps>) -> Element {
                 }
             }
 
+            // Space between labels
             let space_x = region.width() / x_labels.len() as f32;
 
+            // Draw the labels
             for (i, point) in x_labels.iter().enumerate() {
                 let x = (space_x * i as f32) + start_x;
 
                 let mut paragrap_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
                 paragrap_builder.add_text(point);
                 let mut text = paragrap_builder.build();
+
                 text.layout(space_x);
                 text.paint(canvas, (x, start_y + x_height - 30.0));
             }
@@ -160,7 +177,7 @@ pub fn Graph(cx: Scope<GraphProps>) -> Element {
         rect {
             width: "{width}",
             height: "{height}",
-            padding: "5",
+            padding: "15 5",
             background: "white",
             rect {
                 canvas_reference: canvas.attribute(cx),
