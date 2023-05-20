@@ -1,11 +1,19 @@
 use dioxus_native_core::real_dom::NodeImmutable;
 use freya_dom::prelude::DioxusNode;
 use freya_node_state::{References, Style};
-use skia_safe::{BlurStyle, Canvas, MaskFilter, Paint, PaintStyle, Path, PathDirection, Rect};
-use torin::geometry::Area;
+use skia_safe::{
+    textlayout::FontCollection, BlurStyle, Canvas, MaskFilter, Paint, PaintStyle, Path,
+    PathDirection, Rect,
+};
+use torin::prelude::Area;
 
 /// Render a `rect` or a `container` element
-pub fn render_rect_container(area: &Area, node_ref: &DioxusNode, canvas: &mut Canvas) {
+pub fn render_rect_container(
+    area: &Area,
+    node_ref: &DioxusNode,
+    canvas: &mut Canvas,
+    font_collection: &FontCollection,
+) {
     let node_style = &*node_ref.get::<Style>().unwrap();
 
     let mut paint = Paint::default();
@@ -47,6 +55,6 @@ pub fn render_rect_container(area: &Area, node_ref: &DioxusNode, canvas: &mut Ca
     let references = node_ref.get::<References>().unwrap();
 
     if let Some(canvas_ref) = &references.canvas_ref {
-        (canvas_ref.runner)(canvas, area);
+        (canvas_ref.runner)(canvas, font_collection, area);
     }
 }
