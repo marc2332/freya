@@ -94,14 +94,15 @@ dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="0527cff3a59ba3176f
 - Hooks crate for text editing, animating, theming..
 
 ### Goals 😁
-- Performant
-- Low memory usage
-- Lightweight 
+- Performant and low memory usage
 - Good developer experience
-- Cross platform
+- Cross-platform
+- Provide accessibility APIs
+- Provide testing APIs
+- Provide useful built-in components and hooks
 
 ## Status ⌚
 
-You can see the tracking [issues](https://github.com/marc2332/freya/issues?q=is%3Aopen+is%3Aissue+label%3Atracking) labeled with the `tracking` label to know what features are implemented and which ones are not, yet.
+You can see the tracking [issue](https://github.com/marc2332/freya/issues/200) to know what features are implemented and which ones are not, yet.
 
 [MIT License](./LICENSE.md)
