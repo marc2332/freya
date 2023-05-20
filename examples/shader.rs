@@ -51,12 +51,15 @@ fn app(cx: Scope) -> Element {
         }
     });
 
-    let canvas = use_canvas(cx, || {
+    let canvas = use_canvas(cx, (), |_| {
         let shader = RuntimeEffect::make_for_shader(SHADER, None).unwrap();
-        let shader = Arc::new(Mutex::new(shader));
+        let shader_wrapper = Arc::new(Mutex::new(ShaderWrapper(shader)));
         let instant = Instant::now();
-        to_owned![render_channel];
+
+        to_owned![render_channel, shader_wrapper];
         Box::new(move |canvas, _, region| {
+            let shader = shader_wrapper.lock().unwrap();
+
             let mut builder = UniformsBuilder::default();
             builder.set(
                 "u_resolution",
@@ -67,13 +70,9 @@ fn app(cx: Scope) -> Element {
                 UniformValue::Float(instant.elapsed().as_secs_f32()),
             );
 
-            let uniforms = Data::new_copy(&builder.build(&shader.lock().unwrap()));
+            let uniforms = Data::new_copy(&builder.build(&shader.0));
 
-            let shader = shader
-                .lock()
-                .unwrap()
-                .make_shader(uniforms, &[], None)
-                .unwrap();
+            let shader = shader.0.make_shader(uniforms, &[], None).unwrap();
 
             let mut paint = Paint::default();
             paint.set_anti_alias(true);
@@ -105,3 +104,8 @@ fn app(cx: Scope) -> Element {
         }
     )
 }
+
+struct ShaderWrapper(RuntimeEffect);
+
+unsafe impl Sync for ShaderWrapper {}
+unsafe impl Send for ShaderWrapper {}

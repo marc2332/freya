@@ -62,12 +62,10 @@ pub fn Graph(cx: Scope<GraphProps>) -> Element {
         }
     });
 
-    let canvas = use_canvas(cx, || {
-        to_owned![state];
+    let canvas = use_canvas(cx, state, |state| {
+        let state = state.get().clone();
         Box::new(move |canvas, font_collection, region| {
             canvas.translate((region.min_x(), region.min_y()));
-
-            let state = state.get();
 
             let mut paragraph_style = ParagraphStyle::default();
             paragraph_style.set_text_align(TextAlign::Center);

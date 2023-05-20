@@ -23,8 +23,8 @@ fn app(cx: Scope) -> Element {
         }
     });
 
-    let canvas = use_canvas(cx, || {
-        to_owned![state];
+    let canvas = use_canvas(cx, state, |state| {
+        let state = *state.current();
         Box::new(move |canvas, _, region| {
             canvas.translate((region.min_x(), region.min_y()));
 
@@ -37,7 +37,7 @@ fn app(cx: Scope) -> Element {
             );
 
             canvas.draw_str(
-                format!("value is {}", state.current()),
+                format!("value is {}", state),
                 ((region.max_x() / 2.0 - 120.0), region.max_y() / 2.0),
                 &font,
                 &text_paint,
