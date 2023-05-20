@@ -1,14 +1,14 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use dioxus_core::{AttributeValue, Scope, ScopeState};
-use dioxus_hooks::{to_owned, use_effect, UseFutureDep};
+use dioxus_hooks::{use_memo, UseFutureDep};
 use freya_node_state::{CanvasReference, CanvasRunner, CustomAttributeValues};
 use uuid::Uuid;
 
 /// Holds a rendering hook callback that allows to render to the Canvas.
 pub struct UseCanvas {
     id: Uuid,
-    hook_callback: Arc<Mutex<Box<CanvasRunner>>>,
+    runner: Arc<Box<CanvasRunner>>,
 }
 
 impl PartialEq for UseCanvas {
@@ -20,7 +20,8 @@ impl PartialEq for UseCanvas {
 impl UseCanvas {
     pub fn attribute<'a, T>(&self, cx: Scope<'a, T>) -> AttributeValue<'a> {
         cx.any_value(CustomAttributeValues::Canvas(CanvasReference {
-            runner: self.hook_callback.clone(),
+            id: self.id,
+            runner: self.runner.clone(),
         }))
     }
 }
@@ -52,19 +53,12 @@ pub fn use_canvas<D>(
 where
     D: UseFutureDep,
 {
-    let id = cx.use_hook(Uuid::new_v4);
-    let renderer = cx.use_hook(|| Arc::new(Mutex::new(renderer_cb(dependencies.out()))));
-
-    use_effect(cx, dependencies.clone(), {
-        to_owned![renderer];
-        move |_| {
-            *renderer.lock().unwrap() = renderer_cb(dependencies.out());
-            async move {}
-        }
+    let (id, runner) = use_memo(cx, dependencies, |dependencies| {
+        (Uuid::new_v4(), Arc::new(renderer_cb(dependencies)))
     });
 
     UseCanvas {
         id: *id,
-        hook_callback: renderer.clone(),
+        runner: runner.clone(),
     }
 }

@@ -53,12 +53,13 @@ pub type CanvasRunner = dyn Fn(&mut Canvas, &FontCollection, Area) + Sync + Send
 /// Canvas Reference
 #[derive(Clone)]
 pub struct CanvasReference {
-    pub runner: Arc<Mutex<Box<CanvasRunner>>>,
+    pub id: Uuid,
+    pub runner: Arc<Box<CanvasRunner>>,
 }
 
 impl PartialEq for CanvasReference {
-    fn eq(&self, _other: &Self) -> bool {
-        true
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
     }
 }
 
