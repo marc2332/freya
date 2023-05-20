@@ -76,7 +76,7 @@ pub fn render_skia(
 
         match tag.as_str() {
             "rect" | "container" => {
-                render_rect_container(area, dioxus_node, canvas);
+                render_rect_container(area, dioxus_node, canvas, font_collection);
             }
             "label" => {
                 render_label(area, dioxus_node, canvas, font_collection);

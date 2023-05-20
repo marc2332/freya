@@ -25,15 +25,15 @@ freya-dom = { path = "dom", version = "0.1.0" }
 freya-testing = { path = "testing", version = "0.1.0" }
 torin = { path = "torin", version = "0.1.0" }
 
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="c9044111908338c347b2b00bb48f579e5d9e1877" }
-dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="c9044111908338c347b2b00bb48f579e5d9e1877" }
-dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="c9044111908338c347b2b00bb48f579e5d9e1877" }
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="c9044111908338c347b2b00bb48f579e5d9e1877", features=["dioxus"] }
-dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="c9044111908338c347b2b00bb48f579e5d9e1877" }
-dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="c9044111908338c347b2b00bb48f579e5d9e1877" }
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="c9044111908338c347b2b00bb48f579e5d9e1877" }
-dioxus-hot-reload = { git = "https://github.com/DioxusLabs/dioxus", rev="c9044111908338c347b2b00bb48f579e5d9e1877" }
-dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev="c9044111908338c347b2b00bb48f579e5d9e1877" }
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="0527cff3a59ba3176f7510a7234c5977ce1b17d7" }
+dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="0527cff3a59ba3176f7510a7234c5977ce1b17d7" }
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="0527cff3a59ba3176f7510a7234c5977ce1b17d7" }
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="0527cff3a59ba3176f7510a7234c5977ce1b17d7", features=["dioxus"] }
+dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="0527cff3a59ba3176f7510a7234c5977ce1b17d7" }
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="0527cff3a59ba3176f7510a7234c5977ce1b17d7" }
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="0527cff3a59ba3176f7510a7234c5977ce1b17d7" }
+dioxus-hot-reload = { git = "https://github.com/DioxusLabs/dioxus", rev="0527cff3a59ba3176f7510a7234c5977ce1b17d7" }
+dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev="0527cff3a59ba3176f7510a7234c5977ce1b17d7" }
 
 gl = "0.14.0"
 glutin = "0.30.6"
@@ -57,11 +57,11 @@ winit = { workspace = true }
 tokio = { workspace = true }
 dioxus = { workspace = true }
 freya = { workspace = true }
+freya-node-state = { workspace = true }
 reqwest = { version = "0.11.13", features = ["json"] }
 serde = "1.0.152"
 tracing-subscriber = "0.2.25"
-dioxus-utils = { git = "https://github.com/marc2332/dioxus-utils", rev = "b277db0b8c57bd4041bb552bf3e16870c1f33567" }
-uuid = { workspace = true }
+dioxus-utils = { git = "https://github.com/marc2332/dioxus-utils", rev = "ba88f558d4be08b1d6c40b7cb16167de33a698ae" }
 rand = "0.8.5"
 
 [profile.release]

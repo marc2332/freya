@@ -1,17 +1,14 @@
 use std::sync::Arc;
 
 use dioxus_core::{AttributeValue, Scope, ScopeState};
-use freya_node_state::{CanvasReference, CustomAttributeValues};
-use skia_safe::Canvas;
-use torin::geometry::Area;
+use dioxus_hooks::{use_memo, UseFutureDep};
+use freya_node_state::{CanvasReference, CanvasRunner, CustomAttributeValues};
 use uuid::Uuid;
-
-pub type RenderCallback = Box<dyn Fn(&mut Canvas, Area)>;
 
 /// Holds a rendering hook callback that allows to render to the Canvas.
 pub struct UseCanvas {
     id: Uuid,
-    hook_callback: Arc<RenderCallback>,
+    runner: Arc<Box<CanvasRunner>>,
 }
 
 impl PartialEq for UseCanvas {
@@ -23,7 +20,8 @@ impl PartialEq for UseCanvas {
 impl UseCanvas {
     pub fn attribute<'a, T>(&self, cx: Scope<'a, T>) -> AttributeValue<'a> {
         cx.any_value(CustomAttributeValues::Canvas(CanvasReference {
-            runner: self.hook_callback.clone(),
+            id: self.id,
+            runner: self.runner.clone(),
         }))
     }
 }
@@ -34,8 +32,8 @@ impl UseCanvas {
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app(cx: Scope) -> Element {
-///     let canvas = use_canvas(cx, || {
-///         Box::new(|canvas, area| {
+///     let canvas = use_canvas(cx, (), |_| {
+///         Box::new(|canvas, font_collection, area| {
 ///             // Draw using the canvas !
 ///         })
 ///     });
@@ -47,12 +45,20 @@ impl UseCanvas {
 ///     )
 /// }
 /// ```
-pub fn use_canvas(cx: &ScopeState, renderer: impl FnOnce() -> RenderCallback) -> UseCanvas {
-    let id = cx.use_hook(Uuid::new_v4);
-    let renderer = cx.use_hook(|| Arc::new(renderer()));
+pub fn use_canvas<D>(
+    cx: &ScopeState,
+    dependencies: D,
+    renderer_cb: impl Fn(D::Out) -> Box<CanvasRunner>,
+) -> UseCanvas
+where
+    D: UseFutureDep,
+{
+    let (id, runner) = use_memo(cx, dependencies, |dependencies| {
+        (Uuid::new_v4(), Arc::new(renderer_cb(dependencies)))
+    });
 
     UseCanvas {
         id: *id,
-        hook_callback: renderer.clone(),
+        runner: runner.clone(),
     }
 }

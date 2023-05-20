@@ -11,15 +11,19 @@ use crate::{Animation, TransitionAnimation};
 /// Configure a `Transition` animation.
 #[derive(Clone, Debug, Copy, PartialEq)]
 pub enum Transition {
+    /// Transition from one size to another.
     Size(f64, f64),
+    /// Transition from one color to another.
     Color(Color, Color),
 }
 
 impl Transition {
+    /// Create a Size transition.
     pub fn new_size(start: f64, end: f64) -> Self {
         Self::Size(start, end)
     }
 
+    /// Create a Color transition.
     pub fn new_color(start: &str, end: &str) -> Self {
         let start = parse_color(start).unwrap();
         let end = parse_color(end).unwrap();
@@ -45,6 +49,7 @@ impl From<&Transition> for TransitionState {
 }
 
 impl TransitionState {
+    /// Process the new value in this transition.
     pub fn set_value(&mut self, animate: &Transition, value: f64) {
         match (self, animate) {
             (Self::Size(current), Transition::Size(start, end)) => {
@@ -72,14 +77,30 @@ impl TransitionState {
         }
     }
 
+    /// Reset the current value back to the starting value.
+    pub fn clear(&mut self, animate: &Transition) {
+        match (self, animate) {
+            (Self::Size(current), Transition::Size(start, _)) => {
+                *current = *start;
+            }
+            (Self::Color(current), Transition::Color(start, _)) => {
+                *current = *start;
+            }
+            _ => {}
+        }
+    }
+
+    /// Cast as a size transition. This could panic if the tranistion of type Size.
     pub fn as_size(&self) -> f64 {
         self.to_size().unwrap()
     }
 
+    /// Cast as a Color transition. This could panic if the tranistion of type Color.
     pub fn as_color(&self) -> String {
         self.to_color().unwrap()
     }
 
+    /// Try casting to a Size transition.
     pub fn to_size(&self) -> Option<f64> {
         match self {
             Self::Size(current) => Some(*current),
@@ -87,6 +108,7 @@ impl TransitionState {
         }
     }
 
+    /// Try casting to a stringified Color transition.
     pub fn to_color(&self) -> Option<String> {
         match self {
             Self::Color(current) => Some(format!(
@@ -99,22 +121,11 @@ impl TransitionState {
         }
     }
 
+    /// Try casting to a raw Color transition.
     pub fn to_raw_color(&self) -> Option<Color> {
         match self {
             Self::Color(current) => Some(*current),
             _ => None,
-        }
-    }
-
-    pub fn clear(&mut self, animate: &Transition) {
-        match (self, animate) {
-            (Self::Size(current), Transition::Size(start, _)) => {
-                *current = *start;
-            }
-            (Self::Color(current), Transition::Color(start, _)) => {
-                *current = *start;
-            }
-            _ => {}
         }
     }
 }
@@ -122,56 +133,61 @@ impl TransitionState {
 /// Manage the lifecyle of an [AnimationTransitionManager].
 #[derive(Clone)]
 pub struct TransitionsManager<'a> {
+    /// Registered transitions
+    transitions: &'a Vec<Transition>,
+    /// The registered tranistions states
+    transitions_storage: &'a UseState<Vec<TransitionState>>,
+    /// The transition animation type
+    transition_animation: TransitionAnimation,
+    /// Currently running animation.
     current_animation_id: &'a UseState<Option<Uuid>>,
-    animations: &'a Vec<Transition>,
-    storage: &'a UseState<Vec<TransitionState>>,
+    /// The scope.
     cx: &'a ScopeState,
-    transition: TransitionAnimation,
 }
 
 impl<'a> TransitionsManager<'a> {
     /// Animate from the end to the start.
     pub fn reverse(&self) {
         self.clear();
-        let anim = self.transition.to_animation(100.0..=0.0);
-        self.run_with(anim);
+        let animation = self.transition_animation.to_animation(100.0..=0.0);
+        self.run_with_animation(animation);
     }
 
     /// Animate from the start to the end.
     pub fn start(&self) {
         self.clear();
-        let anim = self.transition.to_animation(0.0..=100.0);
-        self.run_with(anim);
+        let animation = self.transition_animation.to_animation(0.0..=100.0);
+        self.run_with_animation(animation);
     }
 
-    pub fn run_with(&self, mut anim: Animation) {
-        let new_id = Uuid::new_v4();
-        let mut index = 0;
+    fn run_with_animation(&self, mut animation: Animation) {
+        let animation_id = Uuid::new_v4();
 
-        let animations = self.animations.clone();
-        let storage = self.storage.clone();
+        let transitions = self.transitions.clone();
+        let transitions_storage = self.transitions_storage.clone();
         let current_animation_id = self.current_animation_id.clone();
 
         // Set as current this new animation
-        current_animation_id.set(Some(new_id));
+        current_animation_id.set(Some(animation_id));
 
         // Spawn the animation that will run at 1ms speed
         self.cx.spawn(async move {
             let mut ticker = interval(Duration::from_millis(1));
+            let mut index = 0;
             loop {
-                // Stop running the animation if it was removed
-                if *current_animation_id.current() == Some(new_id) {
+                // Stop running the animation if it's no longer selected
+                if *current_animation_id.current() == Some(animation_id) {
                     // Remove the current animation if it has finished
-                    if anim.is_finished() {
+                    if animation.is_finished() {
                         current_animation_id.set(None);
                         break;
                     }
 
                     // Advance one tick
-                    let value = anim.move_value(index);
-                    storage.with_mut(|storage| {
+                    let value = animation.move_value(index);
+                    transitions_storage.with_mut(|storage| {
                         for (i, storage) in storage.iter_mut().enumerate() {
-                            if let Some(conf) = animations.get(i) {
+                            if let Some(conf) = transitions.get(i) {
                                 storage.set_value(conf, value);
                             }
                         }
@@ -188,12 +204,12 @@ impl<'a> TransitionsManager<'a> {
         });
     }
 
-    /// Clear all the currently running [Transition]
+    /// Clear all the currently running [Transition]s.
     pub fn clear(&self) {
         self.current_animation_id.set(None);
-        self.storage.with_mut(|storage| {
+        self.transitions_storage.with_mut(|storage| {
             for (i, storage) in storage.iter_mut().enumerate() {
-                if let Some(conf) = self.animations.get(i) {
+                if let Some(conf) = self.transitions.get(i) {
                     storage.clear(conf);
                 }
             }
@@ -208,7 +224,7 @@ impl<'a> TransitionsManager<'a> {
     /// Check whether the [Transition]s are at the start or at the end.
     pub fn is_at_start(&self) -> bool {
         if let Some(storage) = self.get(0) {
-            let anim = self.animations[0];
+            let anim = self.transitions[0];
             match anim {
                 Transition::Size(start, _) => start == storage.to_size().unwrap_or(start),
                 Transition::Color(start, _) => start == storage.to_raw_color().unwrap_or(start),
@@ -220,7 +236,7 @@ impl<'a> TransitionsManager<'a> {
 
     /// Get an [TransitionState]
     pub fn get(&self, index: usize) -> Option<TransitionState> {
-        self.storage.current().get(index).copied()
+        self.transitions_storage.current().get(index).copied()
     }
 }
 
@@ -259,21 +275,23 @@ where
     D: UseFutureDep,
 {
     let current_animation_id = use_state(cx, || None);
-    let animations = use_memo(cx, dependencies.clone(), &mut init);
-    let storage = use_state(cx, || animations_map(animations));
-    let storage_setter = storage.setter();
+    let transitions = use_memo(cx, dependencies.clone(), &mut init);
+    let transitions_storage = use_state(cx, || animations_map(transitions));
 
-    use_effect(cx, dependencies, move |v| {
-        storage_setter(animations_map(&init(v)));
-        async move {}
+    use_effect(cx, dependencies, {
+        let storage_setter = transitions_storage.setter();
+        move |v| {
+            storage_setter(animations_map(&init(v)));
+            async move {}
+        }
     });
 
     TransitionsManager {
         current_animation_id,
-        animations,
-        storage,
+        transitions,
+        transitions_storage,
         cx,
-        transition,
+        transition_animation: transition,
     }
 }
 
