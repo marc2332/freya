@@ -10,6 +10,7 @@ use dioxus_core::Scope;
 use dioxus_native_core::node::FromAnyValue;
 use freya_common::CursorLayoutResponse;
 use freya_common::NodeReferenceLayout;
+use skia_safe::textlayout::FontCollection;
 use skia_safe::Canvas;
 use tokio::sync::mpsc::UnboundedSender;
 use torin::geometry::{Area, CursorPoint};
@@ -47,17 +48,18 @@ impl Display for NodeReference {
     }
 }
 
-type CanvasRunner = dyn Fn(&mut Canvas, Area);
+pub type CanvasRunner = dyn Fn(&mut Canvas, &FontCollection, Area) + Sync + Send + 'static;
 
 /// Canvas Reference
 #[derive(Clone)]
 pub struct CanvasReference {
+    pub id: Uuid,
     pub runner: Arc<Box<CanvasRunner>>,
 }
 
 impl PartialEq for CanvasReference {
-    fn eq(&self, _other: &Self) -> bool {
-        true
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
     }
 }
 
@@ -66,9 +68,6 @@ impl Debug for CanvasReference {
         f.debug_struct("CanvasReference").finish_non_exhaustive()
     }
 }
-
-unsafe impl Sync for CanvasReference {}
-unsafe impl Send for CanvasReference {}
 
 /// Cursor reference
 #[derive(Clone, Debug)]
