@@ -25,7 +25,7 @@ fn app(cx: Scope) -> Element {
 
     let canvas = use_canvas(cx, || {
         to_owned![state];
-        Box::new(move |canvas, region| {
+        Box::new(move |canvas, _, region| {
             canvas.translate((region.min_x(), region.min_y()));
 
             let mut text_paint = Paint::default();

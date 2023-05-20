@@ -10,6 +10,7 @@ use dioxus_core::Scope;
 use dioxus_native_core::node::FromAnyValue;
 use freya_common::CursorLayoutResponse;
 use freya_common::NodeReferenceLayout;
+use skia_safe::textlayout::FontCollection;
 use skia_safe::Canvas;
 use tokio::sync::mpsc::UnboundedSender;
 use torin::geometry::{Area, CursorPoint};
@@ -47,7 +48,7 @@ impl Display for NodeReference {
     }
 }
 
-type CanvasRunner = dyn Fn(&mut Canvas, Area);
+type CanvasRunner = dyn Fn(&mut Canvas, &FontCollection, Area);
 
 /// Canvas Reference
 #[derive(Clone)]
