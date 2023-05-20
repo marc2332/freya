@@ -1005,9 +1005,9 @@ dependencies = [
 
 [[package]]
 name = "data-encoding"
-version = "2.3.3"
+version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "23d8666cb01533c39dde32bcbab8e227b4ed6679b2c925eba05feabea39508fb"
+checksum = "c2e66c9d817f1720209181c316d28635c050fa304f9c79e47a520882661b7308"
 
 [[package]]
 name = "data-url"
@@ -1042,7 +1042,7 @@ dependencies = [
 [[package]]
 name = "dioxus"
 version = "0.3.2"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877#c9044111908338c347b2b00bb48f579e5d9e1877"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7#0527cff3a59ba3176f7510a7234c5977ce1b17d7"
 dependencies = [
  "dioxus-core",
  "dioxus-core-macro",
@@ -1054,8 +1054,8 @@ dependencies = [
 
 [[package]]
 name = "dioxus-core"
-version = "0.3.2"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877#c9044111908338c347b2b00bb48f579e5d9e1877"
+version = "0.3.3"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7#0527cff3a59ba3176f7510a7234c5977ce1b17d7"
 dependencies = [
  "bumpalo",
  "bumpslab",
@@ -1073,7 +1073,7 @@ dependencies = [
 [[package]]
 name = "dioxus-core-macro"
 version = "0.3.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877#c9044111908338c347b2b00bb48f579e5d9e1877"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7#0527cff3a59ba3176f7510a7234c5977ce1b17d7"
 dependencies = [
  "dioxus-rsx",
  "proc-macro2",
@@ -1083,8 +1083,8 @@ dependencies = [
 
 [[package]]
 name = "dioxus-hooks"
-version = "0.3.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877#c9044111908338c347b2b00bb48f579e5d9e1877"
+version = "0.3.1"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7#0527cff3a59ba3176f7510a7234c5977ce1b17d7"
 dependencies = [
  "dioxus-core",
  "futures-channel",
@@ -1094,7 +1094,7 @@ dependencies = [
 [[package]]
 name = "dioxus-hot-reload"
 version = "0.1.1"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877#c9044111908338c347b2b00bb48f579e5d9e1877"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7#0527cff3a59ba3176f7510a7234c5977ce1b17d7"
 dependencies = [
  "chrono",
  "dioxus-core",
@@ -1112,7 +1112,7 @@ dependencies = [
 [[package]]
 name = "dioxus-html"
 version = "0.3.1"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877#c9044111908338c347b2b00bb48f579e5d9e1877"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7#0527cff3a59ba3176f7510a7234c5977ce1b17d7"
 dependencies = [
  "async-trait",
  "dioxus-core",
@@ -1128,7 +1128,7 @@ dependencies = [
 [[package]]
 name = "dioxus-native-core"
 version = "0.2.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877#c9044111908338c347b2b00bb48f579e5d9e1877"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7#0527cff3a59ba3176f7510a7234c5977ce1b17d7"
 dependencies = [
  "anymap 1.0.0-beta.2",
  "crossbeam-deque",
@@ -1149,7 +1149,7 @@ dependencies = [
 [[package]]
 name = "dioxus-native-core-macro"
 version = "0.3.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877#c9044111908338c347b2b00bb48f579e5d9e1877"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7#0527cff3a59ba3176f7510a7234c5977ce1b17d7"
 dependencies = [
  "quote",
  "syn 1.0.109",
@@ -1158,7 +1158,7 @@ dependencies = [
 [[package]]
 name = "dioxus-router"
 version = "0.3.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877#c9044111908338c347b2b00bb48f579e5d9e1877"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7#0527cff3a59ba3176f7510a7234c5977ce1b17d7"
 dependencies = [
  "dioxus",
  "futures-channel",
@@ -1173,7 +1173,7 @@ dependencies = [
 [[package]]
 name = "dioxus-rsx"
 version = "0.0.3"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=c9044111908338c347b2b00bb48f579e5d9e1877#c9044111908338c347b2b00bb48f579e5d9e1877"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7#0527cff3a59ba3176f7510a7234c5977ce1b17d7"
 dependencies = [
  "dioxus-core",
  "internment",
@@ -1187,7 +1187,7 @@ dependencies = [
 [[package]]
 name = "dioxus-utils"
 version = "0.1.0"
-source = "git+https://github.com/marc2332/dioxus-utils?rev=b277db0b8c57bd4041bb552bf3e16870c1f33567#b277db0b8c57bd4041bb552bf3e16870c1f33567"
+source = "git+https://github.com/marc2332/dioxus-utils?rev=ba88f558d4be08b1d6c40b7cb16167de33a698ae#ba88f558d4be08b1d6c40b7cb16167de33a698ae"
 dependencies = [
  "dioxus",
  "tokio",
@@ -1381,6 +1381,7 @@ dependencies = [
  "dioxus",
  "dioxus-utils",
  "freya",
+ "freya-node-state",
  "rand",
  "reqwest",
  "serde",
@@ -1578,6 +1579,7 @@ dependencies = [
  "freya-testing",
  "open",
  "reqwest",
+ "skia-safe",
  "tokio",
  "torin",
  "winit",
@@ -2052,6 +2054,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "grid"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0634107a3a005070dd73e27e74ecb691a94e9e5ba7829f434db7fbf73a6b5c47"
+dependencies = [
+ "no-std-compat",
+]
+
+[[package]]
 name = "h2"
 version = "0.3.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2505,9 +2516,9 @@ dependencies = [
 
 [[package]]
 name = "linux-raw-sys"
-version = "0.3.7"
+version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ece97ea872ece730aed82664c424eb4c8291e1ff2480247ccf7409044bc6479f"
+checksum = "ef53942eb7bf7ff43a617b3e2c1c4a5ecf5944a7c1bc12d7ee39bbb15e5c1519"
 
 [[package]]
 name = "lock_api"
@@ -2751,6 +2762,12 @@ dependencies = [
  "memoffset 0.6.5",
  "pin-utils",
 ]
+
+[[package]]
+name = "no-std-compat"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b93853da6d84c2e3c7d730d6473e8817692dd89be387eb01b94d7f108ecb5b8c"
 
 [[package]]
 name = "nokhwa"
@@ -4043,11 +4060,12 @@ dependencies = [
 
 [[package]]
 name = "taffy"
-version = "0.2.2"
+version = "0.3.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c13e87d38366d3cadcf282165b6ba51d5422ed846459997f55a347fe98242f61"
+checksum = "3540ec65df399929a04a485feb50144475735920cc47eaf8eba09c70b1df4055"
 dependencies = [
  "arrayvec",
+ "grid",
  "num-traits",
  "slotmap",
 ]

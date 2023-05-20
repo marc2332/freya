@@ -21,7 +21,7 @@ fn main() {
 fn app(cx: Scope) -> Element {
     render!(
         rect {
-            background: "white",
+
             padding: "10",
             display: "center",
             direction: "both",

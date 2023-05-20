@@ -29,7 +29,7 @@ impl<T: Clone> Default for WindowConfig<T> {
             title: "Freya app",
             transparent: false,
             state: None,
-            background: Color::WHITE,
+            background: Color::TRANSPARENT,
         }
     }
 }
@@ -61,7 +61,7 @@ impl<T> Default for WindowConfigBuilder<T> {
             title: "Freya app",
             transparent: false,
             state: None,
-            background: Color::WHITE,
+            background: Color::TRANSPARENT,
         }
     }
 }

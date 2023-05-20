@@ -79,7 +79,9 @@ impl State<CustomAttributeValues> for References {
             }
         }
 
-        let changed = false;
+        let changed = cursor_ref != self.cursor_ref
+            || image_ref != self.image_ref
+            || canvas_ref != self.canvas_ref;
         *self = Self {
             cursor_ref,
             image_ref,
