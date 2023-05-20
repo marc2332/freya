@@ -72,7 +72,7 @@ Add Freya as a dependency via git (it's not published on [crates.io](https://cra
 
 ```toml
 freya = { git = "https://github.com/marc2332/freya" }
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="c9044111908338c347b2b00bb48f579e5d9e1877", features = ["macro", "hooks"]}
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="0527cff3a59ba3176f7510a7234c5977ce1b17d7", features = ["macro", "hooks"]}
 ```
 
 ### Features ✨
@@ -94,14 +94,15 @@ dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="c9044111908338c347
 - Hooks crate for text editing, animating, theming..
 
 ### Goals 😁
-- Performant
-- Low memory usage
-- Lightweight 
+- Performant and low memory usage
 - Good developer experience
-- Cross platform
+- Cross-platform
+- Provide accessibility APIs
+- Provide testing APIs
+- Provide useful built-in components and hooks
 
 ## Status ⌚
 
-You can see the tracking [issues](https://github.com/marc2332/freya/issues?q=is%3Aopen+is%3Aissue+label%3Atracking) labeled with the `tracking` label to know what features are implemented and which ones are not, yet.
+You can see the tracking [issue](https://github.com/marc2332/freya/issues/200) to know what features are implemented and which ones are not, yet.
 
 [MIT License](./LICENSE.md)
