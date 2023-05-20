@@ -1,17 +1,14 @@
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use dioxus_core::{AttributeValue, Scope, ScopeState};
-use freya_node_state::{CanvasReference, CustomAttributeValues};
-use skia_safe::{textlayout::FontCollection, Canvas};
-use torin::geometry::Area;
+use dioxus_hooks::{to_owned, use_effect, UseFutureDep};
+use freya_node_state::{CanvasReference, CanvasRunner, CustomAttributeValues};
 use uuid::Uuid;
-
-pub type RenderCallback = Box<dyn Fn(&mut Canvas, &FontCollection, Area)>;
 
 /// Holds a rendering hook callback that allows to render to the Canvas.
 pub struct UseCanvas {
     id: Uuid,
-    hook_callback: Arc<RenderCallback>,
+    hook_callback: Arc<Mutex<Box<CanvasRunner>>>,
 }
 
 impl PartialEq for UseCanvas {
@@ -34,7 +31,7 @@ impl UseCanvas {
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app(cx: Scope) -> Element {
-///     let canvas = use_canvas(cx, || {
+///     let canvas = use_canvas(cx, (), |_| {
 ///         Box::new(|canvas, font_collection, area| {
 ///             // Draw using the canvas !
 ///         })
@@ -47,9 +44,24 @@ impl UseCanvas {
 ///     )
 /// }
 /// ```
-pub fn use_canvas(cx: &ScopeState, renderer: impl FnOnce() -> RenderCallback) -> UseCanvas {
+pub fn use_canvas<D>(
+    cx: &ScopeState,
+    dependencies: D,
+    renderer_cb: impl Fn(D::Out) -> Box<CanvasRunner>,
+) -> UseCanvas
+where
+    D: UseFutureDep,
+{
     let id = cx.use_hook(Uuid::new_v4);
-    let renderer = cx.use_hook(|| Arc::new(renderer()));
+    let renderer = cx.use_hook(|| Arc::new(Mutex::new(renderer_cb(dependencies.out()))));
+
+    use_effect(cx, dependencies.clone(), {
+        to_owned![renderer];
+        move |_| {
+            *renderer.lock().unwrap() = renderer_cb(dependencies.out());
+            async move {}
+        }
+    });
 
     UseCanvas {
         id: *id,

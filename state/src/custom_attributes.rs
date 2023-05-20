@@ -48,12 +48,12 @@ impl Display for NodeReference {
     }
 }
 
-type CanvasRunner = dyn Fn(&mut Canvas, &FontCollection, Area);
+pub type CanvasRunner = dyn Fn(&mut Canvas, &FontCollection, Area) + Sync + Send + 'static;
 
 /// Canvas Reference
 #[derive(Clone)]
 pub struct CanvasReference {
-    pub runner: Arc<Box<CanvasRunner>>,
+    pub runner: Arc<Mutex<Box<CanvasRunner>>>,
 }
 
 impl PartialEq for CanvasReference {
@@ -67,9 +67,6 @@ impl Debug for CanvasReference {
         f.debug_struct("CanvasReference").finish_non_exhaustive()
     }
 }
-
-unsafe impl Sync for CanvasReference {}
-unsafe impl Send for CanvasReference {}
 
 /// Cursor reference
 #[derive(Clone, Debug)]
