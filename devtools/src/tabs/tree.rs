@@ -3,16 +3,16 @@ use dioxus_native_core::NodeId;
 use dioxus_router::*;
 use freya_components::*;
 
-use crate::{node::NodeElement, TreeNode};
+use crate::{node::NodeElement, NodeMutation};
 
 #[allow(non_snake_case)]
 #[inline_props]
 pub fn NodesTree<'a>(
     cx: Scope<'a>,
-    nodes: &'a Vec<TreeNode>,
+    nodes: &'a Vec<NodeMutation>,
     height: &'a str,
     selected_node_id: &'a Option<NodeId>,
-    onselected: EventHandler<'a, &'a TreeNode>,
+    onselected: EventHandler<'a, &'a NodeMutation>,
 ) -> Element<'a> {
     let router = use_router(cx);
 
@@ -31,7 +31,7 @@ pub fn NodesTree<'a>(
                 NodeElement {
                     key: "{node.id:?}",
                     is_selected: Some(node.id) == **selected_node_id,
-                    onselected: |node: &TreeNode| {
+                    onselected: |node: &NodeMutation| {
                         onselected.call(node);
                         router.replace_route("/elements/style", None, None)
                     }

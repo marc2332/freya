@@ -12,7 +12,7 @@ keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
 [features]
-devtools = ["dep:freya-devtools", "freya-dom/shared"]
+devtools = ["dep:freya-devtools"]
 use_camera = ["freya-hooks/use_camera"]
 
 [target."cfg(target_os = \"linux\")".dependencies.skia-safe]

@@ -173,8 +173,8 @@ pub fn launch_cfg<T: 'static + Clone + Send>(root: Component, win_config: Window
             use tokio::sync::mpsc::unbounded_channel;
 
             let hovered_node = Some(Arc::new(Mutex::new(None)));
-            let (mutations_sender, mutations_receiver) = unbounded_channel::<()>();
-            let vdom = with_devtools(sdom.clone(), root, mutations_receiver, hovered_node.clone());
+            let (mutations_sender, mutations_receiver) = unbounded_channel();
+            let vdom = with_devtools(root, mutations_receiver, hovered_node.clone());
             (vdom, Some(mutations_sender), hovered_node)
         }
 

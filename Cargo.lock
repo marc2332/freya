@@ -1367,6 +1367,7 @@ dependencies = [
  "freya-renderer",
  "skia-safe",
  "tokio",
+ "torin",
 ]
 
 [[package]]

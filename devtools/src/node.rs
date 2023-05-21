@@ -2,15 +2,15 @@ use dioxus::prelude::*;
 use freya_components::ButtonStatus;
 use freya_elements::elements as dioxus_elements;
 
-use crate::TreeNode;
+use crate::NodeMutation;
 
 #[allow(non_snake_case)]
 #[inline_props]
 pub fn NodeElement<'a>(
     cx: Scope<'a>,
-    node: &'a TreeNode,
+    node: &'a NodeMutation,
     is_selected: bool,
-    onselected: EventHandler<'a, &'a TreeNode>,
+    onselected: EventHandler<'a, &'a NodeMutation>,
 ) -> Element<'a> {
     let status = use_state(cx, ButtonStatus::default);
 

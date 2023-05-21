@@ -10,9 +10,6 @@ repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
 categories = ["GUI"]
 
-[features]
-shared = []
-
 [dependencies]
 freya-node-state = { workspace = true }
 freya-common = { workspace = true }

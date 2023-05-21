@@ -5,12 +5,12 @@ use freya_elements::elements as dioxus_elements;
 
 use crate::{
     property::{ColorfulProperty, Property, ShadowProperty},
-    NodeInspectorBar, TreeNode,
+    NodeInspectorBar, NodeMutation,
 };
 
 #[allow(non_snake_case)]
 #[inline_props]
-pub fn NodeInspectorStyle<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> {
+pub fn NodeInspectorStyle<'a>(cx: Scope<'a>, node: &'a NodeMutation) -> Element<'a> {
     render!(
         container {
             width: "100%",

@@ -1,10 +1,11 @@
 use std::{collections::HashMap, sync::Arc, task::Waker};
 
 use dioxus_core::{Template, VirtualDom};
+use dioxus_native_core::{prelude::{NodeType, ElementNode, TextNode}, real_dom::NodeImmutable, NodeId};
 use freya_common::EventMessage;
 use freya_core::{
     events::{DomEvent, EventsProcessor, FreyaEvent},
-    process_events, EventEmitter, EventReceiver, EventsQueue, ViewportsCollection,
+    process_events, EventEmitter, EventReceiver, EventsQueue, ViewportsCollection, node::{get_node_state, NodeState},
 };
 use freya_dom::prelude::SafeDOM;
 use freya_layout::Layers;
@@ -18,6 +19,7 @@ use tokio::{
     select,
     sync::mpsc::{unbounded_channel, UnboundedSender},
 };
+use torin::prelude::NodeAreas;
 use uuid::Uuid;
 use winit::{dpi::PhysicalSize, event_loop::EventLoopProxy};
 
@@ -38,6 +40,19 @@ pub fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
     task::waker(Arc::new(DomHandle(proxy.clone())))
 }
 
+#[derive(Clone, Debug)]
+pub struct NodeMutation {
+    pub tag: String,
+    pub id: NodeId,
+    pub height: u16,
+    pub text: Option<String>,
+    pub state: NodeState,
+    pub areas: NodeAreas
+}
+
+pub type MutationsSender = UnboundedSender<Vec<NodeMutation>>;
+
+
 /// Manages the Application lifecycle
 pub struct App<State: 'static + Clone> {
     rdom: SafeDOM,
@@ -47,7 +62,7 @@ pub struct App<State: 'static + Clone> {
 
     vdom_waker: Waker,
     proxy: EventLoopProxy<EventMessage>,
-    mutations_sender: Option<UnboundedSender<()>>,
+    mutations_sender: Option<MutationsSender>,
 
     event_emitter: EventEmitter,
     event_receiver: EventReceiver,
@@ -66,7 +81,7 @@ impl<State: 'static + Clone> App<State> {
         rdom: SafeDOM,
         vdom: VirtualDom,
         proxy: &EventLoopProxy<EventMessage>,
-        mutations_sender: Option<UnboundedSender<()>>,
+        mutations_sender: Option<MutationsSender>,
         window_env: WindowEnv<State>,
     ) -> Self {
         let mut font_collection = FontCollection::new();
@@ -97,6 +112,54 @@ impl<State: 'static + Clone> App<State> {
         self.vdom.base_scope().provide_context(self.proxy.clone());
     }
 
+    fn notify_mutations_listener(&self) {
+        if let Some(mutations_sender) = &self.mutations_sender {
+            let dom = self.rdom.get();
+            let rdom = dom.rdom();
+            let layout = dom.layout();
+            let mut new_children = Vec::new();
+    
+            let mut root_found = false;
+            let mut devtools_found = false;
+    
+            rdom.traverse_depth_first(|node| {
+                let height = node.height();
+                if height == 2 {
+                    if !root_found {
+                        root_found = true;
+                    } else {
+                        devtools_found = true;
+                    }
+                }
+    
+                if !devtools_found && root_found{
+                    let (text, tag) = match &*node.node_type() {
+                        NodeType::Text(TextNode { text, .. }) => {
+                            (Some(text.to_string()), "text".to_string())
+                        }
+                        NodeType::Element(ElementNode { tag, .. }) => {
+                            (None, tag.to_string())
+                        }
+                        NodeType::Placeholder => (None, "placeholder".to_string()),
+                    };
+    
+                    let state = get_node_state(&node);
+                    let areas = layout.get(node.id()).cloned().unwrap_or_default();
+    
+                    new_children.push(NodeMutation {
+                        height,
+                        id: node.id(),
+                        tag,
+                        text,
+                        state,
+                        areas
+                    });
+                }
+            });    
+            mutations_sender.send(new_children).unwrap();
+        }
+    }
+
     /// Make the first build of the VirtualDOM.
     pub fn init_vdom(&mut self) {
         let scale_factor = self.window_env.window.scale_factor() as f32;
@@ -106,26 +169,27 @@ impl<State: 'static + Clone> App<State> {
 
         self.rdom.get_mut().init_dom(mutations, scale_factor);
 
-        self.mutations_sender.as_ref().map(|s| s.send(()));
+        self.notify_mutations_listener();
     }
 
     /// Update the DOM with the mutations from the VirtualDOM.
     pub fn apply_vdom_changes(&mut self) -> (bool, bool) {
-        let scale_factor = self.window_env.window.scale_factor() as f32;
-        let mutations = self.vdom.render_immediate();
-
-        let is_empty = mutations.dirty_scopes.is_empty()
-            && mutations.edits.is_empty()
-            && mutations.templates.is_empty();
-
-        let (repaint, relayout) = if !is_empty {
-            self.rdom.get_mut().apply_mutations(mutations, scale_factor)
-        } else {
-            (false, false)
+        let (repaint, relayout) = {
+            let scale_factor = self.window_env.window.scale_factor() as f32;
+            let mutations = self.vdom.render_immediate();
+    
+            let is_empty = mutations.dirty_scopes.is_empty()
+                && mutations.edits.is_empty()
+                && mutations.templates.is_empty();
+            if !is_empty {
+                self.rdom.get_mut().apply_mutations(mutations, scale_factor)
+            } else {
+                (false, false)
+            }
         };
 
         if repaint {
-            self.mutations_sender.as_ref().map(|s| s.send(()));
+            self.notify_mutations_listener();
         }
 
         (repaint, relayout)
@@ -138,13 +202,14 @@ impl<State: 'static + Clone> App<State> {
 
         loop {
             {
+               
                 let fut = async {
                     select! {
                         ev = self.event_receiver.recv() => {
                             if let Some(ev) = ev {
+                                println!("> {ev:?}");
                                 let data = ev.data.any();
                                 self.vdom.handle_event(&ev.name, data, ev.element_id, false);
-
                                 self.vdom.process_events();
                             }
                         },

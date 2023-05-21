@@ -6,7 +6,7 @@ use freya_node_state::{
 use skia_safe::Color;
 use torin::{direction::DirectionMode, display::DisplayMode, padding::Paddings, size::Size};
 
-#[derive(Clone)]
+#[derive(Clone, Default, Debug)]
 pub struct NodeState {
     pub cursor: CursorSettings,
     pub font_style: FontStyle,

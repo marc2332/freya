@@ -1,4 +1,4 @@
-use app::App;
+use app::{App};
 use dioxus_core::VirtualDom;
 
 use dioxus_native_core::NodeId;
@@ -30,6 +30,7 @@ mod renderer;
 mod window;
 mod window_config;
 
+pub use app::NodeMutation;
 pub type HoveredNode = Option<Arc<Mutex<Option<NodeId>>>>;
 
 const SPEED_MODIFIER: f32 = 20.0;
@@ -39,7 +40,7 @@ pub fn run<T: 'static + Clone>(
     vdom: VirtualDom,
     rdom: SafeDOM,
     window_config: WindowConfig<T>,
-    mutations_sender: Option<UnboundedSender<()>>,
+    mutations_sender: Option<UnboundedSender<Vec<NodeMutation>>>,
     hovered_node: HoveredNode,
 ) {
     let rt = tokio::runtime::Builder::new_multi_thread()
