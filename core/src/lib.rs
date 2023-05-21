@@ -21,7 +21,7 @@ pub type EventEmitter = UnboundedSender<DomEvent>;
 pub type EventReceiver = UnboundedReceiver<DomEvent>;
 pub type EventsQueue = Vec<FreyaEvent>;
 pub type ViewportsCollection = FxHashMap<NodeId, (Option<Area>, Vec<NodeId>)>;
-pub type NodesEvents<'a> = FxHashMap<&'a str, Vec<(NodeId, FreyaEvent)>>;
+pub type NodesEvents = FxHashMap<String, Vec<(NodeId, FreyaEvent)>>;
 
 // Calculate all the applicable viewports for the given nodes
 pub fn calculate_viewports(
@@ -67,13 +67,13 @@ pub fn calculate_viewports(
 }
 
 // Calculate possible events in nodes considering their viewports
-pub fn calculate_node_events<'a>(
+pub fn calculate_node_events(
     layers_nums: &[&i16],
     layers: &Layers,
     events: &EventsQueue,
     viewports_collection: &ViewportsCollection,
     fdom: &FreyaDOM,
-) -> (NodesEvents<'a>, Vec<FreyaEvent>) {
+) -> (NodesEvents, Vec<FreyaEvent>) {
     let mut calculated_events = FxHashMap::default();
     let mut global_events = Vec::default();
 
@@ -85,7 +85,7 @@ pub fn calculate_node_events<'a>(
         };
         if let Some(event_name) = event_name {
             let mut global_event = event.clone();
-            global_event.set_name(event_name);
+            global_event.set_name(event_name.to_string());
             global_events.push(global_event);
         }
     }
@@ -103,7 +103,7 @@ pub fn calculate_node_events<'a>(
                     if let FreyaEvent::Keyboard { name, .. } = event {
                         let event_data = (*node_id, event.clone());
                         calculated_events
-                            .entry(*name)
+                            .entry(name.clone())
                             .or_insert_with(|| vec![event_data.clone()])
                             .push(event_data);
                     } else {
@@ -136,7 +136,7 @@ pub fn calculate_node_events<'a>(
                                 let event_data = (*node_id, event.clone());
 
                                 calculated_events
-                                    .entry(*name)
+                                    .entry(name.clone())
                                     .or_insert_with(Vec::new)
                                     .push(event_data);
                             }
@@ -150,6 +150,24 @@ pub fn calculate_node_events<'a>(
     (calculated_events, global_events)
 }
 
+/// Some events might cause other events, like for example:
+/// A `mouseover` might also trigger a `mouseenter`
+/// A `mousedown` or a `touchdown` might also trigger a `pointerdown`
+fn get_derivated_events(event_name: &str) -> Vec<&str> {
+    match event_name {
+        "mouseover" => {
+            vec![event_name, "mouseenter"]
+        }
+        "mousedown" | "touchdown" => {
+            vec![event_name, "pointerdown"]
+        }
+        "click" | "ontouchend" => {
+            vec![event_name, "pointerup"]
+        }
+        _ => vec![event_name],
+    }
+}
+
 // Calculate events that can actually be triggered
 fn calculate_events_listeners(
     calculated_events: &mut NodesEvents,
@@ -161,42 +179,40 @@ fn calculate_events_listeners(
     let rdom = fdom.rdom();
 
     for (event_name, event_nodes) in calculated_events.iter_mut() {
-        // `mouseover` events might also derive into other events such as `mouseenter` so we must also check these.
-        let derivated_events = if event_name == &"mouseover" {
-            vec![&"mouseover", &"mouseenter"]
-        } else {
-            vec![event_name]
-        };
+        let derivated_events = get_derivated_events(event_name.as_str());
 
-        let mut found_nodes: Vec<(&NodeId, &FreyaEvent)> = Vec::new();
-        for event_name in derivated_events {
-            let listeners = rdom.get_listening_sorted(event_name);
+        let mut found_nodes: Vec<(&NodeId, FreyaEvent)> = Vec::new();
+        for derivated_event_name in derivated_events {
+            let listeners = rdom.get_listening_sorted(derivated_event_name);
             'event_nodes: for (node_id, request) in event_nodes.iter() {
                 for listener in &listeners {
                     if listener.id() == *node_id {
                         let Style { background, .. } = &*listener.get::<Style>().unwrap();
 
-                        if background != &Color::TRANSPARENT && event_name == &"wheel" {
+                        if background != &Color::TRANSPARENT && derivated_event_name == "wheel" {
                             break 'event_nodes;
                         }
 
                         if background != &Color::TRANSPARENT
-                            && (event_name == &"click"
-                                || event_name == &"touchstart"
-                                || event_name == &"touchend")
+                            && (derivated_event_name == "click"
+                                || derivated_event_name == "touchstart"
+                                || derivated_event_name == "touchend")
                         {
                             found_nodes.clear();
                         }
 
-                        if event_name == &"mouseover"
-                            || event_name == &"mouseenter"
-                            || event_name == &"click"
-                            || event_name == &"keydown"
-                            || event_name == &"keyup"
-                            || event_name == &"touchcancel"
-                            || event_name == &"touchend"
-                            || event_name == &"touchmove"
-                            || event_name == &"touchstart"
+                        let mut request = request.clone();
+                        request.set_name(derivated_event_name.to_string());
+
+                        if derivated_event_name == "mouseover"
+                            || derivated_event_name == "mouseenter"
+                            || derivated_event_name == "click"
+                            || derivated_event_name == "keydown"
+                            || derivated_event_name == "keyup"
+                            || derivated_event_name == "touchcancel"
+                            || derivated_event_name == "touchend"
+                            || derivated_event_name == "touchmove"
+                            || derivated_event_name == "touchstart"
                         {
                             found_nodes.push((node_id, request))
                         } else {
@@ -212,9 +228,8 @@ fn calculate_events_listeners(
             let node_ref = fdom.rdom().get(*node_id).unwrap();
             let element_id = node_ref.mounted_id().unwrap();
             let event = DomEvent::from_freya_event(
-                event_name,
                 element_id,
-                request_event,
+                &request_event,
                 Some(areas.area),
                 scale_factor,
             );
@@ -239,13 +254,7 @@ fn calculate_global_events_listeners(
 
         for listener in listeners {
             let element_id = listener.mounted_id().unwrap();
-            let event = DomEvent::from_freya_event(
-                event_name,
-                element_id,
-                &global_event,
-                None,
-                scale_factor,
-            );
+            let event = DomEvent::from_freya_event(element_id, &global_event, None, scale_factor);
             event_emitter.send(event).unwrap();
         }
     }
