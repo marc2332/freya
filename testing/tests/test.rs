@@ -99,7 +99,7 @@ async fn simulate_events() {
     assert_eq!(text.text(), Some("Is enabled? false"));
 
     utils.push_event(FreyaEvent::Mouse {
-        name: "click",
+        name: "click".to_string(),
         cursor: (5.0, 5.0).into(),
         button: Some(MouseButton::Left),
     });
