@@ -1,11 +1,16 @@
 use std::{collections::HashMap, sync::Arc, task::Waker};
 
 use dioxus_core::{Template, VirtualDom};
-use dioxus_native_core::{prelude::{NodeType, ElementNode, TextNode}, real_dom::NodeImmutable, NodeId};
+use dioxus_native_core::{
+    prelude::{ElementNode, NodeType, TextNode},
+    real_dom::NodeImmutable,
+    NodeId,
+};
 use freya_common::EventMessage;
 use freya_core::{
     events::{DomEvent, EventsProcessor, FreyaEvent},
-    process_events, EventEmitter, EventReceiver, EventsQueue, ViewportsCollection, node::{get_node_state, NodeState},
+    node::{get_node_state, NodeState},
+    process_events, EventEmitter, EventReceiver, EventsQueue, ViewportsCollection,
 };
 use freya_dom::prelude::SafeDOM;
 use freya_layout::Layers;
@@ -47,11 +52,10 @@ pub struct NodeMutation {
     pub height: u16,
     pub text: Option<String>,
     pub state: NodeState,
-    pub areas: NodeAreas
+    pub areas: NodeAreas,
 }
 
 pub type MutationsSender = UnboundedSender<Vec<NodeMutation>>;
-
 
 /// Manages the Application lifecycle
 pub struct App<State: 'static + Clone> {
@@ -118,10 +122,10 @@ impl<State: 'static + Clone> App<State> {
             let rdom = dom.rdom();
             let layout = dom.layout();
             let mut new_children = Vec::new();
-    
+
             let mut root_found = false;
             let mut devtools_found = false;
-    
+
             rdom.traverse_depth_first(|node| {
                 let height = node.height();
                 if height == 2 {
@@ -131,31 +135,29 @@ impl<State: 'static + Clone> App<State> {
                         devtools_found = true;
                     }
                 }
-    
-                if !devtools_found && root_found{
+
+                if !devtools_found && root_found {
                     let (text, tag) = match &*node.node_type() {
                         NodeType::Text(TextNode { text, .. }) => {
                             (Some(text.to_string()), "text".to_string())
                         }
-                        NodeType::Element(ElementNode { tag, .. }) => {
-                            (None, tag.to_string())
-                        }
+                        NodeType::Element(ElementNode { tag, .. }) => (None, tag.to_string()),
                         NodeType::Placeholder => (None, "placeholder".to_string()),
                     };
-    
+
                     let state = get_node_state(&node);
                     let areas = layout.get(node.id()).cloned().unwrap_or_default();
-    
+
                     new_children.push(NodeMutation {
                         height,
                         id: node.id(),
                         tag,
                         text,
                         state,
-                        areas
+                        areas,
                     });
                 }
-            });    
+            });
             mutations_sender.send(new_children).unwrap();
         }
     }
@@ -177,7 +179,7 @@ impl<State: 'static + Clone> App<State> {
         let (repaint, relayout) = {
             let scale_factor = self.window_env.window.scale_factor() as f32;
             let mutations = self.vdom.render_immediate();
-    
+
             let is_empty = mutations.dirty_scopes.is_empty()
                 && mutations.edits.is_empty()
                 && mutations.templates.is_empty();
@@ -202,7 +204,6 @@ impl<State: 'static + Clone> App<State> {
 
         loop {
             {
-               
                 let fut = async {
                     select! {
                         ev = self.event_receiver.recv() => {

@@ -5,9 +5,9 @@
 
 use dioxus_router::*;
 use freya::prelude::*;
-use freya_devtools::*;
-use freya_devtools::tabs::{style::*, tree::*, computed::*};
+use freya_devtools::tabs::{computed::*, style::*, tree::*};
 use freya_devtools::NodeId;
+use freya_devtools::*;
 
 fn main() {
     launch(app);
@@ -17,9 +17,16 @@ fn app(cx: Scope) -> Element {
     let a = cx.use_hook(|| NodeId::new_from_index_and_gen(0, 1));
     let b = cx.use_hook(|| Some(*a));
 
-    let children = cx.use_hook(|| vec![
-        TreeNode { tag: "aa".to_string(), id: *a , height: 1, text: None, state: NodeState::default(), areas: NodeAreas::default() }
-    ]);
+    let children = cx.use_hook(|| {
+        vec![TreeNode {
+            tag: "aa".to_string(),
+            id: *a,
+            height: 1,
+            text: None,
+            state: NodeState::default(),
+            areas: NodeAreas::default(),
+        }]
+    });
 
     render!(
         Button {
@@ -37,7 +44,7 @@ fn app(cx: Scope) -> Element {
                     height: "calc(100% - 35)",
                     selected_node_id: &None,
                     onselected: |_node: &TreeNode| {
-   
+
                     }
                 }
             }
@@ -48,7 +55,7 @@ fn app(cx: Scope) -> Element {
                     height: "calc(50% - 35)",
                     selected_node_id: b,
                     onselected: |_node: &TreeNode| {
-                      
+
                     }
                 }
                 NodeInspectorStyle {
@@ -62,7 +69,7 @@ fn app(cx: Scope) -> Element {
                     height: "calc(50% - 35)",
                     selected_node_id: b,
                     onselected: |node: &TreeNode| {
-                       
+
                     }
                 }
                 NodeInspectorComputed {

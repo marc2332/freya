@@ -2,9 +2,7 @@ use dioxus::prelude::*;
 use freya_components::*;
 use freya_elements::elements as dioxus_elements;
 
-use crate::{
-    NodeInspectorBar, NodeMutation,
-};
+use crate::{NodeInspectorBar, NodeMutation};
 
 #[allow(non_snake_case)]
 #[inline_props]

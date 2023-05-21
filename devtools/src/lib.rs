@@ -15,7 +15,7 @@ mod tab;
 mod tabs;
 
 use tab::*;
-use tabs::{style::*, tree::*, computed::*};
+use tabs::{computed::*, style::*, tree::*};
 
 /// Run the [`VirtualDom`](dioxus_core::VirtualDom) with a sidepanel where the devtools are located.
 pub fn with_devtools(
@@ -72,7 +72,6 @@ fn AppWithDevtools(cx: Scope<AppWithDevtoolsProps>) -> Element {
         }
     )
 }
-
 
 #[derive(Props)]
 pub struct DevToolsProps {

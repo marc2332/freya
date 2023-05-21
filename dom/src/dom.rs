@@ -20,28 +20,64 @@ pub type DioxusNode<'a> = NodeRef<'a, CustomAttributeValues>;
 /// Tiny wrapper over [FreyaDOM] to make it thread-safe if desired.
 /// This is primarily used by the Devtools and Testing renderer.
 pub struct SafeDOM {
+    #[cfg(not(feature = "shared"))]
     pub fdom: FreyaDOM,
+
+    #[cfg(feature = "shared")]
+    pub fdom: Arc<Mutex<FreyaDOM>>,
+}
+
+#[cfg(feature = "shared")]
+impl Clone for SafeDOM {
+    fn clone(&self) -> Self {
+        Self {
+            fdom: self.fdom.clone(),
+        }
+    }
 }
 
 impl SafeDOM {
+    #[cfg(not(feature = "shared"))]
     pub fn new(fdom: FreyaDOM) -> Self {
         Self { fdom }
     }
+
+    #[cfg(feature = "shared")]
+    pub fn new(fdom: FreyaDOM) -> Self {
+        Self {
+            fdom: Arc::new(Mutex::new(fdom)),
+        }
+    }
+
     /// Get a reference to the DOM.
+    #[cfg(not(feature = "shared"))]
     pub fn get(&self) -> &FreyaDOM {
         &self.fdom
     }
 
     /// Get a mutable reference to the DOM.
+    #[cfg(not(feature = "shared"))]
     pub fn get_mut(&mut self) -> &mut FreyaDOM {
         &mut self.fdom
+    }
+
+    /// Get a reference to the DOM.
+    #[cfg(feature = "shared")]
+    pub fn get(&self) -> MutexGuard<FreyaDOM> {
+        return self.fdom.lock().unwrap();
+    }
+
+    /// Get a mutable reference to the dom.
+    #[cfg(feature = "shared")]
+    pub fn get_mut(&self) -> MutexGuard<FreyaDOM> {
+        return self.fdom.lock().unwrap();
     }
 }
 
 /// Manages the application DOM.
 pub struct FreyaDOM {
     rdom: DioxusDOM,
-    pub dioxus_integration_state: DioxusState,
+    dioxus_integration_state: DioxusState,
     torin: Arc<Mutex<Torin<NodeId>>>,
 }
 
