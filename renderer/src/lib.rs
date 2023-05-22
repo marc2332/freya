@@ -9,7 +9,6 @@ use freya_dom::prelude::SafeDOM;
 use freya_elements::events::keyboard::{
     from_winit_to_code, get_modifiers, get_non_text_keys, Code, Key,
 };
-use tokio::runtime::Runtime;
 use torin::geometry::CursorPoint;
 
 use std::sync::{Arc, Mutex};
@@ -36,11 +35,6 @@ pub type HoveredNode = Option<Arc<Mutex<Option<NodeId>>>>;
 
 const SPEED_MODIFIER: f32 = 20.0;
 
-#[cfg_attr(miri, ignore)]
-fn rt() -> Runtime {
-    tokio::runtime::Builder::new_multi_thread().build().unwrap()
-}
-
 /// Start the winit event loop with the virtual dom polling
 pub fn run<T: 'static + Clone>(
     vdom: VirtualDom,
@@ -49,7 +43,10 @@ pub fn run<T: 'static + Clone>(
     mutations_sender: Option<UnboundedSender<Vec<NodeMutation>>>,
     hovered_node: HoveredNode,
 ) {
-    let rt = rt();
+    let rt = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .unwrap();
 
     let _guard = rt.enter();
 
