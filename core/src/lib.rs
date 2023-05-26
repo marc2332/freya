@@ -156,7 +156,7 @@ pub fn calculate_node_events(
 fn get_derivated_events(event_name: &str) -> Vec<&str> {
     match event_name {
         "mouseover" => {
-            vec![event_name, "mouseenter"]
+            vec![event_name, "mouseenter", "pointerenter", "pointerover"]
         }
         "mousedown" | "touchdown" => {
             vec![event_name, "pointerdown"]
@@ -164,15 +164,17 @@ fn get_derivated_events(event_name: &str) -> Vec<&str> {
         "click" | "ontouchend" => {
             vec![event_name, "pointerup"]
         }
+        "mouseleave" => {
+            vec![event_name, "pointerleave"]
+        }
         _ => vec![event_name],
     }
 }
 
-// Calculate events that can actually be triggered
+// Calculate events that can actually be phisically triggered
 fn calculate_events_listeners(
     calculated_events: &mut NodesEvents,
     fdom: &FreyaDOM,
-    event_emitter: &EventEmitter,
     scale_factor: f64,
 ) -> Vec<DomEvent> {
     let mut new_events = Vec::new();
@@ -204,16 +206,23 @@ fn calculate_events_listeners(
                         let mut request = request.clone();
                         request.set_name(derivated_event_name.to_string());
 
-                        if derivated_event_name == "mouseover"
-                            || derivated_event_name == "mouseenter"
-                            || derivated_event_name == "click"
-                            || derivated_event_name == "keydown"
-                            || derivated_event_name == "keyup"
-                            || derivated_event_name == "touchcancel"
-                            || derivated_event_name == "touchend"
-                            || derivated_event_name == "touchmove"
-                            || derivated_event_name == "touchstart"
-                        {
+                        const STACKED_ELEMENTS: [&str; 13] = [
+                            "mouseover",
+                            "mouseenter",
+                            "mouseleave",
+                            "click",
+                            "keydown",
+                            "keyup",
+                            "touchcancel",
+                            "touchend",
+                            "touchend",
+                            "touchstart",
+                            "pointerover",
+                            "pointerenter",
+                            "pointerleave",
+                        ];
+
+                        if STACKED_ELEMENTS.contains(&derivated_event_name) {
                             found_nodes.push((node_id, request))
                         } else {
                             found_nodes = vec![(node_id, request)]
@@ -228,21 +237,21 @@ fn calculate_events_listeners(
             let node_ref = fdom.rdom().get(*node_id).unwrap();
             let element_id = node_ref.mounted_id().unwrap();
             let event = DomEvent::from_freya_event(
+                *node_id,
                 element_id,
                 &request_event,
                 Some(areas.area),
                 scale_factor,
             );
-            new_events.push(event.clone());
-            event_emitter.send(event).unwrap();
+            new_events.push(event);
         }
     }
 
     new_events
 }
 
-/// Calculate global events to be triggered
-fn calculate_global_events_listeners(
+/// Emit global events
+fn emit_global_events_listeners(
     global_events: Vec<FreyaEvent>,
     fdom: &FreyaDOM,
     event_emitter: &EventEmitter,
@@ -254,7 +263,13 @@ fn calculate_global_events_listeners(
 
         for listener in listeners {
             let element_id = listener.mounted_id().unwrap();
-            let event = DomEvent::from_freya_event(element_id, &global_event, None, scale_factor);
+            let event = DomEvent::from_freya_event(
+                listener.id(),
+                element_id,
+                &global_event,
+                None,
+                scale_factor,
+            );
             event_emitter.send(event).unwrap();
         }
     }
@@ -384,13 +399,17 @@ pub fn process_events(
 
     let (mut node_events, global_events) =
         calculate_node_events(&layers_nums, layers, events, viewports_collection, dom);
+    let emitted_events = calculate_events_listeners(&mut node_events, dom, scale_factor);
+    let mut node_colateral_events =
+        events_processor.process_events(emitted_events, events, event_emitter);
+    let colateral_emitted_events =
+        calculate_events_listeners(&mut node_colateral_events, dom, scale_factor);
 
-    let emitted_events =
-        calculate_events_listeners(&mut node_events, dom, event_emitter, scale_factor);
+    for event in colateral_emitted_events {
+        event_emitter.send(event).unwrap();
+    }
 
-    calculate_global_events_listeners(global_events, dom, event_emitter, scale_factor);
-
-    events_processor.process_events(emitted_events, events, event_emitter);
+    emit_global_events_listeners(global_events, dom, event_emitter, scale_factor);
 
     events.clear();
 }

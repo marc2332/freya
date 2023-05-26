@@ -319,6 +319,9 @@ pub mod events {
 
         onpointerdown
         onpointerup
+        onpointerover
+        onpointerenter
+        onpointerleave
     ];
 }
 

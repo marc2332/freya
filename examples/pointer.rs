@@ -19,16 +19,37 @@ fn app(cx: Scope) -> Element {
         println!("Up -> {:?}", ev.data.get_pointer_type());
     };
 
+    let onpointerover = move |ev: PointerEvent| {
+        println!("Over -> {:?}", ev.data.get_pointer_type());
+    };
+
+    let onpointerenter = move |ev: PointerEvent| {
+        println!("Enter -> {:?}", ev.data.get_pointer_type());
+    };
+
+    let onpointerleave = move |ev: PointerEvent| {
+        println!("Leave -> {:?}", ev.data.get_pointer_type());
+    };
+
     render!(
         container {
             height: "100%",
             width: "100%",
-            background: "rgb(168, 218, 220)",
-            color: "black",
+            background: "red",
             padding: "12",
-            onpointerdown: onpointerdown,
-            onpointerup: onpointerup,
-            label { "Click me" }
+            container {
+                height: "100%",
+                width: "100%",
+                background: "rgb(168, 218, 220)",
+                color: "black",
+                padding: "12",
+                onpointerdown: onpointerdown,
+                onpointerup: onpointerup,
+                onpointerover: onpointerover,
+                onpointerenter: onpointerenter,
+                onpointerleave: onpointerleave,
+                label { "Click me" }
+            }
         }
     )
 }
