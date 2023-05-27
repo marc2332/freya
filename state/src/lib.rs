@@ -45,6 +45,7 @@ pub fn parse_color(color: &str) -> Option<Color> {
         "gray" => Some(Color::GRAY),
         "white" => Some(Color::WHITE),
         "orange" => Some(Color::from_rgb(255, 165, 0)),
+        "transparent" => Some(Color::TRANSPARENT),
         _ => parse_rgb(color),
     }
 }
