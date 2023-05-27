@@ -35,7 +35,7 @@ fn app(cx: Scope) -> Element {
         container {
             height: "100%",
             width: "100%",
-            background: "red",
+            background: "rgb(100, 100, 100)",
             padding: "12",
             container {
                 height: "100%",
