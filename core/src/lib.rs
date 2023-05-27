@@ -66,17 +66,9 @@ pub fn calculate_viewports(
     viewports_collection
 }
 
-// Calculate possible events in nodes considering their viewports
-pub fn calculate_node_events(
-    layers_nums: &[&i16],
-    layers: &Layers,
-    events: &EventsQueue,
-    viewports_collection: &ViewportsCollection,
-    fdom: &FreyaDOM,
-) -> (NodesEvents, Vec<FreyaEvent>) {
-    let mut calculated_events = FxHashMap::default();
+/// Measure globale events
+pub fn measure_global_events(events: &EventsQueue) -> Vec<FreyaEvent> {
     let mut global_events = Vec::default();
-
     for event in events {
         let event_name = match event.get_name() {
             "click" => Some("globalclick"),
@@ -89,6 +81,18 @@ pub fn calculate_node_events(
             global_events.push(global_event);
         }
     }
+    global_events
+}
+
+/// Measure what potential event listeners could be triggered
+pub fn measure_potential_event_listeners(
+    layers_nums: &[&i16],
+    layers: &Layers,
+    events: &EventsQueue,
+    viewports_collection: &ViewportsCollection,
+    fdom: &FreyaDOM,
+) -> NodesEvents {
+    let mut potential_events = FxHashMap::default();
 
     let layout = fdom.layout();
 
@@ -102,7 +106,7 @@ pub fn calculate_node_events(
                 'events: for event in events.iter() {
                     if let FreyaEvent::Keyboard { name, .. } = event {
                         let event_data = (*node_id, event.clone());
-                        calculated_events
+                        potential_events
                             .entry(name.clone())
                             .or_insert_with(|| vec![event_data.clone()])
                             .push(event_data);
@@ -135,7 +139,7 @@ pub fn calculate_node_events(
 
                                 let event_data = (*node_id, event.clone());
 
-                                calculated_events
+                                potential_events
                                     .entry(name.clone())
                                     .or_insert_with(Vec::new)
                                     .push(event_data);
@@ -147,7 +151,7 @@ pub fn calculate_node_events(
         }
     }
 
-    (calculated_events, global_events)
+    potential_events
 }
 
 /// Some events might cause other events, like for example:
@@ -171,16 +175,16 @@ fn get_derivated_events(event_name: &str) -> Vec<&str> {
     }
 }
 
-// Calculate events that can actually be phisically triggered
-fn calculate_events_listeners(
-    calculated_events: &mut NodesEvents,
+/// Measure what DOM events could be emited
+fn measure_dom_events(
+    potential_events: &mut NodesEvents,
     fdom: &FreyaDOM,
     scale_factor: f64,
 ) -> Vec<DomEvent> {
     let mut new_events = Vec::new();
     let rdom = fdom.rdom();
 
-    for (event_name, event_nodes) in calculated_events.iter_mut() {
+    for (event_name, event_nodes) in potential_events.iter_mut() {
         let derivated_events = get_derivated_events(event_name.as_str());
 
         let mut found_nodes: Vec<(&NodeId, FreyaEvent)> = Vec::new();
@@ -397,15 +401,20 @@ pub fn process_events(
     // Order the layers from top to bottom
     layers_nums.sort();
 
-    let (mut node_events, global_events) =
-        calculate_node_events(&layers_nums, layers, events, viewports_collection, dom);
-    let emitted_events = calculate_events_listeners(&mut node_events, dom, scale_factor);
-    let mut node_colateral_events =
-        events_processor.process_events(emitted_events, events, event_emitter);
-    let colateral_emitted_events =
-        calculate_events_listeners(&mut node_colateral_events, dom, scale_factor);
+    let global_events = measure_global_events(events);
 
-    for event in colateral_emitted_events {
+    let mut potential_events =
+        measure_potential_event_listeners(&layers_nums, layers, events, viewports_collection, dom);
+
+    let emitted_events = measure_dom_events(&mut potential_events, dom, scale_factor);
+
+    let mut potential_colateral_events =
+        events_processor.process_events(emitted_events, events, event_emitter);
+
+    let emitted_colateral_events =
+        measure_dom_events(&mut potential_colateral_events, dom, scale_factor);
+
+    for event in emitted_colateral_events {
         event_emitter.send(event).unwrap();
     }
 
