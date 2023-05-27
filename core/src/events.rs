@@ -69,7 +69,7 @@ impl FreyaEvent {
     }
 }
 
-pub fn does_event_move_mouse(event_name: &str) -> bool {
+pub fn does_event_move_cursor(event_name: &str) -> bool {
     ["pointerover", "pointerenter", "mouseover", "mouseenter"].contains(&event_name)
 }
 
@@ -83,8 +83,8 @@ pub struct DomEvent {
 }
 
 impl DomEvent {
-    pub fn does_mouse_move(&self) -> bool {
-        return does_event_move_mouse(self.name.as_str());
+    pub fn does_move_cursor(&self) -> bool {
+        return does_event_move_cursor(self.name.as_str());
     }
 
     pub fn from_freya_event(
@@ -238,7 +238,7 @@ impl EventsProcessor {
                 let no_recent_mouse_movement_on_me = events_to_emit
                     .iter()
                     .find_map(|event| {
-                        if event.does_mouse_move() && &event.node_id == element {
+                        if event.does_move_cursor() && &event.node_id == element {
                             Some(false)
                         } else {
                             None
@@ -250,7 +250,7 @@ impl EventsProcessor {
                     .iter()
                     .find(|event| {
                         if let FreyaEvent::Mouse { name, .. } = event {
-                            does_event_move_mouse(name)
+                            does_event_move_cursor(name)
                         } else {
                             false
                         }
@@ -315,7 +315,7 @@ impl EventsProcessor {
         // e.g `mouseover` will mark the element as hovered.
         for event in events_to_emit {
             let id = &event.node_id;
-            if does_event_move_mouse(event.name.as_str()) {
+            if does_event_move_cursor(event.name.as_str()) {
                 if !self.states.contains_key(id) {
                     self.states.insert(*id, ElementState::default());
                 }
