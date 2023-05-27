@@ -231,7 +231,6 @@ impl EventsProcessor {
         event_emitter: &EventEmitter,
     ) -> FxHashMap<String, Vec<(NodeId, FreyaEvent)>> {
         let mut new_events = FxHashMap::<String, Vec<(NodeId, FreyaEvent)>>::default();
-        let cursor_was_moved = events.iter().any(|e| e.get_name() == "mouseover");
 
         for (element, element_state) in self.states.iter_mut() {
             {
@@ -257,7 +256,7 @@ impl EventsProcessor {
                     })
                     .cloned();
 
-                if element_state.hovered && cursor_was_moved && no_recent_mouse_movement_on_me {
+                if element_state.hovered && no_recent_mouse_movement_on_me {
                     if let Some(FreyaEvent::Mouse { cursor, button, .. }) =
                         recent_mouse_movement_event
                     {
