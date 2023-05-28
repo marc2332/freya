@@ -223,6 +223,30 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                         )
                     })
                 }
+                Route {
+                    to: "/elements/otherTab",
+                    NodesTree {
+                        nodes: children,
+                        height: "calc(50% - 35)",
+                        selected_node_id: selected_node_id.get(),
+                        onselected: |node: &TreeNode| {
+                            if let Some(hovered_node) = &cx.props.hovered_node {
+                                hovered_node.lock().unwrap().replace(node.id);
+                            }
+                            selected_node_id.set(Some(node.id));
+                        }
+                    }
+                    label {
+                        "otherTab"
+                    }
+                    selected_node.map(|selected_node| {
+                        rsx!(
+                            NodeInspectorStyle {
+                                node: selected_node
+                            }
+                        )
+                    })
+                }
             }
         }
     )
@@ -247,6 +271,10 @@ pub fn NodeInspectorBar(cx: Scope) -> Element {
             TabButton {
                 to: "/elements/style",
                 label: "Style"
+            }
+            TabButton {
+                to: "/elements/otherTab",
+                label: "other tab"
             }
         }
     )

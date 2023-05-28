@@ -63,6 +63,7 @@ serde = "1.0.152"
 tracing-subscriber = "0.2.25"
 dioxus-utils = { git = "https://github.com/marc2332/dioxus-utils", rev = "ba88f558d4be08b1d6c40b7cb16167de33a698ae" }
 rand = "0.8.5"
+dioxus-router = { workspace = true }
 
 [profile.release]
 lto = true

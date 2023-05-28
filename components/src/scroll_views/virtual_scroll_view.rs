@@ -257,33 +257,14 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
             onmouseover: onmouseover,
             onkeydown: onkeydown,
             onkeyup: onkeyup,
-            rect {
-                direction: "vertical",
+            container {
+                padding: "{padding}",
+                height: "100%",
                 width: "{container_width}",
-                height: "{container_height}",
-                container {
-                    padding: "{padding}",
-                    height: "100%",
-                    width: "100%",
-                    direction: "{user_direction}",
-                    reference: node_ref,
-                    onwheel: onwheel,
-                    children
-                }
-                container {
-                    width: "100%",
-                    height: "{horizontal_scrollbar_size}",
-                    scroll_x: "{scrollbar_x}",
-                    onmouseleave: |_| {},
-                    background: "{scrollbar_theme.background}",
-                    rect {
-                        onmousedown: onmousedown_x,
-                        width: "{scrollbar_width}",
-                        height: "100%",
-                        radius: "10",
-                        background: "{scrollbar_theme.thumb_background}",
-                    },
-                }
+                direction: "vertical",
+                reference: node_ref,
+                onwheel: onwheel,
+                children
             }
             container {
                 width: "{vertical_scrollbar_size}",
