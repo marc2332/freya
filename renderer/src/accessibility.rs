@@ -135,21 +135,34 @@ impl AccessibilityState {
         let mut nodes = vec![(WINDOW_ID, root)];
         nodes.extend(self.get_nodes());
 
+        let focus = self.nodes.iter().find_map(|node| {
+            if Some(node.0) == self.focus {
+                Some(node.0)
+            } else {
+                None
+            }
+        });
+
         TreeUpdate {
             nodes,
             tree: Some(Tree::new(WINDOW_ID)),
-            focus: self.focus,
+            focus,
         }
     }
 
     /// Focus a Node given it's `AccessibilityId`
     pub fn set_focus(&mut self, adapter: &Adapter, id: AccessibilityId) {
         self.focus = Some(id);
-        adapter.update(TreeUpdate {
-            nodes: Vec::new(),
-            tree: None,
-            focus: self.focus,
-        });
+
+        // Only focus the element if it exists
+        let node_focused_exists = self.nodes.iter().any(|node| node.0 == id);
+        if node_focused_exists {
+            adapter.update(TreeUpdate {
+                nodes: Vec::new(),
+                tree: None,
+                focus: self.focus,
+            });
+        }
     }
 
     /// Focus the next/previous Node starting from the currently focused Node.

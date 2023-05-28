@@ -13,7 +13,9 @@ fn app(cx: Scope) -> Element {
     let values = cx.use_hook(|| vec!["A".to_string(), "B".to_string(), "C".to_string()]);
     let selected_dropdown = use_state(cx, || "A".to_string());
 
+    use_init_focus(cx);
     render!(
+        AccessibilityFocusProvider {},
         Dropdown {
             value: selected_dropdown.get().clone(),
             values.iter().map(|ch| {
