@@ -180,31 +180,30 @@ impl AccessibilityState {
                 .find(|(_, node)| node.0 == focused_node_id);
 
             if let Some((node_index, _)) = current_node {
-                let target_node = if direction == AccessibilityFocusDirection::Forward {
+                let target_node_index = if direction == AccessibilityFocusDirection::Forward {
                     // Find the next Node
-                    self.nodes
-                        .iter()
-                        .enumerate()
-                        .find(|(i, _)| i + 1 == node_index)
-                        .map(|(_, node)| node)
+                    if node_index == self.nodes.len() - 1 {
+                        0
+                    } else {
+                        node_index + 1
+                    }
                 } else {
                     // Find the previous Node
-                    self.nodes
-                        .iter()
-                        .enumerate()
-                        .find(|(i, _)| *i == node_index + 1)
-                        .map(|(_, node)| node)
+                    if node_index == 0 {
+                        self.nodes.len() - 1
+                    } else {
+                        node_index - 1
+                    }
                 };
 
-                if let Some((next_node_id, _)) = target_node {
-                    self.focus = Some(*next_node_id);
-                } else if direction == AccessibilityFocusDirection::Forward {
-                    // Select the last Node
-                    self.focus = self.nodes.last().map(|(id, _)| *id)
-                } else if direction == AccessibilityFocusDirection::Backward {
-                    // Select the first Node
-                    self.focus = self.nodes.first().map(|(id, _)| *id)
-                }
+                let target_node = self
+                    .nodes
+                    .iter()
+                    .enumerate()
+                    .find(|(i, _)| *i == target_node_index)
+                    .map(|(_, node)| node.0);
+
+                self.focus = target_node;
             } else {
                 // Select the first Node
                 self.focus = self.nodes.first().map(|(id, _)| *id)

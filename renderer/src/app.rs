@@ -258,18 +258,22 @@ impl<State: 'static + Clone> App<State> {
         let fdom = &self.sdom.get();
         let layout = fdom.layout();
         let rdom = fdom.rdom();
+        let layers = &self.layers.layers;
 
-        for (node_id, node_areas) in &layout.results {
-            let dioxus_node = rdom.get(*node_id);
-            if let Some(dioxus_node) = dioxus_node {
-                let node_accessibility = &*dioxus_node.get::<AccessibilitySettings>().unwrap();
-                if let Some(accessibility_id) = node_accessibility.focus_id {
-                    self.accessibility_state.lock().unwrap().add_element(
-                        &dioxus_node,
-                        node_areas,
-                        accessibility_id,
-                        node_accessibility,
-                    );
+        for layer in layers.values() {
+            for node_id in layer {
+                let node_areas = layout.get(*node_id).unwrap();
+                let dioxus_node = rdom.get(*node_id);
+                if let Some(dioxus_node) = dioxus_node {
+                    let node_accessibility = &*dioxus_node.get::<AccessibilitySettings>().unwrap();
+                    if let Some(accessibility_id) = node_accessibility.focus_id {
+                        self.accessibility_state.lock().unwrap().add_element(
+                            &dioxus_node,
+                            node_areas,
+                            accessibility_id,
+                            node_accessibility,
+                        );
+                    }
                 }
             }
         }

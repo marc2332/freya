@@ -148,7 +148,6 @@ impl FreyaDOM {
 
         let must_repaint = !diff.is_empty();
         let must_relayout = !self.layout().get_dirty_nodes().is_empty();
-
         (must_repaint, must_relayout)
     }
 
