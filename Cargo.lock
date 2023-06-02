@@ -838,14 +838,45 @@ dependencies = [
 [[package]]
 name = "dioxus"
 version = "0.3.2"
+source = "git+https://github.com/Demonthos/dioxus?branch=update-all-ids#db44721c3d7e0759b725580447dd5a9698484ef2"
+dependencies = [
+ "dioxus-core 0.3.3 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-core-macro 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-hooks 0.3.1 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-hot-reload 0.1.1 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-html 0.3.1 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-rsx 0.0.3 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+]
+
+[[package]]
+name = "dioxus"
+version = "0.3.2"
 source = "git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7#0527cff3a59ba3176f7510a7234c5977ce1b17d7"
 dependencies = [
- "dioxus-core",
- "dioxus-core-macro",
- "dioxus-hooks",
- "dioxus-hot-reload",
- "dioxus-html",
- "dioxus-rsx",
+ "dioxus-core 0.3.3 (git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7)",
+ "dioxus-core-macro 0.3.0 (git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7)",
+ "dioxus-hooks 0.3.1 (git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7)",
+ "dioxus-hot-reload 0.1.1 (git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7)",
+ "dioxus-html 0.3.1 (git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7)",
+ "dioxus-rsx 0.0.3 (git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7)",
+]
+
+[[package]]
+name = "dioxus-core"
+version = "0.3.3"
+source = "git+https://github.com/Demonthos/dioxus?branch=update-all-ids#db44721c3d7e0759b725580447dd5a9698484ef2"
+dependencies = [
+ "bumpalo",
+ "bumpslab",
+ "futures-channel",
+ "futures-util",
+ "indexmap",
+ "log",
+ "longest-increasing-subsequence",
+ "rustc-hash",
+ "serde",
+ "slab",
+ "smallbox",
 ]
 
 [[package]]
@@ -869,9 +900,20 @@ dependencies = [
 [[package]]
 name = "dioxus-core-macro"
 version = "0.3.0"
+source = "git+https://github.com/Demonthos/dioxus?branch=update-all-ids#db44721c3d7e0759b725580447dd5a9698484ef2"
+dependencies = [
+ "dioxus-rsx 0.0.3 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "dioxus-core-macro"
+version = "0.3.0"
 source = "git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7#0527cff3a59ba3176f7510a7234c5977ce1b17d7"
 dependencies = [
- "dioxus-rsx",
+ "dioxus-rsx 0.0.3 (git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7)",
  "proc-macro2",
  "quote",
  "syn 1.0.109",
@@ -880,11 +922,39 @@ dependencies = [
 [[package]]
 name = "dioxus-hooks"
 version = "0.3.1"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7#0527cff3a59ba3176f7510a7234c5977ce1b17d7"
+source = "git+https://github.com/Demonthos/dioxus?branch=update-all-ids#db44721c3d7e0759b725580447dd5a9698484ef2"
 dependencies = [
- "dioxus-core",
+ "dioxus-core 0.3.3 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
  "futures-channel",
  "log",
+]
+
+[[package]]
+name = "dioxus-hooks"
+version = "0.3.1"
+source = "git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7#0527cff3a59ba3176f7510a7234c5977ce1b17d7"
+dependencies = [
+ "dioxus-core 0.3.3 (git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7)",
+ "futures-channel",
+ "log",
+]
+
+[[package]]
+name = "dioxus-hot-reload"
+version = "0.1.1"
+source = "git+https://github.com/Demonthos/dioxus?branch=update-all-ids#db44721c3d7e0759b725580447dd5a9698484ef2"
+dependencies = [
+ "chrono",
+ "dioxus-core 0.3.3 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-html 0.3.1 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-rsx 0.0.3 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "execute",
+ "ignore",
+ "interprocess",
+ "notify",
+ "once_cell",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -893,9 +963,9 @@ version = "0.1.1"
 source = "git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7#0527cff3a59ba3176f7510a7234c5977ce1b17d7"
 dependencies = [
  "chrono",
- "dioxus-core",
- "dioxus-html",
- "dioxus-rsx",
+ "dioxus-core 0.3.3 (git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7)",
+ "dioxus-html 0.3.1 (git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7)",
+ "dioxus-rsx 0.0.3 (git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7)",
  "execute",
  "ignore",
  "interprocess",
@@ -908,11 +978,27 @@ dependencies = [
 [[package]]
 name = "dioxus-html"
 version = "0.3.1"
+source = "git+https://github.com/Demonthos/dioxus?branch=update-all-ids#db44721c3d7e0759b725580447dd5a9698484ef2"
+dependencies = [
+ "async-trait",
+ "dioxus-core 0.3.3 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-rsx 0.0.3 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "enumset",
+ "euclid",
+ "keyboard-types",
+ "serde",
+ "serde-value",
+ "serde_repr",
+]
+
+[[package]]
+name = "dioxus-html"
+version = "0.3.1"
 source = "git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7#0527cff3a59ba3176f7510a7234c5977ce1b17d7"
 dependencies = [
  "async-trait",
- "dioxus-core",
- "dioxus-rsx",
+ "dioxus-core 0.3.3 (git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7)",
+ "dioxus-rsx 0.0.3 (git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7)",
  "enumset",
  "euclid",
  "keyboard-types",
@@ -924,12 +1010,12 @@ dependencies = [
 [[package]]
 name = "dioxus-native-core"
 version = "0.2.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7#0527cff3a59ba3176f7510a7234c5977ce1b17d7"
+source = "git+https://github.com/Demonthos/dioxus?branch=update-all-ids#db44721c3d7e0759b725580447dd5a9698484ef2"
 dependencies = [
  "anymap 1.0.0-beta.2",
  "crossbeam-deque",
  "dashmap",
- "dioxus-core",
+ "dioxus-core 0.3.3 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
  "hashbrown 0.13.2",
  "keyboard-types",
  "lightningcss",
@@ -945,7 +1031,7 @@ dependencies = [
 [[package]]
 name = "dioxus-native-core-macro"
 version = "0.3.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7#0527cff3a59ba3176f7510a7234c5977ce1b17d7"
+source = "git+https://github.com/Demonthos/dioxus?branch=update-all-ids#db44721c3d7e0759b725580447dd5a9698484ef2"
 dependencies = [
  "quote",
  "syn 1.0.109",
@@ -954,9 +1040,9 @@ dependencies = [
 [[package]]
 name = "dioxus-router"
 version = "0.3.0"
-source = "git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7#0527cff3a59ba3176f7510a7234c5977ce1b17d7"
+source = "git+https://github.com/Demonthos/dioxus?branch=update-all-ids#db44721c3d7e0759b725580447dd5a9698484ef2"
 dependencies = [
- "dioxus",
+ "dioxus 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
  "futures-channel",
  "futures-util",
  "log",
@@ -969,9 +1055,23 @@ dependencies = [
 [[package]]
 name = "dioxus-rsx"
 version = "0.0.3"
+source = "git+https://github.com/Demonthos/dioxus?branch=update-all-ids#db44721c3d7e0759b725580447dd5a9698484ef2"
+dependencies = [
+ "dioxus-core 0.3.3 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "internment",
+ "krates",
+ "proc-macro2",
+ "quote",
+ "serde",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "dioxus-rsx"
+version = "0.0.3"
 source = "git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7#0527cff3a59ba3176f7510a7234c5977ce1b17d7"
 dependencies = [
- "dioxus-core",
+ "dioxus-core 0.3.3 (git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7)",
  "internment",
  "krates",
  "proc-macro2",
@@ -985,7 +1085,7 @@ name = "dioxus-utils"
 version = "0.1.0"
 source = "git+https://github.com/marc2332/dioxus-utils?rev=ba88f558d4be08b1d6c40b7cb16167de33a698ae#ba88f558d4be08b1d6c40b7cb16167de33a698ae"
 dependencies = [
- "dioxus",
+ "dioxus 0.3.2 (git+https://github.com/DioxusLabs/dioxus?rev=0527cff3a59ba3176f7510a7234c5977ce1b17d7)",
  "tokio",
  "uuid",
 ]
@@ -1122,7 +1222,7 @@ checksum = "0206175f82b8d6bf6652ff7d71a1e27fd2e4efde587fd368662814d6ec1d9ce0"
 name = "examples"
 version = "0.0.0"
 dependencies = [
- "dioxus",
+ "dioxus 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
  "dioxus-utils",
  "freya",
  "freya-node-state",
@@ -1266,14 +1366,14 @@ name = "freya"
 version = "0.1.0"
 dependencies = [
  "anymap 0.12.1",
- "dioxus",
- "dioxus-core",
- "dioxus-core-macro",
- "dioxus-hooks",
- "dioxus-hot-reload",
+ "dioxus 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-core 0.3.3 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-core-macro 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-hooks 0.3.1 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-hot-reload 0.1.1 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
  "dioxus-native-core",
  "dioxus-router",
- "dioxus-rsx",
+ "dioxus-rsx 0.0.3 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
  "freya-common",
  "freya-components",
  "freya-core",
@@ -1295,11 +1395,11 @@ dependencies = [
 name = "freya-common"
 version = "0.1.0"
 dependencies = [
- "dioxus-core",
- "dioxus-core-macro",
- "dioxus-hooks",
+ "dioxus-core 0.3.3 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-core-macro 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-hooks 0.3.1 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
  "dioxus-native-core",
- "dioxus-rsx",
+ "dioxus-rsx 0.0.3 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
  "euclid",
  "torin",
  "uuid",
@@ -1310,7 +1410,7 @@ dependencies = [
 name = "freya-components"
 version = "0.1.0"
 dependencies = [
- "dioxus",
+ "dioxus 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
  "dioxus-router",
  "freya",
  "freya-common",
@@ -1330,11 +1430,11 @@ dependencies = [
 name = "freya-core"
 version = "0.1.0"
 dependencies = [
- "dioxus-core",
- "dioxus-core-macro",
- "dioxus-hooks",
+ "dioxus-core 0.3.3 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-core-macro 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-hooks 0.3.1 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
  "dioxus-native-core",
- "dioxus-rsx",
+ "dioxus-rsx 0.0.3 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
  "freya-common",
  "freya-dom",
  "freya-elements",
@@ -1352,9 +1452,9 @@ dependencies = [
 name = "freya-devtools"
 version = "0.1.0"
 dependencies = [
- "dioxus",
- "dioxus-core",
- "dioxus-core-macro",
+ "dioxus 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-core 0.3.3 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-core-macro 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
  "dioxus-native-core",
  "dioxus-router",
  "freya-components",
@@ -1367,17 +1467,18 @@ dependencies = [
  "freya-renderer",
  "skia-safe",
  "tokio",
+ "torin",
 ]
 
 [[package]]
 name = "freya-dom"
 version = "0.1.0"
 dependencies = [
- "dioxus-core",
- "dioxus-core-macro",
- "dioxus-hooks",
+ "dioxus-core 0.3.3 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-core-macro 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-hooks 0.3.1 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
  "dioxus-native-core",
- "dioxus-rsx",
+ "dioxus-rsx 0.0.3 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
  "freya-common",
  "freya-node-state",
  "rustc-hash",
@@ -1390,11 +1491,11 @@ dependencies = [
 name = "freya-elements"
 version = "0.1.0"
 dependencies = [
- "dioxus-core",
- "dioxus-core-macro",
- "dioxus-hooks",
+ "dioxus-core 0.3.3 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-core-macro 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-hooks 0.3.1 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
  "dioxus-native-core",
- "dioxus-rsx",
+ "dioxus-rsx 0.0.3 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
  "freya-common",
  "keyboard-types",
  "tokio",
@@ -1407,12 +1508,12 @@ name = "freya-hooks"
 version = "0.1.0"
 dependencies = [
  "bytes",
- "dioxus",
- "dioxus-core",
- "dioxus-core-macro",
- "dioxus-hooks",
+ "dioxus 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-core 0.3.3 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-core-macro 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-hooks 0.3.1 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
  "dioxus-native-core",
- "dioxus-rsx",
+ "dioxus-rsx 0.0.3 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
  "euclid",
  "freya",
  "freya-common",
@@ -1434,13 +1535,13 @@ name = "freya-layout"
 version = "0.1.0"
 dependencies = [
  "anymap 0.12.1",
- "dioxus",
- "dioxus-core",
- "dioxus-core-macro",
- "dioxus-hooks",
+ "dioxus 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-core 0.3.3 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-core-macro 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-hooks 0.3.1 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
  "dioxus-native-core",
  "dioxus-native-core-macro",
- "dioxus-rsx",
+ "dioxus-rsx 0.0.3 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
  "freya-common",
  "freya-components",
  "freya-dom",
@@ -1461,12 +1562,12 @@ version = "0.1.0"
 dependencies = [
  "anymap 0.12.1",
  "bytes",
- "dioxus-core",
- "dioxus-core-macro",
- "dioxus-hooks",
+ "dioxus-core 0.3.3 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-core-macro 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-hooks 0.3.1 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
  "dioxus-native-core",
  "dioxus-native-core-macro",
- "dioxus-rsx",
+ "dioxus-rsx 0.0.3 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
  "freya-common",
  "freya-elements",
  "fxhash",
@@ -1482,12 +1583,12 @@ dependencies = [
 name = "freya-renderer"
 version = "0.1.0"
 dependencies = [
- "dioxus-core",
- "dioxus-core-macro",
- "dioxus-hooks",
- "dioxus-hot-reload",
+ "dioxus-core 0.3.3 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-core-macro 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-hooks 0.3.1 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-hot-reload 0.1.1 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
  "dioxus-native-core",
- "dioxus-rsx",
+ "dioxus-rsx 0.0.3 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
  "freya-common",
  "freya-core",
  "freya-dom",
@@ -1511,13 +1612,13 @@ name = "freya-testing"
 version = "0.1.0"
 dependencies = [
  "anymap 0.12.1",
- "dioxus",
- "dioxus-core",
- "dioxus-core-macro",
- "dioxus-hooks",
+ "dioxus 0.3.2 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-core 0.3.3 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-core-macro 0.3.0 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
+ "dioxus-hooks 0.3.1 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
  "dioxus-native-core",
  "dioxus-native-core-macro",
- "dioxus-rsx",
+ "dioxus-rsx 0.0.3 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
  "freya-common",
  "freya-components",
  "freya-core",
@@ -3967,7 +4068,7 @@ dependencies = [
 name = "torin"
 version = "0.1.0"
 dependencies = [
- "dioxus-core",
+ "dioxus-core 0.3.3 (git+https://github.com/Demonthos/dioxus?branch=update-all-ids)",
  "dioxus-native-core",
  "euclid",
  "fxhash",
