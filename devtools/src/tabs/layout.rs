@@ -6,7 +6,7 @@ use crate::{NodeInspectorBar, TreeNode};
 
 #[allow(non_snake_case)]
 #[inline_props]
-pub fn NodeInspectorComputed<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> {
+pub fn NodeInspectorLayout<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> {
     let inner_area = format!(
         "{}x{}",
         node.areas.inner_area.width(),

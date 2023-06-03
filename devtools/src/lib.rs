@@ -24,7 +24,7 @@ mod tab;
 mod tabs;
 
 use tab::*;
-use tabs::{computed::*, style::*, tree::*};
+use tabs::{layout::*, style::*, tree::*};
 
 /// Run the [`VirtualDom`](dioxus_core::VirtualDom) with a sidepanel where the devtools are located.
 pub fn with_devtools(
@@ -232,7 +232,7 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                     })
                 }
                 Route {
-                    to: "/elements/computed",
+                    to: "/elements/layout",
                     NodesTree {
                         nodes: children,
                         height: "calc(50% - 35)",
@@ -246,7 +246,7 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                     }
                     selected_node.map(|selected_node| {
                         rsx!(
-                            NodeInspectorComputed {
+                            NodeInspectorLayout {
                                 node: selected_node
                             }
                         )
@@ -278,8 +278,8 @@ pub fn NodeInspectorBar(cx: Scope) -> Element {
                 label: "Style"
             }
             TabButton {
-                to: "/elements/computed",
-                label: "Computed"
+                to: "/elements/layout",
+                label: "Layout"
             }
         }
     )
