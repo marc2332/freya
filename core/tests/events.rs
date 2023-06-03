@@ -1,7 +1,6 @@
 use dioxus::prelude::*;
 use freya_core::events::FreyaEvent;
 use freya_elements::elements as dioxus_elements;
-use freya_elements::events::PointerEvent;
 use freya_testing::{launch_test, MouseButton};
 use torin::prelude::CursorPoint;
 
@@ -10,17 +9,15 @@ pub async fn pointer_events() {
     fn pointer_events_app(cx: Scope) -> Element {
         let state = use_state(cx, || vec![]);
 
-        let onpointerdown = move |ev: PointerEvent| state.with_mut(|v| v.push("down".to_string()));
+        let onpointerdown = move |_| state.with_mut(|v| v.push("down".to_string()));
 
-        let onpointerup = move |ev: PointerEvent| state.with_mut(|v| v.push("up".to_string()));
+        let onpointerup = move |_| state.with_mut(|v| v.push("up".to_string()));
 
-        let onpointerover = move |ev: PointerEvent| state.with_mut(|v| v.push("over".to_string()));
+        let onpointerover = move |_| state.with_mut(|v| v.push("over".to_string()));
 
-        let onpointerenter =
-            move |ev: PointerEvent| state.with_mut(|v| v.push("enter".to_string()));
+        let onpointerenter = move |_| state.with_mut(|v| v.push("enter".to_string()));
 
-        let onpointerleave =
-            move |ev: PointerEvent| state.with_mut(|v| v.push("leave".to_string()));
+        let onpointerleave = move |_| state.with_mut(|v| v.push("leave".to_string()));
 
         render!(
             rect {
