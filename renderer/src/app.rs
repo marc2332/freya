@@ -193,6 +193,8 @@ impl<State: 'static + Clone> App<State> {
             .process_layout(&dom, &mut self.font_collection);
         self.layers = layers;
         self.viewports_collection = viewports;
+
+        self.mutations_sender.as_ref().map(|s| s.send(()));
     }
 
     /// Push an event to the events queue

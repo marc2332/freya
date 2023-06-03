@@ -12,11 +12,11 @@ use freya_elements::elements as dioxus_elements;
 use freya_hooks::use_theme;
 
 use freya_renderer::HoveredNode;
-use torin::prelude::Area;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tokio::sync::mpsc::UnboundedReceiver;
 use tokio::time::sleep;
+use torin::prelude::NodeAreas;
 
 mod node;
 mod property;
@@ -24,7 +24,7 @@ mod tab;
 mod tabs;
 
 use tab::*;
-use tabs::{style::*, tree::*, computed::*};
+use tabs::{computed::*, style::*, tree::*};
 
 /// Run the [`VirtualDom`](dioxus_core::VirtualDom) with a sidepanel where the devtools are located.
 pub fn with_devtools(
@@ -94,7 +94,7 @@ pub struct TreeNode {
     #[allow(dead_code)]
     text: Option<String>,
     state: NodeState,
-    area: Area
+    areas: NodeAreas,
 }
 
 #[derive(Props)]
@@ -158,19 +158,18 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                                     }
                                     NodeType::Placeholder => (None, "placeholder".to_string()),
                                 };
-    
+
                                 let state = get_node_state(&node);
-    
+
                                 new_children.push(TreeNode {
                                     height,
                                     id: node.id(),
                                     tag,
                                     text,
                                     state,
-                                    area: areas.area
+                                    areas: areas.clone(),
                                 });
                             }
-                            
                         }
                     });
                     children.set(new_children);

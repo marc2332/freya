@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use dioxus_router::use_router;
-use freya_components::ButtonStatus;
+use freya_components::{ButtonStatus, ScrollView};
 use freya_elements::elements as dioxus_elements;
 use freya_hooks::use_get_theme;
 
@@ -11,17 +11,11 @@ pub struct TabsBarProps<'a> {
 
 #[allow(non_snake_case)]
 pub fn TabsBar<'a>(cx: Scope<'a, TabsBarProps<'a>>) -> Element<'a> {
-    let theme = use_get_theme(cx);
-    let background = theme.button.background;
-    let color = theme.button.font_theme.color;
-
     render!(
-        container {
-            background: "{background}",
+        ScrollView {
             direction: "horizontal",
             height: "35",
             width: "100%",
-            color: "{color}",
             &cx.props.children
         }
     )

@@ -25,15 +25,15 @@ freya-dom = { path = "dom", version = "0.1.0" }
 freya-testing = { path = "testing", version = "0.1.0" }
 torin = { path = "torin", version = "0.1.0" }
 
-dioxus = { git = "https://github.com/Demonthos/dioxus", branch="update-all-ids" }
-dioxus-native-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="update-all-ids" }
-dioxus-rsx = { git = "https://github.com/Demonthos/dioxus", branch="update-all-ids" }
-dioxus-native-core = { git = "https://github.com/Demonthos/dioxus", branch="update-all-ids", features=["dioxus"] }
-dioxus-core-macro = { git = "https://github.com/Demonthos/dioxus", branch="update-all-ids" }
-dioxus-hooks = { git = "https://github.com/Demonthos/dioxus", branch="update-all-ids" }
-dioxus-core = { git = "https://github.com/Demonthos/dioxus", branch="update-all-ids" }
-dioxus-hot-reload = { git = "https://github.com/Demonthos/dioxus", branch="update-all-ids" }
-dioxus-router = { git = "https://github.com/Demonthos/dioxus", branch="update-all-ids" }
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="b264211cc2685232426317d3055046838047d3db" }
+dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="b264211cc2685232426317d3055046838047d3db" }
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev="b264211cc2685232426317d3055046838047d3db" }
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev="b264211cc2685232426317d3055046838047d3db", features=["dioxus"] }
+dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev="b264211cc2685232426317d3055046838047d3db" }
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev="b264211cc2685232426317d3055046838047d3db" }
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev="b264211cc2685232426317d3055046838047d3db" }
+dioxus-hot-reload = { git = "https://github.com/DioxusLabs/dioxus", rev="b264211cc2685232426317d3055046838047d3db" }
+dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev="b264211cc2685232426317d3055046838047d3db" }
 
 gl = "0.14.0"
 glutin = "0.30.6"

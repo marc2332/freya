@@ -22,7 +22,7 @@ edition = "2021"
 
 [dependencies]
 freya = { git = "https://github.com/marc2332/freya" }
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", branch="update-all-ids", features = ["macro", "hooks"]}
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="b264211cc2685232426317d3055046838047d3db", features = ["macro", "hooks"]}
 ```
 
 ### src/main.rs
