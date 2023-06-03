@@ -1,11 +1,11 @@
 # Testing
 
-Freya comes with a special testing renderer (`freya-testing`)that let's you run your component in a headless environment.
-This will let you write unit tests for your components.
+Freya comes with a special testing renderer (`freya-testing`) that let's you run your components in a headless environment.
+This will let you easily write unit tests for your components.
 
 ## Getting started
 
-You can use the `launch_test` function to launch your component in a headless environment, it will also return you a set of utilities for you to interact with the component.
+You can use the `launch_test` function to run the tests of your component, it will return you a set of utilities for you to interact with the component.
 
 For example, this will launch a state-less component and assert that it renders a label with the text `"Hello World!"`.
 
@@ -120,3 +120,33 @@ async fn event_test() {
     assert_eq!(text.text(), Some("Is enabled? true"));
 }
 ```
+
+## Testing configuration
+
+The `launch_test` comes with a default configuration, but you can also pass your own with the `launch_test_with_config` function.
+
+Here is an example of how to can set our custom window size:
+
+```rust
+#[tokio::test]
+async fn test() {
+    fn our_component(cx: Scope) -> Element {
+        render!(
+            label {
+                "Hello World!"
+            }
+        )
+    }
+
+    let mut utils = launch_test_with_config(
+        our_component,
+        TestingConfig::default().with_size((500.0, 800.0).into()),
+    );
+
+    let root = utils.root();
+    let label = root.get(0);
+    let label_text = label.get(0);
+
+    assert_eq!(label_text.text(), Some("Hello World!"));
+}
+````
