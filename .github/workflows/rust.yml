@@ -27,7 +27,7 @@ jobs:
     - name: Set up cargo cache
       uses: Swatinem/rust-cache@v2
       with:
-        prefix-key: "3"
+        prefix-key: "4"
     - name: Install linux dependencies
       if: runner.os == 'Linux'
       run: |
