@@ -175,6 +175,26 @@ fn get_derivated_events(event_name: &str) -> Vec<&str> {
     }
 }
 
+const STACKED_EVENTS: [&str; 13] = [
+    "mouseover",
+    "mouseenter",
+    "mouseleave",
+    "click",
+    "keydown",
+    "keyup",
+    "touchcancel",
+    "touchend",
+    "touchend",
+    "touchstart",
+    "pointerover",
+    "pointerenter",
+    "pointerleave",
+];
+
+const FIRST_CAPTURED_EVENTS: [&str; 1] = ["wheel"];
+
+const LAST_CAPTURED_EVENTS: [&str; 3] = ["click", "touchstart", "touchend"];
+
 /// Measure what DOM events could be emited
 fn measure_dom_events(
     potential_events: &mut NodesEvents,
@@ -195,38 +215,25 @@ fn measure_dom_events(
                     if listener.id() == *node_id {
                         let Style { background, .. } = &*listener.get::<Style>().unwrap();
 
-                        if background != &Color::TRANSPARENT && derivated_event_name == "wheel" {
+                        let mut request = request.clone();
+                        request.set_name(derivated_event_name.to_string());
+
+                        // Stop searching on first match
+                        if background != &Color::TRANSPARENT
+                            && FIRST_CAPTURED_EVENTS.contains(&derivated_event_name)
+                        {
                             break 'event_nodes;
                         }
 
+                        // Only keep the last matched event
                         if background != &Color::TRANSPARENT
-                            && (derivated_event_name == "click"
-                                || derivated_event_name == "touchstart"
-                                || derivated_event_name == "touchend")
+                            && LAST_CAPTURED_EVENTS.contains(&derivated_event_name)
                         {
                             found_nodes.clear();
                         }
 
-                        let mut request = request.clone();
-                        request.set_name(derivated_event_name.to_string());
-
-                        const STACKED_ELEMENTS: [&str; 13] = [
-                            "mouseover",
-                            "mouseenter",
-                            "mouseleave",
-                            "click",
-                            "keydown",
-                            "keyup",
-                            "touchcancel",
-                            "touchend",
-                            "touchend",
-                            "touchstart",
-                            "pointerover",
-                            "pointerenter",
-                            "pointerleave",
-                        ];
-
-                        if STACKED_ELEMENTS.contains(&derivated_event_name) {
+                        // Stack the matched events
+                        if STACKED_EVENTS.contains(&derivated_event_name) {
                             found_nodes.push((node_id, request))
                         } else {
                             found_nodes = vec![(node_id, request)]
