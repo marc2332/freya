@@ -11,3 +11,4 @@
 - [Theming](./guides/theming.md)
 - [Hot reload](./guides/hot_reload.md)
 - [Virtualizing](./guides/virtualizing.md)
+- [Animating](./guides/animating.md)
