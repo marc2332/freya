@@ -189,7 +189,7 @@ mod test {
         utils.wait_for_update().await;
 
         utils.push_event(FreyaEvent::Mouse {
-            name: "mousedown",
+            name: "mousedown".to_string(),
             cursor: (5.0, 5.0).into(),
             button: Some(MouseButton::Left),
         });
@@ -197,7 +197,7 @@ mod test {
         utils.wait_for_update().await;
 
         utils.push_event(FreyaEvent::Mouse {
-            name: "mouseover",
+            name: "mouseover".to_string(),
             cursor: (5.0, 5.0).into(),
             button: Some(MouseButton::Left),
         });
@@ -205,7 +205,7 @@ mod test {
         utils.wait_for_update().await;
 
         utils.push_event(FreyaEvent::Mouse {
-            name: "mouseover",
+            name: "mouseover".to_string(),
             cursor: (5.0, 300.0).into(),
             button: Some(MouseButton::Left),
         });
@@ -226,7 +226,7 @@ mod test {
         );
 
         utils.push_event(FreyaEvent::Mouse {
-            name: "click",
+            name: "click".to_string(),
             cursor: (5.0, 300.0).into(),
             button: Some(MouseButton::Left),
         });

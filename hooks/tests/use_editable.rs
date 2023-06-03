@@ -70,7 +70,7 @@ pub async fn multiple_lines_single_editor() {
 
     // Move cursor
     utils.push_event(FreyaEvent::Mouse {
-        name: "mousedown",
+        name: "mousedown".to_string(),
         cursor: (35.0, 3.0).into(),
         button: Some(MouseButton::Left),
     });
@@ -89,7 +89,7 @@ pub async fn multiple_lines_single_editor() {
 
     // Insert text
     utils.push_event(FreyaEvent::Keyboard {
-        name: "keydown",
+        name: "keydown".to_string(),
         key: Key::Character("!".to_string()),
         code: Code::Unidentified,
         modifiers: Modifiers::empty(),
@@ -184,7 +184,7 @@ pub async fn single_line_mulitple_editors() {
 
     // Move cursor
     utils.push_event(FreyaEvent::Mouse {
-        name: "mousedown",
+        name: "mousedown".to_string(),
         cursor: (35.0, 3.0).into(),
         button: Some(MouseButton::Left),
     });
@@ -203,7 +203,7 @@ pub async fn single_line_mulitple_editors() {
 
     // Insert text
     utils.push_event(FreyaEvent::Keyboard {
-        name: "keydown",
+        name: "keydown".to_string(),
         key: Key::Character("!".to_string()),
         code: Code::Unidentified,
         modifiers: Modifiers::empty(),
@@ -304,7 +304,7 @@ pub async fn highlight_multiple_lines_single_editor() {
 
     // Click cursor
     utils.push_event(FreyaEvent::Mouse {
-        name: "mousedown",
+        name: "mousedown".to_string(),
         cursor: (35.0, 3.0).into(),
         button: Some(MouseButton::Left),
     });
@@ -313,7 +313,7 @@ pub async fn highlight_multiple_lines_single_editor() {
 
     // Move cursor
     utils.push_event(FreyaEvent::Mouse {
-        name: "mouseover",
+        name: "mouseover".to_string(),
         cursor: (80.0, 20.0).into(),
         button: Some(MouseButton::Left),
     });
@@ -423,7 +423,7 @@ pub async fn highlights_single_line_mulitple_editors() {
 
     // Click cursor
     utils.push_event(FreyaEvent::Mouse {
-        name: "mousedown",
+        name: "mousedown".to_string(),
         cursor: (35.0, 3.0).into(),
         button: Some(MouseButton::Left),
     });
@@ -432,7 +432,7 @@ pub async fn highlights_single_line_mulitple_editors() {
 
     // Move cursor
     utils.push_event(FreyaEvent::Mouse {
-        name: "mouseover",
+        name: "mouseover".to_string(),
         cursor: (35.0, 3.0).into(),
         button: Some(MouseButton::Left),
     });
@@ -442,7 +442,7 @@ pub async fn highlights_single_line_mulitple_editors() {
 
     // Move cursor
     utils.push_event(FreyaEvent::Mouse {
-        name: "mouseover",
+        name: "mouseover".to_string(),
         cursor: (80.0, 35.0).into(),
         button: Some(MouseButton::Left),
     });

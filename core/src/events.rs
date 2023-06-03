@@ -1,10 +1,13 @@
-use std::{any::Any, collections::HashMap, rc::Rc};
+use std::{any::Any, rc::Rc};
 
 use dioxus_core::ElementId;
+use dioxus_native_core::NodeId;
 use freya_elements::events::{
     keyboard::{Code, Key, Modifiers},
-    KeyboardData, MouseData, TouchData, WheelData,
+    pointer::PointerType,
+    KeyboardData, MouseData, PointerData, TouchData, WheelData,
 };
+use rustc_hash::FxHashMap;
 use torin::prelude::*;
 use winit::event::{Force, MouseButton, TouchPhase};
 
@@ -15,26 +18,26 @@ use crate::EventEmitter;
 pub enum FreyaEvent {
     /// A Mouse Event.
     Mouse {
-        name: &'static str,
+        name: String,
         cursor: CursorPoint,
         button: Option<MouseButton>,
     },
     /// A Wheel event.
     Wheel {
-        name: &'static str,
+        name: String,
         scroll: CursorPoint,
         cursor: CursorPoint,
     },
     /// A Keyboard event.
     Keyboard {
-        name: &'static str,
+        name: String,
         key: Key,
         code: Code,
         modifiers: Modifiers,
     },
     /// A Touch event.
     Touch {
-        name: &'static str,
+        name: String,
         location: CursorPoint,
         finger_id: u64,
         phase: TouchPhase,
@@ -52,7 +55,7 @@ impl FreyaEvent {
         }
     }
 
-    pub fn set_name(&mut self, new_name: &'static str) {
+    pub fn set_name(&mut self, new_name: String) {
         match self {
             Self::Mouse { name, .. } => *name = new_name,
             Self::Wheel { name, .. } => *name = new_name,
@@ -60,41 +63,75 @@ impl FreyaEvent {
             Self::Touch { name, .. } => *name = new_name,
         }
     }
+
+    pub fn is_pointer_event(&self) -> bool {
+        self.get_name().starts_with("point")
+    }
+}
+
+pub fn does_event_move_cursor(event_name: &str) -> bool {
+    ["pointerover", "pointerenter", "mouseover", "mouseenter"].contains(&event_name)
 }
 
 /// Event emitted to the DOM.
 #[derive(Debug, Clone)]
 pub struct DomEvent {
     pub name: String,
+    pub node_id: NodeId,
     pub element_id: ElementId,
     pub data: DomEventData,
 }
 
 impl DomEvent {
+    pub fn does_move_cursor(&self) -> bool {
+        return does_event_move_cursor(self.name.as_str());
+    }
+
     pub fn from_freya_event(
-        event_name: &str,
+        node_id: NodeId,
         element_id: ElementId,
         event: &FreyaEvent,
         node_area: Option<Area>,
         scale_factor: f64,
     ) -> Self {
+        let is_pointer_event = event.is_pointer_event();
+        let event_name = event.get_name().to_string();
+
         match event {
-            FreyaEvent::Mouse { cursor, button, .. } => Self {
-                element_id,
-                name: event_name.to_string(),
-                data: DomEventData::Mouse(MouseData::new(
-                    *cursor / scale_factor,
-                    (
-                        (cursor.x - node_area.unwrap_or_default().min_x() as f64) / scale_factor,
-                        (cursor.y - node_area.unwrap_or_default().min_y() as f64) / scale_factor,
-                    )
-                        .into(),
-                    *button,
-                )),
-            },
+            FreyaEvent::Mouse { cursor, button, .. } => {
+                let screen_coordinates = *cursor / scale_factor;
+                let element_x =
+                    (cursor.x - node_area.unwrap_or_default().min_x() as f64) / scale_factor;
+                let element_y =
+                    (cursor.y - node_area.unwrap_or_default().min_y() as f64) / scale_factor;
+
+                let event_data = if is_pointer_event {
+                    DomEventData::Pointer(PointerData::new(
+                        screen_coordinates,
+                        (element_x, element_y).into(),
+                        PointerType::Mouse {
+                            trigger_button: *button,
+                        },
+                    ))
+                } else {
+                    DomEventData::Mouse(MouseData::new(
+                        screen_coordinates,
+                        (element_x, element_y).into(),
+                        *button,
+                    ))
+                };
+
+                Self {
+                    node_id,
+                    element_id,
+                    name: event_name,
+                    data: event_data,
+                }
+            }
             FreyaEvent::Wheel { scroll, .. } => Self {
+                node_id,
                 element_id,
-                name: event_name.to_string(),
+                name: event_name,
                 data: DomEventData::Wheel(WheelData::new(scroll.x, scroll.y)),
             },
             FreyaEvent::Keyboard {
@@ -103,8 +140,9 @@ impl DomEvent {
                 modifiers,
                 ..
             } => Self {
+                node_id,
                 element_id,
-                name: event_name.to_string(),
+                name: event_name,
                 data: DomEventData::Keyboard(KeyboardData::new(key.clone(), *code, *modifiers)),
             },
             FreyaEvent::Touch {
@@ -113,21 +151,37 @@ impl DomEvent {
                 phase,
                 force,
                 ..
-            } => DomEvent {
-                element_id,
-                name: event_name.to_string(),
-                data: DomEventData::Touch(TouchData::new(
-                    *location,
-                    (
-                        location.x - node_area.unwrap_or_default().min_x() as f64,
-                        location.y - node_area.unwrap_or_default().min_y() as f64,
-                    )
-                        .into(),
-                    *finger_id,
-                    *phase,
-                    *force,
-                )),
-            },
+            } => {
+                let element_x = location.x - node_area.unwrap_or_default().min_x() as f64;
+                let element_y = location.y - node_area.unwrap_or_default().min_y() as f64;
+
+                let event_data = if is_pointer_event {
+                    DomEventData::Pointer(PointerData::new(
+                        *location,
+                        (element_x, element_y).into(),
+                        PointerType::Touch {
+                            finger_id: *finger_id,
+                            phase: *phase,
+                            force: *force,
+                        },
+                    ))
+                } else {
+                    DomEventData::Touch(TouchData::new(
+                        *location,
+                        (element_x, element_y).into(),
+                        *finger_id,
+                        *phase,
+                        *force,
+                    ))
+                };
+
+                Self {
+                    node_id,
+                    element_id,
+                    name: event_name,
+                    data: event_data,
+                }
+            }
         }
     }
 }
@@ -139,6 +193,7 @@ pub enum DomEventData {
     Keyboard(KeyboardData),
     Wheel(WheelData),
     Touch(TouchData),
+    Pointer(PointerData),
 }
 
 impl DomEventData {
@@ -147,15 +202,16 @@ impl DomEventData {
             DomEventData::Mouse(m) => Rc::new(m),
             DomEventData::Keyboard(k) => Rc::new(k),
             DomEventData::Wheel(w) => Rc::new(w),
-            DomEventData::Touch(w) => Rc::new(w),
+            DomEventData::Touch(t) => Rc::new(t),
+            DomEventData::Pointer(p) => Rc::new(p),
         }
     }
 }
 
-/// Cached state between re-renders
+/// State of an element.
 #[derive(Default)]
 struct ElementState {
-    mouseover: bool,
+    hovered: bool,
 }
 
 /// [`EventsProcessor`] stores the elements events states.
@@ -163,7 +219,7 @@ struct ElementState {
 /// TODO(marc2332): Remove deleted Elements
 #[derive(Default)]
 pub struct EventsProcessor {
-    states: HashMap<ElementId, ElementState>,
+    states: FxHashMap<NodeId, ElementState>,
 }
 
 impl EventsProcessor {
@@ -173,62 +229,102 @@ impl EventsProcessor {
         events_to_emit: Vec<DomEvent>,
         events: &[FreyaEvent],
         event_emitter: &EventEmitter,
-    ) {
-        let cursor_was_moved = events.iter().any(|e| e.get_name() == "mouseover");
+    ) -> FxHashMap<String, Vec<(NodeId, FreyaEvent)>> {
+        let mut new_events = FxHashMap::<String, Vec<(NodeId, FreyaEvent)>>::default();
 
-        for (element, state) in self.states.iter_mut() {
+        for (element, element_state) in self.states.iter_mut() {
             {
-                let mut no_recent_mouseover = true;
+                let no_recent_mouse_movement_on_me = events_to_emit
+                    .iter()
+                    .find_map(|event| {
+                        if event.does_move_cursor() && &event.node_id == element {
+                            Some(false)
+                        } else {
+                            None
+                        }
+                    })
+                    .unwrap_or(true);
 
-                // Check if the element has been hovered
-                for event in &events_to_emit {
-                    if event.name == "mouseover" && &event.element_id == element {
-                        no_recent_mouseover = false;
-                        break;
+                let recent_mouse_movement_event = events
+                    .iter()
+                    .find(|event| {
+                        if let FreyaEvent::Mouse { name, .. } = event {
+                            does_event_move_cursor(name)
+                        } else {
+                            false
+                        }
+                    })
+                    .cloned();
+
+                if element_state.hovered && no_recent_mouse_movement_on_me {
+                    if let Some(FreyaEvent::Mouse { cursor, button, .. }) =
+                        recent_mouse_movement_event
+                    {
+                        let events = new_events.entry("mouseleave".to_string()).or_default();
+                        events.push((
+                            *element,
+                            FreyaEvent::Mouse {
+                                name: "mouseleave".to_string(),
+                                cursor,
+                                button,
+                            },
+                        ));
+
+                        // Mark the element as no longer being hovered
+                        element_state.hovered = false;
                     }
-                }
-
-                if no_recent_mouseover && state.mouseover && cursor_was_moved {
-                    event_emitter
-                        .send(DomEvent {
-                            element_id: *element,
-                            name: "mouseleave".to_string(),
-                            data: DomEventData::Mouse(MouseData::new(
-                                CursorPoint::default(), // TODO: Use actual locations
-                                CursorPoint::default(), // TODO: Use actual locations
-                                Some(MouseButton::Left),
-                            )),
-                        })
-                        .unwrap();
-
-                    // Mark the element as no longer being hovered
-                    state.mouseover = false;
                 }
             }
         }
 
+        // All these events will mark the node as being hovered
+        // "mouseover" "mouseenter" "pointerover"  "pointerenter"
+
+        // Emit valid events
+        for event in &events_to_emit {
+            let id = &event.node_id;
+
+            let should_trigger = match event.name.as_str() {
+                name @ "mouseover"
+                | name @ "mouseenter"
+                | name @ "pointerover"
+                | name @ "pointerenter" => {
+                    if !self.states.contains_key(id) {
+                        self.states.insert(*id, ElementState::default());
+                    }
+
+                    let node_state = self.states.get_mut(id).unwrap();
+
+                    if name == "mouseenter" || name == "pointerenter" {
+                        // If the event is already being hovered then it's pointless to trigger the movement event
+                        !node_state.hovered
+                    } else {
+                        true
+                    }
+                }
+                _ => true,
+            };
+
+            if should_trigger {
+                event_emitter.send(event.clone()).unwrap();
+            }
+        }
+
+        // Update the internal states of elements given the events
+        // e.g `mouseover` will mark the element as hovered.
         for event in events_to_emit {
-            if event.name == "mouseover" {
-                let id = &event.element_id;
+            let id = &event.node_id;
+            if does_event_move_cursor(event.name.as_str()) {
                 if !self.states.contains_key(id) {
                     self.states.insert(*id, ElementState::default());
                 }
 
-                let node_state = self.states.get_mut(&event.element_id).unwrap();
+                let node_state = self.states.get_mut(id).unwrap();
 
-                if !node_state.mouseover {
-                    event_emitter
-                        .send(DomEvent {
-                            element_id: *id,
-                            name: "mouseenter".to_string(),
-                            data: event.data,
-                        })
-                        .unwrap();
-                }
-
-                // Mark the element as being hovered
-                node_state.mouseover = true;
+                node_state.hovered = true;
             }
         }
+
+        new_events
     }
 }
