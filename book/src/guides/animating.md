@@ -11,7 +11,7 @@ This a very simple hook that will let you animate a certain value from an `inita
 - EaseInOut
 - BounceIns
 
-Here is an example that will animate a value from `0.0` to `100.0` in `50` milliseconds, using the linear animation.
+Here is an example that will animate a value from `0.0` to `100.0` in `50` milliseconds, using the `linear` animation.
 
 ```rust
 fn main() {
@@ -36,7 +36,7 @@ fn main() {
 
 ### `use_animation_transition`
 
-This hook let's you group a set of animations together with a certain type of `animation` (linear, ease in, etc) and a given `duration`.
+This hook let's you group a set of animations together with a certain type of `animation` and a given `duration`. You can also specifiy a set of dependencies that will make animations callback re run.
 
 Just like `use_animation` you have these animations:
 
@@ -45,7 +45,7 @@ Just like `use_animation` you have these animations:
 - EaseInOut
 - BounceIns
 
-Here is an example that will animate a size and a color in `200` milliseconds, using the linear animation.
+Here is an example that will animate a `size` and a color in `200` milliseconds, using the `new_sine_in_out` animation.
 
 ```rust
 fn main() {
@@ -55,7 +55,7 @@ fn main() {
 const TARGET: f64 = 500.0;
 
 fn app(cx: Scope) -> Element {
-    let animation = use_animation_transition(cx, TransitionAnimation::new_sine_in_out(200), || {
+    let animation = use_animation_transition(cx, TransitionAnimation::new_sine_in_out(200), (), || {
         vec![
             Animate::new_size(0.0, TARGET),
             Animate::new_color("rgb(33, 158, 188)", "white"),
