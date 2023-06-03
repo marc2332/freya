@@ -27,7 +27,7 @@ pub fn NodeInspectorComputed<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'
                 rect {
                     width: "100%",
                     height: "200",
-                    padding: "5",
+                    padding: "20",
                     label {
                         height: "25",
                         "Area: {area}"
@@ -42,6 +42,7 @@ pub fn NodeInspectorComputed<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'
                             width: "100%",
                             height: "100%",
                             background: "rgb(71, 180, 240)",
+                            radius: "5",
                             rect {
                                 direction: "both",
                                 display: "center",
@@ -74,6 +75,7 @@ pub fn NodeInspectorComputed<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'
                                     display: "center",
                                     direction: "both",
                                     background: "rgb(40, 40, 40)",
+                                    radius: "5",
                                     label {
                                         "{inner_area}"
                                     }
