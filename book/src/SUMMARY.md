@@ -12,3 +12,4 @@
 - [Hot reload](./guides/hot_reload.md)
 - [Virtualizing](./guides/virtualizing.md)
 - [Testing](./guides/testing.md)
+- [Animating](./guides/animating.md)
