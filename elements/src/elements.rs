@@ -279,7 +279,7 @@ builder_constructors! {
 }
 
 pub mod events {
-    use crate::events::{KeyboardData, MouseData, TouchData, WheelData};
+    use crate::events::{KeyboardData, MouseData, PointerData, TouchData, WheelData};
 
     macro_rules! impl_event {
         (
@@ -336,6 +336,16 @@ pub mod events {
         ontouchend
         ontouchmove
         ontouchstart
+    ];
+
+    impl_event! [
+        PointerData;
+
+        onpointerdown
+        onpointerup
+        onpointerover
+        onpointerenter
+        onpointerleave
     ];
 }
 

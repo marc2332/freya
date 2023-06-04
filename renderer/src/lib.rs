@@ -134,7 +134,7 @@ pub fn run<T: 'static + Clone>(
                         };
 
                         app.push_event(FreyaEvent::Mouse {
-                            name: event_name,
+                            name: event_name.to_string(),
                             cursor: cursor_pos,
                             button: Some(button),
                         });
@@ -153,7 +153,7 @@ pub fn run<T: 'static + Clone>(
                             };
 
                             app.push_event(FreyaEvent::Wheel {
-                                name: "wheel",
+                                name: "wheel".to_string(),
                                 scroll: CursorPoint::from(scroll_data),
                                 cursor: cursor_pos,
                             });
@@ -168,7 +168,7 @@ pub fn run<T: 'static + Clone>(
                         // Emit the received character if the last pressed key wasn't text
                         if last_keydown == Key::Unidentified || !modifiers_state.is_empty() {
                             app.push_event(FreyaEvent::Keyboard {
-                                name: "keydown",
+                                name: "keydown".to_string(),
                                 key: Key::Character(a.to_string()),
                                 code: last_code,
                                 modifiers: get_modifiers(modifiers_state),
@@ -226,7 +226,7 @@ pub fn run<T: 'static + Clone>(
                                 last_keydown = Key::Unidentified;
                             }
                             app.push_event(FreyaEvent::Keyboard {
-                                name: event_name,
+                                name: event_name.to_string(),
                                 key,
                                 code: from_winit_to_code(&virtual_keycode),
                                 modifiers: get_modifiers(modifiers_state),
@@ -249,7 +249,7 @@ pub fn run<T: 'static + Clone>(
                         cursor_pos = CursorPoint::from((position.x, position.y));
 
                         app.push_event(FreyaEvent::Mouse {
-                            name: "mouseover",
+                            name: "mouseover".to_string(),
                             cursor: cursor_pos,
                             button: None,
                         });
@@ -273,7 +273,7 @@ pub fn run<T: 'static + Clone>(
                         };
 
                         app.push_event(FreyaEvent::Touch {
-                            name: event_name,
+                            name: event_name.to_string(),
                             location: cursor_pos,
                             finger_id: id,
                             phase,

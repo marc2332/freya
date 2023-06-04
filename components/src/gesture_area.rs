@@ -204,7 +204,7 @@ mod test {
         assert_eq!(utils.root().get(0).get(0).text(), Some("EMPTY"));
 
         utils.push_event(FreyaEvent::Touch {
-            name: "touchstart",
+            name: "touchstart".to_string(),
             location: (1.0, 1.0).into(),
             phase: TouchPhase::Started,
             finger_id: 0,
@@ -212,7 +212,7 @@ mod test {
         });
 
         utils.push_event(FreyaEvent::Touch {
-            name: "touchend",
+            name: "touchend".to_string(),
             location: (1.0, 1.0).into(),
             phase: TouchPhase::Ended,
             finger_id: 0,
@@ -225,7 +225,7 @@ mod test {
         sleep(Duration::from_millis(DOUBLE_TAP_MIN as u64)).await;
 
         utils.push_event(FreyaEvent::Touch {
-            name: "touchstart",
+            name: "touchstart".to_string(),
             location: (1.0, 1.0).into(),
             phase: TouchPhase::Started,
             finger_id: 0,
@@ -264,7 +264,7 @@ mod test {
         assert_eq!(utils.root().get(0).get(0).text(), Some("EMPTY"));
 
         utils.push_event(FreyaEvent::Touch {
-            name: "touchstart",
+            name: "touchstart".to_string(),
             location: (1.0, 1.0).into(),
             phase: TouchPhase::Started,
             finger_id: 0,
@@ -277,7 +277,7 @@ mod test {
         assert_eq!(utils.root().get(0).get(0).text(), Some("TapDown"));
 
         utils.push_event(FreyaEvent::Touch {
-            name: "touchend",
+            name: "touchend".to_string(),
             location: (1.0, 1.0).into(),
             phase: TouchPhase::Ended,
             finger_id: 0,

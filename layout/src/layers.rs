@@ -1,6 +1,6 @@
 use dioxus_native_core::NodeId;
 use freya_dom::prelude::FreyaDOM;
-use rustc_hash::{FxHashMap, FxHashSet};
+use rustc_hash::FxHashMap;
 use skia_safe::textlayout::FontCollection;
 use torin::torin::Torin;
 use uuid::Uuid;
@@ -10,7 +10,7 @@ use crate::{measure_paragraph, DioxusDOM};
 #[derive(Default, Clone)]
 pub struct Layers {
     pub layers: FxHashMap<i16, Vec<NodeId>>,
-    pub paragraph_elements: FxHashMap<Uuid, FxHashSet<NodeId>>,
+    pub paragraph_elements: FxHashMap<Uuid, Vec<NodeId>>,
 }
 
 impl Layers {

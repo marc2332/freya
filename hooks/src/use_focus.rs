@@ -112,7 +112,7 @@ mod test {
 
         // Click on the first rect
         utils.push_event(FreyaEvent::Mouse {
-            name: "click",
+            name: "click".to_string(),
             cursor: (5.0, 5.0).into(),
             button: Some(MouseButton::Left),
         });
@@ -124,7 +124,7 @@ mod test {
 
         // Click on the second rect
         utils.push_event(FreyaEvent::Mouse {
-            name: "click",
+            name: "click".to_string(),
             cursor: (5.0, 75.0).into(),
             button: Some(MouseButton::Left),
         });
