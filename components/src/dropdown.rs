@@ -50,8 +50,8 @@ where
     let is_selected = *selected.read() == cx.props.value;
 
     let background = match *state.get() {
+        _ if is_selected => theme.dropdown_item.select_background,
         _ if is_focused => theme.dropdown_item.hover_background,
-        _ if is_selected => theme.dropdown_item.hover_background,
         DropdownItemState::Hovering => theme.dropdown_item.hover_background,
         DropdownItemState::Idle => theme.dropdown_item.background,
     };
