@@ -4,6 +4,7 @@ use dioxus_core::VirtualDom;
 use dioxus_native_core::NodeId;
 use freya_common::EventMessage;
 
+use freya_core::accessibility::AccessibilityFocusDirection;
 use freya_core::events::FreyaEvent;
 use freya_dom::prelude::SafeDOM;
 use freya_elements::events::keyboard::{
@@ -11,7 +12,6 @@ use freya_elements::events::keyboard::{
 };
 use torin::geometry::CursorPoint;
 
-use accessibility::AccessibilityFocusDirection;
 use std::sync::{Arc, Mutex};
 use winit::event::{
     ElementState, Event, KeyboardInput, ModifiersState, MouseScrollDelta, StartCause, Touch,

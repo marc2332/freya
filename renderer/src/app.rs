@@ -6,6 +6,7 @@ use dioxus_core::{Template, VirtualDom};
 use dioxus_native_core::real_dom::NodeImmutable;
 use freya_common::EventMessage;
 use freya_core::{
+    accessibility::{AccessibilityFocusDirection, AccessibilityProvider},
     events::{DomEvent, EventsProcessor, FreyaEvent},
     process_events, EventEmitter, EventReceiver, EventsQueue, FocusReceiver, FocusSender,
     ViewportsCollection,
@@ -27,7 +28,7 @@ use uuid::Uuid;
 use winit::{dpi::PhysicalSize, event::WindowEvent, event_loop::EventLoopProxy, window::Window};
 
 use crate::{
-    accessibility::{AccessibilityFocusDirection, AccessibilityState, SharedAccessibilityState},
+    accessibility::{AccessibilityState, SharedAccessibilityState, WINDOW_ID},
     HoveredNode, WindowEnv,
 };
 
@@ -56,7 +57,7 @@ fn create_accessibility_adapter(
         window,
         move || {
             let mut accessibility_state = accessibility_state.lock().unwrap();
-            accessibility_state.process(&window_title)
+            accessibility_state.process(WINDOW_ID, &window_title)
         },
         proxy.clone(),
     )
@@ -262,7 +263,7 @@ impl<State: 'static + Clone> App<State> {
                 if let Some(dioxus_node) = dioxus_node {
                     let node_accessibility = &*dioxus_node.get::<AccessibilitySettings>().unwrap();
                     if let Some(accessibility_id) = node_accessibility.focus_id {
-                        self.accessibility_state.lock().unwrap().add_element(
+                        self.accessibility_state.lock().unwrap().add_node(
                             &dioxus_node,
                             node_areas,
                             accessibility_id,
@@ -303,10 +304,14 @@ impl<State: 'static + Clone> App<State> {
 
     /// Focus a new accessibility node
     pub fn set_accessibility_focus(&mut self, id: NodeId) {
-        self.accessibility_state
+        let tree = self
+            .accessibility_state
             .lock()
             .unwrap()
-            .set_focus(&self.accessibility_adapter, id);
+            .set_focus_with_update(Some(id));
+        if let Some(tree) = tree {
+            self.accessibility_adapter.update(tree);
+        }
     }
 
     /// Validate a winit event for accessibility
@@ -326,16 +331,20 @@ impl<State: 'static + Clone> App<State> {
             .accessibility_state
             .lock()
             .unwrap()
-            .process(self.window_env.window_config.title);
+            .process(WINDOW_ID, self.window_env.window_config.title);
         self.accessibility_adapter.update(tree);
     }
 
     /// Focus the next accessibility node
     pub fn focus_next_node(&mut self, direction: AccessibilityFocusDirection) {
-        self.accessibility_state
+        let tree = self
+            .accessibility_state
             .lock()
             .unwrap()
-            .set_focus_on_next_node(&self.accessibility_adapter, direction, &self.focus_sender);
+            .set_focus_on_next_node(direction, &self.focus_sender);
+        if let Some(tree) = tree {
+            self.accessibility_adapter.update(tree);
+        }
     }
 
     pub fn measure_text_group(&self, text_id: &Uuid) {

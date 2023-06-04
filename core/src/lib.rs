@@ -13,6 +13,7 @@ use skia_safe::{textlayout::FontCollection, Color};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tokio::sync::watch;
 
+pub mod accessibility;
 pub mod events;
 pub mod node;
 
