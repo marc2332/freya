@@ -12,9 +12,8 @@ pub use ropey::Rope;
 use tokio::sync::{mpsc::unbounded_channel, mpsc::UnboundedSender};
 use torin::geometry::CursorPoint;
 use uuid::Uuid;
-use winit::event_loop::EventLoopProxy;
 
-use crate::{RopeEditor, TextCursor, TextEditor, TextEvent};
+use crate::{use_platform, RopeEditor, TextCursor, TextEditor, TextEvent, UsePlatform};
 
 /// Events emitted to the [`UseEditable`].
 pub enum EditableEvent {
@@ -52,7 +51,7 @@ pub struct UseEditable {
     pub(crate) editor: EditorState,
     pub(crate) cursor_reference: CursorReference,
     pub(crate) selecting_text_with_mouse: UseRef<Option<CursorPoint>>,
-    pub(crate) event_loop_proxy: Option<EventLoopProxy<EventMessage>>,
+    pub(crate) platform: UsePlatform,
 }
 
 impl UseEditable {
@@ -119,13 +118,11 @@ impl UseEditable {
         }
 
         if self.selecting_text_with_mouse.read().is_some() {
-            if let Some(event_loop_proxy) = &self.event_loop_proxy {
-                event_loop_proxy
-                    .send_event(EventMessage::RemeasureTextGroup(
-                        self.cursor_reference.text_id,
-                    ))
-                    .unwrap();
-            }
+            self.platform
+                .send(EventMessage::RemeasureTextGroup(
+                    self.cursor_reference.text_id,
+                ))
+                .unwrap()
         }
     }
 }
@@ -159,7 +156,7 @@ pub fn use_editable(
     mode: EditableMode,
 ) -> UseEditable {
     let id = cx.use_hook(Uuid::new_v4);
-    let event_loop_proxy = cx.consume_context::<EventLoopProxy<EventMessage>>();
+    let platform = use_platform(cx);
 
     // Hold the text editor
     let text_editor = use_state(cx, || {
@@ -187,7 +184,7 @@ pub fn use_editable(
         editor: text_editor.clone(),
         cursor_reference: cursor_reference.clone(),
         selecting_text_with_mouse: selecting_text_with_mouse.clone(),
-        event_loop_proxy,
+        platform,
     };
 
     // Listen for new calculations from the layout engine
