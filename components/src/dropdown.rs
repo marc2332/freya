@@ -186,15 +186,16 @@ where
 
     let onkeydown = move |e: KeyboardEvent| {
         match e.key {
+            // Close when `Escape` key is pressed
             Key::Escape => {
                 opened.set(false);
             }
+            // Open the dropdown items when the `Enter` key is pressed
             Key::Enter if is_focused && !is_opened => {
                 opened.set(true);
             }
             _ => {}
         }
-        if e.key == Key::Escape {}
     };
 
     if *opened.get() {

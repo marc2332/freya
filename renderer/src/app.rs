@@ -1,8 +1,4 @@
-use std::{
-    collections::HashMap,
-    sync::{Arc, Mutex},
-    task::Waker,
-};
+use std::{collections::HashMap, sync::Arc, task::Waker};
 
 use accesskit::NodeId;
 use accesskit_winit::Adapter;
@@ -25,10 +21,7 @@ use futures::{
 use skia_safe::{textlayout::FontCollection, FontMgr};
 use tokio::{
     select,
-    sync::{
-        mpsc::{unbounded_channel, UnboundedSender},
-        watch,
-    },
+    sync::{mpsc, watch},
 };
 use uuid::Uuid;
 use winit::{dpi::PhysicalSize, event::WindowEvent, event_loop::EventLoopProxy, window::Window};
@@ -78,7 +71,7 @@ pub struct App<State: 'static + Clone> {
 
     vdom_waker: Waker,
     proxy: EventLoopProxy<EventMessage>,
-    mutations_sender: Option<UnboundedSender<()>>,
+    mutations_sender: Option<mpsc::UnboundedSender<()>>,
 
     event_emitter: EventEmitter,
     event_receiver: EventReceiver,
@@ -92,7 +85,7 @@ pub struct App<State: 'static + Clone> {
     focus_sender: FocusSender,
     focus_receiver: FocusReceiver,
 
-    accessibility_state: Arc<Mutex<AccessibilityState>>,
+    accessibility_state: SharedAccessibilityState,
     accessibility_adapter: Adapter,
 
     font_collection: FontCollection,
@@ -100,10 +93,10 @@ pub struct App<State: 'static + Clone> {
 
 impl<State: 'static + Clone> App<State> {
     pub fn new(
-        rdom: SafeDOM,
+        sdom: SafeDOM,
         vdom: VirtualDom,
         proxy: &EventLoopProxy<EventMessage>,
-        mutations_sender: Option<UnboundedSender<()>>,
+        mutations_sender: Option<mpsc::UnboundedSender<()>>,
         window_env: WindowEnv<State>,
     ) -> Self {
         let accessibility_state = AccessibilityState::new().wrap();
@@ -117,11 +110,11 @@ impl<State: 'static + Clone> App<State> {
         let mut font_collection = FontCollection::new();
         font_collection.set_default_font_manager(FontMgr::default(), "Fira Sans");
 
-        let (event_emitter, event_receiver) = unbounded_channel::<DomEvent>();
+        let (event_emitter, event_receiver) = mpsc::unbounded_channel::<DomEvent>();
         let (focus_sender, focus_receiver) = watch::channel(None);
 
         Self {
-            sdom: rdom,
+            sdom,
             vdom,
             events: Vec::new(),
             vdom_waker: winit_waker(proxy),
@@ -254,6 +247,8 @@ impl<State: 'static + Clone> App<State> {
     }
 
     /// Create the Accessibility tree
+    /// This will iterater the DOM ordered by layers (top to bottom)
+    /// and add every element with an accessibility ID to the Accessibility Tree
     pub fn process_accessibility(&mut self) {
         let fdom = &self.sdom.get();
         let layout = fdom.layout();
