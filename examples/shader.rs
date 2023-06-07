@@ -12,7 +12,6 @@ use dioxus_utils::use_channel::{use_channel, use_listen_channel};
 use freya::{common::EventMessage, prelude::*};
 use skia_safe::{Color, Data, Paint, Rect, RuntimeEffect};
 use tokio::time::sleep;
-use winit::event_loop::EventLoopProxy;
 
 fn main() {
     launch(app);
@@ -36,18 +35,14 @@ const SHADER: &str = "
  ";
 
 fn app(cx: Scope) -> Element {
-    let event_loop_proxy = cx.consume_context::<EventLoopProxy<EventMessage>>();
+    let platform = use_platform(cx);
     let render_channel = use_channel::<()>(cx, 5);
 
     use_listen_channel(cx, &render_channel, move |_| {
-        to_owned![event_loop_proxy];
+        to_owned![platform];
         async move {
             sleep(Duration::from_millis(25)).await;
-            if let Some(event_loop_proxy) = &event_loop_proxy {
-                event_loop_proxy
-                    .send_event(EventMessage::RequestRerender)
-                    .unwrap();
-            }
+            platform.send(EventMessage::RequestRerender).unwrap();
         }
     });
 

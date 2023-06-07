@@ -1,6 +1,8 @@
 use dioxus_core::VirtualDom;
+use freya_common::EventMessage;
 use freya_core::prelude::*;
 use skia_safe::textlayout::FontCollection;
+use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use torin::geometry::{Area, Size2D};
 
 pub use freya_core::events::FreyaEvent;
@@ -19,6 +21,9 @@ pub struct TestingHandler {
     pub(crate) event_emitter: EventEmitter,
     pub(crate) event_receiver: EventReceiver,
 
+    pub(crate) platform_event_emitter: UnboundedSender<EventMessage>,
+    pub(crate) platform_event_receiver: UnboundedReceiver<EventMessage>,
+
     pub(crate) events_queue: Vec<FreyaEvent>,
     pub(crate) events_processor: EventsProcessor,
     pub(crate) font_collection: FontCollection,
@@ -28,17 +33,50 @@ pub struct TestingHandler {
 }
 
 impl TestingHandler {
+    /// Init the DOM.
+    pub fn init_dom(&mut self) {
+        self.provide_vdom_contexts();
+        let sdom = self.utils.sdom();
+        let mut fdom = sdom.get();
+        let mutations = self.vdom.rebuild();
+        fdom.init_dom(mutations, SCALE_FACTOR as f32);
+    }
+
     /// Replace the current [`TestingConfig`].
     pub fn set_config(&mut self, config: TestingConfig) {
         self.config = config;
+    }
+
+    /// Provide some values to the app
+    pub fn provide_vdom_contexts(&self) {
+        self.vdom
+            .base_scope()
+            .provide_context(self.platform_event_emitter.clone());
     }
 
     /// Wait and apply new changes
     pub async fn wait_for_update(&mut self) -> (bool, bool) {
         self.wait_for_work(self.config.size());
 
+        self.provide_vdom_contexts();
+
         let vdom = &mut self.vdom;
 
+        // Handle platform events
+        loop {
+            let ev = self.platform_event_receiver.try_recv();
+
+            if let Ok(ev) = ev {
+                #[allow(clippy::match_single_binding)]
+                match ev {
+                    _ => {}
+                }
+            } else {
+                break;
+            }
+        }
+
+        // Handle virtual dom events
         loop {
             let ev = self.event_receiver.try_recv();
 

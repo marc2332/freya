@@ -1,13 +1,12 @@
 use dioxus::prelude::*;
 use freya_common::EventMessage;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::use_canvas;
+use freya_hooks::{use_canvas, use_platform};
 use freya_node_state::parse_color;
 use skia_safe::{
     textlayout::{ParagraphBuilder, ParagraphStyle, TextAlign, TextStyle},
     Color, Paint, PaintStyle,
 };
-use winit::event_loop::EventLoopProxy;
 
 /// Data line for the [`Graph`] component.
 #[derive(Debug, PartialEq, Clone)]
@@ -47,19 +46,13 @@ pub struct GraphProps {
 ///
 #[allow(non_snake_case)]
 pub fn Graph(cx: Scope<GraphProps>) -> Element {
-    let event_loop_proxy = cx.consume_context::<EventLoopProxy<EventMessage>>();
+    let platform = use_platform(cx);
     let state = use_state(cx, || cx.props.clone());
     let state_setter = state.setter();
 
     use_effect(cx, (cx.props,), move |(data,)| {
         state_setter(data);
-        async move {
-            if let Some(event_loop_proxy) = &event_loop_proxy {
-                event_loop_proxy
-                    .send_event(EventMessage::RequestRerender)
-                    .unwrap();
-            }
-        }
+        async move { platform.send(EventMessage::RequestRerender) }
     });
 
     let canvas = use_canvas(cx, state, |state| {
