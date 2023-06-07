@@ -9,6 +9,7 @@ use freya_dom::prelude::SafeDOM;
 use freya_elements::events::keyboard::{
     from_winit_to_code, get_modifiers, get_non_text_keys, Code, Key,
 };
+use tokio::sync::Notify;
 use torin::geometry::CursorPoint;
 
 use std::sync::{Arc, Mutex};
@@ -18,7 +19,6 @@ use winit::event::{
 };
 use winit::event_loop::{ControlFlow, EventLoopBuilder};
 
-use tokio::sync::mpsc::UnboundedSender;
 pub use window::WindowEnv;
 pub use window_config::WindowConfig;
 
@@ -39,7 +39,7 @@ pub fn run<T: 'static + Clone>(
     vdom: VirtualDom,
     rdom: SafeDOM,
     window_config: WindowConfig<T>,
-    mutations_sender: Option<UnboundedSender<()>>,
+    mutations_notifier: Option<Arc<Notify>>,
     hovered_node: HoveredNode,
 ) {
     let rt = tokio::runtime::Builder::new_multi_thread()
@@ -69,7 +69,7 @@ pub fn run<T: 'static + Clone>(
         rdom,
         vdom,
         &proxy,
-        mutations_sender,
+        mutations_notifier,
         WindowEnv::from_config(window_config, &event_loop),
     );
 

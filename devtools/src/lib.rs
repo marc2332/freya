@@ -12,10 +12,8 @@ use freya_elements::elements as dioxus_elements;
 use freya_hooks::use_theme;
 
 use freya_renderer::HoveredNode;
-use std::sync::{Arc, Mutex};
-use std::time::Duration;
-use tokio::sync::mpsc::UnboundedReceiver;
-use tokio::time::sleep;
+use std::sync::Arc;
+use tokio::sync::Notify;
 use torin::prelude::NodeAreas;
 
 mod node;
@@ -30,17 +28,15 @@ use tabs::{layout::*, style::*, tree::*};
 pub fn with_devtools(
     rdom: SafeDOM,
     root: fn(cx: Scope) -> Element,
-    mutations_receiver: UnboundedReceiver<()>,
+    mutations_notifier: Arc<Notify>,
     hovered_node: HoveredNode,
 ) -> VirtualDom {
-    let mutations_receiver = Arc::new(Mutex::new(mutations_receiver));
-
     VirtualDom::new_with_props(
         AppWithDevtools,
         AppWithDevtoolsProps {
             root,
             rdom,
-            mutations_receiver,
+            mutations_notifier,
             hovered_node,
         },
     )
@@ -49,7 +45,7 @@ pub fn with_devtools(
 struct AppWithDevtoolsProps {
     root: fn(cx: Scope) -> Element,
     rdom: SafeDOM,
-    mutations_receiver: Arc<Mutex<UnboundedReceiver<()>>>,
+    mutations_notifier: Arc<Notify>,
     hovered_node: HoveredNode,
 }
 
@@ -57,7 +53,7 @@ struct AppWithDevtoolsProps {
 fn AppWithDevtools(cx: Scope<AppWithDevtoolsProps>) -> Element {
     #[allow(non_snake_case)]
     let Root = cx.props.root;
-    let mutations_receiver = cx.props.mutations_receiver.clone();
+    let mutations_notifier = cx.props.mutations_notifier.clone();
     let hovered_node = cx.props.hovered_node.clone();
 
     render!(
@@ -77,7 +73,7 @@ fn AppWithDevtools(cx: Scope<AppWithDevtoolsProps>) -> Element {
                 ThemeProvider {
                     DevTools {
                         rdom: cx.props.rdom.clone(),
-                        mutations_receiver: mutations_receiver
+                        mutations_notifier: mutations_notifier
                         hovered_node: hovered_node
                     }
                 }
@@ -100,7 +96,7 @@ pub struct TreeNode {
 #[derive(Props)]
 pub struct DevToolsProps {
     rdom: SafeDOM,
-    mutations_receiver: Arc<Mutex<UnboundedReceiver<()>>>,
+    mutations_notifier: Arc<Notify>,
     hovered_node: HoveredNode,
 }
 
@@ -119,61 +115,58 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
     #[allow(clippy::await_holding_lock)]
     use_effect(cx, (), move |_| {
         let rdom = cx.props.rdom.clone();
-        let mutations_receiver = cx.props.mutations_receiver.clone();
+        let mutations_notifier = cx.props.mutations_notifier.clone();
         let children = children.clone();
         async move {
-            let mut mutations_receiver = mutations_receiver.lock().unwrap();
             loop {
-                if mutations_receiver.recv().await.is_some() {
-                    sleep(Duration::from_millis(10)).await;
+                mutations_notifier.notified().await;
 
-                    let dom = rdom.get();
-                    let rdom = dom.rdom();
-                    let layout = dom.layout();
+                let dom = rdom.get();
+                let rdom = dom.rdom();
+                let layout = dom.layout();
 
-                    let mut new_children = Vec::new();
+                let mut new_children = Vec::new();
 
-                    let mut root_found = false;
-                    let mut devtools_found = false;
+                let mut root_found = false;
+                let mut devtools_found = false;
 
-                    rdom.traverse_depth_first(|node| {
-                        let height = rdom.tree_ref().height(node.id()).unwrap();
-                        if height == 2 {
-                            if !root_found {
-                                root_found = true;
-                            } else {
-                                devtools_found = true;
-                            }
+                rdom.traverse_depth_first(|node| {
+                    let height = rdom.tree_ref().height(node.id()).unwrap();
+                    if height == 2 {
+                        if !root_found {
+                            root_found = true;
+                        } else {
+                            devtools_found = true;
                         }
+                    }
 
-                        if !devtools_found && root_found {
-                            let areas = layout.get(node.id());
-                            if let Some(areas) = areas {
-                                let (text, tag) = match &*node.node_type() {
-                                    NodeType::Text(TextNode { text, .. }) => {
-                                        (Some(text.to_string()), "text".to_string())
-                                    }
-                                    NodeType::Element(ElementNode { tag, .. }) => {
-                                        (None, tag.to_string())
-                                    }
-                                    NodeType::Placeholder => (None, "placeholder".to_string()),
-                                };
+                    if !devtools_found && root_found {
+                        let areas = layout.get(node.id());
+                        if let Some(areas) = areas {
+                            let (text, tag) = match &*node.node_type() {
+                                NodeType::Text(TextNode { text, .. }) => {
+                                    (Some(text.to_string()), "text".to_string())
+                                }
+                                NodeType::Element(ElementNode { tag, .. }) => {
+                                    (None, tag.to_string())
+                                }
+                                NodeType::Placeholder => (None, "placeholder".to_string()),
+                            };
 
-                                let state = get_node_state(&node);
+                            let state = get_node_state(&node);
 
-                                new_children.push(TreeNode {
-                                    height,
-                                    id: node.id(),
-                                    tag,
-                                    text,
-                                    state,
-                                    areas: areas.clone(),
-                                });
-                            }
+                            new_children.push(TreeNode {
+                                height,
+                                id: node.id(),
+                                tag,
+                                text,
+                                state,
+                                areas: areas.clone(),
+                            });
                         }
-                    });
-                    children.set(new_children);
-                }
+                    }
+                });
+                children.set(new_children);
             }
         }
     });
