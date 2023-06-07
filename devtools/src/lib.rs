@@ -16,6 +16,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tokio::sync::mpsc::UnboundedReceiver;
 use tokio::time::sleep;
+use torin::prelude::NodeAreas;
 
 mod node;
 mod property;
@@ -23,7 +24,7 @@ mod tab;
 mod tabs;
 
 use tab::*;
-use tabs::{style::*, tree::*};
+use tabs::{layout::*, style::*, tree::*};
 
 /// Run the [`VirtualDom`](dioxus_core::VirtualDom) with a sidepanel where the devtools are located.
 pub fn with_devtools(
@@ -93,6 +94,7 @@ pub struct TreeNode {
     #[allow(dead_code)]
     text: Option<String>,
     state: NodeState,
+    areas: NodeAreas,
 }
 
 #[derive(Props)]
@@ -127,6 +129,8 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
 
                     let dom = rdom.get();
                     let rdom = dom.rdom();
+                    let layout = dom.layout();
+
                     let mut new_children = Vec::new();
 
                     let mut root_found = false;
@@ -142,26 +146,30 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                             }
                         }
 
-                        if !devtools_found {
-                            let (text, tag) = match &*node.node_type() {
-                                NodeType::Text(TextNode { text, .. }) => {
-                                    (Some(text.to_string()), "text".to_string())
-                                }
-                                NodeType::Element(ElementNode { tag, .. }) => {
-                                    (None, tag.to_string())
-                                }
-                                NodeType::Placeholder => (None, "placeholder".to_string()),
-                            };
+                        if !devtools_found && root_found {
+                            let areas = layout.get(node.id());
+                            if let Some(areas) = areas {
+                                let (text, tag) = match &*node.node_type() {
+                                    NodeType::Text(TextNode { text, .. }) => {
+                                        (Some(text.to_string()), "text".to_string())
+                                    }
+                                    NodeType::Element(ElementNode { tag, .. }) => {
+                                        (None, tag.to_string())
+                                    }
+                                    NodeType::Placeholder => (None, "placeholder".to_string()),
+                                };
 
-                            let state = get_node_state(&node);
+                                let state = get_node_state(&node);
 
-                            new_children.push(TreeNode {
-                                height,
-                                id: node.id(),
-                                tag,
-                                text,
-                                state,
-                            });
+                                new_children.push(TreeNode {
+                                    height,
+                                    id: node.id(),
+                                    tag,
+                                    text,
+                                    state,
+                                    areas: areas.clone(),
+                                });
+                            }
                         }
                     });
                     children.set(new_children);
@@ -223,6 +231,27 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                         )
                     })
                 }
+                Route {
+                    to: "/elements/layout",
+                    NodesTree {
+                        nodes: children,
+                        height: "calc(50% - 35)",
+                        selected_node_id: selected_node_id.get(),
+                        onselected: |node: &TreeNode| {
+                            if let Some(hovered_node) = &cx.props.hovered_node {
+                                hovered_node.lock().unwrap().replace(node.id);
+                            }
+                            selected_node_id.set(Some(node.id));
+                        }
+                    }
+                    selected_node.map(|selected_node| {
+                        rsx!(
+                            NodeInspectorLayout {
+                                node: selected_node
+                            }
+                        )
+                    })
+                }
             }
         }
     )
@@ -247,6 +276,10 @@ pub fn NodeInspectorBar(cx: Scope) -> Element {
             TabButton {
                 to: "/elements/style",
                 label: "Style"
+            }
+            TabButton {
+                to: "/elements/layout",
+                label: "Layout"
             }
         }
     )
