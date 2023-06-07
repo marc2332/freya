@@ -106,7 +106,9 @@ impl<State: 'static + Clone> App<State> {
 
         self.rdom.get_mut().init_dom(mutations, scale_factor);
 
-        self.mutations_sender.as_ref().map(|s| s.send(()));
+        if let Some(mutations_sender) = &self.mutations_sender {
+            mutations_sender.send(()).unwrap();
+        }
     }
 
     /// Update the DOM with the mutations from the VirtualDOM.
@@ -125,7 +127,9 @@ impl<State: 'static + Clone> App<State> {
         };
 
         if repaint {
-            self.mutations_sender.as_ref().map(|s| s.send(()));
+            if let Some(mutations_sender) = &self.mutations_sender {
+                mutations_sender.send(()).unwrap();
+            }
         }
 
         (repaint, relayout)
@@ -194,7 +198,9 @@ impl<State: 'static + Clone> App<State> {
         self.layers = layers;
         self.viewports_collection = viewports;
 
-        self.mutations_sender.as_ref().map(|s| s.send(()));
+        if let Some(mutations_sender) = &self.mutations_sender {
+            mutations_sender.send(()).unwrap();
+        }
     }
 
     /// Push an event to the events queue
