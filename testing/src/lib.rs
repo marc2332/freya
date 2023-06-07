@@ -6,6 +6,7 @@ use dioxus_native_core::prelude::TextNode;
 use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::tree::TreeRef;
 use dioxus_native_core::NodeId;
+use freya_common::EventMessage;
 use freya_core::events::EventsProcessor;
 use freya_core::{
     events::DomEvent,
@@ -19,7 +20,7 @@ use freya_node_state::CustomAttributeValues;
 use rustc_hash::FxHashMap;
 use skia_safe::textlayout::FontCollection;
 use skia_safe::FontMgr;
-use tokio::sync::mpsc::unbounded_channel;
+use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 use torin::geometry::{Area, Size2D};
 
 pub use freya_core::events::FreyaEvent;
@@ -141,6 +142,9 @@ pub struct TestingHandler {
     event_emitter: EventEmitter,
     event_receiver: EventReceiver,
 
+    platform_event_emitter: UnboundedSender<EventMessage>,
+    platform_event_receiver: UnboundedReceiver<EventMessage>,
+
     events_queue: Vec<FreyaEvent>,
     events_processor: EventsProcessor,
     font_collection: FontCollection,
@@ -155,12 +159,33 @@ impl TestingHandler {
         self.config = config;
     }
 
+    pub fn provide_vdom_contexts(&self) {
+        self.vdom
+            .base_scope()
+            .provide_context(self.platform_event_emitter.clone());
+    }
+
     /// Wait and apply new changes
     pub async fn wait_for_update(&mut self) -> (bool, bool) {
         self.wait_for_work(self.config.size());
 
         let vdom = &mut self.vdom;
 
+        // Handle platform events
+        loop {
+            let ev = self.platform_event_receiver.try_recv();
+
+            if let Ok(ev) = ev {
+                #[allow(clippy::match_single_binding)]
+                match ev {
+                    _ => {}
+                }
+            } else {
+                break;
+            }
+        }
+
+        // Handle virtual dom events
         loop {
             let ev = self.event_receiver.try_recv();
 
@@ -253,6 +278,7 @@ pub fn launch_test_with_config(root: Component<()>, config: TestingConfig) -> Te
     let sdom = SafeDOM::new(fdom);
 
     let (event_emitter, event_receiver) = unbounded_channel::<DomEvent>();
+    let (platform_event_emitter, platform_event_receiver) = unbounded_channel::<EventMessage>();
     let layers = Arc::new(Mutex::new(Layers::default()));
     let freya_events = Vec::new();
     let events_processor = EventsProcessor::default();
@@ -269,5 +295,7 @@ pub fn launch_test_with_config(root: Component<()>, config: TestingConfig) -> Te
         viewports: FxHashMap::default(),
         utils: TestUtils { sdom, layers },
         config,
+        platform_event_emitter,
+        platform_event_receiver,
     }
 }
