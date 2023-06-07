@@ -1,5 +1,5 @@
 use dioxus_core::Component;
-use freya_renderer::run;
+use freya_renderer::run_app;
 use freya_renderer::WindowConfig;
 
 #[cfg(not(doctest))]
@@ -164,18 +164,23 @@ pub fn launch_cfg<T: 'static + Clone + Send>(root: Component, win_config: Window
     let fdom = FreyaDOM::default();
     let sdom = SafeDOM::new(fdom);
 
-    let (vdom, mutations_sender, hovered_node) = {
+    let (vdom, mutations_notifier, hovered_node) = {
         #[cfg(feature = "devtools")]
         #[cfg(debug_assertions)]
         {
             use freya_devtools::with_devtools;
             use std::sync::{Arc, Mutex};
-            use tokio::sync::mpsc::unbounded_channel;
+            use tokio::sync::Notify;
 
             let hovered_node = Some(Arc::new(Mutex::new(None)));
-            let (mutations_sender, mutations_receiver) = unbounded_channel::<()>();
-            let vdom = with_devtools(sdom.clone(), root, mutations_receiver, hovered_node.clone());
-            (vdom, Some(mutations_sender), hovered_node)
+            let mutations_notifier = Arc::new(Notify::new());
+            let vdom = with_devtools(
+                sdom.clone(),
+                root,
+                mutations_notifier.clone(),
+                hovered_node.clone(),
+            );
+            (vdom, Some(mutations_notifier), hovered_node)
         }
 
         #[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
@@ -185,5 +190,5 @@ pub fn launch_cfg<T: 'static + Clone + Send>(root: Component, win_config: Window
             (vdom, None, None)
         }
     };
-    run(vdom, sdom, win_config, mutations_sender, hovered_node);
+    run_app(vdom, sdom, win_config, mutations_notifier, hovered_node);
 }

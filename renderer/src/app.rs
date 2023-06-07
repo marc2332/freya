@@ -2,10 +2,7 @@ use std::{collections::HashMap, sync::Arc, task::Waker};
 
 use dioxus_core::{Template, VirtualDom};
 use freya_common::EventMessage;
-use freya_core::{
-    events::{DomEvent, EventsProcessor, FreyaEvent},
-    process_events, EventEmitter, EventReceiver, EventsQueue, ViewportsCollection,
-};
+use freya_core::prelude::*;
 use freya_dom::prelude::SafeDOM;
 use freya_layout::Layers;
 use futures::FutureExt;
@@ -16,7 +13,7 @@ use futures::{
 use skia_safe::{textlayout::FontCollection, FontMgr};
 use tokio::{
     select,
-    sync::mpsc::{unbounded_channel, UnboundedSender},
+    sync::{mpsc::unbounded_channel, Notify},
 };
 use uuid::Uuid;
 use winit::{dpi::PhysicalSize, event_loop::EventLoopProxy};
@@ -47,7 +44,7 @@ pub struct App<State: 'static + Clone> {
 
     vdom_waker: Waker,
     proxy: EventLoopProxy<EventMessage>,
-    mutations_sender: Option<UnboundedSender<()>>,
+    mutations_notifier: Option<Arc<Notify>>,
 
     event_emitter: EventEmitter,
     event_receiver: EventReceiver,
@@ -66,7 +63,7 @@ impl<State: 'static + Clone> App<State> {
         rdom: SafeDOM,
         vdom: VirtualDom,
         proxy: &EventLoopProxy<EventMessage>,
-        mutations_sender: Option<UnboundedSender<()>>,
+        mutations_notifier: Option<Arc<Notify>>,
         window_env: WindowEnv<State>,
     ) -> Self {
         let mut font_collection = FontCollection::new();
@@ -78,7 +75,7 @@ impl<State: 'static + Clone> App<State> {
             events: Vec::new(),
             vdom_waker: winit_waker(proxy),
             proxy: proxy.clone(),
-            mutations_sender,
+            mutations_notifier,
             event_emitter,
             event_receiver,
             window_env,
@@ -106,7 +103,9 @@ impl<State: 'static + Clone> App<State> {
 
         self.rdom.get_mut().init_dom(mutations, scale_factor);
 
-        self.mutations_sender.as_ref().map(|s| s.send(()));
+        if let Some(mutations_notifier) = &self.mutations_notifier {
+            mutations_notifier.notify_one();
+        }
     }
 
     /// Update the DOM with the mutations from the VirtualDOM.
@@ -125,7 +124,9 @@ impl<State: 'static + Clone> App<State> {
         };
 
         if repaint {
-            self.mutations_sender.as_ref().map(|s| s.send(()));
+            if let Some(mutations_notifier) = &self.mutations_notifier {
+                mutations_notifier.notify_one();
+            }
         }
 
         (repaint, relayout)
@@ -193,6 +194,10 @@ impl<State: 'static + Clone> App<State> {
             .process_layout(&dom, &mut self.font_collection);
         self.layers = layers;
         self.viewports_collection = viewports;
+
+        if let Some(mutations_notifier) = &self.mutations_notifier {
+            mutations_notifier.notify_one();
+        }
     }
 
     /// Push an event to the events queue

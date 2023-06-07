@@ -9,7 +9,6 @@ use freya_common::EventMessage;
 use freya_node_state::{CustomAttributeValues, ImageReference};
 use nokhwa::{pixel_format::RgbFormat, utils::RequestedFormat, Camera, NokhwaError};
 use tokio::time::sleep;
-use winit::event_loop::EventLoopProxy;
 
 pub use nokhwa::utils::{CameraIndex, RequestedFormatType, Resolution};
 
@@ -63,6 +62,7 @@ pub fn use_camera(
     cx: &ScopeState,
     camera_settings: CameraSettings,
 ) -> (AttributeValue, &UseState<Option<NokhwaError>>) {
+    let platform = use_platform();
     let camera_error = use_state(cx, || None);
     let image_reference = cx.use_hook(|| Arc::new(Mutex::new(None)));
 
@@ -71,8 +71,7 @@ pub fn use_camera(
     )));
 
     use_effect(cx, (), move |_| {
-        to_owned![image_reference, camera_error];
-        let event_loop_proxy = cx.consume_context::<EventLoopProxy<EventMessage>>();
+        to_owned![image_reference, camera_error, platform];
         async move {
             let handle_error = |e: NokhwaError| {
                 camera_error.set(Some(e));
@@ -104,11 +103,7 @@ pub fn use_camera(
                         image_reference.lock().unwrap().replace(bts);
 
                         // Request the renderer to relayout
-                        if let Some(event_loop_proxy) = &event_loop_proxy {
-                            event_loop_proxy
-                                .send_event(EventMessage::RequestRerender)
-                                .unwrap();
-                        }
+                        platform.send(EventMessage::RequestRerender).unwrap();
                     } else if let Err(err) = frame {
                         handle_error(err);
                     }
