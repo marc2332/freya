@@ -1,7 +1,8 @@
 use dioxus::prelude::*;
 use freya_common::EventMessage;
 use freya_elements::elements as dioxus_elements;
-use winit::{event_loop::EventLoopProxy, window::CursorIcon};
+use freya_hooks::use_platform;
+use winit::window::CursorIcon;
 
 /// [`CursorArea`] component properties.
 #[derive(Props)]
@@ -38,26 +39,20 @@ pub struct CursorAreaProps<'a> {
 ///
 #[allow(non_snake_case)]
 pub fn CursorArea<'a>(cx: Scope<'a, CursorAreaProps<'a>>) -> Element<'a> {
-    let event_loop_proxy = cx.consume_context::<EventLoopProxy<EventMessage>>();
+    let platform = use_platform(cx);
     let icon = cx.props.icon;
 
     let onmouseover = {
-        to_owned![event_loop_proxy];
+        to_owned![platform];
         move |_| {
-            if let Some(event_loop_proxy) = &event_loop_proxy {
-                event_loop_proxy
-                    .send_event(EventMessage::SetCursorIcon(icon))
-                    .unwrap();
-            }
+            platform.send(EventMessage::SetCursorIcon(icon)).unwrap();
         }
     };
 
     let onmouseleave = move |_| {
-        if let Some(event_loop_proxy) = &event_loop_proxy {
-            event_loop_proxy
-                .send_event(EventMessage::SetCursorIcon(CursorIcon::default()))
-                .unwrap();
-        }
+        platform
+            .send(EventMessage::SetCursorIcon(CursorIcon::default()))
+            .unwrap();
     };
 
     render!(

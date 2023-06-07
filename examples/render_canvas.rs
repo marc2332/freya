@@ -5,22 +5,17 @@
 
 use freya::{common::EventMessage, prelude::*};
 use skia_safe::{Color, Font, FontStyle, Paint, Typeface};
-use winit::event_loop::EventLoopProxy;
 
 fn main() {
     launch(app);
 }
 
 fn app(cx: Scope) -> Element {
-    let event_loop_proxy = cx.consume_context::<EventLoopProxy<EventMessage>>();
+    let platform = use_platform(cx);
     let mut state = use_state(cx, || 0);
 
     use_effect(cx, (state,), move |_| async move {
-        if let Some(event_loop_proxy) = &event_loop_proxy {
-            event_loop_proxy
-                .send_event(EventMessage::RequestRerender)
-                .unwrap();
-        }
+        platform.send(EventMessage::RequestRerender).unwrap();
     });
 
     let canvas = use_canvas(cx, state, |state| {

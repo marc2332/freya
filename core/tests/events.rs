@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use freya_core::events::FreyaEvent;
+use freya_core::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_testing::{launch_test, MouseButton};
 use torin::prelude::CursorPoint;

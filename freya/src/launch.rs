@@ -1,5 +1,5 @@
 use dioxus_core::Component;
-use freya_renderer::run;
+use freya_renderer::run_app;
 use freya_renderer::WindowConfig;
 
 #[cfg(not(doctest))]
@@ -190,5 +190,5 @@ pub fn launch_cfg<T: 'static + Clone + Send>(root: Component, win_config: Window
             (vdom, None, None)
         }
     };
-    run(vdom, sdom, win_config, mutations_notifier, hovered_node);
+    run_app(vdom, sdom, win_config, mutations_notifier, hovered_node);
 }
