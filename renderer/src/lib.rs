@@ -5,7 +5,7 @@ use event_loop::run_event_loop;
 use freya_common::EventMessage;
 use freya_dom::prelude::SafeDOM;
 use std::sync::{Arc, Mutex};
-use tokio::sync::mpsc::UnboundedSender;
+use tokio::sync::Notify;
 pub use window::WindowEnv;
 pub use window_config::WindowConfig;
 use winit::event_loop::EventLoopBuilder;
@@ -25,7 +25,7 @@ pub fn run_app<T: 'static + Clone>(
     vdom: VirtualDom,
     rdom: SafeDOM,
     window_config: WindowConfig<T>,
-    mutations_sender: Option<UnboundedSender<()>>,
+    mutations_notifier: Option<Arc<Notify>>,
     hovered_node: HoveredNode,
 ) {
     let rt = tokio::runtime::Builder::new_multi_thread()
@@ -55,7 +55,7 @@ pub fn run_app<T: 'static + Clone>(
         rdom,
         vdom,
         &proxy,
-        mutations_sender,
+        mutations_notifier,
         WindowEnv::from_config(window_config, &event_loop),
     );
 
