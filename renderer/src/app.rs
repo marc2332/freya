@@ -2,10 +2,7 @@ use std::{collections::HashMap, sync::Arc, task::Waker};
 
 use dioxus_core::{Template, VirtualDom};
 use freya_common::EventMessage;
-use freya_core::{
-    events::{DomEvent, EventsProcessor, FreyaEvent},
-    process_events, EventEmitter, EventReceiver, EventsQueue, ViewportsCollection,
-};
+use freya_core::prelude::*;
 use freya_dom::prelude::SafeDOM;
 use freya_layout::Layers;
 use futures::FutureExt;
