@@ -46,7 +46,7 @@ pub fn render_label(
 
         paragraph_style.set_text_style(
             TextStyle::new()
-                .set_font_style(node_font_style.font_style)
+                .set_font_style(node_font_style.to_skia_font_style())
                 .set_color(node_font_style.color)
                 .set_font_size(node_font_style.font_size)
                 .set_font_families(&node_font_style.font_family),

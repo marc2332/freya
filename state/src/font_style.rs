@@ -7,6 +7,9 @@ use dioxus_native_core::NodeId;
 use dioxus_native_core::SendAnyMap;
 use dioxus_native_core_macro::partial_derive_state;
 use skia_safe::textlayout::TextAlign;
+use skia_safe::font_style::Weight;
+use skia_safe::font_style::Slant;
+use skia_safe::font_style::Width;
 use skia_safe::Color;
 use smallvec::{smallvec, SmallVec};
 use torin::torin::Torin;
@@ -18,10 +21,12 @@ pub struct FontStyle {
     pub color: Color,
     pub font_family: SmallVec<[String; 2]>,
     pub font_size: f32,
+    pub font_slant: Slant,
+    pub font_weight: Weight,
+    pub font_width: Width,
     pub line_height: f32, // https://developer.mozilla.org/en-US/docs/Web/CSS/line-height,
     pub align: TextAlign,
     pub max_lines: Option<usize>,
-    pub font_style: skia_safe::FontStyle,
 }
 
 impl FontStyle {
@@ -31,6 +36,12 @@ impl FontStyle {
             ..FontStyle::default()
         }
     }
+
+    pub fn to_skia_font_style(&self) -> skia_safe::font_style::FontStyle {
+        skia_safe::font_style::FontStyle::new(
+            self.font_weight, self.font_width, self.font_slant
+        )
+    }
 }
 
 impl Default for FontStyle {
@@ -39,10 +50,12 @@ impl Default for FontStyle {
             color: Color::BLACK,
             font_family: smallvec!["Fira Sans".to_string()],
             font_size: 16.0,
+            font_weight: Weight::NORMAL,
+            font_slant: Slant::Upright,
+            font_width: Width::NORMAL,
             line_height: 1.2,
             align: TextAlign::default(),
             max_lines: None,
-            font_style: skia_safe::FontStyle::default(),
         }
     }
 }
@@ -63,7 +76,9 @@ impl State<CustomAttributeValues> for FontStyle {
             "line_height",
             "align",
             "max_lines",
-            "font_style",
+            "font_slant",
+            "font_weight",
+            "font_width",
         ]));
 
     fn update<'a>(
@@ -135,10 +150,22 @@ impl State<CustomAttributeValues> for FontStyle {
                             }
                         }
                     }
-                    "font_style" => {
+                    "font_slant" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
-                            font_style.font_style = parse_font_style(attr);
+                            font_style.font_slant = parse_font_slant(attr);
+                        }
+                    }
+                    "font_weight" => {
+                        let attr = attr.value.as_text();
+                        if let Some(attr) = attr {
+                            font_style.font_weight = parse_font_weight(attr);
+                        }
+                    }
+                    "font_width" => {
+                        let attr = attr.value.as_text();
+                        if let Some(attr) = attr {
+                            font_style.font_width = parse_font_width(attr);
                         }
                     }
                     _ => {}
@@ -146,11 +173,13 @@ impl State<CustomAttributeValues> for FontStyle {
             }
         }
 
-        let changed_size = self.font_style != font_style.font_style
-            || self.max_lines != font_style.max_lines
+        let changed_size = self.max_lines != font_style.max_lines
             || self.line_height != font_style.line_height
             || self.font_size != font_style.font_size
-            || self.font_family != font_style.font_family;
+            || self.font_family != font_style.font_family
+            || self.font_slant != font_style.font_slant
+            || self.font_weight != font_style.font_weight
+            || self.font_width != font_style.font_width;
 
         if changed_size {
             torin_layout.lock().unwrap().invalidate(node_view.node_id());
@@ -162,12 +191,61 @@ impl State<CustomAttributeValues> for FontStyle {
     }
 }
 
-fn parse_font_style(style: &str) -> skia_safe::FontStyle {
-    match style {
-        "italic" => skia_safe::FontStyle::italic(),
-        "bold" => skia_safe::FontStyle::bold(),
-        "bold-italic" => skia_safe::FontStyle::bold_italic(),
-        _ => skia_safe::FontStyle::default(),
+fn parse_font_slant(slant: &str) -> Slant {
+    match slant {
+        "upright" => Slant::Upright,
+        "italic" => Slant::Italic,
+        "oblique" => Slant::Oblique,
+        _ => Slant::Upright,
+    }
+}
+
+fn parse_font_weight(weight: &str) -> Weight {
+    // NOTES:
+    // This is mostly taken from the OpenType specification (https://learn.microsoft.com/en-us/typography/opentype/spec/os2#usweightclass)
+    // CSS has one deviation from this spec, which uses the value "950" for extra_black.
+    // skia_safe also has an "invisible" weight smaller than the thin weight, which could fall under CSS's interpretation of OpenType's
+    // version. In this case it would be font_weight: "50".
+    // I've left these two abnormal values commented for now. They can't be specified via the number syntax.
+    match weight {
+        "invisible" => Weight::INVISIBLE,
+        "thin" => Weight::THIN,
+        "extra-light" => Weight::EXTRA_LIGHT,
+        "light" => Weight::LIGHT,
+        "normal" => Weight::NORMAL,
+        "medium" => Weight::MEDIUM,
+        "semi-bold" => Weight::SEMI_BOLD,
+        "bold" => Weight::BOLD,
+        "extra-bold" => Weight::EXTRA_BOLD,
+        "black" => Weight::BLACK,
+        "extra-black" => Weight::EXTRA_BLACK,
+        // "50" => skia_safe::font_style::Weight::INVISIBLE,
+        "100" => Weight::THIN,
+        "200" => Weight::EXTRA_LIGHT,
+        "300" => Weight::LIGHT,
+        "400" => Weight::NORMAL,
+        "500" => Weight::MEDIUM,
+        "600" => Weight::SEMI_BOLD,
+        "700" => Weight::BOLD,
+        "800" => Weight::EXTRA_BOLD,
+        "900" => Weight::BLACK,
+        // "950" => Weight::EXTRA_BLACK,
+        _ => Weight::NORMAL,
+    }
+}
+
+fn parse_font_width(width: &str) -> Width {
+    match width {
+        "ultra-condensed" => Width::ULTRA_CONDENSED,
+        "extra-condensed" => Width::EXTRA_CONDENSED,
+        "condensed" => Width::CONDENSED,
+        "semi-condensed" => Width::SEMI_CONDENSED,
+        "normal" => Width::NORMAL,
+        "semi-expanded" => Width::SEMI_EXPANDED,
+        "expanded"  => Width::EXPANDED,
+        "extra-expanded" => Width::EXTRA_EXPANDED,
+        "ultra-expanded" => Width::ULTRA_EXPANDED,
+        _ => Width::NORMAL,
     }
 }
 
