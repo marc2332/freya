@@ -57,6 +57,11 @@ fn app(cx: Scope) -> Element {
                 }
                 text {
                     font_size: "20",
+                    font_weight: "bold",
+                    "Bold\n"
+                }
+                text {
+                    font_size: "20",
                     font_weight: "extra-bold",
                     "Extra Bold\n"
                 }
