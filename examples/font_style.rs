@@ -18,9 +18,8 @@ fn app(cx: Scope) -> Element {
             color: "rgb(240, 240, 240)",
             direction: "horizontal",
             paragraph {
-                width: "20%",
+                width: "33%",
                 line_height: "2",
-
                 text {
                     font_size: "20",
                     font_weight: "thin",
@@ -58,6 +57,11 @@ fn app(cx: Scope) -> Element {
                 }
                 text {
                     font_size: "20",
+                    font_weight: "bold",
+                    "Bold\n"
+                }
+                text {
+                    font_size: "20",
                     font_weight: "extra-bold",
                     "Extra Bold\n"
                 }
@@ -73,9 +77,8 @@ fn app(cx: Scope) -> Element {
                 }
             }
             paragraph {
-                width: "20%",
+                width: "33%",
                 line_height: "2",
-
                 text {
                     font_size: "20",
                     font_style: "normal",
@@ -93,9 +96,8 @@ fn app(cx: Scope) -> Element {
                 }
             }
             paragraph {
-                width: "40%",
+                width: "33%",
                 line_height: "2",
-
                 text {
                     font_size: "20",
                     font_width: "extra-condensed",
