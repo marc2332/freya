@@ -36,11 +36,11 @@ impl FontStyle {
             ..FontStyle::default()
         }
     }
+}
 
-    pub fn to_skia_font_style(&self) -> skia_safe::font_style::FontStyle {
-        skia_safe::font_style::FontStyle::new(
-            self.font_weight, self.font_width, self.font_slant
-        )
+impl From<&FontStyle> for skia_safe::FontStyle {
+    fn from(value: &FontStyle) -> Self {
+        skia_safe::FontStyle::new(value.font_weight, value.font_width, value.font_slant)
     }
 }
 
@@ -206,7 +206,6 @@ fn parse_font_weight(weight: &str) -> Weight {
     // CSS has one deviation from this spec, which uses the value "950" for extra_black.
     // skia_safe also has an "invisible" weight smaller than the thin weight, which could fall under CSS's interpretation of OpenType's
     // version. In this case it would be font_weight: "50".
-    // I've left these two abnormal values commented for now. They can't be specified via the number syntax.
     match weight {
         "invisible" => Weight::INVISIBLE,
         "thin" => Weight::THIN,
