@@ -113,11 +113,11 @@ fn create_text(
 
     paragraph_builder.push_style(
         TextStyle::new()
-            .set_font_style(skia_safe::FontStyle::from(font_style))
+            .set_font_style(font_style.into())
             .set_font_size(font_style.font_size)
             .set_font_families(&font_style.font_family),
     );
-    
+
     paragraph_builder.add_text(text);
 
     let mut paragraph = paragraph_builder.build();
@@ -144,7 +144,7 @@ pub fn create_paragraph(
 
     paragraph_builder.push_style(
         TextStyle::new()
-            .set_font_style(skia_safe::FontStyle::from(font_style))
+            .set_font_style(font_style.into())
             .set_font_size(font_style.font_size)
             .set_font_families(&font_style.font_family),
     );
@@ -168,7 +168,6 @@ pub fn create_paragraph(
         // This is very tricky, but it works! It allows freya to render the cursor at the end of a line.
         paragraph_builder.add_text(" ");
     }
-
 
     let mut paragraph = paragraph_builder.build();
     paragraph.layout(node_area.width() + 1.0);

@@ -6,10 +6,10 @@ use dioxus_native_core::prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuil
 use dioxus_native_core::NodeId;
 use dioxus_native_core::SendAnyMap;
 use dioxus_native_core_macro::partial_derive_state;
-use skia_safe::textlayout::TextAlign;
-use skia_safe::font_style::Weight;
 use skia_safe::font_style::Slant;
+use skia_safe::font_style::Weight;
 use skia_safe::font_style::Width;
+use skia_safe::textlayout::TextAlign;
 use skia_safe::Color;
 use smallvec::{smallvec, SmallVec};
 use torin::torin::Torin;
@@ -244,7 +244,7 @@ fn parse_font_width(width: &str) -> Width {
         "semi-condensed" => Width::SEMI_CONDENSED,
         "normal" => Width::NORMAL,
         "semi-expanded" => Width::SEMI_EXPANDED,
-        "expanded"  => Width::EXPANDED,
+        "expanded" => Width::EXPANDED,
         "extra-expanded" => Width::EXTRA_EXPANDED,
         "ultra-expanded" => Width::ULTRA_EXPANDED,
         _ => Width::NORMAL,
