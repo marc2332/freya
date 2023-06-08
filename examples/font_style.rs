@@ -98,43 +98,36 @@ fn app(cx: Scope) -> Element {
 
                 text {
                     font_size: "20",
-                    font_family: "Arial",
                     font_width: "extra-condensed",
                     "Extra Condensed\n"
                 }
                 text {
                     font_size: "20",
-                    font_family: "Arial",
                     font_width: "condensed",
                     "Condensed\n"
                 }
                 text {
                     font_size: "20",
-                    font_family: "Arial",
                     font_width: "semi-condensed",
                     "Semi Condensed\n"
                 }
                 text {
                     font_size: "20",
-                    font_family: "Arial",
                     font_width: "normal",
                     "Normal\n"
                 }
                 text {
                     font_size: "20",
-                    font_family: "Arial",
                     font_width: "semi-expanded",
                     "Semi Expanded\n"
                 }
                 text {
                     font_size: "20",
-                    font_family: "Arial",
                     font_width: "extra-expanded",
                     "Extra Expanded\n"
                 }
                 text {
                     font_size: "20",
-                    font_family: "Arial",
                     font_width: "ultra-expanded",
                     "Ultra Expanded\n"
                 }

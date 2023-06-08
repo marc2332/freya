@@ -235,6 +235,9 @@ fn parse_font_weight(weight: &str) -> Weight {
 }
 
 fn parse_font_width(width: &str) -> Width {
+    // NOTES:
+    // CSS also supports some percentage mappings for different stretches.
+    // https://developer.mozilla.org/en-US/docs/Web/CSS/font-stretch#keyword_to_numeric_mapping
     match width {
         "ultra-condensed" => Width::ULTRA_CONDENSED,
         "extra-condensed" => Width::EXTRA_CONDENSED,
