@@ -4,9 +4,10 @@
 
 - [Introduction](./index.md)
 - [Environment Setup](setup.md)
-- [Hello World](./guides/hello_world.md)
+- [Differences with Dioxus](differences_with_dioxus.md)
 
 # Guides
+- [Getting started](./guides/getting_started.md)
 - [Layout](./guides/layout.md)
 - [Theming](./guides/theming.md)
 - [Hot reload](./guides/hot_reload.md)
