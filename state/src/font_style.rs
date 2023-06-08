@@ -76,7 +76,7 @@ impl State<CustomAttributeValues> for FontStyle {
             "line_height",
             "align",
             "max_lines",
-            "font_slant",
+            "font_style",
             "font_weight",
             "font_width",
         ]));
@@ -150,10 +150,10 @@ impl State<CustomAttributeValues> for FontStyle {
                             }
                         }
                     }
-                    "font_slant" => {
+                    "font_style" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
-                            font_style.font_slant = parse_font_slant(attr);
+                            font_style.font_slant = parse_font_style(attr);
                         }
                     }
                     "font_weight" => {
@@ -191,8 +191,8 @@ impl State<CustomAttributeValues> for FontStyle {
     }
 }
 
-fn parse_font_slant(slant: &str) -> Slant {
-    match slant {
+fn parse_font_style(style: &str) -> Slant {
+    match style {
         "upright" => Slant::Upright,
         "italic" => Slant::Italic,
         "oblique" => Slant::Oblique,

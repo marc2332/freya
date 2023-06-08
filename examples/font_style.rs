@@ -78,17 +78,17 @@ fn app(cx: Scope) -> Element {
 
                 text {
                     font_size: "20",
-                    font_slant: "normal",
+                    font_style: "normal",
                     "Normal\n"
                 }
                 text {
                     font_size: "20",
-                    font_slant: "italic",
+                    font_style: "italic",
                     "Italic\n"
                 }
                 text {
                     font_size: "20",
-                    font_slant: "oblique",
+                    font_style: "oblique",
                     "Oblique\n"
                 }
             }
