@@ -218,7 +218,7 @@ fn parse_font_weight(weight: &str) -> Weight {
         "extra-bold" => Weight::EXTRA_BOLD,
         "black" => Weight::BLACK,
         "extra-black" => Weight::EXTRA_BLACK,
-        "50" => skia_safe::font_style::Weight::INVISIBLE,
+        "50" => Weight::INVISIBLE,
         "100" => Weight::THIN,
         "200" => Weight::EXTRA_LIGHT,
         "300" => Weight::LIGHT,
