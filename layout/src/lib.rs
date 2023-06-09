@@ -102,7 +102,7 @@ fn create_text(
     font_collection: &FontCollection,
     text: &str,
 ) -> Paragraph {
-    let font_style = node.get::<FontStyle>().unwrap();
+    let font_style = &*node.get::<FontStyle>().unwrap();
 
     let mut paragraph_style = ParagraphStyle::default();
     paragraph_style.set_text_align(font_style.align);
@@ -113,7 +113,7 @@ fn create_text(
 
     paragraph_builder.push_style(
         TextStyle::new()
-            .set_font_style(font_style.font_style)
+            .set_font_style(font_style.into())
             .set_font_size(font_style.font_size)
             .set_font_families(&font_style.font_family),
     );
@@ -132,7 +132,7 @@ pub fn create_paragraph(
     font_collection: &FontCollection,
     is_rendering: bool,
 ) -> Paragraph {
-    let font_style = node.get::<FontStyle>().unwrap();
+    let font_style = &*node.get::<FontStyle>().unwrap();
     let node_cursor_settings = &*node.get::<CursorSettings>().unwrap();
 
     let mut paragraph_style = ParagraphStyle::default();
@@ -144,7 +144,7 @@ pub fn create_paragraph(
 
     paragraph_builder.push_style(
         TextStyle::new()
-            .set_font_style(font_style.font_style)
+            .set_font_style(font_style.into())
             .set_font_size(font_style.font_size)
             .set_font_families(&font_style.font_family),
     );
@@ -154,7 +154,7 @@ pub fn create_paragraph(
     for (font_style, text) in texts.into_iter() {
         paragraph_builder.push_style(
             TextStyle::new()
-                .set_font_style(font_style.font_style)
+                .set_font_style(skia_safe::FontStyle::from(&font_style))
                 .set_height_override(true)
                 .set_height(font_style.line_height)
                 .set_color(font_style.color)

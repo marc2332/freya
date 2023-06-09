@@ -19,6 +19,7 @@ freya-hooks = { workspace = true }
 freya-core = { workspace = true }
 freya-components = { workspace = true }
 freya-dom = { workspace = true, features = ["shared"] }
+torin = { workspace = true }
 
 dioxus = { workspace = true }
 dioxus-native-core = { workspace = true }

@@ -5,12 +5,7 @@ use accesskit_winit::Adapter;
 use dioxus_core::{Template, VirtualDom};
 use dioxus_native_core::real_dom::NodeImmutable;
 use freya_common::EventMessage;
-use freya_core::{
-    accessibility::{AccessibilityFocusDirection, AccessibilityProvider},
-    events::{DomEvent, EventsProcessor, FreyaEvent},
-    process_events, EventEmitter, EventReceiver, EventsQueue, FocusReceiver, FocusSender,
-    ViewportsCollection,
-};
+use freya_core::prelude::*;
 use freya_dom::prelude::SafeDOM;
 use freya_layout::Layers;
 use freya_node_state::AccessibilitySettings;
@@ -22,7 +17,7 @@ use futures::{
 use skia_safe::{textlayout::FontCollection, FontMgr};
 use tokio::{
     select,
-    sync::{mpsc, watch},
+    sync::{mpsc, watch, Notify},
 };
 use uuid::Uuid;
 use winit::{dpi::PhysicalSize, event::WindowEvent, event_loop::EventLoopProxy, window::Window};
@@ -72,7 +67,7 @@ pub struct App<State: 'static + Clone> {
 
     vdom_waker: Waker,
     proxy: EventLoopProxy<EventMessage>,
-    mutations_sender: Option<mpsc::UnboundedSender<()>>,
+    mutations_notifier: Option<Arc<Notify>>,
 
     event_emitter: EventEmitter,
     event_receiver: EventReceiver,
@@ -97,7 +92,7 @@ impl<State: 'static + Clone> App<State> {
         sdom: SafeDOM,
         vdom: VirtualDom,
         proxy: &EventLoopProxy<EventMessage>,
-        mutations_sender: Option<mpsc::UnboundedSender<()>>,
+        mutations_notifier: Option<Arc<Notify>>,
         window_env: WindowEnv<State>,
     ) -> Self {
         let accessibility_state = AccessibilityState::new().wrap();
@@ -120,7 +115,7 @@ impl<State: 'static + Clone> App<State> {
             events: Vec::new(),
             vdom_waker: winit_waker(proxy),
             proxy: proxy.clone(),
-            mutations_sender,
+            mutations_notifier,
             event_emitter,
             event_receiver,
             window_env,
@@ -155,7 +150,9 @@ impl<State: 'static + Clone> App<State> {
 
         self.sdom.get_mut().init_dom(mutations, scale_factor);
 
-        self.mutations_sender.as_ref().map(|s| s.send(()));
+        if let Some(mutations_notifier) = &self.mutations_notifier {
+            mutations_notifier.notify_one();
+        }
     }
 
     /// Update the DOM with the mutations from the VirtualDOM.
@@ -174,7 +171,9 @@ impl<State: 'static + Clone> App<State> {
         };
 
         if repaint {
-            self.mutations_sender.as_ref().map(|s| s.send(()));
+            if let Some(mutations_notifier) = &self.mutations_notifier {
+                mutations_notifier.notify_one();
+            }
         }
 
         (repaint, relayout)
@@ -244,6 +243,11 @@ impl<State: 'static + Clone> App<State> {
             self.layers = layers;
             self.viewports_collection = viewports;
         }
+
+        if let Some(mutations_notifier) = &self.mutations_notifier {
+            mutations_notifier.notify_one();
+        }
+
         self.process_accessibility();
     }
 

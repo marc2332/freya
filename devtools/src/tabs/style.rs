@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use freya_components::*;
-use freya_core::node::AttributeType;
+use freya_core::prelude::*;
 use freya_elements::elements as dioxus_elements;
 
 use crate::{

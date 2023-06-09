@@ -1,330 +1,272 @@
-use std::{any::Any, rc::Rc};
-
-use dioxus_core::ElementId;
+use dioxus_native_core::prelude::NodeImmutableDioxusExt;
+use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::NodeId;
-use freya_elements::events::{
-    keyboard::{Code, Key, Modifiers},
-    pointer::PointerType,
-    KeyboardData, MouseData, PointerData, TouchData, WheelData,
-};
+use freya_dom::prelude::FreyaDOM;
+use freya_layout::Layers;
+
+use freya_node_state::Style;
 use rustc_hash::FxHashMap;
-use torin::prelude::*;
-use winit::event::{Force, MouseButton, TouchPhase};
+use skia_safe::Color;
 
-use crate::EventEmitter;
+pub use crate::dom_events::DomEvent;
+pub use crate::events_processor::EventsProcessor;
+pub use crate::freya_events::FreyaEvent;
 
-/// Events emitted in Freya.
-#[derive(Clone, Debug)]
-pub enum FreyaEvent {
-    /// A Mouse Event.
-    Mouse {
-        name: String,
-        cursor: CursorPoint,
-        button: Option<MouseButton>,
-    },
-    /// A Wheel event.
-    Wheel {
-        name: String,
-        scroll: CursorPoint,
-        cursor: CursorPoint,
-    },
-    /// A Keyboard event.
-    Keyboard {
-        name: String,
-        key: Key,
-        code: Code,
-        modifiers: Modifiers,
-    },
-    /// A Touch event.
-    Touch {
-        name: String,
-        location: CursorPoint,
-        finger_id: u64,
-        phase: TouchPhase,
-        force: Option<Force>,
-    },
-}
+use crate::{EventEmitter, EventsQueue, NodesEvents, ViewportsCollection};
 
-impl FreyaEvent {
-    pub fn get_name(&self) -> &str {
-        match self {
-            Self::Mouse { name, .. } => name,
-            Self::Wheel { name, .. } => name,
-            Self::Keyboard { name, .. } => name,
-            Self::Touch { name, .. } => name,
+/// Measure globale events
+pub fn measure_global_events(events: &EventsQueue) -> Vec<FreyaEvent> {
+    let mut global_events = Vec::default();
+    for event in events {
+        let event_name = match event.get_name() {
+            "click" => Some("globalclick"),
+            "mouseover" => Some("globalmouseover"),
+            _ => None,
+        };
+        if let Some(event_name) = event_name {
+            let mut global_event = event.clone();
+            global_event.set_name(event_name.to_string());
+            global_events.push(global_event);
         }
     }
-
-    pub fn set_name(&mut self, new_name: String) {
-        match self {
-            Self::Mouse { name, .. } => *name = new_name,
-            Self::Wheel { name, .. } => *name = new_name,
-            Self::Keyboard { name, .. } => *name = new_name,
-            Self::Touch { name, .. } => *name = new_name,
-        }
-    }
-
-    pub fn is_pointer_event(&self) -> bool {
-        self.get_name().starts_with("point")
-    }
+    global_events
 }
 
-pub fn does_event_move_cursor(event_name: &str) -> bool {
-    ["pointerover", "pointerenter", "mouseover", "mouseenter"].contains(&event_name)
-}
+/// Measure what potential event listeners could be triggered
+pub fn measure_potential_event_listeners(
+    layers_nums: &[&i16],
+    layers: &Layers,
+    events: &EventsQueue,
+    viewports_collection: &ViewportsCollection,
+    fdom: &FreyaDOM,
+) -> NodesEvents {
+    let mut potential_events = FxHashMap::default();
 
-/// Event emitted to the DOM.
-#[derive(Debug, Clone)]
-pub struct DomEvent {
-    pub name: String,
-    pub node_id: NodeId,
-    pub element_id: ElementId,
-    pub data: DomEventData,
-}
+    let layout = fdom.layout();
 
-impl DomEvent {
-    pub fn does_move_cursor(&self) -> bool {
-        return does_event_move_cursor(self.name.as_str());
-    }
+    // Propagate events from the top to the bottom
+    for layer_num in layers_nums {
+        let layer = layers.layers.get(layer_num).unwrap();
 
-    pub fn from_freya_event(
-        node_id: NodeId,
-        element_id: ElementId,
-        event: &FreyaEvent,
-        node_area: Option<Area>,
-        scale_factor: f64,
-    ) -> Self {
-        let is_pointer_event = event.is_pointer_event();
-        let event_name = event.get_name().to_string();
-
-        match event {
-            FreyaEvent::Mouse { cursor, button, .. } => {
-                let screen_coordinates = *cursor / scale_factor;
-                let element_x =
-                    (cursor.x - node_area.unwrap_or_default().min_x() as f64) / scale_factor;
-                let element_y =
-                    (cursor.y - node_area.unwrap_or_default().min_y() as f64) / scale_factor;
-
-                let event_data = if is_pointer_event {
-                    DomEventData::Pointer(PointerData::new(
-                        screen_coordinates,
-                        (element_x, element_y).into(),
-                        PointerType::Mouse {
-                            trigger_button: *button,
-                        },
-                    ))
-                } else {
-                    DomEventData::Mouse(MouseData::new(
-                        screen_coordinates,
-                        (element_x, element_y).into(),
-                        *button,
-                    ))
-                };
-
-                Self {
-                    node_id,
-                    element_id,
-                    name: event_name,
-                    data: event_data,
-                }
-            }
-            FreyaEvent::Wheel { scroll, .. } => Self {
-                node_id,
-                element_id,
-                name: event_name,
-                data: DomEventData::Wheel(WheelData::new(scroll.x, scroll.y)),
-            },
-            FreyaEvent::Keyboard {
-                ref key,
-                code,
-                modifiers,
-                ..
-            } => Self {
-                node_id,
-                element_id,
-                name: event_name,
-                data: DomEventData::Keyboard(KeyboardData::new(key.clone(), *code, *modifiers)),
-            },
-            FreyaEvent::Touch {
-                location,
-                finger_id,
-                phase,
-                force,
-                ..
-            } => {
-                let element_x = location.x - node_area.unwrap_or_default().min_x() as f64;
-                let element_y = location.y - node_area.unwrap_or_default().min_y() as f64;
-
-                let event_data = if is_pointer_event {
-                    DomEventData::Pointer(PointerData::new(
-                        *location,
-                        (element_x, element_y).into(),
-                        PointerType::Touch {
-                            finger_id: *finger_id,
-                            phase: *phase,
-                            force: *force,
-                        },
-                    ))
-                } else {
-                    DomEventData::Touch(TouchData::new(
-                        *location,
-                        (element_x, element_y).into(),
-                        *finger_id,
-                        *phase,
-                        *force,
-                    ))
-                };
-
-                Self {
-                    node_id,
-                    element_id,
-                    name: event_name,
-                    data: event_data,
-                }
-            }
-        }
-    }
-}
-
-/// Data of a DOM event.
-#[derive(Debug, Clone)]
-pub enum DomEventData {
-    Mouse(MouseData),
-    Keyboard(KeyboardData),
-    Wheel(WheelData),
-    Touch(TouchData),
-    Pointer(PointerData),
-}
-
-impl DomEventData {
-    pub fn any(self) -> Rc<dyn Any> {
-        match self {
-            DomEventData::Mouse(m) => Rc::new(m),
-            DomEventData::Keyboard(k) => Rc::new(k),
-            DomEventData::Wheel(w) => Rc::new(w),
-            DomEventData::Touch(t) => Rc::new(t),
-            DomEventData::Pointer(p) => Rc::new(p),
-        }
-    }
-}
-
-/// State of an element.
-#[derive(Default)]
-struct ElementState {
-    hovered: bool,
-}
-
-/// [`EventsProcessor`] stores the elements events states.
-///
-/// TODO(marc2332): Remove deleted Elements
-#[derive(Default)]
-pub struct EventsProcessor {
-    states: FxHashMap<NodeId, ElementState>,
-}
-
-impl EventsProcessor {
-    /// Update the Element states given the new events
-    pub fn process_events(
-        &mut self,
-        events_to_emit: Vec<DomEvent>,
-        events: &[FreyaEvent],
-        event_emitter: &EventEmitter,
-    ) -> FxHashMap<String, Vec<(NodeId, FreyaEvent)>> {
-        let mut new_events = FxHashMap::<String, Vec<(NodeId, FreyaEvent)>>::default();
-
-        for (element, element_state) in self.states.iter_mut() {
-            {
-                let no_recent_mouse_movement_on_me = events_to_emit
-                    .iter()
-                    .find_map(|event| {
-                        if event.does_move_cursor() && &event.node_id == element {
-                            Some(false)
-                        } else {
-                            None
-                        }
-                    })
-                    .unwrap_or(true);
-
-                let recent_mouse_movement_event = events
-                    .iter()
-                    .find(|event| {
-                        if let FreyaEvent::Mouse { name, .. } = event {
-                            does_event_move_cursor(name)
-                        } else {
-                            false
-                        }
-                    })
-                    .cloned();
-
-                if element_state.hovered && no_recent_mouse_movement_on_me {
-                    if let Some(FreyaEvent::Mouse { cursor, button, .. }) =
-                        recent_mouse_movement_event
-                    {
-                        let events = new_events.entry("mouseleave".to_string()).or_default();
-                        events.push((
-                            *element,
-                            FreyaEvent::Mouse {
-                                name: "mouseleave".to_string(),
-                                cursor,
-                                button,
-                            },
-                        ));
-
-                        // Mark the element as no longer being hovered
-                        element_state.hovered = false;
-                    }
-                }
-            }
-        }
-
-        // All these events will mark the node as being hovered
-        // "mouseover" "mouseenter" "pointerover"  "pointerenter"
-
-        // Emit valid events
-        for event in &events_to_emit {
-            let id = &event.node_id;
-
-            let should_trigger = match event.name.as_str() {
-                name @ "mouseover"
-                | name @ "mouseenter"
-                | name @ "pointerover"
-                | name @ "pointerenter" => {
-                    if !self.states.contains_key(id) {
-                        self.states.insert(*id, ElementState::default());
-                    }
-
-                    let node_state = self.states.get_mut(id).unwrap();
-
-                    if name == "mouseenter" || name == "pointerenter" {
-                        // If the event is already being hovered then it's pointless to trigger the movement event
-                        !node_state.hovered
+        for node_id in layer {
+            let areas = layout.get(*node_id);
+            if let Some(areas) = areas {
+                'events: for event in events.iter() {
+                    if let FreyaEvent::Keyboard { name, .. } = event {
+                        let event_data = (*node_id, event.clone());
+                        potential_events
+                            .entry(name.clone())
+                            .or_insert_with(|| vec![event_data.clone()])
+                            .push(event_data);
                     } else {
-                        true
+                        let data = match event {
+                            FreyaEvent::Mouse { name, cursor, .. } => Some((name, cursor)),
+                            FreyaEvent::Wheel { name, cursor, .. } => Some((name, cursor)),
+                            FreyaEvent::Touch { name, location, .. } => Some((name, location)),
+                            _ => None,
+                        };
+                        if let Some((name, cursor)) = data {
+                            let cursor_is_inside = areas.area.contains(cursor.to_f32());
+
+                            // Make sure the cursor is inside the node area
+                            if cursor_is_inside {
+                                let viewports = viewports_collection.get(node_id);
+
+                                // Make sure the cursor is inside all the applicable viewports from the element
+                                if let Some((_, viewports)) = viewports {
+                                    for viewport_id in viewports {
+                                        let viewport =
+                                            viewports_collection.get(viewport_id).unwrap().0;
+                                        if let Some(viewport) = viewport {
+                                            if !viewport.contains(cursor.to_f32()) {
+                                                continue 'events;
+                                            }
+                                        }
+                                    }
+                                }
+
+                                let event_data = (*node_id, event.clone());
+
+                                potential_events
+                                    .entry(name.clone())
+                                    .or_insert_with(Vec::new)
+                                    .push(event_data);
+                            }
+                        }
                     }
                 }
-                _ => true,
-            };
-
-            if should_trigger {
-                event_emitter.send(event.clone()).unwrap();
             }
         }
-
-        // Update the internal states of elements given the events
-        // e.g `mouseover` will mark the element as hovered.
-        for event in events_to_emit {
-            let id = &event.node_id;
-            if does_event_move_cursor(event.name.as_str()) {
-                if !self.states.contains_key(id) {
-                    self.states.insert(*id, ElementState::default());
-                }
-
-                let node_state = self.states.get_mut(id).unwrap();
-
-                node_state.hovered = true;
-            }
-        }
-
-        new_events
     }
+
+    potential_events
+}
+
+/// Some events might cause other events, like for example:
+/// A `mouseover` might also trigger a `mouseenter`
+/// A `mousedown` or a `touchdown` might also trigger a `pointerdown`
+fn get_derivated_events(event_name: &str) -> Vec<&str> {
+    match event_name {
+        "mouseover" => {
+            vec![event_name, "mouseenter", "pointerenter", "pointerover"]
+        }
+        "mousedown" | "touchdown" => {
+            vec![event_name, "pointerdown"]
+        }
+        "click" | "ontouchend" => {
+            vec![event_name, "pointerup"]
+        }
+        "mouseleave" => {
+            vec![event_name, "pointerleave"]
+        }
+        _ => vec![event_name],
+    }
+}
+
+const STACKED_EVENTS: [&str; 13] = [
+    "mouseover",
+    "mouseenter",
+    "mouseleave",
+    "click",
+    "keydown",
+    "keyup",
+    "touchcancel",
+    "touchend",
+    "touchend",
+    "touchstart",
+    "pointerover",
+    "pointerenter",
+    "pointerleave",
+];
+
+const FIRST_CAPTURED_EVENTS: [&str; 1] = ["wheel"];
+
+const LAST_CAPTURED_EVENTS: [&str; 3] = ["click", "touchstart", "touchend"];
+
+/// Measure what DOM events could be emited
+fn measure_dom_events(
+    potential_events: &mut NodesEvents,
+    fdom: &FreyaDOM,
+    scale_factor: f64,
+) -> Vec<DomEvent> {
+    let mut new_events = Vec::new();
+    let rdom = fdom.rdom();
+
+    for (event_name, event_nodes) in potential_events.iter_mut() {
+        let derivated_events = get_derivated_events(event_name.as_str());
+
+        let mut found_nodes: Vec<(&NodeId, FreyaEvent)> = Vec::new();
+        for derivated_event_name in derivated_events {
+            let listeners = rdom.get_listening_sorted(derivated_event_name);
+            'event_nodes: for (node_id, request) in event_nodes.iter() {
+                for listener in &listeners {
+                    if listener.id() == *node_id {
+                        let Style { background, .. } = &*listener.get::<Style>().unwrap();
+
+                        let mut request = request.clone();
+                        request.set_name(derivated_event_name.to_string());
+
+                        // Stop searching on first match
+                        if background != &Color::TRANSPARENT
+                            && FIRST_CAPTURED_EVENTS.contains(&derivated_event_name)
+                        {
+                            break 'event_nodes;
+                        }
+
+                        // Only keep the last matched event
+                        if background != &Color::TRANSPARENT
+                            && LAST_CAPTURED_EVENTS.contains(&derivated_event_name)
+                        {
+                            found_nodes.clear();
+                        }
+
+                        // Stack the matched events
+                        if STACKED_EVENTS.contains(&derivated_event_name) {
+                            found_nodes.push((node_id, request))
+                        } else {
+                            found_nodes = vec![(node_id, request)]
+                        }
+                    }
+                }
+            }
+        }
+
+        for (node_id, request_event) in found_nodes {
+            let areas = fdom.layout().get(*node_id).unwrap().clone();
+            let node_ref = fdom.rdom().get(*node_id).unwrap();
+            let element_id = node_ref.mounted_id().unwrap();
+            let event = DomEvent::from_freya_event(
+                *node_id,
+                element_id,
+                &request_event,
+                Some(areas.area),
+                scale_factor,
+            );
+            new_events.push(event);
+        }
+    }
+
+    new_events
+}
+
+/// Emit global events
+fn emit_global_events_listeners(
+    global_events: Vec<FreyaEvent>,
+    fdom: &FreyaDOM,
+    event_emitter: &EventEmitter,
+    scale_factor: f64,
+) {
+    for global_event in global_events {
+        let event_name = global_event.get_name();
+        let listeners = fdom.rdom().get_listening_sorted(event_name);
+
+        for listener in listeners {
+            let element_id = listener.mounted_id().unwrap();
+            let event = DomEvent::from_freya_event(
+                listener.id(),
+                element_id,
+                &global_event,
+                None,
+                scale_factor,
+            );
+            event_emitter.send(event).unwrap();
+        }
+    }
+}
+
+/// Process the events and emit them to the DOM
+pub fn process_events(
+    dom: &FreyaDOM,
+    layers: &Layers,
+    events: &mut EventsQueue,
+    event_emitter: &EventEmitter,
+    events_processor: &mut EventsProcessor,
+    viewports_collection: &ViewportsCollection,
+    scale_factor: f64,
+) {
+    let mut layers_nums: Vec<&i16> = layers.layers.keys().collect();
+
+    // Order the layers from top to bottom
+    layers_nums.sort();
+
+    let global_events = measure_global_events(events);
+
+    let mut potential_events =
+        measure_potential_event_listeners(&layers_nums, layers, events, viewports_collection, dom);
+
+    let emitted_events = measure_dom_events(&mut potential_events, dom, scale_factor);
+
+    let mut potential_colateral_events =
+        events_processor.process_events(emitted_events, events, event_emitter);
+
+    let emitted_colateral_events =
+        measure_dom_events(&mut potential_colateral_events, dom, scale_factor);
+
+    for event in emitted_colateral_events {
+        event_emitter.send(event).unwrap();
+    }
+
+    emit_global_events_listeners(global_events, dom, event_emitter, scale_factor);
+
+    events.clear();
 }

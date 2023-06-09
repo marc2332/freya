@@ -170,18 +170,8 @@ fn Editor(cx: Scope) -> Element {
     let font_size = font_size_percentage + 5.0;
     let line_height = (line_height_percentage / 25.0) + 1.2;
     let mut line_index = 0;
-
-    let font_style = {
-        if *is_bold.get() && *is_italic.get() {
-            "bold-italic"
-        } else if *is_italic.get() {
-            "italic"
-        } else if *is_bold.get() {
-            "bold"
-        } else {
-            "normal"
-        }
-    };
+    let font_style = if *is_italic.get() { "italic" } else { "normal" };
+    let font_weight = if *is_bold.get() { "bold" } else { "normal" };
 
     use_effect(cx, (), {
         to_owned![focus_manager];
@@ -406,6 +396,7 @@ fn Editor(cx: Scope) -> Element {
                                             color: "rgb(240, 240, 240)",
                                             font_size: "{font_size}",
                                             font_style: "{font_style}",
+                                            font_weight: "{font_weight}",
                                             "{l}"
                                         }
                                     }

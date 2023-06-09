@@ -2,7 +2,7 @@ use dioxus_native_core::node::NodeType;
 use dioxus_native_core::prelude::ElementNode;
 use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::NodeId;
-use freya_core::ViewportsCollection;
+use freya_core::prelude::*;
 use freya_dom::prelude::DioxusNode;
 use freya_node_state::Transform;
 use skia_safe::{textlayout::FontCollection, Canvas, ClipOp, Rect};
