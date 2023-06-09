@@ -204,9 +204,11 @@ builder_constructors! {
         width: String,
         font_size: String,
         font_family: String,
+        font_style: String,
+        font_weight: String,
+        font_width: String,
         align: String,
         max_lines: String,
-        font_style: String,
         rotate: String,
     };
     paragraph {
@@ -234,8 +236,10 @@ builder_constructors! {
         width: String,
         font_size: String,
         font_family: String,
-        line_height: String,
         font_style: String,
+        font_weight: String,
+        font_width: String,
+        line_height: String,
         rotate: String,
     };
     image {
