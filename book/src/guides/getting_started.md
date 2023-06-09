@@ -1,6 +1,8 @@
-# Hello, World!
+# Getting started
 
-Let's start by creating a hello world project.
+I encourage you to learn how [Dioxus works](https://dioxuslabs.com/docs/0.3/guide/en/describing_ui/index.html), when you are done you can continue here.
+
+Now, let's start by creating a hello world project.
 
 ### Creating the project
 
