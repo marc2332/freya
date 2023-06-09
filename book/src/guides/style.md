@@ -11,6 +11,8 @@ Learn how the style attributes work.
 - [`align`](#align)
 - [`max_lines`](#max_lines)
 - [`font_style`](#font_style)
+- [`font_weight`](#font_weight)
+- [`font_width`](#font_width)
 
 ### background
 
@@ -21,7 +23,7 @@ You can learn about the syntax of this attribute [here](#color-syntax).
 Example:
 
 ```rust
-fn app() -> Element {
+fn app(cx: Scope) -> Element {
     render!(
         rect {
             background: "red"
@@ -39,7 +41,7 @@ The `color` attribute let's you specify the color of the text.
 Example:
 
 ```rust
-fn app() -> Element {
+fn app(cx: Scope) -> Element {
     render!(
         label {
             color: "green",
@@ -52,7 +54,7 @@ fn app() -> Element {
 Another example showing [inheritance](#inheritance):
 
 ```rust
-fn app() -> Element {
+fn app(cx: Scope) -> Element {
     render!(
         rect {
             color: "blue",
@@ -65,8 +67,7 @@ fn app() -> Element {
 
 ```
 
-Compatible elements: [`label`](/guides/element.html#label), [`paragraph`](/guides/elements.html#paragraph), 
-[`text`](/guides/elements.html#text)
+Compatible elements: [`label`](/guides/element.html#label), [`paragraph`](/guides/elements.html#paragraph), [`text`](/guides/elements.html#text)
 
 
 ### shadow
@@ -78,7 +79,7 @@ Syntax: `<x> <y> <intensity> <size> <color>`
 Example:
 
 ```rust
-fn app() -> Element {
+fn app(cx: Scope) -> Element {
     render!(
         rect {
             shadow: "0 0 50 10 black"
@@ -96,7 +97,7 @@ The `radius` attribute let's you smooth the corners of the element.
 Example:
 
 ```rust
-fn app() -> Element {
+fn app(cx: Scope) -> Element {
     render!(
         rect {
             radius: "10"
@@ -116,7 +117,7 @@ Limitation: Only fonts installed in the system are supported for now.
 Example: 
 
 ```rust
-fn app() -> Element {
+fn app(cx: Scope) -> Element {
     render!(
         label {
             font_family: "Inter",
@@ -135,7 +136,7 @@ You can specify the size of the text using `font_size`.
 Example:
 
 ```rust
-fn app() -> Element {
+fn app(cx: Scope) -> Element {
     render!(
         label {
             font_size: "50",
@@ -145,8 +146,7 @@ fn app() -> Element {
 }
 ```
 
-Compatible elements: [`label`](/guides/element.html#label), [`paragraph`](/guides/elements.html#paragraph), 
-[`text`](/guides/elements.html#text)
+Compatible elements: [`label`](/guides/element.html#label), [`paragraph`](/guides/elements.html#paragraph), [`text`](/guides/elements.html#text)
 
 ### align
 
@@ -157,7 +157,7 @@ Accepted values: `center`, `end`, `justify`, `left`, `right`, `start`
 Example
 
 ```rust
-fn app() -> Element {
+fn app(cx: Scope) -> Element {
     render!(
         label {
             align: "right",
@@ -176,7 +176,7 @@ You can limit the amount of shown lines with the `max_lines` attribute.
 Example:
 
 ```rust
-fn app() -> Element {
+fn app(cx: Scope) -> Element {
     render!(
         label {
             max_lines: "1",
@@ -191,6 +191,91 @@ Compatible elements: [`label`](/guides/element.html#label), [`paragraph`](/guide
 
 ### font_style
 
+You can choose a style for a text using the `font_style` attribute.
+
+Accepted values: `upright` (default), `italic` and `oblique`.
+
+Example:
+
+```rust
+fn app(cx: Scope) -> Element {
+    render!(
+        label {
+            font_style: "italic",
+            "Hello, World!"
+        }
+    )
+}
+```
+
+### font_weight
+
+You can choose a weight for a text using the `font_weight` attribute.
+
+Accepted values:
+- `invisible`
+- `thin`
+- `extra-light`
+- `light`
+- `normal` (default)
+- `medium`
+- `semi-bold`
+- `bold`
+- `extra-bold`
+- `black`
+- `extra-black`
+- `50`
+- `100`
+- `200`
+- `300`
+- `400`
+- `500`
+- `600`
+- `700`
+- `800`
+- `900`
+- `950`
+
+Example:
+
+```rust
+fn app(cx: Scope) -> Element {
+    render!(
+        label {
+            font_weight: "bold",
+            "Hello, World!"
+        }
+    )
+}
+```
+
+### font_width
+
+You can choose a width for a text using the `font_width` attribute.
+
+Accepted values:
+- `ultra-condensed`
+- `extra-condensed`
+- `condensed`
+- `normal` (default)
+- `semi-expanded`
+- `expanded`
+- `extra-expanded`
+- `ultra-expanded`
+
+Example:
+
+```rust
+fn app(cx: Scope) -> Element {
+    render!(
+        label {
+            font_weight: "bold",
+            "Hello, World!"
+        }
+    )
+}
+```
+
 ### Color syntax
 
 The attributes that have colors as values can use the following syntax:
@@ -200,20 +285,27 @@ The attributes that have colors as values can use the following syntax:
 - `blue`
 - `green`
 - `yellow`
-- `black`
+- `black` (default for `color` attribute)
 - `gray`
-- `white`
+- `white` (default for `background` attribute)
 - `orange`
 - `transparent`
 
 #### rgb() / rgba()
 
-- `rgb(150, 60, 20)`
-- `rgba(30, 50, 200, 70)`
+- With RGB: `rgb(150, 60, 20)`
+- With RGBA: `rgba(30, 50, 200, 70)`
 
 ### Inheritance
 
-There are some attribute that can be inherited from the element parents.
+These are some attribute that are inherited from the element parents:
 
 - `color`
 - `font_family`
+- `font_size`
+- `font_style`
+- `font_weight`
+- `font_width`
+- `line_height`
+- `align`
+- `max_lines`

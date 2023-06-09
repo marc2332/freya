@@ -12,12 +12,12 @@ Freya contains a set of primitive elements:
 ## rect
 
 The `rect` element (aka `rectangle`) is a box where you can place as many elements inside you want.
-It let's you specify the it's inner [paddings](/guides/layout.html#padding) or even in what [direction](/guides/layout.html#direction) the inner elements are stacked.
+You can specify things like [`width`](/guides/layout.html#width), [`paddings`](/guides/layout.html#padding) or even in what [`direction`](/guides/layout.html#direction) the inner elements are stacked.
 
 Example:
 
 ```rust
-fn app() -> Element {
+fn app(cx: Scope) -> Element {
     render!(
         rect {
             direction: "vertical",
@@ -30,13 +30,12 @@ fn app() -> Element {
 
 ### container
 
-The `container` behaves the same as the [`rect`](#rect) element, except, it
-hide any element overflowing it's bounds.
+The `container` behaves the same as the [`rect`](#rect) element, except, it hides any element overflowing it's bounds.
 
 Example:
 
 ```rust
-fn app() -> Element {
+fn app(cx: Scope) -> Element {
     render!(
         container {
             label {
@@ -54,7 +53,7 @@ The `label` element simply shows some text.
 Example:
 
 ```rust
-fn app() -> Element {
+fn app(cx: Scope) -> Element {
     render!(
         label {
             "Hello World"
@@ -73,7 +72,7 @@ Example:
 
 static FERRIS: &[u8] = include_bytes!("./ferris.svg");
 
-fn app() -> Element {
+fn app(cx: Scope) -> Element {
     let ferris = bytes_to_data(cx, FERRIS);
     render!(
         svg {
@@ -90,7 +89,7 @@ The `image` element, just like `svg` element, require you to pass the image byte
 ```rust
 static RUST_LOGO: &[u8] = include_bytes!("./rust_logo.png");
 
-fn app() -> Element {
+fn app(cx: Scope) -> Element {
     let image_data = bytes_to_data(cx, RUST_LOGO);
     render!(
         image {
@@ -107,7 +106,7 @@ fn app() -> Element {
 Both `paragraph` and `text` elements are used together. They will let you build texts with different styles.
 
 ``` rust
-fn app() -> Element {
+fn app(cx: Scope) -> Element {
     render!(
         paragraph {
             text {
