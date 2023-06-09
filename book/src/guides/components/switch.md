@@ -12,17 +12,17 @@ Example:
 // will be shown with the new state
 
 fn app() -> Element {
-	let is_enabled = use_state(cx, || false);
+    let is_enabled = use_state(cx, || false);
 
-	let ontoggled = |_| {
-		is_enabled.set(!is_enabled.get());
-	};
+    let ontoggled = |_| {
+        is_enabled.set(!is_enabled.get());
+    };
 
-	render!(
-		Switch {
-			enabled: *is_enabled.get(),
-			ontoggled: ontoggled,
-		}
-	)
+    render!(
+        Switch {
+            enabled: *is_enabled.get(),
+            ontoggled: ontoggled,
+        }
+    )
 }
 ```

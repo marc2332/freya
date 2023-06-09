@@ -22,11 +22,11 @@ Example:
 
 ```rust
 fn app() -> Element {
-	render!(
-		rect {
-			background: "red"
-		}
-	)
+    render!(
+        rect {
+            background: "red"
+        }
+    )
 }
 ```
 
@@ -40,12 +40,12 @@ Example:
 
 ```rust
 fn app() -> Element {
-	render!(
-		label {
-			color: "green",
-			"Hello, World!"
-		}
-	)
+    render!(
+        label {
+            color: "green",
+            "Hello, World!"
+        }
+    )
 }
 ```
 
@@ -53,14 +53,14 @@ Another example showing [inheritance](#inheritance):
 
 ```rust
 fn app() -> Element {
-	render!(
-		rect {
-			color: "blue",
-			label {
-				"Hello, World!"
-			}
-		}
-	)
+    render!(
+        rect {
+            color: "blue",
+            label {
+                "Hello, World!"
+            }
+        }
+    )
 }
 
 ```
@@ -79,11 +79,11 @@ Example:
 
 ```rust
 fn app() -> Element {
-	render!(
-		rect {
-			shadow: "0 0 50 10 black"
-		}
-	)
+    render!(
+        rect {
+            shadow: "0 0 50 10 black"
+        }
+    )
 }
 ```
 
@@ -97,11 +97,11 @@ Example:
 
 ```rust
 fn app() -> Element {
-	render!(
-		rect {
-			radius: "10"
-		}
-	)
+    render!(
+        rect {
+            radius: "10"
+        }
+    )
 }
 ```
 
@@ -117,12 +117,12 @@ Example:
 
 ```rust
 fn app() -> Element {
-	render!(
-		label {
-			font_family: "Inter",
-			"Hello, World!"
-		}
-	)
+    render!(
+        label {
+            font_family: "Inter",
+            "Hello, World!"
+        }
+    )
 }
 ```
 
@@ -136,12 +136,12 @@ Example:
 
 ```rust
 fn app() -> Element {
-	render!(
-		label {
-			font_size: "50",
-			"Hellooooo!"
-		}
-	)
+    render!(
+        label {
+            font_size: "50",
+            "Hellooooo!"
+        }
+    )
 }
 ```
 
@@ -158,12 +158,12 @@ Example
 
 ```rust
 fn app() -> Element {
-	render!(
-		label {
-			align: "right",
-			"Hello, World!"
-		}
-	)
+    render!(
+        label {
+            align: "right",
+            "Hello, World!"
+        }
+    )
 }
 ```
 
@@ -177,12 +177,12 @@ Example:
 
 ```rust
 fn app() -> Element {
-	render!(
-		label {
-			max_lines: "1",
-			"Hello, World! \n Hello, again!"
-		}
-	)
+    render!(
+        label {
+            max_lines: "1",
+            "Hello, World! \n Hello, again!"
+        }
+    )
 }
 ```
 

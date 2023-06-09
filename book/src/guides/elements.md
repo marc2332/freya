@@ -18,13 +18,13 @@ Example:
 
 ```rust
 fn app() -> Element {
-	render!(
-		rect {
-			direction: "vertical",
-			label { "Hi!" }
-			label { "Hi again!"}
-		}
-	)
+    render!(
+        rect {
+            direction: "vertical",
+            label { "Hi!" }
+            label { "Hi again!"}
+        }
+    )
 }
 ```
 
@@ -37,13 +37,13 @@ Example:
 
 ```rust
 fn app() -> Element {
-	render!(
-		container {
-			label {
-				"Hello World!"
-			}
-		}
-	)
+    render!(
+        container {
+            label {
+                "Hello World!"
+            }
+        }
+    )
 }
 ```
 
@@ -55,11 +55,11 @@ Example:
 
 ```rust
 fn app() -> Element {
-	render!(
-		label {
-			"Hello World"
-		}
-	)
+    render!(
+        label {
+            "Hello World"
+        }
+    )
 }
 ```
 
@@ -74,12 +74,12 @@ Example:
 static FERRIS: &[u8] = include_bytes!("./ferris.svg");
 
 fn app() -> Element {
-	let ferris = bytes_to_data(cx, FERRIS);
-	render!(
-		svg {
-			svg_data: ferris,
-		}
-	)
+    let ferris = bytes_to_data(cx, FERRIS);
+    render!(
+        svg {
+            svg_data: ferris,
+        }
+    )
 }
 ```
 
@@ -91,14 +91,14 @@ The `image` element, just like `svg` element, require you to pass the image byte
 static RUST_LOGO: &[u8] = include_bytes!("./rust_logo.png");
 
 fn app() -> Element {
-	let image_data = bytes_to_data(cx, RUST_LOGO);
-	render!(
-		image {
+    let image_data = bytes_to_data(cx, RUST_LOGO);
+    render!(
+        image {
             image_data: image_data,
-			width: "{size}",
-			height: "{size}",
+            width: "{size}",
+            height: "{size}",
         }
-	)
+    )
 }
 ```
 
@@ -108,17 +108,17 @@ Both `paragraph` and `text` elements are used together. They will let you build 
 
 ``` rust
 fn app() -> Element {
-	render!(
-		paragraph {
-			text {
-				font_size: "15",
-				"Hello, "
-			}
-			text {
-				font_size: "30",
-				"World!"
-			}
-		}
-	)
+    render!(
+        paragraph {
+            text {
+                font_size: "15",
+                "Hello, "
+            }
+            text {
+                font_size: "30",
+                "World!"
+            }
+        }
+    )
 }
 ```
