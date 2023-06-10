@@ -34,7 +34,7 @@ fn Child(cx: Scope) -> Element {
 fn app(cx: Scope) -> Element {
     use_init_focus(cx);
     render!(
-        AccessibilityFocusProvider {},
+        AccessibilityFocusBridge {},
         Child {},
         Child {},
         Child {},

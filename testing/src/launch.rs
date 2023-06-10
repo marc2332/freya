@@ -1,7 +1,6 @@
 use dioxus_core::{Component, VirtualDom};
 use freya_common::EventMessage;
-use freya_core::events::DomEvent;
-use freya_core::events::EventsProcessor;
+use freya_core::prelude::*;
 use freya_dom::prelude::{FreyaDOM, SafeDOM};
 use freya_layout::Layers;
 use rustc_hash::FxHashMap;
@@ -35,6 +34,7 @@ pub fn launch_test_with_config(root: Component<()>, config: TestingConfig) -> Te
     let events_processor = EventsProcessor::default();
     let mut font_collection = FontCollection::new();
     font_collection.set_dynamic_font_manager(FontMgr::default());
+    let accessibility_state = SharedAccessibilityState::default();
 
     let mut handler = TestingHandler {
         vdom,
@@ -48,6 +48,7 @@ pub fn launch_test_with_config(root: Component<()>, config: TestingConfig) -> Te
         config,
         platform_event_emitter,
         platform_event_receiver,
+        accessibility_state,
     };
 
     handler.init_dom();

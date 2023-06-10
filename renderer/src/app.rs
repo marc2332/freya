@@ -3,12 +3,11 @@ use std::{collections::HashMap, sync::Arc, task::Waker};
 use accesskit::NodeId;
 use accesskit_winit::Adapter;
 use dioxus_core::{Template, VirtualDom};
-use dioxus_native_core::real_dom::NodeImmutable;
 use freya_common::EventMessage;
+use freya_core::accessibility_state::{AccessibilityState, SharedAccessibilityState, ROOT_ID};
 use freya_core::prelude::*;
 use freya_dom::prelude::SafeDOM;
 use freya_layout::Layers;
-use freya_node_state::AccessibilitySettings;
 use futures::FutureExt;
 use futures::{
     pin_mut,
@@ -22,10 +21,7 @@ use tokio::{
 use uuid::Uuid;
 use winit::{dpi::PhysicalSize, event::WindowEvent, event_loop::EventLoopProxy, window::Window};
 
-use crate::{
-    accessibility::{AccessibilityState, SharedAccessibilityState, WINDOW_ID},
-    HoveredNode, WindowEnv,
-};
+use crate::{HoveredNode, WindowEnv};
 
 fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
     struct DomHandle(EventLoopProxy<EventMessage>);
@@ -52,7 +48,7 @@ fn create_accessibility_adapter(
         window,
         move || {
             let mut accessibility_state = accessibility_state.lock().unwrap();
-            accessibility_state.process(WINDOW_ID, &window_title)
+            accessibility_state.process(ROOT_ID, &window_title)
         },
         proxy.clone(),
     )
@@ -258,25 +254,14 @@ impl<State: 'static + Clone> App<State> {
         let fdom = &self.sdom.get();
         let layout = fdom.layout();
         let rdom = fdom.rdom();
-        let layers = &self.layers.layers;
+        let layers = &self.layers;
 
-        for layer in layers.values() {
-            for node_id in layer {
-                let node_areas = layout.get(*node_id).unwrap();
-                let dioxus_node = rdom.get(*node_id);
-                if let Some(dioxus_node) = dioxus_node {
-                    let node_accessibility = &*dioxus_node.get::<AccessibilitySettings>().unwrap();
-                    if let Some(accessibility_id) = node_accessibility.focus_id {
-                        self.accessibility_state.lock().unwrap().add_node(
-                            &dioxus_node,
-                            node_areas,
-                            accessibility_id,
-                            node_accessibility,
-                        );
-                    }
-                }
-            }
-        }
+        process_accessibility(
+            layers,
+            &layout,
+            rdom,
+            &mut *self.accessibility_state.lock().unwrap(),
+        );
     }
 
     /// Push an event to the events queue
@@ -335,7 +320,7 @@ impl<State: 'static + Clone> App<State> {
             .accessibility_state
             .lock()
             .unwrap()
-            .process(WINDOW_ID, self.window_env.window_config.title);
+            .process(ROOT_ID, self.window_env.window_config.title);
         self.accessibility_adapter.update(tree);
     }
 

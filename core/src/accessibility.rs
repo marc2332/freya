@@ -5,12 +5,14 @@ use accesskit::{
 use dioxus_native_core::{
     prelude::{NodeType, TextNode},
     real_dom::NodeImmutable,
+    NodeId,
 };
-use freya_dom::prelude::DioxusNode;
+use freya_dom::prelude::{DioxusDOM, DioxusNode};
+use freya_layout::Layers;
 use freya_node_state::AccessibilitySettings;
 use std::slice::Iter;
 use tokio::sync::watch;
-use torin::prelude::NodeAreas;
+use torin::{prelude::NodeAreas, torin::Torin};
 
 /// Direction for the next Accessibility Node to be focused.
 #[derive(PartialEq)]
@@ -226,5 +228,30 @@ impl NodeAccessibility for DioxusNode<'_> {
                 node_accessibility.focus_id
             })
             .collect::<Vec<AccessibilityId>>()
+    }
+}
+
+pub fn process_accessibility(
+    layers: &Layers,
+    layout: &Torin<NodeId>,
+    rdom: &DioxusDOM,
+    access_provider: &mut impl AccessibilityProvider,
+) {
+    for layer in layers.layers.values() {
+        for node_id in layer {
+            let node_areas = layout.get(*node_id).unwrap();
+            let dioxus_node = rdom.get(*node_id);
+            if let Some(dioxus_node) = dioxus_node {
+                let node_accessibility = &*dioxus_node.get::<AccessibilitySettings>().unwrap();
+                if let Some(accessibility_id) = node_accessibility.focus_id {
+                    access_provider.add_node(
+                        &dioxus_node,
+                        node_areas,
+                        accessibility_id,
+                        node_accessibility,
+                    );
+                }
+            }
+        }
     }
 }

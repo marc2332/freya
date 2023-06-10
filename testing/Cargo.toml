@@ -30,6 +30,7 @@ dioxus-native-core-macro = { workspace = true }
 winit = { workspace = true }
 tokio = { workspace = true }
 skia-safe = { workspace = true }
+accesskit = { workspace = true }
 
 rustc-hash= { workspace = true }
 anymap = { workspace = true }

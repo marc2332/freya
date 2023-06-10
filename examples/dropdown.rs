@@ -15,7 +15,7 @@ fn app(cx: Scope) -> Element {
 
     use_init_focus(cx);
     render!(
-        AccessibilityFocusProvider {},
+        AccessibilityFocusBridge {},
         Dropdown {
             value: selected_dropdown.get().clone(),
             values.iter().map(|ch| {

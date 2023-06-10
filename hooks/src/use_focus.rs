@@ -1,13 +1,10 @@
 use std::num::NonZeroU128;
 
+use accesskit::NodeId as AccessibilityId;
 use dioxus_core::{AttributeValue, Scope, ScopeState};
 use dioxus_hooks::{use_shared_state, use_shared_state_provider, UseSharedState};
-use freya_common::EventMessage;
 use freya_node_state::CustomAttributeValues;
 use uuid::Uuid;
-use winit::event_loop::EventLoopProxy;
-
-use accesskit::NodeId as AccessibilityId;
 
 pub type FocusId = AccessibilityId;
 
@@ -52,16 +49,6 @@ pub fn use_focus(cx: &ScopeState) -> FocusManager {
 /// Create a focus provider.
 pub fn use_init_focus(cx: &ScopeState) {
     use_shared_state_provider::<Option<FocusId>>(cx, || None);
-}
-
-/// Easily focus the given node focus ID
-pub fn focus_node_id(cx: Scope, id: FocusId) {
-    let proxy = cx.consume_context::<EventLoopProxy<EventMessage>>();
-    if let Some(proxy) = &proxy {
-        proxy
-            .send_event(EventMessage::FocusAccessibilityNode(id))
-            .unwrap();
-    }
 }
 
 #[cfg(test)]

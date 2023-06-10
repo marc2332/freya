@@ -9,6 +9,7 @@ use tokio::sync::watch;
 use torin::prelude::Area;
 
 pub mod accessibility;
+pub mod accessibility_state;
 pub mod dom_events;
 pub mod events;
 pub mod events_processor;
@@ -29,6 +30,7 @@ pub type ViewportsCollection = FxHashMap<NodeId, (Option<Area>, Vec<NodeId>)>;
 
 pub mod prelude {
     pub use crate::accessibility::*;
+    pub use crate::accessibility_state::*;
     pub use crate::dom_events::*;
     pub use crate::events::*;
     pub use crate::events_processor::*;
