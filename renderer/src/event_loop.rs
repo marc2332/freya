@@ -36,7 +36,7 @@ pub fn run_event_loop<State: Clone>(
                 app.window_env().request_redraw();
             }
             Event::UserEvent(EventMessage::FocusAccessibilityNode(id)) => {
-                app.set_accessibility_focus(id);
+                app.accessibility().set_accessibility_focus(id);
             }
             Event::UserEvent(EventMessage::RequestRerender) => {
                 app.render(&hovered_node);
@@ -62,7 +62,7 @@ pub fn run_event_loop<State: Clone>(
                 }
             }
             Event::RedrawRequested(_) => {
-                app.clear_accessibility();
+                app.accessibility().clear_accessibility();
                 app.process_layout();
                 app.render(&hovered_node);
                 app.render_accessibility();

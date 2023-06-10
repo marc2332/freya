@@ -11,6 +11,7 @@ use winit::event_loop::EventLoopBuilder;
 pub use window::WindowEnv;
 pub use window_config::WindowConfig;
 
+mod accessibility;
 mod app;
 mod elements;
 mod event_loop;

@@ -1,10 +1,7 @@
 use std::{collections::HashMap, sync::Arc, task::Waker};
 
-use accesskit::NodeId;
-use accesskit_winit::Adapter;
 use dioxus_core::{Template, VirtualDom};
 use freya_common::EventMessage;
-use freya_core::accessibility_state::{AccessibilityState, SharedAccessibilityState, ROOT_ID};
 use freya_core::prelude::*;
 use freya_dom::prelude::SafeDOM;
 use freya_layout::Layers;
@@ -19,8 +16,10 @@ use tokio::{
     sync::{mpsc, watch, Notify},
 };
 use uuid::Uuid;
-use winit::{dpi::PhysicalSize, event::WindowEvent, event_loop::EventLoopProxy, window::Window};
+use winit::event::WindowEvent;
+use winit::{dpi::PhysicalSize, event_loop::EventLoopProxy};
 
+use crate::accessibility::NativeAccessibility;
 use crate::{HoveredNode, WindowEnv};
 
 fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
@@ -36,22 +35,6 @@ fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
     }
 
     task::waker(Arc::new(DomHandle(proxy.clone())))
-}
-
-fn create_accessibility_adapter(
-    window: &Window,
-    window_title: String,
-    accessibility_state: SharedAccessibilityState,
-    proxy: &EventLoopProxy<EventMessage>,
-) -> Adapter {
-    Adapter::new(
-        window,
-        move || {
-            let mut accessibility_state = accessibility_state.lock().unwrap();
-            accessibility_state.process(ROOT_ID, &window_title)
-        },
-        proxy.clone(),
-    )
 }
 
 /// Manages the Application lifecycle
@@ -77,8 +60,7 @@ pub struct App<State: 'static + Clone> {
     focus_sender: FocusSender,
     focus_receiver: FocusReceiver,
 
-    accessibility_state: SharedAccessibilityState,
-    accessibility_adapter: Adapter,
+    accessibility: NativeAccessibility,
 
     font_collection: FontCollection,
 }
@@ -91,13 +73,7 @@ impl<State: 'static + Clone> App<State> {
         mutations_notifier: Option<Arc<Notify>>,
         window_env: WindowEnv<State>,
     ) -> Self {
-        let accessibility_state = AccessibilityState::new().wrap();
-        let accessibility_adapter = create_accessibility_adapter(
-            &window_env.window,
-            window_env.window_config.title.to_string(),
-            accessibility_state.clone(),
-            proxy,
-        );
+        let accessibility = NativeAccessibility::new(&window_env.window, proxy.clone());
 
         let mut font_collection = FontCollection::new();
         font_collection.set_default_font_manager(FontMgr::default(), "Fira Sans");
@@ -118,8 +94,7 @@ impl<State: 'static + Clone> App<State> {
             layers: Layers::default(),
             events_processor: EventsProcessor::default(),
             viewports_collection: HashMap::default(),
-            accessibility_adapter,
-            accessibility_state,
+            accessibility,
             focus_sender,
             focus_receiver,
             font_collection,
@@ -260,7 +235,7 @@ impl<State: 'static + Clone> App<State> {
             layers,
             &layout,
             rdom,
-            &mut *self.accessibility_state.lock().unwrap(),
+            &mut *self.accessibility.accessibility_state().lock().unwrap(),
         );
     }
 
@@ -291,51 +266,6 @@ impl<State: 'static + Clone> App<State> {
         self.window_env.resize(size);
     }
 
-    /// Focus a new accessibility node
-    pub fn set_accessibility_focus(&mut self, id: NodeId) {
-        let tree = self
-            .accessibility_state
-            .lock()
-            .unwrap()
-            .set_focus_with_update(Some(id));
-        if let Some(tree) = tree {
-            self.accessibility_adapter.update(tree);
-        }
-    }
-
-    /// Validate a winit event for accessibility
-    pub fn on_accessibility_window_event(&mut self, event: &WindowEvent) -> bool {
-        self.accessibility_adapter
-            .on_event(&self.window_env.window, event)
-    }
-
-    /// Remove the accessibility nodes
-    pub fn clear_accessibility(&mut self) {
-        self.accessibility_state.lock().unwrap().clear();
-    }
-
-    /// Process the accessibility nodes
-    pub fn render_accessibility(&mut self) {
-        let tree = self
-            .accessibility_state
-            .lock()
-            .unwrap()
-            .process(ROOT_ID, self.window_env.window_config.title);
-        self.accessibility_adapter.update(tree);
-    }
-
-    /// Focus the next accessibility node
-    pub fn focus_next_node(&mut self, direction: AccessibilityFocusDirection) {
-        let tree = self
-            .accessibility_state
-            .lock()
-            .unwrap()
-            .set_focus_on_next_node(direction, &self.focus_sender);
-        if let Some(tree) = tree {
-            self.accessibility_adapter.update(tree);
-        }
-    }
-
     pub fn measure_text_group(&self, text_id: &Uuid) {
         self.layers
             .measure_paragraph_elements(text_id, &self.sdom.get(), &self.font_collection);
@@ -343,5 +273,24 @@ impl<State: 'static + Clone> App<State> {
 
     pub fn window_env(&mut self) -> &mut WindowEnv<State> {
         &mut self.window_env
+    }
+
+    pub fn accessibility(&mut self) -> &mut NativeAccessibility {
+        &mut self.accessibility
+    }
+
+    pub fn render_accessibility(&mut self) {
+        self.accessibility
+            .render_accessibility(self.window_env.window.title().as_str());
+    }
+
+    pub fn on_accessibility_window_event(&mut self, event: &WindowEvent) -> bool {
+        self.accessibility
+            .on_accessibility_window_event(&self.window_env.window, event)
+    }
+
+    pub fn focus_next_node(&mut self, direction: AccessibilityFocusDirection) {
+        self.accessibility
+            .focus_next_node(direction, &self.focus_sender)
     }
 }
