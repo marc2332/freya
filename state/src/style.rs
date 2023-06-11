@@ -5,6 +5,7 @@ use dioxus_native_core::prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuil
 use dioxus_native_core::SendAnyMap;
 use dioxus_native_core_macro::partial_derive_state;
 use skia_safe::Color;
+use torin::radius::Radius;
 
 use crate::{parse_color, CustomAttributeValues};
 
@@ -14,7 +15,7 @@ pub struct Style {
     pub relative_layer: i16,
     pub border: BorderSettings,
     pub shadow: ShadowSettings,
-    pub radius: f32,
+    pub radius: Radius,
     pub image_data: Option<Vec<u8>>,
     pub svg_data: Option<Vec<u8>>,
 }
@@ -54,7 +55,7 @@ impl State<CustomAttributeValues> for Style {
         let mut relative_layer = 0;
         let mut shadow = ShadowSettings::default();
         let mut border = BorderSettings::default();
-        let mut radius = 0.0;
+        let mut radius = Radius::default();
         let mut image_data = None;
         let mut svg_data = None;
 
@@ -97,8 +98,8 @@ impl State<CustomAttributeValues> for Style {
                     }
                     "radius" => {
                         if let Some(attr) = attr.value.as_text() {
-                            if let Ok(new_radius) = attr.parse::<f32>() {
-                                radius = new_radius * scale_factor;
+                            if let Some(new_radius) = parse_radius(attr, *scale_factor) {
+                                radius = new_radius;
                             }
                         }
                     }
@@ -146,6 +147,38 @@ impl State<CustomAttributeValues> for Style {
         };
         changed
     }
+}
+
+pub fn parse_radius(value: &str, scale_factor: f32) -> Option<Radius> {
+    let mut radius_config = Radius::default();
+    let mut radius = value.split_ascii_whitespace();
+
+    match radius.clone().count() {
+        // Same in all corners
+        1 => {
+            radius_config.fill_all(radius.next()?.parse::<f32>().ok()? * scale_factor);
+        }
+        // By Top and Bottom
+        2 => {
+            // Top
+            radius_config.fill_top(radius.next()?.parse::<f32>().ok()? * scale_factor);
+
+            // Bottom
+            radius_config.fill_bottom(radius.next()?.parse::<f32>().ok()? * scale_factor)
+        }
+        // Each corner
+        4 => {
+            radius_config = Radius::new(
+                radius.next()?.parse::<f32>().ok()? * scale_factor,
+                radius.next()?.parse::<f32>().ok()? * scale_factor,
+                radius.next()?.parse::<f32>().ok()? * scale_factor,
+                radius.next()?.parse::<f32>().ok()? * scale_factor,
+            );
+        }
+        _ => {}
+    }
+
+    Some(radius_config)
 }
 
 pub fn parse_shadow(value: &str) -> Option<ShadowSettings> {

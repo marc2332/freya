@@ -81,7 +81,7 @@ impl<'a> Iterator for NodeStateIterator<'a> {
                 "background",
                 AttributeType::Color(&self.state.style.background),
             )),
-            10 => Some(("radius", AttributeType::Measure(self.state.style.radius))),
+            // 10 => Some(("radius", AttributeType::Measure(self.state.style.radius.to))),
             11 => Some(("shadow", AttributeType::Shadow(&self.state.style.shadow))),
             12 => Some(("color", AttributeType::Color(&self.state.font_style.color))),
             13 => Some((
