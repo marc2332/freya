@@ -64,8 +64,8 @@ fn parse_border_alignments() {
 #[test]
 fn parse_border_style() {
     let solid = parse_border("1 solid red inner");
-    let none = parse_border("1 solid red outer");
-    let invalid = parse_border("1 solid red unknown");
+    let none = parse_border("1 rust red outer");
+    let invalid = parse_border("rust solid red unknown");
 
     assert_eq!(
         solid,
@@ -82,16 +82,8 @@ fn parse_border_style() {
 			width: 1.0,
 			color: Color::RED,
 			style: BorderStyle::None,
-			alignment: BorderAlignment::Inner
+			alignment: BorderAlignment::Outer
         })
     );
-	assert_eq!(
-        invalid,
-        Some(BorderSettings {
-			width: 1.0,
-			color: Color::RED,
-			style: BorderStyle::None,
-			alignment: BorderAlignment::Inner
-        })
-    );
+	assert!(invalid.is_none());
 }
