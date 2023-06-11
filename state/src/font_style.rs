@@ -6,10 +6,10 @@ use dioxus_native_core::prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuil
 use dioxus_native_core::NodeId;
 use dioxus_native_core::SendAnyMap;
 use dioxus_native_core_macro::partial_derive_state;
-use skia_safe::textlayout::TextAlign;
-use skia_safe::font_style::Weight;
 use skia_safe::font_style::Slant;
+use skia_safe::font_style::Weight;
 use skia_safe::font_style::Width;
+use skia_safe::textlayout::TextAlign;
 use skia_safe::Color;
 use smallvec::{smallvec, SmallVec};
 use torin::torin::Torin;
@@ -36,11 +36,11 @@ impl FontStyle {
             ..FontStyle::default()
         }
     }
+}
 
-    pub fn to_skia_font_style(&self) -> skia_safe::font_style::FontStyle {
-        skia_safe::font_style::FontStyle::new(
-            self.font_weight, self.font_width, self.font_slant
-        )
+impl From<&FontStyle> for skia_safe::FontStyle {
+    fn from(value: &FontStyle) -> Self {
+        skia_safe::FontStyle::new(value.font_weight, value.font_width, value.font_slant)
     }
 }
 
@@ -76,7 +76,7 @@ impl State<CustomAttributeValues> for FontStyle {
             "line_height",
             "align",
             "max_lines",
-            "font_slant",
+            "font_style",
             "font_weight",
             "font_width",
         ]));
@@ -150,10 +150,10 @@ impl State<CustomAttributeValues> for FontStyle {
                             }
                         }
                     }
-                    "font_slant" => {
+                    "font_style" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
-                            font_style.font_slant = parse_font_slant(attr);
+                            font_style.font_slant = parse_font_style(attr);
                         }
                     }
                     "font_weight" => {
@@ -191,8 +191,8 @@ impl State<CustomAttributeValues> for FontStyle {
     }
 }
 
-fn parse_font_slant(slant: &str) -> Slant {
-    match slant {
+fn parse_font_style(style: &str) -> Slant {
+    match style {
         "upright" => Slant::Upright,
         "italic" => Slant::Italic,
         "oblique" => Slant::Oblique,
@@ -206,7 +206,6 @@ fn parse_font_weight(weight: &str) -> Weight {
     // CSS has one deviation from this spec, which uses the value "950" for extra_black.
     // skia_safe also has an "invisible" weight smaller than the thin weight, which could fall under CSS's interpretation of OpenType's
     // version. In this case it would be font_weight: "50".
-    // I've left these two abnormal values commented for now. They can't be specified via the number syntax.
     match weight {
         "invisible" => Weight::INVISIBLE,
         "thin" => Weight::THIN,
@@ -219,7 +218,7 @@ fn parse_font_weight(weight: &str) -> Weight {
         "extra-bold" => Weight::EXTRA_BOLD,
         "black" => Weight::BLACK,
         "extra-black" => Weight::EXTRA_BLACK,
-        // "50" => skia_safe::font_style::Weight::INVISIBLE,
+        "50" => Weight::INVISIBLE,
         "100" => Weight::THIN,
         "200" => Weight::EXTRA_LIGHT,
         "300" => Weight::LIGHT,
@@ -229,12 +228,15 @@ fn parse_font_weight(weight: &str) -> Weight {
         "700" => Weight::BOLD,
         "800" => Weight::EXTRA_BOLD,
         "900" => Weight::BLACK,
-        // "950" => Weight::EXTRA_BLACK,
+        "950" => Weight::EXTRA_BLACK,
         _ => Weight::NORMAL,
     }
 }
 
 fn parse_font_width(width: &str) -> Width {
+    // NOTES:
+    // CSS also supports some percentage mappings for different stretches.
+    // https://developer.mozilla.org/en-US/docs/Web/CSS/font-stretch#keyword_to_numeric_mapping
     match width {
         "ultra-condensed" => Width::ULTRA_CONDENSED,
         "extra-condensed" => Width::EXTRA_CONDENSED,
@@ -242,7 +244,7 @@ fn parse_font_width(width: &str) -> Width {
         "semi-condensed" => Width::SEMI_CONDENSED,
         "normal" => Width::NORMAL,
         "semi-expanded" => Width::SEMI_EXPANDED,
-        "expanded"  => Width::EXPANDED,
+        "expanded" => Width::EXPANDED,
         "extra-expanded" => Width::EXTRA_EXPANDED,
         "ultra-expanded" => Width::ULTRA_EXPANDED,
         _ => Width::NORMAL,
