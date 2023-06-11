@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{keyboard::Key, KeyboardEvent, MouseEvent, WheelEvent};
-use freya_hooks::{use_get_theme, use_node};
+use freya_hooks::{use_get_theme, use_node, use_scroll};
 
 use crate::{
     get_container_size, get_corrected_scroll_position, get_scroll_position_from_cursor,
@@ -61,7 +61,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     let theme = use_get_theme(cx);
     let clicking_scrollbar = use_ref::<Option<(Axis, f64)>>(cx, || None);
     let clicking_shift = use_ref(cx, || false);
-    let scrolled_y = use_ref(cx, || 0);
+    let scroll = use_scroll(cx);
     let scrolled_x = use_ref(cx, || 0);
     let (node_ref, size) = use_node(cx);
 
@@ -84,7 +84,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     let corrected_scrolled_y = get_corrected_scroll_position(
         size.inner.height,
         size.area.height(),
-        *scrolled_y.read() as f32,
+        scroll.read().scroll_y as f32,
     );
     let corrected_scrolled_x = get_corrected_scroll_position(
         size.inner.width,
@@ -106,10 +106,9 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
                 wheel_y as f32,
                 size.inner.height,
                 size.area.height(),
-                *scrolled_y.read() as f32,
+                scroll.read().scroll_y as f32,
             );
-
-            scrolled_y.with_mut(|y| *y = scroll_position_y);
+            scroll.write().scroll_y = scroll_position_y;
         }
 
         let wheel_x = if *clicking_shift.read() {
@@ -140,7 +139,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
                 size.area.height(),
             );
 
-            scrolled_y.with_mut(|y| *y = scroll_position);
+            scroll.write().scroll_y = scroll_position;
         } else if let Some((Axis::X, x)) = *clicking_scrollbar.read() {
             let coordinates = e.get_element_coordinates();
             let cursor_x = coordinates.x - x;

@@ -13,6 +13,7 @@ mod use_editable;
 mod use_focus;
 mod use_node;
 mod use_platform;
+mod use_scroll;
 mod use_theme;
 
 #[cfg(feature = "use_camera")]
@@ -30,6 +31,7 @@ pub use use_editable::*;
 pub use use_focus::*;
 pub use use_node::*;
 pub use use_platform::*;
+pub use use_scroll::*;
 pub use use_theme::*;
 
 #[cfg(feature = "use_camera")]
