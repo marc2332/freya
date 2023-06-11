@@ -18,7 +18,7 @@ pub struct NodeAreas {
     /// Ocuppied sizes from the inner children in this Node
     pub inner_sizes: Size2D,
 
-    /// Inner margin
+    /// Outer margin
     pub margin: Gap,
 }
 
