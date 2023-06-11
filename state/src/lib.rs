@@ -17,6 +17,7 @@ pub use style::*;
 pub use transform::*;
 
 pub fn parse_rgb(color: &str) -> Option<Color> {
+    println!("{color:?}");
     let color = color.replace("rgb(", "").replace(')', "");
     let mut colors = color.split(',');
 

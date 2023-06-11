@@ -18,27 +18,30 @@ fn app(cx: Scope) -> Element {
             color: "rgb(240, 240, 240)",
             direction: "horizontal",
             padding: "14",
-            border: "1 solid red",
+            border: "3 solid rgb(242, 76, 61)",
             rect {
                 width: "80",
                 height: "80",
                 radius: "20",
                 background: "rgb(0, 0, 0)",
-                border: "1 solid red inner"
+                border: "1 solid rgb(242, 151, 39)",
+                border_align: "inner"
             }
             rect {
                 width: "80",
                 height: "80",
                 radius: "2",
                 background: "rgb(0, 0, 0)",
-                border: "8 solid green outer"
+                border: "8 solid green",
+                border_align: "outer"
             }
             rect {
                 width: "80",
                 height: "80",
                 radius: "2",
                 background: "rgb(0, 0, 0)",
-                border: "8 solid blue center"
+                border: "8 solid rgb(34, 166, 153)",
+                border_align: "center"
             }
         }
     )

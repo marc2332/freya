@@ -32,6 +32,7 @@ impl State<CustomAttributeValues> for Style {
             "background",
             "layer",
             "border",
+            "border_align",
             "shadow",
             "radius",
             "image_data",
@@ -77,9 +78,14 @@ impl State<CustomAttributeValues> for Style {
                     }
                     "border" => {
                         if let Some(attr) = attr.value.as_text() {
-                            if let Some(new_border) = parse_border(attr) {
+                            if let Some(new_border) = parse_border(attr, border.alignment) {
                                 border = new_border;
                             }
+                        }
+                    }
+                    "border_align" => {
+                        if let Some(attr) = attr.value.as_text() {
+                            border.alignment = parse_border_align(attr);
                         }
                     }
                     "shadow" => {
@@ -154,9 +160,19 @@ pub fn parse_shadow(value: &str) -> Option<ShadowSettings> {
     })
 }
 
-pub fn parse_border(value: &str) -> Option<BorderSettings> {
-    let value = value.to_string();
-    let mut border_values = value.split_ascii_whitespace();
+pub fn parse_border_align(value: &str) -> BorderAlignment {
+    let mut border_align_value = value.split_ascii_whitespace();
+
+    match border_align_value.next() {
+        Some("inner") => BorderAlignment::Inner,
+        Some("outer") => BorderAlignment::Outer,
+        Some("center") => BorderAlignment::Center,
+        _ => BorderAlignment::Inner,
+    }
+}
+
+pub fn parse_border(border_value: &str, alignment: BorderAlignment) -> Option<BorderSettings> {
+    let mut border_values = border_value.split_ascii_whitespace();
 
     Some(BorderSettings {
         width: border_values.next()?.parse().ok()?,
@@ -164,24 +180,19 @@ pub fn parse_border(value: &str) -> Option<BorderSettings> {
             "solid" => BorderStyle::Solid,
             _ => BorderStyle::None,
         },
-        color: parse_color(border_values.next()?)?,
-        alignment: match border_values.next() {
-            Some("inner") => BorderAlignment::Inner,
-            Some("outer") => BorderAlignment::Outer,
-            Some("center") => BorderAlignment::Center,
-            _ => BorderAlignment::Inner,
-        },
+        color: parse_color(&border_values.collect::<Vec<&str>>().join(" "))?,
+        alignment,
     })
 }
 
-#[derive(Default, Clone, Debug, PartialEq)]
+#[derive(Default, Clone, Copy, Debug, PartialEq)]
 pub enum BorderStyle {
     #[default]
     None,
     Solid,
 }
 
-#[derive(Default, Clone, Debug, PartialEq)]
+#[derive(Default, Clone, Copy, Debug, PartialEq)]
 pub enum BorderAlignment {
     #[default]
     Inner,
