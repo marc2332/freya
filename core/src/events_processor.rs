@@ -1,5 +1,5 @@
 use dioxus_native_core::NodeId;
-use rustc_hash::FxHashMap;
+use rustc_hash::{FxHashMap, FxHashSet};
 
 use crate::{
     dom_events::{does_event_move_cursor, DomEvent},
@@ -7,18 +7,36 @@ use crate::{
     EventEmitter,
 };
 
-/// State of an element.
-#[derive(Default)]
-struct ElementState {
-    hovered: bool,
+fn any_recent_mouse_movement(events: &[FreyaEvent]) -> Option<FreyaEvent> {
+    events
+        .iter()
+        .find(|event| {
+            if let FreyaEvent::Mouse { name, .. } = event {
+                does_event_move_cursor(name)
+            } else {
+                false
+            }
+        })
+        .cloned()
+}
+
+fn has_node_been_hovered_recently(events_to_emit: &[DomEvent], element: &NodeId) -> bool {
+    events_to_emit
+        .iter()
+        .find_map(|event| {
+            if event.does_move_cursor() && &event.node_id == element {
+                Some(false)
+            } else {
+                None
+            }
+        })
+        .unwrap_or(true)
 }
 
 /// [`EventsProcessor`] stores the elements events states.
-///
-/// TODO(marc2332): Remove deleted Elements
 #[derive(Default)]
 pub struct EventsProcessor {
-    states: FxHashMap<NodeId, ElementState>,
+    hovered_elements: FxHashSet<NodeId>,
 }
 
 impl EventsProcessor {
@@ -31,50 +49,32 @@ impl EventsProcessor {
     ) -> FxHashMap<String, Vec<(NodeId, FreyaEvent)>> {
         let mut new_events = FxHashMap::<String, Vec<(NodeId, FreyaEvent)>>::default();
 
-        for (element, element_state) in self.states.iter_mut() {
-            {
-                let no_recent_mouse_movement_on_me = events_to_emit
-                    .iter()
-                    .find_map(|event| {
-                        if event.does_move_cursor() && &event.node_id == element {
-                            Some(false)
-                        } else {
-                            None
-                        }
-                    })
-                    .unwrap_or(true);
+        let recent_mouse_movement_event = any_recent_mouse_movement(events);
 
-                let recent_mouse_movement_event = events
-                    .iter()
-                    .find(|event| {
-                        if let FreyaEvent::Mouse { name, .. } = event {
-                            does_event_move_cursor(name)
-                        } else {
-                            false
-                        }
-                    })
-                    .cloned();
+        // Suggest emitting `mouseleave` in elements not being hovered anymore
+        self.hovered_elements.retain(|node_id| {
+            let no_recent_mouse_movement_on_me =
+                has_node_been_hovered_recently(&events_to_emit, node_id);
 
-                if element_state.hovered && no_recent_mouse_movement_on_me {
-                    if let Some(FreyaEvent::Mouse { cursor, button, .. }) =
-                        recent_mouse_movement_event
-                    {
-                        let events = new_events.entry("mouseleave".to_string()).or_default();
-                        events.push((
-                            *element,
-                            FreyaEvent::Mouse {
-                                name: "mouseleave".to_string(),
-                                cursor,
-                                button,
-                            },
-                        ));
+            if no_recent_mouse_movement_on_me {
+                if let Some(FreyaEvent::Mouse { cursor, button, .. }) = recent_mouse_movement_event
+                {
+                    let events = new_events.entry("mouseleave".to_string()).or_default();
+                    events.push((
+                        *node_id,
+                        FreyaEvent::Mouse {
+                            name: "mouseleave".to_string(),
+                            cursor,
+                            button,
+                        },
+                    ));
 
-                        // Mark the element as no longer being hovered
-                        element_state.hovered = false;
-                    }
+                    // Remove the node from the list of hovered elements
+                    return false;
                 }
             }
-        }
+            true
+        });
 
         // All these events will mark the node as being hovered
         // "mouseover" "mouseenter" "pointerover"  "pointerenter"
@@ -88,15 +88,15 @@ impl EventsProcessor {
                 | name @ "mouseenter"
                 | name @ "pointerover"
                 | name @ "pointerenter" => {
-                    if !self.states.contains_key(id) {
-                        self.states.insert(*id, ElementState::default());
-                    }
+                    let is_hovered = self.hovered_elements.contains(id);
 
-                    let node_state = self.states.get_mut(id).unwrap();
+                    if !is_hovered {
+                        self.hovered_elements.insert(*id);
+                    }
 
                     if name == "mouseenter" || name == "pointerenter" {
                         // If the event is already being hovered then it's pointless to trigger the movement event
-                        !node_state.hovered
+                        !is_hovered
                     } else {
                         true
                     }
@@ -113,14 +113,8 @@ impl EventsProcessor {
         // e.g `mouseover` will mark the element as hovered.
         for event in events_to_emit {
             let id = &event.node_id;
-            if does_event_move_cursor(event.name.as_str()) {
-                if !self.states.contains_key(id) {
-                    self.states.insert(*id, ElementState::default());
-                }
-
-                let node_state = self.states.get_mut(id).unwrap();
-
-                node_state.hovered = true;
+            if does_event_move_cursor(event.name.as_str()) && !self.hovered_elements.contains(id) {
+                self.hovered_elements.insert(*id);
             }
         }
 
