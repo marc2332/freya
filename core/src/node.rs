@@ -96,8 +96,8 @@ impl<'a> Iterator for NodeStateIterator<'a> {
                 "line_height",
                 AttributeType::Measure(self.state.font_style.line_height),
             )),
-            16 => Some(("scroll_x", AttributeType::Measure(self.state.size.scroll_x))),
-            17 => Some(("scroll_y", AttributeType::Measure(self.state.size.scroll_y))),
+            16 => Some(("offset_x", AttributeType::Measure(self.state.size.offset_x))),
+            17 => Some(("offset_y", AttributeType::Measure(self.state.size.offset_y))),
             _ => None,
         }
     }

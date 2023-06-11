@@ -35,7 +35,7 @@ fn app(cx: Scope) -> Element {
             direction: "both",
             width: "100%",
             height: "100%",
-            scroll_x: "{progress}",
+            offset_x: "{progress}",
             rect {
                 display: "center",
                 direction: "both",
