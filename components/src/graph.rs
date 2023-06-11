@@ -47,16 +47,12 @@ pub struct GraphProps {
 #[allow(non_snake_case)]
 pub fn Graph(cx: Scope<GraphProps>) -> Element {
     let platform = use_platform(cx);
-    let state = use_state(cx, || cx.props.clone());
-    let state_setter = state.setter();
 
-    use_effect(cx, (cx.props,), move |(data,)| {
-        state_setter(data);
-        async move { platform.send(EventMessage::RequestRerender) }
+    use_effect(cx, (cx.props,), move |_| async move {
+        platform.send(EventMessage::RequestRerender)
     });
 
-    let canvas = use_canvas(cx, state, |state| {
-        let state = state.get().clone();
+    let canvas = use_canvas(cx, cx.props, |state| {
         Box::new(move |canvas, font_collection, region| {
             canvas.translate((region.min_x(), region.min_y()));
 
