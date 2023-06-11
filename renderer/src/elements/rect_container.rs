@@ -3,7 +3,7 @@ use freya_dom::prelude::DioxusNode;
 use freya_node_state::{References, Style, BorderStyle, BorderAlignment};
 use skia_safe::{
     textlayout::FontCollection, BlurStyle, Canvas, MaskFilter, Paint, PaintStyle, Path,
-    PathDirection, Vector, Rect, RRect
+    PathDirection, Rect, RRect
 };
 use torin::prelude::Area;
 
@@ -21,7 +21,7 @@ pub fn render_rect_container(
     paint.set_style(PaintStyle::Fill);
     paint.set_color(node_style.background);
 
-    let mut radius = (node_style.radius, node_style.radius);
+    let radius = (node_style.radius, node_style.radius);
     
     let area = area.to_f32();
     

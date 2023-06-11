@@ -24,7 +24,7 @@ fn app(cx: Scope) -> Element {
                 height: "80",
                 radius: "2",
                 background: "rgb(0, 0, 0)",
-                border: "8 solid red inner"
+                border: "1 solid red inner"
             }
             rect {
                 width: "80",
