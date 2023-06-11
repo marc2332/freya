@@ -20,7 +20,8 @@ pub struct SizeState {
     pub minimum_height: Size,
     pub maximum_height: Size,
     pub maximum_width: Size,
-    pub padding: Paddings,
+    pub padding: Gap,
+    pub margin: Gap,
     pub direction: DirectionMode,
     pub node_id: NodeId,
     pub scroll_y: f32,
@@ -46,6 +47,7 @@ impl State<CustomAttributeValues> for SizeState {
             "max_height",
             "max_width",
             "padding",
+            "margin",
             "direction",
             "scroll_y",
             "scroll_x",
@@ -72,7 +74,8 @@ impl State<CustomAttributeValues> for SizeState {
         let mut minimum_width = Size::default();
         let mut maximum_height = Size::default();
         let mut maximum_width = Size::default();
-        let mut padding = Paddings::default();
+        let mut padding = Gap::default();
+        let mut margin = Gap::default();
         let mut scroll_y = 0.0;
         let mut scroll_x = 0.0;
         let mut display = DisplayMode::Normal;
@@ -144,8 +147,16 @@ impl State<CustomAttributeValues> for SizeState {
                     "padding" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
-                            if let Some(paddings) = parse_padding(attr, *scale_factor) {
+                            if let Some(paddings) = parse_gap(attr, *scale_factor) {
                                 padding = paddings;
+                            }
+                        }
+                    }
+                    "margin" => {
+                        let attr = attr.value.as_text();
+                        if let Some(attr) = attr {
+                            if let Some(margins) = parse_gap(attr, *scale_factor) {
+                                margin = margins;
                             }
                         }
                     }
@@ -220,6 +231,7 @@ impl State<CustomAttributeValues> for SizeState {
             maximum_height,
             maximum_width,
             padding,
+            margin,
             direction,
             node_id: node_view.node_id(),
             scroll_x,
@@ -238,36 +250,36 @@ pub fn parse_display(value: &str) -> DisplayMode {
     }
 }
 
-pub fn parse_padding(padding: &str, scale_factor: f32) -> Option<Paddings> {
-    let mut padding_config = Paddings::default();
-    let mut paddings = padding.split_ascii_whitespace();
+pub fn parse_gap(gap: &str, scale_factor: f32) -> Option<Gap> {
+    let mut gap_config = Gap::default();
+    let mut gaps = gap.split_ascii_whitespace();
 
-    match paddings.clone().count() {
+    match gaps.clone().count() {
         // Same in each directions
         1 => {
-            padding_config.fill_all(paddings.next()?.parse::<f32>().ok()? * scale_factor);
+            gap_config.fill_all(gaps.next()?.parse::<f32>().ok()? * scale_factor);
         }
         // By vertical and horizontal
         2 => {
             // Vertical
-            padding_config.fill_vertical(paddings.next()?.parse::<f32>().ok()? * scale_factor);
+            gap_config.fill_vertical(gaps.next()?.parse::<f32>().ok()? * scale_factor);
 
             // Horizontal
-            padding_config.fill_horizontal(paddings.next()?.parse::<f32>().ok()? * scale_factor)
+            gap_config.fill_horizontal(gaps.next()?.parse::<f32>().ok()? * scale_factor)
         }
         // Each directions
         4 => {
-            padding_config = Paddings::new(
-                paddings.next()?.parse::<f32>().ok()? * scale_factor,
-                paddings.next()?.parse::<f32>().ok()? * scale_factor,
-                paddings.next()?.parse::<f32>().ok()? * scale_factor,
-                paddings.next()?.parse::<f32>().ok()? * scale_factor,
+            gap_config = Gap::new(
+                gaps.next()?.parse::<f32>().ok()? * scale_factor,
+                gaps.next()?.parse::<f32>().ok()? * scale_factor,
+                gaps.next()?.parse::<f32>().ok()? * scale_factor,
+                gaps.next()?.parse::<f32>().ok()? * scale_factor,
             );
         }
         _ => {}
     }
 
-    Some(padding_config)
+    Some(gap_config)
 }
 
 pub fn parse_size(size: &str, scale_factor: f32) -> Option<Size> {

@@ -477,7 +477,7 @@ pub fn padding() {
         Node::from_size_and_padding(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            Paddings::new(5.0, 10.0, 15.0, 20.0),
+            Gap::new(5.0, 10.0, 15.0, 20.0),
         ),
     );
     mocked_dom.add(
@@ -516,7 +516,7 @@ pub fn caching() {
         Node::from_size_and_padding(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            Paddings::new(5.0, 0.0, 0.0, 0.0),
+            Gap::new(5.0, 0.0, 0.0, 0.0),
         ),
     );
     mocked_dom.add(
@@ -778,7 +778,7 @@ pub fn display_vertical_with_inner_children() {
         Node::from_size_and_padding(
             Size::Pixels(Length::new(100.0)),
             Size::Pixels(Length::new(100.0)),
-            Paddings::new(5.0, 5.0, 5.0, 5.0),
+            Gap::new(5.0, 5.0, 5.0, 5.0),
         ),
     );
     mocked_dom.add(
@@ -1054,5 +1054,61 @@ pub fn two_cols_auto() {
     assert_eq!(
         layout.get(2).unwrap().area,
         Rect::new(Point2D::new(200.0, 0.0), Size2D::new(200.0, 200.0)),
+    );
+}
+
+#[test]
+pub fn margin() {
+    let (mut layout, mut measurer) = test_utils();
+
+    let mut mocked_dom = TestingDOM::default();
+    mocked_dom.add(
+        0,
+        None,
+        vec![1],
+        Node::from_size_and_direction(
+            Size::Percentage(Length::new(100.0)),
+            Size::Percentage(Length::new(100.0)),
+            DirectionMode::Vertical,
+        ),
+    );
+    mocked_dom.add(
+        1,
+        Some(0),
+        vec![],
+        Node::from_size_and_margin(
+            Size::Pixels(Length::new(200.0)),
+            Size::Pixels(Length::new(200.0)),
+            Gap::new(5.0, 5.0, 5.0, 5.0),
+        ),
+    );
+    mocked_dom.add(
+        2,
+        Some(0),
+        vec![],
+        Node::from_size_and_margin(
+            Size::Pixels(Length::new(200.0)),
+            Size::Pixels(Length::new(200.0)),
+            Gap::new(5.0, 5.0, 5.0, 5.0),
+        ),
+    );
+
+    layout.measure(
+        0,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+        &mut measurer,
+        &mocked_dom,
+    );
+
+    let node_areas = layout.get(1).unwrap();
+
+    assert_eq!(
+        node_areas.area,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(210.0, 210.0)),
+    );
+
+    assert_eq!(
+        node_areas.visible_area(),
+        Rect::new(Point2D::new(5.0, 5.0), Size2D::new(200.0, 200.0)),
     );
 }

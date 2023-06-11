@@ -73,25 +73,20 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
     let color = theme.button.font_theme.color;
 
     render!(
-        rect {
+        container {
+            margin: "2",
+            onclick: onclick,
+            onmouseenter: onmouseenter,
+            onmouseleave: onmouseleave,
             width: "auto",
             height: "auto",
             direction: "both",
-            padding: "2",
-            container {
-                onclick: onclick,
-                onmouseenter: onmouseenter,
-                onmouseleave: onmouseleave,
-                width: "auto",
-                height: "auto",
-                direction: "both",
-                color: "{color}",
-                shadow: "0 5 15 10 black",
-                radius: "5",
-                padding: "8",
-                background: "{background}",
-                &cx.props.children
-            }
+            color: "{color}",
+            shadow: "0 5 15 10 black",
+            radius: "5",
+            padding: "8",
+            background: "{background}",
+            &cx.props.children
         }
     )
 }

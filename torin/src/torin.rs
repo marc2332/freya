@@ -11,6 +11,7 @@ use crate::{
     dom_adapter::{DOMAdapter, NodeAreas, NodeKey},
     geometry::{Area, Size2D},
     node::Node,
+    prelude::{BoxModel, Gap},
     size::Size,
 };
 
@@ -262,6 +263,7 @@ impl<Key: NodeKey> Torin<Key> {
                 area: suggested_root_area,
                 inner_area: suggested_root_area,
                 inner_sizes: Size2D::default(),
+                margin: Gap::default(),
             });
         let root = dom_adapter.get_node(&root_id).unwrap();
 
@@ -312,8 +314,8 @@ fn measure_node<Key: NodeKey>(
 ) -> (bool, NodeAreas) {
     let must_run = layout.dirty.contains(&node_id) || layout.results.get(&node_id).is_none();
     if must_run {
-        let horizontal_padding = node.padding.horizontal_paddings();
-        let vertical_padding = node.padding.vertical_paddings();
+        let horizontal_padding = node.padding.horizontal();
+        let vertical_padding = node.padding.vertical();
 
         let mut area = Rect::new(
             available_parent_area.origin,
@@ -323,11 +325,13 @@ fn measure_node<Key: NodeKey>(
         area.size.width = node
             .width
             .eval(parent_area.size.width)
-            .unwrap_or(area.size.width);
+            .unwrap_or(area.size.width)
+            + node.margin.horizontal();
         area.size.height = node
             .height
             .eval(parent_area.size.height)
-            .unwrap_or(area.size.height);
+            .unwrap_or(area.size.height)
+            + node.margin.vertical();
 
         let minimum_width = node.minimum_width.eval(parent_area.size.width);
         let maximum_width = node.maximum_width.eval(parent_area.size.width);
@@ -371,7 +375,7 @@ fn measure_node<Key: NodeKey>(
 
         // Node's inner area
         let mut inner_area = {
-            let mut inner_area = area;
+            let mut inner_area = area.visible_area(&node.margin);
             if Size::Inner == node.width {
                 inner_area.size.width = available_parent_area.width()
             }
@@ -419,6 +423,7 @@ fn measure_node<Key: NodeKey>(
             must_cache,
             NodeAreas {
                 area,
+                margin: node.margin,
                 inner_area,
                 inner_sizes,
             },

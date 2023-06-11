@@ -174,6 +174,7 @@ builder_constructors! {
         cursor_reference: CursorReference,
         rotate: String,
         canvas_reference: String,
+        margin: String,
     };
     container {
         padding: String,
@@ -196,6 +197,7 @@ builder_constructors! {
         cursor_reference: CursorReference,
         rotate: String,
         canvas_reference: String,
+        margin: String,
     };
     label {
         color: String,

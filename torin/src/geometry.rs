@@ -1,3 +1,5 @@
+use crate::prelude::Gap;
+
 #[derive(PartialEq)]
 pub struct Measure;
 
@@ -6,3 +8,21 @@ pub type Size2D = euclid::Size2D<f32, Measure>;
 pub type Point2D = euclid::Point2D<f32, Measure>;
 pub type CursorPoint = euclid::Point2D<f64, Measure>;
 pub type Length = euclid::Length<f32, Measure>;
+
+pub trait BoxModel {
+    fn visible_area(&self, margin: &Gap) -> Area;
+}
+
+impl BoxModel for Area {
+    fn visible_area(&self, margin: &Gap) -> Area {
+        let origin = self.origin;
+        let size = self.size;
+        Area::new(
+            Point2D::new(origin.x + margin.left(), origin.y + margin.top()),
+            Size2D::new(
+                size.width - margin.horizontal(),
+                size.height - margin.vertical(),
+            ),
+        )
+    }
+}
