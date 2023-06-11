@@ -1,4 +1,4 @@
-use freya_node_state::{parse_border, BorderSettings, BorderStyle, BorderAlignment};
+use freya_node_state::{parse_border, BorderAlignment, BorderSettings, BorderStyle};
 use skia_safe::Color;
 
 #[test]
@@ -8,10 +8,10 @@ fn parse_basic_border() {
     assert_eq!(
         border,
         Some(BorderSettings {
-			width: 1.0,
-			color: Color::RED,
-			style: BorderStyle::Solid,
-			alignment: BorderAlignment::Inner
+            width: 1.0,
+            color: Color::RED,
+            style: BorderStyle::Solid,
+            alignment: BorderAlignment::Inner
         })
     );
 }
@@ -26,37 +26,37 @@ fn parse_border_alignments() {
     assert_eq!(
         inner,
         Some(BorderSettings {
-			width: 1.0,
-			color: Color::RED,
-			style: BorderStyle::Solid,
-			alignment: BorderAlignment::Inner
+            width: 1.0,
+            color: Color::RED,
+            style: BorderStyle::Solid,
+            alignment: BorderAlignment::Inner
         })
     );
-	assert_eq!(
+    assert_eq!(
         outer,
         Some(BorderSettings {
-			width: 1.0,
-			color: Color::RED,
-			style: BorderStyle::Solid,
-			alignment: BorderAlignment::Outer
+            width: 1.0,
+            color: Color::RED,
+            style: BorderStyle::Solid,
+            alignment: BorderAlignment::Outer
         })
     );
-	assert_eq!(
+    assert_eq!(
         center,
         Some(BorderSettings {
-			width: 1.0,
-			color: Color::RED,
-			style: BorderStyle::Solid,
-			alignment: BorderAlignment::Center
+            width: 1.0,
+            color: Color::RED,
+            style: BorderStyle::Solid,
+            alignment: BorderAlignment::Center
         })
     );
-	assert_eq!(
+    assert_eq!(
         invalid,
         Some(BorderSettings {
-			width: 1.0,
-			color: Color::RED,
-			style: BorderStyle::Solid,
-			alignment: BorderAlignment::Inner
+            width: 1.0,
+            color: Color::RED,
+            style: BorderStyle::Solid,
+            alignment: BorderAlignment::Inner
         })
     );
 }
@@ -70,20 +70,20 @@ fn parse_border_style() {
     assert_eq!(
         solid,
         Some(BorderSettings {
-			width: 1.0,
-			color: Color::RED,
-			style: BorderStyle::Solid,
-			alignment: BorderAlignment::Inner
+            width: 1.0,
+            color: Color::RED,
+            style: BorderStyle::Solid,
+            alignment: BorderAlignment::Inner
         })
     );
-	assert_eq!(
+    assert_eq!(
         none,
         Some(BorderSettings {
-			width: 1.0,
-			color: Color::RED,
-			style: BorderStyle::None,
-			alignment: BorderAlignment::Outer
+            width: 1.0,
+            color: Color::RED,
+            style: BorderStyle::None,
+            alignment: BorderAlignment::Outer
         })
     );
-	assert!(invalid.is_none());
+    assert!(invalid.is_none());
 }

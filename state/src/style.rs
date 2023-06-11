@@ -162,7 +162,7 @@ pub fn parse_border(value: &str) -> Option<BorderSettings> {
         width: border_values.next()?.parse().ok()?,
         style: match border_values.next()? {
             "solid" => BorderStyle::Solid,
-            _ => BorderStyle::None
+            _ => BorderStyle::None,
         },
         color: parse_color(border_values.next()?)?,
         alignment: match border_values.next() {

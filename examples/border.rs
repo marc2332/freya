@@ -32,7 +32,7 @@ fn app(cx: Scope) -> Element {
                 radius: "2",
                 background: "rgb(0, 0, 0)",
                 border: "8 solid green outer"
-            } 
+            }
             rect {
                 width: "80",
                 height: "80",
