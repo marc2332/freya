@@ -1,9 +1,9 @@
 use dioxus_native_core::real_dom::NodeImmutable;
 use freya_dom::prelude::DioxusNode;
-use freya_node_state::{References, Style};
+use freya_node_state::{BorderAlignment, BorderStyle, References, Style};
 use skia_safe::{
     textlayout::FontCollection, BlurStyle, Canvas, MaskFilter, Paint, PaintStyle, Path,
-    PathDirection, Rect,
+    PathDirection, RRect, Rect,
 };
 use torin::prelude::Area;
 
@@ -21,36 +21,63 @@ pub fn render_rect_container(
     paint.set_style(PaintStyle::Fill);
     paint.set_color(node_style.background);
 
-    let radius = node_style.radius;
-    let radius = if radius < 0.0 { 0.0 } else { radius };
+    let radius = (node_style.radius, node_style.radius);
 
     let area = area.to_f32();
 
     let mut path = Path::new();
-    path.add_round_rect(
-        Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
-        (radius, radius),
-        PathDirection::CW,
-    );
+    let rect = Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y());
+
+    path.add_round_rect(rect, radius, PathDirection::CW);
     path.close();
 
     // Shadow effect
-    {
-        if node_style.shadow.intensity > 0 {
-            let mut blur_paint = paint.clone();
+    if node_style.shadow.intensity > 0 {
+        let mut blur_paint = paint.clone();
 
-            blur_paint.set_color(node_style.shadow.color);
-            blur_paint.set_alpha(node_style.shadow.intensity);
-            blur_paint.set_mask_filter(MaskFilter::blur(
-                BlurStyle::Normal,
-                node_style.shadow.size,
-                false,
-            ));
-            canvas.draw_path(&path, &blur_paint);
-        }
+        blur_paint.set_color(node_style.shadow.color);
+        blur_paint.set_alpha(node_style.shadow.intensity);
+        blur_paint.set_mask_filter(MaskFilter::blur(
+            BlurStyle::Normal,
+            node_style.shadow.size,
+            false,
+        ));
+
+        canvas.draw_path(&path, &blur_paint);
     }
 
     canvas.draw_path(&path, &paint);
+
+    // Borders
+    if node_style.border.width > 0.0 && node_style.border.style != BorderStyle::None {
+        let mut stroke_paint = paint.clone();
+        let half_border_width = node_style.border.width / 2.0;
+
+        stroke_paint.set_style(PaintStyle::Stroke);
+        stroke_paint.set_color(node_style.border.color);
+        stroke_paint.set_stroke_width(node_style.border.width);
+
+        path.rewind();
+
+        let mut border_rect = RRect::new_rect_radii(
+            rect,
+            &[radius.into(), radius.into(), radius.into(), radius.into()],
+        );
+
+        match node_style.border.alignment {
+            BorderAlignment::Inner => {
+                border_rect.inset((half_border_width, half_border_width));
+            }
+            BorderAlignment::Outer => {
+                border_rect.outset((half_border_width, half_border_width));
+            }
+            BorderAlignment::Center => (),
+        }
+
+        path.add_rrect(border_rect, Some((PathDirection::CW, 0)));
+
+        canvas.draw_path(&path, &stroke_paint);
+    }
 
     let references = node_ref.get::<References>().unwrap();
 
