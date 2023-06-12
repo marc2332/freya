@@ -12,6 +12,7 @@ use crate::{parse_color, CustomAttributeValues};
 pub struct Style {
     pub background: Color,
     pub relative_layer: i16,
+    pub border: BorderSettings,
     pub shadow: ShadowSettings,
     pub radius: f32,
     pub image_data: Option<Vec<u8>>,
@@ -30,6 +31,8 @@ impl State<CustomAttributeValues> for Style {
         NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[
             "background",
             "layer",
+            "border",
+            "border_align",
             "shadow",
             "radius",
             "image_data",
@@ -50,6 +53,7 @@ impl State<CustomAttributeValues> for Style {
         let mut background = Color::TRANSPARENT;
         let mut relative_layer = 0;
         let mut shadow = ShadowSettings::default();
+        let mut border = BorderSettings::default();
         let mut radius = 0.0;
         let mut image_data = None;
         let mut svg_data = None;
@@ -70,6 +74,20 @@ impl State<CustomAttributeValues> for Style {
                             if let Ok(new_relative_layer) = attr.parse::<i16>() {
                                 relative_layer = new_relative_layer;
                             }
+                        }
+                    }
+                    "border" => {
+                        if let Some(attr) = attr.value.as_text() {
+                            if let Some(new_border) =
+                                parse_border(attr, border.alignment, *scale_factor)
+                            {
+                                border = new_border;
+                            }
+                        }
+                    }
+                    "border_align" => {
+                        if let Some(attr) = attr.value.as_text() {
+                            border.alignment = parse_border_align(attr);
                         }
                     }
                     "shadow" => {
@@ -114,6 +132,7 @@ impl State<CustomAttributeValues> for Style {
         let changed = (background != self.background)
             || (relative_layer != self.relative_layer)
             || (shadow != self.shadow)
+            || (border != self.border)
             || (radius != self.radius)
             || (image_data != self.image_data)
             || (svg_data != self.svg_data);
@@ -122,6 +141,7 @@ impl State<CustomAttributeValues> for Style {
             background,
             relative_layer,
             shadow,
+            border,
             radius,
             image_data,
             svg_data,
@@ -140,6 +160,58 @@ pub fn parse_shadow(value: &str) -> Option<ShadowSettings> {
         size: shadow_values.next()?.parse().ok()?,
         color: parse_color(shadow_values.next()?)?,
     })
+}
+
+pub fn parse_border_align(value: &str) -> BorderAlignment {
+    let mut border_align_value = value.split_ascii_whitespace();
+
+    match border_align_value.next() {
+        Some("inner") => BorderAlignment::Inner,
+        Some("outer") => BorderAlignment::Outer,
+        Some("center") => BorderAlignment::Center,
+        _ => BorderAlignment::Inner,
+    }
+}
+
+pub fn parse_border(
+    border_value: &str,
+    alignment: BorderAlignment,
+    scale_factor: f32,
+) -> Option<BorderSettings> {
+    let mut border_values = border_value.split_ascii_whitespace();
+
+    Some(BorderSettings {
+        width: border_values.next()?.parse::<f32>().ok()? * scale_factor,
+        style: match border_values.next()? {
+            "solid" => BorderStyle::Solid,
+            _ => BorderStyle::None,
+        },
+        color: parse_color(&border_values.collect::<Vec<&str>>().join(" "))?,
+        alignment,
+    })
+}
+
+#[derive(Default, Clone, Copy, Debug, PartialEq)]
+pub enum BorderStyle {
+    #[default]
+    None,
+    Solid,
+}
+
+#[derive(Default, Clone, Copy, Debug, PartialEq)]
+pub enum BorderAlignment {
+    #[default]
+    Inner,
+    Outer,
+    Center,
+}
+
+#[derive(Default, Clone, Debug, PartialEq)]
+pub struct BorderSettings {
+    pub color: Color,
+    pub style: BorderStyle,
+    pub width: f32,
+    pub alignment: BorderAlignment,
 }
 
 #[derive(Default, Clone, Debug, PartialEq)]
