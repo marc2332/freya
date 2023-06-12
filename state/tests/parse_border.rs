@@ -5,7 +5,7 @@ use skia_safe::Color;
 
 #[test]
 fn parse_basic_border() {
-    let border = parse_border("1 solid red", BorderAlignment::default());
+    let border = parse_border("1 solid red", BorderAlignment::default(), 1.0);
 
     assert_eq!(
         border,
@@ -33,9 +33,9 @@ fn parse_border_alignments() {
 
 #[test]
 fn parse_border_style() {
-    let solid = parse_border("1 solid red", BorderAlignment::default());
-    let none = parse_border("1 rust red", BorderAlignment::default());
-    let invalid = parse_border("rust solid red", BorderAlignment::default());
+    let solid = parse_border("1 solid red", BorderAlignment::default(), 1.0);
+    let none = parse_border("1 rust red", BorderAlignment::default(), 1.0);
+    let invalid = parse_border("rust solid red", BorderAlignment::default(), 1.0);
 
     assert_eq!(
         solid,

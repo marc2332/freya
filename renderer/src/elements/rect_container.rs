@@ -35,6 +35,7 @@ pub fn render_rect_container(
     let rect = Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y());
     let rounded_rect = RRect::new_rect_radii(rect, radius);
     path.add_rrect(rounded_rect, None);
+    path.close();
 
     // Shadow effect
     if node_style.shadow.intensity > 0 {
