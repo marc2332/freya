@@ -25,7 +25,7 @@ fn app(cx: Scope) -> Element {
                 radius: "20",
                 background: "rgb(0, 0, 0)",
                 border: "1 solid rgb(242, 151, 39)",
-                border_align: "inner"
+                border_align: "inner",
             }
             rect {
                 width: "80",
@@ -33,7 +33,8 @@ fn app(cx: Scope) -> Element {
                 radius: "2",
                 background: "rgb(0, 0, 0)",
                 border: "8 solid green",
-                border_align: "outer"
+                border_align: "outer",
+                margin: "8"
             }
             rect {
                 width: "80",
@@ -41,7 +42,8 @@ fn app(cx: Scope) -> Element {
                 radius: "2",
                 background: "rgb(0, 0, 0)",
                 border: "8 solid rgb(34, 166, 153)",
-                border_align: "center"
+                border_align: "center",
+                margin: "4"
             }
         }
     )
