@@ -50,4 +50,14 @@ impl Radius {
     pub fn bottom_right(&self) -> f32 {
         self.bottom_right.get()
     }
+
+    pub fn pretty(&self) -> String {
+        format!(
+            "({}, {}, {}, {})",
+            self.top_left(),
+            self.top_right(),
+            self.bottom_right(),
+            self.bottom_left()
+        )
+    }
 }
