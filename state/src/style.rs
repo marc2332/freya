@@ -78,7 +78,9 @@ impl State<CustomAttributeValues> for Style {
                     }
                     "border" => {
                         if let Some(attr) = attr.value.as_text() {
-                            if let Some(new_border) = parse_border(attr, border.alignment) {
+                            if let Some(new_border) =
+                                parse_border(attr, border.alignment, *scale_factor)
+                            {
                                 border = new_border;
                             }
                         }
@@ -171,11 +173,15 @@ pub fn parse_border_align(value: &str) -> BorderAlignment {
     }
 }
 
-pub fn parse_border(border_value: &str, alignment: BorderAlignment) -> Option<BorderSettings> {
+pub fn parse_border(
+    border_value: &str,
+    alignment: BorderAlignment,
+    scale_factor: f32,
+) -> Option<BorderSettings> {
     let mut border_values = border_value.split_ascii_whitespace();
 
     Some(BorderSettings {
-        width: border_values.next()?.parse().ok()?,
+        width: border_values.next()?.parse::<f32>().ok()? * scale_factor,
         style: match border_values.next()? {
             "solid" => BorderStyle::Solid,
             _ => BorderStyle::None,
