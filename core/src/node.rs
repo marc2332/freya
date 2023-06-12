@@ -1,7 +1,8 @@
 use dioxus_native_core::real_dom::NodeImmutable;
 use freya_dom::prelude::DioxusNode;
 use freya_node_state::{
-    CursorSettings, FontStyle, References, ShadowSettings, SizeState, Style, Transform,
+    BorderSettings, CursorSettings, FontStyle, References, ShadowSettings, SizeState, Style,
+    Transform,
 };
 use skia_safe::Color;
 use torin::{
@@ -83,23 +84,24 @@ impl<'a> Iterator for NodeStateIterator<'a> {
                 "background",
                 AttributeType::Color(&self.state.style.background),
             )),
-            10 => Some(("radius", AttributeType::Radius(self.state.style.radius))),
-            11 => Some(("shadow", AttributeType::Shadow(&self.state.style.shadow))),
-            12 => Some(("color", AttributeType::Color(&self.state.font_style.color))),
-            13 => Some((
+            10 => Some(("border", AttributeType::Border(&self.state.style.border))),
+            11 => Some(("radius", AttributeType::Radius(self.state.style.radius))),
+            12 => Some(("shadow", AttributeType::Shadow(&self.state.style.shadow))),
+            13 => Some(("color", AttributeType::Color(&self.state.font_style.color))),
+            14 => Some((
                 "font_family",
                 AttributeType::Text(self.state.font_style.font_family.join(",")),
             )),
-            14 => Some((
+            15 => Some((
                 "font_size",
                 AttributeType::Measure(self.state.font_style.font_size),
             )),
-            15 => Some((
+            16 => Some((
                 "line_height",
                 AttributeType::Measure(self.state.font_style.line_height),
             )),
-            16 => Some(("scroll_x", AttributeType::Measure(self.state.size.scroll_x))),
-            17 => Some(("scroll_y", AttributeType::Measure(self.state.size.scroll_y))),
+            17 => Some(("scroll_x", AttributeType::Measure(self.state.size.scroll_x))),
+            18 => Some(("scroll_y", AttributeType::Measure(self.state.size.scroll_y))),
             _ => None,
         }
     }
@@ -122,4 +124,5 @@ pub enum AttributeType<'a> {
     Display(&'a DisplayMode),
     Shadow(&'a ShadowSettings),
     Text(String),
+    Border(&'a BorderSettings),
 }

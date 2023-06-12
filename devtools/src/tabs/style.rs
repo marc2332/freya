@@ -4,7 +4,7 @@ use freya_core::prelude::*;
 use freya_elements::elements as dioxus_elements;
 
 use crate::{
-    property::{ColorfulProperty, Property, ShadowProperty},
+    property::{BorderProperty, ColorfulProperty, Property, ShadowProperty},
     NodeInspectorBar, TreeNode,
 };
 
@@ -64,6 +64,15 @@ pub fn NodeInspectorStyle<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> 
                                     key: "{i}",
                                     name: "{name}",
                                     color: color
+                                }
+                            }
+                        }
+                        AttributeType::Border(border_settings) => {
+                            rsx!{
+                                BorderProperty {
+                                    key: "{i}",
+                                    name: "{name}",
+                                    border_settings: border_settings
                                 }
                             }
                         }
