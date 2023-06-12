@@ -13,6 +13,7 @@ Learn how the style attributes work.
 - [`font_style`](#font_style)
 - [`font_weight`](#font_weight)
 - [`font_width`](#font_width)
+- [`border`](#border)
 
 ### background
 
@@ -271,6 +272,26 @@ fn app(cx: Scope) -> Element {
         label {
             font_weight: "bold",
             "Hello, World!"
+        }
+    )
+}
+```
+
+### border
+
+You can add a border to an element using the `border` and `border_alignment` attributes.
+
+- `border` syntax: `[width] <inner | outer | center> [color]`.
+- `border_alignment` syntax: `<none | solid>`.
+
+Example:
+
+```rust
+fn app(cx: Scope) -> Element {
+    render!(
+        rect {
+            border: "2 center black",
+            border_alignment: "inner"
         }
     )
 }
