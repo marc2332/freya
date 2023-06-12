@@ -21,14 +21,20 @@ pub fn render_rect_container(
     paint.set_style(PaintStyle::Fill);
     paint.set_color(node_style.background);
 
-    let radius = (node_style.radius, node_style.radius);
+    let radius = node_style.radius;
+    let radius = &[
+        (radius.top_left(), radius.top_left()).into(),
+        (radius.top_right(), radius.top_right()).into(),
+        (radius.bottom_right(), radius.bottom_right()).into(),
+        (radius.bottom_left(), radius.bottom_left()).into(),
+    ];
 
     let area = area.to_f32();
 
     let mut path = Path::new();
     let rect = Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y());
-
-    path.add_round_rect(rect, radius, PathDirection::CW);
+    let rounded_rect = RRect::new_rect_radii(rect, radius);
+    path.add_rrect(rounded_rect, None);
     path.close();
 
     // Shadow effect
@@ -59,10 +65,7 @@ pub fn render_rect_container(
 
         path.rewind();
 
-        let mut border_rect = RRect::new_rect_radii(
-            rect,
-            &[radius.into(), radius.into(), radius.into(), radius.into()],
-        );
+        let mut border_rect = RRect::new_rect_radii(rect, radius);
 
         match node_style.border.alignment {
             BorderAlignment::Inner => {
