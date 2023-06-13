@@ -24,9 +24,9 @@ fn app(cx: Scope) -> Element {
             padding: "60",
             onwheel: onwheel,
             rect {
-                shadow: "0 10 210 {shadow_size} red",
-                height: "100%",
-                width: "100%",
+                shadow: "inset 0 0 8 red",
+                height: "80",
+                width: "80",
                 background: "black",
                 padding: "25",
                 label {

@@ -14,7 +14,7 @@ pub struct Style {
     pub background: Color,
     pub relative_layer: i16,
     pub border: BorderSettings,
-    pub shadow: ShadowSettings,
+    pub shadows: Vec<ShadowSettings>,
     pub radius: Radius,
     pub image_data: Option<Vec<u8>>,
     pub svg_data: Option<Vec<u8>>,
@@ -53,7 +53,7 @@ impl State<CustomAttributeValues> for Style {
 
         let mut background = Color::TRANSPARENT;
         let mut relative_layer = 0;
-        let mut shadow = ShadowSettings::default();
+        let mut shadows: Vec<ShadowSettings> = vec![];
         let mut border = BorderSettings::default();
         let mut radius = Radius::default();
         let mut image_data = None;
@@ -93,9 +93,29 @@ impl State<CustomAttributeValues> for Style {
                     }
                     "shadow" => {
                         if let Some(attr) = attr.value.as_text() {
-                            if let Some(new_shadow) = parse_shadow(attr) {
-                                shadow = new_shadow;
+                            let mut chunks = Vec::new();
+                            let mut current = String::new();
+                            let mut in_parenthesis = false;
+
+                            for character in attr.chars() {
+                                if character == '(' {
+                                    in_parenthesis = true;
+                                } else if character == ')' {
+                                    in_parenthesis = false;
+                                }
+
+                                if character == ',' && !in_parenthesis {
+                                    chunks.push(std::mem::take(&mut current));
+                                } else {
+                                    current.push(character);
+                                }
                             }
+
+                            if current.len() > 0 {
+                                chunks.push(current);
+                            }
+
+                            shadows = chunks.iter().map(|chunk| parse_shadow(chunk).unwrap_or_default()).collect();
                         }
                     }
                     "radius" => {
@@ -132,7 +152,7 @@ impl State<CustomAttributeValues> for Style {
 
         let changed = (background != self.background)
             || (relative_layer != self.relative_layer)
-            || (shadow != self.shadow)
+            || (shadows != self.shadows)
             || (border != self.border)
             || (radius != self.radius)
             || (image_data != self.image_data)
@@ -141,7 +161,7 @@ impl State<CustomAttributeValues> for Style {
         *self = Self {
             background,
             relative_layer,
-            shadow,
+            shadows,
             border,
             radius,
             image_data,
@@ -186,13 +206,35 @@ pub fn parse_radius(value: &str, scale_factor: f32) -> Option<Radius> {
 pub fn parse_shadow(value: &str) -> Option<ShadowSettings> {
     let value = value.to_string();
     let mut shadow_values = value.split_ascii_whitespace();
-    Some(ShadowSettings {
-        x: shadow_values.next()?.parse().ok()?,
-        y: shadow_values.next()?.parse().ok()?,
-        intensity: shadow_values.next()?.parse().ok()?,
-        size: shadow_values.next()?.parse().ok()?,
-        color: parse_color(shadow_values.next()?)?,
-    })
+
+    let mut shadow = ShadowSettings::default();
+    
+    let first = shadow_values.next()?;
+    if first == "inset" {
+        shadow.inset = true;
+        shadow.x = shadow_values.next()?.parse().ok()?;
+    } else {
+        shadow.x = first.parse().ok()?;
+    }
+
+    shadow.y = shadow_values.next()?.parse().ok()?;
+    shadow.blur = shadow_values.next()?.parse().ok()?;
+    
+    let spread_or_color = shadow_values.next()?;
+
+    let mut color_string = String::new();
+
+    if spread_or_color.parse::<f32>().is_ok() {
+        shadow.spread = spread_or_color.parse().ok()?;
+    } else {
+        color_string.push_str(spread_or_color);
+    }
+
+    color_string.push_str(shadow_values.collect::<Vec<&str>>().join(" ").as_str());
+
+    shadow.color = parse_color(color_string.as_str())?;
+
+    Some(shadow)
 }
 
 pub fn parse_border_align(value: &str) -> BorderAlignment {
@@ -251,7 +293,8 @@ pub struct BorderSettings {
 pub struct ShadowSettings {
     pub x: f32,
     pub y: f32,
-    pub intensity: u8,
-    pub size: f32,
+    pub blur: f32,
+    pub spread: f32,
     pub color: Color,
+    pub inset: bool,
 }
