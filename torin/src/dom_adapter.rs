@@ -23,8 +23,9 @@ pub struct NodeAreas {
 }
 
 impl NodeAreas {
-    pub fn visible_area(&self) -> Area {
-        self.area.visible_area(&self.margin)
+    // The area without any outer gap (e.g margin)
+    pub fn box_area(&self) -> Area {
+        self.area.box_area(&self.margin)
     }
 }
 

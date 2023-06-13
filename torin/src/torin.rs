@@ -375,7 +375,7 @@ fn measure_node<Key: NodeKey>(
 
         // Node's inner area
         let mut inner_area = {
-            let mut inner_area = area.visible_area(&node.margin);
+            let mut inner_area = area.box_area(&node.margin);
             if Size::Inner == node.width {
                 inner_area.size.width = available_parent_area.width()
             }

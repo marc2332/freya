@@ -10,11 +10,12 @@ pub type CursorPoint = euclid::Point2D<f64, Measure>;
 pub type Length = euclid::Length<f32, Measure>;
 
 pub trait BoxModel {
-    fn visible_area(&self, margin: &Gap) -> Area;
+    // The area without any outer gap (e.g margin)
+    fn box_area(&self, margin: &Gap) -> Area;
 }
 
 impl BoxModel for Area {
-    fn visible_area(&self, margin: &Gap) -> Area {
+    fn box_area(&self, margin: &Gap) -> Area {
         let origin = self.origin;
         let size = self.size;
         Area::new(
