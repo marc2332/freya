@@ -52,6 +52,7 @@ pub fn render_rect_container(
             let mut blur_rect = rounded_rect.clone();
 
             blur_paint.set_color(shadow.color);
+            blur_rect.offset((shadow.x, shadow.y));
 
             if shadow.inset {
                 blur_paint.set_style(PaintStyle::Stroke);

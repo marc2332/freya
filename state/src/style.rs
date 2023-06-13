@@ -221,15 +221,12 @@ pub fn parse_shadow(value: &str) -> Option<ShadowSettings> {
     shadow.blur = shadow_values.next()?.parse().ok()?;
     
     let spread_or_color = shadow_values.next()?;
-
     let mut color_string = String::new();
-
     if spread_or_color.parse::<f32>().is_ok() {
         shadow.spread = spread_or_color.parse().ok()?;
     } else {
         color_string.push_str(spread_or_color);
     }
-
     color_string.push_str(shadow_values.collect::<Vec<&str>>().join(" ").as_str());
 
     shadow.color = parse_color(color_string.as_str())?;
