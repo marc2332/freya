@@ -115,7 +115,10 @@ impl State<CustomAttributeValues> for Style {
                                 chunks.push(current);
                             }
 
-                            shadows = chunks.iter().map(|chunk| parse_shadow(chunk).unwrap_or_default()).collect();
+                            shadows = chunks
+                                .iter()
+                                .map(|chunk| parse_shadow(chunk).unwrap_or_default())
+                                .collect();
                         }
                     }
                     "radius" => {
@@ -208,7 +211,7 @@ pub fn parse_shadow(value: &str) -> Option<ShadowSettings> {
     let mut shadow_values = value.split_ascii_whitespace();
 
     let mut shadow = ShadowSettings::default();
-    
+
     let first = shadow_values.next()?;
     if first == "inset" {
         shadow.inset = true;
@@ -219,7 +222,7 @@ pub fn parse_shadow(value: &str) -> Option<ShadowSettings> {
 
     shadow.y = shadow_values.next()?.parse().ok()?;
     shadow.blur = shadow_values.next()?.parse().ok()?;
-    
+
     let spread_or_color = shadow_values.next()?;
     let mut color_string = String::new();
     if spread_or_color.parse::<f32>().is_ok() {

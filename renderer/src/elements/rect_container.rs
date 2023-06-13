@@ -2,8 +2,8 @@ use dioxus_native_core::real_dom::NodeImmutable;
 use freya_dom::prelude::DioxusNode;
 use freya_node_state::{BorderAlignment, BorderStyle, References, Style};
 use skia_safe::{
-    textlayout::FontCollection, BlurStyle, Canvas, MaskFilter, Paint, PaintStyle, Path,
-    PathDirection, RRect, Rect, Color, ClipOp
+    textlayout::FontCollection, BlurStyle, Canvas, ClipOp, Color, MaskFilter, Paint, PaintStyle,
+    Path, PathDirection, RRect, Rect,
 };
 use torin::prelude::Area;
 
@@ -32,7 +32,10 @@ pub fn render_rect_container(
     let area = area.to_f32();
 
     let mut path = Path::new();
-    let rounded_rect = RRect::new_rect_radii(Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()), radius);
+    let rounded_rect = RRect::new_rect_radii(
+        Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
+        radius,
+    );
 
     path.add_rrect(rounded_rect, None);
     canvas.draw_path(&path, &paint);
@@ -72,20 +75,20 @@ pub fn render_rect_container(
 
             path.rewind();
 
-            path.add_rrect(
-                &blur_rect,
-                Some((PathDirection::CW, 0)),
-            );
+            path.add_rrect(&blur_rect, Some((PathDirection::CW, 0)));
 
             // Exclude the original rect bounds from the shadow
             canvas.save();
-            let clip_operation = if shadow.inset { ClipOp::Intersect } else { ClipOp::Difference };
+            let clip_operation = if shadow.inset {
+                ClipOp::Intersect
+            } else {
+                ClipOp::Difference
+            };
             canvas.clip_rrect(&rounded_rect, clip_operation, true);
             canvas.draw_path(&path, &blur_paint);
             canvas.restore();
         }
     }
-
 
     // Borders
     if node_style.border.width > 0.0 && node_style.border.style != BorderStyle::None {

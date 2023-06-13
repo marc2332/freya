@@ -1,8 +1,7 @@
 use dioxus_native_core::real_dom::NodeImmutable;
 use freya_dom::prelude::DioxusNode;
 use freya_node_state::{
-    BorderSettings, CursorSettings, FontStyle, References, SizeState, Style,
-    Transform,
+    BorderSettings, CursorSettings, FontStyle, References, SizeState, Style, Transform,
 };
 use skia_safe::Color;
 use torin::{
