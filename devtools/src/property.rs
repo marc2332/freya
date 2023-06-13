@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_node_state::{BorderSettings, ShadowSettings};
+use freya_node_state::{BorderSettings};
 use skia_safe::Color;
 
 #[allow(non_snake_case)]
@@ -87,9 +87,9 @@ pub fn ColorfulProperty<'a>(cx: Scope<'a>, name: &'a str, color: &'a Color) -> E
 pub fn ShadowProperty<'a>(
     cx: Scope<'a>,
     name: &'a str,
-    shadow_settings: &'a ShadowSettings,
+    // shadow_settings: &'a ShadowSettings,
 ) -> Element<'a> {
-    let color = shadow_settings.color.to_rgb();
+    // let color = shadow_settings.color.to_rgb();
     render!(
         container {
             height: "30",
@@ -107,11 +107,11 @@ pub fn ShadowProperty<'a>(
                     color: "rgb(215, 215, 215)",
                     ": "
                 }
-                text {
-                    font_size: "15",
-                    color: "rgb(252,181,172)",
-                    "{shadow_settings.x} {shadow_settings.y} {shadow_settings.intensity} {shadow_settings.size}"
-                }
+                // text {
+                //     font_size: "15",
+                //     color: "rgb(252,181,172)",
+                //     "{shadow_settings.x} {shadow_settings.y} {shadow_settings.intensity} {shadow_settings.size}"
+                // }
             }
             rect {
                 width: "5"
