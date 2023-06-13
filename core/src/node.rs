@@ -1,7 +1,7 @@
 use dioxus_native_core::real_dom::NodeImmutable;
 use freya_dom::prelude::DioxusNode;
 use freya_node_state::{
-    BorderSettings, CursorSettings, FontStyle, References, ShadowSettings, SizeState, Style,
+    BorderSettings, CursorSettings, FontStyle, References, SizeState, Style,
     Transform,
 };
 use skia_safe::Color;
@@ -86,22 +86,21 @@ impl<'a> Iterator for NodeStateIterator<'a> {
             )),
             10 => Some(("border", AttributeType::Border(&self.state.style.border))),
             11 => Some(("radius", AttributeType::Radius(self.state.style.radius))),
-            12 => Some(("shadow", AttributeType::Shadow(&self.state.style.shadow))),
-            13 => Some(("color", AttributeType::Color(&self.state.font_style.color))),
-            14 => Some((
+            12 => Some(("color", AttributeType::Color(&self.state.font_style.color))),
+            13 => Some((
                 "font_family",
                 AttributeType::Text(self.state.font_style.font_family.join(",")),
             )),
-            15 => Some((
+            14 => Some((
                 "font_size",
                 AttributeType::Measure(self.state.font_style.font_size),
             )),
-            16 => Some((
+            15 => Some((
                 "line_height",
                 AttributeType::Measure(self.state.font_style.line_height),
             )),
-            17 => Some(("scroll_x", AttributeType::Measure(self.state.size.scroll_x))),
-            18 => Some(("scroll_y", AttributeType::Measure(self.state.size.scroll_y))),
+            16 => Some(("scroll_x", AttributeType::Measure(self.state.size.scroll_x))),
+            17 => Some(("scroll_y", AttributeType::Measure(self.state.size.scroll_y))),
             _ => None,
         }
     }
@@ -122,7 +121,6 @@ pub enum AttributeType<'a> {
     Radius(Radius),
     Direction(&'a DirectionMode),
     Display(&'a DisplayMode),
-    Shadow(&'a ShadowSettings),
     Text(String),
     Border(&'a BorderSettings),
 }
