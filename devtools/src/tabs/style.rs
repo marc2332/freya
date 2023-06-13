@@ -31,12 +31,21 @@ pub fn NodeInspectorStyle<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> 
                                 }
                             }
                         }
-                        AttributeType::Measures(paddings) => {
+                        AttributeType::Measures(measures) => {
                             rsx!{
                                 Property {
                                     key: "{i}",
                                     name: "{name}",
-                                    value: paddings.pretty()
+                                    value: measures.pretty()
+                                }
+                            }
+                        }
+                        AttributeType::Radius(radius) => {
+                            rsx!{
+                                Property {
+                                    key: "{i}",
+                                    name: "{name}",
+                                    value: radius.pretty()
                                 }
                             }
                         }

@@ -25,10 +25,12 @@ fn app(cx: Scope) -> Element {
             onwheel: onwheel,
             rect {
                 shadow: "0 0 150 30.0 black",
-                radius: "{radius}",
+                radius: "{radius} {radius * 0.7} {radius * 0.4} {radius * 0.2}",
                 height: "100%",
                 width: "100%",
-                background: "black",
+                background: "red",
+                border: "7 solid white",
+                border_align: "outer"
             }
         }
     )
