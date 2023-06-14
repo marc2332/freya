@@ -52,7 +52,7 @@ pub fn render_rect_container(
     for shadow in node_style.shadows.iter() {
         if shadow.color != Color::TRANSPARENT {
             let mut blur_paint = paint.clone();
-            let mut blur_rect = rounded_rect.clone();
+            let mut blur_rect = rounded_rect;
 
             blur_paint.set_color(shadow.color);
             blur_rect.offset((shadow.x, shadow.y));
@@ -75,7 +75,7 @@ pub fn render_rect_container(
 
             path.rewind();
 
-            path.add_rrect(&blur_rect, Some((PathDirection::CW, 0)));
+            path.add_rrect(blur_rect, Some((PathDirection::CW, 0)));
 
             // Exclude the original rect bounds from the shadow
             canvas.save();
@@ -84,7 +84,7 @@ pub fn render_rect_container(
             } else {
                 ClipOp::Difference
             };
-            canvas.clip_rrect(&rounded_rect, clip_operation, true);
+            canvas.clip_rrect(rounded_rect, clip_operation, true);
             canvas.draw_path(&path, &blur_paint);
             canvas.restore();
         }
@@ -101,7 +101,7 @@ pub fn render_rect_container(
 
         path.rewind();
 
-        let mut border_rect = rounded_rect.clone();
+        let mut border_rect = rounded_rect;
 
         match node_style.border.alignment {
             BorderAlignment::Inner => {

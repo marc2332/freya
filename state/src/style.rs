@@ -111,7 +111,7 @@ impl State<CustomAttributeValues> for Style {
                                 }
                             }
 
-                            if current.len() > 0 {
+                            if !current.is_empty() {
                                 chunks.push(current);
                             }
 
