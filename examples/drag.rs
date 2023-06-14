@@ -41,8 +41,8 @@ fn app(cx: Scope) -> Element {
             background: "rgb(35, 35, 35)",
             width: "100%",
             height: "100%",
-            scroll_x: "{positions.0}",
-            scroll_y: "{positions.1}",
+            offset_x: "{positions.0}",
+            offset_y: "{positions.1}",
             onmousedown: onmousedown,
             onclick: onclick,
             label {

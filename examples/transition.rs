@@ -40,7 +40,7 @@ fn app(cx: Scope) -> Element {
             display: "center",
             width: "100%",
             height: "100%",
-            scroll_x: "{size}",
+            offset_x: "{size}",
             rect {
                 height: "200",
                 width: "200",

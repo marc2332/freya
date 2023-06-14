@@ -26,8 +26,8 @@ pub struct Node {
     pub padding: Paddings,
 
     /// Inner position offsets
-    pub scroll_x: Length,
-    pub scroll_y: Length,
+    pub offset_x: Length,
+    pub offset_y: Length,
 
     /// Direction in which it's inner Nodes will be stacked
     pub direction: DirectionMode,
@@ -56,14 +56,14 @@ impl Node {
     pub fn from_size_and_scroll(
         width: Size,
         height: Size,
-        scroll_x: Length,
-        scroll_y: Length,
+        offset_x: Length,
+        offset_y: Length,
     ) -> Self {
         Self {
             width,
             height,
-            scroll_x,
-            scroll_y,
+            offset_x,
+            offset_y,
             ..Default::default()
         }
     }

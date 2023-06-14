@@ -48,7 +48,7 @@ pub fn NodeElement<'a>(
             background: background,
             width: "100%",
             height: "27",
-            scroll_x: "{margin_left}",
+            offset_x: "{margin_left}",
             onmousedown: onmousedown,
             onmouseover: onmouseover,
             onmouseleave: onmouseleave,

@@ -139,8 +139,8 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
                 rect {
                     width: "{progress}",
                     height: "100%",
-                    scroll_y: "-5",
-                    scroll_x: "-2",
+                    offset_y: "-5",
+                    offset_x: "-2",
                     rect {
                         background: "{theme.thumb_background}",
                         width: "17",

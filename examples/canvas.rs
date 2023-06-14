@@ -73,8 +73,8 @@ fn app(cx: Scope) -> Element {
                 background: "rgb(35, 35, 35)",
                 width: "100%",
                 height: "calc(100% - 100)",
-                scroll_x: "{canvas_pos.0}",
-                scroll_y: "{canvas_pos.1}",
+                offset_x: "{canvas_pos.0}",
+                offset_y: "{canvas_pos.1}",
                 onmousedown: onmousedown,
                 onclick: onclick,
                 onmouseover: onmouseover,
@@ -89,8 +89,8 @@ fn app(cx: Scope) -> Element {
                             key: "{id}",
                             direction: "horizontal",
                             rect {
-                                scroll_x: "{node.0}",
-                                scroll_y: "{node.1}",
+                                offset_x: "{node.0}",
+                                offset_y: "{node.1}",
                                 width: "0",
                                 height: "0",
                                 container {
