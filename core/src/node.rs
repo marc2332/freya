@@ -1,8 +1,7 @@
 use dioxus_native_core::real_dom::NodeImmutable;
 use freya_dom::prelude::DioxusNode;
 use freya_node_state::{
-    BorderSettings, CursorSettings, FontStyle, References, ShadowSettings, SizeState, Style,
-    Transform,
+    Border, CursorSettings, FontStyle, References, Shadow, SizeState, Style, Transform,
 };
 use skia_safe::Color;
 use torin::{
@@ -126,7 +125,7 @@ pub enum AttributeType<'a> {
     Radius(Radius),
     Direction(&'a DirectionMode),
     Display(&'a DisplayMode),
-    Shadow(&'a ShadowSettings),
+    Shadow(&'a Shadow),
     Text(String),
-    Border(&'a BorderSettings),
+    Border(&'a Border),
 }

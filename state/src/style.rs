@@ -7,14 +7,14 @@ use dioxus_native_core_macro::partial_derive_state;
 use skia_safe::Color;
 use torin::radius::Radius;
 
-use crate::{parse_color, CustomAttributeValues};
+use crate::{parse_color, Border, BorderAlignment, CustomAttributeValues, Shadow};
 
 #[derive(Default, Clone, Debug, Component)]
 pub struct Style {
     pub background: Color,
     pub relative_layer: i16,
-    pub border: BorderSettings,
-    pub shadows: Vec<ShadowSettings>,
+    pub border: Border,
+    pub shadows: Vec<Shadow>,
     pub radius: Radius,
     pub image_data: Option<Vec<u8>>,
     pub svg_data: Option<Vec<u8>>,
@@ -53,8 +53,8 @@ impl State<CustomAttributeValues> for Style {
 
         let mut background = Color::TRANSPARENT;
         let mut relative_layer = 0;
-        let mut shadows: Vec<ShadowSettings> = vec![];
-        let mut border = BorderSettings::default();
+        let mut shadows: Vec<Shadow> = vec![];
+        let mut border = Border::default();
         let mut radius = Radius::default();
         let mut image_data = None;
         let mut svg_data = None;
@@ -79,16 +79,18 @@ impl State<CustomAttributeValues> for Style {
                     }
                     "border" => {
                         if let Some(attr) = attr.value.as_text() {
-                            if let Some(new_border) =
-                                parse_border(attr, border.alignment, *scale_factor)
-                            {
+                            if let Ok(mut new_border) = attr.parse::<Border>() {
+                                new_border.width *= scale_factor;
+
                                 border = new_border;
                             }
                         }
                     }
                     "border_align" => {
                         if let Some(attr) = attr.value.as_text() {
-                            border.alignment = parse_border_align(attr);
+                            if let Ok(new_border_alignment) = attr.parse::<BorderAlignment>() {
+                                border.alignment = new_border_alignment;
+                            }
                         }
                     }
                     "shadow" => {
@@ -117,7 +119,16 @@ impl State<CustomAttributeValues> for Style {
 
                             shadows = chunks
                                 .iter()
-                                .map(|chunk| parse_shadow(chunk, *scale_factor).unwrap_or_default())
+                                .map(|chunk| {
+                                    let mut shadow = chunk.parse::<Shadow>().unwrap_or_default();
+
+                                    shadow.x *= scale_factor;
+                                    shadow.y *= scale_factor;
+                                    shadow.spread *= scale_factor;
+                                    shadow.blur *= scale_factor;
+
+                                    shadow
+                                })
                                 .collect();
                         }
                     }
@@ -204,105 +215,4 @@ pub fn parse_radius(value: &str, scale_factor: f32) -> Option<Radius> {
     }
 
     Some(radius_config)
-}
-
-pub fn parse_shadow(value: &str, scale_factor: f32) -> Option<ShadowSettings> {
-    let value = value.to_string();
-    let mut shadow_values = value.split_ascii_whitespace();
-
-    let mut shadow = ShadowSettings::default();
-
-    let first = shadow_values.next()?;
-    if first == "inset" {
-        shadow.position = ShadowPosition::Inset;
-        shadow.x = shadow_values.next()?.parse().ok()?;
-    } else {
-        shadow.x = first.parse().ok()?;
-    }
-
-    shadow.x *= scale_factor;
-    shadow.y = shadow_values.next()?.parse::<f32>().ok()? * scale_factor;
-    shadow.blur = shadow_values.next()?.parse::<f32>().ok()? * scale_factor;
-
-    let spread_or_color = shadow_values.next()?;
-    let mut color_string = String::new();
-    if spread_or_color.parse::<f32>().is_ok() {
-        shadow.spread = spread_or_color.parse::<f32>().ok()? * scale_factor;
-    } else {
-        color_string.push_str(spread_or_color);
-    }
-    color_string.push_str(shadow_values.collect::<Vec<&str>>().join(" ").as_str());
-
-    shadow.color = parse_color(color_string.as_str())?;
-
-    Some(shadow)
-}
-
-pub fn parse_border_align(value: &str) -> BorderAlignment {
-    let mut border_align_value = value.split_ascii_whitespace();
-
-    match border_align_value.next() {
-        Some("inner") => BorderAlignment::Inner,
-        Some("outer") => BorderAlignment::Outer,
-        Some("center") => BorderAlignment::Center,
-        _ => BorderAlignment::Inner,
-    }
-}
-
-pub fn parse_border(
-    border_value: &str,
-    alignment: BorderAlignment,
-    scale_factor: f32,
-) -> Option<BorderSettings> {
-    let mut border_values = border_value.split_ascii_whitespace();
-
-    Some(BorderSettings {
-        width: border_values.next()?.parse::<f32>().ok()? * scale_factor,
-        style: match border_values.next()? {
-            "solid" => BorderStyle::Solid,
-            _ => BorderStyle::None,
-        },
-        color: parse_color(&border_values.collect::<Vec<&str>>().join(" "))?,
-        alignment,
-    })
-}
-
-#[derive(Default, Clone, Copy, Debug, PartialEq)]
-pub enum BorderStyle {
-    #[default]
-    None,
-    Solid,
-}
-
-#[derive(Default, Clone, Copy, Debug, PartialEq)]
-pub enum BorderAlignment {
-    #[default]
-    Inner,
-    Outer,
-    Center,
-}
-
-#[derive(Default, Clone, Debug, PartialEq)]
-pub struct BorderSettings {
-    pub color: Color,
-    pub style: BorderStyle,
-    pub width: f32,
-    pub alignment: BorderAlignment,
-}
-
-#[derive(Default, Clone, Debug, PartialEq)]
-pub struct ShadowSettings {
-    pub x: f32,
-    pub y: f32,
-    pub blur: f32,
-    pub spread: f32,
-    pub color: Color,
-    pub position: ShadowPosition,
-}
-
-#[derive(Default, Clone, Debug, PartialEq)]
-pub enum ShadowPosition {
-    #[default]
-    Normal,
-    Inset,
 }
