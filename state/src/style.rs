@@ -214,7 +214,7 @@ pub fn parse_shadow(value: &str, scale_factor: f32) -> Option<ShadowSettings> {
 
     let first = shadow_values.next()?;
     if first == "inset" {
-        shadow.inset = true;
+        shadow.position = ShadowPosition::Inset;
         shadow.x = shadow_values.next()?.parse().ok()?;
     } else {
         shadow.x = first.parse().ok()?;
@@ -297,5 +297,12 @@ pub struct ShadowSettings {
     pub blur: f32,
     pub spread: f32,
     pub color: Color,
-    pub inset: bool,
+    pub position: ShadowPosition,
+}
+
+#[derive(Default, Clone, Debug, PartialEq)]
+pub enum ShadowPosition {
+    #[default]
+    Normal,
+    Inset,
 }

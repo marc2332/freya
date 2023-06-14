@@ -1,7 +1,8 @@
 use dioxus_native_core::real_dom::NodeImmutable;
 use freya_dom::prelude::DioxusNode;
 use freya_node_state::{
-    BorderSettings, CursorSettings, FontStyle, References, SizeState, Style, Transform,
+    BorderSettings, CursorSettings, FontStyle, References, ShadowSettings, SizeState, Style,
+    Transform,
 };
 use skia_safe::Color;
 use torin::{
@@ -100,7 +101,12 @@ impl<'a> Iterator for NodeStateIterator<'a> {
             )),
             16 => Some(("scroll_x", AttributeType::Measure(self.state.size.scroll_x))),
             17 => Some(("scroll_y", AttributeType::Measure(self.state.size.scroll_y))),
-            _ => None,
+            n => {
+                let shadows = &self.state.style.shadows;
+                shadows
+                    .get(n - 18)
+                    .map(|shadow| ("shadow", AttributeType::Shadow(shadow)))
+            }
         }
     }
 
@@ -120,6 +126,7 @@ pub enum AttributeType<'a> {
     Radius(Radius),
     Direction(&'a DirectionMode),
     Display(&'a DisplayMode),
+    Shadow(&'a ShadowSettings),
     Text(String),
     Border(&'a BorderSettings),
 }
