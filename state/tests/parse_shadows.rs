@@ -1,4 +1,4 @@
-use freya_node_state::{parse_shadow, ShadowSettings};
+use freya_node_state::{parse_shadow, ShadowPosition, ShadowSettings};
 use skia_safe::Color;
 
 const SCALE_FACTOR: f32 = 1.0;
@@ -14,7 +14,7 @@ fn parse_big_shadow() {
             blur: 50.0,
             spread: 25.0,
             color: Color::RED,
-            inset: false
+            position: ShadowPosition::Normal
         })
     );
 }
@@ -30,7 +30,7 @@ fn parse_inset_shadow() {
             blur: 50.0,
             spread: 25.0,
             color: Color::RED,
-            inset: true
+            position: ShadowPosition::Inset
         })
     );
 }
@@ -46,7 +46,7 @@ fn parse_shadow_with_assumed_spread() {
             blur: 50.0,
             spread: 0.0,
             color: Color::RED,
-            inset: true
+            position: ShadowPosition::Inset
         })
     );
 }
