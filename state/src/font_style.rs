@@ -6,10 +6,8 @@ use dioxus_native_core::prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuil
 use dioxus_native_core::NodeId;
 use dioxus_native_core::SendAnyMap;
 use dioxus_native_core_macro::partial_derive_state;
-use skia_safe::font_style::Slant;
-use skia_safe::font_style::Weight;
-use skia_safe::font_style::Width;
-use skia_safe::textlayout::TextAlign;
+use skia_safe::font_style::{Slant, Weight, Width};
+use skia_safe::textlayout::{TextStyle, Decoration, TextDecoration, TextDecorationStyle, TextAlign};
 use skia_safe::Color;
 use smallvec::{smallvec, SmallVec};
 use torin::torin::Torin;
@@ -25,6 +23,9 @@ pub struct FontStyle {
     pub font_weight: Weight,
     pub font_width: Width,
     pub line_height: f32, // https://developer.mozilla.org/en-US/docs/Web/CSS/line-height,
+    pub decoration: Decoration,
+    pub word_spacing: f32,
+    pub letter_spacing: f32,
     pub align: TextAlign,
     pub max_lines: Option<usize>,
 }
@@ -38,9 +39,23 @@ impl FontStyle {
     }
 }
 
-impl From<&FontStyle> for skia_safe::FontStyle {
+impl From<&FontStyle> for TextStyle {
     fn from(value: &FontStyle) -> Self {
-        skia_safe::FontStyle::new(value.font_weight, value.font_width, value.font_slant)
+        let mut text_style = TextStyle::new();
+        
+        text_style
+            .set_color(value.color)
+            .set_font_style(skia_safe::FontStyle::new(value.font_weight, value.font_width, value.font_slant))
+            .set_font_size(value.font_size)
+            .set_font_families(&value.font_family)
+            .set_word_spacing(value.word_spacing)
+            .set_letter_spacing(value.letter_spacing)
+            .set_height_override(true)
+            .set_height(value.line_height);
+
+        *text_style.decoration_mut() = value.decoration;
+
+        text_style
     }
 }
 
@@ -54,6 +69,12 @@ impl Default for FontStyle {
             font_slant: Slant::Upright,
             font_width: Width::NORMAL,
             line_height: 1.2,
+            word_spacing: 0.0,
+            letter_spacing: 0.0,
+            decoration: Decoration {
+                thickness_multiplier: 1.0, // Defaults to 0.0, even though 0.0 won't render anything
+                ..Decoration::default()
+            },
             align: TextAlign::default(),
             max_lines: None,
         }
@@ -79,6 +100,11 @@ impl State<CustomAttributeValues> for FontStyle {
             "font_style",
             "font_weight",
             "font_width",
+            "word_spacing",
+            "letter_spacing",
+            "decoration",
+            "decoration_color",
+            "decoration_style"
         ]));
 
     fn update<'a>(
@@ -168,6 +194,44 @@ impl State<CustomAttributeValues> for FontStyle {
                             font_style.font_width = parse_font_width(attr);
                         }
                     }
+                    "decoration" => {
+                        let attr = attr.value.as_text();
+                        if let Some(attr) = attr {
+                            font_style.decoration.ty = parse_decoration(attr);
+                        }
+                    }
+                    "decoration_style" => {
+                        let attr = attr.value.as_text();
+                        if let Some(attr) = attr {
+                            font_style.decoration.style = parse_decoration_style(attr);
+                        }
+                    }
+                    "decoration_color" => {
+                        let attr = attr.value.as_text();
+                        if let Some(attr) = attr {
+                            if let Some(new_decoration_color) = parse_color(attr) {
+                                font_style.decoration.color = new_decoration_color;
+                            }
+                        } else {
+                            font_style.decoration.color = font_style.color;
+                        }
+                    }
+                    "word_spacing" => {
+                        let attr = attr.value.as_text();
+                        if let Some(attr) = attr {
+                            if let Ok(word_spacing) = attr.parse() {
+                                font_style.word_spacing = word_spacing;
+                            }
+                        }
+                    }
+                    "letter_spacing" => {
+                        let attr = attr.value.as_text();
+                        if let Some(attr) = attr {
+                            if let Ok(letter_spacing) = attr.parse() {
+                                font_style.letter_spacing = letter_spacing;
+                            }
+                        }
+                    }
                     _ => {}
                 }
             }
@@ -179,7 +243,9 @@ impl State<CustomAttributeValues> for FontStyle {
             || self.font_family != font_style.font_family
             || self.font_slant != font_style.font_slant
             || self.font_weight != font_style.font_weight
-            || self.font_width != font_style.font_width;
+            || self.font_width != font_style.font_width
+            || self.word_spacing != font_style.word_spacing
+            || self.letter_spacing != font_style.letter_spacing;
 
         if changed_size {
             torin_layout.lock().unwrap().invalidate(node_view.node_id());
@@ -260,5 +326,32 @@ pub fn parse_text_align(align: &str) -> TextAlign {
         "right" => TextAlign::Right,
         "start" => TextAlign::Start,
         _ => TextAlign::Left,
+    }
+}
+
+pub fn parse_decoration(value: &str) -> TextDecoration {
+    let decoration_values = value.split_ascii_whitespace();
+    let mut decoration = TextDecoration::default();
+
+    for value in decoration_values {
+        decoration.set(match value {
+            "underline" => TextDecoration::UNDERLINE,
+            "overline" => TextDecoration::OVERLINE,
+            "line-through" => TextDecoration::LINE_THROUGH,
+            _ => TextDecoration::NO_DECORATION
+        }, true);
+    }
+
+    decoration
+}
+
+pub fn parse_decoration_style(style: &str) -> TextDecorationStyle {
+    match style {
+        "solid" => TextDecorationStyle::Solid,
+        "double" => TextDecorationStyle::Double,
+        "dotted" => TextDecorationStyle::Dotted,
+        "dashed" => TextDecorationStyle::Dashed,
+        "wavy" => TextDecorationStyle::Wavy,
+        _ => TextDecorationStyle::Solid
     }
 }
