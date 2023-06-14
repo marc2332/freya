@@ -7,7 +7,9 @@ use dioxus_native_core::NodeId;
 use dioxus_native_core::SendAnyMap;
 use dioxus_native_core_macro::partial_derive_state;
 use skia_safe::font_style::{Slant, Weight, Width};
-use skia_safe::textlayout::{TextStyle, Decoration, TextDecoration, TextDecorationStyle, TextAlign};
+use skia_safe::textlayout::{
+    Decoration, TextAlign, TextDecoration, TextDecorationStyle, TextStyle,
+};
 use skia_safe::Color;
 use smallvec::{smallvec, SmallVec};
 use torin::torin::Torin;
@@ -42,10 +44,14 @@ impl FontStyle {
 impl From<&FontStyle> for TextStyle {
     fn from(value: &FontStyle) -> Self {
         let mut text_style = TextStyle::new();
-        
+
         text_style
             .set_color(value.color)
-            .set_font_style(skia_safe::FontStyle::new(value.font_weight, value.font_width, value.font_slant))
+            .set_font_style(skia_safe::FontStyle::new(
+                value.font_weight,
+                value.font_width,
+                value.font_slant,
+            ))
             .set_font_size(value.font_size)
             .set_font_families(&value.font_family)
             .set_word_spacing(value.word_spacing)
@@ -104,7 +110,7 @@ impl State<CustomAttributeValues> for FontStyle {
             "letter_spacing",
             "decoration",
             "decoration_color",
-            "decoration_style"
+            "decoration_style",
         ]));
 
     fn update<'a>(
@@ -334,12 +340,15 @@ pub fn parse_decoration(value: &str) -> TextDecoration {
     let mut decoration = TextDecoration::default();
 
     for value in decoration_values {
-        decoration.set(match value {
-            "underline" => TextDecoration::UNDERLINE,
-            "overline" => TextDecoration::OVERLINE,
-            "line-through" => TextDecoration::LINE_THROUGH,
-            _ => TextDecoration::NO_DECORATION
-        }, true);
+        decoration.set(
+            match value {
+                "underline" => TextDecoration::UNDERLINE,
+                "overline" => TextDecoration::OVERLINE,
+                "line-through" => TextDecoration::LINE_THROUGH,
+                _ => TextDecoration::NO_DECORATION,
+            },
+            true,
+        );
     }
 
     decoration
@@ -352,6 +361,6 @@ pub fn parse_decoration_style(style: &str) -> TextDecorationStyle {
         "dotted" => TextDecorationStyle::Dotted,
         "dashed" => TextDecorationStyle::Dashed,
         "wavy" => TextDecorationStyle::Wavy,
-        _ => TextDecorationStyle::Solid
+        _ => TextDecorationStyle::Solid,
     }
 }

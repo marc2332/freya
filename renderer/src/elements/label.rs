@@ -38,7 +38,7 @@ pub fn render_label(
         let mut paragraph_style = ParagraphStyle::default();
         paragraph_style.set_text_align(node_font_style.align);
         paragraph_style.set_text_style(&node_font_style.into());
-        
+
         let mut paragraph_builder =
             ParagraphBuilder::new(&paragraph_style, font_collection.clone());
 
