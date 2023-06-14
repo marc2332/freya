@@ -99,7 +99,7 @@ fn app(cx: Scope) -> Element {
                                     height: "400",
                                     radius: "15",
                                     padding: "10",
-                                    shadow: "0 0 60 35 white",
+                                    shadow: "0 0 30 0 rgb(0, 0, 0, 150)",
                                     onmousedown:  move |e: MouseEvent| {
                                         clicking_drag.set(Some((id, e.get_element_coordinates().to_tuple())));
                                     },
