@@ -59,7 +59,7 @@ pub fn render_rect_container(
 
             if shadow.inset {
                 blur_paint.set_style(PaintStyle::Stroke);
-                blur_paint.set_stroke_width((shadow.blur / 2.0) + shadow.spread);
+                blur_paint.set_stroke_width(shadow.blur / 2.0 + shadow.spread);
                 blur_rect.inset((shadow.spread / 2.0, shadow.spread / 2.0));
             } else {
                 blur_rect.outset((shadow.spread, shadow.spread));

@@ -117,7 +117,7 @@ impl State<CustomAttributeValues> for Style {
 
                             shadows = chunks
                                 .iter()
-                                .map(|chunk| parse_shadow(chunk).unwrap_or_default())
+                                .map(|chunk| parse_shadow(chunk, *scale_factor).unwrap_or_default())
                                 .collect();
                         }
                     }
@@ -206,7 +206,7 @@ pub fn parse_radius(value: &str, scale_factor: f32) -> Option<Radius> {
     Some(radius_config)
 }
 
-pub fn parse_shadow(value: &str) -> Option<ShadowSettings> {
+pub fn parse_shadow(value: &str, scale_factor: f32) -> Option<ShadowSettings> {
     let value = value.to_string();
     let mut shadow_values = value.split_ascii_whitespace();
 
@@ -220,13 +220,14 @@ pub fn parse_shadow(value: &str) -> Option<ShadowSettings> {
         shadow.x = first.parse().ok()?;
     }
 
-    shadow.y = shadow_values.next()?.parse().ok()?;
-    shadow.blur = shadow_values.next()?.parse().ok()?;
+    shadow.x *= scale_factor;
+    shadow.y = shadow_values.next()?.parse::<f32>().ok()? * scale_factor;
+    shadow.blur = shadow_values.next()?.parse::<f32>().ok()? * scale_factor;
 
     let spread_or_color = shadow_values.next()?;
     let mut color_string = String::new();
     if spread_or_color.parse::<f32>().is_ok() {
-        shadow.spread = spread_or_color.parse().ok()?;
+        shadow.spread = spread_or_color.parse::<f32>().ok()? * scale_factor;
     } else {
         color_string.push_str(spread_or_color);
     }
