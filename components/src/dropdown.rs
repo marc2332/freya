@@ -151,7 +151,7 @@ where
                     width: "130",
                     height: "auto",
                     background: *background_button.get(),
-                    shadow: "0 0 100 6 black",
+                    shadow: "0 0 20 0 rgb(0, 0, 0, 100)",
                     padding: "7",
                     &cx.props.children
                 }

@@ -212,18 +212,7 @@ mod test {
 
         utils.wait_for_update().await;
 
-        assert_eq!(
-            root.child(0)
-                .unwrap()
-                .child(0)
-                .unwrap()
-                .child(0)
-                .unwrap()
-                .child(0)
-                .unwrap()
-                .text(),
-            Some("Moving")
-        );
+        assert_eq!(root.get(0).get(0).get(0).get(0).text(), Some("Moving"));
 
         utils.push_event(FreyaEvent::Mouse {
             name: "click".to_string(),
@@ -234,15 +223,7 @@ mod test {
         utils.wait_for_update().await;
 
         assert_eq!(
-            root.child(1)
-                .unwrap()
-                .child(0)
-                .unwrap()
-                .child(0)
-                .unwrap()
-                .child(0)
-                .unwrap()
-                .text(),
+            root.get(1).get(0).get(0).get(0).text(),
             Some("Enabled: true")
         );
     }
