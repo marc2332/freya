@@ -3,7 +3,7 @@ use skia_safe::Color;
 
 #[test]
 fn parse_big_shadow() {
-    let shadow = parse_shadow("1 2 50 25.0 red");
+    let shadow = parse_shadow("1 2 50 25.0 red", 1.0);
     assert_eq!(
         shadow,
         Some(ShadowSettings {
@@ -19,7 +19,7 @@ fn parse_big_shadow() {
 
 #[test]
 fn parse_inset_shadow() {
-    let shadow = parse_shadow("inset 1 2 50 25.0 red");
+    let shadow = parse_shadow("inset 1 2 50 25.0 red", 1.0);
     assert_eq!(
         shadow,
         Some(ShadowSettings {
