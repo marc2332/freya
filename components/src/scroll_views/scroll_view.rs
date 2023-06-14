@@ -212,8 +212,8 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
                     height: "100%",
                     width: "100%",
                     direction: "{user_direction}",
-                    scroll_y: "{corrected_scrolled_y}",
-                    scroll_x: "{corrected_scrolled_x}",
+                    offset_y: "{corrected_scrolled_y}",
+                    offset_x: "{corrected_scrolled_x}",
                     reference: node_ref,
                     onwheel: onwheel,
                     &cx.props.children
@@ -221,7 +221,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
                 container {
                     width: "100%",
                     height: "{horizontal_scrollbar_size}",
-                    scroll_x: "{scrollbar_x}",
+                    offset_x: "{scrollbar_x}",
                     onmouseleave: |_| {},
                     background: "{scrollbar_theme.background}",
                     rect {
@@ -236,7 +236,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
             container {
                 width: "{vertical_scrollbar_size}",
                 height: "100%",
-                scroll_y: "{scrollbar_y}",
+                offset_y: "{scrollbar_y}",
                 onmouseleave: |_| {},
                 background: "{scrollbar_theme.background}",
                 rect {

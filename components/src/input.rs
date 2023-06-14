@@ -112,7 +112,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     render!(
         CursorArea {
             icon: CursorIcon::Text,
-            container {
+            rect {
                 onkeydown: onkeydown,
                 onclick: move |_| {
                     focus();
@@ -121,12 +121,12 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
                 height: "auto",
                 direction: "both",
                 padding: "1.5",
-                container {
+                rect {
                     width: "100",
                     height: "35",
                     direction: "both",
                     color: "{button_theme.font_theme.color}",
-                    shadow: "0 5 15 10 black",
+                    shadow: "0 5 20 0 rgb(0, 0, 0, 100)",
                     radius: "5",
                     padding: "8",
                     background: "{button_theme.background}",

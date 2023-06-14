@@ -78,7 +78,7 @@ fn app(cx: Scope) -> Element {
             background: "black",
             width: "100%",
             height: "100%",
-            scroll_x: "{size}",
+            offset_x: "{size}",
             rect {
                 height: "100%",
                 width: "200",
