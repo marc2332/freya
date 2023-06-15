@@ -78,8 +78,8 @@ fn app(cx: Scope) -> Element {
                 rect {
                     width: "0",
                     height: "0",
-                    scroll_x: "{pos.x}",
-                    scroll_y: "{pos.y}",
+                    offset_x: "{pos.x}",
+                    offset_y: "{pos.y}",
                     Box {}
                 }
             ))
