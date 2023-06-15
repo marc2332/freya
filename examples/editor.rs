@@ -276,7 +276,7 @@ fn Body(cx: Scope) -> Element {
                     width: "50%",
                     height: "100%",
                     padding: "15",
-                    shadow: "0 10 30 7 white",
+                    shadow: "0 0 30 0 rgb(0, 0, 0, 150)",
                     ScrollView {
                         width: "100%",
                         height: "100%",

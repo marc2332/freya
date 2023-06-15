@@ -92,7 +92,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
                 height: "auto",
                 direction: "both",
                 color: "{color}",
-                shadow: "0 5 15 10 black",
+                shadow: "0 5 20 0 rgb(0, 0, 0, 100)",
                 radius: "5",
                 padding: "8",
                 background: "{background}",
