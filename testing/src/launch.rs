@@ -1,7 +1,11 @@
+use dioxus_core::fc_to_builder;
 use dioxus_core::{Component, VirtualDom};
+use dioxus_core::{Element, Scope};
+use dioxus_core_macro::render;
 use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_dom::prelude::{FreyaDOM, SafeDOM};
+use freya_hooks::{use_init_accessibility, use_init_focus};
 use freya_layout::Layers;
 use rustc_hash::FxHashMap;
 use skia_safe::textlayout::FontCollection;
@@ -23,7 +27,7 @@ pub fn launch_test(root: Component<()>) -> TestingHandler {
 
 /// Run a Component in a headless testing environment
 pub fn launch_test_with_config(root: Component<()>, config: TestingConfig) -> TestingHandler {
-    let vdom = VirtualDom::new(root);
+    let vdom = with_accessibility(root);
     let fdom = FreyaDOM::default();
     let sdom = SafeDOM::new(fdom);
 
@@ -54,4 +58,23 @@ pub fn launch_test_with_config(root: Component<()>, config: TestingConfig) -> Te
     handler.init_dom();
 
     handler
+}
+
+fn with_accessibility(app: Component) -> VirtualDom {
+    struct RootProps {
+        app: Component,
+    }
+
+    #[allow(non_snake_case)]
+    fn Root(cx: Scope<RootProps>) -> Element {
+        use_init_focus(cx);
+        use_init_accessibility(cx);
+
+        #[allow(non_snake_case)]
+        let App = cx.props.app;
+
+        render!(App {})
+    }
+
+    VirtualDom::new_with_props(Root, RootProps { app })
 }

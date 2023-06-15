@@ -1,11 +1,12 @@
-use dioxus::prelude::*;
+use dioxus_core::ScopeState;
+use dioxus_hooks::{to_owned, use_effect, use_shared_state};
 use freya_common::EventMessage;
 use freya_core::FocusReceiver;
-use freya_hooks::{use_platform, FocusId};
 
-/// Use this to sync both the Focus shared state and the platform accessibility focus
-#[allow(non_snake_case)]
-pub fn AccessibilityFocusBridge(cx: Scope) -> Element {
+use crate::{use_platform, FocusId};
+
+/// Sync both the Focus shared state and the platform accessibility focus
+pub fn use_init_accessibility(cx: &ScopeState) {
     let platform = use_platform(cx);
     let focused_id = use_shared_state::<Option<FocusId>>(cx).unwrap();
     let current_focused_id = *focused_id.read();
@@ -33,8 +34,6 @@ pub fn AccessibilityFocusBridge(cx: Scope) -> Element {
             }
         }
     });
-
-    None
 }
 
 #[cfg(test)]
@@ -56,10 +55,7 @@ mod test {
         }
 
         fn use_focus_app(cx: Scope) -> Element {
-            use_init_focus(cx);
-
             render!(
-                AccessibilityFocusBridge { }
                 rect {
                     width: "100%",
                     height: "100%",

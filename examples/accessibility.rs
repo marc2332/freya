@@ -13,7 +13,6 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    use_init_focus(cx);
     let focus_a = use_focus(cx);
     let focus_b = use_focus(cx);
     let focus_c = use_focus(cx);
@@ -22,7 +21,6 @@ fn app(cx: Scope) -> Element {
     let url = Url::from_str("https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/PNG_transparency_demonstration_1.png/420px-PNG_transparency_demonstration_1.png").unwrap();
 
     render!(
-        AccessibilityFocusBridge {},
         rect {
             focus_id: focus_a.attribute(cx),
             background: "rgb(233, 196, 106)",

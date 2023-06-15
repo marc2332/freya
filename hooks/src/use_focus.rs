@@ -10,12 +10,12 @@ pub type FocusId = AccessibilityId;
 
 /// Manage the focus operations of given Node
 #[derive(Clone, Copy)]
-pub struct FocusManager<'a> {
+pub struct UseFocus<'a> {
     id: AccessibilityId,
     focused_id: Option<&'a UseSharedState<Option<AccessibilityId>>>,
 }
 
-impl FocusManager<'_> {
+impl UseFocus<'_> {
     /// Focus this node
     pub fn focus(&self) {
         if let Some(focused_id) = self.focused_id {
@@ -39,11 +39,11 @@ impl FocusManager<'_> {
     }
 }
 
-/// Create a [`FocusManager`] for a component.
-pub fn use_focus(cx: &ScopeState) -> FocusManager {
+/// Create a focus manager for a node.
+pub fn use_focus(cx: &ScopeState) -> UseFocus {
     let id = *cx.use_hook(|| AccessibilityId(NonZeroU128::new(Uuid::new_v4().as_u128()).unwrap()));
     let focused_id = use_shared_state::<Option<FocusId>>(cx);
-    FocusManager { id, focused_id }
+    UseFocus { id, focused_id }
 }
 
 /// Create a focus provider.

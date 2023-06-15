@@ -18,6 +18,7 @@ freya-layout = { workspace = true }
 freya-node-state = { workspace = true }
 freya-core = { workspace = true }
 freya-dom = { workspace = true, features = ["shared"]}
+freya-hooks = { workspace = true }
 torin = { workspace = true }
 
 dioxus-rsx = { workspace = true }
@@ -26,6 +27,7 @@ dioxus-core-macro = { workspace = true }
 dioxus-hooks = { workspace = true }
 dioxus-core = { workspace = true }
 dioxus-native-core-macro = { workspace = true }
+dioxus = { workspace = true }
 
 winit = { workspace = true }
 tokio = { workspace = true }

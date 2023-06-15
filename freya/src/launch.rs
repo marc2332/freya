@@ -158,7 +158,7 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
 ///     )
 /// }
 /// ```
-pub fn launch_cfg<T: 'static + Clone + Send>(root: Component, win_config: WindowConfig<T>) {
+pub fn launch_cfg<T: 'static + Clone + Send>(app: Component, win_config: WindowConfig<T>) {
     use freya_dom::prelude::{FreyaDOM, SafeDOM};
 
     let fdom = FreyaDOM::default();
@@ -176,7 +176,7 @@ pub fn launch_cfg<T: 'static + Clone + Send>(root: Component, win_config: Window
             let mutations_notifier = Arc::new(Notify::new());
             let vdom = with_devtools(
                 sdom.clone(),
-                root,
+                app,
                 mutations_notifier.clone(),
                 hovered_node.clone(),
             );
@@ -185,10 +185,36 @@ pub fn launch_cfg<T: 'static + Clone + Send>(root: Component, win_config: Window
 
         #[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
         {
-            use dioxus_core::VirtualDom;
-            let vdom = VirtualDom::new(root);
+            let vdom = with_accessibility(app);
             (vdom, None, None)
         }
     };
     run_app(vdom, sdom, win_config, mutations_notifier, hovered_node);
+}
+
+#[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
+use dioxus_core::VirtualDom;
+#[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
+fn with_accessibility(app: Component) -> VirtualDom {
+    use dioxus_core::fc_to_builder;
+    use dioxus_core::{Element, Scope};
+    use dioxus_core_macro::render;
+    use freya_hooks::{use_init_accessibility, use_init_focus};
+
+    struct RootProps {
+        app: Component,
+    }
+
+    #[allow(non_snake_case)]
+    fn Root(cx: Scope<RootProps>) -> Element {
+        use_init_focus(cx);
+        use_init_accessibility(cx);
+
+        #[allow(non_snake_case)]
+        let App = cx.props.app;
+
+        render!(App {})
+    }
+
+    VirtualDom::new_with_props(Root, RootProps { app })
 }
