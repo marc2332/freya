@@ -110,7 +110,7 @@ pub fn ShadowProperty<'a>(
                 text {
                     font_size: "15",
                     color: "rgb(252,181,172)",
-                    "{shadow_settings.x} {shadow_settings.y} {shadow_settings.intensity} {shadow_settings.size}"
+                    "{shadow_settings.position:?} {shadow_settings.x} {shadow_settings.y} {shadow_settings.blur} {shadow_settings.spread}"
                 }
             }
             rect {

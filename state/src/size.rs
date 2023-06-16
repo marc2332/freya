@@ -24,8 +24,8 @@ pub struct SizeState {
     pub margin: Gap,
     pub direction: DirectionMode,
     pub node_id: NodeId,
-    pub scroll_y: f32,
-    pub scroll_x: f32,
+    pub offset_y: f32,
+    pub offset_x: f32,
     pub display: DisplayMode,
     pub node_ref: Option<UnboundedSender<NodeReferenceLayout>>,
 }
@@ -49,8 +49,8 @@ impl State<CustomAttributeValues> for SizeState {
             "padding",
             "margin",
             "direction",
-            "scroll_y",
-            "scroll_x",
+            "offset_y",
+            "offset_x",
             "display",
             "reference",
         ]))
@@ -76,8 +76,8 @@ impl State<CustomAttributeValues> for SizeState {
         let mut maximum_width = Size::default();
         let mut padding = Gap::default();
         let mut margin = Gap::default();
-        let mut scroll_y = 0.0;
-        let mut scroll_x = 0.0;
+        let mut offset_y = 0.0;
+        let mut offset_x = 0.0;
         let mut display = DisplayMode::Normal;
         let mut node_ref = None;
 
@@ -172,18 +172,18 @@ impl State<CustomAttributeValues> for SizeState {
                             };
                         }
                     }
-                    "scroll_y" => {
+                    "offset_y" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
                             let scroll: f32 = attr.parse().unwrap();
-                            scroll_y = scroll * scale_factor;
+                            offset_y = scroll * scale_factor;
                         }
                     }
-                    "scroll_x" => {
+                    "offset_x" => {
                         let attr = attr.value.as_text();
                         if let Some(attr) = attr {
                             let scroll: f32 = attr.parse().unwrap();
-                            scroll_x = scroll * scale_factor;
+                            offset_x = scroll * scale_factor;
                         }
                     }
                     "display" => {
@@ -215,8 +215,8 @@ impl State<CustomAttributeValues> for SizeState {
             || (padding != self.padding)
             || (node_view.node_id() != self.node_id)
             || (direction != self.direction)
-            || (scroll_x != self.scroll_x)
-            || (scroll_y != self.scroll_y)
+            || (offset_x != self.offset_x)
+            || (offset_y != self.offset_y)
             || (display != self.display);
 
         if changed {
@@ -234,8 +234,8 @@ impl State<CustomAttributeValues> for SizeState {
             margin,
             direction,
             node_id: node_view.node_id(),
-            scroll_x,
-            scroll_y,
+            offset_x,
+            offset_y,
             display,
             node_ref,
         };

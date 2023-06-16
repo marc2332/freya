@@ -395,8 +395,8 @@ fn measure_node<Key: NodeKey>(
         let mut available_area = inner_area;
 
         // Apply scroll
-        available_area.origin.x += node.scroll_x.get();
-        available_area.origin.y += node.scroll_y.get();
+        available_area.origin.x += node.offset_x.get();
+        available_area.origin.y += node.offset_y.get();
 
         let mut measurement_mode = MeasureMode::ParentIsNotCached {
             area: &mut area,
@@ -435,8 +435,8 @@ fn measure_node<Key: NodeKey>(
         let mut available_area = areas.inner_area;
 
         // TODO(marc2332): Should I also cache these?
-        available_area.origin.x += node.scroll_x.get();
-        available_area.origin.y += node.scroll_y.get();
+        available_area.origin.x += node.offset_x.get();
+        available_area.origin.y += node.offset_y.get();
 
         let mut measurement_mode = MeasureMode::ParentIsCached {
             inner_area: &areas.inner_area,
