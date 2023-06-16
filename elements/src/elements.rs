@@ -214,6 +214,11 @@ builder_constructors! {
         align: String,
         max_lines: String,
         rotate: String,
+        letter_spacing: String,
+        word_spacing: String,
+        decoration: String,
+        decoration_style: String,
+        decoration_color: String,
     };
     paragraph {
         layer: String,
@@ -232,6 +237,14 @@ builder_constructors! {
         highlight_color: String,
         font_size: String,
         font_family: String,
+        font_style: String,
+        font_weight: String,
+        font_width: String,
+        letter_spacing: String,
+        word_spacing: String,
+        decoration: String,
+        decoration_style: String,
+        decoration_color: String,
     };
     text {
         color: String,
@@ -245,6 +258,11 @@ builder_constructors! {
         font_width: String,
         line_height: String,
         rotate: String,
+        letter_spacing: String,
+        word_spacing: String,
+        decoration: String,
+        decoration_style: String,
+        decoration_color: String,
     };
     image {
         image_data: String,
