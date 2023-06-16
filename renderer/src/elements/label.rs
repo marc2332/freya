@@ -5,7 +5,7 @@ use freya_dom::prelude::DioxusNode;
 use freya_node_state::FontStyle;
 use skia_safe::{
     textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle},
-    Canvas, Paint, PaintStyle,
+    Canvas,
 };
 use torin::geometry::Area;
 
