@@ -7,11 +7,10 @@ pub struct ParsePaddingsError;
 impl Parse for Paddings {
     type Err = ParsePaddingsError;
 
-    fn parse(value: &str, scale_factor: Option<f32>) -> Result<Self, Self::Err> {
+    fn parse(value: &str) -> Result<Self, Self::Err> {
         let mut paddings = Paddings::default();
 
         let mut values = value.split_ascii_whitespace();
-        let scale_factor = scale_factor.unwrap_or(1.0);
 
         match values.clone().count() {
             // Same in each directions
@@ -22,7 +21,6 @@ impl Parse for Paddings {
                         .ok_or(ParsePaddingsError)?
                         .parse::<f32>()
                         .map_err(|_| ParsePaddingsError)?
-                        * scale_factor,
                 );
             }
             // By vertical and horizontal
@@ -34,7 +32,6 @@ impl Parse for Paddings {
                         .ok_or(ParsePaddingsError)?
                         .parse::<f32>()
                         .map_err(|_| ParsePaddingsError)?
-                        * scale_factor,
                 );
 
                 // Horizontal
@@ -44,7 +41,6 @@ impl Parse for Paddings {
                         .ok_or(ParsePaddingsError)?
                         .parse::<f32>()
                         .map_err(|_| ParsePaddingsError)?
-                        * scale_factor,
                 )
             }
             // Each directions
@@ -54,26 +50,22 @@ impl Parse for Paddings {
                         .next()
                         .ok_or(ParsePaddingsError)?
                         .parse::<f32>()
-                        .map_err(|_| ParsePaddingsError)?
-                        * scale_factor,
+                        .map_err(|_| ParsePaddingsError)?,
                     values
                         .next()
                         .ok_or(ParsePaddingsError)?
                         .parse::<f32>()
-                        .map_err(|_| ParsePaddingsError)?
-                        * scale_factor,
+                        .map_err(|_| ParsePaddingsError)?,
                     values
                         .next()
                         .ok_or(ParsePaddingsError)?
                         .parse::<f32>()
-                        .map_err(|_| ParsePaddingsError)?
-                        * scale_factor,
+                        .map_err(|_| ParsePaddingsError)?,
                     values
                         .next()
                         .ok_or(ParsePaddingsError)?
                         .parse::<f32>()
-                        .map_err(|_| ParsePaddingsError)?
-                        * scale_factor,
+                        .map_err(|_| ParsePaddingsError)?,
                 );
             }
             _ => {}

@@ -7,11 +7,10 @@ pub struct ParseRadiusError;
 impl Parse for Radius {
     type Err = ParseRadiusError;
 
-    fn parse(value: &str, scale_factor: Option<f32>) -> Result<Self, Self::Err> {
+    fn parse(value: &str) -> Result<Self, Self::Err> {
         let mut radius = Radius::default();
 
         let mut values = value.split_ascii_whitespace();
-        let scale_factor = scale_factor.unwrap_or(1.0);
 
         match values.clone().count() {
             // Same in all corners
@@ -22,7 +21,6 @@ impl Parse for Radius {
                         .ok_or(ParseRadiusError)?
                         .parse::<f32>()
                         .map_err(|_| ParseRadiusError)?
-                        * scale_factor,
                 );
             }
             // By Top and Bottom
@@ -34,7 +32,6 @@ impl Parse for Radius {
                         .ok_or(ParseRadiusError)?
                         .parse::<f32>()
                         .map_err(|_| ParseRadiusError)?
-                        * scale_factor
                 );
 
                 // Bottom
@@ -44,7 +41,6 @@ impl Parse for Radius {
                         .ok_or(ParseRadiusError)?
                         .parse::<f32>()
                         .map_err(|_| ParseRadiusError)?
-                        * scale_factor
                 )
             }
             // Each corner
@@ -54,26 +50,22 @@ impl Parse for Radius {
                         .next()
                         .ok_or(ParseRadiusError)?
                         .parse::<f32>()
-                        .map_err(|_| ParseRadiusError)?
-                        * scale_factor,
+                        .map_err(|_| ParseRadiusError)?,
                     values
                         .next()
                         .ok_or(ParseRadiusError)?
                         .parse::<f32>()
-                        .map_err(|_| ParseRadiusError)?
-                        * scale_factor,
+                        .map_err(|_| ParseRadiusError)?,
                     values
                         .next()
                         .ok_or(ParseRadiusError)?
                         .parse::<f32>()
-                        .map_err(|_| ParseRadiusError)?
-                        * scale_factor,
+                        .map_err(|_| ParseRadiusError)?,
                     values
                         .next()
                         .ok_or(ParseRadiusError)?
                         .parse::<f32>()
-                        .map_err(|_| ParseRadiusError)?
-                        * scale_factor,
+                        .map_err(|_| ParseRadiusError)?,
                 );
             }
             _ => {}

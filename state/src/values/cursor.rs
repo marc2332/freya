@@ -13,7 +13,7 @@ pub struct ParseCursorError;
 impl Parse for CursorMode {
     type Err = ParseCursorError;
 
-    fn parse(value: &str, _scale_factor: Option<f32>) -> Result<Self, Self::Err> {
+    fn parse(value: &str) -> Result<Self, Self::Err> {
         Ok(match value {
             "editable" => CursorMode::Editable,
             _ => CursorMode::None,

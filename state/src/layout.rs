@@ -87,50 +87,57 @@ impl State<CustomAttributeValues> for LayoutState {
                 match attr.attribute.name.as_str() {
                     "width" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(width) = Size::parse(value, Some(*scale_factor)) {
+                            if let Ok(mut width) = Size::parse(value) {
+                                width.scale(*scale_factor);
                                 layout.width = width;
                             }
                         }
                     }
                     "height" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(height) = Size::parse(value, Some(*scale_factor)) {
+                            if let Ok(mut height) = Size::parse(value) {
+                                height.scale(*scale_factor);
                                 layout.height = height;
                             }
                         }
                     }
                     "min_height" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(min_height) = Size::parse(value, Some(*scale_factor)) {
+                            if let Ok(mut min_height) = Size::parse(value) {
+                                min_height.scale(*scale_factor);
                                 layout.minimum_height = min_height;
                             }
                         }
                     }
                     "min_width" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(min_width) = Size::parse(value, Some(*scale_factor)) {
+                            if let Ok(mut min_width) = Size::parse(value) {
+                                min_width.scale(*scale_factor);
                                 layout.minimum_width = min_width;
                             }
                         }
                     }
                     "max_height" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(max_height) = Size::parse(value, Some(*scale_factor)) {
+                            if let Ok(mut max_height) = Size::parse(value) {
+                                max_height.scale(*scale_factor);
                                 layout.maximum_height = max_height;
                             }
                         }
                     }
                     "max_width" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(max_width) = Size::parse(value, Some(*scale_factor)) {
+                            if let Ok(mut max_width) = Size::parse(value) {
+                                max_width.scale(*scale_factor);
                                 layout.maximum_width = max_width;
                             }
                         }
                     }
                     "padding" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(paddings) = Paddings::parse(value, Some(*scale_factor)) {
-                                layout.padding = paddings;
+                            if let Ok(mut padding) = Paddings::parse(value) {
+                                padding.scale(*scale_factor);
+                                layout.padding = padding;
                             }
                         }
                     }
@@ -159,7 +166,7 @@ impl State<CustomAttributeValues> for LayoutState {
                     }
                     "display" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(display) = DisplayMode::parse(value, None) {
+                            if let Ok(display) = DisplayMode::parse(value) {
                                 layout.display = display;
                             }
                         }

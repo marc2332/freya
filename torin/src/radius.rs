@@ -1,6 +1,7 @@
 pub use euclid::Rect;
 
 use crate::geometry::Length;
+use crate::scaled::Scaled;
 
 #[derive(PartialEq, Clone, Debug, Default, Copy)]
 pub struct Radius {
@@ -59,5 +60,14 @@ impl Radius {
             self.bottom_right(),
             self.bottom_left()
         )
+    }
+}
+
+impl Scaled for Radius {
+    fn scale(&mut self, scale: f32) {
+        self.top_left *= scale;
+        self.top_right *= scale;
+        self.bottom_left *= scale;
+        self.bottom_right *= scale;
     }
 }

@@ -9,13 +9,11 @@ pub struct ParseSizeError;
 impl Parse for Size {
     type Err = ParseSizeError;
 
-    fn parse(value: &str, scale_factor: Option<f32>) -> Result<Self, Self::Err> {
-        let scale_factor = scale_factor.unwrap_or(1.0);
-
+    fn parse(value: &str) -> Result<Self, Self::Err> {
         if value == "auto" {
             Ok(Size::Inner)
         } else if value.contains("calc") {
-            Ok(Size::DynamicCalculations(parse_calc(value, scale_factor)?))
+            Ok(Size::DynamicCalculations(parse_calc(value)?))
         } else if value.contains('%') {
             Ok(Size::Percentage(Length::new(
                 value
@@ -25,7 +23,7 @@ impl Parse for Size {
             )))
         } else {
             Ok(Size::Pixels(Length::new(
-                (value.parse::<f32>().map_err(|_| ParseSizeError)?) * scale_factor,
+                value.parse::<f32>().map_err(|_| ParseSizeError)?
             )))
         }
     }
@@ -33,7 +31,6 @@ impl Parse for Size {
 
 pub fn parse_calc(
     mut value: &str,
-    scale_factor: f32,
 ) -> Result<Vec<DynamicCalculation>, ParseSizeError> {
     let mut calcs = Vec::new();
 
@@ -56,7 +53,7 @@ pub fn parse_calc(
             calcs.push(DynamicCalculation::Mul);
         } else {
             calcs.push(DynamicCalculation::Pixels(
-                val.parse::<f32>().map_err(|_| ParseSizeError)? * scale_factor,
+                val.parse::<f32>().map_err(|_| ParseSizeError)?,
             ));
         }
     }

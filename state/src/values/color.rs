@@ -7,7 +7,7 @@ pub struct ParseColorError;
 impl Parse for Color {
     type Err = ParseColorError;
 
-    fn parse(value: &str, _scale_factor: Option<f32>) -> Result<Self, Self::Err> {
+    fn parse(value: &str) -> Result<Self, Self::Err> {
         match value {
             "red" => Ok(Color::RED),
             "green" => Ok(Color::GREEN),

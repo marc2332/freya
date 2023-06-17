@@ -1,6 +1,7 @@
 use crate::Parse;
 use skia_safe::{Color};
-use std::{fmt, str};
+use torin::scaled::Scaled;
+use std::fmt;
 
 #[derive(Default, Clone, Copy, Debug, PartialEq)]
 pub enum BorderStyle {
@@ -31,7 +32,7 @@ pub struct ParseBorderAlignmentError;
 impl Parse for BorderAlignment {
     type Err = ParseBorderAlignmentError;
 
-    fn parse(value: &str, _scale_factor: Option<f32>) -> Result<Self, Self::Err> {
+    fn parse(value: &str) -> Result<Self, Self::Err> {
         Ok(match value {
             "inner" => BorderAlignment::Inner,
             "outer" => BorderAlignment::Outer,
@@ -66,7 +67,7 @@ pub struct ParseBorderError;
 impl Parse for Border {
     type Err = ParseBorderError;
 
-    fn parse(value: &str, scale_factor: Option<f32>) -> Result<Self, Self::Err> {
+    fn parse(value: &str) -> Result<Self, Self::Err> {
         let mut border_values = value.split_ascii_whitespace();
 
         Ok(Border {
@@ -74,14 +75,20 @@ impl Parse for Border {
                 .next()
                 .ok_or(ParseBorderError)?
                 .parse::<f32>()
-                .map_err(|_| ParseBorderError)? * scale_factor.unwrap_or(1.0),
+                .map_err(|_| ParseBorderError)?,
             style: match border_values.next().ok_or(ParseBorderError)? {
                 "solid" => BorderStyle::Solid,
                 _ => BorderStyle::None,
             },
-            color: Color::parse(&border_values.collect::<Vec<&str>>().join(" "), None).map_err(|_| ParseBorderError)?,
+            color: Color::parse(&border_values.collect::<Vec<&str>>().join(" ")).map_err(|_| ParseBorderError)?,
             alignment: BorderAlignment::default(),
         })
+    }
+}
+
+impl Scaled for Border {
+    fn scale(&mut self, scale_factor: f32) {
+        self.width *= scale_factor;
     }
 }
 

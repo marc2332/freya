@@ -7,7 +7,7 @@ pub struct ParseTextDecorationError;
 impl Parse for TextDecoration {
     type Err = ParseTextDecorationError;
 
-    fn parse(value: &str, _scale_factor: Option<f32>) -> Result<Self, Self::Err> {
+    fn parse(value: &str) -> Result<Self, Self::Err> {
 		let mut decoration = TextDecoration::default();
 		let values = value.split_ascii_whitespace();
 	
@@ -33,7 +33,7 @@ pub struct ParseTextDecorationStyleError;
 impl Parse for TextDecorationStyle {
     type Err = ParseTextDecorationStyleError;
 
-    fn parse(value: &str, _scale_factor: Option<f32>) -> Result<Self, Self::Err> {
+    fn parse(value: &str) -> Result<Self, Self::Err> {
 		Ok(match value {
 			"solid" => TextDecorationStyle::Solid,
 			"double" => TextDecorationStyle::Double,

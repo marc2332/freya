@@ -64,29 +64,29 @@ impl State<CustomAttributeValues> for CursorSettings {
             for attr in attributes {
                 match attr.attribute.name.as_str() {
                     "cursor_index" => {
-                        let text = attr.value.as_text().unwrap();
-                        if text != "none" {
-                            let new_cursor_index = text.parse().unwrap();
+                        let value = attr.value.as_text().unwrap();
+                        if value != "none" {
+                            let new_cursor_index = value.parse().unwrap();
                             cursor.position = Some(new_cursor_index);
                         }
                     }
                     "cursor_color" => {
-                        if let Some(val) = attr.value.as_text() {
-                            if let Ok(color) = Color::parse(val, None) {
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(color) = Color::parse(value) {
                                 cursor.color = color;
                             }
                         }
                     }
                     "cursor_mode" => {
-                        if let Some(val) = attr.value.as_text() {
-                            if let Ok(mode) = CursorMode::parse(val, None) {
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(mode) = CursorMode::parse(value) {
                                 cursor.mode = mode;
                             }
                         }
                     }
                     "cursor_id" => {
-                        if let Some(val) = attr.value.as_text() {
-                            if let Ok(id) = val.parse() {
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(id) = value.parse() {
                                 cursor.cursor_id = Some(id);
                             }
                         }
@@ -99,8 +99,8 @@ impl State<CustomAttributeValues> for CursorSettings {
                         }
                     }
                     "highlight_color" => {
-                        if let Some(val) = attr.value.as_text() {
-                            if let Ok(highlight_color) = Color::parse(val, None) {
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(highlight_color) = Color::parse(value) {
                                 cursor.highlight_color = highlight_color;
                             }
                         }

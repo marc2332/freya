@@ -7,7 +7,10 @@ use dioxus_native_core::{
 };
 use dioxus_native_core_macro::partial_derive_state;
 use skia_safe::Color;
-use torin::radius::Radius;
+use torin::{
+    radius::Radius,
+    scaled::Scaled
+};
 
 use crate::{Parse, Border, BorderAlignment, CustomAttributeValues, Shadow};
 
@@ -59,7 +62,7 @@ impl State<CustomAttributeValues> for Style {
                 match attr.attribute.name.as_str() {
                     "background" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(background) = Color::parse(value, None) {
+                            if let Ok(background) = Color::parse(value) {
                                 style.background = background;
                             } else {
                                 println!("Failed to parse color: {}", value);
@@ -75,15 +78,17 @@ impl State<CustomAttributeValues> for Style {
                     }
                     "border" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(mut border) = Border::parse(value, Some(*scale_factor)) {
+                            if let Ok(mut border) = Border::parse(value) {
                                 border.alignment = style.border.alignment;
+                                border.scale(*scale_factor);
+                                
                                 style.border = border;
                             }
                         }
                     }
                     "border_align" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(alignment) = BorderAlignment::parse(value, None) {
+                            if let Ok(alignment) = BorderAlignment::parse(value) {
                                 style.border.alignment = alignment;
                             }
                         }
@@ -115,14 +120,17 @@ impl State<CustomAttributeValues> for Style {
                             style.shadows = chunks
                                 .iter()
                                 .map(|chunk| {
-                                    Shadow::parse(chunk, Some(*scale_factor)).unwrap_or_default()
+                                    let mut shadow = Shadow::parse(chunk).unwrap_or_default();
+                                    shadow.scale(*scale_factor);
+                                    shadow
                                 })
                                 .collect();
                         }
                     }
                     "radius" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(radius) = Radius::parse(value, Some(*scale_factor)) {
+                            if let Ok(mut radius) = Radius::parse(value) {
+                                radius.scale(*scale_factor);
                                 style.radius = radius;
                             }
                         }

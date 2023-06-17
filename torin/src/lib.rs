@@ -7,6 +7,7 @@ pub mod node;
 pub mod padding;
 pub mod radius;
 pub mod size;
+pub mod scaled;
 pub mod torin;
 
 pub mod prelude {
@@ -19,4 +20,5 @@ pub mod prelude {
     pub use crate::padding::*;
     pub use crate::size::*;
     pub use crate::torin::*;
+    pub use crate::scaled::*;
 }

@@ -134,7 +134,7 @@ impl State<CustomAttributeValues> for FontStyle {
                 match attr.attribute.name.as_str() {
                     "color" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(new_color) = Color::parse(value, None) {
+                            if let Ok(new_color) = Color::parse(value) {
                                 font_style.color = new_color;
                             }
                         }
@@ -166,7 +166,7 @@ impl State<CustomAttributeValues> for FontStyle {
                     }
                     "align" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(align) = TextAlign::parse(value, None) {
+                            if let Ok(align) = TextAlign::parse(value) {
                                 font_style.align = align;
                             }
                         }
@@ -180,42 +180,42 @@ impl State<CustomAttributeValues> for FontStyle {
                     }
                     "font_style" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(font_slant) = Slant::parse(value, None) {
+                            if let Ok(font_slant) = Slant::parse(value) {
                                 font_style.font_slant = font_slant;
                             }
                         }
                     }
                     "font_weight" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(font_weight) = Weight::parse(value, None) {
+                            if let Ok(font_weight) = Weight::parse(value) {
                                 font_style.font_weight = font_weight;
                             }
                         }
                     }
                     "font_width" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(font_width) = Width::parse(value, None) {
+                            if let Ok(font_width) = Width::parse(value) {
                                 font_style.font_width = font_width;
                             }
                         }
                     }
                     "decoration" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(decoration) = TextDecoration::parse(value, None) {
+                            if let Ok(decoration) = TextDecoration::parse(value) {
                                 font_style.decoration.ty = decoration;
                             }
                         }
                     }
                     "decoration_style" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(style) = TextDecorationStyle::parse(value, None) {
+                            if let Ok(style) = TextDecorationStyle::parse(value) {
                                 font_style.decoration.style = style;
                             }
                         }
                     }
                     "decoration_color" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(new_decoration_color) = Color::parse(value, None) {
+                            if let Ok(new_decoration_color) = Color::parse(value) {
                                 font_style.decoration.color = new_decoration_color;
                             }
                         } else {

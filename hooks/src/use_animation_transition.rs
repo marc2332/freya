@@ -25,8 +25,8 @@ impl Transition {
 
     /// Create a Color transition.
     pub fn new_color(start: &str, end: &str) -> Self {
-        let start = Color::parse(start, None).unwrap();
-        let end = Color::parse(end, None).unwrap();
+        let start = Color::parse(start).unwrap();
+        let end = Color::parse(end).unwrap();
 
         Self::Color(start, end)
     }

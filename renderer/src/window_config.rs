@@ -105,7 +105,7 @@ impl<T: Clone> WindowConfigBuilder<T> {
 
     /// Specify the Window background color.
     pub fn with_background(mut self, background: &str) -> Self {
-        self.background = Color::parse(background, None).unwrap_or(Color::WHITE);
+        self.background = Color::parse(background).unwrap_or(Color::WHITE);
         self
     }
 

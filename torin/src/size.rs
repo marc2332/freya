@@ -1,6 +1,9 @@
+use std::ops::MulAssign;
+
 pub use euclid::Rect;
 
 use crate::geometry::Length;
+use crate::scaled::Scaled;
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum Size {
@@ -41,6 +44,15 @@ impl Size {
                 Some(run_calculations(calculations, parent_value))
             }
             _ => None,
+        }
+    }
+}
+
+impl Scaled for Size {
+    fn scale(&mut self, scale_factor: f32) {
+        match self {
+            Size::Pixels(s) => s.mul_assign(scale_factor),
+            _ => ()
         }
     }
 }
