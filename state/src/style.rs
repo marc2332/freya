@@ -7,7 +7,7 @@ use dioxus_native_core_macro::partial_derive_state;
 use skia_safe::Color;
 use torin::radius::Radius;
 
-use crate::{Border, BorderAlignment, CustomAttributeValues, Shadow};
+use crate::{Parse, Border, BorderAlignment, CustomAttributeValues, Shadow};
 
 #[derive(Default, Clone, Debug, Component)]
 pub struct Style {
@@ -51,55 +51,46 @@ impl State<CustomAttributeValues> for Style {
     ) -> bool {
         let scale_factor = context.get::<f32>().unwrap();
 
-        let mut background = Color::TRANSPARENT;
-        let mut relative_layer = 0;
-        let mut shadows: Vec<Shadow> = vec![];
-        let mut border = Border::default();
-        let mut radius = Radius::default();
-        let mut image_data = None;
-        let mut svg_data = None;
+        let mut style = Style::default();
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
                 match attr.attribute.name.as_str() {
                     "background" => {
-                        if let Some(attr) = attr.value.as_text() {
-                            let new_back = parse_color(attr);
-                            if let Some(new_back) = new_back {
-                                background = new_back;
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(background) = Color::parse(value, None) {
+                                style.background = background;
                             }
                         }
                     }
                     "layer" => {
-                        if let Some(attr) = attr.value.as_text() {
-                            if let Ok(new_relative_layer) = attr.parse::<i16>() {
-                                relative_layer = new_relative_layer;
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(relative_layer) = value.parse::<i16>() {
+                                style.relative_layer = relative_layer;
                             }
                         }
                     }
                     "border" => {
-                        if let Some(attr) = attr.value.as_text() {
-                            if let Ok(mut new_border) = attr.parse::<Border>() {
-                                new_border.width *= scale_factor;
-
-                                border = new_border;
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(mut border) = Border::parse(value, Some(*scale_factor)) {
+                                style.border = border;
                             }
                         }
                     }
                     "border_align" => {
-                        if let Some(attr) = attr.value.as_text() {
-                            if let Ok(new_border_alignment) = attr.parse::<BorderAlignment>() {
-                                border.alignment = new_border_alignment;
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(alignment) = BorderAlignment::parse(value, None) {
+                                style.border.alignment = alignment;
                             }
                         }
                     }
                     "shadow" => {
-                        if let Some(attr) = attr.value.as_text() {
+                        if let Some(value) = attr.value.as_text() {
                             let mut chunks = Vec::new();
                             let mut current = String::new();
                             let mut in_parenthesis = false;
 
-                            for character in attr.chars() {
+                            for character in value.chars() {
                                 if character == '(' {
                                     in_parenthesis = true;
                                 } else if character == ')' {
@@ -117,25 +108,18 @@ impl State<CustomAttributeValues> for Style {
                                 chunks.push(current);
                             }
 
-                            shadows = chunks
+                            style.shadows = chunks
                                 .iter()
                                 .map(|chunk| {
-                                    let mut shadow = chunk.parse::<Shadow>().unwrap_or_default();
-
-                                    shadow.x *= scale_factor;
-                                    shadow.y *= scale_factor;
-                                    shadow.spread *= scale_factor;
-                                    shadow.blur *= scale_factor;
-
-                                    shadow
+                                    Shadow::parse(chunk, Some(*scale_factor)).unwrap_or_default()
                                 })
                                 .collect();
                         }
                     }
                     "radius" => {
-                        if let Some(attr) = attr.value.as_text() {
+                        if let Some(value) = attr.value.as_text() {
                             if let Some(new_radius) = parse_radius(attr, *scale_factor) {
-                                radius = new_radius;
+                                style.radius = new_radius;
                             }
                         }
                     }
@@ -143,19 +127,19 @@ impl State<CustomAttributeValues> for Style {
                         if let OwnedAttributeValue::Custom(CustomAttributeValues::Bytes(bytes)) =
                             attr.value
                         {
-                            image_data = Some(bytes.clone());
+                            style.image_data = Some(bytes.clone());
                         }
                     }
                     "svg_data" => {
                         if let OwnedAttributeValue::Custom(CustomAttributeValues::Bytes(bytes)) =
                             attr.value
                         {
-                            svg_data = Some(bytes.clone());
+                            style.svg_data = Some(bytes.clone());
                         }
                     }
                     "svg_content" => {
                         let text = attr.value.as_text();
-                        svg_data = text.map(|v| v.as_bytes().to_owned());
+                        style.svg_data = text.map(|v| v.as_bytes().to_owned());
                     }
                     _ => {
                         println!("Unsupported attribute <{}>", attr.attribute.name);
@@ -164,23 +148,15 @@ impl State<CustomAttributeValues> for Style {
             }
         }
 
-        let changed = (background != self.background)
-            || (relative_layer != self.relative_layer)
-            || (shadows != self.shadows)
-            || (border != self.border)
-            || (radius != self.radius)
-            || (image_data != self.image_data)
-            || (svg_data != self.svg_data);
+        let changed = (style.background != self.background)
+            || (style.relative_layer != self.relative_layer)
+            || (style.shadows != self.shadows)
+            || (style.border != self.border)
+            || (style.radius != self.radius)
+            || (style.image_data != self.image_data)
+            || (style.svg_data != self.svg_data);
 
-        *self = Self {
-            background,
-            relative_layer,
-            shadows,
-            border,
-            radius,
-            image_data,
-            svg_data,
-        };
+        *self = style;
         changed
     }
 }

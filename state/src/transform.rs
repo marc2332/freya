@@ -38,7 +38,7 @@ impl State<CustomAttributeValues> for Transform {
             for attr in attributes {
                 match attr.attribute.name.as_str() {
                     "rotate" => {
-                        if let Some(attr) = attr.value.as_text() {
+                        if let Some(value) = attr.value.as_text() {
                             if let Ok(degs) = attr.parse::<f32>() {
                                 rotate_degs = Some(degs)
                             }

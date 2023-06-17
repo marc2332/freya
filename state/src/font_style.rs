@@ -100,15 +100,15 @@ impl State<CustomAttributeValues> for FontStyle {
             for attr in attributes {
                 match attr.attribute.name.as_str() {
                     "color" => {
-                        if let Some(attr) = attr.value.as_text() {
-                            if let Ok(new_color) = Color::parse(attr, None) {
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(new_color) = Color::parse(value, None) {
                                 font_style.color = new_color;
                             }
                         }
                     }
                     "font_family" => {
-                        if let Some(attr) = attr.value.as_text() {
-                            let families = attr.split(',');
+                        if let Some(value) = attr.value.as_text() {
+                            let families = value.split(',');
                             font_style.font_family = SmallVec::from(
                                 families
                                     .into_iter()
@@ -118,50 +118,50 @@ impl State<CustomAttributeValues> for FontStyle {
                         }
                     }
                     "font_size" => {
-                        if let Some(attr) = attr.value.as_text() {
-                            if let Ok(font_size) = attr.parse::<f32>() {
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(font_size) = value.parse::<f32>() {
                                 font_style.font_size = font_size * scale_factor;
                             }
                         }
                     }
                     "line_height" => {
-                        if let Some(attr) = attr.value.as_text() {
-                            if let Ok(line_height) = attr.parse() {
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(line_height) = value.parse() {
                                 font_style.line_height = line_height;
                             }
                         }
                     }
                     "align" => {
-                        if let Some(attr) = attr.value.as_text() {
-                            if let Ok(align) = TextAlign::parse(attr, None) {
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(align) = TextAlign::parse(value, None) {
                                 font_style.align = align;
                             }
                         }
                     }
                     "max_lines" => {
-                        if let Some(attr) = attr.value.as_text() {
-                            if let Ok(max_lines) = attr.parse() {
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(max_lines) = value.parse() {
                                 font_style.max_lines = Some(max_lines);
                             }
                         }
                     }
                     "font_style" => {
-                        if let Some(attr) = attr.value.as_text() {
-                            if let Ok(font_slant) = Slant::parse(attr, None) {
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(font_slant) = Slant::parse(value, None) {
                                 font_style.font_slant = font_slant;
                             }
                         }
                     }
                     "font_weight" => {
-                        if let Some(attr) = attr.value.as_text() {
-                            if let Ok(font_weight) = Weight::parse(attr, None) {
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(font_weight) = Weight::parse(value, None) {
                                 font_style.font_weight = font_weight;
                             }
                         }
                     }
                     "font_width" => {
-                        if let Some(attr) = attr.value.as_text() {
-                            if let Ok(font_width) = Width::parse(attr, None) {
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(font_width) = Width::parse(value, None) {
                                 font_style.font_width = font_width;
                             }
                         }

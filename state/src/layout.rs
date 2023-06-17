@@ -94,56 +94,56 @@ impl State<CustomAttributeValues> for LayoutState {
             for attr in attributes {
                 match attr.attribute.name.as_str() {
                     "width" => {
-                        if let Some(attr) = attr.value.as_text() {
+                        if let Some(value) = attr.value.as_text() {
                             if let Some(new_width) = parse_size(attr, *scale_factor) {
                                 width = new_width;
                             }
                         }
                     }
                     "height" => {
-                        if let Some(attr) = attr.value.as_text() {
+                        if let Some(value) = attr.value.as_text() {
                             if let Some(new_height) = parse_size(attr, *scale_factor) {
                                 height = new_height;
                             }
                         }
                     }
                     "min_height" => {
-                        if let Some(attr) = attr.value.as_text() {
+                        if let Some(value) = attr.value.as_text() {
                             if let Some(new_min_height) = parse_size(attr, *scale_factor) {
                                 minimum_height = new_min_height;
                             }
                         }
                     }
                     "min_width" => {
-                        if let Some(attr) = attr.value.as_text() {
+                        if let Some(value) = attr.value.as_text() {
                             if let Some(new_min_width) = parse_size(attr, *scale_factor) {
                                 minimum_width = new_min_width;
                             }
                         }
                     }
                     "max_height" => {
-                        if let Some(attr) = attr.value.as_text() {
+                        if let Some(value) = attr.value.as_text() {
                             if let Some(new_max_height) = parse_size(attr, *scale_factor) {
                                 maximum_height = new_max_height;
                             }
                         }
                     }
                     "max_width" => {
-                        if let Some(attr) = attr.value.as_text() {
+                        if let Some(value) = attr.value.as_text() {
                             if let Some(new_max_width) = parse_size(attr, *scale_factor) {
                                 maximum_width = new_max_width;
                             }
                         }
                     }
                     "padding" => {
-                        if let Some(attr) = attr.value.as_text() {
+                        if let Some(value) = attr.value.as_text() {
                             if let Some(paddings) = parse_padding(attr, *scale_factor) {
                                 padding = paddings;
                             }
                         }
                     }
                     "direction" => {
-                        if let Some(attr) = attr.value.as_text() {
+                        if let Some(value) = attr.value.as_text() {
                             direction = if attr == "horizontal" {
                                 DirectionMode::Horizontal
                             } else if attr == "both" {
@@ -154,13 +154,13 @@ impl State<CustomAttributeValues> for LayoutState {
                         }
                     }
                     "scroll_y" => {
-                        if let Some(attr) = attr.value.as_text() {
+                        if let Some(value) = attr.value.as_text() {
                             let scroll: f32 = attr.parse().unwrap();
                             scroll_y = scroll * scale_factor;
                         }
                     }
                     "scroll_x" => {
-                        if let Some(attr) = attr.value.as_text() {
+                        if let Some(value) = attr.value.as_text() {
                             let scroll: f32 = attr.parse().unwrap();
                             scroll_x = scroll * scale_factor;
                         }
