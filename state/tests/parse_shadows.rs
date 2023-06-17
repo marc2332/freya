@@ -44,7 +44,7 @@ fn parse_shadow_with_assumed_spread() {
             blur: 50.0,
             spread: 0.0,
             color: Color::RED,
-            inset: false
+            inset: true
         })
     );
 }
