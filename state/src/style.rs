@@ -1,15 +1,17 @@
-use dioxus_native_core::exports::shipyard::Component;
-use dioxus_native_core::node::OwnedAttributeValue;
-use dioxus_native_core::node_ref::NodeView;
-use dioxus_native_core::prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State};
-use dioxus_native_core::SendAnyMap;
+use dioxus_native_core::{
+    exports::shipyard::Component,
+    node::OwnedAttributeValue,
+    node_ref::NodeView,
+    prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State},
+    SendAnyMap,
+};
 use dioxus_native_core_macro::partial_derive_state;
 use skia_safe::Color;
 use torin::radius::Radius;
 
 use crate::{Parse, Border, BorderAlignment, CustomAttributeValues, Shadow};
 
-#[derive(Default, Clone, Debug, Component)]
+#[derive(Default, Debug, Clone, PartialEq, Component)]
 pub struct Style {
     pub background: Color,
     pub relative_layer: i16,
@@ -49,9 +51,8 @@ impl State<CustomAttributeValues> for Style {
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
         context: &SendAnyMap,
     ) -> bool {
-        let scale_factor = context.get::<f32>().unwrap();
-
         let mut style = Style::default();
+        let scale_factor = context.get::<f32>().unwrap();
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
@@ -60,6 +61,8 @@ impl State<CustomAttributeValues> for Style {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(background) = Color::parse(value, None) {
                                 style.background = background;
+                            } else {
+                                println!("Failed to parse color: {}", value);
                             }
                         }
                     }
@@ -72,7 +75,7 @@ impl State<CustomAttributeValues> for Style {
                     }
                     "border" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(mut border) = Border::parse(value, Some(*scale_factor)) {
+                            if let Ok(border) = Border::parse(value, Some(*scale_factor)) {
                                 style.border = border;
                             }
                         }
@@ -118,8 +121,8 @@ impl State<CustomAttributeValues> for Style {
                     }
                     "radius" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Some(new_radius) = parse_radius(attr, *scale_factor) {
-                                style.radius = new_radius;
+                            if let Ok(radius) = Radius::parse(value, Some(*scale_factor)) {
+                                style.radius = radius;
                             }
                         }
                     }
@@ -148,13 +151,7 @@ impl State<CustomAttributeValues> for Style {
             }
         }
 
-        let changed = (style.background != self.background)
-            || (style.relative_layer != self.relative_layer)
-            || (style.shadows != self.shadows)
-            || (style.border != self.border)
-            || (style.radius != self.radius)
-            || (style.image_data != self.image_data)
-            || (style.svg_data != self.svg_data);
+        let changed = &style != self;
 
         *self = style;
         changed

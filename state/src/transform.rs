@@ -1,7 +1,9 @@
-use dioxus_native_core::exports::shipyard::Component;
-use dioxus_native_core::node_ref::NodeView;
-use dioxus_native_core::prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State};
-use dioxus_native_core::SendAnyMap;
+use dioxus_native_core::{
+    exports::shipyard::Component,
+    node_ref::NodeView,
+    prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State},
+    SendAnyMap,
+};
 use dioxus_native_core_macro::partial_derive_state;
 
 use crate::CustomAttributeValues;
@@ -39,7 +41,7 @@ impl State<CustomAttributeValues> for Transform {
                 match attr.attribute.name.as_str() {
                     "rotate" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(degs) = attr.parse::<f32>() {
+                            if let Ok(degs) = value.parse::<f32>() {
                                 rotate_degs = Some(degs)
                             }
                         }

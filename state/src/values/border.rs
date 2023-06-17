@@ -31,7 +31,7 @@ pub struct ParseBorderAlignmentError;
 impl Parse for BorderAlignment {
     type Err = ParseBorderAlignmentError;
 
-    fn parse(value: &str, scale_factor: Option<f32>) -> Result<Self, Self::Err> {
+    fn parse(value: &str, _scale_factor: Option<f32>) -> Result<Self, Self::Err> {
         Ok(match value {
             "inner" => BorderAlignment::Inner,
             "outer" => BorderAlignment::Outer,
@@ -74,7 +74,7 @@ impl Parse for Border {
                 .next()
                 .ok_or(ParseBorderError)?
                 .parse::<f32>()
-                .map_err(|_| ParseBorderError)?,
+                .map_err(|_| ParseBorderError)? * scale_factor.unwrap_or(1.0),
             style: match border_values.next().ok_or(ParseBorderError)? {
                 "solid" => BorderStyle::Solid,
                 _ => BorderStyle::None,

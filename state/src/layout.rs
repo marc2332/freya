@@ -1,16 +1,18 @@
 use std::sync::{Arc, Mutex};
 
-use dioxus_native_core::exports::shipyard::Component;
-use dioxus_native_core::node::OwnedAttributeValue;
-use dioxus_native_core::node_ref::NodeView;
-use dioxus_native_core::prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State};
-use dioxus_native_core::{NodeId, SendAnyMap};
+use dioxus_native_core::{
+    exports::shipyard::Component,
+    node::OwnedAttributeValue,
+    node_ref::NodeView,
+    prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State},
+    NodeId, SendAnyMap,
+};
 use dioxus_native_core_macro::partial_derive_state;
 use freya_common::NodeReferenceLayout;
 use tokio::sync::mpsc::UnboundedSender;
 use torin::prelude::*;
 
-use crate::CustomAttributeValues;
+use crate::{CustomAttributeValues, Parse};
 
 #[derive(Default, Clone, Debug, Component)]
 pub struct LayoutState {
@@ -66,19 +68,9 @@ impl State<CustomAttributeValues> for LayoutState {
         let torin_layout = context.get::<Arc<Mutex<Torin<NodeId>>>>().unwrap();
         let scale_factor = context.get::<f32>().unwrap();
 
-        let mut width = Size::default();
-        let mut height = Size::default();
-        let mut minimum_height = Size::default();
-        let mut minimum_width = Size::default();
-        let mut maximum_height = Size::default();
-        let mut maximum_width = Size::default();
-        let mut padding = Paddings::default();
-        let mut scroll_y = 0.0;
-        let mut scroll_x = 0.0;
-        let mut display = DisplayMode::Normal;
-        let mut node_ref = None;
+        let mut layout = LayoutState::default();
 
-        let mut direction = if let Some("label") = node_view.tag() {
+        layout.direction = if let Some("label") = node_view.tag() {
             DirectionMode::Horizontal
         } else if let Some("paragraph") = node_view.tag() {
             DirectionMode::Horizontal
@@ -95,79 +87,81 @@ impl State<CustomAttributeValues> for LayoutState {
                 match attr.attribute.name.as_str() {
                     "width" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Some(new_width) = parse_size(attr, *scale_factor) {
-                                width = new_width;
+                            if let Ok(width) = Size::parse(value, Some(*scale_factor)) {
+                                layout.width = width;
                             }
                         }
                     }
                     "height" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Some(new_height) = parse_size(attr, *scale_factor) {
-                                height = new_height;
+                            if let Ok(height) = Size::parse(value, Some(*scale_factor)) {
+                                layout.height = height;
                             }
                         }
                     }
                     "min_height" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Some(new_min_height) = parse_size(attr, *scale_factor) {
-                                minimum_height = new_min_height;
+                            if let Ok(min_height) = Size::parse(value, Some(*scale_factor)) {
+                                layout.minimum_height = min_height;
                             }
                         }
                     }
                     "min_width" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Some(new_min_width) = parse_size(attr, *scale_factor) {
-                                minimum_width = new_min_width;
+                            if let Ok(min_width) = Size::parse(value, Some(*scale_factor)) {
+                                layout.minimum_width = min_width;
                             }
                         }
                     }
                     "max_height" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Some(new_max_height) = parse_size(attr, *scale_factor) {
-                                maximum_height = new_max_height;
+                            if let Ok(max_height) = Size::parse(value, Some(*scale_factor)) {
+                                layout.maximum_height = max_height;
                             }
                         }
                     }
                     "max_width" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Some(new_max_width) = parse_size(attr, *scale_factor) {
-                                maximum_width = new_max_width;
+                            if let Ok(max_width) = Size::parse(value, Some(*scale_factor)) {
+                                layout.maximum_width = max_width;
                             }
                         }
                     }
                     "padding" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Some(paddings) = parse_padding(attr, *scale_factor) {
-                                padding = paddings;
+                            if let Ok(paddings) = Paddings::parse(value, Some(*scale_factor)) {
+                                layout.padding = paddings;
                             }
                         }
                     }
                     "direction" => {
                         if let Some(value) = attr.value.as_text() {
-                            direction = if attr == "horizontal" {
-                                DirectionMode::Horizontal
-                            } else if attr == "both" {
-                                DirectionMode::Both
-                            } else {
-                                DirectionMode::Vertical
-                            };
+                            layout.direction = match value {
+                                "horizontal" => DirectionMode::Horizontal,
+                                "both" => DirectionMode::Both,
+                                _ => DirectionMode::Vertical,
+                            }
                         }
                     }
                     "scroll_y" => {
                         if let Some(value) = attr.value.as_text() {
-                            let scroll: f32 = attr.parse().unwrap();
-                            scroll_y = scroll * scale_factor;
+                            if let Ok(scroll) = value.parse::<f32>() {
+                                layout.scroll_y = scroll * scale_factor;
+                            }
                         }
                     }
                     "scroll_x" => {
                         if let Some(value) = attr.value.as_text() {
-                            let scroll: f32 = attr.parse().unwrap();
-                            scroll_x = scroll * scale_factor;
+                            if let Ok(scroll) = value.parse::<f32>() {
+                                layout.scroll_x = scroll * scale_factor;
+                            }
                         }
                     }
                     "display" => {
-                        if let Some(new_display) = attr.value.as_text() {
-                            display = parse_display(new_display)
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(display) = DisplayMode::parse(value, None) {
+                                layout.display = display;
+                            }
                         }
                     }
                     "reference" => {
@@ -175,7 +169,7 @@ impl State<CustomAttributeValues> for LayoutState {
                             reference,
                         )) = attr.value
                         {
-                            node_ref = Some(reference.0.clone());
+                            layout.node_ref = Some(reference.0.clone());
                         }
                     }
                     _ => {
@@ -185,123 +179,24 @@ impl State<CustomAttributeValues> for LayoutState {
             }
         }
 
-        let changed = (width != self.width)
-            || (height != self.height)
-            || (minimum_width != self.minimum_width)
-            || (minimum_height != self.minimum_height)
-            || (maximum_width != self.maximum_width)
-            || (maximum_height != self.maximum_height)
-            || (padding != self.padding)
+        let changed = (layout.width != self.width)
+            || (layout.height != self.height)
+            || (layout.minimum_width != self.minimum_width)
+            || (layout.minimum_height != self.minimum_height)
+            || (layout.maximum_width != self.maximum_width)
+            || (layout.maximum_height != self.maximum_height)
+            || (layout.padding != self.padding)
             || (node_view.node_id() != self.node_id)
-            || (direction != self.direction)
-            || (scroll_x != self.scroll_x)
-            || (scroll_y != self.scroll_y)
-            || (display != self.display);
+            || (layout.direction != self.direction)
+            || (layout.scroll_x != self.scroll_x)
+            || (layout.scroll_y != self.scroll_y)
+            || (layout.display != self.display);
 
         if changed {
             torin_layout.lock().unwrap().invalidate(node_view.node_id());
         }
 
-        *self = Self {
-            width,
-            height,
-            minimum_height,
-            minimum_width,
-            maximum_height,
-            maximum_width,
-            padding,
-            direction,
-            node_id: node_view.node_id(),
-            scroll_x,
-            scroll_y,
-            display,
-            node_ref,
-        };
+        *self = layout;
         changed
     }
-}
-
-pub fn parse_display(value: &str) -> DisplayMode {
-    match value {
-        "center" => DisplayMode::Center,
-        _ => DisplayMode::Normal,
-    }
-}
-
-pub fn parse_padding(padding: &str, scale_factor: f32) -> Option<Paddings> {
-    let mut padding_config = Paddings::default();
-    let mut paddings = padding.split_ascii_whitespace();
-
-    match paddings.clone().count() {
-        // Same in each directions
-        1 => {
-            padding_config.fill_all(paddings.next()?.parse::<f32>().ok()? * scale_factor);
-        }
-        // By vertical and horizontal
-        2 => {
-            // Vertical
-            padding_config.fill_vertical(paddings.next()?.parse::<f32>().ok()? * scale_factor);
-
-            // Horizontal
-            padding_config.fill_horizontal(paddings.next()?.parse::<f32>().ok()? * scale_factor)
-        }
-        // Each directions
-        4 => {
-            padding_config = Paddings::new(
-                paddings.next()?.parse::<f32>().ok()? * scale_factor,
-                paddings.next()?.parse::<f32>().ok()? * scale_factor,
-                paddings.next()?.parse::<f32>().ok()? * scale_factor,
-                paddings.next()?.parse::<f32>().ok()? * scale_factor,
-            );
-        }
-        _ => {}
-    }
-
-    Some(padding_config)
-}
-
-pub fn parse_size(size: &str, scale_factor: f32) -> Option<Size> {
-    if size == "auto" {
-        Some(Size::Inner)
-    } else if size.contains("calc") {
-        Some(Size::DynamicCalculations(parse_calc(size, scale_factor)?))
-    } else if size.contains('%') {
-        Some(Size::Percentage(Length::new(
-            size.replace('%', "").parse().ok()?,
-        )))
-    } else {
-        Some(Size::Pixels(Length::new(
-            (size.parse::<f32>().ok()?) * scale_factor,
-        )))
-    }
-}
-pub fn parse_calc(mut size: &str, scale_factor: f32) -> Option<Vec<DynamicCalculation>> {
-    let mut calcs = Vec::new();
-
-    size = size.strip_prefix("calc(")?;
-    size = size.strip_suffix(')')?;
-
-    let vals = size.split_whitespace();
-
-    for val in vals {
-        if val.contains('%') {
-            calcs.push(DynamicCalculation::Percentage(
-                val.replace('%', "").parse().ok()?,
-            ));
-        } else if val == "+" {
-            calcs.push(DynamicCalculation::Add);
-        } else if val == "-" {
-            calcs.push(DynamicCalculation::Sub);
-        } else if val == "/" {
-            calcs.push(DynamicCalculation::Div);
-        } else if val == "*" {
-            calcs.push(DynamicCalculation::Mul);
-        } else {
-            calcs.push(DynamicCalculation::Pixels(
-                val.parse::<f32>().ok()? * scale_factor,
-            ));
-        }
-    }
-
-    Some(calcs)
 }

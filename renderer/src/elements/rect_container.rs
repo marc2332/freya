@@ -1,6 +1,6 @@
 use dioxus_native_core::real_dom::NodeImmutable;
 use freya_dom::prelude::DioxusNode;
-use freya_node_state::{BorderAlignment, BorderStyle, References, Shadow, Style};
+use freya_node_state::{BorderAlignment, BorderStyle, References, Style};
 use skia_safe::{
     textlayout::FontCollection, BlurStyle, Canvas, ClipOp, Color, MaskFilter, Paint, PaintStyle,
     Path, PathDirection, RRect, Rect,

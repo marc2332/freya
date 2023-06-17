@@ -1,5 +1,5 @@
-use freya_node_state::parse_color;
 use skia_safe::Color;
+use freya_node_state::Parse;
 
 /// Configuration for a Window.
 #[derive(Clone)]
@@ -105,7 +105,7 @@ impl<T: Clone> WindowConfigBuilder<T> {
 
     /// Specify the Window background color.
     pub fn with_background(mut self, background: &str) -> Self {
-        self.background = parse_color(background).unwrap_or(Color::WHITE);
+        self.background = Color::parse(background, None).unwrap_or(Color::WHITE);
         self
     }
 

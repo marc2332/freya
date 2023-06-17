@@ -22,6 +22,7 @@ impl Parse for Shadow {
     fn parse(value: &str, scale_factor: Option<f32>) -> Result<Self, Self::Err> {
         let mut shadow_values = value.split_ascii_whitespace();
         let mut shadow = Shadow::default();
+        let scale_factor = scale_factor.unwrap_or(1.0);
 
         let first = shadow_values.next().ok_or(ParseShadowError)?;
 
@@ -59,6 +60,11 @@ impl Parse for Shadow {
         color_string.push_str(shadow_values.collect::<Vec<&str>>().join(" ").as_str());
 
         shadow.color = Color::parse(color_string.as_str(), None).map_err(|_| ParseShadowError)?;
+
+        shadow.x *= scale_factor;
+        shadow.y *= scale_factor;
+        shadow.blur *= scale_factor;
+        shadow.spread *= scale_factor;
 
         Ok(shadow)
     }

@@ -1,84 +1,84 @@
 use crate::Parse;
-use torin::radius::Radius;
+use torin::padding::Paddings;
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct ParseRadiusError;
+pub struct ParsePaddingsError;
 
-impl Parse for Radius {
-    type Err = ParseRadiusError;
+impl Parse for Paddings {
+    type Err = ParsePaddingsError;
 
     fn parse(value: &str, scale_factor: Option<f32>) -> Result<Self, Self::Err> {
-        let mut radius = Radius::default();
+        let mut paddings = Paddings::default();
 
         let mut values = value.split_ascii_whitespace();
         let scale_factor = scale_factor.unwrap_or(1.0);
 
         match values.clone().count() {
-            // Same in all corners
+            // Same in each directions
             1 => {
-                radius.fill_all(
+                paddings.fill_all(
                     values
                         .next()
-                        .ok_or(ParseRadiusError)?
+                        .ok_or(ParsePaddingsError)?
                         .parse::<f32>()
-                        .map_err(|_| ParseRadiusError)?
+                        .map_err(|_| ParsePaddingsError)?
                         * scale_factor,
                 );
             }
-            // By Top and Bottom
+            // By vertical and horizontal
             2 => {
-                // Top
-                radius.fill_top(
+                // Vertical
+                paddings.fill_vertical(
                     values
                         .next()
-                        .ok_or(ParseRadiusError)?
+                        .ok_or(ParsePaddingsError)?
                         .parse::<f32>()
-                        .map_err(|_| ParseRadiusError)?
-                        * scale_factor
+                        .map_err(|_| ParsePaddingsError)?
+                        * scale_factor,
                 );
 
-                // Bottom
-                radius.fill_bottom(
+                // Horizontal
+                paddings.fill_horizontal(
                     values
                         .next()
-                        .ok_or(ParseRadiusError)?
+                        .ok_or(ParsePaddingsError)?
                         .parse::<f32>()
-                        .map_err(|_| ParseRadiusError)?
-                        * scale_factor
+                        .map_err(|_| ParsePaddingsError)?
+                        * scale_factor,
                 )
             }
-            // Each corner
+            // Each directions
             4 => {
-                radius = Radius::new(
+                paddings = Paddings::new(
                     values
                         .next()
-                        .ok_or(ParseRadiusError)?
+                        .ok_or(ParsePaddingsError)?
                         .parse::<f32>()
-                        .map_err(|_| ParseRadiusError)?
+                        .map_err(|_| ParsePaddingsError)?
                         * scale_factor,
                     values
                         .next()
-                        .ok_or(ParseRadiusError)?
+                        .ok_or(ParsePaddingsError)?
                         .parse::<f32>()
-                        .map_err(|_| ParseRadiusError)?
+                        .map_err(|_| ParsePaddingsError)?
                         * scale_factor,
                     values
                         .next()
-                        .ok_or(ParseRadiusError)?
+                        .ok_or(ParsePaddingsError)?
                         .parse::<f32>()
-                        .map_err(|_| ParseRadiusError)?
+                        .map_err(|_| ParsePaddingsError)?
                         * scale_factor,
                     values
                         .next()
-                        .ok_or(ParseRadiusError)?
+                        .ok_or(ParsePaddingsError)?
                         .parse::<f32>()
-                        .map_err(|_| ParseRadiusError)?
+                        .map_err(|_| ParsePaddingsError)?
                         * scale_factor,
                 );
             }
             _ => {}
         }
 
-        Ok(radius)
+        Ok(paddings)
     }
 }

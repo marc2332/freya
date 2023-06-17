@@ -2,17 +2,13 @@ use skia_safe::Color;
 use crate::Parse;
 use std::fmt;
 
-pub trait FmtColor {
-    fn fmt_rgb(&self, f: &mut fmt::Formatter) -> fmt::Result;
-}
-
 #[derive(Debug, PartialEq, Eq)]
 pub struct ParseColorError;
 
 impl Parse for Color {
     type Err = ParseColorError;
 
-    fn parse(value: &str, scale_factor: Option<f32>) -> Result<Self, Self::Err> {
+    fn parse(value: &str, _scale_factor: Option<f32>) -> Result<Self, Self::Err> {
         match value {
             "red" => Ok(Color::RED),
             "green" => Ok(Color::GREEN),
@@ -32,9 +28,9 @@ fn parse_rgb(color: &str) -> Result<Color, ParseColorError> {
     let color = color.replace("rgb(", "").replace(')', "");
     let mut colors = color.split(',');
 
-    let r = colors.next().ok_or(ParseColorError)?.parse::<u8>().map_err(|_| ParseColorError)?;
-    let g = colors.next().ok_or(ParseColorError)?.parse::<u8>().map_err(|_| ParseColorError)?;
-    let b = colors.next().ok_or(ParseColorError)?.parse::<u8>().map_err(|_| ParseColorError)?;
+    let r = colors.next().ok_or(ParseColorError)?.trim().parse::<u8>().map_err(|_| ParseColorError)?;
+    let g = colors.next().ok_or(ParseColorError)?.trim().parse::<u8>().map_err(|_| ParseColorError)?;
+    let b = colors.next().ok_or(ParseColorError)?.trim().parse::<u8>().map_err(|_| ParseColorError)?;
     let a: Option<&str> = colors.next();
 
     if let Some(a) = a {

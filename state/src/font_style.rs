@@ -1,16 +1,17 @@
 use std::sync::{Arc, Mutex};
 
-use dioxus_native_core::exports::shipyard::Component;
-use dioxus_native_core::node_ref::NodeView;
-use dioxus_native_core::prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State};
-use dioxus_native_core::NodeId;
-use dioxus_native_core::SendAnyMap;
+use dioxus_native_core::{
+    exports::shipyard::Component,
+    node_ref::NodeView,
+    prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State},
+    NodeId, SendAnyMap,
+};
 use dioxus_native_core_macro::partial_derive_state;
-use skia_safe::font_style::Slant;
-use skia_safe::font_style::Weight;
-use skia_safe::font_style::Width;
-use skia_safe::textlayout::TextAlign;
-use skia_safe::Color;
+use skia_safe::{
+    font_style::{Slant, Weight, Width},
+    textlayout::TextAlign,
+    Color
+};
 use smallvec::{smallvec, SmallVec};
 use torin::torin::Torin;
 
