@@ -1,6 +1,6 @@
 use dioxus_native_core::real_dom::NodeImmutable;
 use freya_dom::prelude::DioxusNode;
-use freya_node_state::{BorderAlignment, BorderStyle, References, ShadowPosition, Style};
+use freya_node_state::{BorderAlignment, BorderStyle, References, Style};
 use skia_safe::{
     textlayout::FontCollection, BlurStyle, Canvas, ClipOp, Color, MaskFilter, Paint, PaintStyle,
     Path, PathDirection, RRect, Rect,
@@ -57,7 +57,7 @@ pub fn render_rect_container(
             blur_paint.set_color(shadow.color);
             blur_rect.offset((shadow.x, shadow.y));
 
-            if shadow.position == ShadowPosition::Inset {
+            if shadow.inset {
                 blur_paint.set_style(PaintStyle::Stroke);
                 blur_paint.set_stroke_width(shadow.blur / 2.0 + shadow.spread);
                 blur_rect.inset((shadow.spread / 2.0, shadow.spread / 2.0));
@@ -79,7 +79,7 @@ pub fn render_rect_container(
 
             // Exclude the original rect bounds from the shadow
             canvas.save();
-            let clip_operation = if shadow.position == ShadowPosition::Inset {
+            let clip_operation = if shadow.inset {
                 ClipOp::Intersect
             } else {
                 ClipOp::Difference

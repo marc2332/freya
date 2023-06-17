@@ -1,6 +1,5 @@
 use skia_safe::Color;
 use crate::Parse;
-use std::fmt;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct ParseColorError;
