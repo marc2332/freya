@@ -7,7 +7,7 @@ use dioxus_native_core::{
     NodeId, SendAnyMap,
 };
 use freya_node_state::{
-    CursorSettings, CustomAttributeValues, FontStyle, References, SizeState, Style, Transform,
+    CursorSettings, CustomAttributeValues, FontStyle, References, LayoutState, Style, Transform,
 };
 use std::sync::MutexGuard;
 use torin::prelude::*;
@@ -87,7 +87,7 @@ impl Default for FreyaDOM {
             CursorSettings::to_type_erased(),
             FontStyle::to_type_erased(),
             References::to_type_erased(),
-            SizeState::to_type_erased(),
+            LayoutState::to_type_erased(),
             Style::to_type_erased(),
             Transform::to_type_erased(),
         ]);

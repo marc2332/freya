@@ -1,40 +1,46 @@
 use skia_safe::Color;
+use crate::Parse;
+use std::fmt;
 
-pub fn parse_rgb(color: &str) -> Option<Color> {
+pub trait FmtColor {
+    fn fmt_rgb(&self, f: &mut fmt::Formatter) -> fmt::Result;
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct ParseColorError;
+
+impl Parse for Color {
+    type Err = ParseColorError;
+
+    fn parse(value: &str, scale_factor: Option<f32>) -> Result<Self, Self::Err> {
+        match value {
+            "red" => Ok(Color::RED),
+            "green" => Ok(Color::GREEN),
+            "blue" => Ok(Color::BLUE),
+            "yellow" => Ok(Color::YELLOW),
+            "black" => Ok(Color::BLACK),
+            "gray" => Ok(Color::GRAY),
+            "white" => Ok(Color::WHITE),
+            "orange" => Ok(Color::from_rgb(255, 165, 0)),
+            "transparent" => Ok(Color::TRANSPARENT),
+            _ => parse_rgb(value)
+        }
+    }
+}
+
+fn parse_rgb(color: &str) -> Result<Color, ParseColorError> {
     let color = color.replace("rgb(", "").replace(')', "");
     let mut colors = color.split(',');
 
-    let r = colors.next()?.trim().parse().ok()?;
-    let g = colors.next()?.trim().parse().ok()?;
-    let b = colors.next()?.trim().parse().ok()?;
+    let r = colors.next().ok_or(ParseColorError)?.parse::<u8>().map_err(|_| ParseColorError)?;
+    let g = colors.next().ok_or(ParseColorError)?.parse::<u8>().map_err(|_| ParseColorError)?;
+    let b = colors.next().ok_or(ParseColorError)?.parse::<u8>().map_err(|_| ParseColorError)?;
     let a: Option<&str> = colors.next();
+
     if let Some(a) = a {
-        let a = a.trim().parse::<u8>().ok()?;
-        Some(Color::from_argb(a, r, g, b))
+        let a = a.trim().parse::<u8>().map_err(|_| ParseColorError)?;
+        Ok(Color::from_argb(a, r, g, b))
     } else {
-        Some(Color::from_rgb(r, g, b))
+        Ok(Color::from_rgb(r, g, b))
     }
-}
-
-pub fn parse_color(color: &str) -> Option<Color> {
-    match color {
-        "inherit" => None,
-        "red" => Some(Color::RED),
-        "green" => Some(Color::GREEN),
-        "blue" => Some(Color::BLUE),
-        "yellow" => Some(Color::YELLOW),
-        "black" => Some(Color::BLACK),
-        "gray" => Some(Color::GRAY),
-        "white" => Some(Color::WHITE),
-        "orange" => Some(Color::from_rgb(255, 165, 0)),
-        "transparent" => Some(Color::TRANSPARENT),
-        _ => parse_rgb(color),
-    }
-}
-
-pub fn fmt_color_rgba(color: &Color) -> String {
-    let rgb = color.to_rgb();
-    let a = color.a();
-
-    format!("rgb({}, {}, {}, {a})", rgb.r, rgb.g, rgb.b)
 }

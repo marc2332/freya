@@ -1,6 +1,6 @@
 use std::{fmt, str};
 
-use crate::{fmt_color_rgba, parse_color};
+use crate::Parse;
 use skia_safe::Color;
 
 #[derive(Default, Clone, Debug, PartialEq)]
@@ -16,10 +16,10 @@ pub struct Shadow {
 #[derive(Debug, PartialEq, Eq)]
 pub struct ParseShadowError;
 
-impl str::FromStr for Shadow {
+impl Parse for Shadow {
     type Err = ParseShadowError;
 
-    fn from_str(value: &str) -> Result<Self, Self::Err> {
+    fn parse(value: &str, scale_factor: Option<f32>) -> Result<Self, Self::Err> {
         let mut shadow_values = value.split_ascii_whitespace();
         let mut shadow = Shadow::default();
 
@@ -58,7 +58,7 @@ impl str::FromStr for Shadow {
         }
         color_string.push_str(shadow_values.collect::<Vec<&str>>().join(" ").as_str());
 
-        shadow.color = parse_color(color_string.as_str()).ok_or(ParseShadowError)?;
+        shadow.color = Color::parse(color_string.as_str(), None).map_err(|_| ParseShadowError)?;
 
         Ok(shadow)
     }
@@ -72,14 +72,15 @@ impl fmt::Display for Shadow {
 
 		write!(
 			f,
-			"{} {} {} {} {}",
+			"{} {} {} {} rgb({}, {}, {}, {})",
 			self.x,
 			self.y,
 			self.blur,
 			self.spread,
-			fmt_color_rgba(&self.color)
-		)?;
-
-		Ok(())
+			self.color.r(),
+            self.color.g(),
+            self.color.b(),
+            self.color.a(),
+		)
     }
 }

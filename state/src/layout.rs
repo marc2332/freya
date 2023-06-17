@@ -13,7 +13,7 @@ use torin::prelude::*;
 use crate::CustomAttributeValues;
 
 #[derive(Default, Clone, Debug, Component)]
-pub struct SizeState {
+pub struct LayoutState {
     pub width: Size,
     pub height: Size,
     pub minimum_width: Size,
@@ -30,7 +30,7 @@ pub struct SizeState {
 }
 
 #[partial_derive_state]
-impl State<CustomAttributeValues> for SizeState {
+impl State<CustomAttributeValues> for LayoutState {
     type ParentDependencies = ();
 
     type ChildDependencies = ();
@@ -94,64 +94,56 @@ impl State<CustomAttributeValues> for SizeState {
             for attr in attributes {
                 match attr.attribute.name.as_str() {
                     "width" => {
-                        let attr = attr.value.as_text();
-                        if let Some(attr) = attr {
+                        if let Some(attr) = attr.value.as_text() {
                             if let Some(new_width) = parse_size(attr, *scale_factor) {
                                 width = new_width;
                             }
                         }
                     }
                     "height" => {
-                        let attr = attr.value.as_text();
-                        if let Some(attr) = attr {
+                        if let Some(attr) = attr.value.as_text() {
                             if let Some(new_height) = parse_size(attr, *scale_factor) {
                                 height = new_height;
                             }
                         }
                     }
                     "min_height" => {
-                        let attr = attr.value.as_text();
-                        if let Some(attr) = attr {
+                        if let Some(attr) = attr.value.as_text() {
                             if let Some(new_min_height) = parse_size(attr, *scale_factor) {
                                 minimum_height = new_min_height;
                             }
                         }
                     }
                     "min_width" => {
-                        let attr = attr.value.as_text();
-                        if let Some(attr) = attr {
+                        if let Some(attr) = attr.value.as_text() {
                             if let Some(new_min_width) = parse_size(attr, *scale_factor) {
                                 minimum_width = new_min_width;
                             }
                         }
                     }
                     "max_height" => {
-                        let attr = attr.value.as_text();
-                        if let Some(attr) = attr {
+                        if let Some(attr) = attr.value.as_text() {
                             if let Some(new_max_height) = parse_size(attr, *scale_factor) {
                                 maximum_height = new_max_height;
                             }
                         }
                     }
                     "max_width" => {
-                        let attr = attr.value.as_text();
-                        if let Some(attr) = attr {
+                        if let Some(attr) = attr.value.as_text() {
                             if let Some(new_max_width) = parse_size(attr, *scale_factor) {
                                 maximum_width = new_max_width;
                             }
                         }
                     }
                     "padding" => {
-                        let attr = attr.value.as_text();
-                        if let Some(attr) = attr {
+                        if let Some(attr) = attr.value.as_text() {
                             if let Some(paddings) = parse_padding(attr, *scale_factor) {
                                 padding = paddings;
                             }
                         }
                     }
                     "direction" => {
-                        let attr = attr.value.as_text();
-                        if let Some(attr) = attr {
+                        if let Some(attr) = attr.value.as_text() {
                             direction = if attr == "horizontal" {
                                 DirectionMode::Horizontal
                             } else if attr == "both" {
@@ -162,15 +154,13 @@ impl State<CustomAttributeValues> for SizeState {
                         }
                     }
                     "scroll_y" => {
-                        let attr = attr.value.as_text();
-                        if let Some(attr) = attr {
+                        if let Some(attr) = attr.value.as_text() {
                             let scroll: f32 = attr.parse().unwrap();
                             scroll_y = scroll * scale_factor;
                         }
                     }
                     "scroll_x" => {
-                        let attr = attr.value.as_text();
-                        if let Some(attr) = attr {
+                        if let Some(attr) = attr.value.as_text() {
                             let scroll: f32 = attr.parse().unwrap();
                             scroll_x = scroll * scale_factor;
                         }

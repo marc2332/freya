@@ -1,5 +1,5 @@
-use crate::{fmt_color_rgba, parse_color};
-use skia_safe::Color;
+use crate::Parse;
+use skia_safe::{Color};
 use std::{fmt, str};
 
 #[derive(Default, Clone, Copy, Debug, PartialEq)]
@@ -28,18 +28,16 @@ pub enum BorderAlignment {
 #[derive(Debug, PartialEq, Eq)]
 pub struct ParseBorderAlignmentError;
 
-impl str::FromStr for BorderAlignment {
+impl Parse for BorderAlignment {
     type Err = ParseBorderAlignmentError;
 
-    fn from_str(value: &str) -> Result<Self, Self::Err> {
-        let mut border_align_value = value.split_ascii_whitespace();
-
-        match border_align_value.next() {
-            Some("inner") => Ok(BorderAlignment::Inner),
-            Some("outer") => Ok(BorderAlignment::Outer),
-            Some("center") => Ok(BorderAlignment::Center),
-            _ => Ok(BorderAlignment::default()),
-        }
+    fn parse(value: &str, scale_factor: Option<f32>) -> Result<Self, Self::Err> {
+        Ok(match value {
+            "inner" => BorderAlignment::Inner,
+            "outer" => BorderAlignment::Outer,
+            "center" => BorderAlignment::Center,
+            _ => BorderAlignment::default(),
+        })
     }
 }
 
@@ -62,12 +60,13 @@ impl fmt::Display for BorderStyle {
     }
 }
 
+#[derive(Debug, PartialEq, Eq)]
 pub struct ParseBorderError;
 
-impl str::FromStr for Border {
+impl Parse for Border {
     type Err = ParseBorderError;
 
-    fn from_str(value: &str) -> Result<Self, Self::Err> {
+    fn parse(value: &str, scale_factor: Option<f32>) -> Result<Self, Self::Err> {
         let mut border_values = value.split_ascii_whitespace();
 
         Ok(Border {
@@ -80,8 +79,7 @@ impl str::FromStr for Border {
                 "solid" => BorderStyle::Solid,
                 _ => BorderStyle::None,
             },
-            color: parse_color(&border_values.collect::<Vec<&str>>().join(" "))
-                .ok_or(ParseBorderError)?,
+            color: Color::parse(&border_values.collect::<Vec<&str>>().join(" "), None).map_err(|_| ParseBorderError)?,
             alignment: BorderAlignment::default(),
         })
     }
@@ -89,6 +87,6 @@ impl str::FromStr for Border {
 
 impl fmt::Display for Border {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f, "{}, {}, {}", self.width, self.style, fmt_color_rgba(&self.color))
+		write!(f, "{} {} rgb({}, {}, {}, {})", self.width, self.style, self.color.r(), self.color.g(), self.color.b(), self.color.a())
     }
 }

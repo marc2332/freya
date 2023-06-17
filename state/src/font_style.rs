@@ -14,7 +14,7 @@ use skia_safe::Color;
 use smallvec::{smallvec, SmallVec};
 use torin::torin::Torin;
 
-use crate::{parse_color, CustomAttributeValues};
+use crate::{CustomAttributeValues, Parse};
 
 #[derive(Debug, Clone, PartialEq, Component)]
 pub struct FontStyle {
@@ -100,17 +100,14 @@ impl State<CustomAttributeValues> for FontStyle {
             for attr in attributes {
                 match attr.attribute.name.as_str() {
                     "color" => {
-                        let attr = attr.value.as_text();
-                        if let Some(attr) = attr {
-                            let new_color = parse_color(attr);
-                            if let Some(new_color) = new_color {
+                        if let Some(attr) = attr.value.as_text() {
+                            if let Ok(new_color) = Color::parse(attr, None) {
                                 font_style.color = new_color;
                             }
                         }
                     }
                     "font_family" => {
-                        let attr = attr.value.as_text();
-                        if let Some(attr) = attr {
+                        if let Some(attr) = attr.value.as_text() {
                             let families = attr.split(',');
                             font_style.font_family = SmallVec::from(
                                 families
@@ -121,51 +118,52 @@ impl State<CustomAttributeValues> for FontStyle {
                         }
                     }
                     "font_size" => {
-                        let attr = attr.value.as_text();
-                        if let Some(attr) = attr {
+                        if let Some(attr) = attr.value.as_text() {
                             if let Ok(font_size) = attr.parse::<f32>() {
                                 font_style.font_size = font_size * scale_factor;
                             }
                         }
                     }
                     "line_height" => {
-                        let attr = attr.value.as_text();
-                        if let Some(attr) = attr {
+                        if let Some(attr) = attr.value.as_text() {
                             if let Ok(line_height) = attr.parse() {
                                 font_style.line_height = line_height;
                             }
                         }
                     }
                     "align" => {
-                        let attr = attr.value.as_text();
-                        if let Some(attr) = attr {
-                            font_style.align = parse_text_align(attr);
+                        if let Some(attr) = attr.value.as_text() {
+                            if let Ok(align) = TextAlign::parse(attr, None) {
+                                font_style.align = align;
+                            }
                         }
                     }
                     "max_lines" => {
-                        let attr = attr.value.as_text();
-                        if let Some(attr) = attr {
+                        if let Some(attr) = attr.value.as_text() {
                             if let Ok(max_lines) = attr.parse() {
                                 font_style.max_lines = Some(max_lines);
                             }
                         }
                     }
                     "font_style" => {
-                        let attr = attr.value.as_text();
-                        if let Some(attr) = attr {
-                            font_style.font_slant = parse_font_style(attr);
+                        if let Some(attr) = attr.value.as_text() {
+                            if let Ok(font_slant) = Slant::parse(attr, None) {
+                                font_style.font_slant = font_slant;
+                            }
                         }
                     }
                     "font_weight" => {
-                        let attr = attr.value.as_text();
-                        if let Some(attr) = attr {
-                            font_style.font_weight = parse_font_weight(attr);
+                        if let Some(attr) = attr.value.as_text() {
+                            if let Ok(font_weight) = Weight::parse(attr, None) {
+                                font_style.font_weight = font_weight;
+                            }
                         }
                     }
                     "font_width" => {
-                        let attr = attr.value.as_text();
-                        if let Some(attr) = attr {
-                            font_style.font_width = parse_font_width(attr);
+                        if let Some(attr) = attr.value.as_text() {
+                            if let Ok(font_width) = Width::parse(attr, None) {
+                                font_style.font_width = font_width;
+                            }
                         }
                     }
                     _ => {}
@@ -188,77 +186,5 @@ impl State<CustomAttributeValues> for FontStyle {
         let changed = &font_style != self;
         *self = font_style;
         changed
-    }
-}
-
-fn parse_font_style(style: &str) -> Slant {
-    match style {
-        "upright" => Slant::Upright,
-        "italic" => Slant::Italic,
-        "oblique" => Slant::Oblique,
-        _ => Slant::Upright,
-    }
-}
-
-fn parse_font_weight(weight: &str) -> Weight {
-    // NOTES:
-    // This is mostly taken from the OpenType specification (https://learn.microsoft.com/en-us/typography/opentype/spec/os2#usweightclass)
-    // CSS has one deviation from this spec, which uses the value "950" for extra_black.
-    // skia_safe also has an "invisible" weight smaller than the thin weight, which could fall under CSS's interpretation of OpenType's
-    // version. In this case it would be font_weight: "50".
-    match weight {
-        "invisible" => Weight::INVISIBLE,
-        "thin" => Weight::THIN,
-        "extra-light" => Weight::EXTRA_LIGHT,
-        "light" => Weight::LIGHT,
-        "normal" => Weight::NORMAL,
-        "medium" => Weight::MEDIUM,
-        "semi-bold" => Weight::SEMI_BOLD,
-        "bold" => Weight::BOLD,
-        "extra-bold" => Weight::EXTRA_BOLD,
-        "black" => Weight::BLACK,
-        "extra-black" => Weight::EXTRA_BLACK,
-        "50" => Weight::INVISIBLE,
-        "100" => Weight::THIN,
-        "200" => Weight::EXTRA_LIGHT,
-        "300" => Weight::LIGHT,
-        "400" => Weight::NORMAL,
-        "500" => Weight::MEDIUM,
-        "600" => Weight::SEMI_BOLD,
-        "700" => Weight::BOLD,
-        "800" => Weight::EXTRA_BOLD,
-        "900" => Weight::BLACK,
-        "950" => Weight::EXTRA_BLACK,
-        _ => Weight::NORMAL,
-    }
-}
-
-fn parse_font_width(width: &str) -> Width {
-    // NOTES:
-    // CSS also supports some percentage mappings for different stretches.
-    // https://developer.mozilla.org/en-US/docs/Web/CSS/font-stretch#keyword_to_numeric_mapping
-    match width {
-        "ultra-condensed" => Width::ULTRA_CONDENSED,
-        "extra-condensed" => Width::EXTRA_CONDENSED,
-        "condensed" => Width::CONDENSED,
-        "semi-condensed" => Width::SEMI_CONDENSED,
-        "normal" => Width::NORMAL,
-        "semi-expanded" => Width::SEMI_EXPANDED,
-        "expanded" => Width::EXPANDED,
-        "extra-expanded" => Width::EXTRA_EXPANDED,
-        "ultra-expanded" => Width::ULTRA_EXPANDED,
-        _ => Width::NORMAL,
-    }
-}
-
-pub fn parse_text_align(align: &str) -> TextAlign {
-    match align {
-        "center" => TextAlign::Center,
-        "end" => TextAlign::End,
-        "justify" => TextAlign::Justify,
-        "left" => TextAlign::Left,
-        "right" => TextAlign::Right,
-        "start" => TextAlign::Start,
-        _ => TextAlign::Left,
     }
 }
