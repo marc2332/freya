@@ -64,7 +64,7 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
         cx.props.ontoggled.call(());
     };
 
-    let (scroll_x, border, circle) = {
+    let (offset_x, border, circle) = {
         if cx.props.enabled {
             (
                 animation.value(),
@@ -108,7 +108,7 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
                 rect {
                     width: "100%",
                     height: "100%",
-                    scroll_x: "{scroll_x}",
+                    offset_x: "{offset_x}",
                     padding: "2.5",
                     radius: "50",
                     rect {

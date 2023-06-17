@@ -273,7 +273,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
                 container {
                     width: "100%",
                     height: "{horizontal_scrollbar_size}",
-                    scroll_x: "{scrollbar_x}",
+                    offset_x: "{scrollbar_x}",
                     onmouseleave: |_| {},
                     background: "{scrollbar_theme.background}",
                     rect {
@@ -288,7 +288,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
             container {
                 width: "{vertical_scrollbar_size}",
                 height: "100%",
-                scroll_y: "{scrollbar_y}",
+                offset_y: "{scrollbar_y}",
                 onmouseleave: |_| {},
                 background: "{scrollbar_theme.background}",
                 rect {

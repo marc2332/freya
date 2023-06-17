@@ -1,6 +1,6 @@
 use dioxus_native_core::real_dom::NodeImmutable;
 use freya_dom::prelude::DioxusNode;
-use freya_node_state::{BorderAlignment, BorderStyle, References, Style};
+use freya_node_state::{BorderAlignment, BorderStyle, References, ShadowPosition, Style};
 use skia_safe::{
     textlayout::FontCollection, BlurStyle, Canvas, ClipOp, Color, MaskFilter, Paint, PaintStyle,
     Path, PathDirection, RRect, Rect,
@@ -52,12 +52,12 @@ pub fn render_rect_container(
     for shadow in node_style.shadows.iter() {
         if shadow.color != Color::TRANSPARENT {
             let mut blur_paint = paint.clone();
-            let mut blur_rect = rounded_rect.clone();
+            let mut blur_rect = rounded_rect;
 
             blur_paint.set_color(shadow.color);
             blur_rect.offset((shadow.x, shadow.y));
 
-            if shadow.inset {
+            if shadow.position == ShadowPosition::Inset {
                 blur_paint.set_style(PaintStyle::Stroke);
                 blur_paint.set_stroke_width(shadow.blur / 2.0 + shadow.spread);
                 blur_rect.inset((shadow.spread / 2.0, shadow.spread / 2.0));
@@ -75,16 +75,16 @@ pub fn render_rect_container(
 
             path.rewind();
 
-            path.add_rrect(&blur_rect, Some((PathDirection::CW, 0)));
+            path.add_rrect(blur_rect, Some((PathDirection::CW, 0)));
 
             // Exclude the original rect bounds from the shadow
             canvas.save();
-            let clip_operation = if shadow.inset {
+            let clip_operation = if shadow.position == ShadowPosition::Inset {
                 ClipOp::Intersect
             } else {
                 ClipOp::Difference
             };
-            canvas.clip_rrect(&rounded_rect, clip_operation, true);
+            canvas.clip_rrect(rounded_rect, clip_operation, true);
             canvas.draw_path(&path, &blur_paint);
             canvas.restore();
         }
@@ -101,7 +101,7 @@ pub fn render_rect_container(
 
         path.rewind();
 
-        let mut border_rect = rounded_rect.clone();
+        let mut border_rect = rounded_rect;
 
         match node_style.border.alignment {
             BorderAlignment::Inner => {
