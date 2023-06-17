@@ -200,21 +200,22 @@ impl State<CustomAttributeValues> for FontStyle {
                         }
                     }
                     "decoration" => {
-                        let attr = attr.value.as_text();
-                        if let Some(attr) = attr {
-                            font_style.decoration.ty = parse_decoration(attr);
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(decoration) = TextDecoration::parse(value, None) {
+                                font_style.decoration.ty = decoration;
+                            }
                         }
                     }
                     "decoration_style" => {
-                        let attr = attr.value.as_text();
-                        if let Some(attr) = attr {
-                            font_style.decoration.style = parse_decoration_style(attr);
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(style) = TextDecoration::parse(value, None) {
+                                font_style.decoration.style = style;
+                            }
                         }
                     }
                     "decoration_color" => {
-                        let attr = attr.value.as_text();
-                        if let Some(attr) = attr {
-                            if let Some(new_decoration_color) = parse_color(attr) {
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(new_decoration_color) = Color::parse(value, None) {
                                 font_style.decoration.color = new_decoration_color;
                             }
                         } else {

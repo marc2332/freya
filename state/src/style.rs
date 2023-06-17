@@ -89,36 +89,6 @@ impl State<CustomAttributeValues> for Style {
                         }
                     }
                     "shadow" => {
-                        if let Some(attr) = attr.value.as_text() {
-                            let mut chunks = Vec::new();
-                            let mut current = String::new();
-                            let mut in_parenthesis = false;
-
-                            for character in attr.chars() {
-                                if character == '(' {
-                                    in_parenthesis = true;
-                                } else if character == ')' {
-                                    in_parenthesis = false;
-                                }
-
-                                if character == ',' && !in_parenthesis {
-                                    chunks.push(std::mem::take(&mut current));
-                                } else {
-                                    current.push(character);
-                                }
-                            }
-
-                            if !current.is_empty() {
-                                chunks.push(current);
-                            }
-
-                            shadows = chunks
-                                .iter()
-                                .map(|chunk| parse_shadow(chunk, *scale_factor).unwrap_or_default())
-                                .collect();
-                        }
-                    }
-                    "shadow" => {
                         if let Some(value) = attr.value.as_text() {
                             let mut chunks = Vec::new();
                             let mut current = String::new();
