@@ -132,7 +132,7 @@ pub fn ShadowProperty<'a>(cx: Scope<'a>, name: &'a str, shadow: &'a Shadow) -> E
                 font_size: "15",
                 color: "rgb(252,181,172)",
 
-                "rgb({color.r}, {color.g}, {color.b}})"
+                "rgb({color.r}, {color.g}, {color.b})"
             }
         }
     )
@@ -141,7 +141,7 @@ pub fn ShadowProperty<'a>(cx: Scope<'a>, name: &'a str, shadow: &'a Shadow) -> E
 #[allow(non_snake_case)]
 #[inline_props]
 pub fn BorderProperty<'a>(cx: Scope<'a>, name: &'a str, border: &'a Border) -> Element<'a> {
-    let color = border_settings.color.to_rgb();
+    let color = border.color.to_rgb();
     render!(
         container {
             height: "30",
@@ -163,7 +163,7 @@ pub fn BorderProperty<'a>(cx: Scope<'a>, name: &'a str, border: &'a Border) -> E
                     font_size: "15",
                     color: "rgb(252,181,172)",
 
-                    {border}
+                    "{border}"
                 }
             }
             rect {
