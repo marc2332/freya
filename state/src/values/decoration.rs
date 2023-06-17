@@ -30,7 +30,7 @@ impl Parse for TextDecoration {
 #[derive(Debug, PartialEq, Eq)]
 pub struct ParseTextDecorationStyleError;
 
-impl Parse for Slant {
+impl Parse for TextDecorationStyle {
     type Err = ParseTextDecorationStyleError;
 
     fn parse(value: &str, _scale_factor: Option<f32>) -> Result<Self, Self::Err> {

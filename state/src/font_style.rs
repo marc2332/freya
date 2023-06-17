@@ -208,7 +208,7 @@ impl State<CustomAttributeValues> for FontStyle {
                     }
                     "decoration_style" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(style) = TextDecoration::parse(value, None) {
+                            if let Ok(style) = TextDecorationStyle::parse(value, None) {
                                 font_style.decoration.style = style;
                             }
                         }

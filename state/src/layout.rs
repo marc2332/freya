@@ -25,8 +25,8 @@ pub struct LayoutState {
     pub padding: Paddings,
     pub direction: DirectionMode,
     pub node_id: NodeId,
-    pub scroll_y: f32,
-    pub scroll_x: f32,
+    pub offset_y: f32,
+    pub offset_x: f32,
     pub display: DisplayMode,
     pub node_ref: Option<UnboundedSender<NodeReferenceLayout>>,
 }
@@ -49,8 +49,8 @@ impl State<CustomAttributeValues> for LayoutState {
             "max_width",
             "padding",
             "direction",
-            "scroll_y",
-            "scroll_x",
+            "offset_y",
+            "offset_x",
             "display",
             "reference",
         ]))
@@ -143,17 +143,17 @@ impl State<CustomAttributeValues> for LayoutState {
                             }
                         }
                     }
-                    "scroll_y" => {
+                    "offset_y" => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(scroll) = value.parse::<f32>() {
-                                layout.scroll_y = scroll * scale_factor;
+                                layout.offset_y = scroll * scale_factor;
                             }
                         }
                     }
-                    "scroll_x" => {
+                    "offset_x" => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(scroll) = value.parse::<f32>() {
-                                layout.scroll_x = scroll * scale_factor;
+                                layout.offset_x = scroll * scale_factor;
                             }
                         }
                     }
@@ -188,8 +188,8 @@ impl State<CustomAttributeValues> for LayoutState {
             || (layout.padding != self.padding)
             || (node_view.node_id() != self.node_id)
             || (layout.direction != self.direction)
-            || (layout.scroll_x != self.scroll_x)
-            || (layout.scroll_y != self.scroll_y)
+            || (layout.offset_x != self.offset_x)
+            || (layout.offset_y != self.offset_y)
             || (layout.display != self.display);
 
         if changed {
