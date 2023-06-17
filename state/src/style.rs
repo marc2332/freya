@@ -75,7 +75,8 @@ impl State<CustomAttributeValues> for Style {
                     }
                     "border" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(border) = Border::parse(value, Some(*scale_factor)) {
+                            if let Ok(mut border) = Border::parse(value, Some(*scale_factor)) {
+                                border.alignment = style.border.alignment;
                                 style.border = border;
                             }
                         }
