@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_node_state::{fmt_color_rgba, Border, Shadow};
+use freya_node_state::{Border, Shadow};
 use skia_safe::Color;
 
 #[allow(non_snake_case)]
@@ -132,7 +132,7 @@ pub fn ShadowProperty<'a>(cx: Scope<'a>, name: &'a str, shadow: &'a Shadow) -> E
                 font_size: "15",
                 color: "rgb(252,181,172)",
 
-                fmt_color_rgba(&shadow.color)
+                "rgb({color.r}, {color.g}, {color.b}})"
             }
         }
     )
@@ -189,7 +189,7 @@ pub fn BorderProperty<'a>(cx: Scope<'a>, name: &'a str, border: &'a Border) -> E
                 font_size: "15",
                 color: "rgb(252,181,172)",
 
-                fmt_color_rgba(&border.color)
+                "rgb({color.r}, {color.g}, {color.b})"
             }
         }
     )
