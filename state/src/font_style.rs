@@ -107,7 +107,7 @@ impl State<CustomAttributeValues> for FontStyle {
     const NODE_MASK: NodeMaskBuilder<'static> =
         NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[
             "color",
-            "shadow",
+            "text_shadow",
             "font_size",
             "font_family",
             "line_height",
@@ -148,7 +148,7 @@ impl State<CustomAttributeValues> for FontStyle {
                             }
                         }
                     }
-                    "shadow" => {
+                    "text_shadow" => {
                         if let Some(value) = attr.value.as_text() {
                             font_style.shadows = split_shadows(value)
                                 .iter()
