@@ -1,12 +1,19 @@
 use std::{fmt, str};
 
 use crate::Parse;
-use torin::scaled::Scaled;
 use skia_safe::Color;
+use torin::scaled::Scaled;
+
+#[derive(Default, Clone, Debug, PartialEq)]
+pub enum ShadowPosition {
+    #[default]
+    Normal,
+    Inset,
+}
 
 #[derive(Default, Clone, Debug, PartialEq)]
 pub struct Shadow {
-    pub inset: bool,
+    pub position: ShadowPosition,
     pub x: f32,
     pub y: f32,
     pub blur: f32,
@@ -27,7 +34,7 @@ impl Parse for Shadow {
         let first = shadow_values.next().ok_or(ParseShadowError)?;
 
         if first == "inset" {
-            shadow.inset = true;
+            shadow.position = ShadowPosition::Inset;
             shadow.x = shadow_values
                 .next()
                 .ok_or(ParseShadowError)?
@@ -74,23 +81,35 @@ impl Scaled for Shadow {
     }
 }
 
-impl fmt::Display for Shadow {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		if self.inset {
-			f.write_str("inset ")?;
-		}
+pub fn parse_shadows(value: &str, scale_factor: f32) -> Vec<Shadow> {
+    let mut chunks = Vec::new();
+    let mut current = String::new();
+    let mut in_parenthesis = false;
 
-		write!(
-			f,
-			"{} {} {} {} rgb({}, {}, {}, {})",
-			self.x,
-			self.y,
-			self.blur,
-			self.spread,
-			self.color.r(),
-            self.color.g(),
-            self.color.b(),
-            self.color.a(),
-		)
+    for character in value.chars() {
+        if character == '(' {
+            in_parenthesis = true;
+        } else if character == ')' {
+            in_parenthesis = false;
+        }
+
+        if character == ',' && !in_parenthesis {
+            chunks.push(std::mem::take(&mut current));
+        } else {
+            current.push(character);
+        }
     }
+
+    if !current.is_empty() {
+        chunks.push(current);
+    }
+
+    chunks
+        .iter()
+        .map(|chunk| {
+            let mut shadow = Shadow::parse(chunk).unwrap_or_default();
+            shadow.scale(scale_factor);
+            shadow
+        })
+        .collect()
 }

@@ -20,7 +20,7 @@ impl Parse for Radius {
                         .next()
                         .ok_or(ParseRadiusError)?
                         .parse::<f32>()
-                        .map_err(|_| ParseRadiusError)?
+                        .map_err(|_| ParseRadiusError)?,
                 );
             }
             // By Top and Bottom
@@ -31,7 +31,7 @@ impl Parse for Radius {
                         .next()
                         .ok_or(ParseRadiusError)?
                         .parse::<f32>()
-                        .map_err(|_| ParseRadiusError)?
+                        .map_err(|_| ParseRadiusError)?,
                 );
 
                 // Bottom
@@ -40,7 +40,7 @@ impl Parse for Radius {
                         .next()
                         .ok_or(ParseRadiusError)?
                         .parse::<f32>()
-                        .map_err(|_| ParseRadiusError)?
+                        .map_err(|_| ParseRadiusError)?,
                 )
             }
             // Each corner

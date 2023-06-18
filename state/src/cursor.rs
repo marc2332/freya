@@ -7,7 +7,7 @@ use dioxus_native_core::{
 use dioxus_native_core_macro::partial_derive_state;
 use skia_safe::Color;
 
-use crate::{Parse, CursorMode, CustomAttributeValues};
+use crate::{CursorMode, CustomAttributeValues, Parse};
 
 #[derive(Clone, Debug, PartialEq, Eq, Component)]
 pub struct CursorSettings {

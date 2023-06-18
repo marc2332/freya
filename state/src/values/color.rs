@@ -1,5 +1,5 @@
-use skia_safe::Color;
 use crate::Parse;
+use skia_safe::Color;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct ParseColorError;
@@ -18,7 +18,7 @@ impl Parse for Color {
             "white" => Ok(Color::WHITE),
             "orange" => Ok(Color::from_rgb(255, 165, 0)),
             "transparent" => Ok(Color::TRANSPARENT),
-            _ => parse_rgb(value)
+            _ => parse_rgb(value),
         }
     }
 }
@@ -27,9 +27,24 @@ fn parse_rgb(color: &str) -> Result<Color, ParseColorError> {
     let color = color.replace("rgb(", "").replace(')', "");
     let mut colors = color.split(',');
 
-    let r = colors.next().ok_or(ParseColorError)?.trim().parse::<u8>().map_err(|_| ParseColorError)?;
-    let g = colors.next().ok_or(ParseColorError)?.trim().parse::<u8>().map_err(|_| ParseColorError)?;
-    let b = colors.next().ok_or(ParseColorError)?.trim().parse::<u8>().map_err(|_| ParseColorError)?;
+    let r = colors
+        .next()
+        .ok_or(ParseColorError)?
+        .trim()
+        .parse::<u8>()
+        .map_err(|_| ParseColorError)?;
+    let g = colors
+        .next()
+        .ok_or(ParseColorError)?
+        .trim()
+        .parse::<u8>()
+        .map_err(|_| ParseColorError)?;
+    let b = colors
+        .next()
+        .ok_or(ParseColorError)?
+        .trim()
+        .parse::<u8>()
+        .map_err(|_| ParseColorError)?;
     let a: Option<&str> = colors.next();
 
     if let Some(a) = a {

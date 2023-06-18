@@ -9,8 +9,8 @@ use dioxus_native_core::{
 use dioxus_native_core_macro::partial_derive_state;
 use skia_safe::{
     font_style::{Slant, Weight, Width},
-    textlayout::{TextAlign, Decoration, TextDecoration, TextDecorationStyle, TextStyle},
-    Color
+    textlayout::{Decoration, TextAlign, TextDecoration, TextDecorationStyle, TextStyle},
+    Color,
 };
 use smallvec::{smallvec, SmallVec};
 use torin::torin::Torin;

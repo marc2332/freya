@@ -106,7 +106,7 @@ pub fn ShadowProperty<'a>(cx: Scope<'a>, name: &'a str, shadow: &'a Shadow) -> E
                 text {
                     font_size: "15",
                     color: "rgb(252,181,172)",
-                    "{shadow}"
+                    "{shadow.position:?} {shadow.x} {shadow.y} {shadow.blur} {shadow.spread}"
                 }
             }
             rect {
@@ -162,8 +162,7 @@ pub fn BorderProperty<'a>(cx: Scope<'a>, name: &'a str, border: &'a Border) -> E
                 text {
                     font_size: "15",
                     color: "rgb(252,181,172)",
-
-                    "{border}"
+                    "{border.width} {border.style:?} {border.alignment:?}"
                 }
             }
             rect {
@@ -188,7 +187,6 @@ pub fn BorderProperty<'a>(cx: Scope<'a>, name: &'a str, border: &'a Border) -> E
             label {
                 font_size: "15",
                 color: "rgb(252,181,172)",
-
                 "rgb({color.r}, {color.g}, {color.b})"
             }
         }

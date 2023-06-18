@@ -23,18 +23,20 @@ impl Parse for Size {
             )))
         } else {
             Ok(Size::Pixels(Length::new(
-                value.parse::<f32>().map_err(|_| ParseSizeError)?
+                value.parse::<f32>().map_err(|_| ParseSizeError)?,
             )))
         }
     }
 }
 
-pub fn parse_calc(
-    mut value: &str,
-) -> Result<Vec<DynamicCalculation>, ParseSizeError> {
+pub fn parse_calc(mut value: &str) -> Result<Vec<DynamicCalculation>, ParseSizeError> {
     let mut calcs = Vec::new();
 
-    value = value.strip_prefix("calc(").ok_or(ParseSizeError)?.strip_suffix(')').ok_or(ParseSizeError)?;
+    value = value
+        .strip_prefix("calc(")
+        .ok_or(ParseSizeError)?
+        .strip_suffix(')')
+        .ok_or(ParseSizeError)?;
 
     let values = value.split_whitespace();
 

@@ -1,6 +1,4 @@
-use freya_node_state::{
-    Parse, BorderAlignment, Border, BorderStyle,
-};
+use freya_node_state::{Border, BorderAlignment, BorderStyle, Parse};
 use skia_safe::Color;
 
 #[test]

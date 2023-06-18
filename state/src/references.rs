@@ -39,12 +39,13 @@ impl State<CustomAttributeValues> for References {
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
         _context: &SendAnyMap,
     ) -> bool {
-        let mut references = References::default();
-
-        references.cursor_ref = if let Some(parent) = parent {
-            parent.0.cursor_ref.clone()
-        } else {
-            None
+        let mut references = References {
+            cursor_ref: if let Some(parent) = parent {
+                parent.0.cursor_ref.clone()
+            } else {
+                None
+            },
+            ..Default::default()
         };
 
         if let Some(attributes) = node_view.attributes() {

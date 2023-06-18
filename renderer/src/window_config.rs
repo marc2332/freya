@@ -1,5 +1,5 @@
-use skia_safe::Color;
 use freya_node_state::Parse;
+use skia_safe::Color;
 
 /// Configuration for a Window.
 #[derive(Clone)]

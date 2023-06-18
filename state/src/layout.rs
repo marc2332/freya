@@ -68,18 +68,19 @@ impl State<CustomAttributeValues> for LayoutState {
         let torin_layout = context.get::<Arc<Mutex<Torin<NodeId>>>>().unwrap();
         let scale_factor = context.get::<f32>().unwrap();
 
-        let mut layout = LayoutState::default();
-
-        layout.direction = if let Some("label") = node_view.tag() {
-            DirectionMode::Horizontal
-        } else if let Some("paragraph") = node_view.tag() {
-            DirectionMode::Horizontal
-        } else if let Some("text") = node_view.tag() {
-            DirectionMode::Horizontal
-        } else if node_view.text().is_some() {
-            DirectionMode::Horizontal
-        } else {
-            DirectionMode::Vertical
+        let mut layout = LayoutState {
+            direction: if let Some("label") = node_view.tag() {
+                DirectionMode::Horizontal
+            } else if let Some("paragraph") = node_view.tag() {
+                DirectionMode::Horizontal
+            } else if let Some("text") = node_view.tag() {
+                DirectionMode::Horizontal
+            } else if node_view.text().is_some() {
+                DirectionMode::Horizontal
+            } else {
+                DirectionMode::Vertical
+            },
+            ..Default::default()
         };
 
         if let Some(attributes) = node_view.attributes() {

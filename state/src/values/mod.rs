@@ -1,24 +1,24 @@
 mod border;
 mod color;
-mod shadow;
-mod font;
-mod decoration;
-mod radius;
-mod padding;
-mod display;
-mod size;
 mod cursor;
+mod decoration;
+mod display;
+mod font;
+mod padding;
+mod radius;
+mod shadow;
+mod size;
 
-pub use display::*;
 pub use border::*;
 pub use color::*;
-pub use shadow::*;
-pub use font::*;
-pub use decoration::*;
-pub use radius::*;
-pub use padding::*;
-pub use size::*;
 pub use cursor::*;
+pub use decoration::*;
+pub use display::*;
+pub use font::*;
+pub use padding::*;
+pub use radius::*;
+pub use shadow::*;
+pub use size::*;
 
 // FromStr but we own it so we can impl it on torin and skia_safe types.
 pub trait Parse: Sized {

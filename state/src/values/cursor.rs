@@ -23,7 +23,7 @@ impl Parse for CursorMode {
 
 impl fmt::Display for CursorMode {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		f.write_str(match self {
+        f.write_str(match self {
             CursorMode::Editable => "editable",
             CursorMode::None => "none",
         })

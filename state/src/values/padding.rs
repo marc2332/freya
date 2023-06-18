@@ -20,7 +20,7 @@ impl Parse for Paddings {
                         .next()
                         .ok_or(ParsePaddingsError)?
                         .parse::<f32>()
-                        .map_err(|_| ParsePaddingsError)?
+                        .map_err(|_| ParsePaddingsError)?,
                 );
             }
             // By vertical and horizontal
@@ -31,7 +31,7 @@ impl Parse for Paddings {
                         .next()
                         .ok_or(ParsePaddingsError)?
                         .parse::<f32>()
-                        .map_err(|_| ParsePaddingsError)?
+                        .map_err(|_| ParsePaddingsError)?,
                 );
 
                 // Horizontal
@@ -40,7 +40,7 @@ impl Parse for Paddings {
                         .next()
                         .ok_or(ParsePaddingsError)?
                         .parse::<f32>()
-                        .map_err(|_| ParsePaddingsError)?
+                        .map_err(|_| ParsePaddingsError)?,
                 )
             }
             // Each directions

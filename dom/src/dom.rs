@@ -7,7 +7,7 @@ use dioxus_native_core::{
     NodeId, SendAnyMap,
 };
 use freya_node_state::{
-    CursorSettings, CustomAttributeValues, FontStyle, References, LayoutState, Style, Transform,
+    CursorSettings, CustomAttributeValues, FontStyle, LayoutState, References, Style, Transform,
 };
 use std::sync::MutexGuard;
 use torin::prelude::*;

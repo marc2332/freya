@@ -7,12 +7,9 @@ use dioxus_native_core::{
 };
 use dioxus_native_core_macro::partial_derive_state;
 use skia_safe::Color;
-use torin::{
-    radius::Radius,
-    scaled::Scaled
-};
+use torin::{radius::Radius, scaled::Scaled};
 
-use crate::{Parse, Border, BorderAlignment, CustomAttributeValues, Shadow};
+use crate::{parse_shadows, Border, BorderAlignment, CustomAttributeValues, Parse, Shadow};
 
 #[derive(Default, Debug, Clone, PartialEq, Component)]
 pub struct Style {
@@ -64,8 +61,6 @@ impl State<CustomAttributeValues> for Style {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(background) = Color::parse(value) {
                                 style.background = background;
-                            } else {
-                                println!("Failed to parse color: {}", value);
                             }
                         }
                     }
@@ -81,7 +76,7 @@ impl State<CustomAttributeValues> for Style {
                             if let Ok(mut border) = Border::parse(value) {
                                 border.alignment = style.border.alignment;
                                 border.scale(*scale_factor);
-                                
+
                                 style.border = border;
                             }
                         }
@@ -95,36 +90,7 @@ impl State<CustomAttributeValues> for Style {
                     }
                     "shadow" => {
                         if let Some(value) = attr.value.as_text() {
-                            let mut chunks = Vec::new();
-                            let mut current = String::new();
-                            let mut in_parenthesis = false;
-
-                            for character in value.chars() {
-                                if character == '(' {
-                                    in_parenthesis = true;
-                                } else if character == ')' {
-                                    in_parenthesis = false;
-                                }
-
-                                if character == ',' && !in_parenthesis {
-                                    chunks.push(std::mem::take(&mut current));
-                                } else {
-                                    current.push(character);
-                                }
-                            }
-
-                            if current.len() > 0 {
-                                chunks.push(current);
-                            }
-
-                            style.shadows = chunks
-                                .iter()
-                                .map(|chunk| {
-                                    let mut shadow = Shadow::parse(chunk).unwrap_or_default();
-                                    shadow.scale(*scale_factor);
-                                    shadow
-                                })
-                                .collect();
+                            style.shadows = parse_shadows(value, *scale_factor)
                         }
                     }
                     "radius" => {

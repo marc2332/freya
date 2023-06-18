@@ -5,7 +5,7 @@ use freya_common::NodeReferenceLayout;
 use freya_dom::prelude::DioxusDOM;
 use freya_layout::Layers;
 
-use freya_node_state::{CursorMode, CursorSettings, References, LayoutState, Style};
+use freya_node_state::{CursorMode, CursorSettings, LayoutState, References, Style};
 use rustc_hash::FxHashMap;
 use skia_safe::textlayout::FontCollection;
 use torin::torin::Torin;
