@@ -12,6 +12,7 @@
 - [Layout](./guides/layout.md)
 - [Style](./guides/style.md)
 - [Font Style](./guides/font_style.md)
+- [Effects](./guides/effects.md)
 - [Components](./guides/components.md)
 - [Theming](./guides/theming.md)
 - [Hot reload](./guides/hot_reload.md)

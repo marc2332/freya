@@ -240,7 +240,6 @@ builder_constructors! {
         font_weight: String,
         font_width: String,
         line_height: String,
-        rotate: String,
     };
     image {
         image_data: String,
