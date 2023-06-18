@@ -12,7 +12,7 @@ fn parse_big_shadow() {
             blur: 50.0,
             spread: 25.0,
             color: Color::RED,
-            position: ShadowPosition::Inset
+            position: ShadowPosition::Normal
         })
     );
 }

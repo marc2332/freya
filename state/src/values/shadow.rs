@@ -1,5 +1,3 @@
-use std::{fmt, str};
-
 use crate::Parse;
 use skia_safe::Color;
 use torin::scaled::Scaled;
