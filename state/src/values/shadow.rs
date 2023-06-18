@@ -97,16 +97,16 @@ impl Parse for TextShadow {
                     .ok_or(ParseShadowError)?
                     .parse::<f32>()
                     .map_err(|_| ParseShadowError)?,
-            ).into(),
+            )
+                .into(),
             blur_sigma: shadow_values
                 .next()
                 .ok_or(ParseShadowError)?
                 .parse::<f64>()
-                .map_err(|_| ParseShadowError)? / 2.0,
-            color: Color::parse(shadow_values
-                .collect::<Vec<&str>>()
-                .join(" ")
-                .as_str()).map_err(|_| ParseShadowError)?,
+                .map_err(|_| ParseShadowError)?
+                / 2.0,
+            color: Color::parse(shadow_values.collect::<Vec<&str>>().join(" ").as_str())
+                .map_err(|_| ParseShadowError)?,
         })
     }
 }

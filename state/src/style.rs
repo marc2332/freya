@@ -90,12 +90,14 @@ impl State<CustomAttributeValues> for Style {
                     }
                     "shadow" => {
                         if let Some(value) = attr.value.as_text() {
-                            style.shadows = split_shadows(value).iter()
+                            style.shadows = split_shadows(value)
+                                .iter()
                                 .map(|chunk| {
                                     let mut shadow = Shadow::parse(chunk).unwrap_or_default();
                                     shadow.scale(*scale_factor);
                                     shadow
-                                }).collect();
+                                })
+                                .collect();
                         }
                     }
                     "radius" => {

@@ -9,7 +9,9 @@ use dioxus_native_core::{
 use dioxus_native_core_macro::partial_derive_state;
 use skia_safe::{
     font_style::{Slant, Weight, Width},
-    textlayout::{Decoration, TextShadow, TextAlign, TextDecoration, TextDecorationStyle, TextStyle},
+    textlayout::{
+        Decoration, TextAlign, TextDecoration, TextDecorationStyle, TextShadow, TextStyle,
+    },
     Color,
 };
 use smallvec::{smallvec, SmallVec};
@@ -60,7 +62,7 @@ impl From<&FontStyle> for TextStyle {
             .set_letter_spacing(value.letter_spacing)
             .set_height_override(true)
             .set_height(value.line_height);
-        
+
         for shadow in value.shadows.iter() {
             text_style.add_shadow(*shadow);
         }
@@ -148,14 +150,16 @@ impl State<CustomAttributeValues> for FontStyle {
                     }
                     "shadow" => {
                         if let Some(value) = attr.value.as_text() {
-                            font_style.shadows = split_shadows(value).iter()
+                            font_style.shadows = split_shadows(value)
+                                .iter()
                                 .map(|chunk| {
                                     let mut shadow = TextShadow::parse(chunk).unwrap_or_default();
                                     shadow.offset *= *scale_factor;
                                     shadow.blur_sigma *= *scale_factor as f64;
 
                                     shadow
-                                }).collect();
+                                })
+                                .collect();
                         }
                     }
                     "font_family" => {
