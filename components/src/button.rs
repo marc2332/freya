@@ -83,6 +83,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
             direction: "both",
             padding: "2",
             focus_id: focus_id,
+            focusable: "true",
             role: "button",
             container {
                 onclick: onclick,

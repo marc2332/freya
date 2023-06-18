@@ -16,6 +16,7 @@ pub struct AccessibilityState {
     pub role: Option<Role>,
     pub alt: Option<String>,
     pub name: Option<String>,
+    pub focusable: bool,
 }
 
 #[partial_derive_state]
@@ -28,7 +29,11 @@ impl State<CustomAttributeValues> for AccessibilityState {
 
     const NODE_MASK: NodeMaskBuilder<'static> =
         NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[
-            "focus_id", "role", "alt", "name",
+            "focus_id",
+            "role",
+            "alt",
+            "name",
+            "focusable",
         ]));
 
     fn update<'a>(
@@ -69,6 +74,11 @@ impl State<CustomAttributeValues> for AccessibilityState {
                     "name" => {
                         if let OwnedAttributeValue::Text(attr) = attr.value {
                             accessibility.name = Some(attr.to_owned())
+                        }
+                    }
+                    "focusable" => {
+                        if let OwnedAttributeValue::Text(attr) = attr.value {
+                            accessibility.focusable = attr.parse().unwrap_or_default()
                         }
                     }
                     _ => {}

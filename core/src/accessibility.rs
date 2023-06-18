@@ -64,9 +64,13 @@ pub trait AccessibilityProvider {
             y1: area.max_y(),
         });
 
-        // Set the action
-        builder.add_action(Action::Default);
-        builder.set_default_action_verb(DefaultActionVerb::Click);
+        // Set focusable action
+        if node_accessibility.focusable {
+            builder.add_action(Action::Focus);
+        } else {
+            builder.add_action(Action::Default);
+            builder.set_default_action_verb(DefaultActionVerb::Focus);
+        }
 
         // Insert the node into the Tree
         let node = builder.build(self.node_classes());

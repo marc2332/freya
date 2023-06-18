@@ -180,6 +180,7 @@ builder_constructors! {
         alt: String,
         canvas_reference: String,
         name: String,
+        focusable: String,
     };
     container {
         padding: String,
@@ -208,6 +209,7 @@ builder_constructors! {
         alt: String,
         canvas_reference: String,
         name: String,
+        focusable: String,
     };
     label {
         color: String,
@@ -231,6 +233,7 @@ builder_constructors! {
         decoration: String,
         decoration_style: String,
         decoration_color: String,
+        focusable: String,
     };
     paragraph {
         layer: String,
@@ -261,6 +264,7 @@ builder_constructors! {
         decoration: String,
         decoration_style: String,
         decoration_color: String,
+        focusable: String,
     };
     text {
         color: String,
@@ -290,6 +294,7 @@ builder_constructors! {
         focus_id: AccessibilityId,
         alt: String,
         name: String,
+        focusable: String,
     };
     svg {
         svg_data: String,
@@ -301,6 +306,7 @@ builder_constructors! {
         focus_id: AccessibilityId,
         alt: String,
         name: String,
+        focusable: String,
     };
 }
 
