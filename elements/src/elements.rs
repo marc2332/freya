@@ -259,7 +259,6 @@ builder_constructors! {
         font_weight: String,
         font_width: String,
         line_height: String,
-        rotate: String,
         letter_spacing: String,
         word_spacing: String,
         decoration: String,
