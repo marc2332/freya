@@ -1,4 +1,4 @@
-use torin::gap::Gaps;
+use torin::gaps::Gaps;
 
 const SCALE_FACTOR: f32 = 1.0;
 
