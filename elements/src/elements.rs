@@ -226,6 +226,11 @@ builder_constructors! {
         alt: String,
         focus_id: AccessibilityId,
         name: String,
+        letter_spacing: String,
+        word_spacing: String,
+        decoration: String,
+        decoration_style: String,
+        decoration_color: String,
     };
     paragraph {
         layer: String,
@@ -248,6 +253,14 @@ builder_constructors! {
         font_family: String,
         alt: String,
         name: String,
+        font_style: String,
+        font_weight: String,
+        font_width: String,
+        letter_spacing: String,
+        word_spacing: String,
+        decoration: String,
+        decoration_style: String,
+        decoration_color: String,
     };
     text {
         color: String,
@@ -261,6 +274,11 @@ builder_constructors! {
         font_width: String,
         line_height: String,
         rotate: String,
+        letter_spacing: String,
+        word_spacing: String,
+        decoration: String,
+        decoration_style: String,
+        decoration_color: String,
     };
     image {
         image_data: String,

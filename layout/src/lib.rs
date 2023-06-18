@@ -111,13 +111,7 @@ fn create_text(
 
     let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
 
-    paragraph_builder.push_style(
-        TextStyle::new()
-            .set_font_style(font_style.into())
-            .set_font_size(font_style.font_size)
-            .set_font_families(&font_style.font_family),
-    );
-
+    paragraph_builder.push_style(&font_style.into());
     paragraph_builder.add_text(text);
 
     let mut paragraph = paragraph_builder.build();
@@ -142,25 +136,12 @@ pub fn create_paragraph(
 
     let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
 
-    paragraph_builder.push_style(
-        TextStyle::new()
-            .set_font_style(font_style.into())
-            .set_font_size(font_style.font_size)
-            .set_font_families(&font_style.font_family),
-    );
+    paragraph_builder.push_style(&font_style.into());
 
     let texts = get_inner_texts(node);
 
     for (font_style, text) in texts.into_iter() {
-        paragraph_builder.push_style(
-            TextStyle::new()
-                .set_font_style(skia_safe::FontStyle::from(&font_style))
-                .set_height_override(true)
-                .set_height(font_style.line_height)
-                .set_color(font_style.color)
-                .set_font_size(font_style.font_size)
-                .set_font_families(&font_style.font_family),
-        );
+        paragraph_builder.push_style(&TextStyle::from(&font_style));
         paragraph_builder.add_text(text);
     }
 

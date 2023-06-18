@@ -2,7 +2,7 @@
 
 **Freya** is native GUI library built on top of 🧬 [Dioxus](https://dioxuslabs.com) and powered by 🎨 [Skia](https://skia.org/), for 🦀 Rust. 
 
-You can check the check [API References](https://docs.freyaui.dev/freya/) or join the [Discord](https://discord.gg/sYejxCdewG) server if you have any questions or issues. 
+You can check the [API References](https://docs.freyaui.dev/freya/) or join the [Discord](https://discord.gg/sYejxCdewG) server if you have any questions or issues. 
 
 > It's currently work in progress and not usable for production, but you can already play with it! 
 

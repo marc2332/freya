@@ -1,6 +1,7 @@
 pub use euclid::Rect;
 
 use crate::geometry::Length;
+use crate::scaled::Scaled;
 
 #[derive(PartialEq, Clone, Debug, Default, Copy)]
 pub struct Paddings {
@@ -67,5 +68,14 @@ impl Paddings {
             self.bottom(),
             self.left()
         )
+    }
+}
+
+impl Scaled for Paddings {
+    fn scale(&mut self, scale: f32) {
+        self.left *= scale;
+        self.right *= scale;
+        self.top *= scale;
+        self.bottom *= scale;
     }
 }

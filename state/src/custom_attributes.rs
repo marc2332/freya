@@ -6,13 +6,10 @@ use std::sync::Mutex;
 
 use accesskit::NodeId as AccessibilityId;
 use bytes::Bytes;
-use dioxus_core::AttributeValue;
-use dioxus_core::Scope;
+use dioxus_core::{AttributeValue, Scope};
 use dioxus_native_core::node::FromAnyValue;
-use freya_common::CursorLayoutResponse;
-use freya_common::NodeReferenceLayout;
-use skia_safe::textlayout::FontCollection;
-use skia_safe::Canvas;
+use freya_common::{CursorLayoutResponse, NodeReferenceLayout};
+use skia_safe::{textlayout::FontCollection, Canvas};
 use tokio::sync::mpsc::UnboundedSender;
 use torin::geometry::{Area, CursorPoint};
 use uuid::Uuid;

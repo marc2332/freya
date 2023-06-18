@@ -11,7 +11,7 @@ use dioxus_native_core_macro::partial_derive_state;
 use crate::CustomAttributeValues;
 
 #[derive(Clone, Debug, PartialEq, Eq, Default, Component)]
-pub struct AccessibilitySettings {
+pub struct AccessibilityState {
     pub focus_id: Option<AccessibilityId>,
     pub role: Option<Role>,
     pub alt: Option<String>,
@@ -19,7 +19,7 @@ pub struct AccessibilitySettings {
 }
 
 #[partial_derive_state]
-impl State<CustomAttributeValues> for AccessibilitySettings {
+impl State<CustomAttributeValues> for AccessibilityState {
     type ParentDependencies = ();
 
     type ChildDependencies = ();
@@ -39,10 +39,7 @@ impl State<CustomAttributeValues> for AccessibilitySettings {
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
         _context: &SendAnyMap,
     ) -> bool {
-        let mut focus_id = None;
-        let mut role = None;
-        let mut alt = None;
-        let mut name = None;
+        let mut accessibility = AccessibilityState::default();
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
@@ -52,7 +49,7 @@ impl State<CustomAttributeValues> for AccessibilitySettings {
                         if let OwnedAttributeValue::Custom(CustomAttributeValues::FocusId(id)) =
                             attr.value
                         {
-                            focus_id = Some(*id);
+                            accessibility.focus_id = Some(*id);
                         }
                     }
                     "role" => {
@@ -60,31 +57,27 @@ impl State<CustomAttributeValues> for AccessibilitySettings {
                             if let Ok(new_role) =
                                 serde_json::from_str::<Role>(&format!("\"{attr}\""))
                             {
-                                role = Some(new_role)
+                                accessibility.role = Some(new_role)
                             }
                         }
                     }
                     "alt" => {
                         if let OwnedAttributeValue::Text(attr) = attr.value {
-                            alt = Some(attr.to_owned())
+                            accessibility.alt = Some(attr.to_owned())
                         }
                     }
                     "name" => {
                         if let OwnedAttributeValue::Text(attr) = attr.value {
-                            name = Some(attr.to_owned())
+                            accessibility.name = Some(attr.to_owned())
                         }
                     }
                     _ => {}
                 }
             }
         }
-        let changed = self.focus_id != focus_id || self.role != role || self.alt != alt;
-        *self = Self {
-            focus_id,
-            role,
-            alt,
-            name,
-        };
+        let changed = &accessibility != self;
+
+        *self = accessibility;
         changed
     }
 }

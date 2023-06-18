@@ -1,8 +1,7 @@
 use dioxus_native_core::real_dom::NodeImmutable;
 use freya_dom::prelude::DioxusNode;
 use freya_node_state::{
-    BorderSettings, CursorSettings, FontStyle, References, ShadowSettings, SizeState, Style,
-    Transform,
+    Border, CursorSettings, FontStyle, LayoutState, References, Shadow, Style, Transform,
 };
 use skia_safe::Color;
 use torin::{
@@ -14,7 +13,7 @@ pub struct NodeState {
     pub cursor: CursorSettings,
     pub font_style: FontStyle,
     pub references: References,
-    pub size: SizeState,
+    pub size: LayoutState,
     pub style: Style,
     pub transform: Transform,
 }
@@ -23,7 +22,7 @@ pub fn get_node_state(node: &DioxusNode) -> NodeState {
     let cursor = node.get::<CursorSettings>().unwrap().clone();
     let font_style = node.get::<FontStyle>().unwrap().clone();
     let references = node.get::<References>().unwrap().clone();
-    let size = node.get::<SizeState>().unwrap().clone();
+    let size = node.get::<LayoutState>().unwrap().clone();
     let style = node.get::<Style>().unwrap().clone();
     let transform = node.get::<Transform>().unwrap().clone();
 
@@ -126,7 +125,7 @@ pub enum AttributeType<'a> {
     Radius(Radius),
     Direction(&'a DirectionMode),
     Display(&'a DisplayMode),
-    Shadow(&'a ShadowSettings),
+    Shadow(&'a Shadow),
     Text(String),
-    Border(&'a BorderSettings),
+    Border(&'a Border),
 }

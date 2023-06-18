@@ -4,8 +4,8 @@ use dioxus_native_core::real_dom::NodeImmutable;
 use freya_dom::prelude::DioxusNode;
 use freya_node_state::FontStyle;
 use skia_safe::{
-    textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle},
-    Canvas, Paint, PaintStyle,
+    textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle},
+    Canvas,
 };
 use torin::geometry::Area;
 
@@ -18,12 +18,6 @@ pub fn render_label(
 ) {
     let node_children = node_ref.children();
     let node_font_style = &*node_ref.get::<FontStyle>().unwrap();
-
-    let mut paint = Paint::default();
-
-    paint.set_anti_alias(true);
-    paint.set_style(PaintStyle::StrokeAndFill);
-    paint.set_color(node_font_style.color);
 
     let child = node_children.first();
 
@@ -43,23 +37,15 @@ pub fn render_label(
 
         let mut paragraph_style = ParagraphStyle::default();
         paragraph_style.set_text_align(node_font_style.align);
+        paragraph_style.set_text_style(&node_font_style.into());
 
-        paragraph_style.set_text_style(
-            TextStyle::new()
-                .set_font_style(skia_safe::FontStyle::from(node_font_style))
-                .set_color(node_font_style.color)
-                .set_font_size(node_font_style.font_size)
-                .set_font_families(&node_font_style.font_family),
-        );
         let mut paragraph_builder =
             ParagraphBuilder::new(&paragraph_style, font_collection.clone());
 
         paragraph_builder.add_text(text);
 
         let mut paragraph = paragraph_builder.build();
-
         paragraph.layout(area.width() + 1.0);
-
         paragraph.paint(canvas, (x, y));
     }
 }

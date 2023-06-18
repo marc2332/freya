@@ -7,7 +7,7 @@ use dioxus_native_core::{
 use dioxus_native_core_macro::partial_derive_state;
 use skia_safe::Color;
 
-use crate::{parse_color, CustomAttributeValues};
+use crate::{CursorMode, CustomAttributeValues, Parse};
 
 #[derive(Clone, Debug, PartialEq, Eq, Component)]
 pub struct CursorSettings {
@@ -17,6 +17,19 @@ pub struct CursorSettings {
     pub cursor_id: Option<usize>,
     pub highlights: Option<Vec<(usize, usize)>>,
     pub highlight_color: Color,
+}
+
+impl Default for CursorSettings {
+    fn default() -> Self {
+        Self {
+            position: None,
+            color: Color::BLACK,
+            mode: CursorMode::None,
+            cursor_id: None,
+            highlights: None,
+            highlight_color: Color::from_rgb(87, 108, 188),
+        }
+    }
 }
 
 #[partial_derive_state]
@@ -51,29 +64,30 @@ impl State<CustomAttributeValues> for CursorSettings {
             for attr in attributes {
                 match attr.attribute.name.as_str() {
                     "cursor_index" => {
-                        let text = attr.value.as_text().unwrap();
-                        if text != "none" {
-                            let new_cursor_index = text.parse().unwrap();
+                        let value = attr.value.as_text().unwrap();
+                        if value != "none" {
+                            let new_cursor_index = value.parse().unwrap();
                             cursor.position = Some(new_cursor_index);
                         }
                     }
                     "cursor_color" => {
-                        if let Some(val) = attr.value.as_text() {
-                            let new_cursor_color = parse_color(val);
-                            if let Some(new_cursor_color) = new_cursor_color {
-                                cursor.color = new_cursor_color;
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(color) = Color::parse(value) {
+                                cursor.color = color;
                             }
                         }
                     }
                     "cursor_mode" => {
-                        if let Some(val) = attr.value.as_text() {
-                            cursor.mode = parse_cursor(val);
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(mode) = CursorMode::parse(value) {
+                                cursor.mode = mode;
+                            }
                         }
                     }
                     "cursor_id" => {
-                        if let Some(val) = attr.value.as_text() {
-                            if let Ok(new_cursor_id) = val.parse() {
-                                cursor.cursor_id = Some(new_cursor_id);
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(id) = value.parse() {
+                                cursor.cursor_id = Some(id);
                             }
                         }
                     }
@@ -85,10 +99,9 @@ impl State<CustomAttributeValues> for CursorSettings {
                         }
                     }
                     "highlight_color" => {
-                        if let Some(val) = attr.value.as_text() {
-                            let new_highlight_color = parse_color(val);
-                            if let Some(new_highlight_color) = new_highlight_color {
-                                cursor.highlight_color = new_highlight_color;
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(highlight_color) = Color::parse(value) {
+                                cursor.highlight_color = highlight_color;
                             }
                         }
                     }
@@ -100,30 +113,4 @@ impl State<CustomAttributeValues> for CursorSettings {
         *self = cursor;
         changed
     }
-}
-
-fn parse_cursor(cursor: &str) -> CursorMode {
-    match cursor {
-        "editable" => CursorMode::Editable,
-        _ => CursorMode::None,
-    }
-}
-
-impl Default for CursorSettings {
-    fn default() -> Self {
-        Self {
-            position: None,
-            color: Color::BLACK,
-            mode: CursorMode::None,
-            cursor_id: None,
-            highlights: None,
-            highlight_color: Color::from_rgb(87, 108, 188),
-        }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum CursorMode {
-    None,
-    Editable,
 }

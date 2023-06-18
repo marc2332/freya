@@ -1,14 +1,12 @@
-use freya_node_state::{parse_shadow, ShadowPosition, ShadowSettings};
+use freya_node_state::{Parse, Shadow, ShadowPosition};
 use skia_safe::Color;
-
-const SCALE_FACTOR: f32 = 1.0;
 
 #[test]
 fn parse_big_shadow() {
-    let shadow = parse_shadow("1 2 50 25.0 red", SCALE_FACTOR);
+    let shadow = Shadow::parse("1 2 50 25.0 red");
     assert_eq!(
         shadow,
-        Some(ShadowSettings {
+        Ok(Shadow {
             x: 1.0,
             y: 2.0,
             blur: 50.0,
@@ -21,10 +19,10 @@ fn parse_big_shadow() {
 
 #[test]
 fn parse_inset_shadow() {
-    let shadow = parse_shadow("inset 1 2 50 25.0 red", SCALE_FACTOR);
+    let shadow = Shadow::parse("inset 1 2 50 25.0 red");
     assert_eq!(
         shadow,
-        Some(ShadowSettings {
+        Ok(Shadow {
             x: 1.0,
             y: 2.0,
             blur: 50.0,
@@ -37,10 +35,10 @@ fn parse_inset_shadow() {
 
 #[test]
 fn parse_shadow_with_assumed_spread() {
-    let shadow = parse_shadow("inset 1 2 50 red", SCALE_FACTOR);
+    let shadow = Shadow::parse("inset 1 2 50 red");
     assert_eq!(
         shadow,
-        Some(ShadowSettings {
+        Ok(Shadow {
             x: 1.0,
             y: 2.0,
             blur: 50.0,

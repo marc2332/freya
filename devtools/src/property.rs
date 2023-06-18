@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_node_state::{BorderSettings, ShadowSettings};
+use freya_node_state::{Border, Shadow};
 use skia_safe::Color;
 
 #[allow(non_snake_case)]
@@ -84,12 +84,8 @@ pub fn ColorfulProperty<'a>(cx: Scope<'a>, name: &'a str, color: &'a Color) -> E
 
 #[allow(non_snake_case)]
 #[inline_props]
-pub fn ShadowProperty<'a>(
-    cx: Scope<'a>,
-    name: &'a str,
-    shadow_settings: &'a ShadowSettings,
-) -> Element<'a> {
-    let color = shadow_settings.color.to_rgb();
+pub fn ShadowProperty<'a>(cx: Scope<'a>, name: &'a str, shadow: &'a Shadow) -> Element<'a> {
+    let color = shadow.color.to_rgb();
     render!(
         container {
             height: "30",
@@ -110,7 +106,7 @@ pub fn ShadowProperty<'a>(
                 text {
                     font_size: "15",
                     color: "rgb(252,181,172)",
-                    "{shadow_settings.position:?} {shadow_settings.x} {shadow_settings.y} {shadow_settings.blur} {shadow_settings.spread}"
+                    "{shadow.position:?} {shadow.x} {shadow.y} {shadow.blur} {shadow.spread}"
                 }
             }
             rect {
@@ -135,6 +131,7 @@ pub fn ShadowProperty<'a>(
             label {
                 font_size: "15",
                 color: "rgb(252,181,172)",
+
                 "rgb({color.r}, {color.g}, {color.b})"
             }
         }
@@ -143,12 +140,8 @@ pub fn ShadowProperty<'a>(
 
 #[allow(non_snake_case)]
 #[inline_props]
-pub fn BorderProperty<'a>(
-    cx: Scope<'a>,
-    name: &'a str,
-    border_settings: &'a BorderSettings,
-) -> Element<'a> {
-    let color = border_settings.color.to_rgb();
+pub fn BorderProperty<'a>(cx: Scope<'a>, name: &'a str, border: &'a Border) -> Element<'a> {
+    let color = border.color.to_rgb();
     render!(
         container {
             height: "30",
@@ -169,7 +162,7 @@ pub fn BorderProperty<'a>(
                 text {
                     font_size: "15",
                     color: "rgb(252,181,172)",
-                    "{border_settings.width} {border_settings.style:?} {border_settings.alignment:?}"
+                    "{border.width} {border.style:?} {border.alignment:?}"
                 }
             }
             rect {

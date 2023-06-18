@@ -132,7 +132,7 @@ const STACKED_EVENTS: [&str; 13] = [
     "keyup",
     "touchcancel",
     "touchend",
-    "touchend",
+    "touchmove",
     "touchstart",
     "pointerover",
     "pointerenter",
