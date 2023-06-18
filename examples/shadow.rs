@@ -45,6 +45,11 @@ fn app(cx: Scope) -> Element {
                 radius: "8",
                 background: "rgb(224, 224, 224)",
             }
+            label {
+                shadow: "0 0 12 red",
+
+                "Text!"
+            }
         }
     )
 }

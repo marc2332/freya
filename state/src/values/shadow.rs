@@ -1,5 +1,5 @@
 use crate::Parse;
-use skia_safe::Color;
+use skia_safe::{textlayout::TextShadow, Color};
 use torin::scaled::Scaled;
 
 #[derive(Default, Clone, Debug, PartialEq)]
@@ -79,7 +79,39 @@ impl Scaled for Shadow {
     }
 }
 
-pub fn parse_shadows(value: &str, scale_factor: f32) -> Vec<Shadow> {
+// Same as shadow, but no inset or spread.
+impl Parse for TextShadow {
+    type Err = ParseShadowError;
+
+    fn parse(value: &str) -> Result<Self, Self::Err> {
+        let mut shadow_values = value.split_ascii_whitespace();
+        Ok(TextShadow {
+            offset: (
+                shadow_values
+                    .next()
+                    .ok_or(ParseShadowError)?
+                    .parse::<f32>()
+                    .map_err(|_| ParseShadowError)?,
+                shadow_values
+                    .next()
+                    .ok_or(ParseShadowError)?
+                    .parse::<f32>()
+                    .map_err(|_| ParseShadowError)?,
+            ).into(),
+            blur_sigma: shadow_values
+                .next()
+                .ok_or(ParseShadowError)?
+                .parse::<f64>()
+                .map_err(|_| ParseShadowError)? / 2.0,
+            color: Color::parse(shadow_values
+                .collect::<Vec<&str>>()
+                .join(" ")
+                .as_str()).map_err(|_| ParseShadowError)?,
+        })
+    }
+}
+
+pub fn split_shadows(value: &str) -> Vec<String> {
     let mut chunks = Vec::new();
     let mut current = String::new();
     let mut in_parenthesis = false;
@@ -103,11 +135,4 @@ pub fn parse_shadows(value: &str, scale_factor: f32) -> Vec<Shadow> {
     }
 
     chunks
-        .iter()
-        .map(|chunk| {
-            let mut shadow = Shadow::parse(chunk).unwrap_or_default();
-            shadow.scale(scale_factor);
-            shadow
-        })
-        .collect()
 }

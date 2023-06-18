@@ -9,7 +9,7 @@ use dioxus_native_core_macro::partial_derive_state;
 use skia_safe::Color;
 use torin::{radius::Radius, scaled::Scaled};
 
-use crate::{parse_shadows, Border, BorderAlignment, CustomAttributeValues, Parse, Shadow};
+use crate::{split_shadows, Border, BorderAlignment, CustomAttributeValues, Parse, Shadow};
 
 #[derive(Default, Debug, Clone, PartialEq, Component)]
 pub struct Style {
@@ -90,7 +90,12 @@ impl State<CustomAttributeValues> for Style {
                     }
                     "shadow" => {
                         if let Some(value) = attr.value.as_text() {
-                            style.shadows = parse_shadows(value, *scale_factor)
+                            style.shadows = split_shadows(value).iter()
+                                .map(|chunk| {
+                                    let mut shadow = Shadow::parse(chunk).unwrap_or_default();
+                                    shadow.scale(*scale_factor);
+                                    shadow
+                                }).collect();
                         }
                     }
                     "radius" => {

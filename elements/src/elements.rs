@@ -203,6 +203,7 @@ builder_constructors! {
     };
     label {
         color: String,
+        shadow: String,
         layer: String,
         height: String,
         width: String,
@@ -248,6 +249,7 @@ builder_constructors! {
     };
     text {
         color: String,
+        shadow: String,
         layer: String,
         height: String,
         width: String,
