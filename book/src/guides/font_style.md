@@ -11,13 +11,18 @@ Learn how the font style attributes work.
 - [`font_width`](#font_width)
 - [`line_height`](#line_height)
 - [`max_lines`](#max_lines)
+- [`letter_spacing`](#letter_spacing)
+- [`word_spacing`](#word_spacing)
+- [`decoration`](#decoration)
+- [`decoration_style`](#decoration_style)
+- [`decoration_color`](#decoration_color)
 
 
 ### color
 
 The `color` attribute let's you specify the color of the text.
 
-You can learn about the syntax of this attribute [here](/guides/style.html#color-syntax).
+You can learn about the syntax of this attribute in [`Color Syntax`](/guides/style.html#color-syntax).
 
 Example:
 
@@ -224,3 +229,114 @@ fn app(cx: Scope) -> Element {
 ```
 
 Compatible elements: [`text`](/guides/elements.html#paragraph-and-text), [`paragraph`](/guides/elements.html#paragraph-and-text).
+
+### letter_spacing
+
+Specify the spacing between characters of the text.
+
+Example:
+
+```rust
+fn app(cx: Scope) -> Element {
+    render!(
+        label {
+            letter_spacing: "10",
+            "Hello, World!"
+        }
+    )
+}
+```
+
+Compatible elements: [`text`](/guides/elements.html#paragraph-and-text), [`paragraph`](/guides/elements.html#paragraph-and-text), [`label`](/guides/elements.html#label).
+
+### word_spacing
+
+Specify the spacing between words of the text.
+
+Example:
+
+```rust
+fn app(cx: Scope) -> Element {
+    render!(
+        label {
+            word_spacing: "10",
+            "Hello, World!"
+        }
+    )
+}
+```
+
+Compatible elements: [`text`](/guides/elements.html#paragraph-and-text), [`paragraph`](/guides/elements.html#paragraph-and-text), [`label`](/guides/elements.html#label).
+
+### decoration
+
+Specify the decoration in a text.
+
+Accpted values:
+- `underline`
+- `line-through`
+- `overline`
+
+Example:
+
+```rust
+fn app(cx: Scope) -> Element {
+    render!(
+        label {
+            decoration: "line-through",
+            "Hello, World!"
+        }
+    )
+}
+```
+
+Compatible elements: [`text`](/guides/elements.html#paragraph-and-text), [`paragraph`](/guides/elements.html#paragraph-and-text), [`label`](/guides/elements.html#label).
+
+### decoration_style
+
+Specify the decoration's style in a text.
+
+Accpted values:
+- `solid` (default)
+- `double`
+- `dotted`
+- `dashed`
+- `wavy`
+
+Example:
+
+```rust
+fn app(cx: Scope) -> Element {
+    render!(
+        label {
+            decoration: "line-through",
+            decoration_style: "dotted",
+            "Hello, World!"
+        }
+    )
+}
+```
+
+Compatible elements: [`text`](/guides/elements.html#paragraph-and-text), [`paragraph`](/guides/elements.html#paragraph-and-text), [`label`](/guides/elements.html#label).
+
+### decoration_color
+
+Specify the decoration's color in a text.
+
+You can learn about the syntax of this attribute in [`Color Syntax`](/guides/style.html#color-syntax).
+
+Example:
+
+```rust
+fn app(cx: Scope) -> Element {
+    render!(
+        label {
+            decoration: "line-through",
+            decoration_color: "orange",
+            "Hello, World!"
+        }
+    )
+}
+```
+
+Compatible elements: [`text`](/guides/elements.html#paragraph-and-text), [`paragraph`](/guides/elements.html#paragraph-and-text), [`label`](/guides/elements.html#label).

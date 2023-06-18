@@ -1,6 +1,7 @@
 pub use euclid::Rect;
 
 use crate::geometry::Length;
+use crate::scaled::Scaled;
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum Size {
@@ -45,6 +46,18 @@ impl Size {
     }
 }
 
+impl Scaled for Size {
+    fn scale(&mut self, scale_factor: f32) {
+        match self {
+            Size::Pixels(s) => *s *= scale_factor,
+            Size::DynamicCalculations(calcs) => {
+                calcs.iter_mut().for_each(|calc| calc.scale(scale_factor));
+            }
+            _ => (),
+        }
+    }
+}
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum DynamicCalculation {
     Sub,
@@ -53,6 +66,14 @@ pub enum DynamicCalculation {
     Add,
     Percentage(f32),
     Pixels(f32),
+}
+
+impl Scaled for DynamicCalculation {
+    fn scale(&mut self, scale_factor: f32) {
+        if let DynamicCalculation::Pixels(s) = self {
+            *s *= scale_factor;
+        }
+    }
 }
 
 impl std::fmt::Display for DynamicCalculation {
@@ -70,7 +91,7 @@ impl std::fmt::Display for DynamicCalculation {
 
 /// Calculate some chained operations with a given value.
 /// This value could be for example the width of a node's parent area.
-pub fn run_calculations(calcs: &Vec<DynamicCalculation>, value: f32) -> f32 {
+pub fn run_calculations(calcs: &[DynamicCalculation], value: f32) -> f32 {
     let mut prev_number: Option<f32> = None;
     let mut prev_op: Option<DynamicCalculation> = None;
 

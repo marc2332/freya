@@ -4,7 +4,7 @@ use freya_core::prelude::*;
 use freya_elements::elements as dioxus_elements;
 
 use crate::{
-    property::{ColorfulProperty, Property, ShadowProperty},
+    property::{BorderProperty, ColorfulProperty, Property, ShadowProperty},
     NodeInspectorBar, TreeNode,
 };
 
@@ -31,12 +31,21 @@ pub fn NodeInspectorStyle<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> 
                                 }
                             }
                         }
-                        AttributeType::Measures(paddings) => {
+                        AttributeType::Paddings(paddings) => {
                             rsx!{
                                 Property {
                                     key: "{i}",
                                     name: "{name}",
                                     value: paddings.pretty()
+                                }
+                            }
+                        }
+                        AttributeType::Radius(radius) => {
+                            rsx!{
+                                Property {
+                                    key: "{i}",
+                                    name: "{name}",
+                                    value: radius.pretty()
                                 }
                             }
                         }
@@ -55,6 +64,15 @@ pub fn NodeInspectorStyle<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> 
                                     key: "{i}",
                                     name: "{name}",
                                     color: color
+                                }
+                            }
+                        }
+                        AttributeType::Border(border) => {
+                            rsx!{
+                                BorderProperty {
+                                    key: "{i}",
+                                    name: "{name}",
+                                    border: border
                                 }
                             }
                         }
@@ -85,12 +103,12 @@ pub fn NodeInspectorStyle<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> 
                                 }
                             }
                         }
-                        AttributeType::Shadow(shadow_settings) => {
+                        AttributeType::Shadow(shadow) => {
                             rsx!{
                                 ShadowProperty {
                                     key: "{i}",
                                     name: "{name}",
-                                    shadow_settings: shadow_settings
+                                    shadow: shadow
                                 }
                             }
                         }

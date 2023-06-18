@@ -18,7 +18,7 @@ fn app(cx: Scope) -> Element {
             color: "rgb(240, 240, 240)",
             direction: "horizontal",
             paragraph {
-                width: "33%",
+                width: "25%",
                 line_height: "2",
                 text {
                     font_size: "20",
@@ -77,7 +77,7 @@ fn app(cx: Scope) -> Element {
                 }
             }
             paragraph {
-                width: "33%",
+                width: "25%",
                 line_height: "2",
                 text {
                     font_size: "20",
@@ -96,7 +96,7 @@ fn app(cx: Scope) -> Element {
                 }
             }
             paragraph {
-                width: "33%",
+                width: "25%",
                 line_height: "2",
                 text {
                     font_size: "20",
@@ -132,6 +132,32 @@ fn app(cx: Scope) -> Element {
                     font_size: "20",
                     font_width: "ultra-expanded",
                     "Ultra Expanded\n"
+                }
+            }
+            paragraph {
+                width: "25%",
+                line_height: "2",
+                text {
+                    font_size: "20",
+                    decoration: "underline",
+                    decoration_color: "red",
+                    "Underline\n"
+                }
+                text {
+                    font_size: "20",
+                    decoration: "line-through",
+                    "Line-through\n"
+                }
+                text {
+                    font_size: "20",
+                    decoration: "overline",
+                    "Overline\n"
+                }
+                text {
+                    font_size: "20",
+                    decoration: "underline",
+                    decoration_style: "wavy",
+                    "Wavy\n"
                 }
             }
         }

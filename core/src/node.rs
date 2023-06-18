@@ -1,17 +1,19 @@
 use dioxus_native_core::real_dom::NodeImmutable;
 use freya_dom::prelude::DioxusNode;
 use freya_node_state::{
-    CursorSettings, FontStyle, References, ShadowSettings, SizeState, Style, Transform,
+    Border, CursorSettings, FontStyle, LayoutState, References, Shadow, Style, Transform,
 };
 use skia_safe::Color;
-use torin::{direction::DirectionMode, display::DisplayMode, padding::Paddings, size::Size};
+use torin::{
+    direction::DirectionMode, display::DisplayMode, padding::Paddings, radius::Radius, size::Size,
+};
 
 #[derive(Clone)]
 pub struct NodeState {
     pub cursor: CursorSettings,
     pub font_style: FontStyle,
     pub references: References,
-    pub size: SizeState,
+    pub size: LayoutState,
     pub style: Style,
     pub transform: Transform,
 }
@@ -20,7 +22,7 @@ pub fn get_node_state(node: &DioxusNode) -> NodeState {
     let cursor = node.get::<CursorSettings>().unwrap().clone();
     let font_style = node.get::<FontStyle>().unwrap().clone();
     let references = node.get::<References>().unwrap().clone();
-    let size = node.get::<SizeState>().unwrap().clone();
+    let size = node.get::<LayoutState>().unwrap().clone();
     let style = node.get::<Style>().unwrap().clone();
     let transform = node.get::<Transform>().unwrap().clone();
 
@@ -75,14 +77,14 @@ impl<'a> Iterator for NodeStateIterator<'a> {
                 "direction",
                 AttributeType::Direction(&self.state.size.direction),
             )),
-            7 => Some(("padding", AttributeType::Measures(self.state.size.padding))),
+            7 => Some(("padding", AttributeType::Paddings(self.state.size.padding))),
             8 => Some(("display", AttributeType::Display(&self.state.size.display))),
             9 => Some((
                 "background",
                 AttributeType::Color(&self.state.style.background),
             )),
-            10 => Some(("radius", AttributeType::Measure(self.state.style.radius))),
-            11 => Some(("shadow", AttributeType::Shadow(&self.state.style.shadow))),
+            10 => Some(("border", AttributeType::Border(&self.state.style.border))),
+            11 => Some(("radius", AttributeType::Radius(self.state.style.radius))),
             12 => Some(("color", AttributeType::Color(&self.state.font_style.color))),
             13 => Some((
                 "font_family",
@@ -96,9 +98,14 @@ impl<'a> Iterator for NodeStateIterator<'a> {
                 "line_height",
                 AttributeType::Measure(self.state.font_style.line_height),
             )),
-            16 => Some(("scroll_x", AttributeType::Measure(self.state.size.scroll_x))),
-            17 => Some(("scroll_y", AttributeType::Measure(self.state.size.scroll_y))),
-            _ => None,
+            16 => Some(("offset_x", AttributeType::Measure(self.state.size.offset_x))),
+            17 => Some(("offset_y", AttributeType::Measure(self.state.size.offset_y))),
+            n => {
+                let shadows = &self.state.style.shadows;
+                shadows
+                    .get(n - 18)
+                    .map(|shadow| ("shadow", AttributeType::Shadow(shadow)))
+            }
         }
     }
 
@@ -114,9 +121,11 @@ pub enum AttributeType<'a> {
     Color(&'a Color),
     Size(&'a Size),
     Measure(f32),
-    Measures(Paddings),
+    Paddings(Paddings),
+    Radius(Radius),
     Direction(&'a DirectionMode),
     Display(&'a DisplayMode),
-    Shadow(&'a ShadowSettings),
+    Shadow(&'a Shadow),
     Text(String),
+    Border(&'a Border),
 }

@@ -87,8 +87,8 @@ pub fn DragZone<'a, T: 'static + Clone>(cx: Scope<'a, DragZoneProps<'a, T>>) -> 
                 rect {
                     width: "0",
                     height: "0",
-                    scroll_x: "{pos.x}",
-                    scroll_y: "{pos.y}",
+                    offset_x: "{pos.x}",
+                    offset_y: "{pos.y}",
                     &cx.props.drag_element
                 }
             )
@@ -212,18 +212,7 @@ mod test {
 
         utils.wait_for_update().await;
 
-        assert_eq!(
-            root.child(0)
-                .unwrap()
-                .child(0)
-                .unwrap()
-                .child(0)
-                .unwrap()
-                .child(0)
-                .unwrap()
-                .text(),
-            Some("Moving")
-        );
+        assert_eq!(root.get(0).get(0).get(0).get(0).text(), Some("Moving"));
 
         utils.push_event(FreyaEvent::Mouse {
             name: "click".to_string(),
@@ -234,15 +223,7 @@ mod test {
         utils.wait_for_update().await;
 
         assert_eq!(
-            root.child(1)
-                .unwrap()
-                .child(0)
-                .unwrap()
-                .child(0)
-                .unwrap()
-                .child(0)
-                .unwrap()
-                .text(),
+            root.get(1).get(0).get(0).get(0).text(),
             Some("Enabled: true")
         );
     }

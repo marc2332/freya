@@ -1,5 +1,5 @@
 use dioxus_native_core::{prelude::NodeType, real_dom::NodeImmutable, tree::TreeRef, NodeId};
-use freya_node_state::SizeState;
+use freya_node_state::LayoutState;
 use torin::prelude::*;
 
 use crate::dom::DioxusDOM;
@@ -18,7 +18,7 @@ impl<'a> DioxusDOMAdapter<'a> {
 impl DOMAdapter<NodeId> for DioxusDOMAdapter<'_> {
     fn get_node(&self, node_id: &NodeId) -> Option<Node> {
         let node = self.rdom.get(*node_id)?;
-        let mut size = node.get::<SizeState>().unwrap().clone();
+        let mut size = node.get::<LayoutState>().unwrap().clone();
 
         // The root node expands by default
         if *node_id == self.rdom.root_id() {
@@ -36,8 +36,8 @@ impl DOMAdapter<NodeId> for DioxusDOMAdapter<'_> {
             direction: size.direction,
             padding: size.padding,
             display: size.display,
-            scroll_x: Length::new(size.scroll_x),
-            scroll_y: Length::new(size.scroll_y),
+            offset_x: Length::new(size.offset_x),
+            offset_y: Length::new(size.offset_y),
             has_layout_references: size.node_ref.is_some(),
         })
     }
