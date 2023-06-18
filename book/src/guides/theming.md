@@ -2,7 +2,7 @@
 
 Freya has built-in support for Theming. 
 
-> Currently, extending the base theme is not supported.
+> ⚠️ Currently, extending the base theme is not supported.
 
 ### Accessing the current theme
 You can access the whole current theme via the `use_get_theme` hook.
