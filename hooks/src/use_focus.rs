@@ -37,6 +37,13 @@ impl UseFocus<'_> {
     pub fn is_focused(&self) -> bool {
         Some(Some(self.id)) == self.focused_id.map(|f| *f.read())
     }
+
+    /// Unfocus the currently focused node.
+    pub fn unfocus(&self) {
+        if let Some(focused_id) = self.focused_id {
+            *focused_id.write() = None;
+        }
+    }
 }
 
 /// Create a focus manager for a node.
