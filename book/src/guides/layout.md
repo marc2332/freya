@@ -2,6 +2,17 @@
 
 Learn how the layout attributes work.
 
+- [`width & height`](#width_&_height)
+- [`min_width & min_height`](#min_width_&_min_height)
+- [`max_width & max_height`](#max_width_&_max_height)
+- [`Size units`](#size_units)
+  - [`Static values`](#static-values)
+  - [`Percentages`](#percentages)
+  - [`calc()`](#calc)
+- [`direction`](#direction)
+- [`padding`](#padding)
+- [`display`](#display)
+
 > ⚠️ Freya's layout is still somewhat limited.
 
 ### width & height
@@ -61,7 +72,7 @@ fn app(cx: Scope) -> Element {
 }
 ```
 
-### Units
+### Size Units
 
 #### Static Values
 
@@ -78,12 +89,13 @@ fn app(cx: Scope) -> Element {
 
 #### Percentages
 Relative percentage to the parent equivalent value.
+
 ```rust
 fn app(cx: Scope) -> Element {
     render!(
         rect {
-            width: "50%", // Half the window
-            height: "75%" // 3/4 the window
+            width: "50%", // Half the parent
+            height: "75%" // 3/4 the parent
         }
     )
 }
@@ -97,8 +109,8 @@ For more complex logic you can use the `calc()` function.
 fn app(cx: Scope) -> Element {
     render!(
         rect {
-            width: "calc(33% - 60 + 15%)",
-            height: "calc(100% - 10)"
+            width: "calc(33% - 60 + 15%)", // (1/3 of the parent minus 60) plus 15% of parent
+            height: "calc(100% - 10)" // 100% of the parent minus 10
         }
     )
 }

@@ -7,7 +7,7 @@ Freya contains a set of primitive elements:
 - [`label`](#label)
 - [`image`](#image)
 - [`svg`](#svg)
-- [`paragraph and text`](#paragraph-and-text)
+- [`paragraph and text`](#paragraph-and-text-and-text)
 
 ## rect
 
