@@ -5,7 +5,7 @@ use freya_common::NodeReferenceLayout;
 use freya_dom::prelude::DioxusDOM;
 use freya_layout::Layers;
 
-use freya_node_state::{CursorMode, CursorSettings, References, SizeState, Style};
+use freya_node_state::{CursorMode, CursorSettings, LayoutState, References, Style};
 use rustc_hash::FxHashMap;
 use skia_safe::textlayout::FontCollection;
 use torin::torin::Torin;
@@ -63,7 +63,7 @@ pub fn process_layers(
 
             // Notify layout references
 
-            let size_state = &*node.get::<SizeState>().unwrap();
+            let size_state = &*node.get::<LayoutState>().unwrap();
 
             if let Some(reference) = &size_state.node_ref {
                 let mut node_layout = NodeReferenceLayout {

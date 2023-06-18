@@ -1,4 +1,4 @@
-use crate::prelude::Gap;
+use crate::prelude::Gaps;
 
 #[derive(PartialEq)]
 pub struct Measure;
@@ -11,11 +11,11 @@ pub type Length = euclid::Length<f32, Measure>;
 
 pub trait BoxModel {
     // The area without any outer gap (e.g margin)
-    fn box_area(&self, margin: &Gap) -> Area;
+    fn box_area(&self, margin: &Gaps) -> Area;
 }
 
 impl BoxModel for Area {
-    fn box_area(&self, margin: &Gap) -> Area {
+    fn box_area(&self, margin: &Gaps) -> Area {
         let origin = self.origin;
         let size = self.size;
         Area::new(

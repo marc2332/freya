@@ -67,12 +67,12 @@ pub fn NodeInspectorStyle<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> 
                                 }
                             }
                         }
-                        AttributeType::Border(border_settings) => {
+                        AttributeType::Border(border) => {
                             rsx!{
                                 BorderProperty {
                                     key: "{i}",
                                     name: "{name}",
-                                    border_settings: border_settings
+                                    border: border
                                 }
                             }
                         }
@@ -103,12 +103,12 @@ pub fn NodeInspectorStyle<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> 
                                 }
                             }
                         }
-                        AttributeType::Shadow(shadow_settings) => {
+                        AttributeType::Shadow(shadow) => {
                             rsx!{
                                 ShadowProperty {
                                     key: "{i}",
                                     name: "{name}",
-                                    shadow_settings: shadow_settings
+                                    shadow: shadow
                                 }
                             }
                         }

@@ -1,15 +1,13 @@
-use freya_node_state::{
-    parse_border, parse_border_align, BorderAlignment, BorderSettings, BorderStyle,
-};
+use freya_node_state::{Border, BorderAlignment, BorderStyle, Parse};
 use skia_safe::Color;
 
 #[test]
 fn parse_basic_border() {
-    let border = parse_border("1 solid red", BorderAlignment::default(), 1.0);
+    let border = Border::parse("1 solid red");
 
     assert_eq!(
         border,
-        Some(BorderSettings {
+        Ok(Border {
             width: 1.0,
             color: Color::RED,
             style: BorderStyle::Solid,
@@ -20,26 +18,26 @@ fn parse_basic_border() {
 
 #[test]
 fn parse_border_alignments() {
-    let inner = parse_border_align("inner");
-    let outer = parse_border_align("outer");
-    let center = parse_border_align("center");
-    let invalid = parse_border_align("invalid");
+    let inner = BorderAlignment::parse("inner");
+    let outer = BorderAlignment::parse("outer");
+    let center = BorderAlignment::parse("center");
+    let invalid = BorderAlignment::parse("invalid");
 
-    assert_eq!(inner, BorderAlignment::Inner);
-    assert_eq!(outer, BorderAlignment::Outer);
-    assert_eq!(center, BorderAlignment::Center);
-    assert_eq!(invalid, BorderAlignment::Inner);
+    assert_eq!(inner, Ok(BorderAlignment::Inner));
+    assert_eq!(outer, Ok(BorderAlignment::Outer));
+    assert_eq!(center, Ok(BorderAlignment::Center));
+    assert_eq!(invalid, Ok(BorderAlignment::Inner));
 }
 
 #[test]
 fn parse_border_style() {
-    let solid = parse_border("1 solid red", BorderAlignment::default(), 1.0);
-    let none = parse_border("1 rust red", BorderAlignment::default(), 1.0);
-    let invalid = parse_border("rust solid red", BorderAlignment::default(), 1.0);
+    let solid = Border::parse("1 solid red");
+    let none = Border::parse("1 rust red");
+    let invalid = Border::parse("rust solid red");
 
     assert_eq!(
         solid,
-        Some(BorderSettings {
+        Ok(Border {
             width: 1.0,
             color: Color::RED,
             style: BorderStyle::Solid,
@@ -48,12 +46,12 @@ fn parse_border_style() {
     );
     assert_eq!(
         none,
-        Some(BorderSettings {
+        Ok(Border {
             width: 1.0,
             color: Color::RED,
             style: BorderStyle::None,
             alignment: BorderAlignment::default()
         })
     );
-    assert!(invalid.is_none());
+    assert!(invalid.is_err());
 }

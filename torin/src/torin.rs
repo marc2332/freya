@@ -11,7 +11,7 @@ use crate::{
     dom_adapter::{DOMAdapter, NodeAreas, NodeKey},
     geometry::{Area, Size2D},
     node::Node,
-    prelude::{BoxModel, Gap},
+    prelude::{BoxModel, Gaps},
     size::Size,
 };
 
@@ -263,7 +263,7 @@ impl<Key: NodeKey> Torin<Key> {
                 area: suggested_root_area,
                 inner_area: suggested_root_area,
                 inner_sizes: Size2D::default(),
-                margin: Gap::default(),
+                margin: Gaps::default(),
             });
         let root = dom_adapter.get_node(&root_id).unwrap();
 
