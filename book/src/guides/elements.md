@@ -16,7 +16,7 @@ You can specify things like [`width`](/guides/layout.html#width), [`paddings`](/
 
 Example:
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -34,7 +34,7 @@ The `container` behaves the same as the [`rect`](#rect) element, except, it hide
 
 Example:
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         container {
@@ -52,7 +52,7 @@ The `label` element simply shows some text.
 
 Example:
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         label {
@@ -68,7 +68,7 @@ The `svg` element let's you draw a SVG. You will need to use the `bytes_to_data`
 
 Example:
 
-```rust
+```rust, no_run
 
 static FERRIS: &[u8] = include_bytes!("./ferris.svg");
 
@@ -86,7 +86,7 @@ fn app(cx: Scope) -> Element {
 
 The `image` element, just like `svg` element, require you to pass the image bytes yourself.
 
-```rust
+```rust, no_run
 static RUST_LOGO: &[u8] = include_bytes!("./rust_logo.png");
 
 fn app(cx: Scope) -> Element {
