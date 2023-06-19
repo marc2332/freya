@@ -33,7 +33,12 @@ pub fn render_rect_container(
 
     let mut path = Path::new();
     let rounded_rect = RRect::new_rect_radii(
-        Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
+        Rect::new(
+            area.min_x().round(),
+            area.min_y().round(),
+            area.max_x().round(),
+            area.max_y().round(),
+        ),
         radius,
     );
 
@@ -91,9 +96,12 @@ pub fn render_rect_container(
     }
 
     // Borders
-    if node_style.border.width > 0.0 && node_style.border.style != BorderStyle::None {
-        let mut stroke_paint = paint.clone();
+    if node_style.border.width > 0.0
+        && node_style.border.style != BorderStyle::None
+        && node_style.border.color != Color::TRANSPARENT
+    {
         let half_border_width = node_style.border.width / 2.0;
+        let mut stroke_paint = paint.clone();
 
         stroke_paint.set_style(PaintStyle::Stroke);
         stroke_paint.set_color(node_style.border.color);
