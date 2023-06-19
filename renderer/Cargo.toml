@@ -38,6 +38,7 @@ glutin = { workspace = true }
 glutin-winit = { workspace = true }
 raw-window-handle = { workspace = true }
 winit = { workspace = true }
+tracing = { workspace = true }
 
 uuid = { workspace = true }
 futures = { workspace = true }

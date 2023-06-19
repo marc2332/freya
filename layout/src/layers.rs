@@ -14,6 +14,14 @@ pub struct Layers {
 }
 
 impl Layers {
+    pub fn len_paragraph_elements(&self) -> usize {
+        self.paragraph_elements.len()
+    }
+
+    pub fn len_layers(&self) -> usize {
+        self.layers.len()
+    }
+
     /// Measure all the paragraphs
     pub fn measure_all_paragraph_elements(
         &self,

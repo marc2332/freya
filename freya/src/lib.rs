@@ -84,6 +84,4 @@ pub mod prelude {
     pub use freya_node_state::{bytes_to_data, CustomAttributeValues};
     pub use freya_renderer::WindowConfig;
     pub use torin::prelude::*;
-
-    pub use tracing;
 }
