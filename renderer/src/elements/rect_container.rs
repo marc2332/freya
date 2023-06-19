@@ -34,10 +34,10 @@ pub fn render_rect_container(
     let mut path = Path::new();
     let rounded_rect = RRect::new_rect_radii(
         Rect::new(
-            area.min_x().round(),
-            area.min_y().round(),
-            area.max_x().round(),
-            area.max_y().round(),
+            area.min_x(),
+            area.min_y(),
+            area.max_x(),
+            area.max_y(),
         ),
         radius,
     );
