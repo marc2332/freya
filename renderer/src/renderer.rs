@@ -74,21 +74,23 @@ pub fn render_skia(
             }
         }
 
+        let snapped_area = area.round();
+
         match tag.as_str() {
             "rect" | "container" => {
-                render_rect_container(area, dioxus_node, canvas, font_collection);
+                render_rect_container(&snapped_area, dioxus_node, canvas, font_collection);
             }
             "label" => {
-                render_label(area, dioxus_node, canvas, font_collection);
+                render_label(&snapped_area, dioxus_node, canvas, font_collection);
             }
             "paragraph" => {
-                render_paragraph(area, dioxus_node, canvas, font_collection);
+                render_paragraph(&snapped_area, dioxus_node, canvas, font_collection);
             }
             "svg" => {
-                render_svg(area, dioxus_node, canvas);
+                render_svg(&snapped_area, dioxus_node, canvas);
             }
             "image" => {
-                render_image(area, dioxus_node, canvas);
+                render_image(&snapped_area, dioxus_node, canvas);
             }
             _ => {}
         }
