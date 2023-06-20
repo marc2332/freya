@@ -49,7 +49,16 @@ impl Size {
 impl Scaled for Size {
     fn scale(&mut self, scale_factor: f32) {
         match self {
-            Size::Pixels(s) => *s *= scale_factor,
+            Size::Pixels(s) => {
+                let logical_pixels = s.get();
+                let logical_subpixels = logical_pixels.fract();
+
+                *s *= scale_factor;
+
+                if logical_subpixels == 0.0 {
+                    *s = Length::new(logical_pixels.round());
+                }
+            },
             Size::DynamicCalculations(calcs) => {
                 calcs.iter_mut().for_each(|calc| calc.scale(scale_factor));
             }
@@ -71,7 +80,7 @@ pub enum DynamicCalculation {
 impl Scaled for DynamicCalculation {
     fn scale(&mut self, scale_factor: f32) {
         if let DynamicCalculation::Pixels(s) = self {
-            *s *= scale_factor;
+            *s = (*s * scale_factor).round();
         }
     }
 }

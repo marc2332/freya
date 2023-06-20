@@ -89,16 +89,11 @@ impl Parse for Border {
 
 impl Scaled for Border {
     fn scale(&mut self, scale_factor: f32) {
-        let subpixels = self.width.fract();
+        let logical_subpixels = self.width.fract();
 
         self.width *= scale_factor;
 
-        // Let's talk about subpixels.
-        // Did you know that chromium renders a 0.25px and 1px border exactly the same? Browsers normally
-        // will round up most border-width values to the nearest pixel. But if someone wants the illusion
-        // of thickness in between pixels, then a workaround is to only snap pixels if the original logical
-        // border width was a whole integer.
-        if subpixels == 0.0 {
+        if logical_subpixels == 0.0 {
             self.width = self.width.round();
         }
     }

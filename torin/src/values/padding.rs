@@ -73,9 +73,25 @@ impl Paddings {
 
 impl Scaled for Paddings {
     fn scale(&mut self, scale: f32) {
+        let logical_subpixels = (
+            self.left.get().fract(),
+            self.right.get().fract(),
+            self.top.get().fract(),
+            self.bottom.get().fract()
+        );
+
         self.left *= scale;
         self.right *= scale;
         self.top *= scale;
         self.bottom *= scale;
+
+        if logical_subpixels.0 == 0.0 && logical_subpixels.1 == 0.0 {
+            self.left = Length::new(self.left.get().round());
+            self.right = Length::new(self.right.get().round());
+        }
+        if logical_subpixels.2 == 0.0 && logical_subpixels.3 == 0.0 {
+            self.top = Length::new(self.top.get().round());
+            self.bottom = Length::new(self.bottom.get().round());
+        }
     }
 }
