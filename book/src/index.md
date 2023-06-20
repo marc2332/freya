@@ -1,4 +1,4 @@
-# Introduction
+# Welcome
 
 **Freya** is __work in progress__ cross-platform native GUI library for 🦀 Rust, built on top of 🧬 [Dioxus](https://dioxuslabs.com) and 🎨 [Skia](https://skia.org/) as graphics library. 
 
