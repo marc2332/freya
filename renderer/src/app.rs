@@ -15,6 +15,7 @@ use tokio::{
     select,
     sync::{mpsc::unbounded_channel, Notify},
 };
+use tracing::info;
 use uuid::Uuid;
 use winit::{dpi::PhysicalSize, event_loop::EventLoopProxy};
 
@@ -194,6 +195,13 @@ impl<State: 'static + Clone> App<State> {
             .process_layout(&dom, &mut self.font_collection);
         self.layers = layers;
         self.viewports_collection = viewports;
+
+        info!(
+            "Processed {} layers and {} group of paragraph elements",
+            self.layers.len_layers(),
+            self.layers.len_paragraph_elements()
+        );
+        info!("Processed {} viewports", self.viewports_collection.len());
 
         if let Some(mutations_notifier) = &self.mutations_notifier {
             mutations_notifier.notify_one();

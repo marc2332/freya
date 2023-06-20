@@ -11,6 +11,7 @@ use freya_node_state::{
 };
 use std::sync::MutexGuard;
 use torin::prelude::*;
+use tracing::info;
 
 use crate::dom_adapter::DioxusDOMAdapter;
 
@@ -146,6 +147,13 @@ impl FreyaDOM {
 
         let must_repaint = !diff.is_empty();
         let must_relayout = !self.layout().get_dirty_nodes().is_empty();
+
+        if !diff.is_empty() {
+            info!(
+                "Updated DOM, now with {} nodes",
+                self.rdom().tree_ref().len()
+            );
+        }
 
         (must_repaint, must_relayout)
     }

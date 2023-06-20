@@ -181,7 +181,7 @@ impl State<CustomAttributeValues> for LayoutState {
                         }
                     }
                     _ => {
-                        println!("Unsupported attribute <{}>", attr.attribute.name);
+                        panic!("Unsupported attribute <{}>, this should not be happening, please report it.", attr.attribute.name);
                     }
                 }
             }
