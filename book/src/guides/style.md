@@ -15,7 +15,7 @@ You can learn about the syntax of this attribute [here](#color-syntax).
 
 Example:
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -36,7 +36,7 @@ Syntax: `<x> <y> <intensity> <size> <color>`
 
 Example:
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -54,7 +54,7 @@ The `radius` attribute let's you smooth the corners of the element.
 
 Example:
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -73,7 +73,7 @@ You can add a border to an element using the `border` and `border_alignment` att
 
 Example:
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {

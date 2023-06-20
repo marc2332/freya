@@ -1,13 +1,14 @@
 # Summary
 
-# General
+# Introduction
 
-- [Introduction](./index.md)
+- [Welcome](./index.md)
+- [What is Freya?](./what_is_freya.md)
 - [Differences with Dioxus](differences_with_dioxus.md)
 - [Environment Setup](setup.md)
+- [Getting started](./guides/getting_started.md)
 
 # Guides
-- [Getting started](./guides/getting_started.md)
 - [Elements](./guides/elements.md)
 - [Layout](./guides/layout.md)
 - [Style](./guides/style.md)

@@ -26,7 +26,7 @@ You can learn about the syntax of this attribute in [`Color Syntax`](/guides/sty
 
 Example:
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         label {
@@ -39,7 +39,7 @@ fn app(cx: Scope) -> Element {
 
 Another example showing [inheritance](#inheritance):
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -63,7 +63,7 @@ Limitation: Only fonts installed in the system are supported for now.
 
 Example: 
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         label {
@@ -82,7 +82,7 @@ You can specify the size of the text using `font_size`.
 
 Example:
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         label {
@@ -103,7 +103,7 @@ Accepted values: `center`, `end`, `justify`, `left`, `right`, `start`
 
 Example
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         label {
@@ -124,7 +124,7 @@ Accepted values: `upright` (default), `italic` and `oblique`.
 
 Example:
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         label {
@@ -167,7 +167,7 @@ Accepted values:
 
 Example:
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         label {
@@ -196,7 +196,7 @@ Accepted values:
 
 Example:
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         label {
@@ -217,7 +217,7 @@ Specify the height of the lines of the text.
 
 Example:
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         label {
@@ -236,7 +236,7 @@ Specify the spacing between characters of the text.
 
 Example:
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         label {
@@ -255,7 +255,7 @@ Specify the spacing between words of the text.
 
 Example:
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         label {
@@ -279,7 +279,7 @@ Accpted values:
 
 Example:
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         label {
@@ -305,7 +305,7 @@ Accpted values:
 
 Example:
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         label {
@@ -327,7 +327,7 @@ You can learn about the syntax of this attribute in [`Color Syntax`](/guides/sty
 
 Example:
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         label {

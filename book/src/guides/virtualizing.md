@@ -14,7 +14,7 @@ Freya comes with a `VirtualScrollView` component which can help you archive the 
 > The virtualization logic of `VirtualScrollView` is implemented at component-level, so, you could implement your own version if you wanted.
 
 Here is an example:
-```rust
+```rust, no_run
 fn main() {
     launch(app);
 }

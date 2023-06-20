@@ -1,6 +1,6 @@
 # Getting started
 
-I encourage you to learn how [Dioxus works](https://dioxuslabs.com/docs/0.3/guide/en/describing_ui/index.html), when you are done you can continue here.
+I encourage you to learn how [Dioxus works](https://dioxuslabs.com/docs/0.3/guide/en/describing_ui/index.html), when you are done you can continue here. Also make sure you have the followed the [environment setup](../setup.html) guide.
 
 Now, let's start by creating a hello world project.
 
@@ -31,7 +31,7 @@ dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="b264211cc268523242
 
 And paste this code in your `main.rs` file.
 
-```rust no_run
+```rust, no_run no_run
 #![cfg_attr(
     all(not(debug_assertions), target_os = "windows"),
     windows_subsystem = "windows"
