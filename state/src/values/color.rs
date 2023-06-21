@@ -19,10 +19,12 @@ impl Parse for Color {
             "orange" => Ok(Color::from_rgb(255, 165, 0)),
             "transparent" => Ok(Color::TRANSPARENT),
             _ => {
-                if value.starts_with("hsl") {
+                if value.starts_with("hsl(") {
                     parse_hsl(value)
-                } else {
+                } else if value.starts_with("rgb(") {
                     parse_rgb(value)
+                } else {
+                    Err(ParseColorError)
                 }
             }
         }
@@ -30,8 +32,13 @@ impl Parse for Color {
 }
 
 fn parse_rgb(color: &str) -> Result<Color, ParseColorError> {
-    let color = color.replace("rgb(", "").replace(')', "");
+    if !color.ends_with(")") {
+        return Err(ParseColorError)
+    }
+
+    let color = color.replacen("rgb(", "", 1).replacen(")", "", 1);
     let mut colors = color.split(',');
+
 
     let r = colors
         .next()
@@ -62,7 +69,11 @@ fn parse_rgb(color: &str) -> Result<Color, ParseColorError> {
 }
 
 fn parse_hsl(color: &str) -> Result<Color, ParseColorError> {
-    let color = color.replace("hsl(", "").replace(')', "");
+    if !color.ends_with(")") {
+        return Err(ParseColorError)
+    }
+
+    let color = color.replacen("hsl(", "", 1).replacen(")", "", 1);
     let mut colors = color.split(',');
 
     // Get each color component
