@@ -49,7 +49,7 @@ fn app(cx: Scope) -> Element {
             }
             rect { height: "40" }
             label {
-                text_shadow: "0 18 12 rgb(0, 0, 0), 0 0 20 red",
+                text_shadow: "0 18 12 rgb(0, 0, 0), 0 0 20 orange",
                 font_size: "80",
                 font_weight: "bold",
 
