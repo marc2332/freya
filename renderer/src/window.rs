@@ -34,8 +34,8 @@ use skia_safe::{
     ColorType, Matrix, Surface,
 };
 
+use crate::config::WindowConfig;
 use crate::renderer::render_skia;
-use crate::window_config::WindowConfig;
 use crate::HoveredNode;
 
 /// Manager for a Window

@@ -1,4 +1,5 @@
 use app::App;
+pub use config::*;
 use dioxus_core::VirtualDom;
 use dioxus_native_core::NodeId;
 use event_loop::run_event_loop;
@@ -7,15 +8,14 @@ use freya_dom::prelude::SafeDOM;
 use std::sync::{Arc, Mutex};
 use tokio::sync::Notify;
 pub use window::WindowEnv;
-pub use window_config::WindowConfig;
 use winit::event_loop::EventLoopBuilder;
 
 mod app;
+mod config;
 mod elements;
 mod event_loop;
 mod renderer;
 mod window;
-mod window_config;
 mod wireframe;
 
 pub type HoveredNode = Option<Arc<Mutex<Option<NodeId>>>>;
@@ -24,7 +24,7 @@ pub type HoveredNode = Option<Arc<Mutex<Option<NodeId>>>>;
 pub fn run_app<T: 'static + Clone>(
     vdom: VirtualDom,
     rdom: SafeDOM,
-    window_config: WindowConfig<T>,
+    config: LaunchConfig<T>,
     mutations_notifier: Option<Arc<Notify>>,
     hovered_node: HoveredNode,
 ) {
@@ -56,7 +56,8 @@ pub fn run_app<T: 'static + Clone>(
         vdom,
         &proxy,
         mutations_notifier,
-        WindowEnv::from_config(window_config, &event_loop),
+        WindowEnv::from_config(config.window.clone(), &event_loop),
+        config,
     );
 
     app.init_vdom();

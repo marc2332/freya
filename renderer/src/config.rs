@@ -34,15 +34,22 @@ impl<T: Clone> Default for WindowConfig<T> {
     }
 }
 
-impl<T: Clone> WindowConfig<T> {
-    pub fn builder() -> WindowConfigBuilder<T> {
-        WindowConfigBuilder::default()
+/// Launch configuration.
+#[derive(Clone, Default)]
+pub struct LaunchConfig<'a, T: Clone> {
+    pub window: WindowConfig<T>,
+    pub fonts: Vec<(&'a str, &'a [u8])>,
+}
+
+impl<'a, T: Clone> LaunchConfig<'a, T> {
+    pub fn builder() -> LaunchConfigBuilder<'a, T> {
+        LaunchConfigBuilder::default()
     }
 }
 
-/// Configuration Builder for a window.
+/// Configuration Builder.
 #[derive(Clone)]
-pub struct WindowConfigBuilder<T> {
+pub struct LaunchConfigBuilder<'a, T> {
     pub width: f64,
     pub height: f64,
     pub decorations: bool,
@@ -50,9 +57,10 @@ pub struct WindowConfigBuilder<T> {
     pub transparent: bool,
     pub state: Option<T>,
     pub background: Color,
+    pub fonts: Vec<(&'a str, &'a [u8])>,
 }
 
-impl<T> Default for WindowConfigBuilder<T> {
+impl<T> Default for LaunchConfigBuilder<'_, T> {
     fn default() -> Self {
         Self {
             width: 350.0,
@@ -62,11 +70,12 @@ impl<T> Default for WindowConfigBuilder<T> {
             transparent: false,
             state: None,
             background: Color::WHITE,
+            fonts: Vec::default(),
         }
     }
 }
 
-impl<T: Clone> WindowConfigBuilder<T> {
+impl<'a, T: Clone> LaunchConfigBuilder<'a, T> {
     /// Specify a Window width.
     pub fn with_width(mut self, width: f64) -> Self {
         self.width = width;
@@ -109,16 +118,24 @@ impl<T: Clone> WindowConfigBuilder<T> {
         self
     }
 
-    /// Build the Window.
-    pub fn build(self) -> WindowConfig<T> {
-        WindowConfig {
-            width: self.width,
-            height: self.height,
-            title: self.title,
-            decorations: self.decorations,
-            transparent: self.transparent,
-            state: self.state,
-            background: self.background,
+    pub fn with_font(mut self, font_name: &'a str, font: &'a [u8]) -> Self {
+        self.fonts.push((font_name, font));
+        self
+    }
+
+    /// Build the configuration.
+    pub fn build(self) -> LaunchConfig<'a, T> {
+        LaunchConfig {
+            window: WindowConfig {
+                width: self.width,
+                height: self.height,
+                title: self.title,
+                decorations: self.decorations,
+                transparent: self.transparent,
+                state: self.state,
+                background: self.background,
+            },
+            fonts: self.fonts,
         }
     }
 }
