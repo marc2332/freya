@@ -1,5 +1,5 @@
 use crate::Parse;
-use skia_safe::{textlayout::TextShadow, Color};
+use skia_safe::Color;
 use torin::scaled::Scaled;
 
 #[derive(Default, Clone, Debug, PartialEq)]
@@ -76,38 +76,6 @@ impl Scaled for Shadow {
         self.y *= scale_factor;
         self.spread *= scale_factor;
         self.blur *= scale_factor;
-    }
-}
-
-// Same as shadow, but no inset or spread.
-impl Parse for TextShadow {
-    type Err = ParseShadowError;
-
-    fn parse(value: &str) -> Result<Self, Self::Err> {
-        let mut shadow_values = value.split_ascii_whitespace();
-        Ok(TextShadow {
-            offset: (
-                shadow_values
-                    .next()
-                    .ok_or(ParseShadowError)?
-                    .parse::<f32>()
-                    .map_err(|_| ParseShadowError)?,
-                shadow_values
-                    .next()
-                    .ok_or(ParseShadowError)?
-                    .parse::<f32>()
-                    .map_err(|_| ParseShadowError)?,
-            )
-                .into(),
-            blur_sigma: shadow_values
-                .next()
-                .ok_or(ParseShadowError)?
-                .parse::<f64>()
-                .map_err(|_| ParseShadowError)?
-                / 2.0,
-            color: Color::parse(shadow_values.collect::<Vec<&str>>().join(" ").as_str())
-                .map_err(|_| ParseShadowError)?,
-        })
     }
 }
 
