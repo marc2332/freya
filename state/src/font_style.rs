@@ -9,17 +9,20 @@ use dioxus_native_core::{
 use dioxus_native_core_macro::partial_derive_state;
 use skia_safe::{
     font_style::{Slant, Weight, Width},
-    textlayout::{Decoration, TextAlign, TextDecoration, TextDecorationStyle, TextStyle},
+    textlayout::{
+        Decoration, TextAlign, TextDecoration, TextDecorationStyle, TextShadow, TextStyle,
+    },
     Color,
 };
 use smallvec::{smallvec, SmallVec};
 use torin::torin::Torin;
 
-use crate::{CustomAttributeValues, Parse};
+use crate::{split_shadows, CustomAttributeValues, Parse};
 
 #[derive(Debug, Clone, PartialEq, Component)]
 pub struct FontStyle {
     pub color: Color,
+    pub text_shadows: Vec<TextShadow>,
     pub font_family: SmallVec<[String; 2]>,
     pub font_size: f32,
     pub font_slant: Slant,
@@ -60,6 +63,10 @@ impl From<&FontStyle> for TextStyle {
             .set_height_override(true)
             .set_height(value.line_height);
 
+        for shadow in value.text_shadows.iter() {
+            text_style.add_shadow(*shadow);
+        }
+
         *text_style.decoration_mut() = value.decoration;
 
         text_style
@@ -70,6 +77,7 @@ impl Default for FontStyle {
     fn default() -> Self {
         Self {
             color: Color::BLACK,
+            text_shadows: Vec::new(),
             font_family: smallvec!["Fira Sans".to_string()],
             font_size: 16.0,
             font_weight: Weight::NORMAL,
@@ -99,6 +107,7 @@ impl State<CustomAttributeValues> for FontStyle {
     const NODE_MASK: NodeMaskBuilder<'static> =
         NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[
             "color",
+            "text_shadow",
             "font_size",
             "font_family",
             "line_height",
@@ -137,6 +146,20 @@ impl State<CustomAttributeValues> for FontStyle {
                             if let Ok(new_color) = Color::parse(value) {
                                 font_style.color = new_color;
                             }
+                        }
+                    }
+                    "text_shadow" => {
+                        if let Some(value) = attr.value.as_text() {
+                            font_style.text_shadows = split_shadows(value)
+                                .iter()
+                                .map(|chunk| {
+                                    let mut shadow = TextShadow::parse(chunk).unwrap_or_default();
+                                    shadow.offset *= *scale_factor;
+                                    shadow.blur_sigma *= *scale_factor as f64;
+
+                                    shadow
+                                })
+                                .collect();
                         }
                     }
                     "font_family" => {
