@@ -34,7 +34,7 @@ fn app(cx: Scope) -> Element {
 
 ### min_width & min_height
 
-`rect` and `container` support specifying a minimum width and height, this can be useful if you use it alongside a percentage for the target size.
+`rect` supports specifying a minimum width and height, this can be useful if you use it alongside a percentage for the target size.
 
 ##### Usage
 
@@ -54,7 +54,7 @@ fn app(cx: Scope) -> Element {
 
 ### max_width & max_height
 
-`rect` and `container` support specifying a maximum width and height.
+`rect` supports specifying a maximum width and height.
 
 ##### Usage
 

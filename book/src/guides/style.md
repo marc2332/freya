@@ -25,7 +25,7 @@ fn app(cx: Scope) -> Element {
 }
 ```
 
-Compatible elements: [`rect`](/guides/elements.html#rect), [`container`](/guides/elements.html#container)
+Compatible elements: [`rect`](/guides/elements.html#rect)
 
 
 ### shadow
@@ -46,7 +46,7 @@ fn app(cx: Scope) -> Element {
 }
 ```
 
-Compatible elements: [`rect`](/guides/elements.html#rect), [`container`](/guides/elements.html#container)
+Compatible elements: [`rect`](/guides/elements.html#rect)
 
 ### radius
 
@@ -63,6 +63,8 @@ fn app(cx: Scope) -> Element {
     )
 }
 ```
+
+Compatible elements: [`rect`](/guides/elements.html#rect)
 
 ### border
 
@@ -83,6 +85,35 @@ fn app(cx: Scope) -> Element {
     )
 }
 ```
+
+Compatible elements: [`rect`](/guides/elements.html#rect)
+
+### overflow
+
+Specify how overflow should be handled.
+
+Accepted values: `clip | none`.
+
+Example:
+
+```rust, no_run
+fn app(cx: Scope) -> Element {
+    render!(
+        rect {
+            overflow: "clip"
+            width: "100",
+            height: "100%",
+            rect {
+                width: "500",
+                height: "100%",
+                background: "red",
+            }
+        }
+    )
+}
+```
+
+Compatible elements: [`rect`](/guides/elements.html#rect)
 
 ### Color syntax
 

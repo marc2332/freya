@@ -71,7 +71,8 @@ async fn simulate_events() {
     fn stateful_app(cx: Scope) -> Element {
         let enabled = use_state(cx, || false);
         render!(
-            container {
+            rect {
+                overflow: "clip",
                 width: "100%",
                 height: "100%",
                 background: "red",

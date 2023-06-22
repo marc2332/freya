@@ -78,7 +78,8 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
             height: "auto",
             direction: "both",
             padding: "2",
-            container {
+            rect {
+                overflow: "clip",
                 onclick: onclick,
                 onmouseenter: onmouseenter,
                 onmouseleave: onmouseleave,

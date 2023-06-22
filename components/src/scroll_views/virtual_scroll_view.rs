@@ -1,13 +1,13 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{keyboard::Key, KeyboardEvent, MouseEvent, WheelEvent};
-use freya_hooks::{use_get_theme, use_node};
+use freya_hooks::use_node;
 use std::ops::Range;
 
 use crate::{
     get_container_size, get_corrected_scroll_position, get_scroll_position_from_cursor,
     get_scroll_position_from_wheel, get_scrollbar_pos_and_size, is_scrollbar_visible, Axis,
-    SCROLLBAR_SIZE,
+    ScrollBar, ScrollThumb, SCROLLBAR_SIZE,
 };
 
 type BuilderFunction<'a, T> = dyn Fn(
@@ -101,14 +101,11 @@ fn get_render_range(
 /// ```
 #[allow(non_snake_case)]
 pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) -> Element {
-    let theme = use_get_theme(cx);
     let clicking_scrollbar = use_ref::<Option<(Axis, f64)>>(cx, || None);
     let clicking_shift = use_ref(cx, || false);
     let scrolled_y = use_ref(cx, || 0);
     let scrolled_x = use_ref(cx, || 0);
     let (node_ref, size) = use_node(cx);
-
-    let scrollbar_theme = &theme.scrollbar;
 
     let padding = cx.props.padding.unwrap_or("0");
     let user_container_width = cx.props.width.unwrap_or("100%");
@@ -249,7 +246,8 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
         render_range.map(|i| (cx.props.builder)((i + 1, i, cx, &cx.props.builder_values)));
 
     render!(
-        container {
+        rect {
+            overflow: "clip",
             direction: "horizontal",
             width: "{user_container_width}",
             height: "{user_container_height}",
@@ -261,7 +259,8 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
                 direction: "vertical",
                 width: "{container_width}",
                 height: "{container_height}",
-                container {
+                rect {
+                    overflow: "clip",
                     padding: "{padding}",
                     height: "100%",
                     width: "100%",
@@ -270,33 +269,25 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
                     onwheel: onwheel,
                     children
                 }
-                container {
+                ScrollBar {
                     width: "100%",
                     height: "{horizontal_scrollbar_size}",
                     offset_x: "{scrollbar_x}",
-                    onmouseleave: |_| {},
-                    background: "{scrollbar_theme.background}",
-                    rect {
+                    ScrollThumb {
                         onmousedown: onmousedown_x,
                         width: "{scrollbar_width}",
                         height: "100%",
-                        radius: "10",
-                        background: "{scrollbar_theme.thumb_background}",
                     },
                 }
             }
-            container {
+            ScrollBar {
                 width: "{vertical_scrollbar_size}",
                 height: "100%",
                 offset_y: "{scrollbar_y}",
-                onmouseleave: |_| {},
-                background: "{scrollbar_theme.background}",
-                rect {
+                ScrollThumb {
                     onmousedown: onmousedown_y,
                     width: "100%",
                     height: "{scrollbar_height}",
-                    radius: "10",
-                    background: "{scrollbar_theme.thumb_background}",
                 }
             }
         }

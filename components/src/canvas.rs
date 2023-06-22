@@ -25,7 +25,8 @@ pub struct CanvasProps {
 ///
 #[allow(non_snake_case)]
 pub fn Canvas(cx: Scope<CanvasProps>) -> Element {
-    render!(container {
+    render!(rect {
+        overflow: "clip",
         canvas_reference: cx.props.canvas.attribute(cx),
         background: "{cx.props.background}",
         width: "{cx.props.width}",
