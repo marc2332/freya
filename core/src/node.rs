@@ -107,7 +107,7 @@ impl<'a> Iterator for NodeStateIterator<'a> {
                     .map(|shadow| ("shadow", AttributeType::Shadow(shadow)));
 
                 if shadow.is_some() {
-                    return shadow;
+                    shadow
                 } else {
                     let text_shadows = &self.state.font_style.text_shadows;
                     text_shadows
