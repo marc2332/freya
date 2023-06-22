@@ -127,7 +127,7 @@ impl State<CustomAttributeValues> for Style {
                         style.svg_data = text.map(|v| v.as_bytes().to_owned());
                     }
                     _ => {
-                        println!("Unsupported attribute <{}>", attr.attribute.name);
+                        panic!("Unsupported attribute <{}>, this should not be happening, please report it.", attr.attribute.name);
                     }
                 }
             }

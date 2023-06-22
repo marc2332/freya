@@ -20,7 +20,7 @@ All elements support both `width` and `height` attributes.
 
 ##### Usage
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -38,7 +38,7 @@ fn app(cx: Scope) -> Element {
 
 ##### Usage
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -58,7 +58,7 @@ fn app(cx: Scope) -> Element {
 
 ##### Usage
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -76,7 +76,7 @@ fn app(cx: Scope) -> Element {
 
 #### Static Values
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -90,7 +90,7 @@ fn app(cx: Scope) -> Element {
 #### Percentages
 Relative percentage to the parent equivalent value.
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -105,7 +105,7 @@ fn app(cx: Scope) -> Element {
 
 For more complex logic you can use the `calc()` function.
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -122,7 +122,7 @@ Control how the inner elements will be stacked, possible values are `horizontal`
 
 ##### Usage
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -148,7 +148,7 @@ fn app(cx: Scope) -> Element {
 
 Specify the inner paddings of an element. You can do so by three different ways, just like in CSS.
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -165,7 +165,7 @@ fn app(cx: Scope) -> Element {
 
 Control how the inner elements are displayed, possible values are `normal` (default) or `center`.
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {

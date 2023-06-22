@@ -1,4 +1,5 @@
 use crate::CursorArea;
+use crate::ScrollView;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{KeyboardData, MouseEvent};
@@ -14,6 +15,15 @@ pub struct InputProps<'a> {
     pub value: String,
     /// Handler for the `onchange` event.
     pub onchange: EventHandler<'a, String>,
+    /// Width of the Input. Default 100.
+    #[props(default = "150".to_string(), into)]
+    width: String,
+    /// Height of the Input. Default 100.
+    #[props(default = "35".to_string(), into)]
+    height: String,
+    /// Max lines for the Input. Default 1.
+    #[props(default = "1".to_string(), into)]
+    max_lines: String,
 }
 
 /// `Input` component.
@@ -59,6 +69,9 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     let button_theme = &theme.button;
     let cursor_attr = editable.cursor_attr(cx);
     let highlights_attr = editable.highlights_attr(cx, 0);
+    let width = &cx.props.width;
+    let height = &cx.props.height;
+    let max_lines = &cx.props.max_lines;
 
     use_effect(cx, &(cx.props.value.to_string(),), {
         to_owned![editable];
@@ -122,9 +135,10 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
                 direction: "both",
                 padding: "1.5",
                 rect {
-                    width: "100",
-                    height: "35",
-                    direction: "both",
+                    width: "{width}",
+                    height: "{height}",
+                    direction: "vertical",
+                    display: "center",
                     color: "{button_theme.font_theme.color}",
                     shadow: "0 5 20 0 rgb(0, 0, 0, 100)",
                     radius: "5",
@@ -132,19 +146,22 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
                     background: "{button_theme.background}",
                     cursor_reference: cursor_attr,
                     color: "white",
-                    paragraph {
-                        width: "100%",
-                        cursor_id: "0",
-                        cursor_index: "{cursor_char}",
-                        cursor_mode: "editable",
-                        cursor_color: "white",
-                        max_lines: "1",
-                        onclick: onclick,
-                        onmouseover: onmouseover,
-                        onmousedown: onmousedown,
-                        highlights: highlights_attr,
-                        text {
-                            "{text}"
+                    ScrollView {
+                        show_scrollbar: true,
+                        paragraph {
+                            width: "100%",
+                            cursor_id: "0",
+                            cursor_index: "{cursor_char}",
+                            cursor_mode: "editable",
+                            cursor_color: "white",
+                            max_lines: "{max_lines}",
+                            onclick: onclick,
+                            onmouseover: onmouseover,
+                            onmousedown: onmousedown,
+                            highlights: highlights_attr,
+                            text {
+                                "{text}"
+                            }
                         }
                     }
                 }
