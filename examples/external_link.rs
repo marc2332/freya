@@ -31,7 +31,8 @@ fn app(cx: Scope) -> Element {
     render!(
         ThemeProvider {
             theme: LIGHT_THEME,
-            container {
+            rect {
+                overflow: "clip",
                 width: "100%",
                 height: "100%",
                 color: "black",

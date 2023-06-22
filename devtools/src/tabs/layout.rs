@@ -16,7 +16,8 @@ pub fn NodeInspectorLayout<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a>
     let paddings = node.state.size.padding;
 
     render!(
-        container {
+        rect {
+            overflow: "clip",
             width: "100%",
             height: "50%",
             NodeInspectorBar { }

@@ -7,7 +7,8 @@ use skia_safe::Color;
 #[inline_props]
 pub fn Property<'a>(cx: Scope<'a>, name: &'a str, value: String) -> Element<'a> {
     render!(
-        container {
+        rect {
+            overflow: "clip",
             height: "30",
             width: "100%",
             direction: "horizontal",
@@ -39,7 +40,8 @@ pub fn Property<'a>(cx: Scope<'a>, name: &'a str, value: String) -> Element<'a> 
 pub fn ColorfulProperty<'a>(cx: Scope<'a>, name: &'a str, color: &'a Color) -> Element<'a> {
     let color = color.to_rgb();
     render!(
-        container {
+        rect {
+            overflow: "clip",
             height: "30",
             width: "100%",
             direction: "horizontal",
@@ -87,7 +89,8 @@ pub fn ColorfulProperty<'a>(cx: Scope<'a>, name: &'a str, color: &'a Color) -> E
 pub fn ShadowProperty<'a>(cx: Scope<'a>, name: &'a str, shadow: &'a Shadow) -> Element<'a> {
     let color = shadow.color.to_rgb();
     render!(
-        container {
+        rect {
+            overflow: "clip",
             height: "30",
             width: "100%",
             direction: "horizontal",
@@ -143,7 +146,8 @@ pub fn ShadowProperty<'a>(cx: Scope<'a>, name: &'a str, shadow: &'a Shadow) -> E
 pub fn BorderProperty<'a>(cx: Scope<'a>, name: &'a str, border: &'a Border) -> Element<'a> {
     let color = border.color.to_rgb();
     render!(
-        container {
+        rect {
+            overflow: "clip",
             height: "30",
             width: "100%",
             direction: "horizontal",

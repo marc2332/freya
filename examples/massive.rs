@@ -21,7 +21,8 @@ fn app(cx: Scope) -> Element {
     let rows = 100;
 
     render!(
-        container {
+        rect {
+            overflow: "clip",
             width: "100%",
             height: "100%",
             padding: "2.5",

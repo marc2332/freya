@@ -37,7 +37,8 @@ Example:
 ```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
-        container {
+        rect {
+            overflow: "clip",
             label {
                 "Hello World!"
             }
