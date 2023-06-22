@@ -8,8 +8,8 @@ pub fn use_init_theme(cx: &ScopeState, theme: Theme) {
 
 /// Provide the default [`Theme`].
 pub fn use_init_default_theme(cx: &ScopeState) -> Theme {
-    use_shared_state_provider(cx, || DARK_THEME);
-    DARK_THEME
+    use_shared_state_provider(cx, || LIGHT_THEME);
+    LIGHT_THEME
 }
 
 /// Subscribe to [`Theme`] changes.
@@ -23,7 +23,7 @@ pub fn use_theme(cx: &ScopeState) -> &UseSharedState<Theme> {
 pub fn use_get_theme(cx: &ScopeState) -> Theme {
     use_shared_state::<Theme>(cx)
         .map(|v| v.read().clone())
-        .unwrap_or(DARK_THEME)
+        .unwrap_or(LIGHT_THEME)
 }
 
 /// Theming properties for DropdownItem components.
