@@ -118,6 +118,7 @@ impl<'a, T: Clone> LaunchConfigBuilder<'a, T> {
         self
     }
 
+    /// Register a font.
     pub fn with_font(mut self, font_name: &'a str, font: &'a [u8]) -> Self {
         self.fonts.push((font_name, font));
         self
