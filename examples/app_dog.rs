@@ -37,12 +37,14 @@ fn app(cx: Scope) -> Element {
     };
 
     render!(
-        container {
+        rect {
+            overflow: "clip",
             background: "rgb(15, 15, 15)",
             width: "100%",
             height: "100%",
             color: "white",
-            container {
+            rect {
+                overflow: "clip",
                 width: "100%",
                 height: "calc(100% - 58)",
                 radius: "25",
@@ -54,7 +56,8 @@ fn app(cx: Scope) -> Element {
                    )
                 }
             }
-            container {
+            rect {
+                overflow: "clip",
                 padding: "10",
                 height: "58",
                 width: "100%",

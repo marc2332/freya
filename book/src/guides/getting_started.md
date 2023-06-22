@@ -47,7 +47,8 @@ fn app(cx: Scope) -> Element {
     let mut count = use_state(cx, || 0);
 
     render!(
-        container {
+        rect {
+            overflow: "clip",
             height: "100%",
             width: "100%",
             background: "rgb(35, 35, 35)",

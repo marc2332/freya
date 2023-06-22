@@ -193,7 +193,8 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     };
 
     render!(
-        container {
+        rect {
+            overflow: "clip",
             direction: "horizontal",
             width: "{user_container_width}",
             height: "{user_container_height}",
@@ -205,7 +206,8 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
                 direction: "vertical",
                 width: "{container_width}",
                 height: "{container_height}",
-                container {
+                rect {
+                    overflow: "clip",
                     padding: "{padding}",
                     height: "100%",
                     width: "100%",

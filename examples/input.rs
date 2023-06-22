@@ -15,7 +15,8 @@ fn app(cx: Scope) -> Element {
     let values = use_state(cx, || (String::new(), String::new()));
 
     render!(
-        container {
+        rect {
+            overflow: "clip",
             padding: "7",
             width: "100%",
             height: "100%",

@@ -24,7 +24,8 @@ pub fn ScrollBar<'a>(cx: Scope<'a, ScrollBarProps<'a>>) -> Element<'a> {
     let theme = use_get_theme(cx);
     let scrollbar_theme = &theme.scrollbar;
     render!(
-        container {
+        rect {
+            overflow: "clip",
             width: "{cx.props.width}",
             height: "{cx.props.height}",
             offset_x: "{cx.props.offset_x}",

@@ -12,7 +12,8 @@ use crate::{
 #[inline_props]
 pub fn NodeInspectorStyle<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> {
     render!(
-        container {
+        rect {
+            overflow: "clip",
             width: "100%",
             height: "50%",
             NodeInspectorBar { }

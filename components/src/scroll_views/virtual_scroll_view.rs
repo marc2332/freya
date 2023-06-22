@@ -246,7 +246,8 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
         render_range.map(|i| (cx.props.builder)((i + 1, i, cx, &cx.props.builder_values)));
 
     render!(
-        container {
+        rect {
+            overflow: "clip",
             direction: "horizontal",
             width: "{user_container_width}",
             height: "{user_container_height}",
@@ -258,7 +259,8 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
                 direction: "vertical",
                 width: "{container_width}",
                 height: "{container_height}",
-                container {
+                rect {
+                    overflow: "clip",
                     padding: "{padding}",
                     height: "100%",
                     width: "100%",
