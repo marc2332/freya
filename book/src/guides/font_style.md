@@ -346,7 +346,7 @@ Compatible elements: [`text`](/guides/elements.html#paragraph-and-text), [`parag
 
 Specify the shadow of a text.
 
-Syntax: `<x> <y> <intensity> <color>`
+Syntax: `<x> <y> <size> <color>`
 
 Example:
 
