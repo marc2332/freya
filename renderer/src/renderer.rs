@@ -9,9 +9,7 @@ use skia_safe::{textlayout::FontCollection, Canvas, ClipOp, Rect};
 use skia_safe::{Matrix, Point};
 use torin::geometry::Area;
 
-use crate::elements::{
-    render_image, render_label, render_paragraph, render_rect_container, render_svg,
-};
+use crate::elements::{render_image, render_label, render_paragraph, render_rect, render_svg};
 
 /// Render a node into the Skia canvas
 #[allow(clippy::too_many_arguments)]
@@ -75,8 +73,8 @@ pub fn render_skia(
         }
 
         match tag.as_str() {
-            "rect" | "container" => {
-                render_rect_container(area, dioxus_node, canvas, font_collection);
+            "rect" => {
+                render_rect(area, dioxus_node, canvas, font_collection);
             }
             "label" => {
                 render_label(area, dioxus_node, canvas, font_collection);

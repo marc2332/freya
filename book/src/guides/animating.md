@@ -74,7 +74,8 @@ fn app(cx: Scope) -> Element {
     };
 
     render!(
-        container {
+        rect {
+            overflow: "clip",
             background: "black",
             width: "100%",
             height: "100%",

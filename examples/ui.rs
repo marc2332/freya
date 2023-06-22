@@ -99,7 +99,8 @@ struct NavbarProps<'a> {
 #[allow(non_snake_case)]
 fn Navbar<'a>(cx: Scope<'a, NavbarProps<'a>>) -> Element {
     render!(
-        container {
+        rect {
+            overflow: "clip",
             height: "75",
             width: "100%",
             background: "rgb(20, 20, 20)",
