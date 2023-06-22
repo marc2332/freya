@@ -7,7 +7,7 @@ use skia_safe::{
 };
 use torin::prelude::Area;
 
-/// Render a `rect` or a `container` element
+/// Render a `rect` element
 pub fn render_rect(
     area: &Area,
     node_ref: &DioxusNode,

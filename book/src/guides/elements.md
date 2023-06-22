@@ -3,7 +3,6 @@
 Freya contains a set of primitive elements:
 
 - [`rect`](#rect)
-- [`container`](#container)
 - [`label`](#label)
 - [`image`](#image)
 - [`svg`](#svg)
@@ -23,25 +22,6 @@ fn app(cx: Scope) -> Element {
             direction: "vertical",
             label { "Hi!" }
             label { "Hi again!"}
-        }
-    )
-}
-```
-
-### container
-
-The `container` behaves the same as the [`rect`](#rect) element, except, it hides any element overflowing it's bounds.
-
-Example:
-
-```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
-        rect {
-            overflow: "clip",
-            label {
-                "Hello World!"
-            }
         }
     )
 }

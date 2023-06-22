@@ -206,7 +206,8 @@ pub fn TextShadowProperty<'a>(
 ) -> Element<'a> {
     let color = text_shadow.color.to_rgb();
     render!(
-        container {
+        rect {
+            overflow: "clip",
             height: "30",
             width: "100%",
             direction: "horizontal",
