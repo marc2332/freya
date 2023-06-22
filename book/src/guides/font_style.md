@@ -16,6 +16,7 @@ Learn how the font style attributes work.
 - [`decoration`](#decoration)
 - [`decoration_style`](#decoration_style)
 - [`decoration_color`](#decoration_color)
+- [`text_shadow`](#text_shadow)
 
 
 ### color
@@ -340,3 +341,24 @@ fn app(cx: Scope) -> Element {
 ```
 
 Compatible elements: [`text`](/guides/elements.html#paragraph-and-text), [`paragraph`](/guides/elements.html#paragraph-and-text), [`label`](/guides/elements.html#label).
+
+### text_shadow
+
+Specify the shadow of a text.
+
+Syntax: `<x> <y> <intensity> <color>`
+
+Example:
+
+```rust, no_run
+fn app(cx: Scope) -> Element {
+    render!(
+        label {
+            text_shadow: "0 18 12 rgb(0, 0, 0)",
+            "Hello, World!"
+        }
+    )
+}
+```
+
+Compatible elements: [`text`](/guides/elements.html#paragraph-and-text), [`label`](/guides/elements.html#label).
