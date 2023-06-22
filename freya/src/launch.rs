@@ -164,6 +164,19 @@ pub fn launch_cfg<T: 'static + Clone + Send>(root: Component, win_config: Window
     let fdom = FreyaDOM::default();
     let sdom = SafeDOM::new(fdom);
 
+    #[cfg(feature = "log")]
+    {
+        use tracing::Level;
+        use tracing_subscriber::FmtSubscriber;
+
+        let subscriber = FmtSubscriber::builder()
+            .with_max_level(Level::TRACE)
+            .finish();
+
+        tracing::subscriber::set_global_default(subscriber)
+            .expect("Setting default subscriber failed");
+    }
+
     let (vdom, mutations_notifier, hovered_node) = {
         #[cfg(feature = "devtools")]
         #[cfg(debug_assertions)]

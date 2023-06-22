@@ -28,3 +28,4 @@ skia-safe = { workspace = true }
 
 uuid = { version =  "1.2.2", features = ["v4"]}
 rustc-hash = { workspace = true }
+tracing = { workspace = true }

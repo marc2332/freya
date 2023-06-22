@@ -13,14 +13,15 @@ static RUST_LOGO: &[u8] = include_bytes!("./rust_logo.png");
 
 fn app(cx: Scope) -> Element {
     let image_data = bytes_to_data(cx, RUST_LOGO);
-    let mut size = use_state(cx, || 150);
+    let size = use_state(cx, || 250);
 
     let onwheel = move |e: WheelEvent| {
-        let y = e.get_delta_y();
-        if *size.get() >= 15 && y > 15.0 {
+        let y = e.get_delta_y() as i32;
+        let res = *size.get() + y;
+        if res >= 600 || res <= 20 {
             return;
         }
-        size += (y as i32) * 20;
+        size.set(res);
     };
 
     render!(

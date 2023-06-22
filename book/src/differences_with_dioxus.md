@@ -2,7 +2,7 @@
 
 **Freya** uses most of the core packages of Dioxus, but not all them.
 
-Main differences:
+These are the main differences:
 - Freya has it's own elements, attributes and events, instead of `HTML`.
 - Freya uses it's own UI layout library called  [`torin`](`https://github.com/marc2332/freya/tree/main/torin`), instead of [`taffy`](https://github.com/DioxusLabs/taffy).
 - Freya uses Skia, instead of webview or other graphics libraries used by Dioxus.
