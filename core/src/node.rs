@@ -3,7 +3,7 @@ use freya_dom::prelude::DioxusNode;
 use freya_node_state::{
     Border, CursorSettings, FontStyle, LayoutState, References, Shadow, Style, Transform,
 };
-use skia_safe::Color;
+use skia_safe::{textlayout::TextShadow, Color};
 use torin::{
     direction::DirectionMode, display::DisplayMode, padding::Paddings, radius::Radius, size::Size,
 };
@@ -102,9 +102,18 @@ impl<'a> Iterator for NodeStateIterator<'a> {
             17 => Some(("offset_y", AttributeType::Measure(self.state.size.offset_y))),
             n => {
                 let shadows = &self.state.style.shadows;
-                shadows
+                let shadow = shadows
                     .get(n - 18)
-                    .map(|shadow| ("shadow", AttributeType::Shadow(shadow)))
+                    .map(|shadow| ("shadow", AttributeType::Shadow(shadow)));
+
+                if shadow.is_some() {
+                    shadow
+                } else {
+                    let text_shadows = &self.state.font_style.text_shadows;
+                    text_shadows
+                        .get(n - 18 + shadows.len())
+                        .map(|text_shadow| ("text_shadow", AttributeType::TextShadow(text_shadow)))
+                }
             }
         }
     }
@@ -126,6 +135,7 @@ pub enum AttributeType<'a> {
     Direction(&'a DirectionMode),
     Display(&'a DisplayMode),
     Shadow(&'a Shadow),
+    TextShadow(&'a TextShadow),
     Text(String),
     Border(&'a Border),
 }

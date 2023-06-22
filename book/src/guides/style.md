@@ -99,10 +99,12 @@ The attributes that have colors as values can use the following syntax:
 - `orange`
 - `transparent`
 
-#### rgb() / rgba()
+#### rgb() / hsl()
 
 - With RGB: `rgb(150, 60, 20)`
-- With RGBA: `rgba(30, 50, 200, 70)`
+- With RGB and alpha: `rgb(150, 60, 20, 70)`
+- With HSL: `hsl(28, 0.8, 0.5)`
+- With HSL and alpha: `hsl(28, 0.8, 0.5, 0.25)`
 
 ### Inheritance
 
