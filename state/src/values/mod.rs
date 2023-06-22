@@ -9,6 +9,7 @@ mod padding;
 mod radius;
 mod shadow;
 mod size;
+mod text_shadow;
 
 pub use border::*;
 pub use color::*;
@@ -21,6 +22,7 @@ pub use padding::*;
 pub use radius::*;
 pub use shadow::*;
 pub use size::*;
+pub use text_shadow::*;
 
 // FromStr but we own it so we can impl it on torin and skia_safe types.
 pub trait Parse: Sized {

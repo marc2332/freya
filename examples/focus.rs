@@ -27,15 +27,15 @@ fn Child(cx: Scope) -> Element {
 fn app(cx: Scope) -> Element {
     use_init_focus(cx);
     render!(
-        rect {
-            overflow: "clip",
-            width: "100%",
-            height: "100%",
-            Child {},
-            Child {},
-            Child {},
-            Child {},
-            Child {},
-        }
-     )
+       rect {
+           overflow: "clip",
+           width: "100%",
+           height: "100%",
+           Child {},
+           Child {},
+           Child {},
+           Child {},
+           Child {},
+       }
+    )
 }

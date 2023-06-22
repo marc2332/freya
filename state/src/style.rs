@@ -10,7 +10,7 @@ use skia_safe::Color;
 use torin::{radius::Radius, scaled::Scaled};
 
 use crate::{
-    parse_shadows, Border, BorderAlignment, CustomAttributeValues, OverflowMode, Parse, Shadow,
+    split_shadows, Border, BorderAlignment, CustomAttributeValues, OverflowMode, Parse, Shadow,
 };
 
 #[derive(Default, Debug, Clone, PartialEq, Component)]
@@ -94,7 +94,14 @@ impl State<CustomAttributeValues> for Style {
                     }
                     "shadow" => {
                         if let Some(value) = attr.value.as_text() {
-                            style.shadows = parse_shadows(value, *scale_factor)
+                            style.shadows = split_shadows(value)
+                                .iter()
+                                .map(|chunk| {
+                                    let mut shadow = Shadow::parse(chunk).unwrap_or_default();
+                                    shadow.scale(*scale_factor);
+                                    shadow
+                                })
+                                .collect();
                         }
                     }
                     "radius" => {

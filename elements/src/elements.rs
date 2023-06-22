@@ -180,6 +180,7 @@ builder_constructors! {
     };
     label {
         color: String,
+        text_shadow: String,
         layer: String,
         height: String,
         width: String,
@@ -225,6 +226,7 @@ builder_constructors! {
     };
     text {
         color: String,
+        text_shadow: String,
         layer: String,
         height: String,
         width: String,

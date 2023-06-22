@@ -79,7 +79,7 @@ impl Scaled for Shadow {
     }
 }
 
-pub fn parse_shadows(value: &str, scale_factor: f32) -> Vec<Shadow> {
+pub fn split_shadows(value: &str) -> Vec<String> {
     let mut chunks = Vec::new();
     let mut current = String::new();
     let mut in_parenthesis = false;
@@ -103,11 +103,4 @@ pub fn parse_shadows(value: &str, scale_factor: f32) -> Vec<Shadow> {
     }
 
     chunks
-        .iter()
-        .map(|chunk| {
-            let mut shadow = Shadow::parse(chunk).unwrap_or_default();
-            shadow.scale(scale_factor);
-            shadow
-        })
-        .collect()
 }
