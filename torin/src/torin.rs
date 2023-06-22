@@ -271,7 +271,7 @@ impl<Key: NodeKey> Torin<Key> {
             root_id,
             &root,
             self,
-            &areas.area,
+            &areas.inner_area,
             &areas.inner_area,
             measurer,
             true,
