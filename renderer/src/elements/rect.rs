@@ -1,9 +1,11 @@
 use dioxus_native_core::real_dom::NodeImmutable;
 use freya_dom::prelude::DioxusNode;
-use freya_node_state::{BorderAlignment, BorderStyle, References, ShadowPosition, Style};
+use freya_node_state::{BorderAlignment, BorderStyle, Fill, References, ShadowPosition, Style};
 use skia_safe::{
-    textlayout::FontCollection, BlurStyle, Canvas, ClipOp, Color, MaskFilter, Paint, PaintStyle,
-    Path, PathDirection, RRect, Rect,
+    gradient_shader::GradientShaderColors,
+    shader::Shader,
+    textlayout::FontCollection,
+    TileMode, Matrix, BlurStyle, Canvas, ClipOp, Color, MaskFilter, Paint, PaintStyle, Path, PathDirection, RRect, Rect,
 };
 use torin::prelude::Area;
 
@@ -19,7 +21,35 @@ pub fn render_rect(
     let mut paint = Paint::default();
     paint.set_anti_alias(true);
     paint.set_style(PaintStyle::Fill);
-    paint.set_color(node_style.background);
+
+    let area = area.to_f32();
+
+    match &node_style.background {
+        Fill::Color(color) => {
+            paint.set_color(*color);
+        },
+        Fill::LinearGradient(gradient) => {
+            let colors: Vec<Color> = gradient.stops.iter().map(|stop| stop.color).collect();
+            let offsets: Vec<f32> = gradient.stops.iter().enumerate()
+                .map(|(idx, stop)| {
+                    if let Some(offset) = stop.offset {
+                        offset
+                    } else {
+                        idx as f32 / (gradient.stops.len() - 1) as f32
+                    }
+                })
+                .collect();
+
+            paint.set_shader(Shader::linear_gradient(
+                ((area.min_x(), area.min_y()), (area.max_x(), area.max_y())),
+                GradientShaderColors::Colors(&colors[..]),
+                Some(&offsets[..]),
+                TileMode::Clamp,
+                None,
+                Some(&Matrix::rotate_deg(gradient.angle - 45.0))
+            ));
+        }
+    }
 
     let radius = node_style.radius;
     let radius = &[
@@ -28,8 +58,6 @@ pub fn render_rect(
         (radius.bottom_right(), radius.bottom_right()).into(),
         (radius.bottom_left(), radius.bottom_left()).into(),
     ];
-
-    let area = area.to_f32();
 
     let mut path = Path::new();
     let rounded_rect = RRect::new_rect_radii(

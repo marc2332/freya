@@ -1,7 +1,7 @@
 use dioxus_native_core::real_dom::NodeImmutable;
 use freya_dom::prelude::DioxusNode;
 use freya_node_state::{
-    Border, CursorSettings, FontStyle, LayoutState, References, Shadow, Style, Transform,
+    Fill, Border, CursorSettings, FontStyle, LayoutState, References, Shadow, Style, Transform,
 };
 use skia_safe::{textlayout::TextShadow, Color};
 use torin::{
@@ -79,10 +79,10 @@ impl<'a> Iterator for NodeStateIterator<'a> {
             )),
             7 => Some(("padding", AttributeType::Paddings(self.state.size.padding))),
             8 => Some(("display", AttributeType::Display(&self.state.size.display))),
-            9 => Some((
-                "background",
-                AttributeType::Color(&self.state.style.background),
-            )),
+            // 9 => Some((
+            //     "background",
+            //     AttributeType::Color(&self.state.style.background),
+            // )),
             10 => Some(("border", AttributeType::Border(&self.state.style.border))),
             11 => Some(("radius", AttributeType::Radius(self.state.style.radius))),
             12 => Some(("color", AttributeType::Color(&self.state.font_style.color))),
@@ -127,6 +127,7 @@ impl<'a> Iterator for NodeStateIterator<'a> {
 }
 
 pub enum AttributeType<'a> {
+    Fill(&'a Fill),
     Color(&'a Color),
     Size(&'a Size),
     Measure(f32),

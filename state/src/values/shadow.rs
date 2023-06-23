@@ -55,10 +55,9 @@ impl Parse for Shadow {
 
         let spread_or_color = shadow_values.next().ok_or(ParseShadowError)?;
         let mut color_string = String::new();
-        if spread_or_color.parse::<f32>().is_ok() {
-            shadow.spread = spread_or_color
-                .parse::<f32>()
-                .map_err(|_| ParseShadowError)?;
+
+        if let Ok(spread) = spread_or_color.parse::<f32>() {
+            shadow.spread = spread;
         } else {
             color_string.push_str(spread_or_color);
         }
@@ -77,30 +76,4 @@ impl Scaled for Shadow {
         self.spread *= scale_factor;
         self.blur *= scale_factor;
     }
-}
-
-pub fn split_shadows(value: &str) -> Vec<String> {
-    let mut chunks = Vec::new();
-    let mut current = String::new();
-    let mut in_parenthesis = false;
-
-    for character in value.chars() {
-        if character == '(' {
-            in_parenthesis = true;
-        } else if character == ')' {
-            in_parenthesis = false;
-        }
-
-        if character == ',' && !in_parenthesis {
-            chunks.push(std::mem::take(&mut current));
-        } else {
-            current.push(character);
-        }
-    }
-
-    if !current.is_empty() {
-        chunks.push(current);
-    }
-
-    chunks
 }

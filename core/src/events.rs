@@ -4,7 +4,7 @@ use dioxus_native_core::NodeId;
 use freya_dom::prelude::FreyaDOM;
 use freya_layout::Layers;
 
-use freya_node_state::Style;
+use freya_node_state::{Style, Fill};
 use rustc_hash::FxHashMap;
 use skia_safe::Color;
 
@@ -167,14 +167,14 @@ fn measure_dom_events(
                         request.set_name(derivated_event_name.to_string());
 
                         // Stop searching on first match
-                        if background != &Color::TRANSPARENT
+                        if background != &Fill::Color(Color::TRANSPARENT)
                             && FIRST_CAPTURED_EVENTS.contains(&derivated_event_name)
                         {
                             break 'event_nodes;
                         }
 
                         // Only keep the last matched event
-                        if background != &Color::TRANSPARENT
+                        if background != &Fill::Color(Color::TRANSPARENT)
                             && LAST_CAPTURED_EVENTS.contains(&derivated_event_name)
                         {
                             found_nodes.clear();

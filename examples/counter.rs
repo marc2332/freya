@@ -27,7 +27,7 @@ fn app(cx: Scope) -> Element {
         rect {
             height: "80%",
             width: "100%",
-            background: "rgb(168, 218, 220)",
+            background: "linear-gradient(red, orange, yellow, green, blue, rgb(128, 0, 128))",
             color: "black",
             padding: "12",
             onclick: move |_| count += 1,

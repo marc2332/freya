@@ -1,5 +1,8 @@
 use crate::Parse;
-use skia_safe::{Color, HSV};
+use skia_safe::{
+    Color,
+    HSV
+};
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct ParseColorError;
