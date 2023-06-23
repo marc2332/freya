@@ -1,41 +1,51 @@
-# Introduction
+# Welcome
 
-**Freya** is native GUI library built on top of 🧬 [Dioxus](https://dioxuslabs.com) and powered by 🎨 [Skia](https://skia.org/), for 🦀 Rust. 
+**Freya** is __work in progress__ cross-platform native GUI library for 🦀 Rust, built on top of 🧬 [Dioxus](https://dioxuslabs.com) and 🎨 [Skia](https://skia.org/) as graphics library. 
 
-You can check the check [API References](https://docs.freyaui.dev/freya/) or join the [Discord](https://discord.gg/sYejxCdewG) server if you have any questions or issues. 
+- [What is Freya?](./what_is_freya.html)
+- [Main differences with Dioxus](./differences_with_dioxus.html)
+- [Environment Setup](./setup.html)
+- [API References](https://docs.freyaui.dev/freya/)
+- [Discord](https://discord.gg/sYejxCdewG)
 
-> It's currently work in progress and not usable for production, but you can already play with it! 
+<table>
+<tr>
+<td style="border:hidden;">
 
-Example
-<br>
-
-```rust no_run
+```rust, no_run
 fn app(cx: Scope) -> Element {
     let mut count = use_state(cx, || 0);
 
     render!(
         container {
-            height: "100%",
+            height: "20%",
             width: "100%",
-            background: "rgb(35, 35, 35)",
-            color: "white",
-            padding: "12.5",
+            background: "rgb(233, 196, 106)",
+            padding: "12",
+            color: "rgb(20, 33, 61)",
+            label { 
+                font_size: "20", 
+                "Number is: {count}"
+            }
+        }
+        container {
+            height: "80%",
+            width: "100%",
+            background: "rgb(168, 218, 220)",
+            color: "black",
+            padding: "12",
             onclick: move |_| count += 1,
-            label { "Click to increase -> {count}" }
+            label { "Click to increase!" }
         }
     )
 }
 ```
+</td>
+<td style="border:hidden;">
+
+![Freya](./demo.png)
+
+</td>
+</table>
 
 Check out the examples in the Freya [repository](https://github.com/marc2332/freya/tree/main/examples) to learn more.
-
-### About
-**Freya** is built on top of Dioxus. It provides a renderer powered by Skia alongside a set of elements, components, hooks and testing utilities.
-
-### Why 🧬 Dioxus?
-
-Dioxus is a React-like library for Rust. Its component and hooks model make it simple to use and scales to complex apps.
-
-### Why 🎨 Skia?
-
-Skia is a battle-tested and well-maintained graphics library, and there are even some rusty [bindings](https://github.com/rust-skia/rust-skia). 

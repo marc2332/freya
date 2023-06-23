@@ -3,7 +3,7 @@ pub use euclid::Rect;
 use crate::{
     geometry::{Area, Size2D},
     node::Node,
-    prelude::{BoxModel, Gap},
+    prelude::{BoxModel, Gaps},
 };
 
 /// Cached layout results of a Node
@@ -19,7 +19,7 @@ pub struct NodeAreas {
     pub inner_sizes: Size2D,
 
     /// Outer margin
-    pub margin: Gap,
+    pub margin: Gaps,
 }
 
 impl NodeAreas {

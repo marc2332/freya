@@ -6,7 +6,7 @@ Freya supports Dioxus [hot reload](https://dioxuslabs.com/docs/0.3/guide/en/gett
 
 Just before launching your app, you need to initialize the hot-reload context:
 
-```rust
+```rust, no_run
 fn main() {
 
     dioxus_hot_reload::hot_reload_init!(Config::<FreyaCtx>::default());

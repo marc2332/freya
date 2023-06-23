@@ -165,8 +165,8 @@ builder_constructors! {
         border: String,
         border_align: String,
         layer: String,
-        scroll_y: String,
-        scroll_x: String,
+        offset_y: String,
+        offset_x: String,
         direction: String,
         shadow: String,
         radius: String,
@@ -190,8 +190,8 @@ builder_constructors! {
         border: String,
         border_align: String,
         layer: String,
-        scroll_y: String,
-        scroll_x: String,
+        offset_y: String,
+        offset_x: String,
         direction: String,
         shadow: String,
         radius: String,
@@ -205,6 +205,7 @@ builder_constructors! {
     };
     label {
         color: String,
+        text_shadow: String,
         layer: String,
         height: String,
         width: String,
@@ -216,6 +217,11 @@ builder_constructors! {
         align: String,
         max_lines: String,
         rotate: String,
+        letter_spacing: String,
+        word_spacing: String,
+        decoration: String,
+        decoration_style: String,
+        decoration_color: String,
     };
     paragraph {
         layer: String,
@@ -234,9 +240,18 @@ builder_constructors! {
         highlight_color: String,
         font_size: String,
         font_family: String,
+        font_style: String,
+        font_weight: String,
+        font_width: String,
+        letter_spacing: String,
+        word_spacing: String,
+        decoration: String,
+        decoration_style: String,
+        decoration_color: String,
     };
     text {
         color: String,
+        text_shadow: String,
         layer: String,
         height: String,
         width: String,
@@ -246,7 +261,11 @@ builder_constructors! {
         font_weight: String,
         font_width: String,
         line_height: String,
-        rotate: String,
+        letter_spacing: String,
+        word_spacing: String,
+        decoration: String,
+        decoration_style: String,
+        decoration_color: String,
     };
     image {
         image_data: String,

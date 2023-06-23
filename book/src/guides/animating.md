@@ -13,7 +13,7 @@ This a very simple hook that will let you animate a certain value from an `inita
 
 Here is an example that will animate a value from `0.0` to `100.0` in `50` milliseconds, using the `linear` animation.
 
-```rust
+```rust, no_run
 fn main() {
     launch(app);
 }
@@ -47,7 +47,7 @@ Just like `use_animation` you have these animations:
 
 Here is an example that will animate a `size` and a color in `200` milliseconds, using the `new_sine_in_out` animation.
 
-```rust
+```rust, no_run
 fn main() {
     launch(app);
 }
@@ -78,7 +78,7 @@ fn app(cx: Scope) -> Element {
             background: "black",
             width: "100%",
             height: "100%",
-            scroll_x: "{size}",
+            offset_x: "{size}",
             rect {
                 height: "100%",
                 width: "200",

@@ -19,7 +19,7 @@
 <tr>
 <td style="border:hidden;">
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     let mut count = use_state(cx, || 0);
 

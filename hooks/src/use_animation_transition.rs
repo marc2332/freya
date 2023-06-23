@@ -1,6 +1,6 @@
 use dioxus_core::ScopeState;
 use dioxus_hooks::{use_effect, use_memo, use_state, UseFutureDep, UseState};
-use freya_node_state::parse_color;
+use freya_node_state::Parse;
 use skia_safe::Color;
 use std::time::Duration;
 use tokio::time::interval;
@@ -25,8 +25,8 @@ impl Transition {
 
     /// Create a Color transition.
     pub fn new_color(start: &str, end: &str) -> Self {
-        let start = parse_color(start).unwrap();
-        let end = parse_color(end).unwrap();
+        let start = Color::parse(start).unwrap();
+        let end = Color::parse(end).unwrap();
 
         Self::Color(start, end)
     }

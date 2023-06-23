@@ -3,4 +3,11 @@ authors = ["marc2332"]
 language = "en"
 multilingual = false
 src = "src"
-title = "Freya Docs"
+title = "Freya Book"
+
+[output.html]
+default-theme = "ayu"
+preferred-dark-theme = "ayu"
+git-repository-url = "https://github.com/marc2332/freya"
+edit-url-template = "https://github.com/marc2332/freya/edit/main/book/{path}"
+cname = "book.freyaui.dev"

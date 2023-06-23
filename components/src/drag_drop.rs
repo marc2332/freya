@@ -87,8 +87,8 @@ pub fn DragZone<'a, T: 'static + Clone>(cx: Scope<'a, DragZoneProps<'a, T>>) -> 
                 rect {
                     width: "0",
                     height: "0",
-                    scroll_x: "{pos.x}",
-                    scroll_y: "{pos.y}",
+                    offset_x: "{pos.x}",
+                    offset_y: "{pos.y}",
                     &cx.props.drag_element
                 }
             )

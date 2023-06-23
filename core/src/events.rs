@@ -132,7 +132,7 @@ const STACKED_EVENTS: [&str; 13] = [
     "keyup",
     "touchcancel",
     "touchend",
-    "touchend",
+    "touchmove",
     "touchstart",
     "pointerover",
     "pointerenter",
@@ -192,17 +192,19 @@ fn measure_dom_events(
         }
 
         for (node_id, request_event) in found_nodes {
-            let areas = fdom.layout().get(*node_id).unwrap().clone();
-            let node_ref = fdom.rdom().get(*node_id).unwrap();
-            let element_id = node_ref.mounted_id().unwrap();
-            let event = DomEvent::from_freya_event(
-                *node_id,
-                element_id,
-                &request_event,
-                Some(areas.area),
-                scale_factor,
-            );
-            new_events.push(event);
+            let areas = fdom.layout().get(*node_id).cloned();
+            if let Some(areas) = areas {
+                let node_ref = fdom.rdom().get(*node_id).unwrap();
+                let element_id = node_ref.mounted_id().unwrap();
+                let event = DomEvent::from_freya_event(
+                    *node_id,
+                    element_id,
+                    &request_event,
+                    Some(areas.area),
+                    scale_factor,
+                );
+                new_events.push(event);
+            }
         }
     }
 

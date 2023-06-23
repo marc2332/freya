@@ -477,7 +477,7 @@ pub fn padding() {
         Node::from_size_and_padding(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            Gap::new(5.0, 10.0, 15.0, 20.0),
+            Gaps::new(5.0, 10.0, 15.0, 20.0),
         ),
     );
     mocked_dom.add(
@@ -516,7 +516,7 @@ pub fn caching() {
         Node::from_size_and_padding(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            Gap::new(5.0, 0.0, 0.0, 0.0),
+            Gaps::new(5.0, 0.0, 0.0, 0.0),
         ),
     );
     mocked_dom.add(
@@ -778,7 +778,7 @@ pub fn display_vertical_with_inner_children() {
         Node::from_size_and_padding(
             Size::Pixels(Length::new(100.0)),
             Size::Pixels(Length::new(100.0)),
-            Gap::new(5.0, 5.0, 5.0, 5.0),
+            Gaps::new(5.0, 5.0, 5.0, 5.0),
         ),
     );
     mocked_dom.add(
@@ -1079,7 +1079,7 @@ pub fn margin() {
         Node::from_size_and_margin(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            Gap::new(5.0, 5.0, 5.0, 5.0),
+            Gaps::new(5.0, 5.0, 5.0, 5.0),
         ),
     );
     mocked_dom.add(
@@ -1089,7 +1089,7 @@ pub fn margin() {
         Node::from_size_and_margin(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            Gap::new(5.0, 5.0, 5.0, 5.0),
+            Gaps::new(5.0, 5.0, 5.0, 5.0),
         ),
     );
 

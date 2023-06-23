@@ -7,10 +7,11 @@ use dioxus_native_core::{
     NodeId, SendAnyMap,
 };
 use freya_node_state::{
-    CursorSettings, CustomAttributeValues, FontStyle, References, SizeState, Style, Transform,
+    CursorSettings, CustomAttributeValues, FontStyle, LayoutState, References, Style, Transform,
 };
 use std::sync::MutexGuard;
 use torin::prelude::*;
+use tracing::info;
 
 use crate::dom_adapter::DioxusDOMAdapter;
 
@@ -87,7 +88,7 @@ impl Default for FreyaDOM {
             CursorSettings::to_type_erased(),
             FontStyle::to_type_erased(),
             References::to_type_erased(),
-            SizeState::to_type_erased(),
+            LayoutState::to_type_erased(),
             Style::to_type_erased(),
             Transform::to_type_erased(),
         ]);
@@ -146,6 +147,13 @@ impl FreyaDOM {
 
         let must_repaint = !diff.is_empty();
         let must_relayout = !self.layout().get_dirty_nodes().is_empty();
+
+        if !diff.is_empty() {
+            info!(
+                "Updated DOM, now with {} nodes",
+                self.rdom().tree_ref().len()
+            );
+        }
 
         (must_repaint, must_relayout)
     }

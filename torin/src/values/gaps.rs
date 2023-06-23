@@ -1,16 +1,17 @@
 pub use euclid::Rect;
 
 use crate::geometry::Length;
+use crate::scaled::Scaled;
 
 #[derive(PartialEq, Clone, Debug, Default, Copy)]
-pub struct Gap {
+pub struct Gaps {
     top: Length,
     right: Length,
     bottom: Length,
     left: Length,
 }
 
-impl Gap {
+impl Gaps {
     pub fn new(top: f32, right: f32, bottom: f32, left: f32) -> Self {
         Self {
             top: Length::new(top),
@@ -67,5 +68,14 @@ impl Gap {
             self.bottom(),
             self.left()
         )
+    }
+}
+
+impl Scaled for Gaps {
+    fn scale(&mut self, scale: f32) {
+        self.left *= scale;
+        self.right *= scale;
+        self.top *= scale;
+        self.bottom *= scale;
     }
 }

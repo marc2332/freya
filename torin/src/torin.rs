@@ -11,7 +11,7 @@ use crate::{
     dom_adapter::{DOMAdapter, NodeAreas, NodeKey},
     geometry::{Area, Size2D},
     node::Node,
-    prelude::{BoxModel, Gap},
+    prelude::{BoxModel, Gaps},
     size::Size,
 };
 
@@ -244,12 +244,6 @@ impl<Key: NodeKey> Torin<Key> {
             return;
         }
 
-        info!(
-            "Found {} dirty nodes and {} cached nodes",
-            self.dirty.len(),
-            self.results.len()
-        );
-
         // Try the Root candidate otherwise use the provided Root
         let root_id = if let RootNodeCandidate::Valid(id) = self.root_node_candidate {
             id
@@ -263,15 +257,23 @@ impl<Key: NodeKey> Torin<Key> {
                 area: suggested_root_area,
                 inner_area: suggested_root_area,
                 inner_sizes: Size2D::default(),
-                margin: Gap::default(),
+                margin: Gaps::default(),
             });
         let root = dom_adapter.get_node(&root_id).unwrap();
+        let root_height = dom_adapter.height(&root_id).unwrap();
+
+        info!(
+            "Processing {} dirty nodes and {} cached nodes from a height of {}",
+            self.dirty.len(),
+            self.results.len(),
+            root_height
+        );
 
         let (root_revalidated, root_areas) = measure_node(
             root_id,
             &root,
             self,
-            &areas.area,
+            &areas.inner_area,
             &areas.inner_area,
             measurer,
             true,
@@ -395,8 +397,8 @@ fn measure_node<Key: NodeKey>(
         let mut available_area = inner_area;
 
         // Apply scroll
-        available_area.origin.x += node.scroll_x.get();
-        available_area.origin.y += node.scroll_y.get();
+        available_area.origin.x += node.offset_x.get();
+        available_area.origin.y += node.offset_y.get();
 
         let mut measurement_mode = MeasureMode::ParentIsNotCached {
             area: &mut area,
@@ -435,8 +437,8 @@ fn measure_node<Key: NodeKey>(
         let mut available_area = areas.inner_area;
 
         // TODO(marc2332): Should I also cache these?
-        available_area.origin.x += node.scroll_x.get();
-        available_area.origin.y += node.scroll_y.get();
+        available_area.origin.x += node.offset_x.get();
+        available_area.origin.y += node.offset_y.get();
 
         let mut measurement_mode = MeasureMode::ParentIsCached {
             inner_area: &areas.inner_area,

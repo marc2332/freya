@@ -4,7 +4,7 @@ use freya_core::prelude::*;
 use freya_elements::elements as dioxus_elements;
 
 use crate::{
-    property::{BorderProperty, ColorfulProperty, Property, ShadowProperty},
+    property::{BorderProperty, ColorfulProperty, Property, ShadowProperty, TextShadowProperty},
     NodeInspectorBar, TreeNode,
 };
 
@@ -67,12 +67,12 @@ pub fn NodeInspectorStyle<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> 
                                 }
                             }
                         }
-                        AttributeType::Border(border_settings) => {
+                        AttributeType::Border(border) => {
                             rsx!{
                                 BorderProperty {
                                     key: "{i}",
                                     name: "{name}",
-                                    border_settings: border_settings
+                                    border: border
                                 }
                             }
                         }
@@ -103,12 +103,21 @@ pub fn NodeInspectorStyle<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> 
                                 }
                             }
                         }
-                        AttributeType::Shadow(shadow_settings) => {
+                        AttributeType::Shadow(shadow) => {
                             rsx!{
                                 ShadowProperty {
                                     key: "{i}",
                                     name: "{name}",
-                                    shadow_settings: shadow_settings
+                                    shadow: shadow
+                                }
+                            }
+                        }
+                        AttributeType::TextShadow(text_shadow) => {
+                            rsx!{
+                                TextShadowProperty {
+                                    key: "{i}",
+                                    name: "{name}",
+                                    text_shadow: text_shadow
                                 }
                             }
                         }

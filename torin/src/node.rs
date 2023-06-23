@@ -1,7 +1,7 @@
 pub use euclid::Rect;
 
 use crate::{
-    direction::DirectionMode, display::DisplayMode, gap::Gap, geometry::Length, size::Size,
+    direction::DirectionMode, display::DisplayMode, gaps::Gaps, geometry::Length, size::Size,
 };
 
 /// Node layout configuration
@@ -23,14 +23,14 @@ pub struct Node {
     pub display: DisplayMode,
 
     /// Inner padding
-    pub padding: Gap,
+    pub padding: Gaps,
 
     /// Inner margin
-    pub margin: Gap,
+    pub margin: Gaps,
 
     /// Inner position offsets
-    pub scroll_x: Length,
-    pub scroll_y: Length,
+    pub offset_x: Length,
+    pub offset_y: Length,
 
     /// Direction in which it's inner Nodes will be stacked
     pub direction: DirectionMode,
@@ -59,20 +59,20 @@ impl Node {
     pub fn from_size_and_scroll(
         width: Size,
         height: Size,
-        scroll_x: Length,
-        scroll_y: Length,
+        offset_x: Length,
+        offset_y: Length,
     ) -> Self {
         Self {
             width,
             height,
-            scroll_x,
-            scroll_y,
+            offset_x,
+            offset_y,
             ..Default::default()
         }
     }
 
     /// Construct a new Node given a size and padding
-    pub fn from_size_and_padding(width: Size, height: Size, padding: Gap) -> Self {
+    pub fn from_size_and_padding(width: Size, height: Size, padding: Gaps) -> Self {
         Self {
             width,
             height,
@@ -98,7 +98,7 @@ impl Node {
     }
 
     /// Construct a new Node given a size and a direction
-    pub fn from_size_and_margin(width: Size, height: Size, margin: Gap) -> Self {
+    pub fn from_size_and_margin(width: Size, height: Size, margin: Gaps) -> Self {
         Self {
             width,
             height,
