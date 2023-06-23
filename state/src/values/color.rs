@@ -32,11 +32,11 @@ impl Parse for Color {
 }
 
 fn parse_rgb(color: &str) -> Result<Color, ParseColorError> {
-    if !color.ends_with(")") {
+    if !color.ends_with(')') {
         return Err(ParseColorError);
     }
 
-    let color = color.replacen("rgb(", "", 1).replacen(")", "", 1);
+    let color = color.replacen("rgb(", "", 1).replacen(')', "", 1);
     let mut colors = color.split(',');
 
     let r = colors
@@ -68,11 +68,11 @@ fn parse_rgb(color: &str) -> Result<Color, ParseColorError> {
 }
 
 fn parse_hsl(color: &str) -> Result<Color, ParseColorError> {
-    if !color.ends_with(")") {
+    if !color.ends_with(')') {
         return Err(ParseColorError);
     }
 
-    let color = color.replacen("hsl(", "", 1).replacen(")", "", 1);
+    let color = color.replacen("hsl(", "", 1).replacen(')', "", 1);
     let mut colors = color.split(',');
 
     // Get each color component
@@ -88,9 +88,9 @@ fn parse_hsl(color: &str) -> Result<Color, ParseColorError> {
     let a_str: Option<&str> = colors.next();
 
     // S, L and A can end in percentage, otherwise its 0.0 - 1.0
-    let mut s = if s_str.ends_with("%") {
+    let mut s = if s_str.ends_with('%') {
         s_str
-            .replace("%", "")
+            .replace('%', "")
             .parse::<f32>()
             .map_err(|_| ParseColorError)?
             / 100.0
@@ -98,9 +98,9 @@ fn parse_hsl(color: &str) -> Result<Color, ParseColorError> {
         s_str.parse::<f32>().map_err(|_| ParseColorError)?
     };
 
-    let mut l = if l_str.ends_with("%") {
+    let mut l = if l_str.ends_with('%') {
         l_str
-            .replace("%", "")
+            .replace('%', "")
             .parse::<f32>()
             .map_err(|_| ParseColorError)?
             / 100.0
@@ -117,10 +117,10 @@ fn parse_hsl(color: &str) -> Result<Color, ParseColorError> {
 
     // Handle alpha formatting and convert to ARGB
     if let Some(a_str) = a_str {
-        let a = if a_str.ends_with("%") {
+        let a = if a_str.ends_with('%') {
             a_str
                 .trim()
-                .replace("%", "")
+                .replace('%', "")
                 .parse::<f32>()
                 .map_err(|_| ParseColorError)?
                 / 100.0
