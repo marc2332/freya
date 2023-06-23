@@ -5,7 +5,7 @@
 
 use freya::prelude::*;
 
-static KABLAMO: &[u8] = include_bytes!("./Kablammo-Regular.ttf");
+static SANSITA_SWASHED: &[u8] = include_bytes!("./SansitaSwashed-Regular.ttf");
 
 fn main() {
     launch_cfg(
@@ -13,7 +13,7 @@ fn main() {
         LaunchConfig::<()>::builder()
             .with_width(200.0)
             .with_height(200.0)
-            .with_font("kablammo", KABLAMO)
+            .with_font("Sansita Swashed", SANSITA_SWASHED)
             .build(),
     );
 }
@@ -27,9 +27,9 @@ fn app(cx: Scope) -> Element {
             label {
                 width: "100%",
                 font_size: "20",
-                font_family: "kablammo",
+                font_family: "Sansita Swashed",
                 align: "center",
-                "This font is called Kablamo"
+                "This font is called Sansita Swashed"
             }
         }
     )
