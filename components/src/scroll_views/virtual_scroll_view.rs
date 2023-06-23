@@ -170,7 +170,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
     let onmouseover = move |e: MouseEvent| {
         if let Some((Axis::Y, y)) = *clicking_scrollbar.read() {
             let coordinates = e.get_element_coordinates();
-            let cursor_y = coordinates.y - y;
+            let cursor_y = coordinates.y - y - size.area.min_y() as f64;
 
             let scroll_position =
                 get_scroll_position_from_cursor(cursor_y as f32, inner_size, size.area.height());
@@ -178,7 +178,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
             scrolled_y.with_mut(|y| *y = scroll_position);
         } else if let Some((Axis::X, x)) = *clicking_scrollbar.read() {
             let coordinates = e.get_element_coordinates();
-            let cursor_x = coordinates.x - x;
+            let cursor_x = coordinates.x - x - size.area.min_x() as f64;
 
             let scroll_position =
                 get_scroll_position_from_cursor(cursor_x as f32, inner_size, size.area.width());
@@ -252,7 +252,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
             width: "{user_container_width}",
             height: "{user_container_height}",
             onglobalclick: onclick, // TODO(marc2332): mouseup would be better
-            onmouseover: onmouseover,
+            onglobalmouseover: onmouseover,
             onkeydown: onkeydown,
             onkeyup: onkeyup,
             rect {
