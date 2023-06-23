@@ -37,7 +37,8 @@ fn app(cx: Scope) -> Element {
     };
 
     render!(
-        container {
+        rect {
+            overflow: "clip",
             background: "rgb(35, 35, 35)",
             width: "100%",
             height: "100%",
@@ -50,7 +51,8 @@ fn app(cx: Scope) -> Element {
                 color: "white",
                 "Drag me"
             }
-            container {
+            rect {
+                overflow: "clip",
                 background: "rgb(255, 166, 0)",
                 direction: "both",
                 width: "100",

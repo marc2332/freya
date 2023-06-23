@@ -1,10 +1,10 @@
 use dioxus_native_core::node::NodeType;
-use dioxus_native_core::prelude::ElementNode;
 use dioxus_native_core::real_dom::NodeImmutable;
 
 use freya_dom::prelude::FreyaDOM;
 use freya_layout::Layers;
 
+use freya_node_state::{OverflowMode, Style};
 use rustc_hash::FxHashMap;
 
 use crate::ViewportsCollection;
@@ -26,11 +26,12 @@ pub fn calculate_viewports(
             let node_areas = layout.get(*node_id);
 
             if let Some((node, node_areas)) = node.zip(node_areas) {
+                let style = node.get::<Style>().unwrap();
                 let node_type = &*node.node_type();
 
-                if let NodeType::Element(ElementNode { tag, .. }) = node_type {
-                    // `container` elements will clip any overflow from it's children
-                    if tag == "container" {
+                if let NodeType::Element(..) = node_type {
+                    // Clip any overflow from it's children
+                    if style.overflow == OverflowMode::Clip {
                         viewports_collection
                             .entry(*node_id)
                             .or_insert_with(|| (None, Vec::new()))

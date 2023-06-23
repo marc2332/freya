@@ -14,7 +14,8 @@ fn main() {
 fn app(cx: Scope) -> Element {
     let mut count = use_state(cx, || 0);
     render!(
-        container {
+        rect {
+            overflow: "clip",
             background: "rgb(15, 15, 15)",
             padding: "50",
             direction: "horizontal",
@@ -23,7 +24,8 @@ fn app(cx: Scope) -> Element {
             onclick: move |_| {
                 count += 1;
             },
-            container {
+            rect {
+                overflow: "clip",
                 padding: "50",
                 height: "100%",
                 width: "50%",

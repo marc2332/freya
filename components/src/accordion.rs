@@ -60,7 +60,8 @@ pub fn Accordion<'a>(cx: Scope<'a, AccordionProps<'a>>) -> Element<'a> {
     };
 
     render!(
-        container {
+        rect {
+            overflow: "clip",
             color: "{accordion_theme.color}",
             padding: "10",
             radius: "3",
@@ -69,7 +70,8 @@ pub fn Accordion<'a>(cx: Scope<'a, AccordionProps<'a>>) -> Element<'a> {
             background: "{accordion_theme.background}",
             onclick: onclick,
             &cx.props.summary
-            container {
+            rect {
+                overflow: "clip",
                 width: "100%",
                 height: "{animation_value}",
                 rect {

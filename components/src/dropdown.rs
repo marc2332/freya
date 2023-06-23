@@ -144,7 +144,8 @@ where
             rect {
                 width: "70",
                 height: "50",
-                container {
+                rect {
+                    overflow: "clip",
                     layer: "-1",
                     radius: "3",
                     onglobalclick: onglobalclick,
@@ -159,7 +160,8 @@ where
         )
     } else {
         render!(
-            container {
+            rect {
+                overflow: "clip",
                 background: dropdown_theme.desplegable_background,
                 color: "{dropdown_theme.font_theme.color}",
                 radius: "3",

@@ -9,7 +9,9 @@ use dioxus_native_core_macro::partial_derive_state;
 use skia_safe::Color;
 use torin::{radius::Radius, scaled::Scaled};
 
-use crate::{split_shadows, Border, BorderAlignment, CustomAttributeValues, Parse, Shadow};
+use crate::{
+    split_shadows, Border, BorderAlignment, CustomAttributeValues, OverflowMode, Parse, Shadow,
+};
 
 #[derive(Default, Debug, Clone, PartialEq, Component)]
 pub struct Style {
@@ -20,6 +22,7 @@ pub struct Style {
     pub radius: Radius,
     pub image_data: Option<Vec<u8>>,
     pub svg_data: Option<Vec<u8>>,
+    pub overflow: OverflowMode,
 }
 
 #[partial_derive_state]
@@ -41,6 +44,7 @@ impl State<CustomAttributeValues> for Style {
             "image_data",
             "svg_data",
             "svg_content",
+            "overflow",
         ]));
 
     fn update<'a>(
@@ -125,6 +129,13 @@ impl State<CustomAttributeValues> for Style {
                     "svg_content" => {
                         let text = attr.value.as_text();
                         style.svg_data = text.map(|v| v.as_bytes().to_owned());
+                    }
+                    "overflow" => {
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(overflow) = OverflowMode::parse(value) {
+                                style.overflow = overflow;
+                            }
+                        }
                     }
                     _ => {
                         panic!("Unsupported attribute <{}>, this should not be happening, please report it.", attr.attribute.name);
