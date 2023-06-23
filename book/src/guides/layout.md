@@ -18,6 +18,8 @@ Learn how the layout attributes work.
 ### width & height
 All elements support both `width` and `height` attributes.
 
+See syntax for [`Size Units`](#size-units).
+
 ##### Usage
 
 ```rust, no_run
@@ -35,6 +37,8 @@ fn app(cx: Scope) -> Element {
 ### min_width & min_height
 
 `rect` supports specifying a minimum width and height, this can be useful if you use it alongside a percentage for the target size.
+
+See syntax for [`Size Units`](#size-units).
 
 ##### Usage
 
@@ -56,6 +60,8 @@ fn app(cx: Scope) -> Element {
 
 `rect` supports specifying a maximum width and height.
 
+See syntax for [`Size Units`](#size-units).
+
 ##### Usage
 
 ```rust, no_run
@@ -74,7 +80,7 @@ fn app(cx: Scope) -> Element {
 
 ### Size Units
 
-#### Static Values
+#### Logical pixels
 
 ```rust, no_run
 fn app(cx: Scope) -> Element {

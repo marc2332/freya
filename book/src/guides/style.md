@@ -71,7 +71,7 @@ Compatible elements: [`rect`](/guides/elements.html#rect)
 You can add a border to an element using the `border` and `border_alignment` attributes.
 
 - `border` syntax: `[width] <inner | outer | center> [color]`.
-- `border_alignment` syntax: `<none | solid>`.
+- `border_alignment` syntax: `<inner | outer | center>`.
 
 Example:
 
@@ -150,3 +150,10 @@ These are some attribute that are inherited from the element parents:
 - `line_height`
 - `align`
 - `max_lines`
+- `letter_spacing`
+- `word_spacing`
+- `decoration`
+- `decoration_style`
+- `decoration_color`
+- `text_shadow`
+
