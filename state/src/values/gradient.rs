@@ -46,7 +46,7 @@ impl LinearGradient {
         let colors: Vec<Color> = self.stops.iter().map(|stop| stop.color).collect();
         let offsets: Vec<f32> = self.stops.iter().map(|stop| stop.offset).collect();
 
-        let (dx, dy) = (-self.angle).to_radians().sin_cos();
+        let (dx, dy) = (-self.angle).sin_cos();
         let farthest_corner = Point::new(
             if dx > 0.0 { bounds.width() } else { 0.0 },
             if dy > 0.0 { bounds.height() } else { 0.0 },
@@ -91,7 +91,7 @@ impl Parse for LinearGradient {
             .replace("deg", "");
 
         if let Ok(angle) = angle_or_first_stop.replace("deg", "").parse::<f32>() {
-            gradient.angle = angle;
+            gradient.angle = angle.to_radians();
         } else {
             gradient.stops.push(
                 GradientStop::parse(angle_or_first_stop.as_str())
