@@ -10,6 +10,7 @@ use futures::{
     pin_mut,
     task::{self, ArcWake},
 };
+use skia_safe::textlayout::TypefaceFontProvider;
 use skia_safe::{textlayout::FontCollection, FontMgr};
 use tokio::{
     select,
@@ -19,6 +20,7 @@ use tracing::info;
 use uuid::Uuid;
 use winit::{dpi::PhysicalSize, event_loop::EventLoopProxy};
 
+use crate::config::LaunchConfig;
 use crate::{HoveredNode, WindowEnv};
 
 pub fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
@@ -66,9 +68,22 @@ impl<State: 'static + Clone> App<State> {
         proxy: &EventLoopProxy<EventMessage>,
         mutations_notifier: Option<Arc<Notify>>,
         window_env: WindowEnv<State>,
+        config: LaunchConfig<State>,
     ) -> Self {
         let mut font_collection = FontCollection::new();
-        font_collection.set_default_font_manager(FontMgr::default(), "Fira Sans");
+        let def_mgr = FontMgr::default();
+
+        let mut provider = TypefaceFontProvider::new();
+
+        for (font_name, font_data) in config.fonts {
+            let ft_type = def_mgr.new_from_data(font_data, None).unwrap();
+            provider.register_typeface(ft_type, Some(font_name));
+        }
+
+        let mgr: FontMgr = provider.into();
+        font_collection.set_default_font_manager(def_mgr, "Fira Sans");
+        font_collection.set_dynamic_font_manager(mgr);
+
         let (event_emitter, event_receiver) = unbounded_channel::<DomEvent>();
         Self {
             rdom,
