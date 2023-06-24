@@ -25,7 +25,7 @@ fn app(cx: Scope) -> Element {
 }
 ```
 
-Compatible elements: [`rect`](/guides/elements.html#rect), [`container`](/guides/elements.html#container)
+Compatible elements: [`rect`](/guides/elements.html#rect)
 
 
 ### shadow
@@ -46,7 +46,7 @@ fn app(cx: Scope) -> Element {
 }
 ```
 
-Compatible elements: [`rect`](/guides/elements.html#rect), [`container`](/guides/elements.html#container)
+Compatible elements: [`rect`](/guides/elements.html#rect)
 
 ### radius
 
@@ -64,12 +64,14 @@ fn app(cx: Scope) -> Element {
 }
 ```
 
+Compatible elements: [`rect`](/guides/elements.html#rect)
+
 ### border
 
 You can add a border to an element using the `border` and `border_alignment` attributes.
 
 - `border` syntax: `[width] <inner | outer | center> [color]`.
-- `border_alignment` syntax: `<none | solid>`.
+- `border_alignment` syntax: `<inner | outer | center>`.
 
 Example:
 
@@ -83,6 +85,35 @@ fn app(cx: Scope) -> Element {
     )
 }
 ```
+
+Compatible elements: [`rect`](/guides/elements.html#rect)
+
+### overflow
+
+Specify how overflow should be handled.
+
+Accepted values: `clip | none`.
+
+Example:
+
+```rust, no_run
+fn app(cx: Scope) -> Element {
+    render!(
+        rect {
+            overflow: "clip"
+            width: "100",
+            height: "100%",
+            rect {
+                width: "500",
+                height: "100%",
+                background: "red",
+            }
+        }
+    )
+}
+```
+
+Compatible elements: [`rect`](/guides/elements.html#rect)
 
 ### Color syntax
 
@@ -119,3 +150,10 @@ These are some attribute that are inherited from the element parents:
 - `line_height`
 - `align`
 - `max_lines`
+- `letter_spacing`
+- `word_spacing`
+- `decoration`
+- `decoration_style`
+- `decoration_color`
+- `text_shadow`
+

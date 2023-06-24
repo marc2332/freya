@@ -73,7 +73,8 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
     let color = theme.button.font_theme.color;
 
     render!(
-        container {
+        rect {
+            overflow: "clip",
             margin: "2",
             onclick: onclick,
             onmouseenter: onmouseenter,

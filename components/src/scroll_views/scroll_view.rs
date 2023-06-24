@@ -1,12 +1,12 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{keyboard::Key, KeyboardEvent, MouseEvent, WheelEvent};
-use freya_hooks::{use_get_theme, use_node};
+use freya_hooks::use_node;
 
 use crate::{
     get_container_size, get_corrected_scroll_position, get_scroll_position_from_cursor,
     get_scroll_position_from_wheel, get_scrollbar_pos_and_size, is_scrollbar_visible, Axis,
-    SCROLLBAR_SIZE,
+    ScrollBar, ScrollThumb, SCROLLBAR_SIZE,
 };
 
 /// [`ScrollView`] component properties.
@@ -58,14 +58,11 @@ pub struct ScrollViewProps<'a> {
 ///
 #[allow(non_snake_case)]
 pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
-    let theme = use_get_theme(cx);
     let clicking_scrollbar = use_ref::<Option<(Axis, f64)>>(cx, || None);
     let clicking_shift = use_ref(cx, || false);
     let scrolled_y = use_ref(cx, || 0);
     let scrolled_x = use_ref(cx, || 0);
     let (node_ref, size) = use_node(cx);
-
-    let scrollbar_theme = &theme.scrollbar;
 
     let padding = cx.props.padding.unwrap_or("0");
     let user_container_width = cx.props.width.unwrap_or("100%");
@@ -132,7 +129,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     let onmouseover = move |e: MouseEvent| {
         if let Some((Axis::Y, y)) = *clicking_scrollbar.read() {
             let coordinates = e.get_element_coordinates();
-            let cursor_y = coordinates.y - y;
+            let cursor_y = coordinates.y - y - size.area.min_y() as f64;
 
             let scroll_position = get_scroll_position_from_cursor(
                 cursor_y as f32,
@@ -143,7 +140,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
             scrolled_y.with_mut(|y| *y = scroll_position);
         } else if let Some((Axis::X, x)) = *clicking_scrollbar.read() {
             let coordinates = e.get_element_coordinates();
-            let cursor_x = coordinates.x - x;
+            let cursor_x = coordinates.x - x - size.area.min_x() as f64;
 
             let scroll_position = get_scroll_position_from_cursor(
                 cursor_x as f32,
@@ -196,19 +193,21 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     };
 
     render!(
-        container {
+        rect {
+            overflow: "clip",
             direction: "horizontal",
             width: "{user_container_width}",
             height: "{user_container_height}",
             onglobalclick: onclick, // TODO(marc2332): mouseup would be better
-            onmouseover: onmouseover,
+            onglobalmouseover: onmouseover,
             onkeydown: onkeydown,
             onkeyup: onkeyup,
             rect {
                 direction: "vertical",
                 width: "{container_width}",
                 height: "{container_height}",
-                container {
+                rect {
+                    overflow: "clip",
                     padding: "{padding}",
                     height: "100%",
                     width: "100%",
@@ -219,33 +218,25 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
                     onwheel: onwheel,
                     &cx.props.children
                 }
-                container {
+                ScrollBar {
                     width: "100%",
                     height: "{horizontal_scrollbar_size}",
                     offset_x: "{scrollbar_x}",
-                    onmouseleave: |_| {},
-                    background: "{scrollbar_theme.background}",
-                    rect {
+                    ScrollThumb {
                         onmousedown: onmousedown_x,
                         width: "{scrollbar_width}",
                         height: "100%",
-                        radius: "10",
-                        background: "{scrollbar_theme.thumb_background}",
                     }
                 }
             }
-            container {
+            ScrollBar {
                 width: "{vertical_scrollbar_size}",
                 height: "100%",
                 offset_y: "{scrollbar_y}",
-                onmouseleave: |_| {},
-                background: "{scrollbar_theme.background}",
-                rect {
+                ScrollThumb {
                     onmousedown: onmousedown_y,
                     width: "100%",
                     height: "{scrollbar_height}",
-                    radius: "10",
-                    background: "{scrollbar_theme.thumb_background}",
                 }
             }
         }

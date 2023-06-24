@@ -25,6 +25,7 @@ fn app(cx: Scope) -> Element {
                 paragraph {
                     width: "100%",
                     align: "right",
+                    font_family: "Kablammo Zoink",
                     text {
                         color: "rgb(240, 50, 100)",
                         "{loremipsum.repeat(2)}"

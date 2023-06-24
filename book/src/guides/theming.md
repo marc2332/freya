@@ -30,7 +30,7 @@ fn Component(cx: Scope) -> Element {
 }
 ```
 
-### Changing the current theme
+### Custom default theme 
 By default, the selected theme is `DARK_THEME`. You use the alternative, `LIGHT_THEME` or any you want.
 
 ```rust, no_run
@@ -52,6 +52,37 @@ fn Component(cx: Scope) -> Element {
     render!(
         rect {
             background: "{button_theme.background}",
+        }
+    )
+}
+```
+
+### Change theme
+Changing the selected theme at runtime is possible by using the `use_theme` hook.
+
+```rust, no_run
+fn app(cx: Scope) -> Element {
+    render!(
+        ThemeProvider {
+            Component { }
+        }
+    )
+}
+
+#[allow(non_snake_case)]
+fn Component(cx: Scope) -> Element {
+    let theme = use_theme(cx);
+
+    let onclick = |_| {
+        *theme.write() = LIGHT_THEME;
+    };
+
+    render!(
+        Button {
+            onclick: onclick,
+            label {
+                "Use Light theme"
+            }
         }
     )
 }

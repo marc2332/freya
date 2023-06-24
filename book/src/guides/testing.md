@@ -72,7 +72,7 @@ async fn dynamic_test() {
 
 ## Events
 
-We can also simulate events on the component, for example, we can simulate a click event on a container and assert that the state has been updated.
+We can also simulate events on the component, for example, we can simulate a click event on a `rect` and assert that the state has been updated.
 
 ```rust, no_run
 #[tokio::test]

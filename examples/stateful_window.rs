@@ -8,7 +8,7 @@ use freya::prelude::*;
 fn main() {
     launch_cfg(
         app,
-        WindowConfig::builder()
+        LaunchConfig::builder()
             .with_title("Window with state")
             .with_state(10)
             .build(),

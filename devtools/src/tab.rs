@@ -55,7 +55,8 @@ pub fn TabButton<'a>(cx: Scope<'a, TabButtonProps<'a>>) -> Element<'a> {
     let content = cx.props.label;
 
     render!(
-        container {
+        rect {
+            overflow: "clip",
             background: "{background}",
             onclick: onclick,
             onmouseover: onmouseover,

@@ -19,7 +19,8 @@ fn app(cx: Scope) -> Element {
             height: "100%",
             background: "black",
             color: "white",
-            container {
+            rect {
+                overflow: "clip",
                 width: "100%",
                 height: "60",
                 Button {
