@@ -74,10 +74,12 @@ impl<State: 'static + Clone> App<State> {
         vdom: VirtualDom,
         proxy: &EventLoopProxy<EventMessage>,
         mutations_notifier: Option<Arc<Notify>>,
-        window_env: WindowEnv<State>,
+        mut window_env: WindowEnv<State>,
         config: LaunchConfig<State>,
     ) -> Self {
         let accessibility = NativeAccessibility::new(&window_env.window, proxy.clone());
+
+        window_env.window().set_visible(true);
 
         let mut font_collection = FontCollection::new();
         let def_mgr = FontMgr::default();
