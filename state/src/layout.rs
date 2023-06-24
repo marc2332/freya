@@ -54,6 +54,7 @@ impl State<CustomAttributeValues> for LayoutState {
             "offset_x",
             "display",
             "reference",
+            "margin",
         ]))
         .with_tag()
         .with_text();
