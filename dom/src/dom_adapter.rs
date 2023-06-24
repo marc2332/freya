@@ -35,6 +35,7 @@ impl DOMAdapter<NodeId> for DioxusDOMAdapter<'_> {
             maximum_height: size.maximum_height,
             direction: size.direction,
             padding: size.padding,
+            margin: size.margin,
             display: size.display,
             offset_x: Length::new(size.offset_x),
             offset_y: Length::new(size.offset_y),

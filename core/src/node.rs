@@ -5,7 +5,7 @@ use freya_node_state::{
 };
 use skia_safe::{textlayout::TextShadow, Color};
 use torin::{
-    direction::DirectionMode, display::DisplayMode, padding::Paddings, radius::Radius, size::Size,
+    direction::DirectionMode, display::DisplayMode, gaps::Gaps, radius::Radius, size::Size,
 };
 
 #[derive(Clone)]
@@ -77,7 +77,7 @@ impl<'a> Iterator for NodeStateIterator<'a> {
                 "direction",
                 AttributeType::Direction(&self.state.size.direction),
             )),
-            7 => Some(("padding", AttributeType::Paddings(self.state.size.padding))),
+            7 => Some(("padding", AttributeType::Measures(self.state.size.padding))),
             8 => Some(("display", AttributeType::Display(&self.state.size.display))),
             9 => Some((
                 "background",
@@ -130,7 +130,7 @@ pub enum AttributeType<'a> {
     Color(&'a Color),
     Size(&'a Size),
     Measure(f32),
-    Paddings(Paddings),
+    Measures(Gaps),
     Radius(Radius),
     Direction(&'a DirectionMode),
     Display(&'a DisplayMode),

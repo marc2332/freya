@@ -78,28 +78,23 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
 
     render!(
         rect {
-            width: "auto",
-            height: "auto",
-            direction: "both",
-            padding: "2",
+            overflow: "clip",
+            margin: "2",
+            onclick: onclick,
+            onmouseenter: onmouseenter,
+            onmouseleave: onmouseleave,
             focus_id: focus_id,
             focusable: "true",
             role: "button",
-            rect {
-                overflow: "clip",
-                onclick: onclick,
-                onmouseenter: onmouseenter,
-                onmouseleave: onmouseleave,
-                width: "auto",
-                height: "auto",
-                direction: "both",
-                color: "{color}",
-                shadow: "0 5 20 0 rgb(0, 0, 0, 100)",
-                radius: "5",
-                padding: "8",
-                background: "{background}",
-                &cx.props.children
-            }
+            width: "auto",
+            height: "auto",
+            direction: "both",
+            color: "{color}",
+            shadow: "0 5 20 0 rgb(0, 0, 0, 100)",
+            radius: "5",
+            padding: "8",
+            background: "{background}",
+            &cx.props.children
         }
     )
 }

@@ -22,7 +22,6 @@ fn app(cx: Scope) -> Element {
 
     render!(
         rect {
-            overflow: "clip",
             width: "100%",
             height: "100%",
             padding: "2.5",

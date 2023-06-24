@@ -182,6 +182,7 @@ builder_constructors! {
         overflow: String,
         name: String,
         focusable: String,
+        margin: String,
     };
     label {
         color: String,
