@@ -1,11 +1,11 @@
 mod border;
 mod color;
-mod gradient;
-mod fill;
 mod cursor;
 mod decoration;
 mod display;
+mod fill;
 mod font;
+mod gradient;
 mod overflow;
 mod padding;
 mod radius;
@@ -15,12 +15,12 @@ mod text_shadow;
 
 pub use border::*;
 pub use color::*;
-pub use gradient::*;
-pub use fill::*;
 pub use cursor::*;
 pub use decoration::*;
 pub use display::*;
+pub use fill::*;
 pub use font::*;
+pub use gradient::*;
 pub use overflow::*;
 pub use padding::*;
 pub use radius::*;

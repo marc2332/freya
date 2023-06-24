@@ -2,10 +2,8 @@ use dioxus_native_core::real_dom::NodeImmutable;
 use freya_dom::prelude::DioxusNode;
 use freya_node_state::{BorderAlignment, BorderStyle, Fill, References, ShadowPosition, Style};
 use skia_safe::{
-    gradient_shader::GradientShaderColors,
-    shader::Shader,
-    textlayout::FontCollection,
-    TileMode, Matrix, BlurStyle, Canvas, ClipOp, Color, MaskFilter, Paint, PaintStyle, Path, PathDirection, RRect, Rect,
+    textlayout::FontCollection, BlurStyle, Canvas, ClipOp, Color, MaskFilter, Paint, PaintStyle,
+    Path, PathDirection, RRect, Rect,
 };
 use torin::prelude::Area;
 
@@ -29,26 +27,8 @@ pub fn render_rect(
             paint.set_color(*color);
         },
         Fill::LinearGradient(gradient) => {
-            let colors: Vec<Color> = gradient.stops.iter().map(|stop| stop.color).collect();
-            let offsets: Vec<f32> = gradient.stops.iter().enumerate()
-                .map(|(idx, stop)| {
-                    if let Some(offset) = stop.offset {
-                        offset
-                    } else {
-                        idx as f32 / (gradient.stops.len() - 1) as f32
-                    }
-                })
-                .collect();
-
-            paint.set_shader(Shader::linear_gradient(
-                ((area.min_x(), area.min_y()), (area.max_x(), area.max_y())),
-                GradientShaderColors::Colors(&colors[..]),
-                Some(&offsets[..]),
-                TileMode::Clamp,
-                None,
-                Some(&Matrix::rotate_deg(gradient.angle - 45.0))
-            ));
-        }
+            paint.set_shader(gradient.into_shader(area));
+        },
     }
 
     let radius = node_style.radius;
@@ -68,7 +48,7 @@ pub fn render_rect(
     path.add_rrect(rounded_rect, None);
     canvas.draw_path(&path, &paint);
 
-    // Shadow effect
+    // Shadows
     // A box shadow is created by creating a copy of the drawn rectangle
     // and applying a blur filter and a clip.
     //
@@ -78,12 +58,19 @@ pub fn render_rect(
     // If a shadow is inset, then we instead draw an inner stroke and blur that,
     // clipping whatever blur escapes the shadow's bounding
     for shadow in node_style.shadows.iter() {
-        if shadow.color != Color::TRANSPARENT {
+        if shadow.fill != Fill::Color(Color::TRANSPARENT) {
             let mut blur_paint = paint.clone();
             let mut blur_rect = rounded_rect;
 
-            blur_paint.set_color(shadow.color);
             blur_rect.offset((shadow.x, shadow.y));
+            match &shadow.fill {
+                Fill::Color(color) => {
+                    blur_paint.set_color(*color);
+                },
+                Fill::LinearGradient(gradient) => {
+                    blur_paint.set_shader(gradient.into_shader(area));
+                },
+            }
 
             if shadow.position == ShadowPosition::Inset {
                 blur_paint.set_style(PaintStyle::Stroke);
@@ -119,12 +106,19 @@ pub fn render_rect(
     }
 
     // Borders
-    if node_style.border.width > 0.0 && node_style.border.style != BorderStyle::None {
+    if node_style.border.width > 0.0 && node_style.border.fill != Fill::Color(Color::TRANSPARENT) && node_style.border.style != BorderStyle::None {
         let mut stroke_paint = paint.clone();
         let half_border_width = node_style.border.width / 2.0;
 
         stroke_paint.set_style(PaintStyle::Stroke);
-        stroke_paint.set_color(node_style.border.color);
+        match &node_style.border.fill {
+            Fill::Color(color) => {
+                stroke_paint.set_color(*color);
+            },
+            Fill::LinearGradient(gradient) => {
+                stroke_paint.set_shader(gradient.into_shader(area));
+            },
+        }
         stroke_paint.set_stroke_width(node_style.border.width);
 
         path.rewind();

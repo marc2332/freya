@@ -1,5 +1,4 @@
-use crate::Parse;
-use skia_safe::Color;
+use crate::{Parse, Fill};
 use torin::scaled::Scaled;
 
 #[derive(Default, Clone, Debug, PartialEq)]
@@ -16,7 +15,7 @@ pub struct Shadow {
     pub y: f32,
     pub blur: f32,
     pub spread: f32,
-    pub color: Color,
+    pub fill: Fill,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -63,7 +62,7 @@ impl Parse for Shadow {
         }
         color_string.push_str(shadow_values.collect::<Vec<&str>>().join(" ").as_str());
 
-        shadow.color = Color::parse(color_string.as_str()).map_err(|_| ParseShadowError)?;
+        shadow.fill = Fill::parse(color_string.as_str()).map_err(|_| ParseShadowError)?;
 
         Ok(shadow)
     }

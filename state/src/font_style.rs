@@ -17,7 +17,7 @@ use skia_safe::{
 use smallvec::{smallvec, SmallVec};
 use torin::torin::Torin;
 
-use crate::{ExtSplit, CustomAttributeValues, Parse};
+use crate::{CustomAttributeValues, ExtSplit, Parse};
 
 #[derive(Debug, Clone, PartialEq, Component)]
 pub struct FontStyle {
@@ -150,7 +150,8 @@ impl State<CustomAttributeValues> for FontStyle {
                     }
                     "text_shadow" => {
                         if let Some(value) = attr.value.as_text() {
-                            font_style.text_shadows = value.split_excluding_group(',', '(', ')')
+                            font_style.text_shadows = value
+                                .split_excluding_group(',', '(', ')')
                                 .map(|chunk| {
                                     let mut shadow = TextShadow::parse(chunk).unwrap_or_default();
                                     shadow.offset *= *scale_factor;

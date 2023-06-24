@@ -1,5 +1,4 @@
-use crate::Parse;
-use skia_safe::Color;
+use crate::{Parse, Fill};
 use std::fmt;
 use torin::scaled::Scaled;
 
@@ -12,7 +11,7 @@ pub enum BorderStyle {
 
 #[derive(Default, Clone, Debug, PartialEq)]
 pub struct Border {
-    pub color: Color,
+    pub fill: Fill,
     pub style: BorderStyle,
     pub width: f32,
     pub alignment: BorderAlignment,
@@ -80,7 +79,7 @@ impl Parse for Border {
                 "solid" => BorderStyle::Solid,
                 _ => BorderStyle::None,
             },
-            color: Color::parse(&border_values.collect::<Vec<&str>>().join(" "))
+            fill: Fill::parse(&border_values.collect::<Vec<&str>>().join(" "))
                 .map_err(|_| ParseBorderError)?,
             alignment: BorderAlignment::default(),
         })

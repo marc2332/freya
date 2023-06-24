@@ -10,14 +10,7 @@ use dioxus_native_core_macro::partial_derive_state;
 use torin::{radius::Radius, scaled::Scaled};
 
 use crate::{
-    Parse,
-    ExtSplit,
-    Fill,
-    OverflowMode,
-    Border,
-    BorderAlignment,
-    CustomAttributeValues,
-    Shadow
+    Border, BorderAlignment, CustomAttributeValues, ExtSplit, Fill, OverflowMode, Parse, Shadow,
 };
 
 #[derive(Default, Debug, Clone, PartialEq, Component)]
@@ -101,7 +94,8 @@ impl State<CustomAttributeValues> for Style {
                     }
                     "shadow" => {
                         if let Some(value) = attr.value.as_text() {
-                            style.shadows = value.split_excluding_group(',', '(', ')')
+                            style.shadows = value
+                                .split_excluding_group(',', '(', ')')
                                 .map(|chunk| {
                                     let mut shadow = Shadow::parse(chunk).unwrap_or_default();
                                     shadow.scale(*scale_factor);
