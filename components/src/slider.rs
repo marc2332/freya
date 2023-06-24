@@ -115,7 +115,6 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
     render!(
         rect {
             reference: node_reference,
-            overflow: "clip",
             width: "{width}",
             height: "20",
             onmousedown: onmousedown,
