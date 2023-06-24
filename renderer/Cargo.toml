@@ -40,6 +40,7 @@ raw-window-handle = { workspace = true }
 winit = { workspace = true }
 accesskit = { workspace = true }
 accesskit_winit = { workspace = true }
+tracing = { workspace = true }
 
 uuid = { workspace = true }
 futures = { workspace = true }

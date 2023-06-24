@@ -32,5 +32,15 @@ fn Child(cx: Scope) -> Element {
 }
 
 fn app(cx: Scope) -> Element {
-    render!(Child {}, Child {}, Child {}, Child {}, Child {},)
+    render!(
+        rect {
+            width: "100%",
+            height: "100%",
+            Child {},
+            Child {},
+            Child {},
+            Child {},
+            Child {}
+        }
+    )
 }

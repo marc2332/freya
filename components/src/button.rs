@@ -85,7 +85,8 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
             focus_id: focus_id,
             focusable: "true",
             role: "button",
-            container {
+            rect {
+                overflow: "clip",
                 onclick: onclick,
                 onmouseenter: onmouseenter,
                 onmouseleave: onmouseleave,

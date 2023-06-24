@@ -203,7 +203,8 @@ where
             rect {
                 width: "70",
                 height: "50",
-                container {
+                rect {
+                    overflow: "clip",
                     focus_id: focus_id,
                     layer: "-1",
                     radius: "3",
@@ -220,7 +221,8 @@ where
         )
     } else {
         render!(
-            container {
+            rect {
+                overflow: "clip",
                 focus_id: focus_id,
                 background: background,
                 color: color,

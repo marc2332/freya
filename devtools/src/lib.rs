@@ -64,7 +64,8 @@ fn AppWithDevtools(cx: Scope<AppWithDevtoolsProps>) -> Element {
             width: "100%",
             height: "100%",
             direction: "horizontal",
-            container {
+            rect {
+                overflow: "clip",
                 height: "100%",
                 width: "calc(100% - 350)",
                 Root { },

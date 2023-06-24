@@ -2,14 +2,27 @@
 
 Learn how the layout attributes work.
 
+- [`width & height`](#width_&_height)
+- [`min_width & min_height`](#min_width_&_min_height)
+- [`max_width & max_height`](#max_width_&_max_height)
+- [`Size units`](#size_units)
+  - [`Static values`](#static-values)
+  - [`Percentages`](#percentages)
+  - [`calc()`](#calc)
+- [`direction`](#direction)
+- [`padding`](#padding)
+- [`display`](#display)
+
 > ⚠️ Freya's layout is still somewhat limited.
 
 ### width & height
 All elements support both `width` and `height` attributes.
 
+See syntax for [`Size Units`](#size-units).
+
 ##### Usage
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -23,11 +36,13 @@ fn app(cx: Scope) -> Element {
 
 ### min_width & min_height
 
-`rect` and `container` support specifying a minimum width and height, this can be useful if you use it alongside a percentage for the target size.
+`rect` supports specifying a minimum width and height, this can be useful if you use it alongside a percentage for the target size.
+
+See syntax for [`Size Units`](#size-units).
 
 ##### Usage
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -43,11 +58,13 @@ fn app(cx: Scope) -> Element {
 
 ### max_width & max_height
 
-`rect` and `container` support specifying a maximum width and height.
+`rect` supports specifying a maximum width and height.
+
+See syntax for [`Size Units`](#size-units).
 
 ##### Usage
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -61,11 +78,11 @@ fn app(cx: Scope) -> Element {
 }
 ```
 
-### Units
+### Size Units
 
-#### Static Values
+#### Logical pixels
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -78,12 +95,13 @@ fn app(cx: Scope) -> Element {
 
 #### Percentages
 Relative percentage to the parent equivalent value.
-```rust
+
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {
-            width: "50%", // Half the window
-            height: "75%" // 3/4 the window
+            width: "50%", // Half the parent
+            height: "75%" // 3/4 the parent
         }
     )
 }
@@ -93,12 +111,12 @@ fn app(cx: Scope) -> Element {
 
 For more complex logic you can use the `calc()` function.
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {
-            width: "calc(33% - 60 + 15%)",
-            height: "calc(100% - 10)"
+            width: "calc(33% - 60 + 15%)", // (1/3 of the parent minus 60) plus 15% of parent
+            height: "calc(100% - 10)" // 100% of the parent minus 10
         }
     )
 }
@@ -110,7 +128,7 @@ Control how the inner elements will be stacked, possible values are `horizontal`
 
 ##### Usage
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -132,11 +150,28 @@ fn app(cx: Scope) -> Element {
 }
 ```
 
+### padding
+
+Specify the inner paddings of an element. You can do so by three different ways, just like in CSS.
+
+```rust, no_run
+fn app(cx: Scope) -> Element {
+    render!(
+        rect {
+            padding: "25" // 25 in all sides
+            padding: "100 50" // 100 in top and bottom, and 50 in left and right
+            padding: "5 7 3 9" // 5 in top, 7 in right, 3 in bottom and 9 in left
+        }
+    )
+}
+
+```
+
 ### display
 
 Control how the inner elements are displayed, possible values are `normal` (default) or `center`.
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -154,6 +189,3 @@ fn app(cx: Scope) -> Element {
 }
 ```
 
-### overflow
-
-This is the key difference between `rect` and `container` elements. `rect` will still render any overflow it has, in the other hand, `container` will clip any content overflowing its bounds.

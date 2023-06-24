@@ -9,7 +9,7 @@ You can use the `launch_test` function to run the tests of your component, it wi
 
 For example, this will launch a state-less component and assert that it renders a label with the text `"Hello World!"`.
 
-```rust
+```rust, no_run
 #[tokio::test]
 async fn test() {
     fn our_component(cx: Scope) -> Element {
@@ -38,7 +38,7 @@ If the component has logic that might execute asynchronously, you will need to w
 
 Here, the component has a state that is `false` by default, but, once mounted it will update the state to `true`.
 
-```rust
+```rust, no_run
 #[tokio::test]
 async fn dynamic_test() {
     fn dynamic_component(cx: Scope) -> Element {
@@ -72,9 +72,9 @@ async fn dynamic_test() {
 
 ## Events
 
-We can also simulate events on the component, for example, we can simulate a click event on a container and assert that the state has been updated.
+We can also simulate events on the component, for example, we can simulate a click event on a `rect` and assert that the state has been updated.
 
-```rust
+```rust, no_run
 #[tokio::test]
 async fn event_test() {
     fn event_component(cx: Scope) -> Element {
@@ -127,7 +127,7 @@ The `launch_test` comes with a default configuration, but you can also pass your
 
 Here is an example of how to can set our custom window size:
 
-```rust
+```rust, no_run
 #[tokio::test]
 async fn test() {
     fn our_component(cx: Scope) -> Element {

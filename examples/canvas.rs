@@ -93,7 +93,8 @@ fn app(cx: Scope) -> Element {
                                 offset_y: "{node.1}",
                                 width: "0",
                                 height: "0",
-                                container {
+                                rect {
+                                    overflow: "clip",
                                     background: "rgb(20, 20, 20)",
                                     width: "600",
                                     height: "400",

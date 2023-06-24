@@ -10,16 +10,19 @@ use futures::{
     pin_mut,
     task::{self, ArcWake},
 };
+use skia_safe::textlayout::TypefaceFontProvider;
 use skia_safe::{textlayout::FontCollection, FontMgr};
 use tokio::{
     select,
     sync::{mpsc, watch, Notify},
 };
+use tracing::info;
 use uuid::Uuid;
 use winit::event::WindowEvent;
 use winit::{dpi::PhysicalSize, event_loop::EventLoopProxy};
 
 use crate::accessibility::NativeAccessibility;
+use crate::config::LaunchConfig;
 use crate::{HoveredNode, WindowEnv};
 
 fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
@@ -72,11 +75,23 @@ impl<State: 'static + Clone> App<State> {
         proxy: &EventLoopProxy<EventMessage>,
         mutations_notifier: Option<Arc<Notify>>,
         window_env: WindowEnv<State>,
+        config: LaunchConfig<State>,
     ) -> Self {
         let accessibility = NativeAccessibility::new(&window_env.window, proxy.clone());
 
         let mut font_collection = FontCollection::new();
-        font_collection.set_default_font_manager(FontMgr::default(), "Fira Sans");
+        let def_mgr = FontMgr::default();
+
+        let mut provider = TypefaceFontProvider::new();
+
+        for (font_name, font_data) in config.fonts {
+            let ft_type = def_mgr.new_from_data(font_data, None).unwrap();
+            provider.register_typeface(ft_type, Some(font_name));
+        }
+
+        let mgr: FontMgr = provider.into();
+        font_collection.set_default_font_manager(def_mgr, "Fira Sans");
+        font_collection.set_dynamic_font_manager(mgr);
 
         let (event_emitter, event_receiver) = mpsc::unbounded_channel::<DomEvent>();
         let (focus_sender, focus_receiver) = watch::channel(None);
@@ -214,6 +229,13 @@ impl<State: 'static + Clone> App<State> {
             self.layers = layers;
             self.viewports_collection = viewports;
         }
+
+        info!(
+            "Processed {} layers and {} group of paragraph elements",
+            self.layers.len_layers(),
+            self.layers.len_paragraph_elements()
+        );
+        info!("Processed {} viewports", self.viewports_collection.len());
 
         if let Some(mutations_notifier) = &self.mutations_notifier {
             mutations_notifier.notify_one();
