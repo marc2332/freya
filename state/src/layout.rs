@@ -22,7 +22,8 @@ pub struct LayoutState {
     pub minimum_height: Size,
     pub maximum_height: Size,
     pub maximum_width: Size,
-    pub padding: Paddings,
+    pub padding: Gaps,
+    pub margin: Gaps,
     pub direction: DirectionMode,
     pub node_id: NodeId,
     pub offset_y: f32,
@@ -53,6 +54,7 @@ impl State<CustomAttributeValues> for LayoutState {
             "offset_x",
             "display",
             "reference",
+            "margin",
         ]))
         .with_tag()
         .with_text();
@@ -136,9 +138,17 @@ impl State<CustomAttributeValues> for LayoutState {
                     }
                     "padding" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(mut padding) = Paddings::parse(value) {
+                            if let Ok(mut padding) = Gaps::parse(value) {
                                 padding.scale(*scale_factor);
                                 layout.padding = padding;
+                            }
+                        }
+                    }
+                    "margin" => {
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(mut margin) = Gaps::parse(value) {
+                                margin.scale(*scale_factor);
+                                layout.margin = margin;
                             }
                         }
                     }

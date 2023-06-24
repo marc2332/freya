@@ -177,6 +177,7 @@ builder_constructors! {
         rotate: String,
         canvas_reference: String,
         overflow: String,
+        margin: String,
     };
     label {
         color: String,
