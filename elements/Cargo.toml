@@ -23,5 +23,6 @@ dioxus-core = { workspace = true }
 
 winit = { workspace = true }
 tokio = { workspace = true }
+accesskit = { workspace = true }
 
 keyboard-types = "0.6.2"
