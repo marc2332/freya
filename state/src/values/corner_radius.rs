@@ -1,5 +1,5 @@
 use crate::Parse;
-use skia_safe::{Path, Rect, PathDirection, path::ArcSize};
+use skia_safe::{Path, RRect, PathDirection, rrect::Corner, path::ArcSize};
 use std::f32::consts::SQRT_2;
 use std::fmt;
 use torin::scaled::Scaled;
@@ -67,14 +67,19 @@ impl CornerRadius {
     }
 
     // https://github.com/aloisdeniel/figma_squircle/blob/main/lib/src/path_smooth_corners.dart
-    pub fn smoothed_path(&self, bounds: Rect) -> Path {
+    pub fn smoothed_path(&self, rect: RRect) -> Path {
         let mut path = Path::new();
-        let width = bounds.width();
-        let height = bounds.height();
+
+        let width = rect.width();
+        let height = rect.height();
+        let top_right = rect.radii(Corner::UpperRight).x;
+        let bottom_right = rect.radii(Corner::LowerRight).x;
+        let bottom_left = rect.radii(Corner::LowerLeft).x;
+        let top_left = rect.radii(Corner::UpperLeft).x;
 
         if self.top_right > 0.0 {
             let (a, b, c, d, l, p, radius) =
-                compute_squircle(self.top_right, self.smoothing, width, height);
+                compute_squircle(top_right, self.smoothing, width, height);
 
             path.move_to((f32::max(width / 2.0, width - p), 0.0))
                 .cubic_to(
@@ -102,7 +107,7 @@ impl CornerRadius {
 
         if self.bottom_right > 0.0 {
             let (a, b, c, d, l, p, radius) =
-                compute_squircle(self.bottom_right, self.smoothing, width, height);
+                compute_squircle(bottom_right, self.smoothing, width, height);
 
             path.line_to((width, f32::max(height / 2.0, height - p)))
                 .cubic_to(
@@ -128,7 +133,7 @@ impl CornerRadius {
 
         if self.bottom_left > 0.0 {
             let (a, b, c, d, l, p, radius) =
-                compute_squircle(self.bottom_left, self.smoothing, width, height);
+                compute_squircle(bottom_left, self.smoothing, width, height);
 
             path.line_to((f32::min(width / 2.0, p), height))
                 .cubic_to(
@@ -154,7 +159,7 @@ impl CornerRadius {
 
         if self.top_left > 0.0 {
             let (a, b, c, d, l, p, radius) =
-                compute_squircle(self.top_left, self.smoothing, width, height);
+                compute_squircle(top_left, self.smoothing, width, height);
 
             path.line_to((0.0, f32::min(height / 2.0, p)))
                 .cubic_to(

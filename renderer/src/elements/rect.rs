@@ -37,7 +37,7 @@ pub fn render_rect(
 
     if node_style.corner_radius.smoothing > 0.0 {
         path.add_path(
-            &node_style.corner_radius.smoothed_path(*rounded_rect.bounds()),
+            &node_style.corner_radius.smoothed_path(rounded_rect),
             (area.min_x(), area.min_y()),
             None
         );
@@ -82,11 +82,9 @@ pub fn render_rect(
 
             // Add either the RRect or smoothed path based on whether smoothing is used.
             if node_style.corner_radius.smoothing > 0.0 {
-                let outset_bounds = rounded_rect.bounds().with_outset(outset);
-
                 shadow_path.add_path(
-                    &node_style.corner_radius.smoothed_path(outset_bounds),
-                    (outset_bounds.x(), outset_bounds.y()),
+                    &node_style.corner_radius.smoothed_path(rounded_rect.with_outset(outset)),
+                    Point::new(area.min_x(), area.min_y()) - outset,
                     None
                 );
             } else {
@@ -128,11 +126,9 @@ pub fn render_rect(
 
         // Add either the RRect or smoothed path based on whether smoothing is used.
         if node_style.corner_radius.smoothing > 0.0 {
-            let outset_bounds = rounded_rect.bounds().with_outset(outset);
-
             border_path.add_path(
-                &node_style.corner_radius.smoothed_path(outset_bounds),
-                (outset_bounds.x(), outset_bounds.y()),
+                &node_style.corner_radius.smoothed_path(rounded_rect.with_outset(outset)),
+                Point::new(area.min_x(), area.min_y()) - outset,
                 None
             );
         } else {
