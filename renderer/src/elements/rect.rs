@@ -36,7 +36,11 @@ pub fn render_rect(
     );
 
     if node_style.corner_radius.smoothing > 0.0 {
-        path.add_path(&node_style.corner_radius.smoothed_path(rounded_rect), (area.min_x(), area.min_y()), None);
+        path.add_path(
+            &node_style.corner_radius.smoothed_path(*rounded_rect.bounds()),
+            (area.min_x(), area.min_y()),
+            None
+        );
     } else {
         path.add_rrect(&rounded_rect, None);
     }
@@ -77,11 +81,16 @@ pub fn render_rect(
             }
 
             // Add either the RRect or smoothed path based on whether smoothing is used.
-            let outset_rect = rounded_rect.with_outset(outset);
             if node_style.corner_radius.smoothing > 0.0 {
-                shadow_path.add_path(&node_style.corner_radius.smoothed_path(outset_rect), (area.min_x(), area.min_y()), None);
+                let outset_bounds = rounded_rect.bounds().with_outset(outset);
+
+                shadow_path.add_path(
+                    &node_style.corner_radius.smoothed_path(outset_bounds),
+                    (outset_bounds.x(), outset_bounds.y()),
+                    None
+                );
             } else {
-                shadow_path.add_rrect(&outset_rect, None);
+                shadow_path.add_rrect(&rounded_rect.with_outset(outset), None);
             }
 
             // Offset our path by the shadow's x and y coordinates.
@@ -118,11 +127,16 @@ pub fn render_rect(
         };
 
         // Add either the RRect or smoothed path based on whether smoothing is used.
-        let outset_rect = rounded_rect.with_outset(outset);
         if node_style.corner_radius.smoothing > 0.0 {
-            border_path.add_path(&node_style.corner_radius.smoothed_path(outset_rect), (area.min_x(), area.min_y()), None);
+            let outset_bounds = rounded_rect.bounds().with_outset(outset);
+
+            border_path.add_path(
+                &node_style.corner_radius.smoothed_path(outset_bounds),
+                (outset_bounds.x(), outset_bounds.y()),
+                None
+            );
         } else {
-            border_path.add_rrect(&outset_rect, None);
+            border_path.add_rrect(&rounded_rect.with_outset(outset), None);
         }   
         
         canvas.draw_path(&border_path, &border_paint);

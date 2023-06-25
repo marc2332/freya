@@ -1,5 +1,5 @@
 use crate::Parse;
-use skia_safe::{Path, RRect, PathDirection, path::ArcSize};
+use skia_safe::{Path, Rect, PathDirection, path::ArcSize};
 use std::f32::consts::SQRT_2;
 use std::fmt;
 use torin::scaled::Scaled;
@@ -67,10 +67,10 @@ impl CornerRadius {
     }
 
     // https://github.com/aloisdeniel/figma_squircle/blob/main/lib/src/path_smooth_corners.dart
-    pub fn smoothed_path(&self, rect: RRect) -> Path {
+    pub fn smoothed_path(&self, bounds: Rect) -> Path {
         let mut path = Path::new();
-        let width = rect.width();
-        let height = rect.height();
+        let width = bounds.width();
+        let height = bounds.height();
 
         if self.top_right > 0.0 {
             let (a, b, c, d, l, p, radius) =
