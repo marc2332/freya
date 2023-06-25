@@ -1,3 +1,5 @@
+use accesskit::Action;
+use accesskit_winit::ActionRequestEvent;
 use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_elements::events::keyboard::{
@@ -43,6 +45,19 @@ pub fn run_event_loop<State: Clone>(
             }
             Event::UserEvent(EventMessage::RemeasureTextGroup(text_id)) => {
                 app.measure_text_group(&text_id);
+            }
+            Event::UserEvent(EventMessage::ActionRequestEvent(ActionRequestEvent {
+                request,
+                ..
+            })) =>
+            {
+                #[allow(clippy::single_match)]
+                match request.action {
+                    Action::Focus => {
+                        app.accessibility().set_accessibility_focus(request.target);
+                    }
+                    _ => {}
+                }
             }
             Event::UserEvent(EventMessage::SetCursorIcon(icon)) => {
                 app.window_env().window.set_cursor_icon(icon)
