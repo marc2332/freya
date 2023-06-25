@@ -123,9 +123,9 @@ pub fn render_rect(
             border_path.add_path(&node_style.corner_radius.smoothed_path(outset_rect), (area.min_x(), area.min_y()), None);
         } else {
             border_path.add_rrect(&outset_rect, None);
-        }
+        }   
         
-        canvas.draw_path(&path, &border_paint);
+        canvas.draw_path(&border_path, &border_paint);
     }
 
     let references = node_ref.get::<References>().unwrap();
