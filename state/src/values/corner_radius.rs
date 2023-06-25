@@ -14,7 +14,7 @@ pub struct CornerRadius {
 }
 
 // https://www.figma.com/blog/desperately-seeking-squircles/
-fn compute_squircle(
+fn compute_smooth_corner(
     corner_radius: f32,
     smoothing: f32,
     width: f32,
@@ -76,7 +76,7 @@ impl CornerRadius {
         let top_right = rect.radii(Corner::UpperRight).x;
         if top_right > 0.0 {
             let (a, b, c, d, l, p, radius) =
-                compute_squircle(top_right, self.smoothing, width, height);
+                compute_smooth_corner(top_right, self.smoothing, width, height);
 
             path.move_to((f32::max(width / 2.0, width - p), 0.0))
                 .cubic_to(
@@ -105,7 +105,7 @@ impl CornerRadius {
         let bottom_right = rect.radii(Corner::LowerRight).x;
         if bottom_right > 0.0 {
             let (a, b, c, d, l, p, radius) =
-                compute_squircle(bottom_right, self.smoothing, width, height);
+                compute_smooth_corner(bottom_right, self.smoothing, width, height);
 
             path.line_to((width, f32::max(height / 2.0, height - p)))
                 .cubic_to(
@@ -132,7 +132,7 @@ impl CornerRadius {
         let bottom_left = rect.radii(Corner::LowerLeft).x;
         if bottom_left > 0.0 {
             let (a, b, c, d, l, p, radius) =
-                compute_squircle(bottom_left, self.smoothing, width, height);
+                compute_smooth_corner(bottom_left, self.smoothing, width, height);
 
             path.line_to((f32::min(width / 2.0, p), height))
                 .cubic_to(
@@ -159,7 +159,7 @@ impl CornerRadius {
         let top_left = rect.radii(Corner::UpperLeft).x;
         if top_left > 0.0 {
             let (a, b, c, d, l, p, radius) =
-                compute_squircle(top_left, self.smoothing, width, height);
+                compute_smooth_corner(top_left, self.smoothing, width, height);
 
             path.line_to((0.0, f32::min(height / 2.0, p)))
                 .cubic_to(
