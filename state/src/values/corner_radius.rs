@@ -1,5 +1,5 @@
 use crate::Parse;
-use skia_safe::{Path, PathDirection, path::ArcSize, Point};
+use skia_safe::{Path, PathDirection, path::ArcSize};
 use torin::prelude::Area;
 use std::f32::consts::SQRT_2;
 use std::fmt;
@@ -20,20 +20,21 @@ fn compute_squircle(
     smoothing: f32,
     width: f32,
     height: f32,
-) -> (f32, f32, f32, f32, f32, f32) {
-    let max_radius = f32::min(width, height) / 2.0;
-    let corner_radius = f32::min(corner_radius, max_radius);
+) -> (f32, f32, f32, f32, f32, f32, f32) {
+    let max_p = f32::min(width, height) / 2.0;
+    let corner_radius = f32::min(corner_radius, max_p);
 
-    let p = f32::min((1.0 + smoothing) * corner_radius, max_radius);
+    let p = f32::min((1.0 + smoothing) * corner_radius, max_p);
 
     let angle_alpha: f32;
     let angle_beta: f32;
 
-    if corner_radius <= max_radius / 2.0 {
+    if corner_radius <= max_p / 2.0 {
         angle_alpha = 45.0 * smoothing;
         angle_beta = 90.0 * (1.0 - smoothing);
     } else {
-        let diff_ratio = (corner_radius - max_radius / 2.0) / (max_radius / 2.0);
+        let diff_ratio = (corner_radius - max_p / 2.0) / (max_p / 2.0);
+
         angle_alpha = 45.0 * smoothing * (1.0 - diff_ratio);
         angle_beta = 90.0 * (1.0 - smoothing * (1.0 - diff_ratio));
     }
@@ -47,7 +48,7 @@ fn compute_squircle(
     let b = (p - l - c - d) / 3.0;
     let a = 2.0 * b;
 
-    return (a, b, c, d, l, p);
+    return (a, b, c, d, l, p, corner_radius);
 }
 
 impl CornerRadius {
@@ -73,7 +74,7 @@ impl CornerRadius {
         let height = bounds.height();
 
         if self.top_right > 0.0 {
-            let (a, b, c, d, l, p) =
+            let (a, b, c, d, l, p, radius) =
                 compute_squircle(self.top_right, self.smoothing, width, height);
 
             path.move_to((f32::max(width / 2.0, width - p), 0.0))
@@ -83,7 +84,7 @@ impl CornerRadius {
                     (width - (p - a - b - c), d),
                 )
                 .r_arc_to_rotated(
-                    (self.top_right, self.top_right),
+                    (radius, radius),
                     0.0,
                     ArcSize::Small,
                     PathDirection::CW,
@@ -101,7 +102,7 @@ impl CornerRadius {
         }
 
         if self.bottom_right > 0.0 {
-            let (a, b, c, d, l, p) =
+            let (a, b, c, d, l, p, radius) =
                 compute_squircle(self.bottom_right, self.smoothing, width, height);
 
             path.line_to((width, f32::max(height / 2.0, height - p)))
@@ -111,7 +112,7 @@ impl CornerRadius {
                     (width - d, height - (p - a - b - c)),
                 )
                 .r_arc_to_rotated(
-                    (self.bottom_right, self.bottom_right),
+                    (radius, radius),
                     0.0,
                     ArcSize::Small,
                     PathDirection::CW,
@@ -127,7 +128,7 @@ impl CornerRadius {
         }
 
         if self.bottom_left > 0.0 {
-            let (a, b, c, d, l, p) =
+            let (a, b, c, d, l, p, radius) =
                 compute_squircle(self.bottom_left, self.smoothing, width, height);
 
             path.line_to((f32::min(width / 2.0, p), height))
@@ -137,7 +138,7 @@ impl CornerRadius {
                     (p - a - b - c, height - d),
                 )
                 .r_arc_to_rotated(
-                    (self.bottom_left, self.bottom_left),
+                    (radius, radius),
                     0.0,
                     ArcSize::Small,
                     PathDirection::CW,
@@ -153,7 +154,7 @@ impl CornerRadius {
         }
 
         if self.top_left > 0.0 {
-            let (a, b, c, d, l, p) =
+            let (a, b, c, d, l, p, radius) =
                 compute_squircle(self.top_left, self.smoothing, width, height);
 
             path.line_to((0.0, f32::min(height / 2.0, p)))
@@ -163,7 +164,7 @@ impl CornerRadius {
                     (d, p - a - b - c)
                 )
                 .r_arc_to_rotated(
-                    (self.top_left, self.top_left),
+                    (radius, radius),
                     0.0,
                     ArcSize::Small,
                     PathDirection::CW,
@@ -173,12 +174,12 @@ impl CornerRadius {
                     (p - a - b, 0.0),
                     (p - a, 0.0),
                     (f32::min(width / 2.0, p), 0.0)
-                )
-                .close();
+                );
         } else {
-            path.line_to((0.0, 0.0)).close();
+            path.line_to((0.0, 0.0));
         }
 
+        path.close();
         path
     }
 
