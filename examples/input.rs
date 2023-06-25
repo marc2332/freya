@@ -27,6 +27,7 @@ fn app(cx: Scope) -> Element {
             Input {
                 width: "100%",
                 height: "100",
+                max_lines: "none",
                 value: values.0.clone(),
                 onchange: |e| {
                     values.set((e, values.1.clone()))
