@@ -130,6 +130,7 @@ pub trait AccessibilityProvider {
         let root = self.build_root(root_name);
         let mut nodes = vec![(root_id, root)];
         nodes.extend(self.nodes().cloned());
+        nodes.reverse();
 
         let focus = self.nodes().find_map(|node| {
             if Some(node.0) == self.focus_id() {
