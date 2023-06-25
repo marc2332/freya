@@ -1,3 +1,4 @@
+mod accessibility;
 mod border;
 mod color;
 mod cursor;
@@ -11,6 +12,7 @@ mod shadow;
 mod size;
 mod text_shadow;
 
+pub use accessibility::*;
 pub use border::*;
 pub use color::*;
 pub use cursor::*;

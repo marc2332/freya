@@ -1,6 +1,7 @@
 use crate::Loader;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
+use freya_hooks::use_focus;
 use freya_node_state::bytes_to_data;
 use reqwest::Url;
 
@@ -19,12 +20,16 @@ pub struct NetworkImageProps<'a> {
     pub loading: Option<Element<'a>>,
 
     /// Width of image, default is 100%
-    #[props(default = "100%".to_string())]
+    #[props(default = "100%".to_string(), into)]
     pub width: String,
 
     /// Height of image, default is 100%
-    #[props(default = "100%".to_string())]
+    #[props(default = "100%".to_string(), into)]
     pub height: String,
+
+    /// Information about the image.
+    #[props(optional, into)]
+    pub alt: Option<String>,
 }
 
 /// Image status.
@@ -59,10 +64,14 @@ pub enum ImageStatus {
 ///
 #[allow(non_snake_case)]
 pub fn NetworkImage<'a>(cx: Scope<'a, NetworkImageProps<'a>>) -> Element<'a> {
+    let focus = use_focus(cx);
     let status = use_state(cx, || ImageStatus::Loading);
     let image_bytes = use_state::<Option<Vec<u8>>>(cx, || None);
 
-    let NetworkImageProps { width, height, .. } = cx.props;
+    let focus_id = focus.attribute(cx);
+    let height = &cx.props.height;
+    let width = &cx.props.width;
+    let alt = cx.props.alt.as_deref();
 
     use_effect(cx, &cx.props.url, move |url| {
         to_owned![image_bytes, status];
@@ -122,7 +131,10 @@ pub fn NetworkImage<'a>(cx: Scope<'a, NetworkImageProps<'a>>) -> Element<'a> {
                     image {
                         height: "{height}",
                         width: "{width}",
-                        image_data: image_data
+                        focus_id: focus_id,
+                        image_data: image_data,
+                        role: "image",
+                        alt: alt
                     }
                 )
             })

@@ -63,7 +63,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
         EditableMode::MultipleLinesSingleEditor,
     );
     let theme = use_get_theme(cx);
-    let (focused, focus) = use_focus(cx);
+    let focus_manager = use_focus(cx);
 
     let text = &cx.props.value;
     let button_theme = &theme.button;
@@ -84,9 +84,9 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     });
 
     let onkeydown = {
-        to_owned![editable];
+        to_owned![editable, focus_manager];
         move |e: Event<KeyboardData>| {
-            if focused {
+            if focus_manager.is_focused() {
                 editable.process_event(&EditableEvent::KeyDown(e.data));
                 cx.props
                     .onchange
@@ -116,7 +116,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
         }
     };
 
-    let cursor_char = if focused {
+    let cursor_char = if focus_manager.is_focused() {
         editable.editor().cursor_pos().to_string()
     } else {
         "none".to_string()
@@ -128,7 +128,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
             rect {
                 onkeydown: onkeydown,
                 onclick: move |_| {
-                    focus();
+                    focus_manager.focus();
                 },
                 width: "auto",
                 height: "auto",
