@@ -72,12 +72,9 @@ impl CornerRadius {
 
         let width = rect.width();
         let height = rect.height();
+        
         let top_right = rect.radii(Corner::UpperRight).x;
-        let bottom_right = rect.radii(Corner::LowerRight).x;
-        let bottom_left = rect.radii(Corner::LowerLeft).x;
-        let top_left = rect.radii(Corner::UpperLeft).x;
-
-        if self.top_right > 0.0 {
+        if top_right > 0.0 {
             let (a, b, c, d, l, p, radius) =
                 compute_squircle(top_right, self.smoothing, width, height);
 
@@ -105,7 +102,8 @@ impl CornerRadius {
                 .line_to((width, height / 2.0));
         }
 
-        if self.bottom_right > 0.0 {
+        let bottom_right = rect.radii(Corner::LowerRight).x;
+        if bottom_right > 0.0 {
             let (a, b, c, d, l, p, radius) =
                 compute_squircle(bottom_right, self.smoothing, width, height);
 
@@ -131,7 +129,8 @@ impl CornerRadius {
             path.line_to((width, height)).line_to((width / 2.0, height));
         }
 
-        if self.bottom_left > 0.0 {
+        let bottom_left = rect.radii(Corner::LowerLeft).x;
+        if bottom_left > 0.0 {
             let (a, b, c, d, l, p, radius) =
                 compute_squircle(bottom_left, self.smoothing, width, height);
 
@@ -157,7 +156,8 @@ impl CornerRadius {
             path.line_to((0.0, height)).line_to((0.0, height / 2.0));
         }
 
-        if self.top_left > 0.0 {
+        let top_left = rect.radii(Corner::UpperLeft).x;
+        if top_left > 0.0 {
             let (a, b, c, d, l, p, radius) =
                 compute_squircle(top_left, self.smoothing, width, height);
 
