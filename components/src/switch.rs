@@ -95,7 +95,7 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
             width: "50",
             height: "25",
             padding: "1",
-            radius: "50",
+            corner_radius: "50",
             background: "{border}",
             onmousedown: onmousedown,
             onmouseover: onmouseover,
@@ -106,13 +106,13 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
                 height: "100%",
                 offset_x: "{offset_x}",
                 padding: "2.5",
-                radius: "50",
+                corner_radius: "50",
                 rect {
                     background: "{circle}",
                     direction: "both",
                     width: "18",
                     height: "18",
-                    radius: "50",
+                    corner_radius: "50",
                 }
             }
         }

@@ -48,7 +48,7 @@ where
         height: "35",
         background: background,
         padding: "6",
-        radius: "3",
+        corner_radius: "3",
         onmouseover: move |_| {
             if !*is_hovering.get() {
                 is_hovering.set(true);
@@ -147,7 +147,7 @@ where
                 rect {
                     overflow: "clip",
                     layer: "-1",
-                    radius: "3",
+                    corner_radius: "3",
                     onglobalclick: onglobalclick,
                     width: "130",
                     height: "auto",
@@ -164,7 +164,7 @@ where
                 overflow: "clip",
                 background: dropdown_theme.desplegable_background,
                 color: "{dropdown_theme.font_theme.color}",
-                radius: "3",
+                corner_radius: "3",
                 onclick: move |_| opened.set(true),
                 width: "70",
                 height: "auto",

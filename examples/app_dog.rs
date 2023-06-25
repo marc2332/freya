@@ -47,7 +47,7 @@ fn app(cx: Scope) -> Element {
                 overflow: "clip",
                 width: "100%",
                 height: "calc(100% - 58)",
-                radius: "25",
+                corner_radius: "25",
                 if let Some(dog_url) = dog_url.get() {
                    rsx!(
                         NetworkImage {

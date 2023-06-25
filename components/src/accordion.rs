@@ -64,7 +64,7 @@ pub fn Accordion<'a>(cx: Scope<'a, AccordionProps<'a>>) -> Element<'a> {
             overflow: "clip",
             color: "{accordion_theme.color}",
             padding: "10",
-            radius: "3",
+            corner_radius: "3",
             width: "100%",
             height: "auto",
             background: "{accordion_theme.background}",

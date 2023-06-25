@@ -2,10 +2,16 @@
 
 Learn how the style attributes work.
 
-- [`background`](#background)
-- [`shadow`](#shadow)
-- [`radius`](#radius)
-- [`border`](#border)
+- [Style](#style)
+    - [background](#background)
+    - [shadow](#shadow)
+    - [corner\_radius](#corner_radius)
+    - [border](#border)
+    - [overflow](#overflow)
+    - [Color syntax](#color-syntax)
+      - [Static colors](#static-colors)
+      - [rgb() / hsl()](#rgb--hsl)
+    - [Inheritance](#inheritance)
 
 ### background
 
@@ -48,9 +54,9 @@ fn app(cx: Scope) -> Element {
 
 Compatible elements: [`rect`](/guides/elements.html#rect)
 
-### radius
+### corner_radius
 
-The `radius` attribute let's you smooth the corners of the element.
+The `corner_radius` attribute let's you smooth the corners of the element.
 
 Example:
 
@@ -58,7 +64,7 @@ Example:
 fn app(cx: Scope) -> Element {
     render!(
         rect {
-            radius: "10"
+            corner_radius: "10"
         }
     )
 }

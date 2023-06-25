@@ -62,11 +62,11 @@ pub fn ColorfulProperty<'a>(cx: Scope<'a>, name: &'a str, color: &'a Color) -> E
             rect {
                 width: "17",
                 height: "17",
-                radius: "5",
+                corner_radius: "5",
                 background: "white",
                 padding: "2.5",
                 rect {
-                    radius: "3",
+                    corner_radius: "3",
                     width: "100%",
                     height: "100%",
                     background: "rgb({color.r}, {color.g}, {color.b})",
@@ -118,11 +118,11 @@ pub fn ShadowProperty<'a>(cx: Scope<'a>, name: &'a str, shadow: &'a Shadow) -> E
             rect {
                 width: "17",
                 height: "17",
-                radius: "5",
+                corner_radius: "5",
                 background: "white",
                 padding: "2.5",
                 rect {
-                    radius: "3",
+                    corner_radius: "3",
                     width: "100%",
                     height: "100%",
                     background: "rgb({color.r}, {color.g}, {color.b})",
@@ -175,11 +175,11 @@ pub fn BorderProperty<'a>(cx: Scope<'a>, name: &'a str, border: &'a Border) -> E
             rect {
                 width: "17",
                 height: "17",
-                radius: "5",
+                corner_radius: "5",
                 background: "white",
                 padding: "2.5",
                 rect {
-                    radius: "3",
+                    corner_radius: "3",
                     width: "100%",
                     height: "100%",
                     background: "rgb({color.r}, {color.g}, {color.b})",
@@ -235,11 +235,11 @@ pub fn TextShadowProperty<'a>(
             rect {
                 width: "17",
                 height: "17",
-                radius: "5",
+                corner_radius: "5",
                 background: "white",
                 padding: "2.5",
                 rect {
-                    radius: "3",
+                    corner_radius: "3",
                     width: "100%",
                     height: "100%",
                     background: "rgb({color.r}, {color.g}, {color.b})",

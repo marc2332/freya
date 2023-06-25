@@ -98,7 +98,7 @@ fn app(cx: Scope) -> Element {
                                     background: "rgb(20, 20, 20)",
                                     width: "600",
                                     height: "400",
-                                    radius: "15",
+                                    corner_radius: "15",
                                     padding: "10",
                                     shadow: "0 0 30 0 rgb(0, 0, 0, 150)",
                                     onmousedown:  move |e: MouseEvent| {
@@ -128,10 +128,10 @@ fn app(cx: Scope) -> Element {
                 rect {
                     layer: "-100",
                     padding: "10",
-                    radius: "7",
+                    corner_radius: "7",
                     width: "170",
                     height: "100%",
-                    radius: "15",
+                    corner_radius: "15",
                     display: "center",
                     direction: "both",
                     background: "rgb(20, 20, 20)",
@@ -367,7 +367,7 @@ fn Editor(cx: Scope) -> Element {
                                     height: "{manual_line_height}",
                                     direction: "horizontal",
                                     background: "{line_background}",
-                                    radius: "7",
+                                    corner_radius: "7",
                                     rect {
                                         width: "{font_size * 2.0}",
                                         height: "100%",

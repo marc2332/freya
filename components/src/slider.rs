@@ -130,12 +130,12 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
                 width: "100%",
                 height: "6",
                 direction: "horizontal",
-                radius: "50",
+                corner_radius: "50",
                 rect {
                     background: "{theme.thumb_inner_background}",
                     width: "{progress}",
                     height: "100%",
-                    radius: "50",
+                    corner_radius: "50",
                 }
                 rect {
                     width: "{progress}",
@@ -146,13 +146,13 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
                         background: "{theme.thumb_background}",
                         width: "17",
                         height: "17",
-                        radius: "50",
+                        corner_radius: "50",
                         padding: "3",
                         rect {
                             height: "100%",
                             width: "100%",
                             background: "{theme.thumb_inner_background}",
-                            radius: "50"
+                            corner_radius: "50"
                         }
                     }
                 }

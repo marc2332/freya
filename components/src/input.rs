@@ -141,7 +141,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
                     display: "center",
                     color: "{button_theme.font_theme.color}",
                     shadow: "0 5 20 0 rgb(0, 0, 0, 100)",
-                    radius: "5",
+                    corner_radius: "5",
                     padding: "8",
                     background: "{button_theme.background}",
                     cursor_reference: cursor_attr,

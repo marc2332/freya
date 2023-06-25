@@ -84,7 +84,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
             direction: "both",
             color: "{color}",
             shadow: "0 5 20 0 rgb(0, 0, 0, 100)",
-            radius: "5",
+            corner_radius: "5",
             padding: "8",
             background: "{background}",
             &cx.props.children
