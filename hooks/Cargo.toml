@@ -18,6 +18,7 @@ use_camera = ["dep:nokhwa"]
 freya-elements = { workspace = true }
 freya-node-state = { workspace = true }
 freya-common = { workspace = true }
+freya-core = { workspace = true }
 torin = { workspace = true }
 
 dioxus-rsx = { workspace = true }
@@ -29,6 +30,7 @@ dioxus-core = { workspace = true }
 skia-safe = { workspace = true }
 tokio = { workspace = true }
 winit = { workspace = true }
+accesskit = { workspace = true }
 
 euclid = { workspace = true }
 uuid = { workspace = true }

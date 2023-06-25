@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
-use freya_hooks::use_get_theme;
+use freya_hooks::{use_focus, use_get_theme};
 
 /// [`Button`] component properties.
 #[derive(Props)]
@@ -49,10 +49,14 @@ pub enum ButtonStatus {
 ///
 #[allow(non_snake_case)]
 pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
+    let focus = use_focus(cx);
     let theme = use_get_theme(cx);
     let status = use_state(cx, ButtonStatus::default);
 
+    let focus_id = focus.attribute(cx);
+
     let onclick = move |ev| {
+        focus.focus();
         if let Some(onclick) = &cx.props.onclick {
             onclick.call(ev)
         }
@@ -79,6 +83,9 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
             onclick: onclick,
             onmouseenter: onmouseenter,
             onmouseleave: onmouseleave,
+            focus_id: focus_id,
+            focusable: "true",
+            role: "button",
             width: "auto",
             height: "auto",
             direction: "both",

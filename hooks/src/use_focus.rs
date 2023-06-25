@@ -1,39 +1,66 @@
-use dioxus_core::ScopeState;
+use std::num::NonZeroU128;
+
+use accesskit::NodeId as AccessibilityId;
+use dioxus_core::{AttributeValue, Scope, ScopeState};
 use dioxus_hooks::{use_shared_state, use_shared_state_provider, UseSharedState};
+use freya_node_state::CustomAttributeValues;
 use uuid::Uuid;
 
-/// Subscribe and change the current focus.
-pub fn use_focus(cx: &ScopeState) -> (bool, impl Fn() + '_) {
-    let my_id = cx.use_hook(Uuid::new_v4);
-    let focused_id = use_shared_state::<Uuid>(cx);
+pub type FocusId = AccessibilityId;
 
-    let is_focused = Some(*my_id) == focused_id.map(|v| *v.read());
-
-    let focus = move || {
-        if let Some(focused_id) = focused_id {
-            *focused_id.write() = *my_id;
-        }
-    };
-
-    (is_focused, focus)
+/// Manage the focus operations of given Node
+#[derive(Clone, Copy)]
+pub struct UseFocus<'a> {
+    id: AccessibilityId,
+    focused_id: Option<&'a UseSharedState<Option<AccessibilityId>>>,
 }
 
-/// Subscribe and change the current focus but return the raw value and the caller focus ID.
-pub fn use_raw_focus(cx: &ScopeState) -> (bool, Uuid, Option<&UseSharedState<Uuid>>) {
-    let my_id = cx.use_hook(Uuid::new_v4);
-    let focused_id = use_shared_state::<Uuid>(cx);
-    let focused = Some(*my_id) == focused_id.map(|v| *v.read());
-    (focused, *my_id, focused_id)
+impl UseFocus<'_> {
+    /// Focus this node
+    pub fn focus(&self) {
+        if let Some(focused_id) = self.focused_id {
+            *focused_id.write() = Some(self.id)
+        }
+    }
+
+    /// Get the node focus ID
+    pub fn id(&self) -> AccessibilityId {
+        self.id
+    }
+
+    /// Create a node focus ID attribute
+    pub fn attribute<'b, T>(&self, cx: Scope<'b, T>) -> AttributeValue<'b> {
+        cx.any_value(CustomAttributeValues::FocusId(self.id))
+    }
+
+    /// Check if this node is currently focused
+    pub fn is_focused(&self) -> bool {
+        Some(Some(self.id)) == self.focused_id.map(|f| *f.read())
+    }
+
+    /// Unfocus the currently focused node.
+    pub fn unfocus(&self) {
+        if let Some(focused_id) = self.focused_id {
+            *focused_id.write() = None;
+        }
+    }
+}
+
+/// Create a focus manager for a node.
+pub fn use_focus(cx: &ScopeState) -> UseFocus {
+    let id = *cx.use_hook(|| AccessibilityId(NonZeroU128::new(Uuid::new_v4().as_u128()).unwrap()));
+    let focused_id = use_shared_state::<Option<FocusId>>(cx);
+    UseFocus { id, focused_id }
 }
 
 /// Create a focus provider.
 pub fn use_init_focus(cx: &ScopeState) {
-    use_shared_state_provider(cx, Uuid::new_v4);
+    use_shared_state_provider::<Option<FocusId>>(cx, || None);
 }
 
 #[cfg(test)]
 mod test {
-    use crate::{use_focus, use_init_focus};
+    use crate::use_focus;
     use freya::prelude::*;
     use freya_testing::{launch_test_with_config, FreyaEvent, MouseButton, TestingConfig};
 
@@ -41,21 +68,19 @@ mod test {
     pub async fn track_focus() {
         #[allow(non_snake_case)]
         fn OherChild(cx: Scope) -> Element {
-            let (focused, focus) = use_focus(cx);
+            let focus_manager = use_focus(cx);
 
             render!(
                 rect {
                     width: "100%",
                     height: "50%",
-                    onclick: move |_| focus(),
-                    "{focused}"
+                    onclick: move |_| focus_manager.focus(),
+                    "{focus_manager.is_focused()}"
                 }
             )
         }
 
         fn use_focus_app(cx: Scope) -> Element {
-            use_init_focus(cx);
-
             render!(
                 rect {
                     width: "100%",

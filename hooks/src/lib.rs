@@ -6,6 +6,7 @@ mod rope_editor;
 mod shader_uniforms;
 mod text_editor;
 
+mod use_accessibility;
 mod use_animation;
 mod use_animation_transition;
 mod use_canvas;
@@ -23,6 +24,7 @@ pub use rope_editor::*;
 pub use shader_uniforms::*;
 pub use text_editor::*;
 
+pub use use_accessibility::*;
 pub use use_animation::*;
 pub use use_animation_transition::*;
 pub use use_canvas::*;

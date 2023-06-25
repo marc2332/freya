@@ -11,7 +11,6 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    use_init_focus(cx);
     let hovering = use_state(cx, || false);
     let canvas_pos = use_state(cx, || (0.0f64, 0.0f64));
     let nodes = use_state(cx, || vec![(0.0f64, 0.0f64)]);
@@ -150,8 +149,7 @@ fn app(cx: Scope) -> Element {
 
 #[allow(non_snake_case)]
 fn Editor(cx: Scope) -> Element {
-    let (focused, focus_id, focus) = use_raw_focus(cx);
-
+    let focus_manager = use_focus(cx);
     let editable = use_editable(
         cx,
         || {
@@ -175,23 +173,27 @@ fn Editor(cx: Scope) -> Element {
     let font_style = if *is_italic.get() { "italic" } else { "normal" };
     let font_weight = if *is_bold.get() { "bold" } else { "normal" };
 
-    use_effect(cx, (), move |_| {
-        if let Some(focus) = focus {
-            *focus.write() = focus_id
+    use_effect(cx, (), {
+        to_owned![focus_manager];
+        move |_| {
+            focus_manager.focus();
+            async move {}
         }
-        async move {}
     });
 
-    let onclick = move |_: MouseEvent| {
-        if let Some(focus) = focus {
-            *focus.write() = focus_id
+    let onclick = {
+        to_owned![focus_manager];
+        move |_: MouseEvent| {
+            if !focus_manager.is_focused() {
+                focus_manager.focus();
+            }
         }
     };
 
     let onkeydown = {
         to_owned![editable];
         move |e: KeyboardEvent| {
-            if focused {
+            if focus_manager.is_focused() {
                 editable.process_event(&EditableEvent::KeyDown(e.data));
             }
         }

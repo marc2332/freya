@@ -7,9 +7,12 @@ use freya_common::EventMessage;
 use freya_dom::prelude::SafeDOM;
 use std::sync::{Arc, Mutex};
 use tokio::sync::Notify;
-pub use window::WindowEnv;
 use winit::event_loop::EventLoopBuilder;
 
+pub use config::WindowConfig;
+pub use window::WindowEnv;
+
+mod accessibility;
 mod app;
 mod config;
 mod elements;

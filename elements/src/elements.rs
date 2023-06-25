@@ -175,8 +175,13 @@ builder_constructors! {
         reference: Reference,
         cursor_reference: CursorReference,
         rotate: String,
+        role: String,
+        focus_id: AccessibilityId,
+        alt: String,
         canvas_reference: String,
         overflow: String,
+        name: String,
+        focusable: String,
         margin: String,
     };
     label {
@@ -193,11 +198,16 @@ builder_constructors! {
         align: String,
         max_lines: String,
         rotate: String,
+        role: String,
+        alt: String,
+        focus_id: AccessibilityId,
+        name: String,
         letter_spacing: String,
         word_spacing: String,
         decoration: String,
         decoration_style: String,
         decoration_color: String,
+        focusable: String,
     };
     paragraph {
         layer: String,
@@ -212,10 +222,14 @@ builder_constructors! {
         cursor_id: String,
         direction: String,
         rotate: String,
+        role: String,
+        focus_id: AccessibilityId,
         highlights: String,
         highlight_color: String,
         font_size: String,
         font_family: String,
+        alt: String,
+        name: String,
         font_style: String,
         font_weight: String,
         font_width: String,
@@ -224,6 +238,7 @@ builder_constructors! {
         decoration: String,
         decoration_style: String,
         decoration_color: String,
+        focusable: String,
     };
     text {
         color: String,
@@ -249,6 +264,11 @@ builder_constructors! {
         width: String,
         height: String,
         rotate: String,
+        role: String,
+        focus_id: AccessibilityId,
+        alt: String,
+        name: String,
+        focusable: String,
     };
     svg {
         svg_data: String,
@@ -256,6 +276,11 @@ builder_constructors! {
         width: String,
         height: String,
         rotate: String,
+        role: String,
+        focus_id: AccessibilityId,
+        alt: String,
+        name: String,
+        focusable: String,
     };
 }
 

@@ -14,16 +14,18 @@ use skia_safe::textlayout::TypefaceFontProvider;
 use skia_safe::{textlayout::FontCollection, FontMgr};
 use tokio::{
     select,
-    sync::{mpsc::unbounded_channel, Notify},
+    sync::{mpsc, watch, Notify},
 };
 use tracing::info;
 use uuid::Uuid;
+use winit::event::WindowEvent;
 use winit::{dpi::PhysicalSize, event_loop::EventLoopProxy};
 
+use crate::accessibility::NativeAccessibility;
 use crate::config::LaunchConfig;
 use crate::{HoveredNode, WindowEnv};
 
-pub fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
+fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
     struct DomHandle(EventLoopProxy<EventMessage>);
 
     unsafe impl Send for DomHandle {}
@@ -40,7 +42,7 @@ pub fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
 
 /// Manages the Application lifecycle
 pub struct App<State: 'static + Clone> {
-    rdom: SafeDOM,
+    sdom: SafeDOM,
     vdom: VirtualDom,
 
     events: EventsQueue,
@@ -58,18 +60,27 @@ pub struct App<State: 'static + Clone> {
     events_processor: EventsProcessor,
     viewports_collection: ViewportsCollection,
 
+    focus_sender: FocusSender,
+    focus_receiver: FocusReceiver,
+
+    accessibility: NativeAccessibility,
+
     font_collection: FontCollection,
 }
 
 impl<State: 'static + Clone> App<State> {
     pub fn new(
-        rdom: SafeDOM,
+        sdom: SafeDOM,
         vdom: VirtualDom,
         proxy: &EventLoopProxy<EventMessage>,
         mutations_notifier: Option<Arc<Notify>>,
-        window_env: WindowEnv<State>,
+        mut window_env: WindowEnv<State>,
         config: LaunchConfig<State>,
     ) -> Self {
+        let accessibility = NativeAccessibility::new(&window_env.window, proxy.clone());
+
+        window_env.window().set_visible(true);
+
         let mut font_collection = FontCollection::new();
         let def_mgr = FontMgr::default();
 
@@ -84,9 +95,11 @@ impl<State: 'static + Clone> App<State> {
         font_collection.set_default_font_manager(def_mgr, "Fira Sans");
         font_collection.set_dynamic_font_manager(mgr);
 
-        let (event_emitter, event_receiver) = unbounded_channel::<DomEvent>();
+        let (event_emitter, event_receiver) = mpsc::unbounded_channel::<DomEvent>();
+        let (focus_sender, focus_receiver) = watch::channel(None);
+
         Self {
-            rdom,
+            sdom,
             vdom,
             events: Vec::new(),
             vdom_waker: winit_waker(proxy),
@@ -98,6 +111,9 @@ impl<State: 'static + Clone> App<State> {
             layers: Layers::default(),
             events_processor: EventsProcessor::default(),
             viewports_collection: HashMap::default(),
+            accessibility,
+            focus_sender,
+            focus_receiver,
             font_collection,
         }
     }
@@ -108,6 +124,9 @@ impl<State: 'static + Clone> App<State> {
             self.vdom.base_scope().provide_context(state);
         }
         self.vdom.base_scope().provide_context(self.proxy.clone());
+        self.vdom
+            .base_scope()
+            .provide_context(self.focus_receiver.clone());
     }
 
     /// Make the first build of the VirtualDOM.
@@ -117,7 +136,7 @@ impl<State: 'static + Clone> App<State> {
 
         let mutations = self.vdom.rebuild();
 
-        self.rdom.get_mut().init_dom(mutations, scale_factor);
+        self.sdom.get_mut().init_dom(mutations, scale_factor);
 
         if let Some(mutations_notifier) = &self.mutations_notifier {
             mutations_notifier.notify_one();
@@ -134,7 +153,7 @@ impl<State: 'static + Clone> App<State> {
             && mutations.templates.is_empty();
 
         let (repaint, relayout) = if !is_empty {
-            self.rdom.get_mut().apply_mutations(mutations, scale_factor)
+            self.sdom.get_mut().apply_mutations(mutations, scale_factor)
         } else {
             (false, false)
         };
@@ -192,7 +211,7 @@ impl<State: 'static + Clone> App<State> {
     pub fn process_events(&mut self) {
         let scale_factor = self.window_env.window.scale_factor();
         process_events(
-            &self.rdom.get(),
+            &self.sdom.get(),
             &self.layers,
             &mut self.events,
             &self.event_emitter,
@@ -204,12 +223,16 @@ impl<State: 'static + Clone> App<State> {
 
     /// Measure the layout
     pub fn process_layout(&mut self) {
-        let dom = self.rdom.get();
-        let (layers, viewports) = self
-            .window_env
-            .process_layout(&dom, &mut self.font_collection);
-        self.layers = layers;
-        self.viewports_collection = viewports;
+        self.accessibility.clear_accessibility();
+
+        {
+            let dom = self.sdom.get();
+            let (layers, viewports) = self
+                .window_env
+                .process_layout(&dom, &mut self.font_collection);
+            self.layers = layers;
+            self.viewports_collection = viewports;
+        }
 
         info!(
             "Processed {} layers and {} group of paragraph elements",
@@ -221,6 +244,25 @@ impl<State: 'static + Clone> App<State> {
         if let Some(mutations_notifier) = &self.mutations_notifier {
             mutations_notifier.notify_one();
         }
+
+        self.process_accessibility();
+    }
+
+    /// Create the Accessibility tree
+    /// This will iterater the DOM ordered by layers (top to bottom)
+    /// and add every element with an accessibility ID to the Accessibility Tree
+    pub fn process_accessibility(&mut self) {
+        let fdom = &self.sdom.get();
+        let layout = fdom.layout();
+        let rdom = fdom.rdom();
+        let layers = &self.layers;
+
+        process_accessibility(
+            layers,
+            &layout,
+            rdom,
+            &mut *self.accessibility.accessibility_state().lock().unwrap(),
+        );
     }
 
     /// Push an event to the events queue
@@ -240,22 +282,39 @@ impl<State: 'static + Clone> App<State> {
             &self.viewports_collection,
             &mut self.font_collection,
             hovered_node,
-            &self.rdom.get(),
+            &self.sdom.get(),
         );
+
+        self.accessibility
+            .render_accessibility(self.window_env.window.title().as_str());
     }
 
     /// Resize the Window
     pub fn resize(&mut self, size: PhysicalSize<u32>) {
-        self.rdom.get().layout().reset();
+        self.sdom.get().layout().reset();
         self.window_env.resize(size);
     }
 
     pub fn measure_text_group(&self, text_id: &Uuid) {
         self.layers
-            .measure_paragraph_elements(text_id, &self.rdom.get(), &self.font_collection);
+            .measure_paragraph_elements(text_id, &self.sdom.get(), &self.font_collection);
     }
 
     pub fn window_env(&mut self) -> &mut WindowEnv<State> {
         &mut self.window_env
+    }
+
+    pub fn accessibility(&mut self) -> &mut NativeAccessibility {
+        &mut self.accessibility
+    }
+
+    pub fn on_window_event(&mut self, event: &WindowEvent) -> bool {
+        self.accessibility
+            .on_accessibility_window_event(&self.window_env.window, event)
+    }
+
+    pub fn focus_next_node(&mut self, direction: AccessibilityFocusDirection) {
+        self.accessibility
+            .focus_next_node(direction, &self.focus_sender)
     }
 }
