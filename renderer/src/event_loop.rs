@@ -59,12 +59,10 @@ pub fn run_event_loop<State: Clone>(
                 }
             }
             Event::RedrawRequested(_) => {
-                app.accessibility().clear_accessibility();
                 app.process_layout();
                 app.render(&hovered_node);
-                app.render_accessibility();
             }
-            Event::WindowEvent { event, .. } if app.on_accessibility_window_event(&event) => {
+            Event::WindowEvent { event, .. } if app.on_window_event(&event) => {
                 match event {
                     WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
                     WindowEvent::MouseInput { state, button, .. } => {

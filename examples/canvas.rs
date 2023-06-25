@@ -11,7 +11,6 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    use_init_focus(cx);
     let hovering = use_state(cx, || false);
     let canvas_pos = use_state(cx, || (0.0f64, 0.0f64));
     let nodes = use_state(cx, || vec![(0.0f64, 0.0f64)]);

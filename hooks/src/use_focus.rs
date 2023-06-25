@@ -60,7 +60,7 @@ pub fn use_init_focus(cx: &ScopeState) {
 
 #[cfg(test)]
 mod test {
-    use crate::{use_focus, use_init_focus};
+    use crate::use_focus;
     use freya::prelude::*;
     use freya_testing::{launch_test_with_config, FreyaEvent, MouseButton, TestingConfig};
 
@@ -81,8 +81,6 @@ mod test {
         }
 
         fn use_focus_app(cx: Scope) -> Element {
-            use_init_focus(cx);
-
             render!(
                 rect {
                     width: "100%",

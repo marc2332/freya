@@ -223,6 +223,8 @@ impl<State: 'static + Clone> App<State> {
 
     /// Measure the layout
     pub fn process_layout(&mut self) {
+        self.accessibility.clear_accessibility();
+
         {
             let dom = self.sdom.get();
             let (layers, viewports) = self
@@ -282,6 +284,9 @@ impl<State: 'static + Clone> App<State> {
             hovered_node,
             &self.sdom.get(),
         );
+
+        self.accessibility
+            .render_accessibility(self.window_env.window.title().as_str());
     }
 
     /// Resize the Window
@@ -303,12 +308,7 @@ impl<State: 'static + Clone> App<State> {
         &mut self.accessibility
     }
 
-    pub fn render_accessibility(&mut self) {
-        self.accessibility
-            .render_accessibility(self.window_env.window.title().as_str());
-    }
-
-    pub fn on_accessibility_window_event(&mut self, event: &WindowEvent) -> bool {
+    pub fn on_window_event(&mut self, event: &WindowEvent) -> bool {
         self.accessibility
             .on_accessibility_window_event(&self.window_env.window, event)
     }
