@@ -20,14 +20,12 @@ impl Parse for GradientStop {
         let color_str = split.next().ok_or(ParseGradientStopError)?;
 
         let offset_str = split.next().ok_or(ParseGradientStopError)?.trim();
-        if !offset_str.ends_with("%") {
-            return Err(ParseGradientStopError);
-        } else if let Some(_) = split.next() {
+        if !offset_str.ends_with('%') || split.next().is_some() {
             return Err(ParseGradientStopError);
         }
 
         let offset = offset_str
-            .replacen("%", "", 1)
+            .replacen('%', "", 1)
             .parse::<f32>()
             .map_err(|_| ParseGradientStopError)?
             / 100.0;
@@ -88,13 +86,13 @@ impl Parse for LinearGradient {
     type Err = ParseLinearGradientError;
 
     fn parse(value: &str) -> Result<Self, Self::Err> {
-        if !value.starts_with("linear-gradient(") || !value.ends_with(")") {
+        if !value.starts_with("linear-gradient(") || !value.ends_with(')') {
             return Err(ParseLinearGradientError);
         }
 
         let mut gradient = LinearGradient::default();
         let mut value = value.replacen("linear-gradient(", "", 1);
-        value.remove(value.rfind(")").ok_or(ParseLinearGradientError)?);
+        value.remove(value.rfind(')').ok_or(ParseLinearGradientError)?);
 
         let mut split = value.split_excluding_group(',', '(', ')');
 

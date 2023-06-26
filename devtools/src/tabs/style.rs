@@ -4,7 +4,10 @@ use freya_core::prelude::*;
 use freya_elements::elements as dioxus_elements;
 
 use crate::{
-    property::{BorderProperty, FillProperty, Property, ShadowProperty, TextShadowProperty},
+    property::{
+        BorderProperty, ColorProperty, LinearGradientProperty, Property, ShadowProperty,
+        TextShadowProperty,
+    },
     NodeInspectorBar, TreeNode,
 };
 
@@ -59,9 +62,18 @@ pub fn NodeInspectorStyle<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> 
                                 }
                             }
                         }
-                        AttributeType::Fill(fill) => {
+                        AttributeType::Color(fill) => {
                             rsx!{
-                                FillProperty {
+                                ColorProperty {
+                                    key: "{i}",
+                                    name: "{name}",
+                                    fill: fill
+                                }
+                            }
+                        }
+                        AttributeType::LinearGradient(fill) => {
+                            rsx!{
+                                LinearGradientProperty {
                                     key: "{i}",
                                     name: "{name}",
                                     fill: fill

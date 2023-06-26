@@ -79,15 +79,19 @@ impl<'a> Iterator for NodeStateIterator<'a> {
             )),
             7 => Some(("padding", AttributeType::Measures(self.state.size.padding))),
             8 => Some(("display", AttributeType::Display(&self.state.size.display))),
-            9 => Some((
-                "background",
-                AttributeType::Fill(self.state.style.background.clone()),
-            )),
+            9 => {
+                let background = &self.state.style.background;
+                let fill = match *background {
+                    Fill::Color(_) => AttributeType::Color(background.clone()),
+                    Fill::LinearGradient(_) => AttributeType::LinearGradient(background.clone()),
+                };
+                Some(("background", fill))
+            }
             10 => Some(("border", AttributeType::Border(&self.state.style.border))),
             11 => Some(("radius", AttributeType::Radius(self.state.style.radius))),
             12 => Some((
                 "color",
-                AttributeType::Fill(self.state.font_style.color.into()),
+                AttributeType::Color(self.state.font_style.color.into()),
             )),
             13 => Some((
                 "font_family",
@@ -130,7 +134,8 @@ impl<'a> Iterator for NodeStateIterator<'a> {
 }
 
 pub enum AttributeType<'a> {
-    Fill(Fill),
+    Color(Fill),
+    LinearGradient(Fill),
     Size(&'a Size),
     Measure(f32),
     Measures(Gaps),

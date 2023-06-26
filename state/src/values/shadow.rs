@@ -1,4 +1,4 @@
-use crate::{Fill, Parse, ExtSplit};
+use crate::{ExtSplit, Fill, Parse};
 use torin::scaled::Scaled;
 
 #[derive(Default, Clone, Debug, PartialEq)]
