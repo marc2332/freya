@@ -22,6 +22,8 @@ impl Parse for GradientStop {
         let offset_str = split.next().ok_or(ParseGradientStopError)?.trim();
         if !offset_str.ends_with("%") {
             return Err(ParseGradientStopError);
+        } else if let Some(_) = split.next() {
+            return Err(ParseGradientStopError);
         }
 
         let offset = offset_str
@@ -86,7 +88,7 @@ impl Parse for LinearGradient {
     type Err = ParseLinearGradientError;
 
     fn parse(value: &str) -> Result<Self, Self::Err> {
-        if !value.starts_with("linear-gradient") || !value.ends_with(")") {
+        if !value.starts_with("linear-gradient(") || !value.ends_with(")") {
             return Err(ParseLinearGradientError);
         }
 

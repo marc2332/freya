@@ -34,6 +34,7 @@ impl ExtSplit for str {
             delimiter,
             group_start,
             group_end,
+            trailing_empty: true,
         }
     }
 
@@ -58,6 +59,7 @@ pub struct SplitExcludingGroup<'a> {
     pub delimiter: char,
     pub group_start: char,
     pub group_end: char,
+    pub trailing_empty: bool,
 }
 
 impl<'a> Iterator for SplitExcludingGroup<'a> {
@@ -66,8 +68,14 @@ impl<'a> Iterator for SplitExcludingGroup<'a> {
     fn next(&mut self) -> Option<&'a str> {
         let first = self.chars.next();
 
-        let (start, mut prior) = match first {
-            None => return None,
+        let (start, mut prev) = match first {
+            None => {
+                if self.text.ends_with(self.delimiter) && self.trailing_empty {
+                    self.trailing_empty = false;
+                    return Some("");
+                }
+                return None;
+            },
             Some((_, c)) if c == self.delimiter => return Some(""),
             Some(v) => v,
         };
@@ -76,19 +84,19 @@ impl<'a> Iterator for SplitExcludingGroup<'a> {
         let mut nesting = -1;
 
         loop {
-            if prior == self.group_start {
+            if prev == self.group_start {
                 if nesting == -1 {
                     in_group = true;
                 }
                 nesting += 1;
-            } else if prior == self.group_end {
+            } else if prev == self.group_end {
                 nesting -= 1;
                 if nesting == -1 {
                     in_group = false;
                 }
             }
 
-            prior = match self.chars.next() {
+            prev = match self.chars.next() {
                 None => return Some(&self.text[start..]),
                 Some((end, c)) if c == self.delimiter && !in_group => {
                     return Some(&self.text[start..end])
@@ -113,7 +121,7 @@ impl<'a> Iterator for SplitAsciiWhitespaceExcludingGroup<'a> {
     fn next(&mut self) -> Option<&'a str> {
         let first = self.chars.next();
 
-        let (start, mut prior) = match first {
+        let (start, mut prev) = match first {
             None => return None,
             Some((_, c)) if c.is_ascii_whitespace() => return self.next(),
             Some(v) => v,
@@ -123,19 +131,19 @@ impl<'a> Iterator for SplitAsciiWhitespaceExcludingGroup<'a> {
         let mut nesting = -1;
 
         loop {
-            if prior == self.group_start {
+            if prev == self.group_start {
                 if nesting == -1 {
                     in_group = true;
                 }
                 nesting += 1;
-            } else if prior == self.group_end {
+            } else if prev == self.group_end {
                 nesting -= 1;
                 if nesting == -1 {
                     in_group = false;
                 }
             }
 
-            prior = match self.chars.next() {
+            prev = match self.chars.next() {
                 None => return Some(&self.text[start..]),
                 Some((end, c)) if c.is_ascii_whitespace() && !in_group => {
                     return Some(&self.text[start..end])

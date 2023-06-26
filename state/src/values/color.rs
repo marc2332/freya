@@ -76,6 +76,7 @@ fn parse_rgb(color: &str) -> Result<Color, ParseColorError> {
     }
 
     let color = color.replacen("rgb(", "", 1).replacen(')', "", 1);
+    
     let mut colors = color.split(',');
 
     let r = colors
@@ -97,6 +98,11 @@ fn parse_rgb(color: &str) -> Result<Color, ParseColorError> {
         .parse::<u8>()
         .map_err(|_| ParseColorError)?;
     let a: Option<&str> = colors.next();
+
+    // There should not be more than 4 components.
+    if let Some(_) = colors.next() {
+        return Err(ParseColorError);
+    }
 
     if let Some(a) = a {
         let a = a.trim().parse::<u8>().map_err(|_| ParseColorError)?;
@@ -125,6 +131,11 @@ fn parse_hsl(color: &str) -> Result<Color, ParseColorError> {
     let s_str = colors.next().ok_or(ParseColorError)?.trim();
     let l_str = colors.next().ok_or(ParseColorError)?.trim();
     let a_str: Option<&str> = colors.next();
+
+    // There should not be more than 4 components.
+    if let Some(_) = colors.next() {
+        return Err(ParseColorError);
+    }
 
     // S, L and A can end in percentage, otherwise its 0.0 - 1.0
     let mut s = if s_str.ends_with('%') {

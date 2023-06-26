@@ -60,6 +60,7 @@ fn invalid_gradients() {
 	let missing_rparen = LinearGradient::parse("linear-gradient(red 0%, blue 100%");
 	let missing_commas = LinearGradient::parse("linear-gradient(red 0% blue 100%)");
 	let extra_commas = LinearGradient::parse("linear-gradient(red 0%, blue 100%,)");
+	let extra_stop_component = LinearGradient::parse("linear-gradient(red 0% something, blue 100%)");
 	let bad_angle_unit = LinearGradient::parse("linear-gradient(45ft, red 0%, blue 100%,)");
 	let bad_offset_unit = LinearGradient::parse("linear-gradient(45deg, red 0atm, blue 100kpa)");
 	let missing_color = LinearGradient::parse("linear-gradient(45deg, 0%, blue 100%)");
@@ -71,6 +72,7 @@ fn invalid_gradients() {
 	assert_eq!(missing_rparen.is_err(), true);
 	assert_eq!(missing_commas.is_err(), true);
 	assert_eq!(extra_commas.is_err(), true);
+	assert_eq!(extra_stop_component.is_err(), true);
 	assert_eq!(bad_angle_unit.is_err(), true);
 	assert_eq!(bad_offset_unit.is_err(), true);
 	assert_eq!(missing_color.is_err(), true);
