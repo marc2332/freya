@@ -1,4 +1,4 @@
-use freya_node_state::{Border, BorderAlignment, BorderStyle, Parse};
+use freya_node_state::{Border, BorderAlignment, BorderStyle, Fill, Parse};
 use skia_safe::Color;
 
 #[test]
@@ -9,7 +9,7 @@ fn parse_basic_border() {
         border,
         Ok(Border {
             width: 1.0,
-            color: Color::RED,
+            fill: Fill::Color(Color::RED),
             style: BorderStyle::Solid,
             alignment: BorderAlignment::Inner
         })
@@ -39,7 +39,7 @@ fn parse_border_style() {
         solid,
         Ok(Border {
             width: 1.0,
-            color: Color::RED,
+            fill: Fill::Color(Color::RED),
             style: BorderStyle::Solid,
             alignment: BorderAlignment::default()
         })
@@ -48,7 +48,7 @@ fn parse_border_style() {
         none,
         Ok(Border {
             width: 1.0,
-            color: Color::RED,
+            fill: Fill::Color(Color::RED),
             style: BorderStyle::None,
             alignment: BorderAlignment::default()
         })

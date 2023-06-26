@@ -48,7 +48,7 @@ pub fn render_rect(
     path.add_rrect(rounded_rect, None);
     canvas.draw_path(&path, &paint);
 
-    // Shadows
+    // Shadow effect
     // A box shadow is created by creating a copy of the drawn rectangle
     // and applying a blur filter and a clip.
     //

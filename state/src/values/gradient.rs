@@ -15,18 +15,19 @@ impl Parse for GradientStop {
     type Err = ParseGradientStopError;
 
     fn parse(value: &str) -> Result<Self, Self::Err> {
+        
         let mut split = value.split_ascii_whitespace_excluding_group('(', ')');
         let color_str = split.next().ok_or(ParseGradientStopError)?;
 
         let offset_str = split.next().ok_or(ParseGradientStopError)?;
-		let mut offset = offset_str
-			.replace("%", "")
-			.parse::<f32>()
-			.map_err(|_| ParseGradientStopError)?;
+        if !offset_str.ends_with("%") {
+            return Err(ParseGradientStopError);
+        }
 
-		if offset_str.ends_with("%") {
-			offset /= 100.0
-		}
+		let mut offset = offset_str
+			.replacen("%", "", 1)
+			.parse::<f32>()
+			.map_err(|_| ParseGradientStopError)? / 100.0;
 
         Ok(GradientStop {
             color: Color::parse(color_str).map_err(|_| ParseGradientStopError)?,
