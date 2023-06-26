@@ -12,26 +12,26 @@ fn main() {
 fn app(cx: Scope) -> Element {
     let mut count = use_state(cx, || 0);
 
-    render!(rect {
-        width: "100%",
-        height: "100%",
-        display: "center",
-        direction: "both",
-        background: "linear-gradient(20deg, red 0%, blue 100%)" // rect {
-                                                                //     padding: "12",
-                                                                //     width: "200",
-                                                                //     radius: "20",
-                                                                //     background: "linear-gradient(-90deg, rgb(207, 119, 243) 0%, rgb(0, 155, 255) 47%, rgb(42, 201, 219) 100%)",
-                                                                //     shadow: "0 4 12 linear-gradient(-90deg, rgb(207, 119, 243) 0%, rgb(0, 155, 255) 47%, rgb(42, 201, 219) 100%)",
-                                                                //     color: "black",
-                                                                //     padding: "12",
-                                                                //     display: "center",
-                                                                //     direction: "horizontal",
-                                                                //     onclick: move |_| count += 1,
-                                                                //     label {
-                                                                //         font_weight: "600",
-                                                                //         "Click to increase!"
-                                                                //     }
-                                                                // }
-    })
+    render!(
+        rect {
+            height: "20%",
+            width: "100%",
+            background: "rgb(233, 196, 106)",
+            padding: "12",
+            color: "rgb(20, 33, 61)",
+            label {
+                font_size: "20",
+                "Number is: {count}"
+            }
+        }
+        rect {
+            height: "80%",
+            width: "100%",
+            background: "rgb(168, 218, 220)",
+            color: "black",
+            padding: "12",
+            onclick: move |_| count += 1,
+            label { "Click to increase!" }
+        }
+    )
 }
