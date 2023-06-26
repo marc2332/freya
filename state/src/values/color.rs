@@ -76,7 +76,7 @@ fn parse_rgb(color: &str) -> Result<Color, ParseColorError> {
     }
 
     let color = color.replacen("rgb(", "", 1).replacen(')', "", 1);
-    
+
     let mut colors = color.split(',');
 
     let r = colors
@@ -100,7 +100,7 @@ fn parse_rgb(color: &str) -> Result<Color, ParseColorError> {
     let a: Option<&str> = colors.next();
 
     // There should not be more than 4 components.
-    if let Some(_) = colors.next() {
+    if colors.next().is_some() {
         return Err(ParseColorError);
     }
 
@@ -133,7 +133,7 @@ fn parse_hsl(color: &str) -> Result<Color, ParseColorError> {
     let a_str: Option<&str> = colors.next();
 
     // There should not be more than 4 components.
-    if let Some(_) = colors.next() {
+    if colors.next().is_some() {
         return Err(ParseColorError);
     }
 

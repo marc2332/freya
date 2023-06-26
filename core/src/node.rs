@@ -81,15 +81,12 @@ impl<'a> Iterator for NodeStateIterator<'a> {
             8 => Some(("display", AttributeType::Display(&self.state.size.display))),
             9 => {
                 let background = &self.state.style.background;
-                let fill = match background {
-                    &Fill::Color(_) => AttributeType::Color(background.clone()),
-                    &Fill::LinearGradient(_) => AttributeType::LinearGradient(background.clone())
+                let fill = match *background {
+                    Fill::Color(_) => AttributeType::Color(background.clone()),
+                    Fill::LinearGradient(_) => AttributeType::LinearGradient(background.clone()),
                 };
-                Some((
-                    "background",
-                    fill,
-                ))
-            },
+                Some(("background", fill))
+            }
             10 => Some(("border", AttributeType::Border(&self.state.style.border))),
             11 => Some(("radius", AttributeType::Radius(self.state.style.radius))),
             12 => Some((

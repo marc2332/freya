@@ -75,7 +75,7 @@ impl<'a> Iterator for SplitExcludingGroup<'a> {
                     return Some("");
                 }
                 return None;
-            },
+            }
             Some((_, c)) if c == self.delimiter => return Some(""),
             Some(v) => v,
         };

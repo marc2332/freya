@@ -4,7 +4,10 @@ use freya_core::prelude::*;
 use freya_elements::elements as dioxus_elements;
 
 use crate::{
-    property::{BorderProperty, LinearGradientProperty, ColorProperty, Property, ShadowProperty, TextShadowProperty},
+    property::{
+        BorderProperty, ColorProperty, LinearGradientProperty, Property, ShadowProperty,
+        TextShadowProperty,
+    },
     NodeInspectorBar, TreeNode,
 };
 
