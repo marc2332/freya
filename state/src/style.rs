@@ -10,7 +10,8 @@ use skia_safe::Color;
 use torin::scaled::Scaled;
 
 use crate::{
-    split_shadows, CornerRadius, Border, BorderAlignment, CustomAttributeValues, OverflowMode, Parse, Shadow,
+    split_shadows, Border, BorderAlignment, CornerRadius, CustomAttributeValues, OverflowMode,
+    Parse, Shadow,
 };
 
 #[derive(Default, Debug, Clone, PartialEq, Component)]
@@ -118,10 +119,10 @@ impl State<CustomAttributeValues> for Style {
                         if let Some(value) = attr.value.as_text() {
                             if value.ends_with("%") {
                                 if let Ok(smoothing) = value.replacen("%", "", 1).parse::<f32>() {
-                                    style.corner_radius.smoothing = (smoothing / 100.0).clamp(0.0, 1.0);
+                                    style.corner_radius.smoothing =
+                                        (smoothing / 100.0).clamp(0.0, 1.0);
                                 }
                             }
-
                         }
                     }
                     "image_data" => {

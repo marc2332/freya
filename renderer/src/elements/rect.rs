@@ -3,7 +3,7 @@ use freya_dom::prelude::DioxusNode;
 use freya_node_state::{BorderAlignment, BorderStyle, References, ShadowPosition, Style};
 use skia_safe::{
     textlayout::FontCollection, BlurStyle, Canvas, ClipOp, Color, MaskFilter, Paint, PaintStyle,
-    Point, Path, RRect, Rect,
+    Path, Point, RRect, Rect,
 };
 use torin::prelude::Area;
 
@@ -32,14 +32,14 @@ pub fn render_rect(
             (radius.top_right, radius.top_right).into(),
             (radius.bottom_right, radius.bottom_right).into(),
             (radius.bottom_left, radius.bottom_left).into(),
-        ]
+        ],
     );
 
     if node_style.corner_radius.smoothing > 0.0 {
         path.add_path(
             &node_style.corner_radius.smoothed_path(rounded_rect),
             (area.min_x(), area.min_y()),
-            None
+            None,
         );
     } else {
         path.add_rrect(&rounded_rect, None);
@@ -52,9 +52,9 @@ pub fn render_rect(
         if shadow.color != Color::TRANSPARENT {
             let mut shadow_paint = paint.clone();
             let mut shadow_path = Path::new();
-            
+
             shadow_paint.set_color(shadow.color);
-            
+
             // Shadows can be either outset or inset
             // If they are outset, we fill a copy of the path outset by spread_radius, and blur it.
             // Otherwise, we draw a stroke with the inner portion being spread_radius width, and the outer portion being blur_radius width.
@@ -63,12 +63,12 @@ pub fn render_rect(
                 ShadowPosition::Normal => {
                     shadow_paint.set_style(PaintStyle::Fill);
                     outset = (shadow.spread, shadow.spread).into();
-                },
+                }
                 ShadowPosition::Inset => {
                     shadow_paint.set_style(PaintStyle::Stroke);
                     shadow_paint.set_stroke_width(shadow.blur / 2.0 + shadow.spread);
                     outset = (-shadow.spread / 2.0, -shadow.spread / 2.0).into()
-                },
+                }
             };
 
             // Apply gassuan blur to the copied path.
@@ -83,9 +83,11 @@ pub fn render_rect(
             // Add either the RRect or smoothed path based on whether smoothing is used.
             if node_style.corner_radius.smoothing > 0.0 {
                 shadow_path.add_path(
-                    &node_style.corner_radius.smoothed_path(rounded_rect.with_outset(outset)),
+                    &node_style
+                        .corner_radius
+                        .smoothed_path(rounded_rect.with_outset(outset)),
                     Point::new(area.min_x(), area.min_y()) - outset,
-                    None
+                    None,
                 );
             } else {
                 shadow_path.add_rrect(&rounded_rect.with_outset(outset), None);
@@ -96,10 +98,14 @@ pub fn render_rect(
 
             // Exclude the original path bounds from the shadow using a clip, then draw the shadow.
             canvas.save();
-            canvas.clip_path(&path, match shadow.position {
-                ShadowPosition::Normal => ClipOp::Difference,
-                ShadowPosition::Inset => ClipOp::Intersect,
-            }, true);
+            canvas.clip_path(
+                &path,
+                match shadow.position {
+                    ShadowPosition::Normal => ClipOp::Difference,
+                    ShadowPosition::Inset => ClipOp::Intersect,
+                },
+                true,
+            );
             canvas.draw_path(&shadow_path, &shadow_paint);
             canvas.restore();
         }
@@ -118,23 +124,26 @@ pub fn render_rect(
 
         // Skia draws strokes centered on the edge of the path. This means that half of the stroke is inside the path, and half outside.
         // For Inner and Outer borders, we need to grow or shrink the stroke path by half the border width.
-        let outset = Point::new(node_style.border.width / 2.0, node_style.border.width / 2.0) * match node_style.border.alignment {
-            BorderAlignment::Center => 0.0,
-            BorderAlignment::Inner => -1.0,
-            BorderAlignment::Outer => 1.0,
-        };
+        let outset = Point::new(node_style.border.width / 2.0, node_style.border.width / 2.0)
+            * match node_style.border.alignment {
+                BorderAlignment::Center => 0.0,
+                BorderAlignment::Inner => -1.0,
+                BorderAlignment::Outer => 1.0,
+            };
 
         // Add either the RRect or smoothed path based on whether smoothing is used.
         if node_style.corner_radius.smoothing > 0.0 {
             border_path.add_path(
-                &node_style.corner_radius.smoothed_path(rounded_rect.with_outset(outset)),
+                &node_style
+                    .corner_radius
+                    .smoothed_path(rounded_rect.with_outset(outset)),
                 Point::new(area.min_x(), area.min_y()) - outset,
-                None
+                None,
             );
         } else {
             border_path.add_rrect(&rounded_rect.with_outset(outset), None);
-        }   
-        
+        }
+
         canvas.draw_path(&border_path, &border_paint);
     }
 

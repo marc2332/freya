@@ -1,5 +1,5 @@
 use crate::Parse;
-use skia_safe::{Path, RRect, PathDirection, rrect::Corner, path::ArcSize};
+use skia_safe::{path::ArcSize, rrect::Corner, Path, PathDirection, RRect};
 use std::f32::consts::SQRT_2;
 use std::fmt;
 use torin::scaled::Scaled;
@@ -40,8 +40,8 @@ fn compute_smooth_corner(
 
     let angle_theta = (90.0 - angle_beta) / 2.0;
     let dist_p3_p4 = corner_radius * (angle_theta / 2.0).to_radians().tan();
-    let l = (angle_beta / 2.0).to_radians().sin() * corner_radius * SQRT_2;
 
+    let l = (angle_beta / 2.0).to_radians().sin() * corner_radius * SQRT_2;
     let c = dist_p3_p4 * angle_alpha.to_radians().cos();
     let d = c * angle_alpha.to_radians().tan();
     let b = (p - l - c - d) / 3.0;
@@ -72,7 +72,7 @@ impl CornerRadius {
 
         let width = rect.width();
         let height = rect.height();
-        
+
         let top_right = rect.radii(Corner::UpperRight).x;
         if top_right > 0.0 {
             let (a, b, c, d, l, p, radius) =
@@ -89,7 +89,7 @@ impl CornerRadius {
                     0.0,
                     ArcSize::Small,
                     PathDirection::CW,
-                    (l, l)
+                    (l, l),
                 )
                 .cubic_to(
                     (width, p - a - b),
@@ -118,7 +118,7 @@ impl CornerRadius {
                     0.0,
                     ArcSize::Small,
                     PathDirection::CW,
-                    (-l, l)
+                    (-l, l),
                 )
                 .cubic_to(
                     (width - (p - a - b), height),
@@ -145,7 +145,7 @@ impl CornerRadius {
                     0.0,
                     ArcSize::Small,
                     PathDirection::CW,
-                    (-l, -l)
+                    (-l, -l),
                 )
                 .cubic_to(
                     (0.0, height - (p - a - b)),
@@ -162,22 +162,18 @@ impl CornerRadius {
                 compute_smooth_corner(top_left, self.smoothing, width, height);
 
             path.line_to((0.0, f32::min(height / 2.0, p)))
-                .cubic_to(
-                    (0.0, p - a),
-                    (0.0, p - a - b),
-                    (d, p - a - b - c)
-                )
+                .cubic_to((0.0, p - a), (0.0, p - a - b), (d, p - a - b - c))
                 .r_arc_to_rotated(
                     (radius, radius),
                     0.0,
                     ArcSize::Small,
                     PathDirection::CW,
-                    (l, -l)
+                    (l, -l),
                 )
                 .cubic_to(
                     (p - a - b, 0.0),
                     (p - a, 0.0),
-                    (f32::min(width / 2.0, p), 0.0)
+                    (f32::min(width / 2.0, p), 0.0),
                 );
         } else {
             path.line_to((0.0, 0.0));
