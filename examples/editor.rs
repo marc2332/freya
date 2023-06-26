@@ -4,7 +4,7 @@ use freya::prelude::*;
 fn main() {
     launch_cfg(
         app,
-        WindowConfig::<()>::builder()
+        LaunchConfig::<()>::builder()
             .with_width(900.0)
             .with_height(500.0)
             .with_decorations(true)

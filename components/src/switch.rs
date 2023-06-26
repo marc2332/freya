@@ -91,33 +91,28 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
 
     render!(
         rect {
-            width: "auto",
-            height: "auto",
-            direction: "both",
-            padding: "1.5",
+            margin: "1.5",
+            width: "50",
+            height: "25",
+            padding: "1",
+            radius: "50",
+            background: "{border}",
+            onmousedown: onmousedown,
+            onmouseover: onmouseover,
+            onmouseleave: onmouseleave,
+            onclick: onclick,
             rect {
-                width: "50",
-                height: "25",
-                padding: "1",
+                width: "100%",
+                height: "100%",
+                offset_x: "{offset_x}",
+                padding: "2.5",
                 radius: "50",
-                background: "{border}",
-                onmousedown: onmousedown,
-                onmouseover: onmouseover,
-                onmouseleave: onmouseleave,
-                onclick: onclick,
                 rect {
-                    width: "100%",
-                    height: "100%",
-                    offset_x: "{offset_x}",
-                    padding: "2.5",
+                    background: "{circle}",
+                    direction: "both",
+                    width: "18",
+                    height: "18",
                     radius: "50",
-                    rect {
-                        background: "{circle}",
-                        direction: "both",
-                        width: "18",
-                        height: "18",
-                        radius: "50",
-                    }
                 }
             }
         }

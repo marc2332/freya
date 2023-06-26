@@ -1,14 +1,14 @@
 use crate::Parse;
-use torin::padding::Paddings;
+use torin::gaps::Gaps;
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct ParsePaddingsError;
+pub struct ParseGapError;
 
-impl Parse for Paddings {
-    type Err = ParsePaddingsError;
+impl Parse for Gaps {
+    type Err = ParseGapError;
 
     fn parse(value: &str) -> Result<Self, Self::Err> {
-        let mut paddings = Paddings::default();
+        let mut paddings = Gaps::default();
 
         let mut values = value.split_ascii_whitespace();
 
@@ -18,9 +18,9 @@ impl Parse for Paddings {
                 paddings.fill_all(
                     values
                         .next()
-                        .ok_or(ParsePaddingsError)?
+                        .ok_or(ParseGapError)?
                         .parse::<f32>()
-                        .map_err(|_| ParsePaddingsError)?,
+                        .map_err(|_| ParseGapError)?,
                 );
             }
             // By vertical and horizontal
@@ -29,43 +29,43 @@ impl Parse for Paddings {
                 paddings.fill_vertical(
                     values
                         .next()
-                        .ok_or(ParsePaddingsError)?
+                        .ok_or(ParseGapError)?
                         .parse::<f32>()
-                        .map_err(|_| ParsePaddingsError)?,
+                        .map_err(|_| ParseGapError)?,
                 );
 
                 // Horizontal
                 paddings.fill_horizontal(
                     values
                         .next()
-                        .ok_or(ParsePaddingsError)?
+                        .ok_or(ParseGapError)?
                         .parse::<f32>()
-                        .map_err(|_| ParsePaddingsError)?,
+                        .map_err(|_| ParseGapError)?,
                 )
             }
             // Each directions
             4 => {
-                paddings = Paddings::new(
+                paddings = Gaps::new(
                     values
                         .next()
-                        .ok_or(ParsePaddingsError)?
+                        .ok_or(ParseGapError)?
                         .parse::<f32>()
-                        .map_err(|_| ParsePaddingsError)?,
+                        .map_err(|_| ParseGapError)?,
                     values
                         .next()
-                        .ok_or(ParsePaddingsError)?
+                        .ok_or(ParseGapError)?
                         .parse::<f32>()
-                        .map_err(|_| ParsePaddingsError)?,
+                        .map_err(|_| ParseGapError)?,
                     values
                         .next()
-                        .ok_or(ParsePaddingsError)?
+                        .ok_or(ParseGapError)?
                         .parse::<f32>()
-                        .map_err(|_| ParsePaddingsError)?,
+                        .map_err(|_| ParseGapError)?,
                     values
                         .next()
-                        .ok_or(ParsePaddingsError)?
+                        .ok_or(ParseGapError)?
                         .parse::<f32>()
-                        .map_err(|_| ParsePaddingsError)?,
+                        .map_err(|_| ParseGapError)?,
                 );
             }
             _ => {}

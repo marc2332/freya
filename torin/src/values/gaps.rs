@@ -4,14 +4,14 @@ use crate::geometry::Length;
 use crate::scaled::Scaled;
 
 #[derive(PartialEq, Clone, Debug, Default, Copy)]
-pub struct Paddings {
+pub struct Gaps {
     top: Length,
     right: Length,
     bottom: Length,
     left: Length,
 }
 
-impl Paddings {
+impl Gaps {
     pub fn new(top: f32, right: f32, bottom: f32, left: f32) -> Self {
         Self {
             top: Length::new(top),
@@ -36,11 +36,11 @@ impl Paddings {
         self.fill_vertical(value);
     }
 
-    pub fn horizontal_paddings(&self) -> f32 {
+    pub fn horizontal(&self) -> f32 {
         (self.right + self.left).get()
     }
 
-    pub fn vertical_paddings(&self) -> f32 {
+    pub fn vertical(&self) -> f32 {
         (self.top + self.bottom).get()
     }
 
@@ -71,7 +71,7 @@ impl Paddings {
     }
 }
 
-impl Scaled for Paddings {
+impl Scaled for Gaps {
     fn scale(&mut self, scale: f32) {
         self.left *= scale;
         self.right *= scale;
