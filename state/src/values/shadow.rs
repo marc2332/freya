@@ -59,6 +59,7 @@ impl Parse for Shadow {
             shadow.spread = spread;
         } else {
             color_string.push_str(spread_or_color);
+            color_string.push_str(" ");
         }
         color_string.push_str(shadow_values.collect::<Vec<&str>>().join(" ").as_str());
 
