@@ -59,10 +59,12 @@ pub fn render_rect(
     // clipping whatever blur escapes the shadow's bounding
     for shadow in node_style.shadows.iter() {
         if shadow.fill != Fill::Color(Color::TRANSPARENT) {
-            let mut blur_paint = paint.clone();
+            let mut blur_paint = Paint::default();
             let mut blur_rect = rounded_rect;
-
+            
+            blur_paint.set_anti_alias(true);
             blur_rect.offset((shadow.x, shadow.y));
+
             match &shadow.fill {
                 Fill::Color(color) => {
                     blur_paint.set_color(*color);
@@ -77,6 +79,7 @@ pub fn render_rect(
                 blur_paint.set_stroke_width(shadow.blur / 2.0 + shadow.spread);
                 blur_rect.inset((shadow.spread / 2.0, shadow.spread / 2.0));
             } else {
+                paint.set_style(PaintStyle::Fill);
                 blur_rect.outset((shadow.spread, shadow.spread));
             }
 
@@ -110,10 +113,12 @@ pub fn render_rect(
         && node_style.border.fill != Fill::Color(Color::TRANSPARENT)
         && node_style.border.style != BorderStyle::None
     {
-        let mut stroke_paint = paint.clone();
+        let mut stroke_paint = Paint::default();
         let half_border_width = node_style.border.width / 2.0;
 
+        stroke_paint.set_anti_alias(true);
         stroke_paint.set_style(PaintStyle::Stroke);
+
         match &node_style.border.fill {
             Fill::Color(color) => {
                 stroke_paint.set_color(*color);
