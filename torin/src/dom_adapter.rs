@@ -3,6 +3,7 @@ pub use euclid::Rect;
 use crate::{
     geometry::{Area, Size2D},
     node::Node,
+    prelude::{BoxModel, Gaps},
 };
 
 /// Cached layout results of a Node
@@ -16,6 +17,16 @@ pub struct NodeAreas {
 
     /// Ocuppied sizes from the inner children in this Node
     pub inner_sizes: Size2D,
+
+    /// Outer margin
+    pub margin: Gaps,
+}
+
+impl NodeAreas {
+    // The area without any outer gap (e.g margin)
+    pub fn box_area(&self) -> Area {
+        self.area.box_area(&self.margin)
+    }
 }
 
 pub trait NodeKey: Clone + PartialEq + Eq + std::hash::Hash + Copy + std::fmt::Debug {}

@@ -1,3 +1,5 @@
+use accesskit::Action;
+use accesskit_winit::ActionRequestEvent;
 use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_elements::events::keyboard::{
@@ -6,7 +8,7 @@ use freya_elements::events::keyboard::{
 use torin::geometry::CursorPoint;
 use winit::event::{
     ElementState, Event, KeyboardInput, ModifiersState, MouseScrollDelta, StartCause, Touch,
-    TouchPhase, WindowEvent,
+    TouchPhase, VirtualKeyCode, WindowEvent,
 };
 use winit::event_loop::{ControlFlow, EventLoop, EventLoopProxy};
 
@@ -32,6 +34,9 @@ pub fn run_event_loop<State: Clone>(
             Event::NewEvents(StartCause::Init) => {
                 _ = proxy.send_event(EventMessage::PollVDOM);
             }
+            Event::UserEvent(EventMessage::FocusAccessibilityNode(id)) => {
+                app.accessibility().set_accessibility_focus(id);
+            }
             Event::UserEvent(EventMessage::RequestRerender) => {
                 app.render(&hovered_node);
             }
@@ -40,6 +45,19 @@ pub fn run_event_loop<State: Clone>(
             }
             Event::UserEvent(EventMessage::RemeasureTextGroup(text_id)) => {
                 app.measure_text_group(&text_id);
+            }
+            Event::UserEvent(EventMessage::ActionRequestEvent(ActionRequestEvent {
+                request,
+                ..
+            })) =>
+            {
+                #[allow(clippy::single_match)]
+                match request.action {
+                    Action::Focus => {
+                        app.accessibility().set_accessibility_focus(request.target);
+                    }
+                    _ => {}
+                }
             }
             Event::UserEvent(EventMessage::SetCursorIcon(icon)) => {
                 app.window_env().window.set_cursor_icon(icon)
@@ -59,7 +77,7 @@ pub fn run_event_loop<State: Clone>(
                 app.process_layout();
                 app.render(&hovered_node);
             }
-            Event::WindowEvent { event, .. } => {
+            Event::WindowEvent { event, .. } if app.on_window_event(&event) => {
                 match event {
                     WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
                     WindowEvent::MouseInput { state, button, .. } => {
@@ -121,6 +139,19 @@ pub fn run_event_loop<State: Clone>(
                             },
                         ..
                     } => {
+                        if state == ElementState::Pressed && virtual_keycode == VirtualKeyCode::Tab
+                        {
+                            let direction = if modifiers_state.shift() {
+                                AccessibilityFocusDirection::Backward
+                            } else {
+                                AccessibilityFocusDirection::Forward
+                            };
+
+                            app.focus_next_node(direction);
+
+                            return;
+                        }
+
                         let event_name = match state {
                             ElementState::Pressed => "keydown",
                             ElementState::Released => "keyup",

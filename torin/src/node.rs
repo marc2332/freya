@@ -1,7 +1,7 @@
 pub use euclid::Rect;
 
 use crate::{
-    direction::DirectionMode, display::DisplayMode, geometry::Length, padding::Paddings, size::Size,
+    direction::DirectionMode, display::DisplayMode, gaps::Gaps, geometry::Length, size::Size,
 };
 
 /// Node layout configuration
@@ -23,7 +23,10 @@ pub struct Node {
     pub display: DisplayMode,
 
     /// Inner padding
-    pub padding: Paddings,
+    pub padding: Gaps,
+
+    /// Inner margin
+    pub margin: Gaps,
 
     /// Inner position offsets
     pub offset_x: Length,
@@ -69,7 +72,7 @@ impl Node {
     }
 
     /// Construct a new Node given a size and padding
-    pub fn from_size_and_padding(width: Size, height: Size, padding: Paddings) -> Self {
+    pub fn from_size_and_padding(width: Size, height: Size, padding: Gaps) -> Self {
         Self {
             width,
             height,
@@ -90,6 +93,16 @@ impl Node {
             height,
             display,
             direction,
+            ..Default::default()
+        }
+    }
+
+    /// Construct a new Node given a size and a direction
+    pub fn from_size_and_margin(width: Size, height: Size, margin: Gaps) -> Self {
+        Self {
+            width,
+            height,
+            margin,
             ..Default::default()
         }
     }

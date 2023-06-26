@@ -2,8 +2,9 @@ use std::fmt::Display;
 
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_elements::events::MouseEvent;
-use freya_hooks::use_get_theme;
+use freya_elements::events::keyboard::Key;
+use freya_elements::events::{KeyboardEvent, MouseEvent};
+use freya_hooks::{use_focus, use_get_theme};
 
 /// [`DropdownItem`] component properties.
 #[derive(Props)]
@@ -15,6 +16,16 @@ pub struct DropdownItemProps<'a, T: 'static> {
     /// Handler for the `onclick` event.
     #[props(optional)]
     onclick: Option<EventHandler<'a, ()>>,
+}
+
+/// Current status of the DropdownItem.
+#[derive(Debug, Default, PartialEq, Clone, Copy)]
+pub enum DropdownItemState {
+    /// Default state.
+    #[default]
+    Idle,
+    /// Dropdown item is being hovered.
+    Hovering,
 }
 
 /// `DropdownItem` component.
@@ -31,37 +42,56 @@ where
 {
     let selected = use_shared_state::<T>(cx).unwrap();
     let theme = use_get_theme(cx);
-    let is_hovering = use_state(cx, || false);
+    let focus = use_focus(cx);
+    let state = use_state(cx, DropdownItemState::default);
 
+    let focus_id = focus.attribute(cx);
+    let is_focused = focus.is_focused();
     let is_selected = *selected.read() == cx.props.value;
-    let dropdown_item_theme = &theme.dropdown_item;
 
-    let background = if is_selected || *is_hovering.get() {
-        dropdown_item_theme.hover_background
-    } else {
-        dropdown_item_theme.background
+    let background = match *state.get() {
+        _ if is_selected => theme.dropdown_item.select_background,
+        _ if is_focused => theme.dropdown_item.hover_background,
+        DropdownItemState::Hovering => theme.dropdown_item.hover_background,
+        DropdownItemState::Idle => theme.dropdown_item.background,
+    };
+    let color = theme.dropdown_item.font_theme.color;
+
+    let onclick = move |_: MouseEvent| {
+        if let Some(onclick) = &cx.props.onclick {
+            onclick.call(())
+        }
+    };
+
+    let onmouseenter = move |_| {
+        state.set(DropdownItemState::Hovering);
+    };
+
+    let onmouseleave = move |_| {
+        state.set(DropdownItemState::default());
+    };
+
+    let onkeydown = move |ev: KeyboardEvent| {
+        if ev.key == Key::Enter && is_focused {
+            if let Some(onclick) = &cx.props.onclick {
+                onclick.call(())
+            }
+        }
     };
 
     render!(rect {
-        color: "{dropdown_item_theme.font_theme.color}",
+        color: color,
         width: "100%",
         height: "35",
+        focus_id: focus_id,
+        role: "button",
         background: background,
         padding: "6",
         radius: "3",
-        onmouseover: move |_| {
-            if !*is_hovering.get() {
-                is_hovering.set(true);
-            }
-        },
-        onmouseleave: move |_| {
-            is_hovering.set(false);
-        },
-        onclick: move |_| {
-            if let Some(onclick) = &cx.props.onclick {
-                onclick.call(());
-            }
-        },
+        onmouseenter: onmouseenter,
+        onmouseleave: onmouseleave,
+        onclick: onclick,
+        onkeydown: onkeydown,
         &cx.props.children
     })
 }
@@ -73,6 +103,16 @@ pub struct DropdownProps<'a, T: 'static> {
     children: Element<'a>,
     /// Selected value.
     value: T,
+}
+
+/// Current status of the Dropdown.
+#[derive(Debug, Default, PartialEq, Clone, Copy)]
+pub enum DropdownState {
+    /// Default state.
+    #[default]
+    Idle,
+    /// Dropdown is being hovered.
+    Hovering,
 }
 
 /// `Dropdown` component.
@@ -114,17 +154,19 @@ where
     use_shared_state_provider(cx, || cx.props.value.clone());
     let selected = use_shared_state::<T>(cx).unwrap();
     let theme = use_get_theme(cx);
-    let dropdown_theme = &theme.dropdown;
-    let background_button = use_state(cx, || <&str>::clone(&dropdown_theme.background_button));
-    let set_background_button = background_button.setter();
+    let focus = use_focus(cx);
+    let state = use_state(cx, DropdownState::default);
+    let opened = use_state(cx, || false);
 
-    use_effect(
-        cx,
-        &dropdown_theme.clone(),
-        move |dropdown_theme| async move {
-            set_background_button(dropdown_theme.background_button);
-        },
-    );
+    let is_opened = *opened.get();
+    let is_focused = focus.is_focused();
+    let focus_id = focus.attribute(cx);
+
+    let background = match *state.get() {
+        DropdownState::Hovering => theme.dropdown.hover_background,
+        DropdownState::Idle => theme.dropdown.background_button,
+    };
+    let color = theme.dropdown.font_theme.color;
 
     // Update the provided value if the passed value changes
     use_effect(cx, &cx.props.value, move |value| {
@@ -132,11 +174,28 @@ where
         async move {}
     });
 
-    let opened = use_state(cx, || false);
-
     // Close the dropdown if clicked anywhere
     let onglobalclick = move |_: MouseEvent| {
         opened.set(false);
+    };
+
+    let onclick = move |_| {
+        focus.focus();
+        opened.set(true)
+    };
+
+    let onkeydown = move |e: KeyboardEvent| {
+        match e.key {
+            // Close when `Escape` key is pressed
+            Key::Escape => {
+                opened.set(false);
+            }
+            // Open the dropdown items when the `Enter` key is pressed
+            Key::Enter if is_focused && !is_opened => {
+                opened.set(true);
+            }
+            _ => {}
+        }
     };
 
     if *opened.get() {
@@ -146,12 +205,14 @@ where
                 height: "50",
                 rect {
                     overflow: "clip",
+                    focus_id: focus_id,
                     layer: "-1",
                     radius: "3",
                     onglobalclick: onglobalclick,
+                    onkeydown: onkeydown,
                     width: "130",
                     height: "auto",
-                    background: *background_button.get(),
+                    background: background,
                     shadow: "0 0 20 0 rgb(0, 0, 0, 100)",
                     padding: "7",
                     &cx.props.children
@@ -162,10 +223,12 @@ where
         render!(
             rect {
                 overflow: "clip",
-                background: dropdown_theme.desplegable_background,
-                color: "{dropdown_theme.font_theme.color}",
+                focus_id: focus_id,
+                background: background,
+                color: color,
                 radius: "3",
-                onclick: move |_| opened.set(true),
+                onclick: onclick,
+                onkeydown: onkeydown,
                 width: "70",
                 height: "auto",
                 padding: "7",
@@ -176,7 +239,7 @@ where
                 rect {
                     width: "100%",
                     height: "2",
-                    background: "{dropdown_theme.font_theme.color}",
+                    background: color,
                 }
             }
         )

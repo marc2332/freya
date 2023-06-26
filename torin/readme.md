@@ -1,3 +1,3 @@
 # torin
 
-UI Library designed for Freya.
+UI layout Library designed for Freya.

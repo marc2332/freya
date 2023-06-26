@@ -34,8 +34,8 @@ use skia_safe::{
     ColorType, Matrix, Surface,
 };
 
+use crate::config::WindowConfig;
 use crate::renderer::render_skia;
-use crate::window_config::WindowConfig;
 use crate::HoveredNode;
 
 /// Manager for a Window
@@ -58,6 +58,7 @@ impl<T: Clone> WindowEnv<T> {
         event_loop: &EventLoop<EventMessage>,
     ) -> Self {
         let window_builder = WindowBuilder::new()
+            .with_visible(false)
             .with_title(window_config.title)
             .with_decorations(window_config.decorations)
             .with_transparent(window_config.transparent)
@@ -254,9 +255,8 @@ impl<T: Clone> WindowEnv<T> {
         self.gl_surface.swap_buffers(&self.gl_context).unwrap();
     }
 
-    /// Request a redraw
-    pub fn request_redraw(&self) {
-        self.window.request_redraw()
+    pub fn window(&mut self) -> &mut Window {
+        &mut self.window
     }
 
     /// Resize the Window

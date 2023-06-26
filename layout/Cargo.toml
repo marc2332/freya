@@ -28,6 +28,7 @@ dioxus = { workspace = true }
 
 tokio = { workspace = true }
 skia-safe = { workspace = true }
+accesskit = { workspace = true }
 
 rustc-hash= { workspace = true }
 uuid = { version =  "1.2.2", features = ["v4"]}

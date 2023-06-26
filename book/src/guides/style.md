@@ -68,10 +68,10 @@ Compatible elements: [`rect`](/guides/elements.html#rect)
 
 ### border
 
-You can add a border to an element using the `border` and `border_alignment` attributes.
+You can add a border to an element using the `border` and `border_align` attributes.
 
-- `border` syntax: `[width] <inner | outer | center> [color]`.
-- `border_alignment` syntax: `<inner | outer | center>`.
+- `border` syntax: `[width] <solid | none> [color]`.
+- `border_align` syntax: `<inner | outer | center>`.
 
 Example:
 
@@ -79,8 +79,8 @@ Example:
 fn app(cx: Scope) -> Element {
     render!(
         rect {
-            border: "2 center black",
-            border_alignment: "inner"
+            border: "2 solid black",
+            border_align: "inner"
         }
     )
 }

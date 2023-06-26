@@ -5,15 +5,15 @@
 
 use freya::prelude::*;
 
+static SANSITA_SWASHED: &[u8] = include_bytes!("./SansitaSwashed-Regular.ttf");
+
 fn main() {
     launch_cfg(
         app,
         LaunchConfig::<()>::builder()
-            .with_width(400.0)
+            .with_width(200.0)
             .with_height(200.0)
-            .with_decorations(false)
-            .with_transparency(true)
-            .with_title("Floating window")
+            .with_font("Sansita Swashed", SANSITA_SWASHED)
             .build(),
     );
 }
@@ -21,16 +21,15 @@ fn main() {
 fn app(cx: Scope) -> Element {
     render!(
         rect {
-            background: "white",
-            padding: "10",
             display: "center",
-            direction: "both",
-            width: "100%",
             height: "100%",
-            radius: "15",
+            width: "100%",
             label {
-                color: "black",
-                "A frameless window"
+                width: "100%",
+                font_size: "20",
+                font_family: "Sansita Swashed",
+                align: "center",
+                "This font is called Sansita Swashed"
             }
         }
     )
