@@ -16,6 +16,12 @@ impl Default for Fill {
     }
 }
 
+impl From<Color> for Fill {
+    fn from(color: Color) -> Self {
+        Fill::Color(color)
+    }
+}
+
 #[derive(Debug, PartialEq, Eq)]
 pub struct ParseFillError;
 

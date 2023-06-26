@@ -3,7 +3,7 @@ use freya_dom::prelude::DioxusNode;
 use freya_node_state::{
     Border, CursorSettings, Fill, FontStyle, LayoutState, References, Shadow, Style, Transform,
 };
-use skia_safe::{textlayout::TextShadow, Color};
+use skia_safe::{textlayout::TextShadow};
 use torin::{
     direction::DirectionMode, display::DisplayMode, padding::Paddings, radius::Radius, size::Size,
 };
@@ -81,11 +81,11 @@ impl<'a> Iterator for NodeStateIterator<'a> {
             8 => Some(("display", AttributeType::Display(&self.state.size.display))),
             9 => Some((
                 "background",
-                AttributeType::Fill(&self.state.style.background),
+                AttributeType::Fill(self.state.style.background.clone()),
             )),
             10 => Some(("border", AttributeType::Border(&self.state.style.border))),
             11 => Some(("radius", AttributeType::Radius(self.state.style.radius))),
-            12 => Some(("color", AttributeType::Color(&self.state.font_style.color))),
+            12 => Some(("color", AttributeType::Fill(self.state.font_style.color.into()))),
             13 => Some((
                 "font_family",
                 AttributeType::Text(self.state.font_style.font_family.join(",")),
@@ -127,8 +127,7 @@ impl<'a> Iterator for NodeStateIterator<'a> {
 }
 
 pub enum AttributeType<'a> {
-    Fill(&'a Fill),
-    Color(&'a Color),
+    Fill(Fill),
     Size(&'a Size),
     Measure(f32),
     Paddings(Paddings),

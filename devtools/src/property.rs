@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_node_state::{Border, Shadow};
-use skia_safe::{textlayout::TextShadow, Color};
+use freya_node_state::{Border, Shadow, Fill};
+use skia_safe::{textlayout::TextShadow};
 
 #[allow(non_snake_case)]
 #[inline_props]
@@ -37,8 +37,7 @@ pub fn Property<'a>(cx: Scope<'a>, name: &'a str, value: String) -> Element<'a> 
 
 #[allow(non_snake_case)]
 #[inline_props]
-pub fn ColorfulProperty<'a>(cx: Scope<'a>, name: &'a str, color: &'a Color) -> Element<'a> {
-    let color = color.to_rgb();
+pub fn FillProperty<'a>(cx: Scope<'a>, name: &'a str, fill: Fill) -> Element<'a> {
     render!(
         rect {
             overflow: "clip",
@@ -69,7 +68,7 @@ pub fn ColorfulProperty<'a>(cx: Scope<'a>, name: &'a str, color: &'a Color) -> E
                     radius: "3",
                     width: "100%",
                     height: "100%",
-                    background: "rgb({color.r}, {color.g}, {color.b})",
+                    background: "{fill}",
                 }
             }
             rect {
@@ -78,7 +77,7 @@ pub fn ColorfulProperty<'a>(cx: Scope<'a>, name: &'a str, color: &'a Color) -> E
             label {
                 font_size: "15",
                 color: "rgb(252,181,172)",
-                "rgb({color.r}, {color.g}, {color.b})"
+                "{fill}",
             }
         }
     )
@@ -87,7 +86,6 @@ pub fn ColorfulProperty<'a>(cx: Scope<'a>, name: &'a str, color: &'a Color) -> E
 #[allow(non_snake_case)]
 #[inline_props]
 pub fn ShadowProperty<'a>(cx: Scope<'a>, name: &'a str, shadow: &'a Shadow) -> Element<'a> {
-    let color = shadow.fill.to_rgb();
     render!(
         rect {
             overflow: "clip",
@@ -125,7 +123,7 @@ pub fn ShadowProperty<'a>(cx: Scope<'a>, name: &'a str, shadow: &'a Shadow) -> E
                     radius: "3",
                     width: "100%",
                     height: "100%",
-                    background: "rgb({color.r}, {color.g}, {color.b})",
+                    background: "{shadow.fill}",
                 }
             }
             rect {
@@ -135,7 +133,7 @@ pub fn ShadowProperty<'a>(cx: Scope<'a>, name: &'a str, shadow: &'a Shadow) -> E
                 font_size: "15",
                 color: "rgb(252,181,172)",
 
-                "rgb({color.r}, {color.g}, {color.b})"
+                "{shadow.fill}"
             }
         }
     )
@@ -144,7 +142,6 @@ pub fn ShadowProperty<'a>(cx: Scope<'a>, name: &'a str, shadow: &'a Shadow) -> E
 #[allow(non_snake_case)]
 #[inline_props]
 pub fn BorderProperty<'a>(cx: Scope<'a>, name: &'a str, border: &'a Border) -> Element<'a> {
-    let color = border.color.to_rgb();
     render!(
         rect {
             overflow: "clip",
@@ -182,7 +179,7 @@ pub fn BorderProperty<'a>(cx: Scope<'a>, name: &'a str, border: &'a Border) -> E
                     radius: "3",
                     width: "100%",
                     height: "100%",
-                    background: "rgb({color.r}, {color.g}, {color.b})",
+                    background: "{border.fill}",
                 }
             }
             rect {
@@ -191,7 +188,7 @@ pub fn BorderProperty<'a>(cx: Scope<'a>, name: &'a str, border: &'a Border) -> E
             label {
                 font_size: "15",
                 color: "rgb(252,181,172)",
-                "rgb({color.r}, {color.g}, {color.b})"
+                "{border.fill}"
             }
         }
     )

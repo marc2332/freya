@@ -41,7 +41,7 @@ impl Parse for GradientStop {
 impl fmt::Display for GradientStop {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         _ = self.color.fmt_rgb(f);
-        write!(f, " {}%", self.offset)
+        write!(f, " {}%", self.offset * 100.0)
     }
 }
 
