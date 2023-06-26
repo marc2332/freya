@@ -1,4 +1,4 @@
-use crate::{ExtSplit, DisplayColor, Parse};
+use crate::{DisplayColor, ExtSplit, Parse};
 use skia_safe::{gradient_shader::GradientShaderColors, shader::Shader, Color, Point, TileMode};
 use std::fmt;
 use torin::{prelude::Measure, size::Rect};
@@ -29,7 +29,6 @@ impl Parse for GradientStop {
             .parse::<f32>()
             .map_err(|_| ParseGradientStopError)?
             / 100.0;
-
 
         Ok(GradientStop {
             color: Color::parse(color_str).map_err(|_| ParseGradientStopError)?,

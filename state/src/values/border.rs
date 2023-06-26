@@ -1,4 +1,4 @@
-use crate::{Parse, Fill};
+use crate::{Fill, Parse};
 use std::fmt;
 use torin::scaled::Scaled;
 

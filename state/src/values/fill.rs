@@ -1,4 +1,4 @@
-use crate::{LinearGradient, Parse, DisplayColor};
+use crate::{DisplayColor, LinearGradient, Parse};
 use skia_safe::Color;
 use std::fmt;
 
@@ -41,7 +41,7 @@ impl fmt::Display for Fill {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::Color(color) => color.fmt_rgb(f),
-            Self::LinearGradient(gradient) => gradient.fmt(f)
+            Self::LinearGradient(gradient) => gradient.fmt(f),
         }
     }
 }

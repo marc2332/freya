@@ -25,10 +25,10 @@ pub fn render_rect(
     match &node_style.background {
         Fill::Color(color) => {
             paint.set_color(*color);
-        },
+        }
         Fill::LinearGradient(gradient) => {
             paint.set_shader(gradient.into_shader(area));
-        },
+        }
     }
 
     let radius = node_style.radius;
@@ -66,10 +66,10 @@ pub fn render_rect(
             match &shadow.fill {
                 Fill::Color(color) => {
                     blur_paint.set_color(*color);
-                },
+                }
                 Fill::LinearGradient(gradient) => {
                     blur_paint.set_shader(gradient.into_shader(area));
-                },
+                }
             }
 
             if shadow.position == ShadowPosition::Inset {
@@ -106,7 +106,10 @@ pub fn render_rect(
     }
 
     // Borders
-    if node_style.border.width > 0.0 && node_style.border.fill != Fill::Color(Color::TRANSPARENT) && node_style.border.style != BorderStyle::None {
+    if node_style.border.width > 0.0
+        && node_style.border.fill != Fill::Color(Color::TRANSPARENT)
+        && node_style.border.style != BorderStyle::None
+    {
         let mut stroke_paint = paint.clone();
         let half_border_width = node_style.border.width / 2.0;
 
@@ -114,10 +117,10 @@ pub fn render_rect(
         match &node_style.border.fill {
             Fill::Color(color) => {
                 stroke_paint.set_color(*color);
-            },
+            }
             Fill::LinearGradient(gradient) => {
                 stroke_paint.set_shader(gradient.into_shader(area));
-            },
+            }
         }
         stroke_paint.set_stroke_width(node_style.border.width);
 

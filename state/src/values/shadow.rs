@@ -1,4 +1,4 @@
-use crate::{Parse, Fill};
+use crate::{Fill, Parse};
 use torin::scaled::Scaled;
 
 #[derive(Default, Clone, Debug, PartialEq)]
