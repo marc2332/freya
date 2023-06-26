@@ -6,7 +6,6 @@ use dioxus_native_core::{
     SendAnyMap,
 };
 use dioxus_native_core_macro::partial_derive_state;
-// use skia_safe::Color;
 use torin::{radius::Radius, scaled::Scaled};
 
 use crate::{

@@ -37,7 +37,35 @@ pub fn Property<'a>(cx: Scope<'a>, name: &'a str, value: String) -> Element<'a> 
 
 #[allow(non_snake_case)]
 #[inline_props]
-pub fn FillProperty<'a>(cx: Scope<'a>, name: &'a str, fill: Fill) -> Element<'a> {
+pub fn LinearGradientProperty<'a>(cx: Scope<'a>, name: &'a str, fill: Fill) -> Element<'a> {
+    render!(
+        rect {
+            padding: "5 10",
+            paragraph {
+                line_height: "1.9",
+                text {
+                    font_size: "15",
+                    color: "rgb(71, 180, 240)",
+                    "{name}"
+                }
+                text {
+                    font_size: "15",
+                    color: "rgb(215, 215, 215)",
+                    ": "
+                }
+                text {
+                    font_size: "15",
+                    color: "rgb(252,181,172)",
+                    "{fill}",
+                }
+            }
+        }
+    )
+}
+
+#[allow(non_snake_case)]
+#[inline_props]
+pub fn ColorProperty<'a>(cx: Scope<'a>, name: &'a str, fill: Fill) -> Element<'a> {
     render!(
         rect {
             overflow: "clip",
