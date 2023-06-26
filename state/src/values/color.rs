@@ -1,5 +1,11 @@
 use crate::Parse;
 use skia_safe::{Color, HSV};
+use std::fmt;
+
+pub trait DisplayColor {
+    fn fmt_rgb(&self, f: &mut fmt::Formatter) -> fmt::Result;
+    fn fmt_hsl(&self, f: &mut fmt::Formatter) -> fmt::Result;
+}
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct ParseColorError;
@@ -28,6 +34,39 @@ impl Parse for Color {
                 }
             }
         }
+    }
+}
+
+impl DisplayColor for Color {
+    fn fmt_rgb(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "rgb({}, {}, {}, {})",
+            self.r(),
+            self.g(),
+            self.b(),
+            self.a()
+        )
+    }
+
+    fn fmt_hsl(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // HSV to HSL conversion
+        let hsv = self.to_hsv();
+        let l = hsv.v - (hsv.v * hsv.s / 2.0);
+        let s = if l == 1.0 || l == 0.0 {
+            0.0
+        } else {
+            (hsv.v - l) / f32::min(l, 1.0 - l)
+        };
+
+        write!(
+            f,
+            "hsl({}deg, {}%, {}%, {}%)",
+            hsv.h,
+            s * 100.0,
+            l * 100.0,
+            (self.a() as f32 / 128.0) * 100.0
+        )
     }
 }
 

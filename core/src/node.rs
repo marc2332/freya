@@ -79,10 +79,10 @@ impl<'a> Iterator for NodeStateIterator<'a> {
             )),
             7 => Some(("padding", AttributeType::Paddings(self.state.size.padding))),
             8 => Some(("display", AttributeType::Display(&self.state.size.display))),
-            // 9 => Some((
-            //     "background",
-            //     AttributeType::Color(&self.state.style.background),
-            // )),
+            9 => Some((
+                "background",
+                AttributeType::Fill(&self.state.style.background),
+            )),
             10 => Some(("border", AttributeType::Border(&self.state.style.border))),
             11 => Some(("radius", AttributeType::Radius(self.state.style.radius))),
             12 => Some(("color", AttributeType::Color(&self.state.font_style.color))),

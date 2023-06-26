@@ -1,5 +1,6 @@
-use crate::{ExtSplit, Parse};
+use crate::{ExtSplit, DisplayColor, Parse};
 use skia_safe::{gradient_shader::GradientShaderColors, shader::Shader, Color, Point, TileMode};
+use std::fmt;
 use torin::{prelude::Measure, size::Rect};
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -15,24 +16,32 @@ impl Parse for GradientStop {
     type Err = ParseGradientStopError;
 
     fn parse(value: &str) -> Result<Self, Self::Err> {
-        
         let mut split = value.split_ascii_whitespace_excluding_group('(', ')');
         let color_str = split.next().ok_or(ParseGradientStopError)?;
 
-        let offset_str = split.next().ok_or(ParseGradientStopError)?;
+        let offset_str = split.next().ok_or(ParseGradientStopError)?.trim();
         if !offset_str.ends_with("%") {
             return Err(ParseGradientStopError);
         }
 
-		let mut offset = offset_str
-			.replacen("%", "", 1)
-			.parse::<f32>()
-			.map_err(|_| ParseGradientStopError)? / 100.0;
+        let offset = offset_str
+            .replacen("%", "", 1)
+            .parse::<f32>()
+            .map_err(|_| ParseGradientStopError)?
+            / 100.0;
+
 
         Ok(GradientStop {
             color: Color::parse(color_str).map_err(|_| ParseGradientStopError)?,
-			offset,
+            offset,
         })
+    }
+}
+
+impl fmt::Display for GradientStop {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        _ = self.color.fmt_rgb(f);
+        write!(f, " {}%", self.offset)
     }
 }
 
@@ -58,7 +67,10 @@ impl LinearGradient {
 
         let origin = Point::new(bounds.min_x(), bounds.min_y());
         Shader::linear_gradient(
-            (Point::new(bounds.width(), bounds.height()) - endpoint + origin, endpoint + origin,),
+            (
+                Point::new(bounds.width(), bounds.height()) - endpoint + origin,
+                endpoint + origin,
+            ),
             GradientShaderColors::Colors(&colors[..]),
             Some(&offsets[..]),
             TileMode::Clamp,
@@ -85,18 +97,15 @@ impl Parse for LinearGradient {
 
         let mut split = value.split_excluding_group(',', '(', ')');
 
-        let angle_or_first_stop = split
-            .next()
-            .ok_or(ParseLinearGradientError)?
-            .trim()
-            .replace("deg", "");
+        let angle_or_first_stop = split.next().ok_or(ParseLinearGradientError)?.trim();
 
-        if let Ok(angle) = angle_or_first_stop.replace("deg", "").parse::<f32>() {
-            gradient.angle = angle.to_radians();
+        if angle_or_first_stop.ends_with("deg") {
+            if let Ok(angle) = angle_or_first_stop.replacen("deg", "", 1).parse::<f32>() {
+                gradient.angle = angle.to_radians();
+            }
         } else {
             gradient.stops.push(
-                GradientStop::parse(angle_or_first_stop.as_str())
-                    .map_err(|_| ParseLinearGradientError)?,
+                GradientStop::parse(angle_or_first_stop).map_err(|_| ParseLinearGradientError)?,
             );
         }
 
@@ -110,10 +119,17 @@ impl Parse for LinearGradient {
     }
 }
 
-#[test]
-fn test() {
-    println!(
-        "{:?}",
-        LinearGradient::parse("linear-gradient(rgb(255, 255, 255) 50%, blue, green)")
-    );
+impl fmt::Display for LinearGradient {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "linear-gradient({}deg, {})",
+            self.angle.to_degrees(),
+            self.stops
+                .iter()
+                .map(|stop| stop.to_string())
+                .collect::<Vec<_>>()
+                .join(", ")
+        )
+    }
 }

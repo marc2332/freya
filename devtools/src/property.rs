@@ -87,7 +87,7 @@ pub fn ColorfulProperty<'a>(cx: Scope<'a>, name: &'a str, color: &'a Color) -> E
 #[allow(non_snake_case)]
 #[inline_props]
 pub fn ShadowProperty<'a>(cx: Scope<'a>, name: &'a str, shadow: &'a Shadow) -> Element<'a> {
-    let color = shadow.color.to_rgb();
+    let color = shadow.fill.to_rgb();
     render!(
         rect {
             overflow: "clip",

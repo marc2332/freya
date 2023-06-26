@@ -1,5 +1,6 @@
-use crate::{LinearGradient, Parse};
+use crate::{LinearGradient, Parse, DisplayColor};
 use skia_safe::Color;
+use std::fmt;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Fill {
@@ -30,8 +31,11 @@ impl Parse for Fill {
     }
 }
 
-#[test]
-fn test() {
-    println!("{:?}", Fill::parse("linear-gradient(red, blue, green)"));
-    println!("{:?}", Fill::parse("red"));
+impl fmt::Display for Fill {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::Color(color) => color.fmt_rgb(f),
+            Self::LinearGradient(gradient) => gradient.fmt(f)
+        }
+    }
 }
