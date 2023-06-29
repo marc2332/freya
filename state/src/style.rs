@@ -116,8 +116,8 @@ impl State<CustomAttributeValues> for Style {
                     }
                     "corner_smoothing" => {
                         if let Some(value) = attr.value.as_text() {
-                            if value.ends_with("%") {
-                                if let Ok(smoothing) = value.replacen("%", "", 1).parse::<f32>() {
+                            if value.ends_with('%') {
+                                if let Ok(smoothing) = value.replacen('%', "", 1).parse::<f32>() {
                                     style.corner_radius.smoothing =
                                         (smoothing / 100.0).clamp(0.0, 1.0);
                                 }

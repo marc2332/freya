@@ -47,7 +47,7 @@ fn compute_smooth_corner(
     let b = (p - l - c - d) / 3.0;
     let a = 2.0 * b;
 
-    return (a, b, c, d, l, p, corner_radius);
+    (a, b, c, d, l, p, corner_radius)
 }
 
 impl CornerRadius {

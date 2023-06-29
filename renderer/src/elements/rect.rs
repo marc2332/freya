@@ -52,7 +52,7 @@ pub fn render_rect(
             None,
         );
     } else {
-        path.add_rrect(&rounded_rect, None);
+        path.add_rrect(rounded_rect, None);
     }
 
     canvas.draw_path(&path, &paint);
@@ -75,16 +75,15 @@ pub fn render_rect(
             // Shadows can be either outset or inset
             // If they are outset, we fill a copy of the path outset by spread_radius, and blur it.
             // Otherwise, we draw a stroke with the inner portion being spread_radius width, and the outer portion being blur_radius width.
-            let outset: Point;
-            match shadow.position {
+            let outset: Point = match shadow.position {
                 ShadowPosition::Normal => {
                     shadow_paint.set_style(PaintStyle::Fill);
-                    outset = (shadow.spread, shadow.spread).into();
+                    (shadow.spread, shadow.spread).into()
                 }
                 ShadowPosition::Inset => {
                     shadow_paint.set_style(PaintStyle::Stroke);
                     shadow_paint.set_stroke_width(shadow.blur / 2.0 + shadow.spread);
-                    outset = (-shadow.spread / 2.0, -shadow.spread / 2.0).into()
+                    (-shadow.spread / 2.0, -shadow.spread / 2.0).into()
                 }
             };
 
@@ -107,7 +106,7 @@ pub fn render_rect(
                     None,
                 );
             } else {
-                shadow_path.add_rrect(&rounded_rect.with_outset(outset), None);
+                shadow_path.add_rrect(rounded_rect.with_outset(outset), None);
             }
 
             // Offset our path by the shadow's x and y coordinates.
@@ -166,7 +165,7 @@ pub fn render_rect(
                 None,
             );
         } else {
-            border_path.add_rrect(&rounded_rect.with_outset(outset), None);
+            border_path.add_rrect(rounded_rect.with_outset(outset), None);
         }
 
         canvas.draw_path(&border_path, &border_paint);
