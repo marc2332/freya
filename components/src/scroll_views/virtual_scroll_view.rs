@@ -103,6 +103,7 @@ fn get_render_range(
 pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) -> Element {
     let clicking_scrollbar = use_ref::<Option<(Axis, f64)>>(cx, || None);
     let clicking_shift = use_ref(cx, || false);
+    let clicking_alt = use_ref(cx, || false);
     let scrolled_y = use_ref(cx, || 0);
     let scrolled_x = use_ref(cx, || 0);
     let (node_ref, size) = use_node(cx);
@@ -137,8 +138,15 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
 
     // Moves the Y axis when the user scrolls in the container
     let onwheel = move |e: WheelEvent| {
+        // Holding alt while scrolling makes it 5x faster (VSCode behavior).
+        let speed_multiplier = if *clicking_alt.read() {
+            5.0
+        } else {
+            1.0
+        };
+
         if !*clicking_shift.read() {
-            let wheel_y = e.get_delta_y();
+            let wheel_y = e.get_delta_y() * speed_multiplier;
 
             let scroll_position_y = get_scroll_position_from_wheel(
                 wheel_y as f32,
@@ -154,7 +162,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
             e.get_delta_y()
         } else {
             e.get_delta_x()
-        };
+        } * speed_multiplier;
 
         let scroll_position_x = get_scroll_position_from_wheel(
             wheel_x as f32,
@@ -188,15 +196,69 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
     };
 
     // Check if Shift is being pressed
-    let onkeydown = |e: KeyboardEvent| {
-        if e.key == Key::Shift {
-            clicking_shift.set(true);
-        }
+    let onkeydown = move |e: KeyboardEvent| {
+        let y_page_delta = size.area.width() as i32;
+        let y_line_delta = y_page_delta / 5;
+        let x_line_delta = (size.area.height() / 5.0) as i32;
+
+        match e.key {
+            // Incremental Y-scrolling keys
+            Key::ArrowUp | Key::ArrowDown | Key::PageUp | Key::PageDown => {
+                scrolled_y.with_mut(move |y| {
+                    *y = get_corrected_scroll_position(
+                        size.inner.height,
+                        size.area.height(),
+                        (*y + match e.key {
+                            Key::ArrowUp => y_line_delta,
+                            Key::ArrowDown => -y_line_delta,
+                            Key::PageUp => y_page_delta,
+                            Key::PageDown => y_page_delta,
+                            // TODO(tropix126): Handle spacebar and spacebar + shift as PageDown and PageUp
+                            _ => 0,
+                        }) as f32,
+                    ) as i32
+                })
+            },
+            Key::Home => {
+                scrolled_y.set(0);
+            },
+            Key::End => {
+                scrolled_y.set(-size.inner.height as i32);
+            },
+            Key::ArrowLeft => {
+                scrolled_x.with_mut(move |x| {
+                    *x = get_corrected_scroll_position(
+                        size.inner.width,
+                        size.area.width(),
+                        (*x + x_line_delta) as f32
+                    ) as i32
+                })
+            },
+            Key::ArrowRight => {
+                scrolled_x.with_mut(move |x| {
+                    *x = get_corrected_scroll_position(
+                        size.inner.width,
+                        size.area.width(),
+                        (*x - x_line_delta) as f32
+                    ) as i32
+                })
+            },
+            Key::Shift => {
+                clicking_shift.set(true);
+            },
+            Key::Alt => {
+                clicking_alt.set(true);
+            },
+            _ => {},
+        };
     };
 
-    // Unmark the pressed shft at any keyup
-    let onkeyup = |_: KeyboardEvent| {
-        clicking_shift.set(false);
+    let onkeyup = |e: KeyboardEvent| {
+        if e.key == Key::Shift {
+            clicking_shift.set(false);
+        } else if e.key == Key::Alt {
+            clicking_alt.set(false);
+        }
     };
 
     // Mark the Y axis scrollbar as the one being dragged
@@ -247,6 +309,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
 
     render!(
         rect {
+            role: "scrollView",
             overflow: "clip",
             direction: "horizontal",
             width: "{user_container_width}",

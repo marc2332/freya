@@ -219,10 +219,10 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     };
 
     let onkeyup = |e: KeyboardEvent| {
-        match e.key {
-            Key::Shift => clicking_shift.set(false),
-            Key::Alt => clicking_alt.set(false),
-            _ => ()
+        if e.key == Key::Shift {
+            clicking_shift.set(false);
+        } else if e.key == Key::Alt {
+            clicking_alt.set(false);
         }
     };
 
