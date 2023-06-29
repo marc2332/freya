@@ -4,7 +4,7 @@ Learn how the style attributes work.
 
 - [background](#background)
 - [shadow](#shadow)
-- [corner\_radius](#corner_radius)
+- [corner\_radius & corner\_smoothing](#corner_radius-&-corner_smoothing)
 - [border](#border)
 - [overflow](#overflow)
 - [Color syntax](#color-syntax)
@@ -53,9 +53,9 @@ fn app(cx: Scope) -> Element {
 
 Compatible elements: [`rect`](/guides/elements.html#rect)
 
-### corner_radius
+### corner_radius & corner_smoothing
 
-The `corner_radius` attribute let's you smooth the corners of the element.
+The `corner_radius` attribute let's you smooth the corners of the element, with `corner_smoothing` you can archieve a "squircle" effect.
 
 Example:
 
@@ -63,7 +63,8 @@ Example:
 fn app(cx: Scope) -> Element {
     render!(
         rect {
-            corner_radius: "10"
+            corner_radius: "10",
+            corner_smoothing: "75%"
         }
     )
 }
