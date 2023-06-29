@@ -83,7 +83,7 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
     use_effect(cx, &cx.props.enabled, move |enabled| {
         if enabled {
             animation.start(Animation::new_sine_in_out(0.0..=25.0, 200));
-        } else {
+        } else if animation.value() > 0.0 {
             animation.start(Animation::new_sine_in_out(25.0..=0.0, 200));
         }
         async move {}

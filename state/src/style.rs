@@ -6,17 +6,16 @@ use dioxus_native_core::{
     SendAnyMap,
 };
 use dioxus_native_core_macro::partial_derive_state;
-use skia_safe::Color;
 use torin::scaled::Scaled;
 
 use crate::{
-    split_shadows, Border, BorderAlignment, CornerRadius, CustomAttributeValues, OverflowMode,
-    Parse, Shadow,
+    parsing::ExtSplit, Border, BorderAlignment, CornerRadius, CustomAttributeValues, Fill,
+    OverflowMode, Parse, Shadow,
 };
 
 #[derive(Default, Debug, Clone, PartialEq, Component)]
 pub struct Style {
-    pub background: Color,
+    pub background: Fill,
     pub relative_layer: i16,
     pub border: Border,
     pub shadows: Vec<Shadow>,
@@ -65,7 +64,7 @@ impl State<CustomAttributeValues> for Style {
                 match attr.attribute.name.as_str() {
                     "background" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(background) = Color::parse(value) {
+                            if let Ok(background) = Fill::parse(value) {
                                 style.background = background;
                             }
                         }
@@ -96,8 +95,8 @@ impl State<CustomAttributeValues> for Style {
                     }
                     "shadow" => {
                         if let Some(value) = attr.value.as_text() {
-                            style.shadows = split_shadows(value)
-                                .iter()
+                            style.shadows = value
+                                .split_excluding_group(',', '(', ')')
                                 .map(|chunk| {
                                     let mut shadow = Shadow::parse(chunk).unwrap_or_default();
                                     shadow.scale(*scale_factor);

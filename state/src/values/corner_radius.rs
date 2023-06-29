@@ -258,7 +258,7 @@ impl Parse for CornerRadius {
                     ..Default::default()
                 }
             }
-            _ => return Err(ParseCornerRadiusError)
+            _ => return Err(ParseCornerRadiusError),
         }
 
         Ok(radius)

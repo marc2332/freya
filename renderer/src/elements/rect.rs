@@ -1,6 +1,6 @@
 use dioxus_native_core::real_dom::NodeImmutable;
 use freya_dom::prelude::DioxusNode;
-use freya_node_state::{BorderAlignment, BorderStyle, References, ShadowPosition, Style};
+use freya_node_state::{BorderAlignment, BorderStyle, Fill, References, ShadowPosition, Style};
 use skia_safe::{
     textlayout::FontCollection, BlurStyle, Canvas, ClipOp, Color, MaskFilter, Paint, PaintStyle,
     Path, Point, RRect, Rect,
@@ -22,7 +22,17 @@ pub fn render_rect(
 
     paint.set_anti_alias(true);
     paint.set_style(PaintStyle::Fill);
-    paint.set_color(node_style.background);
+
+    let area = area.to_f32();
+
+    match &node_style.background {
+        Fill::Color(color) => {
+            paint.set_color(*color);
+        }
+        Fill::LinearGradient(gradient) => {
+            paint.set_shader(gradient.into_shader(area));
+        }
+    }
 
     let radius = node_style.corner_radius;
     let rounded_rect = RRect::new_rect_radii(
@@ -49,11 +59,18 @@ pub fn render_rect(
 
     // Shadows
     for shadow in node_style.shadows.iter() {
-        if shadow.color != Color::TRANSPARENT {
+        if shadow.fill != Fill::Color(Color::TRANSPARENT) {
             let mut shadow_paint = paint.clone();
             let mut shadow_path = Path::new();
 
-            shadow_paint.set_color(shadow.color);
+            match &shadow.fill {
+                Fill::Color(color) => {
+                    shadow_paint.set_color(*color);
+                }
+                Fill::LinearGradient(gradient) => {
+                    shadow_paint.set_shader(gradient.into_shader(area));
+                }
+            }
 
             // Shadows can be either outset or inset
             // If they are outset, we fill a copy of the path outset by spread_radius, and blur it.
@@ -118,8 +135,16 @@ pub fn render_rect(
         let mut border_path = Path::new();
 
         // Setup paint params
+        border_paint.set_anti_alias(true);
         border_paint.set_style(PaintStyle::Stroke);
-        border_paint.set_color(node_style.border.color);
+        match &node_style.border.fill {
+            Fill::Color(color) => {
+                border_paint.set_color(*color);
+            }
+            Fill::LinearGradient(gradient) => {
+                border_paint.set_shader(gradient.into_shader(area));
+            }
+        }
         border_paint.set_stroke_width(node_style.border.width);
 
         // Skia draws strokes centered on the edge of the path. This means that half of the stroke is inside the path, and half outside.
