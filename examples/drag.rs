@@ -57,7 +57,7 @@ fn app(cx: Scope) -> Element {
                 direction: "both",
                 width: "100",
                 height: "100",
-                radius: "15",
+                corner_radius: "15",
                 shadow: "0 0 50 0 rgb(255, 255, 255, 150)",
                 onmouseover: onmouseover,
                 onmouseleave: onmouseleave
