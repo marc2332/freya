@@ -2,16 +2,15 @@
 
 Learn how the style attributes work.
 
-- [Style](#style)
-    - [background](#background)
-    - [shadow](#shadow)
-    - [corner\_radius](#corner_radius)
-    - [border](#border)
-    - [overflow](#overflow)
-    - [Color syntax](#color-syntax)
-      - [Static colors](#static-colors)
-      - [rgb() / hsl()](#rgb--hsl)
-    - [Inheritance](#inheritance)
+- [background](#background)
+- [shadow](#shadow)
+- [corner\_radius](#corner_radius)
+- [border](#border)
+- [overflow](#overflow)
+- [Color syntax](#color-syntax)
+    - [Static colors](#static-colors)
+    - [rgb() / hsl()](#rgb--hsl)
+- [Inheritance](#inheritance)
 
 ### background
 
