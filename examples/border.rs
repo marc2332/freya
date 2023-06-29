@@ -23,7 +23,7 @@ fn app(cx: Scope) -> Element {
             rect {
                 width: "80",
                 height: "80",
-                radius: "20",
+                corner_radius: "20",
                 background: "rgb(0, 0, 0)",
                 border: "1 solid rgb(242, 151, 39)",
                 border_align: "inner",
@@ -31,7 +31,7 @@ fn app(cx: Scope) -> Element {
             rect {
                 width: "80",
                 height: "80",
-                radius: "2",
+                corner_radius: "2",
                 background: "rgb(0, 0, 0)",
                 border: "8 solid green",
                 border_align: "outer",
@@ -40,7 +40,7 @@ fn app(cx: Scope) -> Element {
             rect {
                 width: "80",
                 height: "80",
-                radius: "2",
+                corner_radius: "2",
                 background: "rgb(0, 0, 0)",
                 border: "8 solid rgb(34, 166, 153)",
                 border_align: "center",

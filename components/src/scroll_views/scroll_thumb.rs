@@ -27,7 +27,7 @@ pub fn ScrollThumb<'a>(cx: Scope<'a, ScrollThumbProps<'a>>) -> Element<'a> {
             rect {
                 width: "100%",
                 height: "100%",
-                radius: "8",
+                corner_radius: "8",
                 background: "{scrollbar_theme.thumb_background}",
             }
         }

@@ -43,7 +43,7 @@ pub fn NodeElement<'a>(
 
     render!(
         rect {
-            radius: "7",
+            corner_radius: "7",
             padding: "5",
             background: background,
             width: "100%",

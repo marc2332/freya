@@ -1,12 +1,11 @@
 use dioxus_native_core::real_dom::NodeImmutable;
 use freya_dom::prelude::DioxusNode;
 use freya_node_state::{
-    Border, CursorSettings, Fill, FontStyle, LayoutState, References, Shadow, Style, Transform,
+    Border, CornerRadius, CursorSettings, Fill, FontStyle, LayoutState, References, Shadow, Style,
+    Transform,
 };
 use skia_safe::textlayout::TextShadow;
-use torin::{
-    direction::DirectionMode, display::DisplayMode, gaps::Gaps, radius::Radius, size::Size,
-};
+use torin::{direction::DirectionMode, display::DisplayMode, gaps::Gaps, size::Size};
 
 #[derive(Clone)]
 pub struct NodeState {
@@ -88,7 +87,10 @@ impl<'a> Iterator for NodeStateIterator<'a> {
                 Some(("background", fill))
             }
             10 => Some(("border", AttributeType::Border(&self.state.style.border))),
-            11 => Some(("radius", AttributeType::Radius(self.state.style.radius))),
+            11 => Some((
+                "corner_radius",
+                AttributeType::CornerRadius(self.state.style.corner_radius),
+            )),
             12 => Some((
                 "color",
                 AttributeType::Color(self.state.font_style.color.into()),
@@ -139,7 +141,7 @@ pub enum AttributeType<'a> {
     Size(&'a Size),
     Measure(f32),
     Measures(Gaps),
-    Radius(Radius),
+    CornerRadius(CornerRadius),
     Direction(&'a DirectionMode),
     Display(&'a DisplayMode),
     Shadow(&'a Shadow),

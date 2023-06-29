@@ -6,10 +6,11 @@ use dioxus_native_core::{
     SendAnyMap,
 };
 use dioxus_native_core_macro::partial_derive_state;
-use torin::{radius::Radius, scaled::Scaled};
+use torin::scaled::Scaled;
 
 use crate::{
-    Border, BorderAlignment, CustomAttributeValues, ExtSplit, Fill, OverflowMode, Parse, Shadow,
+    parsing::ExtSplit, Border, BorderAlignment, CornerRadius, CustomAttributeValues, Fill,
+    OverflowMode, Parse, Shadow,
 };
 
 #[derive(Default, Debug, Clone, PartialEq, Component)]
@@ -18,7 +19,7 @@ pub struct Style {
     pub relative_layer: i16,
     pub border: Border,
     pub shadows: Vec<Shadow>,
-    pub radius: Radius,
+    pub corner_radius: CornerRadius,
     pub image_data: Option<Vec<u8>>,
     pub svg_data: Option<Vec<u8>>,
     pub overflow: OverflowMode,
@@ -39,7 +40,8 @@ impl State<CustomAttributeValues> for Style {
             "border",
             "border_align",
             "shadow",
-            "radius",
+            "corner_radius",
+            "corner_smoothing",
             "image_data",
             "svg_data",
             "svg_content",
@@ -103,11 +105,22 @@ impl State<CustomAttributeValues> for Style {
                                 .collect();
                         }
                     }
-                    "radius" => {
+                    "corner_radius" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(mut radius) = Radius::parse(value) {
+                            if let Ok(mut radius) = CornerRadius::parse(value) {
                                 radius.scale(*scale_factor);
-                                style.radius = radius;
+                                radius.smoothing = style.corner_radius.smoothing;
+                                style.corner_radius = radius;
+                            }
+                        }
+                    }
+                    "corner_smoothing" => {
+                        if let Some(value) = attr.value.as_text() {
+                            if value.ends_with('%') {
+                                if let Ok(smoothing) = value.replacen('%', "", 1).parse::<f32>() {
+                                    style.corner_radius.smoothing =
+                                        (smoothing / 100.0).clamp(0.0, 1.0);
+                                }
                             }
                         }
                     }

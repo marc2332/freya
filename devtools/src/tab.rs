@@ -62,7 +62,7 @@ pub fn TabButton<'a>(cx: Scope<'a, TabButtonProps<'a>>) -> Element<'a> {
             onmouseover: onmouseover,
             onmouseleave: onmouseleave,
             width: "125",
-            radius: "7",
+            corner_radius: "7",
             height: "100%",
             color: "{color}",
             padding: "7.5",

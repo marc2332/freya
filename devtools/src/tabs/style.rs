@@ -44,7 +44,7 @@ pub fn NodeInspectorStyle<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> 
                                 }
                             }
                         }
-                        AttributeType::Radius(radius) => {
+                        AttributeType::CornerRadius(radius) => {
                             rsx!{
                                 Property {
                                     key: "{i}",

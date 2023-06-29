@@ -155,7 +155,7 @@ fn Card<'a>(cx: Scope<'a, CardProps<'a>>) -> Element {
                 width: "100%",
                 height: "50%",
                 padding: "5",
-                radius: "10",
+                corner_radius: "10",
                 label {
                     height: "auto",
                     "{&cx.props.title}"
@@ -199,7 +199,7 @@ fn Area(cx: Scope) -> Element {
             width: "100%",
             background: "blue",
             padding: "10",
-            radius: "10",
+            corner_radius: "10",
             onmouseover: cursor_moved,
             onclick: cursor_clicked,
             label {
