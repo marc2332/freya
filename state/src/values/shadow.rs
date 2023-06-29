@@ -1,5 +1,4 @@
-use crate::Parse;
-use skia_safe::Color;
+use crate::{ExtSplit, Fill, Parse};
 use torin::scaled::Scaled;
 
 #[derive(Default, Clone, Debug, PartialEq)]
@@ -16,7 +15,7 @@ pub struct Shadow {
     pub y: f32,
     pub blur: f32,
     pub spread: f32,
-    pub color: Color,
+    pub fill: Fill,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -26,7 +25,7 @@ impl Parse for Shadow {
     type Err = ParseShadowError;
 
     fn parse(value: &str) -> Result<Self, Self::Err> {
-        let mut shadow_values = value.split_ascii_whitespace();
+        let mut shadow_values = value.split_ascii_whitespace_excluding_group('(', ')');
         let mut shadow = Shadow::default();
 
         let first = shadow_values.next().ok_or(ParseShadowError)?;
@@ -53,18 +52,23 @@ impl Parse for Shadow {
             .parse::<f32>()
             .map_err(|_| ParseShadowError)?;
 
-        let spread_or_color = shadow_values.next().ok_or(ParseShadowError)?;
-        let mut color_string = String::new();
-        if spread_or_color.parse::<f32>().is_ok() {
-            shadow.spread = spread_or_color
-                .parse::<f32>()
-                .map_err(|_| ParseShadowError)?;
-        } else {
-            color_string.push_str(spread_or_color);
-        }
-        color_string.push_str(shadow_values.collect::<Vec<&str>>().join(" ").as_str());
+        let spread_or_fill = shadow_values.next().ok_or(ParseShadowError)?;
 
-        shadow.color = Color::parse(color_string.as_str()).map_err(|_| ParseShadowError)?;
+        let mut already_filled = false;
+        if let Ok(spread) = spread_or_fill.parse::<f32>() {
+            shadow.spread = spread;
+        } else {
+            already_filled = true;
+            shadow.fill = Fill::parse(spread_or_fill).map_err(|_| ParseShadowError)?;
+        }
+
+        if let Some(fill) = shadow_values.next() {
+            if !already_filled {
+                shadow.fill = Fill::parse(fill).map_err(|_| ParseShadowError)?
+            } else {
+                return Err(ParseShadowError);
+            }
+        }
 
         Ok(shadow)
     }
@@ -77,30 +81,4 @@ impl Scaled for Shadow {
         self.spread *= scale_factor;
         self.blur *= scale_factor;
     }
-}
-
-pub fn split_shadows(value: &str) -> Vec<String> {
-    let mut chunks = Vec::new();
-    let mut current = String::new();
-    let mut in_parenthesis = false;
-
-    for character in value.chars() {
-        if character == '(' {
-            in_parenthesis = true;
-        } else if character == ')' {
-            in_parenthesis = false;
-        }
-
-        if character == ',' && !in_parenthesis {
-            chunks.push(std::mem::take(&mut current));
-        } else {
-            current.push(character);
-        }
-    }
-
-    if !current.is_empty() {
-        chunks.push(current);
-    }
-
-    chunks
 }

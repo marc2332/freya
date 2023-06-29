@@ -1,4 +1,6 @@
-use freya_node_state::{Border, BorderAlignment, BorderStyle, Parse};
+use freya_node_state::{
+    Border, BorderAlignment, BorderStyle, Fill, GradientStop, LinearGradient, Parse,
+};
 use skia_safe::Color;
 
 #[test]
@@ -9,7 +11,33 @@ fn parse_basic_border() {
         border,
         Ok(Border {
             width: 1.0,
-            color: Color::RED,
+            fill: Fill::Color(Color::RED),
+            style: BorderStyle::Solid,
+            alignment: BorderAlignment::Inner
+        })
+    );
+}
+
+#[test]
+fn parse_gradient_border() {
+    let shadow = Border::parse("1 solid linear-gradient(red 0%, blue 100%)");
+    assert_eq!(
+        shadow,
+        Ok(Border {
+            width: 1.0,
+            fill: Fill::LinearGradient(LinearGradient {
+                angle: 0.0,
+                stops: vec![
+                    GradientStop {
+                        color: Color::RED,
+                        offset: 0.0,
+                    },
+                    GradientStop {
+                        color: Color::BLUE,
+                        offset: 1.0,
+                    }
+                ]
+            }),
             style: BorderStyle::Solid,
             alignment: BorderAlignment::Inner
         })
@@ -39,7 +67,7 @@ fn parse_border_style() {
         solid,
         Ok(Border {
             width: 1.0,
-            color: Color::RED,
+            fill: Fill::Color(Color::RED),
             style: BorderStyle::Solid,
             alignment: BorderAlignment::default()
         })
@@ -48,7 +76,7 @@ fn parse_border_style() {
         none,
         Ok(Border {
             width: 1.0,
-            color: Color::RED,
+            fill: Fill::Color(Color::RED),
             style: BorderStyle::None,
             alignment: BorderAlignment::default()
         })

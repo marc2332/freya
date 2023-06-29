@@ -23,7 +23,7 @@ fn app(cx: Scope) -> Element {
         padding: "10",
         width: "100%",
         height: "100%",
-        radius: "50",
+        corner_radius: "50",
         label {
             color: "black",
             "{num}"

@@ -341,14 +341,20 @@ fn measure_node<Key: NodeKey>(
         let minimum_height = node.minimum_height.eval(parent_area.size.height);
         let maximum_height = node.maximum_height.eval(parent_area.size.height);
 
-        area.size.width = area.size.width.clamp(
-            minimum_width.unwrap_or(area.size.width),
-            maximum_width.unwrap_or(area.size.width),
-        );
-        area.size.height = area.size.height.clamp(
-            minimum_height.unwrap_or(area.size.height),
-            maximum_height.unwrap_or(area.size.height),
-        );
+        let minimum_area_width = minimum_width.unwrap_or(area.size.width);
+        let maximum_area_width = maximum_width.unwrap_or(minimum_area_width);
+
+        let minimum_area_height = minimum_height.unwrap_or(area.size.height);
+        let maximum_area_height = maximum_height.unwrap_or(minimum_area_height);
+
+        area.size.width = area
+            .size
+            .width
+            .clamp(minimum_area_width, maximum_area_width);
+        area.size.height = area
+            .size
+            .height
+            .clamp(minimum_area_height, maximum_area_height);
 
         // Custom measure
         let skip_inner = if let Some(measurer) = measurer {

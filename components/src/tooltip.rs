@@ -32,7 +32,7 @@ pub fn Tooltip<'a>(cx: Scope<'a, TooltipProps<'a>>) -> Element {
                 width: "100%",
                 height: "100%",
                 shadow: "0 5 25 3 black",
-                radius: "8",
+                corner_radius: "8",
                 background: "{theme.background}",
                 display: "center",
                 label {
