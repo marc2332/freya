@@ -191,16 +191,15 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
         }
     };
 
-    // Check if Shift is being pressed
     let onkeydown = move |e: KeyboardEvent| {
-        let y_page_delta = inner_size as i32;
+        let y_page_delta = size.area.height() as i32;
         let y_line_delta = y_page_delta / 10;
-        let x_line_delta = (size.area.width() / 10.0) as i32;
+        let x_line_delta = (size.area.width() / 5.0) as i32;
 
         match e.key {
             Key::ArrowUp | Key::ArrowDown => scrolled_y.with_mut(move |y| {
                 *y = get_corrected_scroll_position(
-                    inner_size,
+                    size.inner.height,
                     size.area.height(),
                     (*y + match e.key {
                         Key::ArrowUp => y_line_delta,
@@ -211,6 +210,30 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
                 ) as i32
             }),
             // TODO(tropix126): Handle spacebar and spacebar + shift as Home and End
+            Key::PageUp | Key::PageDown => scrolled_y.with_mut(move |y| {
+                *y = get_corrected_scroll_position(
+                    size.inner.height,
+                    size.area.height(),
+                    (*y + match e.key {
+                        Key::PageUp => y_page_delta,
+                        Key::PageDown => -y_page_delta,
+
+                        _ => 0,
+                    }) as f32,
+                ) as i32
+            }),
+            Key::ArrowLeft | Key::ArrowRight => scrolled_y.with_mut(move |y| {
+                *y = get_corrected_scroll_position(
+                    size.inner.width,
+                    size.area.width(),
+                    (*y + match e.key {
+                        Key::ArrowLeft => x_line_delta,
+                        Key::ArrowRight => -x_line_delta,
+
+                        _ => 0,
+                    }) as f32,
+                ) as i32
+            }),
             Key::Home => {
                 scrolled_y.with_mut(move |y| {
                     *y = 0;
@@ -221,30 +244,6 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
                     *y -= y_page_delta;
                 });
             }
-            Key::PageUp => {
-                scrolled_y.with_mut(move |y| {
-                    *y += y_line_delta;
-                });
-            }
-            Key::PageDown => {
-                scrolled_y.with_mut(move |y| {
-                    *y -= y_line_delta;
-                });
-            }
-            Key::ArrowLeft => scrolled_x.with_mut(move |x| {
-                *x = get_corrected_scroll_position(
-                    size.inner.width,
-                    size.area.width(),
-                    (*x + x_line_delta) as f32,
-                ) as i32
-            }),
-            Key::ArrowRight => scrolled_x.with_mut(move |x| {
-                *x = get_corrected_scroll_position(
-                    size.inner.width,
-                    size.area.width(),
-                    (*x - x_line_delta) as f32,
-                ) as i32
-            }),
             Key::Shift => {
                 clicking_shift.set(true);
             }
