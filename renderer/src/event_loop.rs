@@ -101,9 +101,10 @@ pub fn run_event_loop<State: Clone>(
                         if TouchPhase::Moved == phase {
                             let scroll_data = {
                                 match delta {
-                                    MouseScrollDelta::LineDelta(x, y) => {
-                                        ((x * WHEEL_SPEED_MODIFIER) as f64, (y * WHEEL_SPEED_MODIFIER) as f64)
-                                    }
+                                    MouseScrollDelta::LineDelta(x, y) => (
+                                        (x * WHEEL_SPEED_MODIFIER) as f64,
+                                        (y * WHEEL_SPEED_MODIFIER) as f64,
+                                    ),
                                     MouseScrollDelta::PixelDelta(pos) => (pos.x, pos.y),
                                 }
                             };

@@ -139,11 +139,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
     // Moves the Y axis when the user scrolls in the container
     let onwheel = move |e: WheelEvent| {
         // Holding alt while scrolling makes it 5x faster (VSCode behavior).
-        let speed_multiplier = if *clicking_alt.read() {
-            5.0
-        } else {
-            1.0
-        };
+        let speed_multiplier = if *clicking_alt.read() { 5.0 } else { 1.0 };
 
         if !*clicking_shift.read() {
             let wheel_y = e.get_delta_y() * speed_multiplier;
@@ -197,59 +193,65 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
 
     // Check if Shift is being pressed
     let onkeydown = move |e: KeyboardEvent| {
-        let y_page_delta = size.area.width() as i32;
-        let y_line_delta = y_page_delta / 5;
-        let x_line_delta = (size.area.height() / 5.0) as i32;
+        let y_page_delta = inner_size as i32;
+        let y_line_delta = y_page_delta / 10;
+        let x_line_delta = (size.area.width() / 10.0) as i32;
 
         match e.key {
-            // Incremental Y-scrolling keys
-            Key::ArrowUp | Key::ArrowDown | Key::PageUp | Key::PageDown => {
-                scrolled_y.with_mut(move |y| {
-                    *y = get_corrected_scroll_position(
-                        size.inner.height,
-                        size.area.height(),
-                        (*y + match e.key {
-                            Key::ArrowUp => y_line_delta,
-                            Key::ArrowDown => -y_line_delta,
-                            Key::PageUp => y_page_delta,
-                            Key::PageDown => y_page_delta,
-                            // TODO(tropix126): Handle spacebar and spacebar + shift as PageDown and PageUp
-                            _ => 0,
-                        }) as f32,
-                    ) as i32
-                })
-            },
+            Key::ArrowUp | Key::ArrowDown => scrolled_y.with_mut(move |y| {
+                *y = get_corrected_scroll_position(
+                    inner_size,
+                    size.area.height(),
+                    (*y + match e.key {
+                        Key::ArrowUp => y_line_delta,
+                        Key::ArrowDown => -y_line_delta,
+
+                        _ => 0,
+                    }) as f32,
+                ) as i32
+            }),
+            // TODO(tropix126): Handle spacebar and spacebar + shift as Home and End
             Key::Home => {
-                scrolled_y.set(0);
-            },
+                scrolled_y.with_mut(move |y| {
+                    *y = 0;
+                });
+            }
             Key::End => {
-                scrolled_y.set(-size.inner.height as i32);
-            },
-            Key::ArrowLeft => {
-                scrolled_x.with_mut(move |x| {
-                    *x = get_corrected_scroll_position(
-                        size.inner.width,
-                        size.area.width(),
-                        (*x + x_line_delta) as f32
-                    ) as i32
-                })
-            },
-            Key::ArrowRight => {
-                scrolled_x.with_mut(move |x| {
-                    *x = get_corrected_scroll_position(
-                        size.inner.width,
-                        size.area.width(),
-                        (*x - x_line_delta) as f32
-                    ) as i32
-                })
-            },
+                scrolled_y.with_mut(move |y| {
+                    *y -= y_page_delta;
+                });
+            }
+            Key::PageUp => {
+                scrolled_y.with_mut(move |y| {
+                    *y += y_line_delta;
+                });
+            }
+            Key::PageDown => {
+                scrolled_y.with_mut(move |y| {
+                    *y -= y_line_delta;
+                });
+            }
+            Key::ArrowLeft => scrolled_x.with_mut(move |x| {
+                *x = get_corrected_scroll_position(
+                    size.inner.width,
+                    size.area.width(),
+                    (*x + x_line_delta) as f32,
+                ) as i32
+            }),
+            Key::ArrowRight => scrolled_x.with_mut(move |x| {
+                *x = get_corrected_scroll_position(
+                    size.inner.width,
+                    size.area.width(),
+                    (*x - x_line_delta) as f32,
+                ) as i32
+            }),
             Key::Shift => {
                 clicking_shift.set(true);
-            },
+            }
             Key::Alt => {
                 clicking_alt.set(true);
-            },
-            _ => {},
+            }
+            _ => {}
         };
     };
 
