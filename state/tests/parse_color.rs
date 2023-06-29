@@ -30,8 +30,9 @@ fn invalid_colors() {
     let missing_rparen = Color::parse("rgb(0, 0, 0");
     let missing_commas = Color::parse("rgb(0 0 0)");
     let extra_commas = Color::parse("rgb(0,, 0, 0)");
-    let extra_ending_commas = Color::parse("rgb(0, 0, 0,)");
-    let bad_unit = Color::parse("hsl(28in, 0.4, 0.25, 50%);");
+    let extra_component = Color::parse("rgb(0, 0, 0, 0, 0)");
+    let extra_ending_commas = Color::parse("rgb(0, 0, 0, 0,)");
+    let bad_unit = Color::parse("hsl(28in, 0.4, 0.25, 50%)");
 
     assert_eq!(incorrect_name.is_err(), true);
     assert_eq!(extra_lparen.is_err(), true);
@@ -40,6 +41,7 @@ fn invalid_colors() {
     assert_eq!(missing_rparen.is_err(), true);
     assert_eq!(missing_commas.is_err(), true);
     assert_eq!(extra_commas.is_err(), true);
+    assert_eq!(extra_component.is_err(), true);
     assert_eq!(extra_ending_commas.is_err(), true);
     assert_eq!(bad_unit.is_err(), true);
 }
