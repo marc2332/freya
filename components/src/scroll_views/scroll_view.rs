@@ -158,7 +158,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
 
     let onkeydown = move |e: KeyboardEvent| {
         let y_page_delta = size.area.height() as i32;
-        let y_line_delta = y_page_delta / 10;
+        let y_line_delta = y_page_delta / 5;
         let x_line_delta = (size.area.width() / 5.0) as i32;
 
         match e.key {
