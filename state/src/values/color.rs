@@ -127,7 +127,11 @@ fn parse_hsl(color: &str) -> Result<Color, ParseColorError> {
     let a_str: Option<&str> = colors.next();
 
     // Ensure correct units and lengths.
-    if colors.next().is_some() || !h_str.ends_with("deg") || !s_str.ends_with('%') || !l_str.ends_with('%') {
+    if colors.next().is_some()
+        || !h_str.ends_with("deg")
+        || !s_str.ends_with('%')
+        || !l_str.ends_with('%')
+    {
         return Err(ParseColorError);
     }
 
