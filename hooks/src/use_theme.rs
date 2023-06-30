@@ -171,8 +171,8 @@ pub const LIGHT_THEME: Theme = Theme {
     },
     dropdown: DropdownTheme {
         desplegable_background: "white",
-        background_button: "white",
-        hover_background: "rgb(240, 240, 240)",
+        background_button: "rgb(240, 240, 240)",
+        hover_background: "rgb(215, 215, 215)",
         font_theme: FontTheme {
             color: "rgb(10, 10, 10)",
         },
@@ -186,8 +186,8 @@ pub const LIGHT_THEME: Theme = Theme {
         },
     },
     accordion: AccordionTheme {
-        color: "white",
-        background: "rgb(30, 30, 30)",
+        color: "black",
+        background: "rgb(215, 215, 215)",
     },
     loader: LoaderTheme {
         primary_color: "rgb(50, 50, 50)",
@@ -242,8 +242,8 @@ pub const DARK_THEME: Theme = Theme {
         font_theme: FontTheme { color: "white" },
     },
     accordion: AccordionTheme {
-        color: "black",
-        background: "rgb(215, 215, 215)",
+        color: "white",
+        background: "rgb(30, 30, 30)",
     },
     loader: LoaderTheme {
         primary_color: "rgb(150, 150, 150)",

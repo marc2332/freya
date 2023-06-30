@@ -31,7 +31,7 @@ pub fn Tooltip<'a>(cx: Scope<'a, TooltipProps<'a>>) -> Element {
                 direction: "both",
                 width: "100%",
                 height: "100%",
-                shadow: "0 5 25 3 black",
+                shadow: "0 0 10 5 rgb(0, 0, 0, 50)",
                 corner_radius: "8",
                 background: "{theme.background}",
                 display: "center",
