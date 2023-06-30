@@ -53,7 +53,6 @@ fn app(cx: Scope) -> Element {
                 text_shadow: "0 18 12 rgb(0, 0, 0), 0 0 20 orange",
                 font_size: "80",
                 font_weight: "bold",
-
                 "Text!"
             }
         }

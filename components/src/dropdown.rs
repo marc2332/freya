@@ -162,7 +162,8 @@ where
     let is_focused = focus.is_focused();
     let focus_id = focus.attribute(cx);
 
-    let background = match *state.get() {
+    let desplegable_background = theme.dropdown.desplegable_background;
+    let button_background = match *state.get() {
         DropdownState::Hovering => theme.dropdown.hover_background,
         DropdownState::Idle => theme.dropdown.background_button,
     };
@@ -203,6 +204,7 @@ where
             rect {
                 width: "70",
                 height: "50",
+                margin: "5",
                 rect {
                     overflow: "clip",
                     focus_id: focus_id,
@@ -212,7 +214,7 @@ where
                     onkeydown: onkeydown,
                     width: "130",
                     height: "auto",
-                    background: background,
+                    background: desplegable_background,
                     shadow: "0 0 20 0 rgb(0, 0, 0, 100)",
                     padding: "7",
                     &cx.props.children
@@ -222,9 +224,10 @@ where
     } else {
         render!(
             rect {
+                margin: "5",
                 overflow: "clip",
                 focus_id: focus_id,
-                background: background,
+                background: button_background,
                 color: color,
                 corner_radius: "3",
                 onclick: onclick,

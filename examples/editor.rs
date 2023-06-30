@@ -15,7 +15,7 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    use_init_default_theme(cx);
+    use_init_theme(cx, DARK_THEME);
     render!(Body {})
 }
 

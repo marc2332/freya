@@ -10,6 +10,7 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
+    use_init_theme(cx, DARK_THEME);
     let percentage = use_state(cx, || 20.0);
     let font_size = percentage + 20.0;
 

@@ -121,6 +121,8 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     } else {
         "none".to_string()
     };
+    let background = button_theme.background;
+    let color = button_theme.font_theme.color;
 
     render!(
         CursorArea {
@@ -139,13 +141,12 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
                     height: "{height}",
                     direction: "vertical",
                     display: "center",
-                    color: "{button_theme.font_theme.color}",
-                    shadow: "0 5 20 0 rgb(0, 0, 0, 100)",
+                    color: "{color}",
+                    background: "{background}",
+                    shadow: "0 3 15 0 rgb(0, 0, 0, 70)",
                     corner_radius: "5",
                     padding: "8",
-                    background: "{button_theme.background}",
                     cursor_reference: cursor_attr,
-                    color: "white",
                     ScrollView {
                         show_scrollbar: true,
                         paragraph {
@@ -153,7 +154,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
                             cursor_id: "0",
                             cursor_index: "{cursor_char}",
                             cursor_mode: "editable",
-                            cursor_color: "white",
+                            cursor_color: "{color}",
                             max_lines: "{max_lines}",
                             onclick: onclick,
                             onmouseover: onmouseover,

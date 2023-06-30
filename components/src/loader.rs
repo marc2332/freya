@@ -40,7 +40,7 @@ pub fn Loader(cx: Scope<LoaderProps>) -> Element {
     });
 
     render!(svg {
-        rotate: "{degrees}",
+        rotate: "{degrees}deg",
         width: "31",
         height: "31",
         svg_content: r#"

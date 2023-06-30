@@ -14,7 +14,7 @@ Example:
 fn app(cx: Scope) -> Element {
     render!(
         label {
-            rotate: "180",
+            rotate: "180deg",
             "Hello, World!"
         }
     )
