@@ -120,43 +120,36 @@ fn parse_hsl(color: &str) -> Result<Color, ParseColorError> {
     let color = color.replacen("hsl(", "", 1).replacen(')', "", 1);
     let mut colors = color.split(',');
 
-    // Get each color component
-    let h = colors
-        .next()
-        .ok_or(ParseColorError)?
-        .trim()
-        .replace("deg", "")
-        .parse::<f32>()
-        .map_err(|_| ParseColorError)?;
+    // Get each color component as a string
+    let h_str = colors.next().ok_or(ParseColorError)?.trim();
     let s_str = colors.next().ok_or(ParseColorError)?.trim();
     let l_str = colors.next().ok_or(ParseColorError)?.trim();
     let a_str: Option<&str> = colors.next();
 
-    // There should not be more than 4 components.
-    if colors.next().is_some() {
+    // Ensure correct units and lengths.
+    if colors.next().is_some()
+        || !h_str.ends_with("deg")
+        || !s_str.ends_with('%')
+        || !l_str.ends_with('%')
+    {
         return Err(ParseColorError);
     }
 
     // S, L and A can end in percentage, otherwise its 0.0 - 1.0
-    let mut s = if s_str.ends_with('%') {
-        s_str
-            .replace('%', "")
-            .parse::<f32>()
-            .map_err(|_| ParseColorError)?
-            / 100.0
-    } else {
-        s_str.parse::<f32>().map_err(|_| ParseColorError)?
-    };
-
-    let mut l = if l_str.ends_with('%') {
-        l_str
-            .replace('%', "")
-            .parse::<f32>()
-            .map_err(|_| ParseColorError)?
-            / 100.0
-    } else {
-        l_str.parse::<f32>().map_err(|_| ParseColorError)?
-    };
+    let h = h_str
+        .replacen("deg", "", 1)
+        .parse::<f32>()
+        .map_err(|_| ParseColorError)?;
+    let mut s = s_str
+        .replacen('%', "", 1)
+        .parse::<f32>()
+        .map_err(|_| ParseColorError)?
+        / 100.0;
+    let mut l = l_str
+        .replacen('%', "", 1)
+        .parse::<f32>()
+        .map_err(|_| ParseColorError)?
+        / 100.0;
 
     // HSL to HSV Conversion
     l *= 2.0;
@@ -167,16 +160,16 @@ fn parse_hsl(color: &str) -> Result<Color, ParseColorError> {
 
     // Handle alpha formatting and convert to ARGB
     if let Some(a_str) = a_str {
-        let a = if a_str.ends_with('%') {
-            a_str
-                .trim()
-                .replace('%', "")
-                .parse::<f32>()
-                .map_err(|_| ParseColorError)?
-                / 100.0
-        } else {
-            a_str.trim().parse::<f32>().map_err(|_| ParseColorError)?
-        };
+        if !s_str.ends_with('%') {
+            return Err(ParseColorError);
+        }
+
+        let a = a_str
+            .trim()
+            .replace('%', "")
+            .parse::<f32>()
+            .map_err(|_| ParseColorError)?
+            / 100.0;
 
         Ok(hsv.to_color((a * 255.0).round() as u8))
     } else {

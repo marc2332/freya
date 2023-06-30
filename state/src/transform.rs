@@ -41,8 +41,10 @@ impl State<CustomAttributeValues> for Transform {
                 match attr.attribute.name.as_str() {
                     "rotate" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(degs) = value.parse::<f32>() {
-                                rotate_degs = Some(degs)
+                            if value.ends_with("deg") {
+                                if let Ok(degs) = value.replacen("deg", "", 1).parse::<f32>() {
+                                    rotate_degs = Some(degs)
+                                }
                             }
                         }
                     }
