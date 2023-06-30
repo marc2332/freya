@@ -66,7 +66,7 @@ freya-node-state = { workspace = true }
 reqwest = { version = "0.11.13", features = ["json"] }
 serde = "1.0.152"
 tracing-subscriber = "0.2.25"
-dioxus-std = { git = "https://github.com/marc2332/dioxus-std", rev = "4974f9e4e421b9036d9438ef33d4496559a76855", features = ["utils"] }
+dioxus-std = { git = "https://github.com/marc2332/dioxus-std", rev = "4974f9e4e421b9036d9438ef33d4496559a76855", features = ["utils", "i18n"] }
 rand = "0.8.5"
 
 [profile.release]
