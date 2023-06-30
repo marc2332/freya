@@ -1,12 +1,11 @@
 use dioxus_native_core::real_dom::NodeImmutable;
 use freya_dom::prelude::DioxusNode;
 use freya_node_state::{
-    Border, CursorSettings, FontStyle, LayoutState, References, Shadow, Style, Transform,
+    Border, CornerRadius, CursorSettings, Fill, FontStyle, LayoutState, References, Shadow, Style,
+    Transform,
 };
-use skia_safe::{textlayout::TextShadow, Color};
-use torin::{
-    direction::DirectionMode, display::DisplayMode, padding::Paddings, radius::Radius, size::Size,
-};
+use skia_safe::textlayout::TextShadow;
+use torin::{direction::DirectionMode, display::DisplayMode, gaps::Gaps, size::Size};
 
 #[derive(Clone)]
 pub struct NodeState {
@@ -77,15 +76,25 @@ impl<'a> Iterator for NodeStateIterator<'a> {
                 "direction",
                 AttributeType::Direction(&self.state.size.direction),
             )),
-            7 => Some(("padding", AttributeType::Paddings(self.state.size.padding))),
+            7 => Some(("padding", AttributeType::Measures(self.state.size.padding))),
             8 => Some(("display", AttributeType::Display(&self.state.size.display))),
-            9 => Some((
-                "background",
-                AttributeType::Color(&self.state.style.background),
-            )),
+            9 => {
+                let background = &self.state.style.background;
+                let fill = match *background {
+                    Fill::Color(_) => AttributeType::Color(background.clone()),
+                    Fill::LinearGradient(_) => AttributeType::LinearGradient(background.clone()),
+                };
+                Some(("background", fill))
+            }
             10 => Some(("border", AttributeType::Border(&self.state.style.border))),
-            11 => Some(("radius", AttributeType::Radius(self.state.style.radius))),
-            12 => Some(("color", AttributeType::Color(&self.state.font_style.color))),
+            11 => Some((
+                "corner_radius",
+                AttributeType::CornerRadius(self.state.style.corner_radius),
+            )),
+            12 => Some((
+                "color",
+                AttributeType::Color(self.state.font_style.color.into()),
+            )),
             13 => Some((
                 "font_family",
                 AttributeType::Text(self.state.font_style.font_family.join(",")),
@@ -127,11 +136,12 @@ impl<'a> Iterator for NodeStateIterator<'a> {
 }
 
 pub enum AttributeType<'a> {
-    Color(&'a Color),
+    Color(Fill),
+    LinearGradient(Fill),
     Size(&'a Size),
     Measure(f32),
-    Paddings(Paddings),
-    Radius(Radius),
+    Measures(Gaps),
+    CornerRadius(CornerRadius),
     Direction(&'a DirectionMode),
     Display(&'a DisplayMode),
     Shadow(&'a Shadow),

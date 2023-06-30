@@ -11,6 +11,7 @@ pub use values::*;
 pub mod prelude {
     pub use crate::custom_measurer::*;
     pub use crate::dom_adapter::*;
+    pub use crate::gaps::*;
     pub use crate::geometry::*;
     pub use crate::node::*;
     pub use crate::scaled::*;

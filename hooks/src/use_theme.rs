@@ -30,6 +30,7 @@ pub fn use_get_theme(cx: &ScopeState) -> Theme {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DropdownItemTheme {
     pub background: &'static str,
+    pub select_background: &'static str,
     pub hover_background: &'static str,
     pub font_theme: FontTheme,
 }
@@ -178,7 +179,8 @@ pub const LIGHT_THEME: Theme = Theme {
     },
     dropdown_item: DropdownItemTheme {
         background: "white",
-        hover_background: "rgb(240, 240, 240)",
+        select_background: "rgb(240, 240, 240)",
+        hover_background: "rgb(220, 220, 220)",
         font_theme: FontTheme {
             color: "rgb(10, 10, 10)",
         },
@@ -235,7 +237,8 @@ pub const DARK_THEME: Theme = Theme {
     },
     dropdown_item: DropdownItemTheme {
         background: "rgb(35, 35, 35)",
-        hover_background: "rgb(80, 80, 80)",
+        select_background: "rgb(80, 80, 80)",
+        hover_background: "rgb(55, 55, 55)",
         font_theme: FontTheme { color: "white" },
     },
     accordion: AccordionTheme {

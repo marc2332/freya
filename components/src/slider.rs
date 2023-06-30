@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{MouseEvent, WheelEvent};
-use freya_hooks::use_get_theme;
+use freya_hooks::{use_get_theme, use_node_ref};
 
 /// [`Slider`] component properties.
 #[derive(Props)]
@@ -66,6 +66,7 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
     let hovering = use_state(cx, || false);
     let clicking = use_state(cx, || false);
     let value = ensure_correct_slider_range(cx.props.value);
+    let (node_reference, size) = use_node_ref(cx);
     let width = cx.props.width + 14.0;
 
     let progress = (value / 100.0) * cx.props.width + 0.5;
@@ -80,8 +81,7 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
         hovering.set(true);
         if *clicking.get() {
             let coordinates = e.get_element_coordinates();
-
-            let mut x = coordinates.x - 7.5;
+            let mut x = coordinates.x - 7.5 - size.read().area.min_x() as f64;
             x = x.clamp(0.0, width);
 
             let mut percentage = x / cx.props.width * 100.0;
@@ -114,12 +114,12 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
 
     render!(
         rect {
-            overflow: "clip",
+            reference: node_reference,
             width: "{width}",
             height: "20",
             onmousedown: onmousedown,
-            onclick: onclick,
-            onmouseover: onmouseover,
+            onglobalclick: onclick,
+            onglobalmouseover: onmouseover,
             onmouseleave: onmouseleave,
             onwheel: onwheel,
             display: "center",
@@ -130,12 +130,12 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
                 width: "100%",
                 height: "6",
                 direction: "horizontal",
-                radius: "50",
+                corner_radius: "50",
                 rect {
                     background: "{theme.thumb_inner_background}",
                     width: "{progress}",
                     height: "100%",
-                    radius: "50",
+                    corner_radius: "50",
                 }
                 rect {
                     width: "{progress}",
@@ -146,13 +146,13 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
                         background: "{theme.thumb_background}",
                         width: "17",
                         height: "17",
-                        radius: "50",
+                        corner_radius: "50",
                         padding: "3",
                         rect {
                             height: "100%",
                             width: "100%",
                             background: "{theme.thumb_inner_background}",
-                            radius: "50"
+                            corner_radius: "50"
                         }
                     }
                 }

@@ -44,7 +44,7 @@ fn app(cx: Scope) -> Element {
                     shadow: "5 5 10 rgb(190, 190, 190), -5 -5 10 rgb(255, 255, 255)",
                     height: "80",
                     width: "80",
-                    radius: "8",
+                    corner_radius: "8",
                     background: "rgb(224, 224, 224)",
                 }
             }

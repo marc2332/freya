@@ -47,7 +47,7 @@ fn app(cx: Scope) -> Element {
                 width: "200",
                 background: "{background}",
                 padding: "25",
-                radius: "100",
+                corner_radius: "100",
                 display: "center",
                 onclick: anim,
                 label {

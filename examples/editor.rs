@@ -4,7 +4,7 @@ use freya::prelude::*;
 fn main() {
     launch_cfg(
         app,
-        WindowConfig::<()>::builder()
+        LaunchConfig::<()>::builder()
             .with_width(900.0)
             .with_height(500.0)
             .with_decorations(true)
@@ -234,7 +234,7 @@ fn Body(cx: Scope) -> Element {
                                     height: "{manual_line_height}",
                                     direction: "horizontal",
                                     background: "{line_background}",
-                                    radius: "7",
+                                    corner_radius: "7",
                                     rect {
                                         width: "{font_size * 2.0}",
                                         height: "100%",
@@ -272,7 +272,7 @@ fn Body(cx: Scope) -> Element {
                 }
                 rect {
                     background: "{theme.body.background}",
-                    radius: "15",
+                    corner_radius: "15",
                     width: "50%",
                     height: "100%",
                     padding: "15",

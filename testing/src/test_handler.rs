@@ -1,3 +1,4 @@
+use accesskit::NodeId as AccessibilityId;
 use dioxus_core::VirtualDom;
 use freya_common::EventMessage;
 use freya_core::prelude::*;
@@ -28,13 +29,14 @@ pub struct TestingHandler {
     pub(crate) events_processor: EventsProcessor,
     pub(crate) font_collection: FontCollection,
     pub(crate) viewports: ViewportsCollection,
+    pub(crate) accessibility_state: SharedAccessibilityState,
 
     pub(crate) config: TestingConfig,
 }
 
 impl TestingHandler {
     /// Init the DOM.
-    pub fn init_dom(&mut self) {
+    pub(crate) fn init_dom(&mut self) {
         self.provide_vdom_contexts();
         let sdom = self.utils.sdom();
         let mut fdom = sdom.get();
@@ -48,7 +50,7 @@ impl TestingHandler {
     }
 
     /// Provide some values to the app
-    pub fn provide_vdom_contexts(&self) {
+    fn provide_vdom_contexts(&self) {
         self.vdom
             .base_scope()
             .provide_context(self.platform_event_emitter.clone());
@@ -68,8 +70,11 @@ impl TestingHandler {
 
             if let Ok(ev) = ev {
                 #[allow(clippy::match_single_binding)]
-                match ev {
-                    _ => {}
+                if let EventMessage::FocusAccessibilityNode(node_id) = ev {
+                    self.accessibility_state
+                        .lock()
+                        .unwrap()
+                        .set_focus(Some(node_id));
                 }
             } else {
                 break;
@@ -150,5 +155,9 @@ impl TestingHandler {
         };
 
         self.utils.get_node_by_id(root_id)
+    }
+
+    pub fn focus_id(&self) -> Option<AccessibilityId> {
+        self.accessibility_state.lock().unwrap().focus_id()
     }
 }

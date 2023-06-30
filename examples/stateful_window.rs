@@ -8,7 +8,7 @@ use freya::prelude::*;
 fn main() {
     launch_cfg(
         app,
-        WindowConfig::builder()
+        LaunchConfig::builder()
             .with_title("Window with state")
             .with_state(10)
             .build(),
@@ -23,7 +23,7 @@ fn app(cx: Scope) -> Element {
         padding: "10",
         width: "100%",
         height: "100%",
-        radius: "50",
+        corner_radius: "50",
         label {
             color: "black",
             "{num}"
