@@ -14,36 +14,39 @@ fn app(cx: Scope) -> Element {
 
     render!(
         rect {
-            color: "white",
-            width: "75%",
+            color: "black",
+            width: "100%",
             height: "100%",
-            background: "black",
-            ScrollView {
-                show_scrollbar: true,
-                width: "100%",
-                height: "75%",
-                paragraph {
+            display: "center",
+            direction: "horizontal",
+            rect {
+                width: "50%",
+                height: "100%",
+                ScrollView {
+                    show_scrollbar: true,
                     width: "100%",
-                    align: "right",
-                    font_family: "Kablammo Zoink",
-                    text {
-                        color: "rgb(240, 50, 100)",
-                        "{loremipsum.repeat(2)}"
-                    }
-                    text {
-                        color: "rgb(25, 160, 200)",
-                        "{loremipsum.repeat(1)}"
+                    height: "75%",
+                    paragraph {
+                        width: "100%",
+                        align: "right",
+                        text {
+                            color: "rgb(240, 50, 100)",
+                            "{loremipsum.repeat(2)}"
+                        }
+                        text {
+                            color: "rgb(25, 160, 200)",
+                            "{loremipsum.repeat(1)}"
+                        }
                     }
                 }
-            }
-            ScrollView {
-                show_scrollbar: true,
-                height: "25%",
-                label {
-                    color: "white",
-                    font_size: "100",
-                    font_family: "Inter",
-                    "Hello World"
+                ScrollView {
+                    show_scrollbar: true,
+                    height: "25%",
+                    label {
+                        font_size: "100",
+                        font_family: "Inter",
+                        "Hello World"
+                    }
                 }
             }
         }

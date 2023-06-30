@@ -25,6 +25,7 @@ async fn fetch_random_dog() -> Option<Url> {
 }
 
 fn app(cx: Scope) -> Element {
+    use_init_theme(cx, DARK_THEME);
     let dog_url = use_state(cx, || None);
 
     let fetch = move || {

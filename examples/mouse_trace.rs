@@ -9,11 +9,7 @@ fn main() {
     launch_cfg(
         app,
         LaunchConfig::<()>::builder()
-            .with_width(1920.0)
-            .with_height(1080.0)
-            .with_decorations(false)
-            .with_transparency(true)
-            .with_title("Rotate")
+            .with_title("Mouse Trace")
             .build(),
     );
 }
