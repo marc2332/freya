@@ -8,7 +8,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use dioxus_utils::use_channel::{use_channel, use_listen_channel};
+use dioxus_std::utils::channel::{use_channel, use_listen_channel};
 use freya::{common::EventMessage, prelude::*};
 use skia_safe::{Color, Data, Paint, Rect, RuntimeEffect};
 use tokio::time::sleep;
@@ -36,7 +36,7 @@ const SHADER: &str = "
 
 fn app(cx: Scope) -> Element {
     let platform = use_platform(cx);
-    let render_channel = use_channel::<()>(cx, 5);
+    let render_channel = use_channel::<()>(cx, 1);
 
     use_listen_channel(cx, &render_channel, move |_| {
         to_owned![platform];
@@ -84,7 +84,7 @@ fn app(cx: Scope) -> Element {
                 &paint,
             );
 
-            render_channel.send(()).unwrap();
+            render_channel.try_send(()).ok();
         })
     });
 
