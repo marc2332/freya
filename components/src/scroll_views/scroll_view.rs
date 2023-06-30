@@ -180,9 +180,8 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
                     size.inner.height,
                     size.area.height(),
                     (*y + match e.key {
-                        Key::PageUp => y_page_delta,
-                        Key::PageDown => -y_page_delta,
-
+                        Key::PageUp => y_line_delta,
+                        Key::PageDown => -y_line_delta,
                         _ => 0,
                     }) as f32,
                 ) as i32
@@ -194,7 +193,6 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
                     (*y + match e.key {
                         Key::ArrowLeft => x_line_delta,
                         Key::ArrowRight => -x_line_delta,
-
                         _ => 0,
                     }) as f32,
                 ) as i32

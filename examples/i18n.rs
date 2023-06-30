@@ -4,8 +4,8 @@
 )]
 
 use dioxus_std::{
-    i18n::{use_i18, Language, use_init_i18n},
-    translate
+    i18n::{use_i18, use_init_i18n, Language},
+    translate,
 };
 use freya::prelude::*;
 use std::str::FromStr;
@@ -54,11 +54,16 @@ fn Body(cx: Scope) -> Element {
 }
 
 fn app(cx: Scope) -> Element {
-    use_init_i18n(cx, "en-US".parse().unwrap(), "en-US".parse().unwrap(), || {
-        let en_us = Language::from_str(EN_US).unwrap();
-        let es_es = Language::from_str(ES_ES).unwrap();
-        vec![en_us, es_es]
-    });
+    use_init_i18n(
+        cx,
+        "en-US".parse().unwrap(),
+        "en-US".parse().unwrap(),
+        || {
+            let en_us = Language::from_str(EN_US).unwrap();
+            let es_es = Language::from_str(ES_ES).unwrap();
+            vec![en_us, es_es]
+        },
+    );
 
     render!(Body {})
 }
