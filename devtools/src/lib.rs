@@ -9,7 +9,7 @@ use freya_components::*;
 use freya_core::node::{get_node_state, NodeState};
 use freya_dom::prelude::SafeDOM;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::{use_init_accessibility, use_init_focus, use_theme};
+use freya_hooks::{use_init_accessibility, use_init_focus, use_init_theme, use_theme, DARK_THEME};
 
 use freya_renderer::HoveredNode;
 use std::sync::Arc;
@@ -77,7 +77,7 @@ fn AppWithDevtools(cx: Scope<AppWithDevtoolsProps>) -> Element {
                 ThemeProvider {
                     DevTools {
                         rdom: cx.props.rdom.clone(),
-                        mutations_notifier: mutations_notifier
+                        mutations_notifier: mutations_notifier,
                         hovered_node: hovered_node
                     }
                 }
@@ -112,6 +112,7 @@ impl PartialEq for DevToolsProps {
 
 #[allow(non_snake_case)]
 pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
+    use_init_theme(cx, DARK_THEME);
     let children = use_state(cx, Vec::<TreeNode>::new);
     let theme = use_theme(cx);
     let theme = theme.read();
