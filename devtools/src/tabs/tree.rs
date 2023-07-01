@@ -34,7 +34,7 @@ pub fn NodesTree<'a>(
                     onselected: |node: &TreeNode| {
                         onselected.call(node);
                         router.replace_route("/elements/style", None, None)
-                    }
+                    },
                     node: node
                 }
             }
