@@ -192,9 +192,9 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
     };
 
     let onkeydown = move |e: KeyboardEvent| {
-        let y_page_delta = inner_size as i32;
+        let y_page_delta = size.area.height() as i32;
         let y_line_delta = y_page_delta / 5;
-        let x_line_delta = (inner_size / 5.0) as i32;
+        let x_line_delta = (size.area.width() / 5.0) as i32;
 
         match e.key {
             Key::ArrowUp | Key::ArrowDown => scrolled_y.with_mut(move |y| {
@@ -221,11 +221,11 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
                     }) as f32,
                 ) as i32
             }),
-            Key::ArrowLeft | Key::ArrowRight => scrolled_y.with_mut(move |y| {
-                *y = get_corrected_scroll_position(
+            Key::ArrowLeft | Key::ArrowRight => scrolled_x.with_mut(move |x| {
+                *x = get_corrected_scroll_position(
                     inner_size,
                     size.area.width(),
-                    (*y + match e.key {
+                    (*x + match e.key {
                         Key::ArrowLeft => x_line_delta,
                         Key::ArrowRight => -x_line_delta,
                         _ => 0,
@@ -239,7 +239,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
             }
             Key::End => {
                 scrolled_y.with_mut(move |y| {
-                    *y -= y_page_delta;
+                    *y = -inner_size as i32;
                 });
             }
             Key::Shift => {

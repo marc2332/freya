@@ -186,11 +186,11 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
                     }) as f32,
                 ) as i32
             }),
-            Key::ArrowLeft | Key::ArrowRight => scrolled_y.with_mut(move |y| {
-                *y = get_corrected_scroll_position(
+            Key::ArrowLeft | Key::ArrowRight => scrolled_x.with_mut(move |x| {
+                *x = get_corrected_scroll_position(
                     size.inner.width,
                     size.area.width(),
-                    (*y + match e.key {
+                    (*x + match e.key {
                         Key::ArrowLeft => x_line_delta,
                         Key::ArrowRight => -x_line_delta,
                         _ => 0,
@@ -204,7 +204,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
             }
             Key::End => {
                 scrolled_y.with_mut(move |y| {
-                    *y -= y_page_delta;
+                    *y = -size.inner.height as i32;
                 });
             }
             Key::Shift => {
