@@ -12,6 +12,10 @@ pub use virtual_scroll_view::*;
 #[doc(hidden)]
 pub const SCROLLBAR_SIZE: u8 = 15;
 
+// Holding alt while scrolling makes it 5x faster (VSCode behavior).
+#[doc(hidden)]
+pub const SCROLL_SPEED_MULTIPLIER: f32 = 5.0;
+
 #[doc(hidden)]
 #[derive(Debug, PartialEq, Eq)]
 pub enum Axis {

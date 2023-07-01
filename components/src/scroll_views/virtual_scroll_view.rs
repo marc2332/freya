@@ -1,13 +1,13 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{keyboard::Key, KeyboardEvent, MouseEvent, WheelEvent};
-use freya_hooks::use_node;
+use freya_hooks::{use_focus, use_node};
 use std::ops::Range;
 
 use crate::{
     get_container_size, get_corrected_scroll_position, get_scroll_position_from_cursor,
     get_scroll_position_from_wheel, get_scrollbar_pos_and_size, is_scrollbar_visible,
-    manage_key_event, Axis, ScrollBar, ScrollThumb, SCROLLBAR_SIZE,
+    manage_key_event, Axis, ScrollBar, ScrollThumb, SCROLLBAR_SIZE, SCROLL_SPEED_MULTIPLIER,
 };
 
 type BuilderFunction<'a, T> = dyn Fn(
@@ -107,6 +107,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
     let scrolled_y = use_ref(cx, || 0);
     let scrolled_x = use_ref(cx, || 0);
     let (node_ref, size) = use_node(cx);
+    let focus = use_focus(cx);
 
     let padding = cx.props.padding.unwrap_or("0");
     let user_container_width = cx.props.width.unwrap_or("100%");
@@ -138,14 +139,17 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
 
     // Moves the Y axis when the user scrolls in the container
     let onwheel = move |e: WheelEvent| {
-        // Holding alt while scrolling makes it 5x faster (VSCode behavior).
-        let speed_multiplier = if *clicking_alt.read() { 5.0 } else { 1.0 };
+        let speed_multiplier = if *clicking_alt.read() {
+            SCROLL_SPEED_MULTIPLIER
+        } else {
+            1.0
+        };
 
         if !*clicking_shift.read() {
-            let wheel_y = e.get_delta_y() * speed_multiplier;
+            let wheel_y = e.get_delta_y() as f32 * speed_multiplier;
 
             let scroll_position_y = get_scroll_position_from_wheel(
-                wheel_y as f32,
+                wheel_y,
                 inner_size,
                 size.area.height(),
                 *scrolled_y.read() as f32,
@@ -155,24 +159,28 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
         }
 
         let wheel_x = if *clicking_shift.read() {
-            e.get_delta_y()
+            e.get_delta_y() as f32
         } else {
-            e.get_delta_x()
+            e.get_delta_x() as f32
         } * speed_multiplier;
 
         let scroll_position_x = get_scroll_position_from_wheel(
-            wheel_x as f32,
+            wheel_x,
             inner_size,
             size.area.width(),
             *scrolled_x.read() as f32,
         );
 
         scrolled_x.with_mut(|x| *x = scroll_position_x);
+
+        focus.focus();
     };
 
     // Drag the scrollbars
     let onmouseover = move |e: MouseEvent| {
-        if let Some((Axis::Y, y)) = *clicking_scrollbar.read() {
+        let clicking_scrollbar = clicking_scrollbar.read();
+
+        if let Some((Axis::Y, y)) = *clicking_scrollbar {
             let coordinates = e.get_element_coordinates();
             let cursor_y = coordinates.y - y - size.area.min_y() as f64;
 
@@ -180,7 +188,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
                 get_scroll_position_from_cursor(cursor_y as f32, inner_size, size.area.height());
 
             scrolled_y.with_mut(|y| *y = scroll_position);
-        } else if let Some((Axis::X, x)) = *clicking_scrollbar.read() {
+        } else if let Some((Axis::X, x)) = *clicking_scrollbar {
             let coordinates = e.get_element_coordinates();
             let cursor_x = coordinates.x - x - size.area.min_x() as f64;
 
@@ -189,9 +197,17 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
 
             scrolled_x.with_mut(|x| *x = scroll_position);
         }
+
+        if clicking_scrollbar.is_some() {
+            focus.focus();
+        }
     };
 
     let onkeydown = move |e: KeyboardEvent| {
+        if !focus.is_focused() {
+            return;
+        }
+
         match e.key {
             Key::Shift => {
                 clicking_shift.set(true);
