@@ -1,5 +1,8 @@
+use std::sync::Arc;
+
 use freya_node_state::Parse;
 use skia_safe::Color;
+use winit::window::Window;
 
 /// Configuration for a Window.
 #[derive(Clone)]
@@ -18,6 +21,10 @@ pub struct WindowConfig<T: Clone> {
     pub state: Option<T>,
     /// Background color of the Window.
     pub background: Color,
+    /// Setup callback.
+    pub on_setup: Option<Arc<Box<fn(&mut Window)>>>,
+    /// Exit callback.
+    pub on_exit: Option<Arc<Box<fn(&mut Window)>>>,
 }
 
 impl<T: Clone> Default for WindowConfig<T> {
@@ -30,6 +37,8 @@ impl<T: Clone> Default for WindowConfig<T> {
             transparent: false,
             state: None,
             background: Color::WHITE,
+            on_setup: None,
+            on_exit: None,
         }
     }
 }
@@ -58,6 +67,8 @@ pub struct LaunchConfigBuilder<'a, T> {
     pub state: Option<T>,
     pub background: Color,
     pub fonts: Vec<(&'a str, &'a [u8])>,
+    pub on_setup: Option<Arc<Box<fn(&mut Window)>>>,
+    pub on_exit: Option<Arc<Box<fn(&mut Window)>>>,
 }
 
 impl<T> Default for LaunchConfigBuilder<'_, T> {
@@ -71,6 +82,8 @@ impl<T> Default for LaunchConfigBuilder<'_, T> {
             state: None,
             background: Color::WHITE,
             fonts: Vec::default(),
+            on_setup: None,
+            on_exit: None,
         }
     }
 }
@@ -124,6 +137,18 @@ impl<'a, T: Clone> LaunchConfigBuilder<'a, T> {
         self
     }
 
+    /// Register a callback that will be executed when the window is created.
+    pub fn on_setup(mut self, callback: fn(&mut Window)) -> Self {
+        self.on_setup = Some(Arc::new(Box::new(callback)));
+        self
+    }
+
+    /// Register a callback that will be executed when the window is closed.
+    pub fn on_exit(mut self, callback: fn(&mut Window)) -> Self {
+        self.on_exit = Some(Arc::new(Box::new(callback)));
+        self
+    }
+
     /// Build the configuration.
     pub fn build(self) -> LaunchConfig<'a, T> {
         LaunchConfig {
@@ -135,6 +160,8 @@ impl<'a, T: Clone> LaunchConfigBuilder<'a, T> {
                 transparent: self.transparent,
                 state: self.state,
                 background: self.background,
+                on_setup: self.on_setup,
+                on_exit: self.on_exit,
             },
             fonts: self.fonts,
         }

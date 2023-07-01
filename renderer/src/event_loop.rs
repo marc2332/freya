@@ -28,6 +28,10 @@ pub fn run_event_loop<State: Clone>(
     let mut last_code = Code::Unidentified;
     let mut modifiers_state = ModifiersState::empty();
 
+    let window_env = app.window_env();
+
+    window_env.run_on_setup();
+
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Wait;
         match event {
@@ -241,7 +245,9 @@ pub fn run_event_loop<State: Clone>(
                     _ => {}
                 }
             }
-            Event::LoopDestroyed => {}
+            Event::LoopDestroyed => {
+                app.window_env().run_on_exit();
+            }
             _ => (),
         }
     });
