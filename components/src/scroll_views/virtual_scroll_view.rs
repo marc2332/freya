@@ -6,8 +6,8 @@ use std::ops::Range;
 
 use crate::{
     get_container_size, get_corrected_scroll_position, get_scroll_position_from_cursor,
-    get_scroll_position_from_wheel, get_scrollbar_pos_and_size, is_scrollbar_visible, Axis,
-    ScrollBar, ScrollThumb, SCROLLBAR_SIZE,
+    get_scroll_position_from_wheel, get_scrollbar_pos_and_size, is_scrollbar_visible,
+    manage_key_event, Axis, ScrollBar, ScrollThumb, SCROLLBAR_SIZE,
 };
 
 type BuilderFunction<'a, T> = dyn Fn(
@@ -192,63 +192,33 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
     };
 
     let onkeydown = move |e: KeyboardEvent| {
-        let y_page_delta = size.area.height() as i32;
-        let y_line_delta = y_page_delta / 5;
-        let x_line_delta = (size.area.width() / 5.0) as i32;
-
         match e.key {
-            Key::ArrowUp | Key::ArrowDown => scrolled_y.with_mut(move |y| {
-                *y = get_corrected_scroll_position(
-                    inner_size,
-                    size.area.height(),
-                    (*y + match e.key {
-                        Key::ArrowUp => y_line_delta,
-                        Key::ArrowDown => -y_line_delta,
-
-                        _ => 0,
-                    }) as f32,
-                ) as i32
-            }),
-            // TODO(tropix126): Handle spacebar and spacebar + shift as Home and End
-            Key::PageUp | Key::PageDown => scrolled_y.with_mut(move |y| {
-                *y = get_corrected_scroll_position(
-                    inner_size,
-                    size.area.height(),
-                    (*y + match e.key {
-                        Key::PageUp => y_line_delta,
-                        Key::PageDown => -y_line_delta,
-                        _ => 0,
-                    }) as f32,
-                ) as i32
-            }),
-            Key::ArrowLeft | Key::ArrowRight => scrolled_x.with_mut(move |x| {
-                *x = get_corrected_scroll_position(
-                    inner_size,
-                    size.area.width(),
-                    (*x + match e.key {
-                        Key::ArrowLeft => x_line_delta,
-                        Key::ArrowRight => -x_line_delta,
-                        _ => 0,
-                    }) as f32,
-                ) as i32
-            }),
-            Key::Home => {
-                scrolled_y.with_mut(move |y| {
-                    *y = 0;
-                });
-            }
-            Key::End => {
-                scrolled_y.with_mut(move |y| {
-                    *y = -inner_size as i32;
-                });
-            }
             Key::Shift => {
                 clicking_shift.set(true);
             }
             Key::Alt => {
                 clicking_alt.set(true);
             }
-            _ => {}
+            _ => {
+                let x = *scrolled_x.read() as f32;
+                let y = *scrolled_y.read() as f32;
+                let inner_height = inner_size;
+                let inner_width = inner_size;
+                let viewport_height = size.area.height();
+                let viewport_width = size.area.width();
+
+                let (x, y) = manage_key_event(
+                    e,
+                    (x, y),
+                    inner_height,
+                    inner_width,
+                    viewport_height,
+                    viewport_width,
+                );
+
+                scrolled_x.set(x as i32);
+                scrolled_y.set(y as i32);
+            }
         };
     };
 

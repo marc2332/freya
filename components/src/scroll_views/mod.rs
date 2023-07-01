@@ -3,6 +3,7 @@ mod scroll_thumb;
 mod scroll_view;
 mod virtual_scroll_view;
 
+use freya_elements::events::{keyboard::Key, KeyboardEvent};
 pub use scroll_bar::*;
 pub use scroll_thumb::*;
 pub use scroll_view::*;
@@ -127,4 +128,50 @@ pub fn get_corrected_scroll_position(
     } else {
         scroll_position
     }
+}
+
+pub fn manage_key_event(
+    e: KeyboardEvent,
+    (mut x, mut y): (f32, f32),
+    inner_height: f32,
+    inner_width: f32,
+    viewport_height: f32,
+    viewport_width: f32,
+) -> (f32, f32) {
+    let y_page_delta = viewport_height;
+    let y_line_delta = y_page_delta / 5.0;
+    let x_page_delta = viewport_width;
+    let x_line_delta = x_page_delta / 5.0;
+
+    // TODO(tropix126): Handle spacebar and spacebar + shift as Home and End
+
+    match e.key {
+        Key::ArrowUp => {
+            y = get_corrected_scroll_position(inner_height, viewport_height, y + y_line_delta)
+        }
+        Key::ArrowDown => {
+            y = get_corrected_scroll_position(inner_height, viewport_height, y - y_line_delta)
+        }
+        Key::PageUp => {
+            y = get_corrected_scroll_position(inner_height, viewport_height, y + y_line_delta)
+        }
+        Key::PageDown => {
+            y = get_corrected_scroll_position(inner_height, viewport_height, y - y_line_delta)
+        }
+        Key::ArrowLeft => {
+            x = get_corrected_scroll_position(inner_width, viewport_width, x + x_line_delta)
+        }
+        Key::ArrowRight => {
+            x = get_corrected_scroll_position(inner_width, viewport_width, x - x_line_delta)
+        }
+        Key::Home => {
+            y = 0.0;
+        }
+        Key::End => {
+            y = -inner_height;
+        }
+        _ => {}
+    };
+
+    (x, y)
 }
