@@ -57,9 +57,9 @@ fn app(cx: Scope) -> Element {
             height: "100%",
             cursor_reference: cursor_attr,
             ScrollView {
-                show_scrollbar: true,
                 height: "calc(100% - 30)",
                 width: "100%",
+                scroll_with_arrows: false,
                 paragraph {
                     width: "100%",
                     cursor_id: "0",

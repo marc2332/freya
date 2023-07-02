@@ -28,7 +28,7 @@ fn app(cx: Scope) -> Element {
                     }
                     ScrollView {
                         height: "200",
-                        padding: "20",
+                        padding: "0 20",
                         Card {
                             title: "Lalala",
                             content: "Wooow",
@@ -37,33 +37,13 @@ fn app(cx: Scope) -> Element {
                             title: "Lalala",
                             content: "Wooow",
                         }
-                        ScrollView {
-                            height: "200",
-                            padding: "20",
-                            Card {
-                                title: "Lalala",
-                                content: "Wooow",
-                            }
-                            Card {
-                                title: "Lalala",
-                                content: "Wooow",
-                            }
-                            ScrollView {
-                                height: "200",
-                                padding: "20",
-                                Card {
-                                    title: "Lalala",
-                                    content: "Wooow",
-                                }
-                                Card {
-                                    title: "Lalala",
-                                    content: "Wooow",
-                                }
-                                Card {
-                                    title: "Lalala",
-                                    content: "Wooow",
-                                }
-                            }
+                        Card {
+                            title: "Lalala",
+                            content: "Wooow",
+                        }
+                        Card {
+                            title: "Lalala",
+                            content: "Wooow",
                         }
                     }
                     Card {

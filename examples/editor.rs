@@ -180,7 +180,7 @@ fn Body(cx: Scope) -> Element {
                     ScrollView {
                         width: "100%",
                         height: "100%",
-                        show_scrollbar: true,
+                        scroll_with_arrows: false,
                         editor.lines().map(move |l| {
 
                             let is_line_selected = cursor.row() == line_index;

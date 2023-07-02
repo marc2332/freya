@@ -32,20 +32,23 @@ pub struct VirtualScrollViewProps<'a, T: 'a> {
     #[props(optional)]
     pub builder_values: Option<T>,
     /// Direction of the VirtualScrollView, `vertical` or `horizontal`.
-    #[props(optional)]
-    pub direction: Option<&'a str>,
+    #[props(default = "vertical".to_string(), into)]
+    pub direction: String,
     /// Height of the VirtualScrollView.
-    #[props(optional)]
-    pub height: Option<&'a str>,
+    #[props(default = "100%".to_string(), into)]
+    pub height: String,
     /// Width of the VirtualScrollView.
-    #[props(optional)]
-    pub width: Option<&'a str>,
+    #[props(default = "100%".to_string(), into)]
+    pub width: String,
     /// Padding of the VirtualScrollView.
-    #[props(optional)]
-    pub padding: Option<&'a str>,
-    /// Show the scrollbar, by default is hidden.
-    #[props(optional)]
-    pub show_scrollbar: Option<bool>,
+    #[props(default = "0".to_string(), into)]
+    pub padding: String,
+    /// Show the scrollbar, visible by default.
+    #[props(default = true, into)]
+    pub show_scrollbar: bool,
+    /// Enable scrolling with arrow keys.
+    #[props(default = true, into)]
+    pub scroll_with_arrows: bool,
 }
 
 fn get_render_range(
@@ -67,7 +70,7 @@ fn get_render_range(
     render_index_start as usize..(render_index_end as usize)
 }
 
-/// Virtual `Scrollable` container.
+/// `VirtualScrollView` component.
 ///
 /// # Props
 /// See [`VirtualScrollViewProps`](VirtualScrollViewProps).
@@ -109,13 +112,14 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
     let (node_ref, size) = use_node(cx);
     let focus = use_focus(cx);
 
-    let padding = cx.props.padding.unwrap_or("0");
-    let user_container_width = cx.props.width.unwrap_or("100%");
-    let user_container_height = cx.props.height.unwrap_or("100%");
-    let user_direction = cx.props.direction.unwrap_or("vertical");
-    let show_scrollbar = cx.props.show_scrollbar.unwrap_or_default();
+    let padding = &cx.props.padding;
+    let user_container_width = &cx.props.width;
+    let user_container_height = &cx.props.height;
+    let user_direction = &cx.props.direction;
+    let show_scrollbar = cx.props.show_scrollbar;
     let items_length = cx.props.length;
     let items_size = cx.props.item_size;
+    let scroll_with_arrows = cx.props.scroll_with_arrows;
 
     let inner_size = items_size + (items_size * items_length as f32);
 
@@ -152,7 +156,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
                 wheel_y,
                 inner_size,
                 size.area.height(),
-                *scrolled_y.read() as f32,
+                corrected_scrolled_y,
             );
 
             scrolled_y.with_mut(|y| *y = scroll_position_y);
@@ -168,7 +172,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
             wheel_x,
             inner_size,
             size.area.width(),
-            *scrolled_x.read() as f32,
+            corrected_scrolled_x,
         );
 
         scrolled_x.with_mut(|x| *x = scroll_position_x);
@@ -208,16 +212,25 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
             return;
         }
 
-        match e.key {
+        match &e.key {
             Key::Shift => {
                 clicking_shift.set(true);
             }
             Key::Alt => {
                 clicking_alt.set(true);
             }
-            _ => {
-                let x = *scrolled_x.read() as f32;
-                let y = *scrolled_y.read() as f32;
+            k => {
+                if !scroll_with_arrows
+                    && (k == &Key::ArrowUp
+                        || k == &Key::ArrowRight
+                        || k == &Key::ArrowDown
+                        || k == &Key::ArrowLeft)
+                {
+                    return;
+                }
+
+                let x = corrected_scrolled_x;
+                let y = corrected_scrolled_y;
                 let inner_height = inner_size;
                 let inner_width = inner_size;
                 let viewport_height = size.area.height();

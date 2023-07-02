@@ -12,26 +12,29 @@ use crate::{
 /// [`ScrollView`] component properties.
 #[derive(Props)]
 pub struct ScrollViewProps<'a> {
-    /// Direction of the ScrollView, `vertical` or `horizontal`.
-    #[props(optional)]
-    pub direction: Option<&'a str>,
     /// Inner children for the ScrollView.
     pub children: Element<'a>,
+    /// Direction of the ScrollView, `vertical` or `horizontal`.
+    #[props(default = "vertical".to_string(), into)]
+    pub direction: String,
     /// Height of the ScrollView.
-    #[props(optional)]
-    pub height: Option<&'a str>,
+    #[props(default = "100%".to_string(), into)]
+    pub height: String,
     /// Width of the ScrollView.
-    #[props(optional)]
-    pub width: Option<&'a str>,
+    #[props(default = "100%".to_string(), into)]
+    pub width: String,
     /// Padding of the ScrollView.
-    #[props(optional)]
-    pub padding: Option<&'a str>,
-    /// Show the scrollbar, by default is hidden.
-    #[props(optional)]
-    pub show_scrollbar: Option<bool>,
+    #[props(default = "0".to_string(), into)]
+    pub padding: String,
+    /// Show the scrollbar, visible by default.
+    #[props(default = true, into)]
+    pub show_scrollbar: bool,
+    /// Enable scrolling with arrow keys.
+    #[props(default = true, into)]
+    pub scroll_with_arrows: bool,
 }
 
-/// `Scrollable` container.
+/// `ScrollView` component.
 ///
 /// # Props
 /// See [`ScrollViewProps`](ScrollViewProps).
@@ -66,11 +69,12 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     let (node_ref, size) = use_node(cx);
     let focus = use_focus(cx);
 
-    let padding = cx.props.padding.unwrap_or("0");
-    let user_container_width = cx.props.width.unwrap_or("100%");
-    let user_container_height = cx.props.height.unwrap_or("100%");
-    let user_direction = cx.props.direction.unwrap_or("vertical");
-    let show_scrollbar = cx.props.show_scrollbar.unwrap_or_default();
+    let padding = &cx.props.padding;
+    let user_container_width = &cx.props.width;
+    let user_container_height = &cx.props.height;
+    let user_direction = &cx.props.direction;
+    let show_scrollbar = cx.props.show_scrollbar;
+    let scroll_with_arrows = cx.props.scroll_with_arrows;
 
     let vertical_scrollbar_is_visible =
         is_scrollbar_visible(show_scrollbar, size.inner.height, size.area.height());
@@ -111,7 +115,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
                 wheel_y,
                 size.inner.height,
                 size.area.height(),
-                *scrolled_y.read() as f32,
+                corrected_scrolled_y,
             );
 
             scrolled_y.with_mut(|y| *y = scroll_position_y);
@@ -127,7 +131,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
             wheel_x,
             size.inner.width,
             size.area.width(),
-            *scrolled_x.read() as f32,
+            corrected_scrolled_x,
         );
 
         scrolled_x.with_mut(|x| *x = scroll_position_x);
@@ -173,16 +177,25 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
             return;
         }
 
-        match e.key {
+        match &e.key {
             Key::Shift => {
                 clicking_shift.set(true);
             }
             Key::Alt => {
                 clicking_alt.set(true);
             }
-            _ => {
-                let x = *scrolled_x.read() as f32;
-                let y = *scrolled_y.read() as f32;
+            k => {
+                if !scroll_with_arrows
+                    && (k == &Key::ArrowUp
+                        || k == &Key::ArrowRight
+                        || k == &Key::ArrowDown
+                        || k == &Key::ArrowLeft)
+                {
+                    return;
+                }
+
+                let x = corrected_scrolled_x;
+                let y = corrected_scrolled_y;
                 let inner_height = size.inner.height;
                 let inner_width = size.inner.width;
                 let viewport_height = size.area.height();
