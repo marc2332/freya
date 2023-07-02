@@ -4,9 +4,7 @@ use dioxus_native_core::NodeId;
 use freya_dom::prelude::FreyaDOM;
 use freya_layout::Layers;
 
-use freya_node_state::{Fill, Style};
 use rustc_hash::FxHashMap;
-use skia_safe::Color;
 
 pub use crate::dom_events::DomEvent;
 pub use crate::events_processor::EventsProcessor;
@@ -123,26 +121,6 @@ fn get_derivated_events(event_name: &str) -> Vec<&str> {
     }
 }
 
-const STACKED_EVENTS: [&str; 13] = [
-    "mouseover",
-    "mouseenter",
-    "mouseleave",
-    "click",
-    "keydown",
-    "keyup",
-    "touchcancel",
-    "touchend",
-    "touchmove",
-    "touchstart",
-    "pointerover",
-    "pointerenter",
-    "pointerleave",
-];
-
-const FIRST_CAPTURED_EVENTS: [&str; 1] = ["wheel"];
-
-const LAST_CAPTURED_EVENTS: [&str; 3] = ["click", "touchstart", "touchend"];
-
 /// Measure what DOM events could be emited
 fn measure_dom_events(
     potential_events: &mut NodesEvents,
@@ -155,43 +133,22 @@ fn measure_dom_events(
     for (event_name, event_nodes) in potential_events.iter_mut() {
         let derivated_events = get_derivated_events(event_name.as_str());
 
-        let mut found_nodes: Vec<(&NodeId, FreyaEvent)> = Vec::new();
+        let mut found_node: Option<(&NodeId, FreyaEvent)> = None;
         for derivated_event_name in derivated_events {
             let listeners = rdom.get_listening_sorted(derivated_event_name);
-            'event_nodes: for (node_id, request) in event_nodes.iter() {
+            for (node_id, request) in event_nodes.iter() {
                 for listener in &listeners {
                     if listener.id() == *node_id {
-                        let Style { background, .. } = &*listener.get::<Style>().unwrap();
-
                         let mut request = request.clone();
                         request.set_name(derivated_event_name.to_string());
 
-                        // Stop searching on first match
-                        if background != &Fill::Color(Color::TRANSPARENT)
-                            && FIRST_CAPTURED_EVENTS.contains(&derivated_event_name)
-                        {
-                            break 'event_nodes;
-                        }
-
-                        // Only keep the last matched event
-                        if background != &Fill::Color(Color::TRANSPARENT)
-                            && LAST_CAPTURED_EVENTS.contains(&derivated_event_name)
-                        {
-                            found_nodes.clear();
-                        }
-
-                        // Stack the matched events
-                        if STACKED_EVENTS.contains(&derivated_event_name) {
-                            found_nodes.push((node_id, request))
-                        } else {
-                            found_nodes = vec![(node_id, request)]
-                        }
+                        found_node = Some((node_id, request));
                     }
                 }
             }
         }
 
-        for (node_id, request_event) in found_nodes {
+        if let Some((node_id, request_event)) = found_node {
             let areas = fdom.layout().get(*node_id).cloned();
             if let Some(areas) = areas {
                 let node_ref = fdom.rdom().get(*node_id).unwrap();
