@@ -277,6 +277,22 @@ impl<T: Clone> WindowEnv<T> {
             NonZeroU32::new(height.max(1)).unwrap(),
         );
     }
+
+    /// Run the `on_setup` callback that was passed to the launch function
+    pub fn run_on_setup(&mut self) {
+        let on_setup = self.window_config.on_setup.clone();
+        if let Some(on_setup) = on_setup {
+            (on_setup)(self.window())
+        }
+    }
+
+    /// Run the `on_exit` callback that was passed to the launch function
+    pub fn run_on_exit(&mut self) {
+        let on_exit = self.window_config.on_exit.clone();
+        if let Some(on_exit) = on_exit {
+            (on_exit)(self.window())
+        }
+    }
 }
 
 /// Create the surface for Skia to render in
