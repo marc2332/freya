@@ -77,7 +77,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
         to_owned![editable];
         move |(text,)| {
             editable.editor().with_mut(|editor| {
-                editor.set(&text);
+                editor.set_text(&text);
             });
             async move {}
         }
