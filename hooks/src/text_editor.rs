@@ -188,7 +188,7 @@ pub trait TextEditor: Sized + Clone + Display {
                 
                 if col < current_line.len_chars() {
                     self.cursor_mut().set_col(col + 1);
-                } else if row < self.len_lines() - 1 {
+                } else if row < self.len_lines() {
                     let cursor = self.cursor_mut();
 
                     cursor.set_row(row + 1);
@@ -314,7 +314,7 @@ pub trait TextEditor: Sized + Clone + Display {
                 event = TextEvent::TextChanged;
             },
             Key::PageUp => {
-                todo!!();
+                todo!();
             },
             Key::PageDown => {
                 todo!();
