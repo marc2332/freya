@@ -242,6 +242,11 @@ pub fn run_event_loop<State: Clone>(
                     WindowEvent::Resized(size) => {
                         app.resize(size);
                     }
+                    WindowEvent::ScaleFactorChanged { scale_factor, new_inner_size } => {
+                        app.window_env().surface.canvas().scale((scale_factor as f32, scale_factor as f32));
+                        app.resize(*new_inner_size);
+                        println!("{:?} - {:?}", new_inner_size, scale_factor);
+                    }
                     _ => {}
                 }
             }

@@ -40,7 +40,7 @@ use crate::HoveredNode;
 
 /// Manager for a Window
 pub struct WindowEnv<T: Clone> {
-    surface: Surface,
+    pub(crate) surface: Surface,
     gl_surface: GlutinSurface<WindowSurface>,
     gr_context: skia_safe::gpu::DirectContext,
     gl_context: PossiblyCurrentContext,
