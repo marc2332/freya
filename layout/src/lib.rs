@@ -7,7 +7,7 @@ use dioxus_native_core::{
 };
 use freya_common::CursorLayoutResponse;
 use freya_dom::prelude::{DioxusDOM, DioxusNode};
-use freya_node_state::{CursorReference, CursorSettings, FontStyle, References};
+use freya_node_state::{TextOverflow, CursorReference, CursorSettings, FontStyle, References};
 
 pub use layers::*;
 use skia_safe::textlayout::{
@@ -133,6 +133,10 @@ pub fn create_paragraph(
     paragraph_style.set_text_align(font_style.align);
     paragraph_style.set_max_lines(font_style.max_lines);
     paragraph_style.set_replace_tab_characters(true);
+
+    if font_style.text_overflow == TextOverflow::Ellipsis {
+        paragraph_style.set_ellipsis("…");
+    }
 
     let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
 

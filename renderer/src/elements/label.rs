@@ -2,7 +2,7 @@ use dioxus_native_core::node::NodeType;
 use dioxus_native_core::prelude::TextNode;
 use dioxus_native_core::real_dom::NodeImmutable;
 use freya_dom::prelude::DioxusNode;
-use freya_node_state::FontStyle;
+use freya_node_state::{FontStyle, TextOverflow};
 use skia_safe::{
     textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle},
     Canvas,
@@ -37,7 +37,12 @@ pub fn render_label(
 
         let mut paragraph_style = ParagraphStyle::default();
         paragraph_style.set_text_align(node_font_style.align);
+        paragraph_style.set_max_lines(node_font_style.max_lines);
         paragraph_style.set_text_style(&node_font_style.into());
+
+        if node_font_style.text_overflow == TextOverflow::Ellipsis {
+            paragraph_style.set_ellipsis("…");
+        }
 
         let mut paragraph_builder =
             ParagraphBuilder::new(&paragraph_style, font_collection.clone());

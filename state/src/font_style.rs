@@ -123,6 +123,7 @@ impl State<CustomAttributeValues> for FontStyle {
             "decoration",
             "decoration_color",
             "decoration_style",
+            "text_overflow",
         ]));
 
     fn update<'a>(

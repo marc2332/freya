@@ -209,6 +209,7 @@ builder_constructors! {
         decoration_style: String,
         decoration_color: String,
         focusable: String,
+        text_overflow: String,
     };
     paragraph {
         layer: String,
@@ -239,6 +240,7 @@ builder_constructors! {
         decoration: String,
         decoration_style: String,
         decoration_color: String,
+        text_overflow: String,
         focusable: String,
     };
     text {
