@@ -2,21 +2,22 @@
 
 Learn how the font style attributes work.
 
-- [`color`](#color)
-- [`font_family`](#font_family)
-- [`font_size`](#font_size)
-- [`align`](#align)
-- [`font_style`](#font_style)
-- [`font_weight`](#font_weight)
-- [`font_width`](#font_width)
-- [`line_height`](#line_height)
-- [`max_lines`](#max_lines)
-- [`letter_spacing`](#letter_spacing)
-- [`word_spacing`](#word_spacing)
-- [`decoration`](#decoration)
-- [`decoration_style`](#decoration_style)
-- [`decoration_color`](#decoration_color)
-- [`text_shadow`](#text_shadow)
+- [Font Style](#font-style)
+    - [color](#color)
+    - [font\_family](#font_family)
+    - [font\_size](#font_size)
+    - [align](#align)
+    - [font\_style](#font_style)
+    - [font\_weight](#font_weight)
+    - [font\_width](#font_width)
+    - [line\_height](#line_height)
+    - [letter\_spacing](#letter_spacing)
+    - [word\_spacing](#word_spacing)
+    - [decoration](#decoration)
+    - [decoration\_style](#decoration_style)
+    - [decoration\_color](#decoration_color)
+    - [text\_shadow](#text_shadow)
+    - [text\_overflow](#text_overflow)
 
 
 ### color
@@ -356,6 +357,31 @@ fn app(cx: Scope) -> Element {
         label {
             text_shadow: "0 18 12 rgb(0, 0, 0)",
             "Hello, World!"
+        }
+    )
+}
+```
+
+Compatible elements: [`text`](/guides/elements.html#paragraph-and-text), [`label`](/guides/elements.html#label).
+
+### text_overflow
+
+Determines how text is treated when it exceeds its `max_lines` count. The `ellipsis` overflow mode will cut off the text and add a trailing "…" character, while the `clip` mode will simply cut the text off.
+
+Accepted values:
+- `ellipsis` (default)
+- `clip`
+
+Example:
+
+```rust, no_run
+fn app(cx: Scope) -> Element {
+    render!(
+        label {
+            max_lines: "3",
+            text_overflow: "clip",
+
+            "Looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong text"
         }
     )
 }
