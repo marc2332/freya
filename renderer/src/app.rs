@@ -296,8 +296,13 @@ impl<State: 'static + Clone> App<State> {
     }
 
     pub fn measure_text_group(&self, text_id: &Uuid) {
-        self.layers
-            .measure_paragraph_elements(text_id, &self.sdom.get(), &self.font_collection);
+        let scale_factor = self.window_env.window.scale_factor() as f32;
+        self.layers.measure_paragraph_elements(
+            text_id,
+            &self.sdom.get(),
+            &self.font_collection,
+            scale_factor,
+        );
     }
 
     pub fn window_env(&mut self) -> &mut WindowEnv<State> {

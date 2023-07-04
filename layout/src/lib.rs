@@ -1,5 +1,7 @@
 mod layers;
 
+use std::ops::Mul;
+
 use dioxus_native_core::{
     prelude::{ElementNode, NodeType, TextNode},
     real_dom::NodeImmutable,
@@ -160,8 +162,10 @@ fn measure_paragraph(
     node_area: &Area,
     font_collection: &FontCollection,
     is_editable: bool,
+    scale_factor: f32,
 ) -> Paragraph {
     let paragraph = create_paragraph(node, node_area, font_collection, false);
+    let scale_factors = scale_factor as f64;
 
     if is_editable {
         if let Some((cursor_ref, id, cursor_position, cursor_selections)) =
@@ -169,8 +173,9 @@ fn measure_paragraph(
         {
             if let Some(cursor_position) = cursor_position {
                 // Calculate the new cursor position
-                let char_position =
-                    paragraph.get_glyph_position_at_coordinate(cursor_position.to_i32().to_tuple());
+                let char_position = paragraph.get_glyph_position_at_coordinate(
+                    cursor_position.mul(scale_factors).to_i32().to_tuple(),
+                );
 
                 // Notify the cursor reference listener
                 cursor_ref
@@ -184,11 +189,12 @@ fn measure_paragraph(
 
             if let Some((origin, dist)) = cursor_selections {
                 // Calculate the start of the highlighting
-                let origin_char =
-                    paragraph.get_glyph_position_at_coordinate(origin.to_i32().to_tuple());
+                let origin_char = paragraph.get_glyph_position_at_coordinate(
+                    origin.mul(scale_factors).to_i32().to_tuple(),
+                );
                 // Calculate the end of the highlighting
-                let dist_char =
-                    paragraph.get_glyph_position_at_coordinate(dist.to_i32().to_tuple());
+                let dist_char = paragraph
+                    .get_glyph_position_at_coordinate(dist.mul(scale_factors).to_i32().to_tuple());
 
                 cursor_ref
                     .agent
