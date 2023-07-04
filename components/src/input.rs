@@ -148,7 +148,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
                     padding: "8",
                     cursor_reference: cursor_attr,
                     ScrollView {
-                        show_scrollbar: true,
+                        scroll_with_arrows: false,
                         paragraph {
                             width: "100%",
                             cursor_id: "0",

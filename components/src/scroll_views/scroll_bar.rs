@@ -26,6 +26,7 @@ pub fn ScrollBar<'a>(cx: Scope<'a, ScrollBarProps<'a>>) -> Element<'a> {
     render!(
         rect {
             overflow: "clip",
+            role: "scrollBar",
             width: "{cx.props.width}",
             height: "{cx.props.height}",
             offset_x: "{cx.props.offset_x}",
