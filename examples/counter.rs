@@ -14,24 +14,25 @@ fn app(cx: Scope) -> Element {
 
     render!(
         rect {
-            height: "20%",
+            height: "100%",
             width: "100%",
-            background: "rgb(233, 196, 106)",
-            padding: "12",
-            color: "rgb(20, 33, 61)",
-            label {
-                font_size: "20",
-                "Number is: {count}"
-            }
-        }
-        rect {
-            height: "80%",
-            width: "100%",
-            background: "rgb(168, 218, 220)",
-            color: "black",
+            background: "black",
+            color: "white",
             padding: "12",
             onclick: move |_| count += 1,
-            label { "Click to increase!" }
+
+            text {
+                "Hello ",
+                text {
+                    font_weight: "bold",
+                    color: "red",
+                    "World!",
+                    text {
+                        color: "green",
+                        " Wow."
+                    }
+                }
+            }
         }
     )
 }

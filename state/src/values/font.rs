@@ -100,3 +100,25 @@ impl Parse for Weight {
         })
     }
 }
+
+#[derive(Default, Clone, Debug, PartialEq)]
+pub enum TextOverflow {
+    #[default]
+    Ellipsis,
+    Clip,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct ParseTextOverflowError;
+
+impl Parse for TextOverflow {
+    type Err = ParseTextOverflowError;
+
+    fn parse(value: &str) -> Result<Self, Self::Err> {
+        Ok(match value {
+            "ellipsis" => TextOverflow::Ellipsis,
+            "clip" => TextOverflow::Clip,
+            _ => Default::default(),
+        })
+    }
+}
