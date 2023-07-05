@@ -61,10 +61,10 @@ fn Body(cx: Scope) -> Element {
             VirtualScrollView {
                 width: "50%",
                 height: "100%",
-                show_scrollbar: true,
                 length: editor.len_lines(),
                 item_size: 35.0,
                 builder_values: editable.clone(),
+                scroll_with_arrows: false,
                 builder: Box::new(move |(key, line_index, cx, values)| {
                     let editable = values.as_ref().unwrap();
                     let editor = editable.editor();
@@ -144,10 +144,10 @@ fn Body(cx: Scope) -> Element {
             VirtualScrollView {
                 width: "50%",
                 height: "100%",
-                show_scrollbar: true,
                 length: editor.len_lines(),
                 item_size: 35.0,
                 builder_values: editable.clone(),
+                scroll_with_arrows: false,
                 builder: Box::new(move |(key, line_index, cx, values)| {
                     let editable = values.as_ref().unwrap();
                     let editor = editable.editor();

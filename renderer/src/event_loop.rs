@@ -15,7 +15,10 @@ use winit::event_loop::{ControlFlow, EventLoop, EventLoopProxy};
 use crate::app::App;
 use crate::HoveredNode;
 
-const SPEED_MODIFIER: f32 = 53.0;
+// https://github.com/emilk/egui/issues/461
+// https://github.com/rust-windowing/winit/issues/22
+// https://github.com/flutter/flutter/issues/71385
+const WHEEL_SPEED_MODIFIER: f32 = 53.0;
 
 pub fn run_event_loop<State: Clone>(
     mut app: App<State>,
@@ -102,9 +105,10 @@ pub fn run_event_loop<State: Clone>(
                         if TouchPhase::Moved == phase {
                             let scroll_data = {
                                 match delta {
-                                    MouseScrollDelta::LineDelta(x, y) => {
-                                        ((x * SPEED_MODIFIER) as f64, (y * SPEED_MODIFIER) as f64)
-                                    }
+                                    MouseScrollDelta::LineDelta(x, y) => (
+                                        (x * WHEEL_SPEED_MODIFIER) as f64,
+                                        (y * WHEEL_SPEED_MODIFIER) as f64,
+                                    ),
                                     MouseScrollDelta::PixelDelta(pos) => (pos.x, pos.y),
                                 }
                             };
