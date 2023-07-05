@@ -15,7 +15,7 @@ use winit::event_loop::{ControlFlow, EventLoop, EventLoopProxy};
 use crate::app::App;
 use crate::HoveredNode;
 
-const SPEED_MODIFIER: f32 = 20.0;
+const SPEED_MODIFIER: f32 = 53.0;
 
 pub fn run_event_loop<State: Clone>(
     mut app: App<State>,
