@@ -28,13 +28,14 @@ impl Layers {
         rdom: &DioxusDOM,
         layout: &Torin<NodeId>,
         font_collection: &FontCollection,
+        scale_factor: f32,
     ) {
         for group in self.paragraph_elements.values() {
             for node_id in group {
                 let node = rdom.get(*node_id);
                 let areas = layout.get(*node_id);
                 if let Some((node, areas)) = node.zip(areas) {
-                    measure_paragraph(&node, &areas.area, font_collection, true);
+                    measure_paragraph(&node, &areas.area, font_collection, true, scale_factor);
                 }
             }
         }
@@ -46,6 +47,7 @@ impl Layers {
         text_id: &Uuid,
         dom: &FreyaDOM,
         font_collection: &FontCollection,
+        scale_factor: f32,
     ) {
         let group = self.paragraph_elements.get(text_id);
         let layout = dom.layout();
@@ -55,7 +57,7 @@ impl Layers {
                 let areas = layout.get(*node_id);
 
                 if let Some((node, areas)) = node.zip(areas) {
-                    measure_paragraph(&node, &areas.area, font_collection, true);
+                    measure_paragraph(&node, &areas.area, font_collection, true, scale_factor);
                 }
             }
         }

@@ -76,5 +76,5 @@ pub fn process_layers(
         }
     });
 
-    layers.measure_all_paragraph_elements(rdom, layout, font_collection);
+    layers.measure_all_paragraph_elements(rdom, layout, font_collection, scale_factor);
 }
