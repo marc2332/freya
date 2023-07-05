@@ -2,22 +2,21 @@
 
 Learn how the font style attributes work.
 
-- [Font Style](#font-style)
-    - [color](#color)
-    - [font\_family](#font_family)
-    - [font\_size](#font_size)
-    - [align](#align)
-    - [font\_style](#font_style)
-    - [font\_weight](#font_weight)
-    - [font\_width](#font_width)
-    - [line\_height](#line_height)
-    - [letter\_spacing](#letter_spacing)
-    - [word\_spacing](#word_spacing)
-    - [decoration](#decoration)
-    - [decoration\_style](#decoration_style)
-    - [decoration\_color](#decoration_color)
-    - [text\_shadow](#text_shadow)
-    - [text\_overflow](#text_overflow)
+- [`color`](#color)
+- [`font_family`](#font_family)
+- [`font_size`](#font_size)
+- [`align`](#align)
+- [`font_style`](#font_style)
+- [`font_weight`](#font_weight)
+- [`font_width`](#font_width)
+- [`line_height`](#line_height)
+- [`max_lines`](#max_lines)
+- [`letter_spacing`](#letter_spacing)
+- [`word_spacing`](#word_spacing)
+- [`decoration`](#decoration)
+- [`decoration_style`](#decoration_style)
+- [`decoration_color`](#decoration_color)
+- [`text_shadow`](#text_shadow)
 
 
 ### color
