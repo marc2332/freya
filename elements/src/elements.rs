@@ -208,8 +208,8 @@ builder_constructors! {
         decoration: String,
         decoration_style: String,
         decoration_color: String,
-        focusable: String,
         text_overflow: String,
+        focusable: String,
     };
     paragraph {
         layer: String,

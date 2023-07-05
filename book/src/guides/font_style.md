@@ -386,4 +386,4 @@ fn app(cx: Scope) -> Element {
 }
 ```
 
-Compatible elements: [`text`](/guides/elements.html#paragraph-and-text), [`label`](/guides/elements.html#label).
+Compatible elements: [`label`](/guides/elements.html#label), [`paragraph`](/guides/elements.html#paragraph-and-text).
