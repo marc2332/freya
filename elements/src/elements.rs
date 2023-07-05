@@ -172,6 +172,7 @@ builder_constructors! {
         corner_radius: String,
         corner_smoothing: String,
         color: String,
+        font_size: String,
         display: String,
         reference: Reference,
         cursor_reference: CursorReference,
