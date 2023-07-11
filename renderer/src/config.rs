@@ -22,9 +22,9 @@ pub struct WindowConfig<T: Clone> {
     /// Background color of the Window.
     pub background: Color,
     /// Setup callback.
-    pub on_setup: Option<Arc<Box<fn(&mut Window)>>>,
+    pub on_setup: Option<WindowCallback>,
     /// Exit callback.
-    pub on_exit: Option<Arc<Box<fn(&mut Window)>>>,
+    pub on_exit: Option<WindowCallback>,
 }
 
 impl<T: Clone> Default for WindowConfig<T> {
@@ -56,6 +56,8 @@ impl<'a, T: Clone> LaunchConfig<'a, T> {
     }
 }
 
+pub type WindowCallback = Arc<Box<fn(&mut Window)>>;
+
 /// Configuration Builder.
 #[derive(Clone)]
 pub struct LaunchConfigBuilder<'a, T> {
@@ -67,8 +69,8 @@ pub struct LaunchConfigBuilder<'a, T> {
     pub state: Option<T>,
     pub background: Color,
     pub fonts: Vec<(&'a str, &'a [u8])>,
-    pub on_setup: Option<Arc<Box<fn(&mut Window)>>>,
-    pub on_exit: Option<Arc<Box<fn(&mut Window)>>>,
+    pub on_setup: Option<WindowCallback>,
+    pub on_exit: Option<WindowCallback>,
 }
 
 impl<T> Default for LaunchConfigBuilder<'_, T> {
