@@ -9,7 +9,7 @@ use dioxus_native_core::{
 };
 use freya_common::CursorLayoutResponse;
 use freya_dom::prelude::{DioxusDOM, DioxusNode};
-use freya_node_state::{TextOverflow, CursorReference, CursorSettings, FontStyle, References};
+use freya_node_state::{CursorReference, CursorSettings, FontStyle, References, TextOverflow};
 
 pub use layers::*;
 use skia_safe::textlayout::{
@@ -98,7 +98,7 @@ pub fn get_inner_texts(node: &DioxusNode) -> Vec<(FontStyle, String)> {
         .collect()
 }
 
-fn create_text(
+pub fn create_text(
     node: &DioxusNode,
     area: &Area,
     font_collection: &FontCollection,
@@ -110,14 +110,17 @@ fn create_text(
     paragraph_style.set_text_align(font_style.align);
     paragraph_style.set_max_lines(font_style.max_lines);
     paragraph_style.set_replace_tab_characters(true);
+    paragraph_style.set_text_style(&font_style.into());
+
+    if let Some(ellipsis) = font_style.text_overflow.get_ellipsis() {
+        paragraph_style.set_ellipsis(ellipsis);
+    }
 
     let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
-
-    paragraph_builder.push_style(&font_style.into());
     paragraph_builder.add_text(text);
 
     let mut paragraph = paragraph_builder.build();
-    paragraph.layout(area.width());
+    paragraph.layout(area.width() + 1.0);
     paragraph
 }
 

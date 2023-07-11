@@ -69,6 +69,11 @@ fn app(cx: Scope) -> Element {
                     "Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World"
                 }
                 label {
+                    max_lines: "3",
+                    text_overflow: "❌",
+                    "Looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong text"
+                }
+                label {
                     font_size: "18",
                     font_family: "Inter",
                     align: "right",

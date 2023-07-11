@@ -17,7 +17,7 @@ use skia_safe::{
 use smallvec::{smallvec, SmallVec};
 use torin::torin::Torin;
 
-use crate::{CustomAttributeValues, ExtSplit, TextOverflow, Parse};
+use crate::{CustomAttributeValues, ExtSplit, Parse, TextOverflow};
 
 #[derive(Debug, Clone, PartialEq, Component)]
 pub struct FontStyle {

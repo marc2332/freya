@@ -17,6 +17,7 @@ Learn how the font style attributes work.
 - [`decoration_style`](#decoration_style)
 - [`decoration_color`](#decoration_color)
 - [`text_shadow`](#text_shadow)
+- [`text_overflow`](#text_overflow)
 
 
 ### color
@@ -229,6 +230,26 @@ fn app(cx: Scope) -> Element {
 }
 ```
 
+### max_lines
+
+Determines the amount of lines that the text can have. It has unlimited lines by default.
+
+Example:
+
+```rust, no_run
+fn app(cx: Scope) -> Element {
+    render!(
+        label {
+            "Hello, World! \n Hello, World! \n Hello, world!" // Will show all three lines
+        }
+        label {
+            lines_height: "2",
+            "Hello, World! \n Hello, World! \n Hello, world!" // Will only show two lines
+        }
+    )
+}
+```
+
 Compatible elements: [`text`](/guides/elements.html#paragraph-and-text), [`paragraph`](/guides/elements.html#paragraph-and-text).
 
 ### letter_spacing
@@ -365,11 +386,11 @@ Compatible elements: [`text`](/guides/elements.html#paragraph-and-text), [`label
 
 ### text_overflow
 
-Determines how text is treated when it exceeds its `max_lines` count. The `ellipsis` overflow mode will cut off the text and add a trailing "…" character, while the `clip` mode will simply cut the text off.
+Determines how text is treated when it exceeds its [`max_lines`](#max_lines) count. By default uses the `clip` mode, which will cut off any overflowing text, with `ellipsis` mode it will show `...` at the end.
 
 Accepted values:
-- `ellipsis` (default)
-- `clip`
+- `clip` (default)
+- `ellipsis`
 
 Example:
 
@@ -378,8 +399,7 @@ fn app(cx: Scope) -> Element {
     render!(
         label {
             max_lines: "3",
-            text_overflow: "clip",
-
+            text_overflow: "ellipsis",
             "Looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong text"
         }
     )

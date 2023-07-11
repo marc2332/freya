@@ -104,8 +104,19 @@ impl Parse for Weight {
 #[derive(Default, Clone, Debug, PartialEq)]
 pub enum TextOverflow {
     #[default]
-    Ellipsis,
     Clip,
+    Ellipsis,
+    Custom(String),
+}
+
+impl TextOverflow {
+    pub fn get_ellipsis(&self) -> Option<&str> {
+        match self {
+            Self::Clip => None,
+            Self::Ellipsis => Some("..."),
+            Self::Custom(custom) => Some(custom),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -118,7 +129,7 @@ impl Parse for TextOverflow {
         Ok(match value {
             "ellipsis" => TextOverflow::Ellipsis,
             "clip" => TextOverflow::Clip,
-            _ => Default::default(),
+            value => TextOverflow::Custom(value.to_string()),
         })
     }
 }
