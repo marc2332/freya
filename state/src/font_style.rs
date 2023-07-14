@@ -17,7 +17,7 @@ use skia_safe::{
 use smallvec::{smallvec, SmallVec};
 use torin::torin::Torin;
 
-use crate::{CustomAttributeValues, ExtSplit, Parse};
+use crate::{CustomAttributeValues, ExtSplit, Parse, TextOverflow};
 
 #[derive(Debug, Clone, PartialEq, Component)]
 pub struct FontStyle {
@@ -34,6 +34,7 @@ pub struct FontStyle {
     pub letter_spacing: f32,
     pub align: TextAlign,
     pub max_lines: Option<usize>,
+    pub text_overflow: TextOverflow,
 }
 
 impl FontStyle {
@@ -92,6 +93,7 @@ impl Default for FontStyle {
             },
             align: TextAlign::default(),
             max_lines: None,
+            text_overflow: TextOverflow::default(),
         }
     }
 }
@@ -121,6 +123,7 @@ impl State<CustomAttributeValues> for FontStyle {
             "decoration",
             "decoration_color",
             "decoration_style",
+            "text_overflow",
         ]));
 
     fn update<'a>(
@@ -201,6 +204,14 @@ impl State<CustomAttributeValues> for FontStyle {
                             }
                         }
                     }
+                    "text_overflow" => {
+                        let value = attr.value.as_text();
+                        if let Some(value) = value {
+                            if let Ok(text_overflow) = TextOverflow::parse(value) {
+                                font_style.text_overflow = text_overflow;
+                            }
+                        }
+                    }
                     "font_style" => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(font_slant) = Slant::parse(value) {
@@ -246,17 +257,17 @@ impl State<CustomAttributeValues> for FontStyle {
                         }
                     }
                     "word_spacing" => {
-                        let attr = attr.value.as_text();
-                        if let Some(attr) = attr {
-                            if let Ok(word_spacing) = attr.parse() {
+                        let value = attr.value.as_text();
+                        if let Some(value) = value {
+                            if let Ok(word_spacing) = value.parse() {
                                 font_style.word_spacing = word_spacing;
                             }
                         }
                     }
                     "letter_spacing" => {
-                        let attr = attr.value.as_text();
-                        if let Some(attr) = attr {
-                            if let Ok(letter_spacing) = attr.parse() {
+                        let value = attr.value.as_text();
+                        if let Some(value) = value {
+                            if let Ok(letter_spacing) = value.parse() {
                                 font_style.letter_spacing = letter_spacing;
                             }
                         }

@@ -100,3 +100,36 @@ impl Parse for Weight {
         })
     }
 }
+
+#[derive(Default, Clone, Debug, PartialEq)]
+pub enum TextOverflow {
+    #[default]
+    Clip,
+    Ellipsis,
+    Custom(String),
+}
+
+impl TextOverflow {
+    pub fn get_ellipsis(&self) -> Option<&str> {
+        match self {
+            Self::Clip => None,
+            Self::Ellipsis => Some("..."),
+            Self::Custom(custom) => Some(custom),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct ParseTextOverflowError;
+
+impl Parse for TextOverflow {
+    type Err = ParseTextOverflowError;
+
+    fn parse(value: &str) -> Result<Self, Self::Err> {
+        Ok(match value {
+            "ellipsis" => TextOverflow::Ellipsis,
+            "clip" => TextOverflow::Clip,
+            value => TextOverflow::Custom(value.to_string()),
+        })
+    }
+}

@@ -208,6 +208,7 @@ builder_constructors! {
         decoration: String,
         decoration_style: String,
         decoration_color: String,
+        text_overflow: String,
         focusable: String,
     };
     paragraph {
@@ -239,6 +240,7 @@ builder_constructors! {
         decoration: String,
         decoration_style: String,
         decoration_color: String,
+        text_overflow: String,
         focusable: String,
     };
     text {
