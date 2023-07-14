@@ -17,10 +17,10 @@ fn app(cx: Scope) -> Element {
                 Navbar {
                     title: "Top navbar"
                 }
-            )
+            ),
             body: render!(
                 ScrollView {
-                    height: "calc(100% - 75 - 75)"
+                    height: "calc(100% - 75 - 75)",
                     show_scrollbar: true,
                     Card {
                         title: "Another title",
