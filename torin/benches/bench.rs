@@ -61,14 +61,14 @@ impl DOMAdapter<usize> for TestingDOM {
 
 fn criterion_benchmark(c: &mut Criterion) {
     let mut g = c.benchmark_group("benchmarks");
-    g.sample_size(20);
+    g.sample_size(50);
 
     g.bench_function("1 root 1000 direct children", |b| {
         let mut layout = Torin::<usize>::new();
         let mut measurer = Some(TestingMeasurer);
         let mut mocked_dom = TestingDOM::default();
 
-        let children_ids = (0..=1000).into_iter().collect::<Vec<usize>>();
+        let children_ids = (1..=1001).into_iter().collect::<Vec<usize>>();
 
         mocked_dom.add(
             0,
@@ -83,7 +83,7 @@ fn criterion_benchmark(c: &mut Criterion) {
 
         for i in children_ids {
             mocked_dom.add(
-                i + 1,
+                i,
                 Some(0),
                 vec![],
                 Node::from_size_and_direction(
