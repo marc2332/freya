@@ -25,6 +25,9 @@ dioxus-core = { workspace = true, optional = true }
 [dev-dependencies]
 criterion = "0.5.1"
 
+[lib]
+bench = false
+
 [[bench]]
 name = "bench"
 harness = false
