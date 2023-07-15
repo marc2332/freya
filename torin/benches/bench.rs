@@ -155,7 +155,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         })
     });
 
-    g.bench_function("5 levels deep", |b| {
+    g.bench_function("20 levels deep", |b| {
         let mut measurer = Some(TestingMeasurer);
         let mut mocked_dom = TestingDOM::default();
 
@@ -174,7 +174,7 @@ fn criterion_benchmark(c: &mut Criterion) {
             ),
         );
 
-        let levels = 5;
+        let levels = 20;
 
         for level in 0..levels {
             for i in &children_ids {
@@ -212,7 +212,7 @@ fn criterion_benchmark(c: &mut Criterion) {
     });
 
     g.bench_function(
-        "5 levels deep (cached) + modified element in the bottom",
+        "20 levels deep (cached) + modified element in the top",
         |b| {
             let mut layout = Torin::<usize>::new();
             let mut measurer = Some(TestingMeasurer);
@@ -233,7 +233,7 @@ fn criterion_benchmark(c: &mut Criterion) {
                 ),
             );
 
-            let levels = 5;
+            let levels = 20;
 
             for level in 0..levels {
                 for i in &children_ids {
@@ -275,6 +275,82 @@ fn criterion_benchmark(c: &mut Criterion) {
                         ),
                     );
                     layout.invalidate(1);
+                    layout.find_best_root(&mocked_dom);
+                    layout.measure(
+                        0,
+                        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+                        &mut measurer,
+                        &mocked_dom,
+                    )
+                });
+            })
+        },
+    );
+
+    g.bench_function(
+        "20 levels deep (cached) + modified element in the bottom",
+        |b| {
+            let mut layout = Torin::<usize>::new();
+            let mut measurer = Some(TestingMeasurer);
+            let mut mocked_dom = TestingDOM::default();
+
+            let children_ids = (1..=101).into_iter().collect::<Vec<usize>>();
+
+            let mut root = 0;
+
+            mocked_dom.add(
+                0,
+                None,
+                children_ids.clone(),
+                Node::from_size_and_direction(
+                    Size::Percentage(Length::new(100.0)),
+                    Size::Percentage(Length::new(100.0)),
+                    DirectionMode::Vertical,
+                ),
+            );
+
+            let levels = 20;
+
+            for level in 0..levels {
+                for i in &children_ids {
+                    let id = (level * 1000) + *i;
+
+                    mocked_dom.add(
+                        id,
+                        Some(root),
+                        vec![],
+                        Node::from_size_and_direction(
+                            Size::Pixels(Length::new(100.0)),
+                            Size::Pixels(Length::new(100.0)),
+                            DirectionMode::Vertical,
+                        ),
+                    );
+
+                    if *i == 101 {
+                        root = id
+                    }
+                }
+            }
+
+            layout.find_best_root(&mocked_dom);
+            layout.measure(
+                0,
+                Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+                &mut measurer,
+                &mocked_dom,
+            );
+
+            b.iter(|| {
+                black_box({
+                    mocked_dom.set_node(
+                        1,
+                        Node::from_size_and_direction(
+                            Size::Inner,
+                            Size::Pixels(Length::new(10.0)),
+                            DirectionMode::Vertical,
+                        ),
+                    );
+                    layout.invalidate(2001);
                     layout.find_best_root(&mocked_dom);
                     layout.measure(
                         0,
