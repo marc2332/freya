@@ -22,3 +22,9 @@ fxhash = { workspace = true }
 dioxus-native-core = { workspace = true, optional = true }
 dioxus-core = { workspace = true, optional = true }
 
+[dev-dependencies]
+criterion = "0.5.1"
+
+[[bench]]
+name = "bench"
+harness = false
