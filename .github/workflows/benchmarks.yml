@@ -8,6 +8,5 @@ jobs:
       - uses: actions/checkout@v3
       - uses: boa-dev/criterion-compare-action@v3
         with:
-          package: "torin"
-          branchName: ${{ github.base_ref }}
+          branchName: feat/torin-benchmarks-TEST-COMPARE
           token: ${{ secrets.GITHUB_TOKEN }}
