@@ -65,7 +65,7 @@ impl DOMAdapter<usize> for TestingDOM {
 
 fn criterion_benchmark(c: &mut Criterion) {
     let mut g = c.benchmark_group("benchmarks");
-    g.sample_size(100);
+    g.sample_size(200);
 
     g.bench_function("1 root 1000 direct children", |b| {
         let mut measurer = Some(TestingMeasurer);
