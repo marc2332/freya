@@ -65,154 +65,77 @@ impl DOMAdapter<usize> for TestingDOM {
 
 fn criterion_benchmark(c: &mut Criterion) {
     let mut g = c.benchmark_group("benchmarks");
-    g.sample_size(200);
+    g.sample_size(10);
 
-    g.bench_function("1 root 1000 direct children", |b| {
-        let mut measurer = Some(TestingMeasurer);
-        let mut mocked_dom = TestingDOM::default();
+    let params = [
+        ("big trees (wide) nodes=1000, depth=1", 1000, 1),
+        ("big trees (wide) nodes=10000, depth=1", 10000, 1),
+        ("big trees (wide) nodes=100000, depth=1", 100000, 1),
+        ("big trees (deep) nodes=4000, depth=12", 4000, 12),
+        ("big trees (deep) nodes=10000, depth=14", 10000, 14),
+        ("big trees (deep) nodes=100000, depth=17", 100000, 17),
+    ];
 
-        let children_ids = (1..=1001).into_iter().collect::<Vec<usize>>();
+    for (name, size, depth) in params {
+        let size_per_layer = size / depth;
 
-        mocked_dom.add(
-            0,
-            None,
-            children_ids.clone(),
-            Node::from_size_and_direction(
-                Size::Percentage(Length::new(100.0)),
-                Size::Percentage(Length::new(100.0)),
-                DirectionMode::Vertical,
-            ),
-        );
+        g.bench_function(name, |b| {
+            let mut measurer = Some(TestingMeasurer);
+            let mut mocked_dom = TestingDOM::default();
 
-        for i in children_ids {
+            let children_ids = (1..=size_per_layer).into_iter().collect::<Vec<usize>>();
+
+            let mut root = 0;
+
             mocked_dom.add(
-                i,
-                Some(0),
-                vec![],
+                0,
+                None,
+                children_ids.clone(),
                 Node::from_size_and_direction(
-                    Size::Pixels(Length::new(100.0)),
-                    Size::Pixels(Length::new(100.0)),
+                    Size::Percentage(Length::new(100.0)),
+                    Size::Percentage(Length::new(100.0)),
                     DirectionMode::Vertical,
                 ),
             );
-        }
 
-        b.iter(|| {
-            black_box({
-                let mut layout = Torin::<usize>::new();
-                layout.find_best_root(&mocked_dom);
-                layout.measure(
-                    0,
-                    Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
-                    &mut measurer,
-                    &mocked_dom,
-                );
-            });
-        })
-    });
+            for level in 0..depth {
+                for i in &children_ids {
+                    let id = (level * size) + *i;
 
-    g.bench_function("1 root 10000 direct children", |b| {
-        let mut measurer = Some(TestingMeasurer);
-        let mut mocked_dom = TestingDOM::default();
+                    mocked_dom.add(
+                        id,
+                        Some(root),
+                        vec![],
+                        Node::from_size_and_direction(
+                            Size::Pixels(Length::new(100.0)),
+                            Size::Pixels(Length::new(100.0)),
+                            DirectionMode::Vertical,
+                        ),
+                    );
 
-        let children_ids = (1..=10001).into_iter().collect::<Vec<usize>>();
-
-        mocked_dom.add(
-            0,
-            None,
-            children_ids.clone(),
-            Node::from_size_and_direction(
-                Size::Percentage(Length::new(100.0)),
-                Size::Percentage(Length::new(100.0)),
-                DirectionMode::Vertical,
-            ),
-        );
-
-        for i in children_ids {
-            mocked_dom.add(
-                i,
-                Some(0),
-                vec![],
-                Node::from_size_and_direction(
-                    Size::Pixels(Length::new(100.0)),
-                    Size::Pixels(Length::new(100.0)),
-                    DirectionMode::Vertical,
-                ),
-            );
-        }
-
-        b.iter(|| {
-            black_box({
-                let mut layout = Torin::<usize>::new();
-                layout.find_best_root(&mocked_dom);
-                layout.measure(
-                    0,
-                    Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
-                    &mut measurer,
-                    &mocked_dom,
-                )
-            });
-        })
-    });
-
-    g.bench_function("20 levels deep", |b| {
-        let mut measurer = Some(TestingMeasurer);
-        let mut mocked_dom = TestingDOM::default();
-
-        let children_ids = (1..=101).into_iter().collect::<Vec<usize>>();
-
-        let mut root = 0;
-
-        mocked_dom.add(
-            0,
-            None,
-            children_ids.clone(),
-            Node::from_size_and_direction(
-                Size::Percentage(Length::new(100.0)),
-                Size::Percentage(Length::new(100.0)),
-                DirectionMode::Vertical,
-            ),
-        );
-
-        let levels = 20;
-
-        for level in 0..levels {
-            for i in &children_ids {
-                let id = (level * 1000) + *i;
-
-                mocked_dom.add(
-                    id,
-                    Some(root),
-                    vec![],
-                    Node::from_size_and_direction(
-                        Size::Pixels(Length::new(100.0)),
-                        Size::Pixels(Length::new(100.0)),
-                        DirectionMode::Vertical,
-                    ),
-                );
-
-                if *i == 101 {
-                    root = id
+                    if *i == size_per_layer - 1 {
+                        root = id
+                    }
                 }
             }
-        }
 
-        b.iter(|| {
-            black_box({
-                let mut layout = Torin::<usize>::new();
-                layout.find_best_root(&mocked_dom);
-                layout.measure(
-                    0,
-                    Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
-                    &mut measurer,
-                    &mocked_dom,
-                )
-            });
-        })
-    });
+            b.iter(|| {
+                black_box({
+                    let mut layout = Torin::<usize>::new();
+                    layout.find_best_root(&mocked_dom);
+                    layout.measure(
+                        0,
+                        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+                        &mut measurer,
+                        &mocked_dom,
+                    )
+                });
+            })
+        });
+    }
 
     g.bench_function(
-        "20 levels deep (cached) + modified element in the top",
+        "big trees (deep + cached) + invalidated node in the top",
         |b| {
             let mut layout = Torin::<usize>::new();
             let mut measurer = Some(TestingMeasurer);
@@ -288,7 +211,7 @@ fn criterion_benchmark(c: &mut Criterion) {
     );
 
     g.bench_function(
-        "20 levels deep (cached) + modified element in the bottom",
+        "big trees (deep + cached) + invalidated node in the bottom",
         |b| {
             let mut layout = Torin::<usize>::new();
             let mut measurer = Some(TestingMeasurer);
