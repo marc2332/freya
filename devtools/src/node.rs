@@ -8,13 +8,13 @@ use crate::TreeNode;
 #[inline_props]
 pub fn NodeElement<'a>(
     cx: Scope<'a>,
-    node: &'a TreeNode,
+    node: TreeNode,
     is_selected: bool,
     onselected: EventHandler<'a, &'a TreeNode>,
 ) -> Element<'a> {
     let status = use_state(cx, ButtonStatus::default);
 
-    let onmousedown = move |_| onselected.call(node);
+    let onmousedown = move |_| onselected.call(&node);
 
     let onmouseover = move |_| {
         if *status.get() != ButtonStatus::Hovering {

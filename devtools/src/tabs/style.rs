@@ -1,25 +1,31 @@
 use dioxus::prelude::*;
+use dioxus_native_core::NodeId;
 use freya_components::*;
 use freya_core::prelude::*;
 use freya_elements::elements as dioxus_elements;
 
 use crate::{
+    hooks::use_selected_node,
     property::{
         BorderProperty, ColorProperty, LinearGradientProperty, Property, ShadowProperty,
         TextShadowProperty,
     },
-    NodeInspectorBar, TreeNode,
+    NodeInspectorBar,
 };
 
 #[allow(non_snake_case)]
 #[inline_props]
-pub fn NodeInspectorStyle<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> {
+pub fn NodeInspectorStyle(cx: Scope, node_id: NodeId) -> Element {
+    let node = use_selected_node(cx, &node_id).unwrap();
+
     render!(
         rect {
             overflow: "clip",
             width: "100%",
             height: "50%",
-            NodeInspectorBar { }
+            NodeInspectorBar {
+                node_id: *node_id
+            }
             ScrollView {
                 show_scrollbar: true,
                 height: "calc(100% - 35)",
@@ -67,7 +73,7 @@ pub fn NodeInspectorStyle<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> 
                                 ColorProperty {
                                     key: "{i}",
                                     name: "{name}",
-                                    fill: fill
+                                    fill: fill.clone()
                                 }
                             }
                         }
@@ -76,7 +82,7 @@ pub fn NodeInspectorStyle<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> 
                                 LinearGradientProperty {
                                     key: "{i}",
                                     name: "{name}",
-                                    fill: fill
+                                    fill: fill.clone()
                                 }
                             }
                         }
@@ -85,7 +91,7 @@ pub fn NodeInspectorStyle<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> 
                                 BorderProperty {
                                     key: "{i}",
                                     name: "{name}",
-                                    border: border
+                                    border: border.clone()
                                 }
                             }
                         }
@@ -121,7 +127,7 @@ pub fn NodeInspectorStyle<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> 
                                 ShadowProperty {
                                     key: "{i}",
                                     name: "{name}",
-                                    shadow: shadow
+                                    shadow: shadow.clone()
                                 }
                             }
                         }
@@ -130,7 +136,7 @@ pub fn NodeInspectorStyle<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> 
                                 TextShadowProperty {
                                     key: "{i}",
                                     name: "{name}",
-                                    text_shadow: text_shadow
+                                    text_shadow: text_shadow.clone()
                                 }
                             }
                         }

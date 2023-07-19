@@ -1,8 +1,10 @@
 use dioxus::prelude::*;
-use dioxus_router::use_router;
+use dioxus_router::prelude::*;
 use freya_components::{ButtonStatus, ScrollView};
 use freya_elements::elements as dioxus_elements;
 use freya_hooks::use_get_theme;
+
+use crate::Route;
 
 #[derive(Props)]
 pub struct TabsBarProps<'a> {
@@ -23,18 +25,18 @@ pub fn TabsBar<'a>(cx: Scope<'a, TabsBarProps<'a>>) -> Element<'a> {
 
 #[derive(Props)]
 pub struct TabButtonProps<'a> {
-    pub to: &'a str,
+    pub to: Route,
     pub label: &'a str,
 }
 
 #[allow(non_snake_case)]
 pub fn TabButton<'a>(cx: Scope<'a, TabButtonProps<'a>>) -> Element<'a> {
-    let router = use_router(cx);
+    let router = use_generic_navigator::<Route>(cx);
     let theme = use_get_theme(cx);
     let status = use_state(cx, ButtonStatus::default);
 
-    let onclick = move |_| {
-        router.replace_route(cx.props.to, None, None);
+    let onclick = |_| {
+        router.replace(cx.props.to.clone());
     };
 
     let onmouseover = move |_| {

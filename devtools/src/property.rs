@@ -113,7 +113,7 @@ pub fn ColorProperty<'a>(cx: Scope<'a>, name: &'a str, fill: Fill) -> Element<'a
 
 #[allow(non_snake_case)]
 #[inline_props]
-pub fn ShadowProperty<'a>(cx: Scope<'a>, name: &'a str, shadow: &'a Shadow) -> Element<'a> {
+pub fn ShadowProperty<'a>(cx: Scope<'a>, name: &'a str, shadow: Shadow) -> Element<'a> {
     render!(
         rect {
             overflow: "clip",
@@ -169,7 +169,7 @@ pub fn ShadowProperty<'a>(cx: Scope<'a>, name: &'a str, shadow: &'a Shadow) -> E
 
 #[allow(non_snake_case)]
 #[inline_props]
-pub fn BorderProperty<'a>(cx: Scope<'a>, name: &'a str, border: &'a Border) -> Element<'a> {
+pub fn BorderProperty<'a>(cx: Scope<'a>, name: &'a str, border: Border) -> Element<'a> {
     render!(
         rect {
             overflow: "clip",
@@ -227,7 +227,7 @@ pub fn BorderProperty<'a>(cx: Scope<'a>, name: &'a str, border: &'a Border) -> E
 pub fn TextShadowProperty<'a>(
     cx: Scope<'a>,
     name: &'a str,
-    text_shadow: &'a TextShadow,
+    text_shadow: TextShadow,
 ) -> Element<'a> {
     let color = text_shadow.color.to_rgb();
     render!(

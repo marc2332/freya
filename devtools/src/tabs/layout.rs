@@ -1,12 +1,15 @@
 use dioxus::prelude::*;
+use dioxus_native_core::NodeId;
 use freya_components::*;
 use freya_elements::elements as dioxus_elements;
 
-use crate::{NodeInspectorBar, TreeNode};
+use crate::{hooks::use_selected_node, NodeInspectorBar};
 
 #[allow(non_snake_case)]
 #[inline_props]
-pub fn NodeInspectorLayout<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a> {
+pub fn NodeInspectorLayout(cx: Scope, node_id: NodeId) -> Element {
+    let node = use_selected_node(cx, &node_id).unwrap();
+
     let inner_area = format!(
         "{}x{}",
         node.areas.inner_area.width(),
@@ -20,7 +23,9 @@ pub fn NodeInspectorLayout<'a>(cx: Scope<'a>, node: &'a TreeNode) -> Element<'a>
             overflow: "clip",
             width: "100%",
             height: "50%",
-            NodeInspectorBar { }
+            NodeInspectorBar {
+                node_id: *node_id
+            }
             ScrollView {
                 show_scrollbar: true,
                 height: "calc(100% - 35)",
