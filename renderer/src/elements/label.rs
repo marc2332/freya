@@ -28,7 +28,7 @@ pub fn render_label(
     };
 
     if let Some(text) = text {
-        let paragraph = create_text(node_ref, area, font_collection, &text);
+        let paragraph = create_text(node_ref, area, font_collection, &text, true);
 
         let x = area.min_x();
         let y = area.min_y();

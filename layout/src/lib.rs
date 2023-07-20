@@ -49,8 +49,13 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
 
         match &*node_type {
             NodeType::Text(TextNode { text, .. }) => {
-                let text_paragraph =
-                    create_text(&node, available_parent_area, self.font_collection, text);
+                let text_paragraph = create_text(
+                    &node,
+                    available_parent_area,
+                    self.font_collection,
+                    text,
+                    false,
+                );
 
                 Some(Area::new(
                     area.origin,
@@ -103,6 +108,7 @@ pub fn create_text(
     area: &Area,
     font_collection: &FontCollection,
     text: &str,
+    is_rendering: bool,
 ) -> Paragraph {
     let font_style = &*node.get::<FontStyle>().unwrap();
 
@@ -119,8 +125,14 @@ pub fn create_text(
     let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
     paragraph_builder.add_text(text);
 
+    let width = if is_rendering {
+        area.width() + 1.0
+    } else {
+        area.width()
+    };
+
     let mut paragraph = paragraph_builder.build();
-    paragraph.layout(area.width() + 1.0);
+    paragraph.layout(width);
     paragraph
 }
 
@@ -159,8 +171,14 @@ pub fn create_paragraph(
         paragraph_builder.add_text(" ");
     }
 
+    let width = if is_rendering {
+        node_area.width() + 1.0
+    } else {
+        node_area.width()
+    };
+
     let mut paragraph = paragraph_builder.build();
-    paragraph.layout(node_area.width() + 1.0);
+    paragraph.layout(width);
     paragraph
 }
 
