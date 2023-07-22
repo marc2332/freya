@@ -65,7 +65,7 @@ impl DOMAdapter<usize> for TestingDOM {
 
 fn criterion_benchmark(c: &mut Criterion) {
     let mut g = c.benchmark_group("benchmarks");
-    g.sample_size(10);
+    g.significance_level(0.1).sample_size(500);
 
     let params = [
         ("big trees (wide) nodes=1000, depth=1", 1000, 1),
