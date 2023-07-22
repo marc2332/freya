@@ -199,7 +199,7 @@ impl<Key: NodeKey> Torin<Key> {
             if let Some(parent) = parent {
                 // Mark parent if it depeneds on it's inner children
                 if parent.does_depend_on_inner() {
-                    self.check_dirty_dependants(parent_id, dom_adapter, false);
+                    self.check_dirty_dependants(parent_id, dom_adapter, true);
                 }
                 // Otherwise we simply mark this Node siblings
                 else {
@@ -324,37 +324,20 @@ fn measure_node<Key: NodeKey>(
             Size2D::new(horizontal_padding, vertical_padding),
         );
 
-        area.size.width = node
-            .width
-            .eval(parent_area.size.width)
-            .unwrap_or(area.size.width)
-            + node.margin.horizontal();
-        area.size.height = node
-            .height
-            .eval(parent_area.size.height)
-            .unwrap_or(area.size.height)
-            + node.margin.vertical();
-
-        let minimum_width = node.minimum_width.eval(parent_area.size.width);
-        let maximum_width = node.maximum_width.eval(parent_area.size.width);
-
-        let minimum_height = node.minimum_height.eval(parent_area.size.height);
-        let maximum_height = node.maximum_height.eval(parent_area.size.height);
-
-        let minimum_area_width = minimum_width.unwrap_or(area.size.width);
-        let maximum_area_width = maximum_width.unwrap_or(minimum_area_width);
-
-        let minimum_area_height = minimum_height.unwrap_or(area.size.height);
-        let maximum_area_height = maximum_height.unwrap_or(minimum_area_height);
-
-        area.size.width = area
-            .size
-            .width
-            .clamp(minimum_area_width, maximum_area_width);
-        area.size.height = area
-            .size
-            .height
-            .clamp(minimum_area_height, maximum_area_height);
+        area.size.width = node.width.min_max(
+            area.size.width,
+            parent_area.size.width,
+            node.margin.horizontal(),
+            &node.minimum_width,
+            &node.maximum_width,
+        );
+        area.size.height = node.height.min_max(
+            area.size.height,
+            parent_area.size.height,
+            node.margin.vertical(),
+            &node.minimum_height,
+            &node.maximum_height,
+        );
 
         // Custom measure
         let skip_inner = if let Some(measurer) = measurer {
@@ -362,15 +345,21 @@ fn measure_node<Key: NodeKey>(
                 measurer.measure(node_id, node, &area, parent_area, available_parent_area);
             if let Some(new_area) = custom_measure {
                 if Size::Inner == node.width {
-                    area.size.width = new_area.width().clamp(
-                        minimum_width.unwrap_or(new_area.width()),
-                        maximum_width.unwrap_or(new_area.width()),
+                    area.size.width = node.width.min_max(
+                        new_area.width(),
+                        parent_area.size.width,
+                        node.margin.horizontal(),
+                        &node.minimum_width,
+                        &node.maximum_width,
                     );
                 }
                 if Size::Inner == node.height {
-                    area.size.height = new_area.height().clamp(
-                        minimum_height.unwrap_or(new_area.height()),
-                        maximum_height.unwrap_or(new_area.height()),
+                    area.size.height = node.height.min_max(
+                        new_area.height(),
+                        parent_area.size.height,
+                        node.margin.vertical(),
+                        &node.minimum_height,
+                        &node.maximum_height,
                     );
                 }
             }

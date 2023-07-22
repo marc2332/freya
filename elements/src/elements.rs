@@ -213,8 +213,12 @@ builder_constructors! {
     };
     paragraph {
         layer: String,
-        width: String,
         height: String,
+        width: String,
+        min_height: String,
+        min_width: String,
+        max_height: String,
+        max_width: String,
         align: String,
         cursor_index: String,
         max_lines: String,
