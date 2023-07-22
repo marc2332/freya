@@ -44,6 +44,36 @@ impl Size {
             _ => None,
         }
     }
+
+    pub fn min_max(
+        &self,
+        value: f32,
+        parent_value: f32,
+        margin: f32,
+        minimum: &Self,
+        maximum: &Self,
+    ) -> f32 {
+        let value = self.eval(parent_value).unwrap_or(value) + margin;
+
+        let minimum_value = minimum.eval(parent_value);
+        let maximum_value = maximum.eval(parent_value);
+
+        let mut final_value = value;
+
+        if let Some(minimum_value) = minimum_value {
+            if minimum_value > final_value {
+                final_value = minimum_value;
+            }
+        }
+
+        if let Some(maximum_value) = maximum_value {
+            if final_value > maximum_value {
+                final_value = maximum_value
+            }
+        }
+
+        final_value
+    }
 }
 
 impl Scaled for Size {
