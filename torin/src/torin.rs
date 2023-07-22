@@ -199,7 +199,7 @@ impl<Key: NodeKey> Torin<Key> {
             if let Some(parent) = parent {
                 // Mark parent if it depeneds on it's inner children
                 if parent.does_depend_on_inner() {
-                    self.check_dirty_dependants(parent_id, dom_adapter, false);
+                    self.check_dirty_dependants(parent_id, dom_adapter, true);
                 }
                 // Otherwise we simply mark this Node siblings
                 else {
