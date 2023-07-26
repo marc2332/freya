@@ -38,6 +38,7 @@ tween = "2.0.0"
 ropey = "1.6.0"
 nokhwa = { version = "0.10.3", features = ["input-native"], optional = true }
 bytes = "1.3.0"
+unicode-segmentation = "1.10.1"
 
 [dev-dependencies]
 dioxus = { workspace = true }

@@ -18,6 +18,7 @@ use crate::{use_platform, RopeEditor, TextCursor, TextEditor, TextEvent, UsePlat
 /// Events emitted to the [`UseEditable`].
 pub enum EditableEvent {
     Click,
+    DoubleClick,
     MouseOver(Rc<MouseData>, usize),
     MouseDown(Rc<MouseData>, usize),
     KeyDown(Rc<KeyboardData>),
@@ -105,6 +106,9 @@ impl UseEditable {
             }
             EditableEvent::Click => {
                 *self.selecting_text_with_mouse.write_silent() = None;
+            }
+            EditableEvent::DoubleClick => {
+                
             }
             EditableEvent::KeyDown(e) => {
                 self.editor.with_mut(|editor| {

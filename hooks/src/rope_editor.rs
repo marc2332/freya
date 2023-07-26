@@ -1,7 +1,9 @@
 use std::{cmp::Ordering, fmt::Display, ops::Range};
 
-use ropey::iter::Lines;
-pub use ropey::Rope;
+pub use ropey::{
+    iter::Lines,
+    Rope,
+};
 
 use crate::{text_editor::*, EditableMode};
 
@@ -37,29 +39,26 @@ impl RopeEditor {
 impl TextEditor for RopeEditor {
     type LinesIterator<'a> = LinesIterator<'a>;
 
+    fn set_text(&mut self, text: &str) {
+        self.rope.remove(0..);
+        self.rope.insert(0, text);
+    }
+
     fn lines(&self) -> Self::LinesIterator<'_> {
         let lines = self.rope.lines();
         LinesIterator { lines }
-    }
-
-    fn insert_char(&mut self, char: char, char_idx: usize) {
-        self.rope.insert_char(char_idx, char);
     }
 
     fn insert(&mut self, text: &str, char_idx: usize) {
         self.rope.insert(char_idx, text);
     }
 
+    fn insert_char(&mut self, char: char, char_idx: usize) {
+        self.rope.insert_char(char_idx, char);
+    }
+
     fn remove(&mut self, range: Range<usize>) {
         self.rope.remove(range)
-    }
-
-    fn char_to_line(&self, char_idx: usize) -> usize {
-        self.rope.char_to_line(char_idx)
-    }
-
-    fn line_to_char(&self, line_idx: usize) -> usize {
-        self.rope.line_to_char(line_idx)
     }
 
     fn line(&self, line_idx: usize) -> Option<Line<'_>> {
@@ -72,6 +71,10 @@ impl TextEditor for RopeEditor {
         self.rope.len_lines()
     }
 
+    fn len_chars<'a>(&self) -> usize {
+        self.rope.len_chars()
+    }
+
     fn cursor(&self) -> &TextCursor {
         &self.cursor
     }
@@ -80,12 +83,21 @@ impl TextEditor for RopeEditor {
         &mut self.cursor
     }
 
-    fn move_highlight_to_cursor(&mut self) {
+    fn char_to_line(&self, char_idx: usize) -> usize {
+        self.rope.char_to_line(char_idx)
+    }
+
+    fn line_to_char(&self, line_idx: usize) -> usize {
+        self.rope.line_to_char(line_idx)
+    }
+
+    fn highlight_to_cursor(&mut self) {
         let pos = self.cursor_pos();
+
         if let Some(selected) = self.selected.as_mut() {
             selected.1 = pos;
         } else {
-            self.selected = Some((self.cursor_pos(), self.cursor_pos()))
+            self.selected = Some((pos, pos))
         }
     }
 
@@ -154,11 +166,6 @@ impl TextEditor for RopeEditor {
         }
     }
 
-    fn set(&mut self, text: &str) {
-        self.rope.remove(0..);
-        self.rope.insert(0, text);
-    }
-
     fn unhighlight(&mut self) {
         self.selected = None;
     }
@@ -180,7 +187,7 @@ impl TextEditor for RopeEditor {
         if self.mode == EditableMode::SingleLineMultipleEditors {
             self.cursor_mut().move_to(editor_id, to);
         } else {
-            self.set_cursor_pos(to);
+            self.move_cursor(CursorMovement::Position(to));
         }
     }
 }
