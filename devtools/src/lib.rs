@@ -184,9 +184,7 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
             width: "100%",
             height: "100%",
             color: theme.body.color,
-            Router {
-
-            }
+            Router::<Route> { }
         }
     )
 }
@@ -201,7 +199,7 @@ pub fn DevtoolsBar(cx: Scope) -> Element {
                 label: "Elements"
             }
         }
-        Outlet {}
+        Outlet::<Route> {}
     )
 }
 

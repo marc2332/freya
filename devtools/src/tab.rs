@@ -31,7 +31,7 @@ pub struct TabButtonProps<'a> {
 
 #[allow(non_snake_case)]
 pub fn TabButton<'a>(cx: Scope<'a, TabButtonProps<'a>>) -> Element<'a> {
-    let router = use_generic_navigator::<Route>(cx);
+    let router = use_navigator(cx);
     let theme = use_get_theme(cx);
     let status = use_state(cx, ButtonStatus::default);
 

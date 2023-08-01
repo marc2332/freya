@@ -222,6 +222,7 @@ where
             }
         )
     } else {
+        let selected = selected.read().to_string();
         render!(
             rect {
                 margin: "5",
@@ -237,7 +238,7 @@ where
                 padding: "7",
                 label {
                     align: "center",
-                    "{selected.read()}"
+                    "{selected}"
                 }
                 rect {
                     width: "100%",

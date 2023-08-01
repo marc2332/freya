@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use dioxus_native_core::NodeId;
-use dioxus_router::prelude::use_generic_navigator;
+use dioxus_router::prelude::use_navigator;
 use freya_components::*;
 
 use crate::{node::NodeElement, NodeIdSerializer, Route, TreeNode};
@@ -13,7 +13,7 @@ pub fn NodesTree<'a>(
     selected_node_id: Option<NodeId>,
     onselected: EventHandler<'a, &'a TreeNode>,
 ) -> Element<'a> {
-    let router = use_generic_navigator::<Route>(cx);
+    let router = use_navigator(cx);
     let nodes = use_shared_state::<Vec<TreeNode>>(cx).unwrap();
 
     render!(VirtualScrollView {
