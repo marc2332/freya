@@ -14,7 +14,7 @@ pub fn NodeElement<'a>(
 ) -> Element<'a> {
     let status = use_state(cx, ButtonStatus::default);
 
-    let onmousedown = move |_| onselected.call(&node);
+    let onmousedown = move |_| onselected.call(&cx.props.node);
 
     let onmouseover = move |_| {
         if *status.get() != ButtonStatus::Hovering {

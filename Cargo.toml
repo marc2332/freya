@@ -28,12 +28,12 @@ torin = { path = "torin", version = "0.1.0" }
 
 dioxus = { version = "0.4" }
 dioxus-native-core-macro = { version = "0.4" }
-dioxus-rsx = { version = "0.4", features=["hot_reload"] }
-dioxus-native-core = { version = "0.4", features=["dioxus"] }
+dioxus-rsx = { version = "0.4", features = ["hot_reload"] }
+dioxus-native-core = { version = "0.4", features = ["dioxus"] }
 dioxus-core-macro = { version = "0.4" }
 dioxus-hooks = { version = "0.4" }
 dioxus-core = { version = "0.4" }
-dioxus-hot-reload = { version = "0.4", features=["file_watcher"] }
+dioxus-hot-reload = { version = "0.4", features = ["file_watcher"] }
 dioxus-router = { version = "0.4" }
 
 gl = "0.14.0"

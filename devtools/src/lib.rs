@@ -195,7 +195,7 @@ pub fn DevtoolsBar(cx: Scope) -> Element {
     render!(
         TabsBar {
             TabButton {
-                to: Route::TreeTab { },
+                to: Route::TreeElementsTab { },
                 label: "Elements"
             }
         }
@@ -225,7 +225,7 @@ pub fn NodeInspectorBar(cx: Scope, node_id: NodeId) -> Element {
 pub enum Route {
     #[layout(DevtoolsBar)]
         #[route("/")]
-        TreeTab  {},
+        TreeElementsTab  {},
 
         #[route("/elements/:node_id/style")]
         TreeStyleTab { node_id: String },
@@ -249,7 +249,7 @@ fn PageNotFound(cx: Scope) -> Element {
 
 #[allow(non_snake_case)]
 #[inline_props]
-fn TreeTab(cx: Scope) -> Element {
+fn TreeElementsTab(cx: Scope) -> Element {
     let hovered_node = use_shared_state::<HoveredNode>(cx).unwrap();
 
     render!(NodesTree {
@@ -262,11 +262,15 @@ fn TreeTab(cx: Scope) -> Element {
     })
 }
 
+#[derive(Props, PartialEq)]
+struct TreeTabProps {
+    node_id: String,
+}
+
 #[allow(non_snake_case)]
-#[inline_props]
-fn TreeStyleTab(cx: Scope, node_id: String) -> Element {
+fn TreeStyleTab(cx: Scope<TreeTabProps>) -> Element {
     let hovered_node = use_shared_state::<HoveredNode>(cx).unwrap();
-    let node_id = NodeId::deserialize(&node_id);
+    let node_id = NodeId::deserialize(&cx.props.node_id);
 
     render!(
         NodesTree {
@@ -285,10 +289,9 @@ fn TreeStyleTab(cx: Scope, node_id: String) -> Element {
 }
 
 #[allow(non_snake_case)]
-#[inline_props]
-fn TreeLayoutTab(cx: Scope, node_id: String) -> Element {
+fn TreeLayoutTab(cx: Scope<TreeTabProps>) -> Element {
     let hovered_node = use_shared_state::<HoveredNode>(cx).unwrap();
-    let node_id = NodeId::deserialize(&node_id);
+    let node_id = NodeId::deserialize(&cx.props.node_id);
 
     render!(
         NodesTree {
