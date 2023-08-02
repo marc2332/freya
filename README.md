@@ -72,7 +72,7 @@ Add Freya as a dependency via git (it's not published on [crates.io](https://cra
 
 ```toml
 freya = { git = "https://github.com/marc2332/freya" }
-dioxus = { version = "0.4", features = ["macro", "hooks"]}
+dioxus = { version = "0.4", features = ["macro", "hooks"] }
 ```
 
 ### Features ✨
