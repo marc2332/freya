@@ -4,7 +4,7 @@ use dioxus_native_core::prelude::{ElementNode, TextNode};
 use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::tree::TreeRef;
 use dioxus_native_core::NodeId;
-use dioxus_router::*;
+use dioxus_router::prelude::*;
 use freya_components::*;
 use freya_core::node::{get_node_state, NodeState};
 use freya_dom::prelude::SafeDOM;
@@ -16,6 +16,7 @@ use std::sync::Arc;
 use tokio::sync::Notify;
 use torin::prelude::NodeAreas;
 
+mod hooks;
 mod node;
 mod property;
 mod tab;
@@ -112,8 +113,10 @@ impl PartialEq for DevToolsProps {
 
 #[allow(non_snake_case)]
 pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
+    use_shared_state_provider(cx, Vec::<TreeNode>::new);
+    use_shared_state_provider::<HoveredNode>(cx, || cx.props.hovered_node.clone());
     use_init_theme(cx, DARK_THEME);
-    let children = use_state(cx, Vec::<TreeNode>::new);
+    let children = use_shared_state::<Vec<TreeNode>>(cx).unwrap();
     let theme = use_theme(cx);
     let theme = theme.read();
 
@@ -171,18 +174,8 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                         }
                     }
                 });
-                children.set(new_children);
+                *children.write() = new_children;
             }
-        }
-    });
-
-    let selected_node_id = use_state::<Option<NodeId>>(cx, || None);
-
-    let selected_node = children.iter().find(|c| {
-        if let Some(n_id) = selected_node_id.get() {
-            n_id == &c.id
-        } else {
-            false
         }
     });
 
@@ -191,94 +184,144 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
             width: "100%",
             height: "100%",
             color: theme.body.color,
-            Router {
-                initial_url: "freya://freya/elements".to_string(),
-                DevtoolsBar {}
-                Route {
-                    to: "/elements",
-                    NodesTree {
-                        nodes: children,
-                        height: "calc(100% - 35)",
-                        selected_node_id: &None,
-                        onselected: |node: &TreeNode| {
-                            if let Some(hovered_node) = &cx.props.hovered_node {
-                                hovered_node.lock().unwrap().replace(node.id);
-                            }
-                            selected_node_id.set(Some(node.id));
-                        }
-                    }
-                }
-                Route {
-                    to: "/elements/style",
-                    NodesTree {
-                        nodes: children,
-                        height: "calc(50% - 35)",
-                        selected_node_id: selected_node_id.get(),
-                        onselected: |node: &TreeNode| {
-                            if let Some(hovered_node) = &cx.props.hovered_node {
-                                hovered_node.lock().unwrap().replace(node.id);
-                            }
-                            selected_node_id.set(Some(node.id));
-                        }
-                    }
-                    selected_node.map(|selected_node| {
-                        rsx!(
-                            NodeInspectorStyle {
-                                node: selected_node
-                            }
-                        )
-                    })
-                }
-                Route {
-                    to: "/elements/layout",
-                    NodesTree {
-                        nodes: children,
-                        height: "calc(50% - 35)",
-                        selected_node_id: selected_node_id.get(),
-                        onselected: |node: &TreeNode| {
-                            if let Some(hovered_node) = &cx.props.hovered_node {
-                                hovered_node.lock().unwrap().replace(node.id);
-                            }
-                            selected_node_id.set(Some(node.id));
-                        }
-                    }
-                    selected_node.map(|selected_node| {
-                        rsx!(
-                            NodeInspectorLayout {
-                                node: selected_node
-                            }
-                        )
-                    })
-                }
-            }
+            Router::<Route> { }
         }
     )
 }
 
+#[inline_props]
 #[allow(non_snake_case)]
 pub fn DevtoolsBar(cx: Scope) -> Element {
     render!(
         TabsBar {
             TabButton {
-                to: "/elements",
+                to: Route::TreeElementsTab { },
                 label: "Elements"
+            }
+        }
+        Outlet::<Route> {}
+    )
+}
+
+#[allow(non_snake_case)]
+#[inline_props]
+pub fn NodeInspectorBar(cx: Scope, node_id: NodeId) -> Element {
+    render!(
+        TabsBar {
+            TabButton {
+                to: Route::TreeStyleTab { node_id: node_id.serialize() },
+                label: "Style"
+            }
+            TabButton {
+                to: Route::TreeLayoutTab { node_id: node_id.serialize() },
+                label: "Layout"
             }
         }
     )
 }
 
+#[derive(Routable, Clone)]
+#[rustfmt::skip]
+pub enum Route {
+    #[layout(DevtoolsBar)]
+        #[route("/")]
+        TreeElementsTab  {},
+
+        #[route("/elements/:node_id/style")]
+        TreeStyleTab { node_id: String },
+
+        #[route("/elements/:node_id/layout")]
+        TreeLayoutTab { node_id: String },
+    #[end_layout]
+    #[route("/..route")]
+    PageNotFound { },
+}
+
 #[allow(non_snake_case)]
-pub fn NodeInspectorBar(cx: Scope) -> Element {
+#[inline_props]
+fn PageNotFound(cx: Scope) -> Element {
     render!(
-        TabsBar {
-            TabButton {
-                to: "/elements/style",
-                label: "Style"
-            }
-            TabButton {
-                to: "/elements/layout",
-                label: "Layout"
-            }
+        label {
+            "Page not found."
         }
     )
+}
+
+#[allow(non_snake_case)]
+#[inline_props]
+fn TreeElementsTab(cx: Scope) -> Element {
+    let hovered_node = use_shared_state::<HoveredNode>(cx).unwrap();
+
+    render!(NodesTree {
+        height: "calc(100% - 35)",
+        onselected: |node: &TreeNode| {
+            if let Some(hovered_node) = &hovered_node.read().as_ref() {
+                hovered_node.lock().unwrap().replace(node.id);
+            }
+        }
+    })
+}
+
+#[derive(Props, PartialEq)]
+struct TreeTabProps {
+    node_id: String,
+}
+
+#[allow(non_snake_case)]
+fn TreeStyleTab(cx: Scope<TreeTabProps>) -> Element {
+    let hovered_node = use_shared_state::<HoveredNode>(cx).unwrap();
+    let node_id = NodeId::deserialize(&cx.props.node_id);
+
+    render!(
+        NodesTree {
+            height: "calc(50% - 35)",
+            selected_node_id: node_id,
+            onselected: |node: &TreeNode| {
+                if let Some(hovered_node) = &hovered_node.read().as_ref() {
+                    hovered_node.lock().unwrap().replace(node.id);
+                }
+            }
+        }
+        NodeInspectorStyle {
+            node_id: node_id
+        }
+    )
+}
+
+#[allow(non_snake_case)]
+fn TreeLayoutTab(cx: Scope<TreeTabProps>) -> Element {
+    let hovered_node = use_shared_state::<HoveredNode>(cx).unwrap();
+    let node_id = NodeId::deserialize(&cx.props.node_id);
+
+    render!(
+        NodesTree {
+            height: "calc(50% - 35)",
+            selected_node_id: node_id,
+            onselected: |node: &TreeNode| {
+                if let Some(hovered_node) = &hovered_node.read().as_ref() {
+                    hovered_node.lock().unwrap().replace(node.id);
+                }
+            }
+        }
+        NodeInspectorLayout {
+            node_id: node_id
+        }
+    )
+}
+
+pub trait NodeIdSerializer {
+    fn serialize(&self) -> String;
+
+    fn deserialize(node_id: &str) -> Self;
+}
+
+impl NodeIdSerializer for NodeId {
+    fn serialize(&self) -> String {
+        format!("{}-{}", self.index(), self.gen())
+    }
+
+    fn deserialize(node_id: &str) -> Self {
+        let (index, gen) = node_id.split_once('-').unwrap();
+        NodeId::new_from_index_and_gen(index.parse().unwrap(), gen.parse().unwrap())
+    }
 }

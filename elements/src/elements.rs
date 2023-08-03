@@ -307,13 +307,12 @@ pub mod events {
             $(
                 $( #[$attr] )*
                 pub fn $name<'a>(_cx: &'a ::dioxus_core::ScopeState, _f: impl FnMut(::dioxus_core::Event<$data>) + 'a) -> ::dioxus_core::Attribute<'a> {
-                    ::dioxus_core::Attribute {
-                        name: stringify!($name),
-                        value: _cx.listener(_f),
-                        namespace: None,
-                        mounted_element: Default::default(),
-                        volatile: false,
-                    }
+                    ::dioxus_core::Attribute::new(
+                        stringify!($name),
+                        _cx.listener(_f),
+                        None,
+                        false,
+                    )
                 }
             )*
         };
