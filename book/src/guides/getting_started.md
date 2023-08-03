@@ -23,7 +23,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-freya = { git = "https://github.com/marc2332/freya" }
+freya = "0.1"
 dioxus = { version = "0.4", features = ["macro", "hooks"] }
 ```
 

@@ -68,38 +68,33 @@ cargo run --example counter
 You can also try [`freya-template`](https://github.com/marc2332/freya-template)
 
 ### Usage 📜
-Add Freya as a dependency via git (it's not published on [crates.io](https://crates.io/) yet) in your `Cargo.toml`:
+Add Freya and Dioxus as dependencies:
 
 ```toml
-freya = { git = "https://github.com/marc2332/freya" }
+freya = "0.1"
 dioxus = { version = "0.4", features = ["macro", "hooks"] }
 ```
 
 ### Features ✨
-- Support for Windows, Linux and MacOS
-- Text, containers, images, svg, etc
-- Headless testing
-- Hot reload
-- Optional DevTools panel
-- Easy multiline text editing
-- Components crate (with theming support)
-   - Scroll views 
-   - Virtualized scroll views
-   - Button
-   - Slider
-   - Switch
-   - Dropdown
-   - and a few more
-- Keyboard and Mouse events
-- Hooks crate for text editing, animating, theming..
+- ⛏️ Built-in **components** (button, scroll views, switch and more) 
+- 🚇 Built-in **hooks** library (animations, text editing and more)
+- 🔍 Built-in **devtools** panel
+- 🧰 Built-in **headless testing** runner for components
+- 🎨 **Theming** support (not extensible yet ⚠️)
+- 🛩️ Cross-platform (Windows, Linux, MacOS)
+- 🖼️ SKSL **Shaders** support
+- 🔄️ Dioxus **Hot-reload** support
+- 📒 Multi-line **text editing** (experimental ⚠️)
+- 🦾 Basic **Accessibility** Support (experimental ⚠️)
+- 🧩Compatible with dioxus-std and other Dioxus renderer-agnostic libraries
 
 ### Goals 😁
 - Performant and low memory usage
-- Good developer experience
-- Cross-platform
-- Provide accessibility APIs
-- Provide testing APIs
-- Provide useful built-in components and hooks
+- Ggood developer experience
+- Cross-platform support
+- Decent Accessibility support 
+- Useful testing APIs
+- Useful and extensible components and hooks
 
 ## Status ⌚
 
