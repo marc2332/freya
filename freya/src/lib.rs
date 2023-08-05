@@ -18,7 +18,6 @@
 //!
 //!    render!(
 //!        rect {
-//!            overflow: "clip",
 //!            height: "100%",
 //!            width: "100%",
 //!            background: "rgb(35, 35, 35)",
@@ -32,11 +31,15 @@
 //!
 //! ```
 //!
+//! ## Features flags
+//!
+//! - `devtools`: Enables a side panel to inspect your App tree, styles and computed layout.
+//! - `use_camera`: Enables the `use_camera` hook.
+//! - `log`: Enables internal logs.
+//!
 
 /// Dioxus library.
 pub use dioxus;
-
-pub use freya_renderer::WindowConfig;
 
 /// Launch your application.
 pub mod launch;

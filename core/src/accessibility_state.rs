@@ -27,7 +27,7 @@ impl AccessibilityState {
         Self::default()
     }
 
-    /// Wrap it in a Arc<Mutex<T>>.
+    /// Wrap it in a `Arc<Mutex<T>>`.
     pub fn wrap(self) -> SharedAccessibilityState {
         Arc::new(Mutex::new(self))
     }

@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use torin::geometry::Size2D;
 
-/// Configuration for a [`TestingHandler`].
+/// Configuration for [`crate::test_handler::TestingHandler`].
 pub struct TestingConfig {
     vdom_timeout: Duration,
     size: Size2D,
