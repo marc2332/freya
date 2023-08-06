@@ -9,7 +9,7 @@ readme = "../readme.md"
 homepage = "https://freyaui.dev/"
 repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
-categories = ["GUI"]
+categories = ["gui", "asynchronous"]
 
 [features]
 use_camera = ["dep:nokhwa"]
