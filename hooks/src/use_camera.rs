@@ -9,6 +9,7 @@ use freya_common::EventMessage;
 use freya_node_state::{CustomAttributeValues, ImageReference};
 use nokhwa::{pixel_format::RgbFormat, utils::RequestedFormat, Camera, NokhwaError};
 use tokio::time::sleep;
+use crate::use_platform;
 
 pub use nokhwa::utils::{CameraIndex, RequestedFormatType, Resolution};
 
@@ -62,7 +63,7 @@ pub fn use_camera(
     cx: &ScopeState,
     camera_settings: CameraSettings,
 ) -> (AttributeValue, &UseState<Option<NokhwaError>>) {
-    let platform = use_platform();
+    let platform = use_platform(cx);
     let camera_error = use_state(cx, || None);
     let image_reference = cx.use_hook(|| Arc::new(Mutex::new(None)));
 
@@ -102,7 +103,7 @@ pub fn use_camera(
                         // Send the frame to the renderer via the image reference
                         image_reference.lock().unwrap().replace(bts);
 
-                        // Request the renderer to relayout
+                        // Request the renderer to rerender
                         platform.send(EventMessage::RequestRerender).unwrap();
                     } else if let Err(err) = frame {
                         handle_error(err);
