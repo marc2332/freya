@@ -23,10 +23,10 @@ async fn no_state() {
 async fn with_state() {
     fn stateful_app(cx: Scope) -> Element {
         let state = use_state(cx, || false);
-        let state_setter = state.setter();
 
-        use_effect(cx, (), move |_| async move {
-            state_setter(true);
+        use_effect(cx, (), |_| {
+            state.set(true);
+            async move {}
         });
 
         render!(

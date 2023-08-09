@@ -43,10 +43,10 @@ Here, the component has a state that is `false` by default, but, once mounted it
 async fn dynamic_test() {
     fn dynamic_component(cx: Scope) -> Element {
         let state = use_state(cx, || false);
-        let state_setter = state.setter();
 
-        use_effect(cx, (), move |_| async move {
-            state_setter(true);
+        use_effect(cx, (), |_| {
+            state.set(true);
+            async move { }
         });
 
         render!(
@@ -123,7 +123,7 @@ async fn event_test() {
 
 ## Testing configuration
 
-The `launch_test` comes with a default configuration, but you can also pass your own with the `launch_test_with_config` function.
+The `launch_test` comes with a default configuration, but you can also pass your own config with the `launch_test_with_config` function.
 
 Here is an example of how to can set our custom window size:
 
