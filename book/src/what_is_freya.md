@@ -5,7 +5,7 @@
 ### Features
 - ⛏️ Built-in **components** (button, scroll views, switch and more) 
 - 🚇 Built-in **hooks** library (animations, text editing and more)
-- 🔍 Built-in **devtools** panel
+- 🔍 Built-in **devtools** panel (experimental ⚠️)
 - 🧰 Built-in **headless testing** runner for components
 - 🎨 **Theming** support (not extensible yet ⚠️)
 - 🛩️ Cross-platform (Windows, Linux, MacOS)
