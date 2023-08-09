@@ -113,6 +113,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
         to_owned![editable];
         move |_: MouseEvent| {
             editable.process_event(&EditableEvent::Click);
+            focus_manager.focus();
         }
     };
 
@@ -129,9 +130,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
             icon: CursorIcon::Text,
             rect {
                 onkeydown: onkeydown,
-                onclick: move |_| {
-                    focus_manager.focus();
-                },
+                onclick: onclick,
                 width: "auto",
                 height: "auto",
                 direction: "both",
@@ -156,7 +155,6 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
                             cursor_mode: "editable",
                             cursor_color: "{color}",
                             max_lines: "{max_lines}",
-                            onclick: onclick,
                             onmouseover: onmouseover,
                             onmousedown: onmousedown,
                             highlights: highlights_attr,

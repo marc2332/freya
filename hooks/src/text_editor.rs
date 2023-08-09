@@ -360,7 +360,7 @@ pub trait TextEditor: Sized + Clone + Display {
                     }
                     _ => {
                         if let Ok(ch) = character.parse::<char>() {
-                            if ch.is_ascii_alphanumeric() {
+                            if !ch.is_ascii_control() {
                                 // Adds a new character
                                 let char_idx =
                                     self.line_to_char(self.cursor_row()) + self.cursor_col();
