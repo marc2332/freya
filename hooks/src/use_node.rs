@@ -1,5 +1,5 @@
 use dioxus_core::{AttributeValue, ScopeState};
-use dioxus_hooks::{use_effect, use_ref, use_state, UseRef};
+use dioxus_hooks::{use_ref, use_state, UseRef, to_owned};
 use freya_common::NodeReferenceLayout;
 use freya_node_state::{CustomAttributeValues, NodeReference};
 use tokio::sync::mpsc::unbounded_channel;
@@ -8,29 +8,23 @@ use tokio::sync::mpsc::unbounded_channel;
 pub fn use_node(cx: &ScopeState) -> (AttributeValue, NodeReferenceLayout) {
     let status = use_state::<NodeReferenceLayout>(cx, NodeReferenceLayout::default);
 
-    let channel = cx.use_hook(|| {
-        let (tx, rx) = unbounded_channel::<NodeReferenceLayout>();
-        (tx, Some(rx))
-    });
+    let tx = cx.use_hook(|| {
+        let (tx, mut rx) = unbounded_channel::<NodeReferenceLayout>();
 
-    let node_ref = NodeReference(channel.0.clone());
-
-    use_effect(cx, (), move |_| {
-        let rx = channel.1.take();
-        let status = status.clone();
+        to_owned![status];
         cx.spawn(async move {
-            let mut rx = rx.unwrap();
             while let Some(new_status) = rx.recv().await {
                 if status.current().as_ref() != &new_status {
                     status.set(new_status);
                 }
             }
         });
-        async move {}
+
+        tx
     });
 
     (
-        cx.any_value(CustomAttributeValues::Reference(node_ref)),
+        cx.any_value(CustomAttributeValues::Reference(NodeReference(tx.clone()))),
         status.get().clone(),
     )
 }
@@ -39,29 +33,23 @@ pub fn use_node(cx: &ScopeState) -> (AttributeValue, NodeReferenceLayout) {
 pub fn use_node_ref(cx: &ScopeState) -> (AttributeValue, &UseRef<NodeReferenceLayout>) {
     let status = use_ref::<NodeReferenceLayout>(cx, NodeReferenceLayout::default);
 
-    let channel = cx.use_hook(|| {
-        let (tx, rx) = unbounded_channel::<NodeReferenceLayout>();
-        (tx, Some(rx))
-    });
+    let tx = cx.use_hook(|| {
+        let (tx, mut rx) = unbounded_channel::<NodeReferenceLayout>();
 
-    let node_ref = NodeReference(channel.0.clone());
-
-    use_effect(cx, (), move |_| {
-        let rx = channel.1.take();
-        let status = status.clone();
+        to_owned![status];
         cx.spawn(async move {
-            let mut rx = rx.unwrap();
             while let Some(new_status) = rx.recv().await {
                 if *status.read() != new_status {
                     *status.write_silent() = new_status;
                 }
             }
         });
-        async move {}
+
+        tx
     });
 
     (
-        cx.any_value(CustomAttributeValues::Reference(node_ref)),
+        cx.any_value(CustomAttributeValues::Reference(NodeReference(tx.clone()))),
         status,
     )
 }
