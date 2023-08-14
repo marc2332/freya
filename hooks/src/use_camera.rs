@@ -3,13 +3,13 @@ use std::{
     time::Duration,
 };
 
+use crate::use_platform;
 use dioxus_core::{AttributeValue, ScopeState};
 use dioxus_hooks::{to_owned, use_effect, use_state, UseState};
 use freya_common::EventMessage;
 use freya_node_state::{CustomAttributeValues, ImageReference};
 use nokhwa::{pixel_format::RgbFormat, utils::RequestedFormat, Camera, NokhwaError};
 use tokio::time::sleep;
-use crate::use_platform;
 
 pub use nokhwa::utils::{CameraIndex, RequestedFormatType, Resolution};
 
