@@ -50,7 +50,7 @@ impl CameraSettings {
 impl Default for CameraSettings {
     fn default() -> Self {
         Self {
-            frame_rate: 60,
+            frame_rate: 30,
             camera_index: CameraIndex::Index(0),
             resolution: None,
             camera_format: RequestedFormatType::AbsoluteHighestFrameRate,
