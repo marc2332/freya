@@ -93,8 +93,8 @@ impl CursorReference {
 }
 
 impl PartialEq for CursorReference {
-    fn eq(&self, _: &Self) -> bool {
-        true
+    fn eq(&self, other: &Self) -> bool {
+        self.text_id == other.text_id
     }
 }
 
