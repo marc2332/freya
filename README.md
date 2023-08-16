@@ -1,4 +1,4 @@
-# Freya :crab:
+# Freya 🦀
 
 <a href="https://freyaui.dev/"><img align="right" src="logo.svg" alt="Freya logo" width="150"/></a>
 
