@@ -1,15 +1,15 @@
 [package]
 name = "freya-components"
-description = "Cross-platform GUI Library."
+description = "Components library desgined for Freya."
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
 readme = "../readme.md"
-homepage = "https://github.com/marc2332/freya"
+homepage = "https://freyaui.dev/"
 repository = "https://github.com/marc2332/freya"
-keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
-categories = ["GUI"]
+keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
+categories = ["gui", "asynchronous"]
 
 [dependencies]
 freya-elements = { workspace = true }
@@ -30,5 +30,5 @@ open = "1"
 reqwest = { version = "0.11.13", features = ["json"] }
 
 [dev-dependencies]
-freya = { workspace = true }
-freya-testing = { workspace = true }
+freya = { path = "../freya" }
+freya-testing = { path = "../testing" }

@@ -1,15 +1,15 @@
 [package]
 name = "freya-testing"
-description = "Cross-platform GUI Library."
+description = "Headless test runner for Freya."
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
 readme = "../readme.md"
-homepage = "https://github.com/marc2332/freya"
+homepage = "https://freyaui.dev/"
 repository = "https://github.com/marc2332/freya"
-keywords = ["gui", "ui", "cross-platform", "dioxus", "skia", "graphics"]
-categories = ["GUI"]
+keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
+categories = ["gui", "asynchronous"]
 
 [dependencies]
 freya-elements = { workspace = true }

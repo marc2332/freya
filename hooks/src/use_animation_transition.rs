@@ -130,7 +130,7 @@ impl TransitionState {
     }
 }
 
-/// Manage the lifecyle of an [AnimationTransitionManager].
+/// Manage the lifecyle of a collection of transitions.
 #[derive(Clone)]
 pub struct TransitionsManager<'a> {
     /// Registered transitions

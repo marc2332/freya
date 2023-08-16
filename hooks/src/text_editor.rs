@@ -359,12 +359,17 @@ pub trait TextEditor: Sized + Clone + Display {
                         event = TextEvent::TextChanged
                     }
                     _ => {
-                        // Adds a new character
-                        let char_idx = self.line_to_char(self.cursor_row()) + self.cursor_col();
-                        self.insert(character, char_idx);
-                        self.cursor_right();
+                        if let Ok(ch) = character.parse::<char>() {
+                            if !ch.is_ascii_control() {
+                                // Adds a new character
+                                let char_idx =
+                                    self.line_to_char(self.cursor_row()) + self.cursor_col();
+                                self.insert(character, char_idx);
+                                self.cursor_right();
 
-                        event = TextEvent::TextChanged
+                                event = TextEvent::TextChanged
+                            }
+                        }
                     }
                 }
             }
