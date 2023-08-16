@@ -43,5 +43,5 @@ tracing = { workspace = true }
 
 [dev-dependencies]
 dioxus = { workspace = true }
-freya = { workspace = true }
-freya-testing = { workspace = true }
+freya = { path = "../freya" }
+freya-testing = { path = "../testing" }
