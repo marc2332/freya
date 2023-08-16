@@ -90,7 +90,7 @@ dioxus = { version = "0.4", features = ["macro", "hooks"] }
 
 ### Goals 😁
 - Performant and low memory usage
-- Ggood developer experience
+- Good developer experience
 - Cross-platform support
 - Decent Accessibility support 
 - Useful testing APIs
