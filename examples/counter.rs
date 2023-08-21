@@ -30,7 +30,7 @@ fn app(cx: Scope) -> Element {
             background: "rgb(168, 218, 220)",
             color: "black",
             padding: "12",
-            onglobalmousedown: move |_| count += 1,
+            onclick: move |_| count += 1,
             label { "Click to increase!" }
         }
     )
