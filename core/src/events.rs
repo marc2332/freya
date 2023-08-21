@@ -20,6 +20,7 @@ pub fn measure_global_events(events: &EventsQueue) -> Vec<FreyaEvent> {
     for event in events {
         let event_name = match event.get_name() {
             "click" => Some("globalclick"),
+            "mousedown" => Some("globalmousedown"),
             "mouseover" => Some("globalmouseover"),
             _ => None,
         };
