@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use freya_hooks::{use_init_default_theme, use_init_theme, Theme};
+use freya_hooks::{use_init_theme, Theme};
 
 /// [`ThemeProvider`] component properties.
 #[derive(Props)]
@@ -18,11 +18,7 @@ pub struct ThemeProviderProps<'a> {
 ///
 #[allow(non_snake_case)]
 pub fn ThemeProvider<'a>(cx: Scope<'a, ThemeProviderProps<'a>>) -> Element<'a> {
-    if let Some(theme) = cx.props.theme.as_ref() {
-        use_init_theme(cx, theme.clone());
-    } else {
-        use_init_default_theme(cx);
-    }
+    use_init_theme(cx, cx.props.theme.clone().unwrap_or_default());
 
     render!(&cx.props.children)
 }
