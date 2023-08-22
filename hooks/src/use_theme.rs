@@ -7,9 +7,8 @@ pub fn use_init_theme(cx: &ScopeState, theme: Theme) {
 }
 
 /// Provide the default [`Theme`].
-pub fn use_init_default_theme(cx: &ScopeState) -> Theme {
-    use_shared_state_provider(cx, || LIGHT_THEME);
-    LIGHT_THEME
+pub fn use_init_default_theme(cx: &ScopeState) {
+    use_shared_state_provider(cx, Theme::default);
 }
 
 /// Subscribe to [`Theme`] changes.
@@ -23,7 +22,7 @@ pub fn use_theme(cx: &ScopeState) -> &UseSharedState<Theme> {
 pub fn use_get_theme(cx: &ScopeState) -> Theme {
     use_shared_state::<Theme>(cx)
         .map(|v| v.read().clone())
-        .unwrap_or(LIGHT_THEME)
+        .unwrap_or_default()
 }
 
 /// Theming properties for DropdownItem components.
@@ -131,6 +130,12 @@ pub struct Theme {
     pub dropdown_item: DropdownItemTheme,
     pub accordion: AccordionTheme,
     pub loader: LoaderTheme,
+}
+
+impl Default for Theme {
+    fn default() -> Self {
+        LIGHT_THEME
+    }
 }
 
 /// `Light` theme
