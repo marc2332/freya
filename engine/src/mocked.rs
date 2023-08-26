@@ -1,4 +1,9 @@
-use std::{default, ops::*};
+#![allow(dead_code)]
+#![allow(non_upper_case_globals)]
+#![allow(clippy::upper_case_acronyms)]
+#![allow(non_camel_case_types)]
+
+use std::ops::*;
 
 use bitflags::bitflags;
 use glutin::context::PossiblyCurrentContext;
@@ -33,17 +38,17 @@ impl Color {
     pub const MAGENTA: Self = Color(4294902015);
 
     #[inline]
-    pub fn new(argb: u32) -> Self {
+    pub fn new(_argb: u32) -> Self {
         unimplemented!("This is mocked")
     }
 
     #[inline]
-    pub fn from_argb(a: u8, r: u8, g: u8, b: u8) -> Color {
+    pub fn from_argb(_a: u8, _r: u8, _g: u8, _b: u8) -> Color {
         unimplemented!("This is mocked")
     }
 
     #[inline]
-    pub fn from_rgb(r: u8, g: u8, b: u8) -> Color {
+    pub fn from_rgb(_r: u8, _g: u8, _b: u8) -> Color {
         unimplemented!("This is mocked")
     }
 
@@ -69,7 +74,7 @@ impl Color {
 
     #[inline]
     #[must_use]
-    pub fn with_a(self, a: u8) -> Self {
+    pub fn with_a(self, _a: u8) -> Self {
         unimplemented!("This is mocked")
     }
 
@@ -92,7 +97,7 @@ pub struct RGB {
 }
 
 impl From<(u8, u8, u8)> for RGB {
-    fn from(rgb: (u8, u8, u8)) -> Self {
+    fn from(_rgb: (u8, u8, u8)) -> Self {
         unimplemented!("This is mocked")
     }
 }
@@ -105,13 +110,13 @@ pub struct HSV {
 }
 
 impl From<(f32, f32, f32)> for HSV {
-    fn from(hsv: (f32, f32, f32)) -> Self {
+    fn from(_hsv: (f32, f32, f32)) -> Self {
         unimplemented!("This is mocked")
     }
 }
 
 impl HSV {
-    pub fn to_color(self, alpha: u8) -> Color {
+    pub fn to_color(self, _alpha: u8) -> Color {
         unimplemented!("This is mocked")
     }
 }
@@ -125,12 +130,12 @@ pub struct Shader;
 
 impl Shader {
     pub fn linear_gradient<'a>(
-        points: (impl Into<Point>, impl Into<Point>),
-        colors: impl Into<GradientShaderColors<'a>>,
-        pos: impl Into<Option<&'a [f32]>>,
-        mode: TileMode,
-        flags: impl Into<Option<GradientFlags>>,
-        local_matrix: impl Into<Option<&'a Matrix>>,
+        _points: (impl Into<Point>, impl Into<Point>),
+        _colors: impl Into<GradientShaderColors<'a>>,
+        _pos: impl Into<Option<&'a [f32]>>,
+        _mode: TileMode,
+        _flags: impl Into<Option<GradientFlags>>,
+        _local_matrix: impl Into<Option<&'a Matrix>>,
     ) -> Option<Self> {
         unimplemented!("This is mocked")
     }
@@ -162,7 +167,7 @@ impl Matrix {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_rotate(&self, degrees: f32, pivot: impl Into<Option<Point>>) -> &mut Self {
+    pub fn set_rotate(&self, _degrees: f32, _pivot: impl Into<Option<Point>>) -> &mut Self {
         unimplemented!("This is mocked")
     }
 }
@@ -371,11 +376,11 @@ impl TextStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn equals(&self, other: &TextStyle) -> bool {
+    pub fn equals(&self, _other: &TextStyle) -> bool {
         unimplemented!("This is mocked")
     }
 
-    pub fn equals_by_fonts(&self, that: &TextStyle) -> bool {
+    pub fn equals_by_fonts(&self, _that: &TextStyle) -> bool {
         unimplemented!("This is mocked")
     }
 
@@ -383,7 +388,7 @@ impl TextStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_color(&mut self, color: impl Into<Color>) -> &mut Self {
+    pub fn set_color(&mut self, _color: impl Into<Color>) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -391,7 +396,7 @@ impl TextStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_foreground_color(&mut self, paint: &Paint) -> &mut Self {
+    pub fn set_foreground_color(&mut self, _paint: &Paint) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -403,7 +408,7 @@ impl TextStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_background_color(&mut self, paint: &Paint) -> &mut Self {
+    pub fn set_background_color(&mut self, _paint: &Paint) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -423,7 +428,7 @@ impl TextStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_font_style(&mut self, font_style: FontStyle) -> &mut Self {
+    pub fn set_font_style(&mut self, _font_style: FontStyle) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -431,7 +436,7 @@ impl TextStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn add_shadow(&mut self, shadow: TextShadow) -> &mut Self {
+    pub fn add_shadow(&mut self, _shadow: TextShadow) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -443,7 +448,7 @@ impl TextStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn add_font_feature(&mut self, font_feature: impl AsRef<str>, value: i32) {
+    pub fn add_font_feature(&mut self, _font_feature: impl AsRef<str>, _value: i32) {
         unimplemented!("This is mocked")
     }
 
@@ -455,7 +460,7 @@ impl TextStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_font_size(&mut self, size: f32) -> &mut Self {
+    pub fn set_font_size(&mut self, _size: f32) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -463,7 +468,7 @@ impl TextStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_font_families(&mut self, families: &[impl AsRef<str>]) -> &mut Self {
+    pub fn set_font_families(&mut self, _families: &[impl AsRef<str>]) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -471,11 +476,11 @@ impl TextStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_baseline_shift(&mut self, baseline_shift: f32) -> &mut Self {
+    pub fn set_baseline_shift(&mut self, _baseline_shift: f32) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_height(&mut self, height: f32) -> &mut Self {
+    pub fn set_height(&mut self, _height: f32) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -483,7 +488,7 @@ impl TextStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_height_override(&mut self, height_override: bool) -> &mut Self {
+    pub fn set_height_override(&mut self, _height_override: bool) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -491,7 +496,7 @@ impl TextStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_half_leading(&mut self, half_leading: bool) -> &mut Self {
+    pub fn set_half_leading(&mut self, _half_leading: bool) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -499,7 +504,7 @@ impl TextStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_letter_spacing(&mut self, letter_spacing: f32) -> &mut Self {
+    pub fn set_letter_spacing(&mut self, _letter_spacing: f32) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -507,7 +512,7 @@ impl TextStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_word_spacing(&mut self, word_spacing: f32) -> &mut Self {
+    pub fn set_word_spacing(&mut self, _word_spacing: f32) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -519,7 +524,7 @@ impl TextStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_typeface(&mut self, typeface: impl Into<Option<Typeface>>) -> &mut Self {
+    pub fn set_typeface(&mut self, _typeface: impl Into<Option<Typeface>>) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -527,7 +532,7 @@ impl TextStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_locale(&mut self, locale: impl AsRef<str>) -> &mut Self {
+    pub fn set_locale(&mut self, _locale: impl AsRef<str>) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -535,7 +540,7 @@ impl TextStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_text_baseline(&mut self, baseline: TextBaseline) -> &mut Self {
+    pub fn set_text_baseline(&mut self, _baseline: TextBaseline) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -568,27 +573,27 @@ pub struct FontFamilies;
 pub struct Paint;
 
 impl Paint {
-    pub fn set_anti_alias(&mut self, anti_alias: bool) -> &mut Self {
+    pub fn set_anti_alias(&mut self, _anti_alias: bool) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_color(&mut self, color: impl Into<Color>) -> &mut Self {
+    pub fn set_color(&mut self, _color: impl Into<Color>) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_style(&mut self, style: PaintStyle) -> &mut Self {
+    pub fn set_style(&mut self, _style: PaintStyle) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_shader(&mut self, shader: impl Into<Option<Shader>>) -> &mut Self {
+    pub fn set_shader(&mut self, _shader: impl Into<Option<Shader>>) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_stroke_width(&mut self, width: f32) -> &mut Self {
+    pub fn set_stroke_width(&mut self, _width: f32) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_mask_filter(&mut self, mask_filter: impl Into<Option<MaskFilter>>) -> &mut Self {
+    pub fn set_mask_filter(&mut self, _mask_filter: impl Into<Option<MaskFilter>>) -> &mut Self {
         unimplemented!("This is mocked")
     }
 }
@@ -613,8 +618,8 @@ pub struct FontMgr;
 impl FontMgr {
     pub fn new_from_data(
         &self,
-        bytes: &[u8],
-        ttc_index: impl Into<Option<usize>>,
+        _bytes: &[u8],
+        _ttc_index: impl Into<Option<usize>>,
     ) -> Option<Typeface> {
         unimplemented!("This is mocked")
     }
@@ -699,11 +704,11 @@ impl Paragraph {
         unimplemented!("This is mocked")
     }
 
-    pub fn layout(&mut self, width: f32) {
+    pub fn layout(&mut self, _width: f32) {
         unimplemented!("This is mocked")
     }
 
-    pub fn paint(&self, canvas: &mut Canvas, p: impl Into<Point>) {
+    pub fn paint(&self, _canvas: &mut Canvas, _p: impl Into<Point>) {
         unimplemented!("This is mocked")
     }
 
@@ -711,9 +716,9 @@ impl Paragraph {
     /// start and end glyph indexes, including start and excluding end
     pub fn get_rects_for_range(
         &self,
-        range: Range<usize>,
-        rect_height_style: RectHeightStyle,
-        rect_width_style: RectWidthStyle,
+        _range: Range<usize>,
+        _rect_height_style: RectHeightStyle,
+        _rect_width_style: RectWidthStyle,
     ) -> Vec<TextBox> {
         unimplemented!("This is mocked")
     }
@@ -722,11 +727,11 @@ impl Paragraph {
         unimplemented!("This is mocked")
     }
 
-    pub fn get_glyph_position_at_coordinate(&self, p: impl Into<Point>) -> PositionWithAffinity {
+    pub fn get_glyph_position_at_coordinate(&self, _p: impl Into<Point>) -> PositionWithAffinity {
         unimplemented!("This is mocked")
     }
 
-    pub fn get_word_boundary(&self, offset: u32) -> Range<usize> {
+    pub fn get_word_boundary(&self, _offset: u32) -> Range<usize> {
         unimplemented!("This is mocked")
     }
 
@@ -746,27 +751,31 @@ impl Paragraph {
         unimplemented!("This is mocked")
     }
 
-    pub fn get_line_number_at(&self, code_unit_index: usize) -> Option<usize> {
+    pub fn get_line_number_at(&self, _code_unit_index: usize) -> Option<usize> {
         unimplemented!("This is mocked")
     }
 
-    pub fn get_line_metrics_at(&self, line_number: usize) -> Option<LineMetrics> {
+    pub fn get_line_metrics_at(&self, _line_number: usize) -> Option<LineMetrics> {
         unimplemented!("This is mocked")
     }
 
-    pub fn get_actual_text_range(&self, line_number: usize, include_spaces: bool) -> Range<usize> {
+    pub fn get_actual_text_range(
+        &self,
+        _line_number: usize,
+        _include_spaces: bool,
+    ) -> Range<usize> {
         unimplemented!("This is mocked")
     }
 
-    pub fn get_glyph_cluster_at(&self, code_unit_index: usize) -> Option<GlyphClusterInfo> {
+    pub fn get_glyph_cluster_at(&self, _code_unit_index: usize) -> Option<GlyphClusterInfo> {
         unimplemented!("This is mocked")
     }
 
-    pub fn get_closest_glyph_cluster_at(&self, d: impl Into<Point>) -> Option<GlyphClusterInfo> {
+    pub fn get_closest_glyph_cluster_at(&self, _d: impl Into<Point>) -> Option<GlyphClusterInfo> {
         unimplemented!("This is mocked")
     }
 
-    pub fn get_font_at(&self, code_unit_index: usize) -> Font {
+    pub fn get_font_at(&self, _code_unit_index: usize) -> Font {
         unimplemented!("This is mocked")
     }
 
@@ -787,7 +796,7 @@ impl ParagraphStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_strut_style(&mut self, strut_style: StrutStyle) -> &mut Self {
+    pub fn set_strut_style(&mut self, _strut_style: StrutStyle) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -795,7 +804,7 @@ impl ParagraphStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_text_style(&mut self, text_style: &TextStyle) -> &mut Self {
+    pub fn set_text_style(&mut self, _text_style: &TextStyle) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -803,7 +812,7 @@ impl ParagraphStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_text_direction(&mut self, direction: TextDirection) -> &mut Self {
+    pub fn set_text_direction(&mut self, _direction: TextDirection) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -811,7 +820,7 @@ impl ParagraphStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_text_align(&mut self, align: TextAlign) -> &mut Self {
+    pub fn set_text_align(&mut self, _align: TextAlign) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -819,7 +828,7 @@ impl ParagraphStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_max_lines(&mut self, lines: impl Into<Option<usize>>) -> &mut Self {
+    pub fn set_max_lines(&mut self, _lines: impl Into<Option<usize>>) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -829,7 +838,7 @@ impl ParagraphStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_ellipsis(&mut self, ellipsis: impl AsRef<str>) -> &mut Self {
+    pub fn set_ellipsis(&mut self, _ellipsis: impl AsRef<str>) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -837,7 +846,7 @@ impl ParagraphStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_height(&mut self, height: f32) -> &mut Self {
+    pub fn set_height(&mut self, _height: f32) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -845,7 +854,7 @@ impl ParagraphStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_text_height_behavior(&mut self, v: TextHeightBehavior) -> &mut Self {
+    pub fn set_text_height_behavior(&mut self, _v: TextHeightBehavior) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -873,7 +882,7 @@ impl ParagraphStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_replace_tab_characters(&mut self, value: bool) -> &mut Self {
+    pub fn set_replace_tab_characters(&mut self, _value: bool) -> &mut Self {
         unimplemented!("This is mocked")
     }
 }
@@ -881,7 +890,7 @@ impl ParagraphStyle {
 pub struct ParagraphBuilder;
 
 impl ParagraphBuilder {
-    pub fn push_style(&mut self, style: &TextStyle) -> &mut Self {
+    pub fn push_style(&mut self, _style: &TextStyle) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -893,11 +902,11 @@ impl ParagraphBuilder {
         unimplemented!("This is mocked")
     }
 
-    pub fn add_text(&mut self, str: impl AsRef<str>) -> &mut Self {
+    pub fn add_text(&mut self, _str: impl AsRef<str>) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
-    pub fn add_placeholder(&mut self, placeholder_style: &PlaceholderStyle) -> &mut Self {
+    pub fn add_placeholder(&mut self, _placeholder_style: &PlaceholderStyle) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -909,7 +918,7 @@ impl ParagraphBuilder {
         unimplemented!("This is mocked")
     }
 
-    pub fn new(style: &ParagraphStyle, font_collection: &FontCollection) -> Self {
+    pub fn new(_style: &ParagraphStyle, _font_collection: &FontCollection) -> Self {
         unimplemented!("This is mocked")
     }
 }
@@ -974,7 +983,7 @@ impl Canvas {
         unimplemented!("This is mocked")
     }
 
-    pub fn translate(&mut self, d: impl Into<Point>) -> &mut Self {
+    pub fn translate(&mut self, _d: impl Into<Point>) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -1107,7 +1116,7 @@ pub struct Rect {
 }
 
 impl Rect {
-    pub fn new(left: f32, top: f32, right: f32, bottom: f32) -> Self {
+    pub fn new(_left: f32, _top: f32, _right: f32, _bottom: f32) -> Self {
         unimplemented!("This is mocked")
     }
 }
@@ -1123,7 +1132,7 @@ impl Image {
 pub struct Data;
 
 impl Data {
-    pub fn new_bytes(bytes: &[u8]) -> Self {
+    pub fn new_bytes(_bytes: &[u8]) -> Self {
         unimplemented!("This is mocked")
     }
 }
@@ -1174,11 +1183,11 @@ impl Path {
         unimplemented!("This is mocked")
     }
 
-    pub fn move_to(&mut self, p: impl Into<Point>) -> &mut Self {
+    pub fn move_to(&mut self, _p: impl Into<Point>) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
-    pub fn line_to(&mut self, p: impl Into<Point>) -> &mut Self {
+    pub fn line_to(&mut self, _p: impl Into<Point>) -> &mut Self {
         unimplemented!("This is mocked")
     }
 
@@ -1237,7 +1246,7 @@ impl AsRef<RRect> for RRect {
 }
 
 impl RRect {
-    pub fn new_rect_radii(rect: Rect, radii: &[Point; 4]) -> Self {
+    pub fn new_rect_radii(_rect: Rect, _radii: &[Point; 4]) -> Self {
         unimplemented!("This is mocked")
     }
 
@@ -1249,11 +1258,11 @@ impl RRect {
         unimplemented!("This is mocked")
     }
 
-    pub fn radii(&self, corner: Corner) -> Point {
+    pub fn radii(&self, _corner: Corner) -> Point {
         unimplemented!("This is mocked")
     }
 
-    pub fn with_outset(&self, delta: impl Into<Point>) -> Self {
+    pub fn with_outset(&self, _delta: impl Into<Point>) -> Self {
         unimplemented!("This is mocked")
     }
 }
@@ -1285,9 +1294,9 @@ pub struct MaskFilter;
 
 impl MaskFilter {
     pub fn blur(
-        style: BlurStyle,
-        sigma: f32,
-        respect_ctm: impl Into<Option<bool>>,
+        _style: BlurStyle,
+        _sigma: f32,
+        _respect_ctm: impl Into<Option<bool>>,
     ) -> Option<Self> {
         unimplemented!("This is mocked")
     }
@@ -1311,15 +1320,15 @@ pub mod svg {
     pub struct Dom;
 
     impl Dom {
-        pub fn from_bytes(bytes: &[u8]) -> Result<Self, ()> {
+        pub fn from_bytes(_bytes: &[u8]) -> Result<Self, ()> {
             unimplemented!("This is mocked")
         }
 
-        pub fn set_container_size(&mut self, size: impl Into<Size>) {
+        pub fn set_container_size(&mut self, _size: impl Into<Size>) {
             unimplemented!("This is mocked")
         }
 
-        pub fn render(&self, canvas: &mut Canvas) {
+        pub fn render(&self, _canvas: &mut Canvas) {
             unimplemented!("This is mocked")
         }
     }
@@ -1353,9 +1362,9 @@ impl Surface {
     }
 
     pub fn from_backend_render_target(
-        _context: &mut gpu::RecordingContext,
-        _backend_render_target: &gpu::BackendRenderTarget,
-        _origin: gpu::SurfaceOrigin,
+        _context: &mut RecordingContext,
+        _backend_render_target: &BackendRenderTarget,
+        _origin: SurfaceOrigin,
         _color_type: ColorType,
         _color_space: impl Into<Option<ColorSpace>>,
         _surface_props: Option<&SurfaceProps>,
@@ -1374,121 +1383,117 @@ pub enum ColorType {
 
 pub struct SurfaceProps;
 
-pub mod gpu {
-    use std::ops::{Deref, DerefMut};
+use std::ops::{Deref, DerefMut};
 
-    pub struct RecordingContext;
+pub struct RecordingContext;
 
-    #[repr(i32)]
-    #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-    pub enum SurfaceOrigin {
-        TopLeft = 0,
-        BottomLeft = 1,
+#[repr(i32)]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub enum SurfaceOrigin {
+    TopLeft = 0,
+    BottomLeft = 1,
+}
+
+#[repr(C)]
+#[derive(Debug)]
+pub struct ContextOptions;
+
+pub struct DirectContext;
+
+impl From<DirectContext> for RecordingContext {
+    fn from(_direct_context: DirectContext) -> Self {
+        unimplemented!("This is mocked")
+    }
+}
+
+impl Deref for DirectContext {
+    type Target = RecordingContext;
+
+    fn deref(&self) -> &Self::Target {
+        unimplemented!("This is mocked")
+    }
+}
+
+impl DerefMut for DirectContext {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unimplemented!("This is mocked")
+    }
+}
+
+impl DirectContext {
+    pub fn new_gl<'a>(
+        _interface: impl Into<Option<Interface>>,
+        _options: impl Into<Option<&'a ContextOptions>>,
+    ) -> Option<DirectContext> {
+        unimplemented!("This is mocked")
     }
 
-    #[repr(C)]
-    #[derive(Debug)]
-    pub struct ContextOptions;
-
-    pub struct DirectContext;
-
-    impl From<DirectContext> for RecordingContext {
-        fn from(_direct_context: DirectContext) -> Self {
-            unimplemented!("This is mocked")
-        }
+    pub fn flush_and_submit(&self) {
+        unimplemented!("This is mocked")
     }
+}
 
-    impl Deref for DirectContext {
-        type Target = RecordingContext;
+use std::ffi::c_void;
 
-        fn deref(&self) -> &Self::Target {
-            unimplemented!("This is mocked")
-        }
+#[derive(Clone, Copy)]
+pub struct FramebufferInfo {
+    pub fboid: i32,
+    pub format: Format,
+}
+
+pub struct Interface;
+
+impl Interface {
+    pub fn new_load_with<F>(_load_fn: F) -> Option<Self>
+    where
+        F: FnMut(&str) -> *const c_void,
+    {
+        unimplemented!("This is mocked")
     }
+}
 
-    impl DerefMut for DirectContext {
-        fn deref_mut(&mut self) -> &mut Self::Target {
-            unimplemented!("This is mocked")
-        }
-    }
+#[repr(i32)]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub enum Format {
+    Unknown = 0,
+    RGBA8 = 1,
+    R8 = 2,
+    ALPHA8 = 3,
+    LUMINANCE8 = 4,
+    LUMINANCE8_ALPHA8 = 5,
+    BGRA8 = 6,
+    RGB565 = 7,
+    RGBA16F = 8,
+    R16F = 9,
+    RGB8 = 10,
+    RGBX8 = 11,
+    RG8 = 12,
+    RGB10_A2 = 13,
+    RGBA4 = 14,
+    SRGB8_ALPHA8 = 15,
+    COMPRESSED_ETC1_RGB8 = 16,
+    COMPRESSED_RGB8_ETC2 = 17,
+    COMPRESSED_RGB8_BC1 = 18,
+    COMPRESSED_RGBA8_BC1 = 19,
+    R16 = 20,
+    RG16 = 21,
+    RGBA16 = 22,
+    RG16F = 23,
+    LUMINANCE16F = 24,
+    STENCIL_INDEX8 = 25,
+    STENCIL_INDEX16 = 26,
+    DEPTH24_STENCIL8 = 27,
+}
 
-    impl DirectContext {
-        pub fn new_gl<'a>(
-            _interface: impl Into<Option<gl::Interface>>,
-            _options: impl Into<Option<&'a ContextOptions>>,
-        ) -> Option<DirectContext> {
-            unimplemented!("This is mocked")
-        }
+pub struct BackendRenderTarget;
 
-        pub fn flush_and_submit(&self) {
-            unimplemented!("This is mocked")
-        }
-    }
-
-    pub mod gl {
-        use std::ffi::c_void;
-
-        #[derive(Clone, Copy)]
-        pub struct FramebufferInfo {
-            pub fboid: i32,
-            pub format: Format,
-        }
-
-        pub struct Interface;
-
-        impl Interface {
-            pub fn new_load_with<F>(load_fn: F) -> Option<Self>
-            where
-                F: FnMut(&str) -> *const c_void,
-            {
-                unimplemented!("This is mocked")
-            }
-        }
-
-        #[repr(i32)]
-        #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-        pub enum Format {
-            Unknown = 0,
-            RGBA8 = 1,
-            R8 = 2,
-            ALPHA8 = 3,
-            LUMINANCE8 = 4,
-            LUMINANCE8_ALPHA8 = 5,
-            BGRA8 = 6,
-            RGB565 = 7,
-            RGBA16F = 8,
-            R16F = 9,
-            RGB8 = 10,
-            RGBX8 = 11,
-            RG8 = 12,
-            RGB10_A2 = 13,
-            RGBA4 = 14,
-            SRGB8_ALPHA8 = 15,
-            COMPRESSED_ETC1_RGB8 = 16,
-            COMPRESSED_RGB8_ETC2 = 17,
-            COMPRESSED_RGB8_BC1 = 18,
-            COMPRESSED_RGBA8_BC1 = 19,
-            R16 = 20,
-            RG16 = 21,
-            RGBA16 = 22,
-            RG16F = 23,
-            LUMINANCE16F = 24,
-            STENCIL_INDEX8 = 25,
-            STENCIL_INDEX16 = 26,
-            DEPTH24_STENCIL8 = 27,
-        }
-    }
-
-    pub struct BackendRenderTarget;
-
-    impl BackendRenderTarget {
-        pub fn new_gl(
-            (width, height): (i32, i32),
-            sample_count: impl Into<Option<usize>>,
-            stencil_bits: usize,
-            info: gl::FramebufferInfo,
-        ) -> Self {
-            unimplemented!("This is mocked")
-        }
+impl BackendRenderTarget {
+    pub fn new_gl(
+        (_width, _height): (i32, i32),
+        _sample_count: impl Into<Option<usize>>,
+        _stencil_bits: usize,
+        _info: FramebufferInfo,
+    ) -> Self {
+        unimplemented!("This is mocked")
     }
 }
