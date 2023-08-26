@@ -1,16 +1,16 @@
 use dioxus_native_core::real_dom::NodeImmutable;
 use freya_dom::prelude::DioxusNode;
+use freya_engine::prelude::*;
 use freya_node_state::{
-    Border, CornerRadius, CursorSettings, Fill, FontStyle, LayoutState, References, Shadow, Style,
-    Transform,
+    Border, CornerRadius, CursorSettings, Fill, FontStyleState, LayoutState, References, Shadow,
+    Style, Transform,
 };
-use skia_safe::textlayout::TextShadow;
 use torin::{direction::DirectionMode, display::DisplayMode, gaps::Gaps, size::Size};
 
 #[derive(Clone)]
 pub struct NodeState {
     pub cursor: CursorSettings,
-    pub font_style: FontStyle,
+    pub font_style: FontStyleState,
     pub references: References,
     pub size: LayoutState,
     pub style: Style,
@@ -19,7 +19,7 @@ pub struct NodeState {
 
 pub fn get_node_state(node: &DioxusNode) -> NodeState {
     let cursor = node.get::<CursorSettings>().unwrap().clone();
-    let font_style = node.get::<FontStyle>().unwrap().clone();
+    let font_style = node.get::<FontStyleState>().unwrap().clone();
     let references = node.get::<References>().unwrap().clone();
     let size = node.get::<LayoutState>().unwrap().clone();
     let style = node.get::<Style>().unwrap().clone();

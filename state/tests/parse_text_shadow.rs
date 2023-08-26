@@ -1,5 +1,5 @@
+use freya_engine::prelude::*;
 use freya_node_state::Parse;
-use skia_safe::{textlayout::TextShadow, Color, Point};
 
 #[test]
 fn parse_text_shadow() {

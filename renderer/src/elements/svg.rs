@@ -1,7 +1,7 @@
 use dioxus_native_core::real_dom::NodeImmutable;
 use freya_dom::prelude::DioxusNode;
+use freya_engine::prelude::*;
 use freya_node_state::Style;
-use skia_safe::{svg, Canvas};
 use torin::geometry::Area;
 
 /// Render a `svg` element

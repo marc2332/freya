@@ -1,7 +1,7 @@
+use freya_engine::prelude::*;
 use freya_node_state::{
     Border, BorderAlignment, BorderStyle, Fill, GradientStop, LinearGradient, Parse,
 };
-use skia_safe::Color;
 
 #[test]
 fn parse_basic_border() {

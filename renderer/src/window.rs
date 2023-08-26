@@ -28,11 +28,7 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
-use skia_safe::{
-    gpu::{gl::FramebufferInfo, BackendRenderTarget, SurfaceOrigin},
-    textlayout::FontCollection,
-    ColorType, Matrix, Surface,
-};
+use freya_engine::prelude::*;
 
 use crate::config::WindowConfig;
 use crate::renderer::render_skia;

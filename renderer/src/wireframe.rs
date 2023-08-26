@@ -1,4 +1,4 @@
-use skia_safe::{Canvas, Color, Paint, PaintStyle};
+use freya_engine::prelude::*;
 use torin::geometry::Area;
 
 /// Render a wireframe around the given node

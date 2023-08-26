@@ -19,6 +19,7 @@ freya-elements = { workspace = true }
 freya-node-state = { workspace = true }
 freya-common = { workspace = true }
 freya-core = { workspace = true }
+freya-engine = { workspace = true }
 torin = { workspace = true }
 
 dioxus-rsx = { workspace = true }
@@ -27,7 +28,6 @@ dioxus-core-macro = { workspace = true }
 dioxus-hooks = { workspace = true }
 dioxus-core = { workspace = true }
 
-skia-safe = { workspace = true }
 tokio = { workspace = true }
 winit = { workspace = true }
 accesskit = { workspace = true }

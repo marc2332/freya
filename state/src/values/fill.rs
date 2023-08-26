@@ -1,5 +1,5 @@
 use crate::{DisplayColor, LinearGradient, Parse};
-use skia_safe::Color;
+use freya_engine::prelude::Color;
 use std::fmt;
 
 #[derive(Clone, Debug, PartialEq)]

@@ -14,6 +14,7 @@ categories = ["gui", "asynchronous"]
 [dependencies]
 freya-elements = { workspace = true }
 freya-common = { workspace = true }
+freya-engine = { workspace = true }
 torin = { workspace = true }
 
 dioxus-native-core-macro = { workspace = true }

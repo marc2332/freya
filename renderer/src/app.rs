@@ -4,14 +4,13 @@ use dioxus_core::{Template, VirtualDom};
 use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_dom::prelude::SafeDOM;
+use freya_engine::prelude::*;
 use freya_layout::Layers;
 use futures::FutureExt;
 use futures::{
     pin_mut,
     task::{self, ArcWake},
 };
-use skia_safe::textlayout::TypefaceFontProvider;
-use skia_safe::{textlayout::FontCollection, FontMgr};
 use tokio::{
     select,
     sync::{mpsc, watch, Notify},

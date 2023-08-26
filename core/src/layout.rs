@@ -1,6 +1,6 @@
 use freya_dom::prelude::{DioxusDOMAdapter, FreyaDOM};
+use freya_engine::prelude::*;
 use freya_layout::{Layers, SkiaMeasurer};
-use skia_safe::textlayout::FontCollection;
 use torin::geometry::Area;
 
 use crate::{layers::process_layers, viewports::calculate_viewports, ViewportsCollection};

@@ -6,9 +6,10 @@ use dioxus_native_core::{
     real_dom::{NodeRef, RealDom},
     NodeId, SendAnyMap,
 };
+
 use freya_node_state::{
-    AccessibilityState, CursorSettings, CustomAttributeValues, FontStyle, LayoutState, References,
-    Style, Transform,
+    AccessibilityState, CursorSettings, CustomAttributeValues, FontStyleState, LayoutState,
+    References, Style, Transform,
 };
 use std::sync::MutexGuard;
 use torin::prelude::*;
@@ -87,7 +88,7 @@ impl Default for FreyaDOM {
     fn default() -> Self {
         let mut rdom = RealDom::<CustomAttributeValues>::new([
             CursorSettings::to_type_erased(),
-            FontStyle::to_type_erased(),
+            FontStyleState::to_type_erased(),
             References::to_type_erased(),
             LayoutState::to_type_erased(),
             Style::to_type_erased(),

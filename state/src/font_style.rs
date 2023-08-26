@@ -7,20 +7,14 @@ use dioxus_native_core::{
     NodeId, SendAnyMap,
 };
 use dioxus_native_core_macro::partial_derive_state;
-use skia_safe::{
-    font_style::{Slant, Weight, Width},
-    textlayout::{
-        Decoration, TextAlign, TextDecoration, TextDecorationStyle, TextShadow, TextStyle,
-    },
-    Color,
-};
+use freya_engine::prelude::*;
 use smallvec::{smallvec, SmallVec};
 use torin::torin::Torin;
 
 use crate::{CustomAttributeValues, ExtSplit, Parse, TextOverflow};
 
 #[derive(Debug, Clone, PartialEq, Component)]
-pub struct FontStyle {
+pub struct FontStyleState {
     pub color: Color,
     pub text_shadows: Vec<TextShadow>,
     pub font_family: SmallVec<[String; 2]>,
@@ -37,22 +31,22 @@ pub struct FontStyle {
     pub text_overflow: TextOverflow,
 }
 
-impl FontStyle {
+impl FontStyleState {
     fn default_with_scale_factor(scale_factor: f32) -> Self {
         Self {
             font_size: 16.0 * scale_factor,
-            ..FontStyle::default()
+            ..FontStyleState::default()
         }
     }
 }
 
-impl From<&FontStyle> for TextStyle {
-    fn from(value: &FontStyle) -> Self {
+impl From<&FontStyleState> for TextStyle {
+    fn from(value: &FontStyleState) -> Self {
         let mut text_style = TextStyle::new();
 
         text_style
             .set_color(value.color)
-            .set_font_style(skia_safe::FontStyle::new(
+            .set_font_style(freya_engine::prelude::FontStyle::new(
                 value.font_weight,
                 value.font_width,
                 value.font_slant,
@@ -74,7 +68,7 @@ impl From<&FontStyle> for TextStyle {
     }
 }
 
-impl Default for FontStyle {
+impl Default for FontStyleState {
     fn default() -> Self {
         Self {
             color: Color::BLACK,
@@ -99,7 +93,7 @@ impl Default for FontStyle {
 }
 
 #[partial_derive_state]
-impl State<CustomAttributeValues> for FontStyle {
+impl State<CustomAttributeValues> for FontStyleState {
     type ParentDependencies = (Self,);
 
     type ChildDependencies = ();
@@ -139,7 +133,7 @@ impl State<CustomAttributeValues> for FontStyle {
 
         let mut font_style = parent
             .map(|(v,)| v.clone())
-            .unwrap_or_else(|| FontStyle::default_with_scale_factor(*scale_factor));
+            .unwrap_or_else(|| FontStyleState::default_with_scale_factor(*scale_factor));
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {

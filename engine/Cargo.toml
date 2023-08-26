@@ -1,0 +1,21 @@
+[package]
+name = "freya-engine"
+description = "Graphics engine"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../readme.md"
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui", "ui", "desktop", "skia", "graphics"]
+categories = ["gui"]
+
+[features]
+skia = ["dep:skia-safe"]
+default = ["skia"]
+
+[dependencies]
+bitflags = "2.4.0"
+skia-safe = { workspace = true, optional = true }
+

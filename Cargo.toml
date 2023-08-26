@@ -4,7 +4,7 @@ version = "0.0.0"
 edition = "2021"
 
 [workspace]
-members = ["layout", "renderer", "state", "freya", "elements", "components", "hooks", "common", "core", "testing", "devtools", "dom", "torin"]
+members = ["layout", "renderer", "state", "freya", "elements", "components", "hooks", "common", "core", "testing", "devtools", "dom", "torin", "engine"]
 
 [features]
 log = ["freya/log"]
@@ -24,6 +24,7 @@ freya-core = { path = "core", version = "0.1" }
 freya-components = { path = "components", version = "0.1" }
 freya-dom = { path = "dom", version = "0.1" }
 freya-testing = { path = "testing", version = "0.1" }
+freya-engine = { path = "engine", version = "0.1" }
 torin = { path = "torin", version = "0.1" }
 
 dioxus = { version = "0.4" }

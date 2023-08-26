@@ -1,8 +1,5 @@
 use crate::Parse;
-use skia_safe::{
-    font_style::{Slant, Weight, Width},
-    textlayout::TextAlign,
-};
+use freya_engine::prelude::*;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct ParseTextAlignError;

@@ -1,7 +1,7 @@
 use dioxus_core::ScopeState;
 use dioxus_hooks::{use_effect, use_memo, use_state, UseFutureDep, UseState};
+use freya_engine::prelude::Color;
 use freya_node_state::Parse;
-use skia_safe::Color;
 use std::time::Duration;
 use tokio::time::interval;
 use uuid::Uuid;
