@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
+use freya_engine::prelude::*;
 use freya_node_state::{Border, Fill, Shadow};
-use skia_safe::textlayout::TextShadow;
 
 #[allow(non_snake_case)]
 #[inline_props]

@@ -20,6 +20,7 @@ freya-hooks = { workspace = true }
 freya-core = { workspace = true }
 freya-components = { workspace = true }
 freya-dom = { workspace = true, features = ["shared"] }
+freya-engine = { workspace = true }
 torin = { workspace = true }
 
 dioxus = { workspace = true }
@@ -29,4 +30,3 @@ dioxus-core = { workspace = true }
 dioxus-router = { workspace = true }
 
 tokio = { workspace = true }
-skia-safe = { workspace = true }

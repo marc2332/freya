@@ -19,6 +19,7 @@ freya-node-state = { workspace = true }
 freya-core = { workspace = true }
 freya-dom = { workspace = true, features = ["shared"]}
 freya-hooks = { workspace = true }
+freya-engine = { workspace = true }
 torin = { workspace = true }
 
 dioxus-rsx = { workspace = true }
@@ -31,7 +32,6 @@ dioxus = { workspace = true }
 
 winit = { workspace = true }
 tokio = { workspace = true }
-skia-safe = { workspace = true }
 accesskit = { workspace = true }
 
 rustc-hash= { workspace = true }

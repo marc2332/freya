@@ -156,7 +156,7 @@ fn parse_hsl(color: &str) -> Result<Color, ParseColorError> {
     s *= if l <= 1.0 { l } else { 2.0 - l };
     let v = (l + s) / 2.0;
     s = (2.0 * s) / (l + s);
-    let hsv = HSV::new(h, s, v);
+    let hsv = HSV::from((h, s, v));
 
     // Handle alpha formatting and convert to ARGB
     if let Some(a_str) = a_str {

@@ -2,7 +2,7 @@ use accesskit::NodeId as AccessibilityId;
 use dioxus_core::VirtualDom;
 use freya_common::EventMessage;
 use freya_core::prelude::*;
-use skia_safe::textlayout::FontCollection;
+use freya_engine::prelude::FontCollection;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use torin::geometry::{Area, Size2D};
 

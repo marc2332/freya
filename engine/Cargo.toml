@@ -11,11 +11,16 @@ repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "ui", "desktop", "skia", "graphics"]
 categories = ["gui"]
 
+[package.metadata.docs.rs]
+features = ["mocked-engine"]
+no-default-features = true
+
 [features]
-skia = ["dep:skia-safe"]
-default = ["skia"]
+mocked-engine = []
+default = ["dep:skia-safe"]
 
 [dependencies]
 bitflags = "2.4.0"
 skia-safe = { workspace = true, optional = true }
+glutin = { workspace = true }
 

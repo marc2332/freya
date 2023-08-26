@@ -18,7 +18,7 @@ pub fn render_image(area: &Area, node_ref: &DioxusNode, canvas: &mut Canvas) {
                 pic,
                 IRect::new(0, 0, 0, 0),
                 Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
-                skia_safe::FilterMode::Last,
+                FilterMode::Last,
                 Some(&paint),
             );
         }

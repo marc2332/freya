@@ -6,7 +6,6 @@ use freya_core::prelude::*;
 use freya_dom::prelude::DioxusNode;
 use freya_engine::prelude::*;
 use freya_node_state::Transform;
-use skia_safe::{Matrix, Point};
 use torin::geometry::Area;
 
 use crate::elements::{render_image, render_label, render_paragraph, render_rect, render_svg};

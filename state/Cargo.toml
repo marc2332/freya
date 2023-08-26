@@ -25,7 +25,6 @@ dioxus-hooks = { workspace = true }
 dioxus-core = { workspace = true }
 
 tokio = { workspace = true }
-skia-safe = { workspace = true }
 accesskit = { workspace = true }
 shipyard = "0.6.2"
 

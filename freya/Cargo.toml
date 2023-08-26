@@ -16,10 +16,6 @@ log = ["dep:tracing", "dep:tracing-subscriber"]
 devtools = ["dep:freya-devtools", "freya-dom/shared"]
 use_camera = ["freya-hooks/use_camera"]
 
-[target."cfg(target_os = \"linux\")".dependencies.skia-safe]
-workspace = true
-features = ["gl", "textlayout", "svg", "x11", "wayland"]
-
 [dependencies]
 freya-devtools = { workspace = true, optional = true }
 freya-node-state = { workspace = true }
@@ -31,6 +27,7 @@ freya-hooks = { workspace = true }
 freya-core = { workspace = true }
 freya-components = { workspace = true }
 freya-dom = { workspace = true }
+freya-engine = { workspace = true }
 torin = { workspace = true }
 
 dioxus = { workspace = true }
@@ -42,7 +39,6 @@ dioxus-core = { workspace = true }
 dioxus-router = { workspace = true }
 dioxus-hot-reload = { workspace = true }
 
-skia-safe = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true, optional = true }
 tracing-subscriber = { workspace = true, optional = true }

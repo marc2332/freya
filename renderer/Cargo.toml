@@ -11,10 +11,6 @@ repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
 categories = ["gui", "asynchronous"]
 
-[target."cfg(target_os = \"linux\")".dependencies.skia-safe]
-workspace = true
-features = ["gl", "textlayout", "svg", "x11", "wayland"]
-
 [dependencies]
 freya-layout = { workspace = true }
 freya-node-state = { workspace = true }
