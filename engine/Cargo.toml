@@ -1,7 +1,7 @@
 [package]
 name = "freya-engine"
 description = "Abstract Freya's graphics APIs"
-version = "0.1.1"
+version = "0.1.3"
 edition = "2021"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
@@ -13,11 +13,10 @@ categories = ["gui"]
 
 [package.metadata.docs.rs]
 features = ["mocked-engine"]
-no-default-features = true
 
 [features]
 mocked-engine = []
-default = ["dep:skia-safe"]
+skia-engine = ["dep:skia-safe"]
 
 [dependencies]
 bitflags = "2.4.0"
