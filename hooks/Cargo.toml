@@ -1,7 +1,7 @@
 [package]
 name = "freya-hooks"
 description = "Hooks library designed for Freya."
-version = "0.1.1"
+version = "0.1.3"
 edition = "2021"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
@@ -11,8 +11,12 @@ repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
 categories = ["gui", "asynchronous"]
 
+[package.metadata.docs.rs]
+features = ["freya-engine/mocked-engine"]
+
 [features]
 use_camera = ["dep:nokhwa"]
+skia-engine = ["freya-engine/skia-engine"]
 
 [dependencies]
 freya-elements = { workspace = true }
