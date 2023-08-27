@@ -1,13 +1,13 @@
 #[cfg(feature = "mocked-engine")]
 mod mocked;
 
-#[cfg(not(feature = "mocked-engine"))]
+#[cfg(feature = "skia-engine")]
 mod skia;
 
 pub mod prelude {
     #[cfg(feature = "mocked-engine")]
     pub use crate::mocked::*;
 
-    #[cfg(not(feature = "mocked-engine"))]
+    #[cfg(feature = "skia-engine")]
     pub use crate::skia::*;
 }
