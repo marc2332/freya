@@ -1,5 +1,8 @@
 name: Deploy book
-on: [push]
+on: 
+  push:
+    paths:
+      - 'book/**/*'
 
 jobs:
   deploy:

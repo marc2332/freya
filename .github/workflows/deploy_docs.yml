@@ -1,5 +1,8 @@
 name: Deploy docs
-on: [push]
+on: 
+  push:
+    paths:
+      - 'crates/**/*'
 
 jobs:
   deploy:
