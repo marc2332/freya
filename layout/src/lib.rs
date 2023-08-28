@@ -9,12 +9,10 @@ use dioxus_native_core::{
 };
 use freya_common::CursorLayoutResponse;
 use freya_dom::prelude::{DioxusDOM, DioxusNode};
-use freya_node_state::{CursorReference, CursorSettings, FontStyle, References, TextOverflow};
+use freya_node_state::{CursorReference, CursorSettings, FontStyleState, References, TextOverflow};
 
+use freya_engine::prelude::*;
 pub use layers::*;
-use skia_safe::textlayout::{
-    FontCollection, Paragraph, ParagraphBuilder, ParagraphStyle, TextStyle,
-};
 use torin::{
     geometry::{Area, CursorPoint},
     prelude::{LayoutMeasurer, Node, Size2D},
@@ -72,7 +70,7 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
 }
 
 /// Collect all the texts and FontStyles from all the given Node's children
-pub fn get_inner_texts(node: &DioxusNode) -> Vec<(FontStyle, String)> {
+pub fn get_inner_texts(node: &DioxusNode) -> Vec<(FontStyleState, String)> {
     node.children()
         .iter()
         .filter_map(|child| {
@@ -86,7 +84,7 @@ pub fn get_inner_texts(node: &DioxusNode) -> Vec<(FontStyle, String)> {
                 let child_text_type = &*child_text.node_type();
 
                 if let NodeType::Text(TextNode { text, .. }) = child_text_type {
-                    let font_style = child.get::<FontStyle>().unwrap();
+                    let font_style = child.get::<FontStyleState>().unwrap();
                     Some((font_style.clone(), text.to_owned()))
                 } else {
                     None
@@ -104,7 +102,7 @@ pub fn create_text(
     font_collection: &FontCollection,
     text: &str,
 ) -> Paragraph {
-    let font_style = &*node.get::<FontStyle>().unwrap();
+    let font_style = &*node.get::<FontStyleState>().unwrap();
 
     let mut paragraph_style = ParagraphStyle::default();
     paragraph_style.set_text_align(font_style.align);
@@ -131,7 +129,7 @@ pub fn create_paragraph(
     font_collection: &FontCollection,
     is_rendering: bool,
 ) -> Paragraph {
-    let font_style = &*node.get::<FontStyle>().unwrap();
+    let font_style = &*node.get::<FontStyleState>().unwrap();
     let node_cursor_settings = &*node.get::<CursorSettings>().unwrap();
 
     let mut paragraph_style = ParagraphStyle::default();

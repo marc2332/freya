@@ -1,5 +1,5 @@
+use freya_engine::prelude::*;
 use freya_node_state::{GradientStop, LinearGradient, Parse};
-use skia_safe::Color;
 
 #[test]
 fn parse_basic_gradient() {

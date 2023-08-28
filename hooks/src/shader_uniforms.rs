@@ -1,4 +1,4 @@
-use skia_safe::RuntimeEffect;
+use freya_engine::prelude::RuntimeEffect;
 use std::collections::HashMap;
 
 /// Pass uniform values to a Shader.
@@ -41,3 +41,5 @@ impl UniformsBuilder {
         values
     }
 }
+
+pub struct Image {}

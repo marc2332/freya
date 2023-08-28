@@ -1,7 +1,7 @@
 use dioxus_native_core::NodeId;
 use freya_dom::prelude::FreyaDOM;
+use freya_engine::prelude::*;
 use freya_layout::Layers;
-use skia_safe::textlayout::FontCollection;
 use torin::prelude::Area;
 
 use crate::ViewportsCollection;

@@ -1,12 +1,9 @@
 use dioxus::prelude::*;
 use freya_common::EventMessage;
 use freya_elements::elements as dioxus_elements;
+use freya_engine::prelude::*;
 use freya_hooks::{use_canvas, use_platform};
 use freya_node_state::Parse;
-use skia_safe::{
-    textlayout::{ParagraphBuilder, ParagraphStyle, TextAlign, TextStyle},
-    Color, Paint, PaintStyle,
-};
 
 /// Data line for the [`Graph`] component.
 #[derive(Debug, PartialEq, Clone)]

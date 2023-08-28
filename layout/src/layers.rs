@@ -1,7 +1,7 @@
 use dioxus_native_core::NodeId;
 use freya_dom::prelude::FreyaDOM;
+use freya_engine::prelude::*;
 use rustc_hash::FxHashMap;
-use skia_safe::textlayout::FontCollection;
 use torin::torin::Torin;
 use uuid::Uuid;
 

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
+use freya_engine::prelude::*;
 use freya_node_state::Parse;
-use skia_safe::Color;
 use winit::window::Window;
 
 /// Configuration for a Window.

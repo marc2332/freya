@@ -1,7 +1,7 @@
 [package]
 name = "freya-renderer"
 description = "Internal renderer powered by Skia for Freya."
-version = "0.1.0"
+version = "0.1.5"
 edition = "2021"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
@@ -11,9 +11,11 @@ repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
 categories = ["gui", "asynchronous"]
 
-[target."cfg(target_os = \"linux\")".dependencies.skia-safe]
-workspace = true
-features = ["gl", "textlayout", "svg", "x11", "wayland"]
+[package.metadata.docs.rs]
+features = ["freya-engine/mocked-engine"]
+
+[features]
+skia-engine = ["freya-engine/skia-engine"]
 
 [dependencies]
 freya-layout = { workspace = true }
@@ -22,6 +24,7 @@ freya-elements = { workspace = true }
 freya-common = { workspace = true }
 freya-core = { workspace = true }
 freya-dom = { workspace = true }
+freya-engine = { workspace = true }
 torin = { workspace = true }
 
 dioxus-rsx = { workspace = true }
@@ -32,7 +35,6 @@ dioxus-core = { workspace = true }
 dioxus-hot-reload = { workspace = true }
 
 tokio = { workspace = true }
-skia-safe = { workspace = true }
 gl = { workspace = true }
 glutin = { workspace = true }
 glutin-winit = { workspace = true }

@@ -1,7 +1,7 @@
 [package]
 name = "freya-core"
 description = "Internal core funcionatilies for Freya."
-version = "0.1.0"
+version = "0.1.3"
 edition = "2021"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
@@ -11,12 +11,12 @@ repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
 categories = ["gui", "asynchronous"]
 
+[package.metadata.docs.rs]
+features = ["freya-engine/mocked-engine"]
+
 [features]
 devtools = []
-
-[target."cfg(target_os = \"linux\")".dependencies.skia-safe]
-workspace = true
-features = ["gl", "textlayout", "svg", "x11", "wayland"]
+skia-engine = ["freya-engine/skia-engine"]
 
 [dependencies]
 freya-layout = { workspace = true }
@@ -24,6 +24,7 @@ freya-node-state = { workspace = true }
 freya-elements = { workspace = true }
 freya-common = { workspace = true }
 freya-dom = { workspace = true }
+freya-engine = { workspace = true }
 torin = { workspace = true }
 
 dioxus-rsx = { workspace = true }
@@ -34,7 +35,6 @@ dioxus-core = { workspace = true }
 
 tokio = { workspace = true }
 winit = { workspace = true }
-skia-safe = { workspace = true }
 accesskit = { workspace = true }
 zbus = { workspace = true }
 

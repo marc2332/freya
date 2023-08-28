@@ -1,5 +1,5 @@
 use crate::Parse;
-use skia_safe::textlayout::{TextDecoration, TextDecorationStyle};
+use freya_engine::prelude::*;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct ParseTextDecorationError;

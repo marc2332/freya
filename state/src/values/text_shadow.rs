@@ -1,5 +1,5 @@
 use crate::Parse;
-use skia_safe::{textlayout::TextShadow, Color};
+use freya_engine::prelude::*;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct ParseTextShadowError;

@@ -2,8 +2,8 @@ use dioxus_native_core::node::NodeType;
 use dioxus_native_core::prelude::TextNode;
 use dioxus_native_core::real_dom::NodeImmutable;
 use freya_dom::prelude::DioxusNode;
+use freya_engine::prelude::*;
 use freya_layout::create_text;
-use skia_safe::{textlayout::FontCollection, Canvas};
 use torin::geometry::Area;
 
 /// Render a `label` element

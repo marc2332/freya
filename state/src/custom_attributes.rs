@@ -9,7 +9,7 @@ use bytes::Bytes;
 use dioxus_core::{AttributeValue, Scope};
 use dioxus_native_core::node::FromAnyValue;
 use freya_common::{CursorLayoutResponse, NodeReferenceLayout};
-use skia_safe::{textlayout::FontCollection, Canvas};
+use freya_engine::prelude::*;
 use tokio::sync::mpsc::UnboundedSender;
 use torin::geometry::{Area, CursorPoint};
 use uuid::Uuid;

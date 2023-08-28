@@ -1,7 +1,7 @@
 use dioxus_native_core::real_dom::NodeImmutable;
 use freya_dom::prelude::DioxusNode;
+use freya_engine::prelude::*;
 use freya_node_state::{References, Style};
-use skia_safe::{Canvas, Data, IRect, Image, Paint, Rect};
 use torin::geometry::Area;
 
 /// Render an `image` element
@@ -18,7 +18,7 @@ pub fn render_image(area: &Area, node_ref: &DioxusNode, canvas: &mut Canvas) {
                 pic,
                 IRect::new(0, 0, 0, 0),
                 Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
-                skia_safe::FilterMode::Last,
+                FilterMode::Last,
                 Some(&paint),
             );
         }

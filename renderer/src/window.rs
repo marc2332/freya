@@ -2,12 +2,13 @@ use dioxus_native_core::NodeId;
 use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_dom::prelude::FreyaDOM;
+use freya_engine::prelude::*;
 use freya_layout::Layers;
 use std::ffi::CString;
 use std::num::NonZeroU32;
 use torin::geometry::{Area, Size2D};
 
-use gl::types::*;
+use gl::{types::*, *};
 use glutin::context::GlProfile;
 use glutin::{
     config::{ConfigTemplateBuilder, GlConfig},
@@ -28,12 +29,6 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
-use skia_safe::{
-    gpu::{gl::FramebufferInfo, BackendRenderTarget, SurfaceOrigin},
-    textlayout::FontCollection,
-    ColorType, Matrix, Surface,
-};
-
 use crate::config::WindowConfig;
 use crate::renderer::render_skia;
 use crate::HoveredNode;
@@ -42,7 +37,7 @@ use crate::HoveredNode;
 pub struct WindowEnv<T: Clone> {
     surface: Surface,
     gl_surface: GlutinSurface<WindowSurface>,
-    gr_context: skia_safe::gpu::DirectContext,
+    gr_context: DirectContext,
     gl_context: PossiblyCurrentContext,
     pub(crate) window: Window,
     fb_info: FramebufferInfo,
@@ -132,12 +127,12 @@ impl<T: Clone> WindowEnv<T> {
             .make_current(&gl_surface)
             .expect("Could not make GL context current when setting up skia renderer");
 
-        gl::load_with(|s| {
+        load_with(|s| {
             gl_config
                 .display()
                 .get_proc_address(CString::new(s).unwrap().as_c_str())
         });
-        let interface = skia_safe::gpu::gl::Interface::new_load_with(|name| {
+        let interface = Interface::new_load_with(|name| {
             if name == "eglGetCurrentDisplay" {
                 return std::ptr::null();
             }
@@ -147,16 +142,16 @@ impl<T: Clone> WindowEnv<T> {
         })
         .expect("Could not create interface");
 
-        let mut gr_context = skia_safe::gpu::DirectContext::new_gl(Some(interface), None)
-            .expect("Could not create direct context");
+        let mut gr_context =
+            DirectContext::new_gl(Some(interface), None).expect("Could not create direct context");
 
         let fb_info = {
             let mut fboid: GLint = 0;
-            unsafe { gl::GetIntegerv(gl::FRAMEBUFFER_BINDING, &mut fboid) };
+            unsafe { GetIntegerv(FRAMEBUFFER_BINDING, &mut fboid) };
 
             FramebufferInfo {
                 fboid: fboid.try_into().unwrap(),
-                format: skia_safe::gpu::gl::Format::RGBA8.into(),
+                format: Format::RGBA8.into(),
             }
         };
 
@@ -299,7 +294,7 @@ impl<T: Clone> WindowEnv<T> {
 fn create_surface(
     window: &mut Window,
     fb_info: FramebufferInfo,
-    gr_context: &mut skia_safe::gpu::DirectContext,
+    gr_context: &mut DirectContext,
     num_samples: usize,
     stencil_size: usize,
 ) -> Surface {

@@ -1,5 +1,5 @@
+use freya_engine::prelude::*;
 use freya_node_state::Parse;
-use skia_safe::Color;
 
 #[test]
 fn parse_manual_color() {

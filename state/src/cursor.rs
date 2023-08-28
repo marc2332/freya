@@ -5,7 +5,7 @@ use dioxus_native_core::{
     SendAnyMap,
 };
 use dioxus_native_core_macro::partial_derive_state;
-use skia_safe::Color;
+use freya_engine::prelude::*;
 
 use crate::{CursorMode, CustomAttributeValues, Parse};
 
