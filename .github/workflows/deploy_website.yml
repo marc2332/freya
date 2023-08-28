@@ -20,9 +20,11 @@ jobs:
         run: npm install pnpm -g
 
       - name: Install dependencies
+        working-directory: website
         run: pnpm i
 
       - name: Build Astro
+        working-directory: website
         run: pnpm run build
 
       - name: Upload to Deno Deploy
