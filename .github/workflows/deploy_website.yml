@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - 'website/**/*'
+      - '.github/workflows/deploy_website.yml'
 
 jobs:
   deploy:

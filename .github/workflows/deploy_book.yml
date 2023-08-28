@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - 'book/**/*'
+      - '.github/workflows/deploy_book.yml'
 
 jobs:
   deploy:

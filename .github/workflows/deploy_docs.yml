@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - 'crates/**/*'
+      - '.github/workflows/deploy_docs.yml'
 
 jobs:
   deploy:
