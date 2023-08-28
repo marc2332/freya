@@ -1,11 +1,11 @@
 [package]
-name = "freya-devtools"
-description = "Devtools panel integration for Freya."
+name = "freya-testing"
+description = "Headless test runner for Freya."
 version = "0.1.3"
 edition = "2021"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
-readme = "../readme.md"
+readme = "../../readme.md"
 homepage = "https://freyaui.dev/"
 repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
@@ -18,21 +18,31 @@ features = ["freya-engine/mocked-engine"]
 skia-engine = ["freya-engine/skia-engine"]
 
 [dependencies]
-freya-node-state = { workspace = true }
-freya-layout = { workspace = true }
-freya-renderer = { workspace = true }
 freya-elements = { workspace = true }
-freya-hooks = { workspace = true }
+freya-common = { workspace = true }
+freya-layout = { workspace = true }
+freya-node-state = { workspace = true }
 freya-core = { workspace = true }
-freya-components = { workspace = true }
-freya-dom = { workspace = true, features = ["shared"] }
+freya-dom = { workspace = true, features = ["shared"]}
+freya-hooks = { workspace = true }
 freya-engine = { workspace = true }
 torin = { workspace = true }
 
-dioxus = { workspace = true }
+dioxus-rsx = { workspace = true }
 dioxus-native-core = { workspace = true }
 dioxus-core-macro = { workspace = true }
+dioxus-hooks = { workspace = true }
 dioxus-core = { workspace = true }
-dioxus-router = { workspace = true }
+dioxus-native-core-macro = { workspace = true }
+dioxus = { workspace = true }
 
+winit = { workspace = true }
 tokio = { workspace = true }
+accesskit = { workspace = true }
+
+rustc-hash= { workspace = true }
+anymap = { workspace = true }
+
+[dev-dependencies]
+freya-components = { workspace = true }
+dioxus = { workspace = true }

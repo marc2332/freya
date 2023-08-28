@@ -1,11 +1,11 @@
 [package]
-name = "freya-hooks"
-description = "Hooks library designed for Freya."
-version = "0.1.3"
+name = "freya-node-state"
+description = "Internal Node states for Dioxus RealDOM elements used in Freya."
+version = "0.1.4"
 edition = "2021"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
-readme = "../readme.md"
+readme = "../../readme.md"
 homepage = "https://freyaui.dev/"
 repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
@@ -15,17 +15,15 @@ categories = ["gui", "asynchronous"]
 features = ["freya-engine/mocked-engine"]
 
 [features]
-use_camera = ["dep:nokhwa"]
 skia-engine = ["freya-engine/skia-engine"]
 
 [dependencies]
 freya-elements = { workspace = true }
-freya-node-state = { workspace = true }
 freya-common = { workspace = true }
-freya-core = { workspace = true }
 freya-engine = { workspace = true }
 torin = { workspace = true }
 
+dioxus-native-core-macro = { workspace = true }
 dioxus-rsx = { workspace = true }
 dioxus-native-core = { workspace = true }
 dioxus-core-macro = { workspace = true }
@@ -33,17 +31,12 @@ dioxus-hooks = { workspace = true }
 dioxus-core = { workspace = true }
 
 tokio = { workspace = true }
-winit = { workspace = true }
 accesskit = { workspace = true }
+shipyard = "0.6.2"
 
-euclid = { workspace = true }
+anymap = { workspace = true }
+fxhash = { workspace = true }
 uuid = { workspace = true }
-tween = "2.0.0"
-ropey = "1.6.0"
-nokhwa = { version = "0.10.4", features = ["input-native"], optional = true }
 bytes = "1.3.0"
-
-[dev-dependencies]
-dioxus = { workspace = true }
-freya = { path = "../freya" }
-freya-testing = { path = "../testing" }
+smallvec = "1.10.0"
+serde_json = "1.0.94"

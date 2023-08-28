@@ -1,19 +1,23 @@
 [package]
-name = "freya-elements"
-description = "Internal elements, attributes and events designed for Freya."
-version = "0.1.0"
+name = "freya-dom"
+description = "Internal DOM abstractions for Freya."
+version = "0.1.1"
 edition = "2021"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
-readme = "../readme.md"
+readme = "../../readme.md"
 homepage = "https://freyaui.dev/"
 repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
 categories = ["gui", "asynchronous"]
 
+[features]
+shared = []
+
 [dependencies]
-torin = { workspace = true }
+freya-node-state = { workspace = true }
 freya-common = { workspace = true }
+torin = { workspace = true }
 
 dioxus-rsx = { workspace = true }
 dioxus-native-core = { workspace = true }
@@ -21,8 +25,6 @@ dioxus-core-macro = { workspace = true }
 dioxus-hooks = { workspace = true }
 dioxus-core = { workspace = true }
 
-winit = { workspace = true }
-tokio = { workspace = true }
-accesskit = { workspace = true }
-
-keyboard-types = "0.6.2"
+uuid = { workspace = true }
+rustc-hash = { workspace = true }
+tracing = { workspace = true }
