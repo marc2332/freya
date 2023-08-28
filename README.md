@@ -6,7 +6,7 @@
 [![Github Sponsors](https://img.shields.io/github/sponsors/marc2332?style=social)](https://github.com/sponsors/marc2332)
 [![codecov](https://codecov.io/github/marc2332/freya/branch/main/graph/badge.svg?token=APSGEC84B8)](https://codecov.io/github/marc2332/freya)
 
-[Website](https://freyaui.dev) | [Docs](https://docs.freyaui.dev/freya) | [Book](https://book.freyaui.dev) | [Discord](https://discord.gg/sYejxCdewG)
+[Website](https://freyaui.dev) | [Nightly Docs](https://docs.freyaui.dev/freya) | [Stable Docs](https://docs.rs/freya) | [Book](https://book.freyaui.dev) | [Discord](https://discord.gg/sYejxCdewG)
 
 **Freya** is a native GUI library for Rust powered by 🧬 [Dioxus](https://dioxuslabs.com) and 🎨 [Skia](https://skia.org/). 
 
