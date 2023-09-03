@@ -40,20 +40,37 @@ pub struct CursorAreaProps<'a> {
 #[allow(non_snake_case)]
 pub fn CursorArea<'a>(cx: Scope<'a, CursorAreaProps<'a>>) -> Element<'a> {
     let platform = use_platform(cx);
+    let is_hovering = use_ref(cx, || false);
     let icon = cx.props.icon;
 
     let onmouseover = {
         to_owned![platform];
         move |_| {
+            *is_hovering.write_silent() = true;
             platform.send(EventMessage::SetCursorIcon(icon)).unwrap();
         }
     };
 
-    let onmouseleave = move |_| {
-        platform
-            .send(EventMessage::SetCursorIcon(CursorIcon::default()))
-            .unwrap();
+    let onmouseleave = {
+        to_owned![platform];
+        move |_| {
+            *is_hovering.write_silent() = false;
+            platform
+                .send(EventMessage::SetCursorIcon(CursorIcon::default()))
+                .unwrap();
+        }
     };
+
+    use_on_unmount(cx, {
+        to_owned![is_hovering];
+        move || {
+            if *is_hovering.read() {
+                platform
+                    .send(EventMessage::SetCursorIcon(CursorIcon::default()))
+                    .unwrap();
+            }
+        }
+    });
 
     render!(
         rect {
