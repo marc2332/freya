@@ -1,4 +1,4 @@
-# Freya :crab:
+# Freya 🦀
 
 <a href="https://freyaui.dev/"><img align="right" src="logo.svg" alt="Freya logo" width="150"/></a>
 
@@ -6,7 +6,7 @@
 [![Github Sponsors](https://img.shields.io/github/sponsors/marc2332?style=social)](https://github.com/sponsors/marc2332)
 [![codecov](https://codecov.io/github/marc2332/freya/branch/main/graph/badge.svg?token=APSGEC84B8)](https://codecov.io/github/marc2332/freya)
 
-[Website](https://freyaui.dev) | [Docs](https://docs.freyaui.dev/freya) | [Book](https://book.freyaui.dev) | [Discord](https://discord.gg/sYejxCdewG)
+[Website](https://freyaui.dev) | [Nightly Docs](https://docs.freyaui.dev/freya) | [Stable Docs](https://docs.rs/freya/latest/freya) | [Book](https://book.freyaui.dev) | [Discord](https://discord.gg/sYejxCdewG)
 
 **Freya** is a native GUI library for Rust powered by 🧬 [Dioxus](https://dioxuslabs.com) and 🎨 [Skia](https://skia.org/). 
 
@@ -24,7 +24,7 @@ fn app(cx: Scope) -> Element {
     let mut count = use_state(cx, || 0);
 
     render!(
-        container {
+        rect {
             height: "20%",
             width: "100%",
             background: "rgb(233, 196, 106)",
@@ -35,7 +35,7 @@ fn app(cx: Scope) -> Element {
                 "Number is: {count}"
             }
         }
-        container {
+        rect {
             height: "80%",
             width: "100%",
             background: "rgb(168, 218, 220)",
@@ -68,38 +68,33 @@ cargo run --example counter
 You can also try [`freya-template`](https://github.com/marc2332/freya-template)
 
 ### Usage 📜
-Add Freya as a dependency via git (it's not published on [crates.io](https://crates.io/) yet) in your `Cargo.toml`:
+Add Freya and Dioxus as dependencies:
 
 ```toml
-freya = { git = "https://github.com/marc2332/freya" }
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="b264211cc2685232426317d3055046838047d3db", features = ["macro", "hooks"]}
+freya = "0.1"
+dioxus = { version = "0.4", features = ["macro", "hooks"] }
 ```
 
 ### Features ✨
-- Support for Windows, Linux and MacOS
-- Text, containers, images, svg, etc
-- Headless testing
-- Hot reload
-- Optional DevTools panel
-- Easy multiline text editing
-- Components crate (with theming support)
-   - Scroll views 
-   - Virtualized scroll views
-   - Button
-   - Slider
-   - Switch
-   - Dropdown
-   - and a few more
-- Keyboard and Mouse events
-- Hooks crate for text editing, animating, theming..
+- ⛏️ Built-in **components** (button, scroll views, switch and more) 
+- 🚇 Built-in **hooks** library (animations, text editing and more)
+- 🔍 Built-in **devtools** panel (experimental ⚠️) (experimental ⚠️)
+- 🧰 Built-in **headless testing** runner for components
+- 🎨 **Theming** support (not extensible yet ⚠️)
+- 🛩️ Cross-platform (Windows, Linux, MacOS)
+- 🖼️ SKSL **Shaders** support
+- 🔄️ Dioxus **Hot-reload** support
+- 📒 Multi-line **text editing** (experimental ⚠️)
+- 🦾 Basic **Accessibility** Support (experimental ⚠️)
+- 🧩Compatible with dioxus-std and other Dioxus renderer-agnostic libraries
 
 ### Goals 😁
 - Performant and low memory usage
 - Good developer experience
-- Cross-platform
-- Provide accessibility APIs
-- Provide testing APIs
-- Provide useful built-in components and hooks
+- Cross-platform support
+- Decent Accessibility support 
+- Useful testing APIs
+- Useful and extensible components and hooks
 
 ## Status ⌚
 

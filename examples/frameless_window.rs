@@ -8,7 +8,7 @@ use freya::prelude::*;
 fn main() {
     launch_cfg(
         app,
-        WindowConfig::<()>::builder()
+        LaunchConfig::<()>::builder()
             .with_width(400.0)
             .with_height(200.0)
             .with_decorations(false)
@@ -27,7 +27,7 @@ fn app(cx: Scope) -> Element {
             direction: "both",
             width: "100%",
             height: "100%",
-            radius: "15",
+            corner_radius: "15",
             label {
                 color: "black",
                 "A frameless window"

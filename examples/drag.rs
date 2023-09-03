@@ -37,7 +37,8 @@ fn app(cx: Scope) -> Element {
     };
 
     render!(
-        container {
+        rect {
+            overflow: "clip",
             background: "rgb(35, 35, 35)",
             width: "100%",
             height: "100%",
@@ -50,12 +51,13 @@ fn app(cx: Scope) -> Element {
                 color: "white",
                 "Drag me"
             }
-            container {
+            rect {
+                overflow: "clip",
                 background: "rgb(255, 166, 0)",
                 direction: "both",
                 width: "100",
                 height: "100",
-                radius: "15",
+                corner_radius: "15",
                 shadow: "0 0 50 0 rgb(255, 255, 255, 150)",
                 onmouseover: onmouseover,
                 onmouseleave: onmouseleave

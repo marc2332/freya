@@ -4,8 +4,13 @@ Learn how the style attributes work.
 
 - [`background`](#background)
 - [`shadow`](#shadow)
-- [`radius`](#radius)
+- [`corner radius & corner smoothing`](#corner_radius--corner_smoothing)
 - [`border`](#border)
+- [`overflow`](#overflow)
+- [`Color syntax`](#color-syntax)
+    - [`Static colors`](#static-colors)
+    - [`rgb() / hsl(`)](#rgb--hsl)
+- [`Inheritance`](#inheritance)
 
 ### background
 
@@ -25,7 +30,7 @@ fn app(cx: Scope) -> Element {
 }
 ```
 
-Compatible elements: [`rect`](/guides/elements.html#rect), [`container`](/guides/elements.html#container)
+Compatible elements: [`rect`](/guides/elements.html#rect)
 
 
 ### shadow
@@ -46,11 +51,11 @@ fn app(cx: Scope) -> Element {
 }
 ```
 
-Compatible elements: [`rect`](/guides/elements.html#rect), [`container`](/guides/elements.html#container)
+Compatible elements: [`rect`](/guides/elements.html#rect)
 
-### radius
+### corner_radius & corner_smoothing
 
-The `radius` attribute let's you smooth the corners of the element.
+The `corner_radius` attribute let's you smooth the corners of the element, with `corner_smoothing` you can archieve a "squircle" effect.
 
 Example:
 
@@ -58,18 +63,21 @@ Example:
 fn app(cx: Scope) -> Element {
     render!(
         rect {
-            radius: "10"
+            corner_radius: "10",
+            corner_smoothing: "75%"
         }
     )
 }
 ```
+
+Compatible elements: [`rect`](/guides/elements.html#rect)
 
 ### border
 
-You can add a border to an element using the `border` and `border_alignment` attributes.
+You can add a border to an element using the `border` and `border_align` attributes.
 
-- `border` syntax: `[width] <inner | outer | center> [color]`.
-- `border_alignment` syntax: `<none | solid>`.
+- `border` syntax: `[width] <solid | none> [color]`.
+- `border_align` syntax: `<inner | outer | center>`.
 
 Example:
 
@@ -77,12 +85,41 @@ Example:
 fn app(cx: Scope) -> Element {
     render!(
         rect {
-            border: "2 center black",
-            border_alignment: "inner"
+            border: "2 solid black",
+            border_align: "inner"
         }
     )
 }
 ```
+
+Compatible elements: [`rect`](/guides/elements.html#rect)
+
+### overflow
+
+Specify how overflow should be handled.
+
+Accepted values: `clip | none`.
+
+Example:
+
+```rust, no_run
+fn app(cx: Scope) -> Element {
+    render!(
+        rect {
+            overflow: "clip"
+            width: "100",
+            height: "100%",
+            rect {
+                width: "500",
+                height: "100%",
+                background: "red",
+            }
+        }
+    )
+}
+```
+
+Compatible elements: [`rect`](/guides/elements.html#rect)
 
 ### Color syntax
 
@@ -103,8 +140,8 @@ The attributes that have colors as values can use the following syntax:
 
 - With RGB: `rgb(150, 60, 20)`
 - With RGB and alpha: `rgb(150, 60, 20, 70)`
-- With HSL: `hsl(28, 0.8, 0.5)`
-- With HSL and alpha: `hsl(28, 0.8, 0.5, 0.25)`
+- With HSL: `hsl(28deg, 80%, 50%)`
+- With HSL and alpha: `hsl(28deg, 80%, 50%, 25%)`
 
 ### Inheritance
 
@@ -119,3 +156,10 @@ These are some attribute that are inherited from the element parents:
 - `line_height`
 - `align`
 - `max_lines`
+- `letter_spacing`
+- `word_spacing`
+- `decoration`
+- `decoration_style`
+- `decoration_color`
+- `text_shadow`
+

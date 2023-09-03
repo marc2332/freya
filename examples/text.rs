@@ -10,6 +10,7 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
+    use_init_theme(cx, DARK_THEME);
     let percentage = use_state(cx, || 20.0);
     let font_size = percentage + 20.0;
 
@@ -19,7 +20,8 @@ fn app(cx: Scope) -> Element {
             height: "100%",
             background: "black",
             color: "white",
-            container {
+            rect {
+                overflow: "clip",
                 width: "100%",
                 height: "60",
                 Button {
@@ -65,6 +67,11 @@ fn app(cx: Scope) -> Element {
                     font_size: "{font_size / 2f64}",
                     font_family: "Inter",
                     "Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World"
+                }
+                label {
+                    max_lines: "3",
+                    text_overflow: "❌",
+                    "Looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong text"
                 }
                 label {
                     font_size: "18",

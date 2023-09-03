@@ -5,7 +5,7 @@
 - [What is Freya?](./what_is_freya.html)
 - [Main differences with Dioxus](./differences_with_dioxus.html)
 - [Environment Setup](./setup.html)
-- [API References](https://docs.freyaui.dev/freya/)
+- [API References](https://docs.rs/freya/latest/freya/)
 - [Discord](https://discord.gg/sYejxCdewG)
 
 <table>
@@ -17,7 +17,7 @@ fn app(cx: Scope) -> Element {
     let mut count = use_state(cx, || 0);
 
     render!(
-        container {
+        rect {
             height: "20%",
             width: "100%",
             background: "rgb(233, 196, 106)",
@@ -28,7 +28,7 @@ fn app(cx: Scope) -> Element {
                 "Number is: {count}"
             }
         }
-        container {
+        rect {
             height: "80%",
             width: "100%",
             background: "rgb(168, 218, 220)",

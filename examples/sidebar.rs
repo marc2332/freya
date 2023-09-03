@@ -4,7 +4,7 @@
 )]
 
 use freya::prelude::*;
-use dioxus_router::*;
+use dioxus_router::prelude::*;
 
 fn main() {
     launch(app);
@@ -23,18 +23,21 @@ fn Sidebar<'a>(cx: Scope<'a>, children: Element<'a>, sidebar: Element<'a>) -> El
             height: "100%",
             direction: "horizontal",
             background: "{background}",
-            container {
+            rect {
+                overflow: "clip",
                 width: "200",
                 height: "100%",
                 background: "rgb(50, 50, 50)",
-                radius: "0 7 0 7",
-                padding: "30",
+                corner_radius: "0 7 0 7",
+                padding: "20",
                 color: "{color}",
                 ScrollView {
+                    padding: "10",
                     sidebar
                 }
             }
-            container {
+            rect {
+                overflow: "clip",
                 width: "calc(100% - 200)",
                 height: "100%",
                 padding: "30",
@@ -47,14 +50,14 @@ fn Sidebar<'a>(cx: Scope<'a>, children: Element<'a>, sidebar: Element<'a>) -> El
 
 #[allow(non_snake_case)]
 #[inline_props]
-fn SidebarItem<'a>(cx: Scope<'a>, children: Element<'a>, onclick: Option<EventHandler<'a, ()>>, to: Option<&'a str>) -> Element<'a> {
+fn SidebarItem<'a>(cx: Scope<'a>, children: Element<'a>, onclick: Option<EventHandler<'a, ()>>, to: Option<Route>) -> Element<'a> {
     let theme = use_get_theme(cx);
     let status = use_state(cx, ButtonStatus::default);
-    let router = use_router(cx);
+    let navigator = use_navigator(cx);
 
     let onclick = move |_| {
         if let Some(to) = to {
-            router.replace_route(to, None, None)
+            navigator.replace(to.clone());
         }
         if let Some(onclick) = onclick {
             onclick.call(());
@@ -76,7 +79,8 @@ fn SidebarItem<'a>(cx: Scope<'a>, children: Element<'a>, onclick: Option<EventHa
     let color = theme.button.font_theme.color;
 
     render!(
-        container {
+        rect {
+            overflow: "clip",
             margin: "5 0",
             onclick: onclick,
             onmouseenter: onmouseenter,
@@ -85,8 +89,8 @@ fn SidebarItem<'a>(cx: Scope<'a>, children: Element<'a>, onclick: Option<EventHa
             height: "auto",
             direction: "both",
             color: "{color}",
-            shadow: "0 5 15 10 black",
-            radius: "10",
+            shadow: "0 2 10 1 rgb(0, 0, 0, 45)",
+            corner_radius: "10",
             padding: "12",
             background: "{background}",
             label {
@@ -96,38 +100,74 @@ fn SidebarItem<'a>(cx: Scope<'a>, children: Element<'a>, onclick: Option<EventHa
     )
 }
 
-fn app(cx: Scope) -> Element {
-    use_init_default_theme(cx);
+
+#[derive(Routable, Clone)]
+#[rustfmt::skip]
+pub enum Route {
+    #[layout(AppSidebar)]
+        #[route("/")]
+        Home,
+
+        #[route("/wow")]
+        Wow,
+    #[end_layout]
+    #[route("/..route")]
+    PageNotFound { },
+}
+
+#[allow(non_snake_case)]
+fn AppSidebar(cx: Scope) -> Element {
     render!(
-        Router {
-            Sidebar {
-                sidebar: render!(
-                    SidebarItem {
-                        to: "/",
-                        "Go to Hey ! 👋"
-                    }
-                    SidebarItem {
-                        to: "/wow",
-                        "Go to Wow! 👈"
-                    }
-                    SidebarItem {
-                        onclick: |_| println!("whatever"),
-                        "Idk ! 🦀"
-                    }
-                )
-                Route {
-                    to: "/",
-                    label {
-                        "Just some text 😗 in /"
-                    }
+        Sidebar {
+            sidebar: render!(
+                SidebarItem {
+                    to: Route::Home,
+                    "Go to Hey ! 👋"
+                },
+                SidebarItem {
+                    to: Route::Wow,
+                    "Go to Wow! 👈"
+                },
+                SidebarItem {
+                    onclick: |_| println!("Hello!"),
+                    "Print Hello! 👀"
                 }
-                Route {
-                    to: "/wow",
-                    label {
-                        "Just more text 👈!! in /wow"
-                    }
-                }
-            }
+            ),
+            Outlet::<Route> {  }
         }
+    )
+}
+
+#[allow(non_snake_case)]
+fn Home(cx: Scope) -> Element {
+    render!(
+        label {
+            "Just some text 😗 in /"
+        }
+    )
+}
+
+#[allow(non_snake_case)]
+fn Wow(cx: Scope) -> Element {
+    render!(
+        label {
+            "Just more text 👈!! in /wow"
+        }
+    )
+}
+
+#[allow(non_snake_case)]
+fn PageNotFound(cx: Scope) -> Element {
+    render!(
+        label {
+            "404!! 😵"
+        }
+    )
+}
+
+fn app(cx: Scope) -> Element {
+    use_init_theme(cx, DARK_THEME);
+    render!(
+        Router::<Route> {  }
     )
 }

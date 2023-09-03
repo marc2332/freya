@@ -11,7 +11,7 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    use_init_focus(cx);
+    use_init_theme(cx, DARK_THEME);
     let hovering = use_state(cx, || false);
     let canvas_pos = use_state(cx, || (0.0f64, 0.0f64));
     let nodes = use_state(cx, || vec![(0.0f64, 0.0f64)]);
@@ -93,11 +93,12 @@ fn app(cx: Scope) -> Element {
                                 offset_y: "{node.1}",
                                 width: "0",
                                 height: "0",
-                                container {
+                                rect {
+                                    overflow: "clip",
                                     background: "rgb(20, 20, 20)",
                                     width: "600",
                                     height: "400",
-                                    radius: "15",
+                                    corner_radius: "15",
                                     padding: "10",
                                     shadow: "0 0 30 0 rgb(0, 0, 0, 150)",
                                     onmousedown:  move |e: MouseEvent| {
@@ -127,10 +128,10 @@ fn app(cx: Scope) -> Element {
                 rect {
                     layer: "-100",
                     padding: "10",
-                    radius: "7",
+                    corner_radius: "7",
                     width: "170",
                     height: "100%",
-                    radius: "15",
+                    corner_radius: "15",
                     display: "center",
                     direction: "both",
                     background: "rgb(20, 20, 20)",
@@ -149,8 +150,7 @@ fn app(cx: Scope) -> Element {
 
 #[allow(non_snake_case)]
 fn Editor(cx: Scope) -> Element {
-    let (focused, focus_id, focus) = use_raw_focus(cx);
-
+    let focus_manager = use_focus(cx);
     let editable = use_editable(
         cx,
         || {
@@ -174,23 +174,27 @@ fn Editor(cx: Scope) -> Element {
     let font_style = if *is_italic.get() { "italic" } else { "normal" };
     let font_weight = if *is_bold.get() { "bold" } else { "normal" };
 
-    use_effect(cx, (), move |_| {
-        if let Some(focus) = focus {
-            *focus.write() = focus_id
+    use_effect(cx, (), {
+        to_owned![focus_manager];
+        move |_| {
+            focus_manager.focus();
+            async move {}
         }
-        async move {}
     });
 
-    let onclick = move |_: MouseEvent| {
-        if let Some(focus) = focus {
-            *focus.write() = focus_id
+    let onclick = {
+        to_owned![focus_manager];
+        move |_: MouseEvent| {
+            if !focus_manager.is_focused() {
+                focus_manager.focus();
+            }
         }
     };
 
     let onkeydown = {
         to_owned![editable];
         move |e: KeyboardEvent| {
-            if focused {
+            if focus_manager.is_focused() {
                 editable.process_event(&EditableEvent::KeyDown(e.data));
             }
         }
@@ -312,7 +316,7 @@ fn Editor(cx: Scope) -> Element {
                     ScrollView {
                         width: "100%",
                         height: "100%",
-                        show_scrollbar: true,
+                        scroll_with_arrows: false,
                         editor.lines().map(move |l| {
                             let editable = editable.clone();
 
@@ -366,7 +370,7 @@ fn Editor(cx: Scope) -> Element {
                                     height: "{manual_line_height}",
                                     direction: "horizontal",
                                     background: "{line_background}",
-                                    radius: "7",
+                                    corner_radius: "7",
                                     rect {
                                         width: "{font_size * 2.0}",
                                         height: "100%",

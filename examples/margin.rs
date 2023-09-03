@@ -22,29 +22,29 @@ fn app(cx: Scope) -> Element {
                 background: "rgb(50, 255, 100)",
             }
             rect {
-                margin: "50",
+                margin: "10 20 30 40",
                 width: "100",
                 height: "100",
                 background: "rgb(100, 50, 255)",
             }
             Button {
                 label {
-                    "Button ? Yes"
+                    "Button"
                 }
             }
             Button {
                 label {
-                    "Button ? Yes"
+                    "Button"
                 }
             }
             Button {
                 label {
-                    "Button ? Yes"
+                    "Button"
                 }
             }
             Button {
                 label {
-                    "Button ? Yes"
+                    "Button"
                 }
             }
 
