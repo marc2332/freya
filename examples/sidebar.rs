@@ -3,8 +3,8 @@
     windows_subsystem = "windows"
 )]
 
-use freya::prelude::*;
 use dioxus_router::prelude::*;
+use freya::prelude::*;
 
 fn main() {
     launch(app);
@@ -50,7 +50,12 @@ fn Sidebar<'a>(cx: Scope<'a>, children: Element<'a>, sidebar: Element<'a>) -> El
 
 #[allow(non_snake_case)]
 #[inline_props]
-fn SidebarItem<'a>(cx: Scope<'a>, children: Element<'a>, onclick: Option<EventHandler<'a, ()>>, to: Option<Route>) -> Element<'a> {
+fn SidebarItem<'a>(
+    cx: Scope<'a>,
+    children: Element<'a>,
+    onclick: Option<EventHandler<'a, ()>>,
+    to: Option<Route>,
+) -> Element<'a> {
     let theme = use_get_theme(cx);
     let status = use_state(cx, ButtonStatus::default);
     let navigator = use_navigator(cx);
@@ -99,7 +104,6 @@ fn SidebarItem<'a>(cx: Scope<'a>, children: Element<'a>, onclick: Option<EventHa
         }
     )
 }
-
 
 #[derive(Routable, Clone)]
 #[rustfmt::skip]
@@ -167,7 +171,5 @@ fn PageNotFound(cx: Scope) -> Element {
 
 fn app(cx: Scope) -> Element {
     use_init_theme(cx, DARK_THEME);
-    render!(
-        Router::<Route> {  }
-    )
+    render!(Router::<Route> {})
 }
