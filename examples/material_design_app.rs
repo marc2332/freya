@@ -15,7 +15,7 @@ fn main() {
                             "+"
                         }
                     }
-                )
+                ),
                 navbar: render!(
                     Navbar {
                         title: render!(
@@ -24,18 +24,18 @@ fn main() {
                             }
                         )
                     }
-                )
+                ),
                 Card {
-                    title: "Hello World",
-                    content: "whoooah some content"
+                    title: "Rust",
+                    content: "Rust is nice!"
                 }
                 Card {
-                    title: "Hello World",
-                    content: "whoooah some content"
+                    title: "I like it a lot",
+                    content: "A language empowering everyone to build reliable and efficient software. "
                 }
                 Card {
-                    title: "Hello World",
-                    content: "whoooah some content"
+                    title: "Why Rust?",
+                    content: "Rust is blazingly fast and memory-efficient: with no runtime or garbage collector, it can power performance-critical services, run on embedded devices, and easily integrate with other languages. "
                 }
             }
         )
@@ -47,6 +47,7 @@ struct FloatingButtonProps<'a> {
     children: Element<'a>,
 }
 
+#[allow(non_snake_case)]
 fn FloatingButton<'a>(cx: Scope<'a, FloatingButtonProps<'a>>) -> Element<'a> {
     render!(
         rect {
@@ -74,6 +75,10 @@ struct ScaffoldProps<'a> {
     children: Element<'a>,
 }
 
+const FLOATING_BUTTON_BOTTOM_MARGIN: i32 = 85;
+const FLOATING_BUTTON_RIGHT_MARGIN: i32 = 100;
+
+#[allow(non_snake_case)]
 fn Scaffold<'a>(cx: Scope<'a, ScaffoldProps<'a>>) -> Element<'a> {
     let height = if cx.props.navbar.is_some() {
         "calc(100% - 50)"
@@ -96,11 +101,11 @@ fn Scaffold<'a>(cx: Scope<'a, ScaffoldProps<'a>>) -> Element<'a> {
             rect {
                 width: "100%",
                 height: "0",
-                offset_y: "-90",
+                offset_y: "-{FLOATING_BUTTON_BOTTOM_MARGIN}",
                 layer: "-100",
                 direction: "horizontal",
                 rect {
-                    width: "calc(100% - 100)",
+                    width: "calc(100% - {FLOATING_BUTTON_RIGHT_MARGIN})",
                 }
                 cx.props.floating_button.as_ref()
             }
@@ -113,6 +118,7 @@ struct NavbarProps<'a> {
     title: Option<Element<'a>>,
 }
 
+#[allow(non_snake_case)]
 fn Navbar<'a>(cx: Scope<'a, NavbarProps<'a>>) -> Element<'a> {
     render!(
         rect {
