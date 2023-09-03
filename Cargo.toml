@@ -70,6 +70,7 @@ serde = "1.0.152"
 tracing-subscriber = "0.2.25"
 dioxus-std = { version = "0.4", features = ["utils", "i18n"] }
 rand = "0.8.5"
+dioxus-router = { workspace = true }
 
 [profile.release]
 lto = true
