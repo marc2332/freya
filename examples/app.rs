@@ -44,7 +44,7 @@ fn main() {
 
 #[derive(Props)]
 struct FloatingButtonProps<'a> {
-    children: Element<'a>
+    children: Element<'a>,
 }
 
 fn FloatingButton<'a>(cx: Scope<'a, FloatingButtonProps<'a>>) -> Element<'a> {
@@ -71,11 +71,10 @@ fn FloatingButton<'a>(cx: Scope<'a, FloatingButtonProps<'a>>) -> Element<'a> {
 struct ScaffoldProps<'a> {
     navbar: Option<Element<'a>>,
     floating_button: Option<Element<'a>>,
-    children: Element<'a>
+    children: Element<'a>,
 }
 
 fn Scaffold<'a>(cx: Scope<'a, ScaffoldProps<'a>>) -> Element<'a> {
-
     let height = if cx.props.navbar.is_some() {
         "calc(100% - 50)"
     } else {
@@ -111,7 +110,7 @@ fn Scaffold<'a>(cx: Scope<'a, ScaffoldProps<'a>>) -> Element<'a> {
 
 #[derive(Props)]
 struct NavbarProps<'a> {
-    title: Option<Element<'a>>
+    title: Option<Element<'a>>,
 }
 
 fn Navbar<'a>(cx: Scope<'a, NavbarProps<'a>>) -> Element<'a> {
@@ -133,7 +132,6 @@ fn Navbar<'a>(cx: Scope<'a, NavbarProps<'a>>) -> Element<'a> {
         }
     )
 }
-
 
 #[derive(Props)]
 struct CardProps<'a> {
