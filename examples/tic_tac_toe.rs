@@ -44,6 +44,10 @@ impl Board {
         self.evaluate_board();
     }
 
+    pub fn get_player(&mut self, row: usize, col: usize) -> Option<Player> {
+        self.board.get(row)?.get(col)?.clone()
+    }
+
     pub fn evaluate_board(&mut self) {
         // Horizontal checks
         for row in self.board.iter() {
@@ -79,7 +83,67 @@ impl Board {
             }
         }
 
-        // TODO: Diagonal checks
+        // Diagonal checks
+        for (row_n, row) in self.board.clone().iter().enumerate() {
+            for (col_n, _) in row.iter().enumerate() {
+                let lines = match row_n {
+                    0 if col_n < 2 => vec![(
+                        (row_n, col_n),
+                        (row_n + 1, col_n + 1),
+                        (row_n + 2, col_n + 2),
+                    )],
+                    0 if col_n > 2 => vec![(
+                        (row_n, col_n),
+                        (row_n - 1, col_n - 1),
+                        (row_n - 2, col_n - 2),
+                    )],
+                    1 if col_n >= 1 => vec![
+                        (
+                            (row_n - 1, col_n - 1),
+                            (row_n, col_n),
+                            (row_n + 1, col_n + 1),
+                        ),
+                        (
+                            (row_n - 1, col_n + 1),
+                            (row_n, col_n),
+                            (row_n - 1, col_n + 1),
+                        ),
+                    ],
+                    2 if col_n >= 2 => vec![(
+                        (row_n - 2, col_n - 2),
+                        (row_n - 1, col_n - 1),
+                        (row_n, col_n),
+                    )],
+                    2 if col_n < 2 => vec![(
+                        (row_n + 2, col_n + 2),
+                        (row_n + 1, col_n + 1),
+                        (row_n, col_n),
+                    )],
+                    _ => vec![],
+                };
+
+                for (top, mid, bot) in lines {
+                    let line = vec![
+                        self.get_player(top.0, top.1),
+                        self.get_player(mid.0, mid.1),
+                        self.get_player(bot.0, bot.1),
+                    ];
+
+                    let is_line_filled_with_x =
+                        line.iter().all(|player| *player == Some(Player::X));
+                    let is_line_filled_with_o =
+                        line.iter().all(|player| *player == Some(Player::O));
+
+                    if is_line_filled_with_x {
+                        self.winner = Some(Player::X);
+                        return;
+                    } else if is_line_filled_with_o {
+                        self.winner = Some(Player::O);
+                        return;
+                    }
+                }
+            }
+        }
     }
 }
 
