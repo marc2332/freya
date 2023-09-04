@@ -181,8 +181,9 @@ fn app(cx: Scope) -> Element {
                                 margin: "1",
                                 width: "48",
                                 height: "48",
-                                border: "2 solid rgb(35, 35, 35)",
-                                background: "rgb(240, 240, 240)",
+                                corner_radius: "6",
+                                border: "2 solid rgb(40, 40, 40)",
+                                background: "rgb(250, 250, 250)",
                                 display: "center",
                                 direction: "both",
                                 onclick: move |_| {
