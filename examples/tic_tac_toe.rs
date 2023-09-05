@@ -187,7 +187,10 @@ fn app(cx: Scope) -> Element {
                                 display: "center",
                                 direction: "both",
                                 onclick: move |_| {
-                                    board.write().put_player(current_player.read().clone(), n_row, n_col);
+                                    let mut board = board.write();
+                                    if board.winner.is_none(){
+                                        board.put_player(current_player.read().clone(), n_row, n_col);
+                                    }
                                     current_player.write().change_turn();
                                 },
                                 if let Some(col) = col {
