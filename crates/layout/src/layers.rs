@@ -1,11 +1,11 @@
 use dioxus_native_core::NodeId;
-use freya_dom::prelude::FreyaDOM;
+use freya_dom::prelude::{DioxusDOM, FreyaDOM};
 use freya_engine::prelude::*;
 use rustc_hash::FxHashMap;
 use torin::torin::Torin;
 use uuid::Uuid;
 
-use crate::{measure_paragraph, DioxusDOM};
+use crate::measurer::measure_paragraph;
 
 #[derive(Default, Clone)]
 pub struct Layers {
