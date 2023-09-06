@@ -101,3 +101,5 @@ dioxus = { version = "0.4", features = ["macro", "hooks"] }
 You can see the tracking [issue](https://github.com/marc2332/freya/issues/200) to know what features are implemented and which ones are not, yet.
 
 [MIT License](./LICENSE.md)
+
+test
