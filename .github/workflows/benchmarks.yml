@@ -1,0 +1,18 @@
+on: 
+  push:
+    paths:
+      - 'crates/torin/**/*'
+      - '.github/workflows/benchmarks.yml'
+
+name: Run Benchmarks
+jobs:
+  runBenchmark:
+    name: run benchmark
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: boa-dev/criterion-compare-action@59f4d964c5f19d7f13d36f5c0944b18ce6652cb0
+        with:
+          package: torin
+          branchName: feat/torin-benchmarks-TEST-COMPARE
+          token: ${{ secrets.GITHUB_TOKEN }}
