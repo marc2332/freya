@@ -6,7 +6,7 @@ Learn how the layout attributes work.
 - [`min_width & min_height`](#min_width_&_min_height)
 - [`max_width & max_height`](#max_width_&_max_height)
 - [`Size units`](#size_units)
-  - [`Static values`](#static-values)
+  - [`Logical pixels`](#logical-pixels)
   - [`Percentages`](#percentages)
   - [`calc()`](#calc)
 - [`direction`](#direction)

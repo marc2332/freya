@@ -5,7 +5,7 @@
 - [What is Freya?](./what_is_freya.html)
 - [Main differences with Dioxus](./differences_with_dioxus.html)
 - [Environment Setup](./setup.html)
-- [API References](https://docs.freyaui.dev/freya/)
+- [API References](https://docs.rs/freya/latest/freya/)
 - [Discord](https://discord.gg/sYejxCdewG)
 
 <table>

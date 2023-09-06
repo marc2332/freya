@@ -10,65 +10,61 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    render!(
-        App {
-            title: "My App",
-            navbar: render!(
-                Navbar {
-                    title: "Top navbar"
+    render!(App {
+        title: "My App",
+        navbar: render!(Navbar {
+            title: "Top navbar"
+        }),
+        body: render!(
+            ScrollView {
+                height: "calc(100% - 75 - 75)",
+                show_scrollbar: true,
+                Card {
+                    title: "Another title",
+                    content: "Some content",
                 }
-            )
-            body: render!(
                 ScrollView {
-                    height: "calc(100% - 75 - 75)"
-                    show_scrollbar: true,
+                    height: "200",
+                    padding: "0 20",
                     Card {
-                        title: "Another title",
-                        content: "Some content",
-                    }
-                    ScrollView {
-                        height: "200",
-                        padding: "0 20",
-                        Card {
-                            title: "Lalala",
-                            content: "Wooow",
-                        }
-                        Card {
-                            title: "Lalala",
-                            content: "Wooow",
-                        }
-                        Card {
-                            title: "Lalala",
-                            content: "Wooow",
-                        }
-                        Card {
-                            title: "Lalala",
-                            content: "Wooow",
-                        }
-                    }
-                    Card {
-                        title: "Another title",
-                        content: "Some content",
-                    }
-                    Card {
-                        title: "Another title",
-                        content: "Some content",
+                        title: "Lalala",
+                        content: "Wooow",
                     }
                     Card {
                         title: "Lalala",
                         content: "Wooow",
                     }
                     Card {
-                        title: "Another title",
-                        content: "Some content",
+                        title: "Lalala",
+                        content: "Wooow",
+                    }
+                    Card {
+                        title: "Lalala",
+                        content: "Wooow",
                     }
                 }
-                Navbar {
-                    title: "Bottom bar"
+                Card {
+                    title: "Another title",
+                    content: "Some content",
                 }
-            )
-        }
-    )
+                Card {
+                    title: "Another title",
+                    content: "Some content",
+                }
+                Card {
+                    title: "Lalala",
+                    content: "Wooow",
+                }
+                Card {
+                    title: "Another title",
+                    content: "Some content",
+                }
+            }
+            Navbar {
+                title: "Bottom bar"
+            }
+        )
+    })
 }
 
 #[derive(Props)]

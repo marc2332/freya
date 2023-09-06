@@ -1,4 +1,9 @@
-on: [pull_request]
+on: 
+  push:
+    paths:
+      - 'crates/torin/**/*'
+      - '.github/workflows/benchmarks.yml'
+
 name: Run Benchmarks
 jobs:
   runBenchmark:

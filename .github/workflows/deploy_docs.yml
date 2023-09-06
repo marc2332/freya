@@ -1,5 +1,9 @@
 name: Deploy docs
-on: [push]
+on: 
+  push:
+    paths:
+      - 'crates/**/*'
+      - '.github/workflows/deploy_docs.yml'
 
 jobs:
   deploy:

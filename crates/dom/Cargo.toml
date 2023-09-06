@@ -1,0 +1,30 @@
+[package]
+name = "freya-dom"
+description = "Internal DOM abstractions for Freya."
+version = "0.1.1"
+edition = "2021"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../../readme.md"
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
+categories = ["gui", "asynchronous"]
+
+[features]
+shared = []
+
+[dependencies]
+freya-node-state = { workspace = true }
+freya-common = { workspace = true }
+torin = { workspace = true }
+
+dioxus-rsx = { workspace = true }
+dioxus-native-core = { workspace = true }
+dioxus-core-macro = { workspace = true }
+dioxus-hooks = { workspace = true }
+dioxus-core = { workspace = true }
+
+uuid = { workspace = true }
+rustc-hash = { workspace = true }
+tracing = { workspace = true }

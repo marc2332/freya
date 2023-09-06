@@ -1,0 +1,53 @@
+[package]
+name = "freya"
+description = "Cross-platform GUI Library powered by Dioxus and Skia."
+version = "0.1.8"
+edition = "2021"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../../readme.md"
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
+categories = ["gui", "asynchronous"]
+
+[package.metadata.docs.rs]
+features = ["freya-engine/mocked-engine"]
+no-default-features = true
+
+[features]
+log = ["dep:tracing", "dep:tracing-subscriber"]
+devtools = ["dep:freya-devtools", "freya-dom/shared"]
+use_camera = ["freya-hooks/use_camera"]
+default = ["freya-engine/skia-engine"]
+
+[dependencies]
+freya-devtools = { workspace = true, optional = true }
+freya-node-state = { workspace = true }
+freya-layout = { workspace = true }
+freya-renderer = { workspace = true }
+freya-elements = { workspace = true }
+freya-common = { workspace = true }
+freya-hooks = { workspace = true }
+freya-core = { workspace = true }
+freya-components = { workspace = true }
+freya-dom = { workspace = true }
+freya-engine = { workspace = true }
+torin = { workspace = true }
+
+dioxus = { workspace = true }
+dioxus-rsx = { workspace = true }
+dioxus-native-core = { workspace = true }
+dioxus-core-macro = { workspace = true }
+dioxus-hooks = { workspace = true }
+dioxus-core = { workspace = true }
+dioxus-router = { workspace = true }
+dioxus-hot-reload = { workspace = true }
+
+tokio = { workspace = true }
+tracing = { workspace = true, optional = true }
+tracing-subscriber = { workspace = true, optional = true }
+
+anymap = { workspace = true }
+fxhash = { workspace = true }
+
