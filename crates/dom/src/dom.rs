@@ -105,14 +105,6 @@ impl Default for FreyaDOM {
 }
 
 impl FreyaDOM {
-    pub fn new(rdom: DioxusDOM, dioxus_integration_state: DioxusState) -> Self {
-        Self {
-            rdom,
-            dioxus_integration_state,
-            torin: Arc::new(Mutex::new(Torin::new())),
-        }
-    }
-
     pub fn layout(&self) -> MutexGuard<Torin<NodeId>> {
         self.torin.lock().unwrap()
     }

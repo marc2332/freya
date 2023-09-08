@@ -133,7 +133,7 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                 let rdom = dom.rdom();
                 let layout = dom.layout();
 
-                let mut new_children = Vec::new();
+                let mut new_children = Vec::with_capacity(layout.results.len());
 
                 let mut root_found = false;
                 let mut devtools_found = false;
