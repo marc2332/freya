@@ -62,7 +62,7 @@ fn Body(cx: Scope) -> Element {
                 width: "50%",
                 height: "100%",
                 length: editor.len_lines(),
-                item_size: 35.0,
+                item_size: ItemSize::Fixed(35.0),
                 builder_values: editable.clone(),
                 scroll_with_arrows: false,
                 builder: Box::new(move |(key, line_index, cx, values)| {
@@ -145,7 +145,7 @@ fn Body(cx: Scope) -> Element {
                 width: "50%",
                 height: "100%",
                 length: editor.len_lines(),
-                item_size: 35.0,
+                item_size: ItemSize::Fixed(35.0),
                 builder_values: editable.clone(),
                 scroll_with_arrows: false,
                 builder: Box::new(move |(key, line_index, cx, values)| {

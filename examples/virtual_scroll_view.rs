@@ -10,13 +10,13 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    let values = use_state(cx, || vec!["Hello World"].repeat(400));
+    let values = use_state(cx, || vec!["Hello World"].repeat(500));
 
     render!(VirtualScrollView {
         width: "100%",
         height: "100%",
         length: values.get().len(),
-        item_size: 25.0,
+        item_size: ItemSize::Dynamic,
         builder_values: values.get(),
         direction: "vertical",
         builder: Box::new(move |(key, index, _, values)| {
@@ -32,7 +32,8 @@ fn app(cx: Scope) -> Element {
                     key: "{key}",
                     background: "{background}",
                     label {
-                        height: "25",
+                        // height: "{70}",
+                        height: "{25 + (100.0*(index as f32).sin()) as usize}",
                         width: "100%",
                         "{index} {value}"
                     }
