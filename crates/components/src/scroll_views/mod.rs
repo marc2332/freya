@@ -55,10 +55,10 @@ pub fn get_scrollbar_pos_and_size(
         inner_size
     } else {
         let viewable_ratio_height = viewport_size / inner_size;
-        viewport_size * viewable_ratio_height
+        (viewport_size * viewable_ratio_height).max(30.0)
     };
-    let scroll_position = (100.0 / inner_size) * -scroll_position;
-    let scrollbar_position = (scroll_position / 100.0) * viewport_size;
+    let scroll_position = (100.0 / (inner_size-viewport_size)) * -scroll_position;
+    let scrollbar_position = (scroll_position / 100.0) * (viewport_size - scrollbar_height);
     (scrollbar_position, scrollbar_height)
 }
 
