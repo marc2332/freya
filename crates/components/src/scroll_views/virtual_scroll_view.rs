@@ -667,7 +667,10 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
                     direction: "{user_direction}",
                     reference: node_ref,
                     onwheel: onwheel,
-                    children
+                    rect {
+                        margin: "{-render_offset} 0 0 0",
+                        children
+                    }
                 }
                 ScrollBar {
                     width: "100%",
