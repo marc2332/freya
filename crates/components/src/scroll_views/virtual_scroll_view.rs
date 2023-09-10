@@ -1,5 +1,4 @@
 use std::ops::Range;
-use std::sync::Arc;
 
 use dioxus::prelude::*;
 use freya_common::NodeReferenceLayout;
@@ -132,6 +131,38 @@ impl Node {
             _ => None
         }
     }
+
+    fn min_index(&self) -> usize {
+        match self {
+            Node::LeafRange(v) => {v.range.start}
+            Node::Leaf(v) => {v.index}
+            Node::Inner(v) => {v.range.start}
+        }
+    }
+
+    fn max_index(&self) -> usize {
+        match self {
+            Node::LeafRange(v) => {v.range.end-1}
+            Node::Leaf(v) => {v.index}
+            Node::Inner(v) => {v.range.end-1}
+        }
+    }
+
+    fn get_real_size(&self) -> f32 {
+        match self {
+            Node::LeafRange(_) => {0.0}
+            Node::Leaf(v) => {v.size}
+            Node::Inner(v) => {v.total_real_size}
+        }
+    }
+
+    fn get_leaf_range_node_count(&self) -> usize {
+        match self {
+            Node::LeafRange(v) => {v.range.len()}
+            Node::Leaf(_) => {0}
+            Node::Inner(v) => {v.range_node_count}
+        }
+    }
 }
 
 impl LeafRangeNode {
@@ -153,20 +184,23 @@ impl LeafRangeNode {
 }
 
 impl InnerNode {
-    fn insert(&mut self, index: usize, value: f32, chunk_size: usize) -> bool {
+    fn insert(&mut self, index: usize, value: f32, chunk_size: usize) -> (bool, Option<InnerNode>) {
         assert!(self.range.contains(&index));
         let child_index = self.children.iter().enumerate().find(|(_, node)| {
             node.contains_index(index)
         }).unwrap().0;
 
-        if self.children[child_index].is_inner() {
+        let dirty = if self.children[child_index].is_inner() {
             let node = self.children[child_index].as_inner_mut().unwrap();
             let old_size = node.total_real_size;
             let old_range_count = node.range_node_count;
-            let dirty = node.insert(index, value, chunk_size);
+            let (dirty, new_node) = node.insert(index, value, chunk_size);
             self.total_real_size += node.total_real_size - old_size;
             self.range_node_count += node.range_node_count;
             self.range_node_count -= old_range_count;
+            if let Some(new_node) = new_node {
+                self.children.insert(child_index+1, Node::Inner(new_node));
+            }
             dirty
         } else if self.children[child_index].is_leaf() {
             let node = self.children[child_index].as_leaf_mut().unwrap();
@@ -211,9 +245,29 @@ impl InnerNode {
             true
         } else {
             unreachable!()
+        };
+
+        if self.children.len() > chunk_size {
+            let new_inner = self.split_children();
+            (dirty, Some(new_inner))
+        } else {
+            (dirty, None)
         }
     }
 
+    fn split_children(&mut self) -> Self {
+        let children2 = self.children.split_off(self.children.len() / 2);
+        let new_inner = InnerNode {
+            range: children2.first().unwrap().min_index()..children2.last().unwrap().max_index()+1,
+            total_real_size: children2.iter().map(Node::get_real_size).sum(),
+            range_node_count: children2.iter().map(Node::get_leaf_range_node_count).sum(),
+            children: vec![],
+        };
+        self.total_real_size -= new_inner.total_real_size;
+        self.range = self.range.start..self.children.last().unwrap().max_index()+1;
+        self.range_node_count -= new_inner.range_node_count;
+        new_inner
+    }
     fn get_total_size(&self, range_size: f32) -> f32 {
         self.total_real_size + self.range_node_count as f32 * range_size
     }
@@ -288,7 +342,19 @@ impl SizeCache {
 
     fn insert(&mut self, index: usize, size: f32) -> bool {
         let root = self.nodes[0].as_inner_mut().unwrap();
-        root.insert(index, size, self.chunk_size)
+        let (dirty, new_inner) = root.insert(index, size, self.chunk_size);
+        if let Some(new_inner) = new_inner {
+            let old_root = std::mem::replace(root, InnerNode {
+                range: root.range.start..new_inner.range.end,
+                total_real_size: root.total_real_size + new_inner.total_real_size,
+                range_node_count: root.range_node_count + new_inner.range_node_count,
+                children: vec![],
+            });
+            root.children.push(Node::Inner(old_root));
+            root.children.push(Node::Inner(new_inner));
+        }
+        dirty
+
     }
 
     fn get_covering_range(&self, offset: f32, viewport_size: f32, item_size: &ItemSize) -> (Range<usize>, f32) {
