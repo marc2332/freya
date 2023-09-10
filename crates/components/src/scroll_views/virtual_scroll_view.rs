@@ -22,10 +22,9 @@ type BuilderFunction<'a, T> = dyn Fn(
     ),
 ) -> LazyNodes<'a, 'a>;
 
-#[derive(Clone)]
 pub enum ItemSize {
     Fixed(f32),
-    PerItem(Arc<dyn Fn(usize) -> f32>),
+    PerItem(Box<dyn Fn(usize) -> f32>),
     Dynamic,
 }
 
