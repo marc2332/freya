@@ -16,9 +16,9 @@ mod network_image;
 mod scroll_views;
 mod slider;
 mod switch;
+mod table;
 mod theme;
 mod tooltip;
-mod table;
 
 pub use accordion::*;
 pub use button::*;
@@ -35,6 +35,6 @@ pub use network_image::*;
 pub use scroll_views::*;
 pub use slider::*;
 pub use switch::*;
+pub use table::*;
 pub use theme::*;
 pub use tooltip::*;
-pub use table::*;

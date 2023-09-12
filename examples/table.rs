@@ -10,17 +10,19 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    let data = use_state(cx, || vec![
-        vec!["test".to_string(), "test".to_string(),],
-        vec!["test".to_string(), "aaaaaaaa".to_string(),],
-        vec!["dddddddddddddd".to_string(), "bbbbbb".to_string(),],
-        vec!["test".to_string(), "ccccc".to_string(),],
-        vec!["Woah".to_string(), "2222222".to_string(),],
-        vec!["Nice".to_string(), "hola".to_string(),],
-        vec!["Rust".to_string(), "hello".to_string(),],
-        vec!["is".to_string(), "hi!".to_string(),],
-        vec!["really nice!".to_string(), "test".to_string(),],
-    ]);
+    let data = use_state(cx, || {
+        vec![
+            vec!["test".to_string(), "test".to_string()],
+            vec!["test".to_string(), "aaaaaaaa".to_string()],
+            vec!["dddddddddddddd".to_string(), "bbbbbb".to_string()],
+            vec!["test".to_string(), "ccccc".to_string()],
+            vec!["Woah".to_string(), "2222222".to_string()],
+            vec!["Nice".to_string(), "hola".to_string()],
+            vec!["Rust".to_string(), "hello".to_string()],
+            vec!["is".to_string(), "hi!".to_string()],
+            vec!["really nice!".to_string(), "test".to_string()],
+        ]
+    });
 
     render!(
         rect {
@@ -50,6 +52,7 @@ fn app(cx: Scope) -> Element {
                         for (i, items) in data.iter().enumerate() {
                             TableRow {
                                 key: "{i}",
+                                alternate_colors: i % 2 == 0,
                                 for item in items.iter(){
                                     TableCell {
                                         key: "{item}",

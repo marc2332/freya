@@ -4,7 +4,8 @@ use freya_elements::elements as dioxus_elements;
 /// [`TableHead`] component properties.
 #[derive(Props)]
 pub struct TableHeadProps<'a> {
-    children: Element<'a>
+    /// The content of this table head.
+    children: Element<'a>,
 }
 
 #[allow(non_snake_case)]
@@ -20,7 +21,8 @@ pub fn TableHead<'a>(cx: Scope<'a, TableHeadProps<'a>>) -> Element {
 /// [`TableBody`] component properties.
 #[derive(Props)]
 pub struct TableBodyProps<'a> {
-    children: Element<'a>
+    /// The content of this table body.
+    children: Element<'a>,
 }
 
 #[allow(non_snake_case)]
@@ -36,16 +38,26 @@ pub fn TableBody<'a>(cx: Scope<'a, TableBodyProps<'a>>) -> Element {
 /// [`TableRow`] component properties.
 #[derive(Props)]
 pub struct TableRowProps<'a> {
-    children: Element<'a>
+    /// The content of this row.
+    children: Element<'a>,
+    /// Show the row with a different background, this allows to have a zebra-style table.
+    #[props(default = false)]
+    alternate_colors: bool,
 }
 
 #[allow(non_snake_case)]
 pub fn TableRow<'a>(cx: Scope<'a, TableRowProps<'a>>) -> Element {
+    let background = if cx.props.alternate_colors {
+        "rgb(240, 240, 240)"
+    } else {
+        "transparent"
+    };
     render!(
         rect {
             direction: "horizontal",
             width: "100%",
-            min_height: "50",
+            min_height: "35",
+            background: "{background}",
             &cx.props.children
         }
         rect {
@@ -59,6 +71,7 @@ pub fn TableRow<'a>(cx: Scope<'a, TableRowProps<'a>>) -> Element {
 /// [`TableCell`] component properties.
 #[derive(Props)]
 pub struct TableCellProps<'a> {
+    /// The content of this cell.
     children: Element<'a>,
 }
 
@@ -73,7 +86,7 @@ pub fn TableCell<'a>(cx: Scope<'a, TableCellProps<'a>>) -> Element {
             padding: "5 25",
             width: "{width}%",
             display: "center",
-            height: "50",
+            height: "35",
             align: "right",
             &cx.props.children
         }
@@ -83,15 +96,21 @@ pub fn TableCell<'a>(cx: Scope<'a, TableCellProps<'a>>) -> Element {
 /// [`Table`] component properties.
 #[derive(Props)]
 pub struct TableProps<'a> {
+    /// Number of columns used in the table.
     columns: usize,
-    children: Element<'a>
+    /// The content of the table.
+    children: Element<'a>,
+    /// The height of the table.
+    #[props(default = "auto".to_string(), into)]
+    height: String,
 }
 
 #[allow(non_snake_case)]
 pub fn Table<'a>(cx: Scope<'a, TableProps<'a>>) -> Element {
     cx.provide_context(TableConfig {
-        columns: cx.props.columns
+        columns: cx.props.columns,
     });
+    let height = &cx.props.height;
 
     render!(
         rect {
@@ -99,6 +118,7 @@ pub fn Table<'a>(cx: Scope<'a, TableProps<'a>>) -> Element {
             background: "white",
             corner_radius: "6",
             shadow: "0 2 15 5 rgb(35, 35, 35, 70)",
+            height: "{height}",
             &cx.props.children
         }
     )
