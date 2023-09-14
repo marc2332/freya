@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
+use freya_elements::events::MouseEvent;
 
 /// [`TableHead`] component properties.
 #[derive(Props)]
@@ -73,6 +74,8 @@ pub fn TableRow<'a>(cx: Scope<'a, TableRowProps<'a>>) -> Element {
 pub struct TableCellProps<'a> {
     /// The content of this cell.
     children: Element<'a>,
+    /// Onclick event handler for the TableCell.
+    onclick: Option<EventHandler<'a, MouseEvent>>,
 }
 
 #[allow(non_snake_case)]
@@ -88,6 +91,11 @@ pub fn TableCell<'a>(cx: Scope<'a, TableCellProps<'a>>) -> Element {
             display: "center",
             height: "35",
             align: "right",
+            onclick: |e| {
+                if let Some(onclick) = &cx.props.onclick {
+                    onclick.call(e);
+                }
+            },
             &cx.props.children
         }
     )
