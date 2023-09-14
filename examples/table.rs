@@ -6,7 +6,7 @@
 use std::{cmp::Ordering, fmt::Display};
 
 use freya::prelude::*;
-use itertools::Itertools;
+use itertools::{Itertools, Either};
 
 fn main() {
     launch(app);
@@ -14,7 +14,6 @@ fn main() {
 
 #[derive(PartialEq)]
 enum OrderBy {
-    None,
     Name,
     OtherName,
 }
@@ -22,7 +21,6 @@ enum OrderBy {
 impl Display for OrderBy {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            OrderBy::None => f.write_str("Nothing"),
             OrderBy::Name => f.write_str("Name"),
             OrderBy::OtherName => f.write_str("Other Name"),
         }
@@ -30,7 +28,8 @@ impl Display for OrderBy {
 }
 
 fn app(cx: Scope) -> Element {
-    let order = use_state(cx, || OrderBy::None);
+    let order_direction = use_state(cx, || TableColumnOrdered::Down); 
+    let order = use_state(cx, || OrderBy::Name);
     let data = use_state(cx, || {
         vec![
             vec!["test".to_string(), "Just some data".to_string()],
@@ -46,10 +45,15 @@ fn app(cx: Scope) -> Element {
     });
 
     let filtered_data = data.iter().sorted_by(|a, b| match *order.get() {
-        OrderBy::None => Ordering::Equal,
         OrderBy::Name => Ord::cmp(&a[0], &b[0]),
         OrderBy::OtherName => Ord::cmp(&a[1], &b[1]),
     });
+
+    let filtered_data = if *order_direction.get() == TableColumnOrdered::Down {
+        Either::Left(filtered_data.rev())
+    } else {
+        Either::Right(filtered_data)
+    };
 
     render!(
         rect {
@@ -63,11 +67,13 @@ fn app(cx: Scope) -> Element {
                 TableHead {
                     TableRow {
                         TableCell {
+                            ordered: if *order.get() == OrderBy::Name { Some(*order_direction.get()) } else { None },
                             onclick: |_| {
-                                if *order.get() == OrderBy::Name {
-                                    order.set(OrderBy::None)
+                                order.set(OrderBy::Name);
+                                if *order_direction.get() == TableColumnOrdered::Up {
+                                    order_direction.set(TableColumnOrdered::Down)
                                 } else {
-                                    order.set(OrderBy::Name)
+                                    order_direction.set(TableColumnOrdered::Up)
                                 }
                             },
                             label {
@@ -77,11 +83,13 @@ fn app(cx: Scope) -> Element {
                             }
                         }
                         TableCell {
+                            ordered: if *order.get() == OrderBy::OtherName { Some(*order_direction.get()) } else { None },
                             onclick: |_| {
-                                if *order.get() == OrderBy::OtherName {
-                                    order.set(OrderBy::None)
+                                order.set(OrderBy::OtherName);
+                                if *order_direction.get() == TableColumnOrdered::Up {
+                                    order_direction.set(TableColumnOrdered::Down)
                                 } else {
-                                    order.set(OrderBy::OtherName)
+                                    order_direction.set(TableColumnOrdered::Up)
                                 }
                             },
                             label {
