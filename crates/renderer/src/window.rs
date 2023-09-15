@@ -271,6 +271,8 @@ impl<T: Clone> WindowEnv<T> {
             NonZeroU32::new(width.max(1)).unwrap(),
             NonZeroU32::new(height.max(1)).unwrap(),
         );
+
+        self.window.request_redraw();
     }
 
     /// Run the `on_setup` callback that was passed to the launch function
