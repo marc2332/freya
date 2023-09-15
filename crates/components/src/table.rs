@@ -3,21 +3,25 @@ use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
 
 #[allow(non_snake_case)]
-fn Arrow(cx: Scope) -> Element {
+#[inline_props]
+fn Arrow(cx: Scope, ordered: TableColumnOrdered) -> Element {
+    let color = "rgb(40, 40, 40)";
+    let rotate = match ordered {
+        TableColumnOrdered::Down => "0",
+        TableColumnOrdered::Up => "180",
+    };
 
-    let color = "black";
-
-    render!(
-        svg {
-            svg_content: r#"
-                <svg viewBox="0 0 250 142" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd" clip-rule="evenodd" d="M245.028 28.9774L137.003 137.003C130.374 143.632 119.626 143.632 112.997 137.003L4.97174 28.9774C-1.65725 22.3484 -1.65725 11.6007 4.97174 4.97173C11.6007 -1.65724 22.3484 -1.65724 28.9774 4.97173L125 100.994L221.023 4.97173C227.652 -1.65724 238.399 -1.65724 245.028 4.97173C251.657 11.6007 251.657 22.3484 245.028 28.9774Z" fill="{color}"/>
+    render!(svg {
+        height: "10",
+        width: "10",
+        rotate: "{rotate}deg",
+        svg_content: r#"
+                <svg viewBox="0 0 18 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M7.18177 9.58579L0 2.40401L1.81823 0.585785L9 7.76756L16.1818 0.585787L18 2.40402L10.8182 9.58579L10.8185 9.58601L9.00023 11.4042L9 11.404L8.99977 11.4042L7.18154 9.58602L7.18177 9.58579Z" fill="{color}"  stroke="{color}" stroke-width="2"/>
                 </svg>
             "#
-        }
-    )
+    })
 }
-
 
 /// [`TableHead`] component properties.
 #[derive(Props)]
@@ -86,10 +90,11 @@ pub fn TableRow<'a>(cx: Scope<'a, TableRowProps<'a>>) -> Element {
     )
 }
 
-#[derive(Clone, Copy, PartialEq, Debug)]
+#[derive(Clone, Copy, PartialEq, Debug, Default)]
 pub enum TableColumnOrdered {
     Up,
-    Down
+    #[default]
+    Down,
 }
 
 /// [`TableCell`] component properties.
@@ -101,7 +106,10 @@ pub struct TableCellProps<'a> {
     onclick: Option<EventHandler<'a, MouseEvent>>,
 
     #[props(into)]
-    ordered: Option<Option<TableColumnOrdered>>
+    ordered: Option<Option<TableColumnOrdered>>,
+
+    #[props(default = true, into)]
+    separator: bool,
 }
 
 #[allow(non_snake_case)]
@@ -110,6 +118,27 @@ pub fn TableCell<'a>(cx: Scope<'a, TableCellProps<'a>>) -> Element {
     let width = 100.0 / config.columns as f32;
 
     render!(
+        if cx.props.separator {
+            rsx!(
+                rect {
+                    width: "1",
+                    height: "35",
+                    background: "rgb(200, 200, 200)"
+                }
+            )
+        }
+        rect {
+            width: "0",
+            height: "0",
+            padding: "10",
+            if let Some(Some(ordered)) = &cx.props.ordered {
+                rsx!(
+                    Arrow {
+                        ordered: *ordered
+                    }
+                )
+            }
+        }
         rect {
             overflow: "clip",
             padding: "5 25",
@@ -122,13 +151,6 @@ pub fn TableCell<'a>(cx: Scope<'a, TableCellProps<'a>>) -> Element {
                     onclick.call(e);
                 }
             },
-            if let Some(Some(ordered)) = &cx.props.ordered {
-                rsx!(
-                    rect {
-                       
-                    }
-                )
-            }
             &cx.props.children
         }
     )
