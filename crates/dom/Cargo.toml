@@ -11,12 +11,17 @@ repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
 categories = ["gui", "asynchronous"]
 
+[package.metadata.docs.rs]
+features = ["freya-engine/mocked-engine"]
+
 [features]
 shared = []
+skia-engine = ["freya-engine/skia-engine"]
 
 [dependencies]
 freya-node-state = { workspace = true }
 freya-common = { workspace = true }
+freya-engine = { workspace = true }
 torin = { workspace = true }
 
 dioxus-rsx = { workspace = true }
