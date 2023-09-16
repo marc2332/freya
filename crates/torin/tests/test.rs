@@ -1104,7 +1104,7 @@ pub fn margin() {
 
     assert_eq!(
         node_areas.area,
-        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(210.0, 210.0)),
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
     );
 
     assert_eq!(
