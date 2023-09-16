@@ -35,7 +35,7 @@ impl TestingDOM {
 }
 
 impl DOMAdapter<usize> for TestingDOM {
-    fn children_of(&self, node_id: &usize) -> Vec<usize> {
+    fn children_of(&mut self, node_id: &usize) -> Vec<usize> {
         self.mapper
             .get(node_id)
             .map(|c| c.1.clone())
@@ -54,7 +54,7 @@ impl DOMAdapter<usize> for TestingDOM {
         self.mapper.get(node_id).map(|c| c.3.clone())
     }
 
-    fn is_node_valid(&self, _node_id: &usize) -> bool {
+    fn is_node_valid(&mut self, _node_id: &usize) -> bool {
         true
     }
 
@@ -122,12 +122,12 @@ fn criterion_benchmark(c: &mut Criterion) {
             b.iter(|| {
                 black_box({
                     let mut layout = Torin::<usize>::new();
-                    layout.find_best_root(&mocked_dom);
+                    layout.find_best_root(&mut mocked_dom);
                     layout.measure(
                         0,
                         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
                         &mut measurer,
-                        &mocked_dom,
+                        &mut mocked_dom,
                     )
                 });
             })
@@ -179,12 +179,12 @@ fn criterion_benchmark(c: &mut Criterion) {
                 }
             }
 
-            layout.find_best_root(&mocked_dom);
+            layout.find_best_root(&mut mocked_dom);
             layout.measure(
                 0,
                 Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
                 &mut measurer,
-                &mocked_dom,
+                &mut mocked_dom,
             );
 
             b.iter(|| {
@@ -198,12 +198,12 @@ fn criterion_benchmark(c: &mut Criterion) {
                         ),
                     );
                     layout.invalidate(1);
-                    layout.find_best_root(&mocked_dom);
+                    layout.find_best_root(&mut mocked_dom);
                     layout.measure(
                         0,
                         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
                         &mut measurer,
-                        &mocked_dom,
+                        &mut mocked_dom,
                     )
                 });
             })
@@ -255,12 +255,12 @@ fn criterion_benchmark(c: &mut Criterion) {
                 }
             }
 
-            layout.find_best_root(&mocked_dom);
+            layout.find_best_root(&mut mocked_dom);
             layout.measure(
                 0,
                 Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
                 &mut measurer,
-                &mocked_dom,
+                &mut mocked_dom,
             );
 
             b.iter(|| {
@@ -274,12 +274,12 @@ fn criterion_benchmark(c: &mut Criterion) {
                         ),
                     );
                     layout.invalidate(2001);
-                    layout.find_best_root(&mocked_dom);
+                    layout.find_best_root(&mut mocked_dom);
                     layout.measure(
                         0,
                         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
                         &mut measurer,
-                        &mocked_dom,
+                        &mut mocked_dom,
                     )
                 });
             })
