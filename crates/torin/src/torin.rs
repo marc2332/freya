@@ -11,7 +11,7 @@ use crate::{
     dom_adapter::{DOMAdapter, NodeAreas, NodeKey},
     geometry::{Area, Size2D},
     node::Node,
-    prelude::{BoxModel, Gaps},
+    prelude::Gaps,
     size::Size,
 };
 
@@ -324,9 +324,13 @@ fn measure_node<Key: NodeKey>(
             Size2D::new(horizontal_padding, vertical_padding),
         );
 
+        area.origin.x += node.margin.left();
+        area.origin.y += node.margin.top();
+
         area.size.width = node.width.min_max(
             area.size.width,
             parent_area.size.width,
+            node.margin.left(),
             node.margin.horizontal(),
             &node.minimum_width,
             &node.maximum_width,
@@ -334,6 +338,7 @@ fn measure_node<Key: NodeKey>(
         area.size.height = node.height.min_max(
             area.size.height,
             parent_area.size.height,
+            node.margin.top(),
             node.margin.vertical(),
             &node.minimum_height,
             &node.maximum_height,
@@ -348,6 +353,7 @@ fn measure_node<Key: NodeKey>(
                     area.size.width = node.width.min_max(
                         new_area.width(),
                         parent_area.size.width,
+                        node.margin.left(),
                         node.margin.horizontal(),
                         &node.minimum_width,
                         &node.maximum_width,
@@ -357,6 +363,7 @@ fn measure_node<Key: NodeKey>(
                     area.size.height = node.height.min_max(
                         new_area.height(),
                         parent_area.size.height,
+                        node.margin.top(),
                         node.margin.vertical(),
                         &node.minimum_height,
                         &node.maximum_height,
@@ -372,7 +379,7 @@ fn measure_node<Key: NodeKey>(
 
         // Node's inner area
         let mut inner_area = {
-            let mut inner_area = area.box_area(&node.margin);
+            let mut inner_area = area;
             if Size::Inner == node.width {
                 inner_area.size.width = available_parent_area.width()
             }

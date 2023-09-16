@@ -34,12 +34,12 @@ impl Size {
         }
     }
 
-    pub fn eval(&self, parent_value: f32) -> Option<f32> {
+    pub fn eval(&self, parent_value: f32, parent_margin: f32) -> Option<f32> {
         match self {
             Size::Pixels(px) => Some(px.get()),
-            Size::Percentage(per) => Some(parent_value / 100.0 * per.get()),
+            Size::Percentage(per) => Some((parent_value / 100.0 * per.get()) - parent_margin),
             Size::DynamicCalculations(calculations) => {
-                Some(run_calculations(calculations, parent_value))
+                Some(run_calculations(calculations, parent_value, parent_margin))
             }
             _ => None,
         }
@@ -49,14 +49,17 @@ impl Size {
         &self,
         value: f32,
         parent_value: f32,
+        single_margin: f32,
         margin: f32,
         minimum: &Self,
         maximum: &Self,
     ) -> f32 {
-        let value = self.eval(parent_value).unwrap_or(value) + margin;
+        let value = self.eval(parent_value, margin).unwrap_or(value);
 
-        let minimum_value = minimum.eval(parent_value);
-        let maximum_value = maximum.eval(parent_value);
+        let minimum_value = minimum
+            .eval(parent_value, margin)
+            .map(|v| v + single_margin);
+        let maximum_value = maximum.eval(parent_value, margin);
 
         let mut final_value = value;
 
@@ -121,7 +124,7 @@ impl std::fmt::Display for DynamicCalculation {
 
 /// Calculate some chained operations with a given value.
 /// This value could be for example the width of a node's parent area.
-pub fn run_calculations(calcs: &[DynamicCalculation], value: f32) -> f32 {
+pub fn run_calculations(calcs: &[DynamicCalculation], value: f32, parent_margin: f32) -> f32 {
     let mut prev_number: Option<f32> = None;
     let mut prev_op: Option<DynamicCalculation> = None;
 
@@ -150,7 +153,7 @@ pub fn run_calculations(calcs: &[DynamicCalculation], value: f32) -> f32 {
     for calc in calcs {
         match calc {
             DynamicCalculation::Percentage(per) => {
-                let val = (value / 100.0 * per).round();
+                let val = (value / 100.0 * per).round() - parent_margin;
 
                 calc_with_op(val, prev_op);
 
