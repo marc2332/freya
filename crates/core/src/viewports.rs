@@ -26,10 +26,11 @@ pub fn calculate_viewports(
             let node_areas = layout.get(*node_id);
 
             if let Some((node, node_areas)) = node.zip(node_areas) {
-                let style = node.get::<Style>().unwrap();
                 let node_type = &*node.node_type();
 
                 if let NodeType::Element(..) = node_type {
+                    let style = node.get::<Style>().unwrap();
+
                     // Clip any overflow from it's children
                     if style.overflow == OverflowMode::Clip {
                         viewports_collection
@@ -38,14 +39,16 @@ pub fn calculate_viewports(
                             .0 = Some(node_areas.area);
                     }
 
-                    for child in node.children() {
-                        if viewports_collection.contains_key(node_id) {
-                            let mut inherited_viewports =
-                                viewports_collection.get(node_id).unwrap().1.clone();
+                    // Pass viewports to the children
+                    if let Some((_, mut inherited_viewports)) =
+                        viewports_collection.get(node_id).cloned()
+                    {
+                        // Add the itself
+                        inherited_viewports.push(*node_id);
 
-                            inherited_viewports.push(*node_id);
-
-                            viewports_collection.insert(child.id(), (None, inherited_viewports));
+                        for child in node.children() {
+                            viewports_collection
+                                .insert(child.id(), (None, inherited_viewports.clone()));
                         }
                     }
                 }
