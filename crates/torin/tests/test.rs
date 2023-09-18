@@ -49,7 +49,7 @@ impl TestingDOM {
 }
 
 impl DOMAdapter<usize> for TestingDOM {
-    fn children_of(&self, node_id: &usize) -> Vec<usize> {
+    fn children_of(&mut self, node_id: &usize) -> Vec<usize> {
         self.mapper
             .get(node_id)
             .map(|c| c.1.clone())
@@ -68,7 +68,7 @@ impl DOMAdapter<usize> for TestingDOM {
         self.mapper.get(node_id).map(|c| c.3.clone())
     }
 
-    fn is_node_valid(&self, _node_id: &usize) -> bool {
+    fn is_node_valid(&mut self, _node_id: &usize) -> bool {
         true
     }
 
@@ -120,12 +120,12 @@ pub fn root_100per_children_50per50per() {
         ),
     );
 
-    layout.find_best_root(&mocked_dom);
+    layout.find_best_root(&mut mocked_dom);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mocked_dom,
+        &mut mocked_dom,
     );
 
     assert_eq!(
@@ -180,12 +180,12 @@ pub fn root_200px_children_50per50per() {
         ),
     );
 
-    layout.find_best_root(&mocked_dom);
+    layout.find_best_root(&mut mocked_dom);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mocked_dom,
+        &mut mocked_dom,
     );
 
     assert_eq!(
@@ -244,7 +244,7 @@ pub fn layout_dirty_nodes() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mocked_dom,
+        &mut mocked_dom,
     );
 
     // CASE 1
@@ -365,7 +365,7 @@ pub fn direction() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mocked_dom,
+        &mut mocked_dom,
     );
 
     assert_eq!(
@@ -390,12 +390,12 @@ pub fn direction() {
     );
     layout.invalidate(0);
 
-    layout.find_best_root(&mocked_dom);
+    layout.find_best_root(&mut mocked_dom);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mocked_dom,
+        &mut mocked_dom,
     );
 
     assert_eq!(
@@ -446,12 +446,12 @@ pub fn scroll() {
         ),
     );
 
-    layout.find_best_root(&mocked_dom);
+    layout.find_best_root(&mut mocked_dom);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mocked_dom,
+        &mut mocked_dom,
     );
 
     assert_eq!(
@@ -495,7 +495,7 @@ pub fn padding() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mocked_dom,
+        &mut mocked_dom,
     );
 
     assert_eq!(
@@ -534,7 +534,7 @@ pub fn caching() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mocked_dom,
+        &mut mocked_dom,
     );
 
     assert_eq!(
@@ -556,7 +556,7 @@ pub fn caching() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mocked_dom,
+        &mut mocked_dom,
     );
 
     assert_eq!(
@@ -601,7 +601,7 @@ pub fn sibling_increments_area() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mocked_dom,
+        &mut mocked_dom,
     );
 
     assert_eq!(
@@ -661,7 +661,7 @@ pub fn node_removal() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mocked_dom,
+        &mut mocked_dom,
     );
 
     assert_eq!(
@@ -679,11 +679,11 @@ pub fn node_removal() {
         Rect::new(Point2D::new(0.0, 200.0), Size2D::new(200.0, 200.0)),
     );
 
-    layout.remove(2, &mocked_dom, true);
+    layout.remove(2, &mut mocked_dom, true);
 
     mocked_dom.remove(2);
 
-    layout.find_best_root(&mocked_dom);
+    layout.find_best_root(&mut mocked_dom);
 
     assert_eq!(layout.get_dirty_nodes(), &HashSet::from([1, 3]));
 
@@ -691,7 +691,7 @@ pub fn node_removal() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mocked_dom,
+        &mut mocked_dom,
     );
 
     assert_eq!(
@@ -741,7 +741,7 @@ pub fn display_horizontal() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mocked_dom,
+        &mut mocked_dom,
     );
 
     assert_eq!(
@@ -792,12 +792,12 @@ pub fn display_vertical_with_inner_children() {
         ),
     );
 
-    layout.find_best_root(&mocked_dom);
+    layout.find_best_root(&mut mocked_dom);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mocked_dom,
+        &mut mocked_dom,
     );
 
     assert_eq!(
@@ -883,12 +883,12 @@ pub fn deep_tree() {
         ),
     );
 
-    layout.find_best_root(&mocked_dom);
+    layout.find_best_root(&mut mocked_dom);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mocked_dom,
+        &mut mocked_dom,
     );
 
     mocked_dom.set_node(
@@ -901,14 +901,14 @@ pub fn deep_tree() {
     );
     layout.invalidate(4);
 
-    layout.find_best_root(&mocked_dom);
+    layout.find_best_root(&mut mocked_dom);
     assert_eq!(layout.get_root_candidate(), RootNodeCandidate::Valid(4));
 
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mocked_dom,
+        &mut mocked_dom,
     );
 
     assert_eq!(layout.get_root_candidate(), RootNodeCandidate::None);
@@ -954,7 +954,7 @@ pub fn stacked() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mocked_dom,
+        &mut mocked_dom,
     );
 
     assert_eq!(
@@ -977,13 +977,13 @@ pub fn stacked() {
     );
     layout.invalidate(2);
 
-    layout.find_best_root(&mocked_dom);
+    layout.find_best_root(&mut mocked_dom);
 
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mocked_dom,
+        &mut mocked_dom,
     );
 
     assert_eq!(
@@ -1033,12 +1033,12 @@ pub fn two_cols_auto() {
         ),
     );
 
-    layout.find_best_root(&mocked_dom);
+    layout.find_best_root(&mut mocked_dom);
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(400.0, 400.0)),
         &mut measurer,
-        &mocked_dom,
+        &mut mocked_dom,
     );
 
     assert_eq!(
@@ -1097,7 +1097,7 @@ pub fn margin() {
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
         &mut measurer,
-        &mocked_dom,
+        &mut mocked_dom,
     );
 
     let node_areas = layout.get(1).unwrap();
