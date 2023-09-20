@@ -19,7 +19,7 @@ sudo apt install build-essential libssl-dev pkg-config cmake libgtk-3-dev libcla
 
 Install these packages:
 ```sh
-sudo pacman -S basedevel openssl cmake gtk3 clang
+sudo pacman -S base-devel openssl cmake gtk3 clang
 ```
 
 Don't hesitate to contribute so other distros can be added here.
