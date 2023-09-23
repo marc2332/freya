@@ -1,5 +1,5 @@
 on: 
-  push:
+  pull_request:
     paths:
       - 'crates/torin/**/*'
       - '.github/workflows/benchmarks.yml'
