@@ -123,10 +123,10 @@ impl FreyaDOM {
 
     /// Process the given mutations from the [`VirtualDOM`](dioxus_core::VirtualDom).
     pub fn apply_mutations(&mut self, mutations: Mutations, scale_factor: f32) -> (bool, bool) {
-        let dom_adapter = DioxusDOMAdapter::new(self.rdom());
+        let mut dom_adapter = DioxusDOMAdapter::new_with_cache(self.rdom());
         // Apply the mutations to the layout
         self.layout()
-            .apply_mutations(&mutations, &self.dioxus_integration_state, &dom_adapter);
+            .apply_mutations(&mutations, &self.dioxus_integration_state, &mut dom_adapter);
 
         // Apply the mutations the integration state
         self.dioxus_integration_state
