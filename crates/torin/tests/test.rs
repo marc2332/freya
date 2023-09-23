@@ -1,5 +1,6 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
+use fxhash::FxHashSet;
 use torin::prelude::*;
 
 struct TestingMeasurer;
@@ -277,7 +278,7 @@ pub fn layout_dirty_nodes() {
     );
     layout.invalidate(2);
 
-    assert_eq!(layout.get_dirty_nodes(), &HashSet::from([2]));
+    assert_eq!(layout.get_dirty_nodes(), &FxHashSet::from_iter([2]));
 
     // CASE 2
     // Same as Case 1 but we make Child A depend on Child A[0]'s size
@@ -292,7 +293,7 @@ pub fn layout_dirty_nodes() {
     );
     layout.invalidate(1);
 
-    assert_eq!(layout.get_dirty_nodes(), &HashSet::from([2, 1]));
+    assert_eq!(layout.get_dirty_nodes(), &FxHashSet::from_iter([2, 1]));
 
     // CASE 3
     // Same as Case 2, but triggers a change in Child A[0]
@@ -307,7 +308,7 @@ pub fn layout_dirty_nodes() {
     );
     layout.invalidate(2);
 
-    assert_eq!(layout.get_dirty_nodes(), &HashSet::from([2, 1]));
+    assert_eq!(layout.get_dirty_nodes(), &FxHashSet::from_iter([2, 1]));
 
     // CASE 4
     // Same as Case 3, but triggers a change in the root
@@ -322,7 +323,7 @@ pub fn layout_dirty_nodes() {
     );
     layout.invalidate(0);
 
-    assert_eq!(layout.get_dirty_nodes(), &HashSet::from([2, 1, 0]));
+    assert_eq!(layout.get_dirty_nodes(), &FxHashSet::from_iter([2, 1, 0]));
 }
 
 #[test]
@@ -685,7 +686,7 @@ pub fn node_removal() {
 
     layout.find_best_root(&mut mocked_dom);
 
-    assert_eq!(layout.get_dirty_nodes(), &HashSet::from([1, 3]));
+    assert_eq!(layout.get_dirty_nodes(), &FxHashSet::from_iter([1, 3]));
 
     layout.measure(
         0,

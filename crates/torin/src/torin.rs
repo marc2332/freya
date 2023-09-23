@@ -1,7 +1,7 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 pub use euclid::Rect;
-use fxhash::FxHashMap;
+use fxhash::{FxHashMap, FxHashSet};
 use tracing::info;
 
 use crate::{
@@ -30,7 +30,7 @@ pub struct Torin<Key: NodeKey> {
     pub results: FxHashMap<Key, NodeAreas>,
 
     /// Invalid registered nodes since previous layout measurement
-    pub dirty: HashSet<Key>,
+    pub dirty: FxHashSet<Key>,
 
     /// Best Root node candidate from where to start measuring
     pub root_node_candidate: RootNodeCandidate<Key>,
@@ -99,7 +99,7 @@ impl<Key: NodeKey> Torin<Key> {
     pub fn new() -> Self {
         Self {
             results: HashMap::default(),
-            dirty: HashSet::new(),
+            dirty: FxHashSet::default(),
             root_node_candidate: RootNodeCandidate::None,
         }
     }
@@ -112,7 +112,7 @@ impl<Key: NodeKey> Torin<Key> {
     }
 
     /// Read the HashSet of dirty nodes
-    pub fn get_dirty_nodes(&self) -> &HashSet<Key> {
+    pub fn get_dirty_nodes(&self) -> &FxHashSet<Key> {
         &self.dirty
     }
 
