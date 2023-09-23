@@ -47,7 +47,6 @@ pub struct ExternalLinkProps<'a> {
 #[allow(non_snake_case)]
 pub fn ExternalLink<'a>(cx: Scope<'a, ExternalLinkProps<'a>>) -> Element {
     let theme = use_get_theme(cx);
-    let theme = &theme.external_link;
     let is_hovering = use_state(cx, || false);
     let show_tooltip = cx.props.show_tooltip.unwrap_or(true);
 
@@ -68,7 +67,7 @@ pub fn ExternalLink<'a>(cx: Scope<'a, ExternalLinkProps<'a>>) -> Element {
     };
 
     let color = if *is_hovering.get() {
-        theme.highlight_color
+        theme.external_link.highlight_color
     } else {
         "inherit"
     };

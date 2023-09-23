@@ -1,5 +1,5 @@
 use dioxus_core::ScopeState;
-use dioxus_hooks::{use_effect, use_memo, use_state, UseFutureDep, UseState};
+use dioxus_hooks::{use_memo, use_state, UseFutureDep, UseState};
 use freya_engine::prelude::Color;
 use freya_node_state::Parse;
 use std::time::Duration;
@@ -252,9 +252,8 @@ impl<'a> TransitionsManager<'a> {
 ///
 ///     let progress = animation.get(0).unwrap().as_size();
 ///
-///     use_effect(cx, (), move |_| {
+///     use_memo(cx, (), move |_| {
 ///         animation.start();
-///         async move {}
 ///     });
 ///
 ///     render!(
@@ -278,11 +277,10 @@ where
     let transitions = use_memo(cx, dependencies.clone(), &mut init);
     let transitions_storage = use_state(cx, || animations_map(transitions));
 
-    use_effect(cx, dependencies, {
+    use_memo(cx, dependencies, {
         let storage_setter = transitions_storage.setter();
         move |v| {
             storage_setter(animations_map(&init(v)));
-            async move {}
         }
     });
 
@@ -322,9 +320,8 @@ mod test {
 
             let progress = animation.get(0).unwrap().as_size();
 
-            use_effect(cx, (), move |_| {
+            use_memo(cx, (), move |_| {
                 animation.start();
-                async move {}
             });
 
             render!(rect {

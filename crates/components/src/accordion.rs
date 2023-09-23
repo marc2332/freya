@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
-use freya_hooks::{use_animation, use_get_theme, use_node, Animation};
+use freya_hooks::{use_animation, use_get_theme, use_node, AccordionTheme, Animation};
 
 /// [`Accordion`] component properties.
 #[derive(Props)]
@@ -23,15 +23,15 @@ pub struct AccordionProps<'a> {
 #[allow(non_snake_case)]
 pub fn Accordion<'a>(cx: Scope<'a, AccordionProps<'a>>) -> Element<'a> {
     let theme = use_get_theme(cx);
-    let accordion_theme = &theme.accordion;
     let animation = use_animation(cx, 0.0);
     let open = use_state(cx, || false);
     let (node_ref, size) = use_node(cx);
 
     let animation_value = animation.value();
+    let AccordionTheme { background, color } = theme.accordion;
 
     // Adapt the accordion if the body size changes
-    use_effect(
+    use_memo(
         cx,
         &(
             size.area.width(),
@@ -44,7 +44,6 @@ pub fn Accordion<'a>(cx: Scope<'a, AccordionProps<'a>>) -> Element<'a> {
                 if (height as f64) < animation.value() && !animating {
                     animation.set_value(size.area.height() as f64);
                 }
-                async move {}
             }
         },
     );
@@ -62,12 +61,12 @@ pub fn Accordion<'a>(cx: Scope<'a, AccordionProps<'a>>) -> Element<'a> {
     render!(
         rect {
             overflow: "clip",
-            color: "{accordion_theme.color}",
+            color: "{color}",
             padding: "10",
             corner_radius: "3",
             width: "100%",
             height: "auto",
-            background: "{accordion_theme.background}",
+            background: "{background}",
             onclick: onclick,
             &cx.props.summary
             rect {

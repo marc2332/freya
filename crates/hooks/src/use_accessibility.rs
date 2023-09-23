@@ -1,5 +1,5 @@
 use dioxus_core::ScopeState;
-use dioxus_hooks::{to_owned, use_effect, use_shared_state};
+use dioxus_hooks::{to_owned, use_effect, use_memo, use_shared_state};
 use freya_common::EventMessage;
 use freya_core::FocusReceiver;
 
@@ -11,13 +11,12 @@ pub fn use_init_accessibility(cx: &ScopeState) {
     let focused_id = use_shared_state::<Option<FocusId>>(cx).unwrap();
     let current_focused_id = *focused_id.read();
 
-    use_effect(cx, &(current_focused_id,), move |(focused_id,)| {
+    use_memo(cx, &(current_focused_id,), move |(focused_id,)| {
         if let Some(focused_id) = focused_id {
             platform
                 .send(EventMessage::FocusAccessibilityNode(focused_id))
                 .unwrap();
         }
-        async move {}
     });
 
     use_effect(cx, (), {
