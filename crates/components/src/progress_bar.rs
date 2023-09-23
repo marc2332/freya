@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::{use_focus, use_get_theme};
+use freya_hooks::{use_get_theme, ProgressBarTheme};
 
 /// [`ProgressBar`] component properties.
 #[derive(Props, PartialEq)]
@@ -43,6 +43,12 @@ pub struct ProgressBarProps {
 ///
 #[allow(non_snake_case)]
 pub fn ProgressBar(cx: Scope<ProgressBarProps>) -> Element {
+    let theme = use_get_theme(cx);
+
+    let ProgressBarTheme {
+        background,
+        progress_background,
+    } = theme.progress_bar;
     let width = &cx.props.width;
     let height = &cx.props.height;
     let show_progress = cx.props.show_progress;
@@ -58,14 +64,14 @@ pub fn ProgressBar(cx: Scope<ProgressBarProps>) -> Element {
                 width: "100%",
                 height: "100%",
                 shadow: "0 2 10 1 rgb(0, 0, 0, 45)",
-                background: "rgb(210, 210, 210)",
+                background: "{background}",
                 font_size: "13",
                 direction: "horizontal",
                 rect {
                     corner_radius: "999",
                     width: "{progress}%",
                     height: "100%",
-                    background: "rgb(103, 80, 164)",
+                    background: "{progress_background}",
                     display: "center",
                     overflow: "clip",
                     if show_progress {
@@ -75,7 +81,7 @@ pub fn ProgressBar(cx: Scope<ProgressBarProps>) -> Element {
                                 width: "100%",
                                 color: "white",
                                 max_lines: "1",
-                                "{progress.ceil()}%"
+                                "{progress.floor()}%"
                             }
                         )
                     }
