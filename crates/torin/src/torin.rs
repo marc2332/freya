@@ -275,8 +275,6 @@ impl<Key: NodeKey> Torin<Key> {
         let root = dom_adapter.get_node(&root_id).unwrap();
         let root_height = dom_adapter.height(&root_id).unwrap();
 
-        println!("{}", dom_adapter.children_of(&root_id).len());
-
         info!(
             "Processing {} dirty nodes and {} cached nodes from a height of {}",
             self.dirty.len(),
