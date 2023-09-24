@@ -102,7 +102,7 @@ fn criterion_benchmark(c: &mut Criterion) {
                 for i in &children_ids {
                     let id = (level * size) + *i;
                     let children = (1..101)
-                        .map(move |i| i + (level * 1000))
+                        .map(move |i| i + (level * size))
                         .collect::<Vec<usize>>();
 
                     mocked_dom.add(
