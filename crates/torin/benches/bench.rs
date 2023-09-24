@@ -170,9 +170,7 @@ fn criterion_benchmark(c: &mut Criterion) {
             for level in 0..levels {
                 for i in &children_ids {
                     let id = (level * 1000) + *i;
-                    let children = if level == levels - 1 {
-                        vec![]
-                    } else if *i == 101 {
+                    let children = if *i == 101 && level < levels - 1 {
                         (1..101)
                             .map(move |i| i + ((level + 1) * 1000))
                             .collect::<Vec<usize>>()
@@ -255,9 +253,7 @@ fn criterion_benchmark(c: &mut Criterion) {
             for level in 0..levels {
                 for i in &children_ids {
                     let id = (level * 1000) + *i;
-                    let children = if level == levels - 1 {
-                        vec![]
-                    } else if *i == 101 {
+                    let children = if *i == 101 && level < levels - 1 {
                         (1..101)
                             .map(move |i| i + ((level + 1) * 1000))
                             .collect::<Vec<usize>>()
@@ -340,9 +336,7 @@ fn criterion_benchmark(c: &mut Criterion) {
             for level in 0..levels {
                 for i in &children_ids {
                     let id = (level * 1000) + *i;
-                    let children = if level == levels - 1 {
-                        vec![]
-                    } else if *i == 101 {
+                    let children = if *i == 101 && level < levels - 1 {
                         (1..101)
                             .map(move |i| i + ((level + 1) * 1000))
                             .collect::<Vec<usize>>()
