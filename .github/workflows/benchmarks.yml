@@ -1,5 +1,5 @@
 on: 
-  push:
+  pull_request:
     paths:
       - 'crates/torin/**/*'
       - '.github/workflows/benchmarks.yml'
@@ -14,5 +14,5 @@ jobs:
       - uses: boa-dev/criterion-compare-action@59f4d964c5f19d7f13d36f5c0944b18ce6652cb0
         with:
           package: torin
-          branchName: feat/torin-benchmarks-TEST-COMPARE
+          branchName: ${{ github.base_ref }}
           token: ${{ secrets.GITHUB_TOKEN }}

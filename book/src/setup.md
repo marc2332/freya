@@ -15,6 +15,13 @@ Install these packages:
 sudo apt install build-essential libssl-dev pkg-config cmake libgtk-3-dev libclang-dev
 ```
 
+#### Arch Linux
+
+Install these packages:
+```sh
+sudo pacman -S base-devel openssl cmake gtk3 clang
+```
+
 Don't hesitate to contribute so other distros can be added here.
 
 ### MacOS

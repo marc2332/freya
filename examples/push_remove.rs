@@ -11,39 +11,18 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    let elements = use_state(cx, || Vec::new());
+    let elements = use_ref(cx, || Vec::new());
 
-    let add = {
-        to_owned![elements];
-        move |_| {
-            let mut rng = rand::thread_rng();
-            elements.with_mut(|elements| {
-                elements.push(rng.gen());
-            })
-        }
+    let add = |_| {
+        let mut rng = rand::thread_rng();
+        elements.write().push(rng.gen());
     };
 
-    let remove = {
-        to_owned![elements];
-        move |_| {
-            elements.with_mut(|elements| {
-                elements.pop();
-            })
-        }
+    let remove = |_| {
+        elements.write().pop();
     };
 
-    render!(rect {
-        background: "rgb(225, 200, 150)",
-        elements.get().iter().map(|e: &usize| rsx!(
-            rect {
-                key: "{e}",
-                background: "rgb(150, 200, 225)",
-                width: "100%",
-                label {
-                    "Element {e}"
-                }
-            }
-        ))
+    render!(
         Button {
             onclick: add,
             label {
@@ -56,5 +35,14 @@ fn app(cx: Scope) -> Element {
                 "Remove"
             }
         }
-    })
+        elements.read().iter().map(|e: &usize| rsx!(
+            rect {
+                key: "{e}",
+                background: "rgb(150, 200, 225)",
+                label {
+                    "Element {e}"
+                }
+            }
+        ))
+    )
 }
