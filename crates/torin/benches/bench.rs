@@ -101,11 +101,20 @@ fn criterion_benchmark(c: &mut Criterion) {
             for level in 0..depth {
                 for i in &children_ids {
                     let id = (level * size) + *i;
+                    let children = if level == depth - 1 {
+                        vec![]
+                    } else if *i == size_per_layer - 1 {
+                        (1..101)
+                            .map(move |i| i + ((level + 1) * size))
+                            .collect::<Vec<usize>>()
+                    } else {
+                        vec![]
+                    };
 
                     mocked_dom.add(
                         id,
                         Some(root),
-                        vec![],
+                        children,
                         Node::from_size_and_direction(
                             Size::Pixels(Length::new(100.0)),
                             Size::Pixels(Length::new(100.0)),
@@ -161,11 +170,18 @@ fn criterion_benchmark(c: &mut Criterion) {
             for level in 0..levels {
                 for i in &children_ids {
                     let id = (level * 1000) + *i;
+                    let children = if *i == 101 && level < levels - 1 {
+                        (1..101)
+                            .map(move |i| i + ((level + 1) * 1000))
+                            .collect::<Vec<usize>>()
+                    } else {
+                        vec![]
+                    };
 
                     mocked_dom.add(
                         id,
                         Some(root),
-                        vec![],
+                        children,
                         Node::from_size_and_direction(
                             Size::Pixels(Length::new(100.0)),
                             Size::Pixels(Length::new(100.0)),
@@ -237,11 +253,18 @@ fn criterion_benchmark(c: &mut Criterion) {
             for level in 0..levels {
                 for i in &children_ids {
                     let id = (level * 1000) + *i;
+                    let children = if *i == 101 && level < levels - 1 {
+                        (1..101)
+                            .map(move |i| i + ((level + 1) * 1000))
+                            .collect::<Vec<usize>>()
+                    } else {
+                        vec![]
+                    };
 
                     mocked_dom.add(
                         id,
                         Some(root),
-                        vec![],
+                        children,
                         Node::from_size_and_direction(
                             Size::Pixels(Length::new(100.0)),
                             Size::Pixels(Length::new(100.0)),
@@ -313,11 +336,18 @@ fn criterion_benchmark(c: &mut Criterion) {
             for level in 0..levels {
                 for i in &children_ids {
                     let id = (level * 1000) + *i;
+                    let children = if *i == 101 && level < levels - 1 {
+                        (1..101)
+                            .map(move |i| i + ((level + 1) * 1000))
+                            .collect::<Vec<usize>>()
+                    } else {
+                        vec![]
+                    };
 
                     mocked_dom.add(
                         id,
                         Some(root),
-                        vec![],
+                        children,
                         Node::from_size_and_direction(
                             Size::Pixels(Length::new(100.0)),
                             Size::Pixels(Length::new(100.0)),
