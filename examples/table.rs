@@ -3,7 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use std::{cmp::Ordering, fmt::Display};
+use std::fmt::Display;
 
 use freya::prelude::*;
 use itertools::{Either, Itertools};
@@ -12,7 +12,7 @@ fn main() {
     launch(app);
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 enum OrderBy {
     Name,
     OtherName,
@@ -94,6 +94,21 @@ fn app(cx: Scope) -> Element {
         Either::Right(filtered_data)
     };
 
+    let on_column_head_click = |column_order: OrderBy| {
+        // Change order diection
+        if *order.get() == column_order {
+            if *order_direction.get() == TableColumnOrdered::Up {
+                order_direction.set(TableColumnOrdered::Down)
+            } else {
+                order_direction.set(TableColumnOrdered::Up)
+            }
+        // Change order column
+        } else {
+            order.set(column_order);
+            order_direction.set(TableColumnOrdered::default())
+        }
+    };
+
     render!(
         rect {
             padding: "10",
@@ -108,18 +123,7 @@ fn app(cx: Scope) -> Element {
                         TableCell {
                             separator: false,
                             ordered: if *order.get() == OrderBy::Name { Some(*order_direction.get()) } else { None },
-                            onclick: |_| {
-                                if *order.get() == OrderBy::Name {
-                                    if *order_direction.get() == TableColumnOrdered::Up {
-                                        order_direction.set(TableColumnOrdered::Down)
-                                    } else {
-                                        order_direction.set(TableColumnOrdered::Up)
-                                    }
-                                } else {
-                                    order.set(OrderBy::Name);
-                                    order_direction.set(TableColumnOrdered::default())
-                                }
-                            },
+                            onclick: move  |_| on_column_head_click(OrderBy::Name),
                             label {
                                 width: "100%",
                                 align: "center",
@@ -128,18 +132,7 @@ fn app(cx: Scope) -> Element {
                         }
                         TableCell {
                             ordered: if *order.get() == OrderBy::OtherName { Some(*order_direction.get()) } else { None },
-                            onclick: |_| {
-                                if *order.get() == OrderBy::OtherName {
-                                    if *order_direction.get() == TableColumnOrdered::Up {
-                                        order_direction.set(TableColumnOrdered::Down)
-                                    } else {
-                                        order_direction.set(TableColumnOrdered::Up)
-                                    }
-                                } else {
-                                    order.set(OrderBy::OtherName);
-                                    order_direction.set(TableColumnOrdered::default())
-                                }
-                            },
+                            onclick: move |_| on_column_head_click(OrderBy::OtherName),
                             label {
                                 width: "100%",
                                 align: "center",
@@ -148,18 +141,7 @@ fn app(cx: Scope) -> Element {
                         }
                         TableCell {
                             ordered: if *order.get() == OrderBy::MoreData { Some(*order_direction.get()) } else { None },
-                            onclick: |_| {
-                                if *order.get() == OrderBy::MoreData {
-                                    if *order_direction.get() == TableColumnOrdered::Up {
-                                        order_direction.set(TableColumnOrdered::Down)
-                                    } else {
-                                        order_direction.set(TableColumnOrdered::Up)
-                                    }
-                                } else {
-                                    order.set(OrderBy::MoreData);
-                                    order_direction.set(TableColumnOrdered::default())
-                                }
-                            },
+                            onclick: move |_| on_column_head_click(OrderBy::MoreData),
                             label {
                                 width: "100%",
                                 align: "center",
