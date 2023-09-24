@@ -1,7 +1,7 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 pub use euclid::Rect;
-use fxhash::FxHashMap;
+use fxhash::{FxHashMap, FxHashSet};
 use tracing::info;
 
 use crate::{
@@ -30,7 +30,7 @@ pub struct Torin<Key: NodeKey> {
     pub results: FxHashMap<Key, NodeAreas>,
 
     /// Invalid registered nodes since previous layout measurement
-    pub dirty: HashSet<Key>,
+    pub dirty: FxHashSet<Key>,
 
     /// Best Root node candidate from where to start measuring
     pub root_node_candidate: RootNodeCandidate<Key>,
@@ -53,7 +53,7 @@ impl Torin<NodeId> {
         &mut self,
         mutations: &Mutations,
         dioxus_integration_state: &DioxusState,
-        dom_adapter: &impl DOMAdapter<NodeId>,
+        dom_adapter: &mut impl DOMAdapter<NodeId>,
     ) {
         use dioxus_core::Mutation;
 
@@ -99,7 +99,7 @@ impl<Key: NodeKey> Torin<Key> {
     pub fn new() -> Self {
         Self {
             results: HashMap::default(),
-            dirty: HashSet::new(),
+            dirty: FxHashSet::default(),
             root_node_candidate: RootNodeCandidate::None,
         }
     }
@@ -112,7 +112,7 @@ impl<Key: NodeKey> Torin<Key> {
     }
 
     /// Read the HashSet of dirty nodes
-    pub fn get_dirty_nodes(&self) -> &HashSet<Key> {
+    pub fn get_dirty_nodes(&self) -> &FxHashSet<Key> {
         &self.dirty
     }
 
@@ -131,7 +131,7 @@ impl<Key: NodeKey> Torin<Key> {
     pub fn remove(
         &mut self,
         node_id: Key,
-        dom_adapter: &impl DOMAdapter<Key>,
+        dom_adapter: &mut impl DOMAdapter<Key>,
         invalidate_parent: bool,
     ) {
         // Remove itself
@@ -153,7 +153,7 @@ impl<Key: NodeKey> Torin<Key> {
         self.dirty.insert(node_id);
     }
 
-    pub fn safe_invalidate(&mut self, node_id: Key, dom_adapter: &impl DOMAdapter<Key>) {
+    pub fn safe_invalidate(&mut self, node_id: Key, dom_adapter: &mut impl DOMAdapter<Key>) {
         if dom_adapter.is_node_valid(&node_id) {
             self.invalidate(node_id)
         }
@@ -163,7 +163,7 @@ impl<Key: NodeKey> Torin<Key> {
     pub fn check_dirty_dependants(
         &mut self,
         node_id: Key,
-        dom_adapter: &impl DOMAdapter<Key>,
+        dom_adapter: &mut impl DOMAdapter<Key>,
         ignore: bool,
     ) {
         if (self.dirty.contains(&node_id) && ignore) || !dom_adapter.is_node_valid(&node_id) {
@@ -220,7 +220,7 @@ impl<Key: NodeKey> Torin<Key> {
     }
 
     /// Find the best root Node from where to start measuring
-    pub fn find_best_root(&mut self, dom_adapter: &impl DOMAdapter<Key>) {
+    pub fn find_best_root(&mut self, dom_adapter: &mut impl DOMAdapter<Key>) {
         if self.results.is_empty() {
             return;
         }
@@ -235,7 +235,7 @@ impl<Key: NodeKey> Torin<Key> {
         suggested_root_id: Key,
         suggested_root_area: Area,
         measurer: &mut Option<impl LayoutMeasurer<Key>>,
-        dom_adapter: &impl DOMAdapter<Key>,
+        dom_adapter: &mut impl DOMAdapter<Key>,
     ) {
         // If there are previosuly cached results
         // But no dirty nodes, we can simply skip the measurement
@@ -312,7 +312,7 @@ fn measure_node<Key: NodeKey>(
     available_parent_area: &Area,
     measurer: &mut Option<impl LayoutMeasurer<Key>>,
     must_cache: bool,
-    dom_adapter: &impl DOMAdapter<Key>,
+    dom_adapter: &mut impl DOMAdapter<Key>,
 ) -> (bool, NodeAreas) {
     let must_run = layout.dirty.contains(&node_id) || layout.results.get(&node_id).is_none();
     if must_run {
@@ -498,7 +498,7 @@ fn measure_inner_nodes<Key: NodeKey>(
     measurer: &mut Option<impl LayoutMeasurer<Key>>,
     must_cache: bool,
     mode: &mut MeasureMode,
-    dom_adapter: &impl DOMAdapter<Key>,
+    dom_adapter: &mut impl DOMAdapter<Key>,
 ) {
     let children = dom_adapter.children_of(node_id);
 

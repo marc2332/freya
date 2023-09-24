@@ -40,10 +40,10 @@ pub trait DOMAdapter<NodeKey> {
     fn parent_of(&self, node_id: &NodeKey) -> Option<NodeKey>;
 
     /// Get the children of a Node
-    fn children_of(&self, node_id: &NodeKey) -> Vec<NodeKey>;
+    fn children_of(&mut self, node_id: &NodeKey) -> Vec<NodeKey>;
 
     /// Check whether the given Node is valid (isn't a placeholder, unconnected node..)
-    fn is_node_valid(&self, node_id: &NodeKey) -> bool;
+    fn is_node_valid(&mut self, node_id: &NodeKey) -> bool;
 
     /// Get the closest common parent Node of two Nodes
     fn closest_common_parent(&self, node_id_a: &NodeKey, node_id_b: &NodeKey) -> Option<NodeKey>;

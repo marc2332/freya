@@ -13,17 +13,17 @@ pub fn process_layout(
     scale_factor: f32,
 ) -> (Layers, ViewportsCollection) {
     let rdom = fdom.rdom();
-    let dom_adapter = DioxusDOMAdapter::new(rdom);
+    let mut dom_adapter = DioxusDOMAdapter::new_with_cache(rdom);
     let skia_measurer = SkiaMeasurer::new(rdom, font_collection);
 
     // Finds the best Node from where to start measuring
-    fdom.layout().find_best_root(&dom_adapter);
+    fdom.layout().find_best_root(&mut dom_adapter);
 
     let root_id = fdom.rdom().root_id();
 
     // Measure the layout
     fdom.layout()
-        .measure(root_id, area, &mut Some(skia_measurer), &dom_adapter);
+        .measure(root_id, area, &mut Some(skia_measurer), &mut dom_adapter);
 
     // Create the layers
     let mut layers = Layers::default();
