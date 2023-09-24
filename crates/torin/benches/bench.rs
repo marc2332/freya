@@ -103,10 +103,12 @@ fn criterion_benchmark(c: &mut Criterion) {
                     let id = (level * size) + *i;
                     let children = if level == depth - 1 {
                         vec![]
-                    } else {
+                    } else if *i == size_per_layer - 1 {
                         (1..101)
                             .map(move |i| i + ((level + 1) * size))
                             .collect::<Vec<usize>>()
+                    } else {
+                        vec![]
                     };
 
                     mocked_dom.add(
@@ -170,10 +172,12 @@ fn criterion_benchmark(c: &mut Criterion) {
                     let id = (level * 1000) + *i;
                     let children = if level == levels - 1 {
                         vec![]
-                    } else {
+                    } else if *i == 101 {
                         (1..101)
                             .map(move |i| i + ((level + 1) * 1000))
                             .collect::<Vec<usize>>()
+                    } else {
+                        vec![]
                     };
 
                     mocked_dom.add(
@@ -253,10 +257,12 @@ fn criterion_benchmark(c: &mut Criterion) {
                     let id = (level * 1000) + *i;
                     let children = if level == levels - 1 {
                         vec![]
-                    } else {
+                    } else if *i == 101 {
                         (1..101)
                             .map(move |i| i + ((level + 1) * 1000))
                             .collect::<Vec<usize>>()
+                    } else {
+                        vec![]
                     };
 
                     mocked_dom.add(
@@ -336,10 +342,12 @@ fn criterion_benchmark(c: &mut Criterion) {
                     let id = (level * 1000) + *i;
                     let children = if level == levels - 1 {
                         vec![]
-                    } else {
+                    } else if *i == 101 {
                         (1..101)
                             .map(move |i| i + ((level + 1) * 1000))
                             .collect::<Vec<usize>>()
+                    } else {
+                        vec![]
                     };
 
                     mocked_dom.add(
