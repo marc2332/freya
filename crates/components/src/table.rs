@@ -4,11 +4,11 @@ use freya_elements::events::MouseEvent;
 
 #[allow(non_snake_case)]
 #[inline_props]
-fn Arrow(cx: Scope, ordered: TableColumnOrdered) -> Element {
+fn TableArrow(cx: Scope, order_direction: OrderDirection) -> Element {
     let color = "rgb(40, 40, 40)";
-    let rotate = match ordered {
-        TableColumnOrdered::Down => "0",
-        TableColumnOrdered::Up => "180",
+    let rotate = match order_direction {
+        OrderDirection::Down => "0",
+        OrderDirection::Up => "180",
     };
 
     render!(svg {
@@ -16,10 +16,10 @@ fn Arrow(cx: Scope, ordered: TableColumnOrdered) -> Element {
         width: "10",
         rotate: "{rotate}deg",
         svg_content: r#"
-                <svg viewBox="0 0 18 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path fill-rule="evenodd" clip-rule="evenodd" d="M7.18177 9.58579L0 2.40401L1.81823 0.585785L9 7.76756L16.1818 0.585787L18 2.40402L10.8182 9.58579L10.8185 9.58601L9.00023 11.4042L9 11.404L8.99977 11.4042L7.18154 9.58602L7.18177 9.58579Z" fill="{color}"  stroke="{color}" stroke-width="2"/>
-                </svg>
-            "#
+            <svg viewBox="0 0 18 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M7.18177 9.58579L0 2.40401L1.81823 0.585785L9 7.76756L16.1818 0.585787L18 2.40402L10.8182 9.58579L10.8185 9.58601L9.00023 11.4042L9 11.404L8.99977 11.4042L7.18154 9.58602L7.18177 9.58579Z" fill="{color}"  stroke="{color}" stroke-width="2"/>
+            </svg>
+        "#
     })
 }
 
@@ -91,7 +91,7 @@ pub fn TableRow<'a>(cx: Scope<'a, TableRowProps<'a>>) -> Element {
 }
 
 #[derive(Clone, Copy, PartialEq, Debug, Default)]
-pub enum TableColumnOrdered {
+pub enum OrderDirection {
     Up,
     #[default]
     Down,
@@ -104,10 +104,10 @@ pub struct TableCellProps<'a> {
     children: Element<'a>,
     /// Onclick event handler for the TableCell.
     onclick: Option<EventHandler<'a, MouseEvent>>,
-
+    /// The direction in which this TableCell's column will be ordered.
     #[props(into)]
-    ordered: Option<Option<TableColumnOrdered>>,
-
+    order_direction: Option<Option<OrderDirection>>,
+    /// Show a line separator to the left of this TableCell.
     #[props(default = true, into)]
     separator: bool,
 }
@@ -131,10 +131,10 @@ pub fn TableCell<'a>(cx: Scope<'a, TableCellProps<'a>>) -> Element {
             width: "0",
             height: "0",
             padding: "10",
-            if let Some(Some(ordered)) = &cx.props.ordered {
+            if let Some(Some(order_direction)) = &cx.props.order_direction {
                 rsx!(
-                    Arrow {
-                        ordered: *ordered
+                    TableArrow {
+                        order_direction: *order_direction
                     }
                 )
             }

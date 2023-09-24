@@ -30,7 +30,7 @@ impl Display for OrderBy {
 }
 
 fn app(cx: Scope) -> Element {
-    let order_direction = use_state(cx, || TableColumnOrdered::Down);
+    let order_direction = use_state(cx, || OrderDirection::Down);
     let order = use_state(cx, || OrderBy::Name);
     let data = use_state(cx, || {
         vec![
@@ -81,31 +81,40 @@ fn app(cx: Scope) -> Element {
             ],
         ]
     });
-
-    let filtered_data = data.iter().sorted_by(|a, b| match *order.get() {
-        OrderBy::Name => Ord::cmp(&a[0], &b[0]),
-        OrderBy::OtherName => Ord::cmp(&a[1], &b[1]),
-        OrderBy::MoreData => Ord::cmp(&a[2], &b[2]),
+    let columns = cx.use_hook(|| {
+        vec![
+            ("Name", OrderBy::Name),
+            ("OtherName", OrderBy::OtherName),
+            ("MoreData", OrderBy::MoreData),
+        ]
     });
 
-    let filtered_data = if *order_direction.get() == TableColumnOrdered::Down {
-        Either::Left(filtered_data.rev())
-    } else {
-        Either::Right(filtered_data)
+    let filtered_data = {
+        let filtered_data = data.iter().sorted_by(|a, b| match *order.get() {
+            OrderBy::Name => Ord::cmp(&a[0], &b[0]),
+            OrderBy::OtherName => Ord::cmp(&a[1], &b[1]),
+            OrderBy::MoreData => Ord::cmp(&a[2], &b[2]),
+        });
+
+        if *order_direction.get() == OrderDirection::Down {
+            Either::Left(filtered_data.rev())
+        } else {
+            Either::Right(filtered_data)
+        }
     };
 
-    let on_column_head_click = |column_order: OrderBy| {
+    let on_column_head_click = |column_order: &OrderBy| {
         // Change order diection
-        if *order.get() == column_order {
-            if *order_direction.get() == TableColumnOrdered::Up {
-                order_direction.set(TableColumnOrdered::Down)
+        if order.get() == column_order {
+            if *order_direction.get() == OrderDirection::Up {
+                order_direction.set(OrderDirection::Down)
             } else {
-                order_direction.set(TableColumnOrdered::Up)
+                order_direction.set(OrderDirection::Up)
             }
         // Change order column
         } else {
-            order.set(column_order);
-            order_direction.set(TableColumnOrdered::default())
+            order.set(column_order.clone());
+            order_direction.set(OrderDirection::default())
         }
     };
 
@@ -120,32 +129,17 @@ fn app(cx: Scope) -> Element {
                 columns: 3,
                 TableHead {
                     TableRow {
-                        TableCell {
-                            separator: false,
-                            ordered: if *order.get() == OrderBy::Name { Some(*order_direction.get()) } else { None },
-                            onclick: move  |_| on_column_head_click(OrderBy::Name),
-                            label {
-                                width: "100%",
-                                align: "center",
-                                "Name"
-                            }
-                        }
-                        TableCell {
-                            ordered: if *order.get() == OrderBy::OtherName { Some(*order_direction.get()) } else { None },
-                            onclick: move |_| on_column_head_click(OrderBy::OtherName),
-                            label {
-                                width: "100%",
-                                align: "center",
-                                "Other name"
-                            }
-                        }
-                        TableCell {
-                            ordered: if *order.get() == OrderBy::MoreData { Some(*order_direction.get()) } else { None },
-                            onclick: move |_| on_column_head_click(OrderBy::MoreData),
-                            label {
-                                width: "100%",
-                                align: "center",
-                                "More data"
+                        for (n, (text, order_by)) in columns.iter().enumerate() {
+                            TableCell {
+                                key: "{n}",
+                                separator: false,
+                                order_direction: if *order.get() == *order_by { Some(*order_direction.get()) } else { None },
+                                onclick: move  |_| on_column_head_click(order_by),
+                                label {
+                                    width: "100%",
+                                    align: "center",
+                                    "{text}"
+                                }
                             }
                         }
                     }
