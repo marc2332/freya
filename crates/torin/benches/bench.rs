@@ -285,6 +285,82 @@ fn criterion_benchmark(c: &mut Criterion) {
             })
         },
     );
+
+    g.bench_function(
+        "big trees (deep + cached) + invalidated node in the middle",
+        |b| {
+            let mut layout = Torin::<usize>::new();
+            let mut measurer = Some(TestingMeasurer);
+            let mut mocked_dom = TestingDOM::default();
+
+            let children_ids = (1..=101).into_iter().collect::<Vec<usize>>();
+
+            let mut root = 0;
+
+            mocked_dom.add(
+                0,
+                None,
+                children_ids.clone(),
+                Node::from_size_and_direction(
+                    Size::Percentage(Length::new(100.0)),
+                    Size::Percentage(Length::new(100.0)),
+                    DirectionMode::Vertical,
+                ),
+            );
+
+            let levels = 20;
+
+            for level in 0..levels {
+                for i in &children_ids {
+                    let id = (level * 1000) + *i;
+
+                    mocked_dom.add(
+                        id,
+                        Some(root),
+                        vec![],
+                        Node::from_size_and_direction(
+                            Size::Pixels(Length::new(100.0)),
+                            Size::Pixels(Length::new(100.0)),
+                            DirectionMode::Vertical,
+                        ),
+                    );
+
+                    if *i == 101 {
+                        root = id
+                    }
+                }
+            }
+
+            layout.find_best_root(&mut mocked_dom);
+            layout.measure(
+                0,
+                Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+                &mut measurer,
+                &mut mocked_dom,
+            );
+
+            b.iter(|| {
+                black_box({
+                    mocked_dom.set_node(
+                        1,
+                        Node::from_size_and_direction(
+                            Size::Inner,
+                            Size::Pixels(Length::new(10.0)),
+                            DirectionMode::Vertical,
+                        ),
+                    );
+                    layout.invalidate(1001);
+                    layout.find_best_root(&mut mocked_dom);
+                    layout.measure(
+                        0,
+                        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+                        &mut measurer,
+                        &mut mocked_dom,
+                    )
+                });
+            })
+        },
+    );
 }
 
 criterion_group!(benches, criterion_benchmark);
