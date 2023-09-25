@@ -421,7 +421,7 @@ fn criterion_benchmark(c: &mut Criterion) {
             mocked_dom.add(
                 0,
                 None,
-                vec![1, 2, 3],
+                vec![101, 102],
                 Node::from_size_and_direction(
                     Size::Percentage(Length::new(100.0)),
                     Size::Percentage(Length::new(100.0)),
