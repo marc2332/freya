@@ -910,7 +910,7 @@ pub fn deep_tree() {
     layout.find_best_root(&mut mocked_dom);
     assert_eq!(
         layout.get_root_candidate(),
-        RootNodeCandidate::Valid(4, vec![4])
+        RootNodeCandidate::Valid(4, FxHashSet::from_iter([4]))
     );
 
     layout.measure(
