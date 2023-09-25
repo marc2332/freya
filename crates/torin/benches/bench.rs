@@ -429,15 +429,16 @@ fn criterion_benchmark(c: &mut Criterion) {
                 ),
             );
 
-            const LEVELS: usize = 20;
+            const LEVELS: usize = 14;
+            const WIDE: usize = 2;
 
             fn build_branch(mocked_dom: &mut TestingDOM, root: usize, level: usize) -> Vec<usize> {
                 if level == LEVELS {
                     return vec![];
                 }
 
-                let nodes = (0..=((level + 1) * 3))
-                    .map(|i| i + ((level + 1) * 1000))
+                let nodes = (0..=WIDE)
+                    .map(|i| i + ((level + 1) * 100) + (root * 10))
                     .into_iter()
                     .collect::<Vec<usize>>();
                 for id in nodes.iter() {
@@ -477,7 +478,7 @@ fn criterion_benchmark(c: &mut Criterion) {
                             DirectionMode::Vertical,
                         ),
                     );
-                    layout.invalidate(8013);
+                    layout.invalidate(7008);
                     layout.find_best_root(&mut mocked_dom);
                     layout.measure(
                         0,
