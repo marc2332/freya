@@ -437,7 +437,7 @@ fn criterion_benchmark(c: &mut Criterion) {
                 }
 
                 let nodes = (level + 1..=(level + 1 * 3))
-                    .map(|i| i * 1000)
+                    .map(|i| i + (1000 * level))
                     .into_iter()
                     .collect::<Vec<usize>>();
                 for id in nodes.iter() {
