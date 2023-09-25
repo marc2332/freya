@@ -81,8 +81,9 @@ impl DOMAdapter<NodeId> for DioxusDOMAdapter<'_> {
         &self,
         node_id_a: &NodeId,
         node_id_b: &NodeId,
-    ) -> Option<(NodeId, FxHashSet<NodeId>)> {
-        find_common_parent(self.rdom, *node_id_a, *node_id_b)
+        root_track_patch: &mut FxHashSet<NodeId>,
+    ) -> Option<NodeId> {
+        find_common_parent(self.rdom, *node_id_a, *node_id_b, root_track_patch)
     }
 }
 
@@ -115,21 +116,23 @@ fn find_common_parent(
     rdom: &DioxusDOM,
     node_a: NodeId,
     node_b: NodeId,
-) -> Option<(NodeId, FxHashSet<NodeId>)> {
+    root_track_patch: &mut FxHashSet<NodeId>,
+) -> Option<NodeId> {
     let tree = rdom.tree_ref();
     let height_a = tree.height(node_a)?;
     let height_b = tree.height(node_b)?;
 
-    let mut root_track_patch = FxHashSet::from_iter([node_a, node_b]);
+    root_track_patch.insert(node_a);
+    root_track_patch.insert(node_b);
 
     let (node_a, node_b) = match height_a.cmp(&height_b) {
         std::cmp::Ordering::Less => (
             node_a,
-            balance_heights(rdom, node_b, node_a, &mut root_track_patch).unwrap_or(node_b),
+            balance_heights(rdom, node_b, node_a, root_track_patch).unwrap_or(node_b),
         ),
         std::cmp::Ordering::Equal => (node_a, node_b),
         std::cmp::Ordering::Greater => (
-            balance_heights(rdom, node_a, node_b, &mut root_track_patch).unwrap_or(node_a),
+            balance_heights(rdom, node_a, node_b, root_track_patch).unwrap_or(node_a),
             node_b,
         ),
     };
@@ -139,7 +142,7 @@ fn find_common_parent(
     loop {
         // Common parent of node_a and node_b
         if currents.0 == currents.1 {
-            return Some((currents.0, root_track_patch));
+            return Some(currents.0);
         }
 
         let parent_a = tree.parent_id(currents.0);

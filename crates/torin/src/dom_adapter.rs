@@ -58,5 +58,6 @@ pub trait DOMAdapter<NodeKey> {
         &self,
         node_id_a: &NodeKey,
         node_id_b: &NodeKey,
-    ) -> Option<(NodeKey, FxHashSet<NodeKey>)>;
+        root_track_patch: &mut FxHashSet<NodeKey>,
+    ) -> Option<NodeKey>;
 }

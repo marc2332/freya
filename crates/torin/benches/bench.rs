@@ -62,10 +62,12 @@ impl DOMAdapter<usize> for TestingDOM {
     fn closest_common_parent(
         &self,
         node_id_a: &usize,
-        _node_id_b: &usize,
-    ) -> Option<(usize, FxHashSet<usize>)> {
-        let parent = self.parent_of(node_id_a)?;
-        Some((parent, FxHashSet::from_iter([parent])))
+        node_id_b: &usize,
+        root_track_patch: &mut FxHashSet<usize>,
+    ) -> Option<usize> {
+        root_track_patch.insert(*node_id_a);
+        root_track_patch.insert(*node_id_b);
+        self.parent_of(node_id_a)
     }
 }
 

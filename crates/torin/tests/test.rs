@@ -77,9 +77,9 @@ impl DOMAdapter<usize> for TestingDOM {
         &self,
         node_id_a: &usize,
         _node_id_b: &usize,
-    ) -> Option<(usize, FxHashSet<usize>)> {
-        let parent = self.parent_of(node_id_a).unwrap_or(*node_id_a);
-        Some((parent, FxHashSet::from_iter([parent])))
+        _root_track_patch: &mut FxHashSet<usize>,
+    ) -> Option<usize> {
+        Some(self.parent_of(node_id_a).unwrap_or(*node_id_a))
     }
 }
 

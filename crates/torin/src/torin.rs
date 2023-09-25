@@ -182,14 +182,14 @@ impl<Key: NodeKey> Torin<Key> {
         if RootNodeCandidate::None == self.root_node_candidate {
             self.root_node_candidate =
                 RootNodeCandidate::Valid(node_id, FxHashSet::from_iter([node_id]));
-        } else if let RootNodeCandidate::Valid(root_candidate, ref mut prev_path) =
+        } else if let RootNodeCandidate::Valid(root_candidate, ref mut root_track_patch) =
             &mut self.root_node_candidate
         {
             if node_id != *root_candidate {
-                let closest_parent = dom_adapter.closest_common_parent(&node_id, root_candidate);
+                let closest_parent =
+                    dom_adapter.closest_common_parent(&node_id, root_candidate, root_track_patch);
 
-                if let Some((closest_parent, path)) = closest_parent {
-                    prev_path.extend(path);
+                if let Some(closest_parent) = closest_parent {
                     *root_candidate = closest_parent;
                 }
             }
@@ -228,14 +228,16 @@ impl<Key: NodeKey> Torin<Key> {
 
                     // Try saving using  node's parent as root candidate if it has multiple children
                     if multiple_children {
-                        if let RootNodeCandidate::Valid(root_candidate, ref mut prev_path) =
+                        if let RootNodeCandidate::Valid(root_candidate, ref mut root_track_patch) =
                             &mut self.root_node_candidate
                         {
-                            let closest_parent =
-                                dom_adapter.closest_common_parent(&parent_id, root_candidate);
+                            let closest_parent = dom_adapter.closest_common_parent(
+                                &parent_id,
+                                root_candidate,
+                                root_track_patch,
+                            );
 
-                            if let Some((closest_parent, path)) = closest_parent {
-                                prev_path.extend(path);
+                            if let Some(closest_parent) = closest_parent {
                                 *root_candidate = closest_parent;
                             }
                         }
@@ -463,7 +465,7 @@ fn measure_node<Key: NodeKey>(
     } else {
         let areas = layout.get(node_id).unwrap().clone();
 
-        if true {
+        if root_path.contains(&node_id) {
             let mut inner_sizes = areas.inner_sizes;
             let mut available_area = areas.inner_area;
 
