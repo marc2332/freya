@@ -29,6 +29,17 @@ impl TestingDOM {
         self.mapper.insert(node_id, (parent, children, depth, node));
     }
 
+    fn add_with_depth(
+        &mut self,
+        node_id: usize,
+        parent: Option<usize>,
+        children: Vec<usize>,
+        node: Node,
+        depth: u16,
+    ) {
+        self.mapper.insert(node_id, (parent, children, depth, node));
+    }
+
     fn set_node(&mut self, node_id: usize, node: Node) {
         self.mapper.get_mut(&node_id).unwrap().3 = node;
     }
@@ -65,7 +76,7 @@ impl DOMAdapter<usize> for TestingDOM {
 
 fn criterion_benchmark(c: &mut Criterion) {
     let mut g = c.benchmark_group("benchmarks");
-    g.significance_level(0.1).sample_size(500);
+    g.significance_level(0.05).sample_size(500);
 
     let params = [
         ("big trees (wide) nodes=1000, depth=1", 1000, 1),
@@ -372,7 +383,7 @@ fn criterion_benchmark(c: &mut Criterion) {
             b.iter(|| {
                 black_box({
                     mocked_dom.set_node(
-                        1,
+                        1001,
                         Node::from_size_and_direction(
                             Size::Inner,
                             Size::Pixels(Length::new(10.0)),
@@ -380,6 +391,86 @@ fn criterion_benchmark(c: &mut Criterion) {
                         ),
                     );
                     layout.invalidate(1001);
+                    layout.find_best_root(&mut mocked_dom);
+                    layout.measure(
+                        0,
+                        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+                        &mut measurer,
+                        &mut mocked_dom,
+                    )
+                });
+            })
+        },
+    );
+
+    g.bench_function(
+        "big trees (deep + branches + cached) + invalidated node in the middle",
+        |b| {
+            let mut layout = Torin::<usize>::new();
+            let mut measurer = Some(TestingMeasurer);
+            let mut mocked_dom = TestingDOM::default();
+
+            mocked_dom.add(
+                0,
+                None,
+                vec![101, 102],
+                Node::from_size_and_direction(
+                    Size::Percentage(Length::new(100.0)),
+                    Size::Percentage(Length::new(100.0)),
+                    DirectionMode::Vertical,
+                ),
+            );
+
+            const LEVELS: usize = 9;
+            const WIDE: usize = 2;
+
+            fn build_branch(mocked_dom: &mut TestingDOM, root: usize, level: usize) -> Vec<usize> {
+                if level == LEVELS {
+                    return vec![];
+                }
+
+                let nodes = (0..=WIDE)
+                    .map(|i| i + ((level + 1) * 100) + (root * 10))
+                    .into_iter()
+                    .collect::<Vec<usize>>();
+                for id in nodes.iter() {
+                    let children = build_branch(mocked_dom, *id, level + 1);
+                    mocked_dom.add_with_depth(
+                        *id,
+                        Some(root),
+                        children,
+                        Node::from_size_and_direction(
+                            Size::Pixels(Length::new(100.0)),
+                            Size::Pixels(Length::new(100.0)),
+                            DirectionMode::Vertical,
+                        ),
+                        level as u16,
+                    );
+                }
+                nodes
+            }
+
+            build_branch(&mut mocked_dom, 0, 0);
+
+            layout.find_best_root(&mut mocked_dom);
+            layout.measure(
+                0,
+                Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+                &mut measurer,
+                &mut mocked_dom,
+            );
+
+            b.iter(|| {
+                black_box({
+                    mocked_dom.set_node(
+                        12456790001,
+                        Node::from_size_and_direction(
+                            Size::Inner,
+                            Size::Pixels(Length::new(10.0)),
+                            DirectionMode::Vertical,
+                        ),
+                    );
+                    layout.invalidate(12456790001);
                     layout.find_best_root(&mut mocked_dom);
                     layout.measure(
                         0,
