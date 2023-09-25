@@ -463,7 +463,7 @@ fn measure_node<Key: NodeKey>(
     } else {
         let areas = layout.get(node_id).unwrap().clone();
 
-        if root_path.contains(&node_id) {
+        if true {
             let mut inner_sizes = areas.inner_sizes;
             let mut available_area = areas.inner_area;
 
