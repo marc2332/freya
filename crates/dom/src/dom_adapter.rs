@@ -1,7 +1,6 @@
 use dioxus_native_core::{prelude::NodeType, real_dom::NodeImmutable, tree::TreeRef, NodeId};
 use freya_node_state::LayoutState;
-use fxhash::FxHashSet;
-use rustc_hash::FxHashMap;
+use rustc_hash::{FxHashMap, FxHashSet};
 use torin::prelude::*;
 
 use crate::dom::DioxusDOM;

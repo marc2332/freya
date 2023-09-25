@@ -1,5 +1,5 @@
 pub use euclid::Rect;
-use fxhash::FxHashSet;
+use rustc_hash::FxHashSet;
 
 use crate::{
     geometry::{Area, Size2D},

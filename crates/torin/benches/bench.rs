@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use fxhash::FxHashSet;
+use rustc_hash::FxHashSet;
 use torin::prelude::*;
 
 struct TestingMeasurer;

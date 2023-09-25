@@ -1,7 +1,7 @@
 use std::{collections::HashMap, mem};
 
 pub use euclid::Rect;
-use fxhash::{FxHashMap, FxHashSet};
+use rustc_hash::{FxHashMap, FxHashSet};
 use tracing::info;
 
 use crate::{
