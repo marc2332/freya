@@ -30,6 +30,17 @@ impl TestingDOM {
         self.mapper.insert(node_id, (parent, children, depth, node));
     }
 
+    fn add_with_depth(
+        &mut self,
+        node_id: usize,
+        parent: Option<usize>,
+        children: Vec<usize>,
+        node: Node,
+        depth: u16,
+    ) {
+        self.mapper.insert(node_id, (parent, children, depth, node));
+    }
+
     fn set_node(&mut self, node_id: usize, node: Node) {
         self.mapper.get_mut(&node_id).unwrap().3 = node;
     }
@@ -400,7 +411,6 @@ fn criterion_benchmark(c: &mut Criterion) {
         },
     );
 
-    
     g.bench_function(
         "big trees (deep + branches + cached) + invalidated node in the middle",
         |b| {
@@ -421,15 +431,18 @@ fn criterion_benchmark(c: &mut Criterion) {
 
             const LEVELS: usize = 20;
 
-            fn build_branch(mocked_dom: &mut TestingDOM, root: usize, level: usize) -> Vec<usize>{
+            fn build_branch(mocked_dom: &mut TestingDOM, root: usize, level: usize) -> Vec<usize> {
                 if level == LEVELS {
-                    return vec![]
+                    return vec![];
                 }
 
-                let nodes = (level+1..=(level+1 * 3)).map(|i| i * 1000).into_iter().collect::<Vec<usize>>();
+                let nodes = (level + 1..=(level + 1 * 3))
+                    .map(|i| i * 1000)
+                    .into_iter()
+                    .collect::<Vec<usize>>();
                 for id in nodes.iter() {
                     let children = build_branch(mocked_dom, *id, level + 1);
-                    mocked_dom.add(
+                    mocked_dom.add_with_depth(
                         *id,
                         Some(root),
                         children,
@@ -438,6 +451,7 @@ fn criterion_benchmark(c: &mut Criterion) {
                             Size::Pixels(Length::new(100.0)),
                             DirectionMode::Vertical,
                         ),
+                        level as u16,
                     );
                 }
                 nodes
