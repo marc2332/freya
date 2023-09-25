@@ -84,7 +84,7 @@ impl DOMAdapter<usize> for TestingDOM {
 
 fn criterion_benchmark(c: &mut Criterion) {
     let mut g = c.benchmark_group("benchmarks");
-    g.significance_level(0.1).sample_size(500);
+    g.significance_level(0.05).sample_size(500);
 
     let params = [
         ("big trees (wide) nodes=1000, depth=1", 1000, 1),
@@ -429,7 +429,7 @@ fn criterion_benchmark(c: &mut Criterion) {
                 ),
             );
 
-            const LEVELS: usize = 14;
+            const LEVELS: usize = 9;
             const WIDE: usize = 2;
 
             fn build_branch(mocked_dom: &mut TestingDOM, root: usize, level: usize) -> Vec<usize> {
@@ -471,14 +471,14 @@ fn criterion_benchmark(c: &mut Criterion) {
             b.iter(|| {
                 black_box({
                     mocked_dom.set_node(
-                        7008,
+                        12456790001,
                         Node::from_size_and_direction(
                             Size::Inner,
                             Size::Pixels(Length::new(10.0)),
                             DirectionMode::Vertical,
                         ),
                     );
-                    layout.invalidate(7008);
+                    layout.invalidate(12456790001);
                     layout.find_best_root(&mut mocked_dom);
                     layout.measure(
                         0,
