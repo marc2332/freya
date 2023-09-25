@@ -77,16 +77,21 @@ impl DOMAdapter<NodeId> for DioxusDOMAdapter<'_> {
         is_node_valid(self.rdom, &mut self.valid_nodes_cache, node_id)
     }
 
-    fn closest_common_parent(&self, node_id_a: &NodeId, node_id_b: &NodeId) -> Option<NodeId> {
+    fn closest_common_parent(
+        &self,
+        node_id_a: &NodeId,
+        node_id_b: &NodeId,
+    ) -> Option<(NodeId, Vec<NodeId>)> {
         find_common_parent(self.rdom, *node_id_a, *node_id_b)
     }
 }
 
 /// Walk to the ancestor of `base` with the same height of `target`
-fn balance_heights(rdom: &DioxusDOM, base: NodeId, target: NodeId) -> Option<NodeId> {
+fn balance_heights(rdom: &DioxusDOM, base: NodeId, target: NodeId) -> Option<Vec<NodeId>> {
     let tree = rdom.tree_ref();
     let target_height = tree.height(target)?;
     let mut current = base;
+    let mut path = Vec::new();
     loop {
         if tree.height(current)? == target_height {
             break;
@@ -95,49 +100,62 @@ fn balance_heights(rdom: &DioxusDOM, base: NodeId, target: NodeId) -> Option<Nod
         let parent_current = tree.parent_id(current);
         if let Some(parent_current) = parent_current {
             current = parent_current;
+            path.push(current);
         }
     }
-    Some(current)
+    Some(path)
 }
 
 /// Return the closest common ancestor of both Nodes
-fn find_common_parent(rdom: &DioxusDOM, node_a: NodeId, node_b: NodeId) -> Option<NodeId> {
+fn find_common_parent(
+    rdom: &DioxusDOM,
+    node_a: NodeId,
+    node_b: NodeId,
+) -> Option<(NodeId, Vec<NodeId>)> {
     let tree = rdom.tree_ref();
     let height_a = tree.height(node_a)?;
     let height_b = tree.height(node_b)?;
 
-    let (node_a, node_b) = match height_a.cmp(&height_b) {
+    let (path_a, path_b) = match height_a.cmp(&height_b) {
         std::cmp::Ordering::Less => (
-            node_a,
-            balance_heights(rdom, node_b, node_a).unwrap_or(node_b),
+            vec![node_a],
+            balance_heights(rdom, node_b, node_a).unwrap_or(vec![node_b]),
         ),
-        std::cmp::Ordering::Equal => (node_a, node_b),
+        std::cmp::Ordering::Equal => (vec![node_a], vec![node_b]),
         std::cmp::Ordering::Greater => (
-            balance_heights(rdom, node_a, node_b).unwrap_or(node_a),
-            node_b,
+            balance_heights(rdom, node_a, node_b).unwrap_or(vec![node_a]),
+            vec![node_b],
         ),
     };
 
-    let mut currents = (node_a, node_b);
+    let node_a = *path_a.last().unwrap();
+    let node_b = *path_b.last().unwrap();
+
+    let mut branch_a = vec![node_a];
+    let mut branch_b = vec![node_b];
 
     loop {
         // Common parent of node_a and node_b
-        if currents.0 == currents.1 {
-            return Some(currents.0);
+        if branch_a.last() == branch_b.last() {
+            let last = *branch_a.last().unwrap();
+            branch_a.extend(branch_b);
+            branch_a.extend(path_a);
+            branch_a.extend(path_b);
+            return Some((last, branch_a));
         }
 
-        let parent_a = tree.parent_id(currents.0);
+        let parent_a = tree.parent_id(*branch_a.last().unwrap());
         if let Some(parent_a) = parent_a {
-            currents.0 = parent_a;
-        } else if rdom.root_id() != currents.0 {
+            branch_a.push(parent_a);
+        } else if rdom.root_id() != *branch_a.last().unwrap() {
             // Skip unconected nodes
             break;
         }
 
-        let parent_b = tree.parent_id(currents.1);
+        let parent_b = tree.parent_id(*branch_b.last().unwrap());
         if let Some(parent_b) = parent_b {
-            currents.1 = parent_b;
-        } else if rdom.root_id() != currents.1 {
+            branch_b.push(parent_b);
+        } else if rdom.root_id() != *branch_b.last().unwrap() {
             // Skip unconected nodes
             break;
         }

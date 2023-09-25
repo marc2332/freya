@@ -58,8 +58,13 @@ impl DOMAdapter<usize> for TestingDOM {
         true
     }
 
-    fn closest_common_parent(&self, node_id_a: &usize, _node_id_b: &usize) -> Option<usize> {
-        Some(self.parent_of(node_id_a)?)
+    fn closest_common_parent(
+        &self,
+        node_id_a: &usize,
+        _node_id_b: &usize,
+    ) -> Option<(usize, Vec<usize>)> {
+        let parent = self.parent_of(node_id_a)?;
+        Some((parent, vec![parent]))
     }
 }
 

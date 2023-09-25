@@ -73,8 +73,13 @@ impl DOMAdapter<usize> for TestingDOM {
         true
     }
 
-    fn closest_common_parent(&self, node_id_a: &usize, _node_id_b: &usize) -> Option<usize> {
-        Some(self.parent_of(node_id_a).unwrap_or(*node_id_a))
+    fn closest_common_parent(
+        &self,
+        node_id_a: &usize,
+        _node_id_b: &usize,
+    ) -> Option<(usize, Vec<usize>)> {
+        let parent = self.parent_of(node_id_a).unwrap_or(*node_id_a);
+        Some((parent, vec![parent]))
     }
 }
 
@@ -903,7 +908,10 @@ pub fn deep_tree() {
     layout.invalidate(4);
 
     layout.find_best_root(&mut mocked_dom);
-    assert_eq!(layout.get_root_candidate(), RootNodeCandidate::Valid(4));
+    assert_eq!(
+        layout.get_root_candidate(),
+        RootNodeCandidate::Valid(4, vec![4])
+    );
 
     layout.measure(
         0,
