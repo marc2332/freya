@@ -1,5 +1,6 @@
 use dioxus_native_core::{prelude::NodeType, real_dom::NodeImmutable, tree::TreeRef, NodeId};
 use freya_node_state::LayoutState;
+use fxhash::FxHashSet;
 use rustc_hash::FxHashMap;
 use torin::prelude::*;
 
@@ -81,17 +82,21 @@ impl DOMAdapter<NodeId> for DioxusDOMAdapter<'_> {
         &self,
         node_id_a: &NodeId,
         node_id_b: &NodeId,
-    ) -> Option<(NodeId, Vec<NodeId>)> {
+    ) -> Option<(NodeId, FxHashSet<NodeId>)> {
         find_common_parent(self.rdom, *node_id_a, *node_id_b)
     }
 }
 
 /// Walk to the ancestor of `base` with the same height of `target`
-fn balance_heights(rdom: &DioxusDOM, base: NodeId, target: NodeId) -> Option<Vec<NodeId>> {
+fn balance_heights(
+    rdom: &DioxusDOM,
+    base: NodeId,
+    target: NodeId,
+    root_track_patch: &mut FxHashSet<NodeId>,
+) -> Option<NodeId> {
     let tree = rdom.tree_ref();
     let target_height = tree.height(target)?;
     let mut current = base;
-    let mut path = Vec::new();
     loop {
         if tree.height(current)? == target_height {
             break;
@@ -100,10 +105,10 @@ fn balance_heights(rdom: &DioxusDOM, base: NodeId, target: NodeId) -> Option<Vec
         let parent_current = tree.parent_id(current);
         if let Some(parent_current) = parent_current {
             current = parent_current;
-            path.push(current);
+            root_track_patch.insert(current);
         }
     }
-    Some(path)
+    Some(current)
 }
 
 /// Return the closest common ancestor of both Nodes
@@ -111,51 +116,47 @@ fn find_common_parent(
     rdom: &DioxusDOM,
     node_a: NodeId,
     node_b: NodeId,
-) -> Option<(NodeId, Vec<NodeId>)> {
+) -> Option<(NodeId, FxHashSet<NodeId>)> {
     let tree = rdom.tree_ref();
     let height_a = tree.height(node_a)?;
     let height_b = tree.height(node_b)?;
 
-    let (path_a, path_b) = match height_a.cmp(&height_b) {
+    let mut root_track_patch = FxHashSet::from_iter([node_a, node_b]);
+
+    let (node_a, node_b) = match height_a.cmp(&height_b) {
         std::cmp::Ordering::Less => (
-            vec![node_a],
-            balance_heights(rdom, node_b, node_a).unwrap_or(vec![node_b]),
+            node_a,
+            balance_heights(rdom, node_b, node_a, &mut root_track_patch).unwrap_or(node_b),
         ),
-        std::cmp::Ordering::Equal => (vec![node_a], vec![node_b]),
+        std::cmp::Ordering::Equal => (node_a, node_b),
         std::cmp::Ordering::Greater => (
-            balance_heights(rdom, node_a, node_b).unwrap_or(vec![node_a]),
-            vec![node_b],
+            balance_heights(rdom, node_a, node_b, &mut root_track_patch).unwrap_or(node_a),
+            node_b,
         ),
     };
 
-    let node_a = *path_a.last().unwrap();
-    let node_b = *path_b.last().unwrap();
-
-    let mut branch_a = vec![node_a];
-    let mut branch_b = vec![node_b];
+    let mut currents = (node_a, node_b);
 
     loop {
         // Common parent of node_a and node_b
-        if branch_a.last() == branch_b.last() {
-            let last = *branch_a.last().unwrap();
-            branch_a.extend(branch_b);
-            branch_a.extend(path_a);
-            branch_a.extend(path_b);
-            return Some((last, branch_a));
+        if currents.0 == currents.1 {
+            return Some((currents.0, root_track_patch));
         }
 
-        let parent_a = tree.parent_id(*branch_a.last().unwrap());
+        let parent_a = tree.parent_id(currents.0);
         if let Some(parent_a) = parent_a {
-            branch_a.push(parent_a);
-        } else if rdom.root_id() != *branch_a.last().unwrap() {
+            currents.0 = parent_a;
+            root_track_patch.insert(parent_a);
+        } else if rdom.root_id() != currents.0 {
             // Skip unconected nodes
             break;
         }
 
-        let parent_b = tree.parent_id(*branch_b.last().unwrap());
+        let parent_b = tree.parent_id(currents.1);
         if let Some(parent_b) = parent_b {
-            branch_b.push(parent_b);
-        } else if rdom.root_id() != *branch_b.last().unwrap() {
+            currents.1 = parent_b;
+            root_track_patch.insert(parent_b);
+        } else if rdom.root_id() != currents.1 {
             // Skip unconected nodes
             break;
         }

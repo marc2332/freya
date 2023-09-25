@@ -32,4 +32,5 @@ dioxus-core = { workspace = true }
 
 uuid = { workspace = true }
 rustc-hash = { workspace = true }
+fxhash = { workspace = true }
 tracing = { workspace = true }

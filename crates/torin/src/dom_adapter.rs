@@ -1,4 +1,5 @@
 pub use euclid::Rect;
+use fxhash::FxHashSet;
 
 use crate::{
     geometry::{Area, Size2D},
@@ -57,5 +58,5 @@ pub trait DOMAdapter<NodeKey> {
         &self,
         node_id_a: &NodeKey,
         node_id_b: &NodeKey,
-    ) -> Option<(NodeKey, Vec<NodeKey>)>;
+    ) -> Option<(NodeKey, FxHashSet<NodeKey>)>;
 }

@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use fxhash::FxHashSet;
 use torin::prelude::*;
 
 struct TestingMeasurer;
@@ -62,9 +63,9 @@ impl DOMAdapter<usize> for TestingDOM {
         &self,
         node_id_a: &usize,
         _node_id_b: &usize,
-    ) -> Option<(usize, Vec<usize>)> {
+    ) -> Option<(usize, FxHashSet<usize>)> {
         let parent = self.parent_of(node_id_a)?;
-        Some((parent, vec![parent]))
+        Some((parent, FxHashSet::from_iter([parent])))
     }
 }
 

@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, mem};
 
 pub use euclid::Rect;
 use fxhash::{FxHashMap, FxHashSet};
@@ -19,10 +19,16 @@ use crate::{
 #[derive(PartialEq, Debug, Clone)]
 pub enum RootNodeCandidate<Key: NodeKey> {
     /// A valid Node ID
-    Valid(Key, Vec<Key>),
+    Valid(Key, FxHashSet<Key>),
 
     /// None
     None,
+}
+
+impl<Key: NodeKey> RootNodeCandidate<Key> {
+    pub fn take(&mut self) -> Self {
+        mem::replace(self, Self::None)
+    }
 }
 
 pub struct Torin<Key: NodeKey> {
@@ -174,12 +180,13 @@ impl<Key: NodeKey> Torin<Key> {
         self.invalidate(node_id);
 
         if RootNodeCandidate::None == self.root_node_candidate {
-            self.root_node_candidate = RootNodeCandidate::Valid(node_id, vec![node_id]);
+            self.root_node_candidate =
+                RootNodeCandidate::Valid(node_id, FxHashSet::from_iter([node_id]));
         } else if let RootNodeCandidate::Valid(root_candidate, ref mut prev_path) =
             &mut self.root_node_candidate
         {
             if node_id != *root_candidate {
-                let closest_parent = dom_adapter.closest_common_parent(&node_id, &root_candidate);
+                let closest_parent = dom_adapter.closest_common_parent(&node_id, root_candidate);
 
                 if let Some((closest_parent, path)) = closest_parent {
                     prev_path.extend(path);
@@ -225,7 +232,7 @@ impl<Key: NodeKey> Torin<Key> {
                             &mut self.root_node_candidate
                         {
                             let closest_parent =
-                                dom_adapter.closest_common_parent(&parent_id, &root_candidate);
+                                dom_adapter.closest_common_parent(&parent_id, root_candidate);
 
                             if let Some((closest_parent, path)) = closest_parent {
                                 prev_path.extend(path);
@@ -270,10 +277,10 @@ impl<Key: NodeKey> Torin<Key> {
 
         // Try the Root candidate otherwise use the provided Root
         let (root_id, root_path) =
-            if let RootNodeCandidate::Valid(id, path) = self.root_node_candidate.clone() {
+            if let RootNodeCandidate::Valid(id, path) = self.root_node_candidate.take() {
                 (id, path)
             } else {
-                (suggested_root_id, vec![suggested_root_id])
+                (suggested_root_id, FxHashSet::from_iter([suggested_root_id]))
             };
         let root_parent = dom_adapter.parent_of(&root_id);
         let areas = root_parent
@@ -339,7 +346,7 @@ fn measure_node<Key: NodeKey>(
     measurer: &mut Option<impl LayoutMeasurer<Key>>,
     must_cache: bool,
     dom_adapter: &mut impl DOMAdapter<Key>,
-    root_path: &[Key],
+    root_path: &FxHashSet<Key>,
 ) -> (bool, NodeAreas) {
     let must_run = layout.dirty.contains(&node_id) || layout.results.get(&node_id).is_none();
     if must_run {
@@ -523,7 +530,7 @@ fn measure_inner_nodes<Key: NodeKey>(
     must_cache: bool,
     mode: &mut MeasureMode,
     dom_adapter: &mut impl DOMAdapter<Key>,
-    root_path: &[Key],
+    root_path: &FxHashSet<Key>,
 ) {
     let children = dom_adapter.children_of(node_id);
 
