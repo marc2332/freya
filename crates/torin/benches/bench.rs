@@ -391,7 +391,7 @@ fn criterion_benchmark(c: &mut Criterion) {
             b.iter(|| {
                 black_box({
                     mocked_dom.set_node(
-                        1,
+                        1001,
                         Node::from_size_and_direction(
                             Size::Inner,
                             Size::Pixels(Length::new(10.0)),
@@ -471,7 +471,7 @@ fn criterion_benchmark(c: &mut Criterion) {
             b.iter(|| {
                 black_box({
                     mocked_dom.set_node(
-                        1,
+                        7008,
                         Node::from_size_and_direction(
                             Size::Inner,
                             Size::Pixels(Length::new(10.0)),
