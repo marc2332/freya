@@ -436,8 +436,8 @@ fn criterion_benchmark(c: &mut Criterion) {
                     return vec![];
                 }
 
-                let nodes = (level + 1..=(level + 1 * 3))
-                    .map(|i| i + (1000 * level))
+                let nodes = (0..=(level + 1 * 3))
+                    .map(|i| i + (1000 * (level + 1)))
                     .into_iter()
                     .collect::<Vec<usize>>();
                 for id in nodes.iter() {
@@ -477,7 +477,7 @@ fn criterion_benchmark(c: &mut Criterion) {
                             DirectionMode::Vertical,
                         ),
                     );
-                    layout.invalidate(1001);
+                    layout.invalidate(8013);
                     layout.find_best_root(&mut mocked_dom);
                     layout.measure(
                         0,
