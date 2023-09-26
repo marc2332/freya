@@ -463,7 +463,7 @@ fn criterion_benchmark(c: &mut Criterion) {
             b.iter(|| {
                 black_box({
                     mocked_dom.set_node(
-                        12456790001,
+                        1202,
                         Node::from_size_and_direction(
                             Size::Inner,
                             Size::Pixels(Length::new(10.0)),
