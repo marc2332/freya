@@ -470,6 +470,7 @@ fn criterion_benchmark(c: &mut Criterion) {
                             DirectionMode::Vertical,
                         ),
                     );
+                    layout.root_node_candidate = RootNodeCandidate::Valid(0);
                     layout.invalidate(12456790001);
                     layout.find_best_root(&mut mocked_dom);
                     layout.measure(
