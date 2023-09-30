@@ -132,7 +132,7 @@ fn app(cx: Scope) -> Element {
                         for (n, (text, order_by)) in columns.iter().enumerate() {
                             TableCell {
                                 key: "{n}",
-                                separator: false,
+                                separator: n > 0,
                                 order_direction: if *order.get() == *order_by { Some(*order_direction.get()) } else { None },
                                 onclick: move  |_| on_column_head_click(order_by),
                                 label {
