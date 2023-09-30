@@ -1435,10 +1435,47 @@ impl DirectContext {
 
 use std::ffi::c_void;
 
+#[repr(u8)]
+pub enum Protected {
+    No,
+    Yes,
+}
+
 #[derive(Clone, Copy)]
 pub struct FramebufferInfo {
     pub fboid: i32,
     pub format: Format,
+    pub protected: Protected,
+}
+
+impl Default for FramebufferInfo {
+    fn default() -> Self {
+        Self {
+            fboid: 0,
+            format: 0,
+            protected: Protected::No,
+        }
+    }
+}
+
+pub fn wrap_backend_render_target(
+    context: &mut RecordingContext,
+    backend_render_target: &BackendRenderTarget,
+    origin: SurfaceOrigin,
+    color_type: ColorType,
+    color_space: impl Into<Option<ColorSpace>>,
+    surface_props: Option<&SurfaceProps>,
+) -> Option<Surface> {
+    Surface::from_ptr(unsafe {
+        sb::C_SkSurfaces_WrapBackendRenderTarget(
+            context.native_mut(),
+            backend_render_target.native(),
+            origin,
+            color_type.into_native(),
+            color_space.into().into_ptr_or_null(),
+            surface_props.native_ptr_or_null(),
+        )
+    })
 }
 
 pub struct Interface;
