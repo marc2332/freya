@@ -24,7 +24,7 @@ pub struct AccordionProps<'a> {
 pub fn Accordion<'a>(cx: Scope<'a, AccordionProps<'a>>) -> Element<'a> {
     let theme = use_get_theme(cx);
     let accordion_theme = &theme.accordion;
-    let animation = use_animation(cx, 0.0);
+    let animation = use_animation(cx, || 0.0);
     let open = use_state(cx, || false);
     let (node_ref, size) = use_node(cx);
 
