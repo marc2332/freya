@@ -35,49 +35,49 @@ fn app(cx: Scope) -> Element {
     let data = use_state(cx, || {
         vec![
             vec![
-                "test".to_string(),
-                "Just some data".to_string(),
-                "even more data".to_string(),
+                "aaaa".to_string(),
+                "bbbb".to_string(),
+                "111".to_string(),
             ],
             vec![
-                "test".to_string(),
-                "aaaaaaaa".to_string(),
-                "even more data".to_string(),
+                "bbbb".to_string(),
+                "aaaa".to_string(),
+                "333".to_string(),
             ],
             vec![
-                "Nice!".to_string(),
-                "Awesome!!".to_string(),
-                "even more data".to_string(),
+                "wwww".to_string(),
+                "777".to_string(),
+                "ccc".to_string(),
             ],
             vec![
-                "test".to_string(),
-                "ccccc".to_string(),
-                "even more data".to_string(),
+                "dddd".to_string(),
+                "222".to_string(),
+                "111".to_string(),
             ],
             vec![
-                "Woah".to_string(),
-                "2222222".to_string(),
-                "even more data".to_string(),
+                "hhhh".to_string(),
+                "444".to_string(),
+                "aaa".to_string(),
             ],
             vec![
-                "Nice".to_string(),
-                "hola".to_string(),
-                "even more data".to_string(),
+                "555".to_string(),
+                "ffff".to_string(),
+                "zzzz".to_string(),
             ],
             vec![
-                "Rust".to_string(),
-                "hello".to_string(),
-                "even more data".to_string(),
+                "llll".to_string(),
+                "999".to_string(),
+                "eeee".to_string(),
             ],
             vec![
-                "is".to_string(),
-                "hi!".to_string(),
-                "even more data".to_string(),
+                "abcd".to_string(),
+                "987".to_string(),
+                "wwww".to_string(),
             ],
             vec![
-                "really nice!".to_string(),
-                "test".to_string(),
-                "even more data".to_string(),
+                "rrrr".to_string(),
+                "333".to_string(),
+                "888".to_string(),
             ],
         ]
     });
@@ -91,15 +91,15 @@ fn app(cx: Scope) -> Element {
 
     let filtered_data = {
         let filtered_data = data.iter().sorted_by(|a, b| match *order.get() {
-            OrderBy::Name => Ord::cmp(&a[0], &b[0]),
-            OrderBy::OtherName => Ord::cmp(&a[1], &b[1]),
-            OrderBy::MoreData => Ord::cmp(&a[2], &b[2]),
+            OrderBy::Name => Ord::cmp(&a[0].to_lowercase(), &b[0].to_lowercase()),
+            OrderBy::OtherName => Ord::cmp(&a[1].to_lowercase(), &b[1].to_lowercase()),
+            OrderBy::MoreData => Ord::cmp(&a[2].to_lowercase(), &b[2].to_lowercase()),
         });
 
         if *order_direction.get() == OrderDirection::Down {
-            Either::Left(filtered_data.rev())
+            Either::Left(filtered_data)
         } else {
-            Either::Right(filtered_data)
+            Either::Right(filtered_data.rev())
         }
     };
 
