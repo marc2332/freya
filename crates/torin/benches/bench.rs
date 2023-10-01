@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use rustc_hash::FxHashSet;
 use torin::prelude::*;
 
 struct TestingMeasurer;
@@ -69,8 +70,15 @@ impl DOMAdapter<usize> for TestingDOM {
         true
     }
 
-    fn closest_common_parent(&self, node_id_a: &usize, _node_id_b: &usize) -> Option<usize> {
-        Some(self.parent_of(node_id_a)?)
+    fn closest_common_parent(
+        &self,
+        node_id_a: &usize,
+        node_id_b: &usize,
+        root_track_patch: &mut FxHashSet<usize>,
+    ) -> Option<usize> {
+        root_track_patch.insert(*node_id_a);
+        root_track_patch.insert(*node_id_b);
+        self.parent_of(node_id_a)
     }
 }
 
@@ -470,7 +478,6 @@ fn criterion_benchmark(c: &mut Criterion) {
                             DirectionMode::Vertical,
                         ),
                     );
-                    layout.root_node_candidate = RootNodeCandidate::Valid(0);
                     layout.invalidate(12456790001);
                     layout.find_best_root(&mut mocked_dom);
                     layout.measure(
