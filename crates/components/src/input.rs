@@ -3,6 +3,8 @@ use crate::ScrollView;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{KeyboardData, MouseEvent};
+use freya_hooks::ButtonTheme;
+use freya_hooks::FontTheme;
 use freya_hooks::{
     use_editable, use_focus, use_get_theme, EditableConfig, EditableEvent, EditableMode, TextEditor,
 };
@@ -66,20 +68,18 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     let focus_manager = use_focus(cx);
 
     let text = &cx.props.value;
-    let button_theme = &theme.button;
     let cursor_attr = editable.cursor_attr(cx);
     let highlights_attr = editable.highlights_attr(cx, 0);
     let width = &cx.props.width;
     let height = &cx.props.height;
     let max_lines = &cx.props.max_lines;
 
-    use_effect(cx, &(cx.props.value.to_string(),), {
+    use_memo(cx, &(cx.props.value.to_string(),), {
         to_owned![editable];
         move |(text,)| {
             editable.editor().with_mut(|editor| {
                 editor.set(&text);
             });
-            async move {}
         }
     });
 
@@ -122,8 +122,11 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     } else {
         "none".to_string()
     };
-    let background = button_theme.background;
-    let color = button_theme.font_theme.color;
+    let ButtonTheme {
+        background,
+        font_theme: FontTheme { color, .. },
+        ..
+    } = theme.button;
 
     render!(
         CursorArea {

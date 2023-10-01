@@ -19,13 +19,12 @@ fn main() {
 }
 
  fn app(cx: Scope) -> Element {
-    let animation = use_animation(cx, 0.0);
+    let animation = use_animation(cx, || 0.0);
 
     let progress = animation.value();
 
-    use_effect(cx, (), move |_| {
+    use_memo(cx, (), move |_| {
         animation.start(Animation::new_linear(0.0..=100.0, 50));
-        async move {}
     });
 
     render!(rect {

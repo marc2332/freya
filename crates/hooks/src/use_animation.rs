@@ -80,13 +80,12 @@ impl<'a> AnimationManager<'a> {
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app(cx: Scope) -> Element {
-///     let animation = use_animation(cx, 0.0);
+///     let animation = use_animation(cx, || 0.0);
 ///
 ///     let progress = animation.value();
 ///
-///     use_effect(cx, (), move |_| {
+///     use_memo(cx, (), move |_| {
 ///         animation.start(Animation::new_linear(0.0..=100.0, 50));
-///         async move {}
 ///     });
 ///
 ///     render!(
@@ -97,8 +96,9 @@ impl<'a> AnimationManager<'a> {
 /// }
 /// ```
 ///
-pub fn use_animation(cx: &ScopeState, init_value: f64) -> AnimationManager {
+pub fn use_animation(cx: &ScopeState, init_value: impl FnOnce() -> f64) -> AnimationManager {
     let current_animation_id = use_state(cx, || None);
+    let init_value = *cx.use_hook(init_value);
     let value = use_state(cx, || init_value);
 
     AnimationManager {
@@ -114,7 +114,7 @@ mod test {
     use std::time::Duration;
 
     use crate::{use_animation, Animation};
-    use dioxus_hooks::{to_owned, use_effect};
+    use dioxus_hooks::{to_owned, use_memo};
     use freya::prelude::*;
     use freya_testing::{launch_test, FreyaEvent, MouseButton};
     use tokio::time::sleep;
@@ -122,13 +122,12 @@ mod test {
     #[tokio::test]
     pub async fn track_progress() {
         fn use_animation_app(cx: Scope) -> Element {
-            let animation = use_animation(cx, 0.0);
+            let animation = use_animation(cx, || 0.0);
 
             let progress = animation.value();
 
-            use_effect(cx, (), move |_| {
+            use_memo(cx, (), move |_| {
                 animation.start(Animation::new_linear(0.0..=100.0, 50));
-                async move {}
             });
 
             render!(rect {
@@ -163,7 +162,7 @@ mod test {
     #[tokio::test]
     pub async fn restart_progress() {
         fn use_animation_app(cx: Scope) -> Element {
-            let animation = use_animation(cx, 10.0);
+            let animation = use_animation(cx, || 10.0);
 
             let progress = animation.value();
 
@@ -174,9 +173,8 @@ mod test {
                 }
             };
 
-            use_effect(cx, (), move |_| {
+            use_memo(cx, (), move |_| {
                 animation.start(Animation::new_linear(10.0..=100.0, 50));
-                async move {}
             });
 
             render!(rect {

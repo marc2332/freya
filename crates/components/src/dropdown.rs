@@ -170,9 +170,8 @@ where
     let color = theme.dropdown.font_theme.color;
 
     // Update the provided value if the passed value changes
-    use_effect(cx, &cx.props.value, move |value| {
+    use_memo(cx, &cx.props.value, move |value| {
         *selected.write() = value;
-        async move {}
     });
 
     // Close the dropdown if clicked anywhere

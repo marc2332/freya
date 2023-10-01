@@ -115,6 +115,13 @@ pub struct LoaderTheme {
     pub secondary_color: &'static str,
 }
 
+/// Theming properties for ProgressBar component.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ProgressBarTheme {
+    pub background: &'static str,
+    pub progress_background: &'static str,
+}
+
 /// Theming properties for Themes.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Theme {
@@ -130,6 +137,7 @@ pub struct Theme {
     pub dropdown_item: DropdownItemTheme,
     pub accordion: AccordionTheme,
     pub loader: LoaderTheme,
+    pub progress_bar: ProgressBarTheme,
 }
 
 impl Default for Theme {
@@ -198,6 +206,10 @@ pub const LIGHT_THEME: Theme = Theme {
         primary_color: "rgb(50, 50, 50)",
         secondary_color: "rgb(150, 150, 150)",
     },
+    progress_bar: ProgressBarTheme {
+        background: "rgb(210, 210, 210)",
+        progress_background: "rgb(103, 80, 164)",
+    },
 };
 
 /// `Dark` theme
@@ -253,5 +265,9 @@ pub const DARK_THEME: Theme = Theme {
     loader: LoaderTheme {
         primary_color: "rgb(150, 150, 150)",
         secondary_color: "rgb(255, 255, 255)",
+    },
+    progress_bar: ProgressBarTheme {
+        background: "rgb(60, 60, 60)",
+        progress_background: "rgb(255, 95, 0)",
     },
 };

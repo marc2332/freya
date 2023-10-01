@@ -2,6 +2,7 @@ use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{MouseEvent, WheelEvent};
 use freya_hooks::{use_get_theme, use_node_ref};
+use tracing::info;
 
 /// [`Slider`] component properties.
 #[derive(Props)]
@@ -17,11 +18,10 @@ pub struct SliderProps<'a> {
 #[inline]
 fn ensure_correct_slider_range(value: f64) -> f64 {
     if value < 0.0 {
-        // TODO: Better logging
-        println!("Slider value is less than 0.0, setting to 0.0");
+        info!("Slider value is less than 0.0, setting to 0.0");
         0.0
     } else if value > 100.0 {
-        println!("Slider value is greater than 100.0, setting to 100.0");
+        info!("Slider value is greater than 100.0, setting to 100.0");
         100.0
     } else {
         value
