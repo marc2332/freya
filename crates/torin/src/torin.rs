@@ -201,7 +201,7 @@ impl<Key: NodeKey> Torin<Key> {
                 if parent.does_depend_on_inner() {
                     self.check_dirty_dependants(parent_id, dom_adapter, true);
                 }
-                // Mark all the siblings  that come after this node
+                // Mark as dirty all the siblings that come after this node
                 else {
                     let mut found_node = false;
                     let mut multiple_children = false;
