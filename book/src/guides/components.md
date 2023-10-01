@@ -20,3 +20,4 @@ Freya comes with a set of ready to use components:
 - [`Slider`](https://docs.rs/freya/latest/freya/components/fn.Slider.html)
 - [`ThemeProvider`](https://docs.rs/freya/latest/freya/components/fn.ThemeProvider.html)
 - [`Tooltip`](https://docs.rs/freya/latest/freya/components/fn.Tooltip.html)
+- [`ProgressBar`](https://docs.rs/freya/latest/freya/components/fn.ProgressBar.html)
