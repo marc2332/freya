@@ -201,12 +201,30 @@ impl<Key: NodeKey> Torin<Key> {
                 if parent.does_depend_on_inner() {
                     self.check_dirty_dependants(parent_id, dom_adapter, true);
                 }
-                // Otherwise we simply mark this Node siblings
+                // Mark as dirty all the siblings that come after this node
                 else {
-                    // TODO(marc2332): Only mark those who come before this node.
+                    let mut found_node = false;
+                    let mut multiple_children = false;
                     for child_id in dom_adapter.children_of(&parent_id) {
-                        if child_id != node_id {
-                            self.check_dirty_dependants(child_id, dom_adapter, true)
+                        if found_node {
+                            self.check_dirty_dependants(child_id, dom_adapter, true);
+                        }
+                        if child_id == node_id {
+                            found_node = true;
+                        } else {
+                            multiple_children = true;
+                        }
+                    }
+
+                    // Try saving using  node's parent as root candidate if it has multiple children
+                    if multiple_children {
+                        if let RootNodeCandidate::Valid(root_candidate) = self.root_node_candidate {
+                            let closest_parent =
+                                dom_adapter.closest_common_parent(&parent_id, &root_candidate);
+
+                            if let Some(closest_parent) = closest_parent {
+                                self.root_node_candidate = RootNodeCandidate::Valid(closest_parent);
+                            }
                         }
                     }
                 }
