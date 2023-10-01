@@ -23,9 +23,8 @@ fn main() {
 
     let progress = animation.value();
 
-    use_effect(cx, (), move |_| {
+    use_memo(cx, (), move |_| {
         animation.start(Animation::new_linear(0.0..=100.0, 50));
-        async move {}
     });
 
     render!(rect {

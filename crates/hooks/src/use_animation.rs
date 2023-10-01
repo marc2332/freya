@@ -84,9 +84,8 @@ impl<'a> AnimationManager<'a> {
 ///
 ///     let progress = animation.value();
 ///
-///     use_effect(cx, (), move |_| {
+///     use_memo(cx, (), move |_| {
 ///         animation.start(Animation::new_linear(0.0..=100.0, 50));
-///         async move {}
 ///     });
 ///
 ///     render!(
@@ -115,7 +114,7 @@ mod test {
     use std::time::Duration;
 
     use crate::{use_animation, Animation};
-    use dioxus_hooks::{to_owned, use_effect};
+    use dioxus_hooks::{to_owned, use_memo};
     use freya::prelude::*;
     use freya_testing::{launch_test, FreyaEvent, MouseButton};
     use tokio::time::sleep;
@@ -127,9 +126,8 @@ mod test {
 
             let progress = animation.value();
 
-            use_effect(cx, (), move |_| {
+            use_memo(cx, (), move |_| {
                 animation.start(Animation::new_linear(0.0..=100.0, 50));
-                async move {}
             });
 
             render!(rect {
@@ -175,9 +173,8 @@ mod test {
                 }
             };
 
-            use_effect(cx, (), move |_| {
+            use_memo(cx, (), move |_| {
                 animation.start(Animation::new_linear(10.0..=100.0, 50));
-                async move {}
             });
 
             render!(rect {
