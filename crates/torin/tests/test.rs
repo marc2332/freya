@@ -980,8 +980,6 @@ pub fn stacked() {
 
     layout.find_best_root(&mut mocked_dom);
 
-    println!(">{:?}<", layout.root_node_candidate);
-
     layout.measure(
         0,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
