@@ -29,7 +29,7 @@ impl<'a> AnimationManager<'a> {
 
         // Spawn the animation that will run at 1ms speed
         self.cx.spawn(async move {
-            let mut ticker = interval(Duration::from_millis(1));
+            let mut ticker = interval(Duration::from_millis(16));
             loop {
                 // Stop running the animation if it was removed
                 if *current_animation_id.current() == Some(new_id) {

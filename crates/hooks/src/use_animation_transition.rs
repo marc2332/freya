@@ -172,7 +172,7 @@ impl<'a> TransitionsManager<'a> {
 
         // Spawn the animation that will run at 1ms speed
         self.cx.spawn(async move {
-            let mut ticker = interval(Duration::from_millis(1));
+            let mut ticker = interval(Duration::from_millis(16));
             let mut index = 0;
             loop {
                 // Stop running the animation if it's no longer selected
@@ -305,7 +305,6 @@ mod test {
     use std::time::Duration;
 
     use crate::{use_animation_transition, Transition, TransitionAnimation};
-    use dioxus_hooks::use_effect;
     use freya::prelude::*;
     use freya_testing::launch_test;
     use tokio::time::sleep;
