@@ -40,7 +40,7 @@ pub struct SwitchProps<'a> {
 ///
 #[allow(non_snake_case)]
 pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
-    let animation = use_animation(cx, 0.0);
+    let animation = use_animation(cx, || 0.0);
     let theme = use_get_theme(cx);
     let hovering = use_state(cx, || false);
     let clicking = use_state(cx, || false);

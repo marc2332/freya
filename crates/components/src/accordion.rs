@@ -23,7 +23,7 @@ pub struct AccordionProps<'a> {
 #[allow(non_snake_case)]
 pub fn Accordion<'a>(cx: Scope<'a, AccordionProps<'a>>) -> Element<'a> {
     let theme = use_get_theme(cx);
-    let animation = use_animation(cx, 0.0);
+    let animation = use_animation(cx, || 0.0);
     let open = use_state(cx, || false);
     let (node_ref, size) = use_node(cx);
 
