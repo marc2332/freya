@@ -62,7 +62,7 @@ impl From<&FontStyleState> for TextStyle {
             text_style.add_shadow(*shadow);
         }
 
-        *text_style.decoration_mut() = value.decoration;
+        text_style.set_decoration(&value.decoration);
 
         text_style
     }
