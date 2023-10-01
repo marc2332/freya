@@ -1,5 +1,4 @@
 pub use euclid::Rect;
-use rustc_hash::FxHashSet;
 
 use crate::{
     geometry::{Area, Size2D},
@@ -54,10 +53,5 @@ pub trait DOMAdapter<NodeKey> {
     fn is_node_valid(&mut self, node_id: &NodeKey) -> bool;
 
     /// Get the closest common parent Node of two Nodes
-    fn closest_common_parent(
-        &self,
-        node_id_a: &NodeKey,
-        node_id_b: &NodeKey,
-        root_track_patch: &mut FxHashSet<NodeKey>,
-    ) -> Option<NodeKey>;
+    fn closest_common_parent(&self, node_id_a: &NodeKey, node_id_b: &NodeKey) -> Option<NodeKey>;
 }
