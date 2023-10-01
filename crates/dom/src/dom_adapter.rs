@@ -1,6 +1,6 @@
 use dioxus_native_core::{prelude::NodeType, real_dom::NodeImmutable, tree::TreeRef, NodeId};
 use freya_node_state::LayoutState;
-use rustc_hash::FxHashMap;
+use rustc_hash::{FxHashMap, FxHashSet};
 use torin::prelude::*;
 
 use crate::dom::DioxusDOM;
@@ -77,13 +77,23 @@ impl DOMAdapter<NodeId> for DioxusDOMAdapter<'_> {
         is_node_valid(self.rdom, &mut self.valid_nodes_cache, node_id)
     }
 
-    fn closest_common_parent(&self, node_id_a: &NodeId, node_id_b: &NodeId) -> Option<NodeId> {
-        find_common_parent(self.rdom, *node_id_a, *node_id_b)
+    fn closest_common_parent(
+        &self,
+        node_id_a: &NodeId,
+        node_id_b: &NodeId,
+        root_track_patch: &mut FxHashSet<NodeId>,
+    ) -> Option<NodeId> {
+        find_common_parent(self.rdom, *node_id_a, *node_id_b, root_track_patch)
     }
 }
 
 /// Walk to the ancestor of `base` with the same height of `target`
-fn balance_heights(rdom: &DioxusDOM, base: NodeId, target: NodeId) -> Option<NodeId> {
+fn balance_heights(
+    rdom: &DioxusDOM,
+    base: NodeId,
+    target: NodeId,
+    root_track_patch: &mut FxHashSet<NodeId>,
+) -> Option<NodeId> {
     let tree = rdom.tree_ref();
     let target_height = tree.height(target)?;
     let mut current = base;
@@ -95,25 +105,34 @@ fn balance_heights(rdom: &DioxusDOM, base: NodeId, target: NodeId) -> Option<Nod
         let parent_current = tree.parent_id(current);
         if let Some(parent_current) = parent_current {
             current = parent_current;
+            root_track_patch.insert(current);
         }
     }
     Some(current)
 }
 
 /// Return the closest common ancestor of both Nodes
-fn find_common_parent(rdom: &DioxusDOM, node_a: NodeId, node_b: NodeId) -> Option<NodeId> {
+fn find_common_parent(
+    rdom: &DioxusDOM,
+    node_a: NodeId,
+    node_b: NodeId,
+    root_track_patch: &mut FxHashSet<NodeId>,
+) -> Option<NodeId> {
     let tree = rdom.tree_ref();
     let height_a = tree.height(node_a)?;
     let height_b = tree.height(node_b)?;
 
+    root_track_patch.insert(node_a);
+    root_track_patch.insert(node_b);
+
     let (node_a, node_b) = match height_a.cmp(&height_b) {
         std::cmp::Ordering::Less => (
             node_a,
-            balance_heights(rdom, node_b, node_a).unwrap_or(node_b),
+            balance_heights(rdom, node_b, node_a, root_track_patch).unwrap_or(node_b),
         ),
         std::cmp::Ordering::Equal => (node_a, node_b),
         std::cmp::Ordering::Greater => (
-            balance_heights(rdom, node_a, node_b).unwrap_or(node_a),
+            balance_heights(rdom, node_a, node_b, root_track_patch).unwrap_or(node_a),
             node_b,
         ),
     };
@@ -129,6 +148,7 @@ fn find_common_parent(rdom: &DioxusDOM, node_a: NodeId, node_b: NodeId) -> Optio
         let parent_a = tree.parent_id(currents.0);
         if let Some(parent_a) = parent_a {
             currents.0 = parent_a;
+            root_track_patch.insert(parent_a);
         } else if rdom.root_id() != currents.0 {
             // Skip unconected nodes
             break;
@@ -137,6 +157,7 @@ fn find_common_parent(rdom: &DioxusDOM, node_a: NodeId, node_b: NodeId) -> Optio
         let parent_b = tree.parent_id(currents.1);
         if let Some(parent_b) = parent_b {
             currents.1 = parent_b;
+            root_track_patch.insert(parent_b);
         } else if rdom.root_id() != currents.1 {
             // Skip unconected nodes
             break;
