@@ -19,7 +19,7 @@ fn main() {
 }
 
  fn app(cx: Scope) -> Element {
-    let animation = use_animation(cx, 0.0);
+    let animation = use_animation(cx, || 0.0);
 
     let progress = animation.value();
 
