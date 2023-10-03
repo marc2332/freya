@@ -6,6 +6,8 @@ use uuid::Uuid;
 
 use crate::Animation;
 
+const ANIMATION_MS: i32 = 16; // Assume 60 FPS for now
+
 /// Manage the lifecyle of an [Animation].
 #[derive(Clone)]
 pub struct AnimationManager<'a> {
@@ -29,7 +31,7 @@ impl<'a> AnimationManager<'a> {
 
         // Spawn the animation that will run at 1ms speed
         self.cx.spawn(async move {
-            let mut ticker = interval(Duration::from_millis(16));
+            let mut ticker = interval(Duration::from_millis(ANIMATION_MS as u64));
             loop {
                 // Stop running the animation if it was removed
                 if *current_animation_id.current() == Some(new_id) {
@@ -41,7 +43,7 @@ impl<'a> AnimationManager<'a> {
 
                     // Advance one tick
                     value.set(anim.move_value(index));
-                    index += 1;
+                    index += ANIMATION_MS;
 
                     // Wait 1m
                     ticker.tick().await;
