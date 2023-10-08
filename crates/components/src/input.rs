@@ -9,9 +9,11 @@ use freya_hooks::{
     use_editable, use_focus, use_get_theme, EditableConfig, EditableEvent, EditableMode, TextEditor,
 };
 use winit::window::CursorIcon;
-
+/// Enum to declare is [`Input`] hidden.
 pub enum InputIsHidden {
+    /// The input shown
     Shown,
+    /// The input is obfuscated with a character
     Hidden(char),
 }
 /// [`Input`] component properties.
