@@ -10,6 +10,10 @@ use freya_hooks::{
 };
 use winit::window::CursorIcon;
 
+pub enum InputIsHidden {
+    Shown,
+    Hidden(char),
+}
 /// [`Input`] component properties.
 #[derive(Props)]
 pub struct InputProps<'a> {
@@ -17,6 +21,9 @@ pub struct InputProps<'a> {
     pub value: String,
     /// Handler for the `onchange` event.
     pub onchange: EventHandler<'a, String>,
+    /// Is input hidden with a character. By defaultv input is shown
+    #[props(default = InputIsHidden::Shown, into)]
+    hidden: InputIsHidden,
     /// Width of the Input. Default 100.
     #[props(default = "150".to_string(), into)]
     width: String,
@@ -67,7 +74,10 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     let theme = use_get_theme(cx);
     let focus_manager = use_focus(cx);
 
-    let text = &cx.props.value;
+    let text = match cx.props.hidden {
+        InputIsHidden::Hidden(ch) => ch.to_string().repeat(cx.props.value.len()),
+        InputIsHidden::Shown => cx.props.value.clone(),
+    };
     let cursor_attr = editable.cursor_attr(cx);
     let highlights_attr = editable.highlights_attr(cx, 0);
     let width = &cx.props.width;
