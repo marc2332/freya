@@ -24,7 +24,7 @@ edition = "2021"
 
 [dependencies]
 freya = "0.1"
-dioxus = { version = "0.4", features = ["macro", "hooks"] }
+dioxus = { version = "0.4", features = ["macro", "hooks"], default-features = false }
 ```
 
 ### src/main.rs
