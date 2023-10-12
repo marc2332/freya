@@ -26,9 +26,9 @@ fn app(cx: Scope) -> Element {
                 direction: "horizontal",
                 Input {
                     hidden: if !is_hidden {
-                        InputIsHidden::Shown
+                        InputMode::Shown
                     } else {
-                        InputIsHidden::Hidden('*')
+                        InputMode::new_password()
                     },
                     value: password.get().clone(),
                     onchange: |e| {

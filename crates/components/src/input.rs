@@ -10,7 +10,7 @@ use freya_hooks::{
 };
 use winit::window::CursorIcon;
 /// Enum to declare is [`Input`] hidden.
-#[derive(Default)
+#[derive(Default)]
 pub enum InputMode {
     /// The input text is shown
     #[default]
@@ -20,7 +20,7 @@ pub enum InputMode {
 }
 
 impl InputMode {
-    fn new_password() -> Self {
+    pub fn new_password() -> Self {
         Self::Hidden('*')
     }
 }
@@ -85,8 +85,8 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     let focus_manager = use_focus(cx);
 
     let text = match cx.props.hidden {
-        InputIsHidden::Hidden(ch) => ch.to_string().repeat(cx.props.value.len()),
-        InputIsHidden::Shown => cx.props.value.clone(),
+        InputMode::Hidden(ch) => ch.to_string().repeat(cx.props.value.len()),
+        InputMode::Shown => cx.props.value.clone(),
     };
     let cursor_attr = editable.cursor_attr(cx);
     let highlights_attr = editable.highlights_attr(cx, 0);
