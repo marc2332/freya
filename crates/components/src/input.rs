@@ -10,11 +10,19 @@ use freya_hooks::{
 };
 use winit::window::CursorIcon;
 /// Enum to declare is [`Input`] hidden.
-pub enum InputIsHidden {
-    /// The input shown
+#[derive(Default)
+pub enum InputMode {
+    /// The input text is shown
+    #[default]
     Shown,
-    /// The input is obfuscated with a character
+    /// The input text is obfuscated with a character
     Hidden(char),
+}
+
+impl InputMode {
+    fn new_password() -> Self {
+        Self::Hidden('*')
+    }
 }
 /// [`Input`] component properties.
 #[derive(Props)]
@@ -23,9 +31,9 @@ pub struct InputProps<'a> {
     pub value: String,
     /// Handler for the `onchange` event.
     pub onchange: EventHandler<'a, String>,
-    /// Is input hidden with a character. By defaultv input is shown
-    #[props(default = InputIsHidden::Shown, into)]
-    hidden: InputIsHidden,
+    /// Is input hidden with a character. By default input text is shown.
+    #[props(default = InputMode::Shown, into)]
+    hidden: InputMode,
     /// Width of the Input. Default 100.
     #[props(default = "150".to_string(), into)]
     width: String,
