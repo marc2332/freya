@@ -9,7 +9,21 @@ use freya_hooks::{
     use_editable, use_focus, use_get_theme, EditableConfig, EditableEvent, EditableMode, TextEditor,
 };
 use winit::window::CursorIcon;
+/// Enum to declare is [`Input`] hidden.
+#[derive(Default)]
+pub enum InputMode {
+    /// The input text is shown
+    #[default]
+    Shown,
+    /// The input text is obfuscated with a character
+    Hidden(char),
+}
 
+impl InputMode {
+    pub fn new_password() -> Self {
+        Self::Hidden('*')
+    }
+}
 /// [`Input`] component properties.
 #[derive(Props)]
 pub struct InputProps<'a> {
@@ -17,6 +31,9 @@ pub struct InputProps<'a> {
     pub value: String,
     /// Handler for the `onchange` event.
     pub onchange: EventHandler<'a, String>,
+    /// Is input hidden with a character. By default input text is shown.
+    #[props(default = InputMode::Shown, into)]
+    hidden: InputMode,
     /// Width of the Input. Default 100.
     #[props(default = "150".to_string(), into)]
     width: String,
@@ -67,7 +84,10 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     let theme = use_get_theme(cx);
     let focus_manager = use_focus(cx);
 
-    let text = &cx.props.value;
+    let text = match cx.props.hidden {
+        InputMode::Hidden(ch) => ch.to_string().repeat(cx.props.value.len()),
+        InputMode::Shown => cx.props.value.clone(),
+    };
     let cursor_attr = editable.cursor_attr(cx);
     let highlights_attr = editable.highlights_attr(cx, 0);
     let width = &cx.props.width;
