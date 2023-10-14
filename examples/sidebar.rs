@@ -92,7 +92,6 @@ fn SidebarItem<'a>(
             onmouseleave: onmouseleave,
             width: "100%",
             height: "auto",
-            direction: "both",
             color: "{color}",
             shadow: "0 2 10 1 rgb(0, 0, 0, 45)",
             corner_radius: "10",

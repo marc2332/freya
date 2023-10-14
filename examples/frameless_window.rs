@@ -23,8 +23,8 @@ fn app(cx: Scope) -> Element {
         rect {
             background: "white",
             padding: "10",
-            display: "center",
-            direction: "both",
+            main_alignment: "center",
+            cross_alignment: "center",
             width: "100%",
             height: "100%",
             corner_radius: "15",

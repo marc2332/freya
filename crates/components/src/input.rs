@@ -156,13 +156,11 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
                 onclick: onclick,
                 width: "auto",
                 height: "auto",
-                direction: "both",
                 padding: "1.5",
                 rect {
                     width: "{width}",
                     height: "{height}",
                     direction: "vertical",
-                    display: "center",
                     color: "{color}",
                     background: "{background}",
                     shadow: "0 3 15 0 rgb(0, 0, 0, 70)",

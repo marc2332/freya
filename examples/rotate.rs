@@ -49,8 +49,8 @@ fn app(cx: Scope) -> Element {
 
     render!(
         rect {
-            direction: "both",
-            display: "center",
+            main_alignment: "center",
+            cross_alignment: "center",
             width: "100%",
             height: "100%",
             rect {
@@ -58,15 +58,15 @@ fn app(cx: Scope) -> Element {
                 background: "rgb(65, 53, 67)",
                 width: "250",
                 height: "250",
-                direction: "both",
-                display: "center",
+                main_alignment: "center",
+                cross_alignment: "center",
                 rect {
                     rotate: "{degrees.1}deg",
                     background: "rgb(143, 67, 238)",
                     width: "180",
                     height: "180",
-                    direction: "both",
-                    display: "center",
+                    main_alignment: "center",
+                    cross_alignment: "center",
                     rect {
                         rotate: "{degrees.2}deg",
                         background: "rgb(240, 235, 141)",

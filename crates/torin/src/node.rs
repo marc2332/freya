@@ -1,8 +1,7 @@
 pub use euclid::Rect;
 
 use crate::{
-    direction::DirectionMode, display::DisplayMode, gaps::Gaps, geometry::Length,
-    prelude::Alignment, size::Size,
+    alignment::Alignment, direction::DirectionMode, gaps::Gaps, geometry::Length, size::Size,
 };
 
 /// Node layout configuration
@@ -20,9 +19,7 @@ pub struct Node {
     pub maximum_width: Size,
     pub maximum_height: Size,
 
-    /// Inner layout mode
-    pub display: DisplayMode,
-
+    // Axis alignments for the children
     pub main_alignment: Alignment,
     pub cross_alignment: Alignment,
 
@@ -85,17 +82,19 @@ impl Node {
         }
     }
 
-    /// Construct a new Node given a size and a display
-    pub fn from_size_and_display_and_direction(
+    /// Construct a new Node given a size, alignments and a direction
+    pub fn from_size_and_alignments_and_direction(
         width: Size,
         height: Size,
-        display: DisplayMode,
+        main_alignment: Alignment,
+        cross_alignment: Alignment,
         direction: DirectionMode,
     ) -> Self {
         Self {
             width,
             height,
-            display,
+            main_alignment,
+            cross_alignment,
             direction,
             ..Default::default()
         }
@@ -113,9 +112,8 @@ impl Node {
 
     /// Has properties that depend on the inner Nodes?
     pub fn does_depend_on_inner(&self) -> bool {
-        Size::Inner == self.width
-            || Size::Inner == self.height
-            || self.has_layout_references
-            || self.display == DisplayMode::Center
+        Size::Inner == self.width || Size::Inner == self.height || self.has_layout_references
+        // || self.main_alignment.is_not_start()
+        // || self.cross_alignment.is_not_start()
     }
 }

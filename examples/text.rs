@@ -46,7 +46,6 @@ fn app(cx: Scope) -> Element {
                 height: "calc(100% - 60)",
                 rect {
                     background: "red",
-                    direction: "both",
                     label {
                         font_size: "{font_size}",
                         font_family: "Inter",

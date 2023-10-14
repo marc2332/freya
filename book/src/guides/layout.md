@@ -12,7 +12,7 @@ Learn how the layout attributes work.
 - [`direction`](#direction)
 - [`padding`](#padding)
 - [`margin`](#margin)
-- [`display`](#display)
+- [`main_alignment & cross_alignment`](#main_alignment_&_cross_alignment)
 
 > ⚠️ Freya's layout is still somewhat limited.
 
@@ -168,9 +168,18 @@ fn app(cx: Scope) -> Element {
 
 ```
 
-### display
+### main_alignment & cross_alignment
 
-Control how the inner elements are displayed, possible values are `normal` (default) or `center`.
+Control how the inner elements are positioned inside the element. You can combine it with the `direction` attribute to create complex flows.
+Possible values for both are:
+- `start` (default): At the begining of the axis
+- `center`: At the center of the axis
+- `end`: At the end of the axis
+
+When using the `vertical` direction, `main_alignment` will be the Y axis and `cross_alignment` will be the X axis. But when using the `horizontal` direction, the
+`main_alignment` will be the X axis and the `cross_alignment` will be the Y axis.
+
+Example on how to center the inner elements in both axis:
 
 ```rust, no_run
 fn app(cx: Scope) -> Element {
@@ -178,8 +187,8 @@ fn app(cx: Scope) -> Element {
         rect {
             width: "100%",
             height: "100%",
-            direction: "both",
-            display: "center",
+            main_alignment: "center",
+            cross_alignment: "center",
             rect {
                 width: "50%",
                 height: "50%",

@@ -616,7 +616,6 @@ fn measure_inner_nodes<Key: NodeKey>(
                         }
                         _ => {}
                     },
-                    _ => {}
                 }
             }
 
@@ -694,7 +693,6 @@ fn measure_inner_nodes<Key: NodeKey>(
                         }
                     }
                 }
-                DirectionMode::Both => {}
             }
 
             if child_revalidated && must_cache {
@@ -754,7 +752,6 @@ fn measure_inner_nodes<Key: NodeKey>(
                     }
                     _ => {}
                 },
-                _ => {}
             }
         }
     }

@@ -108,7 +108,6 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
                 corner_radius: "50",
                 rect {
                     background: "{circle}",
-                    direction: "both",
                     width: "18",
                     height: "18",
                     corner_radius: "50",

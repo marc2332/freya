@@ -3,7 +3,6 @@ pub enum DirectionMode {
     #[default]
     Vertical,
     Horizontal,
-    Both,
 }
 
 impl DirectionMode {
@@ -11,7 +10,6 @@ impl DirectionMode {
         match self {
             DirectionMode::Horizontal => "horizontal".to_string(),
             DirectionMode::Vertical => "vertical".to_string(),
-            DirectionMode::Both => "both".to_string(),
         }
     }
 }

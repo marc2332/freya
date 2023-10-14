@@ -160,8 +160,8 @@ fn app(cx: Scope) -> Element {
         rect {
             width: "100%",
             height: "100%",
-            display: "center",
-            direction: "both",
+            main_alignment: "center",
+            cross_alignment: "center",
             rect {
                 width: "150",
                 height: "170",
@@ -184,8 +184,8 @@ fn app(cx: Scope) -> Element {
                                 corner_radius: "6",
                                 border: "2 solid rgb(40, 40, 40)",
                                 background: "rgb(250, 250, 250)",
-                                display: "center",
-                                direction: "both",
+                                main_alignment: "center",
+                                cross_alignment: "center",
                                 onclick: move |_| {
                                     let mut board = board.write();
                                     if board.winner.is_none(){

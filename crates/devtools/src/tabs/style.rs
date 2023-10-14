@@ -114,12 +114,12 @@ pub fn NodeInspectorStyle(cx: Scope, node_id: NodeId) -> Element {
                                     }
                                 }
                             }
-                            AttributeType::Display(display) => {
+                            AttributeType::Alignment(alignment) => {
                                 rsx!{
                                     Property {
                                         key: "{i}",
                                         name: "{name}",
-                                        value: display.pretty()
+                                        value: alignment.pretty()
                                     }
                                 }
                             }

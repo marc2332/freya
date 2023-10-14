@@ -122,8 +122,8 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
             onglobalmouseover: onmouseover,
             onmouseleave: onmouseleave,
             onwheel: onwheel,
-            display: "center",
-            direction: "both",
+            main_alignment: "center",
+            cross_alignment: "center",
             padding: "1",
             rect {
                 background: "{theme.background}",

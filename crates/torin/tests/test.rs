@@ -720,10 +720,11 @@ pub fn display_horizontal() {
         0,
         None,
         vec![1],
-        Node::from_size_and_display_and_direction(
+        Node::from_size_and_alignments_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            DisplayMode::Center,
+            Alignment::Center,
+            Alignment::Center,
             DirectionMode::Horizontal,
         ),
     );
@@ -752,7 +753,7 @@ pub fn display_horizontal() {
 
     assert_eq!(
         layout.get(1).unwrap().area,
-        Rect::new(Point2D::new(50.0, 0.0), Size2D::new(100.0, 100.0)),
+        Rect::new(Point2D::new(50.0, 50.0), Size2D::new(100.0, 100.0)),
     );
 }
 
@@ -765,10 +766,11 @@ pub fn display_vertical_with_inner_children() {
         0,
         None,
         vec![1],
-        Node::from_size_and_display_and_direction(
+        Node::from_size_and_alignments_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            DisplayMode::Center,
+            Alignment::Center,
+            Alignment::Center,
             DirectionMode::Vertical,
         ),
     );
@@ -808,12 +810,12 @@ pub fn display_vertical_with_inner_children() {
 
     assert_eq!(
         layout.get(1).unwrap().area,
-        Rect::new(Point2D::new(0.0, 50.0), Size2D::new(100.0, 100.0)),
+        Rect::new(Point2D::new(50.0, 50.0), Size2D::new(100.0, 100.0)),
     );
 
     assert_eq!(
         layout.get(2).unwrap().area,
-        Rect::new(Point2D::new(5.0, 55.0), Size2D::new(90.0, 90.0)),
+        Rect::new(Point2D::new(55.0, 55.0), Size2D::new(90.0, 90.0)),
     );
 }
 
@@ -826,10 +828,9 @@ pub fn deep_tree() {
         0,
         None,
         vec![1],
-        Node::from_size_and_display_and_direction(
+        Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            DisplayMode::Center,
             DirectionMode::Vertical,
         ),
     );
