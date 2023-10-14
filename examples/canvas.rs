@@ -203,72 +203,62 @@ fn Editor(cx: Scope) -> Element {
             height: "100%",
             rect {
                 width: "100%",
-                height: "50",
-                padding: "10",
+                height: "70",
+                padding: "5",
                 direction: "horizontal",
+                cross_alignment: "center",
                 rect {
-                    height: "100%",
-                    width: "100%",
-                    direction: "horizontal",
+                    width: "130",
                     cross_alignment: "center",
-                    padding: "5",
-                    rect {
-                        width: "130",
-                        cross_alignment: "center",
-                        Slider {
-                            width: 100.0,
-                            value: *font_size_percentage.get(),
-                            onmoved: |p| {
-                                font_size_percentage.set(p);
-                            }
-                        }
-                        label {
-                            width: "100%",
-                            "Font size"
+                    Slider {
+                        width: 100.0,
+                        value: *font_size_percentage.get(),
+                        onmoved: |p| {
+                            font_size_percentage.set(p);
                         }
                     }
-                    rect {
-                        width: "130",
-                        cross_alignment: "center",
-                        Slider {
-                            width: 100.0,
-                            value: *line_height_percentage.get(),
-                            onmoved: |p| {
-                                line_height_percentage.set(p);
-                            }
-                        }
-                        label {
-                            width: "100%",
-                            "Line height"
+                    label {
+                        "Font size"
+                    }
+                }
+                rect {
+                    width: "130",
+                    cross_alignment: "center",
+                    Slider {
+                        width: 100.0,
+                        value: *line_height_percentage.get(),
+                        onmoved: |p| {
+                            line_height_percentage.set(p);
                         }
                     }
-                    rect {
-                        width: "80",
-                        cross_alignment: "center",
-                        Switch {
-                            enabled: *is_bold.get(),
-                            ontoggled: |_| {
-                                is_bold.set(!is_bold.get());
-                            }
-                        }
-                        label {
-                            width: "100%",
-                            "Bold"
+                    label {
+                        "Line height"
+                    }
+                }
+                rect {
+                    width: "80",
+                    cross_alignment: "center",
+                    Switch {
+                        enabled: *is_bold.get(),
+                        ontoggled: |_| {
+                            is_bold.set(!is_bold.get());
                         }
                     }
-                    rect {
-                        width: "80",
-                        cross_alignment: "center",
-                        Switch {
-                            enabled: *is_italic.get(),
-                            ontoggled: |_| {
-                                is_italic.set(!is_italic.get());
-                            }
+                    label {
+                        "Bold"
+                    }
+                }
+                rect {
+                    width: "80",
+                    cross_alignment: "center",
+                    Switch {
+                        enabled: *is_italic.get(),
+                        ontoggled: |_| {
+                            is_italic.set(!is_italic.get());
                         }
-                        label {
-                            width: "100%",
-                            "Italic"
-                        }
+                    }
+                    label {
+                        "Italic"
                     }
                 }
             }
@@ -344,7 +334,7 @@ fn Editor(cx: Scope) -> Element {
                                     rect {
                                         width: "{font_size * 2.0}",
                                         height: "100%",
-                                        display: "center",
+                                        main_alignment: "center",
                                         direction: "horizontal",
                                         label {
                                             font_size: "{font_size}",

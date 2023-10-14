@@ -7,7 +7,6 @@ use tracing::info;
 use crate::{
     custom_measurer::LayoutMeasurer,
     direction::DirectionMode,
-    display::DisplayMode,
     dom_adapter::{DOMAdapter, NodeAreas, NodeKey},
     geometry::{Area, Size2D},
     node::Node,
@@ -511,7 +510,7 @@ enum OwnedMeasureMode {
 }
 
 impl OwnedMeasureMode {
-    pub fn ref_mut<'a>(&'a mut self) -> MeasureMode<'a> {
+    pub fn ref_mut(&mut self) -> MeasureMode<'_> {
         match self {
             Self::ParentIsCached { inner_area } => MeasureMode::ParentIsCached { inner_area },
             Self::ParentIsNotCached {
@@ -567,6 +566,7 @@ fn measure_inner_nodes<Key: NodeKey>(
     let mut measure_children = |mode: &mut MeasureMode,
                                 available_area: &mut Area,
                                 inner_sizes: &mut Size2D,
+                                measure_cross_axis: bool,
                                 must_cache: bool| {
         let children = dom_adapter.children_of(node_id);
 
@@ -575,12 +575,57 @@ fn measure_inner_nodes<Key: NodeKey>(
 
             let child_data = dom_adapter.get_node(&child_id).unwrap();
 
+            let mut adapted_available_area = *available_area;
+
+            if measure_cross_axis {
+                let (_, child_areas) = measure_node(
+                    child_id,
+                    &child_data,
+                    layout,
+                    &inner_area,
+                    available_area,
+                    measurer,
+                    false,
+                    dom_adapter,
+                );
+
+                match node.direction {
+                    DirectionMode::Horizontal => match node.cross_alignment {
+                        Alignment::Center => {
+                            let new_origin_y =
+                                (available_area.height() / 2.0) - (child_areas.area.height() / 2.0);
+
+                            adapted_available_area.origin.y = available_area.min_y() + new_origin_y;
+                        }
+                        Alignment::End => {
+                            adapted_available_area.origin.y =
+                                available_area.max_y() - child_areas.area.height();
+                        }
+                        _ => {}
+                    },
+                    DirectionMode::Vertical => match node.cross_alignment {
+                        Alignment::Center => {
+                            let new_origin_x =
+                                (available_area.width() / 2.0) - (child_areas.area.width() / 2.0);
+
+                            adapted_available_area.origin.x = available_area.min_x() + new_origin_x;
+                        }
+                        Alignment::End => {
+                            adapted_available_area.origin.x =
+                                available_area.max_x() - child_areas.area.width();
+                        }
+                        _ => {}
+                    },
+                    _ => {}
+                }
+            }
+
             let (child_revalidated, child_areas) = measure_node(
                 child_id,
                 &child_data,
                 layout,
                 &inner_area,
-                available_area,
+                &adapted_available_area,
                 measurer,
                 must_cache,
                 dom_adapter,
@@ -665,74 +710,60 @@ fn measure_inner_nodes<Key: NodeKey>(
 
     // TODO: Only clone when necessary (center or end)
 
+    let has_special_alignments =
+        node.main_alignment.is_not_start() || node.cross_alignment.is_not_start();
+
     {
         let mut alignment_mode = mode.to_owned();
         let mut alignment_mode = alignment_mode.ref_mut();
-        let mut inner_sizes = inner_sizes.clone();
+        let mut inner_sizes = *inner_sizes;
 
-        if node.main_alignment.is_not_start() || node.cross_alignment.is_not_start() {
+        if has_special_alignments {
             measure_children(
                 &mut alignment_mode,
                 &mut available_area.clone(),
                 &mut inner_sizes,
+                true,
                 false,
             );
 
             match node.direction {
-                DirectionMode::Horizontal => {
-                    match node.main_alignment {
-                        Alignment::Center => {
-                            let inner_area = alignment_mode.inner_area();
-                            let new_origin_x =
-                                (inner_area.width() / 2.0) - (inner_sizes.width / 2.0);
+                DirectionMode::Horizontal => match node.main_alignment {
+                    Alignment::Center => {
+                        let inner_area = alignment_mode.inner_area();
+                        let new_origin_x = (inner_area.width() / 2.0) - (inner_sizes.width / 2.0);
 
-                            available_area.origin.x = inner_area.min_x() + new_origin_x;
-                        }
-                        Alignment::End => {}
-                        _ => {}
+                        available_area.origin.x = inner_area.min_x() + new_origin_x;
                     }
-
-                    match node.cross_alignment {
-                        Alignment::Center => {
-                            let inner_area = alignment_mode.inner_area();
-                            let new_origin_y =
-                                (inner_area.height() / 2.0) - (inner_sizes.height / 2.0);
-
-                            available_area.origin.y = inner_area.min_y() + new_origin_y;
-                        }
-                        Alignment::End => {}
-                        _ => {}
+                    Alignment::End => {
+                        let inner_area = alignment_mode.inner_area();
+                        available_area.origin.x = inner_area.max_x() - inner_sizes.width;
                     }
-                }
-                DirectionMode::Vertical => {
-                    match node.main_alignment {
-                        Alignment::Center => {
-                            let inner_area = alignment_mode.inner_area();
-                            let new_origin_y =
-                                (inner_area.height() / 2.0) - (inner_sizes.height / 2.0);
+                    _ => {}
+                },
+                DirectionMode::Vertical => match node.main_alignment {
+                    Alignment::Center => {
+                        let inner_area = alignment_mode.inner_area();
+                        let new_origin_y = (inner_area.height() / 2.0) - (inner_sizes.height / 2.0);
 
-                            available_area.origin.y = inner_area.min_y() + new_origin_y;
-                        }
-                        Alignment::End => {}
-                        _ => {}
+                        available_area.origin.y = inner_area.min_y() + new_origin_y;
                     }
-
-                    match node.cross_alignment {
-                        Alignment::Center => {
-                            let inner_area = alignment_mode.inner_area();
-                            let new_origin_x =
-                                (inner_area.width() / 2.0) - (inner_sizes.width / 2.0);
-
-                            available_area.origin.x = inner_area.min_x() + new_origin_x;
-                        }
-                        Alignment::End => {}
-                        _ => {}
+                    Alignment::End => {
+                        let inner_area = alignment_mode.inner_area();
+                        available_area.origin.y = inner_area.max_y() - inner_sizes.height;
                     }
-                }
+                    _ => {}
+                },
                 _ => {}
             }
         }
     }
 
-    measure_children(mode, available_area, inner_sizes, must_cache);
+    measure_children(
+        mode,
+        available_area,
+        inner_sizes,
+        has_special_alignments,
+        must_cache,
+    );
 }

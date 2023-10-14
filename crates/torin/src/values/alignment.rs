@@ -8,9 +8,6 @@ pub enum Alignment {
 
 impl Alignment {
     pub fn is_not_start(&self) -> bool {
-        match self {
-            Self::Start => false,
-            _ => true,
-        }
+        *self != Self::Start
     }
 }
