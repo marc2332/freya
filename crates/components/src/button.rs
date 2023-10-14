@@ -88,7 +88,6 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
             role: "button",
             width: "auto",
             height: "auto",
-            direction: "both",
             color: "{color}",
             shadow: "0 2 10 1 rgb(0, 0, 0, 45)",
             corner_radius: "5",

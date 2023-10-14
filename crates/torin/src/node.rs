@@ -1,7 +1,8 @@
 pub use euclid::Rect;
 
 use crate::{
-    direction::DirectionMode, display::DisplayMode, gaps::Gaps, geometry::Length, size::Size,
+    direction::DirectionMode, display::DisplayMode, gaps::Gaps, geometry::Length,
+    prelude::Alignment, size::Size,
 };
 
 /// Node layout configuration
@@ -21,6 +22,9 @@ pub struct Node {
 
     /// Inner layout mode
     pub display: DisplayMode,
+
+    pub main_alignment: Alignment,
+    pub cross_alignment: Alignment,
 
     /// Inner padding
     pub padding: Gaps,

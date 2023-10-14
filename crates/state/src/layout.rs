@@ -29,6 +29,8 @@ pub struct LayoutState {
     pub offset_y: f32,
     pub offset_x: f32,
     pub display: DisplayMode,
+    pub main_alignment: Alignment,
+    pub cross_alignment: Alignment,
     pub node_ref: Option<UnboundedSender<NodeReferenceLayout>>,
 }
 
@@ -53,6 +55,8 @@ impl State<CustomAttributeValues> for LayoutState {
             "offset_y",
             "offset_x",
             "display",
+            "main_alignment",
+            "cross_alignment",
             "reference",
             "margin",
         ]))
@@ -179,6 +183,20 @@ impl State<CustomAttributeValues> for LayoutState {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(display) = DisplayMode::parse(value) {
                                 layout.display = display;
+                            }
+                        }
+                    }
+                    "main_alignment" => {
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(alignment) = Alignment::parse(value) {
+                                layout.main_alignment = alignment;
+                            }
+                        }
+                    }
+                    "cross_alignment" => {
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(alignment) = Alignment::parse(value) {
+                                layout.cross_alignment = alignment;
                             }
                         }
                     }

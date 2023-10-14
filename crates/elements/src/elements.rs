@@ -178,6 +178,8 @@ builder_constructors! {
         font_weight: String,
         font_width: String,
         display: String,
+        main_alignment: String,
+        cross_alignment: String,
         reference: Reference,
         cursor_reference: CursorReference,
         rotate: String,

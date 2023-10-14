@@ -122,8 +122,8 @@ fn app(cx: Scope) -> Element {
                 background: "rgb(35, 35, 35)",
                 height: "100",
                 width: "100%",
-                display: "center",
-                direction: "horizontal",
+                main_alignment: "center",
+                cross_alignment: "center",
                 padding: "15",
                 rect {
                     layer: "-100",
@@ -132,8 +132,8 @@ fn app(cx: Scope) -> Element {
                     width: "170",
                     height: "100%",
                     corner_radius: "15",
-                    display: "center",
-                    direction: "both",
+                    main_alignment: "center",
+                    cross_alignment: "center",
                     background: "rgb(20, 20, 20)",
                     Button {
                         onclick: create_node,
@@ -210,11 +210,11 @@ fn Editor(cx: Scope) -> Element {
                     height: "100%",
                     width: "100%",
                     direction: "horizontal",
+                    cross_alignment: "center",
                     padding: "5",
                     rect {
-                        height: "40%",
-                        display: "center",
                         width: "130",
+                        cross_alignment: "center",
                         Slider {
                             width: 100.0,
                             value: *font_size_percentage.get(),
@@ -222,21 +222,14 @@ fn Editor(cx: Scope) -> Element {
                                 font_size_percentage.set(p);
                             }
                         }
-                        rect {
-                            height: "auto",
+                        label {
                             width: "100%",
-                            display: "center",
-                            direction: "horizontal",
-                            label {
-                                "Font size"
-                            }
+                            "Font size"
                         }
                     }
                     rect {
-                        height: "40%",
-                        display: "center",
-                        direction: "vertical",
                         width: "130",
+                        cross_alignment: "center",
                         Slider {
                             width: 100.0,
                             value: *line_height_percentage.get(),
@@ -244,56 +237,37 @@ fn Editor(cx: Scope) -> Element {
                                 line_height_percentage.set(p);
                             }
                         }
-                        rect {
-                            height: "auto",
+                        label {
                             width: "100%",
-                            display: "center",
-                            direction: "horizontal",
-                            label {
-                                "Line height"
-                            }
+                            "Line height"
                         }
                     }
                     rect {
-                        height: "40%",
-                        display: "center",
-                        direction: "vertical",
-                        width: "60",
+                        width: "80",
+                        cross_alignment: "center",
                         Switch {
                             enabled: *is_bold.get(),
                             ontoggled: |_| {
                                 is_bold.set(!is_bold.get());
                             }
                         }
-                        rect {
-                            height: "auto",
+                        label {
                             width: "100%",
-                            display: "center",
-                            direction: "horizontal",
-                            label {
-                                "Bold"
-                            }
+                            "Bold"
                         }
                     }
                     rect {
-                        height: "40%",
-                        display: "center",
-                        direction: "vertical",
-                        width: "60",
+                        width: "80",
+                        cross_alignment: "center",
                         Switch {
                             enabled: *is_italic.get(),
                             ontoggled: |_| {
                                 is_italic.set(!is_italic.get());
                             }
                         }
-                        rect {
-                            height: "auto",
+                        label {
                             width: "100%",
-                            display: "center",
-                            direction: "horizontal",
-                            label {
-                                "Italic"
-                            }
+                            "Italic"
                         }
                     }
                 }
