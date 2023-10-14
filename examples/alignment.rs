@@ -14,7 +14,6 @@ fn app(cx: Scope) -> Element {
         rect {
             height: "100%",
             width: "100%",
-            background: "blue",
             cross_alignment: "end",
             main_alignment: "end",
             rect {
