@@ -1,13 +1,12 @@
 use crate::accessibility::AccessibilityProvider;
 use accesskit::{Node, NodeClassSet, NodeId as AccessibilityId};
 use std::{
-    num::NonZeroU128,
     sync::{Arc, Mutex},
 };
 
 pub type SharedAccessibilityState = Arc<Mutex<AccessibilityState>>;
 
-pub const ROOT_ID: AccessibilityId = AccessibilityId(unsafe { NonZeroU128::new_unchecked(1) });
+pub const ROOT_ID: AccessibilityId = AccessibilityId(1);
 
 /// Manages the Accessibility integration.
 #[derive(Default)]

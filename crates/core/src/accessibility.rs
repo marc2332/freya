@@ -14,6 +14,8 @@ use std::slice::Iter;
 use tokio::sync::watch;
 use torin::{prelude::NodeAreas, torin::Torin};
 
+use crate::accessibility_state::ROOT_ID;
+
 /// Direction for the next Accessibility Node to be focused.
 #[derive(PartialEq)]
 pub enum AccessibilityFocusDirection {
@@ -100,12 +102,19 @@ pub trait AccessibilityProvider {
         self.set_focus(new_focus_id);
 
         // Only focus the element if it exists
-        let node_focused_exists = self.nodes().any(|node| Some(node.0) == new_focus_id);
-        if node_focused_exists {
+        let focus = self.nodes().find_map(|node| {
+            if Some(node.0) == self.focus_id() {
+                Some(node.0)
+            } else {
+                None
+            }
+        });
+
+        if let Some(focus) = focus{
             Some(TreeUpdate {
                 nodes: Vec::new(),
                 tree: None,
-                focus: self.focus_id(),
+                focus,
             })
         } else {
             None
@@ -138,13 +147,15 @@ pub trait AccessibilityProvider {
             } else {
                 None
             }
-        });
+        }).unwrap_or(ROOT_ID);
 
         TreeUpdate {
             nodes,
             tree: Some(Tree::new(root_id)),
             focus,
         }
+
+        
     }
 
     /// Focus the next/previous Node starting from the currently focused Node.
@@ -194,7 +205,7 @@ pub trait AccessibilityProvider {
             Some(TreeUpdate {
                 nodes: Vec::new(),
                 tree: None,
-                focus: self.focus_id(),
+                focus: self.focus_id().unwrap_or(ROOT_ID),
             })
         } else {
             None
