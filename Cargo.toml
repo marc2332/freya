@@ -37,21 +37,21 @@ dioxus-core = { version = "0.4" }
 dioxus-hot-reload = { version = "0.4", features = ["file_watcher"] }
 dioxus-router = { version = "0.4", default-features = false }
 
-skia-safe = { version = "0.66.3", features = ["gl", "textlayout", "svg"] }
+skia-safe = { version = "0.67.0", features = ["gl", "textlayout", "svg"] }
 
 gl = "0.14.0"
-glutin = "0.30.6"
+glutin = "0.30.10"
 glutin-winit = "0.3.0"
-raw-window-handle = "0.5.1"
-winit = "0.28.2"
-tokio = { version = "1.23.0", features = ["sync", "rt-multi-thread", "time", "macros"] }
-accesskit = { version = "0.11.0", features = ["serde"]}
-accesskit_winit = "0.14.1"
-zbus = "3.13.1"
+raw-window-handle = "0.6.0"
+winit = "0.28.7"
+tokio = { version = "1.33.0", features = ["sync", "rt-multi-thread", "time", "macros"] }
+accesskit = { version = "0.12.0", features = ["serde"]}
+accesskit_winit = "0.15.0"
+zbus = "3.14.1"
 
-euclid = "0.22.7"
-uuid = { version = "1.2.2", features = ["v4"]}
-futures = "0.3.25"
+euclid = "0.22.9"
+uuid = { version = "1.4.1", features = ["v4"]}
+futures = "0.3.28"
 anymap = "0.12.1"
 fxhash = "0.2.1"
 tracing = "0.1"
@@ -65,9 +65,9 @@ tokio = { workspace = true }
 dioxus = { workspace = true }
 freya = { workspace = true }
 freya-node-state = { workspace = true }
-reqwest = { version = "0.11.13", features = ["json"] }
-serde = "1.0.152"
-tracing-subscriber = "0.2.25"
+reqwest = { version = "0.11.22", features = ["json"] }
+serde = "1.0.189"
+tracing-subscriber = "0.3.17"
 dioxus-std = { version = "0.4", features = ["utils", "i18n"] }
 rand = "0.8.5"
 dioxus-router = { workspace = true }
