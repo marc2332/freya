@@ -11,12 +11,12 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/deno": "^3.0.0",
-    "@astrojs/react": "^1.2.2",
-    "@fontsource/inter": "^4.5.14",
+    "@astrojs/deno": "^5.0.0",
+    "@astrojs/react": "^3.0.0",
+    "@fontsource/inter": "^5.0.0",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
-    "astro": "^1.7.0",
+    "astro": "^3.0.0",
     "highlight.js": "^11.7.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",

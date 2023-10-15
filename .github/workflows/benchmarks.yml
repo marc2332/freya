@@ -10,7 +10,7 @@ jobs:
     name: run benchmark
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: boa-dev/criterion-compare-action@59f4d964c5f19d7f13d36f5c0944b18ce6652cb0
         with:
           package: torin
