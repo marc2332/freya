@@ -11,6 +11,14 @@ pub struct WindowConfig<T: Clone> {
     pub width: f64,
     /// Height of the window.
     pub height: f64,
+    /// Minimum width of the Window.
+    pub min_width: Option<f64>,
+    /// Minimum height of the window.
+    pub min_height: Option<f64>,
+    /// Maximum width of the Window.
+    pub max_width: Option<f64>,
+    /// Maximum height of the window.
+    pub max_height: Option<f64>,
     /// Enable Window decorations.
     pub decorations: bool,
     /// Title for the Window.
@@ -29,17 +37,7 @@ pub struct WindowConfig<T: Clone> {
 
 impl<T: Clone> Default for WindowConfig<T> {
     fn default() -> Self {
-        Self {
-            width: 600.0,
-            height: 600.0,
-            decorations: true,
-            title: "Freya app",
-            transparent: false,
-            state: None,
-            background: Color::WHITE,
-            on_setup: None,
-            on_exit: None,
-        }
+        LaunchConfigBuilder::default().build().window
     }
 }
 
@@ -63,6 +61,10 @@ pub type WindowCallback = Arc<Box<fn(&mut Window)>>;
 pub struct LaunchConfigBuilder<'a, T> {
     pub width: f64,
     pub height: f64,
+    pub min_width: Option<f64>,
+    pub min_height: Option<f64>,
+    pub max_width: Option<f64>,
+    pub max_height: Option<f64>,
     pub decorations: bool,
     pub title: &'static str,
     pub transparent: bool,
@@ -76,8 +78,12 @@ pub struct LaunchConfigBuilder<'a, T> {
 impl<T> Default for LaunchConfigBuilder<'_, T> {
     fn default() -> Self {
         Self {
-            width: 350.0,
-            height: 350.0,
+            width: 600.0,
+            height: 600.0,
+            min_width: None,
+            min_height: None,
+            max_height: None,
+            max_width: None,
             decorations: true,
             title: "Freya app",
             transparent: false,
@@ -100,6 +106,30 @@ impl<'a, T: Clone> LaunchConfigBuilder<'a, T> {
     /// Specify a Window height.
     pub fn with_height(mut self, height: f64) -> Self {
         self.height = height;
+        self
+    }
+
+    /// Specify a minimum Window width.
+    pub fn with_min_width(mut self, min_width: f64) -> Self {
+        self.min_width = Some(min_width);
+        self
+    }
+
+    /// Specify a minimum Window height.
+    pub fn with_min_height(mut self, min_height: f64) -> Self {
+        self.min_height = Some(min_height);
+        self
+    }
+
+    /// Specify a maximum Window width.
+    pub fn with_max_width(mut self, max_width: f64) -> Self {
+        self.max_width = Some(max_width);
+        self
+    }
+
+    /// Specify a maximum Window height.
+    pub fn with_max_height(mut self, max_height: f64) -> Self {
+        self.max_height = Some(max_height);
         self
     }
 
@@ -157,6 +187,10 @@ impl<'a, T: Clone> LaunchConfigBuilder<'a, T> {
             window: WindowConfig {
                 width: self.width,
                 height: self.height,
+                min_width: self.min_width,
+                min_height: self.min_height,
+                max_width: self.max_width,
+                max_height: self.max_height,
                 title: self.title,
                 decorations: self.decorations,
                 transparent: self.transparent,
