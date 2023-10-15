@@ -2,6 +2,7 @@ pub use skia_safe::{
     font_style::{Slant, Weight, Width},
     gpu::{
         gl::{Format, FramebufferInfo, Interface},
+        surfaces::wrap_backend_render_target,
         BackendRenderTarget, DirectContext, RecordingContext, SurfaceOrigin,
     },
     gradient_shader::GradientShaderColors,

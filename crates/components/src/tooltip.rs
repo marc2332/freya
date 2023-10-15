@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::use_get_theme;
+use freya_hooks::{use_get_theme, TooltipTheme};
 
 /// [`Tooltip`] component properties.
 #[derive(Props)]
@@ -20,7 +20,8 @@ pub struct TooltipProps<'a> {
 #[allow(non_snake_case)]
 pub fn Tooltip<'a>(cx: Scope<'a, TooltipProps<'a>>) -> Element {
     let theme = use_get_theme(cx);
-    let theme = &theme.tooltip;
+    let TooltipTheme { background, color } = &theme.tooltip;
+
     render!(
         rect {
             height: "30",
@@ -33,11 +34,11 @@ pub fn Tooltip<'a>(cx: Scope<'a, TooltipProps<'a>>) -> Element {
                 height: "100%",
                 shadow: "0 0 10 5 rgb(0, 0, 0, 50)",
                 corner_radius: "8",
-                background: "{theme.background}",
+                background: "{background}",
                 display: "center",
                 label {
                     max_lines: "1",
-                    color: "{theme.color}",
+                    color: "{color}",
                     "{cx.props.url}"
                 }
             }

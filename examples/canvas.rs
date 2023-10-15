@@ -174,12 +174,8 @@ fn Editor(cx: Scope) -> Element {
     let font_style = if *is_italic.get() { "italic" } else { "normal" };
     let font_weight = if *is_bold.get() { "bold" } else { "normal" };
 
-    use_effect(cx, (), {
-        to_owned![focus_manager];
-        move |_| {
-            focus_manager.focus();
-            async move {}
-        }
+    use_memo(cx, (), |_| {
+        focus_manager.focus();
     });
 
     let onclick = {

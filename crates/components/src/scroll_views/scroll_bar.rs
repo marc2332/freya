@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::use_get_theme;
+use freya_hooks::{use_get_theme, ScrollbarTheme};
 
 #[derive(Props)]
 pub struct ScrollBarProps<'a> {
@@ -22,7 +22,8 @@ pub struct ScrollBarProps<'a> {
 #[allow(non_snake_case)]
 pub fn ScrollBar<'a>(cx: Scope<'a, ScrollBarProps<'a>>) -> Element<'a> {
     let theme = use_get_theme(cx);
-    let scrollbar_theme = &theme.scrollbar;
+    let ScrollbarTheme { background, .. } = &theme.scrollbar;
+
     render!(
         rect {
             overflow: "clip",
@@ -31,7 +32,7 @@ pub fn ScrollBar<'a>(cx: Scope<'a, ScrollBarProps<'a>>) -> Element<'a> {
             height: "{cx.props.height}",
             offset_x: "{cx.props.offset_x}",
             offset_y: "{cx.props.offset_y}",
-            background: "{scrollbar_theme.background}",
+            background: "{background}",
             &cx.props.children
         }
     )
