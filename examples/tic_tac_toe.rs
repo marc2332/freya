@@ -168,7 +168,7 @@ fn app(cx: Scope) -> Element {
                 label {
                     height: "20",
                     width: "100%",
-                    align: "center",
+                    text_align: "center",
                     "{message}"
                 }
                 for (n_row, row) in board.read().board.iter().enumerate() {

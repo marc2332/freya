@@ -76,42 +76,42 @@ fn app(cx: Scope) -> Element {
                 label {
                     font_size: "18",
                     font_family: "Inter",
-                    align: "right",
+                    text_align: "right",
                     width: "100%",
                     "Right align"
                 }
                 label {
                     font_size: "18",
                     font_family: "Inter",
-                    align: "center",
+                    text_align: "center",
                     width: "100%",
                     "Center align"
                 }
                 label {
                     font_size: "18",
                     font_family: "Inter",
-                    align: "justify",
+                    text_align: "justify",
                     width: "100%",
                     "Justify align"
                 }
                 label {
                     font_size: "18",
                     font_family: "Inter",
-                    align: "end",
+                    text_align: "end",
                     width: "100%",
                     "End align"
                 }
                 label {
                     font_size: "18",
                     font_family: "Inter",
-                    align: "start",
+                    text_align: "start",
                     width: "100%",
                     "Start align"
                 }
                 label {
                     font_size: "18",
                     font_family: "Inter",
-                    align: "left",
+                    text_align: "left",
                     width: "100%",
                     "Left align"
                 }

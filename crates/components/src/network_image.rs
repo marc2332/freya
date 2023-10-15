@@ -117,7 +117,7 @@ pub fn NetworkImage<'a>(cx: Scope<'a, NetworkImageProps<'a>>) -> Element<'a> {
                     width: "{width}",
                     display: "center",
                     label {
-                        align: "center",
+                        text_align: "center",
                         "Error"
                     }
                 }

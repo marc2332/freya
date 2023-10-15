@@ -20,7 +20,7 @@ fn app(cx: Scope) -> Element {
                 direction: "vertical",
                 display: "center",
                 label {
-                    align: "center",
+                    text_align: "center",
                     width: "100%",
                     font_size: "70",
                     "{gesture}"

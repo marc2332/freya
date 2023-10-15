@@ -53,7 +53,7 @@ fn app(cx: Scope) -> Element {
                 label {
                     width: "100%",
                     font_size: "30",
-                    align: "center",
+                    text_align: "center",
                     color: "{text}",
                     "Click to move"
                 }
