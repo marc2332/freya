@@ -122,6 +122,17 @@ pub struct ProgressBarTheme {
     pub progress_background: &'static str,
 }
 
+/// Theming properties for Table component.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct TableTheme {
+    pub color: &'static str,
+    pub background: &'static str,
+    pub arrow_fill: &'static str,
+    pub alternate_row_background: &'static str,
+    pub row_background: &'static str,
+    pub divider_fill: &'static str,
+}
+
 /// Theming properties for Themes.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Theme {
@@ -138,6 +149,7 @@ pub struct Theme {
     pub accordion: AccordionTheme,
     pub loader: LoaderTheme,
     pub progress_bar: ProgressBarTheme,
+    pub table: TableTheme,
 }
 
 impl Default for Theme {
@@ -210,6 +222,14 @@ pub const LIGHT_THEME: Theme = Theme {
         background: "rgb(210, 210, 210)",
         progress_background: "rgb(103, 80, 164)",
     },
+    table: TableTheme {
+        color: "black",
+        background: "white",
+        arrow_fill: "rgb(40, 40, 40)",
+        row_background: "transparent",
+        alternate_row_background: "rgb(240, 240, 240)",
+        divider_fill: "rgb(200, 200, 200)",
+    },
 };
 
 /// `Dark` theme
@@ -269,5 +289,13 @@ pub const DARK_THEME: Theme = Theme {
     progress_bar: ProgressBarTheme {
         background: "rgb(60, 60, 60)",
         progress_background: "rgb(255, 95, 0)",
+    },
+    table: TableTheme {
+        color: "white",
+        background: "rgb(25, 25, 25)",
+        arrow_fill: "rgb(150, 150, 150)",
+        row_background: "transparent",
+        alternate_row_background: "rgb(50, 50, 50)",
+        divider_fill: "rgb(100, 100, 100)",
     },
 };

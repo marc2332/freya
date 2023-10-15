@@ -34,51 +34,15 @@ fn app(cx: Scope) -> Element {
     let order = use_state(cx, || OrderBy::Name);
     let data = use_state(cx, || {
         vec![
-            vec![
-                "aaaa".to_string(),
-                "bbbb".to_string(),
-                "111".to_string(),
-            ],
-            vec![
-                "bbbb".to_string(),
-                "aaaa".to_string(),
-                "333".to_string(),
-            ],
-            vec![
-                "wwww".to_string(),
-                "777".to_string(),
-                "ccc".to_string(),
-            ],
-            vec![
-                "dddd".to_string(),
-                "222".to_string(),
-                "111".to_string(),
-            ],
-            vec![
-                "hhhh".to_string(),
-                "444".to_string(),
-                "aaa".to_string(),
-            ],
-            vec![
-                "555".to_string(),
-                "ffff".to_string(),
-                "zzzz".to_string(),
-            ],
-            vec![
-                "llll".to_string(),
-                "999".to_string(),
-                "eeee".to_string(),
-            ],
-            vec![
-                "abcd".to_string(),
-                "987".to_string(),
-                "wwww".to_string(),
-            ],
-            vec![
-                "rrrr".to_string(),
-                "333".to_string(),
-                "888".to_string(),
-            ],
+            vec!["aaaa".to_string(), "bbbb".to_string(), "111".to_string()],
+            vec!["bbbb".to_string(), "aaaa".to_string(), "333".to_string()],
+            vec!["wwww".to_string(), "777".to_string(), "ccc".to_string()],
+            vec!["dddd".to_string(), "222".to_string(), "111".to_string()],
+            vec!["hhhh".to_string(), "444".to_string(), "aaa".to_string()],
+            vec!["555".to_string(), "ffff".to_string(), "zzzz".to_string()],
+            vec!["llll".to_string(), "999".to_string(), "eeee".to_string()],
+            vec!["abcd".to_string(), "987".to_string(), "wwww".to_string()],
+            vec!["rrrr".to_string(), "333".to_string(), "888".to_string()],
         ]
     });
     let columns = cx.use_hook(|| {
@@ -132,7 +96,7 @@ fn app(cx: Scope) -> Element {
                         for (n, (text, order_by)) in columns.iter().enumerate() {
                             TableCell {
                                 key: "{n}",
-                                separator: n > 0,
+                                divider: n > 0,
                                 order_direction: if *order.get() == *order_by { Some(*order_direction.get()) } else { None },
                                 onclick: move  |_| on_column_head_click(order_by),
                                 label {
@@ -153,7 +117,7 @@ fn app(cx: Scope) -> Element {
                                 for (n, item) in items.iter().enumerate() {
                                     TableCell {
                                         key: "{n}",
-                                        separator: n > 0,
+                                        divider: n > 0,
                                         label {
                                             width: "100%",
                                             align: "right",
