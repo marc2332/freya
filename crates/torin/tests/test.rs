@@ -1067,7 +1067,7 @@ pub fn margin() {
     mocked_dom.add(
         0,
         None,
-        vec![1],
+        vec![1, 2],
         Node::from_size_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(100.0)),
@@ -1123,7 +1123,7 @@ pub fn double_center_alignment() {
     mocked_dom.add(
         0,
         None,
-        vec![1],
+        vec![1, 2],
         Node::from_size_and_alignments_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(100.0)),
@@ -1160,16 +1160,14 @@ pub fn double_center_alignment() {
         &mut mocked_dom,
     );
 
-    let node_areas = layout.get(1).unwrap();
-
     assert_eq!(
-        node_areas.area,
-        Rect::new(Point2D::new(250.0, 250.0), Size2D::new(200.0, 200.0)),
+        layout.get(1).unwrap().area,
+        Rect::new(Point2D::new(400.0, 250.0), Size2D::new(200.0, 200.0)),
     );
 
     assert_eq!(
-        node_areas.box_area(),
-        Rect::new(Point2D::new(450.0, 450.0), Size2D::new(300.0, 300.0)),
+        layout.get(2).unwrap().area,
+        Rect::new(Point2D::new(350.0, 450.0), Size2D::new(300.0, 300.0)),
     );
 }
 
@@ -1181,7 +1179,7 @@ pub fn double_end_alignment() {
     mocked_dom.add(
         0,
         None,
-        vec![1],
+        vec![1, 2],
         Node::from_size_and_alignments_and_direction(
             Size::Percentage(Length::new(100.0)),
             Size::Percentage(Length::new(100.0)),
@@ -1218,15 +1216,13 @@ pub fn double_end_alignment() {
         &mut mocked_dom,
     );
 
-    let node_areas = layout.get(1).unwrap();
-
     assert_eq!(
-        node_areas.area,
-        Rect::new(Point2D::new(500.0, 500.0), Size2D::new(200.0, 200.0)),
+        layout.get(1).unwrap().area,
+        Rect::new(Point2D::new(800.0, 500.0), Size2D::new(200.0, 200.0)),
     );
 
     assert_eq!(
-        node_areas.box_area(),
+        layout.get(2).unwrap().area,
         Rect::new(Point2D::new(700.0, 700.0), Size2D::new(300.0, 300.0)),
     );
 }
