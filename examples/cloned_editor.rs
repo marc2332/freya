@@ -112,7 +112,7 @@ fn Body(cx: Scope) -> Element {
                             rect {
                                 width: "30",
                                 height: "100%",
-                                display: "center",
+                                main_alignment: "center",
                                 direction: "horizontal",
                                 label {
                                     font_size: "15",
@@ -196,7 +196,7 @@ fn Body(cx: Scope) -> Element {
                             rect {
                                 width: "30",
                                 height: "100%",
-                                display: "center",
+                                main_alignment: "center",
                                 direction: "horizontal",
                                 label {
                                     font_size: "15",

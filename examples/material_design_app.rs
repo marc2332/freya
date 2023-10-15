@@ -127,7 +127,7 @@ fn Navbar<'a>(cx: Scope<'a, NavbarProps<'a>>) -> Element<'a> {
             background: "rgb(104, 24, 245)",
             direction: "vertical",
             color: "white",
-            display: "center",
+            main_alignment: "center",
             rect {
                 width: "100%",
                 direction: "horizontal",

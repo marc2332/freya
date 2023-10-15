@@ -17,18 +17,20 @@ fn app(cx: Scope) -> Element {
             cross_alignment: "end",
             main_alignment: "end",
             rect {
-                width: "300",
-                height: "300",
+                width: "65%",
+                height: "65%",
                 background: "yellow",
                 main_alignment: "start",
                 cross_alignment: "start",
+                overflow: "clip",
                 rect {
                     main_alignment: "end",
                     cross_alignment: "center",
                     background: "red",
                     direction: "horizontal",
-                    width: "150",
-                    height: "150",
+                    width: "50%%",
+                    height: "50%",
+                    overflow: "clip",
                     rect {
                         width: "50",
                         height: "50",
@@ -40,8 +42,28 @@ fn app(cx: Scope) -> Element {
                         background: "orange"
                     }
                 }
-                label {
-                    "🦀🦀🦀🦀🦀🦀"
+                rect {
+                    cross_alignment: "end",
+                    width: "100%%",
+                    height: "50%",
+                    rect {
+                        main_alignment: "end",
+                        cross_alignment: "center",
+                        width: "50%",
+                        height: "100%",
+                        label {
+                            "Some crabs"
+                        }
+                        label {
+                            "🦀🦀"
+                        }
+                        label {
+                            "Even more crabs"
+                        }
+                        label {
+                            "🦀🦀🦀🦀🦀"
+                        }
+                    }
                 }
             }
             label {
