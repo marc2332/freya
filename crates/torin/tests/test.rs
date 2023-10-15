@@ -1114,3 +1114,119 @@ pub fn margin() {
         Rect::new(Point2D::new(5.0, 5.0), Size2D::new(200.0, 200.0)),
     );
 }
+
+#[test]
+pub fn double_center_alignment() {
+    let (mut layout, mut measurer) = test_utils();
+
+    let mut mocked_dom = TestingDOM::default();
+    mocked_dom.add(
+        0,
+        None,
+        vec![1],
+        Node::from_size_and_alignments_and_direction(
+            Size::Percentage(Length::new(100.0)),
+            Size::Percentage(Length::new(100.0)),
+            Alignment::Center,
+            Alignment::Center,
+            DirectionMode::Vertical,
+        ),
+    );
+    mocked_dom.add(
+        1,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(200.0)),
+            Size::Pixels(Length::new(200.0)),
+            DirectionMode::Vertical,
+        ),
+    );
+    mocked_dom.add(
+        2,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(300.0)),
+            Size::Pixels(Length::new(300.0)),
+            DirectionMode::Vertical,
+        ),
+    );
+
+    layout.measure(
+        0,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+        &mut measurer,
+        &mut mocked_dom,
+    );
+
+    let node_areas = layout.get(1).unwrap();
+
+    assert_eq!(
+        node_areas.area,
+        Rect::new(Point2D::new(250.0, 250.0), Size2D::new(200.0, 200.0)),
+    );
+
+    assert_eq!(
+        node_areas.box_area(),
+        Rect::new(Point2D::new(450.0, 450.0), Size2D::new(300.0, 300.0)),
+    );
+}
+
+#[test]
+pub fn double_end_alignment() {
+    let (mut layout, mut measurer) = test_utils();
+
+    let mut mocked_dom = TestingDOM::default();
+    mocked_dom.add(
+        0,
+        None,
+        vec![1],
+        Node::from_size_and_alignments_and_direction(
+            Size::Percentage(Length::new(100.0)),
+            Size::Percentage(Length::new(100.0)),
+            Alignment::End,
+            Alignment::End,
+            DirectionMode::Vertical,
+        ),
+    );
+    mocked_dom.add(
+        1,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(200.0)),
+            Size::Pixels(Length::new(200.0)),
+            DirectionMode::Vertical,
+        ),
+    );
+    mocked_dom.add(
+        2,
+        Some(0),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(300.0)),
+            Size::Pixels(Length::new(300.0)),
+            DirectionMode::Vertical,
+        ),
+    );
+
+    layout.measure(
+        0,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+        &mut measurer,
+        &mut mocked_dom,
+    );
+
+    let node_areas = layout.get(1).unwrap();
+
+    assert_eq!(
+        node_areas.area,
+        Rect::new(Point2D::new(500.0, 500.0), Size2D::new(200.0, 200.0)),
+    );
+
+    assert_eq!(
+        node_areas.box_area(),
+        Rect::new(Point2D::new(700.0, 700.0), Size2D::new(300.0, 300.0)),
+    );
+}
