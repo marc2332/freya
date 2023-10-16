@@ -46,6 +46,7 @@ pub fn ProgressBar(cx: Scope<ProgressBarProps>) -> Element {
     let theme = use_get_theme(cx);
 
     let ProgressBarTheme {
+        color,
         background,
         progress_background,
     } = theme.progress_bar;
@@ -80,7 +81,7 @@ pub fn ProgressBar(cx: Scope<ProgressBarProps>) -> Element {
                             label {
                                 align: "center",
                                 width: "100%",
-                                color: "white",
+                                color: "{color}",
                                 max_lines: "1",
                                 "{progress.floor()}%"
                             }
