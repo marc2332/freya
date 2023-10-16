@@ -71,6 +71,8 @@ pub struct SwitchTheme {
 pub struct ScrollbarTheme {
     pub background: &'static str,
     pub thumb_background: &'static str,
+    pub hover_thumb_background: &'static str,
+    pub active_thumb_background: &'static str,
 }
 
 /// Theming properties for the App body.
@@ -175,6 +177,8 @@ pub const LIGHT_THEME: Theme = Theme {
     scrollbar: ScrollbarTheme {
         background: "rgb(225, 225, 225)",
         thumb_background: "rgb(135, 135, 135)",
+        hover_thumb_background: "rgb(115, 115, 115)",
+        active_thumb_background: "rgb(95, 95, 95)",
     },
     tooltip: TooltipTheme {
         background: "rgb(230,230,230)",
@@ -240,6 +244,8 @@ pub const DARK_THEME: Theme = Theme {
     scrollbar: ScrollbarTheme {
         background: "rgb(35, 35, 35)",
         thumb_background: "rgb(100, 100, 100)",
+        hover_thumb_background: "rgb(120, 120, 120)",
+        active_thumb_background: "rgb(140, 140, 140)",
     },
     tooltip: TooltipTheme {
         background: "rgb(35,35,35)",

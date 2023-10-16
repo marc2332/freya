@@ -227,18 +227,20 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     // Mark the Y axis scrollbar as the one being dragged
     let onmousedown_y = |e: MouseEvent| {
         let coordinates = e.get_element_coordinates();
-        *clicking_scrollbar.write_silent() = Some((Axis::Y, coordinates.y));
+        *clicking_scrollbar.write() = Some((Axis::Y, coordinates.y));
     };
 
     // Mark the X axis scrollbar as the one being dragged
     let onmousedown_x = |e: MouseEvent| {
         let coordinates = e.get_element_coordinates();
-        *clicking_scrollbar.write_silent() = Some((Axis::X, coordinates.x));
+        *clicking_scrollbar.write() = Some((Axis::X, coordinates.x));
     };
 
     // Unmark any scrollbar
     let onclick = |_: MouseEvent| {
-        *clicking_scrollbar.write_silent() = None;
+        if clicking_scrollbar.read().is_some() {
+            *clicking_scrollbar.write() = None;
+        }
     };
 
     let horizontal_scrollbar_size = if horizontal_scrollbar_is_visible {
@@ -251,6 +253,17 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     } else {
         0
     };
+
+    let is_scrolling_x = clicking_scrollbar
+        .read()
+        .as_ref()
+        .map(|f| f.0 == Axis::X)
+        .unwrap_or_default();
+    let is_scrolling_y = clicking_scrollbar
+        .read()
+        .as_ref()
+        .map(|f| f.0 == Axis::Y)
+        .unwrap_or_default();
 
     render!(
         rect {
@@ -284,6 +297,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
                     height: "{horizontal_scrollbar_size}",
                     offset_x: "{scrollbar_x}",
                     ScrollThumb {
+                        clicking_scrollbar: is_scrolling_x,
                         onmousedown: onmousedown_x,
                         width: "{scrollbar_width}",
                         height: "100%",
@@ -295,6 +309,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
                 height: "100%",
                 offset_y: "{scrollbar_y}",
                 ScrollThumb {
+                    clicking_scrollbar: is_scrolling_y,
                     onmousedown: onmousedown_y,
                     width: "100%",
                     height: "{scrollbar_height}",
