@@ -113,7 +113,5 @@ impl Node {
     /// Has properties that depend on the inner Nodes?
     pub fn does_depend_on_inner(&self) -> bool {
         Size::Inner == self.width || Size::Inner == self.height || self.has_layout_references
-        // || self.main_alignment.is_not_start()
-        // || self.cross_alignment.is_not_start()
     }
 }
