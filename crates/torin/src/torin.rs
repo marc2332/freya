@@ -577,6 +577,7 @@ fn measure_inner_nodes<Key: NodeKey>(
 
             let mut adapted_available_area = *available_area;
 
+            // If required, make a previous measure to adapt the position
             if measure_cross_axis {
                 let (_, child_areas) = measure_node(
                     child_id,
@@ -701,13 +702,7 @@ fn measure_inner_nodes<Key: NodeKey>(
         }
     };
 
-    // KEy concepts:
-    // When using special alignments elements are assumed that they will have the same size in first measure and the second one
-
-    // Center display
-
-    // TODO: Only clone when necessary (center or end)
-
+    // If any of the alignments isn't "start", it needs to run a measurement to get the aligned position, before caching the value
     let has_special_alignments =
         node.main_alignment.is_not_start() || node.cross_alignment.is_not_start();
 
