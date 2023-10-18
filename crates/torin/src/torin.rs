@@ -10,7 +10,7 @@ use crate::{
     dom_adapter::{DOMAdapter, NodeAreas, NodeKey},
     geometry::{Area, Size2D},
     node::Node,
-    prelude::{Alignment, BoxModel, Gaps},
+    prelude::{Alignment, Gaps},
     size::Size,
 };
 
@@ -341,9 +341,13 @@ fn measure_node<Key: NodeKey>(
             Size2D::new(horizontal_padding, vertical_padding),
         );
 
+        area.origin.x += node.margin.left();
+        area.origin.y += node.margin.top();
+
         area.size.width = node.width.min_max(
             area.size.width,
             parent_area.size.width,
+            node.margin.left(),
             node.margin.horizontal(),
             &node.minimum_width,
             &node.maximum_width,
@@ -351,6 +355,7 @@ fn measure_node<Key: NodeKey>(
         area.size.height = node.height.min_max(
             area.size.height,
             parent_area.size.height,
+            node.margin.top(),
             node.margin.vertical(),
             &node.minimum_height,
             &node.maximum_height,
@@ -365,6 +370,7 @@ fn measure_node<Key: NodeKey>(
                     area.size.width = node.width.min_max(
                         new_area.width(),
                         parent_area.size.width,
+                        node.margin.left(),
                         node.margin.horizontal(),
                         &node.minimum_width,
                         &node.maximum_width,
@@ -374,6 +380,7 @@ fn measure_node<Key: NodeKey>(
                     area.size.height = node.height.min_max(
                         new_area.height(),
                         parent_area.size.height,
+                        node.margin.top(),
                         node.margin.vertical(),
                         &node.minimum_height,
                         &node.maximum_height,
@@ -389,7 +396,7 @@ fn measure_node<Key: NodeKey>(
 
         // Node's inner area
         let mut inner_area = {
-            let mut inner_area = area.box_area(&node.margin);
+            let mut inner_area = area;
             if Size::Inner == node.width {
                 inner_area.size.width = available_parent_area.width()
             }
@@ -734,19 +741,54 @@ fn measure_inner_nodes<Key: NodeKey>(
                     }
                     _ => {}
                 },
-                DirectionMode::Vertical => match node.main_alignment {
-                    Alignment::Center => {
-                        let inner_area = alignment_mode.inner_area();
-                        let new_origin_y = (inner_area.height() / 2.0) - (inner_sizes.height / 2.0);
+                DirectionMode::Vertical => {
+                    // If the height is auto, we set the inner area to the parent area
+                    // TODO: CLEAN THIS UP LOL
+                    if Size::Inner == node.height && node.main_alignment.is_not_start() {
+                        if let MeasureMode::ParentIsNotCached {
+                            area,
+                            inner_area,
+                            vertical_padding,
+                            ..
+                        } = &mut alignment_mode
+                        {
+                            inner_area.origin.y = area.origin.y + node.padding.top();
+                            inner_area.size.height = area.size.height - *vertical_padding;
+                            available_area.size.height = inner_area.size.height;
+                        }
+                    }
 
-                        available_area.origin.y = inner_area.min_y() + new_origin_y;
+                    // If the width is auto, we set the inner area to the parent area
+                    // TODO: CLEAN THIS UP LOL
+                    if Size::Inner == node.width && node.cross_alignment.is_not_start() {
+                        if let MeasureMode::ParentIsNotCached {
+                            area,
+                            inner_area,
+                            horizontal_padding,
+                            ..
+                        } = &mut alignment_mode
+                        {
+                            inner_area.origin.x = area.origin.x + node.padding.left();
+                            inner_area.size.width = area.size.width - *horizontal_padding;
+                            available_area.size.width = inner_area.size.width;
+                        }
                     }
-                    Alignment::End => {
-                        let inner_area = alignment_mode.inner_area();
-                        available_area.origin.y = inner_area.max_y() - inner_sizes.height;
+
+                    match node.main_alignment {
+                        Alignment::Center => {
+                            let inner_area = alignment_mode.inner_area();
+                            let new_origin_y =
+                                (inner_area.height() / 2.0) - (inner_sizes.height / 2.0);
+
+                            available_area.origin.y = inner_area.min_y() + new_origin_y;
+                        }
+                        Alignment::End => {
+                            let inner_area = alignment_mode.inner_area();
+                            available_area.origin.y = inner_area.max_y() - inner_sizes.height;
+                        }
+                        _ => {}
                     }
-                    _ => {}
-                },
+                }
             }
         }
     }

@@ -174,8 +174,8 @@ pub const LIGHT_THEME: Theme = Theme {
         thumb_inner_background: "rgb(103, 80, 164)",
     },
     button: ButtonTheme {
-        background: "rgb(220, 220, 220)",
-        hover_background: "rgb(200, 200, 200)",
+        background: "rgb(245, 245, 245)",
+        hover_background: "rgb(235, 235, 235)",
         font_theme: FontTheme {
             color: "rgb(10, 10, 10)",
         },

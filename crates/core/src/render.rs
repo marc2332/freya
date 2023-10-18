@@ -52,7 +52,7 @@ pub fn process_render<HookOptions>(
                 render_hook(
                     dom,
                     node_id,
-                    &areas.box_area(),
+                    &areas.area,
                     font_collection,
                     viewports_collection,
                     hook_options,
