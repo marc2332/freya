@@ -3,7 +3,7 @@ pub use euclid::Rect;
 use crate::{
     geometry::{Area, Size2D},
     node::Node,
-    prelude::Gaps,
+    prelude::{AreaModel, Gaps},
 };
 
 /// Cached layout results of a Node
@@ -20,6 +20,13 @@ pub struct NodeAreas {
 
     /// Outer margin
     pub margin: Gaps,
+}
+
+impl NodeAreas {
+    // The area without any outer gap (e.g margin)
+    pub fn visible_area(&self) -> Area {
+        self.area.visible_area(&self.margin)
+    }
 }
 
 pub trait NodeKey: Clone + PartialEq + Eq + std::hash::Hash + Copy + std::fmt::Debug {}

@@ -34,9 +34,6 @@ pub fn measure_node<Key: NodeKey>(
             Size2D::new(horizontal_padding, vertical_padding),
         );
 
-        area.origin.x += node.margin.left();
-        area.origin.y += node.margin.top();
-
         area.size.width = node.width.min_max(
             area.size.width,
             parent_area.size.width,
@@ -89,7 +86,7 @@ pub fn measure_node<Key: NodeKey>(
 
         // Node's inner area
         let mut inner_area = {
-            let mut inner_area = area;
+            let mut inner_area = area.visible_area(&node.margin);
             if Size::Inner == node.width {
                 inner_area.size.width = available_parent_area.width()
             }

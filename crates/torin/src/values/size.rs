@@ -36,7 +36,7 @@ impl Size {
 
     pub fn eval(&self, parent_value: f32, parent_margin: f32) -> Option<f32> {
         match self {
-            Size::Pixels(px) => Some(px.get()),
+            Size::Pixels(px) => Some(px.get() + parent_margin),
             Size::Percentage(per) => Some((parent_value / 100.0 * per.get()) - parent_margin),
             Size::DynamicCalculations(calculations) => {
                 Some(run_calculations(calculations, parent_value, parent_margin))
@@ -54,7 +54,7 @@ impl Size {
         minimum: &Self,
         maximum: &Self,
     ) -> f32 {
-        let value = self.eval(parent_value, margin).unwrap_or(value);
+        let value = self.eval(parent_value, margin).unwrap_or(value + margin);
 
         let minimum_value = minimum
             .eval(parent_value, margin)

@@ -6,7 +6,7 @@
 use freya::prelude::*;
 
 fn main() {
-    launch(app);
+    launch_with_props(app, "Counter", (400.0, 350.0));
 }
 
 fn app(cx: Scope) -> Element {

@@ -81,6 +81,8 @@ impl<'a> MeasureMode<'a> {
                     &mut area.size.height,
                     node.padding.top(),
                     *vertical_padding,
+                    node.margin.top(),
+                    node.margin.vertical(),
                     &mut available_area.size.height,
                 )),
                 AlignAxis::Width if Size::Inner == node.width && is_horizontal_not_start => Some((
@@ -90,6 +92,8 @@ impl<'a> MeasureMode<'a> {
                     &mut area.size.width,
                     node.padding.left(),
                     *horizontal_padding,
+                    node.margin.left(),
+                    node.margin.horizontal(),
                     &mut available_area.size.width,
                 )),
                 _ => None,
@@ -105,11 +109,13 @@ impl<'a> MeasureMode<'a> {
             area_size,
             one_side_padding,
             two_sides_padding,
+            one_side_margin,
+            two_sides_margin,
             available_size,
         )) = params
         {
-            *inner_origin = *area_origin + one_side_padding;
-            *inner_size = *area_size - two_sides_padding;
+            *inner_origin = *area_origin + one_side_padding + one_side_margin;
+            *inner_size = *area_size - two_sides_padding - two_sides_margin;
             *available_size = *inner_size;
         }
     }
@@ -140,12 +146,12 @@ impl<'a> MeasureMode<'a> {
 
                     // Keep the biggest height
                     if node.height == Size::Inner {
-                        area.size.height = area
-                            .size
-                            .height
-                            .max(content_area.size.height + *vertical_padding);
+                        area.size.height = area.size.height.max(
+                            content_area.size.height + *vertical_padding + node.margin.vertical(),
+                        );
                         // Keep the inner area in sync
-                        inner_area.size.height = area.size.height - *vertical_padding;
+                        inner_area.size.height =
+                            area.size.height - *vertical_padding - node.margin.vertical();
                     }
 
                     // Accumulate width
@@ -171,12 +177,14 @@ impl<'a> MeasureMode<'a> {
 
                     // Keep the biggest width
                     if node.width == Size::Inner {
-                        area.size.width = area
-                            .size
-                            .width
-                            .max(content_area.size.width + *horizontal_padding);
+                        area.size.width = area.size.width.max(
+                            content_area.size.width
+                                + *horizontal_padding
+                                + node.margin.horizontal(),
+                        );
                         // Keep the inner area in sync
-                        inner_area.size.width = area.size.width - *horizontal_padding;
+                        inner_area.size.width =
+                            area.size.width - *horizontal_padding - node.margin.horizontal();
                     }
 
                     // Accumulate height

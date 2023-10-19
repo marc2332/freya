@@ -1,4 +1,4 @@
-use crate::prelude::{Alignment, DirectionMode};
+use crate::prelude::{Alignment, DirectionMode, Gaps};
 
 #[derive(PartialEq)]
 pub struct Measure;
@@ -10,6 +10,9 @@ pub type CursorPoint = euclid::Point2D<f64, Measure>;
 pub type Length = euclid::Length<f32, Measure>;
 
 pub trait AreaModel {
+    // The area without any outer gap (e.g margin)
+    fn visible_area(&self, margin: &Gaps) -> Area;
+
     fn align_content(
         &mut self,
         available_area: &Area,
@@ -21,6 +24,18 @@ pub trait AreaModel {
 }
 
 impl AreaModel for Area {
+    fn visible_area(&self, margin: &Gaps) -> Area {
+        let origin = self.origin;
+        let size = self.size;
+        Area::new(
+            Point2D::new(origin.x + margin.left(), origin.y + margin.top()),
+            Size2D::new(
+                size.width - margin.horizontal(),
+                size.height - margin.vertical(),
+            ),
+        )
+    }
+
     fn align_content(
         &mut self,
         available_area: &Area,
