@@ -1110,7 +1110,7 @@ pub fn margin() {
     );
 
     assert_eq!(
-        node_areas.box_area(),
+        node_areas.area,
         Rect::new(Point2D::new(5.0, 5.0), Size2D::new(200.0, 200.0)),
     );
 }

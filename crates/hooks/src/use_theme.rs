@@ -49,6 +49,7 @@ pub struct ButtonTheme {
     pub background: &'static str,
     pub hover_background: &'static str,
     pub font_theme: FontTheme,
+    pub border_fill: &'static str,
 }
 
 /// Theming properties for Fonts.
@@ -179,6 +180,7 @@ pub const LIGHT_THEME: Theme = Theme {
         font_theme: FontTheme {
             color: "rgb(10, 10, 10)",
         },
+        border_fill: "rgb(210, 210, 210)",
     },
     switch: SwitchTheme {
         background: "rgb(121, 116, 126)",
@@ -252,8 +254,9 @@ pub const DARK_THEME: Theme = Theme {
     },
     button: ButtonTheme {
         background: "rgb(35, 35, 35)",
-        hover_background: "rgb(80, 80, 80)",
+        hover_background: "rgb(45, 45, 45)",
         font_theme: FontTheme { color: "white" },
+        border_fill: "rgb(80, 80, 80)",
     },
     switch: SwitchTheme {
         background: "rgb(60, 60, 60)",

@@ -119,28 +119,23 @@ fn app(cx: Scope) -> Element {
                 })
             }
             rect {
-                background: "rgb(35, 35, 35)",
+                background: "rgb(25, 25, 25)",
                 height: "100",
                 width: "100%",
                 main_alignment: "center",
                 cross_alignment: "center",
                 padding: "15",
-                rect {
-                    layer: "-100",
-                    padding: "10",
-                    corner_radius: "7",
-                    width: "170",
-                    height: "100%",
-                    corner_radius: "15",
-                    main_alignment: "center",
-                    cross_alignment: "center",
-                    background: "rgb(20, 20, 20)",
-                    Button {
-                        onclick: create_node,
-                        label {
-                            color: "white",
-                            "Create new node"
-                        }
+                layer: "-100",
+                shadow: "0 -2 5 0 rgb(0, 0, 0, 30)",
+                direction: "horizontal",
+                label {
+                    "Create as many editors you want!"
+                }
+                Button {
+                    margin: "0 20",
+                    onclick: create_node,
+                    label {
+                        "New Editor"
                     }
                 }
             }

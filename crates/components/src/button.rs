@@ -7,7 +7,7 @@ use freya_hooks::{use_focus, use_get_theme};
 #[derive(Props)]
 pub struct ButtonProps<'a> {
     /// Padding for the Button.
-    #[props(default = "10".to_string(), into)]
+    #[props(default = "10 14".to_string(), into)]
     pub padding: String,
     /// Margin for the Button.
     #[props(default = "4".to_string(), into)]
@@ -90,6 +90,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
         ButtonStatus::Idle => theme.button.background,
     };
     let color = theme.button.font_theme.color;
+    let border_fill = theme.button.border_fill;
     let ButtonProps {
         width,
         height,
@@ -114,7 +115,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
             role: "button",
             color: "{color}",
             shadow: "0 4 5 0 rgb(0, 0, 0, 30)",
-            border: "1 solid rgb(210, 210, 210)",
+            border: "1 solid {border_fill}",
             corner_radius: "{corner_radius}",
             background: "{background}",
             align: "center",

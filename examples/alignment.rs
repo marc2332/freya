@@ -28,7 +28,7 @@ fn app(cx: Scope) -> Element {
                     cross_alignment: "center",
                     background: "red",
                     direction: "horizontal",
-                    width: "50%%",
+                    width: "50%",
                     height: "50%",
                     overflow: "clip",
                     rect {
@@ -47,7 +47,7 @@ fn app(cx: Scope) -> Element {
                     width: "100%%",
                     height: "50%",
                     rect {
-                        main_alignment: "end",
+                        main_alignment: "start",
                         cross_alignment: "center",
                         width: "50%",
                         height: "100%",
