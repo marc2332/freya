@@ -91,7 +91,7 @@ impl<State: 'static + Clone> App<State> {
         }
 
         let mgr: FontMgr = provider.into();
-        font_collection.set_default_font_manager(def_mgr, "Inter");
+        font_collection.set_default_font_manager(def_mgr, "Fira Sans");
         font_collection.set_dynamic_font_manager(mgr);
 
         let (event_emitter, event_receiver) = mpsc::unbounded_channel::<DomEvent>();
