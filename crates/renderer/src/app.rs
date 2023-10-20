@@ -1,4 +1,3 @@
-use std::rc::Rc;
 use std::{collections::HashMap, sync::Arc, task::Waker};
 
 use dioxus_core::{Template, VirtualDom};
@@ -118,7 +117,7 @@ impl<State: 'static + Clone> App<State> {
             focus_sender,
             focus_receiver,
             font_collection,
-            ticker_sender: broadcast::channel(5).0
+            ticker_sender: broadcast::channel(5).0,
         }
     }
 

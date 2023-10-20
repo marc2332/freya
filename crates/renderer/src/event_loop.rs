@@ -8,6 +8,7 @@ use freya_elements::events::keyboard::{
     from_winit_to_code, get_modifiers, get_non_text_keys, Code, Key,
 };
 use torin::geometry::CursorPoint;
+use tracing::info;
 use winit::event::{
     ElementState, Event, KeyboardInput, ModifiersState, MouseScrollDelta, StartCause, Touch,
     TouchPhase, VirtualKeyCode, WindowEvent,
@@ -91,7 +92,7 @@ pub fn run_event_loop<State: Clone>(
                 app.tick();
 
                 if instant.elapsed().as_millis() >= 1000 {
-                    println!("{} FPS", frames);
+                    info!("{} FPS", frames);
                     instant = Instant::now();
                     frames = 0;
                 } else {

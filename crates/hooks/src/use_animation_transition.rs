@@ -2,13 +2,10 @@ use dioxus_core::ScopeState;
 use dioxus_hooks::{use_memo, use_state, UseFutureDep, UseState};
 use freya_engine::prelude::Color;
 use freya_node_state::Parse;
-use std::time::Duration;
-use tokio::time::interval;
+use tokio::time::Instant;
 use uuid::Uuid;
 
-use crate::{Animation, TransitionAnimation};
-
-const ANIMATION_MS: i32 = 16; // Assume 60 FPS for now
+use crate::{use_platform, use_ticker, Animation, Ticker, TransitionAnimation, UsePlatform};
 
 /// Configure a `Transition` animation.
 #[derive(Clone, Debug, Copy, PartialEq)]
@@ -133,7 +130,6 @@ impl TransitionState {
 }
 
 /// Manage the lifecyle of a collection of transitions.
-#[derive(Clone)]
 pub struct TransitionsManager<'a> {
     /// Registered transitions
     transitions: &'a Vec<Transition>,
@@ -145,6 +141,24 @@ pub struct TransitionsManager<'a> {
     current_animation_id: &'a UseState<Option<Uuid>>,
     /// The scope.
     cx: &'a ScopeState,
+    /// The event loop ticker
+    ticker: Ticker,
+    /// Platform events emitter
+    platform: UsePlatform,
+}
+
+impl Clone for TransitionsManager<'_> {
+    fn clone(&self) -> Self {
+        Self {
+            transitions: self.transitions,
+            transitions_storage: self.transitions_storage,
+            transition_animation: self.transition_animation,
+            current_animation_id: self.current_animation_id,
+            cx: self.cx,
+            ticker: self.ticker.resubscribe(),
+            platform: self.platform.clone(),
+        }
+    }
 }
 
 impl<'a> TransitionsManager<'a> {
@@ -165,6 +179,8 @@ impl<'a> TransitionsManager<'a> {
     fn run_with_animation(&self, mut animation: Animation) {
         let animation_id = Uuid::new_v4();
 
+        let platform = self.platform.clone();
+        let mut ticker = self.ticker.resubscribe();
         let transitions = self.transitions.clone();
         let transitions_storage = self.transitions_storage.clone();
         let current_animation_id = self.current_animation_id.clone();
@@ -174,9 +190,19 @@ impl<'a> TransitionsManager<'a> {
 
         // Spawn the animation that will run at 1ms speed
         self.cx.spawn(async move {
-            let mut ticker = interval(Duration::from_millis(ANIMATION_MS as u64));
+            platform
+                .send(freya_common::EventMessage::RequestRerender)
+                .unwrap();
+
             let mut index = 0;
+            let mut prev_frame = Instant::now();
+
             loop {
+                ticker.recv().await.unwrap();
+                platform
+                    .send(freya_common::EventMessage::RequestRerender)
+                    .unwrap();
+
                 // Stop running the animation if it's no longer selected
                 if *current_animation_id.current() == Some(animation_id) {
                     // Remove the current animation if it has finished
@@ -185,7 +211,7 @@ impl<'a> TransitionsManager<'a> {
                         break;
                     }
 
-                    // Advance one tick
+                    index += prev_frame.elapsed().as_millis() as i32;
                     let value = animation.move_value(index);
                     transitions_storage.with_mut(|storage| {
                         for (i, storage) in storage.iter_mut().enumerate() {
@@ -195,10 +221,7 @@ impl<'a> TransitionsManager<'a> {
                         }
                     });
 
-                    index += ANIMATION_MS;
-
-                    // Wait 1ms
-                    ticker.tick().await;
+                    prev_frame = Instant::now();
                 } else {
                     break;
                 }
@@ -278,6 +301,8 @@ where
     let current_animation_id = use_state(cx, || None);
     let transitions = use_memo(cx, dependencies.clone(), &mut init);
     let transitions_storage = use_state(cx, || animations_map(transitions));
+    let ticker = use_ticker(cx);
+    let platform = use_platform(cx);
 
     use_memo(cx, dependencies, {
         let storage_setter = transitions_storage.setter();
@@ -292,6 +317,8 @@ where
         transitions_storage,
         cx,
         transition_animation: transition,
+        ticker,
+        platform,
     }
 }
 
@@ -332,20 +359,24 @@ mod test {
 
         let mut utils = launch_test(use_animation_transition_app);
 
+        // Disable event loop ticker
+        utils.config().enable_ticker(false);
+
         // Initial state
         utils.wait_for_update().await;
 
         assert_eq!(utils.root().get(0).layout().unwrap().width(), 0.0);
 
         // State somewhere in the middle
-        utils.wait_for_update().await;
+        sleep(Duration::from_millis(32)).await;
         utils.wait_for_update().await;
 
         let width = utils.root().get(0).layout().unwrap().width();
         assert!(width > 0.0);
         assert!(width < 100.0);
 
-        sleep(Duration::from_millis(50)).await;
+        // Enable event loop ticker
+        utils.config().enable_ticker(true);
 
         // State in the end
         utils.wait_for_update().await;
