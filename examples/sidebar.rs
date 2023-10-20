@@ -27,7 +27,7 @@ fn Sidebar<'a>(cx: Scope<'a>, children: Element<'a>, sidebar: Element<'a>) -> El
                 overflow: "clip",
                 width: "200",
                 height: "100%",
-                background: "rgb(50, 50, 50)",
+                background: "rgb(20, 20, 20)",
                 corner_radius: "0 7 0 7",
                 padding: "20",
                 color: "{color}",

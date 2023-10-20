@@ -61,7 +61,6 @@ fn app(cx: Scope) -> Element {
                 main_alignment: "center",
                 cross_alignment: "center",
                 Button {
-                    margin: "0",
                     onclick: move |_|  fetch(),
                     label {
                         "Fetch random Doggo!"
