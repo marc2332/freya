@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use accesskit::Action;
 use accesskit_winit::ActionRequestEvent;
 use freya_common::EventMessage;
@@ -35,6 +37,9 @@ pub fn run_event_loop<State: Clone>(
 
     window_env.run_on_setup();
 
+    let mut frames = 0;
+    let mut instant = Instant::now();
+
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Wait;
         match event {
@@ -45,7 +50,7 @@ pub fn run_event_loop<State: Clone>(
                 app.accessibility().set_accessibility_focus(id);
             }
             Event::UserEvent(EventMessage::RequestRerender) => {
-                app.render(&hovered_node);
+                app.window_env().window().request_redraw();
             }
             Event::UserEvent(EventMessage::RequestRelayout) => {
                 app.process_layout();
@@ -83,6 +88,15 @@ pub fn run_event_loop<State: Clone>(
             Event::RedrawRequested(_) => {
                 app.process_layout();
                 app.render(&hovered_node);
+                app.tick();
+
+                if instant.elapsed().as_millis() >= 1000 {
+                    println!("{} FPS", frames);
+                    instant = Instant::now();
+                    frames = 0;
+                } else {
+                    frames += 1;
+                }
             }
             Event::WindowEvent { event, .. } if app.on_window_event(&event) => {
                 match event {
