@@ -1,5 +1,5 @@
 use crate::prelude::{
-    get_align_axis, AlignAxis, AlignmentDirection, Area, DirectionMode, Node, Size, Size2D,
+    get_align_axis, AlignAxis, AlignmentDirection, Area, DirectionMode, Gaps, Node, Size, Size2D,
 };
 
 /// Measurement data for the inner Nodes of a Node
@@ -11,8 +11,7 @@ pub enum MeasureMode<'a> {
     ParentIsNotCached {
         area: &'a mut Area,
         inner_area: &'a mut Area,
-        vertical_padding: f32,
-        horizontal_padding: f32,
+        padding: Gaps,
     },
 }
 
@@ -25,6 +24,7 @@ impl<'a> MeasureMode<'a> {
         }
     }
 
+    /// Create an owned version of [MeasureMode]
     pub fn to_owned(&self) -> OwnedMeasureMode {
         match self {
             MeasureMode::ParentIsCached { inner_area } => OwnedMeasureMode::ParentIsCached {
@@ -33,13 +33,11 @@ impl<'a> MeasureMode<'a> {
             MeasureMode::ParentIsNotCached {
                 area,
                 inner_area,
-                vertical_padding,
-                horizontal_padding,
+                padding,
             } => OwnedMeasureMode::ParentIsNotCached {
                 area: **area.clone(),
                 inner_area: **inner_area.clone(),
-                vertical_padding: *vertical_padding,
-                horizontal_padding: *horizontal_padding,
+                padding: *padding,
             },
         }
     }
@@ -55,6 +53,18 @@ impl<'a> MeasureMode<'a> {
         alignment_direction: AlignmentDirection,
         available_area: &mut Area,
     ) {
+        struct NodeData<'a> {
+            pub inner_origin: &'a mut f32,
+            pub inner_size: &'a mut f32,
+            pub area_origin: &'a mut f32,
+            pub area_size: &'a mut f32,
+            pub one_side_padding: f32,
+            pub two_sides_padding: f32,
+            pub one_side_margin: f32,
+            pub two_sides_margin: f32,
+            pub available_size: &'a mut f32,
+        }
+
         let axis = get_align_axis(&node.direction, alignment_direction);
         let (is_vertical_not_start, is_horizontal_not_start) = match node.direction {
             DirectionMode::Vertical => (
@@ -69,40 +79,43 @@ impl<'a> MeasureMode<'a> {
         let params = if let MeasureMode::ParentIsNotCached {
             area,
             inner_area,
-            horizontal_padding,
-            vertical_padding,
+            padding,
         } = self
         {
             match axis {
-                AlignAxis::Height if Size::Inner == node.height && is_vertical_not_start => Some((
-                    &mut inner_area.origin.y,
-                    &mut inner_area.size.height,
-                    &mut area.origin.y,
-                    &mut area.size.height,
-                    node.padding.top(),
-                    *vertical_padding,
-                    node.margin.top(),
-                    node.margin.vertical(),
-                    &mut available_area.size.height,
-                )),
-                AlignAxis::Width if Size::Inner == node.width && is_horizontal_not_start => Some((
-                    &mut inner_area.origin.x,
-                    &mut inner_area.size.width,
-                    &mut area.origin.x,
-                    &mut area.size.width,
-                    node.padding.left(),
-                    *horizontal_padding,
-                    node.margin.left(),
-                    node.margin.horizontal(),
-                    &mut available_area.size.width,
-                )),
+                AlignAxis::Height if Size::Inner == node.height && is_vertical_not_start => {
+                    Some(NodeData {
+                        inner_origin: &mut inner_area.origin.y,
+                        inner_size: &mut inner_area.size.height,
+                        area_origin: &mut area.origin.y,
+                        area_size: &mut area.size.height,
+                        one_side_padding: node.padding.top(),
+                        two_sides_padding: padding.vertical(),
+                        one_side_margin: node.margin.top(),
+                        two_sides_margin: node.margin.vertical(),
+                        available_size: &mut available_area.size.height,
+                    })
+                }
+                AlignAxis::Width if Size::Inner == node.width && is_horizontal_not_start => {
+                    Some(NodeData {
+                        inner_origin: &mut inner_area.origin.x,
+                        inner_size: &mut inner_area.size.width,
+                        area_origin: &mut area.origin.x,
+                        area_size: &mut area.size.width,
+                        one_side_padding: node.padding.left(),
+                        two_sides_padding: padding.horizontal(),
+                        one_side_margin: node.margin.left(),
+                        two_sides_margin: node.margin.horizontal(),
+                        available_size: &mut available_area.size.width,
+                    })
+                }
                 _ => None,
             }
         } else {
             None
         };
 
-        if let Some((
+        if let Some(NodeData {
             inner_origin,
             inner_size,
             area_origin,
@@ -112,10 +125,13 @@ impl<'a> MeasureMode<'a> {
             one_side_margin,
             two_sides_margin,
             available_size,
-        )) = params
+        }) = params
         {
+            // Set the origin of the inner area to the origin of the area plus the padding and margin for the given axis
             *inner_origin = *area_origin + one_side_padding + one_side_margin;
+            // Set the size of the inner area to the size of the area minus the padding and margin for the given axis
             *inner_size = *area_size - two_sides_padding - two_sides_margin;
+            // Set the same available size as the inner area for the given axis
             *available_size = *inner_size;
         }
     }
@@ -136,9 +152,8 @@ impl<'a> MeasureMode<'a> {
 
                 if let MeasureMode::ParentIsNotCached {
                     area,
-                    vertical_padding,
+                    padding,
                     inner_area,
-                    ..
                 } = self
                 {
                     inner_sizes.height = content_area.height().max(inner_sizes.height);
@@ -147,11 +162,11 @@ impl<'a> MeasureMode<'a> {
                     // Keep the biggest height
                     if node.height == Size::Inner {
                         area.size.height = area.size.height.max(
-                            content_area.size.height + *vertical_padding + node.margin.vertical(),
+                            content_area.size.height + padding.vertical() + node.margin.vertical(),
                         );
                         // Keep the inner area in sync
                         inner_area.size.height =
-                            area.size.height - *vertical_padding - node.margin.vertical();
+                            area.size.height - padding.vertical() - node.margin.vertical();
                     }
 
                     // Accumulate width
@@ -167,9 +182,8 @@ impl<'a> MeasureMode<'a> {
 
                 if let MeasureMode::ParentIsNotCached {
                     area,
-                    horizontal_padding,
+                    padding,
                     inner_area,
-                    ..
                 } = self
                 {
                     inner_sizes.width = content_area.width().max(inner_sizes.width);
@@ -179,12 +193,12 @@ impl<'a> MeasureMode<'a> {
                     if node.width == Size::Inner {
                         area.size.width = area.size.width.max(
                             content_area.size.width
-                                + *horizontal_padding
+                                + padding.horizontal()
                                 + node.margin.horizontal(),
                         );
                         // Keep the inner area in sync
                         inner_area.size.width =
-                            area.size.width - *horizontal_padding - node.margin.horizontal();
+                            area.size.width - padding.horizontal() - node.margin.horizontal();
                     }
 
                     // Accumulate height
@@ -197,6 +211,7 @@ impl<'a> MeasureMode<'a> {
     }
 }
 
+/// Just an owned version of [MeasureMode]
 #[derive(Debug)]
 pub enum OwnedMeasureMode {
     ParentIsCached {
@@ -205,8 +220,7 @@ pub enum OwnedMeasureMode {
     ParentIsNotCached {
         area: Area,
         inner_area: Area,
-        vertical_padding: f32,
-        horizontal_padding: f32,
+        padding: Gaps,
     },
 }
 
@@ -217,13 +231,11 @@ impl OwnedMeasureMode {
             Self::ParentIsNotCached {
                 area,
                 inner_area,
-                vertical_padding,
-                horizontal_padding,
+                padding,
             } => MeasureMode::ParentIsNotCached {
                 area,
                 inner_area,
-                vertical_padding: *vertical_padding,
-                horizontal_padding: *horizontal_padding,
+                padding: *padding,
             },
         }
     }

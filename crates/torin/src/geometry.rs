@@ -11,7 +11,9 @@ pub type Length = euclid::Length<f32, Measure>;
 
 pub trait AreaModel {
     // The area without any outer gap (e.g margin)
-    fn visible_area(&self, margin: &Gaps) -> Area;
+    fn after_gaps(&self, margin: &Gaps) -> Area;
+
+    fn move_with_offsets(&mut self, offset_x: &Length, offset_y: &Length);
 
     fn align_content(
         &mut self,
@@ -24,7 +26,8 @@ pub trait AreaModel {
 }
 
 impl AreaModel for Area {
-    fn visible_area(&self, margin: &Gaps) -> Area {
+    /// Get the area inside after including the gaps (margins or paddings)
+    fn after_gaps(&self, margin: &Gaps) -> Area {
         let origin = self.origin;
         let size = self.size;
         Area::new(
@@ -34,6 +37,12 @@ impl AreaModel for Area {
                 size.height - margin.vertical(),
             ),
         )
+    }
+
+    /// Get the area inside after including the gaps (margins or paddings)
+    fn move_with_offsets(&mut self, offset_x: &Length, offset_y: &Length) {
+        self.origin.x += offset_x.get();
+        self.origin.y += offset_y.get();
     }
 
     fn align_content(

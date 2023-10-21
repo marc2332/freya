@@ -10,30 +10,32 @@ use crate::{
     size::Size,
 };
 
-/// Measure this node and all it's children
-/// The caller of this function is responsible of caching the Node's layout results
+/// Measure a Node layout
 #[allow(clippy::too_many_arguments)]
 #[inline(always)]
 pub fn measure_node<Key: NodeKey>(
     node_id: Key,
     node: &Node,
     layout: &mut Torin<Key>,
+    // Area occupied by it's parent
     parent_area: &Area,
+    // Area that is available to use by the children of the parent
     available_parent_area: &Area,
     measurer: &mut Option<impl LayoutMeasurer<Key>>,
-    must_cache: bool,
+    // Whether to cache the measurements of this Node's children
+    must_cache_inner_nodes: bool,
+    // Adapter for the provided DOM
     dom_adapter: &mut impl DOMAdapter<Key>,
 ) -> (bool, NodeAreas) {
     let must_run = layout.dirty.contains(&node_id) || layout.results.get(&node_id).is_none();
     if must_run {
-        let horizontal_padding = node.padding.horizontal();
-        let vertical_padding = node.padding.vertical();
-
+        // 1. Create the initial Node area
         let mut area = Rect::new(
             available_parent_area.origin,
-            Size2D::new(horizontal_padding, vertical_padding),
+            Size2D::new(node.padding.horizontal(), node.padding.vertical()),
         );
 
+        // 2. Compute the width and height given the size, the minimum size, the maximum size and margins
         area.size.width = node.width.min_max(
             area.size.width,
             parent_area.size.width,
@@ -51,14 +53,18 @@ pub fn measure_node<Key: NodeKey>(
             &node.maximum_height,
         );
 
-        // Custom measure
-        let skip_inner = if let Some(measurer) = measurer {
-            let custom_measure =
+        // 3. If available, run a custom layout measure function
+        // This is useful when you use third-party libraries (e.g. rust-skia, cosmic-text) to measure text layouts
+        // When a Node is measured by a custom measurer function the inner children will be skipped
+        let measure_inner_children = if let Some(measurer) = measurer {
+            let custom_area =
                 measurer.measure(node_id, node, &area, parent_area, available_parent_area);
-            if let Some(new_area) = custom_measure {
+
+            // 3.1. Compute the width and height again using the new custom area sizes
+            if let Some(custom_area) = custom_area {
                 if Size::Inner == node.width {
                     area.size.width = node.width.min_max(
-                        new_area.width(),
+                        custom_area.width(),
                         parent_area.size.width,
                         node.margin.left(),
                         node.margin.horizontal(),
@@ -68,7 +74,7 @@ pub fn measure_node<Key: NodeKey>(
                 }
                 if Size::Inner == node.height {
                     area.size.height = node.height.min_max(
-                        new_area.height(),
+                        custom_area.height(),
                         parent_area.size.height,
                         node.margin.top(),
                         node.margin.vertical(),
@@ -77,46 +83,44 @@ pub fn measure_node<Key: NodeKey>(
                     );
                 }
             }
-            custom_measure.is_some()
+
+            // Do not measure inner children
+            custom_area.is_none()
         } else {
-            false
+            true
         };
 
-        let mut inner_sizes = Size2D::default();
-
-        // Node's inner area
+        // 4. Compute the inner area of the Node, which is basically the area inside the margins and paddings
         let mut inner_area = {
-            let mut inner_area = area.visible_area(&node.margin);
+            let mut inner_area = area.after_gaps(&node.margin).after_gaps(&node.padding);
+
+            // 4.1. When having an unsized bound we set it to whatever it is still available in the parent's area
             if Size::Inner == node.width {
                 inner_area.size.width = available_parent_area.width()
             }
             if Size::Inner == node.height {
                 inner_area.size.height = available_parent_area.height()
             }
+
             inner_area
         };
 
-        // Apply padding
-        inner_area.origin.x += node.padding.left();
-        inner_area.origin.y += node.padding.top();
-        inner_area.size.width -= horizontal_padding;
-        inner_area.size.height -= vertical_padding;
+        let mut inner_sizes = Size2D::default();
 
-        // Node's available inner area
-        let mut available_area = inner_area;
+        if measure_inner_children {
+            // 5. Create an area containin the available space inside the inner area
+            let mut available_area = inner_area;
 
-        // Apply scroll
-        available_area.origin.x += node.offset_x.get();
-        available_area.origin.y += node.offset_y.get();
+            // 5.1. Adjust the available area with the node offsets (mainly used by scrollviews)
+            available_area.move_with_offsets(&node.offset_x, &node.offset_y);
 
-        let mut measurement_mode = MeasureMode::ParentIsNotCached {
-            area: &mut area,
-            inner_area: &mut inner_area,
-            vertical_padding,
-            horizontal_padding,
-        };
+            let mut measurement_mode = MeasureMode::ParentIsNotCached {
+                area: &mut area,
+                inner_area: &mut inner_area,
+                padding: node.padding,
+            };
 
-        if !skip_inner {
+            // 6. Measure the layout of this Node's children
             measure_inner_nodes(
                 &node_id,
                 node,
@@ -124,14 +128,14 @@ pub fn measure_node<Key: NodeKey>(
                 &mut available_area,
                 &mut inner_sizes,
                 measurer,
-                must_cache,
+                must_cache_inner_nodes,
                 &mut measurement_mode,
                 dom_adapter,
             );
         }
 
         (
-            must_cache,
+            must_cache_inner_nodes,
             NodeAreas {
                 area,
                 margin: node.margin,
@@ -145,8 +149,7 @@ pub fn measure_node<Key: NodeKey>(
         let mut inner_sizes = areas.inner_sizes;
         let mut available_area = areas.inner_area;
 
-        available_area.origin.x += node.offset_x.get();
-        available_area.origin.y += node.offset_y.get();
+        available_area.move_with_offsets(&node.offset_x, &node.offset_y);
 
         let mut measurement_mode = MeasureMode::ParentIsCached {
             inner_area: &areas.inner_area,
@@ -159,7 +162,7 @@ pub fn measure_node<Key: NodeKey>(
             &mut available_area,
             &mut inner_sizes,
             measurer,
-            must_cache,
+            must_cache_inner_nodes,
             &mut measurement_mode,
             dom_adapter,
         );
@@ -168,24 +171,28 @@ pub fn measure_node<Key: NodeKey>(
     }
 }
 
-/// Measure the inner Nodes of a Node
+/// Measure the children layouts of a Node
 #[allow(clippy::too_many_arguments)]
 #[inline(always)]
 pub fn measure_inner_nodes<Key: NodeKey>(
     node_id: &Key,
     node: &Node,
     layout: &mut Torin<Key>,
+    // Area available inside the Node
     available_area: &mut Area,
+    // Accumulated sizes in both axis in the Node
     inner_sizes: &mut Size2D,
     measurer: &mut Option<impl LayoutMeasurer<Key>>,
-    must_cache: bool,
+    // Whether to cache the measurements of this Node's children
+    must_cache_inner_nodes: bool,
     mode: &mut MeasureMode,
+    // Adapter for the provided DOM
     dom_adapter: &mut impl DOMAdapter<Key>,
 ) {
     let mut measure_children = |mode: &mut MeasureMode,
                                 available_area: &mut Area,
                                 inner_sizes: &mut Size2D,
-                                must_cache: bool| {
+                                must_cache_inner_nodes: bool| {
         let children = dom_adapter.children_of(node_id);
 
         for child_id in children {
@@ -226,20 +233,23 @@ pub fn measure_inner_nodes<Key: NodeKey>(
                 &inner_area,
                 &adapted_available_area,
                 measurer,
-                must_cache,
+                must_cache_inner_nodes,
                 dom_adapter,
             );
 
             // Stack the child node
             mode.stack_node(node, available_area, &child_areas.area, inner_sizes);
 
-            if child_revalidated && must_cache {
+            // Cache the child layout if it was mutated and inner nodes must be cache
+            if child_revalidated && must_cache_inner_nodes {
                 layout.cache_node(child_id, child_areas);
             }
         }
     };
 
     {
+        // This is no the final measure, hence we make a temporary measurement mode
+        // so the affected values are not reused by the final measurement
         let mut alignment_mode = mode.to_owned();
         let mut alignment_mode = alignment_mode.to_mut();
         let mut inner_sizes = *inner_sizes;
@@ -283,5 +293,5 @@ pub fn measure_inner_nodes<Key: NodeKey>(
     }
 
     // 5. Second measure
-    measure_children(mode, available_area, inner_sizes, must_cache);
+    measure_children(mode, available_area, inner_sizes, must_cache_inner_nodes);
 }

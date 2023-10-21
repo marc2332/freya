@@ -111,7 +111,12 @@ impl Node {
     }
 
     /// Construct a new Node given a size and a direction and some margin,
-    pub fn from_size_and_direction_and_margin(width: Size, height: Size, direction: DirectionMode, margin: Gaps) -> Self {
+    pub fn from_size_and_direction_and_margin(
+        width: Size,
+        height: Size,
+        direction: DirectionMode,
+        margin: Gaps,
+    ) -> Self {
         Self {
             width,
             height,
@@ -121,8 +126,8 @@ impl Node {
         }
     }
 
-     /// Construct a new Node given a size, alignments and a direction
-     pub fn from_size_and_alignments_and_direction_and_padding(
+    /// Construct a new Node given a size, alignments and a direction
+    pub fn from_size_and_alignments_and_direction_and_padding(
         width: Size,
         height: Size,
         main_alignment: Alignment,

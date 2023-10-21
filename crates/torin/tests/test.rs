@@ -1227,8 +1227,6 @@ pub fn double_end_alignment() {
     );
 }
 
-
-
 #[test]
 pub fn unsized_alignment() {
     let (mut layout, mut measurer) = test_utils();
@@ -1244,7 +1242,7 @@ pub fn unsized_alignment() {
             Alignment::Center,
             Alignment::End,
             DirectionMode::Horizontal,
-            Gaps::new(15.0, 15.0, 15.0, 15.0)
+            Gaps::new(15.0, 15.0, 15.0, 15.0),
         ),
     );
     mocked_dom.add(
@@ -1265,7 +1263,7 @@ pub fn unsized_alignment() {
             Size::Pixels(Length::new(150.0)),
             Size::Pixels(Length::new(80.0)),
             DirectionMode::Vertical,
-            Gaps::new(10.0, 50.0, 20.0, 0.0)
+            Gaps::new(10.0, 50.0, 20.0, 0.0),
         ),
     );
 
