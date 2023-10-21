@@ -1,5 +1,3 @@
-use std::time::Instant;
-
 use accesskit::Action;
 use accesskit_winit::ActionRequestEvent;
 use freya_common::EventMessage;
@@ -8,7 +6,6 @@ use freya_elements::events::keyboard::{
     from_winit_to_code, get_modifiers, get_non_text_keys, Code, Key,
 };
 use torin::geometry::CursorPoint;
-use tracing::info;
 use winit::event::{
     ElementState, Event, KeyboardInput, ModifiersState, MouseScrollDelta, StartCause, Touch,
     TouchPhase, VirtualKeyCode, WindowEvent,
@@ -37,9 +34,6 @@ pub fn run_event_loop<State: Clone>(
     let window_env = app.window_env();
 
     window_env.run_on_setup();
-
-    let mut frames = 0;
-    let mut instant = Instant::now();
 
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Wait;
@@ -90,14 +84,6 @@ pub fn run_event_loop<State: Clone>(
                 app.process_layout();
                 app.render(&hovered_node);
                 app.tick();
-
-                if instant.elapsed().as_millis() >= 1000 {
-                    info!("{} FPS", frames);
-                    instant = Instant::now();
-                    frames = 0;
-                } else {
-                    frames += 1;
-                }
             }
             Event::WindowEvent { event, .. } if app.on_window_event(&event) => {
                 match event {
