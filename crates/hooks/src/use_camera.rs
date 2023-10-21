@@ -1,6 +1,6 @@
 use std::sync::{Arc, Mutex};
 
-use crate::{use_platform, use_ticker};
+use crate::use_platform;
 use dioxus_core::{AttributeValue, ScopeState};
 use dioxus_hooks::{to_owned, use_effect, use_state, UseState};
 use freya_node_state::{CustomAttributeValues, ImageReference};
@@ -52,7 +52,6 @@ pub fn use_camera(
     let platform = use_platform(cx);
     let camera_error = use_state(cx, || None);
     let image_reference = cx.use_hook(|| Arc::new(Mutex::new(None)));
-    let ticker = use_ticker(cx);
 
     let image_reference_attr = cx.any_value(CustomAttributeValues::ImageReference(ImageReference(
         image_reference.clone(),
@@ -76,7 +75,7 @@ pub fn use_camera(
                         .unwrap_or_else(handle_error);
                 }
 
-                let mut ticker = ticker.new_subscriber();
+                let mut ticker = platform.new_ticker();
 
                 loop {
                     // Wait for the event loop to tick
