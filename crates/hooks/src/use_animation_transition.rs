@@ -5,7 +5,7 @@ use freya_node_state::Parse;
 use tokio::time::Instant;
 use uuid::Uuid;
 
-use crate::{use_platform, use_ticker, Animation, TransitionAnimation, UsePlatform, UseTicker};
+use crate::{use_platform, Animation, TransitionAnimation, UsePlatform};
 
 /// Configure a `Transition` animation.
 #[derive(Clone, Debug, Copy, PartialEq)]
@@ -142,9 +142,7 @@ pub struct TransitionsManager<'a> {
     current_animation_id: &'a UseState<Option<Uuid>>,
     /// The scope.
     cx: &'a ScopeState,
-    /// The event loop ticker
-    ticker: UseTicker,
-    /// Platform events emitter
+    /// Platform APIs
     platform: UsePlatform,
 }
 
@@ -167,7 +165,7 @@ impl<'a> TransitionsManager<'a> {
         let animation_id = Uuid::new_v4();
 
         let platform = self.platform.clone();
-        let mut ticker = self.ticker.new_subscriber();
+        let mut ticker = platform.new_ticker();
         let transitions = self.transitions.clone();
         let transitions_storage = self.transitions_storage.clone();
         let current_animation_id = self.current_animation_id.clone();
@@ -285,7 +283,6 @@ where
     let current_animation_id = use_state(cx, || None);
     let transitions = use_memo(cx, dependencies.clone(), &mut init);
     let transitions_storage = use_state(cx, || animations_map(transitions));
-    let ticker = use_ticker(cx);
     let platform = use_platform(cx);
 
     use_memo(cx, dependencies, {
@@ -301,7 +298,6 @@ where
         transitions_storage,
         cx,
         transition_animation: transition,
-        ticker,
         platform,
     }
 }

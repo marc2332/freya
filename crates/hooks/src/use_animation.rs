@@ -3,7 +3,7 @@ use dioxus_hooks::{use_state, UseState};
 use tokio::time::Instant;
 use uuid::Uuid;
 
-use crate::{use_platform, use_ticker, Animation, UsePlatform, UseTicker};
+use crate::{use_platform, Animation, UsePlatform};
 
 /// Manage the lifecyle of an [Animation].
 #[derive(Clone)]
@@ -12,7 +12,6 @@ pub struct AnimationManager<'a> {
     current_animation_id: &'a UseState<Option<Uuid>>,
     value: &'a UseState<f64>,
     cx: &'a ScopeState,
-    ticker: UseTicker,
     platform: UsePlatform,
 }
 
@@ -22,7 +21,7 @@ impl<'a> AnimationManager<'a> {
         let new_id = Uuid::new_v4();
 
         let platform = self.platform.clone();
-        let mut ticker = self.ticker.new_subscriber();
+        let mut ticker = platform.new_ticker();
         let value = self.value.clone();
         let current_animation_id = self.current_animation_id.clone();
 
@@ -108,7 +107,6 @@ pub fn use_animation(cx: &ScopeState, init_value: impl FnOnce() -> f64) -> Anima
     let current_animation_id = use_state(cx, || None);
     let init_value = *cx.use_hook(init_value);
     let value = use_state(cx, || init_value);
-    let ticker = use_ticker(cx);
     let platform = use_platform(cx);
 
     AnimationManager {
@@ -116,7 +114,6 @@ pub fn use_animation(cx: &ScopeState, init_value: impl FnOnce() -> f64) -> Anima
         value,
         cx,
         init_value,
-        ticker,
         platform,
     }
 }
