@@ -52,7 +52,7 @@ impl<T: Clone> WindowEnv<T> {
         window_config: WindowConfig<T>,
         event_loop: &EventLoop<EventMessage>,
     ) -> Self {
-        let window_builder = WindowBuilder::new()
+        let mut window_builder = WindowBuilder::new()
             .with_visible(false)
             .with_title(window_config.title)
             .with_decorations(window_config.decorations)
@@ -61,6 +61,14 @@ impl<T: Clone> WindowEnv<T> {
                 window_config.width,
                 window_config.height,
             ));
+
+        if let Some(min_size) = window_config.min_width.zip(window_config.min_height) {
+            window_builder = window_builder.with_min_inner_size(LogicalSize::<f64>::from(min_size))
+        }
+
+        if let Some(max_size) = window_config.max_width.zip(window_config.max_height) {
+            window_builder = window_builder.with_max_inner_size(LogicalSize::<f64>::from(max_size))
+        }
 
         let template = ConfigTemplateBuilder::new()
             .with_alpha_size(8)
@@ -152,6 +160,7 @@ impl<T: Clone> WindowEnv<T> {
             FramebufferInfo {
                 fboid: fboid.try_into().unwrap(),
                 format: Format::RGBA8.into(),
+                ..Default::default()
             }
         };
 
@@ -307,8 +316,7 @@ fn create_surface(
     );
     let backend_render_target =
         BackendRenderTarget::new_gl(size, num_samples, stencil_size, fb_info);
-
-    Surface::from_backend_render_target(
+    wrap_backend_render_target(
         gr_context,
         &backend_render_target,
         SurfaceOrigin::BottomLeft,

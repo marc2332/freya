@@ -177,6 +177,7 @@ builder_constructors! {
         font_style: String,
         font_weight: String,
         font_width: String,
+        align: String,
         display: String,
         reference: Reference,
         cursor_reference: CursorReference,

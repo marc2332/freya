@@ -19,7 +19,7 @@ use crate::{
 #[derive(PartialEq, Debug, Clone)]
 pub enum RootNodeCandidate<Key: NodeKey> {
     /// A valid Node ID
-    Valid(Key, FxHashSet<Key>),
+    Valid(Key),
 
     /// None
     None,
@@ -126,7 +126,7 @@ impl<Key: NodeKey> Torin<Key> {
     pub fn raw_remove(&mut self, node_id: Key) {
         self.results.remove(&node_id);
         self.dirty.remove(&node_id);
-        if let RootNodeCandidate::Valid(id, _) = self.root_node_candidate {
+        if let RootNodeCandidate::Valid(id) = self.root_node_candidate {
             if id == node_id {
                 self.root_node_candidate = RootNodeCandidate::None
             }
@@ -180,14 +180,10 @@ impl<Key: NodeKey> Torin<Key> {
         self.invalidate(node_id);
 
         if RootNodeCandidate::None == self.root_node_candidate {
-            self.root_node_candidate =
-                RootNodeCandidate::Valid(node_id, FxHashSet::from_iter([node_id]));
-        } else if let RootNodeCandidate::Valid(root_candidate, ref mut root_track_patch) =
-            &mut self.root_node_candidate
-        {
+            self.root_node_candidate = RootNodeCandidate::Valid(node_id);
+        } else if let RootNodeCandidate::Valid(root_candidate) = &mut self.root_node_candidate {
             if node_id != *root_candidate {
-                let closest_parent =
-                    dom_adapter.closest_common_parent(&node_id, root_candidate, root_track_patch);
+                let closest_parent = dom_adapter.closest_common_parent(&node_id, root_candidate);
 
                 if let Some(closest_parent) = closest_parent {
                     *root_candidate = closest_parent;
@@ -228,17 +224,12 @@ impl<Key: NodeKey> Torin<Key> {
 
                     // Try saving using  node's parent as root candidate if it has multiple children
                     if multiple_children {
-                        if let RootNodeCandidate::Valid(root_candidate, ref mut root_track_patch) =
-                            &mut self.root_node_candidate
-                        {
-                            let closest_parent = dom_adapter.closest_common_parent(
-                                &parent_id,
-                                root_candidate,
-                                root_track_patch,
-                            );
+                        if let RootNodeCandidate::Valid(root_candidate) = self.root_node_candidate {
+                            let closest_parent =
+                                dom_adapter.closest_common_parent(&parent_id, &root_candidate);
 
                             if let Some(closest_parent) = closest_parent {
-                                *root_candidate = closest_parent;
+                                self.root_node_candidate = RootNodeCandidate::Valid(closest_parent);
                             }
                         }
                     }
@@ -278,12 +269,11 @@ impl<Key: NodeKey> Torin<Key> {
         }
 
         // Try the Root candidate otherwise use the provided Root
-        let (root_id, root_path) =
-            if let RootNodeCandidate::Valid(id, path) = self.root_node_candidate.take() {
-                (id, path)
-            } else {
-                (suggested_root_id, FxHashSet::from_iter([suggested_root_id]))
-            };
+        let root_id = if let RootNodeCandidate::Valid(id) = self.root_node_candidate.take() {
+            id
+        } else {
+            suggested_root_id
+        };
         let root_parent = dom_adapter.parent_of(&root_id);
         let areas = root_parent
             .and_then(|root_parent| self.get(root_parent).cloned())
@@ -312,7 +302,6 @@ impl<Key: NodeKey> Torin<Key> {
             measurer,
             true,
             dom_adapter,
-            &root_path,
         );
 
         // Cache the root Node results if it was modified
@@ -348,7 +337,6 @@ fn measure_node<Key: NodeKey>(
     measurer: &mut Option<impl LayoutMeasurer<Key>>,
     must_cache: bool,
     dom_adapter: &mut impl DOMAdapter<Key>,
-    root_path: &FxHashSet<Key>,
 ) -> (bool, NodeAreas) {
     let must_run = layout.dirty.contains(&node_id) || layout.results.get(&node_id).is_none();
     if must_run {
@@ -449,7 +437,6 @@ fn measure_node<Key: NodeKey>(
                 must_cache,
                 &mut measurement_mode,
                 dom_adapter,
-                root_path,
             );
         }
 
@@ -465,31 +452,28 @@ fn measure_node<Key: NodeKey>(
     } else {
         let areas = layout.get(node_id).unwrap().clone();
 
-        if root_path.contains(&node_id) {
-            let mut inner_sizes = areas.inner_sizes;
-            let mut available_area = areas.inner_area;
+        let mut inner_sizes = areas.inner_sizes;
+        let mut available_area = areas.inner_area;
 
-            // TODO(marc2332): Should I also cache these?
-            available_area.origin.x += node.offset_x.get();
-            available_area.origin.y += node.offset_y.get();
+        // TODO(marc2332): Should I also cache these?
+        available_area.origin.x += node.offset_x.get();
+        available_area.origin.y += node.offset_y.get();
 
-            let mut measurement_mode = MeasureMode::ParentIsCached {
-                inner_area: &areas.inner_area,
-            };
+        let mut measurement_mode = MeasureMode::ParentIsCached {
+            inner_area: &areas.inner_area,
+        };
 
-            measure_inner_nodes(
-                &node_id,
-                node,
-                layout,
-                &mut available_area,
-                &mut inner_sizes,
-                measurer,
-                must_cache,
-                &mut measurement_mode,
-                dom_adapter,
-                root_path,
-            );
-        }
+        measure_inner_nodes(
+            &node_id,
+            node,
+            layout,
+            &mut available_area,
+            &mut inner_sizes,
+            measurer,
+            must_cache,
+            &mut measurement_mode,
+            dom_adapter,
+        );
 
         (false, areas)
     }
@@ -532,7 +516,6 @@ fn measure_inner_nodes<Key: NodeKey>(
     must_cache: bool,
     mode: &mut MeasureMode,
     dom_adapter: &mut impl DOMAdapter<Key>,
-    root_path: &FxHashSet<Key>,
 ) {
     let children = dom_adapter.children_of(node_id);
 
@@ -554,7 +537,6 @@ fn measure_inner_nodes<Key: NodeKey>(
                 measurer,
                 false,
                 dom_adapter,
-                root_path,
             );
 
             // TODO(marc2332): Should I also reduce the width and heights?
@@ -597,7 +579,6 @@ fn measure_inner_nodes<Key: NodeKey>(
             measurer,
             must_cache,
             dom_adapter,
-            root_path,
         );
 
         match node.direction {

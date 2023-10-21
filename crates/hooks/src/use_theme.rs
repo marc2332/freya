@@ -71,6 +71,8 @@ pub struct SwitchTheme {
 pub struct ScrollbarTheme {
     pub background: &'static str,
     pub thumb_background: &'static str,
+    pub hover_thumb_background: &'static str,
+    pub active_thumb_background: &'static str,
 }
 
 /// Theming properties for the App body.
@@ -115,6 +117,25 @@ pub struct LoaderTheme {
     pub secondary_color: &'static str,
 }
 
+/// Theming properties for ProgressBar component.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ProgressBarTheme {
+    pub color: &'static str,
+    pub background: &'static str,
+    pub progress_background: &'static str,
+}
+
+/// Theming properties for Table component.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct TableTheme {
+    pub color: &'static str,
+    pub background: &'static str,
+    pub arrow_fill: &'static str,
+    pub alternate_row_background: &'static str,
+    pub row_background: &'static str,
+    pub divider_fill: &'static str,
+}
+
 /// Theming properties for Themes.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Theme {
@@ -130,6 +151,8 @@ pub struct Theme {
     pub dropdown_item: DropdownItemTheme,
     pub accordion: AccordionTheme,
     pub loader: LoaderTheme,
+    pub progress_bar: ProgressBarTheme,
+    pub table: TableTheme,
 }
 
 impl Default for Theme {
@@ -166,6 +189,8 @@ pub const LIGHT_THEME: Theme = Theme {
     scrollbar: ScrollbarTheme {
         background: "rgb(225, 225, 225)",
         thumb_background: "rgb(135, 135, 135)",
+        hover_thumb_background: "rgb(115, 115, 115)",
+        active_thumb_background: "rgb(95, 95, 95)",
     },
     tooltip: TooltipTheme {
         background: "rgb(230,230,230)",
@@ -198,6 +223,19 @@ pub const LIGHT_THEME: Theme = Theme {
         primary_color: "rgb(50, 50, 50)",
         secondary_color: "rgb(150, 150, 150)",
     },
+    progress_bar: ProgressBarTheme {
+        color: "white",
+        background: "rgb(210, 210, 210)",
+        progress_background: "rgb(103, 80, 164)",
+    },
+    table: TableTheme {
+        color: "black",
+        background: "white",
+        arrow_fill: "rgb(40, 40, 40)",
+        row_background: "transparent",
+        alternate_row_background: "rgb(240, 240, 240)",
+        divider_fill: "rgb(200, 200, 200)",
+    },
 };
 
 /// `Dark` theme
@@ -226,6 +264,8 @@ pub const DARK_THEME: Theme = Theme {
     scrollbar: ScrollbarTheme {
         background: "rgb(35, 35, 35)",
         thumb_background: "rgb(100, 100, 100)",
+        hover_thumb_background: "rgb(120, 120, 120)",
+        active_thumb_background: "rgb(140, 140, 140)",
     },
     tooltip: TooltipTheme {
         background: "rgb(35,35,35)",
@@ -253,5 +293,18 @@ pub const DARK_THEME: Theme = Theme {
     loader: LoaderTheme {
         primary_color: "rgb(150, 150, 150)",
         secondary_color: "rgb(255, 255, 255)",
+    },
+    progress_bar: ProgressBarTheme {
+        color: "white",
+        background: "rgb(60, 60, 60)",
+        progress_background: "rgb(255, 95, 0)",
+    },
+    table: TableTheme {
+        color: "white",
+        background: "rgb(25, 25, 25)",
+        arrow_fill: "rgb(150, 150, 150)",
+        row_background: "transparent",
+        alternate_row_background: "rgb(50, 50, 50)",
+        divider_fill: "rgb(100, 100, 100)",
     },
 };

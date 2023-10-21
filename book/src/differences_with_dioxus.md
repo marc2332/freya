@@ -7,7 +7,7 @@ These are the main differences between Freya and the different Dioxus renderers 
 | Category                             | Freya            | Dioxus                          |
 |--------------------------------------|------------------|---------------------------------|
 | **Elements, attributes and events**  | Custom           | HTML                            |
-| **Layout**                           | Custom ([`torin`](https://github.com/marc2332/freya/tree/main/torin))   | WebView and [`taffy`](https://github.com/DioxusLabs/taffy)               |
+| **Layout** | [`Torin`](https://github.com/marc2332/freya/tree/main/crates/torin) | WebView and [`Taffy`](https://github.com/DioxusLabs/taffy) |
 | **Renderer**                         | Skia             | WebView or WGPU                 |
 | **Components library**               | Custom           | None, but can use CSS libraries |
 | **Devtools**                         | Custom           | Provided in Webview             |
