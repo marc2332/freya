@@ -38,7 +38,7 @@ pub struct InputProps<'a> {
     #[props(default = "150".to_string(), into)]
     width: String,
     /// Height of the Input. Default 100.
-    #[props(default = "35".to_string(), into)]
+    #[props(default = "38".to_string(), into)]
     height: String,
     /// Max lines for the Input. Default 1.
     #[props(default = "1".to_string(), into)]
@@ -154,34 +154,30 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
             rect {
                 onkeydown: onkeydown,
                 onclick: onclick,
-                width: "auto",
-                height: "auto",
-                padding: "1.5",
-                rect {
-                    width: "{width}",
-                    height: "{height}",
-                    direction: "vertical",
-                    color: "{color}",
-                    background: "{background}",
-                    shadow: "0 3 15 0 rgb(0, 0, 0, 70)",
-                    corner_radius: "5",
-                    padding: "8",
-                    cursor_reference: cursor_attr,
-                    ScrollView {
-                        scroll_with_arrows: false,
-                        paragraph {
-                            width: "100%",
-                            cursor_id: "0",
-                            cursor_index: "{cursor_char}",
-                            cursor_mode: "editable",
-                            cursor_color: "{color}",
-                            max_lines: "{max_lines}",
-                            onmouseover: onmouseover,
-                            onmousedown: onmousedown,
-                            highlights: highlights_attr,
-                            text {
-                                "{text}"
-                            }
+                width: "{width}",
+                height: "{height}",
+                direction: "vertical",
+                color: "{color}",
+                background: "{background}",
+                shadow: "0 3 15 0 rgb(0, 0, 0, 70)",
+                corner_radius: "5",
+                padding: "8",
+                margin: "4",
+                cursor_reference: cursor_attr,
+                ScrollView {
+                    scroll_with_arrows: false,
+                    paragraph {
+                        width: "100%",
+                        cursor_id: "0",
+                        cursor_index: "{cursor_char}",
+                        cursor_mode: "editable",
+                        cursor_color: "{color}",
+                        max_lines: "{max_lines}",
+                        onmouseover: onmouseover,
+                        onmousedown: onmousedown,
+                        highlights: highlights_attr,
+                        text {
+                            "{text}"
                         }
                     }
                 }
