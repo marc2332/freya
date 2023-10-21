@@ -80,7 +80,7 @@ pub fn use_camera(
 
                 loop {
                     // Wait for the event loop to tick
-                    ticker.recv().await.unwrap();
+                    ticker.tick().await;
 
                     // Capture the next frame
                     let frame = camera.frame();

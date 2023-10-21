@@ -38,7 +38,7 @@ impl<'a> AnimationManager<'a> {
 
             loop {
                 // Wait for the event loop to tick
-                ticker.recv().await.unwrap();
+                ticker.tick().await;
                 platform.request_animation_frame();
 
                 // Stop running the animation if it was removed
