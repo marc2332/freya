@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use rustc_hash::FxHashSet;
 use torin::prelude::*;
 
 struct TestingMeasurer;
@@ -70,7 +69,7 @@ impl DOMAdapter<usize> for TestingDOM {
         true
     }
 
-    fn closest_common_parent(&self, node_id_a: &usize, node_id_b: &usize) -> Option<usize> {
+    fn closest_common_parent(&self, node_id_a: &usize, _node_id_b: &usize) -> Option<usize> {
         self.parent_of(node_id_a)
     }
 }
