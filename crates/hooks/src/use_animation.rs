@@ -3,29 +3,17 @@ use dioxus_hooks::{use_state, UseState};
 use tokio::time::Instant;
 use uuid::Uuid;
 
-use crate::{use_platform, use_ticker, Animation, Ticker, UsePlatform};
+use crate::{use_platform, use_ticker, Animation, UsePlatform, UseTicker};
 
 /// Manage the lifecyle of an [Animation].
+#[derive(Clone)]
 pub struct AnimationManager<'a> {
     init_value: f64,
     current_animation_id: &'a UseState<Option<Uuid>>,
     value: &'a UseState<f64>,
     cx: &'a ScopeState,
-    ticker: Ticker,
+    ticker: UseTicker,
     platform: UsePlatform,
-}
-
-impl Clone for AnimationManager<'_> {
-    fn clone(&self) -> Self {
-        Self {
-            init_value: self.init_value,
-            current_animation_id: self.current_animation_id,
-            value: self.value,
-            cx: self.cx.clone(),
-            ticker: self.ticker.resubscribe(),
-            platform: self.platform.clone(),
-        }
-    }
 }
 
 impl<'a> AnimationManager<'a> {
@@ -34,7 +22,7 @@ impl<'a> AnimationManager<'a> {
         let new_id = Uuid::new_v4();
 
         let platform = self.platform.clone();
-        let mut ticker = self.ticker.resubscribe();
+        let mut ticker = self.ticker.new_subscriber();
         let value = self.value.clone();
         let current_animation_id = self.current_animation_id.clone();
 
@@ -51,6 +39,7 @@ impl<'a> AnimationManager<'a> {
             let mut prev_frame = Instant::now();
 
             loop {
+                // Wait for the event loop to tick
                 ticker.recv().await.unwrap();
                 platform
                     .send(freya_common::EventMessage::RequestRerender)

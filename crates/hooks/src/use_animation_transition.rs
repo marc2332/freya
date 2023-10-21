@@ -5,7 +5,7 @@ use freya_node_state::Parse;
 use tokio::time::Instant;
 use uuid::Uuid;
 
-use crate::{use_platform, use_ticker, Animation, Ticker, TransitionAnimation, UsePlatform};
+use crate::{use_platform, use_ticker, Animation, TransitionAnimation, UsePlatform, UseTicker};
 
 /// Configure a `Transition` animation.
 #[derive(Clone, Debug, Copy, PartialEq)]
@@ -130,6 +130,7 @@ impl TransitionState {
 }
 
 /// Manage the lifecyle of a collection of transitions.
+#[derive(Clone)]
 pub struct TransitionsManager<'a> {
     /// Registered transitions
     transitions: &'a Vec<Transition>,
@@ -142,23 +143,9 @@ pub struct TransitionsManager<'a> {
     /// The scope.
     cx: &'a ScopeState,
     /// The event loop ticker
-    ticker: Ticker,
+    ticker: UseTicker,
     /// Platform events emitter
     platform: UsePlatform,
-}
-
-impl Clone for TransitionsManager<'_> {
-    fn clone(&self) -> Self {
-        Self {
-            transitions: self.transitions,
-            transitions_storage: self.transitions_storage,
-            transition_animation: self.transition_animation,
-            current_animation_id: self.current_animation_id,
-            cx: self.cx,
-            ticker: self.ticker.resubscribe(),
-            platform: self.platform.clone(),
-        }
-    }
 }
 
 impl<'a> TransitionsManager<'a> {
@@ -180,7 +167,7 @@ impl<'a> TransitionsManager<'a> {
         let animation_id = Uuid::new_v4();
 
         let platform = self.platform.clone();
-        let mut ticker = self.ticker.resubscribe();
+        let mut ticker = self.ticker.new_subscriber();
         let transitions = self.transitions.clone();
         let transitions_storage = self.transitions_storage.clone();
         let current_animation_id = self.current_animation_id.clone();
@@ -198,6 +185,7 @@ impl<'a> TransitionsManager<'a> {
             let mut prev_frame = Instant::now();
 
             loop {
+                // Wait for the event loop to tick
                 ticker.recv().await.unwrap();
                 platform
                     .send(freya_common::EventMessage::RequestRerender)
