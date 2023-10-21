@@ -110,6 +110,37 @@ impl Node {
         }
     }
 
+    /// Construct a new Node given a size and a direction and some margin,
+    pub fn from_size_and_direction_and_margin(width: Size, height: Size, direction: DirectionMode, margin: Gaps) -> Self {
+        Self {
+            width,
+            height,
+            direction,
+            margin,
+            ..Default::default()
+        }
+    }
+
+     /// Construct a new Node given a size, alignments and a direction
+     pub fn from_size_and_alignments_and_direction_and_padding(
+        width: Size,
+        height: Size,
+        main_alignment: Alignment,
+        cross_alignment: Alignment,
+        direction: DirectionMode,
+        padding: Gaps,
+    ) -> Self {
+        Self {
+            width,
+            height,
+            main_alignment,
+            cross_alignment,
+            direction,
+            padding,
+            ..Default::default()
+        }
+    }
+
     /// Has properties that depend on the inner Nodes?
     pub fn does_depend_on_inner(&self) -> bool {
         Size::Inner == self.width
