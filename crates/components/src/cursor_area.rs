@@ -61,7 +61,7 @@ pub fn CursorArea<'a>(cx: Scope<'a, CursorAreaProps<'a>>) -> Element<'a> {
         }
     };
 
-    use_on_unmount(cx, {
+    use_on_destroy(cx, {
         to_owned![is_hovering];
         move || {
             if *is_hovering.read() {

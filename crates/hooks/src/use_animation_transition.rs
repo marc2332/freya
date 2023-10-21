@@ -279,7 +279,7 @@ where
     let transitions = use_memo(cx, dependencies.clone(), &mut init);
     let transitions_storage = use_state(cx, || animations_map(transitions));
 
-    use_memo(cx, dependencies, {
+    let _ = use_memo(cx, dependencies, {
         let storage_setter = transitions_storage.setter();
         move |v| {
             storage_setter(animations_map(&init(v)));
@@ -321,7 +321,7 @@ mod test {
 
             let progress = animation.get(0).unwrap().as_size();
 
-            use_memo(cx, (), move |_| {
+            let _ = use_memo(cx, (), move |_| {
                 animation.start();
             });
 

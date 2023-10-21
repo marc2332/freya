@@ -31,7 +31,7 @@ pub fn Accordion<'a>(cx: Scope<'a, AccordionProps<'a>>) -> Element<'a> {
     let AccordionTheme { background, color } = theme.accordion;
 
     // Adapt the accordion if the body size changes
-    use_memo(
+    let _ = use_memo(
         cx,
         &(
             size.area.width(),

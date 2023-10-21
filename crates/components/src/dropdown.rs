@@ -170,7 +170,7 @@ where
     let color = theme.dropdown.font_theme.color;
 
     // Update the provided value if the passed value changes
-    use_memo(cx, &cx.props.value, move |value| {
+    let _ = use_memo(cx, &cx.props.value, move |value| {
         *selected.write() = value;
     });
 

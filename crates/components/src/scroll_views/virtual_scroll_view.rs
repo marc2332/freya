@@ -20,6 +20,7 @@ type BuilderFunction<'a, T> = dyn Fn(
 ) -> LazyNodes<'a, 'a>;
 
 /// [`VirtualScrollView`] component properties.
+#[allow(clippy::type_complexity)]
 #[derive(Props)]
 pub struct VirtualScrollViewProps<'a, T: 'a> {
     /// Quantity of items in the VirtualScrollView.
@@ -73,7 +74,7 @@ fn get_render_range(
 /// `VirtualScrollView` component.
 ///
 /// # Props
-/// See [`VirtualScrollViewProps`](VirtualScrollViewProps).
+/// See [`VirtualScrollAA`](VirtualScrollAA).
 ///
 /// # Example
 ///

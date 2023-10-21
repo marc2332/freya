@@ -14,7 +14,7 @@ use crate::{
 };
 
 #[allow(non_snake_case)]
-#[inline_props]
+#[component]
 pub fn NodeInspectorStyle(cx: Scope, node_id: NodeId) -> Element {
     let node = use_selected_node(cx, &cx.props.node_id);
 

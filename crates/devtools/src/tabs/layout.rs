@@ -6,7 +6,7 @@ use freya_elements::elements as dioxus_elements;
 use crate::{hooks::use_selected_node, NodeInspectorBar};
 
 #[allow(non_snake_case)]
-#[inline_props]
+#[component]
 pub fn NodeInspectorLayout(cx: Scope, node_id: NodeId) -> Element {
     let node = use_selected_node(cx, &cx.props.node_id);
 

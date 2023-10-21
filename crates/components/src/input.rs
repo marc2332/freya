@@ -94,7 +94,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     let height = &cx.props.height;
     let max_lines = &cx.props.max_lines;
 
-    use_memo(cx, &(cx.props.value.to_string(),), {
+    let _ = use_memo(cx, &(cx.props.value.to_string(),), {
         to_owned![editable];
         move |(text,)| {
             editable.editor().with_mut(|editor| {
