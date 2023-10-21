@@ -177,9 +177,7 @@ impl<'a> TransitionsManager<'a> {
 
         // Spawn the animation that will run at 1ms speed
         self.cx.spawn(async move {
-            platform
-                .send(freya_common::EventMessage::RequestRerender)
-                .unwrap();
+            platform.request_animation_frame();
 
             let mut index = 0;
             let mut prev_frame = Instant::now();
@@ -187,9 +185,7 @@ impl<'a> TransitionsManager<'a> {
             loop {
                 // Wait for the event loop to tick
                 ticker.recv().await.unwrap();
-                platform
-                    .send(freya_common::EventMessage::RequestRerender)
-                    .unwrap();
+                platform.request_animation_frame();
 
                 // Stop running the animation if it's no longer selected
                 if *current_animation_id.current() == Some(animation_id) {

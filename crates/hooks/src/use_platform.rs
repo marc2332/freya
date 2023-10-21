@@ -28,6 +28,10 @@ impl UsePlatform {
         }
         Ok(())
     }
+
+    pub fn request_animation_frame(&self) {
+        self.send(EventMessage::RequestRerender).ok();
+    }
 }
 
 pub fn use_platform(cx: &ScopeState) -> UsePlatform {
