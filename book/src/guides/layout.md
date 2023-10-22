@@ -125,7 +125,7 @@ fn app(cx: Scope) -> Element {
 
 ### direction
 
-Control how the inner elements will be stacked, possible values are `horizontal`, `vertical` (default) or `both` (default for text elements, e.g label, paragraph, text, etc).
+Control how the inner elements will be stacked, possible values are `vertical` (default) and `horizontal`.
 
 ##### Usage
 

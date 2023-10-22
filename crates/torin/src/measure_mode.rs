@@ -1,5 +1,5 @@
 use crate::prelude::{
-    get_align_axis, AlignAxis, AlignmentDirection, Area, DirectionMode, Gaps, Node, Size, Size2D,
+    get_align_axis, AlignAxis, AlignmentDirection, Area, DirectionMode, Node, Size, Size2D,
 };
 
 /// Measurement data for the inner Nodes of a Node
@@ -11,7 +11,6 @@ pub enum MeasureMode<'a> {
     ParentIsNotCached {
         area: &'a mut Area,
         inner_area: &'a mut Area,
-        padding: Gaps,
     },
 }
 
@@ -30,15 +29,12 @@ impl<'a> MeasureMode<'a> {
             MeasureMode::ParentIsCached { inner_area } => OwnedMeasureMode::ParentIsCached {
                 inner_area: *inner_area.to_owned(),
             },
-            MeasureMode::ParentIsNotCached {
-                area,
-                inner_area,
-                padding,
-            } => OwnedMeasureMode::ParentIsNotCached {
-                area: **area.clone(),
-                inner_area: **inner_area.clone(),
-                padding: *padding,
-            },
+            MeasureMode::ParentIsNotCached { area, inner_area } => {
+                OwnedMeasureMode::ParentIsNotCached {
+                    area: **area.clone(),
+                    inner_area: **inner_area.clone(),
+                }
+            }
         }
     }
 
@@ -49,7 +45,7 @@ impl<'a> MeasureMode<'a> {
     /// of overflowing due to being aligned relatively to the upper parent element
     pub fn fit_bounds_when_unspecified_and_aligned(
         &mut self,
-        node: &Node,
+        parent_node: &Node,
         alignment_direction: AlignmentDirection,
         available_area: &mut Area,
     ) {
@@ -65,47 +61,42 @@ impl<'a> MeasureMode<'a> {
             pub available_size: &'a mut f32,
         }
 
-        let axis = get_align_axis(&node.direction, alignment_direction);
-        let (is_vertical_not_start, is_horizontal_not_start) = match node.direction {
+        let axis = get_align_axis(&parent_node.direction, alignment_direction);
+        let (is_vertical_not_start, is_horizontal_not_start) = match parent_node.direction {
             DirectionMode::Vertical => (
-                node.main_alignment.is_not_start(),
-                node.cross_alignment.is_not_start(),
+                parent_node.main_alignment.is_not_start(),
+                parent_node.cross_alignment.is_not_start(),
             ),
             DirectionMode::Horizontal => (
-                node.cross_alignment.is_not_start(),
-                node.main_alignment.is_not_start(),
+                parent_node.cross_alignment.is_not_start(),
+                parent_node.main_alignment.is_not_start(),
             ),
         };
-        let params = if let MeasureMode::ParentIsNotCached {
-            area,
-            inner_area,
-            padding,
-        } = self
-        {
+        let params = if let MeasureMode::ParentIsNotCached { area, inner_area } = self {
             match axis {
-                AlignAxis::Height if Size::Inner == node.height && is_vertical_not_start => {
+                AlignAxis::Height if Size::Inner == parent_node.height && is_vertical_not_start => {
                     Some(NodeData {
                         inner_origin: &mut inner_area.origin.y,
                         inner_size: &mut inner_area.size.height,
                         area_origin: &mut area.origin.y,
                         area_size: &mut area.size.height,
-                        one_side_padding: node.padding.top(),
-                        two_sides_padding: padding.vertical(),
-                        one_side_margin: node.margin.top(),
-                        two_sides_margin: node.margin.vertical(),
+                        one_side_padding: parent_node.padding.top(),
+                        two_sides_padding: parent_node.padding.vertical(),
+                        one_side_margin: parent_node.margin.top(),
+                        two_sides_margin: parent_node.margin.vertical(),
                         available_size: &mut available_area.size.height,
                     })
                 }
-                AlignAxis::Width if Size::Inner == node.width && is_horizontal_not_start => {
+                AlignAxis::Width if Size::Inner == parent_node.width && is_horizontal_not_start => {
                     Some(NodeData {
                         inner_origin: &mut inner_area.origin.x,
                         inner_size: &mut inner_area.size.width,
                         area_origin: &mut area.origin.x,
                         area_size: &mut area.size.width,
-                        one_side_padding: node.padding.left(),
-                        two_sides_padding: padding.horizontal(),
-                        one_side_margin: node.margin.left(),
-                        two_sides_margin: node.margin.horizontal(),
+                        one_side_padding: parent_node.padding.left(),
+                        two_sides_padding: parent_node.padding.horizontal(),
+                        one_side_margin: parent_node.margin.left(),
+                        two_sides_margin: parent_node.margin.horizontal(),
                         available_size: &mut available_area.size.width,
                     })
                 }
@@ -137,40 +128,38 @@ impl<'a> MeasureMode<'a> {
     }
 
     /// Stack a Node into another Node
-    pub fn stack_node(
+    pub fn stack_into_node(
         &mut self,
-        node: &Node,
+        parent_node: &Node,
         available_area: &mut Area,
         content_area: &Area,
         inner_sizes: &mut Size2D,
     ) {
-        match node.direction {
+        match parent_node.direction {
             DirectionMode::Horizontal => {
                 // Move the available area
                 available_area.origin.x = content_area.max_x();
                 available_area.size.width -= content_area.size.width;
 
-                if let MeasureMode::ParentIsNotCached {
-                    area,
-                    padding,
-                    inner_area,
-                } = self
-                {
+                if let MeasureMode::ParentIsNotCached { area, inner_area } = self {
                     inner_sizes.height = content_area.height().max(inner_sizes.height);
                     inner_sizes.width += content_area.width();
 
                     // Keep the biggest height
-                    if node.height == Size::Inner {
+                    if parent_node.height == Size::Inner {
                         area.size.height = area.size.height.max(
-                            content_area.size.height + padding.vertical() + node.margin.vertical(),
+                            content_area.size.height
+                                + parent_node.padding.vertical()
+                                + parent_node.margin.vertical(),
                         );
                         // Keep the inner area in sync
-                        inner_area.size.height =
-                            area.size.height - padding.vertical() - node.margin.vertical();
+                        inner_area.size.height = area.size.height
+                            - parent_node.padding.vertical()
+                            - parent_node.margin.vertical();
                     }
 
                     // Accumulate width
-                    if node.width == Size::Inner {
+                    if parent_node.width == Size::Inner {
                         area.size.width += content_area.size.width;
                     }
                 }
@@ -180,29 +169,25 @@ impl<'a> MeasureMode<'a> {
                 available_area.origin.y = content_area.max_y();
                 available_area.size.height -= content_area.size.height;
 
-                if let MeasureMode::ParentIsNotCached {
-                    area,
-                    padding,
-                    inner_area,
-                } = self
-                {
+                if let MeasureMode::ParentIsNotCached { area, inner_area } = self {
                     inner_sizes.width = content_area.width().max(inner_sizes.width);
                     inner_sizes.height += content_area.height();
 
                     // Keep the biggest width
-                    if node.width == Size::Inner {
+                    if parent_node.width == Size::Inner {
                         area.size.width = area.size.width.max(
                             content_area.size.width
-                                + padding.horizontal()
-                                + node.margin.horizontal(),
+                                + parent_node.padding.horizontal()
+                                + parent_node.margin.horizontal(),
                         );
                         // Keep the inner area in sync
-                        inner_area.size.width =
-                            area.size.width - padding.horizontal() - node.margin.horizontal();
+                        inner_area.size.width = area.size.width
+                            - parent_node.padding.horizontal()
+                            - parent_node.margin.horizontal();
                     }
 
                     // Accumulate height
-                    if node.height == Size::Inner {
+                    if parent_node.height == Size::Inner {
                         area.size.height += content_area.size.height;
                     }
                 }
@@ -214,29 +199,17 @@ impl<'a> MeasureMode<'a> {
 /// Just an owned version of [MeasureMode]
 #[derive(Debug)]
 pub enum OwnedMeasureMode {
-    ParentIsCached {
-        inner_area: Area,
-    },
-    ParentIsNotCached {
-        area: Area,
-        inner_area: Area,
-        padding: Gaps,
-    },
+    ParentIsCached { inner_area: Area },
+    ParentIsNotCached { area: Area, inner_area: Area },
 }
 
 impl OwnedMeasureMode {
     pub fn to_mut(&mut self) -> MeasureMode<'_> {
         match self {
             Self::ParentIsCached { inner_area } => MeasureMode::ParentIsCached { inner_area },
-            Self::ParentIsNotCached {
-                area,
-                inner_area,
-                padding,
-            } => MeasureMode::ParentIsNotCached {
-                area,
-                inner_area,
-                padding: *padding,
-            },
+            Self::ParentIsNotCached { area, inner_area } => {
+                MeasureMode::ParentIsNotCached { area, inner_area }
+            }
         }
     }
 }
