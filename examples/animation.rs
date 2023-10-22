@@ -37,8 +37,8 @@ fn app(cx: Scope) -> Element {
             height: "100%",
             offset_x: "{progress}",
             rect {
-                main_alignment: "center",
-                cross_alignment: "center",
+                main_align: "center",
+                cross_align: "center",
                 height: "100%",
                 width: "200",
                 rect {
@@ -47,8 +47,8 @@ fn app(cx: Scope) -> Element {
                     background: "rgb(100, 100, 100)",
                     padding: "25",
                     corner_radius: "100",
-                    main_alignment: "center",
-                    cross_alignment: "center",
+                    main_align: "center",
+                    cross_align: "center",
                     onclick: anim,
                     label {
                         font_size: "30",

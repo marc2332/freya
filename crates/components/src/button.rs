@@ -119,8 +119,8 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
             corner_radius: "{corner_radius}",
             background: "{background}",
             align: "center",
-            main_alignment: "center",
-            cross_alignment: "center",
+            main_align: "center",
+            cross_align: "center",
             &cx.props.children
         }
     )

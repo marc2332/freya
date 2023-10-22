@@ -53,8 +53,8 @@ fn FloatingButton<'a>(cx: Scope<'a, FloatingButtonProps<'a>>) -> Element<'a> {
         rect {
             height: "100%",
             width: "100%",
-            main_alignment: "center",
-            cross_alignment: "center",
+            main_align: "center",
+            cross_align: "center",
             height: "50",
             width: "50",
             background: "rgb(104, 24, 245)",
@@ -127,7 +127,7 @@ fn Navbar<'a>(cx: Scope<'a, NavbarProps<'a>>) -> Element<'a> {
             background: "rgb(104, 24, 245)",
             direction: "vertical",
             color: "white",
-            main_alignment: "center",
+            main_align: "center",
             rect {
                 width: "100%",
                 direction: "horizontal",

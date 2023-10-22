@@ -14,18 +14,18 @@ fn app(cx: Scope) -> Element {
         rect {
             height: "100%",
             width: "100%",
-            cross_alignment: "end",
-            main_alignment: "end",
+            cross_align: "end",
+            main_align: "end",
             rect {
                 width: "65%",
                 height: "65%",
                 background: "yellow",
-                main_alignment: "start",
-                cross_alignment: "start",
+                main_align: "start",
+                cross_align: "start",
                 overflow: "clip",
                 rect {
-                    main_alignment: "end",
-                    cross_alignment: "center",
+                    main_align: "end",
+                    cross_align: "center",
                     background: "red",
                     direction: "horizontal",
                     width: "50%",
@@ -43,12 +43,12 @@ fn app(cx: Scope) -> Element {
                     }
                 }
                 rect {
-                    cross_alignment: "end",
+                    cross_align: "end",
                     width: "100%%",
                     height: "50%",
                     rect {
-                        main_alignment: "start",
-                        cross_alignment: "center",
+                        main_align: "start",
+                        cross_align: "center",
                         width: "50%",
                         height: "100%",
                         label {

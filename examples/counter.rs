@@ -16,8 +16,8 @@ fn app(cx: Scope) -> Element {
         rect {
             height: "50%",
             width: "100%",
-            main_alignment: "center",
-            cross_alignment: "center",
+            main_align: "center",
+            cross_align: "center",
             background: "rgb(0, 119, 182)",
             color: "white",
             shadow: "0 4 20 5 rgb(0, 0, 0, 80)",
@@ -30,8 +30,8 @@ fn app(cx: Scope) -> Element {
         rect {
             height: "50%",
             width: "100%",
-            main_alignment: "center",
-            cross_alignment: "center",
+            main_align: "center",
+            cross_align: "center",
             direction: "horizontal",
             Button {
                 onclick: move |_| count += 1,

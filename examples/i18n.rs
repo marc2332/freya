@@ -26,8 +26,8 @@ fn Body(cx: Scope) -> Element {
 
     render!(
         rect {
-            main_alignment: "center",
-            cross_alignment: "center",
+            main_align: "center",
+            cross_align: "center",
             width: "100%",
             height: "100%",
             rect {

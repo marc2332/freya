@@ -187,8 +187,8 @@ fn app(cx: Scope) -> Element {
         rect {
             width: "100%",
             height: "100%",
-            main_alignment: "center",
-            cross_alignment: "center",
+            main_align: "center",
+            cross_align: "center",
             rect {
                 width: "50%",
                 height: "50%",

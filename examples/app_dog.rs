@@ -58,8 +58,8 @@ fn app(cx: Scope) -> Element {
                 overflow: "clip",
                 height: "60",
                 width: "100%",
-                main_alignment: "center",
-                cross_alignment: "center",
+                main_align: "center",
+                cross_align: "center",
                 Button {
                     onclick: move |_|  fetch(),
                     label {

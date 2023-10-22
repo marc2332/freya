@@ -176,14 +176,14 @@ impl State<CustomAttributeValues> for LayoutState {
                             }
                         }
                     }
-                    "main_alignment" => {
+                    "main_align" => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(alignment) = Alignment::parse(value) {
                                 layout.main_alignment = alignment;
                             }
                         }
                     }
-                    "cross_alignment" => {
+                    "cross_align" => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(alignment) = Alignment::parse(value) {
                                 layout.cross_alignment = alignment;

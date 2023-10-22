@@ -33,8 +33,8 @@ pub fn Tooltip<'a>(cx: Scope<'a, TooltipProps<'a>>) -> Element {
                 shadow: "0 0 10 5 rgb(0, 0, 0, 50)",
                 corner_radius: "8",
                 background: "{background}",
-                main_alignment: "center",
-                cross_alignment: "center",
+                main_align: "center",
+                cross_align: "center",
                 label {
                     max_lines: "1",
                     color: "{color}",

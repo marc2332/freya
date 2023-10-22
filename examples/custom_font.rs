@@ -21,8 +21,8 @@ fn main() {
 fn app(cx: Scope) -> Element {
     render!(
         rect {
-            main_alignment: "center",
-            cross_alignment: "center",
+            main_align: "center",
+            cross_align: "center",
             height: "100%",
             width: "100%",
             label {

@@ -122,8 +122,8 @@ fn app(cx: Scope) -> Element {
                 background: "rgb(25, 25, 25)",
                 height: "100",
                 width: "100%",
-                main_alignment: "center",
-                cross_alignment: "center",
+                main_align: "center",
+                cross_align: "center",
                 padding: "15",
                 layer: "-100",
                 shadow: "0 -2 5 0 rgb(0, 0, 0, 30)",
@@ -201,10 +201,10 @@ fn Editor(cx: Scope) -> Element {
                 height: "70",
                 padding: "5",
                 direction: "horizontal",
-                cross_alignment: "center",
+                cross_align: "center",
                 rect {
                     width: "130",
-                    cross_alignment: "center",
+                    cross_align: "center",
                     Slider {
                         width: 100.0,
                         value: *font_size_percentage.get(),
@@ -218,7 +218,7 @@ fn Editor(cx: Scope) -> Element {
                 }
                 rect {
                     width: "130",
-                    cross_alignment: "center",
+                    cross_align: "center",
                     Slider {
                         width: 100.0,
                         value: *line_height_percentage.get(),
@@ -232,7 +232,7 @@ fn Editor(cx: Scope) -> Element {
                 }
                 rect {
                     width: "80",
-                    cross_alignment: "center",
+                    cross_align: "center",
                     Switch {
                         enabled: *is_bold.get(),
                         ontoggled: |_| {
@@ -245,7 +245,7 @@ fn Editor(cx: Scope) -> Element {
                 }
                 rect {
                     width: "80",
-                    cross_alignment: "center",
+                    cross_align: "center",
                     Switch {
                         enabled: *is_italic.get(),
                         ontoggled: |_| {
@@ -329,7 +329,7 @@ fn Editor(cx: Scope) -> Element {
                                     rect {
                                         width: "{font_size * 2.0}",
                                         height: "100%",
-                                        main_alignment: "center",
+                                        main_align: "center",
                                         direction: "horizontal",
                                         label {
                                             font_size: "{font_size}",

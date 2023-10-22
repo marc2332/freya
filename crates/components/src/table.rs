@@ -154,8 +154,8 @@ pub fn TableCell<'a>(cx: Scope<'a, TableCellProps<'a>>) -> Element {
             overflow: "clip",
             padding: "5 25",
             width: "{width}%",
-            main_alignment: "center",
-            cross_alignment: "center",
+            main_align: "center",
+            cross_align: "center",
             height: "35",
             align: "right",
             onclick: |e| {
