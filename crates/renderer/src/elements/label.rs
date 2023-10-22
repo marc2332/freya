@@ -10,7 +10,7 @@ use torin::geometry::Area;
 pub fn render_label(
     area: &Area,
     node_ref: &DioxusNode,
-    canvas: &mut Canvas,
+    canvas: &Canvas,
     font_collection: &mut FontCollection,
 ) {
     let node_children = node_ref.children();

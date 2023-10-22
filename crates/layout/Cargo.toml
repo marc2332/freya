@@ -33,4 +33,4 @@ tokio = { workspace = true }
 accesskit = { workspace = true }
 
 rustc-hash= { workspace = true }
-uuid = { version =  "1.2.2", features = ["v4"]}
+uuid = { version =  "1.4.1", features = ["v4"]}
