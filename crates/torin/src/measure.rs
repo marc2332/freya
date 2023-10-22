@@ -124,7 +124,7 @@ pub fn measure_node<Key: NodeKey>(
         let mut inner_sizes = Size2D::default();
 
         if measure_inner_children {
-            // 5. Create an area containin the available space inside the inner area
+            // 5. Create an area containing the available space inside the inner area
             let mut available_area = inner_area;
 
             // 5.1. Adjust the available area with the node offsets (mainly used by scrollviews)
