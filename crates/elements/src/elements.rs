@@ -253,6 +253,7 @@ builder_constructors! {
         decoration_style: String,
         decoration_color: String,
         text_overflow: String,
+        overflow: String,
         focusable: String,
         margin: String,
     };
