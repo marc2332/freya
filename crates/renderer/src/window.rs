@@ -4,6 +4,7 @@ use freya_core::prelude::*;
 use freya_dom::prelude::FreyaDOM;
 use freya_engine::prelude::*;
 use freya_layout::Layers;
+use glutin::prelude::PossiblyCurrentGlContext;
 use std::ffi::CString;
 use std::num::NonZeroU32;
 use torin::geometry::{Area, Size2D};
@@ -44,6 +45,14 @@ pub struct WindowEnv<T: Clone> {
     num_samples: usize,
     stencil_size: usize,
     pub(crate) window_config: WindowConfig<T>,
+}
+
+impl<T: Clone> Drop for WindowEnv<T> {
+    fn drop(&mut self) {
+        if !self.gl_context.is_current() {
+            self.gr_context.abandon();
+        }
+    }
 }
 
 impl<T: Clone> WindowEnv<T> {
