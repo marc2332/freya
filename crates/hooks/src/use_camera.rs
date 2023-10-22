@@ -1,33 +1,20 @@
-use std::{
-    sync::{Arc, Mutex},
-    time::Duration,
-};
+use std::sync::{Arc, Mutex};
 
 use crate::use_platform;
 use dioxus_core::{AttributeValue, ScopeState};
 use dioxus_hooks::{to_owned, use_effect, use_state, UseState};
-use freya_common::EventMessage;
 use freya_node_state::{CustomAttributeValues, ImageReference};
-use nokhwa::{pixel_format::RgbFormat, utils::RequestedFormat, Camera, NokhwaError};
-use tokio::time::sleep;
-
 pub use nokhwa::utils::{CameraIndex, RequestedFormatType, Resolution};
+use nokhwa::{pixel_format::RgbFormat, utils::RequestedFormat, Camera, NokhwaError};
 
 /// Configuration for a camera
 pub struct CameraSettings {
-    frame_rate: u32,
     camera_index: CameraIndex,
     resolution: Option<Resolution>,
     camera_format: RequestedFormatType,
 }
 
 impl CameraSettings {
-    /// Specify a frame rate
-    pub fn with_frame_rate(mut self, frame_rate: u32) -> Self {
-        self.frame_rate = frame_rate;
-        self
-    }
-
     /// Specify a camera index   
     pub fn with_camera_index(mut self, camera_index: CameraIndex) -> Self {
         self.camera_index = camera_index;
@@ -50,7 +37,6 @@ impl CameraSettings {
 impl Default for CameraSettings {
     fn default() -> Self {
         Self {
-            frame_rate: 30,
             camera_index: CameraIndex::Index(0),
             resolution: None,
             camera_format: RequestedFormatType::AbsoluteHighestFrameRate,
@@ -89,11 +75,11 @@ pub fn use_camera(
                         .unwrap_or_else(handle_error);
                 }
 
-                let frame_rate = camera_settings.frame_rate;
-                let fps = 1000 / frame_rate;
+                let mut ticker = platform.new_ticker();
 
                 loop {
-                    sleep(Duration::from_millis(fps as u64)).await;
+                    // Wait for the event loop to tick
+                    ticker.tick().await;
 
                     // Capture the next frame
                     let frame = camera.frame();
@@ -104,9 +90,10 @@ pub fn use_camera(
                         image_reference.lock().unwrap().replace(bts);
 
                         // Request the renderer to rerender
-                        platform.send(EventMessage::RequestRerender).unwrap();
+                        platform.request_animation_frame();
                     } else if let Err(err) = frame {
                         handle_error(err);
+                        break;
                     }
                 }
             } else if let Err(err) = camera {
