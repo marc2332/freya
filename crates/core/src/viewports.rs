@@ -36,19 +36,25 @@ pub fn calculate_viewports(
                         viewports_collection
                             .entry(*node_id)
                             .or_insert_with(|| (None, Vec::new()))
-                            .0 = Some(node_areas.area);
+                            .0 = Some(node_areas.visible_area());
                     }
 
                     // Pass viewports to the children
                     if let Some((_, mut inherited_viewports)) =
                         viewports_collection.get(node_id).cloned()
                     {
-                        // Add the itself
-                        inherited_viewports.push(*node_id);
+                        if !inherited_viewports.is_empty() {
+                            // Add itself
+                            inherited_viewports.push(*node_id);
 
-                        for child in node.children() {
-                            viewports_collection
-                                .insert(child.id(), (None, inherited_viewports.clone()));
+                            for child in node.children() {
+                                if let NodeType::Element(..) = *child.node_type() {
+                                    viewports_collection
+                                        .entry(child.id())
+                                        .or_insert_with(|| (None, Vec::new()))
+                                        .1 = inherited_viewports.clone();
+                                }
+                            }
                         }
                     }
                 }
