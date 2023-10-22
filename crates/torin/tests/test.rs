@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use fxhash::FxHashSet;
+use rustc_hash::FxHashSet;
 use torin::prelude::*;
 
 struct TestingMeasurer;

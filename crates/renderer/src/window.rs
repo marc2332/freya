@@ -52,7 +52,7 @@ impl<T: Clone> WindowEnv<T> {
         window_config: WindowConfig<T>,
         event_loop: &EventLoop<EventMessage>,
     ) -> Self {
-        let window_builder = WindowBuilder::new()
+        let mut window_builder = WindowBuilder::new()
             .with_visible(false)
             .with_title(window_config.title)
             .with_decorations(window_config.decorations)
@@ -61,6 +61,14 @@ impl<T: Clone> WindowEnv<T> {
                 window_config.width,
                 window_config.height,
             ));
+
+        if let Some(min_size) = window_config.min_width.zip(window_config.min_height) {
+            window_builder = window_builder.with_min_inner_size(LogicalSize::<f64>::from(min_size))
+        }
+
+        if let Some(max_size) = window_config.max_width.zip(window_config.max_height) {
+            window_builder = window_builder.with_max_inner_size(LogicalSize::<f64>::from(max_size))
+        }
 
         let template = ConfigTemplateBuilder::new()
             .with_alpha_size(8)
