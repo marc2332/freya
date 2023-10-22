@@ -18,7 +18,7 @@ default = ["dioxus"]
 [dependencies]
 tracing = { workspace = true }
 euclid = { workspace = true }
-fxhash = { workspace = true }
+rustc-hash = { workspace = true }
 dioxus-native-core = { workspace = true, optional = true }
 dioxus-core = { workspace = true, optional = true }
 

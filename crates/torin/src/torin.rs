@@ -1,7 +1,7 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, mem};
 
 pub use euclid::Rect;
-use fxhash::{FxHashMap, FxHashSet};
+use rustc_hash::{FxHashMap, FxHashSet};
 use tracing::info;
 
 use crate::{
@@ -13,13 +13,19 @@ use crate::{
 };
 
 /// Contains the best Root node candidate from where to start measuring
-#[derive(PartialEq, Debug, Clone, Copy)]
+#[derive(PartialEq, Debug, Clone)]
 pub enum RootNodeCandidate<Key: NodeKey> {
     /// A valid Node ID
     Valid(Key),
 
     /// None
     None,
+}
+
+impl<Key: NodeKey> RootNodeCandidate<Key> {
+    pub fn take(&mut self) -> Self {
+        mem::replace(self, Self::None)
+    }
 }
 
 pub struct Torin<Key: NodeKey> {
@@ -172,12 +178,12 @@ impl<Key: NodeKey> Torin<Key> {
 
         if RootNodeCandidate::None == self.root_node_candidate {
             self.root_node_candidate = RootNodeCandidate::Valid(node_id);
-        } else if let RootNodeCandidate::Valid(root_candidate) = self.root_node_candidate {
-            if node_id != root_candidate {
-                let closest_parent = dom_adapter.closest_common_parent(&node_id, &root_candidate);
+        } else if let RootNodeCandidate::Valid(root_candidate) = &mut self.root_node_candidate {
+            if node_id != *root_candidate {
+                let closest_parent = dom_adapter.closest_common_parent(&node_id, root_candidate);
 
                 if let Some(closest_parent) = closest_parent {
-                    self.root_node_candidate = RootNodeCandidate::Valid(closest_parent);
+                    *root_candidate = closest_parent;
                 }
             }
         }
@@ -231,7 +237,7 @@ impl<Key: NodeKey> Torin<Key> {
 
     /// Get the Root Node candidate
     pub fn get_root_candidate(&self) -> RootNodeCandidate<Key> {
-        self.root_node_candidate
+        self.root_node_candidate.clone()
     }
 
     /// Find the best root Node from where to start measuring
@@ -260,7 +266,7 @@ impl<Key: NodeKey> Torin<Key> {
         }
 
         // Try the Root candidate otherwise use the provided Root
-        let root_id = if let RootNodeCandidate::Valid(id) = self.root_node_candidate {
+        let root_id = if let RootNodeCandidate::Valid(id) = self.root_node_candidate.take() {
             id
         } else {
             suggested_root_id
