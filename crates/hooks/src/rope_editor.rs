@@ -32,6 +32,10 @@ impl RopeEditor {
             mode,
         }
     }
+
+    pub fn rope(&self) -> &Rope {
+        &self.rope
+    }
 }
 
 impl TextEditor for RopeEditor {
@@ -155,11 +159,11 @@ impl TextEditor for RopeEditor {
     }
 
     fn set(&mut self, text: &str) {
+        self.rope.remove(0..);
+        self.rope.insert(0, text);
         if self.cursor_pos() > text.len() {
             self.set_cursor_pos(text.len());
         }
-        self.rope.remove(0..);
-        self.rope.insert(0, text);
     }
 
     fn unhighlight(&mut self) {
