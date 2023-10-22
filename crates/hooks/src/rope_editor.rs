@@ -155,6 +155,9 @@ impl TextEditor for RopeEditor {
     }
 
     fn set(&mut self, text: &str) {
+        if self.cursor_pos() > text.len() {
+            self.set_cursor_pos(text.len());
+        }
         self.rope.remove(0..);
         self.rope.insert(0, text);
     }
