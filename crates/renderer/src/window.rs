@@ -307,7 +307,7 @@ fn create_surface(
         size.height.try_into().expect("Could not convert height"),
     );
     let backend_render_target =
-        BackendRenderTarget::new_gl(size, num_samples, stencil_size, fb_info);
+        backend_render_targets::make_gl(size, num_samples, stencil_size, fb_info);
     wrap_backend_render_target(
         gr_context,
         &backend_render_target,

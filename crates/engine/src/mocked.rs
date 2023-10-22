@@ -708,7 +708,7 @@ impl Paragraph {
         unimplemented!("This is mocked")
     }
 
-    pub fn paint(&self, _canvas: &mut Canvas, _p: impl Into<Point>) {
+    pub fn paint(&self, _canvas: &Canvas, _p: impl Into<Point>) {
         unimplemented!("This is mocked")
     }
 
@@ -1328,7 +1328,7 @@ pub mod svg {
             unimplemented!("This is mocked")
         }
 
-        pub fn render(&self, _canvas: &mut Canvas) {
+        pub fn render(&self, _canvas: &Canvas) {
             unimplemented!("This is mocked")
         }
     }
@@ -1531,6 +1531,17 @@ impl BackendRenderTarget {
         _stencil_bits: usize,
         _info: FramebufferInfo,
     ) -> Self {
+        unimplemented!("This is mocked")
+    }
+}
+
+pub mod backend_render_targets {
+    pub fn make_gl(
+        (width, height): (i32, i32),
+        sample_count: impl Into<Option<usize>>,
+        stencil_bits: usize,
+        info: FramebufferInfo,
+    ) -> BackendRenderTarget {
         unimplemented!("This is mocked")
     }
 }

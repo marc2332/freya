@@ -9,7 +9,7 @@ use torin::geometry::Area;
 pub fn render_paragraph(
     area: &Area,
     dioxus_node: &DioxusNode,
-    canvas: &mut Canvas,
+    canvas: &Canvas,
     font_collection: &mut FontCollection,
 ) {
     let (x, y) = area.origin.to_tuple();
@@ -27,7 +27,7 @@ pub fn render_paragraph(
 fn draw_cursor_highlights(
     area: &Area,
     paragraph: &Paragraph,
-    canvas: &mut Canvas,
+    canvas: &Canvas,
     dioxus_node: &DioxusNode,
 ) -> Option<()> {
     let node_cursor_settings = &*dioxus_node.get::<CursorSettings>().unwrap();
@@ -70,7 +70,7 @@ fn draw_cursor_highlights(
 fn draw_cursor(
     area: &Area,
     paragraph: &Paragraph,
-    canvas: &mut Canvas,
+    canvas: &Canvas,
     dioxus_node: &DioxusNode,
 ) -> Option<()> {
     let node_cursor_settings = &*dioxus_node.get::<CursorSettings>().unwrap();
