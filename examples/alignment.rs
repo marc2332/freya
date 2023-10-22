@@ -37,9 +37,20 @@ fn app(cx: Scope) -> Element {
                         background: "green"
                     }
                     rect {
-                        width: "50",
-                        height: "50",
-                        background: "orange"
+                        main_align: "center",
+                        cross_align: "center",
+                        background: "orange",
+                        padding: "15",
+                        rect {
+                            width: "20",
+                            height: "20",
+                            background: "black"
+                        }
+                        rect {
+                            width: "20",
+                            height: "20",
+                            background: "white"
+                        }
                     }
                 }
                 rect {

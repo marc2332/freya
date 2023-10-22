@@ -2,9 +2,9 @@
 
 Learn how the layout attributes work.
 
-- [`width & height`](#width_&_height)
-- [`min_width & min_height`](#min_width_&_min_height)
-- [`max_width & max_height`](#max_width_&_max_height)
+- [`width & height`](#width--height)
+- [`min_width & min_height`](#min_width--min_height)
+- [`max_width & max_height`](#max_width--max_height)
 - [`Size units`](#size_units)
   - [`Logical pixels`](#logical-pixels)
   - [`Percentages`](#percentages)
@@ -12,7 +12,7 @@ Learn how the layout attributes work.
 - [`direction`](#direction)
 - [`padding`](#padding)
 - [`margin`](#margin)
-- [`main_alignment & cross_alignment`](#main_alignment_&_cross_alignment)
+- [`main_align & cross_align`](#main_align--cross_align)
 
 > ⚠️ Freya's layout is still somewhat limited.
 
@@ -168,16 +168,17 @@ fn app(cx: Scope) -> Element {
 
 ```
 
-### main_alignment & cross_alignment
+### main_align & cross_align
 
 Control how the inner elements are positioned inside the element. You can combine it with the `direction` attribute to create complex flows.
-Possible values for both are:
+
+Possible values for both attributes are:
 - `start` (default): At the begining of the axis
 - `center`: At the center of the axis
 - `end`: At the end of the axis
 
-When using the `vertical` direction, `main_alignment` will be the Y axis and `cross_alignment` will be the X axis. But when using the `horizontal` direction, the
-`main_alignment` will be the X axis and the `cross_alignment` will be the Y axis.
+When using the `vertical` direction, `main_align` will be the Y axis and `cross_align` will be the X axis. But when using the `horizontal` direction, the
+`main_align` will be the X axis and the `cross_align` will be the Y axis.
 
 Example on how to center the inner elements in both axis:
 

@@ -53,8 +53,8 @@ impl State<CustomAttributeValues> for LayoutState {
             "direction",
             "offset_y",
             "offset_x",
-            "main_alignment",
-            "cross_alignment",
+            "main_align",
+            "cross_align",
             "reference",
             "margin",
         ]))
