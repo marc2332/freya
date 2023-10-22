@@ -226,7 +226,7 @@ pub const LIGHT_THEME: Theme = Theme {
         secondary_color: "rgb(150, 150, 150)",
     },
     progress_bar: ProgressBarTheme {
-        color: "black",
+        color: "white",
         background: "rgb(210, 210, 210)",
         progress_background: "rgb(103, 80, 164)",
     },
