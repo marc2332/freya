@@ -4,7 +4,7 @@ use freya_core::prelude::*;
 use freya_dom::prelude::FreyaDOM;
 use freya_engine::prelude::*;
 use freya_layout::Layers;
-use glutin::prelude::PossiblyCurrentGlContext;
+use glutin::prelude::PossiblyCurrentContextGlSurfaceAccessor;
 use std::ffi::CString;
 use std::num::NonZeroU32;
 use torin::geometry::{Area, Size2D};
@@ -36,9 +36,9 @@ use crate::HoveredNode;
 
 /// Manager for a Window
 pub struct WindowEnv<T: Clone> {
+    gr_context: DirectContext,
     surface: Surface,
     gl_surface: GlutinSurface<WindowSurface>,
-    gr_context: DirectContext,
     gl_context: PossiblyCurrentContext,
     pub(crate) window: Window,
     fb_info: FramebufferInfo,
@@ -49,7 +49,7 @@ pub struct WindowEnv<T: Clone> {
 
 impl<T: Clone> Drop for WindowEnv<T> {
     fn drop(&mut self) {
-        if !self.gl_context.is_current() {
+        if self.gl_context.make_current(&self.gl_surface).is_err() {
             self.gr_context.abandon();
         }
     }
