@@ -67,8 +67,13 @@ pub fn render_skia(
 
         // Clip all elements with their corresponding viewports
         if let Some((element_viewport, viewports)) = viewports {
-            if let Some(element_viewport) = element_viewport {
-                clip_viewpot(canvas, element_viewport);
+            // Only clip the element iself when it's paragraph because
+            // it will render the inner text spans on it's own, so if these spans overflow the paragraph,
+            // It is the paragraph job to make sure they are clipped
+            if tag.as_str() == "paragraph" {
+                if let Some(element_viewport) = element_viewport {
+                    clip_viewpot(canvas, element_viewport);
+                }
             }
             for viewport_id in viewports {
                 let viewport = viewports_collection.get(viewport_id).unwrap().0;

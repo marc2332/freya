@@ -33,17 +33,19 @@ pub fn calculate_viewports(
 
                     // Clip any overflow from it's children
                     if style.overflow == OverflowMode::Clip {
-                        viewports_collection
+                        let viewport = viewports_collection
                             .entry(*node_id)
-                            .or_insert_with(|| (None, Vec::new()))
-                            .0 = Some(node_areas.visible_area());
+                            .or_insert_with(|| (None, Vec::new()));
+                        viewport.0 = Some(node_areas.visible_area());
                     }
 
                     // Pass viewports to the children
                     if let Some((_, mut inherited_viewports)) =
                         viewports_collection.get(node_id).cloned()
                     {
-                        if !inherited_viewports.is_empty() {
+                        // Only pass the inherited viewports if they are not empty
+                        // or this same element has a clipped overflow
+                        if !inherited_viewports.is_empty() || style.overflow == OverflowMode::Clip {
                             // Add itself
                             inherited_viewports.push(*node_id);
 
