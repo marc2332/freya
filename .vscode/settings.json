@@ -1,6 +1,7 @@
 {
     "rust-analyzer.cargo.features": [
         "devtools",
-        "log"
+        "log",
+        "use_camera"
     ]
 }
