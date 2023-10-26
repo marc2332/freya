@@ -115,7 +115,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
             }
         }
     });
-  
+
     let onkeydown = {
         to_owned![editable, focus_manager];
         move |e: Event<KeyboardData>| {
