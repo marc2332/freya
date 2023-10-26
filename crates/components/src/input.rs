@@ -96,19 +96,16 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     let theme = use_get_theme(cx);
     let focus_manager = use_focus(cx);
 
+    if &cx.props.value != editable.editor().current().rope() {
+        editable.editor().with_mut(|editor| {
+            editor.set(&cx.props.value);
+        });
+    }
+
     let text = match cx.props.hidden {
         InputMode::Hidden(ch) => ch.to_string().repeat(cx.props.value.len()),
         InputMode::Shown => cx.props.value.clone(),
     };
-
-    use_memo(cx, &(cx.props.value.to_string(),), {
-        to_owned![editable];
-        move |(text,)| {
-            editable.editor().with_mut(|editor| {
-                editor.set(&text);
-            });
-        }
-    });
 
     use_on_unmount(cx, {
         to_owned![status, platform];
@@ -118,7 +115,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
             }
         }
     });
-
+  
     let onkeydown = {
         to_owned![editable, focus_manager];
         move |e: Event<KeyboardData>| {
@@ -200,7 +197,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
             color: "{color}",
             background: "{background}",
             border: "1 solid {border_fill}",
-            shadow: "0 4 5 0 rgb(0, 0, 0, 30)",
+            shadow: "0 3 15 0 rgb(0, 0, 0, 70)",
             corner_radius: "10",
             margin: "4",
             cursor_reference: cursor_attr,

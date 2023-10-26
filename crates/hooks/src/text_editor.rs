@@ -4,7 +4,7 @@ use freya_elements::events::keyboard::{Code, Key, Modifiers};
 pub use ropey::Rope;
 
 /// Holds the position of a cursor in a text
-#[derive(Clone, Default)]
+#[derive(Clone, Default, PartialEq, Debug)]
 pub struct TextCursor {
     col: usize,
     row: usize,

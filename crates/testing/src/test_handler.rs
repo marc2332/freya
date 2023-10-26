@@ -1,14 +1,18 @@
+use std::sync::Arc;
+use std::time::Duration;
+
 use accesskit::NodeId as AccessibilityId;
 use dioxus_core::VirtualDom;
 use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_engine::prelude::FontCollection;
+use tokio::sync::broadcast;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use torin::geometry::{Area, Size2D};
 
 pub use freya_core::events::FreyaEvent;
 pub use freya_elements::events::mouse::MouseButton;
-use tokio::time::timeout;
+use tokio::time::{sleep, timeout};
 
 use crate::test_node::TestNode;
 use crate::test_utils::TestUtils;
@@ -32,6 +36,8 @@ pub struct TestingHandler {
     pub(crate) accessibility_state: SharedAccessibilityState,
 
     pub(crate) config: TestingConfig,
+
+    pub(crate) ticker_sender: broadcast::Sender<()>,
 }
 
 impl TestingHandler {
@@ -44,9 +50,9 @@ impl TestingHandler {
         fdom.init_dom(mutations, SCALE_FACTOR as f32);
     }
 
-    /// Replace the current [`TestingConfig`].
-    pub fn set_config(&mut self, config: TestingConfig) {
-        self.config = config;
+    /// Get a mutable reference to the current [`TestingConfig`].
+    pub fn config(&mut self) -> &mut TestingConfig {
+        &mut self.config
     }
 
     /// Provide some values to the app
@@ -54,6 +60,9 @@ impl TestingHandler {
         self.vdom
             .base_scope()
             .provide_context(self.platform_event_emitter.clone());
+        self.vdom
+            .base_scope()
+            .provide_context(Arc::new(self.ticker_sender.subscribe()));
     }
 
     /// Wait and apply new changes
@@ -64,32 +73,36 @@ impl TestingHandler {
 
         let vdom = &mut self.vdom;
 
-        // Handle platform events
+        // Handle platform and VDOM events
         loop {
-            let ev = self.platform_event_receiver.try_recv();
+            let platform_ev = self.platform_event_receiver.try_recv();
+            let vdom_ev = self.event_receiver.try_recv();
 
-            if let Ok(ev) = ev {
-                #[allow(clippy::match_single_binding)]
-                if let EventMessage::FocusAccessibilityNode(node_id) = ev {
-                    self.accessibility_state
-                        .lock()
-                        .unwrap()
-                        .set_focus(Some(node_id));
-                }
-            } else {
+            if vdom_ev.is_err() && platform_ev.is_err() {
                 break;
             }
-        }
 
-        // Handle virtual dom events
-        loop {
-            let ev = self.event_receiver.try_recv();
+            if let Ok(ev) = platform_ev {
+                match ev {
+                    EventMessage::RequestRerender => {
+                        if self.config.run_ticker {
+                            sleep(Duration::from_millis(16)).await;
+                            self.ticker_sender.send(()).unwrap();
+                        }
+                    }
+                    EventMessage::FocusAccessibilityNode(node_id) => {
+                        self.accessibility_state
+                            .lock()
+                            .unwrap()
+                            .set_focus(Some(node_id));
+                    }
+                    _ => {}
+                }
+            }
 
-            if let Ok(ev) = ev {
+            if let Ok(ev) = vdom_ev {
                 vdom.handle_event(&ev.name, ev.data.any(), ev.element_id, false);
                 vdom.process_events();
-            } else {
-                break;
             }
         }
 
@@ -106,6 +119,8 @@ impl TestingHandler {
             .apply_mutations(mutations, SCALE_FACTOR as f32);
 
         self.wait_for_work(self.config.size());
+
+        self.ticker_sender.send(()).unwrap();
 
         (must_repaint, must_relayout)
     }

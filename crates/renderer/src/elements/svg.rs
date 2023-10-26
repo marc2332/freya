@@ -5,7 +5,7 @@ use freya_node_state::Style;
 use torin::geometry::Area;
 
 /// Render a `svg` element
-pub fn render_svg(area: &Area, node_ref: &DioxusNode, canvas: &mut Canvas) {
+pub fn render_svg(area: &Area, node_ref: &DioxusNode, canvas: &Canvas) {
     let node_style = &*node_ref.get::<Style>().unwrap();
 
     let x = area.min_x();

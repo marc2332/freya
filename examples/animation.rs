@@ -52,7 +52,7 @@ fn app(cx: Scope) -> Element {
                     onclick: anim,
                     label {
                         font_size: "30",
-                        align: "center",
+                        text_align: "center",
                         color: "white",
                         "Click to move"
                     }

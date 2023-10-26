@@ -26,7 +26,7 @@ pub struct FontStyleState {
     pub decoration: Decoration,
     pub word_spacing: f32,
     pub letter_spacing: f32,
-    pub align: TextAlign,
+    pub text_align: TextAlign,
     pub max_lines: Option<usize>,
     pub text_overflow: TextOverflow,
 }
@@ -85,7 +85,7 @@ impl Default for FontStyleState {
                 thickness_multiplier: 1.0, // Defaults to 0.0, even though 0.0 won't render anything
                 ..Decoration::default()
             },
-            align: TextAlign::default(),
+            text_align: TextAlign::default(),
             max_lines: None,
             text_overflow: TextOverflow::default(),
         }
@@ -184,10 +184,10 @@ impl State<CustomAttributeValues> for FontStyleState {
                             }
                         }
                     }
-                    "align" => {
+                    "text_align" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(align) = TextAlign::parse(value) {
-                                font_style.align = align;
+                            if let Ok(text_align) = TextAlign::parse(value) {
+                                font_style.text_align = text_align;
                             }
                         }
                     }
