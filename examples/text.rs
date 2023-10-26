@@ -21,9 +21,7 @@ fn app(cx: Scope) -> Element {
             background: "black",
             color: "white",
             rect {
-                overflow: "clip",
-                width: "100%",
-                height: "60",
+                height: "80",
                 Button {
                     onclick: move |_| {
                         percentage.set(20.0);

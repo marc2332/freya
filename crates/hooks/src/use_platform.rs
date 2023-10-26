@@ -1,10 +1,13 @@
+use std::sync::Arc;
+
 use dioxus_core::ScopeState;
 use freya_common::EventMessage;
-use tokio::sync::mpsc::UnboundedSender;
+use tokio::sync::{broadcast, mpsc::UnboundedSender};
 use winit::event_loop::EventLoopProxy;
 
 #[derive(Clone)]
 pub struct UsePlatform {
+    ticker: Arc<broadcast::Receiver<()>>,
     event_loop_proxy: Option<EventLoopProxy<EventMessage>>,
     platform_emitter: Option<UnboundedSender<EventMessage>>,
 }
@@ -28,11 +31,34 @@ impl UsePlatform {
         }
         Ok(())
     }
+
+    pub fn request_animation_frame(&self) {
+        self.send(EventMessage::RequestRerender).ok();
+    }
+
+    pub fn new_ticker(&self) -> Ticker {
+        Ticker {
+            inner: self.ticker.resubscribe(),
+        }
+    }
 }
 
 pub fn use_platform(cx: &ScopeState) -> UsePlatform {
     UsePlatform {
         event_loop_proxy: cx.consume_context::<EventLoopProxy<EventMessage>>(),
         platform_emitter: cx.consume_context::<UnboundedSender<EventMessage>>(),
+        ticker: cx
+            .consume_context::<Arc<broadcast::Receiver<()>>>()
+            .expect("This is not expected, and likely a bug. Please, report it."),
+    }
+}
+
+pub struct Ticker {
+    inner: broadcast::Receiver<()>,
+}
+
+impl Ticker {
+    pub async fn tick(&mut self) {
+        self.inner.recv().await.ok();
     }
 }

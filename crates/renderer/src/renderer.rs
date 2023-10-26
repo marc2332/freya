@@ -26,7 +26,7 @@ fn clip_viewpot(canvas: &mut Canvas, viewport: &Area) {
 /// Render a node into the Skia canvas
 #[allow(clippy::too_many_arguments)]
 pub fn render_skia(
-    canvas: &mut Canvas,
+    canvas: &Canvas,
     area: &Area,
     dioxus_node: &DioxusNode,
     font_collection: &mut FontCollection,
