@@ -10,7 +10,7 @@ use torin::geometry::Area;
 
 use crate::elements::{render_image, render_label, render_paragraph, render_rect, render_svg};
 
-fn clip_viewpot(canvas: &mut Canvas, viewport: &Area) {
+fn clip_viewport(canvas: &Canvas, viewport: &Area) {
     canvas.clip_rect(
         Rect::new(
             viewport.min_x(),
@@ -72,13 +72,13 @@ pub fn render_skia(
             // It is the paragraph job to make sure they are clipped
             if tag.as_str() == "paragraph" {
                 if let Some(element_viewport) = element_viewport {
-                    clip_viewpot(canvas, element_viewport);
+                    clip_viewport(canvas, element_viewport);
                 }
             }
             for viewport_id in viewports {
                 let viewport = viewports_collection.get(viewport_id).unwrap().0;
                 if let Some(viewport) = viewport {
-                    clip_viewpot(canvas, &viewport);
+                    clip_viewport(canvas, &viewport);
                 }
             }
         }
