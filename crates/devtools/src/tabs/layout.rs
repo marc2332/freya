@@ -57,7 +57,7 @@ pub fn NodeInspectorLayout(cx: Scope, node_id: NodeId) -> Element {
                                     height: "25",
                                     label {
                                         width: "100%",
-                                        align: "center",
+                                        text_align: "center",
                                         "{paddings.top()}"
                                     }
                                 }
@@ -72,7 +72,7 @@ pub fn NodeInspectorLayout(cx: Scope, node_id: NodeId) -> Element {
                                         height: "100%",
                                         label {
                                             width: "100%",
-                                            align: "center",
+                                            text_align: "center",
                                             "{paddings.left()}"
                                         }
                                     }
@@ -94,7 +94,7 @@ pub fn NodeInspectorLayout(cx: Scope, node_id: NodeId) -> Element {
                                         height: "100%",
                                         label {
                                             width: "100%",
-                                            align: "center",
+                                            text_align: "center",
                                             "{paddings.right()}"
                                         }
                                     }
@@ -106,7 +106,7 @@ pub fn NodeInspectorLayout(cx: Scope, node_id: NodeId) -> Element {
                                     height: "25",
                                     label {
                                         width: "100%",
-                                        align: "center",
+                                        text_align: "center",
                                         "{paddings.bottom()}"
                                     }
                                 }

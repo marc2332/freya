@@ -236,7 +236,7 @@ where
                 height: "auto",
                 padding: "7",
                 label {
-                    align: "center",
+                    text_align: "center",
                     "{selected}"
                 }
                 rect {

@@ -102,7 +102,7 @@ pub fn create_text(
     let font_style = &*node.get::<FontStyleState>().unwrap();
 
     let mut paragraph_style = ParagraphStyle::default();
-    paragraph_style.set_text_align(font_style.align);
+    paragraph_style.set_text_align(font_style.text_align);
     paragraph_style.set_max_lines(font_style.max_lines);
     paragraph_style.set_replace_tab_characters(true);
     paragraph_style.set_text_style(&font_style.into());
@@ -130,7 +130,7 @@ pub fn create_paragraph(
     let node_cursor_settings = &*node.get::<CursorSettings>().unwrap();
 
     let mut paragraph_style = ParagraphStyle::default();
-    paragraph_style.set_text_align(font_style.align);
+    paragraph_style.set_text_align(font_style.text_align);
     paragraph_style.set_max_lines(font_style.max_lines);
     paragraph_style.set_replace_tab_characters(true);
 
