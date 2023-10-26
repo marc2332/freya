@@ -45,7 +45,7 @@ pub fn run_event_loop<State: Clone>(
                 app.accessibility().set_accessibility_focus(id);
             }
             Event::UserEvent(EventMessage::RequestRerender) => {
-                app.render(&hovered_node);
+                app.window_env().window().request_redraw();
             }
             Event::UserEvent(EventMessage::RequestRelayout) => {
                 app.process_layout();
@@ -83,6 +83,7 @@ pub fn run_event_loop<State: Clone>(
             Event::RedrawRequested(_) => {
                 app.process_layout();
                 app.render(&hovered_node);
+                app.tick();
             }
             Event::WindowEvent { event, .. } if app.on_window_event(&event) => {
                 match event {

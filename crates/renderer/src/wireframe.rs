@@ -2,7 +2,7 @@ use freya_engine::prelude::*;
 use torin::geometry::Area;
 
 /// Render a wireframe around the given node
-pub fn render_wireframe(canvas: &mut Canvas, area: &Area) {
+pub fn render_wireframe(canvas: &Canvas, area: &Area) {
     let mut paint = Paint::default();
 
     paint.set_anti_alias(true);

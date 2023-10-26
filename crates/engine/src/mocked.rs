@@ -2,6 +2,7 @@
 #![allow(non_upper_case_globals)]
 #![allow(clippy::upper_case_acronyms)]
 #![allow(non_camel_case_types)]
+#![allow(unused_variables)]
 
 use std::ops::*;
 
@@ -167,7 +168,7 @@ impl Matrix {
         unimplemented!("This is mocked")
     }
 
-    pub fn set_rotate(&self, _degrees: f32, _pivot: impl Into<Option<Point>>) -> &mut Self {
+    pub fn set_rotate(&mut self, _degrees: f32, _pivot: impl Into<Option<Point>>) -> &mut Self {
         unimplemented!("This is mocked")
     }
 }
@@ -420,7 +421,7 @@ impl TextStyle {
         unimplemented!("This is mocked")
     }
 
-    pub fn decoration_mut(&mut self) -> &mut Decoration {
+    pub fn set_decoration(&mut self, decoration: &Decoration) {
         unimplemented!("This is mocked")
     }
 
@@ -708,7 +709,7 @@ impl Paragraph {
         unimplemented!("This is mocked")
     }
 
-    pub fn paint(&self, _canvas: &mut Canvas, _p: impl Into<Point>) {
+    pub fn paint(&self, _canvas: &Canvas, _p: impl Into<Point>) {
         unimplemented!("This is mocked")
     }
 
@@ -947,43 +948,43 @@ impl Canvas {
         unimplemented!("This is mocked")
     }
 
-    pub fn concat(&mut self, _matrix: &Matrix) {
+    pub fn concat(&self, _matrix: &Matrix) {
         unimplemented!("This is mocked")
     }
 
-    pub fn clip_rect(&mut self, _rect: Rect, _clip: ClipOp, _: bool) {
+    pub fn clip_rect(&self, _rect: Rect, _clip: ClipOp, _: bool) {
         unimplemented!("This is mocked")
     }
 
     pub fn draw_image_nine(
-        &mut self,
+        &self,
         _image: Image,
         _center: IRect,
         _dst: Rect,
         _filter_mode: FilterMode,
         _paint: Option<&Paint>,
-    ) -> &mut Self {
+    ) -> &Self {
         unimplemented!("This is mocked")
     }
 
-    pub fn draw_rect(&mut self, _rect: Rect, _paint: &Paint) -> &mut Self {
+    pub fn draw_rect(&self, _rect: Rect, _paint: &Paint) -> &Self {
         unimplemented!("This is mocked")
     }
 
-    pub fn draw_path(&mut self, _path: &Path, _paint: &Paint) -> &mut Self {
+    pub fn draw_path(&self, _path: &Path, _paint: &Paint) -> &Self {
         unimplemented!("This is mocked")
     }
 
     pub fn clip_path(
-        &mut self,
+        &self,
         _path: &Path,
         _op: impl Into<Option<ClipOp>>,
         _do_anti_alias: impl Into<Option<bool>>,
-    ) -> &mut Self {
+    ) -> &Self {
         unimplemented!("This is mocked")
     }
 
-    pub fn translate(&mut self, _d: impl Into<Point>) -> &mut Self {
+    pub fn translate(&self, _d: impl Into<Point>) -> &Self {
         unimplemented!("This is mocked")
     }
 
@@ -995,21 +996,11 @@ impl Canvas {
         unimplemented!("This is mocked")
     }
 
-    pub fn draw_line(
-        &mut self,
-        _p1: impl Into<Point>,
-        _p2: impl Into<Point>,
-        _paint: &Paint,
-    ) -> &mut Self {
+    pub fn draw_line(&self, _p1: impl Into<Point>, _p2: impl Into<Point>, _paint: &Paint) -> &Self {
         unimplemented!("This is mocked")
     }
 
-    pub fn draw_circle(
-        &mut self,
-        _center: impl Into<Point>,
-        _radius: f32,
-        _paint: &Paint,
-    ) -> &mut Self {
+    pub fn draw_circle(&self, _center: impl Into<Point>, _radius: f32, _paint: &Paint) -> &Self {
         unimplemented!("This is mocked")
     }
 }
@@ -1132,7 +1123,7 @@ impl Image {
 pub struct Data;
 
 impl Data {
-    pub fn new_bytes(_bytes: &[u8]) -> Self {
+    pub unsafe fn new_bytes(_bytes: &[u8]) -> Self {
         unimplemented!("This is mocked")
     }
 }
@@ -1328,7 +1319,7 @@ pub mod svg {
             unimplemented!("This is mocked")
         }
 
-        pub fn render(&self, _canvas: &mut Canvas) {
+        pub fn render(&self, _canvas: &Canvas) {
             unimplemented!("This is mocked")
         }
     }
@@ -1353,7 +1344,7 @@ impl From<(i32, i32)> for Size {
 pub struct Surface;
 
 impl Surface {
-    pub fn canvas(&self) -> Canvas {
+    pub fn canvas(&mut self) -> Canvas {
         unimplemented!("This is mocked")
     }
 
@@ -1436,12 +1427,14 @@ impl DirectContext {
 use std::ffi::c_void;
 
 #[repr(u8)]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub enum Protected {
     No,
     Yes,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[repr(C)]
 pub struct FramebufferInfo {
     pub fboid: i32,
     pub format: Format,
@@ -1450,11 +1443,7 @@ pub struct FramebufferInfo {
 
 impl Default for FramebufferInfo {
     fn default() -> Self {
-        Self {
-            fboid: 0,
-            format: 0,
-            protected: Protected::No,
-        }
+        unimplemented!("This is mocked")
     }
 }
 
@@ -1466,16 +1455,7 @@ pub fn wrap_backend_render_target(
     color_space: impl Into<Option<ColorSpace>>,
     surface_props: Option<&SurfaceProps>,
 ) -> Option<Surface> {
-    Surface::from_ptr(unsafe {
-        sb::C_SkSurfaces_WrapBackendRenderTarget(
-            context.native_mut(),
-            backend_render_target.native(),
-            origin,
-            color_type.into_native(),
-            color_space.into().into_ptr_or_null(),
-            surface_props.native_ptr_or_null(),
-        )
-    })
+    unimplemented!("This is mocked")
 }
 
 pub struct Interface;
@@ -1531,6 +1511,18 @@ impl BackendRenderTarget {
         _stencil_bits: usize,
         _info: FramebufferInfo,
     ) -> Self {
+        unimplemented!("This is mocked")
+    }
+}
+
+pub mod backend_render_targets {
+    use crate::prelude::*;
+    pub fn make_gl(
+        (width, height): (i32, i32),
+        sample_count: impl Into<Option<usize>>,
+        stencil_bits: usize,
+        info: FramebufferInfo,
+    ) -> BackendRenderTarget {
         unimplemented!("This is mocked")
     }
 }
