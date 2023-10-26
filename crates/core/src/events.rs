@@ -201,7 +201,7 @@ fn measure_dom_events(
                     *node_id,
                     element_id,
                     &request_event,
-                    Some(areas.area),
+                    Some(areas.visible_area()),
                     scale_factor,
                 );
                 new_events.push(event);

@@ -190,7 +190,6 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
 
     render!(
         rect {
-
             width: "{width}",
             height: "{height}",
             direction: "vertical",
