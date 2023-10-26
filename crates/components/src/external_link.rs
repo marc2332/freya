@@ -74,7 +74,6 @@ pub fn ExternalLink<'a>(cx: Scope<'a, ExternalLinkProps<'a>>) -> Element {
 
     render!(
         rect {
-            direction: "both",
             onmouseover: onmouseover,
             onmouseleave: onmouseleave,
             onclick: onclick,

@@ -21,9 +21,7 @@ fn app(cx: Scope) -> Element {
             background: "black",
             color: "white",
             rect {
-                overflow: "clip",
-                width: "100%",
-                height: "60",
+                height: "80",
                 Button {
                     onclick: move |_| {
                         percentage.set(20.0);
@@ -46,7 +44,6 @@ fn app(cx: Scope) -> Element {
                 height: "calc(100% - 60)",
                 rect {
                     background: "red",
-                    direction: "both",
                     label {
                         font_size: "{font_size}",
                         font_family: "Inter",

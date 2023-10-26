@@ -27,15 +27,14 @@ pub fn Tooltip<'a>(cx: Scope<'a, TooltipProps<'a>>) -> Element {
             height: "30",
             padding: "2",
             width: "170",
-            direction: "both",
             rect {
-                direction: "both",
                 width: "100%",
                 height: "100%",
                 shadow: "0 0 10 5 rgb(0, 0, 0, 50)",
                 corner_radius: "8",
                 background: "{background}",
-                display: "center",
+                main_align: "center",
+                cross_align: "center",
                 label {
                     max_lines: "1",
                     color: "{color}",

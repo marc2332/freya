@@ -17,8 +17,7 @@ fn app(cx: Scope) -> Element {
             color: "black",
             width: "100%",
             height: "100%",
-            display: "center",
-            direction: "horizontal",
+            cross_align: "center",
             rect {
                 width: "50%",
                 height: "100%",

@@ -99,8 +99,8 @@ pub fn NetworkImage<'a>(cx: Scope<'a, NetworkImageProps<'a>>) -> Element<'a> {
                 rect {
                     height: "{height}",
                     width: "{width}",
-                    display: "center",
-                    direction: "both",
+                    main_align: "center",
+                    cross_align: "center",
                     Loader {
 
                     }
@@ -115,7 +115,8 @@ pub fn NetworkImage<'a>(cx: Scope<'a, NetworkImageProps<'a>>) -> Element<'a> {
                 rect {
                     height: "{height}",
                     width: "{width}",
-                    display: "center",
+                    main_align: "center",
+                    cross_align: "center",
                     label {
                         align: "center",
                         "Error"
