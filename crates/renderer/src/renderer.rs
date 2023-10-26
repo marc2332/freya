@@ -13,7 +13,7 @@ use crate::elements::{render_image, render_label, render_paragraph, render_rect,
 /// Render a node into the Skia canvas
 #[allow(clippy::too_many_arguments)]
 pub fn render_skia(
-    canvas: &mut Canvas,
+    canvas: &Canvas,
     area: &Area,
     dioxus_node: &DioxusNode,
     font_collection: &mut FontCollection,
