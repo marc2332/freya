@@ -79,6 +79,9 @@ impl EventsProcessor {
         // All these events will mark the node as being hovered
         // "mouseover" "mouseenter" "pointerover"  "pointerenter"
 
+         // We clone this here so events emitted in the same batch that mark an element as hovered will not affect the other events
+        let hovered_elements = self.hovered_elements.clone();
+
         // Emit valid events
         for event in &events_to_emit {
             let id = &event.node_id;
@@ -88,7 +91,7 @@ impl EventsProcessor {
                 | name @ "mouseenter"
                 | name @ "pointerover"
                 | name @ "pointerenter" => {
-                    let is_hovered = self.hovered_elements.contains(id);
+                    let is_hovered = hovered_elements.contains(id);
 
                     if !is_hovered {
                         self.hovered_elements.insert(*id);
