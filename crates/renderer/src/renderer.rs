@@ -10,6 +10,19 @@ use torin::geometry::Area;
 
 use crate::elements::{render_image, render_label, render_paragraph, render_rect, render_svg};
 
+fn clip_viewport(canvas: &Canvas, viewport: &Area) {
+    canvas.clip_rect(
+        Rect::new(
+            viewport.min_x(),
+            viewport.min_y(),
+            viewport.max_x(),
+            viewport.max_y(),
+        ),
+        ClipOp::Intersect,
+        true,
+    );
+}
+
 /// Render a node into the Skia canvas
 #[allow(clippy::too_many_arguments)]
 pub fn render_skia(
@@ -53,20 +66,19 @@ pub fn render_skia(
         let viewports = viewports_collection.get(&dioxus_node.id());
 
         // Clip all elements with their corresponding viewports
-        if let Some((_, viewports)) = viewports {
+        if let Some((element_viewport, viewports)) = viewports {
+            // Only clip the element iself when it's paragraph because
+            // it will render the inner text spans on it's own, so if these spans overflow the paragraph,
+            // It is the paragraph job to make sure they are clipped
+            if tag.as_str() == "paragraph" {
+                if let Some(element_viewport) = element_viewport {
+                    clip_viewport(canvas, element_viewport);
+                }
+            }
             for viewport_id in viewports {
                 let viewport = viewports_collection.get(viewport_id).unwrap().0;
                 if let Some(viewport) = viewport {
-                    canvas.clip_rect(
-                        Rect::new(
-                            viewport.min_x(),
-                            viewport.min_y(),
-                            viewport.max_x(),
-                            viewport.max_y(),
-                        ),
-                        ClipOp::Intersect,
-                        true,
-                    );
+                    clip_viewport(canvas, &viewport);
                 }
             }
         }
