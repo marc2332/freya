@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
+use freya_elements::events::keyboard::Key;
 use freya_elements::events::{KeyboardData, MouseEvent};
 use freya_hooks::FontTheme;
 use freya_hooks::{
@@ -44,15 +45,9 @@ pub struct InputProps<'a> {
     /// Is input hidden with a character. By default input text is shown.
     #[props(default = InputMode::Shown, into)]
     hidden: InputMode,
-    /// Width of the Input. Default 100.
+    /// Width of the Input. Default 150.
     #[props(default = "150".to_string(), into)]
     width: String,
-    /// Height of the Input. Default 100.
-    #[props(default = "38".to_string(), into)]
-    height: String,
-    /// Max lines for the Input. Default 1.
-    #[props(default = "1".to_string(), into)]
-    max_lines: String,
 }
 
 /// `Input` component.
@@ -120,10 +115,12 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
         to_owned![editable, focus_manager];
         move |e: Event<KeyboardData>| {
             if focus_manager.is_focused() {
-                editable.process_event(&EditableEvent::KeyDown(e.data));
-                cx.props
-                    .onchange
-                    .call(editable.editor().current().to_string());
+                if e.data.key != Key::Enter {
+                    editable.process_event(&EditableEvent::KeyDown(e.data));
+                    cx.props
+                        .onchange
+                        .call(editable.editor().current().to_string());
+                }
             }
         }
     };
@@ -172,8 +169,6 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     let cursor_attr = editable.cursor_attr(cx);
     let highlights_attr = editable.highlights_attr(cx, 0);
     let width = &cx.props.width;
-    let height = &cx.props.height;
-    let max_lines = &cx.props.max_lines;
     let (background, cursor_char) = if focus_manager.is_focused() {
         (
             theme.button.hover_background,
@@ -191,7 +186,6 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     render!(
         rect {
             width: "{width}",
-            height: "{height}",
             direction: "vertical",
             color: "{color}",
             background: "{background}",
@@ -200,8 +194,8 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
             corner_radius: "10",
             margin: "4",
             cursor_reference: cursor_attr,
+            main_align: "center",
             paragraph {
-                overflow: "clip",
                 margin: "8 12",
                 onkeydown: onkeydown,
                 onglobalclick: onglobalclick,
@@ -210,12 +204,11 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
                 onmousedown: onmousedown,
                 onmouseover: onmouseover,
                 width: "100%",
-                height: "100%",
                 cursor_id: "0",
                 cursor_index: "{cursor_char}",
                 cursor_mode: "editable",
                 cursor_color: "{color}",
-                max_lines: "{max_lines}",
+                max_lines: "1",
                 highlights: highlights_attr,
                 text {
                     "{text}"
