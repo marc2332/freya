@@ -77,7 +77,7 @@ impl Layers {
 
     /// Insert a Node into a layer
     pub fn add_element(&mut self, node_id: NodeId, node_layer: i16) {
-        let layer = self.layers.entry(node_layer).or_insert_with(Vec::default);
+        let layer = self.layers.entry(node_layer).or_default();
 
         layer.push(node_id);
     }
