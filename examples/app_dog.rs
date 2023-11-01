@@ -25,6 +25,7 @@ async fn fetch_random_dog() -> Option<Url> {
 }
 
 fn app(cx: Scope) -> Element {
+    use_init_theme(cx, DARK_THEME);
     let dog_url = use_state(cx, || None);
 
     let fetch = move || {
@@ -37,15 +38,14 @@ fn app(cx: Scope) -> Element {
     };
 
     render!(
-        container {
+        rect {
             background: "rgb(15, 15, 15)",
             width: "100%",
             height: "100%",
-            color: "white",
-            container {
+            rect {
+                overflow: "clip",
                 width: "100%",
-                height: "calc(100% - 58)",
-                radius: "25",
+                height: "calc(100% - 60)",
                 if let Some(dog_url) = dog_url.get() {
                    rsx!(
                         NetworkImage {
@@ -54,11 +54,12 @@ fn app(cx: Scope) -> Element {
                    )
                 }
             }
-            container {
-                padding: "10",
-                height: "58",
+            rect {
+                overflow: "clip",
+                height: "60",
                 width: "100%",
-                direction: "horizontal",
+                main_align: "center",
+                cross_align: "center",
                 Button {
                     onclick: move |_|  fetch(),
                     label {

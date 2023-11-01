@@ -6,32 +6,41 @@
 use freya::prelude::*;
 
 fn main() {
-    launch(app);
+    launch_with_props(app, "Counter", (400.0, 350.0));
 }
 
 fn app(cx: Scope) -> Element {
     let mut count = use_state(cx, || 0);
 
     render!(
-        container {
-            height: "20%",
+        rect {
+            height: "50%",
             width: "100%",
-            background: "rgb(233, 196, 106)",
-            padding: "12",
-            color: "rgb(20, 33, 61)",
+            main_align: "center",
+            cross_align: "center",
+            background: "rgb(0, 119, 182)",
+            color: "white",
+            shadow: "0 4 20 5 rgb(0, 0, 0, 80)",
             label {
-                font_size: "20",
-                "Number is: {count}"
+                font_size: "75",
+                font_weight: "bold",
+                "{count}"
             }
         }
-        container {
-            height: "80%",
+        rect {
+            height: "50%",
             width: "100%",
-            background: "rgb(168, 218, 220)",
-            color: "black",
-            padding: "12",
-            onclick: move |_| count += 1,
-            label { "Click to increase!" }
+            main_align: "center",
+            cross_align: "center",
+            direction: "horizontal",
+            Button {
+                onclick: move |_| count += 1,
+                label { "Increase" }
+            }
+            Button {
+                onclick: move |_| count -= 1,
+                label { "Decrease" }
+            }
         }
     )
 }

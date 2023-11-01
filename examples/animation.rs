@@ -14,7 +14,7 @@ const TIME: i32 = 500;
 const TARGET: f64 = 500.0;
 
 fn app(cx: Scope) -> Element {
-    let animation = use_animation(cx, 0.0);
+    let animation = use_animation(cx, || 0.0);
 
     let progress = animation.value();
 
@@ -30,15 +30,15 @@ fn app(cx: Scope) -> Element {
     };
 
     render!(
-        container {
+        rect {
+            overflow: "clip",
             background: "black",
-            direction: "both",
             width: "100%",
             height: "100%",
             offset_x: "{progress}",
             rect {
-                display: "center",
-                direction: "both",
+                main_align: "center",
+                cross_align: "center",
                 height: "100%",
                 width: "200",
                 rect {
@@ -46,13 +46,13 @@ fn app(cx: Scope) -> Element {
                     width: "100%",
                     background: "rgb(100, 100, 100)",
                     padding: "25",
-                    radius: "100",
-                    display: "center",
-                    direction: "both",
+                    corner_radius: "100",
+                    main_align: "center",
+                    cross_align: "center",
                     onclick: anim,
                     label {
                         font_size: "30",
-                        align: "center",
+                        text_align: "center",
                         color: "white",
                         "Click to move"
                     }

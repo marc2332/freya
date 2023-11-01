@@ -5,7 +5,7 @@ Learn how the font style attributes work.
 - [`color`](#color)
 - [`font_family`](#font_family)
 - [`font_size`](#font_size)
-- [`align`](#align)
+- [`text_align`](#text_align)
 - [`font_style`](#font_style)
 - [`font_weight`](#font_weight)
 - [`font_width`](#font_width)
@@ -16,6 +16,8 @@ Learn how the font style attributes work.
 - [`decoration`](#decoration)
 - [`decoration_style`](#decoration_style)
 - [`decoration_color`](#decoration_color)
+- [`text_shadow`](#text_shadow)
+- [`text_overflow`](#text_overflow)
 
 
 ### color
@@ -26,7 +28,7 @@ You can learn about the syntax of this attribute in [`Color Syntax`](/guides/sty
 
 Example:
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         label {
@@ -39,7 +41,7 @@ fn app(cx: Scope) -> Element {
 
 Another example showing [inheritance](#inheritance):
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -63,7 +65,7 @@ Limitation: Only fonts installed in the system are supported for now.
 
 Example: 
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         label {
@@ -82,7 +84,7 @@ You can specify the size of the text using `font_size`.
 
 Example:
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         label {
@@ -95,19 +97,19 @@ fn app(cx: Scope) -> Element {
 
 Compatible elements: [`label`](/guides/elements.html#label), [`paragraph`](/guides/elements.html#paragraph-and-text), [`text`](/guides/elements.html#paragraph-and-text)
 
-### align
+### text_align
 
-You can change the alignment of the text using the `align` attribute.
+You can change the alignment of the text using the `text_align` attribute.
 
 Accepted values: `center`, `end`, `justify`, `left`, `right`, `start`
 
 Example
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         label {
-            align: "right",
+            text_align: "right",
             "Hello, World!"
         }
     )
@@ -124,7 +126,7 @@ Accepted values: `upright` (default), `italic` and `oblique`.
 
 Example:
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         label {
@@ -167,7 +169,7 @@ Accepted values:
 
 Example:
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         label {
@@ -196,7 +198,7 @@ Accepted values:
 
 Example:
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         label {
@@ -217,12 +219,32 @@ Specify the height of the lines of the text.
 
 Example:
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         label {
             lines_height: "3",
             "Hello, World! \n Hello, again!"
+        }
+    )
+}
+```
+
+### max_lines
+
+Determines the amount of lines that the text can have. It has unlimited lines by default.
+
+Example:
+
+```rust, no_run
+fn app(cx: Scope) -> Element {
+    render!(
+        label {
+            "Hello, World! \n Hello, World! \n Hello, world!" // Will show all three lines
+        }
+        label {
+            lines_height: "2",
+            "Hello, World! \n Hello, World! \n Hello, world!" // Will only show two lines
         }
     )
 }
@@ -236,7 +258,7 @@ Specify the spacing between characters of the text.
 
 Example:
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         label {
@@ -255,7 +277,7 @@ Specify the spacing between words of the text.
 
 Example:
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         label {
@@ -279,7 +301,7 @@ Accpted values:
 
 Example:
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         label {
@@ -305,7 +327,7 @@ Accpted values:
 
 Example:
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         label {
@@ -327,7 +349,7 @@ You can learn about the syntax of this attribute in [`Color Syntax`](/guides/sty
 
 Example:
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         label {
@@ -340,3 +362,48 @@ fn app(cx: Scope) -> Element {
 ```
 
 Compatible elements: [`text`](/guides/elements.html#paragraph-and-text), [`paragraph`](/guides/elements.html#paragraph-and-text), [`label`](/guides/elements.html#label).
+
+### text_shadow
+
+Specify the shadow of a text.
+
+Syntax: `<x> <y> <size> <color>`
+
+Example:
+
+```rust, no_run
+fn app(cx: Scope) -> Element {
+    render!(
+        label {
+            text_shadow: "0 18 12 rgb(0, 0, 0)",
+            "Hello, World!"
+        }
+    )
+}
+```
+
+Compatible elements: [`text`](/guides/elements.html#paragraph-and-text), [`label`](/guides/elements.html#label).
+
+### text_overflow
+
+Determines how text is treated when it exceeds its [`max_lines`](#max_lines) count. By default uses the `clip` mode, which will cut off any overflowing text, with `ellipsis` mode it will show `...` at the end.
+
+Accepted values:
+- `clip` (default)
+- `ellipsis`
+
+Example:
+
+```rust, no_run
+fn app(cx: Scope) -> Element {
+    render!(
+        label {
+            max_lines: "3",
+            text_overflow: "ellipsis",
+            "Looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong text"
+        }
+    )
+}
+```
+
+Compatible elements: [`label`](/guides/elements.html#label), [`paragraph`](/guides/elements.html#paragraph-and-text).

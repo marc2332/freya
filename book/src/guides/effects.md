@@ -10,11 +10,11 @@ The `rotate` attribute let's you rotate an element.
 
 Example:
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         label {
-            rotate: "180",
+            rotate: "180deg",
             "Hello, World!"
         }
     )

@@ -1,6 +1,6 @@
 # Getting started
 
-I encourage you to learn how [Dioxus works](https://dioxuslabs.com/docs/0.3/guide/en/describing_ui/index.html), when you are done you can continue here.
+I encourage you to learn how [Dioxus works](https://dioxuslabs.com/learn/0.4/guide/your_first_component), when you are done you can continue here. Also make sure you have the followed the [environment setup](../setup.html) guide.
 
 Now, let's start by creating a hello world project.
 
@@ -23,15 +23,15 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-freya = { git = "https://github.com/marc2332/freya" }
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev="b264211cc2685232426317d3055046838047d3db", features = ["macro", "hooks"]}
+freya = "0.1"
+dioxus = { version = "0.4", features = ["macro", "hooks"], default-features = false }
 ```
 
 ### src/main.rs
 
 And paste this code in your `main.rs` file.
 
-```rust no_run
+```rust, no_run no_run
 #![cfg_attr(
     all(not(debug_assertions), target_os = "windows"),
     windows_subsystem = "windows"
@@ -47,7 +47,7 @@ fn app(cx: Scope) -> Element {
     let mut count = use_state(cx, || 0);
 
     render!(
-        container {
+        rect {
             height: "100%",
             width: "100%",
             background: "rgb(35, 35, 35)",
@@ -66,3 +66,7 @@ Simply run with `cargo`:
 ```sh
 cargo run
 ```
+
+Nice! You have created your first Freya app. 
+
+You can learn more with the [examples](https://github.com/marc2332/freya/tree/main/examples) in the repository.

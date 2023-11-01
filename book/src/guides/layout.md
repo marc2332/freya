@@ -2,25 +2,28 @@
 
 Learn how the layout attributes work.
 
-- [`width & height`](#width_&_height)
-- [`min_width & min_height`](#min_width_&_min_height)
-- [`max_width & max_height`](#max_width_&_max_height)
+- [`width & height`](#width--height)
+- [`min_width & min_height`](#min_width--min_height)
+- [`max_width & max_height`](#max_width--max_height)
 - [`Size units`](#size_units)
-  - [`Static values`](#static-values)
+  - [`Logical pixels`](#logical-pixels)
   - [`Percentages`](#percentages)
   - [`calc()`](#calc)
 - [`direction`](#direction)
 - [`padding`](#padding)
-- [`display`](#display)
+- [`margin`](#margin)
+- [`main_align & cross_align`](#main_align--cross_align)
 
 > ⚠️ Freya's layout is still somewhat limited.
 
 ### width & height
 All elements support both `width` and `height` attributes.
 
+See syntax for [`Size Units`](#size-units).
+
 ##### Usage
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -34,11 +37,13 @@ fn app(cx: Scope) -> Element {
 
 ### min_width & min_height
 
-`rect` and `container` support specifying a minimum width and height, this can be useful if you use it alongside a percentage for the target size.
+`rect` supports specifying a minimum width and height, this can be useful if you use it alongside a percentage for the target size.
+
+See syntax for [`Size Units`](#size-units).
 
 ##### Usage
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -54,11 +59,13 @@ fn app(cx: Scope) -> Element {
 
 ### max_width & max_height
 
-`rect` and `container` support specifying a maximum width and height.
+`rect` supports specifying a maximum width and height.
+
+See syntax for [`Size Units`](#size-units).
 
 ##### Usage
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -74,9 +81,9 @@ fn app(cx: Scope) -> Element {
 
 ### Size Units
 
-#### Static Values
+#### Logical pixels
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -90,7 +97,7 @@ fn app(cx: Scope) -> Element {
 #### Percentages
 Relative percentage to the parent equivalent value.
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -105,7 +112,7 @@ fn app(cx: Scope) -> Element {
 
 For more complex logic you can use the `calc()` function.
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -118,11 +125,11 @@ fn app(cx: Scope) -> Element {
 
 ### direction
 
-Control how the inner elements will be stacked, possible values are `horizontal`, `vertical` (default) or `both` (default for text elements, e.g label, paragraph, text, etc).
+Control how the inner elements will be stacked, possible values are `vertical` (default) and `horizontal`.
 
 ##### Usage
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -148,7 +155,7 @@ fn app(cx: Scope) -> Element {
 
 Specify the inner paddings of an element. You can do so by three different ways, just like in CSS.
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -161,18 +168,28 @@ fn app(cx: Scope) -> Element {
 
 ```
 
-### display
+### main_align & cross_align
 
-Control how the inner elements are displayed, possible values are `normal` (default) or `center`.
+Control how the inner elements are positioned inside the element. You can combine it with the `direction` attribute to create complex flows.
 
-```rust
+Possible values for both attributes are:
+- `start` (default): At the begining of the axis
+- `center`: At the center of the axis
+- `end`: At the end of the axis
+
+When using the `vertical` direction, `main_align` will be the Y axis and `cross_align` will be the X axis. But when using the `horizontal` direction, the
+`main_align` will be the X axis and the `cross_align` will be the Y axis.
+
+Example on how to center the inner elements in both axis:
+
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         rect {
             width: "100%",
             height: "100%",
-            direction: "both",
-            display: "center",
+            main_align: "center",
+            cross_align: "center",
             rect {
                 width: "50%",
                 height: "50%",
@@ -183,3 +200,18 @@ fn app(cx: Scope) -> Element {
 }
 ```
 
+### margin
+
+Specify the margin of an element. You can do so by three different ways, just like in CSS.
+
+```rust, no_run
+fn app(cx: Scope) -> Element {
+    render!(
+        rect {
+            margin: "25" // 25 in all sides
+            margin: "100 50" // 100 in top and bottom, and 50 in left and right
+            margin: "5 7 3 9" // 5 in top, 7 in right, 3 in bottom and 9 in left
+        }
+    )
+}
+```

@@ -13,19 +13,18 @@ This a very simple hook that will let you animate a certain value from an `inita
 
 Here is an example that will animate a value from `0.0` to `100.0` in `50` milliseconds, using the `linear` animation.
 
-```rust
+```rust, no_run
 fn main() {
     launch(app);
 }
 
  fn app(cx: Scope) -> Element {
-    let animation = use_animation(cx, 0.0);
+    let animation = use_animation(cx, || 0.0);
 
     let progress = animation.value();
 
-    use_effect(cx, (), move |_| {
+    use_memo(cx, (), move |_| {
         animation.start(Animation::new_linear(0.0..=100.0, 50));
-        async move {}
     });
 
     render!(rect {
@@ -47,7 +46,7 @@ Just like `use_animation` you have these animations:
 
 Here is an example that will animate a `size` and a color in `200` milliseconds, using the `new_sine_in_out` animation.
 
-```rust
+```rust, no_run
 fn main() {
     launch(app);
 }
@@ -74,7 +73,8 @@ fn app(cx: Scope) -> Element {
     };
 
     render!(
-        container {
+        rect {
+            overflow: "clip",
             background: "black",
             width: "100%",
             height: "100%",

@@ -1,0 +1,36 @@
+[package]
+name = "freya-layout"
+description = "Internal layout and layers management for Freya."
+version = "0.1.6"
+edition = "2021"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../../readme.md"
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
+categories = ["gui", "asynchronous"]
+
+[package.metadata.docs.rs]
+features = ["freya-engine/mocked-engine"]
+
+[features]
+skia-engine = ["freya-engine/skia-engine"]
+
+[dependencies]
+freya-common = { workspace = true }
+freya-node-state = { workspace = true }
+freya-dom = { workspace = true }
+freya-elements = { workspace = true }
+freya-engine = { workspace = true }
+torin = { workspace = true }
+
+dioxus-core = { workspace = true }
+dioxus-native-core = { workspace = true }
+dioxus = { workspace = true }
+
+tokio = { workspace = true }
+accesskit = { workspace = true }
+
+rustc-hash= { workspace = true }
+uuid = { version =  "1.4.1", features = ["v4"]}

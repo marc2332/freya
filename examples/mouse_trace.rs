@@ -8,12 +8,8 @@ use freya::prelude::*;
 fn main() {
     launch_cfg(
         app,
-        WindowConfig::<()>::builder()
-            .with_width(1920.0)
-            .with_height(1080.0)
-            .with_decorations(false)
-            .with_transparency(true)
-            .with_title("Rotate")
+        LaunchConfig::<()>::builder()
+            .with_title("Mouse Trace")
             .build(),
     );
 }
@@ -28,21 +24,21 @@ fn Box(cx: Scope) -> Element {
             background: "rgb(65, 53, 67)",
             width: "250",
             height: "250",
-            direction: "both",
-            display: "center",
-            radius: "100",
+            main_align: "center",
+            cross_align: "center",
+            corner_radius: "100",
             rect {
                 background: "rgb(143, 67, 238)",
                 width: "180",
                 height: "180",
-                direction: "both",
-                display: "center",
-                radius: "100",
+                main_align: "center",
+                cross_align: "center",
+                corner_radius: "100",
                 rect {
                     background: "rgb(240, 235, 141)",
                     width: "100",
                     height: "100",
-                    radius: "100",
+                    corner_radius: "100",
                 }
             }
         }

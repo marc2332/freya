@@ -1,0 +1,17 @@
+#[derive(PartialEq, Clone, Debug, Default)]
+pub enum Alignment {
+    #[default]
+    Start,
+    Center,
+    End,
+}
+
+impl Alignment {
+    pub fn is_not_start(&self) -> bool {
+        *self != Self::Start
+    }
+
+    pub fn pretty(&self) -> String {
+        format!("{self:?}")
+    }
+}

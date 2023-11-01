@@ -5,13 +5,11 @@
 
 use std::{
     sync::{Arc, Mutex},
-    time::{Duration, Instant},
+    time::Instant,
 };
 
-use dioxus_utils::use_channel::{use_channel, use_listen_channel};
-use freya::{common::EventMessage, prelude::*};
+use freya::prelude::*;
 use skia_safe::{Color, Data, Paint, Rect, RuntimeEffect};
-use tokio::time::sleep;
 
 fn main() {
     launch(app);
@@ -36,14 +34,16 @@ const SHADER: &str = "
 
 fn app(cx: Scope) -> Element {
     let platform = use_platform(cx);
-    let render_channel = use_channel::<()>(cx, 5);
 
-    use_listen_channel(cx, &render_channel, move |_| {
-        to_owned![platform];
-        async move {
-            sleep(Duration::from_millis(25)).await;
-            platform.send(EventMessage::RequestRerender).unwrap();
-        }
+    cx.use_hook(|| {
+        let mut ticker = platform.new_ticker();
+
+        cx.spawn(async move {
+            loop {
+                ticker.tick().await;
+                platform.request_animation_frame();
+            }
+        });
     });
 
     let canvas = use_canvas(cx, (), |_| {
@@ -51,7 +51,7 @@ fn app(cx: Scope) -> Element {
         let shader_wrapper = Arc::new(Mutex::new(ShaderWrapper(shader)));
         let instant = Instant::now();
 
-        to_owned![render_channel, shader_wrapper];
+        to_owned![shader_wrapper];
         Box::new(move |canvas, _, region| {
             let shader = shader_wrapper.lock().unwrap();
 
@@ -83,8 +83,6 @@ fn app(cx: Scope) -> Element {
                 ),
                 &paint,
             );
-
-            render_channel.send(()).unwrap();
         })
     });
 

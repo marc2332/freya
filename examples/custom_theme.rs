@@ -9,6 +9,7 @@ const CUSTOM_THEME: Theme = Theme {
     button: ButtonTheme {
         background: "rgb(230, 0, 0)",
         hover_background: "rgb(150, 0, 0)",
+        border_fill: "rgb(120, 0, 0)",
         font_theme: FontTheme { color: "white" },
     },
     ..LIGHT_THEME

@@ -7,7 +7,7 @@ Freya has built-in support for Theming.
 ### Accessing the current theme
 You can access the whole current theme via the `use_get_theme` hook.
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         ThemeProvider {
@@ -30,10 +30,10 @@ fn Component(cx: Scope) -> Element {
 }
 ```
 
-### Changing the current theme
+### Custom default theme 
 By default, the selected theme is `DARK_THEME`. You use the alternative, `LIGHT_THEME` or any you want.
 
-```rust
+```rust, no_run
 fn app(cx: Scope) -> Element {
     render!(
         ThemeProvider {
@@ -57,11 +57,42 @@ fn Component(cx: Scope) -> Element {
 }
 ```
 
+### Change theme
+Changing the selected theme at runtime is possible by using the `use_theme` hook.
+
+```rust, no_run
+fn app(cx: Scope) -> Element {
+    render!(
+        ThemeProvider {
+            Component { }
+        }
+    )
+}
+
+#[allow(non_snake_case)]
+fn Component(cx: Scope) -> Element {
+    let theme = use_theme(cx);
+
+    let onclick = |_| {
+        *theme.write() = LIGHT_THEME;
+    };
+
+    render!(
+        Button {
+            onclick: onclick,
+            label {
+                "Use Light theme"
+            }
+        }
+    )
+}
+```
+
 ### Custom theme
 
 Themes can be built from scratch or extended from others, like here with `LIGHT_THEME`:
 
-```rust
+```rust, no_run
 
 const CUSTOM_THEME: Theme = Theme {
     button: ButtonTheme {

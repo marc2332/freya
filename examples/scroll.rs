@@ -20,43 +20,28 @@ fn app(cx: Scope) -> Element {
             ScrollView {
                 show_scrollbar: true,
                 rect {
+                    border: "15 solid rgb(214, 40, 40)",
                     height: "200",
                     width: "400",
-                    background: "rgb(214, 40, 40)",
-                    padding: "15",
-                    rect {
-                        height: "100%",
-                        width: "100%",
-                        background: "rgb(27, 38, 59)",
-                        padding: "15",
-                        label {  "Scroll support :)" }
-                    }
+                    background: "rgb(27, 38, 59)",
+                    padding: "30",
+                    label {  "Scroll support :)" }
                 }
                 rect {
+                    border: "15 solid rgb(214, 40, 40)",
                     height: "200",
                     width: "400",
-                    background: "rgb(214, 40, 40)",
-                    padding: "15",
-                    rect {
-                        height: "100%",
-                        width: "100%",
-                        background: "rgb(27, 38, 59)",
-                        padding: "15",
-                        label { "Scroll support :-)" }
-                    }
+                    background: "rgb(27, 38, 59)",
+                    padding: "30",
+                    label { "Scroll support :-)" }
                 }
                 rect {
+                    border: "15 solid rgb(214, 40, 40)",
                     height: "200",
                     width: "400",
-                    background: "rgb(214, 40, 40)",
-                    padding: "15",
-                    rect {
-                        height: "100%",
-                        width: "100%",
-                        background: "rgb(27, 38, 59)",
-                        padding: "15",
-                        label { "Scroll support >:D" }
-                    }
+                    background: "rgb(27, 38, 59)",
+                    padding: "30",
+                    label {  "Scroll support >:D" }
                 }
             }
         }
