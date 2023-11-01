@@ -118,7 +118,7 @@ fn app(cx: Scope) -> Element {
                                         divider: n > 0,
                                         label {
                                             width: "100%",
-                                            align: "right",
+                                            text_align: "right",
                                             "{item}"
                                         }
                                     }

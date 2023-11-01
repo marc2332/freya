@@ -31,8 +31,8 @@ impl<'a> MeasureMode<'a> {
             },
             MeasureMode::ParentIsNotCached { area, inner_area } => {
                 OwnedMeasureMode::ParentIsNotCached {
-                    area: **area.clone(),
-                    inner_area: **inner_area.clone(),
+                    area: **area,
+                    inner_area: **inner_area,
                 }
             }
         }

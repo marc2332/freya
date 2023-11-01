@@ -53,7 +53,7 @@ pub fn process_layers(
                             let text_group = layers
                                 .paragraph_elements
                                 .entry(cursor_ref.text_id)
-                                .or_insert_with(Vec::default);
+                                .or_default();
 
                             text_group.push(node.id());
                         }
