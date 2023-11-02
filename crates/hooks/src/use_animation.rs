@@ -155,7 +155,7 @@ mod test {
         assert_eq!(utils.root().get(0).layout().unwrap().width(), 0.0);
 
         // State somewhere in the middle
-        sleep(Duration::from_millis(32)).await;
+        sleep(Duration::from_millis(15)).await;
         utils.wait_for_update().await;
 
         let width = utils.root().get(0).layout().unwrap().width();
