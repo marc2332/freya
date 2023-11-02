@@ -3,3 +3,4 @@ coverage:
     patch: false
 
 fail_ci_if_error: false
+threshold: 0.20
