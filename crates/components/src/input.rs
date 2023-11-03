@@ -117,13 +117,11 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     let onkeydown = {
         to_owned![editable, focus_manager];
         move |e: Event<KeyboardData>| {
-            if focus_manager.is_focused() {
-                if e.data.key != Key::Enter {
-                    editable.process_event(&EditableEvent::KeyDown(e.data));
-                    cx.props
-                        .onchange
-                        .call(editable.editor().current().to_string());
-                }
+            if focus_manager.is_focused() && e.data.key != Key::Enter {
+                editable.process_event(&EditableEvent::KeyDown(e.data));
+                cx.props
+                    .onchange
+                    .call(editable.editor().current().to_string());
             }
         }
     };
