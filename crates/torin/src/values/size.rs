@@ -20,7 +20,7 @@ impl Default for Size {
 impl Size {
     pub fn pretty(&self) -> String {
         match self {
-            Size::Inner => "inner".to_string(),
+            Size::Inner => "auto".to_string(),
             Size::Pixels(s) => format!("{}", s.get()),
             Size::DynamicCalculations(calcs) => format!(
                 "calc({})",
