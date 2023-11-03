@@ -48,6 +48,9 @@ pub struct InputProps<'a> {
     /// Width of the Input. Default 150.
     #[props(default = "150".to_string(), into)]
     width: String,
+    /// Margin of the Input. Default 4.
+    #[props(default = "4".to_string(), into)]
+    margin: String,
 }
 
 /// `Input` component.
@@ -169,6 +172,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     let cursor_attr = editable.cursor_attr(cx);
     let highlights_attr = editable.highlights_attr(cx, 0);
     let width = &cx.props.width;
+    let margin = &cx.props.margin;
     let (background, cursor_char) = if focus_manager.is_focused() {
         (
             theme.button.hover_background,
@@ -192,7 +196,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
             border: "1 solid {border_fill}",
             shadow: "0 3 15 0 rgb(0, 0, 0, 70)",
             corner_radius: "10",
-            margin: "4",
+            margin: "{margin}",
             cursor_reference: cursor_attr,
             main_align: "center",
             paragraph {
