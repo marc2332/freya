@@ -71,6 +71,7 @@ dioxus-std = { version = "0.4", features = ["i18n"] }
 rand = "0.8.5"
 dioxus-router = { workspace = true }
 itertools = "0.11.0"
+fermi = "0.4.0"
 
 [profile.release]
 lto = true

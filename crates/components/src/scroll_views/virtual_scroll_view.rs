@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{keyboard::Key, KeyboardEvent, MouseEvent, WheelEvent};
-use freya_hooks::{use_focus, use_node};
+use freya_hooks::{use_focus, use_node, ScrollController, use_scroll_controller};
 use std::ops::Range;
 
 use crate::{
@@ -49,9 +49,9 @@ pub struct VirtualScrollViewProps<'a, T: 'a> {
     /// Enable scrolling with arrow keys.
     #[props(default = true, into)]
     pub scroll_with_arrows: bool,
-    /// Tracker for the vertical scroll.
+    /// Optional scroll controller.
     #[props(optional)]
-    pub scrolled_y: Option<UseRef<i32>>,
+    pub scroll_controller: Option<&'a ScrollController>,
 }
 
 fn get_render_range(
@@ -110,8 +110,11 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
     let clicking_scrollbar = use_ref::<Option<(Axis, f64)>>(cx, || None);
     let clicking_shift = use_ref(cx, || false);
     let clicking_alt = use_ref(cx, || false);
-    let scrolled_y = use_ref(cx, || 0);
-    let scrolled_x = use_ref(cx, || 0);
+    let scroll_controller = cx.props.scroll_controller.unwrap_or_else(|| {
+        let scrolled_y = use_ref(cx, || 0);
+        let scrolled_x = use_ref(cx, || 0);
+        use_scroll_controller(cx, || ScrollController::new_both(scrolled_y.into(), scrolled_x.into()))
+    });
     let (node_ref, size) = use_node(cx);
     let focus = use_focus(cx);
 
@@ -135,9 +138,9 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
     let container_height = get_container_size(horizontal_scrollbar_is_visible);
 
     let corrected_scrolled_y =
-        get_corrected_scroll_position(inner_size, size.area.height(), *scrolled_y.read() as f32);
+        get_corrected_scroll_position(inner_size, size.area.height(), scroll_controller.read_y() as f32);
     let corrected_scrolled_x =
-        get_corrected_scroll_position(inner_size, size.area.width(), *scrolled_x.read() as f32);
+        get_corrected_scroll_position(inner_size, size.area.width(), scroll_controller.read_x() as f32);
 
     let (scrollbar_y, scrollbar_height) =
         get_scrollbar_pos_and_size(inner_size, size.area.height(), corrected_scrolled_y);
@@ -162,7 +165,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
                 corrected_scrolled_y,
             );
 
-            scrolled_y.with_mut(|y| *y = scroll_position_y);
+            scroll_controller.scroll_y(scroll_position_y);
         }
 
         let wheel_x = if *clicking_shift.read() {
@@ -178,7 +181,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
             corrected_scrolled_x,
         );
 
-        scrolled_x.with_mut(|x| *x = scroll_position_x);
+        scroll_controller.scroll_x(scroll_position_x);
 
         focus.focus();
     };
@@ -194,7 +197,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
             let scroll_position =
                 get_scroll_position_from_cursor(cursor_y as f32, inner_size, size.area.height());
 
-            scrolled_y.with_mut(|y| *y = scroll_position);
+                scroll_controller.scroll_y(scroll_position);
         } else if let Some((Axis::X, x)) = *clicking_scrollbar {
             let coordinates = e.get_element_coordinates();
             let cursor_x = coordinates.x - x - size.area.min_x() as f64;
@@ -202,7 +205,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
             let scroll_position =
                 get_scroll_position_from_cursor(cursor_x as f32, inner_size, size.area.width());
 
-            scrolled_x.with_mut(|x| *x = scroll_position);
+                scroll_controller.scroll_x(scroll_position);
         }
 
         if clicking_scrollbar.is_some() {
@@ -248,8 +251,8 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
                     viewport_width,
                 );
 
-                scrolled_x.set(x as i32);
-                scrolled_y.set(y as i32);
+                scroll_controller.scroll_x(x as i32);
+                scroll_controller.scroll_y(y as i32);
             }
         };
     };

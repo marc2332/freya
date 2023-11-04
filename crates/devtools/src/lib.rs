@@ -5,6 +5,7 @@ use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::tree::TreeRef;
 use dioxus_native_core::NodeId;
 use dioxus_router::prelude::*;
+use fermi::use_init_atom_root;
 use freya_components::*;
 use freya_core::node::{get_node_state, NodeState};
 use freya_dom::prelude::SafeDOM;
@@ -116,6 +117,7 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
     use_shared_state_provider(cx, Vec::<TreeNode>::new);
     use_shared_state_provider::<HoveredNode>(cx, || cx.props.hovered_node.clone());
     use_init_theme(cx, DARK_THEME);
+    use_init_atom_root(cx);
     let children = use_shared_state::<Vec<TreeNode>>(cx).unwrap();
     let theme = use_theme(cx);
     let theme = theme.read();

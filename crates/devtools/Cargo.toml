@@ -36,3 +36,4 @@ dioxus-core = { workspace = true }
 dioxus-router = { workspace = true }
 
 tokio = { workspace = true }
+fermi = "0.4.0"
