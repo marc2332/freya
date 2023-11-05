@@ -6,7 +6,7 @@ use crate::{
     geometry::{Area, Size2D},
     measure_mode::MeasureMode,
     node::Node,
-    prelude::{AlignmentDirection, AreaModel, Torin},
+    prelude::{AlignmentDirection, AreaModel, Position, Torin},
     size::Size,
 };
 
@@ -29,9 +29,14 @@ pub fn measure_node<Key: NodeKey>(
 ) -> (bool, NodeAreas) {
     let must_run = layout.dirty.contains(&node_id) || layout.results.get(&node_id).is_none();
     if must_run {
+        let origin = match node.position {
+            Position::Stacked => available_parent_area.origin,
+            Position::Absolute => parent_area.origin,
+        };
+
         // 1. Create the initial Node area
         let mut area = Rect::new(
-            available_parent_area.origin,
+            origin,
             Size2D::new(node.padding.horizontal(), node.padding.vertical()),
         );
 
@@ -253,7 +258,13 @@ pub fn measure_inner_nodes<Key: NodeKey>(
             );
 
             // Stack the child into its parent
-            mode.stack_into_node(parent_node, available_area, &child_areas.area, inner_sizes);
+            mode.stack_into_node(
+                parent_node,
+                available_area,
+                &child_areas.area,
+                inner_sizes,
+                &child_data,
+            );
 
             // Cache the child layout if it was mutated and inner nodes must be cache
             if child_revalidated && must_cache_inner_nodes {

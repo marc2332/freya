@@ -191,6 +191,7 @@ builder_constructors! {
         name: String,
         focusable: String,
         margin: String,
+        position: String,
     };
     label {
         color: String,

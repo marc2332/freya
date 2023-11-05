@@ -1,5 +1,6 @@
 use crate::prelude::{
-    get_align_axis, AlignAxis, AlignmentDirection, Area, DirectionMode, Node, Size, Size2D,
+    get_align_axis, AlignAxis, AlignmentDirection, Area, DirectionMode, Node, Position, Size,
+    Size2D,
 };
 
 /// Measurement data for the inner Nodes of a Node
@@ -134,7 +135,12 @@ impl<'a> MeasureMode<'a> {
         available_area: &mut Area,
         content_area: &Area,
         inner_sizes: &mut Size2D,
+        node_data: &Node,
     ) {
+        if node_data.position == Position::Absolute {
+            return;
+        }
+
         match parent_node.direction {
             DirectionMode::Horizontal => {
                 // Move the available area
