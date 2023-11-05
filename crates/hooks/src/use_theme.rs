@@ -129,7 +129,7 @@ pub struct ProgressBarTheme {
 /// Theming properties for Table component.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TableTheme {
-    pub color: &'static str,
+    pub font_theme: FontTheme,
     pub background: &'static str,
     pub arrow_fill: &'static str,
     pub alternate_row_background: &'static str,
@@ -231,7 +231,7 @@ pub const LIGHT_THEME: Theme = Theme {
         progress_background: "rgb(103, 80, 164)",
     },
     table: TableTheme {
-        color: "black",
+        font_theme: FontTheme { color: "white" },
         background: "white",
         arrow_fill: "rgb(40, 40, 40)",
         row_background: "transparent",
@@ -303,7 +303,7 @@ pub const DARK_THEME: Theme = Theme {
         progress_background: "rgb(255, 95, 0)",
     },
     table: TableTheme {
-        color: "white",
+        font_theme: FontTheme { color: "white" },
         background: "rgb(25, 25, 25)",
         arrow_fill: "rgb(150, 150, 150)",
         row_background: "transparent",

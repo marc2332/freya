@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
-use freya_hooks::{use_get_theme, TableTheme};
+use freya_hooks::{use_get_theme, FontTheme, TableTheme};
 
 #[allow(non_snake_case)]
 #[inline_props]
@@ -193,7 +193,9 @@ pub struct TableProps<'a> {
 pub fn Table<'a>(cx: Scope<'a, TableProps<'a>>) -> Element {
     let theme = use_get_theme(cx);
     let TableTheme {
-        background, color, ..
+        background,
+        font_theme: FontTheme { color },
+        ..
     } = theme.table;
     cx.provide_context(TableConfig {
         columns: cx.props.columns,
