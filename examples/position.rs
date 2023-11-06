@@ -16,25 +16,35 @@ fn app(cx: Scope) -> Element {
             width: "100%",
             rect {
                 height: "20%",
-                width: "100%",
-                background: "green",
-            }
-            rect {
-                height: "100",
-                width: "100",
-                background: "red",
+                width: "20%",
+                background: "black",
                 position: "absolute",
-                layer: "-1"
+                position_top: "10",
+                position_left: "10",
             }
             rect {
                 height: "20%",
-                width: "100%",
-                background: "orange",
+                width: "20%",
+                background: "black",
+                position: "absolute",
+                position_top: "10",
+                position_right: "10",
             }
             rect {
                 height: "20%",
-                width: "100%",
-                background: "yellow",
+                width: "20%",
+                background: "black",
+                position: "absolute",
+                position_bottom: "10",
+                position_right: "10",
+            }
+            rect {
+                height: "20%",
+                width: "20%",
+                background: "black",
+                position: "absolute",
+                position_bottom: "10",
+                position_left: "10",
             }
         }
     )
