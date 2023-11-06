@@ -9,32 +9,66 @@ fn main() {
     launch_with_props(app, "Position", (400.0, 350.0));
 }
 
-fn app(cx: Scope) -> Element {
+#[allow(non_snake_case)]
+#[inline_props]
+fn PopupBackground<'a>(cx: Scope<'a>, children: Element<'a>) -> Element {
     render!(
         rect {
             height: "100%",
             width: "100%",
+            background: "rgb(0, 0, 0, 150)",
+            position: "absolute",
+            layer: "-1",
+            main_align: "center",
+            cross_align: "center",
+            children
+        }
+    )
+}
+
+#[allow(non_snake_case)]
+#[inline_props]
+fn Popup<'a>(cx: Scope<'a>, children: Element<'a>) -> Element {
+    render!(
+        PopupBackground {
             rect {
-                height: "20%",
-                width: "100%",
-                background: "green",
+                padding: "10",
+                corner_radius: "8",
+                background: "white",
+                shadow: "0 4 5 0 rgb(0, 0, 0, 30)",
+                width: "300",
+                height: "200",
+                children
             }
-            rect {
-                height: "100",
-                width: "100",
-                background: "red",
-                position: "absolute",
-                layer: "-1"
+        }
+    )
+}
+
+fn app(cx: Scope) -> Element {
+    let show_popup = use_state(cx, || false);
+
+    render!(
+        rect {
+            if *show_popup.get() {
+                render!(
+                    Popup {
+                        label {
+                            "whatever"
+                        }
+                        Button {
+                            onclick: |_| show_popup.set(false),
+                            label {
+                                "Close"
+                            }
+                        }
+                    }
+                )
             }
-            rect {
-                height: "20%",
-                width: "100%",
-                background: "orange",
-            }
-            rect {
-                height: "20%",
-                width: "100%",
-                background: "yellow",
+            Button {
+                onclick: |_| show_popup.set(true),
+                label {
+                    "Open"
+                }
             }
         }
     )
