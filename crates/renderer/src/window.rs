@@ -49,7 +49,7 @@ pub struct WindowEnv<T: Clone> {
 impl<T: Clone> WindowEnv<T> {
     /// Create a Window environment from a set of configuration
     pub fn from_config(
-        window_config: WindowConfig<T>,
+        mut window_config: WindowConfig<T>,
         event_loop: &EventLoop<EventMessage>,
     ) -> Self {
         let mut window_builder = WindowBuilder::new()
@@ -57,6 +57,7 @@ impl<T: Clone> WindowEnv<T> {
             .with_title(window_config.title)
             .with_decorations(window_config.decorations)
             .with_transparent(window_config.transparent)
+            .with_window_icon(window_config.icon.take())
             .with_inner_size(LogicalSize::<f64>::new(
                 window_config.width,
                 window_config.height,
