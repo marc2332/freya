@@ -11,8 +11,9 @@ Learn how the layout attributes work.
   - [`calc()`](#calc)
 - [`direction`](#direction)
 - [`padding`](#padding)
-- [`margin`](#margin)
 - [`main_align & cross_align`](#main_align--cross_align)
+- [`margin`](#margin)
+- [`position`](#position)
 
 > ⚠️ Freya's layout is still somewhat limited.
 
@@ -211,6 +212,29 @@ fn app(cx: Scope) -> Element {
             margin: "25" // 25 in all sides
             margin: "100 50" // 100 in top and bottom, and 50 in left and right
             margin: "5 7 3 9" // 5 in top, 7 in right, 3 in bottom and 9 in left
+        }
+    )
+}
+```
+
+### position
+
+Specify how you want the element to be positioned inside it's parent Area
+
+```rust, no_run
+fn app(cx: Scope) -> Element {
+    render!(
+        rect {
+            width: "100%",
+            height: "100%",
+            rect {
+                position: "absolute",
+                position_bottom: "15",
+                position_right: "15",
+                background: "black",
+                width: "100",
+                height: "100",
+            }
         }
     )
 }
