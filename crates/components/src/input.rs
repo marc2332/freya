@@ -105,7 +105,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
         InputMode::Shown => cx.props.value.clone(),
     };
 
-    use_on_unmount(cx, {
+    use_on_destroy(cx, {
         to_owned![status, platform];
         move || {
             if *status.read() == InputStatus::Hovering {

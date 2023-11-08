@@ -1,3 +1,5 @@
+#![allow(clippy::type_complexity)]
+
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{keyboard::Key, KeyboardEvent, MouseEvent, WheelEvent};
@@ -20,7 +22,6 @@ type BuilderFunction<'a, T> = dyn Fn(
 ) -> LazyNodes<'a, 'a>;
 
 /// [`VirtualScrollView`] component properties.
-#[allow(clippy::type_complexity)]
 #[derive(Props)]
 pub struct VirtualScrollViewProps<'a, T: 'a> {
     /// Quantity of items in the VirtualScrollView.
