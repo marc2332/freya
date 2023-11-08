@@ -39,16 +39,13 @@ fn app(cx: Scope) -> Element {
 
     render!(
         rect {
-            overflow: "clip",
             background: "rgb(15, 15, 15)",
             width: "100%",
             height: "100%",
-            color: "white",
             rect {
                 overflow: "clip",
                 width: "100%",
-                height: "calc(100% - 58)",
-                corner_radius: "25",
+                height: "calc(100% - 60)",
                 if let Some(dog_url) = dog_url.get() {
                    rsx!(
                         NetworkImage {
@@ -59,10 +56,10 @@ fn app(cx: Scope) -> Element {
             }
             rect {
                 overflow: "clip",
-                padding: "10",
-                height: "58",
+                height: "60",
                 width: "100%",
-                direction: "horizontal",
+                main_align: "center",
+                cross_align: "center",
                 Button {
                     onclick: move |_|  fetch(),
                     label {

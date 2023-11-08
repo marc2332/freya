@@ -10,6 +10,7 @@ use freya_hooks::{use_init_accessibility, use_init_focus};
 use freya_layout::Layers;
 use rustc_hash::FxHashMap;
 use std::sync::{Arc, Mutex};
+use tokio::sync::broadcast;
 use tokio::sync::mpsc::unbounded_channel;
 
 pub use freya_core::events::FreyaEvent;
@@ -52,6 +53,7 @@ pub fn launch_test_with_config(root: Component<()>, config: TestingConfig) -> Te
         platform_event_emitter,
         platform_event_receiver,
         accessibility_state,
+        ticker_sender: broadcast::channel(5).0,
     };
 
     handler.init_dom();

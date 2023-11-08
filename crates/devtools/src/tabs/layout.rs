@@ -42,8 +42,8 @@ pub fn NodeInspectorLayout(cx: Scope, node_id: NodeId) -> Element {
                         rect {
                             width: "100%",
                             height: "calc(100% - 25)",
-                            display: "center",
-                            direction: "both",
+                            main_align: "center",
+                            cross_align: "center",
                             background: "rgb(40, 40, 40)",
                             rect {
                                 width: "100%",
@@ -51,13 +51,13 @@ pub fn NodeInspectorLayout(cx: Scope, node_id: NodeId) -> Element {
                                 background: "rgb(71, 180, 240)",
                                 corner_radius: "5",
                                 rect {
-                                    direction: "both",
-                                    display: "center",
+                                    main_align: "center",
+                                    cross_align: "center",
                                     width: "100%",
                                     height: "25",
                                     label {
                                         width: "100%",
-                                        align: "center",
+                                        text_align: "center",
                                         "{paddings.top()}"
                                     }
                                 }
@@ -66,21 +66,21 @@ pub fn NodeInspectorLayout(cx: Scope, node_id: NodeId) -> Element {
                                     height: "calc(100% - 50)",
                                     direction: "horizontal",
                                     rect {
-                                        direction: "vertical",
-                                        display: "center",
+                                        main_align: "center",
+                                        cross_align: "center",
                                         width: "25",
                                         height: "100%",
                                         label {
                                             width: "100%",
-                                            align: "center",
+                                            text_align: "center",
                                             "{paddings.left()}"
                                         }
                                     }
                                     rect {
                                         width: "calc(100% - 50)",
                                         height: "100%",
-                                        display: "center",
-                                        direction: "both",
+                                        main_align: "center",
+                                        cross_align: "center",
                                         background: "rgb(40, 40, 40)",
                                         corner_radius: "5",
                                         label {
@@ -88,25 +88,25 @@ pub fn NodeInspectorLayout(cx: Scope, node_id: NodeId) -> Element {
                                         }
                                     }
                                     rect {
-                                        direction: "vertical",
-                                        display: "center",
+                                        main_align: "center",
+                                        cross_align: "center",
                                         width: "25",
                                         height: "100%",
                                         label {
                                             width: "100%",
-                                            align: "center",
+                                            text_align: "center",
                                             "{paddings.right()}"
                                         }
                                     }
                                 }
                                 rect {
-                                    direction: "both",
-                                    display: "center",
+                                    main_align: "center",
+                                    cross_align: "center",
                                     width: "100%",
                                     height: "25",
                                     label {
                                         width: "100%",
-                                        align: "center",
+                                        text_align: "center",
                                         "{paddings.bottom()}"
                                     }
                                 }

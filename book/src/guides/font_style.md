@@ -5,7 +5,7 @@ Learn how the font style attributes work.
 - [`color`](#color)
 - [`font_family`](#font_family)
 - [`font_size`](#font_size)
-- [`align`](#align)
+- [`text_align`](#text_align)
 - [`font_style`](#font_style)
 - [`font_weight`](#font_weight)
 - [`font_width`](#font_width)
@@ -97,9 +97,9 @@ fn app(cx: Scope) -> Element {
 
 Compatible elements: [`label`](/guides/elements.html#label), [`paragraph`](/guides/elements.html#paragraph-and-text), [`text`](/guides/elements.html#paragraph-and-text)
 
-### align
+### text_align
 
-You can change the alignment of the text using the `align` attribute.
+You can change the alignment of the text using the `text_align` attribute.
 
 Accepted values: `center`, `end`, `justify`, `left`, `right`, `start`
 
@@ -109,7 +109,7 @@ Example
 fn app(cx: Scope) -> Element {
     render!(
         label {
-            align: "right",
+            text_align: "right",
             "Hello, World!"
         }
     )

@@ -11,6 +11,7 @@ use futures::{
     pin_mut,
     task::{self, ArcWake},
 };
+use tokio::sync::broadcast;
 use tokio::{
     select,
     sync::{mpsc, watch, Notify},
@@ -65,6 +66,8 @@ pub struct App<State: 'static + Clone> {
     accessibility: NativeAccessibility,
 
     font_collection: FontCollection,
+
+    ticker_sender: broadcast::Sender<()>,
 }
 
 impl<State: 'static + Clone> App<State> {
@@ -114,6 +117,7 @@ impl<State: 'static + Clone> App<State> {
             focus_sender,
             focus_receiver,
             font_collection,
+            ticker_sender: broadcast::channel(5).0,
         }
     }
 
@@ -126,6 +130,9 @@ impl<State: 'static + Clone> App<State> {
         self.vdom
             .base_scope()
             .provide_context(self.focus_receiver.clone());
+        self.vdom
+            .base_scope()
+            .provide_context(Arc::new(self.ticker_sender.subscribe()));
     }
 
     /// Make the first build of the VirtualDOM.
@@ -320,5 +327,9 @@ impl<State: 'static + Clone> App<State> {
     pub fn focus_next_node(&mut self, direction: AccessibilityFocusDirection) {
         self.accessibility
             .focus_next_node(direction, &self.focus_sender)
+    }
+
+    pub fn tick(&self) {
+        self.ticker_sender.send(()).unwrap();
     }
 }

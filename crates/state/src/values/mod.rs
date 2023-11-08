@@ -1,10 +1,10 @@
 mod accessibility;
+mod alignment;
 mod border;
 mod color;
 mod corner_radius;
 mod cursor;
 mod decoration;
-mod display;
 mod fill;
 mod font;
 mod gaps;
@@ -15,12 +15,12 @@ mod size;
 mod text_shadow;
 
 pub use accessibility::*;
+pub use alignment::*;
 pub use border::*;
 pub use color::*;
 pub use corner_radius::*;
 pub use cursor::*;
 pub use decoration::*;
-pub use display::*;
 pub use fill::*;
 pub use font::*;
 pub use gaps::*;

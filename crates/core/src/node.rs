@@ -5,7 +5,7 @@ use freya_node_state::{
     Border, CornerRadius, CursorSettings, Fill, FontStyleState, LayoutState, References, Shadow,
     Style, Transform,
 };
-use torin::{direction::DirectionMode, display::DisplayMode, gaps::Gaps, size::Size};
+use torin::{alignment::Alignment, direction::DirectionMode, gaps::Gaps, size::Size};
 
 #[derive(Clone)]
 pub struct NodeState {
@@ -77,8 +77,15 @@ impl<'a> Iterator for NodeStateIterator<'a> {
                 AttributeType::Direction(&self.state.size.direction),
             )),
             7 => Some(("padding", AttributeType::Measures(self.state.size.padding))),
-            8 => Some(("display", AttributeType::Display(&self.state.size.display))),
-            9 => {
+            8 => Some((
+                "main_alignment",
+                AttributeType::Alignment(&self.state.size.main_alignment),
+            )),
+            9 => Some((
+                "cross_alignment",
+                AttributeType::Alignment(&self.state.size.cross_alignment),
+            )),
+            10 => {
                 let background = &self.state.style.background;
                 let fill = match *background {
                     Fill::Color(_) => AttributeType::Color(background.clone()),
@@ -86,33 +93,33 @@ impl<'a> Iterator for NodeStateIterator<'a> {
                 };
                 Some(("background", fill))
             }
-            10 => Some(("border", AttributeType::Border(&self.state.style.border))),
-            11 => Some((
+            11 => Some(("border", AttributeType::Border(&self.state.style.border))),
+            12 => Some((
                 "corner_radius",
                 AttributeType::CornerRadius(self.state.style.corner_radius),
             )),
-            12 => Some((
+            13 => Some((
                 "color",
                 AttributeType::Color(self.state.font_style.color.into()),
             )),
-            13 => Some((
+            14 => Some((
                 "font_family",
                 AttributeType::Text(self.state.font_style.font_family.join(",")),
             )),
-            14 => Some((
+            15 => Some((
                 "font_size",
                 AttributeType::Measure(self.state.font_style.font_size),
             )),
-            15 => Some((
+            16 => Some((
                 "line_height",
                 AttributeType::Measure(self.state.font_style.line_height),
             )),
-            16 => Some(("offset_x", AttributeType::Measure(self.state.size.offset_x))),
-            17 => Some(("offset_y", AttributeType::Measure(self.state.size.offset_y))),
+            17 => Some(("offset_x", AttributeType::Measure(self.state.size.offset_x))),
+            18 => Some(("offset_y", AttributeType::Measure(self.state.size.offset_y))),
             n => {
                 let shadows = &self.state.style.shadows;
                 let shadow = shadows
-                    .get(n - 18)
+                    .get(n - 19)
                     .map(|shadow| ("shadow", AttributeType::Shadow(shadow)));
 
                 if shadow.is_some() {
@@ -120,7 +127,7 @@ impl<'a> Iterator for NodeStateIterator<'a> {
                 } else {
                     let text_shadows = &self.state.font_style.text_shadows;
                     text_shadows
-                        .get(n - 18 + shadows.len())
+                        .get(n - 19 + shadows.len())
                         .map(|text_shadow| ("text_shadow", AttributeType::TextShadow(text_shadow)))
                 }
             }
@@ -143,7 +150,7 @@ pub enum AttributeType<'a> {
     Measures(Gaps),
     CornerRadius(CornerRadius),
     Direction(&'a DirectionMode),
-    Display(&'a DisplayMode),
+    Alignment(&'a Alignment),
     Shadow(&'a Shadow),
     TextShadow(&'a TextShadow),
     Text(String),

@@ -160,15 +160,15 @@ fn app(cx: Scope) -> Element {
         rect {
             width: "100%",
             height: "100%",
-            display: "center",
-            direction: "both",
+            main_align: "center",
+            cross_align: "center",
             rect {
                 width: "150",
                 height: "170",
                 label {
                     height: "20",
                     width: "100%",
-                    align: "center",
+                    text_align: "center",
                     "{message}"
                 }
                 for (n_row, row) in board.read().board.iter().enumerate() {
@@ -184,8 +184,8 @@ fn app(cx: Scope) -> Element {
                                 corner_radius: "6",
                                 border: "2 solid rgb(40, 40, 40)",
                                 background: "rgb(250, 250, 250)",
-                                display: "center",
-                                direction: "both",
+                                main_align: "center",
+                                cross_align: "center",
                                 onclick: move |_| {
                                     let mut board = board.write();
                                     if board.winner.is_none(){

@@ -84,7 +84,6 @@ async fn event_test() {
                 width: "100%",
                 height: "100%",
                 background: "red",
-                direction: "both",
                 onclick: |_| {
                     enabled.set(true);
                 },

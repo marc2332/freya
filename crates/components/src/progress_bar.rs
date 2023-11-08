@@ -73,12 +73,13 @@ pub fn ProgressBar(cx: Scope<ProgressBarProps>) -> Element {
                     width: "{progress}%",
                     height: "100%",
                     background: "{progress_background}",
-                    display: "center",
+                    main_align: "center",
+                    cross_align: "center",
                     overflow: "clip",
                     if show_progress {
                         rsx!(
                             label {
-                                align: "center",
+                                text_align: "center",
                                 width: "100%",
                                 color: "{color}",
                                 max_lines: "1",

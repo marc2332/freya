@@ -28,7 +28,8 @@ pub struct LayoutState {
     pub node_id: NodeId,
     pub offset_y: f32,
     pub offset_x: f32,
-    pub display: DisplayMode,
+    pub main_alignment: Alignment,
+    pub cross_alignment: Alignment,
     pub node_ref: Option<UnboundedSender<NodeReferenceLayout>>,
 }
 
@@ -52,7 +53,8 @@ impl State<CustomAttributeValues> for LayoutState {
             "direction",
             "offset_y",
             "offset_x",
-            "display",
+            "main_align",
+            "cross_align",
             "reference",
             "margin",
         ]))
@@ -156,7 +158,6 @@ impl State<CustomAttributeValues> for LayoutState {
                         if let Some(value) = attr.value.as_text() {
                             layout.direction = match value {
                                 "horizontal" => DirectionMode::Horizontal,
-                                "both" => DirectionMode::Both,
                                 _ => DirectionMode::Vertical,
                             }
                         }
@@ -175,10 +176,17 @@ impl State<CustomAttributeValues> for LayoutState {
                             }
                         }
                     }
-                    "display" => {
+                    "main_align" => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(display) = DisplayMode::parse(value) {
-                                layout.display = display;
+                            if let Ok(alignment) = Alignment::parse(value) {
+                                layout.main_alignment = alignment;
+                            }
+                        }
+                    }
+                    "cross_align" => {
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(alignment) = Alignment::parse(value) {
+                                layout.cross_alignment = alignment;
                             }
                         }
                     }
@@ -208,7 +216,8 @@ impl State<CustomAttributeValues> for LayoutState {
             || (layout.direction != self.direction)
             || (layout.offset_x != self.offset_x)
             || (layout.offset_y != self.offset_y)
-            || (layout.display != self.display);
+            || (layout.main_alignment != self.main_alignment)
+            || (layout.cross_alignment != self.cross_alignment);
 
         if changed {
             torin_layout.lock().unwrap().invalidate(node_view.node_id());

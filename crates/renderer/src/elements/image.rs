@@ -5,11 +5,11 @@ use freya_node_state::{References, Style};
 use torin::geometry::Area;
 
 /// Render an `image` element
-pub fn render_image(area: &Area, node_ref: &DioxusNode, canvas: &mut Canvas) {
+pub fn render_image(area: &Area, node_ref: &DioxusNode, canvas: &Canvas) {
     let node_style = node_ref.get::<Style>().unwrap();
     let node_references = node_ref.get::<References>().unwrap();
 
-    let mut draw_img = |bytes: &[u8]| {
+    let draw_img = |bytes: &[u8]| {
         let pic = Image::from_encoded(unsafe { Data::new_bytes(bytes) });
         if let Some(pic) = pic {
             let mut paint = Paint::default();

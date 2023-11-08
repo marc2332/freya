@@ -8,7 +8,7 @@ use torin::prelude::Area;
 pub fn render_rect(
     area: &Area,
     node_ref: &DioxusNode,
-    canvas: &mut Canvas,
+    canvas: &Canvas,
     font_collection: &FontCollection,
 ) {
     let node_style = &*node_ref.get::<Style>().unwrap();

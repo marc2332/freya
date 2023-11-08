@@ -1,28 +1,31 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, mem};
 
 pub use euclid::Rect;
-use fxhash::{FxHashMap, FxHashSet};
+use rustc_hash::{FxHashMap, FxHashSet};
 use tracing::info;
 
 use crate::{
     custom_measurer::LayoutMeasurer,
-    direction::DirectionMode,
-    display::DisplayMode,
     dom_adapter::{DOMAdapter, NodeAreas, NodeKey},
     geometry::{Area, Size2D},
-    node::Node,
-    prelude::{BoxModel, Gaps},
-    size::Size,
+    measure::measure_node,
+    prelude::Gaps,
 };
 
 /// Contains the best Root node candidate from where to start measuring
-#[derive(PartialEq, Debug, Clone, Copy)]
+#[derive(PartialEq, Debug, Clone)]
 pub enum RootNodeCandidate<Key: NodeKey> {
     /// A valid Node ID
     Valid(Key),
 
     /// None
     None,
+}
+
+impl<Key: NodeKey> RootNodeCandidate<Key> {
+    pub fn take(&mut self) -> Self {
+        mem::replace(self, Self::None)
+    }
 }
 
 pub struct Torin<Key: NodeKey> {
@@ -175,12 +178,12 @@ impl<Key: NodeKey> Torin<Key> {
 
         if RootNodeCandidate::None == self.root_node_candidate {
             self.root_node_candidate = RootNodeCandidate::Valid(node_id);
-        } else if let RootNodeCandidate::Valid(root_candidate) = self.root_node_candidate {
-            if node_id != root_candidate {
-                let closest_parent = dom_adapter.closest_common_parent(&node_id, &root_candidate);
+        } else if let RootNodeCandidate::Valid(root_candidate) = &mut self.root_node_candidate {
+            if node_id != *root_candidate {
+                let closest_parent = dom_adapter.closest_common_parent(&node_id, root_candidate);
 
                 if let Some(closest_parent) = closest_parent {
-                    self.root_node_candidate = RootNodeCandidate::Valid(closest_parent);
+                    *root_candidate = closest_parent;
                 }
             }
         }
@@ -234,7 +237,7 @@ impl<Key: NodeKey> Torin<Key> {
 
     /// Get the Root Node candidate
     pub fn get_root_candidate(&self) -> RootNodeCandidate<Key> {
-        self.root_node_candidate
+        self.root_node_candidate.clone()
     }
 
     /// Find the best root Node from where to start measuring
@@ -263,7 +266,7 @@ impl<Key: NodeKey> Torin<Key> {
         }
 
         // Try the Root candidate otherwise use the provided Root
-        let root_id = if let RootNodeCandidate::Valid(id) = self.root_node_candidate {
+        let root_id = if let RootNodeCandidate::Valid(id) = self.root_node_candidate.take() {
             id
         } else {
             suggested_root_id
@@ -315,356 +318,5 @@ impl<Key: NodeKey> Torin<Key> {
     /// Cache a Node's areas
     pub fn cache_node(&mut self, node_id: Key, areas: NodeAreas) {
         self.results.insert(node_id, areas);
-    }
-}
-
-/// Measure this node and all it's children
-/// The caller of this function is responsible of caching the Node's layout results
-#[allow(clippy::too_many_arguments)]
-#[inline(always)]
-fn measure_node<Key: NodeKey>(
-    node_id: Key,
-    node: &Node,
-    layout: &mut Torin<Key>,
-    parent_area: &Area,
-    available_parent_area: &Area,
-    measurer: &mut Option<impl LayoutMeasurer<Key>>,
-    must_cache: bool,
-    dom_adapter: &mut impl DOMAdapter<Key>,
-) -> (bool, NodeAreas) {
-    let must_run = layout.dirty.contains(&node_id) || layout.results.get(&node_id).is_none();
-    if must_run {
-        let horizontal_padding = node.padding.horizontal();
-        let vertical_padding = node.padding.vertical();
-
-        let mut area = Rect::new(
-            available_parent_area.origin,
-            Size2D::new(horizontal_padding, vertical_padding),
-        );
-
-        area.size.width = node.width.min_max(
-            area.size.width,
-            parent_area.size.width,
-            node.margin.horizontal(),
-            &node.minimum_width,
-            &node.maximum_width,
-        );
-        area.size.height = node.height.min_max(
-            area.size.height,
-            parent_area.size.height,
-            node.margin.vertical(),
-            &node.minimum_height,
-            &node.maximum_height,
-        );
-
-        // Custom measure
-        let skip_inner = if let Some(measurer) = measurer {
-            let custom_measure =
-                measurer.measure(node_id, node, &area, parent_area, available_parent_area);
-            if let Some(new_area) = custom_measure {
-                if Size::Inner == node.width {
-                    area.size.width = node.width.min_max(
-                        new_area.width(),
-                        parent_area.size.width,
-                        node.margin.horizontal(),
-                        &node.minimum_width,
-                        &node.maximum_width,
-                    );
-                }
-                if Size::Inner == node.height {
-                    area.size.height = node.height.min_max(
-                        new_area.height(),
-                        parent_area.size.height,
-                        node.margin.vertical(),
-                        &node.minimum_height,
-                        &node.maximum_height,
-                    );
-                }
-            }
-            custom_measure.is_some()
-        } else {
-            false
-        };
-
-        let mut inner_sizes = Size2D::default();
-
-        // Node's inner area
-        let mut inner_area = {
-            let mut inner_area = area.box_area(&node.margin);
-            if Size::Inner == node.width {
-                inner_area.size.width = available_parent_area.width()
-            }
-            if Size::Inner == node.height {
-                inner_area.size.height = available_parent_area.height()
-            }
-            inner_area
-        };
-
-        // Apply padding
-        inner_area.origin.x += node.padding.left();
-        inner_area.origin.y += node.padding.top();
-        inner_area.size.width -= horizontal_padding;
-        inner_area.size.height -= vertical_padding;
-
-        // Node's available inner area
-        let mut available_area = inner_area;
-
-        // Apply scroll
-        available_area.origin.x += node.offset_x.get();
-        available_area.origin.y += node.offset_y.get();
-
-        let mut measurement_mode = MeasureMode::ParentIsNotCached {
-            area: &mut area,
-            inner_area: &mut inner_area,
-            vertical_padding,
-            horizontal_padding,
-        };
-
-        if !skip_inner {
-            measure_inner_nodes(
-                &node_id,
-                node,
-                layout,
-                &mut available_area,
-                &mut inner_sizes,
-                measurer,
-                must_cache,
-                &mut measurement_mode,
-                dom_adapter,
-            );
-        }
-
-        (
-            must_cache,
-            NodeAreas {
-                area,
-                margin: node.margin,
-                inner_area,
-                inner_sizes,
-            },
-        )
-    } else {
-        let areas = layout.get(node_id).unwrap().clone();
-
-        let mut inner_sizes = areas.inner_sizes;
-        let mut available_area = areas.inner_area;
-
-        // TODO(marc2332): Should I also cache these?
-        available_area.origin.x += node.offset_x.get();
-        available_area.origin.y += node.offset_y.get();
-
-        let mut measurement_mode = MeasureMode::ParentIsCached {
-            inner_area: &areas.inner_area,
-        };
-
-        measure_inner_nodes(
-            &node_id,
-            node,
-            layout,
-            &mut available_area,
-            &mut inner_sizes,
-            measurer,
-            must_cache,
-            &mut measurement_mode,
-            dom_adapter,
-        );
-
-        (false, areas)
-    }
-}
-
-/// Measurement data for the inner Nodes of a Node
-#[derive(Debug)]
-enum MeasureMode<'a> {
-    ParentIsCached {
-        inner_area: &'a Area,
-    },
-    ParentIsNotCached {
-        area: &'a mut Area,
-        inner_area: &'a mut Area,
-        vertical_padding: f32,
-        horizontal_padding: f32,
-    },
-}
-
-impl<'a> MeasureMode<'a> {
-    /// Get a reference to the inner area
-    pub fn inner_area(&'a self) -> &'a Area {
-        match self {
-            Self::ParentIsCached { inner_area } => inner_area,
-            Self::ParentIsNotCached { inner_area, .. } => inner_area,
-        }
-    }
-}
-
-/// Measure the inner Nodes of a Node
-#[allow(clippy::too_many_arguments)]
-#[inline(always)]
-fn measure_inner_nodes<Key: NodeKey>(
-    node_id: &Key,
-    node: &Node,
-    layout: &mut Torin<Key>,
-    available_area: &mut Area,
-    inner_sizes: &mut Size2D,
-    measurer: &mut Option<impl LayoutMeasurer<Key>>,
-    must_cache: bool,
-    mode: &mut MeasureMode,
-    dom_adapter: &mut impl DOMAdapter<Key>,
-) {
-    let children = dom_adapter.children_of(node_id);
-
-    // Center display
-
-    if node.display == DisplayMode::Center {
-        let child_id = children.first();
-
-        if let Some(child_id) = child_id {
-            let inner_area = *mode.inner_area();
-            let child_data = dom_adapter.get_node(child_id).unwrap();
-
-            let (_, child_areas) = measure_node(
-                *child_id,
-                &child_data,
-                layout,
-                &inner_area,
-                available_area,
-                measurer,
-                false,
-                dom_adapter,
-            );
-
-            // TODO(marc2332): Should I also reduce the width and heights?
-            match node.direction {
-                DirectionMode::Horizontal => {
-                    let new_origin_x =
-                        (inner_area.width() / 2.0) - (child_areas.area.width() / 2.0);
-                    available_area.origin.x = inner_area.min_x() + new_origin_x;
-                }
-                DirectionMode::Vertical => {
-                    let new_origin_y =
-                        (inner_area.height() / 2.0) - (child_areas.area.height() / 2.0);
-                    available_area.origin.y = inner_area.min_y() + new_origin_y;
-                }
-                DirectionMode::Both => {
-                    let new_origin_x =
-                        (inner_area.width() / 2.0) - (child_areas.area.width() / 2.0);
-                    let new_origin_y =
-                        (inner_area.height() / 2.0) - (child_areas.area.height() / 2.0);
-                    available_area.origin.x = inner_area.min_x() + new_origin_x;
-                    available_area.origin.y = inner_area.min_y() + new_origin_y;
-                }
-            }
-        }
-    }
-
-    // Normal display
-
-    for child_id in children {
-        let inner_area = *mode.inner_area();
-
-        let child_data = dom_adapter.get_node(&child_id).unwrap().clone();
-
-        let (child_revalidated, child_areas) = measure_node(
-            child_id,
-            &child_data,
-            layout,
-            &inner_area,
-            available_area,
-            measurer,
-            must_cache,
-            dom_adapter,
-        );
-
-        match node.direction {
-            DirectionMode::Horizontal => {
-                // Move the available area
-                available_area.origin.x = child_areas.area.max_x();
-                available_area.size.width -= child_areas.area.size.width;
-
-                if let MeasureMode::ParentIsNotCached {
-                    area,
-                    vertical_padding,
-                    inner_area,
-                    ..
-                } = mode
-                {
-                    inner_sizes.height = child_areas.area.height();
-                    inner_sizes.width += child_areas.area.width();
-
-                    // Keep the biggest height
-                    if node.height == Size::Inner {
-                        area.size.height = area
-                            .size
-                            .height
-                            .max(child_areas.area.size.height + *vertical_padding);
-                        // Keep the inner area in sync
-                        inner_area.size.height = area.size.height - *vertical_padding;
-                    }
-
-                    // Accumulate width
-                    if node.width == Size::Inner {
-                        area.size.width += child_areas.area.size.width;
-                    }
-                }
-            }
-            DirectionMode::Vertical => {
-                // Move the available area
-                available_area.origin.y = child_areas.area.max_y();
-                available_area.size.height -= child_areas.area.size.height;
-
-                if let MeasureMode::ParentIsNotCached {
-                    area,
-                    horizontal_padding,
-                    inner_area,
-                    ..
-                } = mode
-                {
-                    inner_sizes.width = child_areas.area.width();
-                    inner_sizes.height += child_areas.area.height();
-
-                    // Keep the biggest width
-                    if node.width == Size::Inner {
-                        area.size.width = area
-                            .size
-                            .width
-                            .max(child_areas.area.size.width + *horizontal_padding);
-                        // Keep the inner area in sync
-                        inner_area.size.width = area.size.width - *horizontal_padding;
-                    }
-
-                    // Accumulate height
-                    if node.height == Size::Inner {
-                        area.size.height += child_areas.area.size.height;
-                    }
-                }
-            }
-            DirectionMode::Both => {
-                // Move the available area
-                available_area.origin.x = child_areas.area.max_x();
-                available_area.origin.y = child_areas.area.max_y();
-
-                available_area.size.width -= child_areas.area.size.width;
-                available_area.size.height -= child_areas.area.size.height;
-
-                if let MeasureMode::ParentIsNotCached { area, .. } = mode {
-                    inner_sizes.width += child_areas.area.width();
-                    inner_sizes.height += child_areas.area.height();
-
-                    // Accumulate width
-                    if node.width == Size::Inner {
-                        area.size.width += child_areas.area.size.width;
-                    }
-
-                    // Accumulate height
-                    if node.height == Size::Inner {
-                        area.size.height += child_areas.area.size.height;
-                    }
-                }
-            }
-        }
-
-        if child_revalidated && must_cache {
-            layout.cache_node(child_id, child_areas);
-        }
     }
 }

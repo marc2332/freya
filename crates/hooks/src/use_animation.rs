@@ -1,12 +1,9 @@
 use dioxus_core::ScopeState;
 use dioxus_hooks::{use_state, UseState};
-use std::time::Duration;
-use tokio::time::interval;
+use tokio::time::Instant;
 use uuid::Uuid;
 
-use crate::Animation;
-
-const ANIMATION_MS: i32 = 16; // Assume 60 FPS for now
+use crate::{use_platform, Animation, UsePlatform};
 
 /// Manage the lifecyle of an [Animation].
 #[derive(Clone)]
@@ -15,14 +12,16 @@ pub struct AnimationManager<'a> {
     current_animation_id: &'a UseState<Option<Uuid>>,
     value: &'a UseState<f64>,
     cx: &'a ScopeState,
+    platform: UsePlatform,
 }
 
 impl<'a> AnimationManager<'a> {
     /// Start the given [Animation].
     pub fn start(&self, mut anim: Animation) {
         let new_id = Uuid::new_v4();
-        let mut index = 0;
 
+        let platform = self.platform.clone();
+        let mut ticker = platform.new_ticker();
         let value = self.value.clone();
         let current_animation_id = self.current_animation_id.clone();
 
@@ -31,8 +30,16 @@ impl<'a> AnimationManager<'a> {
 
         // Spawn the animation that will run at 1ms speed
         self.cx.spawn(async move {
-            let mut ticker = interval(Duration::from_millis(ANIMATION_MS as u64));
+            platform.request_animation_frame();
+
+            let mut index = 0;
+            let mut prev_frame = Instant::now();
+
             loop {
+                // Wait for the event loop to tick
+                ticker.tick().await;
+                platform.request_animation_frame();
+
                 // Stop running the animation if it was removed
                 if *current_animation_id.current() == Some(new_id) {
                     // Remove the current animation if it has finished
@@ -41,12 +48,10 @@ impl<'a> AnimationManager<'a> {
                         break;
                     }
 
-                    // Advance one tick
+                    index += prev_frame.elapsed().as_millis() as i32;
                     value.set(anim.move_value(index));
-                    index += ANIMATION_MS;
 
-                    // Wait 1m
-                    ticker.tick().await;
+                    prev_frame = Instant::now();
                 } else {
                     break;
                 }
@@ -102,12 +107,14 @@ pub fn use_animation(cx: &ScopeState, init_value: impl FnOnce() -> f64) -> Anima
     let current_animation_id = use_state(cx, || None);
     let init_value = *cx.use_hook(init_value);
     let value = use_state(cx, || init_value);
+    let platform = use_platform(cx);
 
     AnimationManager {
         current_animation_id,
         value,
         cx,
         init_value,
+        platform,
     }
 }
 
@@ -139,20 +146,24 @@ mod test {
 
         let mut utils = launch_test(use_animation_app);
 
+        // Disable event loop ticker
+        utils.config().enable_ticker(false);
+
         // Initial state
         utils.wait_for_update().await;
 
         assert_eq!(utils.root().get(0).layout().unwrap().width(), 0.0);
 
         // State somewhere in the middle
-        utils.wait_for_update().await;
+        sleep(Duration::from_millis(15)).await;
         utils.wait_for_update().await;
 
         let width = utils.root().get(0).layout().unwrap().width();
         assert!(width > 0.0);
         assert!(width < 100.0);
 
-        sleep(Duration::from_millis(50)).await;
+        // Enable event loop ticker
+        utils.config().enable_ticker(true);
 
         // State in the end
         utils.wait_for_update().await;
@@ -189,25 +200,33 @@ mod test {
 
         let mut utils = launch_test(use_animation_app);
 
+        // Disable event loop ticker
+        utils.config().enable_ticker(false);
+
         // Initial state
         utils.wait_for_update().await;
 
         assert_eq!(utils.root().get(0).layout().unwrap().width(), 10.0);
 
         // State somewhere in the middle
-        utils.wait_for_update().await;
+        sleep(Duration::from_millis(32)).await;
         utils.wait_for_update().await;
 
         let width = utils.root().get(0).layout().unwrap().width();
         assert!(width > 10.0);
 
+        // Trigger the click event to restart the animation
         utils.push_event(FreyaEvent::Mouse {
             name: "click".to_string(),
             cursor: (5.0, 5.0).into(),
             button: Some(MouseButton::Left),
         });
 
+        // Enable event loop ticker
+        utils.config().enable_ticker(true);
+
         // State has been restarted
+        utils.wait_for_update().await;
         utils.wait_for_update().await;
 
         let width = utils.root().get(0).layout().unwrap().width();

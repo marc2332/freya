@@ -21,9 +21,7 @@ fn app(cx: Scope) -> Element {
             background: "black",
             color: "white",
             rect {
-                overflow: "clip",
-                width: "100%",
-                height: "60",
+                height: "80",
                 Button {
                     onclick: move |_| {
                         percentage.set(20.0);
@@ -46,7 +44,6 @@ fn app(cx: Scope) -> Element {
                 height: "calc(100% - 60)",
                 rect {
                     background: "red",
-                    direction: "both",
                     label {
                         font_size: "{font_size}",
                         font_family: "Inter",
@@ -76,42 +73,42 @@ fn app(cx: Scope) -> Element {
                 label {
                     font_size: "18",
                     font_family: "Inter",
-                    align: "right",
+                    text_align: "right",
                     width: "100%",
                     "Right align"
                 }
                 label {
                     font_size: "18",
                     font_family: "Inter",
-                    align: "center",
+                    text_align: "center",
                     width: "100%",
                     "Center align"
                 }
                 label {
                     font_size: "18",
                     font_family: "Inter",
-                    align: "justify",
+                    text_align: "justify",
                     width: "100%",
                     "Justify align"
                 }
                 label {
                     font_size: "18",
                     font_family: "Inter",
-                    align: "end",
+                    text_align: "end",
                     width: "100%",
                     "End align"
                 }
                 label {
                     font_size: "18",
                     font_family: "Inter",
-                    align: "start",
+                    text_align: "start",
                     width: "100%",
                     "Start align"
                 }
                 label {
                     font_size: "18",
                     font_family: "Inter",
-                    align: "left",
+                    text_align: "left",
                     width: "100%",
                     "Left align"
                 }

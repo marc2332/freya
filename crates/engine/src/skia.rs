@@ -1,6 +1,7 @@
 pub use skia_safe::{
     font_style::{Slant, Weight, Width},
     gpu::{
+        backend_render_targets,
         gl::{Format, FramebufferInfo, Interface},
         surfaces::wrap_backend_render_target,
         BackendRenderTarget, DirectContext, RecordingContext, SurfaceOrigin,

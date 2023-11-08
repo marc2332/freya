@@ -100,8 +100,6 @@ fn app(cx: Scope) -> Element {
                                 order_direction: if *order.get() == *order_by { Some(*order_direction.get()) } else { None },
                                 onclick: move  |_| on_column_head_click(order_by),
                                 label {
-                                    width: "100%",
-                                    align: "center",
                                     "{text}"
                                 }
                             }
@@ -120,7 +118,7 @@ fn app(cx: Scope) -> Element {
                                         divider: n > 0,
                                         label {
                                             width: "100%",
-                                            align: "right",
+                                            text_align: "right",
                                             "{item}"
                                         }
                                     }

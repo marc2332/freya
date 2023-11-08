@@ -5,7 +5,6 @@ on:
   push:
     branches: [ "main" ]
   pull_request:
-    branches: [ "main" ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -53,3 +52,6 @@ jobs:
       if: runner.os == 'Linux'
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
+    - name: Make sure the mocked Skia bindings are on sync
+      if: runner.os == 'Linux'
+      run: cargo build --package freya --features mocked-engine-development --no-default-features
