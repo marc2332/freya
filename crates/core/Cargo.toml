@@ -19,7 +19,6 @@ devtools = []
 skia-engine = ["freya-engine/skia-engine"]
 
 [dependencies]
-freya-layout = { workspace = true }
 freya-node-state = { workspace = true }
 freya-elements = { workspace = true }
 freya-common = { workspace = true }
@@ -40,6 +39,7 @@ zbus = { workspace = true }
 
 rustc-hash= { workspace = true }
 tracing = { workspace = true }
+uuid = { workspace = true }
 
 [dev-dependencies]
 dioxus = { workspace = true }

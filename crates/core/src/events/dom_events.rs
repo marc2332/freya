@@ -7,7 +7,7 @@ use freya_elements::events::{
 };
 use torin::prelude::*;
 
-use crate::freya_events::FreyaEvent;
+use crate::events::FreyaEvent;
 
 /// Event emitted to the DOM.
 #[derive(Debug, Clone)]

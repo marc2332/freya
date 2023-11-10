@@ -32,7 +32,7 @@ pub struct TestingHandler {
     pub(crate) events_queue: Vec<FreyaEvent>,
     pub(crate) events_processor: EventsProcessor,
     pub(crate) font_collection: FontCollection,
-    pub(crate) viewports: ViewportsCollection,
+    pub(crate) viewports: Viewports,
     pub(crate) accessibility_state: SharedAccessibilityState,
 
     pub(crate) config: TestingConfig,

@@ -1,9 +1,7 @@
+use crate::layout::*;
 use freya_dom::prelude::{DioxusDOMAdapter, FreyaDOM};
 use freya_engine::prelude::*;
-use freya_layout::{Layers, SkiaMeasurer};
 use torin::geometry::Area;
-
-use crate::{layers::process_layers, viewports::calculate_viewports, ViewportsCollection};
 
 /// Process the layout of the DOM
 pub fn process_layout(
@@ -11,7 +9,7 @@ pub fn process_layout(
     area: Area,
     font_collection: &mut FontCollection,
     scale_factor: f32,
-) -> (Layers, ViewportsCollection) {
+) -> (Layers, Viewports) {
     let rdom = fdom.rdom();
     let mut dom_adapter = DioxusDOMAdapter::new_with_cache(rdom);
     let skia_measurer = SkiaMeasurer::new(rdom, font_collection);
@@ -26,22 +24,15 @@ pub fn process_layout(
         .measure(root_id, area, &mut Some(skia_measurer), &mut dom_adapter);
 
     // Create the layers
-    let mut layers = Layers::default();
-    process_layers(
-        &mut layers,
-        rdom,
-        &fdom.layout(),
-        font_collection,
-        scale_factor,
-    );
+    let layers = Layers::new(rdom, &fdom.layout(), font_collection, scale_factor);
 
-    let mut layers_nums: Vec<&i16> = layers.layers.keys().collect();
+    let mut layers_nums = layers.layers_indices();
 
     // Order the layers from top to bottom
     layers_nums.sort();
 
     // Calculate the viewports
-    let viewports_collection = calculate_viewports(&layers_nums, &layers, fdom);
+    let viewports = Viewports::new(&layers_nums, &layers, fdom);
 
-    (layers, viewports_collection)
+    (layers, viewports)
 }

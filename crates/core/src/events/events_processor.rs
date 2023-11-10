@@ -2,9 +2,8 @@ use dioxus_native_core::NodeId;
 use rustc_hash::{FxHashMap, FxHashSet};
 
 use crate::{
-    dom_events::{does_event_move_cursor, DomEvent},
-    freya_events::FreyaEvent,
-    EventEmitter,
+    events::{does_event_move_cursor, DomEvent, FreyaEvent},
+    types::EventEmitter,
 };
 
 fn any_recent_mouse_movement(events: &[FreyaEvent]) -> Option<FreyaEvent> {

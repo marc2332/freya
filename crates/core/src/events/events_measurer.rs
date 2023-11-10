@@ -1,18 +1,16 @@
+use crate::layout::{Layers, Viewports};
 use dioxus_native_core::prelude::NodeImmutableDioxusExt;
 use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::NodeId;
 use freya_dom::prelude::FreyaDOM;
-use freya_layout::Layers;
 
 use freya_engine::prelude::*;
 use freya_node_state::{Fill, Style};
 use rustc_hash::FxHashMap;
 
-pub use crate::dom_events::DomEvent;
-pub use crate::events_processor::EventsProcessor;
-pub use crate::freya_events::FreyaEvent;
+pub use crate::events::{DomEvent, EventsProcessor, FreyaEvent};
 
-use crate::{EventEmitter, EventsQueue, NodesEvents, ViewportsCollection};
+use crate::types::{EventEmitter, EventsQueue, NodesEvents};
 
 /// Measure globale events
 pub fn measure_global_events(events: &EventsQueue) -> Vec<FreyaEvent> {
@@ -38,7 +36,7 @@ pub fn measure_potential_event_listeners(
     layers_nums: &[&i16],
     layers: &Layers,
     events: &EventsQueue,
-    viewports_collection: &ViewportsCollection,
+    viewports: &Viewports,
     fdom: &FreyaDOM,
 ) -> NodesEvents {
     let mut potential_events = FxHashMap::default();
@@ -71,13 +69,12 @@ pub fn measure_potential_event_listeners(
 
                             // Make sure the cursor is inside the node area
                             if cursor_is_inside {
-                                let viewports = viewports_collection.get(node_id);
+                                let node_viewports = viewports.get(node_id);
 
                                 // Make sure the cursor is inside all the applicable viewports from the element
-                                if let Some((_, viewports)) = viewports {
-                                    for viewport_id in viewports {
-                                        let viewport =
-                                            viewports_collection.get(viewport_id).unwrap().0;
+                                if let Some((_, node_viewports)) = node_viewports {
+                                    for viewport_id in node_viewports {
+                                        let viewport = viewports.get(viewport_id).unwrap().0;
                                         if let Some(viewport) = viewport {
                                             if !viewport.contains(cursor.to_f32()) {
                                                 continue 'events;
@@ -244,7 +241,7 @@ pub fn process_events(
     events: &mut EventsQueue,
     event_emitter: &EventEmitter,
     events_processor: &mut EventsProcessor,
-    viewports_collection: &ViewportsCollection,
+    viewports: &Viewports,
     scale_factor: f64,
 ) {
     let mut layers_nums: Vec<&i16> = layers.layers.keys().collect();
@@ -255,7 +252,7 @@ pub fn process_events(
     let global_events = measure_global_events(events);
 
     let mut potential_events =
-        measure_potential_event_listeners(&layers_nums, layers, events, viewports_collection, dom);
+        measure_potential_event_listeners(&layers_nums, layers, events, viewports, dom);
 
     let emitted_events = measure_dom_events(&mut potential_events, dom, scale_factor);
 

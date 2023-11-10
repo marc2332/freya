@@ -7,8 +7,6 @@ use freya_core::prelude::*;
 use freya_dom::prelude::{FreyaDOM, SafeDOM};
 use freya_engine::prelude::*;
 use freya_hooks::{use_init_accessibility, use_init_focus};
-use freya_layout::Layers;
-use rustc_hash::FxHashMap;
 use std::sync::{Arc, Mutex};
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::unbounded_channel;
@@ -47,7 +45,7 @@ pub fn launch_test_with_config(root: Component<()>, config: TestingConfig) -> Te
         font_collection,
         event_emitter,
         event_receiver,
-        viewports: FxHashMap::default(),
+        viewports: Viewports::default(),
         utils: TestUtils { sdom, layers },
         config,
         platform_event_emitter,
