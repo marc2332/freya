@@ -1,0 +1,18 @@
+---
+import "@fontsource/inter";
+import Layout from "./Layout.astro";
+import { BlogPostTOC }  from "../components/BlogPostTOC"
+const { frontmatter, headings  } = Astro.props;
+
+console.log(frontmatter, headings )
+
+---
+
+<Layout title={frontmatter.title}>
+    <main>
+        <h2>{frontmatter.author}</h2>
+        <i>{frontmatter.author}</i>
+        <slot />
+    </main>
+    <BlogPostTOC headings={headings}/>
+</Layout>

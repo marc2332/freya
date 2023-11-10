@@ -1,14 +1,15 @@
 import { defineConfig } from 'astro/config';
-
-// https://astro.build/config
+import { rehypeAccessibleEmojis } from 'rehype-accessible-emojis';
 import react from "@astrojs/react";
-
-// https://astro.build/config
 import deno from "@astrojs/deno";
+import tailwind from "@astrojs/tailwind";
 
 // https://astro.build/config
 export default defineConfig({
-  integrations: [react()],
+  integrations: [react(), tailwind()],
   output: "server",
-  adapter: deno()
+  adapter: deno(),
+  markdown: {
+    rehypePlugins: [rehypeAccessibleEmojis]
+  }
 });
