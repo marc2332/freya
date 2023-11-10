@@ -23,7 +23,7 @@ impl DomEvent {
         return does_event_move_cursor(self.name.as_str());
     }
 
-    pub fn from_freya_event(
+    pub fn new(
         node_id: NodeId,
         element_id: ElementId,
         event: &FreyaEvent,

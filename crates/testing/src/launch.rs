@@ -33,7 +33,7 @@ pub fn launch_test_with_config(root: Component<()>, config: TestingConfig) -> Te
     let (platform_event_emitter, platform_event_receiver) = unbounded_channel::<EventMessage>();
     let layers = Arc::new(Mutex::new(Layers::default()));
     let freya_events = Vec::new();
-    let events_processor = EventsProcessor::default();
+    let elements_state = ElementsState::default();
     let mut font_collection = FontCollection::new();
     font_collection.set_dynamic_font_manager(FontMgr::default());
     let accessibility_state = SharedAccessibilityState::default();
@@ -41,7 +41,7 @@ pub fn launch_test_with_config(root: Component<()>, config: TestingConfig) -> Te
     let mut handler = TestingHandler {
         vdom,
         events_queue: freya_events,
-        events_processor,
+        elements_state,
         font_collection,
         event_emitter,
         event_receiver,

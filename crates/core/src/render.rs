@@ -13,7 +13,7 @@ pub fn process_render<HookOptions>(
     hook_options: &mut HookOptions,
     render_hook: impl Fn(&FreyaDOM, &NodeId, &Area, &mut FontCollection, &Viewports, &mut HookOptions),
 ) {
-    let mut layers_nums: Vec<&i16> = layers.layers.keys().collect();
+    let mut layers_nums = layers.layers_indices();
 
     // Order the layers from top to bottom
     layers_nums.sort();

@@ -56,7 +56,7 @@ pub struct App<State: 'static + Clone> {
     window_env: WindowEnv<State>,
 
     layers: Layers,
-    events_processor: EventsProcessor,
+    elements_state: ElementsState,
     viewports: Viewports,
 
     focus_sender: FocusSender,
@@ -110,7 +110,7 @@ impl<State: 'static + Clone> App<State> {
             event_receiver,
             window_env,
             layers: Layers::default(),
-            events_processor: EventsProcessor::default(),
+            elements_state: ElementsState::default(),
             viewports: Viewports::default(),
             accessibility,
             focus_sender,
@@ -220,7 +220,7 @@ impl<State: 'static + Clone> App<State> {
             &self.layers,
             &mut self.events,
             &self.event_emitter,
-            &mut self.events_processor,
+            &mut self.elements_state,
             &self.viewports,
             scale_factor,
         )
