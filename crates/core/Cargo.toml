@@ -40,6 +40,7 @@ zbus = { workspace = true }
 rustc-hash= { workspace = true }
 tracing = { workspace = true }
 uuid = { workspace = true }
+itertools = "0.11.0"
 
 [dev-dependencies]
 dioxus = { workspace = true }

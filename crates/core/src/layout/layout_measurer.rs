@@ -26,13 +26,8 @@ pub fn process_layout(
     // Create the layers
     let layers = Layers::new(rdom, &fdom.layout(), font_collection, scale_factor);
 
-    let mut layers_nums = layers.layers_indices();
-
-    // Order the layers from top to bottom
-    layers_nums.sort();
-
     // Calculate the viewports
-    let viewports = Viewports::new(&layers_nums, &layers, fdom);
+    let viewports = Viewports::new(&layers, fdom);
 
     (layers, viewports)
 }

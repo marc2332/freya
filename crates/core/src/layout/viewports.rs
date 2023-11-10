@@ -15,13 +15,12 @@ pub struct Viewports {
 
 impl Viewports {
     // Calculate all the applicable viewports for the given nodes
-    pub fn new(layers_nums: &[i16], layers: &Layers, fdom: &FreyaDOM) -> Self {
+    pub fn new(layers: &Layers, fdom: &FreyaDOM) -> Self {
         let mut viewports = FxHashMap::default();
         let layout = fdom.layout();
         let rdom = fdom.rdom();
 
-        for layer_num in layers_nums {
-            let layer = layers.layers.get(layer_num).unwrap();
+        for (_, layer) in layers.layers() {
             for node_id in layer {
                 let node = rdom.get(*node_id);
                 let node_areas = layout.get(*node_id);

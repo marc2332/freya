@@ -22,38 +22,33 @@ pub fn process_events(
     viewports: &Viewports,
     scale_factor: f64,
 ) {
-    let mut layers_nums = layers.layers_indices();
-
-    // 1. Order the layers from top to bottom
-    layers_nums.sort();
-
-    // 2. Get global events created from the incominge vents
+    // 1. Get global events created from the incominge vents
     let global_events = measure_global_events(events);
 
-    // 3. Get potential events that could be emitted based on the elements layout and viewports
+    // 2. Get potential events that could be emitted based on the elements layout and viewports
     let mut potential_events =
-        measure_potential_event_listeners(&layers_nums, layers, events, viewports, dom);
+        measure_potential_event_listeners(layers, events, viewports, dom);
 
-    // 4. Get what events can be actually emitted based on what elements are listening
+    // 3. Get what events can be actually emitted based on what elements are listening
     let emitted_events = measure_dom_events(&mut potential_events, dom, scale_factor);
 
-    // 5. Emit the events and get potential derived events caused by the emitted ones, e.g mouseover -> mouseenter
+    // 4. Emit the events and get potential derived events caused by the emitted ones, e.g mouseover -> mouseenter
     let mut potential_colateral_events =
         elements_state.process_events(emitted_events, events, event_emitter);
 
-    // 6. Get what derived events can actually be emitted
+    // 5. Get what derived events can actually be emitted
     let emitted_colateral_events =
         measure_dom_events(&mut potential_colateral_events, dom, scale_factor);
 
-    // 7. Emit the colateral events
+    // 6. Emit the colateral events
     for event in emitted_colateral_events {
         event_emitter.send(event).unwrap();
     }
 
-    // 8. Emit the global events
+    // 7. Emit the global events
     emit_global_events_listeners(global_events, dom, event_emitter, scale_factor);
 
-    // 9. Clear the events queue
+    // 8. Clear the events queue
     events.clear();
 }
 
@@ -78,7 +73,6 @@ pub fn measure_global_events(events: &EventsQueue) -> Vec<FreyaEvent> {
 
 /// Measure what potential event listeners could be triggered
 pub fn measure_potential_event_listeners(
-    layers_nums: &[i16],
     layers: &Layers,
     events: &EventsQueue,
     viewports: &Viewports,
@@ -89,8 +83,7 @@ pub fn measure_potential_event_listeners(
     let layout = fdom.layout();
 
     // Propagate events from the top to the bottom
-    for layer_num in layers_nums {
-        let layer = layers.layers.get(layer_num).unwrap();
+    for (_, layer) in layers.layers() {
 
         for node_id in layer {
             let areas = layout.get(*node_id);

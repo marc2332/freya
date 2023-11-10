@@ -13,14 +13,8 @@ pub fn process_render<HookOptions>(
     hook_options: &mut HookOptions,
     render_hook: impl Fn(&FreyaDOM, &NodeId, &Area, &mut FontCollection, &Viewports, &mut HookOptions),
 ) {
-    let mut layers_nums = layers.layers_indices();
-
-    // Order the layers from top to bottom
-    layers_nums.sort();
-
     // Render all the layers from the bottom to the top
-    for layer_num in &layers_nums {
-        let layer = layers.layers.get(layer_num).unwrap();
+    for (_, layer) in layers.layers() {
         'elements: for node_id in layer {
             let node_viewports = viewports.get(node_id);
             let layout = dom.layout();

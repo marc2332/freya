@@ -1,8 +1,11 @@
+use std::vec::IntoIter;
+
 use dioxus_native_core::prelude::ElementNode;
 use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::{node::NodeType, NodeId};
 use freya_common::NodeReferenceLayout;
 use freya_dom::prelude::{DioxusDOM, FreyaDOM};
+use itertools::sorted;
 
 use freya_engine::prelude::*;
 use freya_node_state::{CursorMode, CursorSettings, LayoutState, References, Style};
@@ -90,8 +93,8 @@ impl Layers {
         layers
     }
 
-    pub fn layers_indices(&self) -> Vec<i16> {
-        self.layers.keys().copied().collect()
+    pub fn layers(&self) -> IntoIter<(&i16, &Vec<NodeId>)> {
+        sorted(self.layers.iter())
     }
 
     pub fn len_paragraph_elements(&self) -> usize {
