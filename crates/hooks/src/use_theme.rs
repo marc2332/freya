@@ -96,6 +96,7 @@ pub struct SliderTheme {
 pub struct TooltipTheme {
     pub background: &'static str,
     pub color: &'static str,
+    pub border_fill: &'static str,
 }
 
 /// Theming properties for ExternalLink components.
@@ -195,8 +196,9 @@ pub const LIGHT_THEME: Theme = Theme {
         active_thumb_background: "rgb(95, 95, 95)",
     },
     tooltip: TooltipTheme {
-        background: "rgb(230,230,230)",
+        background: "rgb(245, 245, 245)",
         color: "rgb(25,25,25)",
+        border_fill: "rgb(210, 210, 210)",
     },
     external_link: ExternalLinkTheme {
         highlight_color: "rgb(43,106,208)",
@@ -273,6 +275,7 @@ pub const DARK_THEME: Theme = Theme {
     tooltip: TooltipTheme {
         background: "rgb(35,35,35)",
         color: "rgb(240,240,240)",
+        border_fill: "rgb(80, 80, 80)",
     },
     external_link: ExternalLinkTheme {
         highlight_color: "rgb(43,106,208)",
