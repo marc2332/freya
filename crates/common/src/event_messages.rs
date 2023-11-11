@@ -15,6 +15,8 @@ pub enum EventMessage {
     RequestRelayout,
     /// Request a rerender
     RequestRerender,
+    /// Request a redraw
+    RequestRedraw,
     /// Remeasure a text elements group
     RemeasureTextGroup(Uuid),
     /// Change the cursor icon

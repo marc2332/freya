@@ -206,9 +206,7 @@ impl<State: 'static + Clone> App<State> {
             if must_relayout {
                 self.window_env.window.request_redraw();
             } else if must_repaint {
-                self.proxy
-                    .send_event(EventMessage::RequestRerender)
-                    .unwrap();
+                self.proxy.send_event(EventMessage::RequestRedraw).unwrap();
             }
         }
     }

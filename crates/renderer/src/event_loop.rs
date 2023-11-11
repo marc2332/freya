@@ -47,6 +47,7 @@ pub fn run_event_loop<State: Clone>(
             Event::UserEvent(EventMessage::RequestRerender) => {
                 app.window_env().window().request_redraw();
             }
+            Event::UserEvent(EventMessage::RequestRedraw) => app.render(&hovered_node),
             Event::UserEvent(EventMessage::RequestRelayout) => {
                 app.process_layout();
             }
