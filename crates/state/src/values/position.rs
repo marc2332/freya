@@ -9,7 +9,7 @@ impl Parse for Position {
 
     fn parse(value: &str) -> Result<Self, Self::Err> {
         Ok(match value {
-            "absolute" => Position::Absolute,
+            "absolute" => Position::new_absolute(),
             _ => Position::Stacked,
         })
     }

@@ -192,6 +192,10 @@ builder_constructors! {
         focusable: String,
         margin: String,
         position: String,
+        position_top: String,
+        position_right: String,
+        position_bottom: String,
+        position_left: String,
     };
     label {
         color: String,

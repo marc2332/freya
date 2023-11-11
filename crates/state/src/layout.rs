@@ -59,6 +59,10 @@ impl State<CustomAttributeValues> for LayoutState {
             "reference",
             "margin",
             "position",
+            "position_top",
+            "position_right",
+            "position_bottom",
+            "position_left",
         ]))
         .with_tag()
         .with_text();
@@ -195,7 +199,37 @@ impl State<CustomAttributeValues> for LayoutState {
                     "position" => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(position) = Position::parse(value) {
-                                layout.position = position;
+                                if layout.position.is_empty() {
+                                    layout.position = position;
+                                }
+                            }
+                        }
+                    }
+                    "position_top" => {
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(top) = value.parse::<f32>() {
+                                layout.position.set_top(top * scale_factor);
+                            }
+                        }
+                    }
+                    "position_right" => {
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(right) = value.parse::<f32>() {
+                                layout.position.set_right(right * scale_factor);
+                            }
+                        }
+                    }
+                    "position_bottom" => {
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(bottom) = value.parse::<f32>() {
+                                layout.position.set_bottom(bottom * scale_factor);
+                            }
+                        }
+                    }
+                    "position_left" => {
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(left) = value.parse::<f32>() {
+                                layout.position.set_left(left * scale_factor);
                             }
                         }
                     }
@@ -226,7 +260,8 @@ impl State<CustomAttributeValues> for LayoutState {
             || (layout.offset_x != self.offset_x)
             || (layout.offset_y != self.offset_y)
             || (layout.main_alignment != self.main_alignment)
-            || (layout.cross_alignment != self.cross_alignment);
+            || (layout.cross_alignment != self.cross_alignment)
+            || (layout.position != self.position);
 
         if changed {
             torin_layout.lock().unwrap().invalidate(node_view.node_id());

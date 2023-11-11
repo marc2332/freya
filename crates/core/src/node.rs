@@ -3,7 +3,7 @@ use freya_dom::prelude::DioxusNode;
 use freya_engine::prelude::*;
 use freya_node_state::{
     Border, CornerRadius, CursorSettings, Fill, FontStyleState, LayoutState, References, Shadow,
-    Style, Transform,
+    Style, TextOverflow, Transform,
 };
 use torin::{alignment::Alignment, direction::DirectionMode, gaps::Gaps, size::Size};
 
@@ -114,12 +114,20 @@ impl<'a> Iterator for NodeStateIterator<'a> {
                 "line_height",
                 AttributeType::Measure(self.state.font_style.line_height),
             )),
-            17 => Some(("offset_x", AttributeType::Measure(self.state.size.offset_x))),
-            18 => Some(("offset_y", AttributeType::Measure(self.state.size.offset_y))),
+            17 => Some((
+                "text_align",
+                AttributeType::TextAlignment(&self.state.font_style.text_align),
+            )),
+            18 => Some((
+                "text_overflow",
+                AttributeType::TextOverflow(&self.state.font_style.text_overflow),
+            )),
+            19 => Some(("offset_x", AttributeType::Measure(self.state.size.offset_x))),
+            20 => Some(("offset_y", AttributeType::Measure(self.state.size.offset_y))),
             n => {
                 let shadows = &self.state.style.shadows;
                 let shadow = shadows
-                    .get(n - 19)
+                    .get(n - 21)
                     .map(|shadow| ("shadow", AttributeType::Shadow(shadow)));
 
                 if shadow.is_some() {
@@ -127,7 +135,7 @@ impl<'a> Iterator for NodeStateIterator<'a> {
                 } else {
                     let text_shadows = &self.state.font_style.text_shadows;
                     text_shadows
-                        .get(n - 19 + shadows.len())
+                        .get(n - 21 + shadows.len())
                         .map(|text_shadow| ("text_shadow", AttributeType::TextShadow(text_shadow)))
                 }
             }
@@ -155,4 +163,23 @@ pub enum AttributeType<'a> {
     TextShadow(&'a TextShadow),
     Text(String),
     Border(&'a Border),
+    TextAlignment(&'a TextAlign),
+    TextOverflow(&'a TextOverflow),
+}
+
+pub trait ExternalPretty {
+    fn pretty(&self) -> String;
+}
+
+impl ExternalPretty for TextAlign {
+    fn pretty(&self) -> String {
+        match self {
+            TextAlign::Left => "left".to_string(),
+            TextAlign::Right => "right".to_string(),
+            TextAlign::Center => "center".to_string(),
+            TextAlign::Justify => "justify".to_string(),
+            TextAlign::Start => "start".to_string(),
+            TextAlign::End => "end".to_string(),
+        }
+    }
 }

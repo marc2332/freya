@@ -149,6 +149,16 @@ impl Node {
         }
     }
 
+    /// Construct a new Node given a size and a position
+    pub fn from_size_and_position(width: Size, height: Size, position: Position) -> Self {
+        Self {
+            width,
+            height,
+            position,
+            ..Default::default()
+        }
+    }
+
     /// Has properties that depend on the inner Nodes?
     pub fn does_depend_on_inner(&self) -> bool {
         Size::Inner == self.width

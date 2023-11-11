@@ -96,7 +96,6 @@ fn app(cx: Scope) -> Element {
                         for (n, (text, order_by)) in columns.iter().enumerate() {
                             TableCell {
                                 key: "{n}",
-                                divider: n > 0,
                                 order_direction: if *order.get() == *order_by { Some(*order_direction.get()) } else { None },
                                 onclick: move  |_| on_column_head_click(order_by),
                                 label {
@@ -115,7 +114,6 @@ fn app(cx: Scope) -> Element {
                                 for (n, item) in items.iter().enumerate() {
                                     TableCell {
                                         key: "{n}",
-                                        divider: n > 0,
                                         label {
                                             width: "100%",
                                             text_align: "right",

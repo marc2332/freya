@@ -141,6 +141,24 @@ pub fn NodeInspectorStyle(cx: Scope, node_id: NodeId) -> Element {
                                     }
                                 }
                             }
+                            AttributeType::TextAlignment(text_align) => {
+                                rsx!{
+                                    Property {
+                                        key: "{i}",
+                                        name: "{name}",
+                                        value: text_align.pretty()
+                                    }
+                                }
+                            }
+                            AttributeType::TextOverflow(text_overflow) => {
+                                rsx!{
+                                    Property {
+                                        key: "{i}",
+                                        name: "{name}",
+                                        value: text_overflow.pretty()
+                                    }
+                                }
+                            }
                         }
                     })
                 }

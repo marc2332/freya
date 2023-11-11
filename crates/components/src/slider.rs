@@ -1,8 +1,9 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{MouseEvent, WheelEvent};
-use freya_hooks::{use_get_theme, use_node_ref};
+use freya_hooks::{use_get_theme, use_node_ref, use_platform};
 use tracing::info;
+use winit::window::CursorIcon;
 
 /// [`Slider`] component properties.
 #[derive(Props)]
@@ -26,6 +27,16 @@ fn ensure_correct_slider_range(value: f64) -> f64 {
     } else {
         value
     }
+}
+
+/// Describes the current status of the Slider.
+#[derive(Debug, Default, PartialEq, Clone, Copy)]
+pub enum SliderStatus {
+    /// Default state.
+    #[default]
+    Idle,
+    /// Mouse is hovering the slider.
+    Hovering,
 }
 
 /// Controlled `Slider` component.
@@ -63,22 +74,39 @@ fn ensure_correct_slider_range(value: f64) -> f64 {
 pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
     let theme = use_get_theme(cx);
     let theme = &theme.slider;
-    let hovering = use_state(cx, || false);
+    let status = use_ref(cx, SliderStatus::default);
     let clicking = use_state(cx, || false);
+    let platform = use_platform(cx);
+
     let value = ensure_correct_slider_range(cx.props.value);
     let (node_reference, size) = use_node_ref(cx);
     let width = cx.props.width + 14.0;
 
     let progress = (value / 100.0) * cx.props.width + 0.5;
 
-    let onmouseleave = |_: MouseEvent| {
-        if !(*clicking.get()) {
-            hovering.set(false);
+    use_on_unmount(cx, {
+        to_owned![status, platform];
+        move || {
+            if *status.read() == SliderStatus::Hovering {
+                platform.set_cursor(CursorIcon::default());
+            }
+        }
+    });
+
+    let onmouseleave = {
+        to_owned![platform, status];
+        move |_: MouseEvent| {
+            *status.write_silent() = SliderStatus::Idle;
+            platform.set_cursor(CursorIcon::default());
         }
     };
 
+    let onmouseenter = move |_: MouseEvent| {
+        *status.write_silent() = SliderStatus::Hovering;
+        platform.set_cursor(CursorIcon::Hand);
+    };
+
     let onmouseover = move |e: MouseEvent| {
-        hovering.set(true);
         if *clicking.get() {
             let coordinates = e.get_element_coordinates();
             let mut x = coordinates.x - 7.5 - size.read().area.min_x() as f64;
@@ -119,6 +147,7 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
             height: "20",
             onmousedown: onmousedown,
             onglobalclick: onclick,
+            onmouseenter: onmouseenter,
             onglobalmouseover: onmouseover,
             onmouseleave: onmouseleave,
             onwheel: onwheel,

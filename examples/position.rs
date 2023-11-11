@@ -12,18 +12,16 @@ fn main() {
 #[allow(non_snake_case)]
 #[inline_props]
 fn PopupBackground<'a>(cx: Scope<'a>, children: Element<'a>) -> Element {
-    render!(
-        rect {
-            height: "100%",
-            width: "100%",
-            background: "rgb(0, 0, 0, 150)",
-            position: "absolute",
-            layer: "-1",
-            main_align: "center",
-            cross_align: "center",
-            children
-        }
-    )
+    render!(rect {
+        height: "100%",
+        width: "100%",
+        background: "rgb(0, 0, 0, 150)",
+        position: "absolute",
+        layer: "-1",
+        main_align: "center",
+        cross_align: "center",
+        children
+    })
 }
 
 #[allow(non_snake_case)]

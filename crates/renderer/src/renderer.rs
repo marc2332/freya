@@ -30,7 +30,7 @@ pub fn render_skia(
     area: &Area,
     dioxus_node: &DioxusNode,
     font_collection: &mut FontCollection,
-    viewports_collection: &ViewportsCollection,
+    viewports: &Viewports,
     render_wireframe: bool,
     matrices: &mut Vec<(Matrix, Vec<NodeId>)>,
 ) {
@@ -63,10 +63,10 @@ pub fn render_skia(
             }
         }
 
-        let viewports = viewports_collection.get(&dioxus_node.id());
+        let node_viewports = viewports.get(&dioxus_node.id());
 
         // Clip all elements with their corresponding viewports
-        if let Some((element_viewport, viewports)) = viewports {
+        if let Some((element_viewport, node_viewports)) = node_viewports {
             // Only clip the element iself when it's paragraph because
             // it will render the inner text spans on it's own, so if these spans overflow the paragraph,
             // It is the paragraph job to make sure they are clipped
@@ -75,8 +75,8 @@ pub fn render_skia(
                     clip_viewport(canvas, element_viewport);
                 }
             }
-            for viewport_id in viewports {
-                let viewport = viewports_collection.get(viewport_id).unwrap().0;
+            for viewport_id in node_viewports {
+                let viewport = viewports.get(viewport_id).unwrap().0;
                 if let Some(viewport) = viewport {
                     clip_viewport(canvas, &viewport);
                 }

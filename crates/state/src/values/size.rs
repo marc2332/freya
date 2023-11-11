@@ -12,6 +12,8 @@ impl Parse for Size {
     fn parse(value: &str) -> Result<Self, Self::Err> {
         if value == "auto" {
             Ok(Size::Inner)
+        } else if value == "fill" {
+            Ok(Size::Fill)
         } else if value.contains("calc") {
             Ok(Size::DynamicCalculations(parse_calc(value)?))
         } else if value.contains('%') {
