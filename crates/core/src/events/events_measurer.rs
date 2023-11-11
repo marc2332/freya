@@ -26,8 +26,7 @@ pub fn process_events(
     let global_events = measure_global_events(events);
 
     // 2. Get potential events that could be emitted based on the elements layout and viewports
-    let mut potential_events =
-        measure_potential_event_listeners(layers, events, viewports, dom);
+    let mut potential_events = measure_potential_event_listeners(layers, events, viewports, dom);
 
     // 3. Get what events can be actually emitted based on what elements are listening
     let emitted_events = measure_dom_events(&mut potential_events, dom, scale_factor);
@@ -84,7 +83,6 @@ pub fn measure_potential_event_listeners(
 
     // Propagate events from the top to the bottom
     for (_, layer) in layers.layers() {
-
         for node_id in layer {
             let areas = layout.get(*node_id);
             if let Some(areas) = areas {
