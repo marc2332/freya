@@ -4,15 +4,13 @@ import Layout from "./Layout.astro";
 import { BlogPostTOC }  from "../components/BlogPostTOC"
 const { frontmatter, headings  } = Astro.props;
 
-console.log(frontmatter, headings )
-
 const formattedDate = (new Date(frontmatter.date)).toLocaleString().split(',')[0]
 
 ---
 
 <Layout title={frontmatter.title}>
     <main class="flex">
-        <article class="w-4/5 border-x-2 border-stone-700 px-8">
+        <article class="w-4/5 px-8">
             <h1>{frontmatter.title}</h1>
             <i>{formattedDate} - {frontmatter.author}</i>
             <slot />
@@ -22,6 +20,17 @@ const formattedDate = (new Date(frontmatter.date)).toLocaleString().split(',')[0
 </Layout>
 
 <style is:global>
+	.icon.icon-link::before {
+		padding: 2px 10px;
+        content: "#";
+        color: rgb(100, 100, 100);
+	}
+
+    .icon.icon-link:hover::before {
+        color: rgb(150, 150, 150);
+	}
+
+
     main {
 		max-width: 115ch;
 	}

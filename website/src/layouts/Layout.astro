@@ -1,5 +1,6 @@
 ---
 import "@fontsource/inter";
+import { Navbar } from "../components/Navbar";
 
 export interface Props {
 	title: string;
@@ -20,7 +21,10 @@ const { title } = Astro.props;
 		<title>{title}</title>
 	</head>
 	<body>
-		<slot />
+		<main>
+			<Navbar/>
+			<slot />
+		</main>
 	</body>
 </html>
 <style is:global>
@@ -48,22 +52,8 @@ const { title } = Astro.props;
 		margin: 0;
 	}
 
-	#header {
-		margin: 0 auto 20px auto;
-		width: 390px;
-		text-align: center;
-	}
-	#header * {
-		line-height: 1.75rem;
-		color: rgb(229, 231, 235);
-	}
-	#header p {
-		font-size: 1.25rem;
-		line-height: 1.7;
-	}
-
 	main {
-		margin: auto;
+		margin: 0 auto;
 	}
 	h1 {
 		font-size: 3rem;

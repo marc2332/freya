@@ -6,7 +6,8 @@ export default {
 			backgroundColor: {
 				"custom-yellow": "rgb(233, 196, 106)",
 				"custom-blue": "rgb(73, 151, 222)",
-				"custom-dark-gray": "#131315"
+				"custom-dark-gray": "#131315",
+				"custom-dark-black": "#18181b"
 			}
 		},
 	},
