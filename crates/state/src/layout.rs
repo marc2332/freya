@@ -221,9 +221,7 @@ impl State<CustomAttributeValues> for LayoutState {
                     }
                     "position_bottom" => {
                         if let Some(value) = attr.value.as_text() {
-                            println!("{value}");
                             if let Ok(bottom) = value.parse::<f32>() {
-                                println!(">{bottom}");
                                 layout.position.set_bottom(bottom * scale_factor);
                             }
                         }
