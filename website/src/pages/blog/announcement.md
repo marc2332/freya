@@ -1,7 +1,7 @@
 ---
 title: 'Freya Announcement'
 date: 2023-09-02
-description: 'Freya Announcement'
+description: 'Initial release of Freya. A native GUI library for Rust.'
 author: 'marc2332'
 layout: ../../layouts/BlogPostLayout.astro
 ---

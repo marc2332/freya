@@ -35,23 +35,20 @@ fn app(cx: Scope) -> Element {
 ---
 
 <Layout title="Freya - GUI Library for Rust">
-	
-		<div class="flex justify-center items-center pb-8">
-			<div class="justify-between flex items-center p-4 px-6">
-				<img src="/logo.svg" width="150">
-			</div>
-			<div>
+		<div class="sm:flex justify-center items-center pb-8">
+			<img class="mx-auto mb-8 sm:m-0" src="/logo.svg" width="150">
+			<div class="inline-block sm:p-4">
 				<p>Build native & cross-platform GUI applications  using 🦀 <a href="https://www.rust-lang.org/" class="underline">Rust</a>. <br/>Powered by 🧬 <a href="https://dioxuslabs.com/" class="underline">Dioxus</a> and 🎨 <a href="https://skia.org/" rel="noreferrer"class="underline">Skia</a>.</p>
 				<br/>
-				<a class="mx-2 px-6 py-2 bg-sky-500 rounded-lg text-black hover:bg-sky-600 transition-colors delay-[10]" href="https://book.freyaui.dev/guides/getting_started.html">get started -></a>
-				<a class="mx-2 px-6 py-2 bg-orange-300 rounded-lg text-black hover:bg-orange-400 transition-colors delay-[10]" href="https://github.com/marc2332/freya">contribute -></a>
+				<a class="sm:inline-block sm:my-0 block my-2 mr-2 px-6 py-2 bg-sky-500 rounded-lg text-black hover:bg-sky-600 transition-colors delay-[10]" href="https://book.freyaui.dev/guides/getting_started.html">get started -></a>
+				<a class="sm:inline-block sm:my-0 block my-2 mr-2 px-6 py-2 bg-orange-300 rounded-lg text-black hover:bg-orange-400 transition-colors delay-[10]" href="https://github.com/marc2332/freya">contribute -></a>
 			</div>
 		</div>
-		<div class="flex">
-			<div class="flex-1  text-black border border-stone-800 m-2 rounded-2xl p-4 bg-custom-dark-gray text-xs">
+		<div class="block max-w-prose mx-auto sm:flex">
+			<div class="flex-1 text-black border border-stone-800 m-2 rounded-2xl p-4 bg-custom-dark-gray text-xs">
 				<CodeBlock code={EXAMPLE_CODE} client:load/>
 			</div>
-			<div class="flex-1  text-black m-2 rounded-md ">
+			<div class="flex-1 text-black m-2 rounded-md h-96 sm:h-auto">
 				<div class="bg-custom-yellow h-1/5 p-6 rounded-tl-2xl rounded-tr-2xl">
 					Number is: 37
 				</div>
@@ -60,12 +57,5 @@ fn app(cx: Scope) -> Element {
 				</div>
 			</div>
 		</div>
-	
 </Layout>
 
-<style is:global>	
-	main {
-		max-width: 70ch;
-		color: white;
-	}
-</style>

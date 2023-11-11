@@ -9,14 +9,14 @@ const formattedDate = (new Date(frontmatter.date)).toLocaleString().split(',')[0
 ---
 
 <Layout title={frontmatter.title}>
-    <main class="flex">
-        <article class="w-4/5 px-8">
+    <div class="flex">
+        <article class="sm:w-4/5 px-8 w-full">
             <h1>{frontmatter.title}</h1>
             <i>{formattedDate} - {frontmatter.author}</i>
             <slot />
         </article>
         <BlogPostTOC headings={headings}/>
-    </main>
+    </div>
 </Layout>
 
 <style is:global>
@@ -30,10 +30,9 @@ const formattedDate = (new Date(frontmatter.date)).toLocaleString().split(',')[0
         color: rgb(150, 150, 150);
 	}
 
-
     main {
-		max-width: 115ch;
-	}
+        margin-bottom: 50px;
+    }
 
     pre {
         padding: 20px;

@@ -3,6 +3,9 @@ export default {
 	content: ['./src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}'],
 	theme: {
 		extend: {
+			spacing: {
+				'content': '110ch',
+			},
 			backgroundColor: {
 				"custom-yellow": "rgb(233, 196, 106)",
 				"custom-blue": "rgb(73, 151, 222)",
