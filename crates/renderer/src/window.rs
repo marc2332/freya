@@ -3,7 +3,6 @@ use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_dom::prelude::FreyaDOM;
 use freya_engine::prelude::*;
-use freya_layout::Layers;
 use std::ffi::CString;
 use std::num::NonZeroU32;
 use torin::geometry::{Area, Size2D};
@@ -196,7 +195,7 @@ impl<T: Clone> WindowEnv<T> {
         &mut self,
         rdom: &FreyaDOM,
         font_collection: &mut FontCollection,
-    ) -> (Layers, ViewportsCollection) {
+    ) -> (Layers, Viewports) {
         let window_size = self.window.inner_size();
         let scale_factor = self.window.scale_factor() as f32;
         process_layout(
@@ -214,7 +213,7 @@ impl<T: Clone> WindowEnv<T> {
     pub fn render(
         &mut self,
         layers: &Layers,
-        viewports_collection: &ViewportsCollection,
+        viewports: &Viewports,
         font_collection: &mut FontCollection,
         hovered_node: &HoveredNode,
         rdom: &FreyaDOM,
@@ -226,12 +225,12 @@ impl<T: Clone> WindowEnv<T> {
         let mut matrices: Vec<(Matrix, Vec<NodeId>)> = Vec::default();
 
         process_render(
-            viewports_collection,
+            viewports,
             rdom,
             font_collection,
             layers,
             &mut (canvas, (&mut matrices)),
-            |dom, node_id, area, font_collection, viewports_collection, (canvas, matrices)| {
+            |dom, node_id, area, font_collection, viewports, (canvas, matrices)| {
                 let render_wireframe = if let Some(hovered_node) = &hovered_node {
                     hovered_node
                         .lock()
@@ -247,7 +246,7 @@ impl<T: Clone> WindowEnv<T> {
                         area,
                         &dioxus_node,
                         font_collection,
-                        viewports_collection,
+                        viewports,
                         render_wireframe,
                         matrices,
                     );

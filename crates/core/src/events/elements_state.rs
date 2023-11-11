@@ -2,44 +2,17 @@ use dioxus_native_core::NodeId;
 use rustc_hash::{FxHashMap, FxHashSet};
 
 use crate::{
-    dom_events::{does_event_move_cursor, DomEvent},
-    freya_events::FreyaEvent,
-    EventEmitter,
+    events::{does_event_move_cursor, DomEvent, FreyaEvent},
+    types::EventEmitter,
 };
 
-fn any_recent_mouse_movement(events: &[FreyaEvent]) -> Option<FreyaEvent> {
-    events
-        .iter()
-        .find(|event| {
-            if let FreyaEvent::Mouse { name, .. } = event {
-                does_event_move_cursor(name)
-            } else {
-                false
-            }
-        })
-        .cloned()
-}
-
-fn has_node_been_hovered_recently(events_to_emit: &[DomEvent], element: &NodeId) -> bool {
-    events_to_emit
-        .iter()
-        .find_map(|event| {
-            if event.does_move_cursor() && &event.node_id == element {
-                Some(false)
-            } else {
-                None
-            }
-        })
-        .unwrap_or(true)
-}
-
-/// [`EventsProcessor`] stores the elements events states.
+/// [`ElementsState`] stores the elements states given incoming events.
 #[derive(Default)]
-pub struct EventsProcessor {
+pub struct ElementsState {
     hovered_elements: FxHashSet<NodeId>,
 }
 
-impl EventsProcessor {
+impl ElementsState {
     /// Update the Element states given the new events
     pub fn process_events(
         &mut self,
@@ -123,4 +96,30 @@ impl EventsProcessor {
 
         new_events
     }
+}
+
+fn any_recent_mouse_movement(events: &[FreyaEvent]) -> Option<FreyaEvent> {
+    events
+        .iter()
+        .find(|event| {
+            if let FreyaEvent::Mouse { name, .. } = event {
+                does_event_move_cursor(name)
+            } else {
+                false
+            }
+        })
+        .cloned()
+}
+
+fn has_node_been_hovered_recently(events_to_emit: &[DomEvent], element: &NodeId) -> bool {
+    events_to_emit
+        .iter()
+        .find_map(|event| {
+            if event.does_move_cursor() && &event.node_id == element {
+                Some(false)
+            } else {
+                None
+            }
+        })
+        .unwrap_or(true)
 }

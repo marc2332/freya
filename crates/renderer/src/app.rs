@@ -1,11 +1,10 @@
-use std::{collections::HashMap, sync::Arc, task::Waker};
+use std::{sync::Arc, task::Waker};
 
 use dioxus_core::{Template, VirtualDom};
 use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_dom::prelude::SafeDOM;
 use freya_engine::prelude::*;
-use freya_layout::Layers;
 use futures::FutureExt;
 use futures::{
     pin_mut,
@@ -57,8 +56,8 @@ pub struct App<State: 'static + Clone> {
     window_env: WindowEnv<State>,
 
     layers: Layers,
-    events_processor: EventsProcessor,
-    viewports_collection: ViewportsCollection,
+    elements_state: ElementsState,
+    viewports: Viewports,
 
     focus_sender: FocusSender,
     focus_receiver: FocusReceiver,
@@ -111,8 +110,8 @@ impl<State: 'static + Clone> App<State> {
             event_receiver,
             window_env,
             layers: Layers::default(),
-            events_processor: EventsProcessor::default(),
-            viewports_collection: HashMap::default(),
+            elements_state: ElementsState::default(),
+            viewports: Viewports::default(),
             accessibility,
             focus_sender,
             focus_receiver,
@@ -219,8 +218,8 @@ impl<State: 'static + Clone> App<State> {
             &self.layers,
             &mut self.events,
             &self.event_emitter,
-            &mut self.events_processor,
-            &self.viewports_collection,
+            &mut self.elements_state,
+            &self.viewports,
             scale_factor,
         )
     }
@@ -235,7 +234,7 @@ impl<State: 'static + Clone> App<State> {
                 .window_env
                 .process_layout(&dom, &mut self.font_collection);
             self.layers = layers;
-            self.viewports_collection = viewports;
+            self.viewports = viewports;
         }
 
         info!(
@@ -243,7 +242,7 @@ impl<State: 'static + Clone> App<State> {
             self.layers.len_layers(),
             self.layers.len_paragraph_elements()
         );
-        info!("Processed {} viewports", self.viewports_collection.len());
+        info!("Processed {} viewports", self.viewports.size());
 
         if let Some(mutations_notifier) = &self.mutations_notifier {
             mutations_notifier.notify_one();
@@ -283,7 +282,7 @@ impl<State: 'static + Clone> App<State> {
     pub fn render(&mut self, hovered_node: &HoveredNode) {
         self.window_env.render(
             &self.layers,
-            &self.viewports_collection,
+            &self.viewports,
             &mut self.font_collection,
             hovered_node,
             &self.sdom.get(),

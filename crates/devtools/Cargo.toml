@@ -19,7 +19,6 @@ skia-engine = ["freya-engine/skia-engine"]
 
 [dependencies]
 freya-node-state = { workspace = true }
-freya-layout = { workspace = true }
 freya-renderer = { workspace = true }
 freya-elements = { workspace = true }
 freya-hooks = { workspace = true }

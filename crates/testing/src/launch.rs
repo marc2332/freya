@@ -7,8 +7,6 @@ use freya_core::prelude::*;
 use freya_dom::prelude::{FreyaDOM, SafeDOM};
 use freya_engine::prelude::*;
 use freya_hooks::{use_init_accessibility, use_init_focus};
-use freya_layout::Layers;
-use rustc_hash::FxHashMap;
 use std::sync::{Arc, Mutex};
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::unbounded_channel;
@@ -35,7 +33,7 @@ pub fn launch_test_with_config(root: Component<()>, config: TestingConfig) -> Te
     let (platform_event_emitter, platform_event_receiver) = unbounded_channel::<EventMessage>();
     let layers = Arc::new(Mutex::new(Layers::default()));
     let freya_events = Vec::new();
-    let events_processor = EventsProcessor::default();
+    let elements_state = ElementsState::default();
     let mut font_collection = FontCollection::new();
     font_collection.set_dynamic_font_manager(FontMgr::default());
     let accessibility_state = SharedAccessibilityState::default();
@@ -43,11 +41,11 @@ pub fn launch_test_with_config(root: Component<()>, config: TestingConfig) -> Te
     let mut handler = TestingHandler {
         vdom,
         events_queue: freya_events,
-        events_processor,
+        elements_state,
         font_collection,
         event_emitter,
         event_receiver,
-        viewports: FxHashMap::default(),
+        viewports: Viewports::default(),
         utils: TestUtils { sdom, layers },
         config,
         platform_event_emitter,
