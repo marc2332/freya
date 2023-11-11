@@ -231,7 +231,7 @@ pub const LIGHT_THEME: Theme = Theme {
         progress_background: "rgb(103, 80, 164)",
     },
     table: TableTheme {
-        font_theme: FontTheme { color: "white" },
+        font_theme: FontTheme { color: "black" },
         background: "white",
         arrow_fill: "rgb(40, 40, 40)",
         row_background: "transparent",
