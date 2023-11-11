@@ -1,7 +1,7 @@
 use dioxus_native_core::real_dom::NodeImmutable;
+use freya_core::layout::create_paragraph;
 use freya_dom::prelude::DioxusNode;
 use freya_engine::prelude::*;
-use freya_layout::create_paragraph;
 use freya_node_state::CursorSettings;
 use torin::geometry::Area;
 

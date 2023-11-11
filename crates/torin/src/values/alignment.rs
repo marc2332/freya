@@ -12,6 +12,10 @@ impl Alignment {
     }
 
     pub fn pretty(&self) -> String {
-        format!("{self:?}")
+        match self {
+            Alignment::Start => "start".to_string(),
+            Alignment::Center => "center".to_string(),
+            Alignment::End => "end".to_string(),
+        }
     }
 }

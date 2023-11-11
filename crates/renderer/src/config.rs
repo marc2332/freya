@@ -1,8 +1,9 @@
-use std::sync::Arc;
+use std::{io::Cursor, sync::Arc};
 
-use freya_engine::prelude::*;
+use freya_engine::prelude::Color;
 use freya_node_state::Parse;
-use winit::window::Window;
+use image::{io::Reader, GenericImageView};
+use winit::window::{Icon, Window};
 
 /// Configuration for a Window.
 #[derive(Clone)]
@@ -29,6 +30,8 @@ pub struct WindowConfig<T: Clone> {
     pub state: Option<T>,
     /// Background color of the Window.
     pub background: Color,
+    /// The Icon of the Window.
+    pub icon: Option<Icon>,
     /// Setup callback.
     pub on_setup: Option<WindowCallback>,
     /// Exit callback.
@@ -54,25 +57,38 @@ impl<'a, T: Clone> LaunchConfig<'a, T> {
     }
 }
 
+impl LaunchConfig<'_, ()> {
+    pub fn load_icon(icon: &[u8]) -> Icon {
+        let reader = Reader::new(Cursor::new(icon))
+            .with_guessed_format()
+            .expect("Cursor io never fails");
+        let image = reader.decode().expect("Failed to open icon path");
+        let (width, height) = image.dimensions();
+        let rgba = image.into_bytes();
+        Icon::from_rgba(rgba, width, height).expect("Failed to open icon")
+    }
+}
+
 pub type WindowCallback = Arc<Box<fn(&mut Window)>>;
 
 /// Configuration Builder.
 #[derive(Clone)]
 pub struct LaunchConfigBuilder<'a, T> {
-    pub width: f64,
-    pub height: f64,
-    pub min_width: Option<f64>,
-    pub min_height: Option<f64>,
-    pub max_width: Option<f64>,
-    pub max_height: Option<f64>,
-    pub decorations: bool,
-    pub title: &'static str,
-    pub transparent: bool,
-    pub state: Option<T>,
-    pub background: Color,
-    pub fonts: Vec<(&'a str, &'a [u8])>,
-    pub on_setup: Option<WindowCallback>,
-    pub on_exit: Option<WindowCallback>,
+    pub(crate) width: f64,
+    pub(crate) height: f64,
+    pub(crate) min_width: Option<f64>,
+    pub(crate) min_height: Option<f64>,
+    pub(crate) max_width: Option<f64>,
+    pub(crate) max_height: Option<f64>,
+    pub(crate) decorations: bool,
+    pub(crate) title: &'static str,
+    pub(crate) transparent: bool,
+    pub(crate) state: Option<T>,
+    pub(crate) background: Color,
+    pub(crate) fonts: Vec<(&'a str, &'a [u8])>,
+    pub(crate) icon: Option<Icon>,
+    pub(crate) on_setup: Option<WindowCallback>,
+    pub(crate) on_exit: Option<WindowCallback>,
 }
 
 impl<T> Default for LaunchConfigBuilder<'_, T> {
@@ -90,6 +106,7 @@ impl<T> Default for LaunchConfigBuilder<'_, T> {
             state: None,
             background: Color::WHITE,
             fonts: Vec::default(),
+            icon: None,
             on_setup: None,
             on_exit: None,
         }
@@ -169,6 +186,12 @@ impl<'a, T: Clone> LaunchConfigBuilder<'a, T> {
         self
     }
 
+    /// Specify the Window icon.
+    pub fn with_icon(mut self, icon: Icon) -> Self {
+        self.icon = Some(icon);
+        self
+    }
+
     /// Register a callback that will be executed when the window is created.
     pub fn on_setup(mut self, callback: fn(&mut Window)) -> Self {
         self.on_setup = Some(Arc::new(Box::new(callback)));
@@ -196,6 +219,7 @@ impl<'a, T: Clone> LaunchConfigBuilder<'a, T> {
                 transparent: self.transparent,
                 state: self.state,
                 background: self.background,
+                icon: self.icon,
                 on_setup: self.on_setup,
                 on_exit: self.on_exit,
             },

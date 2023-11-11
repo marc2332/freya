@@ -49,6 +49,9 @@ pub struct VirtualScrollViewProps<'a, T: 'a> {
     /// Enable scrolling with arrow keys.
     #[props(default = true, into)]
     pub scroll_with_arrows: bool,
+    /// Tracker for the vertical scroll.
+    #[props(optional)]
+    pub scrolled_y: Option<UseRef<i32>>,
 }
 
 fn get_render_range(
@@ -347,6 +350,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
                     width: "100%",
                     height: "{horizontal_scrollbar_size}",
                     offset_x: "{scrollbar_x}",
+                    clicking_scrollbar: is_scrolling_x,
                     ScrollThumb {
                         clicking_scrollbar: is_scrolling_x,
                         onmousedown: onmousedown_x,
@@ -359,6 +363,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
                 width: "{vertical_scrollbar_size}",
                 height: "100%",
                 offset_y: "{scrollbar_y}",
+                clicking_scrollbar: is_scrolling_y,
                 ScrollThumb {
                     clicking_scrollbar: is_scrolling_y,
                     onmousedown: onmousedown_y,

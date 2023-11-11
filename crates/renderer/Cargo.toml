@@ -18,7 +18,6 @@ features = ["freya-engine/mocked-engine"]
 skia-engine = ["freya-engine/skia-engine"]
 
 [dependencies]
-freya-layout = { workspace = true }
 freya-node-state = { workspace = true }
 freya-elements = { workspace = true }
 freya-common = { workspace = true }
@@ -46,3 +45,4 @@ tracing = { workspace = true }
 
 uuid = { workspace = true }
 futures = { workspace = true }
+image = "0.24.7"
