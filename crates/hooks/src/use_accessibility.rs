@@ -1,7 +1,7 @@
 use dioxus_core::ScopeState;
 use dioxus_hooks::{to_owned, use_effect, use_memo, use_shared_state};
 use freya_common::EventMessage;
-use freya_core::FocusReceiver;
+use freya_core::types::FocusReceiver;
 
 use crate::{use_platform, FocusId};
 

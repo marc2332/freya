@@ -4,7 +4,7 @@ version = "0.0.0"
 edition = "2021"
 
 [workspace]
-members = ["crates/layout", "crates/renderer", "crates/state", "crates/freya", "crates/elements", "crates/components", "crates/hooks", "crates/common", "crates/core", "crates/testing", "crates/devtools", "crates/dom", "crates/torin", "crates/engine"]
+members = ["crates/renderer", "crates/state", "crates/freya", "crates/elements", "crates/components", "crates/hooks", "crates/common", "crates/core", "crates/testing", "crates/devtools", "crates/dom", "crates/torin", "crates/engine"]
 
 [features]
 log = ["freya/log"]
@@ -15,7 +15,6 @@ use_camera = ["freya/use_camera"]
 freya = { path = "crates/freya", version = "0.1" }
 freya-devtools = { path = "crates/devtools", version = "0.1" }
 freya-node-state = { path = "crates/state", version = "0.1" }
-freya-layout = { path = "crates/layout", version = "0.1" }
 freya-renderer = { path = "crates/renderer", version = "0.1" }
 freya-elements = { path = "crates/elements", version = "0.1" }
 freya-common = { path = "crates/common", version = "0.1" }

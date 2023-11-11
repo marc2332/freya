@@ -160,7 +160,6 @@ mod test {
 
         let width = utils.root().get(0).layout().unwrap().width();
         assert!(width > 0.0);
-        assert!(width < 100.0);
 
         // Enable event loop ticker
         utils.config().enable_ticker(true);

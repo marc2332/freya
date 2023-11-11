@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
-use freya_hooks::{use_get_theme, TableTheme};
+use freya_hooks::{use_get_theme, FontTheme, TableTheme};
 
 #[allow(non_snake_case)]
 #[component]
@@ -87,7 +87,6 @@ pub fn TableRow<'a>(cx: Scope<'a, TableRowProps<'a>>) -> Element {
         rect {
             direction: "horizontal",
             width: "100%",
-            min_height: "35",
             background: "{background}",
             &cx.props.children
         }
@@ -116,54 +115,58 @@ pub struct TableCellProps<'a> {
     /// The direction in which this TableCell's column will be ordered.
     #[props(into)]
     order_direction: Option<Option<OrderDirection>>,
-    /// Show a line divider to the left of this TableCell.
-    #[props(default = true, into)]
-    divider: bool,
+    /// The padding of the cell.
+    #[props(default = "5 25".to_string(), into)]
+    padding: String,
+    /// The height of the cell.
+    #[props(default = "35".to_string(), into)]
+    height: String,
 }
 
 #[allow(non_snake_case)]
 pub fn TableCell<'a>(cx: Scope<'a, TableCellProps<'a>>) -> Element {
-    let theme = use_get_theme(cx);
-    let TableTheme { divider_fill, .. } = theme.table;
     let config = cx.consume_context::<TableConfig>().unwrap();
     let width = 100.0 / config.columns as f32;
+    let TableCellProps {
+        children,
+        order_direction,
+        padding,
+        height,
+        ..
+    } = &cx.props;
 
     render!(
-        if cx.props.divider {
-            rsx!(
-                rect {
-                    width: "1",
-                    height: "35",
-                    background: "{divider_fill}"
-                }
-            )
-        }
-        rect {
-            width: "0",
-            height: "0",
-            padding: "10",
-            if let Some(Some(order_direction)) = &cx.props.order_direction {
-                rsx!(
-                    TableArrow {
-                        order_direction: *order_direction
-                    }
-                )
-            }
-        }
         rect {
             overflow: "clip",
-            padding: "5 25",
+            padding: "{padding}",
             width: "{width}%",
             main_align: "center",
             cross_align: "center",
-            height: "35",
+            height: "{height}",
             align: "right",
+            direction: "horizontal",
             onclick: |e| {
                 if let Some(onclick) = &cx.props.onclick {
                     onclick.call(e);
                 }
             },
-            &cx.props.children
+            if let Some(order_direction) = &order_direction {
+                rsx!(
+                    rect {
+                        margin: "10",
+                        width: "10",
+                        height: "10",
+                        if let Some(order_direction) = &order_direction {
+                            rsx!(
+                                TableArrow {
+                                    order_direction: *order_direction
+                                }
+                            )
+                        }
+                    }
+                )
+            }
+            children
         }
     )
 }
@@ -178,26 +181,36 @@ pub struct TableProps<'a> {
     /// The height of the table.
     #[props(default = "auto".to_string(), into)]
     height: String,
+    /// The corner radius of the table.
+    #[props(default = "6".to_string(), into)]
+    corner_radius: String,
+    /// The drop shadow of the table.
+    #[props(default = "0 2 15 5 rgb(35, 35, 35, 70)".to_string(), into)]
+    shadow: String,
 }
 
 #[allow(non_snake_case)]
 pub fn Table<'a>(cx: Scope<'a, TableProps<'a>>) -> Element {
     let theme = use_get_theme(cx);
     let TableTheme {
-        background, color, ..
+        background,
+        font_theme: FontTheme { color },
+        ..
     } = theme.table;
     cx.provide_context(TableConfig {
         columns: cx.props.columns,
     });
     let height = &cx.props.height;
+    let corner_radius = &cx.props.corner_radius;
+    let shadow = &cx.props.shadow;
 
     render!(
         rect {
             overflow: "clip",
             color: "{color}",
             background: "{background}",
-            corner_radius: "6",
-            shadow: "0 2 15 5 rgb(35, 35, 35, 70)",
+            corner_radius: "{corner_radius}",
+            shadow: "{shadow}",
             height: "{height}",
             &cx.props.children
         }

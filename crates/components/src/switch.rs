@@ -1,7 +1,8 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
-use freya_hooks::{use_animation, use_get_theme, Animation};
+use freya_hooks::{use_animation, use_get_theme, use_platform, Animation};
+use winit::window::CursorIcon;
 
 /// [`Switch`] component properties.
 #[derive(Props)]
@@ -10,6 +11,16 @@ pub struct SwitchProps<'a> {
     pub enabled: bool,
     /// Handler for the `ontoggled` event.
     pub ontoggled: EventHandler<'a, ()>,
+}
+
+/// Describes the current status of the Switch.
+#[derive(Debug, Default, PartialEq, Clone, Copy)]
+pub enum SwitchStatus {
+    /// Default state.
+    #[default]
+    Idle,
+    /// Mouse is hovering the switch.
+    Hovering,
 }
 
 /// Controlled `Switch` component.
@@ -42,25 +53,32 @@ pub struct SwitchProps<'a> {
 pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
     let animation = use_animation(cx, || 0.0);
     let theme = use_get_theme(cx);
-    let hovering = use_state(cx, || false);
-    let clicking = use_state(cx, || false);
+    let platform = use_platform(cx);
+    let status = use_ref(cx, SwitchStatus::default);
 
-    let onmouseleave = |_: MouseEvent| {
-        if !(*clicking.get()) {
-            hovering.set(false);
+    use_on_unmount(cx, {
+        to_owned![status, platform];
+        move || {
+            if *status.read() == SwitchStatus::Hovering {
+                platform.set_cursor(CursorIcon::default());
+            }
+        }
+    });
+
+    let onmouseleave = {
+        to_owned![platform];
+        move |_: MouseEvent| {
+            *status.write_silent() = SwitchStatus::Idle;
+            platform.set_cursor(CursorIcon::default());
         }
     };
 
-    let onmouseover = |_: MouseEvent| {
-        hovering.set(true);
-    };
-
-    let onmousedown = |_: MouseEvent| {
-        clicking.set(true);
+    let onmouseenter = move |_: MouseEvent| {
+        *status.write_silent() = SwitchStatus::Hovering;
+        platform.set_cursor(CursorIcon::Hand);
     };
 
     let onclick = |_: MouseEvent| {
-        clicking.set(false);
         cx.props.ontoggled.call(());
     };
 
@@ -96,8 +114,8 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
             padding: "1",
             corner_radius: "50",
             background: "{border}",
-            onmousedown: onmousedown,
-            onmouseover: onmouseover,
+            onmousedown: |_| {},
+            onmouseenter: onmouseenter,
             onmouseleave: onmouseleave,
             onclick: onclick,
             rect {

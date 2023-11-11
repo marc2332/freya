@@ -1,4 +1,4 @@
-use crate::accessibility::AccessibilityProvider;
+use crate::accessibility::*;
 use accesskit::{Node, NodeClassSet, NodeId as AccessibilityId};
 use std::{
     num::NonZeroU128,

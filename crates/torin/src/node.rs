@@ -1,7 +1,8 @@
 pub use euclid::Rect;
 
 use crate::{
-    alignment::Alignment, direction::DirectionMode, gaps::Gaps, geometry::Length, size::Size,
+    alignment::Alignment, direction::DirectionMode, gaps::Gaps, geometry::Length,
+    prelude::Position, size::Size,
 };
 
 /// Node layout configuration
@@ -35,6 +36,8 @@ pub struct Node {
 
     /// Direction in which it's inner Nodes will be stacked
     pub direction: DirectionMode,
+
+    pub position: Position,
 
     /// A Node might depend on inner sizes but have a fixed position, like scroll views.
     pub has_layout_references: bool,
@@ -142,6 +145,16 @@ impl Node {
             cross_alignment,
             direction,
             padding,
+            ..Default::default()
+        }
+    }
+
+    /// Construct a new Node given a size and a position
+    pub fn from_size_and_position(width: Size, height: Size, position: Position) -> Self {
+        Self {
+            width,
+            height,
+            position,
             ..Default::default()
         }
     }

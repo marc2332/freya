@@ -1,7 +1,8 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
-use freya_hooks::{use_focus, use_get_theme};
+use freya_hooks::{use_focus, use_get_theme, use_platform};
+use winit::window::CursorIcon;
 
 /// [`Button`] component properties.
 #[derive(Props)]
@@ -67,6 +68,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
     let focus = use_focus(cx);
     let theme = use_get_theme(cx);
     let status = use_state(cx, ButtonStatus::default);
+    let platform = use_platform(cx);
 
     let focus_id = focus.attribute(cx);
 
@@ -77,11 +79,25 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
         }
     };
 
-    let onmouseenter = move |_| {
-        status.set(ButtonStatus::Hovering);
+    use_on_unmount(cx, {
+        to_owned![status, platform];
+        move || {
+            if *status.get() == ButtonStatus::Hovering {
+                platform.set_cursor(CursorIcon::default());
+            }
+        }
+    });
+
+    let onmouseenter = {
+        to_owned![status, platform];
+        move |_| {
+            platform.set_cursor(CursorIcon::Hand);
+            status.set(ButtonStatus::Hovering);
+        }
     };
 
     let onmouseleave = move |_| {
+        platform.set_cursor(CursorIcon::default());
         status.set(ButtonStatus::default());
     };
 

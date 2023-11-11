@@ -6,13 +6,16 @@ Learn how the layout attributes work.
 - [`min_width & min_height`](#min_width--min_height)
 - [`max_width & max_height`](#max_width--max_height)
 - [`Size units`](#size_units)
+  - [`auto`](#auto)
   - [`Logical pixels`](#logical-pixels)
   - [`Percentages`](#percentages)
   - [`calc()`](#calc)
+  - [`fill`](#fill)
 - [`direction`](#direction)
 - [`padding`](#padding)
-- [`margin`](#margin)
 - [`main_align & cross_align`](#main_align--cross_align)
+- [`margin`](#margin)
+- [`position`](#position)
 
 > ⚠️ Freya's layout is still somewhat limited.
 
@@ -81,6 +84,23 @@ fn app(cx: Scope) -> Element {
 
 ### Size Units
 
+#### Auto
+Will use it's inner children as size, so in this case, the `rect` width will be defined bu the width of `label`:
+
+```rust, no_run
+fn app(cx: Scope) -> Element {
+    render!(
+        rect {
+            width: "auto",
+            height: "33",
+            label {
+                "hello!"
+            }
+        }
+    )
+}
+```
+
 #### Logical pixels
 
 ```rust, no_run
@@ -103,6 +123,28 @@ fn app(cx: Scope) -> Element {
         rect {
             width: "50%", // Half the parent
             height: "75%" // 3/4 the parent
+        }
+    )
+}
+```
+
+#### fill
+Use the remaining available space from the parent area:
+
+```rust, no_run
+fn app(cx: Scope) -> Element {
+    render!(
+        rect {
+            width: "100%",
+            height: "100%",
+            rect {
+                height: "200",
+                width: "100%",
+            }
+            rect {
+                height: "fill", // This is the same as calc(100% - 200)
+                width: "100%",
+            }
         }
     )
 }
@@ -211,6 +253,43 @@ fn app(cx: Scope) -> Element {
             margin: "25" // 25 in all sides
             margin: "100 50" // 100 in top and bottom, and 50 in left and right
             margin: "5 7 3 9" // 5 in top, 7 in right, 3 in bottom and 9 in left
+        }
+    )
+}
+```
+
+### position
+
+Specify how you want the element to be positioned inside it's parent Area
+
+Possible values for `position`:
+- `stacked` (default)
+- `absolute`
+
+When using the `absolute` mode, you can also combine it with the following attributes:
+- `position_top`
+- `position_right`
+- `position_bottom`
+- `position_left`
+
+These only support pixels.
+
+Example:
+
+```rust, no_run
+fn app(cx: Scope) -> Element {
+    render!(
+        rect {
+            width: "100%",
+            height: "100%",
+            rect {
+                position: "absolute",
+                position_bottom: "15",
+                position_right: "15",
+                background: "black",
+                width: "100",
+                height: "100",
+            }
         }
     )
 }
