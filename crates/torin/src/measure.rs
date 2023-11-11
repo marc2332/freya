@@ -39,6 +39,7 @@ pub fn measure_node<Key: NodeKey>(
         area.size.width = node.width.min_max(
             area.size.width,
             parent_area.size.width,
+            available_parent_area.size.width,
             node.margin.left(),
             node.margin.horizontal(),
             &node.minimum_width,
@@ -47,6 +48,7 @@ pub fn measure_node<Key: NodeKey>(
         area.size.height = node.height.min_max(
             area.size.height,
             parent_area.size.height,
+            available_parent_area.size.height,
             node.margin.top(),
             node.margin.vertical(),
             &node.minimum_height,
@@ -66,6 +68,7 @@ pub fn measure_node<Key: NodeKey>(
                     area.size.width = node.width.min_max(
                         custom_area.width(),
                         parent_area.size.width,
+                        available_parent_area.size.width,
                         node.margin.left(),
                         node.margin.horizontal(),
                         &node.minimum_width,
@@ -76,6 +79,7 @@ pub fn measure_node<Key: NodeKey>(
                     area.size.height = node.height.min_max(
                         custom_area.height(),
                         parent_area.size.height,
+                        available_parent_area.size.height,
                         node.margin.top(),
                         node.margin.vertical(),
                         &node.minimum_height,
@@ -99,6 +103,7 @@ pub fn measure_node<Key: NodeKey>(
                 inner_area.size.width = node.width.min_max(
                     available_parent_area.width(),
                     parent_area.size.width,
+                    available_parent_area.width(),
                     node.margin.left(),
                     node.margin.horizontal(),
                     &node.minimum_width,
@@ -109,6 +114,7 @@ pub fn measure_node<Key: NodeKey>(
                 inner_area.size.height = node.height.min_max(
                     available_parent_area.height(),
                     parent_area.size.height,
+                    available_parent_area.height(),
                     node.margin.top(),
                     node.margin.vertical(),
                     &node.minimum_height,
