@@ -17,8 +17,7 @@ fn app(cx: Scope) -> Element {
             color: "black",
             width: "100%",
             height: "100%",
-            display: "center",
-            direction: "horizontal",
+            cross_align: "center",
             rect {
                 width: "50%",
                 height: "100%",
@@ -28,7 +27,7 @@ fn app(cx: Scope) -> Element {
                     height: "75%",
                     paragraph {
                         width: "100%",
-                        align: "right",
+                        text_align: "right",
                         text {
                             color: "rgb(240, 50, 100)",
                             "{loremipsum.repeat(2)}"

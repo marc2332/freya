@@ -20,4 +20,6 @@
 - [Testing](./guides/testing.md)
 - [Animating](./guides/animating.md)
 - [Virtualizing](./guides/virtualizing.md)
+- [Devtools](./guides/devtools.md)
+- [Publishing]()
 

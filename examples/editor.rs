@@ -70,7 +70,7 @@ fn Body(cx: Scope) -> Element {
                     height: "100%",
                     width: "100%",
                     direction: "horizontal",
-                    padding: "5",
+                    cross_align: "center",
                     label {
                         font_size: "30",
                         "Editor"
@@ -79,9 +79,8 @@ fn Body(cx: Scope) -> Element {
                         width: "20",
                     }
                     rect {
-                        height: "40%",
-                        display: "center",
                         width: "130",
+                        cross_align: "center",
                         Slider {
                             width: 100.0,
                             value: *font_size_percentage.get(),
@@ -89,21 +88,13 @@ fn Body(cx: Scope) -> Element {
                                 font_size_percentage.set(p);
                             }
                         }
-                        rect {
-                            height: "auto",
-                            width: "100%",
-                            display: "center",
-                            direction: "horizontal",
-                            label {
-                                "Font size"
-                            }
+                        label {
+                            "Font size"
                         }
                     }
                     rect {
-                        height: "40%",
-                        display: "center",
-                        direction: "vertical",
                         width: "130",
+                        cross_align: "center",
                         Slider {
                             width: 100.0,
                             value: *line_height_percentage.get(),
@@ -111,56 +102,34 @@ fn Body(cx: Scope) -> Element {
                                 line_height_percentage.set(p);
                             }
                         }
-                        rect {
-                            height: "auto",
-                            width: "100%",
-                            display: "center",
-                            direction: "horizontal",
-                            label {
-                                "Line height"
-                            }
+                        label {
+                            "Line height"
                         }
                     }
                     rect {
-                        height: "40%",
-                        display: "center",
-                        direction: "vertical",
-                        width: "60",
+                        width: "80",
+                        cross_align: "center",
                         Switch {
                             enabled: *is_bold.get(),
                             ontoggled: |_| {
                                 is_bold.set(!is_bold.get());
                             }
                         }
-                        rect {
-                            height: "auto",
-                            width: "100%",
-                            display: "center",
-                            direction: "horizontal",
-                            label {
-                                "Bold"
-                            }
+                        label {
+                            "Bold"
                         }
                     }
                     rect {
-                        height: "40%",
-                        display: "center",
-                        direction: "vertical",
-                        width: "60",
+                        width: "80",
+                        cross_align: "center",
                         Switch {
                             enabled: *is_italic.get(),
                             ontoggled: |_| {
                                 is_italic.set(!is_italic.get());
                             }
                         }
-                        rect {
-                            height: "auto",
-                            width: "100%",
-                            display: "center",
-                            direction: "horizontal",
-                            label {
-                                "Italic"
-                            }
+                        label {
+                            "Italic"
                         }
                     }
                 }
@@ -180,7 +149,7 @@ fn Body(cx: Scope) -> Element {
                     ScrollView {
                         width: "100%",
                         height: "100%",
-                        show_scrollbar: true,
+                        scroll_with_arrows: false,
                         editor.lines().map(move |l| {
 
                             let is_line_selected = cursor.row() == line_index;
@@ -238,7 +207,7 @@ fn Body(cx: Scope) -> Element {
                                     rect {
                                         width: "{font_size * 2.0}",
                                         height: "100%",
-                                        display: "center",
+                                        main_align: "center",
                                         direction: "horizontal",
                                         label {
                                             font_size: "{font_size}",

@@ -119,28 +119,23 @@ fn app(cx: Scope) -> Element {
                 })
             }
             rect {
-                background: "rgb(35, 35, 35)",
+                background: "rgb(25, 25, 25)",
                 height: "100",
                 width: "100%",
-                display: "center",
-                direction: "horizontal",
+                main_align: "center",
+                cross_align: "center",
                 padding: "15",
-                rect {
-                    layer: "-100",
-                    padding: "10",
-                    corner_radius: "7",
-                    width: "170",
-                    height: "100%",
-                    corner_radius: "15",
-                    display: "center",
-                    direction: "both",
-                    background: "rgb(20, 20, 20)",
-                    Button {
-                        onclick: create_node,
-                        label {
-                            color: "white",
-                            "Create new node"
-                        }
+                layer: "-100",
+                shadow: "0 -2 5 0 rgb(0, 0, 0, 30)",
+                direction: "horizontal",
+                label {
+                    "Create as many editors you want!"
+                }
+                Button {
+                    margin: "0 20",
+                    onclick: create_node,
+                    label {
+                        "New Editor"
                     }
                 }
             }
@@ -174,12 +169,9 @@ fn Editor(cx: Scope) -> Element {
     let font_style = if *is_italic.get() { "italic" } else { "normal" };
     let font_weight = if *is_bold.get() { "bold" } else { "normal" };
 
-    use_effect(cx, (), {
-        to_owned![focus_manager];
-        move |_| {
-            focus_manager.focus();
-            async move {}
-        }
+    use_on_create(cx, move || {
+        focus_manager.focus();
+        async move {}
     });
 
     let onclick = {
@@ -207,98 +199,62 @@ fn Editor(cx: Scope) -> Element {
             height: "100%",
             rect {
                 width: "100%",
-                height: "50",
-                padding: "10",
+                height: "70",
+                padding: "5",
                 direction: "horizontal",
+                cross_align: "center",
                 rect {
-                    height: "100%",
-                    width: "100%",
-                    direction: "horizontal",
-                    padding: "5",
-                    rect {
-                        height: "40%",
-                        display: "center",
-                        width: "130",
-                        Slider {
-                            width: 100.0,
-                            value: *font_size_percentage.get(),
-                            onmoved: |p| {
-                                font_size_percentage.set(p);
-                            }
-                        }
-                        rect {
-                            height: "auto",
-                            width: "100%",
-                            display: "center",
-                            direction: "horizontal",
-                            label {
-                                "Font size"
-                            }
+                    width: "130",
+                    cross_align: "center",
+                    Slider {
+                        width: 100.0,
+                        value: *font_size_percentage.get(),
+                        onmoved: |p| {
+                            font_size_percentage.set(p);
                         }
                     }
-                    rect {
-                        height: "40%",
-                        display: "center",
-                        direction: "vertical",
-                        width: "130",
-                        Slider {
-                            width: 100.0,
-                            value: *line_height_percentage.get(),
-                            onmoved: |p| {
-                                line_height_percentage.set(p);
-                            }
-                        }
-                        rect {
-                            height: "auto",
-                            width: "100%",
-                            display: "center",
-                            direction: "horizontal",
-                            label {
-                                "Line height"
-                            }
+                    label {
+                        "Font size"
+                    }
+                }
+                rect {
+                    width: "130",
+                    cross_align: "center",
+                    Slider {
+                        width: 100.0,
+                        value: *line_height_percentage.get(),
+                        onmoved: |p| {
+                            line_height_percentage.set(p);
                         }
                     }
-                    rect {
-                        height: "40%",
-                        display: "center",
-                        direction: "vertical",
-                        width: "60",
-                        Switch {
-                            enabled: *is_bold.get(),
-                            ontoggled: |_| {
-                                is_bold.set(!is_bold.get());
-                            }
-                        }
-                        rect {
-                            height: "auto",
-                            width: "100%",
-                            display: "center",
-                            direction: "horizontal",
-                            label {
-                                "Bold"
-                            }
+                    label {
+                        "Line height"
+                    }
+                }
+                rect {
+                    width: "80",
+                    cross_align: "center",
+                    Switch {
+                        enabled: *is_bold.get(),
+                        ontoggled: |_| {
+                            is_bold.set(!is_bold.get());
                         }
                     }
-                    rect {
-                        height: "40%",
-                        display: "center",
-                        direction: "vertical",
-                        width: "60",
-                        Switch {
-                            enabled: *is_italic.get(),
-                            ontoggled: |_| {
-                                is_italic.set(!is_italic.get());
-                            }
+                    label {
+                        "Bold"
+                    }
+                }
+                rect {
+                    width: "80",
+                    cross_align: "center",
+                    Switch {
+                        enabled: *is_italic.get(),
+                        ontoggled: |_| {
+                            is_italic.set(!is_italic.get());
                         }
-                        rect {
-                            height: "auto",
-                            width: "100%",
-                            display: "center",
-                            direction: "horizontal",
-                            label {
-                                "Italic"
-                            }
-                        }
+                    }
+                    label {
+                        "Italic"
                     }
                 }
             }
@@ -316,7 +272,7 @@ fn Editor(cx: Scope) -> Element {
                     ScrollView {
                         width: "100%",
                         height: "100%",
-                        show_scrollbar: true,
+                        scroll_with_arrows: false,
                         editor.lines().map(move |l| {
                             let editable = editable.clone();
 
@@ -374,7 +330,7 @@ fn Editor(cx: Scope) -> Element {
                                     rect {
                                         width: "{font_size * 2.0}",
                                         height: "100%",
-                                        display: "center",
+                                        main_align: "center",
                                         direction: "horizontal",
                                         label {
                                             font_size: "{font_size}",

@@ -36,7 +36,7 @@ fn app(cx: Scope) -> Element {
                 }
                 Column {
                     data: data.clone(),
-                    direction: SwapDirection::LeftToRight
+                    direction: SwapDirection::LeftToRight,
                     column: data.get().1.clone()
                 }
             }
@@ -45,7 +45,7 @@ fn app(cx: Scope) -> Element {
 }
 
 #[allow(non_snake_case)]
-#[inline_props]
+#[component]
 fn Column(
     cx: Scope,
     direction: SwapDirection,
@@ -79,7 +79,7 @@ fn Column(
             DropZone {
                 ondrop: move |data: String| {
                     swap(data, direction);
-                }
+                },
                 rect {
                     width: "100%",
                     height: "100%",

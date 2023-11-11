@@ -5,7 +5,6 @@ on:
   push:
     branches: [ "main" ]
   pull_request:
-    branches: [ "main" ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -19,7 +18,7 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 2
     - name: Install latest nextest release
@@ -27,7 +26,7 @@ jobs:
     - name: Set up cargo cache
       uses: Swatinem/rust-cache@v2
       with:
-        prefix-key: "4"
+        prefix-key: "5"
     - name: Install linux dependencies
       if: runner.os == 'Linux'
       run: |
@@ -53,3 +52,6 @@ jobs:
       if: runner.os == 'Linux'
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
+    - name: Make sure the mocked Skia bindings are on sync
+      if: runner.os == 'Linux'
+      run: cargo build --package freya --features mocked-engine-development --no-default-features

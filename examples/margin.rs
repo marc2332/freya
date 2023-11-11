@@ -27,27 +27,11 @@ fn app(cx: Scope) -> Element {
                 height: "100",
                 background: "rgb(100, 50, 255)",
             }
-            Button {
-                label {
-                    "Button"
-                }
+            rect {
+                width: "100",
+                height: "100",
+                background: "rgb(150, 150, 150)",
             }
-            Button {
-                label {
-                    "Button"
-                }
-            }
-            Button {
-                label {
-                    "Button"
-                }
-            }
-            Button {
-                label {
-                    "Button"
-                }
-            }
-
         }
     )
 }
