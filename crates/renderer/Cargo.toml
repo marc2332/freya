@@ -45,3 +45,4 @@ tracing = { workspace = true }
 
 uuid = { workspace = true }
 futures = { workspace = true }
+image = "0.24.7"
