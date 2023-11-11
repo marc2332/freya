@@ -10,9 +10,6 @@ dependencies:
   '@astrojs/tailwind':
     specifier: ^5.0.2
     version: 5.0.2(astro@3.3.0)(tailwindcss@3.3.5)
-  '@fontsource/fira-sans':
-    specifier: ^5.0.17
-    version: 5.0.17
   '@fontsource/inter':
     specifier: ^5.0.0
     version: 5.0.13
@@ -809,10 +806,6 @@ packages:
     requiresBuild: true
     dev: false
     optional: true
-
-  /@fontsource/fira-sans@5.0.17:
-    resolution: {integrity: sha512-UAXX8YkVhU5OeLPIw3KezI9XgZPSEkf96wpstqWM9U6qFbc3KD+6ANfG1LkPxrsGi+XmbTKZayO5MGnkiiaTyw==}
-    dev: false
 
   /@fontsource/inter@5.0.13:
     resolution: {integrity: sha512-FVIBhP9X/x02blF2VQl2Pji/c3jUjkWEQ9bom4vIrGwO1MlHRDXhXx9iA1hhjpcCIfH3oX68ihIBdYcFnOXhsg==}
