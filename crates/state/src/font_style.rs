@@ -107,7 +107,7 @@ impl State<CustomAttributeValues> for FontStyleState {
             "font_size",
             "font_family",
             "line_height",
-            "align",
+            "text_align",
             "max_lines",
             "font_style",
             "font_weight",
