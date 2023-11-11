@@ -1,4 +1,5 @@
 ---
+import '@fontsource/fira-sans';
 import "@fontsource/inter";
 import Layout from "./Layout.astro";
 import { BlogPostTOC }  from "../components/BlogPostTOC"
@@ -6,13 +7,76 @@ const { frontmatter, headings  } = Astro.props;
 
 console.log(frontmatter, headings )
 
+const formattedDate = (new Date(frontmatter.date)).toLocaleString().split(',')[0]
+
 ---
 
 <Layout title={frontmatter.title}>
-    <main>
-        <h2>{frontmatter.author}</h2>
-        <i>{frontmatter.author}</i>
-        <slot />
+    <main class="flex">
+        <article class="w-4/5 border-x-2 border-stone-700 px-8">
+            <h1>{frontmatter.title}</h1>
+            <i>{formattedDate} - {frontmatter.author}</i>
+            <slot />
+        </article>
+        <BlogPostTOC headings={headings}/>
     </main>
-    <BlogPostTOC headings={headings}/>
 </Layout>
+
+<style is:global>
+    main {
+		max-width: 115ch;
+	}
+
+    pre {
+        padding: 20px;
+        border-radius: 8px;
+    }
+
+    main * :not(span, pre, code) {
+        color: rgb(210, 210, 210);
+        font-family: "Inter", system-ui, sans-serif;
+        line-height: 1.7;
+    }
+
+    ul {
+        list-style: circle;
+
+        & li {
+            margin-left: 24px;
+        }
+    }
+
+    p {
+        margin: 16px 0px;
+    }
+
+    h1 {
+        font-size: 38px;
+        margin: 24px 0px;
+        font-weight: bold;
+    }
+
+    h2 {
+        font-size: 30px;
+        margin: 20px 0px;
+        font-weight: bold;
+    }
+
+    h3 {
+        font-size: 26px;
+        margin: 18px 0px;
+        font-weight: bold;
+    }
+
+    h4 {
+        font-size: 22px;
+        margin: 16px 0px;
+        font-weight: bold;
+    }
+
+    h5 {
+        font-size: 18px;
+        margin: 16px 0px;
+        font-weight: bold;
+    }
+</style>
