@@ -169,16 +169,16 @@ fn measure_dom_events(
 
         let mut found_events: Vec<(NodeId, FreyaEvent)> = Vec::new();
 
-        'events: for derivated_event_name in derivated_events {
+        for derivated_event_name in derivated_events {
             let listeners = rdom.get_listening_sorted(derivated_event_name);
-            for (node_id, request) in event_nodes.iter() {
+            'event_nodes: for (node_id, request) in event_nodes.iter() {
                 for listener in &listeners {
                     if listener.id() == *node_id {
                         let mut request = request.clone();
                         request.set_name(derivated_event_name.to_string());
                         found_events.push((*node_id, request));
 
-                        break 'events;
+                        break 'event_nodes;
                     }
                 }
             }
