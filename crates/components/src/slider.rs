@@ -119,7 +119,8 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
         }
     };
 
-    let onmousedown = |_: MouseEvent| {
+    let onmousedown = |e: MouseEvent| {
+        e.stop_propagation();
         clicking.set(true);
     };
 

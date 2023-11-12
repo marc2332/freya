@@ -33,13 +33,10 @@ fn app(cx: Scope) -> Element {
 
 #[allow(non_snake_case)]
 fn Test(cx: Scope) -> Element {
-    render!(
-        rect {
-            height: "100%",
-            width: "100%",
-            background: "red",
-            onclick: |_| println!("clicked 4"),
-        }
-    )
+    render!(rect {
+        height: "100%",
+        width: "100%",
+        background: "red",
+        onclick: |_| println!("clicked 4"),
+    })
 }
-
