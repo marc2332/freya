@@ -1,6 +1,6 @@
 export function Navbar() {
   return (
-    <div className="top-0 sticky mx-auto my-2  text-stone-300 w-full p-4 sm:py-8 px-4 bg-custom-dark-black">
+    <div className="mx-auto my-2  text-stone-300 w-full p-4 sm:py-8 px-4 bg-custom-dark-black">
       <div className="w-full flex justify-center items-center  sm:hidden pb-6">
         <a className="mx-4 hover:text-white" title="Freya Home Page" href="/">
           <img src="/logo.svg" width="40" className="inline-block " />
@@ -34,7 +34,6 @@ export function Navbar() {
           className="inline-block mx-4 hover:text-white hover:underline"
           title="Freya Source Code"
           href="https://github.com/marc2332/freya"
-          class="inline-block m-2"
         >
           Contribute
         </a>
@@ -42,7 +41,6 @@ export function Navbar() {
           className="inline-block mx-4 hover:text-white hover:underline"
           title="Freya Discord"
           href="https://discord.gg/sYejxCdewG"
-          class="inline-block m-2"
         >
           Discord
         </a>

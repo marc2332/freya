@@ -4,7 +4,7 @@ export default {
 	theme: {
 		extend: {
 			spacing: {
-				'content': '110ch',
+				'content': '115ch',
 			},
 			backgroundColor: {
 				"custom-yellow": "rgb(233, 196, 106)",
