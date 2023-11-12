@@ -56,7 +56,7 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
     let platform = use_platform(cx);
     let status = use_ref(cx, SwitchStatus::default);
 
-    use_on_unmount(cx, {
+    use_on_destroy(cx, {
         to_owned![status, platform];
         move || {
             if *status.read() == SwitchStatus::Hovering {
