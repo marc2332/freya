@@ -95,18 +95,21 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
 
     let onmouseleave = {
         to_owned![platform, status];
-        move |_: MouseEvent| {
+        move |e: MouseEvent| {
+            e.stop_propagation();
             *status.write_silent() = SliderStatus::Idle;
             platform.set_cursor(CursorIcon::default());
         }
     };
 
-    let onmouseenter = move |_: MouseEvent| {
+    let onmouseenter = move |e: MouseEvent| {
+        e.stop_propagation();
         *status.write_silent() = SliderStatus::Hovering;
         platform.set_cursor(CursorIcon::Hand);
     };
 
     let onmouseover = move |e: MouseEvent| {
+        e.stop_propagation();
         if *clicking.get() {
             let coordinates = e.get_element_coordinates();
             let mut x = coordinates.x - 7.5 - size.read().area.min_x() as f64;
@@ -124,11 +127,13 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
         clicking.set(true);
     };
 
-    let onclick = |_: MouseEvent| {
+    let onclick = |e: MouseEvent| {
+        e.stop_propagation();
         clicking.set(false);
     };
 
     let onwheel = move |e: WheelEvent| {
+        e.stop_propagation();
         let wheel_y = e.get_delta_y();
         let progress_x = (value / 100.0) * cx.props.width;
 

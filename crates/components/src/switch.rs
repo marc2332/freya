@@ -65,20 +65,27 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
         }
     });
 
+    let onmousedown = |e: MouseEvent| {
+        e.stop_propagation();
+    };
+
     let onmouseleave = {
         to_owned![platform];
-        move |_: MouseEvent| {
+        move |e: MouseEvent| {
+            e.stop_propagation();
             *status.write_silent() = SwitchStatus::Idle;
             platform.set_cursor(CursorIcon::default());
         }
     };
 
-    let onmouseenter = move |_: MouseEvent| {
+    let onmouseenter = move |e: MouseEvent| {
+        e.stop_propagation();
         *status.write_silent() = SwitchStatus::Hovering;
         platform.set_cursor(CursorIcon::Hand);
     };
 
-    let onclick = |_: MouseEvent| {
+    let onclick = |e: MouseEvent| {
+        e.stop_propagation();
         cx.props.ontoggled.call(());
     };
 
@@ -114,7 +121,7 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
             padding: "1",
             corner_radius: "50",
             background: "{border}",
-            onmousedown: |_| {},
+            onmousedown: onmousedown,
             onmouseenter: onmouseenter,
             onmouseleave: onmouseleave,
             onclick: onclick,

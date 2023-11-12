@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::layout::{Layers, Viewports};
 use dioxus_native_core::prelude::NodeImmutableDioxusExt;
 use dioxus_native_core::real_dom::NodeImmutable;
@@ -167,7 +169,7 @@ fn measure_dom_events(
     for (event_name, event_nodes) in potential_events.iter_mut() {
         let derivated_events = get_derivated_events(event_name.as_str());
 
-        let mut found_node: Option<(&NodeId, FreyaEvent)> = None;
+        let mut found_events: FxHashMap<String, (&NodeId, FreyaEvent)> = HashMap::default();
         for derivated_event_name in derivated_events {
             let listeners = rdom.get_listening_sorted(derivated_event_name);
             for (node_id, request) in event_nodes.iter() {
@@ -176,13 +178,13 @@ fn measure_dom_events(
                         let mut request = request.clone();
                         request.set_name(derivated_event_name.to_string());
 
-                        found_node = Some((node_id, request));
+                        found_events.insert(derivated_event_name.to_string(), (node_id, request));
                     }
                 }
             }
         }
 
-        if let Some((node_id, request_event)) = found_node {
+        for (node_id, request_event) in found_events.into_values() {
             let areas = fdom.layout().get(*node_id).cloned();
             if let Some(areas) = areas {
                 let node_ref = fdom.rdom().get(*node_id).unwrap();
