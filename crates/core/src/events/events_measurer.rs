@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use crate::layout::{Layers, Viewports};
 use dioxus_native_core::prelude::NodeImmutableDioxusExt;
 use dioxus_native_core::real_dom::NodeImmutable;
@@ -26,18 +24,18 @@ pub fn process_events(
     let global_events = measure_global_events(events);
 
     // 2. Get potential events that could be emitted based on the elements layout and viewports
-    let mut potential_events = measure_potential_event_listeners(layers, events, viewports, dom);
+    let potential_events = measure_potential_event_listeners(layers, events, viewports, dom);
 
     // 3. Get what events can be actually emitted based on what elements are listening
-    let emitted_events = measure_dom_events(&mut potential_events, dom, scale_factor);
+    let emitted_events = measure_dom_events(potential_events, dom, scale_factor);
 
     // 4. Emit the events and get potential derived events caused by the emitted ones, e.g mouseover -> mouseenter
-    let mut potential_colateral_events =
+    let potential_colateral_events =
         elements_state.process_events(emitted_events, events, event_emitter);
 
     // 5. Get what derived events can actually be emitted
     let emitted_colateral_events =
-        measure_dom_events(&mut potential_colateral_events, dom, scale_factor);
+        measure_dom_events(potential_colateral_events, dom, scale_factor);
 
     // 6. Emit the colateral events
     for event in emitted_colateral_events {
@@ -159,38 +157,40 @@ fn get_derivated_events(event_name: &str) -> Vec<&str> {
 
 /// Measure what DOM events could be emited
 fn measure_dom_events(
-    potential_events: &mut NodesEvents,
+    potential_events: NodesEvents,
     fdom: &FreyaDOM,
     scale_factor: f64,
 ) -> Vec<DomEvent> {
     let mut new_events = Vec::new();
     let rdom = fdom.rdom();
 
-    for (event_name, event_nodes) in potential_events.iter_mut() {
+    for (event_name, event_nodes) in potential_events {
         let derivated_events = get_derivated_events(event_name.as_str());
 
-        let mut found_events: FxHashMap<String, (&NodeId, FreyaEvent)> = HashMap::default();
-        for derivated_event_name in derivated_events {
+        let mut found_events: Vec<(NodeId, FreyaEvent)> = Vec::new();
+
+        'events: for derivated_event_name in derivated_events {
             let listeners = rdom.get_listening_sorted(derivated_event_name);
             for (node_id, request) in event_nodes.iter() {
                 for listener in &listeners {
                     if listener.id() == *node_id {
                         let mut request = request.clone();
                         request.set_name(derivated_event_name.to_string());
+                        found_events.push((*node_id, request));
 
-                        found_events.insert(derivated_event_name.to_string(), (node_id, request));
+                        break 'events;
                     }
                 }
             }
         }
 
-        for (node_id, request_event) in found_events.into_values() {
-            let areas = fdom.layout().get(*node_id).cloned();
+        for (node_id, request_event) in found_events {
+            let areas = fdom.layout().get(node_id).cloned();
             if let Some(areas) = areas {
-                let node_ref = fdom.rdom().get(*node_id).unwrap();
+                let node_ref = fdom.rdom().get(node_id).unwrap();
                 let element_id = node_ref.mounted_id().unwrap();
                 let event = DomEvent::new(
-                    *node_id,
+                    node_id,
                     element_id,
                     &request_event,
                     Some(areas.visible_area()),
