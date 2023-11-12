@@ -10,30 +10,36 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    let onclick = |e: MouseEvent| {
-        e.stop_propagation();
-        println!("clicked C");
-    };
+    render!(
+        rect {
+            height: "50%",
+            width: "100%",
+            onclick: |_| println!("clicked 1"),
+            rect {
+                height: "100%",
+                width: "100%",
+                background: "blue",
+                onclick: |_| println!("clicked 2"),
+            }
+        }
+        rect {
+            height: "50%",
+            width: "100%",
+            onclick: |_| println!("clicked 3"),
+            Test { }
+        }
+    )
+}
 
+#[allow(non_snake_case)]
+fn Test(cx: Scope) -> Element {
     render!(
         rect {
             height: "100%",
             width: "100%",
-            padding: "100",
-            onclick: |_| println!("clicked A"),
-            rect {
-                height: "100%",
-                width: "100%",
-                padding: "100",
-                onclick: |_| println!("clicked B"),
-                rect {
-                    height: "100%",
-                    width: "100%",
-                    background: "red",
-                    padding: "100",
-                    onclick: onclick
-                }
-            }
+            background: "red",
+            onclick: |_| println!("clicked 4"),
         }
     )
 }
+
