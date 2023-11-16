@@ -2,7 +2,7 @@ use torin::geometry::CursorPoint;
 pub use winit::event::{Force, TouchPhase};
 
 /// Data of a Touch event.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct TouchData {
     pub screen_coordinates: CursorPoint,
     pub element_coordinates: CursorPoint,
