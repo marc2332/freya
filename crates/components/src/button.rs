@@ -82,7 +82,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
     use_on_unmount(cx, {
         to_owned![status, platform];
         move || {
-            if *status.get() == ButtonStatus::Hovering {
+            if *status.current() == ButtonStatus::Hovering {
                 platform.set_cursor(CursorIcon::default());
             }
         }
