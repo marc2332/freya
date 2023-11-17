@@ -1,18 +1,13 @@
-#![cfg_attr(
-    all(not(debug_assertions), target_os = "windows"),
-    windows_subsystem = "windows"
-)]
+use dioxus::prelude::*;
+use dioxus_router::{hooks::use_navigator, routable::Routable};
+use freya_elements::elements as dioxus_elements;
+use freya_hooks::{use_get_theme, use_theme, ProgressBarTheme};
 
-use dioxus_router::prelude::*;
-use freya::prelude::*;
-
-fn main() {
-    launch(app);
-}
+use crate::{ButtonStatus, ScrollView};
 
 #[allow(non_snake_case)]
 #[inline_props]
-fn Sidebar<'a>(cx: Scope<'a>, children: Element<'a>, sidebar: Element<'a>) -> Element<'a> {
+pub fn Sidebar<'a>(cx: Scope<'a>, children: Element<'a>, sidebar: Element<'a>) -> Element<'a> {
     let theme = use_theme(cx);
     let background = theme.read().body.background;
     let color = theme.read().body.color;
@@ -25,22 +20,19 @@ fn Sidebar<'a>(cx: Scope<'a>, children: Element<'a>, sidebar: Element<'a>) -> El
             background: "{background}",
             rect {
                 overflow: "clip",
-                width: "200",
+                width: "170",
                 height: "100%",
                 background: "rgb(20, 20, 20)",
-                corner_radius: "0 7 0 7",
-                padding: "20",
                 color: "{color}",
                 ScrollView {
-                    padding: "10",
+                    padding: "16",
                     sidebar
                 }
             }
             rect {
                 overflow: "clip",
-                width: "calc(100% - 200)",
+                width: "fill",
                 height: "100%",
-                padding: "30",
                 color: "{color}",
                 children,
             }
@@ -50,11 +42,11 @@ fn Sidebar<'a>(cx: Scope<'a>, children: Element<'a>, sidebar: Element<'a>) -> El
 
 #[allow(non_snake_case)]
 #[inline_props]
-fn SidebarItem<'a>(
+pub fn SidebarItem<'a, T: Routable>(
     cx: Scope<'a>,
     children: Element<'a>,
     onclick: Option<EventHandler<'a, ()>>,
-    to: Option<Route>,
+    to: Option<T>,
 ) -> Element<'a> {
     let theme = use_get_theme(cx);
     let status = use_state(cx, ButtonStatus::default);
@@ -93,82 +85,13 @@ fn SidebarItem<'a>(
             width: "100%",
             height: "auto",
             color: "{color}",
-            shadow: "0 2 10 1 rgb(0, 0, 0, 45)",
-            corner_radius: "10",
-            padding: "12",
+            shadow: "0 4 5 0 rgb(0, 0, 0, 30)",
+            corner_radius: "8",
+            padding: "8",
             background: "{background}",
             label {
                 children
             }
         }
     )
-}
-
-#[derive(Routable, Clone)]
-#[rustfmt::skip]
-pub enum Route {
-    #[layout(AppSidebar)]
-        #[route("/")]
-        Home,
-
-        #[route("/wow")]
-        Wow,
-    #[end_layout]
-    #[route("/..route")]
-    PageNotFound { },
-}
-
-#[allow(non_snake_case)]
-fn AppSidebar(cx: Scope) -> Element {
-    render!(
-        Sidebar {
-            sidebar: render!(
-                SidebarItem {
-                    to: Route::Home,
-                    "Go to Hey ! 👋"
-                },
-                SidebarItem {
-                    to: Route::Wow,
-                    "Go to Wow! 👈"
-                },
-                SidebarItem {
-                    onclick: |_| println!("Hello!"),
-                    "Print Hello! 👀"
-                }
-            ),
-            Outlet::<Route> {  }
-        }
-    )
-}
-
-#[allow(non_snake_case)]
-fn Home(cx: Scope) -> Element {
-    render!(
-        label {
-            "Just some text 😗 in /"
-        }
-    )
-}
-
-#[allow(non_snake_case)]
-fn Wow(cx: Scope) -> Element {
-    render!(
-        label {
-            "Just more text 👈!! in /wow"
-        }
-    )
-}
-
-#[allow(non_snake_case)]
-fn PageNotFound(cx: Scope) -> Element {
-    render!(
-        label {
-            "404!! 😵"
-        }
-    )
-}
-
-fn app(cx: Scope) -> Element {
-    use_init_theme(cx, DARK_THEME);
-    render!(Router::<Route> {})
 }
