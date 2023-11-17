@@ -1,5 +1,6 @@
 use std::fmt::Display;
 
+use crate::icons::ArrowIcon;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::keyboard::Key;
@@ -97,11 +98,10 @@ where
 
     render!(rect {
         color: "{color}",
-        height: "35",
         focus_id: focus_id,
         role: "button",
         background: "{background}",
-        padding: "10 14",
+        padding: "6 22 6 16",
         corner_radius: "6",
         main_align: "center",
         cross_align: "center",
@@ -238,6 +238,7 @@ where
     };
     let border_fill = theme.dropdown.border_fill;
     let color = theme.dropdown.font_theme.color;
+    let arrow_fill = theme.dropdown.arrow_fill;
 
     let selected = selected.read().to_string();
 
@@ -252,14 +253,21 @@ where
             background: "{button_background}",
             color: "{color}",
             corner_radius: "8",
-            padding: "8 20",
+            padding: "8 16",
             border: "1 solid {border_fill}",
             shadow: "0 4 5 0 rgb(0, 0, 0, 30)",
+            direction: "horizontal",
+            main_align: "center",
+            cross_align: "center",
             label {
                 text_align: "center",
                 "{selected}"
             }
-
+            ArrowIcon {
+                rotate: "0",
+                fill: "{arrow_fill}",
+                margin: "0 0 0 8",
+            }
         }
         if *opened.get() {
             rsx!(

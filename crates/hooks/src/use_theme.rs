@@ -42,6 +42,7 @@ pub struct DropdownTheme {
     pub hover_background: &'static str,
     pub font_theme: FontTheme,
     pub border_fill: &'static str,
+    pub arrow_fill: &'static str,
 }
 
 /// Theming properties for Button components.
@@ -212,6 +213,7 @@ pub const LIGHT_THEME: Theme = Theme {
             color: "rgb(10, 10, 10)",
         },
         border_fill: "rgb(210, 210, 210)",
+        arrow_fill: "rgb(40, 40, 40)",
     },
     dropdown_item: DropdownItemTheme {
         background: "white",
@@ -288,6 +290,7 @@ pub const DARK_THEME: Theme = Theme {
         hover_background: "rgb(45, 45, 45)",
         font_theme: FontTheme { color: "white" },
         border_fill: "rgb(80, 80, 80)",
+        arrow_fill: "rgb(40, 40, 40)",
     },
     dropdown_item: DropdownItemTheme {
         background: "rgb(35, 35, 35)",
