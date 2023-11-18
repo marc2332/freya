@@ -16,8 +16,8 @@ pub enum Route {
     #[layout(AppSidebar)]
         #[route("/")]
         Home,
-        #[route("/wow")]
-        Wow,
+        #[route("/recipes")]
+        Recipes,
     #[end_layout]
     #[route("/..route")]
     PageNotFound { },
@@ -30,15 +30,15 @@ fn AppSidebar(cx: Scope) -> Element {
             sidebar: render!(
                 SidebarItem::<Route> {
                     to: Route::Home,
-                    "Go to Hey ! 👋"
+                    "Home 🏡"
                 },
                 SidebarItem::<Route> {
-                    to: Route::Wow,
-                    "Go to Wow! 👈"
+                    to: Route::Recipes,
+                    "Recipes 🥗"
                 },
                 SidebarItem::<Route> {
                     onclick: |_| println!("Hello!"),
-                    "Print Hello! 👀"
+                    "Print Hello! 👋"
                 }
             ),
             rect {
@@ -56,16 +56,16 @@ fn AppSidebar(cx: Scope) -> Element {
 fn Home(cx: Scope) -> Element {
     render!(
         label {
-            "Just some text 😗 in /"
+            "Welcome Home 🏡😄"
         }
     )
 }
 
 #[allow(non_snake_case)]
-fn Wow(cx: Scope) -> Element {
+fn Recipes(cx: Scope) -> Element {
     render!(
         label {
-            "Just more text 👈!! in /wow"
+            "I love spaghetti 🍝"
         }
     )
 }
@@ -80,6 +80,6 @@ fn PageNotFound(cx: Scope) -> Element {
 }
 
 fn app(cx: Scope) -> Element {
-    use_init_theme(cx, DARK_THEME);
+    use_init_default_theme(cx);
     render!(Router::<Route> {})
 }
