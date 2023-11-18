@@ -10,6 +10,10 @@ fn main() {
     launch_with_props(app, "Router Example", (550.0, 400.0));
 }
 
+fn app(cx: Scope) -> Element {
+    render!(Router::<Route> {})
+}
+
 #[derive(Routable, Clone)]
 #[rustfmt::skip]
 pub enum Route {
@@ -77,9 +81,4 @@ fn PageNotFound(cx: Scope) -> Element {
             "404!! 😵"
         }
     )
-}
-
-fn app(cx: Scope) -> Element {
-    use_init_default_theme(cx);
-    render!(Router::<Route> {})
 }
