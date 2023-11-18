@@ -138,6 +138,22 @@ pub struct TableTheme {
     pub divider_fill: &'static str,
 }
 
+/// Theming properties for Sidebar component.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SidebarTheme {
+    pub background: &'static str,
+    pub font_theme: FontTheme,
+}
+
+/// Theming properties for Sidebar component.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SidebarItemTheme {
+    pub background: &'static str,
+    pub hover_background: &'static str,
+    pub font_theme: FontTheme,
+    pub border_fill: &'static str,
+}
+
 /// Theming properties for Themes.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Theme {
@@ -155,6 +171,8 @@ pub struct Theme {
     pub loader: LoaderTheme,
     pub progress_bar: ProgressBarTheme,
     pub table: TableTheme,
+    pub sidebar: SidebarTheme,
+    pub sidebar_item: SidebarItemTheme,
 }
 
 impl Default for Theme {
@@ -240,6 +258,20 @@ pub const LIGHT_THEME: Theme = Theme {
         alternate_row_background: "rgb(240, 240, 240)",
         divider_fill: "rgb(200, 200, 200)",
     },
+    sidebar: SidebarTheme {
+        background: "rgb(245, 245, 245)",
+        font_theme: FontTheme {
+            color: "rgb(10, 10, 10)",
+        },
+    },
+    sidebar_item: SidebarItemTheme {
+        background: "rgb(245, 245, 245)",
+        hover_background: "rgb(235, 235, 235)",
+        font_theme: FontTheme {
+            color: "rgb(10, 10, 10)",
+        },
+        border_fill: "rgb(210, 210, 210)",
+    },
 };
 
 /// `Dark` theme
@@ -312,5 +344,15 @@ pub const DARK_THEME: Theme = Theme {
         row_background: "transparent",
         alternate_row_background: "rgb(50, 50, 50)",
         divider_fill: "rgb(100, 100, 100)",
+    },
+    sidebar: SidebarTheme {
+        background: "rgb(30, 30, 30)",
+        font_theme: FontTheme { color: "white" },
+    },
+    sidebar_item: SidebarItemTheme {
+        background: "rgb(35, 35, 35)",
+        hover_background: "rgb(45, 45, 45)",
+        border_fill: "rgb(80, 80, 80)",
+        font_theme: FontTheme { color: "white" },
     },
 };
