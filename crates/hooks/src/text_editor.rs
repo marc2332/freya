@@ -1,5 +1,6 @@
 use std::{borrow::Cow, fmt::Display, ops::Range};
 
+use dioxus_std::clipboard::UseClipboard;
 use freya_elements::events::keyboard::{Code, Key, Modifiers};
 pub use ropey::Rope;
 
@@ -178,6 +179,8 @@ pub trait TextEditor: Sized + Clone + Display {
     fn highlight_text(&mut self, from: usize, to: usize, editor_id: usize);
 
     fn move_highlight_to_cursor(&mut self);
+
+    fn get_clipboard(&self) -> &UseClipboard;
 
     // Process a Keyboard event
     fn process_key(&mut self, key: &Key, code: &Code, modifiers: &Modifiers) -> TextEvent {
@@ -358,12 +361,16 @@ pub trait TextEditor: Sized + Clone + Display {
 
                         event = TextEvent::TextChanged
                     }
+                    Code::KeyC if modifiers.contains(Modifiers::CONTROL) => {
+                        let selected = self.get_selected_text();
+                        println!("copying: >{selected:?}<");
+                    }
                     _ => {
                         if let Ok(ch) = character.parse::<char>() {
                             if !ch.is_ascii_control() {
                                 // Adds a new character
                                 let char_idx =
-                                    self.line_to_char(self.cursor_row()) + self.cursor_col();
+                                self.line_to_char(self.cursor_row()) + self.cursor_col();
                                 self.insert(character, char_idx);
                                 self.cursor_right();
 
@@ -382,4 +389,6 @@ pub trait TextEditor: Sized + Clone + Display {
 
         event
     }
+
+    fn get_selected_text(&self) -> Option<String>;
 }

@@ -1,5 +1,6 @@
 use std::{cmp::Ordering, fmt::Display, ops::Range};
 
+use dioxus_std::clipboard::UseClipboard;
 use ropey::iter::Lines;
 pub use ropey::Rope;
 
@@ -14,6 +15,8 @@ pub struct RopeEditor {
 
     /// Selected text range
     selected: Option<(usize, usize)>,
+
+    clipboard: UseClipboard
 }
 
 impl Display for RopeEditor {
@@ -24,12 +27,13 @@ impl Display for RopeEditor {
 
 impl RopeEditor {
     // Create a new [`RopeEditor`]
-    pub fn new(text: String, cursor: TextCursor, mode: EditableMode) -> Self {
+    pub fn new(text: String, cursor: TextCursor, mode: EditableMode, clipboard: UseClipboard) -> Self {
         Self {
             rope: Rope::from_str(&text),
             cursor,
             selected: None,
             mode,
+            clipboard
         }
     }
 
@@ -91,6 +95,10 @@ impl TextEditor for RopeEditor {
         } else {
             self.selected = Some((self.cursor_pos(), self.cursor_pos()))
         }
+    }
+
+    fn get_clipboard(&self) -> &UseClipboard {
+        &self.clipboard
     }
 
     fn highlights(&self, editor_id: usize) -> Option<(usize, usize)> {
@@ -189,6 +197,12 @@ impl TextEditor for RopeEditor {
         } else {
             self.set_cursor_pos(to);
         }
+    }
+
+    fn get_selected_text(&self) -> Option<String> {
+        let selected = self.selected?;
+
+        Some(self.rope().get_slice(selected.0..selected.1)?.to_string())
     }
 }
 

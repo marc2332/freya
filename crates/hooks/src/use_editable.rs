@@ -5,6 +5,7 @@ use std::{
 
 use dioxus_core::{AttributeValue, Scope, ScopeState};
 use dioxus_hooks::{use_effect, use_ref, use_state, UseRef, UseState};
+use dioxus_std::clipboard::use_clipboard;
 use freya_common::{CursorLayoutResponse, EventMessage};
 use freya_elements::events::{KeyboardData, MouseData};
 use freya_node_state::{CursorReference, CustomAttributeValues};
@@ -157,11 +158,12 @@ pub fn use_editable(
 ) -> UseEditable {
     let id = cx.use_hook(Uuid::new_v4);
     let platform = use_platform(cx);
+    let clipboard = use_clipboard(cx);
 
     // Hold the text editor
     let text_editor = use_state(cx, || {
         let config = initializer();
-        RopeEditor::new(config.content, config.cursor, mode)
+        RopeEditor::new(config.content, config.cursor, mode, clipboard)
     });
 
     let cursor_channels = cx.use_hook(|| {
