@@ -277,7 +277,7 @@ where
                         onglobalclick: onglobalclick,
                         onkeydown: onkeydown,
                         layer: "-99",
-                        margin: "2 5",
+                        margin: "4",
                         border: "1 solid {border_fill}",
                         overflow: "clip",
                         corner_radius: "8",
