@@ -112,6 +112,7 @@ pub struct ExternalLinkTheme {
 pub struct AccordionTheme {
     pub color: &'static str,
     pub background: &'static str,
+    pub border_fill: &'static str,
 }
 
 /// Theming properties for Loader component.
@@ -225,7 +226,8 @@ pub const LIGHT_THEME: Theme = Theme {
     },
     accordion: AccordionTheme {
         color: "black",
-        background: "rgb(215, 215, 215)",
+        background: "rgb(245, 245, 245)",
+        border_fill: "rgb(210, 210, 210)",
     },
     loader: LoaderTheme {
         primary_color: "rgb(50, 50, 50)",
@@ -300,7 +302,8 @@ pub const DARK_THEME: Theme = Theme {
     },
     accordion: AccordionTheme {
         color: "white",
-        background: "rgb(30, 30, 30)",
+        background: "rgb(60, 60, 60)",
+        border_fill: "rgb(80, 80, 80)",
     },
     loader: LoaderTheme {
         primary_color: "rgb(150, 150, 150)",

@@ -2,6 +2,7 @@
 //! A collection of basic components to be used in Freya.
 
 mod accordion;
+mod body;
 mod button;
 mod canvas;
 mod cursor_area;
@@ -23,6 +24,7 @@ mod theme;
 mod tooltip;
 
 pub use accordion::*;
+pub use body::*;
 pub use button::*;
 pub use canvas::*;
 pub use cursor_area::*;
