@@ -27,6 +27,11 @@ pub struct TableHeadProps<'a> {
     children: Element<'a>,
 }
 
+/// `TableHead` component.
+///
+/// # Props
+/// See [`TableHeadProps`].
+///
 #[allow(non_snake_case)]
 pub fn TableHead<'a>(cx: Scope<'a, TableHeadProps<'a>>) -> Element {
     render!(
@@ -44,6 +49,11 @@ pub struct TableBodyProps<'a> {
     children: Element<'a>,
 }
 
+/// `TableBody` component.
+///
+/// # Props
+/// See [`TableBodyProps`].
+///
 #[allow(non_snake_case)]
 pub fn TableBody<'a>(cx: Scope<'a, TableBodyProps<'a>>) -> Element {
     render!(
@@ -64,6 +74,14 @@ pub struct TableRowProps<'a> {
     alternate_colors: bool,
 }
 
+/// `TableRow` component.
+///
+/// # Props
+/// See [`TableRowProps`].
+///
+/// # Styling
+/// Inherits the [`TableTheme`](freya_hooks::TableTheme) theme.
+///
 #[allow(non_snake_case)]
 pub fn TableRow<'a>(cx: Scope<'a, TableRowProps<'a>>) -> Element {
     let theme = use_get_theme(cx);
@@ -118,6 +136,11 @@ pub struct TableCellProps<'a> {
     height: String,
 }
 
+/// `TableCell` component.
+///
+/// # Props
+/// See [`TableCellProps`].
+///
 #[allow(non_snake_case)]
 pub fn TableCell<'a>(cx: Scope<'a, TableCellProps<'a>>) -> Element {
     let config = cx.consume_context::<TableConfig>().unwrap();
@@ -184,6 +207,14 @@ pub struct TableProps<'a> {
     shadow: String,
 }
 
+/// `Table` component.
+///
+/// # Props
+/// See [`TableProps`].
+///
+/// # Styling
+/// Inherits the [`TableTheme`](freya_hooks::TableTheme) theme.
+///
 #[allow(non_snake_case)]
 pub fn Table<'a>(cx: Scope<'a, TableProps<'a>>) -> Element {
     let theme = use_get_theme(cx);
