@@ -144,7 +144,7 @@ pub struct TableCellProps<'a> {
 /// `TableCell` component.
 ///
 /// # Props
-/// See [`TableCell`].
+/// See [`TableCellProps`].
 ///
 #[allow(non_snake_case)]
 pub fn TableCell<'a>(cx: Scope<'a, TableCellProps<'a>>) -> Element {
