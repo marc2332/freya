@@ -1,10 +1,9 @@
+#![allow(clippy::type_complexity)]
+
 use dioxus_native_core::NodeId;
 use rustc_hash::{FxHashMap, FxHashSet};
 
-use crate::{
-    events::{does_event_move_cursor, DomEvent, FreyaEvent},
-    types::EventEmitter,
-};
+use crate::events::{does_event_move_cursor, DomEvent, FreyaEvent};
 
 /// [`ElementsState`] stores the elements states given incoming events.
 #[derive(Default)]
@@ -16,10 +15,10 @@ impl ElementsState {
     /// Update the Element states given the new events
     pub fn process_events(
         &mut self,
-        events_to_emit: Vec<DomEvent>,
+        events_to_emit: &[DomEvent],
         events: &[FreyaEvent],
-        event_emitter: &EventEmitter,
-    ) -> FxHashMap<String, Vec<(NodeId, FreyaEvent)>> {
+    ) -> (FxHashMap<String, Vec<(NodeId, FreyaEvent)>>, Vec<DomEvent>) {
+        let mut new_events_to_emit = Vec::default();
         let mut new_events = FxHashMap::<String, Vec<(NodeId, FreyaEvent)>>::default();
 
         let recent_mouse_movement_event = any_recent_mouse_movement(events);
@@ -27,7 +26,7 @@ impl ElementsState {
         // Suggest emitting `mouseleave` in elements not being hovered anymore
         self.hovered_elements.retain(|node_id| {
             let no_recent_mouse_movement_on_me =
-                has_node_been_hovered_recently(&events_to_emit, node_id);
+                has_node_been_hovered_recently(events_to_emit, node_id);
 
             if no_recent_mouse_movement_on_me {
                 if let Some(FreyaEvent::Mouse { cursor, button, .. }) = recent_mouse_movement_event
@@ -56,7 +55,7 @@ impl ElementsState {
         let hovered_elements = self.hovered_elements.clone();
 
         // Emit valid events
-        for event in &events_to_emit {
+        for event in events_to_emit {
             let id = &event.node_id;
 
             let should_trigger = match event.name.as_str() {
@@ -81,7 +80,7 @@ impl ElementsState {
             };
 
             if should_trigger {
-                event_emitter.send(event.clone()).unwrap();
+                new_events_to_emit.push(event.clone());
             }
         }
 
@@ -94,7 +93,7 @@ impl ElementsState {
             }
         }
 
-        new_events
+        (new_events, new_events_to_emit)
     }
 }
 
