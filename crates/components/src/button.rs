@@ -8,13 +8,13 @@ use winit::window::CursorIcon;
 #[derive(Props)]
 pub struct ButtonProps<'a> {
     /// Padding for the Button.
-    #[props(default = "10 14".to_string(), into)]
+    #[props(default = "8 16".to_string(), into)]
     pub padding: String,
     /// Margin for the Button.
     #[props(default = "4".to_string(), into)]
     pub margin: String,
     /// Corner radius for the Button.
-    #[props(default = "10".to_string(), into)]
+    #[props(default = "8".to_string(), into)]
     pub corner_radius: String,
     /// Width size for the Button.
     #[props(default = "auto".to_string(), into)]

@@ -293,6 +293,7 @@ builder_constructors! {
         focusable: String,
     };
     svg {
+        margin: String,
         svg_data: String,
         svg_content: String,
         width: String,
