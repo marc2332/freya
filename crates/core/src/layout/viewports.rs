@@ -1,3 +1,4 @@
+use dioxus_native_core::node::ElementNode;
 use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::{node::NodeType, NodeId};
 use torin::prelude::Area;
@@ -28,7 +29,11 @@ impl Viewports {
                 if let Some((node, node_areas)) = node.zip(node_areas) {
                     let node_type = &*node.node_type();
 
-                    if let NodeType::Element(..) = node_type {
+                    if let NodeType::Element(ElementNode { tag, .. }) = node_type {
+                        if tag == "text" {
+                            continue;
+                        }
+
                         let style = node.get::<Style>().unwrap();
 
                         // Clip any overflow from it's children
@@ -51,7 +56,13 @@ impl Viewports {
                                 inherited_viewports.push(*node_id);
 
                                 for child in node.children() {
-                                    if let NodeType::Element(..) = *child.node_type() {
+                                    if let NodeType::Element(ElementNode { tag, .. }) =
+                                        &*child.node_type()
+                                    {
+                                        if tag == "text" {
+                                            continue;
+                                        }
+
                                         viewports
                                             .entry(child.id())
                                             .or_insert_with(|| (None, Vec::new()))
