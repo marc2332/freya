@@ -1,3 +1,4 @@
+use std::sync::Mutex;
 use std::{sync::Arc, task::Waker};
 
 use dioxus_core::{Template, VirtualDom};
@@ -5,6 +6,7 @@ use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_dom::prelude::SafeDOM;
 use freya_engine::prelude::*;
+use freya_hooks::PlatformInformation;
 use futures::FutureExt;
 use futures::{
     pin_mut,
@@ -67,6 +69,8 @@ pub struct App<State: 'static + Clone> {
     font_collection: FontCollection,
 
     ticker_sender: broadcast::Sender<()>,
+
+    platform_information: Arc<Mutex<PlatformInformation>>,
 }
 
 impl<State: 'static + Clone> App<State> {
@@ -99,6 +103,10 @@ impl<State: 'static + Clone> App<State> {
         let (event_emitter, event_receiver) = mpsc::unbounded_channel::<DomEvent>();
         let (focus_sender, focus_receiver) = watch::channel(None);
 
+        let platform_information = Arc::new(Mutex::new(PlatformInformation {
+            window_size: window_env.window.inner_size().into(),
+        }));
+
         Self {
             sdom,
             vdom,
@@ -117,6 +125,7 @@ impl<State: 'static + Clone> App<State> {
             focus_receiver,
             font_collection,
             ticker_sender: broadcast::channel(5).0,
+            platform_information,
         }
     }
 
@@ -132,6 +141,9 @@ impl<State: 'static + Clone> App<State> {
         self.vdom
             .base_scope()
             .provide_context(Arc::new(self.ticker_sender.subscribe()));
+        self.vdom
+            .base_scope()
+            .provide_context(self.platform_information.clone());
     }
 
     /// Make the first build of the VirtualDOM.
@@ -328,5 +340,8 @@ impl<State: 'static + Clone> App<State> {
 
     pub fn tick(&self) {
         self.ticker_sender.send(()).unwrap();
+
+        self.platform_information.lock().unwrap().window_size =
+            self.window_env.window.inner_size().into()
     }
 }
