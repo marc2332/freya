@@ -218,6 +218,7 @@ impl<T: Clone> WindowEnv<T> {
         font_collection: &mut FontCollection,
         hovered_node: &HoveredNode,
         rdom: &FreyaDOM,
+        fps: usize
     ) {
         let canvas = self.surface.canvas();
 
@@ -254,6 +255,8 @@ impl<T: Clone> WindowEnv<T> {
                 }
             },
         );
+
+        self.render_fps(fps, font_collection);
 
         self.gr_context.flush_and_submit();
         self.gl_surface.swap_buffers(&self.gl_context).unwrap();
@@ -298,6 +301,26 @@ impl<T: Clone> WindowEnv<T> {
         if let Some(on_exit) = on_exit {
             (on_exit)(self.window())
         }
+    }
+
+    pub fn render_fps(&mut self, fps: usize, font_collection: &FontCollection) {
+        let canvas = self.surface.canvas();
+
+        let mut text_style = TextStyle::default();
+        text_style.set_font_size(30.0);
+        text_style.set_color(Color::GREEN);
+
+        let mut paragraph_style = ParagraphStyle::default();
+        paragraph_style.set_text_style(&text_style);
+
+        let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
+        paragraph_builder.add_text(format!("{}", fps));
+
+        let mut paragraph = paragraph_builder.build();
+        
+        paragraph.layout(f32::MAX);
+
+        paragraph.paint(canvas, (0.0, 0.0));
     }
 }
 

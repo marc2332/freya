@@ -17,6 +17,7 @@ no-default-features = true
 
 [features]
 log = ["dep:tracing", "dep:tracing-subscriber"]
+fps_counter = []
 devtools = ["dep:freya-devtools", "freya-dom/shared"]
 use_camera = ["freya-hooks/use_camera"]
 mocked-engine-development = ["freya-engine/mocked-engine"] # This is just for the CI

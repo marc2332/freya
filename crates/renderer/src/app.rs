@@ -1,3 +1,4 @@
+use std::time::Instant;
 use std::{sync::Arc, task::Waker};
 
 use dioxus_core::{Template, VirtualDom};
@@ -67,6 +68,8 @@ pub struct App<State: 'static + Clone> {
     font_collection: FontCollection,
 
     ticker_sender: broadcast::Sender<()>,
+
+    fps: Vec<Instant>
 }
 
 impl<State: 'static + Clone> App<State> {
@@ -117,6 +120,7 @@ impl<State: 'static + Clone> App<State> {
             focus_receiver,
             font_collection,
             ticker_sender: broadcast::channel(5).0,
+            fps: Vec::default()
         }
     }
 
@@ -280,12 +284,21 @@ impl<State: 'static + Clone> App<State> {
 
     /// Render the RealDOM into the Window
     pub fn render(&mut self, hovered_node: &HoveredNode) {
+        let now = Instant::now();
+
+        while self.fps.len() > 0 && now.duration_since(self.fps[0]).as_millis() >= 1000 {
+            self.fps.remove(0);
+        }
+
+        self.fps.push(now);
+
         self.window_env.render(
             &self.layers,
             &self.viewports,
             &mut self.font_collection,
             hovered_node,
             &self.sdom.get(),
+            self.fps.len()
         );
 
         self.accessibility
