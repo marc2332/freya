@@ -1,0 +1,42 @@
+#![cfg_attr(
+    all(not(debug_assertions), target_os = "windows"),
+    windows_subsystem = "windows"
+)]
+
+use freya::prelude::*;
+
+static FERRIS: &[u8] = include_bytes!("./ferris.svg");
+
+fn main() {
+    launch_with_props(app, "Opacity", (400.0, 350.0));
+}
+
+fn app(cx: Scope) -> Element {
+    let ferris = bytes_to_data(cx, FERRIS);
+    let opacity = use_state(cx, || 70.0);
+
+    render!(
+        rect {
+            height: "100%",
+            width: "100%",
+            main_align: "center",
+            cross_align: "center",
+            svg {
+                opacity: "{opacity / 100.0}",
+                width: "100%",
+                height: "50%",
+                svg_data: ferris,
+            }
+            Slider {
+                width: 100.0,
+                value: *opacity.get(),
+                onmoved: |p| {
+                    opacity.set(p);
+                }
+            }
+            label {
+                "Drag the slider"
+            }
+        }
+    )
+}

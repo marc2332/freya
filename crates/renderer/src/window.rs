@@ -224,14 +224,15 @@ impl<T: Clone> WindowEnv<T> {
         canvas.clear(self.window_config.background);
 
         let mut matrices: Vec<(Matrix, Vec<NodeId>)> = Vec::default();
+        let mut opacities: Vec<(f32, Vec<NodeId>)> = Vec::default();
 
         process_render(
             viewports,
             rdom,
             font_collection,
             layers,
-            &mut (canvas, (&mut matrices)),
-            |dom, node_id, area, font_collection, viewports, (canvas, matrices)| {
+            &mut (canvas, &mut matrices, &mut opacities),
+            |dom, node_id, area, font_collection, viewports, (canvas, matrices, opacities)| {
                 let render_wireframe = if let Some(hovered_node) = &hovered_node {
                     hovered_node
                         .lock()
@@ -250,6 +251,7 @@ impl<T: Clone> WindowEnv<T> {
                         viewports,
                         render_wireframe,
                         matrices,
+                        opacities,
                     );
                 }
             },
