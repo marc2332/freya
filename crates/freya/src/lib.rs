@@ -72,6 +72,8 @@ pub mod hotreload {
 
 pub use torin;
 
+pub mod plugins;
+
 /// Useful imports.
 pub mod prelude {
     pub use dioxus_core::prelude::*;
@@ -80,6 +82,7 @@ pub mod prelude {
     pub use dioxus_hot_reload::{self, hot_reload_init, Config};
 
     pub use crate::launch::*;
+    pub use crate::plugins::*;
     pub use freya_components::*;
     pub use freya_elements::elements as dioxus_elements;
     pub use freya_elements::events::*;

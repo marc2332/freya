@@ -1,4 +1,3 @@
-use std::time::Instant;
 use std::{sync::Arc, task::Waker};
 
 use dioxus_core::{Template, VirtualDom};
@@ -69,7 +68,7 @@ pub struct App<State: 'static + Clone> {
 
     ticker_sender: broadcast::Sender<()>,
 
-    fps: Vec<Instant>
+    plugins: PluginsManager,
 }
 
 impl<State: 'static + Clone> App<State> {
@@ -102,6 +101,9 @@ impl<State: 'static + Clone> App<State> {
         let (event_emitter, event_receiver) = mpsc::unbounded_channel::<DomEvent>();
         let (focus_sender, focus_receiver) = watch::channel(None);
 
+        let mut plugins = config.plugins;
+        plugins.send(PluginEvent::WindowCreated(window_env.window()));
+
         Self {
             sdom,
             vdom,
@@ -120,7 +122,7 @@ impl<State: 'static + Clone> App<State> {
             focus_receiver,
             font_collection,
             ticker_sender: broadcast::channel(5).0,
-            fps: Vec::default()
+            plugins,
         }
     }
 
@@ -284,25 +286,21 @@ impl<State: 'static + Clone> App<State> {
 
     /// Render the RealDOM into the Window
     pub fn render(&mut self, hovered_node: &HoveredNode) {
-        let now = Instant::now();
-
-        while self.fps.len() > 0 && now.duration_since(self.fps[0]).as_millis() >= 1000 {
-            self.fps.remove(0);
-        }
-
-        self.fps.push(now);
-
         self.window_env.render(
             &self.layers,
             &self.viewports,
             &mut self.font_collection,
             hovered_node,
             &self.sdom.get(),
-            self.fps.len()
         );
 
         self.accessibility
             .render_accessibility(self.window_env.window.title().as_str());
+
+        self.plugins.send(PluginEvent::CanvasRendered(
+            self.window_env.canvas(),
+            &self.font_collection,
+        ))
     }
 
     /// Resize the Window

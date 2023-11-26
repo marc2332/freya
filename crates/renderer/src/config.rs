@@ -1,5 +1,6 @@
 use std::{io::Cursor, sync::Arc};
 
+use freya_core::plugins::{FreyaPlugin, PluginsManager};
 use freya_engine::prelude::Color;
 use freya_node_state::Parse;
 use image::{io::Reader, GenericImageView};
@@ -45,10 +46,11 @@ impl<T: Clone> Default for WindowConfig<T> {
 }
 
 /// Launch configuration.
-#[derive(Clone, Default)]
+#[derive(Default)]
 pub struct LaunchConfig<'a, T: Clone> {
     pub window: WindowConfig<T>,
     pub fonts: Vec<(&'a str, &'a [u8])>,
+    pub plugins: PluginsManager,
 }
 
 impl<'a, T: Clone> LaunchConfig<'a, T> {
@@ -72,7 +74,6 @@ impl LaunchConfig<'_, ()> {
 pub type WindowCallback = Arc<Box<fn(&mut Window)>>;
 
 /// Configuration Builder.
-#[derive(Clone)]
 pub struct LaunchConfigBuilder<'a, T> {
     pub(crate) width: f64,
     pub(crate) height: f64,
@@ -89,6 +90,7 @@ pub struct LaunchConfigBuilder<'a, T> {
     pub(crate) icon: Option<Icon>,
     pub(crate) on_setup: Option<WindowCallback>,
     pub(crate) on_exit: Option<WindowCallback>,
+    pub(crate) plugins: PluginsManager,
 }
 
 impl<T> Default for LaunchConfigBuilder<'_, T> {
@@ -109,6 +111,7 @@ impl<T> Default for LaunchConfigBuilder<'_, T> {
             icon: None,
             on_setup: None,
             on_exit: None,
+            plugins: PluginsManager::default(),
         }
     }
 }
@@ -204,6 +207,12 @@ impl<'a, T: Clone> LaunchConfigBuilder<'a, T> {
         self
     }
 
+    /// Add a new plugin.
+    pub fn with_plugin(mut self, plugin: impl FreyaPlugin + 'static) -> Self {
+        self.plugins.add_plugin(plugin);
+        self
+    }
+
     /// Build the configuration.
     pub fn build(self) -> LaunchConfig<'a, T> {
         LaunchConfig {
@@ -224,6 +233,7 @@ impl<'a, T: Clone> LaunchConfigBuilder<'a, T> {
                 on_exit: self.on_exit,
             },
             fonts: self.fonts,
+            plugins: self.plugins,
         }
     }
 }
