@@ -1,3 +1,3 @@
-mod fps;
+mod performance_overlay;
 
-pub use fps::*;
+pub use performance_overlay::*;

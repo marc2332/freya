@@ -1,4 +1,6 @@
+use dioxus_native_core::NodeId;
 use freya_engine::prelude::{Canvas, FontCollection};
+use torin::torin::Torin;
 use winit::window::Window;
 
 #[derive(Default)]
@@ -20,7 +22,10 @@ impl PluginsManager {
 
 pub enum PluginEvent<'a> {
     WindowCreated(&'a Window),
-    CanvasRendered(&'a Canvas, &'a FontCollection),
+    StartedRender(&'a Canvas, &'a FontCollection),
+    FinishedRender(&'a Canvas, &'a FontCollection),
+    StartedLayout(&'a Torin<NodeId>),
+    FinishedLayout(&'a Torin<NodeId>),
 }
 
 pub trait FreyaPlugin {
