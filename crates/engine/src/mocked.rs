@@ -1344,7 +1344,7 @@ impl From<(i32, i32)> for Size {
 pub struct Surface;
 
 impl Surface {
-    pub fn canvas(&mut self) -> Canvas {
+    pub fn canvas(&mut self) -> &Canvas {
         unimplemented!("This is mocked")
     }
 
