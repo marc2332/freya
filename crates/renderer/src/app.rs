@@ -286,7 +286,7 @@ impl<State: 'static + Clone> App<State> {
 
     /// Render the RealDOM into the Window
     pub fn render(&mut self, hovered_node: &HoveredNode) {
-        self.window_env.render(
+        self.window_env.start_render(
             &self.layers,
             &self.viewports,
             &mut self.font_collection,
@@ -300,7 +300,9 @@ impl<State: 'static + Clone> App<State> {
         self.plugins.send(PluginEvent::CanvasRendered(
             self.window_env.canvas(),
             &self.font_collection,
-        ))
+        ));
+
+        self.window_env.finish_render();
     }
 
     /// Resize the Window

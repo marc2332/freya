@@ -214,8 +214,8 @@ impl<T: Clone> WindowEnv<T> {
         self.surface.canvas()
     }
 
-    /// Render the RealDOM to Window
-    pub fn render(
+    /// Start rendering the RealDOM to Window
+    pub fn start_render(
         &mut self,
         layers: &Layers,
         viewports: &Viewports,
@@ -258,7 +258,10 @@ impl<T: Clone> WindowEnv<T> {
                 }
             },
         );
+    }
 
+    /// Finish all rendering in the Window
+    pub fn finish_render(&mut self) {
         self.gr_context.flush_and_submit();
         self.gl_surface.swap_buffers(&self.gl_context).unwrap();
     }
