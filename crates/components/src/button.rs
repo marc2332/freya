@@ -130,7 +130,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
             overflow: "clip",
             role: "button",
             color: "{color}",
-            shadow: "0 4 5 0 rgb(0, 0, 0, 30)",
+            shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)",
             border: "1 solid {border_fill}",
             corner_radius: "{corner_radius}",
             background: "{background}",
