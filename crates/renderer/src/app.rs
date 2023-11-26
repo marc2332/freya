@@ -67,6 +67,8 @@ pub struct App<State: 'static + Clone> {
     font_collection: FontCollection,
 
     ticker_sender: broadcast::Sender<()>,
+
+    plugins: PluginsManager,
 }
 
 impl<State: 'static + Clone> App<State> {
@@ -99,6 +101,9 @@ impl<State: 'static + Clone> App<State> {
         let (event_emitter, event_receiver) = mpsc::unbounded_channel::<DomEvent>();
         let (focus_sender, focus_receiver) = watch::channel(None);
 
+        let mut plugins = config.plugins;
+        plugins.send(PluginEvent::WindowCreated(window_env.window()));
+
         Self {
             sdom,
             vdom,
@@ -117,6 +122,7 @@ impl<State: 'static + Clone> App<State> {
             focus_receiver,
             font_collection,
             ticker_sender: broadcast::channel(5).0,
+            plugins,
         }
     }
 
@@ -290,6 +296,9 @@ impl<State: 'static + Clone> App<State> {
 
         self.accessibility
             .render_accessibility(self.window_env.window.title().as_str());
+
+        self.plugins
+            .send(PluginEvent::CanvasRendered(self.window_env.canvas()))
     }
 
     /// Resize the Window

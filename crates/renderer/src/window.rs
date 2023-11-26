@@ -210,6 +210,10 @@ impl<T: Clone> WindowEnv<T> {
         )
     }
 
+    pub fn canvas(&mut self) -> &Canvas {
+        self.surface.canvas()
+    }
+
     /// Render the RealDOM to Window
     pub fn render(
         &mut self,
