@@ -1,4 +1,4 @@
-use freya_engine::prelude::Canvas;
+use freya_engine::prelude::{Canvas, FontCollection};
 use winit::window::Window;
 
 #[derive(Default)]
@@ -20,7 +20,7 @@ impl PluginsManager {
 
 pub enum PluginEvent<'a> {
     WindowCreated(&'a Window),
-    CanvasRendered(&'a Canvas),
+    CanvasRendered(&'a Canvas, &'a FontCollection),
 }
 
 pub trait FreyaPlugin {
