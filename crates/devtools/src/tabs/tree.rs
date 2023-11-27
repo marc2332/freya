@@ -2,8 +2,12 @@ use dioxus::prelude::*;
 use dioxus_native_core::NodeId;
 use dioxus_router::prelude::use_navigator;
 use freya_components::*;
+use fermi::*;
+use freya_hooks::{ScrollController, use_scroll_controller};
 
 use crate::{node::NodeElement, NodeIdSerializer, Route, TreeNode};
+
+static SCROLL: Atom<i32> = Atom(|_| 0);
 
 #[allow(non_snake_case)]
 #[inline_props]
@@ -13,6 +17,8 @@ pub fn NodesTree<'a>(
     selected_node_id: Option<NodeId>,
     onselected: EventHandler<'a, &'a TreeNode>,
 ) -> Element<'a> {
+    let scroll_state = use_atom_state(cx, &SCROLL);
+    let scroll_controller =  use_scroll_controller(cx, || ScrollController::new_vertical(scroll_state.into()));
     let router = use_navigator(cx);
     let nodes = use_shared_state::<Vec<TreeNode>>(cx).unwrap();
 
@@ -23,6 +29,7 @@ pub fn NodesTree<'a>(
         show_scrollbar: true,
         length: nodes.read().len(),
         item_size: 27.0,
+        scroll_controller: scroll_controller,
         builder_values: (nodes, selected_node_id, onselected, router),
         builder: Box::new(move |(_k, i, _, values)| {
             let (nodes, selected_node_id, onselected, router) = values.unwrap();
