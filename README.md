@@ -59,7 +59,7 @@ fn app(cx: Scope) -> Element {
 
 Thanks to my sponsors for supporting this project! 😄
 
-<!-- sponsors --><!-- sponsors -->
+<!-- sponsors --><a href="https://github.com/piny4man"><img src="https://github.com/piny4man.png" width="60px" alt="Alberto Mendez" /></a><!-- sponsors -->
 
 ### Want to try it? 🤔
 
