@@ -48,67 +48,72 @@ impl Layers {
         let mut inherit_layers = FxHashMap::default();
 
         traverse_dom(rdom, |node| {
-            let areas = layout.get(node.id()).unwrap();
+            let areas = layout.get(node.id());
 
-            // Add the Node to a Layer
-            let node_style = node.get::<Style>().unwrap();
+            // Some elements like placeholders are not measured
+            if let Some(areas) = areas {
+                // Add the Node to a Layer
+                let node_style = node.get::<Style>().unwrap();
 
-            let inherited_relative_layer = node
-                .parent_id()
-                .map(|p| *inherit_layers.get(&p).unwrap())
-                .unwrap_or(0);
+                let inherited_relative_layer = node
+                    .parent_id()
+                    .map(|p| *inherit_layers.get(&p).unwrap())
+                    .unwrap_or(0);
 
-            let (node_layer, node_relative_layer) = Layers::calculate_layer(
-                node_style.relative_layer,
-                node.height() as i16,
-                inherited_relative_layer,
-            );
+                let (node_layer, node_relative_layer) = Layers::calculate_layer(
+                    node_style.relative_layer,
+                    node.height() as i16,
+                    inherited_relative_layer,
+                );
 
-            inherit_layers.insert(node.id(), node_relative_layer);
-            layers.add_element(node.id(), node_layer);
+                inherit_layers.insert(node.id(), node_relative_layer);
+                layers.add_element(node.id(), node_layer);
 
-            // Register paragraph elements
+                // Register paragraph elements
 
-            let traverse_inner_children =
-                if let NodeType::Element(ElementNode { tag, .. }) = &*node.node_type() {
-                    let is_paragraph = tag == "paragraph";
-                    if is_paragraph {
-                        let cursor_settings = node.get::<CursorSettings>().unwrap();
-                        let is_editable = CursorMode::Editable == cursor_settings.mode;
+                let traverse_inner_children =
+                    if let NodeType::Element(ElementNode { tag, .. }) = &*node.node_type() {
+                        let is_paragraph = tag == "paragraph";
+                        if is_paragraph {
+                            let cursor_settings = node.get::<CursorSettings>().unwrap();
+                            let is_editable = CursorMode::Editable == cursor_settings.mode;
 
-                        let references = node.get::<References>().unwrap();
-                        if is_editable {
-                            if let Some(cursor_ref) = &references.cursor_ref {
-                                let text_group = layers
-                                    .paragraph_elements
-                                    .entry(cursor_ref.text_id)
-                                    .or_default();
+                            let references = node.get::<References>().unwrap();
+                            if is_editable {
+                                if let Some(cursor_ref) = &references.cursor_ref {
+                                    let text_group = layers
+                                        .paragraph_elements
+                                        .entry(cursor_ref.text_id)
+                                        .or_default();
 
-                                text_group.push(node.id());
+                                    text_group.push(node.id());
+                                }
                             }
                         }
-                    }
 
-                    // Traverse all elements except paragraphs
-                    !is_paragraph
-                } else {
-                    false
-                };
+                        // Traverse all elements except paragraphs
+                        !is_paragraph
+                    } else {
+                        false
+                    };
 
-            // Notify layout references
+                // Notify layout references
 
-            let size_state = &*node.get::<LayoutState>().unwrap();
+                let size_state = &*node.get::<LayoutState>().unwrap();
 
-            if let Some(reference) = &size_state.node_ref {
-                let mut node_layout = NodeReferenceLayout {
-                    area: areas.area,
-                    inner: areas.inner_sizes,
-                };
-                node_layout.div(scale_factor);
-                reference.send(node_layout).ok();
+                if let Some(reference) = &size_state.node_ref {
+                    let mut node_layout = NodeReferenceLayout {
+                        area: areas.area,
+                        inner: areas.inner_sizes,
+                    };
+                    node_layout.div(scale_factor);
+                    reference.send(node_layout).ok();
+                }
+
+                traverse_inner_children
+            } else {
+                false
             }
-
-            traverse_inner_children
         });
 
         layers.measure_all_paragraph_elements(rdom, layout, font_collection, scale_factor);
