@@ -2,8 +2,10 @@ use std::vec::IntoIter;
 
 use dioxus_native_core::prelude::ElementNode;
 use dioxus_native_core::real_dom::NodeImmutable;
+use dioxus_native_core::tree::TreeRef;
 use dioxus_native_core::{node::NodeType, NodeId};
 use freya_common::NodeReferenceLayout;
+use freya_dom::dom::DioxusNode;
 use freya_dom::prelude::{DioxusDOM, FreyaDOM};
 use itertools::sorted;
 
@@ -14,6 +16,20 @@ use torin::torin::Torin;
 use uuid::Uuid;
 
 use crate::layout::*;
+
+fn traverse_dom(rdom: &DioxusDOM, mut f: impl FnMut(DioxusNode) -> bool) {
+    let mut stack = vec![rdom.root_id()];
+    let tree = rdom.tree_ref();
+    while let Some(id) = stack.pop() {
+        if let Some(node) = rdom.get(id) {
+            let traverse_children = f(node);
+            if traverse_children {
+                let children = tree.children_ids_advanced(id, true);
+                stack.extend(children.iter().copied().rev());
+            }
+        }
+    }
+}
 
 #[derive(Default, Clone)]
 pub struct Layers {
@@ -31,31 +47,32 @@ impl Layers {
         let mut layers = Layers::default();
         let mut inherit_layers = FxHashMap::default();
 
-        rdom.traverse_depth_first(|node| {
-            let areas = layout.get(node.id());
+        traverse_dom(rdom, |node| {
+            let areas = layout.get(node.id()).unwrap();
 
-            if let Some(areas) = areas {
-                // Add the Node to a Layer
-                let node_style = node.get::<Style>().unwrap();
+            // Add the Node to a Layer
+            let node_style = node.get::<Style>().unwrap();
 
-                let inherited_relative_layer = node
-                    .parent_id()
-                    .map(|p| *inherit_layers.get(&p).unwrap())
-                    .unwrap_or(0);
+            let inherited_relative_layer = node
+                .parent_id()
+                .map(|p| *inherit_layers.get(&p).unwrap())
+                .unwrap_or(0);
 
-                let (node_layer, node_relative_layer) = Layers::calculate_layer(
-                    node_style.relative_layer,
-                    node.height() as i16,
-                    inherited_relative_layer,
-                );
+            let (node_layer, node_relative_layer) = Layers::calculate_layer(
+                node_style.relative_layer,
+                node.height() as i16,
+                inherited_relative_layer,
+            );
 
-                inherit_layers.insert(node.id(), node_relative_layer);
-                layers.add_element(node.id(), node_layer);
+            inherit_layers.insert(node.id(), node_relative_layer);
+            layers.add_element(node.id(), node_layer);
 
-                // Register paragraph elements
+            // Register paragraph elements
 
+            let traverse_inner_children =
                 if let NodeType::Element(ElementNode { tag, .. }) = &*node.node_type() {
-                    if tag == "paragraph" {
+                    let is_paragraph = tag == "paragraph";
+                    if is_paragraph {
                         let cursor_settings = node.get::<CursorSettings>().unwrap();
                         let is_editable = CursorMode::Editable == cursor_settings.mode;
 
@@ -71,21 +88,27 @@ impl Layers {
                             }
                         }
                     }
-                }
 
-                // Notify layout references
+                    // Traverse all elements except paragraphs
+                    !is_paragraph
+                } else {
+                    false
+                };
 
-                let size_state = &*node.get::<LayoutState>().unwrap();
+            // Notify layout references
 
-                if let Some(reference) = &size_state.node_ref {
-                    let mut node_layout = NodeReferenceLayout {
-                        area: areas.area,
-                        inner: areas.inner_sizes,
-                    };
-                    node_layout.div(scale_factor);
-                    reference.send(node_layout).ok();
-                }
+            let size_state = &*node.get::<LayoutState>().unwrap();
+
+            if let Some(reference) = &size_state.node_ref {
+                let mut node_layout = NodeReferenceLayout {
+                    area: areas.area,
+                    inner: areas.inner_sizes,
+                };
+                node_layout.div(scale_factor);
+                reference.send(node_layout).ok();
             }
+
+            traverse_inner_children
         });
 
         layers.measure_all_paragraph_elements(rdom, layout, font_collection, scale_factor);
