@@ -13,55 +13,55 @@ fn app(cx: Scope) -> Element {
     render!(App {
         title: "My App",
         navbar: render!(Navbar {
-            title: "Top navbar"
+            title: "Top Navbar"
         }),
         body: render!(
             ScrollView {
                 height: "calc(100% - 75 - 75)",
                 show_scrollbar: true,
                 Card {
-                    title: "Another title",
-                    content: "Some content",
+                    title: "Card 0",
+                    content: "Content 0",
                 }
                 ScrollView {
                     height: "200",
                     padding: "0 20",
                     Card {
-                        title: "Lalala",
-                        content: "Wooow",
+                        title: "Card 1",
+                        content: "Content 1",
                     }
                     Card {
-                        title: "Lalala",
-                        content: "Wooow",
+                        title: "Card 2",
+                        content: "Content 2",
                     }
                     Card {
-                        title: "Lalala",
-                        content: "Wooow",
+                        title: "Card 3",
+                        content: "Content 3",
                     }
                     Card {
-                        title: "Lalala",
-                        content: "Wooow",
+                        title: "Card 4",
+                        content: "Content 4",
                     }
                 }
                 Card {
-                    title: "Another title",
-                    content: "Some content",
+                    title: "Card 5",
+                    content: "Content 5",
                 }
                 Card {
-                    title: "Another title",
-                    content: "Some content",
+                    title: "Card 6",
+                    content: "Content 6",
                 }
                 Card {
-                    title: "Lalala",
-                    content: "Wooow",
+                    title: "Card 7",
+                    content: "Content 7",
                 }
                 Card {
-                    title: "Another title",
-                    content: "Some content",
+                    title: "Card 7",
+                    content: "Content 7",
                 }
             }
             Navbar {
-                title: "Bottom bar"
+                title: "Bottom Bar"
             }
         )
     })
@@ -81,6 +81,8 @@ fn Navbar<'a>(cx: Scope<'a, NavbarProps<'a>>) -> Element {
             width: "100%",
             background: "rgb(20, 20, 20)",
             padding: "15",
+            main_align: "center",
+            cross_align: "center",
             label {
                 "{&cx.props.title}"
             }
@@ -126,12 +128,13 @@ fn Card<'a>(cx: Scope<'a, CardProps<'a>>) -> Element {
             width: "100%",
             height: "200",
             padding: "10",
-            background: "rgb(45, 45, 45)",
+            background: "rgb(35, 35, 35)",
             rect {
                 width: "100%",
                 height: "50%",
                 padding: "5",
                 corner_radius: "10",
+                main_align: "center",
                 label {
                     height: "auto",
                     "{&cx.props.title}"
@@ -173,9 +176,11 @@ fn Area(cx: Scope) -> Element {
         rect {
             height: "50%",
             width: "100%",
-            background: "blue",
+            background: "rgb(228, 143, 69)",
             padding: "10",
-            corner_radius: "10",
+            corner_radius: "12",
+            main_align: "center",
+            cross_align: "center",
             onmouseover: cursor_moved,
             onclick: cursor_clicked,
             label {
