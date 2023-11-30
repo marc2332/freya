@@ -106,7 +106,7 @@ impl Board {
                         (
                             (row_n - 1, col_n + 1),
                             (row_n, col_n),
-                            (row_n - 1, col_n + 1),
+                            (row_n + 1, col_n - 1),
                         ),
                     ],
                     2 if col_n >= 2 => vec![(

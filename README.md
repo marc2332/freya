@@ -55,6 +55,12 @@ fn app(cx: Scope) -> Element {
 </td>
 </table>
 
+### Sponsors 🤗
+
+Thanks to my sponsors for supporting this project! 😄
+
+<!-- sponsors --><a href="https://github.com/piny4man"><img src="https://github.com/piny4man.png" width="60px" alt="Alberto Mendez" /></a><a href="https://github.com/dcrasch"><img src="https://github.com/dcrasch.png" width="60px" alt="David Rasch" /></a><!-- sponsors -->
+
 ### Want to try it? 🤔
 
 ⚠️ First, see [Environment setup](https://book.freyaui.dev/setup.html).
