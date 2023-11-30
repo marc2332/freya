@@ -31,7 +31,7 @@ pub fn Tooltip<'a>(cx: Scope<'a, TooltipProps<'a>>) -> Element {
     render!(
         rect {
             padding: "4 10",
-            shadow: "0 4 5 0 rgb(0, 0, 0, 30)",
+            shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)",
             border: "1 solid {border_fill}",
             corner_radius: "10",
             background: "{background}",

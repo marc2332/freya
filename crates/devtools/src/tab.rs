@@ -69,7 +69,7 @@ pub fn TabButton<'a>(cx: Scope<'a, TabButtonProps<'a>>) -> Element<'a> {
             height: "100%",
             color: "{color}",
             padding: "6 14",
-            shadow: "0 4 5 0 rgb(0, 0, 0, 30)",
+            shadow: "0 4 5 0 rgb(0, 0, 0, 0.3)",
             border: "1 solid {border_fill}",
             main_align: "center",
             label {
