@@ -41,6 +41,8 @@ pub struct DropdownTheme {
     pub background_button: &'static str,
     pub hover_background: &'static str,
     pub font_theme: FontTheme,
+    pub border_fill: &'static str,
+    pub arrow_fill: &'static str,
 }
 
 /// Theming properties for Button components.
@@ -110,6 +112,7 @@ pub struct ExternalLinkTheme {
 pub struct AccordionTheme {
     pub color: &'static str,
     pub background: &'static str,
+    pub border_fill: &'static str,
 }
 
 /// Theming properties for Loader component.
@@ -223,11 +226,13 @@ pub const LIGHT_THEME: Theme = Theme {
     },
     dropdown: DropdownTheme {
         desplegable_background: "white",
-        background_button: "rgb(240, 240, 240)",
-        hover_background: "rgb(215, 215, 215)",
+        background_button: "rgb(245, 245, 245)",
+        hover_background: "rgb(235, 235, 235)",
         font_theme: FontTheme {
             color: "rgb(10, 10, 10)",
         },
+        border_fill: "rgb(210, 210, 210)",
+        arrow_fill: "rgb(40, 40, 40)",
     },
     dropdown_item: DropdownItemTheme {
         background: "white",
@@ -239,7 +244,8 @@ pub const LIGHT_THEME: Theme = Theme {
     },
     accordion: AccordionTheme {
         color: "black",
-        background: "rgb(215, 215, 215)",
+        background: "rgb(245, 245, 245)",
+        border_fill: "rgb(210, 210, 210)",
     },
     loader: LoaderTheme {
         primary_color: "rgb(50, 50, 50)",
@@ -315,8 +321,10 @@ pub const DARK_THEME: Theme = Theme {
     dropdown: DropdownTheme {
         desplegable_background: "rgb(25, 25, 25)",
         background_button: "rgb(35, 35, 35)",
-        hover_background: "rgb(80, 80, 80)",
+        hover_background: "rgb(45, 45, 45)",
         font_theme: FontTheme { color: "white" },
+        border_fill: "rgb(80, 80, 80)",
+        arrow_fill: "rgb(40, 40, 40)",
     },
     dropdown_item: DropdownItemTheme {
         background: "rgb(35, 35, 35)",
@@ -326,7 +334,8 @@ pub const DARK_THEME: Theme = Theme {
     },
     accordion: AccordionTheme {
         color: "white",
-        background: "rgb(30, 30, 30)",
+        background: "rgb(60, 60, 60)",
+        border_fill: "rgb(80, 80, 80)",
     },
     loader: LoaderTheme {
         primary_color: "rgb(150, 150, 150)",
