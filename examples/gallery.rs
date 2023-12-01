@@ -51,6 +51,10 @@ fn AppSidebar(cx: Scope) -> Element {
                     to: Route::ScrollViewDemo,
                     "ScrollView"
                 }
+                SidebarItem::<Route> {
+                    to: Route::DropdownDemo,
+                    "Dropdown"
+                }
             ),
             rect {
                 width: "100%",
@@ -113,7 +117,7 @@ fn ScrollViewDemo(cx: Scope) -> Element {
                 height: "200",
                 width: "250",
                 show_scrollbar: *show_scrollbar.get(),
-                
+
                 rect {
                     direction: "horizontal",
                     rect {
@@ -180,12 +184,29 @@ fn ScrollViewDemo(cx: Scope) -> Element {
 
 #[allow(non_snake_case)]
 fn DropdownDemo(cx: Scope) -> Element {
+    let values = cx.use_hook(|| vec!["A".to_string(), "B".to_string(), "C".to_string()]);
+    let selected_dropdown = use_state(cx, || "A".to_string());
+
     render!(
         DemoTitle {
             "Dropdown"
         }
         SectionTitle {
             "Example"
+        }
+        DemoBlock {
+            Dropdown {
+                value: selected_dropdown.get().clone(),
+                values.iter().map(|ch| {
+                    rsx!(
+                        DropdownItem {
+                            value: ch.to_string(),
+                            onclick: move |_| selected_dropdown.set(ch.to_string()),
+                            label { "{ch}" }
+                        }
+                    )
+                })
+            }
         }
     )
 }
@@ -200,7 +221,6 @@ fn DemoTitle<'a>(cx: Scope<'a>, children: Element<'a>) -> Element {
         children
     })
 }
-
 
 #[allow(non_snake_case)]
 #[inline_props]
