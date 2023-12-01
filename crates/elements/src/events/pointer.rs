@@ -16,7 +16,7 @@ pub enum PointerType {
 }
 
 /// Data of a Mouse event.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct PointerData {
     pub screen_coordinates: CursorPoint,
     pub element_coordinates: CursorPoint,

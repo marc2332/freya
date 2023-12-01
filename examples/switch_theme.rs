@@ -34,15 +34,18 @@ fn app(cx: Scope) -> Element {
     let is_enabled = if *enabled.get() { "Yes" } else { "No" };
 
     render!(
-        Switch {
-            enabled: *enabled.get(),
-            ontoggled: |_| {
-                enabled.set(!enabled.get());
+        Body {
+            padding: "20",
+            Switch {
+                enabled: *enabled.get(),
+                ontoggled: |_| {
+                    enabled.set(!enabled.get());
+                }
             }
+            label {
+                "Is enabled? {is_enabled}"
+            }
+            TheOtherSwitch { }
         }
-        label {
-            "Is enabled? {is_enabled}"
-        }
-        TheOtherSwitch { }
     )
 }

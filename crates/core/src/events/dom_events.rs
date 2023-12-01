@@ -10,12 +10,35 @@ use torin::prelude::*;
 use crate::events::FreyaEvent;
 
 /// Event emitted to the DOM.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct DomEvent {
     pub name: String,
     pub node_id: NodeId,
     pub element_id: ElementId,
     pub data: DomEventData,
+}
+
+impl Eq for DomEvent {}
+
+impl PartialOrd for DomEvent {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for DomEvent {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        match self.name.as_str() {
+            "mouseleave" | "pointerleave" => {
+                if self.name == other.name {
+                    std::cmp::Ordering::Equal
+                } else {
+                    std::cmp::Ordering::Less
+                }
+            }
+            _ => std::cmp::Ordering::Greater,
+        }
+    }
 }
 
 impl DomEvent {
@@ -123,7 +146,7 @@ impl DomEvent {
 }
 
 /// Data of a DOM event.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum DomEventData {
     Mouse(MouseData),
     Keyboard(KeyboardData),
