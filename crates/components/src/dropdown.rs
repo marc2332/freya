@@ -63,7 +63,7 @@ where
     use_on_unmount(cx, {
         to_owned![status, platform];
         move || {
-            if *status.get() == DropdownItemStatus::Hovering {
+            if *status.current() == DropdownItemStatus::Hovering {
                 platform.set_cursor(CursorIcon::default());
             }
         }
@@ -188,7 +188,7 @@ where
     use_on_unmount(cx, {
         to_owned![status, platform];
         move || {
-            if *status.get() == DropdownStatus::Hovering {
+            if *status.current() == DropdownStatus::Hovering {
                 platform.set_cursor(CursorIcon::default());
             }
         }
