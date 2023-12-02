@@ -1,6 +1,5 @@
-> 👋 Note: This Book is being constantly updated, so, there might some features that have been added, removed or changed.
-
-> ⚠️ Warning: This Book might contain APIs from the latest git version that might not be available on the stable versions released on crates.io.
+> ⚠️ Warning: This Book might contain APIs from the latest [git version](https://github.com/marc2332/freya) that might not be available on the stable versions released on crates.io.
+> As a general rule, don't expect everything to be documented here.
 
 # Welcome
 
