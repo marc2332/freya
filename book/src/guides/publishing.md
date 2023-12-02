@@ -5,6 +5,8 @@ However, you might want to create an installer instead. You can use executable p
 for a more automated and "Rusty" version, you can use [cargo-packager](https://github.com/crabnebula-dev/cargo-packager), which is basically an abstraction
 over executable packagers which you would have to setup yourself.
 
+There's also a complete crate example [here](https://github.com/marc2332/freya/tree/main/examples/installer).
+
 ## Packager installation
 
 Run:
@@ -40,3 +42,8 @@ in the `cargo-packager` API docs. Note that underscores should be hyphens when y
 One very important configuration field is `formats`.
 This is a list of installers that `cargo-packager` should generate, and by default, it's your current OS.
 You can have a look at the list on [GitHub](https://github.com/crabnebula-dev/cargo-packager#supported-packages), or on the [API docs](https://docs.rs/cargo-packager/latest/cargo_packager/config/enum.PackageFormat.html).
+
+# Optimizing
+
+The ["Optimizing"" chapter](https://dioxuslabs.com/learn/0.4/cookbook/optimizing) in the Dioxus docs applies in Freya too.
+Note that WebAssembly-related tips are irrelevant.
