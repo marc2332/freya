@@ -22,7 +22,7 @@ pub fn NodesTree<'a>(
         padding: "15",
         show_scrollbar: true,
         length: nodes.read().len(),
-        item_size: 27.0,
+        item_size: ItemSize::Fixed(27.0),
         builder_values: (nodes, selected_node_id, onselected, router),
         builder: Box::new(move |(_k, i, _, values)| {
             let (nodes, selected_node_id, onselected, router) = values.unwrap();
