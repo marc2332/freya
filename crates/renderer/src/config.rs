@@ -66,9 +66,9 @@ impl LaunchConfig<'_, ()> {
         let reader = Reader::new(Cursor::new(icon))
             .with_guessed_format()
             .expect("Cursor io never fails");
-        let image = reader.decode().expect("Failed to open icon path");
+        let image = reader.decode().expect("Failed to open icon path").into_rgba8();
         let (width, height) = image.dimensions();
-        let rgba = image.into_bytes();
+        let rgba = image.into_raw();
         Icon::from_rgba(rgba, width, height).expect("Failed to open icon")
     }
 }
