@@ -84,7 +84,7 @@ pub fn Anchor<'a>(cx: Scope<'a, AnchorProps<'a>>) -> Element<'a> {
         None
     };
 
-    let onmouseenter = |_: MouseEvent| {
+    let onmouseover = |_: MouseEvent| {
         is_hovering.with_mut(|v| *v = true);
     };
 
@@ -119,7 +119,7 @@ pub fn Anchor<'a>(cx: Scope<'a, AnchorProps<'a>>) -> Element<'a> {
     };
 
     render! {
-        rect { onmouseenter: onmouseenter, onmouseleave: onmouseleave, onclick: onclick, children }
+        rect { onmouseover: onmouseover, onmouseleave: onmouseleave, onclick: onclick, children }
 
         rect {
             height: "0",
