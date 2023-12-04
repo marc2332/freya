@@ -11,27 +11,27 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     render!(
-        ExternalLink {
-            url: "https://duckduckgo.com/",
+        Link {
+            to: "https://duckduckgo.com/",
             label {
                 font_size: "25",
                 "https://duckduckgo.com/"
             }
         }
-        ExternalLink {
-            url: "https://www.google.com/",
+        Link {
+            to: "https://www.google.com/",
             label {
                 font_size: "25",
                 "https://www.google.com/"
             }
         }
-        ExternalLink {
-            url: "https://github.com/marc2332/freya",
+        Link {
+            to: "https://github.com/marc2332/freya",
             label {
                 font_size: "25",
                 "Freya Source Code (no tooltip)"
             },
-            show_tooltip: false
+            tooltip: LinkTooltip::None
         }
     )
 }

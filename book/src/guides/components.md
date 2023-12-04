@@ -11,7 +11,7 @@ Freya comes with a set of ready to use components:
 - [`CursorArea`](https://docs.rs/freya/latest/freya/components/fn.CursorArea.html)
 - [`Drag and Drop`](https://docs.rs/freya/latest/freya/components/fn.DragZone.html)
 - [`Dropdown`](https://docs.rs/freya/latest/freya/components/fn.Dropdown.html)
-- [`ExternalLink`](https://docs.rs/freya/latest/freya/components/fn.ExternalLink.html)
+- [`Link`](https://docs.rs/freya/latest/freya/components/fn.Link.html)
 - [`GestureArea`](https://docs.rs/freya/latest/freya/components/fn.GestureArea.html)
 - [`Graph`](https://docs.rs/freya/latest/freya/components/fn.Graph.html)
 - [`Input`](https://docs.rs/freya/latest/freya/components/fn.Input.html)
