@@ -77,7 +77,6 @@ pub fn Anchor<'a>(cx: Scope<'a, AnchorProps<'a>>) -> Element<'a> {
     let nav = use_navigator(cx);
     let AnchorProps { to, children, onerror, tooltip } = cx.props;
     let is_hovering = use_state(cx, || false);
-    let is_hovering_tooltip = use_state(cx, || false);
 
     let url = if let IntoRoutable::FromStr(url) = to {
         Some(url)
@@ -89,16 +88,8 @@ pub fn Anchor<'a>(cx: Scope<'a, AnchorProps<'a>>) -> Element<'a> {
         is_hovering.with_mut(|v| *v = true);
     };
 
-    let onmouseenter_tooltip = |_: MouseEvent| {
-        is_hovering_tooltip.with_mut(|v| *v = true);
-    };
-
     let onmouseleave = |_: MouseEvent| {
         is_hovering.with_mut(|v| *v = false);
-    };
-
-    let onmouseleave_tooltip = |_: MouseEvent| {
-        is_hovering_tooltip.with_mut(|v| *v = false);
     };
 
     let onclick = move |event: MouseEvent| {
@@ -131,11 +122,9 @@ pub fn Anchor<'a>(cx: Scope<'a, AnchorProps<'a>>) -> Element<'a> {
         rect { onmouseenter: onmouseenter, onmouseleave: onmouseleave, onclick: onclick, children }
 
         rect {
-            onmouseenter: onmouseenter_tooltip,
-            onmouseleave: onmouseleave_tooltip,
             height: "0",
             layer: "-999",
-            if *is_hovering.get() || *is_hovering_tooltip.get() {
+            if *is_hovering.get() {
                 rsx! {
                     Tooltip {
                         url: tooltip

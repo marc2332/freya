@@ -43,7 +43,6 @@ pub struct ExternalLinkProps<'a> {
 ///     )
 /// }
 /// ```
-///
 #[allow(non_snake_case)]
 pub fn ExternalLink<'a>(cx: Scope<'a, ExternalLinkProps<'a>>) -> Element {
     let theme = use_get_theme(cx);
@@ -72,6 +71,12 @@ pub fn ExternalLink<'a>(cx: Scope<'a, ExternalLinkProps<'a>>) -> Element {
         "inherit"
     };
 
+    if !show_tooltip {
+        return render! {
+            rect { onclick: onclick, &cx.props.children }
+        }
+    };
+
     render!(
         rect {
             onmouseover: onmouseover,
@@ -83,13 +88,13 @@ pub fn ExternalLink<'a>(cx: Scope<'a, ExternalLinkProps<'a>>) -> Element {
         rect {
             height: "0",
             layer: "-999",
-            (*is_hovering.get() && show_tooltip).then_some({
+            if *is_hovering.get() {
                 rsx!(
                     Tooltip {
                         url: cx.props.url
                     }
                 )
-            })
+            }
         }
     )
 }
