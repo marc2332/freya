@@ -2,14 +2,13 @@
 //! A collection of basic components to be used in Freya.
 
 mod accordion;
-mod anchor;
+mod link;
 mod body;
 mod button;
 mod canvas;
 mod cursor_area;
 mod drag_drop;
 mod dropdown;
-mod external_link;
 mod gesture_area;
 mod graph;
 mod icons;
@@ -25,14 +24,13 @@ mod theme;
 mod tooltip;
 
 pub use accordion::*;
-pub use anchor::*;
+pub use link::*;
 pub use body::*;
 pub use button::*;
 pub use canvas::*;
 pub use cursor_area::*;
 pub use drag_drop::*;
 pub use dropdown::*;
-pub use external_link::*;
 pub use gesture_area::*;
 pub use graph::*;
 pub use icons::*;
