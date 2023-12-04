@@ -4,6 +4,7 @@ use dioxus_router::prelude::{IntoRoutable, use_navigator};
 use winit::event::MouseButton;
 use freya_elements::events::MouseEvent;
 use freya_elements::elements as dioxus_elements;
+use freya_hooks::use_get_theme;
 use crate::Tooltip;
 
 pub enum LinkTooltip<'a> {
@@ -42,7 +43,11 @@ pub struct LinkProps<'a> {
 /// Similar to [`Link`](dioxus_router::components::Link), but you can use it in Freya.
 /// Both internal routes and external links are supported.
 ///
-/// # Examples
+/// # Styling
+///
+/// Inherits the [`LinkTheme`](freya_hooks::LinkTheme) theme.
+///
+/// # Example
 ///
 /// Bad (will not render the text):
 ///
@@ -76,6 +81,7 @@ pub struct LinkProps<'a> {
 /// ```
 #[allow(non_snake_case)]
 pub fn Link<'a>(cx: Scope<'a, LinkProps<'a>>) -> Element<'a> {
+    let theme = use_get_theme(cx);
     let nav = use_navigator(cx);
     let LinkProps { to, children, onerror, tooltip } = cx.props;
     let is_hovering = use_state(cx, || false);
@@ -105,7 +111,15 @@ pub fn Link<'a>(cx: Scope<'a, LinkProps<'a>>) -> Element<'a> {
             if let (Err(_), Some(onerror)) = (res, onerror.as_ref()) {
                 onerror.call(());
             }
+
+            // TODO(marc2332): Log unhandled errors
         });
+    };
+
+    let color = if *is_hovering.get() {
+        theme.link.highlight_color
+    } else {
+        "inherit"
     };
 
     let tooltip = match tooltip {
@@ -121,7 +135,7 @@ pub fn Link<'a>(cx: Scope<'a, LinkProps<'a>>) -> Element<'a> {
     };
 
     render! {
-        rect { onmouseover: onmouseover, onmouseleave: onmouseleave, onclick: onclick, children }
+        rect { onmouseover: onmouseover, onmouseleave: onmouseleave, onclick: onclick, color: color, children }
 
         rect {
             height: "0",

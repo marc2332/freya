@@ -101,9 +101,9 @@ pub struct TooltipTheme {
     pub border_fill: &'static str,
 }
 
-/// Theming properties for ExternalLink components.
+/// Theming properties for Link components.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ExternalLinkTheme {
+pub struct LinkTheme {
     pub highlight_color: &'static str,
 }
 
@@ -151,7 +151,7 @@ pub struct Theme {
     pub scrollbar: ScrollbarTheme,
     pub slider: SliderTheme,
     pub tooltip: TooltipTheme,
-    pub external_link: ExternalLinkTheme,
+    pub link: LinkTheme,
     pub dropdown: DropdownTheme,
     pub dropdown_item: DropdownItemTheme,
     pub accordion: AccordionTheme,
@@ -203,7 +203,7 @@ pub const LIGHT_THEME: Theme = Theme {
         color: "rgb(25,25,25)",
         border_fill: "rgb(210, 210, 210)",
     },
-    external_link: ExternalLinkTheme {
+    link: LinkTheme {
         highlight_color: "rgb(43,106,208)",
     },
     dropdown: DropdownTheme {
@@ -283,7 +283,7 @@ pub const DARK_THEME: Theme = Theme {
         color: "rgb(240,240,240)",
         border_fill: "rgb(80, 80, 80)",
     },
-    external_link: ExternalLinkTheme {
+    link: LinkTheme {
         highlight_color: "rgb(43,106,208)",
     },
     dropdown: DropdownTheme {
