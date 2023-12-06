@@ -64,6 +64,7 @@ pub struct App<State: 'static + Clone> {
     accessibility: NativeAccessibility,
 
     font_collection: FontCollection,
+    font_mgr: FontMgr,
 
     ticker_sender: broadcast::Sender<()>,
 }
@@ -91,9 +92,9 @@ impl<State: 'static + Clone> App<State> {
             provider.register_typeface(ft_type, Some(font_name));
         }
 
-        let mgr: FontMgr = provider.into();
+        let font_mgr: FontMgr = provider.into();
         font_collection.set_default_font_manager(def_mgr, "Fira Sans");
-        font_collection.set_dynamic_font_manager(mgr);
+        font_collection.set_dynamic_font_manager(font_mgr.clone());
 
         let (event_emitter, event_receiver) = mpsc::unbounded_channel::<DomEvent>();
         let (focus_sender, focus_receiver) = watch::channel(None);
@@ -115,6 +116,7 @@ impl<State: 'static + Clone> App<State> {
             focus_sender,
             focus_receiver,
             font_collection,
+            font_mgr,
             ticker_sender: broadcast::channel(5).0,
         }
     }
@@ -283,6 +285,7 @@ impl<State: 'static + Clone> App<State> {
             &self.layers,
             &self.viewports,
             &mut self.font_collection,
+            &self.font_mgr,
             hovered_node,
             &self.sdom.get(),
         );

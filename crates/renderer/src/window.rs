@@ -220,6 +220,7 @@ impl<T: Clone> WindowEnv<T> {
         layers: &Layers,
         viewports: &Viewports,
         font_collection: &mut FontCollection,
+        font_mgr: &FontMgr,
         hovered_node: &HoveredNode,
         rdom: &FreyaDOM,
     ) {
@@ -234,8 +235,8 @@ impl<T: Clone> WindowEnv<T> {
             rdom,
             font_collection,
             layers,
-            &mut (canvas, (&mut matrices)),
-            |dom, node_id, area, font_collection, viewports, (canvas, matrices)| {
+            &mut (canvas, &mut matrices, &font_mgr),
+            |dom, node_id, area, font_collection, viewports, (canvas, matrices, font_mgr)| {
                 let render_wireframe = if let Some(hovered_node) = &hovered_node {
                     hovered_node
                         .lock()
@@ -251,6 +252,7 @@ impl<T: Clone> WindowEnv<T> {
                         area,
                         &dioxus_node,
                         font_collection,
+                        font_mgr,
                         viewports,
                         render_wireframe,
                         matrices,
