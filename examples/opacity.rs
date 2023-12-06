@@ -21,11 +21,18 @@ fn app(cx: Scope) -> Element {
             width: "100%",
             main_align: "center",
             cross_align: "center",
-            svg {
+            rect {
                 opacity: "{opacity / 100.0}",
-                width: "100%",
-                height: "50%",
-                svg_data: ferris,
+                svg {
+                    width: "100%",
+                    height: "50%",
+                    svg_data: ferris,
+                }
+                label {
+                    text_align: "center",
+                    width: "100%",
+                    "Meet Ferris!"
+                }
             }
             Slider {
                 width: 100.0,
