@@ -1003,6 +1003,8 @@ impl Canvas {
     pub fn draw_circle(&self, _center: impl Into<Point>, _radius: f32, _paint: &Paint) -> &Self {
         unimplemented!("This is mocked")
     }
+
+    pub fn save_layer_alpha_f(&self, bounds: impl Into<Option<Rect>>, alpha: f32) -> usize;
 }
 
 #[repr(i32)]
