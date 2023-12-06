@@ -20,14 +20,26 @@ impl PluginsManager {
     }
 }
 
+/// Event emitted to Plugins.
 pub enum PluginEvent<'a> {
+    /// The Window just got created.
     WindowCreated(&'a Window),
-    StartedRender(&'a Canvas, &'a FontCollection),
-    FinishedRender(&'a Canvas, &'a FontCollection),
+
+    /// Just before starting to render the app to the Canvas.
+    BeforeRender(&'a Canvas, &'a FontCollection),
+
+    /// Just after rendering the app to the Canvas.
+    AfterRender(&'a Canvas, &'a FontCollection),
+
+    /// Just before starting to measure the layout.
     StartedLayout(&'a Torin<NodeId>),
+
+    /// Just fater measuring the layout.
     FinishedLayout(&'a Torin<NodeId>),
 }
 
+/// Skeleton for Freya plugins.
 pub trait FreyaPlugin {
+    /// React on events emitted by Freya.
     fn on_event(&mut self, event: &PluginEvent);
 }

@@ -21,8 +21,7 @@ use winit::event::WindowEvent;
 use winit::{dpi::PhysicalSize, event_loop::EventLoopProxy};
 
 use crate::accessibility::NativeAccessibility;
-use crate::config::LaunchConfig;
-use crate::{HoveredNode, WindowEnv};
+use crate::{FontsConfig, HoveredNode, WindowEnv};
 
 fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
     struct DomHandle(EventLoopProxy<EventMessage>);
@@ -78,7 +77,8 @@ impl<State: 'static + Clone> App<State> {
         proxy: &EventLoopProxy<EventMessage>,
         mutations_notifier: Option<Arc<Notify>>,
         mut window_env: WindowEnv<State>,
-        config: LaunchConfig<State>,
+        fonts_config: FontsConfig,
+        mut plugins: PluginsManager,
     ) -> Self {
         let accessibility = NativeAccessibility::new(&window_env.window, proxy.clone());
 
@@ -89,7 +89,7 @@ impl<State: 'static + Clone> App<State> {
 
         let mut provider = TypefaceFontProvider::new();
 
-        for (font_name, font_data) in config.fonts {
+        for (font_name, font_data) in fonts_config {
             let ft_type = def_mgr.new_from_data(font_data, None).unwrap();
             provider.register_typeface(ft_type, Some(font_name));
         }
@@ -101,7 +101,6 @@ impl<State: 'static + Clone> App<State> {
         let (event_emitter, event_receiver) = mpsc::unbounded_channel::<DomEvent>();
         let (focus_sender, focus_receiver) = watch::channel(None);
 
-        let mut plugins = config.plugins;
         plugins.send(PluginEvent::WindowCreated(window_env.window()));
 
         Self {
@@ -292,7 +291,7 @@ impl<State: 'static + Clone> App<State> {
 
     /// Render the RealDOM into the Window
     pub fn render(&mut self, hovered_node: &HoveredNode) {
-        self.plugins.send(PluginEvent::StartedRender(
+        self.plugins.send(PluginEvent::BeforeRender(
             self.window_env.canvas(),
             &self.font_collection,
         ));
@@ -308,7 +307,7 @@ impl<State: 'static + Clone> App<State> {
         self.accessibility
             .render_accessibility(self.window_env.window.title().as_str());
 
-        self.plugins.send(PluginEvent::FinishedRender(
+        self.plugins.send(PluginEvent::AfterRender(
             self.window_env.canvas(),
             &self.font_collection,
         ));

@@ -7,14 +7,7 @@ use freya::events::MouseEvent;
 use freya::prelude::*;
 
 fn main() {
-    launch_cfg(
-        app,
-        LaunchConfig::<()>::builder()
-            .with_width(700.)
-            .with_height(170.)
-            .with_plugin(PerformanceOverlayPlugin::default())
-            .build(),
-    )
+    launch_with_props(app, "Freya canvas experiment", (700.0, 570.0));
 }
 
 fn app(cx: Scope) -> Element {
@@ -133,7 +126,7 @@ fn app(cx: Scope) -> Element {
                 cross_align: "center",
                 padding: "15",
                 layer: "-100",
-                shadow: "0 -2 5 0 rgb(0, 0, 0, 30)",
+                shadow: "0 -2 5 0 rgb(0, 0, 0, 0.1)",
                 direction: "horizontal",
                 label {
                     "Create as many editors you want!"

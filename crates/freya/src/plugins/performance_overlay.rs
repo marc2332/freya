@@ -18,10 +18,10 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
             PluginEvent::FinishedLayout(_) => {
                 self.finished_layout = Some(self.started_layout.unwrap().elapsed())
             }
-            PluginEvent::StartedRender(_canvas, _font_collection) => {
+            PluginEvent::BeforeRender(_canvas, _font_collection) => {
                 self.started_render = Some(Instant::now())
             }
-            PluginEvent::FinishedRender(canvas, font_collection) => {
+            PluginEvent::AfterRender(canvas, font_collection) => {
                 let started_render = self.started_render.take().unwrap();
                 let finished_layout = self.finished_layout.unwrap();
 
