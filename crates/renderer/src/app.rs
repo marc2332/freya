@@ -21,8 +21,7 @@ use winit::event::WindowEvent;
 use winit::{dpi::PhysicalSize, event_loop::EventLoopProxy};
 
 use crate::accessibility::NativeAccessibility;
-use crate::config::LaunchConfig;
-use crate::{HoveredNode, WindowEnv};
+use crate::{FontsConfig, HoveredNode, WindowEnv};
 
 fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
     struct DomHandle(EventLoopProxy<EventMessage>);
@@ -78,7 +77,7 @@ impl<State: 'static + Clone> App<State> {
         proxy: &EventLoopProxy<EventMessage>,
         mutations_notifier: Option<Arc<Notify>>,
         mut window_env: WindowEnv<State>,
-        config: LaunchConfig<State>,
+        fonts_config: FontsConfig,
     ) -> Self {
         let accessibility = NativeAccessibility::new(&window_env.window, proxy.clone());
 
@@ -89,7 +88,7 @@ impl<State: 'static + Clone> App<State> {
 
         let mut provider = TypefaceFontProvider::new();
 
-        for (font_name, font_data) in config.fonts {
+        for (font_name, font_data) in fonts_config {
             let ft_type = def_mgr.new_from_data(font_data, None).unwrap();
             provider.register_typeface(ft_type, Some(font_name));
         }

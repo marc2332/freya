@@ -3,11 +3,13 @@ use std::{io::Cursor, sync::Arc};
 use freya_core::plugins::{FreyaPlugin, PluginsManager};
 use freya_engine::prelude::Color;
 use freya_node_state::Parse;
-use image::{io::Reader, GenericImageView};
-use winit::window::{Icon, Window};
+use image::io::Reader;
+use winit::window::{Icon, Window, WindowBuilder};
+
+pub type WindowBuilderHook = Box<dyn Fn(&mut WindowBuilder)>;
+pub type FontsConfig<'a> = Vec<(&'a str, &'a [u8])>;
 
 /// Configuration for a Window.
-#[derive(Clone)]
 pub struct WindowConfig<T: Clone> {
     /// Width of the Window.
     pub width: f64,
@@ -37,6 +39,8 @@ pub struct WindowConfig<T: Clone> {
     pub on_setup: Option<WindowCallback>,
     /// Exit callback.
     pub on_exit: Option<WindowCallback>,
+    /// Hook function called with the Window Builder.
+    pub window_builder_hook: Option<WindowBuilderHook>,
 }
 
 impl<T: Clone> Default for WindowConfig<T> {
@@ -49,7 +53,7 @@ impl<T: Clone> Default for WindowConfig<T> {
 #[derive(Default)]
 pub struct LaunchConfig<'a, T: Clone> {
     pub window: WindowConfig<T>,
-    pub fonts: Vec<(&'a str, &'a [u8])>,
+    pub fonts: FontsConfig<'a>,
     pub plugins: PluginsManager,
 }
 
@@ -64,9 +68,12 @@ impl LaunchConfig<'_, ()> {
         let reader = Reader::new(Cursor::new(icon))
             .with_guessed_format()
             .expect("Cursor io never fails");
-        let image = reader.decode().expect("Failed to open icon path");
+        let image = reader
+            .decode()
+            .expect("Failed to open icon path")
+            .into_rgba8();
         let (width, height) = image.dimensions();
-        let rgba = image.into_bytes();
+        let rgba = image.into_raw();
         Icon::from_rgba(rgba, width, height).expect("Failed to open icon")
     }
 }
@@ -91,6 +98,7 @@ pub struct LaunchConfigBuilder<'a, T> {
     pub(crate) on_setup: Option<WindowCallback>,
     pub(crate) on_exit: Option<WindowCallback>,
     pub(crate) plugins: PluginsManager,
+    pub(crate) window_builder_hook: Option<WindowBuilderHook>,
 }
 
 impl<T> Default for LaunchConfigBuilder<'_, T> {
@@ -112,6 +120,7 @@ impl<T> Default for LaunchConfigBuilder<'_, T> {
             on_setup: None,
             on_exit: None,
             plugins: PluginsManager::default(),
+            window_builder_hook: None,
         }
     }
 }
@@ -206,10 +215,18 @@ impl<'a, T: Clone> LaunchConfigBuilder<'a, T> {
         self.on_exit = Some(Arc::new(Box::new(callback)));
         self
     }
-
+  
     /// Add a new plugin.
     pub fn with_plugin(mut self, plugin: impl FreyaPlugin + 'static) -> Self {
         self.plugins.add_plugin(plugin);
+    }
+  
+    /// Register a Window Builder hook.
+    pub fn with_window_builder(
+        mut self,
+        window_builder_hook: impl Fn(&mut WindowBuilder) + 'static,
+    ) -> Self {
+        self.window_builder_hook = Some(Box::new(window_builder_hook));
         self
     }
 
@@ -231,6 +248,7 @@ impl<'a, T: Clone> LaunchConfigBuilder<'a, T> {
                 icon: self.icon,
                 on_setup: self.on_setup,
                 on_exit: self.on_exit,
+                window_builder_hook: self.window_builder_hook,
             },
             fonts: self.fonts,
             plugins: self.plugins,

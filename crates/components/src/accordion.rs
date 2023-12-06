@@ -80,7 +80,7 @@ pub fn Accordion<'a>(cx: Scope<'a, AccordionProps<'a>>) -> Element<'a> {
     use_on_unmount(cx, {
         to_owned![status, platform];
         move || {
-            if *status.get() == AccordionStatus::Hovering {
+            if *status.current() == AccordionStatus::Hovering {
                 platform.set_cursor(CursorIcon::default());
             }
         }

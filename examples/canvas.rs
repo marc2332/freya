@@ -126,7 +126,7 @@ fn app(cx: Scope) -> Element {
                 cross_align: "center",
                 padding: "15",
                 layer: "-100",
-                shadow: "0 -2 5 0 rgb(0, 0, 0, 30)",
+                shadow: "0 -2 5 0 rgb(0, 0, 0, 0.1)",
                 direction: "horizontal",
                 label {
                     "Create as many editors you want!"
