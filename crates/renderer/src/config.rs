@@ -2,11 +2,13 @@ use std::{io::Cursor, sync::Arc};
 
 use freya_engine::prelude::Color;
 use freya_node_state::Parse;
-use image::{io::Reader, GenericImageView};
-use winit::window::{Icon, Window};
+use image::io::Reader;
+use winit::window::{Icon, Window, WindowBuilder};
+
+pub type WindowBuilderHook = Box<dyn Fn(&mut WindowBuilder)>;
+pub type FontsConfig<'a> = Vec<(&'a str, &'a [u8])>;
 
 /// Configuration for a Window.
-#[derive(Clone)]
 pub struct WindowConfig<T: Clone> {
     /// Width of the Window.
     pub width: f64,
@@ -36,6 +38,8 @@ pub struct WindowConfig<T: Clone> {
     pub on_setup: Option<WindowCallback>,
     /// Exit callback.
     pub on_exit: Option<WindowCallback>,
+    /// Hook function called with the Window Builder.
+    pub window_builder_hook: Option<WindowBuilderHook>,
 }
 
 impl<T: Clone> Default for WindowConfig<T> {
@@ -45,10 +49,10 @@ impl<T: Clone> Default for WindowConfig<T> {
 }
 
 /// Launch configuration.
-#[derive(Clone, Default)]
+#[derive(Default)]
 pub struct LaunchConfig<'a, T: Clone> {
     pub window: WindowConfig<T>,
-    pub fonts: Vec<(&'a str, &'a [u8])>,
+    pub fonts: FontsConfig<'a>,
 }
 
 impl<'a, T: Clone> LaunchConfig<'a, T> {
@@ -62,9 +66,12 @@ impl LaunchConfig<'_, ()> {
         let reader = Reader::new(Cursor::new(icon))
             .with_guessed_format()
             .expect("Cursor io never fails");
-        let image = reader.decode().expect("Failed to open icon path");
+        let image = reader
+            .decode()
+            .expect("Failed to open icon path")
+            .into_rgba8();
         let (width, height) = image.dimensions();
-        let rgba = image.into_bytes();
+        let rgba = image.into_raw();
         Icon::from_rgba(rgba, width, height).expect("Failed to open icon")
     }
 }
@@ -72,7 +79,6 @@ impl LaunchConfig<'_, ()> {
 pub type WindowCallback = Arc<Box<fn(&mut Window)>>;
 
 /// Configuration Builder.
-#[derive(Clone)]
 pub struct LaunchConfigBuilder<'a, T> {
     pub(crate) width: f64,
     pub(crate) height: f64,
@@ -89,6 +95,7 @@ pub struct LaunchConfigBuilder<'a, T> {
     pub(crate) icon: Option<Icon>,
     pub(crate) on_setup: Option<WindowCallback>,
     pub(crate) on_exit: Option<WindowCallback>,
+    pub(crate) window_builder_hook: Option<WindowBuilderHook>,
 }
 
 impl<T> Default for LaunchConfigBuilder<'_, T> {
@@ -109,6 +116,7 @@ impl<T> Default for LaunchConfigBuilder<'_, T> {
             icon: None,
             on_setup: None,
             on_exit: None,
+            window_builder_hook: None,
         }
     }
 }
@@ -204,6 +212,15 @@ impl<'a, T: Clone> LaunchConfigBuilder<'a, T> {
         self
     }
 
+    /// Register a Window Builder hook.
+    pub fn with_window_builder(
+        mut self,
+        window_builder_hook: impl Fn(&mut WindowBuilder) + 'static,
+    ) -> Self {
+        self.window_builder_hook = Some(Box::new(window_builder_hook));
+        self
+    }
+
     /// Build the configuration.
     pub fn build(self) -> LaunchConfig<'a, T> {
         LaunchConfig {
@@ -222,6 +239,7 @@ impl<'a, T: Clone> LaunchConfigBuilder<'a, T> {
                 icon: self.icon,
                 on_setup: self.on_setup,
                 on_exit: self.on_exit,
+                window_builder_hook: self.window_builder_hook,
             },
             fonts: self.fonts,
         }

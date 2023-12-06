@@ -32,23 +32,5 @@ fn app(cx: Scope) -> Element {
                 )
             })
         }
-        Button {
-            onclick: |_| selected_dropdown.set("Value A".to_string()),
-            label {
-                "Reset"
-            }
-        }
-        Dropdown {
-            value: selected_dropdown.get().clone(),
-            values.iter().map(|ch| {
-                rsx!(
-                    DropdownItem {
-                        value: ch.to_string(),
-                        onclick: move |_| selected_dropdown.set(ch.to_string()),
-                        label { "{ch}" }
-                    }
-                )
-            })
-        }
     )
 }

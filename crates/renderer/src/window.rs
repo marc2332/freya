@@ -70,6 +70,10 @@ impl<T: Clone> WindowEnv<T> {
             window_builder = window_builder.with_max_inner_size(LogicalSize::<f64>::from(max_size))
         }
 
+        if let Some(with_window_builder) = &window_config.window_builder_hook {
+            (with_window_builder)(&mut window_builder);
+        }
+
         let template = ConfigTemplateBuilder::new()
             .with_alpha_size(8)
             .with_transparency(window_config.transparent);
