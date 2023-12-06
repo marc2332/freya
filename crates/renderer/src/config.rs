@@ -215,12 +215,13 @@ impl<'a, T: Clone> LaunchConfigBuilder<'a, T> {
         self.on_exit = Some(Arc::new(Box::new(callback)));
         self
     }
-  
+
     /// Add a new plugin.
     pub fn with_plugin(mut self, plugin: impl FreyaPlugin + 'static) -> Self {
         self.plugins.add_plugin(plugin);
+        self
     }
-  
+
     /// Register a Window Builder hook.
     pub fn with_window_builder(
         mut self,

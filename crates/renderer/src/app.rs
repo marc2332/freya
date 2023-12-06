@@ -78,6 +78,7 @@ impl<State: 'static + Clone> App<State> {
         mutations_notifier: Option<Arc<Notify>>,
         mut window_env: WindowEnv<State>,
         fonts_config: FontsConfig,
+        mut plugins: PluginsManager,
     ) -> Self {
         let accessibility = NativeAccessibility::new(&window_env.window, proxy.clone());
 
@@ -100,7 +101,6 @@ impl<State: 'static + Clone> App<State> {
         let (event_emitter, event_receiver) = mpsc::unbounded_channel::<DomEvent>();
         let (focus_sender, focus_receiver) = watch::channel(None);
 
-        let mut plugins = config.plugins;
         plugins.send(PluginEvent::WindowCreated(window_env.window()));
 
         Self {
