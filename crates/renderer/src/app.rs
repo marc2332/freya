@@ -295,7 +295,7 @@ impl<State: 'static + Clone> App<State> {
             self.window_env.canvas(),
             &self.font_collection,
         ));
-
+      
         self.window_env.start_render(
             &self.layers,
             &self.viewports,
