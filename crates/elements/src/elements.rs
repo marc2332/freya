@@ -196,6 +196,7 @@ builder_constructors! {
         position_right: String,
         position_bottom: String,
         position_left: String,
+        opacity: String,
     };
     label {
         color: String,
@@ -223,6 +224,7 @@ builder_constructors! {
         text_overflow: String,
         focusable: String,
         margin: String,
+        opacity: String,
     };
     paragraph {
         layer: String,
@@ -261,6 +263,7 @@ builder_constructors! {
         overflow: String,
         focusable: String,
         margin: String,
+        opacity: String,
     };
     text {
         color: String,
@@ -291,6 +294,7 @@ builder_constructors! {
         alt: String,
         name: String,
         focusable: String,
+        opacity: String,
     };
     svg {
         margin: String,
@@ -304,6 +308,7 @@ builder_constructors! {
         alt: String,
         name: String,
         focusable: String,
+        opacity: String,
     };
 }
 

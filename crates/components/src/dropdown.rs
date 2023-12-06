@@ -63,7 +63,7 @@ where
     use_on_unmount(cx, {
         to_owned![status, platform];
         move || {
-            if *status.get() == DropdownItemStatus::Hovering {
+            if *status.current() == DropdownItemStatus::Hovering {
                 platform.set_cursor(CursorIcon::default());
             }
         }
@@ -188,7 +188,7 @@ where
     use_on_unmount(cx, {
         to_owned![status, platform];
         move || {
-            if *status.get() == DropdownStatus::Hovering {
+            if *status.current() == DropdownStatus::Hovering {
                 platform.set_cursor(CursorIcon::default());
             }
         }
@@ -255,7 +255,7 @@ where
             corner_radius: "8",
             padding: "8 16",
             border: "1 solid {border_fill}",
-            shadow: "0 4 5 0 rgb(0, 0, 0, 30)",
+            shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)",
             direction: "horizontal",
             main_align: "center",
             cross_align: "center",
@@ -282,7 +282,7 @@ where
                         overflow: "clip",
                         corner_radius: "8",
                         background: "{desplegable_background}",
-                        shadow: "0 4 5 0 rgb(0, 0, 0, 30)",
+                        shadow: "0 4 5 0 rgb(0, 0, 0, 0.3)",
                         padding: "6",
                         &cx.props.children
                     }

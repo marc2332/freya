@@ -2,8 +2,10 @@ use std::vec::IntoIter;
 
 use dioxus_native_core::prelude::ElementNode;
 use dioxus_native_core::real_dom::NodeImmutable;
+use dioxus_native_core::tree::TreeRef;
 use dioxus_native_core::{node::NodeType, NodeId};
 use freya_common::NodeReferenceLayout;
+use freya_dom::dom::DioxusNode;
 use freya_dom::prelude::{DioxusDOM, FreyaDOM};
 use itertools::sorted;
 
@@ -14,6 +16,20 @@ use torin::torin::Torin;
 use uuid::Uuid;
 
 use crate::layout::*;
+
+fn traverse_dom(rdom: &DioxusDOM, mut f: impl FnMut(DioxusNode) -> bool) {
+    let mut stack = vec![rdom.root_id()];
+    let tree = rdom.tree_ref();
+    while let Some(id) = stack.pop() {
+        if let Some(node) = rdom.get(id) {
+            let traverse_children = f(node);
+            if traverse_children {
+                let children = tree.children_ids_advanced(id, true);
+                stack.extend(children.iter().copied().rev());
+            }
+        }
+    }
+}
 
 #[derive(Default, Clone)]
 pub struct Layers {
@@ -31,9 +47,10 @@ impl Layers {
         let mut layers = Layers::default();
         let mut inherit_layers = FxHashMap::default();
 
-        rdom.traverse_depth_first(|node| {
+        traverse_dom(rdom, |node| {
             let areas = layout.get(node.id());
 
+            // Some elements like placeholders are not measured
             if let Some(areas) = areas {
                 // Add the Node to a Layer
                 let node_style = node.get::<Style>().unwrap();
@@ -54,24 +71,31 @@ impl Layers {
 
                 // Register paragraph elements
 
-                if let NodeType::Element(ElementNode { tag, .. }) = &*node.node_type() {
-                    if tag == "paragraph" {
-                        let cursor_settings = node.get::<CursorSettings>().unwrap();
-                        let is_editable = CursorMode::Editable == cursor_settings.mode;
+                let traverse_inner_children =
+                    if let NodeType::Element(ElementNode { tag, .. }) = &*node.node_type() {
+                        let is_paragraph = tag == "paragraph";
+                        if is_paragraph {
+                            let cursor_settings = node.get::<CursorSettings>().unwrap();
+                            let is_editable = CursorMode::Editable == cursor_settings.mode;
 
-                        let references = node.get::<References>().unwrap();
-                        if is_editable {
-                            if let Some(cursor_ref) = &references.cursor_ref {
-                                let text_group = layers
-                                    .paragraph_elements
-                                    .entry(cursor_ref.text_id)
-                                    .or_default();
+                            let references = node.get::<References>().unwrap();
+                            if is_editable {
+                                if let Some(cursor_ref) = &references.cursor_ref {
+                                    let text_group = layers
+                                        .paragraph_elements
+                                        .entry(cursor_ref.text_id)
+                                        .or_default();
 
-                                text_group.push(node.id());
+                                    text_group.push(node.id());
+                                }
                             }
                         }
-                    }
-                }
+
+                        // Traverse all elements except paragraphs
+                        !is_paragraph
+                    } else {
+                        false
+                    };
 
                 // Notify layout references
 
@@ -85,6 +109,10 @@ impl Layers {
                     node_layout.div(scale_factor);
                     reference.send(node_layout).ok();
                 }
+
+                traverse_inner_children
+            } else {
+                false
             }
         });
 

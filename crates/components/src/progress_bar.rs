@@ -64,7 +64,7 @@ pub fn ProgressBar(cx: Scope<ProgressBarProps>) -> Element {
                 corner_radius: "999",
                 width: "100%",
                 height: "100%",
-                shadow: "0 2 10 1 rgb(0, 0, 0, 45)",
+                shadow: "0 2 10 1 rgb(0, 0, 0, 0.2)",
                 background: "{background}",
                 font_size: "13",
                 direction: "horizontal",
