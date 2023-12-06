@@ -1004,7 +1004,9 @@ impl Canvas {
         unimplemented!("This is mocked")
     }
 
-    pub fn save_layer_alpha_f(&self, bounds: impl Into<Option<Rect>>, alpha: f32) -> usize;
+    pub fn save_layer_alpha_f(&self, bounds: impl Into<Option<Rect>>, alpha: f32) -> usize {
+        unimplemented!("This is mocked")
+    }
 }
 
 #[repr(i32)]
