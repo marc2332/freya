@@ -18,11 +18,17 @@ impl PluginsManager {
     }
 }
 
+/// Event emitted to Plugins.
 pub enum PluginEvent<'a> {
+    /// The Window just got created.
     WindowCreated(&'a Window),
+
+    // The app just got rendered to the canvas.
     CanvasRendered(&'a Canvas, &'a FontCollection),
 }
 
+/// Skeleton for Freya plugins.
 pub trait FreyaPlugin {
+    /// React on events emitted by Freya.
     fn on_event(&mut self, event: &PluginEvent);
 }
