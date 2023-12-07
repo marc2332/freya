@@ -169,8 +169,9 @@ fn Editor(cx: Scope) -> Element {
     let font_style = if *is_italic.get() { "italic" } else { "normal" };
     let font_weight = if *is_bold.get() { "bold" } else { "normal" };
 
-    use_memo(cx, (), |_| {
+    use_on_create(cx, move || {
         focus_manager.focus();
+        async move {}
     });
 
     let onclick = {

@@ -45,7 +45,7 @@ pub struct GraphProps {
 pub fn Graph(cx: Scope<GraphProps>) -> Element {
     let platform = use_platform(cx);
 
-    use_memo(cx, (cx.props,), move |_| {
+    let _ = use_memo(cx, (cx.props,), move |_| {
         platform.send(EventMessage::RequestRerender)
     });
 

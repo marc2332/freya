@@ -84,7 +84,7 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
 
     let progress = (value / 100.0) * cx.props.width + 0.5;
 
-    use_on_unmount(cx, {
+    use_on_destroy(cx, {
         to_owned![status, platform];
         move || {
             if *status.read() == SliderStatus::Hovering {

@@ -6,7 +6,7 @@ use freya_components::*;
 use crate::{node::NodeElement, NodeIdSerializer, Route, TreeNode};
 
 #[allow(non_snake_case)]
-#[inline_props]
+#[component]
 pub fn NodesTree<'a>(
     cx: Scope<'a>,
     height: &'a str,

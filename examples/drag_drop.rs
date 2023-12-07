@@ -45,7 +45,7 @@ fn app(cx: Scope) -> Element {
 }
 
 #[allow(non_snake_case)]
-#[inline_props]
+#[component]
 fn Column(
     cx: Scope,
     direction: SwapDirection,
