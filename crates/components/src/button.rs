@@ -27,7 +27,7 @@ pub struct ButtonProps<'a> {
     /// Handler for the `onclick` event.
     #[props(optional)]
     pub onclick: Option<EventHandler<'a, MouseEvent>>,
-    /// Shadow of the Input. Default "0 4 5 0 rgb(0, 0, 0, 0.1)".
+    /// Shadow of the Button. Default "0 4 5 0 rgb(0, 0, 0, 0.1)".
     #[props(default = "0 4 5 0 rgb(0, 0, 0, 0.1)".to_string(), into)]
     pub shadow: String,
 }
