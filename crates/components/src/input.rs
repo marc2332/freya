@@ -57,7 +57,7 @@ pub struct InputProps<'a> {
     /// Shadow of the Input. Default "0 4 5 0 rgb(0, 0, 0, 0.1)".
     #[props(default = "0 4 5 0 rgb(0, 0, 0, 0.1)".to_string(), into)]
     pub shadow: String,
-    /// Corner radus of the Input. Default 10.
+    /// Corner radius of the Input. Default 10.
     #[props(default = "10".to_string(), into)]
     pub corner_radius: String,
 }
