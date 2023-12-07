@@ -1,3 +1,4 @@
+use crate::icons::ArrowIcon;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
@@ -13,15 +14,9 @@ fn TableArrow(cx: Scope, order_direction: OrderDirection) -> Element {
         OrderDirection::Up => "180",
     };
 
-    render!(svg {
-        height: "10",
-        width: "10",
-        rotate: "{rotate}deg",
-        svg_content: r#"
-            <svg viewBox="0 0 18 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M7.18177 9.58579L0 2.40401L1.81823 0.585785L9 7.76756L16.1818 0.585787L18 2.40402L10.8182 9.58579L10.8185 9.58601L9.00023 11.4042L9 11.404L8.99977 11.4042L7.18154 9.58602L7.18177 9.58579Z" fill="{arrow_fill}"  stroke="{arrow_fill}" stroke-width="2"/>
-            </svg>
-        "#
+    render!(ArrowIcon {
+        rotate: "{rotate}",
+        fill: "{arrow_fill}"
     })
 }
 
@@ -32,6 +27,11 @@ pub struct TableHeadProps<'a> {
     children: Element<'a>,
 }
 
+/// `TableHead` component.
+///
+/// # Props
+/// See [`TableHeadProps`].
+///
 #[allow(non_snake_case)]
 pub fn TableHead<'a>(cx: Scope<'a, TableHeadProps<'a>>) -> Element {
     render!(
@@ -49,6 +49,11 @@ pub struct TableBodyProps<'a> {
     children: Element<'a>,
 }
 
+/// `TableBody` component.
+///
+/// # Props
+/// See [`TableBodyProps`].
+///
 #[allow(non_snake_case)]
 pub fn TableBody<'a>(cx: Scope<'a, TableBodyProps<'a>>) -> Element {
     render!(
@@ -69,6 +74,14 @@ pub struct TableRowProps<'a> {
     alternate_colors: bool,
 }
 
+/// `TableRow` component.
+///
+/// # Props
+/// See [`TableRowProps`].
+///
+/// # Styling
+/// Inherits the [`TableTheme`](freya_hooks::TableTheme) theme.
+///
 #[allow(non_snake_case)]
 pub fn TableRow<'a>(cx: Scope<'a, TableRowProps<'a>>) -> Element {
     let theme = use_get_theme(cx);
@@ -123,6 +136,11 @@ pub struct TableCellProps<'a> {
     height: String,
 }
 
+/// `TableCell` component.
+///
+/// # Props
+/// See [`TableCellProps`].
+///
 #[allow(non_snake_case)]
 pub fn TableCell<'a>(cx: Scope<'a, TableCellProps<'a>>) -> Element {
     let config = cx.consume_context::<TableConfig>().unwrap();
@@ -189,6 +207,14 @@ pub struct TableProps<'a> {
     shadow: String,
 }
 
+/// `Table` component.
+///
+/// # Props
+/// See [`TableProps`].
+///
+/// # Styling
+/// Inherits the [`TableTheme`](freya_hooks::TableTheme) theme.
+///
 #[allow(non_snake_case)]
 pub fn Table<'a>(cx: Scope<'a, TableProps<'a>>) -> Element {
     let theme = use_get_theme(cx);

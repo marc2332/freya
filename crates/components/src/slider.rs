@@ -131,7 +131,7 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
         let wheel_y = e.get_delta_y();
         let progress_x = (value / 100.0) * cx.props.width;
 
-        let mut x = progress_x + (wheel_y * 7.5);
+        let mut x = progress_x + (wheel_y / 4.0);
         x = x.clamp(0.0, width);
 
         let mut percentage = x / cx.props.width * 100.0;

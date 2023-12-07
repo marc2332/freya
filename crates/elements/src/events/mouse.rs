@@ -2,7 +2,7 @@ use torin::geometry::CursorPoint;
 pub use winit::event::MouseButton;
 
 /// Data of a Mouse event.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct MouseData {
     pub screen_coordinates: CursorPoint,
     pub element_coordinates: CursorPoint,

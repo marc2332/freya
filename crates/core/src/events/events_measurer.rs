@@ -29,25 +29,29 @@ pub fn process_events(
     let mut potential_events = measure_potential_event_listeners(layers, events, viewports, dom);
 
     // 3. Get what events can be actually emitted based on what elements are listening
-    let emitted_events = measure_dom_events(&mut potential_events, dom, scale_factor);
+    let dom_events = measure_dom_events(&mut potential_events, dom, scale_factor);
 
-    // 4. Emit the events and get potential derived events caused by the emitted ones, e.g mouseover -> mouseenter
-    let mut potential_colateral_events =
-        elements_state.process_events(emitted_events, events, event_emitter);
+    // 4. Filter the dom events and get potential derived events, e.g mouseover -> mouseenter
+    let (mut potential_colateral_events, mut to_emit_dom_events) =
+        elements_state.process_events(&dom_events, events);
 
     // 5. Get what derived events can actually be emitted
-    let emitted_colateral_events =
+    let to_emit_dom_colateral_events =
         measure_dom_events(&mut potential_colateral_events, dom, scale_factor);
 
-    // 6. Emit the colateral events
-    for event in emitted_colateral_events {
+    // 6. Join both the dom and colateral dom events and sort them
+    to_emit_dom_events.extend(to_emit_dom_colateral_events);
+    to_emit_dom_events.sort_unstable();
+
+    // 7. Emit the DOM events
+    for event in to_emit_dom_events {
         event_emitter.send(event).unwrap();
     }
 
-    // 7. Emit the global events
+    // 8. Emit the global events
     emit_global_events_listeners(global_events, dom, event_emitter, scale_factor);
 
-    // 8. Clear the events queue
+    // 9. Clear the events queue
     events.clear();
 }
 

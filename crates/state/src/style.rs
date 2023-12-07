@@ -23,6 +23,7 @@ pub struct Style {
     pub image_data: Option<Vec<u8>>,
     pub svg_data: Option<Vec<u8>>,
     pub overflow: OverflowMode,
+    pub opacity: Option<f32>,
 }
 
 #[partial_derive_state]
@@ -46,6 +47,7 @@ impl State<CustomAttributeValues> for Style {
             "svg_data",
             "svg_content",
             "overflow",
+            "opacity",
         ]));
 
     fn update<'a>(
@@ -146,6 +148,13 @@ impl State<CustomAttributeValues> for Style {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(overflow) = OverflowMode::parse(value) {
                                 style.overflow = overflow;
+                            }
+                        }
+                    }
+                    "opacity" => {
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(opacity) = value.parse::<f32>() {
+                                style.opacity = Some(opacity);
                             }
                         }
                     }

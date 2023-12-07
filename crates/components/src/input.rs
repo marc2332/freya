@@ -192,7 +192,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
             color: "{color}",
             background: "{background}",
             border: "1 solid {border_fill}",
-            shadow: "0 3 15 0 rgb(0, 0, 0, 70)",
+            shadow: "0 3 15 0 rgb(0, 0, 0, 0.3)",
             corner_radius: "10",
             margin: "{margin}",
             cursor_reference: cursor_attr,

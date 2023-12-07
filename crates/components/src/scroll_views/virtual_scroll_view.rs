@@ -51,9 +51,6 @@ pub struct VirtualScrollViewProps<'a, T: 'a> {
     /// Enable scrolling with arrow keys.
     #[props(default = true, into)]
     pub scroll_with_arrows: bool,
-    /// Tracker for the vertical scroll.
-    #[props(optional)]
-    pub scrolled_y: Option<UseRef<i32>>,
 }
 
 fn get_render_range(

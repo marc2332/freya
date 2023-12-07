@@ -8,13 +8,13 @@ use winit::window::CursorIcon;
 #[derive(Props)]
 pub struct ButtonProps<'a> {
     /// Padding for the Button.
-    #[props(default = "10 14".to_string(), into)]
+    #[props(default = "8 16".to_string(), into)]
     pub padding: String,
     /// Margin for the Button.
     #[props(default = "4".to_string(), into)]
     pub margin: String,
     /// Corner radius for the Button.
-    #[props(default = "10".to_string(), into)]
+    #[props(default = "8".to_string(), into)]
     pub corner_radius: String,
     /// Width size for the Button.
     #[props(default = "auto".to_string(), into)]
@@ -82,7 +82,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
     use_on_destroy(cx, {
         to_owned![status, platform];
         move || {
-            if *status.get() == ButtonStatus::Hovering {
+            if *status.current() == ButtonStatus::Hovering {
                 platform.set_cursor(CursorIcon::default());
             }
         }
@@ -130,7 +130,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
             overflow: "clip",
             role: "button",
             color: "{color}",
-            shadow: "0 4 5 0 rgb(0, 0, 0, 30)",
+            shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)",
             border: "1 solid {border_fill}",
             corner_radius: "{corner_radius}",
             background: "{background}",

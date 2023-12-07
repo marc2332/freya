@@ -20,26 +20,26 @@ pub struct TooltipProps<'a> {
 #[allow(non_snake_case)]
 pub fn Tooltip<'a>(cx: Scope<'a, TooltipProps<'a>>) -> Element {
     let theme = use_get_theme(cx);
-    let TooltipTheme { background, color } = &theme.tooltip;
+
+    let url = &cx.props.url;
+    let TooltipTheme {
+        background,
+        color,
+        border_fill,
+    } = &theme.tooltip;
 
     render!(
         rect {
-            height: "30",
-            padding: "2",
-            width: "170",
-            rect {
-                width: "100%",
-                height: "100%",
-                shadow: "0 0 10 5 rgb(0, 0, 0, 50)",
-                corner_radius: "8",
-                background: "{background}",
-                main_align: "center",
-                cross_align: "center",
-                label {
-                    max_lines: "1",
-                    color: "{color}",
-                    "{cx.props.url}"
-                }
+            padding: "4 10",
+            shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)",
+            border: "1 solid {border_fill}",
+            corner_radius: "10",
+            background: "{background}",
+            main_align: "center",
+            label {
+                max_lines: "1",
+                color: "{color}",
+                "{url}"
             }
         }
     )

@@ -1,10 +1,12 @@
 use std::fmt::Display;
 
+use crate::icons::ArrowIcon;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::keyboard::Key;
 use freya_elements::events::{KeyboardEvent, MouseEvent};
-use freya_hooks::{use_focus, use_get_theme};
+use freya_hooks::{use_focus, use_get_theme, use_platform};
+use winit::window::CursorIcon;
 
 /// [`DropdownItem`] component properties.
 #[derive(Props)]
@@ -20,7 +22,7 @@ pub struct DropdownItemProps<'a, T: 'static> {
 
 /// Current status of the DropdownItem.
 #[derive(Debug, Default, PartialEq, Clone, Copy)]
-pub enum DropdownItemState {
+pub enum DropdownItemStatus {
     /// Default state.
     #[default]
     Idle,
@@ -43,19 +45,29 @@ where
     let selected = use_shared_state::<T>(cx).unwrap();
     let theme = use_get_theme(cx);
     let focus = use_focus(cx);
-    let state = use_state(cx, DropdownItemState::default);
+    let status = use_state(cx, DropdownItemStatus::default);
+    let platform = use_platform(cx);
 
     let focus_id = focus.attribute(cx);
     let is_focused = focus.is_focused();
     let is_selected = *selected.read() == cx.props.value;
 
-    let background = match *state.get() {
+    let background = match *status.get() {
         _ if is_selected => theme.dropdown_item.select_background,
         _ if is_focused => theme.dropdown_item.hover_background,
-        DropdownItemState::Hovering => theme.dropdown_item.hover_background,
-        DropdownItemState::Idle => theme.dropdown_item.background,
+        DropdownItemStatus::Hovering => theme.dropdown_item.hover_background,
+        DropdownItemStatus::Idle => theme.dropdown_item.background,
     };
     let color = theme.dropdown_item.font_theme.color;
+
+    use_on_unmount(cx, {
+        to_owned![status, platform];
+        move || {
+            if *status.current() == DropdownItemStatus::Hovering {
+                platform.set_cursor(CursorIcon::default());
+            }
+        }
+    });
 
     let onclick = move |_: MouseEvent| {
         if let Some(onclick) = &cx.props.onclick {
@@ -63,12 +75,17 @@ where
         }
     };
 
-    let onmouseenter = move |_| {
-        state.set(DropdownItemState::Hovering);
+    let onmouseenter = {
+        to_owned![platform];
+        move |_| {
+            platform.set_cursor(CursorIcon::Hand);
+            status.set(DropdownItemStatus::Hovering);
+        }
     };
 
     let onmouseleave = move |_| {
-        state.set(DropdownItemState::default());
+        platform.set_cursor(CursorIcon::default());
+        status.set(DropdownItemStatus::default());
     };
 
     let onkeydown = move |ev: KeyboardEvent| {
@@ -80,14 +97,14 @@ where
     };
 
     render!(rect {
-        color: color,
-        width: "100%",
-        height: "35",
+        color: "{color}",
         focus_id: focus_id,
         role: "button",
-        background: background,
-        padding: "6",
-        corner_radius: "3",
+        background: "{background}",
+        padding: "6 22 6 16",
+        corner_radius: "6",
+        main_align: "center",
+        cross_align: "center",
         onmouseenter: onmouseenter,
         onmouseleave: onmouseleave,
         onclick: onclick,
@@ -107,7 +124,7 @@ pub struct DropdownProps<'a, T: 'static> {
 
 /// Current status of the Dropdown.
 #[derive(Debug, Default, PartialEq, Clone, Copy)]
-pub enum DropdownState {
+pub enum DropdownStatus {
     /// Default state.
     #[default]
     Idle,
@@ -155,23 +172,26 @@ where
     let selected = use_shared_state::<T>(cx).unwrap();
     let theme = use_get_theme(cx);
     let focus = use_focus(cx);
-    let state = use_state(cx, DropdownState::default);
+    let status = use_state(cx, DropdownStatus::default);
     let opened = use_state(cx, || false);
+    let platform = use_platform(cx);
 
     let is_opened = *opened.get();
     let is_focused = focus.is_focused();
     let focus_id = focus.attribute(cx);
 
-    let desplegable_background = theme.dropdown.desplegable_background;
-    let button_background = match *state.get() {
-        DropdownState::Hovering => theme.dropdown.hover_background,
-        DropdownState::Idle => theme.dropdown.background_button,
-    };
-    let color = theme.dropdown.font_theme.color;
-
     // Update the provided value if the passed value changes
     let _ = use_memo(cx, &cx.props.value, move |value| {
         *selected.write() = value;
+    });
+
+    use_on_unmount(cx, {
+        to_owned![status, platform];
+        move || {
+            if *status.current() == DropdownStatus::Hovering {
+                platform.set_cursor(CursorIcon::default());
+            }
+        }
     });
 
     // Close the dropdown if clicked anywhere
@@ -198,53 +218,76 @@ where
         }
     };
 
-    if *opened.get() {
-        render!(
-            rect {
-                width: "70",
-                height: "50",
-                margin: "5",
-                rect {
-                    overflow: "clip",
-                    focus_id: focus_id,
-                    layer: "-1",
-                    corner_radius: "3",
-                    onglobalclick: onglobalclick,
-                    onkeydown: onkeydown,
-                    width: "130",
-                    height: "auto",
-                    background: desplegable_background,
-                    shadow: "0 0 20 0 rgb(0, 0, 0, 100)",
-                    padding: "7",
-                    &cx.props.children
-                }
+    let onmouseenter = {
+        to_owned![status, platform];
+        move |_| {
+            platform.set_cursor(CursorIcon::Hand);
+            status.set(DropdownStatus::Hovering);
+        }
+    };
+
+    let onmouseleave = move |_| {
+        platform.set_cursor(CursorIcon::default());
+        status.set(DropdownStatus::default());
+    };
+
+    let desplegable_background = theme.dropdown.desplegable_background;
+    let button_background = match *status.get() {
+        DropdownStatus::Hovering => theme.dropdown.hover_background,
+        DropdownStatus::Idle => theme.dropdown.background_button,
+    };
+    let border_fill = theme.dropdown.border_fill;
+    let color = theme.dropdown.font_theme.color;
+    let arrow_fill = theme.dropdown.arrow_fill;
+
+    let selected = selected.read().to_string();
+
+    render!(
+        rect {
+            onmouseenter: onmouseenter,
+            onmouseleave: onmouseleave,
+            onclick: onclick,
+            onkeydown: onkeydown,
+            margin: "4",
+            focus_id: focus_id,
+            background: "{button_background}",
+            color: "{color}",
+            corner_radius: "8",
+            padding: "8 16",
+            border: "1 solid {border_fill}",
+            shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)",
+            direction: "horizontal",
+            main_align: "center",
+            cross_align: "center",
+            label {
+                text_align: "center",
+                "{selected}"
             }
-        )
-    } else {
-        let selected = selected.read().to_string();
-        render!(
-            rect {
-                margin: "5",
-                overflow: "clip",
-                focus_id: focus_id,
-                background: button_background,
-                color: color,
-                corner_radius: "3",
-                onclick: onclick,
-                onkeydown: onkeydown,
-                width: "70",
-                height: "auto",
-                padding: "7",
-                label {
-                    text_align: "center",
-                    "{selected}"
-                }
-                rect {
-                    width: "100%",
-                    height: "2",
-                    background: color,
-                }
+            ArrowIcon {
+                rotate: "0",
+                fill: "{arrow_fill}",
+                margin: "0 0 0 8",
             }
-        )
-    }
+        }
+        if *opened.get() {
+            rsx!(
+                rect {
+                    height: "0",
+                    rect {
+                        onglobalclick: onglobalclick,
+                        onkeydown: onkeydown,
+                        layer: "-99",
+                        margin: "4",
+                        border: "1 solid {border_fill}",
+                        overflow: "clip",
+                        corner_radius: "8",
+                        background: "{desplegable_background}",
+                        shadow: "0 4 5 0 rgb(0, 0, 0, 0.3)",
+                        padding: "6",
+                        &cx.props.children
+                    }
+                }
+            )
+        }
+    )
 }
