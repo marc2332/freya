@@ -60,7 +60,7 @@ where
     };
     let color = theme.dropdown_item.font_theme.color;
 
-    use_on_unmount(cx, {
+    use_on_destroy(cx, {
         to_owned![status, platform];
         move || {
             if *status.current() == DropdownItemStatus::Hovering {
@@ -185,7 +185,7 @@ where
         *selected.write() = value;
     });
 
-    use_on_unmount(cx, {
+    use_on_destroy(cx, {
         to_owned![status, platform];
         move || {
             if *status.current() == DropdownStatus::Hovering {
