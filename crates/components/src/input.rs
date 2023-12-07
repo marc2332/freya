@@ -44,13 +44,22 @@ pub struct InputProps<'a> {
     pub onchange: EventHandler<'a, String>,
     /// Is input hidden with a character. By default input text is shown.
     #[props(default = InputMode::Shown, into)]
-    hidden: InputMode,
+    pub hidden: InputMode,
     /// Width of the Input. Default 150.
     #[props(default = "150".to_string(), into)]
-    width: String,
+    pub width: String,
     /// Margin of the Input. Default 4.
     #[props(default = "4".to_string(), into)]
-    margin: String,
+    pub margin: String,
+    /// Padding of the Input. Default 4.
+    #[props(default = "8 12".to_string(), into)]
+    pub padding: String,
+    /// Shadow of the Input. Default "0 4 5 0 rgb(0, 0, 0, 0.1)".
+    #[props(default = "0 4 5 0 rgb(0, 0, 0, 0.1)".to_string(), into)]
+    pub shadow: String,
+    /// Corner radus of the Input. Default 10.
+    #[props(default = "10".to_string(), into)]
+    pub corner_radius: String,
 }
 
 /// `Input` component.
@@ -84,25 +93,36 @@ pub struct InputProps<'a> {
 /// ```
 #[allow(non_snake_case)]
 pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
+    let InputProps {
+        value,
+        onchange,
+        hidden,
+        width,
+        margin,
+        padding,
+        shadow,
+        corner_radius,
+    } = &cx.props;
+
     let platform = use_platform(cx);
     let status = use_ref(cx, InputStatus::default);
     let editable = use_editable(
         cx,
-        || EditableConfig::new(cx.props.value.to_string()),
+        || EditableConfig::new(value.to_string()),
         EditableMode::MultipleLinesSingleEditor,
     );
     let theme = use_get_theme(cx);
     let focus_manager = use_focus(cx);
 
-    if &cx.props.value != editable.editor().current().rope() {
+    if value != editable.editor().current().rope() {
         editable.editor().with_mut(|editor| {
-            editor.set(&cx.props.value);
+            editor.set(&value);
         });
     }
 
-    let text = match cx.props.hidden {
-        InputMode::Hidden(ch) => ch.to_string().repeat(cx.props.value.len()),
-        InputMode::Shown => cx.props.value.clone(),
+    let text = match hidden {
+        InputMode::Hidden(ch) => ch.to_string().repeat(value.len()),
+        InputMode::Shown => value.clone(),
     };
 
     use_on_destroy(cx, {
@@ -119,9 +139,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
         move |e: Event<KeyboardData>| {
             if focus_manager.is_focused() && e.data.key != Key::Enter {
                 editable.process_event(&EditableEvent::KeyDown(e.data));
-                cx.props
-                    .onchange
-                    .call(editable.editor().current().to_string());
+                onchange.call(editable.editor().current().to_string());
             }
         }
     };
@@ -169,8 +187,6 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
 
     let cursor_attr = editable.cursor_attr(cx);
     let highlights_attr = editable.highlights_attr(cx, 0);
-    let width = &cx.props.width;
-    let margin = &cx.props.margin;
     let (background, cursor_char) = if focus_manager.is_focused() {
         (
             theme.button.hover_background,
@@ -192,13 +208,13 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
             color: "{color}",
             background: "{background}",
             border: "1 solid {border_fill}",
-            shadow: "0 3 15 0 rgb(0, 0, 0, 0.3)",
-            corner_radius: "10",
+            shadow: "{shadow}",
+            corner_radius: "{corner_radius}",
             margin: "{margin}",
             cursor_reference: cursor_attr,
             main_align: "center",
             paragraph {
-                margin: "8 12",
+                margin: "{padding}",
                 onkeydown: onkeydown,
                 onglobalclick: onglobalclick,
                 onmouseenter: onmouseenter,

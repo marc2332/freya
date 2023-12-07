@@ -27,6 +27,9 @@ pub struct ButtonProps<'a> {
     /// Handler for the `onclick` event.
     #[props(optional)]
     pub onclick: Option<EventHandler<'a, MouseEvent>>,
+    /// Shadow of the Input. Default "0 4 5 0 rgb(0, 0, 0, 0.1)".
+    #[props(default = "0 4 5 0 rgb(0, 0, 0, 0.1)".to_string(), into)]
+    pub shadow: String,
 }
 
 /// Identifies the current status of the Button.
@@ -113,6 +116,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
         corner_radius,
         padding,
         margin,
+        shadow,
         ..
     } = &cx.props;
 
@@ -130,7 +134,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
             overflow: "clip",
             role: "button",
             color: "{color}",
-            shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)",
+            shadow: "{shadow}",
             border: "1 solid {border_fill}",
             corner_radius: "{corner_radius}",
             background: "{background}",
