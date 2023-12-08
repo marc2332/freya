@@ -69,75 +69,35 @@ fn Body(cx: Scope) -> Element {
                     let editable = values.as_ref().unwrap();
                     let editor = editable.editor();
                     let line = editor.line(line_index).unwrap();
-
                     let is_line_selected = editor.cursor_row() == line_index;
-
-                    // Only show the cursor in the active line
                     let character_index = if is_line_selected {
                         editor.cursor_col().to_string()
                     } else {
                         "none".to_string()
                     };
-
-                    // Only highlight the active line
-                    let line_background = if is_line_selected {
-                        "rgb(37, 37, 37)"
-                    } else {
-                        ""
-                    };
-
+                    let line_background = if is_line_selected { "rgb(37, 37, 37)" } else { "" };
                     let onmousedown = {
                         to_owned![editable];
                         move |e: MouseEvent| {
                             editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
                         }
                     };
-
                     let onmouseover = {
                         to_owned![editable];
                         move |e: MouseEvent| {
                             editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
                         }
                     };
-
                     let highlights = editable.highlights_attr(&cx, line_index);
-
                     rsx! {
-                        rect {
-                            key: "{key}",
-                            width: "100%",
-                            height: "35",
-                            direction: "horizontal",
-                            background: "{line_background}",
-                            rect {
-                                width: "30",
-                                height: "100%",
-                                main_align: "center",
-                                direction: "horizontal",
-                                label {
-                                    font_size: "15",
-                                    color: "rgb(200, 200, 200)",
-                                    "{line_index + 1} "
-                                }
-                            }
-                            paragraph {
-                                height: "100%",
-                                width: "100%",
-                                cursor_index: "{character_index}",
-                                cursor_color: "white",
-                                max_lines: "1",
-                                cursor_mode: "editable",
-                                cursor_id: "{line_index}",
-                                onmousedown: onmousedown,
-                                onmouseover: onmouseover,
-                                highlights: highlights,
-                                text {
-                                    color: "rgb(240, 240, 240)",
-                                    font_size: "15",
-                                    "{line}"
-                                }
-                            }
-                        }
+                        rect { key : "{key}", width : "100%", height : "35", direction : "horizontal",
+                        background : "{line_background}", rect { width : "30", height : "100%",
+                        main_align : "center", direction : "horizontal", label { font_size : "15", color
+                        : "rgb(200, 200, 200)", "{line_index + 1} " } } paragraph { height : "100%",
+                        width : "100%", cursor_index : "{character_index}", cursor_color : "white",
+                        max_lines : "1", cursor_mode : "editable", cursor_id : "{line_index}",
+                        onmousedown : onmousedown, onmouseover : onmouseover, highlights : highlights,
+                        text { color : "rgb(240, 240, 240)", font_size : "15", "{line}" } } }
                     }
                 })
             }
@@ -152,76 +112,35 @@ fn Body(cx: Scope) -> Element {
                     let editable = values.as_ref().unwrap();
                     let editor = editable.editor();
                     let line = editor.line(line_index).unwrap();
-
                     let is_line_selected = editor.cursor_row() == line_index;
-
-                    // Only show the cursor in the active line
                     let character_index = if is_line_selected {
                         editor.cursor_col().to_string()
                     } else {
                         "none".to_string()
                     };
-
-                    // Only highlight the active line
-                    let line_background = if is_line_selected {
-                        "rgb(37, 37, 37)"
-                    } else {
-                        ""
-                    };
-
+                    let line_background = if is_line_selected { "rgb(37, 37, 37)" } else { "" };
                     let onmousedown = {
                         to_owned![editable];
                         move |e: MouseEvent| {
                             editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
                         }
                     };
-
                     let onmouseover = {
                         to_owned![editable];
                         move |e: MouseEvent| {
                             editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
                         }
                     };
-
-
                     let highlights = editable.highlights_attr(&cx, line_index);
-
                     rsx! {
-                        rect {
-                            key: "{key}",
-                            width: "100%",
-                            height: "35",
-                            direction: "horizontal",
-                            background: "{line_background}",
-                            rect {
-                                width: "30",
-                                height: "100%",
-                                main_align: "center",
-                                direction: "horizontal",
-                                label {
-                                    font_size: "15",
-                                    color: "rgb(200, 200, 200)",
-                                    "{line_index + 1} "
-                                }
-                            }
-                            paragraph {
-                                height: "100%",
-                                width: "100%",
-                                cursor_index: "{character_index}",
-                                cursor_color: "white",
-                                max_lines: "1",
-                                cursor_mode: "editable",
-                                cursor_id: "{line_index}",
-                                onmousedown: onmousedown,
-                                onmouseover: onmouseover,
-                                highlights: highlights,
-                                text {
-                                    color: "rgb(240, 240, 240)",
-                                    font_size: "15",
-                                    "{line}"
-                                }
-                            }
-                        }
+                        rect { key : "{key}", width : "100%", height : "35", direction : "horizontal",
+                        background : "{line_background}", rect { width : "30", height : "100%",
+                        main_align : "center", direction : "horizontal", label { font_size : "15", color
+                        : "rgb(200, 200, 200)", "{line_index + 1} " } } paragraph { height : "100%",
+                        width : "100%", cursor_index : "{character_index}", cursor_color : "white",
+                        max_lines : "1", cursor_mode : "editable", cursor_id : "{line_index}",
+                        onmousedown : onmousedown, onmouseover : onmouseover, highlights : highlights,
+                        text { color : "rgb(240, 240, 240)", font_size : "15", "{line}" } } }
                     }
                 })
             }

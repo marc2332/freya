@@ -25,68 +25,20 @@ fn app(cx: Scope) -> Element {
     };
 
     render!(
-        ProgressBar {
-            show_progress: true,
-            progress: progress
-        }
-        ProgressBar {
-            show_progress: true,
-            progress: progress * 0.75
-        }
-        ProgressBar {
-            show_progress: true,
-            progress: progress * 0.50
-        }
-        ProgressBar {
-            show_progress: true,
-            progress: progress * 0.35
-        }
-        ProgressBar {
-            show_progress: true,
-            progress: progress * 0.15
-        }
-        ProgressBar {
-            show_progress: true,
-            progress: progress * 0.90
-        }
-        ProgressBar {
-            show_progress: true,
-            progress: progress * 0.70
-        }
-        ProgressBar {
-            show_progress: true,
-            progress: progress * 0.65
-        }
-        ProgressBar {
-            show_progress: true,
-            progress: progress * 0.30
-        }
-        ProgressBar {
-            show_progress: true,
-            progress: progress * 0.85
-        }
-        ProgressBar {
-            show_progress: true,
-            progress: progress * 0.60
-        }
-        ProgressBar {
-            show_progress: true,
-            progress: progress * 0.45
-        }
-        ProgressBar {
-            show_progress: true,
-            progress: progress * 0.20
-        }
-        Slider {
-            width: 300.0,
-            value: progress as f64,
-            onmoved: onmoved
-        }
-        Button {
-            onclick: set_to_max,
-            label {
-                "Set to 100%"
-            }
-        }
+        ProgressBar { show_progress: true, progress: progress }
+        ProgressBar { show_progress: true, progress: progress * 0.75 }
+        ProgressBar { show_progress: true, progress: progress * 0.50 }
+        ProgressBar { show_progress: true, progress: progress * 0.35 }
+        ProgressBar { show_progress: true, progress: progress * 0.15 }
+        ProgressBar { show_progress: true, progress: progress * 0.90 }
+        ProgressBar { show_progress: true, progress: progress * 0.70 }
+        ProgressBar { show_progress: true, progress: progress * 0.65 }
+        ProgressBar { show_progress: true, progress: progress * 0.30 }
+        ProgressBar { show_progress: true, progress: progress * 0.85 }
+        ProgressBar { show_progress: true, progress: progress * 0.60 }
+        ProgressBar { show_progress: true, progress: progress * 0.45 }
+        ProgressBar { show_progress: true, progress: progress * 0.20 }
+        Slider { width: 300.0, value: progress as f64, onmoved: onmoved }
+        Button { onclick: set_to_max, label { "Set to 100%" } }
     )
 }

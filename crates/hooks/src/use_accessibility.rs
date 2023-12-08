@@ -49,16 +49,14 @@ mod test {
             render!(rect {
                 width: "100%",
                 height: "50%",
-                onclick: move |_| focus_manager.focus(),
+                onclick: move |_| focus_manager.focus()
             })
         }
 
         fn use_focus_app(cx: Scope) -> Element {
             render!(
-                rect {
-                    width: "100%",
-                    height: "100%",
-                    OherChild {},
+                rect { width: "100%", height: "100%",
+                    OherChild {}
                     OherChild {}
                 }
             )

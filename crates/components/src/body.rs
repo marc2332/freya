@@ -1,15 +1,18 @@
+use crate::theme::get_theme;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::{use_get_theme, BodyTheme};
+use freya_hooks::{use_get_theme, BodyTheme, BodyThemeWith};
 
 /// [`Body`] component properties.
 #[derive(Props)]
 pub struct BodyProps<'a> {
+    /// Theme override.
+    pub theme: Option<BodyThemeWith>,
     /// Inner children for the Body.
-    children: Element<'a>,
+    pub children: Element<'a>,
     /// Padding for the Body.
     #[props(default = "none".to_string(), into)]
-    padding: String,
+    pub padding: String,
 }
 
 /// `Body` component.
@@ -39,9 +42,13 @@ pub struct BodyProps<'a> {
 ///
 #[allow(non_snake_case)]
 pub fn Body<'a>(cx: Scope<'a, BodyProps<'a>>) -> Element {
-    let theme = use_get_theme(cx);
-    let BodyTheme { background, color } = theme.body;
-    let BodyProps { children, padding } = cx.props;
+    let BodyProps {
+        children,
+        padding,
+        theme,
+    } = cx.props;
+    let theme = get_theme!(cx, theme, body);
+    let BodyTheme { background, color } = theme;
 
     render!(rect {
         width: "fill",

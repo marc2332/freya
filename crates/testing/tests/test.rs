@@ -7,11 +7,7 @@ use freya_testing::launch_test;
 #[tokio::test]
 async fn no_state() {
     fn no_state_app(cx: Scope) -> Element {
-        render!(
-            label {
-                "Hello"
-            }
-        )
+        render!( label { "Hello" } )
     }
 
     let mut utils = launch_test(no_state_app);
@@ -28,11 +24,7 @@ async fn with_state() {
             state.set(true);
         });
 
-        render!(
-            label {
-                "Is enabled? {state}"
-            }
-        )
+        render!( label { "Is enabled? {state}" } )
     }
 
     let mut utils = launch_test(stateful_app);
@@ -78,9 +70,7 @@ async fn simulate_events() {
                 onclick: |_| {
                     enabled.set(true);
                 },
-                label {
-                    "Is enabled? {enabled}"
-                }
+                label { "Is enabled? {enabled}" }
             }
         )
     }

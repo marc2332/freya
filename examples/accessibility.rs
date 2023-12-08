@@ -37,11 +37,7 @@ fn app(cx: Scope) -> Element {
                 },
                 "What is this?"
             }
-            Button {
-                label {
-                    "Button"
-                }
-            }
+            Button { label { "Button" } }
         }
         rect {
             focus_id: focus_b.attribute(cx),
@@ -63,12 +59,7 @@ fn app(cx: Scope) -> Element {
                 color: "white",
                 "Hello, World! This is an example."
             }
-            NetworkImage {
-                url: url,
-                width: "100",
-                height: "100",
-                alt: "This is an image"
-            }
+            NetworkImage { url: url, width: "100", height: "100", alt: "This is an image" }
         }
     )
 }

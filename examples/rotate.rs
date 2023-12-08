@@ -48,11 +48,7 @@ fn app(cx: Scope) -> Element {
     });
 
     render!(
-        rect {
-            main_align: "center",
-            cross_align: "center",
-            width: "100%",
-            height: "100%",
+        rect { main_align: "center", cross_align: "center", width: "100%", height: "100%",
             rect {
                 rotate: "{degrees.0}deg",
                 background: "rgb(65, 53, 67)",

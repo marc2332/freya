@@ -28,15 +28,8 @@ fn app(cx: Scope) -> Element {
                 "white"
             };
             rsx! {
-                rect {
-                    key: "{key}",
-                    background: "{background}",
-                    label {
-                        height: "25",
-                        width: "100%",
-                        "{index} {value}"
-                    }
-                }
+                rect { key : "{key}", background : "{background}", label { height : "25", width :
+                "100%", "{index} {value}" } }
             }
         })
     })

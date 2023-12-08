@@ -1,12 +1,16 @@
+use crate::theme::get_theme;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
-use freya_hooks::{use_focus, use_get_theme, use_platform};
+use freya_hooks::{use_focus, use_get_theme, use_platform, ButtonThemeWith};
 use winit::window::CursorIcon;
 
 /// [`Button`] component properties.
 #[derive(Props)]
 pub struct ButtonProps<'a> {
+    /// Theme override.
+    #[props(optional)]
+    pub theme: Option<ButtonThemeWith>,
     /// Padding for the Button.
     #[props(default = "8 16".to_string(), into)]
     pub padding: String,
@@ -66,7 +70,7 @@ pub enum ButtonStatus {
 #[allow(non_snake_case)]
 pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
     let focus = use_focus(cx);
-    let theme = use_get_theme(cx);
+    let theme = get_theme!(cx, &cx.props.theme, button);
     let status = use_state(cx, ButtonStatus::default);
     let platform = use_platform(cx);
 
@@ -102,11 +106,12 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
     };
 
     let background = match *status.get() {
-        ButtonStatus::Hovering => theme.button.hover_background,
-        ButtonStatus::Idle => theme.button.background,
+        ButtonStatus::Hovering => theme.hover_background,
+        ButtonStatus::Idle => theme.background,
     };
-    let color = theme.button.font_theme.color;
-    let border_fill = theme.button.border_fill;
+
+    let color = theme.font_theme.color;
+    let border_fill = theme.border_fill;
     let ButtonProps {
         width,
         height,

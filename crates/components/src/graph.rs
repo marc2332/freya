@@ -158,16 +158,6 @@ pub fn Graph(cx: Scope<GraphProps>) -> Element {
     let height = &cx.props.height;
 
     render!(
-        rect {
-            width: "{width}",
-            height: "{height}",
-            padding: "15 5",
-            background: "white",
-            rect {
-                canvas_reference: canvas.attribute(cx),
-                width: "100%",
-                height: "100%",
-            }
-        }
+        rect { width: "{width}", height: "{height}", padding: "15 5", background: "white", rect { canvas_reference: canvas.attribute(cx), width: "100%", height: "100%" } }
     )
 }

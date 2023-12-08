@@ -2,13 +2,15 @@ use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::keyboard::Key;
 use freya_elements::events::{KeyboardData, MouseEvent};
-use freya_hooks::FontTheme;
+use freya_hooks::use_platform;
 use freya_hooks::{
     use_editable, use_focus, use_get_theme, EditableConfig, EditableEvent, EditableMode, TextEditor,
 };
-use freya_hooks::{use_platform, ButtonTheme};
+use freya_hooks::{FontTheme, InputTheme, InputThemeWith};
 
+use crate::theme::get_theme;
 use winit::window::CursorIcon;
+
 /// Enum to declare is [`Input`] hidden.
 #[derive(Default)]
 pub enum InputMode {
@@ -38,6 +40,8 @@ pub enum InputStatus {
 /// [`Input`] component properties.
 #[derive(Props)]
 pub struct InputProps<'a> {
+    /// Theme override.
+    pub theme: Option<InputThemeWith>,
     /// Current value of the Input
     pub value: String,
     /// Handler for the `onchange` event.
@@ -59,7 +63,7 @@ pub struct InputProps<'a> {
 /// See [`InputProps`].
 ///
 /// # Styling
-/// Inherits the [`ButtonTheme`](freya_hooks::ButtonTheme) theme.
+/// Inherits the [`InputTheme`](freya_hooks::InputTheme) theme.
 ///
 /// # Example
 ///
@@ -91,7 +95,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
         || EditableConfig::new(cx.props.value.to_string()),
         EditableMode::MultipleLinesSingleEditor,
     );
-    let theme = use_get_theme(cx);
+    let theme = get_theme!(cx, &cx.props.theme, input);
     let focus_manager = use_focus(cx);
 
     if &cx.props.value != editable.editor().current().rope() {
@@ -173,17 +177,17 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     let margin = &cx.props.margin;
     let (background, cursor_char) = if focus_manager.is_focused() {
         (
-            theme.button.hover_background,
+            theme.hover_background,
             editable.editor().cursor_pos().to_string(),
         )
     } else {
-        (theme.button.background, "none".to_string())
+        (theme.background, "none".to_string())
     };
-    let ButtonTheme {
+    let InputTheme {
         border_fill,
         font_theme: FontTheme { color, .. },
         ..
-    } = theme.button;
+    } = theme;
 
     render!(
         rect {
@@ -212,9 +216,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
                 cursor_color: "{color}",
                 max_lines: "1",
                 highlights: highlights_attr,
-                text {
-                    "{text}"
-                }
+                text { "{text}" }
             }
         }
     )

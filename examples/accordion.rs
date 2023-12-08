@@ -11,70 +11,26 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     render!(
-        ScrollView {
-            show_scrollbar: true,
-            padding: "5",
-            height: "100%",
-            width: "100%",
-            Accordion {
-                summary: render!(AccordionSummary {
-                    label {
-                        "Accordion 1"
-                    }
-                }),
+        ScrollView { show_scrollbar: true, padding: "5", height: "100%", width: "100%",
+            Accordion { summary: render!(AccordionSummary { label { "Accordion 1" } }),
                 AccordionBody {
-                    label {
-                        "This is the body"
-                    }
-                    label {
-                        "This is the body"
-                    }
-                    label {
-                        "This is the body"
-                    }
-                    label {
-                        "This is the body"
-                    }
-                    label {
-                        "This is the body"
-                    }
-                    label {
-                        "This is the body"
-                    }
-                    label {
-                        "This is the body"
-                    }
-
+                    label { "This is the body" }
+                    label { "This is the body" }
+                    label { "This is the body" }
+                    label { "This is the body" }
+                    label { "This is the body" }
+                    label { "This is the body" }
+                    label { "This is the body" }
                 }
             }
-            Accordion {
-                summary: render!(AccordionSummary {
-                    label {
-                        "Accordion 2"
-                    }
-                }),
-                AccordionBody {
-                    label {
-                        "This is the body"
-                    }
-                }
+            Accordion { summary: render!(AccordionSummary { label { "Accordion 2" } }),
+                AccordionBody { label { "This is the body" } }
             }
-            Accordion {
-                summary: render!(AccordionSummary {
-                    label {
-                        "Accordion 3"
-                    }
-                }),
+            Accordion { summary: render!(AccordionSummary { label { "Accordion 3" } }),
                 AccordionBody {
-                    label {
-                        "This is the body"
-                    }
-                    label {
-                        "This is the body"
-                    }
-                    label {
-                        "This is the body"
-                    }
+                    label { "This is the body" }
+                    label { "This is the body" }
+                    label { "This is the body" }
                 }
             }
         }

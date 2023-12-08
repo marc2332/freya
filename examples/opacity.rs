@@ -16,23 +16,10 @@ fn app(cx: Scope) -> Element {
     let opacity = use_state(cx, || 70.0);
 
     render!(
-        rect {
-            height: "100%",
-            width: "100%",
-            main_align: "center",
-            cross_align: "center",
-            rect {
-                opacity: "{opacity / 100.0}",
-                svg {
-                    width: "100%",
-                    height: "50%",
-                    svg_data: ferris,
-                }
-                label {
-                    text_align: "center",
-                    width: "100%",
-                    "Meet Ferris!"
-                }
+        rect { height: "100%", width: "100%", main_align: "center", cross_align: "center",
+            rect { opacity: "{opacity / 100.0}",
+                svg { width: "100%", height: "50%", svg_data: ferris }
+                label { text_align: "center", width: "100%", "Meet Ferris!" }
             }
             Slider {
                 width: 100.0,
@@ -41,9 +28,7 @@ fn app(cx: Scope) -> Element {
                     opacity.set(p);
                 }
             }
-            label {
-                "Drag the slider"
-            }
+            label { "Drag the slider" }
         }
     )
 }

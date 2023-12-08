@@ -28,10 +28,7 @@ fn app(cx: Scope) -> Element {
             width: "100%",
             height: "100%",
             corner_radius: "15",
-            label {
-                color: "black",
-                "A frameless window"
-            }
+            label { color: "black", "A frameless window" }
         }
     )
 }

@@ -39,11 +39,7 @@ fn app(cx: Scope) -> Element {
             ontouchend: ontouchend,
             ontouchmove: ontouchmove,
             ontouchstart: ontouchstart,
-            label {
-                font_size: "75",
-                color: "white",
-                "{state}"
-            }
+            label { font_size: "75", color: "white", "{state}" }
         }
     )
 }

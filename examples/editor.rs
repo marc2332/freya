@@ -56,31 +56,17 @@ fn Body(cx: Scope) -> Element {
     };
 
     render!(
-        rect {
-            width: "100%",
-            height: "100%",
-            color: "white",
+        rect { width: "100%", height: "100%", color: "white",
             rect {
                 width: "100%",
                 height: "60",
                 padding: "10",
                 direction: "horizontal",
                 background: "rgb(20, 20, 20)",
-                rect {
-                    height: "100%",
-                    width: "100%",
-                    direction: "horizontal",
-                    cross_align: "center",
-                    label {
-                        font_size: "30",
-                        "Editor"
-                    }
-                    rect {
-                        width: "20",
-                    }
-                    rect {
-                        width: "130",
-                        cross_align: "center",
+                rect { height: "100%", width: "100%", direction: "horizontal", cross_align: "center",
+                    label { font_size: "30", "Editor" }
+                    rect { width: "20" }
+                    rect { width: "130", cross_align: "center",
                         Slider {
                             width: 100.0,
                             value: *font_size_percentage.get(),
@@ -88,13 +74,9 @@ fn Body(cx: Scope) -> Element {
                                 font_size_percentage.set(p);
                             }
                         }
-                        label {
-                            "Font size"
-                        }
+                        label { "Font size" }
                     }
-                    rect {
-                        width: "130",
-                        cross_align: "center",
+                    rect { width: "130", cross_align: "center",
                         Slider {
                             width: 100.0,
                             value: *line_height_percentage.get(),
@@ -102,35 +84,25 @@ fn Body(cx: Scope) -> Element {
                                 line_height_percentage.set(p);
                             }
                         }
-                        label {
-                            "Line height"
-                        }
+                        label { "Line height" }
                     }
-                    rect {
-                        width: "80",
-                        cross_align: "center",
+                    rect { width: "80", cross_align: "center",
                         Switch {
                             enabled: *is_bold.get(),
                             ontoggled: |_| {
                                 is_bold.set(!is_bold.get());
                             }
                         }
-                        label {
-                            "Bold"
-                        }
+                        label { "Bold" }
                     }
-                    rect {
-                        width: "80",
-                        cross_align: "center",
+                    rect { width: "80", cross_align: "center",
                         Switch {
                             enabled: *is_italic.get(),
                             ontoggled: |_| {
                                 is_italic.set(!is_italic.get());
                             }
                         }
-                        label {
-                            "Italic"
-                        }
+                        label { "Italic" }
                     }
                 }
             }
@@ -142,14 +114,8 @@ fn Body(cx: Scope) -> Element {
                 cursor_reference: cursor_attr,
                 direction: "horizontal",
                 background: "{theme.body.background}",
-                rect {
-                    width: "50%",
-                    height: "100%",
-                    padding: "15",
-                    ScrollView {
-                        width: "100%",
-                        height: "100%",
-                        scroll_with_arrows: false,
+                rect { width: "50%", height: "100%", padding: "15",
+                    ScrollView { width: "100%", height: "100%", scroll_with_arrows: false,
                         editor.lines().map(move |l| {
 
                             let is_line_selected = cursor.row() == line_index;
@@ -246,20 +212,13 @@ fn Body(cx: Scope) -> Element {
                     height: "100%",
                     padding: "15",
                     shadow: "0 0 30 0 rgb(0, 0, 0, 0.6)",
-                    ScrollView {
-                        width: "100%",
-                        height: "100%",
-                        show_scrollbar: true,
+                    ScrollView { width: "100%", height: "100%", show_scrollbar: true,
                         paragraph {
                             width: "100%",
                             cursor_index: "{cursor_char}",
                             cursor_color: "white",
                             line_height: "{line_height}",
-                            text {
-                                color: "white",
-                                font_size: "{font_size}",
-                                "{editor}"
-                            }
+                            text { color: "white", font_size: "{font_size}", "{editor}" }
                         }
                     }
                 }
@@ -270,8 +229,7 @@ fn Body(cx: Scope) -> Element {
                 background: "rgb(20, 20, 20)",
                 direction: "horizontal",
                 padding: "5",
-                label {
-                    color: "rgb(200, 200, 200)",
+                label { color: "rgb(200, 200, 200)",
                     "Ln {editor.cursor_row() + 1}, Col {editor.cursor_col() + 1}"
                 }
             }

@@ -18,15 +18,7 @@ fn main() {
 fn app(cx: Scope) -> Element {
     let num = cx.consume_context::<i32>().unwrap();
 
-    render!(rect {
-        background: "white",
-        padding: "10",
-        width: "100%",
-        height: "100%",
-        corner_radius: "50",
-        label {
-            color: "black",
-            "{num}"
-        }
-    })
+    render!(
+        rect { background: "white", padding: "10", width: "100%", height: "100%", corner_radius: "50", label { color: "black", "{num}" } }
+    )
 }

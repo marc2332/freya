@@ -14,6 +14,6 @@ fn app(cx: Scope) -> Element {
         height: "100%",
         width: "100%",
         background:
-            "linear-gradient(250deg, orange 15%, rgb(255, 0, 0) 50%, rgb(255, 192, 203) 80%)",
+            "linear-gradient(250deg, orange 15%, rgb(255, 0, 0) 50%, rgb(255, 192, 203) 80%)"
     })
 }

@@ -151,13 +151,7 @@ pub fn GestureArea<'a>(cx: Scope<'a, GestureAreaProps<'a>>) -> Element {
     };
 
     render!(
-        rect {
-            ontouchcancel: ontouchcancel,
-            ontouchend: ontouchend,
-            ontouchmove: ontouchmove,
-            ontouchstart: ontouchstart,
-            &cx.props.children
-        }
+        rect { ontouchcancel: ontouchcancel, ontouchend: ontouchend, ontouchmove: ontouchmove, ontouchstart: ontouchstart, &cx.props.children }
     )
 }
 
@@ -187,10 +181,7 @@ mod test {
             };
 
             render!(
-                GestureArea {
-                    ongesture: ongesture,
-                    "{value}"
-                }
+                GestureArea { ongesture: ongesture, "{value}" }
             )
         }
 
@@ -247,10 +238,7 @@ mod test {
             };
 
             render!(
-                GestureArea {
-                    ongesture: ongesture,
-                    "{value}"
-                }
+                GestureArea { ongesture: ongesture, "{value}" }
             )
         }
 

@@ -50,13 +50,7 @@ fn app(cx: Scope) -> Element {
                 corner_radius: "100",
                 main_align: "center",
                 onclick: anim,
-                label {
-                    width: "100%",
-                    font_size: "30",
-                    text_align: "center",
-                    color: "{text}",
-                    "Click to move"
-                }
+                label { width: "100%", font_size: "30", text_align: "center", color: "{text}", "Click to move" }
             }
         }
     )

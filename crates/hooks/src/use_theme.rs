@@ -25,120 +25,214 @@ pub fn use_get_theme(cx: &ScopeState) -> Theme {
         .unwrap_or_default()
 }
 
-/// Theming properties for DropdownItem components.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct DropdownItemTheme {
-    pub background: &'static str,
-    pub select_background: &'static str,
-    pub hover_background: &'static str,
-    pub font_theme: FontTheme,
+macro_rules! define_theme {
+    (
+        $(#[$attrs:meta])*
+        $vis:vis $name:ident {
+        $(
+            $(#[$field_attrs:meta])*
+            $field_name:ident: $field_ty:ty,
+        )*
+        $(
+            ..owned..
+            $(
+                $(#[$owned_field_attrs:meta])*
+                $owned_field_name:ident: $owned_field_ty:ty,
+            )*
+        )?
+    }) => {
+        ::paste::paste! {
+            #[derive(Default, Clone, Debug, PartialEq, Eq)]
+            $(#[$attrs])*
+            #[doc = "You can use this to change a theme for only one component, with the `theme` property."]
+            $vis struct [<$name With>] {
+                $(
+                    $(#[$field_attrs])*
+                    pub $field_name: Option<$field_ty>,
+                )*
+                $($(
+                    $(#[$owned_field_attrs])*
+                    pub $owned_field_name: Option<$owned_field_ty>,
+                )*)?
+            }
+        }
+
+        #[derive(Clone, Debug, PartialEq, Eq)]
+        $(#[$attrs])*
+        $vis struct $name {
+            $(
+                $(#[$field_attrs])*
+                pub $field_name: $field_ty,
+            )*
+            $($(
+                $(#[$owned_field_attrs])*
+                pub $owned_field_name: $owned_field_ty,
+            )*)?
+        }
+
+        ::paste::paste! {
+            impl $name {
+                pub fn apply_optional(&mut self, optional: &[<$name With>]) {
+                    $(
+                        if let Some($field_name) = optional.$field_name {
+                            self.$field_name = $field_name;
+                        }
+                    )*
+
+                    $($(
+                        if let Some($owned_field_name) = &optional.$owned_field_name {
+                            self.$owned_field_name = $owned_field_name.clone();
+                        }
+                    )*)?
+                }
+            }
+        }
+    };
 }
 
-/// Theming properties for Dropdown components.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct DropdownTheme {
-    pub desplegable_background: &'static str,
-    pub background_button: &'static str,
-    pub hover_background: &'static str,
-    pub font_theme: FontTheme,
-    pub border_fill: &'static str,
-    pub arrow_fill: &'static str,
+define_theme! {
+    /// Theming properties for DropdownItem components.
+    pub DropdownItemTheme {
+        background: &'static str,
+        select_background: &'static str,
+        hover_background: &'static str,
+        ..owned..
+        font_theme: FontTheme,
+    }
 }
 
-/// Theming properties for Button components.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ButtonTheme {
-    pub background: &'static str,
-    pub hover_background: &'static str,
-    pub font_theme: FontTheme,
-    pub border_fill: &'static str,
+define_theme! {
+    /// Theming properties for Dropdown components.
+    pub DropdownTheme {
+        desplegable_background: &'static str,
+        background_button: &'static str,
+        hover_background: &'static str,
+        border_fill: &'static str,
+        arrow_fill: &'static str,
+        ..owned..
+        font_theme: FontTheme,
+    }
 }
 
-/// Theming properties for Fonts.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct FontTheme {
-    pub color: &'static str,
+define_theme! {
+    /// Theming properties for Button components.
+    pub ButtonTheme {
+        background: &'static str,
+        hover_background: &'static str,
+        border_fill: &'static str,
+        ..owned..
+        font_theme: FontTheme,
+    }
 }
 
-/// Theming properties the Switch components.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SwitchTheme {
-    pub background: &'static str,
-    pub thumb_background: &'static str,
-    pub enabled_background: &'static str,
-    pub enabled_thumb_background: &'static str,
+define_theme! {
+    /// Theming properties for Input components.
+    pub InputTheme {
+        background: &'static str,
+        hover_background: &'static str,
+        border_fill: &'static str,
+        ..owned..
+        font_theme: FontTheme,
+    }
 }
 
-/// Theming properties the Scrollbar components.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ScrollbarTheme {
-    pub background: &'static str,
-    pub thumb_background: &'static str,
-    pub hover_thumb_background: &'static str,
-    pub active_thumb_background: &'static str,
+define_theme! {
+    /// Theming properties for Fonts.
+    pub FontTheme {
+        color: &'static str,
+    }
 }
 
-/// Theming properties for the App body.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct BodyTheme {
-    pub background: &'static str,
-    pub color: &'static str,
+define_theme! {
+    /// Theming properties the Switch components.
+    pub SwitchTheme {
+        background: &'static str,
+        thumb_background: &'static str,
+        enabled_background: &'static str,
+        enabled_thumb_background: &'static str,
+    }
 }
 
-/// Theming properties for Slider components.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SliderTheme {
-    pub background: &'static str,
-    pub thumb_background: &'static str,
-    pub thumb_inner_background: &'static str,
+define_theme! {
+    /// Theming properties the Scrollbar components.
+    pub ScrollbarTheme {
+        background: &'static str,
+        thumb_background: &'static str,
+        hover_thumb_background: &'static str,
+        active_thumb_background: &'static str,
+    }
 }
 
-/// Theming properties for Tooltip components.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct TooltipTheme {
-    pub background: &'static str,
-    pub color: &'static str,
-    pub border_fill: &'static str,
+define_theme! {
+    /// Theming properties for the App body.
+    pub BodyTheme {
+        background: &'static str,
+        color: &'static str,
+    }
 }
 
-/// Theming properties for ExternalLink components.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ExternalLinkTheme {
-    pub highlight_color: &'static str,
+define_theme! {
+    /// Theming properties for Slider components.
+    pub SliderTheme {
+        background: &'static str,
+        thumb_background: &'static str,
+        thumb_inner_background: &'static str,
+    }
 }
 
-/// Theming properties for Accordion component.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct AccordionTheme {
-    pub color: &'static str,
-    pub background: &'static str,
-    pub border_fill: &'static str,
+define_theme! {
+    /// Theming properties for Tooltip components.
+    pub TooltipTheme {
+        background: &'static str,
+        color: &'static str,
+        border_fill: &'static str,
+    }
 }
 
-/// Theming properties for Loader component.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct LoaderTheme {
-    pub primary_color: &'static str,
-    pub secondary_color: &'static str,
+define_theme! {
+    /// Theming properties for ExternalLink components.
+    pub ExternalLinkTheme {
+        highlight_color: &'static str,
+    }
 }
 
-/// Theming properties for ProgressBar component.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ProgressBarTheme {
-    pub color: &'static str,
-    pub background: &'static str,
-    pub progress_background: &'static str,
+define_theme! {
+    /// Theming properties for Accordion component.
+    pub AccordionTheme {
+        color: &'static str,
+        background: &'static str,
+        border_fill: &'static str,
+    }
 }
 
-/// Theming properties for Table component.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct TableTheme {
-    pub font_theme: FontTheme,
-    pub background: &'static str,
-    pub arrow_fill: &'static str,
-    pub alternate_row_background: &'static str,
-    pub row_background: &'static str,
-    pub divider_fill: &'static str,
+define_theme! {
+    /// Theming properties for Loader component.
+    pub LoaderTheme {
+        primary_color: &'static str,
+        secondary_color: &'static str,
+    }
+}
+
+define_theme! {
+    /// Theming properties for ProgressBar component.
+    pub ProgressBarTheme {
+        color: &'static str,
+        background: &'static str,
+        progress_background: &'static str,
+    }
+}
+
+define_theme! {
+    /// Theming properties for Table component.
+    pub TableTheme {
+        background: &'static str,
+        arrow_fill: &'static str,
+        alternate_row_background: &'static str,
+        row_background: &'static str,
+        divider_fill: &'static str,
+        ..owned..
+        font_theme: FontTheme,
+    }
 }
 
 /// Theming properties for Themes.
@@ -158,6 +252,7 @@ pub struct Theme {
     pub loader: LoaderTheme,
     pub progress_bar: ProgressBarTheme,
     pub table: TableTheme,
+    pub input: InputTheme,
 }
 
 impl Default for Theme {
@@ -179,6 +274,14 @@ pub const LIGHT_THEME: Theme = Theme {
         thumb_inner_background: "rgb(103, 80, 164)",
     },
     button: ButtonTheme {
+        background: "rgb(245, 245, 245)",
+        hover_background: "rgb(235, 235, 235)",
+        font_theme: FontTheme {
+            color: "rgb(10, 10, 10)",
+        },
+        border_fill: "rgb(210, 210, 210)",
+    },
+    input: InputTheme {
         background: "rgb(245, 245, 245)",
         hover_background: "rgb(235, 235, 235)",
         font_theme: FontTheme {
@@ -261,6 +364,12 @@ pub const DARK_THEME: Theme = Theme {
         thumb_inner_background: "rgb(255, 95, 0)",
     },
     button: ButtonTheme {
+        background: "rgb(35, 35, 35)",
+        hover_background: "rgb(45, 45, 45)",
+        font_theme: FontTheme { color: "white" },
+        border_fill: "rgb(80, 80, 80)",
+    },
+    input: InputTheme {
         background: "rgb(35, 35, 35)",
         hover_background: "rgb(45, 45, 45)",
         font_theme: FontTheme { color: "white" },

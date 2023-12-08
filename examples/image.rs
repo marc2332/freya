@@ -32,11 +32,7 @@ fn app(cx: Scope) -> Element {
             main_align: "center",
             cross_align: "center",
             onwheel: onwheel,
-            image {
-                image_data: image_data,
-                width: "{size}",
-                height: "{size}",
-            }
+            image { image_data: image_data, width: "{size}", height: "{size}" }
         }
     )
 }

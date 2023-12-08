@@ -30,6 +30,6 @@ pub fn Canvas(cx: Scope<CanvasProps>) -> Element {
         canvas_reference: cx.props.canvas.attribute(cx),
         background: "{cx.props.background}",
         width: "{cx.props.width}",
-        height: "{cx.props.height}",
+        height: "{cx.props.height}"
     })
 }

@@ -34,10 +34,7 @@ fn app(cx: Scope) -> Element {
     }
 
     render!(
-        rect {
-            width: "100%",
-            height: "100%",
-            main_align: "center",
+        rect { width: "100%", height: "100%", main_align: "center",
             for i in 0..32 {
                 rsx!(
                     rect {

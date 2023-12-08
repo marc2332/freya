@@ -12,19 +12,9 @@ fn main() {
 fn app(cx: Scope) -> Element {
     let gesture = use_state(cx, || "Tap here".to_string());
     render!(
-        GestureArea {
-            ongesture: move |g| gesture.set(format!("{g:?}")),
-            rect {
-                width: "100%",
-                height: "100%",
-                direction: "vertical",
-                main_align: "center",
-                label {
-                    text_align: "center",
-                    width: "100%",
-                    font_size: "70",
-                    "{gesture}"
-                }
+        GestureArea { ongesture: move |g| gesture.set(format!("{g:?}")),
+            rect { width: "100%", height: "100%", direction: "vertical", main_align: "center",
+                label { text_align: "center", width: "100%", font_size: "70", "{gesture}" }
             }
         }
     )

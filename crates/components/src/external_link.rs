@@ -1,13 +1,16 @@
+use crate::theme::get_theme;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
-use freya_hooks::use_get_theme;
+use freya_hooks::{use_get_theme, ExternalLinkThemeWith};
 
 use crate::Tooltip;
 
 /// [`ExternalLink`] component properties.
 #[derive(Props)]
 pub struct ExternalLinkProps<'a> {
+    /// Theme override.
+    pub theme: Option<ExternalLinkThemeWith>,
     /// Inner children for the ExternalLink.
     children: Element<'a>,
     #[props(optional)]
@@ -46,7 +49,7 @@ pub struct ExternalLinkProps<'a> {
 ///
 #[allow(non_snake_case)]
 pub fn ExternalLink<'a>(cx: Scope<'a, ExternalLinkProps<'a>>) -> Element {
-    let theme = use_get_theme(cx);
+    let theme = get_theme!(cx, &cx.props.theme, external_link);
     let is_hovering = use_state(cx, || false);
     let show_tooltip = cx.props.show_tooltip.unwrap_or(true);
 
@@ -67,22 +70,14 @@ pub fn ExternalLink<'a>(cx: Scope<'a, ExternalLinkProps<'a>>) -> Element {
     };
 
     let color = if *is_hovering.get() {
-        theme.external_link.highlight_color
+        theme.highlight_color
     } else {
         "inherit"
     };
 
     render!(
-        rect {
-            onmouseover: onmouseover,
-            onmouseleave: onmouseleave,
-            onclick: onclick,
-            color: "{color}",
-            &cx.props.children
-        }
-        rect {
-            height: "0",
-            layer: "-999",
+        rect { onmouseover: onmouseover, onmouseleave: onmouseleave, onclick: onclick, color: "{color}", &cx.props.children }
+        rect { height: "0", layer: "-999",
             (*is_hovering.get() && show_tooltip).then_some({
                 rsx!(
                     Tooltip {

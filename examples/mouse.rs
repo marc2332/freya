@@ -11,16 +11,9 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     render!(
-        rect {
-            color: "white",
-            height: "100%",
-            width: "100%",
-            Area {
-
-            }
-            Area {
-
-            }
+        rect { color: "white", height: "100%", width: "100%",
+            Area {}
+            Area {}
         }
     )
 }
@@ -54,12 +47,8 @@ fn Area(cx: Scope) -> Element {
             padding: "5",
             onmouseover: cursor_moved,
             onclick: cursor_clicked,
-            label {
-                "Mouse is at [x: {cursor_pos_over.0}, y: {cursor_pos_over.1}] ",
-            },
-            label {
-                "Mouse clicked at [x: {cursor_pos_click.0}, y: {cursor_pos_click.1}]"
-            }
+            label { "Mouse is at [x: {cursor_pos_over.0}, y: {cursor_pos_over.1}] " }
+            label { "Mouse clicked at [x: {cursor_pos_click.0}, y: {cursor_pos_click.1}]" }
         }
     )
 }

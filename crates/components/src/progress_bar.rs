@@ -1,10 +1,13 @@
+use crate::theme::get_theme;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::{use_get_theme, ProgressBarTheme};
+use freya_hooks::{use_get_theme, ProgressBarTheme, ProgressBarThemeWith};
 
 /// [`ProgressBar`] component properties.
 #[derive(Props, PartialEq)]
 pub struct ProgressBarProps {
+    /// Theme override.
+    pub theme: Option<ProgressBarThemeWith>,
     /// Show a label with the current progress. Default to false.
     #[props(default = false)]
     show_progress: bool,
@@ -43,23 +46,20 @@ pub struct ProgressBarProps {
 ///
 #[allow(non_snake_case)]
 pub fn ProgressBar(cx: Scope<ProgressBarProps>) -> Element {
-    let theme = use_get_theme(cx);
+    let theme = get_theme!(cx, &cx.props.theme, progress_bar);
 
     let ProgressBarTheme {
         color,
         background,
         progress_background,
-    } = theme.progress_bar;
+    } = theme;
     let width = &cx.props.width;
     let height = &cx.props.height;
     let show_progress = cx.props.show_progress;
     let progress = cx.props.progress;
 
     render!(
-        rect {
-            width: "{width}",
-            height: "{height}",
-            padding: "2",
+        rect { width: "{width}", height: "{height}", padding: "2",
             rect {
                 corner_radius: "999",
                 width: "100%",

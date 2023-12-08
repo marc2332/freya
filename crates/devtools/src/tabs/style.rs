@@ -20,17 +20,9 @@ pub fn NodeInspectorStyle(cx: Scope, node_id: NodeId) -> Element {
 
     if let Some(node) = node {
         render!(
-            rect {
-                overflow: "clip",
-                width: "100%",
-                height: "50%",
-                NodeInspectorBar {
-                    node_id: *node_id
-                }
-                ScrollView {
-                    show_scrollbar: true,
-                    height: "calc(100% - 35)",
-                    width: "100%",
+            rect { overflow: "clip", width: "100%", height: "50%",
+                NodeInspectorBar { node_id: *node_id }
+                ScrollView { show_scrollbar: true, height: "calc(100% - 35)", width: "100%",
                     node.state.iter().enumerate().map(|(i, (name, attr))| {
                         match attr {
                             AttributeType::Measure(measure) => {

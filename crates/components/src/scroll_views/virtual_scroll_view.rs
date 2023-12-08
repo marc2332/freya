@@ -327,14 +327,11 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
             direction: "horizontal",
             width: "{user_container_width}",
             height: "{user_container_height}",
-            onglobalclick: onclick, // TODO(marc2332): mouseup would be better
+            onglobalclick: onclick,
             onglobalmouseover: onmouseover,
             onkeydown: onkeydown,
             onkeyup: onkeyup,
-            rect {
-                direction: "vertical",
-                width: "{container_width}",
-                height: "{container_height}",
+            rect { direction: "vertical", width: "{container_width}", height: "{container_height}",
                 rect {
                     overflow: "clip",
                     padding: "{padding}",
@@ -354,8 +351,8 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
                         clicking_scrollbar: is_scrolling_x,
                         onmousedown: onmousedown_x,
                         width: "{scrollbar_width}",
-                        height: "100%",
-                    },
+                        height: "100%"
+                    }
                 }
             }
             ScrollBar {
@@ -367,7 +364,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
                     clicking_scrollbar: is_scrolling_y,
                     onmousedown: onmousedown_y,
                     width: "100%",
-                    height: "{scrollbar_height}",
+                    height: "{scrollbar_height}"
                 }
             }
         }

@@ -12,32 +12,12 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     render!(
-        rect {
-            width: "100%",
-            height: "100%",
-            rect {
-                width: "100%",
-                height: "50%",
-                CursorArea {
-                    icon: CursorIcon::Text,
-                    label {
-                        height: "100%",
-                        width: "100%",
-                        "text cursor"
-                    }
-                }
+        rect { width: "100%", height: "100%",
+            rect { width: "100%", height: "50%",
+                CursorArea { icon: CursorIcon::Text, label { height: "100%", width: "100%", "text cursor" } }
             }
-            rect {
-                width: "100%",
-                height: "50%",
-                CursorArea {
-                    icon: CursorIcon::Progress,
-                    label {
-                        height: "100%",
-                        width: "100%",
-                        "Loading..."
-                    }
-                }
+            rect { width: "100%", height: "50%",
+                CursorArea { icon: CursorIcon::Progress, label { height: "100%", width: "100%", "Loading..." } }
             }
         }
     )

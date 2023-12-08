@@ -38,34 +38,18 @@ fn app(cx: Scope) -> Element {
     };
 
     render!(
-        rect {
-            background: "rgb(15, 15, 15)",
-            width: "100%",
-            height: "100%",
-            rect {
-                overflow: "clip",
-                width: "100%",
-                height: "calc(100% - 60)",
+        rect { background: "rgb(15, 15, 15)", width: "100%", height: "100%",
+            rect { overflow: "clip", width: "100%", height: "calc(100% - 60)",
                 if let Some(dog_url) = dog_url.get() {
-                   rsx!(
+                rsx!(
                         NetworkImage {
                             url: dog_url.clone()
                         }
-                   )
+                )
                 }
             }
-            rect {
-                overflow: "clip",
-                height: "60",
-                width: "100%",
-                main_align: "center",
-                cross_align: "center",
-                Button {
-                    onclick: move |_|  fetch(),
-                    label {
-                        "Fetch random Doggo!"
-                    }
-                }
+            rect { overflow: "clip", height: "60", width: "100%", main_align: "center", cross_align: "center",
+                Button { onclick: move |_| fetch(), label { "Fetch random Doggo!" } }
             }
         }
     )

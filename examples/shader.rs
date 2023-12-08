@@ -87,14 +87,7 @@ fn app(cx: Scope) -> Element {
     });
 
     render!(
-        rect {
-            Canvas {
-                canvas: canvas,
-                background: "black",
-                width: "100%",
-                height: "100%"
-            }
-        }
+        rect { Canvas { canvas: canvas, background: "black", width: "100%", height: "100%" } }
     )
 }
 

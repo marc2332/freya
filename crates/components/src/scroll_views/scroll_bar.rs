@@ -1,9 +1,12 @@
+use crate::theme::get_theme;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::use_get_theme;
+use freya_hooks::{use_get_theme, ScrollbarThemeWith};
 
 #[derive(Props)]
 pub struct ScrollBarProps<'a> {
+    /// Theme override.
+    pub theme: Option<ScrollbarThemeWith>,
     children: Element<'a>,
 
     #[props(into)]
@@ -29,15 +32,15 @@ enum ScrollBarStatus {
 #[allow(non_snake_case)]
 pub fn ScrollBar<'a>(cx: Scope<'a, ScrollBarProps<'a>>) -> Element<'a> {
     let status = use_state(cx, || ScrollBarStatus::Idle);
-    let theme = use_get_theme(cx);
+    let theme = get_theme!(cx, &cx.props.theme, scrollbar);
 
     let onmouseenter = |_| status.set(ScrollBarStatus::Hovering);
 
     let onmouseleave = |_| status.set(ScrollBarStatus::Idle);
 
     let background = match status.get() {
-        _ if cx.props.clicking_scrollbar => theme.scrollbar.background,
-        ScrollBarStatus::Hovering => theme.scrollbar.background,
+        _ if cx.props.clicking_scrollbar => theme.background,
+        ScrollBarStatus::Hovering => theme.background,
         ScrollBarStatus::Idle => "transparent",
     };
 

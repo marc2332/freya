@@ -25,28 +25,13 @@ fn Body(cx: Scope) -> Element {
     let change_to_spanish = move |_| i18.set_language("es-ES".parse().unwrap());
 
     render!(
-        rect {
-            main_align: "center",
-            cross_align: "center",
-            width: "100%",
-            height: "100%",
+        rect { main_align: "center", cross_align: "center", width: "100%", height: "100%",
             rect {
                 label { translate!(i18, "messages.hello_world") }
-                label { translate!(i18, "messages.hello", name: "Dioxus")  }
-                rect {
-                    direction: "horizontal",
-                    Button {
-                        onclick: change_to_english,
-                        label {
-                            "English"
-                        }
-                    }
-                    Button {
-                        onclick: change_to_spanish,
-                        label {
-                            "Spanish"
-                        }
-                    }
+                label { translate!(i18, "messages.hello", name: "Dioxus") }
+                rect { direction: "horizontal",
+                    Button { onclick: change_to_english, label { "English" } }
+                    Button { onclick: change_to_spanish, label { "Spanish" } }
                 }
             }
         }

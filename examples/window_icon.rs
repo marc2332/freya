@@ -27,11 +27,7 @@ fn app(cx: Scope) -> Element {
             cross_align: "center",
             background: "rgb(0, 119, 182)",
             color: "white",
-            label {
-                font_size: "35",
-                text_align: "center",
-                "This simply shows how to pass an icon to the Window"
-            }
+            label { font_size: "35", text_align: "center", "This simply shows how to pass an icon to the Window" }
         }
     )
 }

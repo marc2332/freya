@@ -140,7 +140,7 @@ mod test {
             });
 
             render!(rect {
-                width: "{progress}",
+                width: "{progress}"
             })
         }
 
@@ -193,7 +193,7 @@ mod test {
                 background: "white",
                 height: "100%",
                 onclick: move |_| restart(),
-                width: "{progress}",
+                width: "{progress}"
             })
         }
 

@@ -14,12 +14,7 @@ pub struct TabsBarProps<'a> {
 #[allow(non_snake_case)]
 pub fn TabsBar<'a>(cx: Scope<'a, TabsBarProps<'a>>) -> Element<'a> {
     render!(
-        ScrollView {
-            direction: "horizontal",
-            height: "35",
-            width: "100%",
-            &cx.props.children
-        }
+        ScrollView { direction: "horizontal", height: "35", width: "100%", &cx.props.children }
     )
 }
 
@@ -72,9 +67,7 @@ pub fn TabButton<'a>(cx: Scope<'a, TabButtonProps<'a>>) -> Element<'a> {
             shadow: "0 4 5 0 rgb(0, 0, 0, 0.3)",
             border: "1 solid {border_fill}",
             main_align: "center",
-            label {
-                content
-            }
+            label { content }
         }
     )
 }

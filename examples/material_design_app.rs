@@ -9,26 +9,9 @@ fn main() {
     launch(|cx: Scope| -> Element {
         render!(
             Scaffold {
-                floating_button: render!(
-                    FloatingButton {
-                        label {
-                            "+"
-                        }
-                    }
-                ),
-                navbar: render!(
-                    Navbar {
-                        title: render!(
-                            label {
-                                "Hello, Freya!"
-                            }
-                        )
-                    }
-                ),
-                Card {
-                    title: "Rust",
-                    content: "Rust is nice!"
-                }
+                floating_button: render!(FloatingButton { label { "+" } }),
+                navbar: render!(Navbar { title : render!(label { "Hello, Freya!" }) }),
+                Card { title: "Rust", content: "Rust is nice!" }
                 Card {
                     title: "I like it a lot",
                     content: "A language empowering everyone to build reliable and efficient software. "
@@ -87,26 +70,16 @@ fn Scaffold<'a>(cx: Scope<'a, ScaffoldProps<'a>>) -> Element<'a> {
     };
 
     render!(
-        rect {
-            direction: "vertical",
-            height: "100%",
-            width: "100%",
+        rect { direction: "vertical", height: "100%", width: "100%",
             cx.props.navbar.as_ref(),
-            ScrollView {
-                height: "{height}",
-                width: "100%",
-                padding: "3 10 0 10",
-                &cx.props.children
-            }
+            ScrollView { height: "{height}", width: "100%", padding: "3 10 0 10", &cx.props.children }
             rect {
                 width: "100%",
                 height: "0",
                 offset_y: "-{FLOATING_BUTTON_BOTTOM_MARGIN}",
                 layer: "-100",
                 direction: "horizontal",
-                rect {
-                    width: "calc(100% - {FLOATING_BUTTON_RIGHT_MARGIN})",
-                }
+                rect { width: "calc(100% - {FLOATING_BUTTON_RIGHT_MARGIN})" }
                 cx.props.floating_button.as_ref()
             }
         }
@@ -128,13 +101,7 @@ fn Navbar<'a>(cx: Scope<'a, NavbarProps<'a>>) -> Element<'a> {
             direction: "vertical",
             color: "white",
             main_align: "center",
-            rect {
-                width: "100%",
-                direction: "horizontal",
-                padding: "0 20",
-                font_size: "20",
-                cx.props.title.as_ref()
-            }
+            rect { width: "100%", direction: "horizontal", padding: "0 20", font_size: "20", cx.props.title.as_ref() }
         }
     )
 }
@@ -156,13 +123,8 @@ fn Card<'a>(cx: Scope<'a, CardProps<'a>>) -> Element {
             shadow: "0 0 15 3 rgb(0, 0, 0, 60)",
             padding: "15",
             corner_radius: "8",
-            label {
-                font_size: "20",
-                "{&cx.props.title}"
-            }
-            label {
-                "{&cx.props.content}"
-            }
+            label { font_size: "20", "{&cx.props.title}" }
+            label { "{&cx.props.content}" }
         }
     )
 }

@@ -21,16 +21,9 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     render!(
-        ThemeProvider {
-            theme: CUSTOM_THEME,
-            rect {
-                width: "100%",
-                height: "100%",
-                Button {
-                    label {
-                        "Report"
-                    }
-                }
+        ThemeProvider { theme: CUSTOM_THEME,
+            rect { width: "100%", height: "100%",
+                Button { label { "Report" } }
             }
         }
     )

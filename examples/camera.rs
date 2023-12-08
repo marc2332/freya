@@ -20,10 +20,7 @@ fn app(cx: Scope) -> Element {
     let (image_reference, camera_error) = use_camera(cx, CameraSettings::default());
 
     render!(
-        rect {
-            width: "100%",
-            height: "100%",
-            padding: "50",
+        rect { width: "100%", height: "100%", padding: "50",
             if let Some(err) = camera_error.get() {
                 rsx!(
                     label {

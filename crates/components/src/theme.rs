@@ -22,3 +22,17 @@ pub fn ThemeProvider<'a>(cx: Scope<'a, ThemeProviderProps<'a>>) -> Element<'a> {
 
     render!(&cx.props.children)
 }
+
+macro_rules! get_theme {
+    ($cx:expr, $theme_prop:expr, $theme_name:ident) => {{
+        let mut theme = use_get_theme($cx).$theme_name;
+
+        if let Some(theme_override) = $theme_prop {
+            theme.apply_optional(theme_override);
+        }
+
+        theme
+    }};
+}
+
+pub(crate) use get_theme;

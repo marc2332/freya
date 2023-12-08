@@ -29,15 +29,10 @@ pub fn NodesTree<'a>(
             let nodes = nodes.read();
             let node = nodes.get(i).cloned().unwrap();
             rsx! {
-                NodeElement {
-                    key: "{node.id:?}",
-                    is_selected: Some(node.id) == *selected_node_id,
-                    onselected: |node: &TreeNode| {
-                        onselected.call(node);
-                        router.replace(Route::TreeStyleTab { node_id: node.id.serialize() });
-                    },
-                    node: node
-                }
+                NodeElement { key : "{node.id:?}", is_selected : Some(node.id) == *
+                selected_node_id, onselected : | node : & TreeNode | { onselected.call(node);
+                router.replace(Route::TreeStyleTab { node_id : node.id.serialize() }); }, node :
+                node }
             }
         })
     })
