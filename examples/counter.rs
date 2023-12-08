@@ -24,8 +24,24 @@ fn app(cx: Scope) -> Element {
             label { font_size: "75", font_weight: "bold", "{count}" }
         }
         rect { height: "50%", width: "100%", main_align: "center", cross_align: "center", direction: "horizontal",
-            Button { onclick: move |_| count += 1, label { "Increase" } }
-            Button { onclick: move |_| count -= 1, label { "Decrease" } }
+            Button {
+                theme: ButtonThemeWith {
+                    background: Some("red"),
+                    ..Default::default()
+                },
+                onclick: move |_| count += 1, label { "Increase" }
+            }
+            Button {
+                theme: ButtonThemeWith {
+                    background: Some("blue"),
+                    font_theme: Some(FontThemeWith {
+                        color: Some("white"),
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                },
+                onclick: move |_| count -= 1, label { "Decrease" }
+            }
         }
     )
 }

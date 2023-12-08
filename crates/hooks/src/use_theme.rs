@@ -25,19 +25,42 @@ pub fn use_get_theme(cx: &ScopeState) -> Theme {
         .unwrap_or_default()
 }
 
+/// Example usage:
+/// ```rust,ignore
+/// define_theme! {
+///     pub TestTheme {
+///         ..borrowed..
+///         borrowed_string: &'static str,
+///         ..owned..
+///         owned_string: String,
+///         ..subthemes..
+///         font_theme: FontTheme,
+///     }
+/// }
+/// ```
 macro_rules! define_theme {
     (
         $(#[$attrs:meta])*
         $vis:vis $name:ident {
         $(
-            $(#[$field_attrs:meta])*
-            $field_name:ident: $field_ty:ty,
-        )*
+            ..borrowed..
+            $(
+                $(#[$borrowed_field_attrs:meta])*
+                $borrowed_field_name:ident: $borrowed_field_ty:ty,
+            )*
+        )?
         $(
             ..owned..
             $(
                 $(#[$owned_field_attrs:meta])*
                 $owned_field_name:ident: $owned_field_ty:ty,
+            )*
+        )?
+        $(
+            ..subthemes..
+            $(
+                $(#[$subtheme_field_attrs:meta])*
+                $subtheme_field_name:ident: $subtheme_field_ty:ty,
             )*
         )?
     }) => {
@@ -46,42 +69,54 @@ macro_rules! define_theme {
             $(#[$attrs])*
             #[doc = "You can use this to change a theme for only one component, with the `theme` property."]
             $vis struct [<$name With>] {
-                $(
-                    $(#[$field_attrs])*
-                    pub $field_name: Option<$field_ty>,
-                )*
+                $($(
+                    $(#[$borrowed_field_attrs])*
+                    pub $borrowed_field_name: Option<$borrowed_field_ty>,
+                )*)?
                 $($(
                     $(#[$owned_field_attrs])*
                     pub $owned_field_name: Option<$owned_field_ty>,
                 )*)?
+                $($(
+                    $(#[$subtheme_field_attrs])*
+                    pub $subtheme_field_name: Option<[<$subtheme_field_ty With>]>,
+                )*)?
             }
-        }
 
-        #[derive(Clone, Debug, PartialEq, Eq)]
-        $(#[$attrs])*
-        $vis struct $name {
-            $(
-                $(#[$field_attrs])*
-                pub $field_name: $field_ty,
-            )*
-            $($(
-                $(#[$owned_field_attrs])*
-                pub $owned_field_name: $owned_field_ty,
-            )*)?
-        }
+            #[derive(Clone, Debug, PartialEq, Eq)]
+            $(#[$attrs])*
+            $vis struct $name {
+                $($(
+                    $(#[$borrowed_field_attrs])*
+                    pub $borrowed_field_name: $borrowed_field_ty,
+                )*)?
+                $($(
+                    $(#[$owned_field_attrs])*
+                    pub $owned_field_name: $owned_field_ty,
+                )*)?
+                $($(
+                    $(#[$subtheme_field_attrs])*
+                    pub $subtheme_field_name: $subtheme_field_ty,
+                )*)?
+            }
 
-        ::paste::paste! {
             impl $name {
                 pub fn apply_optional(&mut self, optional: &[<$name With>]) {
-                    $(
-                        if let Some($field_name) = optional.$field_name {
-                            self.$field_name = $field_name;
+                    $($(
+                        if let Some($borrowed_field_name) = optional.$borrowed_field_name {
+                            self.$borrowed_field_name = $borrowed_field_name;
                         }
-                    )*
+                    )*)?
 
                     $($(
                         if let Some($owned_field_name) = &optional.$owned_field_name {
                             self.$owned_field_name = $owned_field_name.clone();
+                        }
+                    )*)?
+
+                    $($(
+                        if let Some($subtheme_field_name) = &optional.$subtheme_field_name {
+                            self.$subtheme_field_name.apply_optional($subtheme_field_name);
                         }
                     )*)?
                 }
@@ -93,10 +128,11 @@ macro_rules! define_theme {
 define_theme! {
     /// Theming properties for DropdownItem components.
     pub DropdownItemTheme {
+        ..borrowed..
         background: &'static str,
         select_background: &'static str,
         hover_background: &'static str,
-        ..owned..
+        ..subthemes..
         font_theme: FontTheme,
     }
 }
@@ -104,12 +140,13 @@ define_theme! {
 define_theme! {
     /// Theming properties for Dropdown components.
     pub DropdownTheme {
+        ..borrowed..
         desplegable_background: &'static str,
         background_button: &'static str,
         hover_background: &'static str,
         border_fill: &'static str,
         arrow_fill: &'static str,
-        ..owned..
+        ..subthemes..
         font_theme: FontTheme,
     }
 }
@@ -117,10 +154,11 @@ define_theme! {
 define_theme! {
     /// Theming properties for Button components.
     pub ButtonTheme {
+        ..borrowed..
         background: &'static str,
         hover_background: &'static str,
         border_fill: &'static str,
-        ..owned..
+        ..subthemes..
         font_theme: FontTheme,
     }
 }
@@ -128,10 +166,11 @@ define_theme! {
 define_theme! {
     /// Theming properties for Input components.
     pub InputTheme {
+        ..borrowed..
         background: &'static str,
         hover_background: &'static str,
         border_fill: &'static str,
-        ..owned..
+        ..subthemes..
         font_theme: FontTheme,
     }
 }
@@ -139,6 +178,7 @@ define_theme! {
 define_theme! {
     /// Theming properties for Fonts.
     pub FontTheme {
+        ..borrowed..
         color: &'static str,
     }
 }
@@ -146,6 +186,7 @@ define_theme! {
 define_theme! {
     /// Theming properties the Switch components.
     pub SwitchTheme {
+        ..borrowed..
         background: &'static str,
         thumb_background: &'static str,
         enabled_background: &'static str,
@@ -156,6 +197,7 @@ define_theme! {
 define_theme! {
     /// Theming properties the Scrollbar components.
     pub ScrollbarTheme {
+        ..borrowed..
         background: &'static str,
         thumb_background: &'static str,
         hover_thumb_background: &'static str,
@@ -166,6 +208,7 @@ define_theme! {
 define_theme! {
     /// Theming properties for the App body.
     pub BodyTheme {
+        ..borrowed..
         background: &'static str,
         color: &'static str,
     }
@@ -174,6 +217,7 @@ define_theme! {
 define_theme! {
     /// Theming properties for Slider components.
     pub SliderTheme {
+        ..borrowed..
         background: &'static str,
         thumb_background: &'static str,
         thumb_inner_background: &'static str,
@@ -183,6 +227,7 @@ define_theme! {
 define_theme! {
     /// Theming properties for Tooltip components.
     pub TooltipTheme {
+        ..borrowed..
         background: &'static str,
         color: &'static str,
         border_fill: &'static str,
@@ -192,6 +237,7 @@ define_theme! {
 define_theme! {
     /// Theming properties for ExternalLink components.
     pub ExternalLinkTheme {
+        ..borrowed..
         highlight_color: &'static str,
     }
 }
@@ -199,6 +245,7 @@ define_theme! {
 define_theme! {
     /// Theming properties for Accordion component.
     pub AccordionTheme {
+        ..borrowed..
         color: &'static str,
         background: &'static str,
         border_fill: &'static str,
@@ -208,6 +255,7 @@ define_theme! {
 define_theme! {
     /// Theming properties for Loader component.
     pub LoaderTheme {
+        ..borrowed..
         primary_color: &'static str,
         secondary_color: &'static str,
     }
@@ -216,6 +264,7 @@ define_theme! {
 define_theme! {
     /// Theming properties for ProgressBar component.
     pub ProgressBarTheme {
+        ..borrowed..
         color: &'static str,
         background: &'static str,
         progress_background: &'static str,
@@ -225,12 +274,13 @@ define_theme! {
 define_theme! {
     /// Theming properties for Table component.
     pub TableTheme {
+        ..borrowed..
         background: &'static str,
         arrow_fill: &'static str,
         alternate_row_background: &'static str,
         row_background: &'static str,
         divider_fill: &'static str,
-        ..owned..
+        ..subthemes..
         font_theme: FontTheme,
     }
 }

@@ -9,7 +9,7 @@ pub struct TooltipProps<'a> {
     /// Theme override.
     pub theme: Option<TooltipThemeWith>,
     /// Url as the Tooltip destination.
-    url: &'a str,
+    pub url: &'a str,
 }
 
 /// `Tooltip` component

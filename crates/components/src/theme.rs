@@ -25,7 +25,7 @@ pub fn ThemeProvider<'a>(cx: Scope<'a, ThemeProviderProps<'a>>) -> Element<'a> {
 
 macro_rules! get_theme {
     ($cx:expr, $theme_prop:expr, $theme_name:ident) => {{
-        let mut theme = use_get_theme($cx).$theme_name;
+        let mut theme = ::freya_hooks::use_get_theme($cx).$theme_name;
 
         if let Some(theme_override) = $theme_prop {
             theme.apply_optional(theme_override);
