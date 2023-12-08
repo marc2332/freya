@@ -39,6 +39,10 @@ fn app(cx: Scope) -> Element {
             }
             Button {
                 onclick: move |_| count -= 1,
+                theme: ButtonThemeOptional {
+                    padding: "20".into(),
+                    ..Default::default()
+                },
                 label { "Decrease" }
             }
         }

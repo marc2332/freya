@@ -52,6 +52,60 @@ pub struct ButtonTheme {
     pub hover_background: &'static str,
     pub font_theme: FontTheme,
     pub border_fill: &'static str,
+    pub padding: &'static str,
+    pub margin: &'static str,
+    pub corner_radius: &'static str,
+    pub shadow: &'static str,
+}
+
+// This should be genreated via a macro
+impl ButtonTheme {
+    pub fn apply_optional(&mut self, optional: &ButtonThemeOptional){
+        if let Some(background) = optional.background {
+            self.background = background;
+        }
+
+        if let Some(hover_background) = optional.hover_background {
+            self.hover_background = hover_background;
+        }
+
+        if let Some(font_theme) = &optional.font_theme {
+            self.font_theme = font_theme.clone();
+        }
+
+        if let Some(border_fill) = optional.border_fill {
+            self.border_fill = border_fill;
+        }
+
+        if let Some(padding) = optional.padding {
+            self.padding = padding;
+        }
+
+        if let Some(margin) = optional.margin {
+            self.margin = margin;
+        }
+
+        if let Some(corner_radius) = optional.corner_radius {
+            self.corner_radius = corner_radius;
+        }
+
+        if let Some(shadow) = optional.shadow {
+            self.shadow = shadow;
+        }
+    }
+}
+
+// This should be genreated via a macro
+#[derive(Clone, Debug, PartialEq, Eq, Default)]
+pub struct ButtonThemeOptional {
+    pub background: Option<&'static str>,
+    pub hover_background: Option<&'static str>,
+    pub font_theme: Option<FontTheme>,
+    pub border_fill: Option<&'static str>,
+    pub padding: Option<&'static str>,
+    pub margin: Option<&'static str>,
+    pub corner_radius: Option<&'static str>,
+    pub shadow: Option<&'static str>,
 }
 
 /// Theming properties for Fonts.
@@ -185,6 +239,10 @@ pub const LIGHT_THEME: Theme = Theme {
             color: "rgb(10, 10, 10)",
         },
         border_fill: "rgb(210, 210, 210)",
+        padding: "8 16",
+        margin: "4",
+        corner_radius: "8",
+        shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)"
     },
     switch: SwitchTheme {
         background: "rgb(121, 116, 126)",
@@ -265,6 +323,10 @@ pub const DARK_THEME: Theme = Theme {
         hover_background: "rgb(45, 45, 45)",
         font_theme: FontTheme { color: "white" },
         border_fill: "rgb(80, 80, 80)",
+        padding: "8 16",
+        margin: "4",
+        corner_radius: "8",
+        shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)"
     },
     switch: SwitchTheme {
         background: "rgb(60, 60, 60)",
