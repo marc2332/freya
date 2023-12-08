@@ -1,7 +1,9 @@
 use std::time::{Duration, Instant};
 
 use freya_core::plugins::{FreyaPlugin, PluginEvent};
-use freya_engine::prelude::{Color, ParagraphBuilder, ParagraphStyle, TextShadow, TextStyle};
+use freya_engine::prelude::{
+    Color, FontStyle, ParagraphBuilder, ParagraphStyle, Slant, TextShadow, TextStyle, Weight, Width,
+};
 
 #[derive(Default)]
 pub struct PerformanceOverlayPlugin {
@@ -102,9 +104,11 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
 
 fn add_text(paragraph_builder: &mut ParagraphBuilder, text: String, font_size: f32) {
     let mut text_style = TextStyle::default();
-    text_style.set_color(Color::from_rgb(63, 255, 0));
+    text_style.set_color(Color::from_rgb(25, 225, 35));
+    let font_style = FontStyle::new(Weight::BOLD, Width::EXPANDED, Slant::Upright);
+    text_style.set_font_style(font_style);
     text_style.add_shadow(TextShadow::new(
-        Color::from_rgb(60, 60, 60),
+        Color::from_rgb(65, 65, 65),
         (0.0, 1.0),
         1.0,
     ));
