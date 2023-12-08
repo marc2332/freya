@@ -135,7 +135,7 @@ mod test {
 
             let progress = animation.value();
 
-            use_memo(cx, (), move |_| {
+            let _ = use_memo(cx, (), move |_| {
                 animation.start(Animation::new_linear(0.0..=100.0, 50));
             });
 
@@ -185,7 +185,7 @@ mod test {
                 }
             };
 
-            use_memo(cx, (), move |_| {
+            let _ = use_memo(cx, (), move |_| {
                 animation.start(Animation::new_linear(10.0..=100.0, 50));
             });
 

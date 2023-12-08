@@ -5,7 +5,7 @@ use freya_elements::events::MouseEvent;
 use freya_hooks::{use_get_theme, FontTheme, TableTheme};
 
 #[allow(non_snake_case)]
-#[inline_props]
+#[component]
 fn TableArrow(cx: Scope, order_direction: OrderDirection) -> Element {
     let theme = use_get_theme(cx);
     let TableTheme { arrow_fill, .. } = theme.table;
