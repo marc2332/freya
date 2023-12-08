@@ -291,10 +291,12 @@ impl<State: 'static + Clone> App<State> {
 
     /// Render the RealDOM into the Window
     pub fn render(&mut self, hovered_node: &HoveredNode) {
-        self.plugins.send(PluginEvent::BeforeRender(
-            self.window_env.canvas(),
-            &self.font_collection,
-        ));
+        self.plugins.send(PluginEvent::BeforeRender {
+            canvas: self.window_env.canvas(),
+            font_collection: &self.font_collection,
+            freya_dom: &self.sdom.get(),
+            viewports: &self.viewports,
+        });
 
         self.window_env.start_render(
             &self.layers,
@@ -307,10 +309,12 @@ impl<State: 'static + Clone> App<State> {
         self.accessibility
             .render_accessibility(self.window_env.window.title().as_str());
 
-        self.plugins.send(PluginEvent::AfterRender(
-            self.window_env.canvas(),
-            &self.font_collection,
-        ));
+        self.plugins.send(PluginEvent::AfterRender {
+            canvas: self.window_env.canvas(),
+            font_collection: &self.font_collection,
+            freya_dom: &self.sdom.get(),
+            viewports: &self.viewports,
+        });
 
         self.window_env.finish_render();
     }

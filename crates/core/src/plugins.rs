@@ -1,7 +1,10 @@
 use dioxus_native_core::NodeId;
+use freya_dom::dom::FreyaDOM;
 use freya_engine::prelude::{Canvas, FontCollection};
 use torin::torin::Torin;
 use winit::window::Window;
+
+use crate::layout::Viewports;
 
 #[derive(Default)]
 pub struct PluginsManager {
@@ -26,10 +29,20 @@ pub enum PluginEvent<'a> {
     WindowCreated(&'a Window),
 
     /// Just before starting to render the app to the Canvas.
-    BeforeRender(&'a Canvas, &'a FontCollection),
+    BeforeRender {
+        canvas: &'a Canvas,
+        font_collection: &'a FontCollection,
+        freya_dom: &'a FreyaDOM,
+        viewports: &'a Viewports,
+    },
 
     /// Just after rendering the app to the Canvas.
-    AfterRender(&'a Canvas, &'a FontCollection),
+    AfterRender {
+        canvas: &'a Canvas,
+        font_collection: &'a FontCollection,
+        freya_dom: &'a FreyaDOM,
+        viewports: &'a Viewports,
+    },
 
     /// Just before starting to measure the layout.
     StartedLayout(&'a Torin<NodeId>),

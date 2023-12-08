@@ -107,6 +107,10 @@ impl<Key: NodeKey> Torin<Key> {
         }
     }
 
+    pub fn size(&self) -> usize {
+        self.results.len()
+    }
+
     /// Reset the layout
     pub fn reset(&mut self) {
         self.root_node_candidate = RootNodeCandidate::None;

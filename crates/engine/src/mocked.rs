@@ -249,7 +249,7 @@ impl Default for TextShadow {
 }
 
 impl TextShadow {
-    pub fn new(color: Color, _: (usize, usize), _:usize) -> Self {
+    pub fn new(color: Color, _: (f32, f32), _: f32) -> Self {
         unimplemented!("This is mocked")
     }
 }
