@@ -25,6 +25,12 @@ pub fn use_get_theme(cx: &ScopeState) -> Theme {
         .unwrap_or_default()
 }
 
+#[doc(hidden)]
+pub use ::paste::paste;
+
+#[doc(hidden)]
+pub use ::core::default::Default;
+
 /// Example usage:
 /// ```rust,ignore
 /// define_theme! {
@@ -38,6 +44,7 @@ pub fn use_get_theme(cx: &ScopeState) -> Theme {
 ///     }
 /// }
 /// ```
+#[macro_export]
 macro_rules! define_theme {
     (
         $(#[$attrs:meta])*
@@ -64,7 +71,7 @@ macro_rules! define_theme {
             )*
         )?
     }) => {
-        ::paste::paste! {
+        $crate::paste! {
             #[derive(Default, Clone, Debug, PartialEq, Eq)]
             $(#[$attrs])*
             #[doc = "You can use this to change a theme for only one component, with the `theme` property."]
@@ -125,16 +132,63 @@ macro_rules! define_theme {
     };
 }
 
-define_theme! {
-    /// Theming properties for DropdownItem components.
-    pub DropdownItemTheme {
-        ..borrowed..
-        background: &'static str,
-        select_background: &'static str,
-        hover_background: &'static str,
-        ..subthemes..
-        font_theme: FontTheme,
-    }
+/// Create `FooThemeWith` structs without having to deal with the verbose syntax.
+///
+/// # Examples
+///
+/// Without the macro:
+///
+/// ```no_run
+/// # use dioxus::prelude::*;
+/// # use freya::prelude::*;
+/// # fn theme_with_example_no_macro(cx: Scope) -> Element {
+/// render! {
+///     Button {
+///         theme: ButtonThemeWith {
+///             background: "blue".into(),
+///             font_theme: FontThemeWith {
+///                 color: "white".into(),
+///                 ..Default::default()
+///             }.into(),
+///             ..Default::default()
+///         }
+///     }
+/// }
+/// # }
+/// ```
+///
+/// With the macro:
+///
+/// ```no_run
+/// # use dioxus::prelude::*;
+/// # use freya::prelude::*;
+/// # fn theme_with_example_no_macro(cx: Scope) -> Element {
+/// render! {
+///     Button {
+///         theme: theme_with!(ButtonTheme {
+///             background: "blue",
+///             font_theme: theme_with!(FontTheme {
+///                 color: "white",
+///             }),
+///         })
+///     }
+/// }
+/// # }
+/// ```
+#[macro_export]
+macro_rules! theme_with {
+    ($theme_name:ident {
+        $(
+            $theme_field_name:ident: $theme_field_val:expr,
+        )*
+    }) => {
+        $crate::paste! {
+            [<$theme_name With>] {
+                $($theme_field_name: Some($theme_field_val),)*
+                ..$crate::Default::default()
+            }
+        }
+    };
 }
 
 define_theme! {
@@ -146,6 +200,18 @@ define_theme! {
         hover_background: &'static str,
         border_fill: &'static str,
         arrow_fill: &'static str,
+        ..subthemes..
+        font_theme: FontTheme,
+    }
+}
+
+define_theme! {
+    /// Theming properties for DropdownItem components.
+    pub DropdownItemTheme {
+        ..borrowed..
+        background: &'static str,
+        select_background: &'static str,
+        hover_background: &'static str,
         ..subthemes..
         font_theme: FontTheme,
     }
