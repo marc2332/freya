@@ -377,7 +377,6 @@ define_component_theme! {
     }
 }
 
-/// Theming properties for Themes.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Theme {
     pub name: &'static str,
@@ -403,7 +402,6 @@ impl Default for Theme {
     }
 }
 
-/// `Light` theme
 pub const LIGHT_THEME: Theme = Theme {
     name: "light",
     body: BodyTheme {
@@ -500,7 +498,6 @@ pub const LIGHT_THEME: Theme = Theme {
     },
 };
 
-/// `Dark` theme
 pub const DARK_THEME: Theme = Theme {
     name: "dark",
     body: BodyTheme {
