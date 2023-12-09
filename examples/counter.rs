@@ -3,8 +3,8 @@
     windows_subsystem = "windows"
 )]
 
-use rand::Rng;
 use freya::prelude::*;
+use rand::Rng;
 use std::borrow::Cow;
 
 fn main() {

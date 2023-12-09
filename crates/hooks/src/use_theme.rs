@@ -1,11 +1,11 @@
-use dioxus_core::ScopeState;
-use dioxus_hooks::{use_shared_state, use_shared_state_provider, UseSharedState};
-#[doc(hidden)]
-pub use ::paste::paste;
 #[doc(hidden)]
 pub use ::core::default::Default;
 #[doc(hidden)]
+pub use ::paste::paste;
+#[doc(hidden)]
 pub use ::std::borrow::Cow;
+use dioxus_core::ScopeState;
+use dioxus_hooks::{use_shared_state, use_shared_state_provider, UseSharedState};
 
 /// Provide a custom [`Theme`].
 pub fn use_init_theme(cx: &ScopeState, theme: Theme) {
@@ -489,7 +489,9 @@ pub const LIGHT_THEME: Theme = Theme {
         progress_background: Cow::Borrowed("rgb(103, 80, 164)"),
     },
     table: TableTheme {
-        font_theme: FontTheme { color: Cow::Borrowed("black") },
+        font_theme: FontTheme {
+            color: Cow::Borrowed("black"),
+        },
         background: Cow::Borrowed("white"),
         arrow_fill: Cow::Borrowed("rgb(40, 40, 40)"),
         row_background: Cow::Borrowed("transparent"),
@@ -513,7 +515,9 @@ pub const DARK_THEME: Theme = Theme {
     button: ButtonTheme {
         background: Cow::Borrowed("rgb(35, 35, 35)"),
         hover_background: Cow::Borrowed("rgb(45, 45, 45)"),
-        font_theme: FontTheme { color: Cow::Borrowed("white") },
+        font_theme: FontTheme {
+            color: Cow::Borrowed("white"),
+        },
         border_fill: Cow::Borrowed("rgb(80, 80, 80)"),
         padding: Cow::Borrowed("8 16"),
         margin: Cow::Borrowed("4"),
@@ -524,7 +528,9 @@ pub const DARK_THEME: Theme = Theme {
     input: InputTheme {
         background: Cow::Borrowed("rgb(35, 35, 35)"),
         hover_background: Cow::Borrowed("rgb(45, 45, 45)"),
-        font_theme: FontTheme { color: Cow::Borrowed("white") },
+        font_theme: FontTheme {
+            color: Cow::Borrowed("white"),
+        },
         border_fill: Cow::Borrowed("rgb(80, 80, 80)"),
     },
     switch: SwitchTheme {
@@ -551,7 +557,9 @@ pub const DARK_THEME: Theme = Theme {
         desplegable_background: Cow::Borrowed("rgb(25, 25, 25)"),
         background_button: Cow::Borrowed("rgb(35, 35, 35)"),
         hover_background: Cow::Borrowed("rgb(45, 45, 45)"),
-        font_theme: FontTheme { color: Cow::Borrowed("white") },
+        font_theme: FontTheme {
+            color: Cow::Borrowed("white"),
+        },
         border_fill: Cow::Borrowed("rgb(80, 80, 80)"),
         arrow_fill: Cow::Borrowed("rgb(40, 40, 40)"),
     },
@@ -559,7 +567,9 @@ pub const DARK_THEME: Theme = Theme {
         background: Cow::Borrowed("rgb(35, 35, 35)"),
         select_background: Cow::Borrowed("rgb(80, 80, 80)"),
         hover_background: Cow::Borrowed("rgb(55, 55, 55)"),
-        font_theme: FontTheme { color: Cow::Borrowed("white") },
+        font_theme: FontTheme {
+            color: Cow::Borrowed("white"),
+        },
     },
     accordion: AccordionTheme {
         color: Cow::Borrowed("white"),
@@ -576,7 +586,9 @@ pub const DARK_THEME: Theme = Theme {
         progress_background: Cow::Borrowed("rgb(255, 95, 0)"),
     },
     table: TableTheme {
-        font_theme: FontTheme { color: Cow::Borrowed("white") },
+        font_theme: FontTheme {
+            color: Cow::Borrowed("white"),
+        },
         background: Cow::Borrowed("rgb(25, 25, 25)"),
         arrow_fill: Cow::Borrowed("rgb(150, 150, 150)"),
         row_background: Cow::Borrowed("transparent"),

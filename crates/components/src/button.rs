@@ -2,7 +2,7 @@ use crate::theme::get_theme;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
-use freya_hooks::{ButtonTheme, ButtonThemeWith, use_focus, use_platform};
+use freya_hooks::{use_focus, use_platform, ButtonTheme, ButtonThemeWith};
 use winit::window::CursorIcon;
 
 /// [`Button`] component properties.
@@ -111,7 +111,15 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
     };
 
     let ButtonTheme {
-        background, hover_background, border_fill, padding, margin, corner_radius, width, height, font_theme
+        background,
+        hover_background,
+        border_fill,
+        padding,
+        margin,
+        corner_radius,
+        width,
+        height,
+        font_theme,
     } = &theme;
 
     // let ButtonProps {

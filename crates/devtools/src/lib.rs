@@ -183,7 +183,7 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
         rect {
             width: "100%",
             height: "100%",
-            color: theme.body.color,
+            color: "{theme.body.color}",
             Router::<Route> { }
         }
     )

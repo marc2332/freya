@@ -6,7 +6,9 @@ use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::keyboard::Key;
 use freya_elements::events::{KeyboardEvent, MouseEvent};
-use freya_hooks::{use_focus, use_get_theme, use_platform, DropdownItemThemeWith, DropdownThemeWith, DropdownTheme};
+use freya_hooks::{
+    use_focus, use_get_theme, use_platform, DropdownItemThemeWith, DropdownTheme, DropdownThemeWith,
+};
 use winit::window::CursorIcon;
 
 /// [`DropdownItem`] component properties.
@@ -239,7 +241,12 @@ where
     };
 
     let DropdownTheme {
-        font_theme, desplegable_background, background_button, hover_background, border_fill, arrow_fill
+        font_theme,
+        desplegable_background,
+        background_button,
+        hover_background,
+        border_fill,
+        arrow_fill,
     } = &theme;
 
     let button_background = match *status.get() {

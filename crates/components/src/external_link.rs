@@ -1,9 +1,9 @@
-use std::borrow::Cow;
 use crate::theme::get_theme;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
 use freya_hooks::{use_get_theme, ExternalLinkThemeWith};
+use std::borrow::Cow;
 
 use crate::Tooltip;
 

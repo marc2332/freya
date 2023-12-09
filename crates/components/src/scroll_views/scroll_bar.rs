@@ -1,8 +1,8 @@
-use std::borrow::Cow;
 use crate::theme::get_theme;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_hooks::{use_get_theme, ScrollbarThemeWith};
+use std::borrow::Cow;
 
 #[derive(Props)]
 pub struct ScrollBarProps<'a> {
