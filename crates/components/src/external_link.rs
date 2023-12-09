@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use crate::theme::get_theme;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
@@ -10,7 +11,7 @@ use crate::Tooltip;
 #[derive(Props)]
 pub struct ExternalLinkProps<'a> {
     /// Theme override.
-    pub theme: Option<ExternalLinkThemeWith>,
+    pub theme: Option<ExternalLinkThemeWith<'a>>,
     /// Inner children for the ExternalLink.
     children: Element<'a>,
     #[props(optional)]
@@ -72,7 +73,7 @@ pub fn ExternalLink<'a>(cx: Scope<'a, ExternalLinkProps<'a>>) -> Element {
     let color = if *is_hovering.get() {
         theme.highlight_color
     } else {
-        "inherit"
+        Cow::Borrowed("inherit")
     };
 
     render!(

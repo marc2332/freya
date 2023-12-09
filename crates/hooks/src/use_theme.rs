@@ -1,5 +1,11 @@
 use dioxus_core::ScopeState;
 use dioxus_hooks::{use_shared_state, use_shared_state_provider, UseSharedState};
+#[doc(hidden)]
+pub use ::paste::paste;
+#[doc(hidden)]
+pub use ::core::default::Default;
+#[doc(hidden)]
+pub use ::std::borrow::Cow;
 
 /// Provide a custom [`Theme`].
 pub fn use_init_theme(cx: &ScopeState, theme: Theme) {
@@ -25,18 +31,12 @@ pub fn use_get_theme(cx: &ScopeState) -> Theme {
         .unwrap_or_default()
 }
 
-#[doc(hidden)]
-pub use ::paste::paste;
-
-#[doc(hidden)]
-pub use ::core::default::Default;
-
 /// Example usage:
 /// ```rust,ignore
 /// define_theme! {
 ///     pub TestTheme {
 ///         ..borrowed..
-///         borrowed_string: &'static str,
+///         borrowed_string,
 ///         ..owned..
 ///         owned_string: String,
 ///         ..subthemes..
@@ -45,37 +45,44 @@ pub use ::core::default::Default;
 /// }
 /// ```
 #[macro_export]
-macro_rules! define_theme {
+macro_rules! define_component_theme {
     (
         $(#[$attrs:meta])*
-        $vis:vis $name:ident {
-        $(
-            ..borrowed..
+        $vis:vis $name:ident $(<$lifetime:lifetime>)? {
             $(
-                $(#[$borrowed_field_attrs:meta])*
-                $borrowed_field_name:ident: $borrowed_field_ty:ty,
-            )*
-        )?
-        $(
-            ..owned..
+                ..cows..
+                $(
+                    $(#[$cow_field_attrs:meta])*
+                    $cow_field_name:ident: $cow_field_ty:ty,
+                )*
+            )?
             $(
-                $(#[$owned_field_attrs:meta])*
-                $owned_field_name:ident: $owned_field_ty:ty,
-            )*
-        )?
-        $(
-            ..subthemes..
+                ..borrowed..
+                $(
+                    $(#[$borrowed_field_attrs:meta])*
+                    $borrowed_field_name:ident: $borrowed_field_ty:ty,
+                )*
+            )?
             $(
-                $(#[$subtheme_field_attrs:meta])*
-                $subtheme_field_name:ident: $subtheme_field_ty:ty,
-            )*
-        )?
+                ..owned..
+                $(
+                    $(#[$owned_field_attrs:meta])*
+                    $owned_field_name:ident: $owned_field_ty:ty,
+                )*
+            )?
+            $(
+                ..subthemes..
+                $(
+                    $(#[$subtheme_field_attrs:meta])*
+                    $subtheme_field_name:ident: $subtheme_field_ty_name:ident $(<$subtheme_field_ty_lifetime:lifetime>)?,
+                )*
+            )?
     }) => {
         $crate::paste! {
             #[derive(Default, Clone, Debug, PartialEq, Eq)]
             $(#[$attrs])*
             #[doc = "You can use this to change a theme for only one component, with the `theme` property."]
-            $vis struct [<$name With>] {
+            $vis struct [<$name With>] $(<$lifetime>)? {
                 $($(
                     $(#[$borrowed_field_attrs])*
                     pub $borrowed_field_name: Option<$borrowed_field_ty>,
@@ -86,13 +93,17 @@ macro_rules! define_theme {
                 )*)?
                 $($(
                     $(#[$subtheme_field_attrs])*
-                    pub $subtheme_field_name: Option<[<$subtheme_field_ty With>]>,
+                    pub $subtheme_field_name: Option< [<$subtheme_field_ty_name With>] $(<$subtheme_field_ty_lifetime>)? >,
+                )*)?
+                $($(
+                    $(#[$cow_field_attrs])*
+                    pub $cow_field_name: Option<$crate::Cow<'a, $cow_field_ty>>,
                 )*)?
             }
 
             #[derive(Clone, Debug, PartialEq, Eq)]
             $(#[$attrs])*
-            $vis struct $name {
+            $vis struct $name $(<$lifetime>)? {
                 $($(
                     $(#[$borrowed_field_attrs])*
                     pub $borrowed_field_name: $borrowed_field_ty,
@@ -103,12 +114,16 @@ macro_rules! define_theme {
                 )*)?
                 $($(
                     $(#[$subtheme_field_attrs])*
-                    pub $subtheme_field_name: $subtheme_field_ty,
+                    pub $subtheme_field_name: $subtheme_field_ty_name $(<$subtheme_field_ty_lifetime>)?,
+                )*)?
+                $($(
+                    $(#[$cow_field_attrs])*
+                    pub $cow_field_name: $crate::Cow<'a, $cow_field_ty>,
                 )*)?
             }
 
-            impl $name {
-                pub fn apply_optional(&mut self, optional: &[<$name With>]) {
+            impl $(<$lifetime>)? $name $(<$lifetime>)? {
+                pub fn apply_optional(&mut self, optional: & $($lifetime)? [<$name With>]) {
                     $($(
                         if let Some($borrowed_field_name) = optional.$borrowed_field_name {
                             self.$borrowed_field_name = $borrowed_field_name;
@@ -124,6 +139,12 @@ macro_rules! define_theme {
                     $($(
                         if let Some($subtheme_field_name) = &optional.$subtheme_field_name {
                             self.$subtheme_field_name.apply_optional($subtheme_field_name);
+                        }
+                    )*)?
+
+                    $($(
+                        if let Some($cow_field_name) = &optional.$cow_field_name {
+                            self.$cow_field_name = $cow_field_name.clone();
                         }
                     )*)?
                 }
@@ -191,163 +212,168 @@ macro_rules! theme_with {
     };
 }
 
-define_theme! {
+define_component_theme! {
     /// Theming properties for Dropdown components.
-    pub DropdownTheme {
-        ..borrowed..
-        desplegable_background: &'static str,
-        background_button: &'static str,
-        hover_background: &'static str,
-        border_fill: &'static str,
-        arrow_fill: &'static str,
+    pub DropdownTheme<'a> {
+        ..cows..
+        desplegable_background: str,
+        background_button: str,
+        hover_background: str,
+        border_fill: str,
+        arrow_fill: str,
         ..subthemes..
-        font_theme: FontTheme,
+        font_theme: FontTheme<'a>,
     }
 }
 
-define_theme! {
+define_component_theme! {
     /// Theming properties for DropdownItem components.
-    pub DropdownItemTheme {
-        ..borrowed..
-        background: &'static str,
-        select_background: &'static str,
-        hover_background: &'static str,
+    pub DropdownItemTheme<'a> {
+        ..cows..
+        background: str,
+        select_background: str,
+        hover_background: str,
         ..subthemes..
-        font_theme: FontTheme,
+        font_theme: FontTheme<'a>,
     }
 }
 
-define_theme! {
+define_component_theme! {
     /// Theming properties for Button components.
-    pub ButtonTheme {
-        ..borrowed..
-        background: &'static str,
-        hover_background: &'static str,
-        border_fill: &'static str,
+    pub ButtonTheme<'a> {
+        ..cows..
+        background: str,
+        hover_background: str,
+        border_fill: str,
+        margin: str,
+        corner_radius: str,
+        width: str,
+        height: str,
+        padding: str,
         ..subthemes..
-        font_theme: FontTheme,
+        font_theme: FontTheme<'a>,
     }
 }
 
-define_theme! {
+define_component_theme! {
     /// Theming properties for Input components.
-    pub InputTheme {
-        ..borrowed..
-        background: &'static str,
-        hover_background: &'static str,
-        border_fill: &'static str,
+    pub InputTheme<'a> {
+        ..cows..
+        background: str,
+        hover_background: str,
+        border_fill: str,
         ..subthemes..
-        font_theme: FontTheme,
+        font_theme: FontTheme<'a>,
     }
 }
 
-define_theme! {
+define_component_theme! {
     /// Theming properties for Fonts.
-    pub FontTheme {
-        ..borrowed..
-        color: &'static str,
+    pub FontTheme<'a> {
+        ..cows..
+        color: str,
     }
 }
 
-define_theme! {
+define_component_theme! {
     /// Theming properties the Switch components.
-    pub SwitchTheme {
-        ..borrowed..
-        background: &'static str,
-        thumb_background: &'static str,
-        enabled_background: &'static str,
-        enabled_thumb_background: &'static str,
+    pub SwitchTheme<'a> {
+        ..cows..
+        background: str,
+        thumb_background: str,
+        enabled_background: str,
+        enabled_thumb_background: str,
     }
 }
 
-define_theme! {
+define_component_theme! {
     /// Theming properties the Scrollbar components.
-    pub ScrollbarTheme {
-        ..borrowed..
-        background: &'static str,
-        thumb_background: &'static str,
-        hover_thumb_background: &'static str,
-        active_thumb_background: &'static str,
+    pub ScrollbarTheme<'a> {
+        ..cows..
+        background: str,
+        thumb_background: str,
+        hover_thumb_background: str,
+        active_thumb_background: str,
     }
 }
 
-define_theme! {
+define_component_theme! {
     /// Theming properties for the App body.
-    pub BodyTheme {
-        ..borrowed..
-        background: &'static str,
-        color: &'static str,
+    pub BodyTheme<'a> {
+        ..cows..
+        background: str,
+        color: str,
     }
 }
 
-define_theme! {
+define_component_theme! {
     /// Theming properties for Slider components.
-    pub SliderTheme {
-        ..borrowed..
-        background: &'static str,
-        thumb_background: &'static str,
-        thumb_inner_background: &'static str,
+    pub SliderTheme<'a> {
+        ..cows..
+        background: str,
+        thumb_background: str,
+        thumb_inner_background: str,
     }
 }
 
-define_theme! {
+define_component_theme! {
     /// Theming properties for Tooltip components.
-    pub TooltipTheme {
-        ..borrowed..
-        background: &'static str,
-        color: &'static str,
-        border_fill: &'static str,
+    pub TooltipTheme<'a> {
+        ..cows..
+        background: str,
+        color: str,
+        border_fill: str,
     }
 }
 
-define_theme! {
+define_component_theme! {
     /// Theming properties for ExternalLink components.
-    pub ExternalLinkTheme {
-        ..borrowed..
-        highlight_color: &'static str,
+    pub ExternalLinkTheme<'a> {
+        ..cows..
+        highlight_color: str,
     }
 }
 
-define_theme! {
+define_component_theme! {
     /// Theming properties for Accordion component.
-    pub AccordionTheme {
-        ..borrowed..
-        color: &'static str,
-        background: &'static str,
-        border_fill: &'static str,
+    pub AccordionTheme<'a> {
+        ..cows..
+        color: str,
+        background: str,
+        border_fill: str,
     }
 }
 
-define_theme! {
+define_component_theme! {
     /// Theming properties for Loader component.
-    pub LoaderTheme {
-        ..borrowed..
-        primary_color: &'static str,
-        secondary_color: &'static str,
+    pub LoaderTheme<'a> {
+        ..cows..
+        primary_color: str,
+        secondary_color: str,
     }
 }
 
-define_theme! {
+define_component_theme! {
     /// Theming properties for ProgressBar component.
-    pub ProgressBarTheme {
-        ..borrowed..
-        color: &'static str,
-        background: &'static str,
-        progress_background: &'static str,
+    pub ProgressBarTheme<'a> {
+        ..cows..
+        color: str,
+        background: str,
+        progress_background: str,
     }
 }
 
-define_theme! {
+define_component_theme! {
     /// Theming properties for Table component.
-    pub TableTheme {
-        ..borrowed..
-        background: &'static str,
-        arrow_fill: &'static str,
-        alternate_row_background: &'static str,
-        row_background: &'static str,
-        divider_fill: &'static str,
+    pub TableTheme<'a> {
+        ..cows..
+        background: str,
+        arrow_fill: str,
+        alternate_row_background: str,
+        row_background: str,
+        divider_fill: str,
         ..subthemes..
-        font_theme: FontTheme,
+        font_theme: FontTheme<'a>,
     }
 }
 
@@ -355,20 +381,20 @@ define_theme! {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Theme {
     pub name: &'static str,
-    pub body: BodyTheme,
-    pub button: ButtonTheme,
-    pub switch: SwitchTheme,
-    pub scrollbar: ScrollbarTheme,
-    pub slider: SliderTheme,
-    pub tooltip: TooltipTheme,
-    pub external_link: ExternalLinkTheme,
-    pub dropdown: DropdownTheme,
-    pub dropdown_item: DropdownItemTheme,
-    pub accordion: AccordionTheme,
-    pub loader: LoaderTheme,
-    pub progress_bar: ProgressBarTheme,
-    pub table: TableTheme,
-    pub input: InputTheme,
+    pub body: BodyTheme<'static>,
+    pub button: ButtonTheme<'static>,
+    pub switch: SwitchTheme<'static>,
+    pub scrollbar: ScrollbarTheme<'static>,
+    pub slider: SliderTheme<'static>,
+    pub tooltip: TooltipTheme<'static>,
+    pub external_link: ExternalLinkTheme<'static>,
+    pub dropdown: DropdownTheme<'static>,
+    pub dropdown_item: DropdownItemTheme<'static>,
+    pub accordion: AccordionTheme<'static>,
+    pub loader: LoaderTheme<'static>,
+    pub progress_bar: ProgressBarTheme<'static>,
+    pub table: TableTheme<'static>,
+    pub input: InputTheme<'static>,
 }
 
 impl Default for Theme {
@@ -381,89 +407,94 @@ impl Default for Theme {
 pub const LIGHT_THEME: Theme = Theme {
     name: "light",
     body: BodyTheme {
-        background: "white",
-        color: "black",
+        background: Cow::Borrowed("white"),
+        color: Cow::Borrowed("black"),
     },
     slider: SliderTheme {
-        background: "rgb(210, 210, 210)",
-        thumb_background: "rgb(210, 210, 210)",
-        thumb_inner_background: "rgb(103, 80, 164)",
+        background: Cow::Borrowed("rgb(210, 210, 210)"),
+        thumb_background: Cow::Borrowed("rgb(210, 210, 210)"),
+        thumb_inner_background: Cow::Borrowed("rgb(103, 80, 164)"),
     },
     button: ButtonTheme {
-        background: "rgb(245, 245, 245)",
-        hover_background: "rgb(235, 235, 235)",
+        background: Cow::Borrowed("rgb(245, 245, 245)"),
+        hover_background: Cow::Borrowed("rgb(235, 235, 235)"),
         font_theme: FontTheme {
-            color: "rgb(10, 10, 10)",
+            color: Cow::Borrowed("rgb(10, 10, 10)"),
         },
-        border_fill: "rgb(210, 210, 210)",
+        border_fill: Cow::Borrowed("rgb(210, 210, 210)"),
+        padding: Cow::Borrowed("8 16"),
+        margin: Cow::Borrowed("4"),
+        corner_radius: Cow::Borrowed("8"),
+        width: Cow::Borrowed("auto"),
+        height: Cow::Borrowed("auto"),
     },
     input: InputTheme {
-        background: "rgb(245, 245, 245)",
-        hover_background: "rgb(235, 235, 235)",
+        background: Cow::Borrowed("rgb(245, 245, 245)"),
+        hover_background: Cow::Borrowed("rgb(235, 235, 235)"),
         font_theme: FontTheme {
-            color: "rgb(10, 10, 10)",
+            color: Cow::Borrowed("rgb(10, 10, 10)"),
         },
-        border_fill: "rgb(210, 210, 210)",
+        border_fill: Cow::Borrowed("rgb(210, 210, 210)"),
     },
     switch: SwitchTheme {
-        background: "rgb(121, 116, 126)",
-        thumb_background: "rgb(231, 224, 236)",
-        enabled_background: "rgb(103, 80, 164)",
-        enabled_thumb_background: "rgb(234, 221, 255)",
+        background: Cow::Borrowed("rgb(121, 116, 126)"),
+        thumb_background: Cow::Borrowed("rgb(231, 224, 236)"),
+        enabled_background: Cow::Borrowed("rgb(103, 80, 164)"),
+        enabled_thumb_background: Cow::Borrowed("rgb(234, 221, 255)"),
     },
     scrollbar: ScrollbarTheme {
-        background: "rgb(225, 225, 225)",
-        thumb_background: "rgb(135, 135, 135)",
-        hover_thumb_background: "rgb(115, 115, 115)",
-        active_thumb_background: "rgb(95, 95, 95)",
+        background: Cow::Borrowed("rgb(225, 225, 225)"),
+        thumb_background: Cow::Borrowed("rgb(135, 135, 135)"),
+        hover_thumb_background: Cow::Borrowed("rgb(115, 115, 115)"),
+        active_thumb_background: Cow::Borrowed("rgb(95, 95, 95)"),
     },
     tooltip: TooltipTheme {
-        background: "rgb(245, 245, 245)",
-        color: "rgb(25,25,25)",
-        border_fill: "rgb(210, 210, 210)",
+        background: Cow::Borrowed("rgb(245, 245, 245)"),
+        color: Cow::Borrowed("rgb(25,25,25)"),
+        border_fill: Cow::Borrowed("rgb(210, 210, 210)"),
     },
     external_link: ExternalLinkTheme {
-        highlight_color: "rgb(43,106,208)",
+        highlight_color: Cow::Borrowed("rgb(43,106,208)"),
     },
     dropdown: DropdownTheme {
-        desplegable_background: "white",
-        background_button: "rgb(245, 245, 245)",
-        hover_background: "rgb(235, 235, 235)",
+        desplegable_background: Cow::Borrowed("white"),
+        background_button: Cow::Borrowed("rgb(245, 245, 245)"),
+        hover_background: Cow::Borrowed("rgb(235, 235, 235)"),
         font_theme: FontTheme {
-            color: "rgb(10, 10, 10)",
+            color: Cow::Borrowed("rgb(10, 10, 10)"),
         },
-        border_fill: "rgb(210, 210, 210)",
-        arrow_fill: "rgb(40, 40, 40)",
+        border_fill: Cow::Borrowed("rgb(210, 210, 210)"),
+        arrow_fill: Cow::Borrowed("rgb(40, 40, 40)"),
     },
     dropdown_item: DropdownItemTheme {
-        background: "white",
-        select_background: "rgb(240, 240, 240)",
-        hover_background: "rgb(220, 220, 220)",
+        background: Cow::Borrowed("white"),
+        select_background: Cow::Borrowed("rgb(240, 240, 240)"),
+        hover_background: Cow::Borrowed("rgb(220, 220, 220)"),
         font_theme: FontTheme {
-            color: "rgb(10, 10, 10)",
+            color: Cow::Borrowed("rgb(10, 10, 10)"),
         },
     },
     accordion: AccordionTheme {
-        color: "black",
-        background: "rgb(245, 245, 245)",
-        border_fill: "rgb(210, 210, 210)",
+        color: Cow::Borrowed("black"),
+        background: Cow::Borrowed("rgb(245, 245, 245)"),
+        border_fill: Cow::Borrowed("rgb(210, 210, 210)"),
     },
     loader: LoaderTheme {
-        primary_color: "rgb(50, 50, 50)",
-        secondary_color: "rgb(150, 150, 150)",
+        primary_color: Cow::Borrowed("rgb(50, 50, 50)"),
+        secondary_color: Cow::Borrowed("rgb(150, 150, 150)"),
     },
     progress_bar: ProgressBarTheme {
-        color: "white",
-        background: "rgb(210, 210, 210)",
-        progress_background: "rgb(103, 80, 164)",
+        color: Cow::Borrowed("white"),
+        background: Cow::Borrowed("rgb(210, 210, 210)"),
+        progress_background: Cow::Borrowed("rgb(103, 80, 164)"),
     },
     table: TableTheme {
-        font_theme: FontTheme { color: "black" },
-        background: "white",
-        arrow_fill: "rgb(40, 40, 40)",
-        row_background: "transparent",
-        alternate_row_background: "rgb(240, 240, 240)",
-        divider_fill: "rgb(200, 200, 200)",
+        font_theme: FontTheme { color: Cow::Borrowed("black") },
+        background: Cow::Borrowed("white"),
+        arrow_fill: Cow::Borrowed("rgb(40, 40, 40)"),
+        row_background: Cow::Borrowed("transparent"),
+        alternate_row_background: Cow::Borrowed("rgb(240, 240, 240)"),
+        divider_fill: Cow::Borrowed("rgb(200, 200, 200)"),
     },
 };
 
@@ -471,80 +502,85 @@ pub const LIGHT_THEME: Theme = Theme {
 pub const DARK_THEME: Theme = Theme {
     name: "dark",
     body: BodyTheme {
-        background: "rgb(25, 25, 25)",
-        color: "white",
+        background: Cow::Borrowed("rgb(25, 25, 25)"),
+        color: Cow::Borrowed("white"),
     },
     slider: SliderTheme {
-        background: "rgb(60, 60, 60)",
-        thumb_background: "rgb(60, 60, 60)",
-        thumb_inner_background: "rgb(255, 95, 0)",
+        background: Cow::Borrowed("rgb(60, 60, 60)"),
+        thumb_background: Cow::Borrowed("rgb(60, 60, 60)"),
+        thumb_inner_background: Cow::Borrowed("rgb(255, 95, 0)"),
     },
     button: ButtonTheme {
-        background: "rgb(35, 35, 35)",
-        hover_background: "rgb(45, 45, 45)",
-        font_theme: FontTheme { color: "white" },
-        border_fill: "rgb(80, 80, 80)",
+        background: Cow::Borrowed("rgb(35, 35, 35)"),
+        hover_background: Cow::Borrowed("rgb(45, 45, 45)"),
+        font_theme: FontTheme { color: Cow::Borrowed("white") },
+        border_fill: Cow::Borrowed("rgb(80, 80, 80)"),
+        padding: Cow::Borrowed("8 16"),
+        margin: Cow::Borrowed("4"),
+        corner_radius: Cow::Borrowed("8"),
+        width: Cow::Borrowed("auto"),
+        height: Cow::Borrowed("auto"),
     },
     input: InputTheme {
-        background: "rgb(35, 35, 35)",
-        hover_background: "rgb(45, 45, 45)",
-        font_theme: FontTheme { color: "white" },
-        border_fill: "rgb(80, 80, 80)",
+        background: Cow::Borrowed("rgb(35, 35, 35)"),
+        hover_background: Cow::Borrowed("rgb(45, 45, 45)"),
+        font_theme: FontTheme { color: Cow::Borrowed("white") },
+        border_fill: Cow::Borrowed("rgb(80, 80, 80)"),
     },
     switch: SwitchTheme {
-        background: "rgb(60, 60, 60)",
-        thumb_background: "rgb(200, 200, 200)",
-        enabled_background: "rgb(255, 95, 0)",
-        enabled_thumb_background: "rgb(234, 221, 255)",
+        background: Cow::Borrowed("rgb(60, 60, 60)"),
+        thumb_background: Cow::Borrowed("rgb(200, 200, 200)"),
+        enabled_background: Cow::Borrowed("rgb(255, 95, 0)"),
+        enabled_thumb_background: Cow::Borrowed("rgb(234, 221, 255)"),
     },
     scrollbar: ScrollbarTheme {
-        background: "rgb(35, 35, 35)",
-        thumb_background: "rgb(100, 100, 100)",
-        hover_thumb_background: "rgb(120, 120, 120)",
-        active_thumb_background: "rgb(140, 140, 140)",
+        background: Cow::Borrowed("rgb(35, 35, 35)"),
+        thumb_background: Cow::Borrowed("rgb(100, 100, 100)"),
+        hover_thumb_background: Cow::Borrowed("rgb(120, 120, 120)"),
+        active_thumb_background: Cow::Borrowed("rgb(140, 140, 140)"),
     },
     tooltip: TooltipTheme {
-        background: "rgb(35,35,35)",
-        color: "rgb(240,240,240)",
-        border_fill: "rgb(80, 80, 80)",
+        background: Cow::Borrowed("rgb(35,35,35)"),
+        color: Cow::Borrowed("rgb(240,240,240)"),
+        border_fill: Cow::Borrowed("rgb(80, 80, 80)"),
     },
     external_link: ExternalLinkTheme {
-        highlight_color: "rgb(43,106,208)",
+        highlight_color: Cow::Borrowed("rgb(43,106,208)"),
     },
     dropdown: DropdownTheme {
-        desplegable_background: "rgb(25, 25, 25)",
-        background_button: "rgb(35, 35, 35)",
-        hover_background: "rgb(45, 45, 45)",
-        font_theme: FontTheme { color: "white" },
-        border_fill: "rgb(80, 80, 80)",
-        arrow_fill: "rgb(40, 40, 40)",
+        desplegable_background: Cow::Borrowed("rgb(25, 25, 25)"),
+        background_button: Cow::Borrowed("rgb(35, 35, 35)"),
+        hover_background: Cow::Borrowed("rgb(45, 45, 45)"),
+        font_theme: FontTheme { color: Cow::Borrowed("white") },
+        border_fill: Cow::Borrowed("rgb(80, 80, 80)"),
+        arrow_fill: Cow::Borrowed("rgb(40, 40, 40)"),
     },
     dropdown_item: DropdownItemTheme {
-        background: "rgb(35, 35, 35)",
-        select_background: "rgb(80, 80, 80)",
-        hover_background: "rgb(55, 55, 55)",
-        font_theme: FontTheme { color: "white" },
+        background: Cow::Borrowed("rgb(35, 35, 35)"),
+        select_background: Cow::Borrowed("rgb(80, 80, 80)"),
+        hover_background: Cow::Borrowed("rgb(55, 55, 55)"),
+        font_theme: FontTheme { color: Cow::Borrowed("white") },
     },
     accordion: AccordionTheme {
-        color: "white",
-        background: "rgb(60, 60, 60)",
-        border_fill: "rgb(80, 80, 80)",
+        color: Cow::Borrowed("white"),
+        background: Cow::Borrowed("rgb(60, 60, 60)"),
+        border_fill: Cow::Borrowed("rgb(80, 80, 80)"),
     },
     loader: LoaderTheme {
-        primary_color: "rgb(150, 150, 150)",
-        secondary_color: "rgb(255, 255, 255)",
+        primary_color: Cow::Borrowed("rgb(150, 150, 150)"),
+        secondary_color: Cow::Borrowed("rgb(255, 255, 255)"),
     },
     progress_bar: ProgressBarTheme {
-        color: "white",
-        background: "rgb(60, 60, 60)",
-        progress_background: "rgb(255, 95, 0)",
+        color: Cow::Borrowed("white"),
+        background: Cow::Borrowed("rgb(60, 60, 60)"),
+        progress_background: Cow::Borrowed("rgb(255, 95, 0)"),
     },
     table: TableTheme {
-        font_theme: FontTheme { color: "white" },
-        background: "rgb(25, 25, 25)",
-        arrow_fill: "rgb(150, 150, 150)",
-        row_background: "transparent",
-        alternate_row_background: "rgb(50, 50, 50)",
-        divider_fill: "rgb(100, 100, 100)",
+        font_theme: FontTheme { color: Cow::Borrowed("white") },
+        background: Cow::Borrowed("rgb(25, 25, 25)"),
+        arrow_fill: Cow::Borrowed("rgb(150, 150, 150)"),
+        row_background: Cow::Borrowed("transparent"),
+        alternate_row_background: Cow::Borrowed("rgb(50, 50, 50)"),
+        divider_fill: Cow::Borrowed("rgb(100, 100, 100)"),
     },
 };

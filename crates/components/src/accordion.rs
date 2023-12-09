@@ -23,7 +23,7 @@ pub enum AccordionStatus {
 pub struct AccordionProps<'a> {
     /// Theme override.
     #[props(optional)]
-    pub theme: Option<AccordionThemeWith>,
+    pub theme: Option<AccordionThemeWith<'a>>,
     /// Inner children for the Accordion.
     pub children: Element<'a>,
     /// Summary element.

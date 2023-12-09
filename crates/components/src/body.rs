@@ -7,7 +7,7 @@ use freya_hooks::{use_get_theme, BodyTheme, BodyThemeWith};
 #[derive(Props)]
 pub struct BodyProps<'a> {
     /// Theme override.
-    pub theme: Option<BodyThemeWith>,
+    pub theme: Option<BodyThemeWith<'a>>,
     /// Inner children for the Body.
     pub children: Element<'a>,
     /// Padding for the Body.

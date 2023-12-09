@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use crate::theme::get_theme;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
@@ -6,7 +7,7 @@ use freya_hooks::{use_get_theme, ScrollbarThemeWith};
 #[derive(Props)]
 pub struct ScrollBarProps<'a> {
     /// Theme override.
-    pub theme: Option<ScrollbarThemeWith>,
+    pub theme: Option<ScrollbarThemeWith<'a>>,
     children: Element<'a>,
 
     #[props(into)]
@@ -41,7 +42,7 @@ pub fn ScrollBar<'a>(cx: Scope<'a, ScrollBarProps<'a>>) -> Element<'a> {
     let background = match status.get() {
         _ if cx.props.clicking_scrollbar => theme.background,
         ScrollBarStatus::Hovering => theme.background,
-        ScrollBarStatus::Idle => "transparent",
+        ScrollBarStatus::Idle => Cow::Borrowed("transparent"),
     };
 
     render!(

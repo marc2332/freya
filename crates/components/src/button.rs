@@ -2,7 +2,7 @@ use crate::theme::get_theme;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
-use freya_hooks::{use_focus, use_get_theme, use_platform, ButtonThemeWith};
+use freya_hooks::{ButtonTheme, ButtonThemeWith, use_focus, use_platform};
 use winit::window::CursorIcon;
 
 /// [`Button`] component properties.
@@ -10,22 +10,22 @@ use winit::window::CursorIcon;
 pub struct ButtonProps<'a> {
     /// Theme override.
     #[props(optional)]
-    pub theme: Option<ButtonThemeWith>,
-    /// Padding for the Button.
-    #[props(default = "8 16".to_string(), into)]
-    pub padding: String,
-    /// Margin for the Button.
-    #[props(default = "4".to_string(), into)]
-    pub margin: String,
-    /// Corner radius for the Button.
-    #[props(default = "8".to_string(), into)]
-    pub corner_radius: String,
-    /// Width size for the Button.
-    #[props(default = "auto".to_string(), into)]
-    pub width: String,
-    /// Inner children for the Button.
-    #[props(default = "auto".to_string(), into)]
-    pub height: String,
+    pub theme: Option<ButtonThemeWith<'a>>,
+    // /// Padding for the Button.
+    // #[props(default = "8 16".to_string(), into)]
+    // pub padding: String,
+    // /// Margin for the Button.
+    // #[props(default = "4".to_string(), into)]
+    // pub margin: String,
+    // /// Corner radius for the Button.
+    // #[props(default = "8".to_string(), into)]
+    // pub corner_radius: String,
+    // /// Width size for the Button.
+    // #[props(default = "auto".to_string(), into)]
+    // pub width: String,
+    // /// Inner children for the Button.
+    // #[props(default = "auto".to_string(), into)]
+    // pub height: String,
     /// Inner children for the Button.
     pub children: Element<'a>,
     /// Handler for the `onclick` event.
@@ -106,20 +106,22 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
     };
 
     let background = match *status.get() {
-        ButtonStatus::Hovering => theme.hover_background,
-        ButtonStatus::Idle => theme.background,
+        ButtonStatus::Hovering => &theme.hover_background,
+        ButtonStatus::Idle => &theme.background,
     };
 
-    let color = theme.font_theme.color;
-    let border_fill = theme.border_fill;
-    let ButtonProps {
-        width,
-        height,
-        corner_radius,
-        padding,
-        margin,
-        ..
-    } = &cx.props;
+    let ButtonTheme {
+        background, hover_background, border_fill, padding, margin, corner_radius, width, height, font_theme
+    } = &theme;
+
+    // let ButtonProps {
+    //     width,
+    //     height,
+    //     corner_radius,
+    //     padding,
+    //     margin,
+    //     ..
+    // } = &cx.props;
 
     render!(
         rect {
@@ -134,7 +136,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
             focusable: "true",
             overflow: "clip",
             role: "button",
-            color: "{color}",
+            color: "{font_theme.color}",
             shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)",
             border: "1 solid {border_fill}",
             corner_radius: "{corner_radius}",

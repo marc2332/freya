@@ -10,7 +10,7 @@ use winit::window::CursorIcon;
 #[derive(Props)]
 pub struct SliderProps<'a> {
     /// Theme override.
-    pub theme: Option<SliderThemeWith>,
+    pub theme: Option<SliderThemeWith<'a>>,
     /// Handler for the `onmoved` event.
     pub onmoved: EventHandler<'a, f64>,
     /// Width of the Slider.

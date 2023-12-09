@@ -7,7 +7,7 @@ use freya_hooks::{use_get_theme, TooltipTheme, TooltipThemeWith};
 #[derive(Props)]
 pub struct TooltipProps<'a> {
     /// Theme override.
-    pub theme: Option<TooltipThemeWith>,
+    pub theme: Option<TooltipThemeWith<'a>>,
     /// Url as the Tooltip destination.
     pub url: &'a str,
 }

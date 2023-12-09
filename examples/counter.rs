@@ -3,7 +3,9 @@
     windows_subsystem = "windows"
 )]
 
+use rand::Rng;
 use freya::prelude::*;
+use std::borrow::Cow;
 
 fn main() {
     launch_with_props(app, "Counter", (400.0, 350.0));
@@ -11,6 +13,13 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     let mut count = use_state(cx, || 0);
+    let base_padding = 10;
+    let mut padding = String::with_capacity(10);
+    padding.push_str("10 ");
+    padding.push_str(&(base_padding + (count.get() * 5)).to_string());
+    padding.push(' ');
+    padding.push_str("10 ");
+    padding.push_str(&(base_padding - (count.get() * 5)).to_string());
 
     render!(
         rect {
@@ -26,20 +35,19 @@ fn app(cx: Scope) -> Element {
         rect { height: "50%", width: "100%", main_align: "center", cross_align: "center", direction: "horizontal",
             Button {
                 theme: ButtonThemeWith {
-                    background: Some("red"),
+                    background: Some(Cow::Borrowed("red")),
                     ..Default::default()
                 },
                 onclick: move |_| count += 1, label { "Increase" }
             }
             Button {
-                theme: ButtonThemeWith {
-                    background: Some("blue"),
-                    font_theme: Some(FontThemeWith {
-                        color: Some("white"),
-                        ..Default::default()
+                theme: theme_with!(ButtonTheme {
+                    padding: padding.into(),
+                    background: "blue".into(),
+                    font_theme: theme_with!(FontTheme {
+                        color: "white".into(),
                     }),
-                    ..Default::default()
-                },
+                }),
                 onclick: move |_| count -= 1, label { "Decrease" }
             }
         }

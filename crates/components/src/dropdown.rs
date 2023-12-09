@@ -6,16 +6,14 @@ use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::keyboard::Key;
 use freya_elements::events::{KeyboardEvent, MouseEvent};
-use freya_hooks::{
-    use_focus, use_get_theme, use_platform, DropdownItemThemeWith, DropdownThemeWith,
-};
+use freya_hooks::{use_focus, use_get_theme, use_platform, DropdownItemThemeWith, DropdownThemeWith, DropdownTheme};
 use winit::window::CursorIcon;
 
 /// [`DropdownItem`] component properties.
 #[derive(Props)]
 pub struct DropdownItemProps<'a, T: 'static> {
     /// Theme override.
-    pub theme: Option<DropdownItemThemeWith>,
+    pub theme: Option<DropdownItemThemeWith<'a>>,
     /// Selectable items, like [`DropdownItem`]
     children: Element<'a>,
     /// Selected value.
@@ -124,7 +122,7 @@ where
 #[derive(Props)]
 pub struct DropdownProps<'a, T: 'static> {
     /// Theme override.
-    pub theme: Option<DropdownThemeWith>,
+    pub theme: Option<DropdownThemeWith<'a>>,
     /// Selectable items, like [`DropdownItem`]
     children: Element<'a>,
     /// Selected value.
@@ -240,14 +238,14 @@ where
         status.set(DropdownStatus::default());
     };
 
-    let desplegable_background = theme.desplegable_background;
+    let DropdownTheme {
+        font_theme, desplegable_background, background_button, hover_background, border_fill, arrow_fill
+    } = &theme;
+
     let button_background = match *status.get() {
-        DropdownStatus::Hovering => theme.hover_background,
-        DropdownStatus::Idle => theme.background_button,
+        DropdownStatus::Hovering => hover_background,
+        DropdownStatus::Idle => background_button,
     };
-    let border_fill = theme.border_fill;
-    let color = theme.font_theme.color;
-    let arrow_fill = theme.arrow_fill;
 
     let selected = selected.read().to_string();
 
@@ -260,7 +258,7 @@ where
             margin: "4",
             focus_id: focus_id,
             background: "{button_background}",
-            color: "{color}",
+            color: "{font_theme.color}",
             corner_radius: "8",
             padding: "8 16",
             border: "1 solid {border_fill}",
