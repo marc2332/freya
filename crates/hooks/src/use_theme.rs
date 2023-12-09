@@ -31,15 +31,22 @@ pub fn use_get_theme(cx: &ScopeState) -> Theme {
         .unwrap_or_default()
 }
 
+/// Utility macro.
+#[macro_export]
+#[doc(hidden)]
+macro_rules! empty {
+    () => {};
+}
+
 /// Example usage:
 /// ```rust,ignore
 /// define_theme! {
 ///     pub TestTheme {
-///         ..borrowed..
+///         %[borrowed]
 ///         borrowed_string,
-///         ..owned..
+///         %[owned]
 ///         owned_string: String,
-///         ..subthemes..
+///         %[subthemes]
 ///         font_theme: FontTheme,
 ///     }
 /// }
@@ -48,41 +55,43 @@ pub fn use_get_theme(cx: &ScopeState) -> Theme {
 macro_rules! define_component_theme {
     (
         $(#[$attrs:meta])*
+        $(%[component$($component_attr_control:tt)?])?
         $vis:vis $name:ident $(<$lifetime:lifetime>)? {
             $(
-                ..cows..
+                %[cows]
                 $(
                     $(#[$cow_field_attrs:meta])*
                     $cow_field_name:ident: $cow_field_ty:ty,
                 )*
             )?
             $(
-                ..borrowed..
+                %[borrowed]
                 $(
                     $(#[$borrowed_field_attrs:meta])*
                     $borrowed_field_name:ident: $borrowed_field_ty:ty,
                 )*
             )?
             $(
-                ..owned..
+                %[owned]
                 $(
                     $(#[$owned_field_attrs:meta])*
                     $owned_field_name:ident: $owned_field_ty:ty,
                 )*
             )?
             $(
-                ..subthemes..
+                %[subthemes]
                 $(
                     $(#[$subtheme_field_attrs:meta])*
                     $subtheme_field_name:ident: $subtheme_field_ty_name:ident $(<$subtheme_field_ty_lifetime:lifetime>)?,
                 )*
             )?
     }) => {
+        $crate::empty!($($($component_attr_control)?)?);
         $crate::paste! {
             #[derive(Default, Clone, Debug, PartialEq, Eq)]
-            $(#[$attrs])*
             #[doc = "You can use this to change a theme for only one component, with the `theme` property."]
-            $vis struct [<$name With>] $(<$lifetime>)? {
+            $(#[$attrs])*
+            $vis struct [<$name ThemeWith>] $(<$lifetime>)? {
                 $($(
                     $(#[$borrowed_field_attrs])*
                     pub $borrowed_field_name: Option<$borrowed_field_ty>,
@@ -102,8 +111,9 @@ macro_rules! define_component_theme {
             }
 
             #[derive(Clone, Debug, PartialEq, Eq)]
+            $(#[doc = "Theming properties for the `" $name "` component."] $($component_attr_control)?)?
             $(#[$attrs])*
-            $vis struct $name $(<$lifetime>)? {
+            $vis struct [<$name Theme>] $(<$lifetime>)? {
                 $($(
                     $(#[$borrowed_field_attrs])*
                     pub $borrowed_field_name: $borrowed_field_ty,
@@ -122,8 +132,9 @@ macro_rules! define_component_theme {
                 )*)?
             }
 
-            impl $(<$lifetime>)? $name $(<$lifetime>)? {
-                pub fn apply_optional(&mut self, optional: & $($lifetime)? [<$name With>]) {
+            impl $(<$lifetime>)? [<$name Theme>] $(<$lifetime>)? {
+                #[doc = "Checks each field in `optional` and if it's `Some`, it overwrites the corresponding `self` field."]
+                pub fn apply_optional(&mut self, optional: & $($lifetime)? [<$name ThemeWith>]) {
                     $($(
                         if let Some($borrowed_field_name) = optional.$borrowed_field_name {
                             self.$borrowed_field_name = $borrowed_field_name;
@@ -213,35 +224,35 @@ macro_rules! theme_with {
 }
 
 define_component_theme! {
-    /// Theming properties for Dropdown components.
-    pub DropdownTheme<'a> {
-        ..cows..
+    %[component]
+    pub Dropdown<'a> {
+        %[cows]
         desplegable_background: str,
         background_button: str,
         hover_background: str,
         border_fill: str,
         arrow_fill: str,
-        ..subthemes..
+        %[subthemes]
         font_theme: FontTheme<'a>,
     }
 }
 
 define_component_theme! {
-    /// Theming properties for DropdownItem components.
-    pub DropdownItemTheme<'a> {
-        ..cows..
+    %[component]
+    pub DropdownItem<'a> {
+        %[cows]
         background: str,
         select_background: str,
         hover_background: str,
-        ..subthemes..
+        %[subthemes]
         font_theme: FontTheme<'a>,
     }
 }
 
 define_component_theme! {
-    /// Theming properties for Button components.
-    pub ButtonTheme<'a> {
-        ..cows..
+    %[component]
+    pub Button<'a> {
+        %[cows]
         background: str,
         hover_background: str,
         border_fill: str,
@@ -250,35 +261,35 @@ define_component_theme! {
         width: str,
         height: str,
         padding: str,
-        ..subthemes..
+        %[subthemes]
         font_theme: FontTheme<'a>,
     }
 }
 
 define_component_theme! {
-    /// Theming properties for Input components.
-    pub InputTheme<'a> {
-        ..cows..
+    %[component]
+    pub Input<'a> {
+        %[cows]
         background: str,
         hover_background: str,
         border_fill: str,
-        ..subthemes..
+        %[subthemes]
         font_theme: FontTheme<'a>,
     }
 }
 
 define_component_theme! {
     /// Theming properties for Fonts.
-    pub FontTheme<'a> {
-        ..cows..
+    pub Font<'a> {
+        %[cows]
         color: str,
     }
 }
 
 define_component_theme! {
-    /// Theming properties the Switch components.
-    pub SwitchTheme<'a> {
-        ..cows..
+    %[component]
+    pub Switch<'a> {
+        %[cows]
         background: str,
         thumb_background: str,
         enabled_background: str,
@@ -287,9 +298,9 @@ define_component_theme! {
 }
 
 define_component_theme! {
-    /// Theming properties the Scrollbar components.
-    pub ScrollbarTheme<'a> {
-        ..cows..
+    %[component]
+    pub Scrollbar<'a> {
+        %[cows]
         background: str,
         thumb_background: str,
         hover_thumb_background: str,
@@ -298,18 +309,18 @@ define_component_theme! {
 }
 
 define_component_theme! {
-    /// Theming properties for the App body.
-    pub BodyTheme<'a> {
-        ..cows..
+    %[component]
+    pub Body<'a> {
+        %[cows]
         background: str,
         color: str,
     }
 }
 
 define_component_theme! {
-    /// Theming properties for Slider components.
-    pub SliderTheme<'a> {
-        ..cows..
+    %[component]
+    pub Slider<'a> {
+        %[cows]
         background: str,
         thumb_background: str,
         thumb_inner_background: str,
@@ -317,9 +328,9 @@ define_component_theme! {
 }
 
 define_component_theme! {
-    /// Theming properties for Tooltip components.
-    pub TooltipTheme<'a> {
-        ..cows..
+    %[component]
+    pub Tooltip<'a> {
+        %[cows]
         background: str,
         color: str,
         border_fill: str,
@@ -327,17 +338,17 @@ define_component_theme! {
 }
 
 define_component_theme! {
-    /// Theming properties for ExternalLink components.
-    pub ExternalLinkTheme<'a> {
-        ..cows..
+    %[component]
+    pub ExternalLink<'a> {
+        %[cows]
         highlight_color: str,
     }
 }
 
 define_component_theme! {
-    /// Theming properties for Accordion component.
-    pub AccordionTheme<'a> {
-        ..cows..
+    %[component]
+    pub Accordion<'a> {
+        %[cows]
         color: str,
         background: str,
         border_fill: str,
@@ -345,18 +356,18 @@ define_component_theme! {
 }
 
 define_component_theme! {
-    /// Theming properties for Loader component.
-    pub LoaderTheme<'a> {
-        ..cows..
+    %[component]
+    pub Loader<'a> {
+        %[cows]
         primary_color: str,
         secondary_color: str,
     }
 }
 
 define_component_theme! {
-    /// Theming properties for ProgressBar component.
-    pub ProgressBarTheme<'a> {
-        ..cows..
+    %[component]
+    pub ProgressBar<'a> {
+        %[cows]
         color: str,
         background: str,
         progress_background: str,
@@ -364,15 +375,15 @@ define_component_theme! {
 }
 
 define_component_theme! {
-    /// Theming properties for Table component.
-    pub TableTheme<'a> {
-        ..cows..
+    %[component]
+    pub Table<'a> {
+        %[cows]
         background: str,
         arrow_fill: str,
         alternate_row_background: str,
         row_background: str,
         divider_fill: str,
-        ..subthemes..
+        %[subthemes]
         font_theme: FontTheme<'a>,
     }
 }
