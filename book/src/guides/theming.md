@@ -31,7 +31,7 @@ fn Component(cx: Scope) -> Element {
 ```
 
 ### Custom default theme 
-By default, the selected theme is `LIGHT_THEME`. You use the alternative, `DARK_THEME`.
+By default, the selected theme is `LIGHT_THEME`. You can use the alternative, `DARK_THEME`.
 
 ```rust, no_run
 fn app(cx: Scope) -> Element {
