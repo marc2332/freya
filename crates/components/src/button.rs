@@ -70,7 +70,6 @@ pub enum ButtonStatus {
 #[allow(non_snake_case)]
 pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
     let focus = use_focus(cx);
-    //let theme = get_theme!(cx, &cx.props.theme, button);
     let status = use_state(cx, ButtonStatus::default);
     let platform = use_platform(cx);
     let focus_id = focus.attribute(cx);
