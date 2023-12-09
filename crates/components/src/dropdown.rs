@@ -242,7 +242,7 @@ where
 
     let DropdownTheme {
         font_theme,
-        desplegable_background,
+        dropdown_background,
         background_button,
         hover_background,
         border_fill,
@@ -288,7 +288,7 @@ where
                         border: "1 solid {border_fill}",
                         overflow: "clip",
                         corner_radius: "8",
-                        background: "{desplegable_background}",
+                        background: "{dropdown_background}",
                         shadow: "0 4 5 0 rgb(0, 0, 0, 0.3)",
                         padding: "6",
                         &cx.props.children

@@ -230,7 +230,7 @@ define_theme! {
     %[component]
     pub Dropdown {
         %[cows]
-        desplegable_background: str,
+        dropdown_background: str,
         background_button: str,
         hover_background: str,
         border_fill: str,
@@ -469,7 +469,7 @@ pub const LIGHT_THEME: Theme = Theme {
         highlight_color: Cow::Borrowed("rgb(43,106,208)"),
     },
     dropdown: DropdownTheme {
-        desplegable_background: Cow::Borrowed("white"),
+        dropdown_background: Cow::Borrowed("white"),
         background_button: Cow::Borrowed("rgb(245, 245, 245)"),
         hover_background: Cow::Borrowed("rgb(235, 235, 235)"),
         font_theme: FontTheme {
@@ -565,7 +565,7 @@ pub const DARK_THEME: Theme = Theme {
         highlight_color: Cow::Borrowed("rgb(43,106,208)"),
     },
     dropdown: DropdownTheme {
-        desplegable_background: Cow::Borrowed("rgb(25, 25, 25)"),
+        dropdown_background: Cow::Borrowed("rgb(25, 25, 25)"),
         background_button: Cow::Borrowed("rgb(35, 35, 35)"),
         hover_background: Cow::Borrowed("rgb(45, 45, 45)"),
         font_theme: FontTheme {
