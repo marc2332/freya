@@ -52,7 +52,7 @@ macro_rules! empty {
 /// }
 /// ```
 #[macro_export]
-macro_rules! define_component_theme {
+macro_rules! define_theme {
     (
         $(#[$attrs:meta])*
         $(%[component$($component_attr_control:tt)?])?
@@ -223,7 +223,7 @@ macro_rules! theme_with {
     };
 }
 
-define_component_theme! {
+define_theme! {
     %[component]
     pub Dropdown<'a> {
         %[cows]
@@ -237,7 +237,7 @@ define_component_theme! {
     }
 }
 
-define_component_theme! {
+define_theme! {
     %[component]
     pub DropdownItem<'a> {
         %[cows]
@@ -249,7 +249,7 @@ define_component_theme! {
     }
 }
 
-define_component_theme! {
+define_theme! {
     %[component]
     pub Button<'a> {
         %[cows]
@@ -266,7 +266,7 @@ define_component_theme! {
     }
 }
 
-define_component_theme! {
+define_theme! {
     %[component]
     pub Input<'a> {
         %[cows]
@@ -278,7 +278,7 @@ define_component_theme! {
     }
 }
 
-define_component_theme! {
+define_theme! {
     /// Theming properties for Fonts.
     pub Font<'a> {
         %[cows]
@@ -286,7 +286,7 @@ define_component_theme! {
     }
 }
 
-define_component_theme! {
+define_theme! {
     %[component]
     pub Switch<'a> {
         %[cows]
@@ -297,7 +297,7 @@ define_component_theme! {
     }
 }
 
-define_component_theme! {
+define_theme! {
     %[component]
     pub Scrollbar<'a> {
         %[cows]
@@ -308,7 +308,7 @@ define_component_theme! {
     }
 }
 
-define_component_theme! {
+define_theme! {
     %[component]
     pub Body<'a> {
         %[cows]
@@ -317,7 +317,7 @@ define_component_theme! {
     }
 }
 
-define_component_theme! {
+define_theme! {
     %[component]
     pub Slider<'a> {
         %[cows]
@@ -327,7 +327,7 @@ define_component_theme! {
     }
 }
 
-define_component_theme! {
+define_theme! {
     %[component]
     pub Tooltip<'a> {
         %[cows]
@@ -337,7 +337,7 @@ define_component_theme! {
     }
 }
 
-define_component_theme! {
+define_theme! {
     %[component]
     pub ExternalLink<'a> {
         %[cows]
@@ -345,7 +345,7 @@ define_component_theme! {
     }
 }
 
-define_component_theme! {
+define_theme! {
     %[component]
     pub Accordion<'a> {
         %[cows]
@@ -355,7 +355,7 @@ define_component_theme! {
     }
 }
 
-define_component_theme! {
+define_theme! {
     %[component]
     pub Loader<'a> {
         %[cows]
@@ -364,7 +364,7 @@ define_component_theme! {
     }
 }
 
-define_component_theme! {
+define_theme! {
     %[component]
     pub ProgressBar<'a> {
         %[cows]
@@ -374,7 +374,7 @@ define_component_theme! {
     }
 }
 
-define_component_theme! {
+define_theme! {
     %[component]
     pub Table<'a> {
         %[cows]
