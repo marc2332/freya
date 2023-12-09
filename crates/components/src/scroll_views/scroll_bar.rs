@@ -7,7 +7,7 @@ use std::borrow::Cow;
 #[derive(Props)]
 pub struct ScrollBarProps<'a> {
     /// Theme override.
-    pub theme: Option<ScrollbarThemeWith<'a>>,
+    pub theme: Option<ScrollbarThemeWith>,
     children: Element<'a>,
 
     #[props(into)]

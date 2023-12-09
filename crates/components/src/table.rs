@@ -63,7 +63,7 @@ pub fn TableBody<'a>(cx: Scope<'a, TableBodyProps<'a>>) -> Element {
 #[derive(Props)]
 pub struct TableRowProps<'a> {
     /// Theme override.
-    pub theme: Option<TableThemeWith<'a>>,
+    pub theme: Option<TableThemeWith>,
     /// The content of this row.
     children: Element<'a>,
     /// Show the row with a different background, this allows to have a zebra-style table.
@@ -182,7 +182,7 @@ pub fn TableCell<'a>(cx: Scope<'a, TableCellProps<'a>>) -> Element {
 #[derive(Props)]
 pub struct TableProps<'a> {
     /// Theme override.
-    pub theme: Option<TableThemeWith<'a>>,
+    pub theme: Option<TableThemeWith>,
     /// Number of columns used in the table.
     pub columns: usize,
     /// The content of the table.

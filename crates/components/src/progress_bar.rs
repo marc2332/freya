@@ -5,9 +5,9 @@ use freya_hooks::{use_get_theme, ProgressBarTheme, ProgressBarThemeWith};
 
 /// [`ProgressBar`] component properties.
 #[derive(Props, PartialEq)]
-pub struct ProgressBarProps<'a> {
+pub struct ProgressBarProps {
     /// Theme override.
-    pub theme: Option<ProgressBarThemeWith<'a>>,
+    pub theme: Option<ProgressBarThemeWith>,
     /// Show a label with the current progress. Default to false.
     #[props(default = false)]
     show_progress: bool,
@@ -45,7 +45,7 @@ pub struct ProgressBarProps<'a> {
 /// ```
 ///
 #[allow(non_snake_case)]
-pub fn ProgressBar<'a>(cx: Scope<'a, ProgressBarProps<'a>>) -> Element<'a> {
+pub fn ProgressBar(cx: Scope<ProgressBarProps>) -> Element {
     let theme = get_theme!(cx, &cx.props.theme, progress_bar);
 
     let ProgressBarTheme {

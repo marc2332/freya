@@ -8,9 +8,9 @@ use tokio::time::interval;
 
 /// [`Loader`] component properties.
 #[derive(Props, PartialEq)]
-pub struct LoaderProps<'a> {
+pub struct LoaderProps {
     /// Theme override.
-    pub theme: Option<LoaderThemeWith<'a>>,
+    pub theme: Option<LoaderThemeWith>,
 }
 
 /// `Loader` component.
@@ -22,7 +22,7 @@ pub struct LoaderProps<'a> {
 /// Inherits the [`LoaderTheme`](freya_hooks::LoaderTheme) theme.
 ///
 #[allow(non_snake_case)]
-pub fn Loader<'a>(cx: Scope<'a, LoaderProps<'a>>) -> Element<'a> {
+pub fn Loader(cx: Scope<LoaderProps>) -> Element {
     let theme = get_theme!(cx, &cx.props.theme, loader);
     let degrees = use_state(cx, || 0);
 

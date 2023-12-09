@@ -11,7 +11,7 @@ use crate::Tooltip;
 #[derive(Props)]
 pub struct ExternalLinkProps<'a> {
     /// Theme override.
-    pub theme: Option<ExternalLinkThemeWith<'a>>,
+    pub theme: Option<ExternalLinkThemeWith>,
     /// Inner children for the ExternalLink.
     children: Element<'a>,
     #[props(optional)]

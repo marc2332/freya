@@ -13,13 +13,9 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     let mut count = use_state(cx, || 0);
-    let base_padding = 10;
-    let mut padding = String::with_capacity(10);
-    padding.push_str("10 ");
-    padding.push_str(&(base_padding + (count.get() * 5)).to_string());
-    padding.push(' ');
-    padding.push_str("10 ");
-    padding.push_str(&(base_padding - (count.get() * 5)).to_string());
+    let base_width = 100;
+    let mut width = String::with_capacity(2);
+    width.push_str(&(base_width + (count.get() * 5)).to_string());
 
     render!(
         rect {
@@ -42,7 +38,7 @@ fn app(cx: Scope) -> Element {
             }
             Button {
                 theme: theme_with!(ButtonTheme {
-                    padding: padding.into(),
+                    width: width.into(),
                     background: "blue".into(),
                     font_theme: theme_with!(FontTheme {
                         color: "white".into(),

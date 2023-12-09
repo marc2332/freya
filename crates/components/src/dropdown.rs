@@ -15,7 +15,7 @@ use winit::window::CursorIcon;
 #[derive(Props)]
 pub struct DropdownItemProps<'a, T: 'static> {
     /// Theme override.
-    pub theme: Option<DropdownItemThemeWith<'a>>,
+    pub theme: Option<DropdownItemThemeWith>,
     /// Selectable items, like [`DropdownItem`]
     children: Element<'a>,
     /// Selected value.
@@ -124,7 +124,7 @@ where
 #[derive(Props)]
 pub struct DropdownProps<'a, T: 'static> {
     /// Theme override.
-    pub theme: Option<DropdownThemeWith<'a>>,
+    pub theme: Option<DropdownThemeWith>,
     /// Selectable items, like [`DropdownItem`]
     children: Element<'a>,
     /// Selected value.

@@ -41,7 +41,7 @@ pub enum InputStatus {
 #[derive(Props)]
 pub struct InputProps<'a> {
     /// Theme override.
-    pub theme: Option<InputThemeWith<'a>>,
+    pub theme: Option<InputThemeWith>,
     /// Current value of the Input
     pub value: String,
     /// Handler for the `onchange` event.

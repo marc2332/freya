@@ -9,7 +9,7 @@ use winit::window::CursorIcon;
 #[derive(Props)]
 pub struct SwitchProps<'a> {
     /// Theme override.
-    pub theme: Option<SwitchThemeWith<'a>>,
+    pub theme: Option<SwitchThemeWith>,
     /// Whether the `Switch` is enabled or not.
     pub enabled: bool,
     /// Handler for the `ontoggled` event.

@@ -7,7 +7,7 @@ use freya_hooks::{use_get_theme, ScrollbarThemeWith};
 #[derive(Props)]
 pub struct ScrollThumbProps<'a> {
     /// Theme override.
-    pub theme: Option<ScrollbarThemeWith<'a>>,
+    pub theme: Option<ScrollbarThemeWith>,
     clicking_scrollbar: bool,
     onmousedown: EventHandler<'a, MouseEvent>,
     #[props(into)]

@@ -39,15 +39,18 @@ macro_rules! empty {
 }
 
 /// Example usage:
+///
 /// ```rust,ignore
 /// define_theme! {
-///     pub TestTheme {
+///     %[component]
+///     pub Test<'a> {
+///         %[cows]
+///         cow_string: str,
 ///         %[borrowed]
-///         borrowed_string,
+///         borrowed_data: &'a Foo,
 ///         %[owned]
-///         owned_string: String,
-///         %[subthemes]
-///         font_theme: FontTheme,
+///         owned_data: Bar,
+///         %[subthemes],
 ///     }
 /// }
 /// ```
@@ -106,7 +109,7 @@ macro_rules! define_theme {
                 )*)?
                 $($(
                     $(#[$cow_field_attrs])*
-                    pub $cow_field_name: Option<$crate::Cow<'a, $cow_field_ty>>,
+                    pub $cow_field_name: Option<$crate::Cow<'static, $cow_field_ty>>,
                 )*)?
             }
 
@@ -128,7 +131,7 @@ macro_rules! define_theme {
                 )*)?
                 $($(
                     $(#[$cow_field_attrs])*
-                    pub $cow_field_name: $crate::Cow<'a, $cow_field_ty>,
+                    pub $cow_field_name: $crate::Cow<'static, $cow_field_ty>,
                 )*)?
             }
 
@@ -225,7 +228,7 @@ macro_rules! theme_with {
 
 define_theme! {
     %[component]
-    pub Dropdown<'a> {
+    pub Dropdown {
         %[cows]
         desplegable_background: str,
         background_button: str,
@@ -233,25 +236,25 @@ define_theme! {
         border_fill: str,
         arrow_fill: str,
         %[subthemes]
-        font_theme: FontTheme<'a>,
+        font_theme: FontTheme,
     }
 }
 
 define_theme! {
     %[component]
-    pub DropdownItem<'a> {
+    pub DropdownItem {
         %[cows]
         background: str,
         select_background: str,
         hover_background: str,
         %[subthemes]
-        font_theme: FontTheme<'a>,
+        font_theme: FontTheme,
     }
 }
 
 define_theme! {
     %[component]
-    pub Button<'a> {
+    pub Button {
         %[cows]
         background: str,
         hover_background: str,
@@ -262,25 +265,25 @@ define_theme! {
         height: str,
         padding: str,
         %[subthemes]
-        font_theme: FontTheme<'a>,
+        font_theme: FontTheme,
     }
 }
 
 define_theme! {
     %[component]
-    pub Input<'a> {
+    pub Input {
         %[cows]
         background: str,
         hover_background: str,
         border_fill: str,
         %[subthemes]
-        font_theme: FontTheme<'a>,
+        font_theme: FontTheme,
     }
 }
 
 define_theme! {
     /// Theming properties for Fonts.
-    pub Font<'a> {
+    pub Font {
         %[cows]
         color: str,
     }
@@ -288,7 +291,7 @@ define_theme! {
 
 define_theme! {
     %[component]
-    pub Switch<'a> {
+    pub Switch {
         %[cows]
         background: str,
         thumb_background: str,
@@ -299,7 +302,7 @@ define_theme! {
 
 define_theme! {
     %[component]
-    pub Scrollbar<'a> {
+    pub Scrollbar {
         %[cows]
         background: str,
         thumb_background: str,
@@ -310,7 +313,7 @@ define_theme! {
 
 define_theme! {
     %[component]
-    pub Body<'a> {
+    pub Body {
         %[cows]
         background: str,
         color: str,
@@ -319,7 +322,7 @@ define_theme! {
 
 define_theme! {
     %[component]
-    pub Slider<'a> {
+    pub Slider {
         %[cows]
         background: str,
         thumb_background: str,
@@ -329,7 +332,7 @@ define_theme! {
 
 define_theme! {
     %[component]
-    pub Tooltip<'a> {
+    pub Tooltip {
         %[cows]
         background: str,
         color: str,
@@ -339,7 +342,7 @@ define_theme! {
 
 define_theme! {
     %[component]
-    pub ExternalLink<'a> {
+    pub ExternalLink {
         %[cows]
         highlight_color: str,
     }
@@ -347,7 +350,7 @@ define_theme! {
 
 define_theme! {
     %[component]
-    pub Accordion<'a> {
+    pub Accordion {
         %[cows]
         color: str,
         background: str,
@@ -357,7 +360,7 @@ define_theme! {
 
 define_theme! {
     %[component]
-    pub Loader<'a> {
+    pub Loader {
         %[cows]
         primary_color: str,
         secondary_color: str,
@@ -366,7 +369,7 @@ define_theme! {
 
 define_theme! {
     %[component]
-    pub ProgressBar<'a> {
+    pub ProgressBar {
         %[cows]
         color: str,
         background: str,
@@ -376,7 +379,7 @@ define_theme! {
 
 define_theme! {
     %[component]
-    pub Table<'a> {
+    pub Table {
         %[cows]
         background: str,
         arrow_fill: str,
@@ -384,27 +387,27 @@ define_theme! {
         row_background: str,
         divider_fill: str,
         %[subthemes]
-        font_theme: FontTheme<'a>,
+        font_theme: FontTheme,
     }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Theme {
     pub name: &'static str,
-    pub body: BodyTheme<'static>,
-    pub button: ButtonTheme<'static>,
-    pub switch: SwitchTheme<'static>,
-    pub scrollbar: ScrollbarTheme<'static>,
-    pub slider: SliderTheme<'static>,
-    pub tooltip: TooltipTheme<'static>,
-    pub external_link: ExternalLinkTheme<'static>,
-    pub dropdown: DropdownTheme<'static>,
-    pub dropdown_item: DropdownItemTheme<'static>,
-    pub accordion: AccordionTheme<'static>,
-    pub loader: LoaderTheme<'static>,
-    pub progress_bar: ProgressBarTheme<'static>,
-    pub table: TableTheme<'static>,
-    pub input: InputTheme<'static>,
+    pub body: BodyTheme,
+    pub button: ButtonTheme,
+    pub switch: SwitchTheme,
+    pub scrollbar: ScrollbarTheme,
+    pub slider: SliderTheme,
+    pub tooltip: TooltipTheme,
+    pub external_link: ExternalLinkTheme,
+    pub dropdown: DropdownTheme,
+    pub dropdown_item: DropdownItemTheme,
+    pub accordion: AccordionTheme,
+    pub loader: LoaderTheme,
+    pub progress_bar: ProgressBarTheme,
+    pub table: TableTheme,
+    pub input: InputTheme,
 }
 
 impl Default for Theme {

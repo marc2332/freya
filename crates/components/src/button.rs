@@ -10,7 +10,7 @@ use winit::window::CursorIcon;
 pub struct ButtonProps<'a> {
     /// Theme override.
     #[props(optional)]
-    pub theme: Option<ButtonThemeWith<'a>>,
+    pub theme: Option<ButtonThemeWith>,
     // /// Padding for the Button.
     // #[props(default = "8 16".to_string(), into)]
     // pub padding: String,
