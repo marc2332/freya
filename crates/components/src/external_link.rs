@@ -3,7 +3,6 @@ use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
 use freya_hooks::ExternalLinkThemeWith;
-use std::borrow::Cow;
 
 use crate::Tooltip;
 
@@ -72,9 +71,9 @@ pub fn ExternalLink<'a>(cx: Scope<'a, ExternalLinkProps<'a>>) -> Element {
     };
 
     let color = if *is_hovering.get() {
-        theme.highlight_color
+        theme.highlight_color.as_ref()
     } else {
-        Cow::Borrowed("inherit")
+        "inherit"
     };
 
     render!(

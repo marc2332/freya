@@ -2,7 +2,6 @@ use crate::theme::get_theme;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_hooks::{ScrollBarTheme, ScrollBarThemeWith};
-use std::borrow::Cow;
 
 #[derive(Props)]
 pub struct ScrollBarProps<'a> {
@@ -35,9 +34,9 @@ pub fn ScrollBar<'a>(cx: Scope<'a, ScrollBarProps<'a>>) -> Element<'a> {
     let onmouseleave = |_| status.set(ScrollBarStatus::Idle);
 
     let background = match status.get() {
-        _ if cx.props.clicking_scrollbar => background,
-        ScrollBarStatus::Hovering => background,
-        ScrollBarStatus::Idle => Cow::Borrowed("transparent"),
+        _ if cx.props.clicking_scrollbar => background.as_ref(),
+        ScrollBarStatus::Hovering => background.as_ref(),
+        ScrollBarStatus::Idle => "transparent",
     };
 
     render!(
