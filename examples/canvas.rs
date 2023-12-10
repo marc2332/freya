@@ -65,7 +65,10 @@ fn app(cx: Scope) -> Element {
     };
 
     render!(
-        rect { width: "100%", height: "100%", color: "white",
+        rect {
+            width: "100%",
+            height: "100%",
+            color: "white",
             rect {
                 background: "rgb(35, 35, 35)",
                 width: "100%",
@@ -76,7 +79,10 @@ fn app(cx: Scope) -> Element {
                 onclick: onclick,
                 onmouseover: onmouseover,
                 onmouseleave: onmouseleave,
-                label { font_size: "25", "What is this even about? I have no idea, but it's cool" }
+                label {
+                    font_size: "25",
+                    "What is this even about? I have no idea, but it's cool"
+                }
                 nodes.get().iter().enumerate().map(|(id, node)| {
                     rsx! {
                         rect {
@@ -122,11 +128,15 @@ fn app(cx: Scope) -> Element {
                 layer: "-100",
                 shadow: "0 -2 5 0 rgb(0, 0, 0, 0.1)",
                 direction: "horizontal",
-                label { "Create as many editors you want!" }
+                label {
+                    "Create as many editors you want!"
+                }
                 Button {
-                    theme: theme_with!(ButtonTheme { margin : "0 20".into(), }),
+                    margin: "0 20",
                     onclick: create_node,
-                    label { "New Editor" }
+                    label {
+                        "New Editor"
+                    }
                 }
             }
         }
@@ -183,9 +193,19 @@ fn Editor(cx: Scope) -> Element {
     };
 
     render!(
-        rect { onclick: onclick, width: "100%", height: "100%",
-            rect { width: "100%", height: "70", padding: "5", direction: "horizontal", cross_align: "center",
-                rect { width: "130", cross_align: "center",
+        rect {
+            onclick: onclick,
+            width: "100%",
+            height: "100%",
+            rect {
+                width: "100%",
+                height: "70",
+                padding: "5",
+                direction: "horizontal",
+                cross_align: "center",
+                rect {
+                    width: "130",
+                    cross_align: "center",
                     Slider {
                         width: 100.0,
                         value: *font_size_percentage.get(),
@@ -193,9 +213,13 @@ fn Editor(cx: Scope) -> Element {
                             font_size_percentage.set(p);
                         }
                     }
-                    label { "Font size" }
+                    label {
+                        "Font size"
+                    }
                 }
-                rect { width: "130", cross_align: "center",
+                rect {
+                    width: "130",
+                    cross_align: "center",
                     Slider {
                         width: 100.0,
                         value: *line_height_percentage.get(),
@@ -203,25 +227,35 @@ fn Editor(cx: Scope) -> Element {
                             line_height_percentage.set(p);
                         }
                     }
-                    label { "Line height" }
+                    label {
+                        "Line height"
+                    }
                 }
-                rect { width: "80", cross_align: "center",
+                rect {
+                    width: "80",
+                    cross_align: "center",
                     Switch {
                         enabled: *is_bold.get(),
                         ontoggled: |_| {
                             is_bold.set(!is_bold.get());
                         }
                     }
-                    label { "Bold" }
+                    label {
+                        "Bold"
+                    }
                 }
-                rect { width: "80", cross_align: "center",
+                rect {
+                    width: "80",
+                    cross_align: "center",
                     Switch {
                         enabled: *is_italic.get(),
                         ontoggled: |_| {
                             is_italic.set(!is_italic.get());
                         }
                     }
-                    label { "Italic" }
+                    label {
+                        "Italic"
+                    }
                 }
             }
             rect {
@@ -231,9 +265,13 @@ fn Editor(cx: Scope) -> Element {
                 onkeydown: onkeydown,
                 cursor_reference: cursor_attr,
                 direction: "horizontal",
-                rect { width: "100%", height: "100%", padding: "5",
+                rect {
+                    width: "100%",
+                    height: "100%",
+                    padding: "5",
                     ScrollView {
-                        theme: theme_with!(ScrollViewTheme { width : "100%".into(), height : "100%".into(), }),
+                        width: "100%",
+                        height: "100%",
                         scroll_with_arrows: false,
                         editor.lines().map(move |l| {
                             let editable = editable.clone();

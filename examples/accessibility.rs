@@ -37,7 +37,11 @@ fn app(cx: Scope) -> Element {
                 },
                 "What is this?"
             }
-            Button { label { "Button" } }
+            Button {
+                label {
+                    "Button"
+                }
+            }
         }
         rect {
             focus_id: focus_b.attribute(cx),
@@ -61,8 +65,9 @@ fn app(cx: Scope) -> Element {
             }
             NetworkImage {
                 url: url,
-                alt: "This is an image",
-                theme: theme_with!(NetworkImageTheme { width : "100".into(), height : "100".into(), })
+                width: "100",
+                height: "100",
+                alt: "This is an image"
             }
         }
     )

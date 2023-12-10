@@ -20,8 +20,16 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     render!(
-        rect { main_align: "center", cross_align: "center", height: "100%", width: "100%",
-            label { width: "100%", font_size: "20", font_family: "Sansita Swashed", text_align: "center",
+        rect {
+            main_align: "center",
+            cross_align: "center",
+            height: "100%",
+            width: "100%",
+            label {
+                width: "100%",
+                font_size: "20",
+                font_family: "Sansita Swashed",
+                text_align: "center",
                 "This font is called Sansita Swashed"
             }
         }

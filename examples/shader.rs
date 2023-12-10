@@ -90,10 +90,9 @@ fn app(cx: Scope) -> Element {
         rect {
             Canvas {
                 canvas: canvas,
-                theme: theme_with!(
-                    CanvasTheme { background : "black".into(), width : "100%".into(), height : "100%"
-                    .into(), }
-                )
+                background: "black",
+                width: "100%",
+                height: "100%"
             }
         }
     )

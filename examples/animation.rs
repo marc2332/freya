@@ -30,8 +30,17 @@ fn app(cx: Scope) -> Element {
     };
 
     render!(
-        rect { overflow: "clip", background: "black", width: "100%", height: "100%", offset_x: "{progress}",
-            rect { main_align: "center", cross_align: "center", height: "100%", width: "200",
+        rect {
+            overflow: "clip",
+            background: "black",
+            width: "100%",
+            height: "100%",
+            offset_x: "{progress}",
+            rect {
+                main_align: "center",
+                cross_align: "center",
+                height: "100%",
+                width: "200",
                 rect {
                     height: "200",
                     width: "100%",
@@ -41,7 +50,12 @@ fn app(cx: Scope) -> Element {
                     main_align: "center",
                     cross_align: "center",
                     onclick: anim,
-                    label { font_size: "30", text_align: "center", color: "white", "Click to move" }
+                    label {
+                        font_size: "30",
+                        text_align: "center",
+                        color: "white",
+                        "Click to move"
+                    }
                 }
             }
         }

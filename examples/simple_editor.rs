@@ -52,12 +52,14 @@ fn app(cx: Scope) -> Element {
     };
 
     render!(
-        rect { width: "100%", height: "100%", cursor_reference: cursor_attr,
+        rect {
+            width: "100%",
+            height: "100%",
+            cursor_reference: cursor_attr,
             ScrollView {
+                height: "calc(100% - 30)",
+                width: "100%",
                 scroll_with_arrows: false,
-                theme: theme_with!(
-                    ScrollViewTheme { height : "calc(100% - 30)".into(), width : "100%".into(), }
-                ),
                 paragraph {
                     width: "100%",
                     cursor_id: "0",
@@ -69,10 +71,16 @@ fn app(cx: Scope) -> Element {
                     onmouseover: onmouseover,
                     onmousedown: onmousedown,
                     onkeydown: onkeydown,
-                    text { "{editable.editor()}" }
+                    text {
+                        "{editable.editor()}"
+                    }
                 }
             }
-            label { color: "black", height: "30", "{cursor.col()}:{cursor.row()}" }
+            label {
+                color: "black",
+                height: "30",
+                "{cursor.col()}:{cursor.row()}"
+            }
         }
     )
 }

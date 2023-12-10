@@ -14,11 +14,15 @@ fn main() {
 #[component]
 fn Sidebar<'a>(cx: Scope<'a>, children: Element<'a>, sidebar: Element<'a>) -> Element<'a> {
     let theme = use_theme(cx);
-    let background = &theme.read().body.background;
-    let color = &theme.read().body.color;
+    let background = theme.read().body.background;
+    let color = theme.read().body.color;
 
     render!(
-        rect { width: "100%", height: "100%", direction: "horizontal", background: "{background}",
+        rect {
+            width: "100%",
+            height: "100%",
+            direction: "horizontal",
+            background: "{background}",
             rect {
                 overflow: "clip",
                 width: "200",
@@ -27,7 +31,10 @@ fn Sidebar<'a>(cx: Scope<'a>, children: Element<'a>, sidebar: Element<'a>) -> El
                 corner_radius: "0 7 0 7",
                 padding: "20",
                 color: "{color}",
-                ScrollView { theme: theme_with!(ScrollViewTheme { padding : "10".into(), }), sidebar }
+                ScrollView {
+                    padding: "10",
+                    sidebar
+                }
             }
             rect {
                 overflow: "clip",
@@ -35,7 +42,7 @@ fn Sidebar<'a>(cx: Scope<'a>, children: Element<'a>, sidebar: Element<'a>) -> El
                 height: "100%",
                 padding: "30",
                 color: "{color}",
-                children
+                children,
             }
         }
     )
@@ -90,7 +97,9 @@ fn SidebarItem<'a>(
             corner_radius: "10",
             padding: "12",
             background: "{background}",
-            label { children }
+            label {
+                children
+            }
         }
     )
 }
@@ -114,28 +123,49 @@ fn AppSidebar(cx: Scope) -> Element {
     render!(
         Sidebar {
             sidebar: render!(
-                SidebarItem { to : Route::Home, "Go to Hey ! 👋" }, SidebarItem { to : Route::Wow,
-                "Go to Wow! 👈" }, SidebarItem { onclick : | _ | println!("Hello!"),
-                "Print Hello! 👀" }
+                SidebarItem {
+                    to: Route::Home,
+                    "Go to Hey ! 👋"
+                },
+                SidebarItem {
+                    to: Route::Wow,
+                    "Go to Wow! 👈"
+                },
+                SidebarItem {
+                    onclick: |_| println!("Hello!"),
+                    "Print Hello! 👀"
+                }
             ),
-            Outlet::<Route> {}
+            Outlet::<Route> {  }
         }
     )
 }
 
 #[allow(non_snake_case)]
 fn Home(cx: Scope) -> Element {
-    render!( label { "Just some text 😗 in /" } )
+    render!(
+        label {
+            "Just some text 😗 in /"
+        }
+    )
 }
 
 #[allow(non_snake_case)]
 fn Wow(cx: Scope) -> Element {
-    render!( label { "Just more text 👈!! in /wow" } )
+    render!(
+        label {
+            "Just more text 👈!! in /wow"
+        }
+    )
 }
 
 #[allow(non_snake_case)]
 fn PageNotFound(cx: Scope) -> Element {
-    render!( label { "404!! 😵" } )
+    render!(
+        label {
+            "404!! 😵"
+        }
+    )
 }
 
 fn app(cx: Scope) -> Element {

@@ -83,27 +83,43 @@ fn app(cx: Scope) -> Element {
     };
 
     render!(
-        rect { padding: "10",
-            label { height: "25", "Ordering by {order}" }
-            Table { columns: 3,
+        rect {
+            padding: "10",
+            label {
+                height: "25",
+                "Ordering by {order}"
+            }
+            Table {
+                columns: 3,
                 TableHead {
                     TableRow {
-                        for (n , (text , order_by)) in columns.iter().enumerate() {
+                        for (n, (text, order_by)) in columns.iter().enumerate() {
                             TableCell {
                                 key: "{n}",
                                 order_direction: if *order.get() == *order_by { Some(*order_direction.get()) } else { None },
-                                onclick: move |_| on_column_head_click(order_by),
-                                label { "{text}" }
+                                onclick: move  |_| on_column_head_click(order_by),
+                                label {
+                                    "{text}"
+                                }
                             }
                         }
                     }
                 }
                 TableBody {
                     ScrollView {
-                        for (i , items) in filtered_data.enumerate() {
-                            TableRow { key: "{i}", alternate_colors: i % 2 == 0,
-                                for (n , item) in items.iter().enumerate() {
-                                    TableCell { key: "{n}", label { width: "100%", text_align: "right", "{item}" } }
+                        for (i, items) in filtered_data.enumerate() {
+                            TableRow {
+                                key: "{i}",
+                                alternate_colors: i % 2 == 0,
+                                for (n, item) in items.iter().enumerate() {
+                                    TableCell {
+                                        key: "{n}",
+                                        label {
+                                            width: "100%",
+                                            text_align: "right",
+                                            "{item}"
+                                        }
+                                    }
                                 }
                             }
                         }

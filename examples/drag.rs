@@ -46,7 +46,11 @@ fn app(cx: Scope) -> Element {
             offset_y: "{positions.1}",
             onmousedown: onmousedown,
             onclick: onclick,
-            label { width: "100", color: "white", "Drag me" }
+            label {
+                width: "100",
+                color: "white",
+                "Drag me"
+            }
             rect {
                 overflow: "clip",
                 background: "rgb(255, 166, 0)",

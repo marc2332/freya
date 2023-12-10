@@ -18,7 +18,12 @@ fn app(cx: Scope) -> Element {
     };
 
     render!(
-        rect { overflow: "clip", height: "100%", width: "100%", padding: "60", onwheel: onwheel,
+        rect {
+            overflow: "clip",
+            height: "100%",
+            width: "100%",
+            padding: "60",
+            onwheel: onwheel,
             rect {
                 shadow: "0 0 25 0 rgb(0, 0, 0, 170)",
                 corner_radius: "{radius} {radius * 0.7} {radius * 0.4} {radius * 0.2}",

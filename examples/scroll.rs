@@ -11,15 +11,21 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     render!(
-        rect { height: "100%", width: "100%", padding: "50", background: "white", color: "white",
-            ScrollView { show_scrollbar: true,
+        rect {
+            height: "100%",
+            width: "100%",
+            padding: "50",
+            background: "white",
+            color: "white",
+            ScrollView {
+                show_scrollbar: true,
                 rect {
                     border: "15 solid rgb(214, 40, 40)",
                     height: "200",
                     width: "400",
                     background: "rgb(27, 38, 59)",
                     padding: "30",
-                    label { "Scroll support :)" }
+                    label {  "Scroll support :)" }
                 }
                 rect {
                     border: "15 solid rgb(214, 40, 40)",
@@ -35,7 +41,7 @@ fn app(cx: Scope) -> Element {
                     width: "400",
                     background: "rgb(27, 38, 59)",
                     padding: "30",
-                    label { "Scroll support >:D" }
+                    label {  "Scroll support >:D" }
                 }
             }
         }

@@ -16,15 +16,53 @@ fn app(cx: Scope) -> Element {
             title: "Top Navbar"
         }),
         body: render!(
-            ScrollView { theme : theme_with!(ScrollViewTheme { height : "calc(100% - 75 - 75)"
-            .into(), }), show_scrollbar : true, Card { title : "Card 0", content : "Content 0", }
-            ScrollView { theme : theme_with!(ScrollViewTheme { height : "200".into(), padding :
-            "0 20".into(), }), Card { title : "Card 1", content : "Content 1", } Card { title :
-            "Card 2", content : "Content 2", } Card { title : "Card 3", content : "Content 3", }
-            Card { title : "Card 4", content : "Content 4", } } Card { title : "Card 5", content
-            : "Content 5", } Card { title : "Card 6", content : "Content 6", } Card { title :
-            "Card 7", content : "Content 7", } Card { title : "Card 7", content : "Content 7", }
-            } Navbar { title : "Bottom Bar" }
+            ScrollView {
+                height: "calc(100% - 75 - 75)",
+                show_scrollbar: true,
+                Card {
+                    title: "Card 0",
+                    content: "Content 0",
+                }
+                ScrollView {
+                    height: "200",
+                    padding: "0 20",
+                    Card {
+                        title: "Card 1",
+                        content: "Content 1",
+                    }
+                    Card {
+                        title: "Card 2",
+                        content: "Content 2",
+                    }
+                    Card {
+                        title: "Card 3",
+                        content: "Content 3",
+                    }
+                    Card {
+                        title: "Card 4",
+                        content: "Content 4",
+                    }
+                }
+                Card {
+                    title: "Card 5",
+                    content: "Content 5",
+                }
+                Card {
+                    title: "Card 6",
+                    content: "Content 6",
+                }
+                Card {
+                    title: "Card 7",
+                    content: "Content 7",
+                }
+                Card {
+                    title: "Card 7",
+                    content: "Content 7",
+                }
+            }
+            Navbar {
+                title: "Bottom Bar"
+            }
         )
     })
 }
@@ -45,7 +83,9 @@ fn Navbar<'a>(cx: Scope<'a, NavbarProps<'a>>) -> Element {
             padding: "15",
             main_align: "center",
             cross_align: "center",
-            label { "{&cx.props.title}" }
+            label {
+                "{&cx.props.title}"
+            }
         }
     )
 }
@@ -61,8 +101,16 @@ struct AppProps<'a> {
 #[allow(non_snake_case)]
 fn App<'a>(cx: Scope<'a, AppProps<'a>>) -> Element {
     render!(
-        rect { color: "white", width: "100%", height: "100%",
-            rect { width: "100%", height: "100%", &cx.props.navbar, &cx.props.body }
+        rect {
+            color: "white",
+            width: "100%",
+            height: "100%",
+            rect {
+                width: "100%",
+                height: "100%",
+                &cx.props.navbar,
+                &cx.props.body
+            }
         }
     )
 }
@@ -76,12 +124,29 @@ struct CardProps<'a> {
 #[allow(non_snake_case)]
 fn Card<'a>(cx: Scope<'a, CardProps<'a>>) -> Element {
     render!(
-        rect { width: "100%", height: "200", padding: "10", background: "rgb(35, 35, 35)",
-            rect { width: "100%", height: "50%", padding: "5", corner_radius: "10", main_align: "center",
-                label { height: "auto", "{&cx.props.title}" }
-                label { height: "auto", "{&cx.props.content}" }
+        rect {
+            width: "100%",
+            height: "200",
+            padding: "10",
+            background: "rgb(35, 35, 35)",
+            rect {
+                width: "100%",
+                height: "50%",
+                padding: "5",
+                corner_radius: "10",
+                main_align: "center",
+                label {
+                    height: "auto",
+                    "{&cx.props.title}"
+                }
+                label {
+                    height: "auto",
+                    "{&cx.props.content}"
+                }
             }
-            Area {}
+            Area {
+
+            }
         }
     )
 }
@@ -118,8 +183,12 @@ fn Area(cx: Scope) -> Element {
             cross_align: "center",
             onmouseover: cursor_moved,
             onclick: cursor_clicked,
-            label { "Mouse is at [x: {cursor_pos_over.0}, y: {cursor_pos_over.1}] " }
-            label { "Mouse clicked at [x: {cursor_pos_click.0}, y: {cursor_pos_click.1}]" }
+            label {
+                "Mouse is at [x: {cursor_pos_over.0}, y: {cursor_pos_over.1}] ",
+            },
+            label {
+                "Mouse clicked at [x: {cursor_pos_click.0}, y: {cursor_pos_click.1}]"
+            }
         }
     )
 }

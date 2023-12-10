@@ -21,7 +21,10 @@ fn app(cx: Scope) -> Element {
             max_height: "250",
             background: "black",
             reference: node_ref,
-            label { color: "white", "Size: {size.area.width()}x{size.area.height()}" }
+            label {
+                color: "white",
+                "Size: {size.area.width()}x{size.area.height()}"
+            }
         }
     )
 }

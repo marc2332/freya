@@ -11,7 +11,17 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     render!(
-        rect { height: "50%", min_height: "150", max_height: "300", width: "100%", background: "rgb(0, 119, 182)" }
-        rect { height: "fill", width: "100%", background: "rgb(20, 150, 220)" }
+        rect {
+            height: "50%",
+            min_height: "150",
+            max_height: "300",
+            width: "100%",
+            background: "rgb(0, 119, 182)",
+        }
+        rect {
+            height: "fill",
+            width: "100%",
+            background: "rgb(20, 150, 220)",
+        }
     )
 }

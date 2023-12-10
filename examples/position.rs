@@ -11,14 +11,16 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     render!(
-        rect { height: "100%", width: "100%",
+        rect {
+            height: "100%",
+            width: "100%",
             rect {
                 height: "20%",
                 width: "20%",
                 background: "black",
                 position: "absolute",
                 position_top: "10",
-                position_left: "10"
+                position_left: "10",
             }
             rect {
                 height: "20%",
@@ -26,7 +28,7 @@ fn app(cx: Scope) -> Element {
                 background: "black",
                 position: "absolute",
                 position_top: "10",
-                position_right: "10"
+                position_right: "10",
             }
             rect {
                 height: "20%",
@@ -34,7 +36,7 @@ fn app(cx: Scope) -> Element {
                 background: "black",
                 position: "absolute",
                 position_bottom: "10",
-                position_right: "10"
+                position_right: "10",
             }
             rect {
                 height: "20%",
@@ -42,7 +44,7 @@ fn app(cx: Scope) -> Element {
                 background: "black",
                 position: "absolute",
                 position_bottom: "10",
-                position_left: "10"
+                position_left: "10",
             }
         }
     )

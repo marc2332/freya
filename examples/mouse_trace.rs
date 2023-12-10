@@ -34,7 +34,12 @@ fn Box(cx: Scope) -> Element {
                 main_align: "center",
                 cross_align: "center",
                 corner_radius: "100",
-                rect { background: "rgb(240, 235, 141)", width: "100", height: "100", corner_radius: "100" }
+                rect {
+                    background: "rgb(240, 235, 141)",
+                    width: "100",
+                    height: "100",
+                    corner_radius: "100",
+                }
             }
         }
     )
@@ -61,7 +66,10 @@ fn app(cx: Scope) -> Element {
     };
 
     render!(
-        rect { onmouseover: onmouseover, width: "100%", height: "100%",
+        rect {
+            onmouseover: onmouseover,
+            width: "100%",
+            height: "100%",
             positions.get().iter().map(|pos| rsx!(
                 rect {
                     width: "0",

@@ -43,15 +43,15 @@ fn app(cx: Scope) -> Element {
     });
 
     render!(
-        rect { onclick: move |_| {
+        rect {
+            onclick: move |_| {
                 state += 1;
             },
             Canvas {
                 canvas: canvas,
-                theme: theme_with!(
-                    CanvasTheme { background : "black".into(), width : "100%".into(), height : "100%"
-                    .into(), }
-                )
+                background: "black",
+                width: "100%",
+                height: "100%"
             }
         }
     )

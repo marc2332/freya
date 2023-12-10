@@ -22,5 +22,7 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    render!( label { "Close the window :)" } )
+    render!(
+        label { "Close the window :)" }
+    )
 }

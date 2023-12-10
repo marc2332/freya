@@ -26,7 +26,7 @@ fn app(cx: Scope) -> Element {
                 corner_radius: "20",
                 background: "rgb(0, 0, 0)",
                 border: "1 solid rgb(242, 151, 39)",
-                border_align: "inner"
+                border_align: "inner",
             }
             rect {
                 width: "80",

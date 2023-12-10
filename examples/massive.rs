@@ -21,8 +21,14 @@ fn app(cx: Scope) -> Element {
     let rows = 100;
 
     render!(
-        rect { width: "100%", height: "100%", padding: "2.5",
-            rect { direction: "horizontal", width: "100%", height: "100%",
+        rect {
+            width: "100%",
+            height: "100%",
+            padding: "2.5",
+            rect {
+                direction: "horizontal",
+                width: "100%",
+                height: "100%",
                 (0..cols).map(|col| {
                     rsx! {
                         rect {

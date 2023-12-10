@@ -23,8 +23,18 @@ fn app(cx: Scope) -> Element {
     };
 
     render!(
-        Button { onclick: add, label { "Add" } }
-        Button { onclick: remove, label { "Remove" } }
+        Button {
+            onclick: add,
+            label {
+                "Add"
+            }
+        }
+        Button {
+            onclick: remove,
+            label {
+                "Remove"
+            }
+        }
         elements.read().iter().map(|e: &usize| rsx!(
             rect {
                 key: "{e}",

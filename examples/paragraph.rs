@@ -13,17 +13,40 @@ fn app(cx: Scope) -> Element {
     let loremipsum = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
 
     render!(
-        rect { color: "black", width: "100%", height: "100%", cross_align: "center",
-            rect { width: "50%", height: "100%",
+        rect {
+            color: "black",
+            width: "100%",
+            height: "100%",
+            cross_align: "center",
+            rect {
+                width: "50%",
+                height: "100%",
                 ScrollView {
                     show_scrollbar: true,
-                    theme: theme_with!(ScrollViewTheme { width : "100%".into(), height : "75%".into(), }),
-                    paragraph { width: "100%", text_align: "right",
-                        text { color: "rgb(240, 50, 100)", "{loremipsum.repeat(2)}" }
-                        text { color: "rgb(25, 160, 200)", "{loremipsum.repeat(1)}" }
+                    width: "100%",
+                    height: "75%",
+                    paragraph {
+                        width: "100%",
+                        text_align: "right",
+                        text {
+                            color: "rgb(240, 50, 100)",
+                            "{loremipsum.repeat(2)}"
+                        }
+                        text {
+                            color: "rgb(25, 160, 200)",
+                            "{loremipsum.repeat(1)}"
+                        }
                     }
                 }
-                ScrollView { show_scrollbar: true, theme: theme_with!(ScrollViewTheme { height : "25%".into(), }), label { font_size: "100", font_family: "Inter", "Hello World" } }
+                ScrollView {
+                    show_scrollbar: true,
+                    height: "25%",
+                    label {
+                        font_size: "100",
+                        font_family: "Inter",
+                        "Hello World"
+                    }
+                }
             }
         }
     )

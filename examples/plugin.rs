@@ -32,8 +32,14 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     render!(
-        rect { main_align: "center", cross_align: "center", width: "100%", height: "100%",
-            Button { label { "Hover me!" } }
+        rect {
+            main_align: "center",
+            cross_align: "center",
+            width: "100%",
+            height: "100%",
+            Button {
+                label { "Hover me!" }
+            }
         }
     )
 }

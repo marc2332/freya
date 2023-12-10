@@ -25,7 +25,10 @@ fn app(cx: Scope) -> Element {
 
     render!(
         DragProvider::<String> {
-            rect { direction: "horizontal", width: "100%", height: "100%",
+            rect {
+                direction: "horizontal",
+                width: "100%",
+                height: "100%",
                 Column {
                     data: data.clone(),
                     direction: SwapDirection::RightToLeft,
@@ -70,12 +73,19 @@ fn Column(
     };
 
     render!(
-        rect { width: "50%", height: "100%",
+        rect {
+            width: "50%",
+            height: "100%",
             DropZone {
                 ondrop: move |data: String| {
                     swap(data, direction);
                 },
-                rect { width: "100%", height: "100%", background: background, direction: "vertical", color: color,
+                rect {
+                    width: "100%",
+                    height: "100%",
+                    background: background,
+                    direction: "vertical",
+                    color: color,
                     for el in column {
                         rsx!(
                             DragZone {
@@ -84,7 +94,7 @@ fn Column(
                                     label {
                                         width: "200",
                                         font_size: "20",
-                                    "Moving '{el}'"
+                                       "Moving '{el}'"
                                     }
                                 ),
                                 label {

@@ -24,18 +24,22 @@ fn Child(cx: Scope) -> Element {
             onclick: move |_| {
                 focus_manager.focus();
             },
-            label { "Am I focused? {is_focused}" }
+            label {
+                "Am I focused? {is_focused}"
+            }
         }
     )
 }
 
 fn app(cx: Scope) -> Element {
     render!(
-        rect { width: "100%", height: "100%",
-            Child {}
-            Child {}
-            Child {}
-            Child {}
+        rect {
+            width: "100%",
+            height: "100%",
+            Child {},
+            Child {},
+            Child {},
+            Child {},
             Child {}
         }
     )

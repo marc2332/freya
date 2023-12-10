@@ -5,21 +5,17 @@
 
 use freya::prelude::*;
 
-macro_rules! cb {
-    ($val:expr) => {
-        Cow::Borrowed($val)
-    };
-}
-
 const CUSTOM_THEME: Theme = Theme {
     button: ButtonTheme {
-        background: cb!("rgb(230, 0, 0)"),
-        hover_background: cb!("rgb(150, 0, 0)"),
-        border_fill: cb!("rgb(120, 0, 0)"),
-        font_theme: FontTheme {
-            color: cb!("white"),
-        },
-        ..LIGHT_THEME.button
+        background: Cow::Borrowed("rgb(230, 0, 0)"),
+        hover_background: Cow::Borrowed("rgb(150, 0, 0)"),
+        border_fill: Cow::Borrowed("rgb(120, 0, 0)"),
+        corner_radius: Cow::Borrowed("4"),
+        height: Cow::Borrowed("auto"),
+        width: Cow::Borrowed("auto"),
+        margin: Cow::Borrowed("5"),
+        padding: Cow::Borrowed("6 12"),
+        font_theme: FontTheme { color: Cow::Borrowed("white") },
     },
     ..LIGHT_THEME
 };
@@ -30,9 +26,16 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     render!(
-        ThemeProvider { theme: CUSTOM_THEME,
-            rect { width: "100%", height: "100%",
-                Button { label { "Report" } }
+        ThemeProvider {
+            theme: CUSTOM_THEME,
+            rect {
+                width: "100%",
+                height: "100%",
+                Button {
+                    label {
+                        "Cancel"
+                    }
+                }
             }
         }
     )

@@ -24,7 +24,17 @@ fn app(cx: Scope) -> Element {
             onclick: move |_| {
                 count += 1;
             },
-            rect { overflow: "clip", padding: "50", height: "100%", width: "50%", background: "red", label { font_size: "50", "{count}" } }
+            rect {
+                overflow: "clip",
+                padding: "50",
+                height: "100%",
+                width: "50%",
+                background: "red",
+                label {
+                    font_size: "50",
+                    "{count}"
+                }
+            }
             Comp {}
         }
     )
