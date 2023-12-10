@@ -69,7 +69,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
         width,
         height,
         font_theme,
-    } = get_theme!( cx, &cx.props.theme, button );
+    } = get_theme!(cx, &cx.props.theme, button);
 
     let onclick = move |ev| {
         focus.focus();
@@ -79,7 +79,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
     };
 
     use_on_destroy(cx, {
-        to_owned![ status, platform ];
+        to_owned![status, platform];
         move || {
             if *status.current() == ButtonStatus::Hovering {
                 platform.set_cursor(CursorIcon::default());
@@ -88,7 +88,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
     });
 
     let onmouseenter = {
-        to_owned![ status, platform ];
+        to_owned![status, platform];
         move |_| {
             platform.set_cursor(CursorIcon::Hand);
             status.set(ButtonStatus::Hovering);

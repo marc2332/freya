@@ -15,7 +15,10 @@ fn TableArrow(cx: Scope, order_direction: OrderDirection) -> Element {
         OrderDirection::Up => "180",
     };
 
-    render!( ArrowIcon { rotate: "{rotate}", fill: "{arrow_fill}" } )
+    render!(ArrowIcon {
+        rotate: "{rotate}",
+        fill: "{arrow_fill}"
+    })
 }
 
 /// [`TableHead`] component properties.
@@ -78,7 +81,7 @@ pub struct TableRowProps<'a> {
 ///
 #[allow(non_snake_case)]
 pub fn TableRow<'a>(cx: Scope<'a, TableRowProps<'a>>) -> Element {
-    let theme = get_theme!( cx, &cx.props.theme, table );
+    let theme = get_theme!(cx, &cx.props.theme, table);
     let TableTheme {
         divider_fill,
         alternate_row_background,
@@ -208,20 +211,18 @@ pub fn Table<'a>(cx: Scope<'a, TableProps<'a>>) -> Element {
         shadow,
         font_theme: FontTheme { color },
         ..
-    } = get_theme!( cx, theme, table );
+    } = get_theme!(cx, theme, table);
     cx.provide_context(TableConfig { columns: *columns });
 
-    render!(
-        rect {
-            overflow: "clip",
-            color: "{color}",
-            background: "{background}",
-            corner_radius: "{corner_radius}",
-            shadow: "{shadow}",
-            height: "{height}",
-            children
-        }
-    )
+    render!(rect {
+        overflow: "clip",
+        color: "{color}",
+        background: "{background}",
+        corner_radius: "{corner_radius}",
+        shadow: "{shadow}",
+        height: "{height}",
+        children
+    })
 }
 
 #[derive(Clone)]

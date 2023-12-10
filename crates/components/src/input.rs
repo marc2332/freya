@@ -90,7 +90,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
         || EditableConfig::new(cx.props.value.to_string()),
         EditableMode::MultipleLinesSingleEditor,
     );
-    let theme = get_theme!( cx, &cx.props.theme, input );
+    let theme = get_theme!(cx, &cx.props.theme, input);
     let focus_manager = use_focus(cx);
 
     if &cx.props.value != editable.editor().current().rope() {
@@ -105,7 +105,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     };
 
     use_on_destroy(cx, {
-        to_owned![ status, platform ];
+        to_owned![status, platform];
         move || {
             if *status.read() == InputStatus::Hovering {
                 platform.set_cursor(CursorIcon::default());
@@ -114,7 +114,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     });
 
     let onkeydown = {
-        to_owned![ editable, focus_manager ];
+        to_owned![editable, focus_manager];
         move |e: Event<KeyboardData>| {
             if focus_manager.is_focused() && e.data.key != Key::Enter {
                 editable.process_event(&EditableEvent::KeyDown(e.data));

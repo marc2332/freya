@@ -23,7 +23,13 @@ pub fn Canvas(cx: Scope<CanvasProps>) -> Element {
         width,
         height,
         background,
-    } = get_theme!( cx, &cx.props.theme, canvas );
+    } = get_theme!(cx, &cx.props.theme, canvas);
 
-    render!(rect { overflow: "clip", canvas_reference: cx.props.canvas.attribute(cx), background: "{background}", width: "{width}", height: "{height}" })
+    render!(rect {
+        overflow: "clip",
+        canvas_reference: cx.props.canvas.attribute(cx),
+        background: "{background}",
+        width: "{width}",
+        height: "{height}"
+    })
 }

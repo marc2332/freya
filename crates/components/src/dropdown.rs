@@ -49,7 +49,7 @@ where
     T: PartialEq + 'static,
 {
     let selected = use_shared_state::<T>(cx).unwrap();
-    let theme = get_theme!( cx, &cx.props.theme, dropdown_item );
+    let theme = get_theme!(cx, &cx.props.theme, dropdown_item);
     let focus = use_focus(cx);
     let status = use_state(cx, DropdownItemStatus::default);
     let platform = use_platform(cx);
@@ -67,7 +67,7 @@ where
     let color = theme.font_theme.color;
 
     use_on_destroy(cx, {
-        to_owned![ status, platform ];
+        to_owned![status, platform];
         move || {
             if *status.current() == DropdownItemStatus::Hovering {
                 platform.set_cursor(CursorIcon::default());
@@ -180,7 +180,7 @@ where
 {
     use_shared_state_provider(cx, || cx.props.value.clone());
     let selected = use_shared_state::<T>(cx).unwrap();
-    let theme = get_theme!( cx, &cx.props.theme, dropdown );
+    let theme = get_theme!(cx, &cx.props.theme, dropdown);
     let focus = use_focus(cx);
     let status = use_state(cx, DropdownStatus::default);
     let opened = use_state(cx, || false);
@@ -196,7 +196,7 @@ where
     });
 
     use_on_destroy(cx, {
-        to_owned![ status, platform ];
+        to_owned![status, platform];
         move || {
             if *status.current() == DropdownStatus::Hovering {
                 platform.set_cursor(CursorIcon::default());
@@ -229,7 +229,7 @@ where
     };
 
     let onmouseenter = {
-        to_owned![ status, platform ];
+        to_owned![status, platform];
         move |_| {
             platform.set_cursor(CursorIcon::Hand);
             status.set(DropdownStatus::Hovering);

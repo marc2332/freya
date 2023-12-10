@@ -39,7 +39,7 @@ pub struct BodyProps<'a> {
 ///
 #[allow(non_snake_case)]
 pub fn Body<'a>(cx: Scope<'a, BodyProps<'a>>) -> Element {
-    let theme = get_theme!( cx, &cx.props.theme, body );
+    let theme = get_theme!(cx, &cx.props.theme, body);
     let BodyTheme {
         background,
         color,

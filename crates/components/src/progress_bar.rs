@@ -45,7 +45,7 @@ pub fn ProgressBar(cx: Scope<ProgressBarProps>) -> Element {
         progress_background,
         width,
         height,
-    } = get_theme!( cx, &cx.props.theme, progress_bar );
+    } = get_theme!(cx, &cx.props.theme, progress_bar);
     let show_progress = cx.props.show_progress;
     let progress = cx.props.progress;
 

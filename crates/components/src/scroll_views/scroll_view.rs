@@ -63,7 +63,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     let scrolled_x = use_ref(cx, || 0);
     let (node_ref, size) = use_node(cx);
     let focus = use_focus(cx);
-    let theme = get_theme!( cx, &cx.props.theme, scroll_view );
+    let theme = get_theme!(cx, &cx.props.theme, scroll_view);
 
     let padding = &theme.padding;
     let user_container_width = &theme.width;

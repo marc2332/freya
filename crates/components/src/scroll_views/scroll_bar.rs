@@ -29,7 +29,7 @@ pub fn ScrollBar<'a>(cx: Scope<'a, ScrollBarProps<'a>>) -> Element<'a> {
         offset_x,
         offset_y,
         ..
-    } = get_theme!( cx, &cx.props.theme, scroll_bar );
+    } = get_theme!(cx, &cx.props.theme, scroll_bar);
 
     let onmouseenter = |_| status.set(ScrollBarStatus::Hovering);
     let onmouseleave = |_| status.set(ScrollBarStatus::Idle);
