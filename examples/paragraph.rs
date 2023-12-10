@@ -15,13 +15,24 @@ fn app(cx: Scope) -> Element {
     render!(
         rect { color: "black", width: "100%", height: "100%", cross_align: "center",
             rect { width: "50%", height: "100%",
-                ScrollView { show_scrollbar: true, width: "100%", height: "75%",
+                ScrollView {
+                    show_scrollbar: true,
+                    theme: theme_with!(ScrollViewTheme {
+                        width: "100%".into(),
+                        height: "75%".into(),
+                    }),
                     paragraph { width: "100%", text_align: "right",
                         text { color: "rgb(240, 50, 100)", "{loremipsum.repeat(2)}" }
                         text { color: "rgb(25, 160, 200)", "{loremipsum.repeat(1)}" }
                     }
                 }
-                ScrollView { show_scrollbar: true, height: "25%", label { font_size: "100", font_family: "Inter", "Hello World" } }
+                ScrollView {
+                    show_scrollbar: true,
+                    theme: theme_with!(ScrollViewTheme {
+                        height: "25%".into(),
+                    }),
+                    label { font_size: "100", font_family: "Inter", "Hello World" }
+                }
             }
         }
     )

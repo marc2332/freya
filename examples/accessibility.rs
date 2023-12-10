@@ -59,7 +59,11 @@ fn app(cx: Scope) -> Element {
                 color: "white",
                 "Hello, World! This is an example."
             }
-            NetworkImage { url: url, width: "100", height: "100", alt: "This is an image" }
+            NetworkImage {
+                url: url,
+                alt: "This is an image",
+                theme: theme_with!(NetworkImageTheme { width : "100".into(), height : "100".into(), })
+            }
         }
     )
 }

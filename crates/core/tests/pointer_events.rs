@@ -20,10 +20,7 @@ pub async fn pointer_events() {
         let onpointerleave = move |_| state.with_mut(|v| v.push("leave".to_string()));
 
         render!(
-            rect {
-                height: "100%",
-                width: "100%",
-                padding: "10",
+            rect { height: "100%", width: "100%", padding: "10",
                 rect {
                     height: "100%",
                     width: "100%",

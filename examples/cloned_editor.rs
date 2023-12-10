@@ -59,12 +59,11 @@ fn Body(cx: Scope) -> Element {
             onglobalclick: onclick,
             background: "{theme.body.background}",
             VirtualScrollView {
-                width: "50%",
-                height: "100%",
                 length: editor.len_lines(),
                 item_size: 35.0,
                 builder_values: editable.clone(),
                 scroll_with_arrows: false,
+                theme: theme_with!(ScrollViewTheme { width : "50%".into(), height : "100%".into(), }),
                 builder: Box::new(move |(key, line_index, cx, values)| {
                     let editable = values.as_ref().unwrap();
                     let editor = editable.editor();
@@ -102,12 +101,11 @@ fn Body(cx: Scope) -> Element {
                 })
             }
             VirtualScrollView {
-                width: "50%",
-                height: "100%",
                 length: editor.len_lines(),
                 item_size: 35.0,
                 builder_values: editable.clone(),
                 scroll_with_arrows: false,
+                theme: theme_with!(ScrollViewTheme { width : "50%".into(), height : "100%".into(), }),
                 builder: Box::new(move |(key, line_index, cx, values)| {
                     let editable = values.as_ref().unwrap();
                     let editor = editable.editor();

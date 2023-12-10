@@ -115,7 +115,12 @@ fn Body(cx: Scope) -> Element {
                 direction: "horizontal",
                 background: "{theme.body.background}",
                 rect { width: "50%", height: "100%", padding: "15",
-                    ScrollView { width: "100%", height: "100%", scroll_with_arrows: false,
+                    ScrollView {
+                        scroll_with_arrows: false,
+                        theme: theme_with!(ScrollViewTheme {
+                            width: "100%".into(),
+                            height: "100%".into(),
+                        }),
                         editor.lines().map(move |l| {
 
                             let is_line_selected = cursor.row() == line_index;
@@ -212,7 +217,12 @@ fn Body(cx: Scope) -> Element {
                     height: "100%",
                     padding: "15",
                     shadow: "0 0 30 0 rgb(0, 0, 0, 0.6)",
-                    ScrollView { width: "100%", height: "100%", show_scrollbar: true,
+                    ScrollView {
+                        show_scrollbar: true,
+                        theme: theme_with!(ScrollViewTheme {
+                            width: "100%".into(),
+                            height: "100%".into(),
+                        }),
                         paragraph {
                             width: "100%",
                             cursor_index: "{cursor_char}",

@@ -21,27 +21,15 @@ pub fn NodeInspectorLayout(cx: Scope, node_id: NodeId) -> Element {
         let paddings = node.state.size.padding;
 
         render!(
-            rect {
-                overflow: "clip",
-                width: "100%",
-                height: "50%",
-                NodeInspectorBar {
-                    node_id: *node_id
-                }
+            rect { overflow: "clip", width: "100%", height: "50%",
+                NodeInspectorBar { node_id: *node_id }
                 ScrollView {
                     show_scrollbar: true,
-                    theme: theme_with!(ScrollViewTheme {
-                        height: "calc(100% - 35)".into(),
-                        width: "100%".into(),
-                    }),
-                    rect {
-                        width: "100%",
-                        height: "200",
-                        padding: "20",
-                        label {
-                            height: "25",
-                            "Area: {area}"
-                        }
+                    theme: theme_with!(
+                        ScrollViewTheme { height : "calc(100% - 35)".into(), width : "100%".into(), }
+                    ),
+                    rect { width: "100%", height: "200", padding: "20",
+                        label { height: "25", "Area: {area}" }
                         rect {
                             width: "100%",
                             height: "calc(100% - 25)",
@@ -58,11 +46,7 @@ pub fn NodeInspectorLayout(cx: Scope, node_id: NodeId) -> Element {
                                     cross_align: "center",
                                     width: "100%",
                                     height: "25",
-                                    label {
-                                        width: "100%",
-                                        text_align: "center",
-                                        "{paddings.top()}"
-                                    }
+                                    label { width: "100%", text_align: "center", "{paddings.top()}" }
                                 }
                                 rect {
                                     width: "100%",
@@ -73,11 +57,7 @@ pub fn NodeInspectorLayout(cx: Scope, node_id: NodeId) -> Element {
                                         cross_align: "center",
                                         width: "25",
                                         height: "100%",
-                                        label {
-                                            width: "100%",
-                                            text_align: "center",
-                                            "{paddings.left()}"
-                                        }
+                                        label { width: "100%", text_align: "center", "{paddings.left()}" }
                                     }
                                     rect {
                                         width: "calc(100% - 50)",
@@ -86,20 +66,14 @@ pub fn NodeInspectorLayout(cx: Scope, node_id: NodeId) -> Element {
                                         cross_align: "center",
                                         background: "rgb(40, 40, 40)",
                                         corner_radius: "5",
-                                        label {
-                                            "{inner_area}"
-                                        }
+                                        label { "{inner_area}" }
                                     }
                                     rect {
                                         main_align: "center",
                                         cross_align: "center",
                                         width: "25",
                                         height: "100%",
-                                        label {
-                                            width: "100%",
-                                            text_align: "center",
-                                            "{paddings.right()}"
-                                        }
+                                        label { width: "100%", text_align: "center", "{paddings.right()}" }
                                     }
                                 }
                                 rect {
@@ -107,11 +81,7 @@ pub fn NodeInspectorLayout(cx: Scope, node_id: NodeId) -> Element {
                                     cross_align: "center",
                                     width: "100%",
                                     height: "25",
-                                    label {
-                                        width: "100%",
-                                        text_align: "center",
-                                        "{paddings.bottom()}"
-                                    }
+                                    label { width: "100%", text_align: "center", "{paddings.bottom()}" }
                                 }
                             }
                         }

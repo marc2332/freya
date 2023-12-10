@@ -123,7 +123,11 @@ fn app(cx: Scope) -> Element {
                 shadow: "0 -2 5 0 rgb(0, 0, 0, 0.1)",
                 direction: "horizontal",
                 label { "Create as many editors you want!" }
-                Button { margin: "0 20", onclick: create_node, label { "New Editor" } }
+                Button {
+                    theme: theme_with!(ButtonTheme { margin : "0 20".into(), }),
+                    onclick: create_node,
+                    label { "New Editor" }
+                }
             }
         }
     )
@@ -228,7 +232,9 @@ fn Editor(cx: Scope) -> Element {
                 cursor_reference: cursor_attr,
                 direction: "horizontal",
                 rect { width: "100%", height: "100%", padding: "5",
-                    ScrollView { width: "100%", height: "100%", scroll_with_arrows: false,
+                    ScrollView {
+                        theme: theme_with!(ScrollViewTheme { width : "100%".into(), height : "100%".into(), }),
+                        scroll_with_arrows: false,
                         editor.lines().map(move |l| {
                             let editable = editable.clone();
 

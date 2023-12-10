@@ -34,7 +34,7 @@ fn app(cx: Scope) -> Element {
     let is_enabled = if *enabled.get() { "Yes" } else { "No" };
 
     render!(
-        Body { padding: "20",
+        Body { theme: theme_with!(BodyTheme { padding : "20".into(), }),
             Switch {
                 enabled: *enabled.get(),
                 ontoggled: |_| {

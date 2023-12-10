@@ -72,7 +72,13 @@ fn Scaffold<'a>(cx: Scope<'a, ScaffoldProps<'a>>) -> Element<'a> {
     render!(
         rect { direction: "vertical", height: "100%", width: "100%",
             cx.props.navbar.as_ref(),
-            ScrollView { height: "{height}", width: "100%", padding: "3 10 0 10", &cx.props.children }
+            ScrollView {
+                theme: theme_with!(
+                    ScrollViewTheme { height : height.into(), width : "100%".into(), padding : "3 10 0 10"
+                    .into(), }
+                ),
+                &cx.props.children
+            }
             rect {
                 width: "100%",
                 height: "0",

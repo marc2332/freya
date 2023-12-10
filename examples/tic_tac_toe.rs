@@ -157,25 +157,12 @@ fn app(cx: Scope) -> Element {
     };
 
     render!(
-        rect {
-            width: "100%",
-            height: "100%",
-            main_align: "center",
-            cross_align: "center",
-            rect {
-                width: "150",
-                height: "170",
-                label {
-                    height: "20",
-                    width: "100%",
-                    text_align: "center",
-                    "{message}"
-                }
-                for (n_row, row) in board.read().board.iter().enumerate() {
-                    rect {
-                        key: "{n_row}",
-                        direction: "horizontal",
-                        for (n_col, col) in row.iter().enumerate() {
+        rect { width: "100%", height: "100%", main_align: "center", cross_align: "center",
+            rect { width: "150", height: "170",
+                label { height: "20", width: "100%", text_align: "center", "{message}" }
+                for (n_row , row) in board.read().board.iter().enumerate() {
+                    rect { key: "{n_row}", direction: "horizontal",
+                        for (n_col , col) in row.iter().enumerate() {
                             rect {
                                 key: "{n_col}",
                                 margin: "1",
@@ -188,7 +175,7 @@ fn app(cx: Scope) -> Element {
                                 cross_align: "center",
                                 onclick: move |_| {
                                     let mut board = board.write();
-                                    if board.winner.is_none(){
+                                    if board.winner.is_none() {
                                         board.put_player(current_player.read().clone(), n_row, n_col);
                                     }
                                     current_player.write().change_turn();

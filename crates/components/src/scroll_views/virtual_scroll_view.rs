@@ -3,9 +3,7 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{keyboard::Key, KeyboardEvent, MouseEvent, WheelEvent};
-use freya_hooks::{
-    theme_with, use_focus, use_node, ScrollBarThemeWith, ScrollViewThemeWith,
-};
+use freya_hooks::{theme_with, use_focus, use_node, ScrollBarThemeWith, ScrollViewThemeWith};
 use std::ops::Range;
 
 use crate::theme::get_theme;

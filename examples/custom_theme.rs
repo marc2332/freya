@@ -5,12 +5,21 @@
 
 use freya::prelude::*;
 
+macro_rules! cb {
+    ($val:expr) => {
+        Cow::Borrowed($val)
+    };
+}
+
 const CUSTOM_THEME: Theme = Theme {
     button: ButtonTheme {
-        background: "rgb(230, 0, 0)",
-        hover_background: "rgb(150, 0, 0)",
-        border_fill: "rgb(120, 0, 0)",
-        font_theme: FontTheme { color: "white" },
+        background: cb!("rgb(230, 0, 0)"),
+        hover_background: cb!("rgb(150, 0, 0)"),
+        border_fill: cb!("rgb(120, 0, 0)"),
+        font_theme: FontTheme {
+            color: cb!("white"),
+        },
+        ..LIGHT_THEME.button
     },
     ..LIGHT_THEME
 };

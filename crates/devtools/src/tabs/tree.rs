@@ -5,7 +5,6 @@ use dioxus_router::prelude::use_navigator;
 use freya_components::*;
 use freya_hooks::{theme_with, ScrollViewThemeWith};
 
-
 #[allow(non_snake_case)]
 #[component]
 pub fn NodesTree<'a>(

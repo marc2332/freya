@@ -16,14 +16,15 @@ fn app(cx: Scope) -> Element {
             title: "Top Navbar"
         }),
         body: render!(
-            ScrollView { height : "calc(100% - 75 - 75)", show_scrollbar : true, Card { title :
-            "Card 0", content : "Content 0", } ScrollView { height : "200", padding : "0 20",
-            Card { title : "Card 1", content : "Content 1", } Card { title : "Card 2", content :
-            "Content 2", } Card { title : "Card 3", content : "Content 3", } Card { title :
-            "Card 4", content : "Content 4", } } Card { title : "Card 5", content : "Content 5",
-            } Card { title : "Card 6", content : "Content 6", } Card { title : "Card 7", content
-            : "Content 7", } Card { title : "Card 7", content : "Content 7", } } Navbar { title :
-            "Bottom Bar" }
+            ScrollView { theme : theme_with!(ScrollViewTheme { height : "calc(100% - 75 - 75)"
+            .into(), }), show_scrollbar : true, Card { title : "Card 0", content : "Content 0", }
+            ScrollView { theme : theme_with!(ScrollViewTheme { height : "200".into(), padding :
+            "0 20".into(), }), Card { title : "Card 1", content : "Content 1", } Card { title :
+            "Card 2", content : "Content 2", } Card { title : "Card 3", content : "Content 3", }
+            Card { title : "Card 4", content : "Content 4", } } Card { title : "Card 5", content
+            : "Content 5", } Card { title : "Card 6", content : "Content 6", } Card { title :
+            "Card 7", content : "Content 7", } Card { title : "Card 7", content : "Content 7", }
+            } Navbar { title : "Bottom Bar" }
         )
     })
 }

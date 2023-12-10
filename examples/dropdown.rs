@@ -20,8 +20,7 @@ fn app(cx: Scope) -> Element {
     let selected_dropdown = use_state(cx, || "Value A".to_string());
 
     render!(
-        Dropdown {
-            value: selected_dropdown.get().clone(),
+        Dropdown { value: selected_dropdown.get().clone(),
             values.iter().map(|ch| {
                 rsx!(
                     DropdownItem {

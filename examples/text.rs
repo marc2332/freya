@@ -31,7 +31,11 @@ fn app(cx: Scope) -> Element {
                     }
                 }
             }
-            ScrollView { show_scrollbar: true, height: "calc(100% - 60)",
+            ScrollView {
+                show_scrollbar: true,
+                theme: theme_with!(ScrollViewTheme {
+                    height: "calc(100% - 60)".into(),
+                }),
                 rect { background: "red", label { font_size: "{font_size}", font_family: "Inter", "Hello World 1" } }
                 label { font_size: "{font_size / 2f64}", font_family: "Inter", "Hello World 2" }
                 label { font_size: "{font_size / 3f64}", font_family: "Inter", "Hello World 3" }

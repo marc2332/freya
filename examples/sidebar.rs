@@ -14,8 +14,8 @@ fn main() {
 #[component]
 fn Sidebar<'a>(cx: Scope<'a>, children: Element<'a>, sidebar: Element<'a>) -> Element<'a> {
     let theme = use_theme(cx);
-    let background = theme.read().body.background;
-    let color = theme.read().body.color;
+    let background = &theme.read().body.background;
+    let color = &theme.read().body.color;
 
     render!(
         rect { width: "100%", height: "100%", direction: "horizontal", background: "{background}",
@@ -27,7 +27,7 @@ fn Sidebar<'a>(cx: Scope<'a>, children: Element<'a>, sidebar: Element<'a>) -> El
                 corner_radius: "0 7 0 7",
                 padding: "20",
                 color: "{color}",
-                ScrollView { padding: "10", sidebar }
+                ScrollView { theme: theme_with!(ScrollViewTheme { padding : "10".into(), }), sidebar }
             }
             rect {
                 overflow: "clip",

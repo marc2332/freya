@@ -11,7 +11,12 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     render!(
-        ScrollView { show_scrollbar: true, padding: "5", height: "100%", width: "100%",
+        ScrollView {
+            show_scrollbar: true,
+            theme: theme_with!(
+                ScrollViewTheme { padding : "5".into(), height : "100%".into(), width : "100%"
+                .into(), }
+            ),
             Accordion { summary: render!(AccordionSummary { label { "Accordion 1" } }),
                 AccordionBody {
                     label { "This is the body" }
