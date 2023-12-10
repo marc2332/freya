@@ -149,9 +149,10 @@ Themes can be built from scratch or extended from others, like here with `LIGHT_
 ```rust, no_run
 const CUSTOM_THEME: Theme = Theme {
     button: ButtonTheme {
-        background: "rgb(230, 0, 0)",
-        hover_background: "rgb(150, 0, 0)",
-        font_theme: FontTheme { color: "white" }
+        background: "rgb(230, 0, 0)".into(),
+        hover_background: "rgb(150, 0, 0)".into(),
+        font_theme: FontTheme { color: "white".into() },
+        ..LIGHT_THEME.button
     },
     ..LIGHT_THEME
 };
