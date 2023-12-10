@@ -61,9 +61,20 @@ fn AppWithDevtools(cx: Scope<AppWithDevtoolsProps>) -> Element {
     let hovered_node = cx.props.hovered_node.clone();
 
     render!(
-        rect { width: "100%", height: "100%", direction: "horizontal",
-            rect { overflow: "clip", height: "100%", width: "calc(100% - 350)", Root {} }
-            rect { background: "rgb(40, 40, 40)", height: "100%", width: "350",
+        rect {
+            width: "100%",
+            height: "100%",
+            direction: "horizontal",
+            rect {
+                overflow: "clip",
+                height: "100%",
+                width: "calc(100% - 350)",
+                Root { },
+            }
+            rect {
+                background: "rgb(40, 40, 40)",
+                height: "100%",
+                width: "350",
                 ThemeProvider {
                     DevTools {
                         rdom: cx.props.rdom.clone(),
@@ -169,7 +180,12 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
     });
 
     render!(
-        rect { width: "100%", height: "100%", color: "{theme.body.color}", Router::<Route> {} }
+        rect {
+            width: "100%",
+            height: "100%",
+            color: theme.body.color,
+            Router::<Route> { }
+        }
     )
 }
 
@@ -177,7 +193,12 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
 #[allow(non_snake_case)]
 pub fn DevtoolsBar(cx: Scope) -> Element {
     render!(
-        TabsBar { TabButton { to: Route::TreeElementsTab {}, label: "Elements" } }
+        TabsBar {
+            TabButton {
+                to: Route::TreeElementsTab { },
+                label: "Elements"
+            }
+        }
         Outlet::<Route> {}
     )
 }
@@ -188,15 +209,11 @@ pub fn NodeInspectorBar(cx: Scope, node_id: NodeId) -> Element {
     render!(
         TabsBar {
             TabButton {
-                to: Route::TreeStyleTab {
-                    node_id: node_id.serialize(),
-                },
+                to: Route::TreeStyleTab { node_id: node_id.serialize() },
                 label: "Style"
             }
             TabButton {
-                to: Route::TreeLayoutTab {
-                    node_id: node_id.serialize(),
-                },
+                to: Route::TreeLayoutTab { node_id: node_id.serialize() },
                 label: "Layout"
             }
         }
@@ -223,7 +240,11 @@ pub enum Route {
 #[allow(non_snake_case)]
 #[component]
 fn PageNotFound(cx: Scope) -> Element {
-    render!( label { "Page not found." } )
+    render!(
+        label {
+            "Page not found."
+        }
+    )
 }
 
 #[allow(non_snake_case)]
@@ -261,7 +282,9 @@ fn TreeStyleTab(cx: Scope<TreeTabProps>) -> Element {
                 }
             }
         }
-        NodeInspectorStyle { node_id: node_id }
+        NodeInspectorStyle {
+            node_id: node_id
+        }
     )
 }
 
@@ -280,7 +303,9 @@ fn TreeLayoutTab(cx: Scope<TreeTabProps>) -> Element {
                 }
             }
         }
-        NodeInspectorLayout { node_id: node_id }
+        NodeInspectorLayout {
+            node_id: node_id
+        }
     )
 }
 

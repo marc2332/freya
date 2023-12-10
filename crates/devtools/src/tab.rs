@@ -16,7 +16,10 @@ pub fn TabsBar<'a>(cx: Scope<'a, TabsBarProps<'a>>) -> Element<'a> {
     render!(
         ScrollView {
             direction: "horizontal",
-            theme: theme_with!(ScrollViewTheme { height : "35".into(), width : "100%".into(), }),
+            theme: theme_with!(ScrollViewTheme {
+                height : "35".into(),
+                width : "100%".into(),
+            }),
             &cx.props.children
         }
     )
@@ -71,7 +74,9 @@ pub fn TabButton<'a>(cx: Scope<'a, TabButtonProps<'a>>) -> Element<'a> {
             shadow: "0 4 5 0 rgb(0, 0, 0, 0.3)",
             border: "1 solid {border_fill}",
             main_align: "center",
-            label { content }
+            label {
+                content
+            }
         }
     )
 }

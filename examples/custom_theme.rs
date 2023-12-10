@@ -15,7 +15,9 @@ const CUSTOM_THEME: Theme = Theme {
         width: Cow::Borrowed("auto"),
         margin: Cow::Borrowed("5"),
         padding: Cow::Borrowed("6 12"),
-        font_theme: FontTheme { color: Cow::Borrowed("white") },
+        font_theme: FontTheme {
+            color: Cow::Borrowed("white"),
+        },
     },
     ..LIGHT_THEME
 };

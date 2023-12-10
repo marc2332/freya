@@ -31,7 +31,12 @@ pub async fn multiple_lines_single_editor() {
         };
 
         render!(
-            rect { width: "100%", height: "100%", background: "white", cursor_reference: cursor_attr, onmousedown: onmousedown,
+            rect {
+                width: "100%",
+                height: "100%",
+                background: "white",
+                cursor_reference: cursor_attr,
+                onmousedown: onmousedown,
                 paragraph {
                     height: "50%",
                     width: "100%",
@@ -40,9 +45,16 @@ pub async fn multiple_lines_single_editor() {
                     cursor_color: "black",
                     cursor_mode: "editable",
                     onkeydown: onkeydown,
-                    text { color: "black", "{editor}" }
+                    text {
+                        color: "black",
+                        "{editor}"
+                    }
                 }
-                label { color: "black", height: "50%", "{cursor.col()}:{cursor.row()}" }
+                label {
+                    color: "black",
+                    height: "50%",
+                    "{cursor.col()}:{cursor.row()}"
+                }
             }
         )
     }
@@ -120,7 +132,12 @@ pub async fn single_line_mulitple_editors() {
         };
 
         render!(
-            rect { width: "100%", height: "100%", background: "white", cursor_reference: cursor_attr, onkeydown: onkeydown,
+            rect {
+                width: "100%",
+                height: "100%",
+                background: "white",
+                cursor_reference: cursor_attr,
+                onkeydown: onkeydown,
                 editor.lines().enumerate().map(move |(i, line)| {
 
                     let onmousedown = {
@@ -146,8 +163,12 @@ pub async fn single_line_mulitple_editors() {
                             }
                         }
                     )
-                }),
-                label { color: "black", height: "50%", "{editor.cursor_col()}:{editor.cursor_row()}" }
+                })
+                label {
+                    color: "black",
+                    height: "50%",
+                    "{editor.cursor_col()}:{editor.cursor_row()}"
+                }
             }
         )
     }
@@ -247,7 +268,11 @@ pub async fn highlight_multiple_lines_single_editor() {
         };
 
         render!(
-            rect { width: "100%", height: "100%", background: "white", cursor_reference: cursor_attr,
+            rect {
+                width: "100%",
+                height: "100%",
+                background: "white",
+                cursor_reference: cursor_attr,
                 paragraph {
                     height: "50%",
                     width: "100%",
@@ -259,9 +284,16 @@ pub async fn highlight_multiple_lines_single_editor() {
                     onkeydown: onkeydown,
                     onmousedown: onmousedown,
                     onmouseover: onmouseover,
-                    text { color: "black", "{editor}" }
+                    text {
+                        color: "black",
+                        "{editor}"
+                    }
                 }
-                label { color: "black", height: "50%", "{cursor.col()}:{cursor.row()}" }
+                label {
+                    color: "black",
+                    height: "50%",
+                    "{cursor.col()}:{cursor.row()}"
+                }
             }
         )
     }
@@ -375,8 +407,12 @@ pub async fn highlights_single_line_mulitple_editors() {
                             }
                         }
                     )
-                }),
-                label { color: "black", height: "50%", "{editor.cursor_col()}:{editor.cursor_row()}" }
+                })
+                label {
+                    color: "black",
+                    height: "50%",
+                    "{editor.cursor_col()}:{editor.cursor_row()}"
+                }
             }
         )
     }

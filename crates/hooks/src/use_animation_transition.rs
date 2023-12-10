@@ -333,7 +333,7 @@ mod test {
             });
 
             render!(rect {
-                width: "{progress}"
+                width: "{progress}",
             })
         }
 

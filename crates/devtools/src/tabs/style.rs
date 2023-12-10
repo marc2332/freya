@@ -21,12 +21,20 @@ pub fn NodeInspectorStyle(cx: Scope, node_id: NodeId) -> Element {
 
     if let Some(node) = node {
         render!(
-            rect { overflow: "clip", width: "100%", height: "50%",
-                NodeInspectorBar { node_id: *node_id }
+            rect {
+                overflow: "clip",
+                width: "100%",
+                height: "50%",
+                NodeInspectorBar {
+                    node_id: *node_id
+                }
                 ScrollView {
                     show_scrollbar: true,
                     theme: theme_with!(
-                        ScrollViewTheme { height : "calc(100% - 35)".into(), width : "100%".into(), }
+                        ScrollViewTheme {
+                            height : "calc(100% - 35)".into(),
+                            width : "100%".into(),
+                        }
                     ),
                     node.state.iter().enumerate().map(|(i, (name, attr))| {
                         match attr {

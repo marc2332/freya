@@ -65,7 +65,14 @@ mod test {
         fn use_node_app(cx: Scope) -> Element {
             let (reference, size) = use_node(cx);
 
-            render!(rect { reference: reference, width: "50%", height: "25%", "{size.area.width()}" })
+            render!(
+                rect {
+                    reference: reference,
+                    width: "50%",
+                    height: "25%",
+                    "{size.area.width()}"
+                }
+            )
         }
 
         let mut utils = launch_test_with_config(

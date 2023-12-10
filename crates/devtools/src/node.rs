@@ -52,7 +52,11 @@ pub fn NodeElement<'a>(
             onmousedown: onmousedown,
             onmouseover: onmouseover,
             onmouseleave: onmouseleave,
-            label { font_size: "14", color: "{color}", "{node.tag} #{node.id:?}" }
+            label {
+                font_size: "14",
+                color: "{color}",
+                "{node.tag} #{node.id:?}"
+            }
         }
     )
 }
