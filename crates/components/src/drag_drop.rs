@@ -93,7 +93,13 @@ pub fn DragZone<'a, T: 'static + Clone>(cx: Scope<'a, DragZoneProps<'a, T>>) -> 
                 }
             )
         }
-        rect { reference: node_reference, onglobalclick: onglobalclick, onglobalmouseover: onglobalmouseover, onmousedown: onmousedown, &cx.props.children }
+        rect {
+            reference: node_reference,
+            onglobalclick: onglobalclick,
+            onglobalmouseover: onglobalmouseover,
+            onmousedown: onmousedown,
+            &cx.props.children
+        }
     )
 }
 
@@ -127,7 +133,10 @@ pub fn DropZone<'a, T: 'static + Clone>(cx: Scope<'a, DropZoneProps<'a, T>>) -> 
     };
 
     render!(
-        rect { onclick: onclick, &cx.props.children }
+        rect {
+            onclick: onclick,
+            &cx.props.children
+        }
     )
 }
 
@@ -143,14 +152,33 @@ mod test {
 
             render!(
                 DragProvider::<bool> {
-                    rect { height: "50%", width: "100%",
-                        DragZone { data: true, drag_element: render!(label { width : "200", "Moving" }), label { "Move" } }
-                    }
+                    rect {
+                        height: "50%",
+                        width: "100%",
+                        DragZone {
+                            data: true,
+                            drag_element: render!(
+                                label {
+                                    width: "200",
+                                    "Moving"
+                                }
+                            ),
+                            label {
+                                "Move"
+                            }
+                        }
+                    },
                     DropZone {
                         ondrop: move |data: bool| {
                             state.set(data);
                         },
-                        rect { height: "50%", width: "100%", label { "Enabled: {state}" } }
+                        rect {
+                            height: "50%",
+                            width: "100%",
+                            label {
+                                "Enabled: {state}"
+                            }
+                        }
                     }
                 }
             )

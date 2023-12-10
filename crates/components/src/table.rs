@@ -95,8 +95,17 @@ pub fn TableRow<'a>(cx: Scope<'a, TableRowProps<'a>>) -> Element {
     };
 
     render!(
-        rect { direction: "horizontal", width: "100%", background: "{background}", &cx.props.children }
-        rect { height: "1", width: "100%", background: "{divider_fill}" }
+        rect {
+            direction: "horizontal",
+            width: "100%",
+            background: "{background}",
+            &cx.props.children
+        }
+        rect {
+            height: "1",
+            width: "100%",
+            background: "{divider_fill}"
+        }
     )
 }
 

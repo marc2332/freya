@@ -274,11 +274,16 @@ where
             direction: "horizontal",
             main_align: "center",
             cross_align: "center",
-            label { text_align: "center", "{selected}" }
+            label {
+                text_align: "center",
+                "{selected}"
+            }
             ArrowIcon {
                 rotate: "0",
                 fill: "{arrow_fill}",
-                theme: theme_with!(ArrowIconTheme { margin : "0 0 0 8".into(), })
+                theme: theme_with!(ArrowIconTheme {
+                    margin : "0 0 0 8".into(),
+                })
             }
         }
         if *opened.get() {

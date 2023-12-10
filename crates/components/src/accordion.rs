@@ -117,9 +117,17 @@ pub fn Accordion<'a>(cx: Scope<'a, AccordionProps<'a>>) -> Element<'a> {
             background: "{background}",
             onclick: onclick,
             border: "1 solid {border_fill}",
-            &cx.props.summary,
-            rect { overflow: "clip", width: "100%", height: "{animation_value}",
-                rect { reference: node_ref, height: "auto", width: "100%", &cx.props.children }
+            &cx.props.summary
+            rect {
+                overflow: "clip",
+                width: "100%",
+                height: "{animation_value}",
+                rect {
+                    reference: node_ref,
+                    height: "auto",
+                    width: "100%",
+                    &cx.props.children
+                }
             }
         }
     )
@@ -156,7 +164,9 @@ pub struct AccordionBodyProps<'a> {
 ///
 #[allow(non_snake_case)]
 pub fn AccordionBody<'a>(cx: Scope<'a, AccordionBodyProps<'a>>) -> Element<'a> {
-    render!(
-        rect { width: "100%", padding: "15 0 0 0", &cx.props.children }
-    )
+    render!(rect {
+        width: "100%",
+        padding: "15 0 0 0",
+        &cx.props.children
+    })
 }

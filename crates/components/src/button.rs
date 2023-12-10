@@ -105,15 +105,6 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
         ButtonStatus::Idle => background,
     };
 
-    // let ButtonProps {
-    //     width,
-    //     height,
-    //     corner_radius,
-    //     padding,
-    //     margin,
-    //     ..
-    // } = &cx.props;
-
     render!(
         rect {
             onclick: onclick,

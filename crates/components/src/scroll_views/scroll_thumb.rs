@@ -45,7 +45,12 @@ pub fn ScrollThumb<'a>(cx: Scope<'a, ScrollThumbProps<'a>>) -> Element<'a> {
             width: "{cx.props.width}",
             height: "{cx.props.height}",
             padding: "2",
-            rect { width: "100%", height: "100%", corner_radius: "8", background: "{thumb_background}" }
+            rect {
+                width: "100%",
+                height: "100%",
+                corner_radius: "8",
+                background: "{thumb_background}",
+            }
         }
     )
 }

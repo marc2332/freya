@@ -117,7 +117,19 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
             onmouseenter: onmouseenter,
             onmouseleave: onmouseleave,
             onclick: onclick,
-            rect { width: "100%", height: "100%", offset_x: "{offset_x}", padding: "2.5", corner_radius: "50", rect { background: "{circle}", width: "18", height: "18", corner_radius: "50" } }
+            rect {
+                width: "100%",
+                height: "100%",
+                offset_x: "{offset_x}",
+                padding: "2.5",
+                corner_radius: "50",
+                rect {
+                    background: "{circle}",
+                    width: "18",
+                    height: "18",
+                    corner_radius: "50",
+                }
+            }
         }
     )
 }

@@ -50,7 +50,10 @@ pub fn ProgressBar(cx: Scope<ProgressBarProps>) -> Element {
     let progress = cx.props.progress;
 
     render!(
-        rect { width: "{width}", height: "{height}", padding: "2",
+        rect {
+            width: "{width}",
+            height: "{height}",
+            padding: "2",
             rect {
                 corner_radius: "999",
                 width: "100%",

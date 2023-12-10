@@ -77,8 +77,16 @@ pub fn ExternalLink<'a>(cx: Scope<'a, ExternalLinkProps<'a>>) -> Element {
     };
 
     render!(
-        rect { onmouseover: onmouseover, onmouseleave: onmouseleave, onclick: onclick, color: "{color}", &cx.props.children }
-        rect { height: "0", layer: "-999",
+        rect {
+            onmouseover: onmouseover,
+            onmouseleave: onmouseleave,
+            onclick: onclick,
+            color: "{color}",
+            &cx.props.children
+        }
+        rect {
+            height: "0",
+            layer: "-999",
             (*is_hovering.get() && show_tooltip).then_some({
                 rsx!(
                     Tooltip {

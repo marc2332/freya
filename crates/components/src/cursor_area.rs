@@ -68,6 +68,10 @@ pub fn CursorArea<'a>(cx: Scope<'a, CursorAreaProps<'a>>) -> Element<'a> {
     });
 
     render!(
-        rect { onmouseover: onmouseover, onmouseleave: onmouseleave, &cx.props.children }
+        rect {
+            onmouseover: onmouseover,
+            onmouseleave: onmouseleave,
+            &cx.props.children
+        }
     )
 }

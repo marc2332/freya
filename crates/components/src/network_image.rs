@@ -92,7 +92,13 @@ pub fn NetworkImage<'a>(cx: Scope<'a, NetworkImageProps<'a>>) -> Element<'a> {
             render!(loading_element)
         } else {
             render!(
-                rect { height: "{height}", width: "{width}", main_align: "center", cross_align: "center", Loader {} }
+                rect {
+                    height: "{height}",
+                    width: "{width}",
+                    main_align: "center",
+                    cross_align: "center",
+                    Loader {}
+                }
             )
         }
     } else if *status.get() == ImageStatus::Errored {
@@ -100,8 +106,15 @@ pub fn NetworkImage<'a>(cx: Scope<'a, NetworkImageProps<'a>>) -> Element<'a> {
             render!(fallback_element)
         } else {
             render!(
-                rect { height: "{height}", width: "{width}", main_align: "center", cross_align: "center",
-                    label { text_align: "center", "Error" }
+                rect {
+                    height: "{height}",
+                    width: "{width}",
+                    main_align: "center",
+                    cross_align: "center",
+                    label {
+                        text_align: "center",
+                        "Error"
+                    }
                 }
             )
         }

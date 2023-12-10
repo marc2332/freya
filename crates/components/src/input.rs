@@ -212,7 +212,9 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
                 cursor_color: "{color}",
                 max_lines: "1",
                 highlights: highlights_attr,
-                text { "{text}" }
+                text {
+                    "{text}"
+                }
             }
         }
     )

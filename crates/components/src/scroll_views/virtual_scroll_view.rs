@@ -327,7 +327,10 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
             onglobalmouseover: onmouseover,
             onkeydown: onkeydown,
             onkeyup: onkeyup,
-            rect { direction: "vertical", width: "{container_width}", height: "{container_height}",
+            rect {
+                direction: "vertical",
+                width: "{container_width}",
+                height: "{container_height}",
                 rect {
                     overflow: "clip",
                     padding: "{padding}",
@@ -341,7 +344,9 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
                 ScrollBar {
                     width: "100%",
                     height: "{horizontal_scrollbar_size}",
-                    theme: theme_with!(ScrollBarTheme { offset_x : scrollbar_x.to_string().into(), }),
+                    theme: theme_with!(ScrollBarTheme {
+                        offset_x: scrollbar_x.to_string().into(),
+                    }),
                     clicking_scrollbar: is_scrolling_x,
                     ScrollThumb {
                         clicking_scrollbar: is_scrolling_x,
@@ -354,7 +359,9 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
             ScrollBar {
                 width: "{vertical_scrollbar_size}",
                 height: "100%",
-                theme: theme_with!(ScrollBarTheme { offset_y : scrollbar_y.to_string().into(), }),
+                theme: theme_with!(ScrollBarTheme {
+                    offset_y: scrollbar_y.to_string().into(),
+                }),
                 clicking_scrollbar: is_scrolling_y,
                 ScrollThumb {
                     clicking_scrollbar: is_scrolling_y,
