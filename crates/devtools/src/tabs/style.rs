@@ -33,7 +33,7 @@ pub fn NodeInspectorStyle(cx: Scope, node_id: NodeId) -> Element {
                     theme: theme_with!(
                         ScrollViewTheme {
                             height : "calc(100% - 35)".into(),
-                            width : "100%".into(),
+                            width: "100%".into(),
                         }
                     ),
                     node.state.iter().enumerate().map(|(i, (name, attr))| {

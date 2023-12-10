@@ -53,7 +53,7 @@ pub const DARK_THEME: Theme = Theme {
     scroll_view: ScrollViewTheme {
         height: LIGHT_THEME.scroll_view.height,
         width: LIGHT_THEME.scroll_view.width,
-        padding: LIGHT_THEME.scroll_view.padding,
+        padding: LIGHT_THEME.scroll_view.padding, // mm
     },
     tooltip: TooltipTheme {
         background: cow_borrowed!("rgb(35,35,35)"),

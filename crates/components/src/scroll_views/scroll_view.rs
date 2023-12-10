@@ -41,8 +41,10 @@ pub struct ScrollViewProps<'a> {
 /// fn app(cx: Scope) -> Element {
 ///     render!(
 ///         ScrollView {
-///              height: "300",
-///              width: "100%",
+///              theme: theme_with!(ScrollViewTheme {
+///                 width: "100%".into(),
+///                 height: "300".into(),
+///              }),
 ///              show_scrollbar: true,
 ///              rect {
 ///                 background: "blue",

@@ -18,7 +18,6 @@ pub fn TabsBar<'a>(cx: Scope<'a, TabsBarProps<'a>>) -> Element<'a> {
             direction: "horizontal",
             theme: theme_with!(ScrollViewTheme {
                 height : "35".into(),
-                width : "100%".into(),
             }),
             &cx.props.children
         }

@@ -30,12 +30,9 @@ pub fn NodeInspectorLayout(cx: Scope, node_id: NodeId) -> Element {
                 }
                 ScrollView {
                     show_scrollbar: true,
-                    theme: theme_with!(
-                        ScrollViewTheme {
-                            height : "calc(100% - 35)".into(),
-                            width : "100%".into(),
-                        }
-                    ),
+                    theme: theme_with!(ScrollViewTheme {
+                        height : "calc(100% - 35)".into(),
+                    }),
                     rect {
                         width: "100%",
                         height: "200",
