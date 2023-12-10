@@ -3,7 +3,7 @@ use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
 use freya_hooks::{
-    use_animation, use_get_theme, use_node, use_platform, AccordionTheme, AccordionThemeWith,
+    use_animation, use_node, use_platform, AccordionTheme, AccordionThemeWith,
     Animation,
 };
 use winit::window::CursorIcon;

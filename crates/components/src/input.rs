@@ -4,7 +4,7 @@ use freya_elements::events::keyboard::Key;
 use freya_elements::events::{KeyboardData, MouseEvent};
 use freya_hooks::use_platform;
 use freya_hooks::{
-    use_editable, use_focus, use_get_theme, EditableConfig, EditableEvent, EditableMode, TextEditor,
+    use_editable, use_focus, EditableConfig, EditableEvent, EditableMode, TextEditor,
 };
 use freya_hooks::{FontTheme, InputTheme, InputThemeWith};
 

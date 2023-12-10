@@ -4,7 +4,7 @@ use dioxus_native_core::NodeId;
 use dioxus_router::prelude::use_navigator;
 use freya_components::*;
 use freya_hooks::{theme_with, ScrollViewThemeWith};
-use std::borrow::Cow;
+
 
 #[allow(non_snake_case)]
 #[component]

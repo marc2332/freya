@@ -1,7 +1,7 @@
 use crate::theme::get_theme;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::{use_get_theme, TooltipTheme, TooltipThemeWith};
+use freya_hooks::{TooltipTheme, TooltipThemeWith};
 
 /// [`Tooltip`] component properties.
 #[derive(Props)]

@@ -7,7 +7,7 @@ use freya_elements::elements as dioxus_elements;
 use freya_elements::events::keyboard::Key;
 use freya_elements::events::{KeyboardEvent, MouseEvent};
 use freya_hooks::{
-    theme_with, use_focus, use_get_theme, use_platform, ArrowIconTheme, ArrowIconThemeWith,
+    theme_with, use_focus, use_platform, ArrowIconThemeWith,
     DropdownItemThemeWith, DropdownTheme, DropdownThemeWith,
 };
 use winit::window::CursorIcon;

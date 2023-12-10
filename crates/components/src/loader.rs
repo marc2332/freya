@@ -3,7 +3,7 @@ use std::time::Duration;
 use crate::theme::get_theme;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::{use_get_theme, LoaderTheme, LoaderThemeWith};
+use freya_hooks::{LoaderTheme, LoaderThemeWith};
 use tokio::time::interval;
 
 /// [`Loader`] component properties.
