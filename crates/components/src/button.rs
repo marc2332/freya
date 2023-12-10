@@ -11,21 +11,6 @@ pub struct ButtonProps<'a> {
     /// Theme override.
     #[props(optional)]
     pub theme: Option<ButtonThemeWith>,
-    // /// Padding for the Button.
-    // #[props(default = "8 16".to_string(), into)]
-    // pub padding: String,
-    // /// Margin for the Button.
-    // #[props(default = "4".to_string(), into)]
-    // pub margin: String,
-    // /// Corner radius for the Button.
-    // #[props(default = "8".to_string(), into)]
-    // pub corner_radius: String,
-    // /// Width size for the Button.
-    // #[props(default = "auto".to_string(), into)]
-    // pub width: String,
-    // /// Inner children for the Button.
-    // #[props(default = "auto".to_string(), into)]
-    // pub height: String,
     /// Inner children for the Button.
     pub children: Element<'a>,
     /// Handler for the `onclick` event.
@@ -84,7 +69,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
         width,
         height,
         font_theme,
-    } = get_theme!(cx, &cx.props.theme, button);
+    } = get_theme!( cx, &cx.props.theme, button );
 
     let onclick = move |ev| {
         focus.focus();
@@ -94,7 +79,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
     };
 
     use_on_destroy(cx, {
-        to_owned![status, platform];
+        to_owned![ status, platform ];
         move || {
             if *status.current() == ButtonStatus::Hovering {
                 platform.set_cursor(CursorIcon::default());
@@ -103,7 +88,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
     });
 
     let onmouseenter = {
-        to_owned![status, platform];
+        to_owned![ status, platform ];
         move |_| {
             platform.set_cursor(CursorIcon::Hand);
             status.set(ButtonStatus::Hovering);

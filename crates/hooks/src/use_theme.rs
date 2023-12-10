@@ -31,13 +31,6 @@ pub fn use_get_theme(cx: &ScopeState) -> Theme {
         .unwrap_or_default()
 }
 
-/// Utility macro.
-#[macro_export]
-#[doc(hidden)]
-macro_rules! empty {
-    () => {};
-}
-
 /// Example usage:
 ///
 /// ```rust,ignore
@@ -56,40 +49,46 @@ macro_rules! empty {
 /// ```
 #[macro_export]
 macro_rules! define_theme {
+    (NOTHING=) => {};
+
     (
         $(#[$attrs:meta])*
         $(%[component$($component_attr_control:tt)?])?
         $vis:vis $name:ident $(<$lifetime:lifetime>)? {
             $(
-                %[cows]
+                %[cows$($cows_attr_control:tt)?]
                 $(
                     $(#[$cow_field_attrs:meta])*
                     $cow_field_name:ident: $cow_field_ty:ty,
                 )*
             )?
             $(
-                %[borrowed]
+                %[borrowed$($borrowed_attr_control:tt)?]
                 $(
                     $(#[$borrowed_field_attrs:meta])*
                     $borrowed_field_name:ident: $borrowed_field_ty:ty,
                 )*
             )?
             $(
-                %[owned]
+                %[owned$($owned_attr_control:tt)?]
                 $(
                     $(#[$owned_field_attrs:meta])*
                     $owned_field_name:ident: $owned_field_ty:ty,
                 )*
             )?
             $(
-                %[subthemes]
+                %[subthemes$($subthemes_attr_control:tt)?]
                 $(
                     $(#[$subtheme_field_attrs:meta])*
                     $subtheme_field_name:ident: $subtheme_field_ty_name:ident $(<$subtheme_field_ty_lifetime:lifetime>)?,
                 )*
             )?
     }) => {
-        $crate::empty!($($($component_attr_control)?)?);
+        $crate::define_theme!(NOTHING=$($($component_attr_control)?)?);
+        $crate::define_theme!(NOTHING=$($($cows_attr_control)?)?);
+        $crate::define_theme!(NOTHING=$($($borrowed_attr_control)?)?);
+        $crate::define_theme!(NOTHING=$($($owned_attr_control)?)?);
+        $crate::define_theme!(NOTHING=$($($subthemes_attr_control)?)?);
         $crate::paste! {
             #[derive(Default, Clone, Debug, PartialEq, Eq)]
             #[doc = "You can use this to change a theme for only one component, with the `theme` property."]
@@ -218,6 +217,7 @@ macro_rules! theme_with {
         )*
     }) => {
         $crate::paste! {
+            #[allow(clippy::needless_update)]
             [<$theme_name With>] {
                 $($theme_field_name: Some($theme_field_val),)*
                 ..$crate::Default::default()
@@ -276,6 +276,8 @@ define_theme! {
         background: str,
         hover_background: str,
         border_fill: str,
+        width: str,
+        margin: str,
         %[subthemes]
         font_theme: FontTheme,
     }
@@ -302,12 +304,25 @@ define_theme! {
 
 define_theme! {
     %[component]
-    pub Scrollbar {
+    pub ScrollBar {
         %[cows]
         background: str,
         thumb_background: str,
         hover_thumb_background: str,
         active_thumb_background: str,
+        offset_x: str,
+        offset_y: str,
+    }
+}
+
+define_theme! {
+    /// Also used by `VirtualScrollView`.
+    %[component]
+    pub ScrollView {
+        %[cows]
+        height: str,
+        width: str,
+        padding: str,
     }
 }
 
@@ -317,6 +332,7 @@ define_theme! {
         %[cows]
         background: str,
         color: str,
+        padding: str,
     }
 }
 
@@ -374,6 +390,8 @@ define_theme! {
         color: str,
         background: str,
         progress_background: str,
+        width: str,
+        height: str,
     }
 }
 
@@ -386,8 +404,49 @@ define_theme! {
         alternate_row_background: str,
         row_background: str,
         divider_fill: str,
+        height: str,
+        corner_radius: str,
+        shadow: str,
         %[subthemes]
         font_theme: FontTheme,
+    }
+}
+
+define_theme! {
+    %[component]
+    pub Canvas {
+        %[cows]
+        width: str,
+        height: str,
+        background: str,
+    }
+}
+
+define_theme! {
+    %[component]
+    pub Graph {
+        %[cows]
+        width: str,
+        height: str,
+    }
+}
+
+define_theme! {
+    %[component]
+    pub NetworkImage {
+        %[cows]
+        width: str,
+        height: str,
+    }
+}
+
+define_theme! {
+    %[component]
+    pub ArrowIcon {
+        %[cows]
+        margin: str,
+        width: str,
+        height: str,
     }
 }
 
@@ -397,7 +456,8 @@ pub struct Theme {
     pub body: BodyTheme,
     pub button: ButtonTheme,
     pub switch: SwitchTheme,
-    pub scrollbar: ScrollbarTheme,
+    pub scroll_bar: ScrollBarTheme,
+    pub scroll_view: ScrollViewTheme,
     pub slider: SliderTheme,
     pub tooltip: TooltipTheme,
     pub external_link: ExternalLinkTheme,
@@ -408,6 +468,10 @@ pub struct Theme {
     pub progress_bar: ProgressBarTheme,
     pub table: TableTheme,
     pub input: InputTheme,
+    pub canvas: CanvasTheme,
+    pub graph: GraphTheme,
+    pub network_image: NetworkImageTheme,
+    pub arrow_icon: ArrowIconTheme,
 }
 
 impl Default for Theme {
@@ -416,194 +480,268 @@ impl Default for Theme {
     }
 }
 
+/// Alias for `Cow::Borrowed`, because that's used a million times so shortening it is nice.
+/// Makes the code more readable.
+macro_rules! cb {
+    ($val:expr) => {
+        $crate::Cow::Borrowed($val)
+    };
+}
+
 pub const LIGHT_THEME: Theme = Theme {
     name: "light",
     body: BodyTheme {
-        background: Cow::Borrowed("white"),
-        color: Cow::Borrowed("black"),
+        background: cb!("white"),
+        color: cb!("black"),
+        padding: cb!("none"),
     },
     slider: SliderTheme {
-        background: Cow::Borrowed("rgb(210, 210, 210)"),
-        thumb_background: Cow::Borrowed("rgb(210, 210, 210)"),
-        thumb_inner_background: Cow::Borrowed("rgb(103, 80, 164)"),
+        background: cb!("rgb(210, 210, 210)"),
+        thumb_background: cb!("rgb(210, 210, 210)"),
+        thumb_inner_background: cb!("rgb(103, 80, 164)"),
     },
     button: ButtonTheme {
-        background: Cow::Borrowed("rgb(245, 245, 245)"),
-        hover_background: Cow::Borrowed("rgb(235, 235, 235)"),
+        background: cb!("rgb(245, 245, 245)"),
+        hover_background: cb!("rgb(235, 235, 235)"),
         font_theme: FontTheme {
-            color: Cow::Borrowed("rgb(10, 10, 10)"),
+            color: cb!("rgb(10, 10, 10)"),
         },
-        border_fill: Cow::Borrowed("rgb(210, 210, 210)"),
-        padding: Cow::Borrowed("8 16"),
-        margin: Cow::Borrowed("4"),
-        corner_radius: Cow::Borrowed("8"),
-        width: Cow::Borrowed("auto"),
-        height: Cow::Borrowed("auto"),
+        border_fill: cb!("rgb(210, 210, 210)"),
+        padding: cb!("8 16"),
+        margin: cb!("4"),
+        corner_radius: cb!("8"),
+        width: cb!("auto"),
+        height: cb!("auto"),
     },
     input: InputTheme {
-        background: Cow::Borrowed("rgb(245, 245, 245)"),
-        hover_background: Cow::Borrowed("rgb(235, 235, 235)"),
+        background: cb!("rgb(245, 245, 245)"),
+        hover_background: cb!("rgb(235, 235, 235)"),
         font_theme: FontTheme {
-            color: Cow::Borrowed("rgb(10, 10, 10)"),
+            color: cb!("rgb(10, 10, 10)"),
         },
-        border_fill: Cow::Borrowed("rgb(210, 210, 210)"),
+        border_fill: cb!("rgb(210, 210, 210)"),
+        width: cb!("150"),
+        margin: cb!("4"),
     },
     switch: SwitchTheme {
-        background: Cow::Borrowed("rgb(121, 116, 126)"),
-        thumb_background: Cow::Borrowed("rgb(231, 224, 236)"),
-        enabled_background: Cow::Borrowed("rgb(103, 80, 164)"),
-        enabled_thumb_background: Cow::Borrowed("rgb(234, 221, 255)"),
+        background: cb!("rgb(121, 116, 126)"),
+        thumb_background: cb!("rgb(231, 224, 236)"),
+        enabled_background: cb!("rgb(103, 80, 164)"),
+        enabled_thumb_background: cb!("rgb(234, 221, 255)"),
     },
-    scrollbar: ScrollbarTheme {
-        background: Cow::Borrowed("rgb(225, 225, 225)"),
-        thumb_background: Cow::Borrowed("rgb(135, 135, 135)"),
-        hover_thumb_background: Cow::Borrowed("rgb(115, 115, 115)"),
-        active_thumb_background: Cow::Borrowed("rgb(95, 95, 95)"),
+    scroll_bar: ScrollBarTheme {
+        background: cb!("rgb(225, 225, 225)"),
+        thumb_background: cb!("rgb(135, 135, 135)"),
+        hover_thumb_background: cb!("rgb(115, 115, 115)"),
+        active_thumb_background: cb!("rgb(95, 95, 95)"),
+        offset_x: cb!("0"),
+        offset_y: cb!("0"),
+    },
+    scroll_view: ScrollViewTheme {
+        height: cb!("100%"),
+        width: cb!("100%"),
+        padding: cb!("0"),
     },
     tooltip: TooltipTheme {
-        background: Cow::Borrowed("rgb(245, 245, 245)"),
-        color: Cow::Borrowed("rgb(25,25,25)"),
-        border_fill: Cow::Borrowed("rgb(210, 210, 210)"),
+        background: cb!("rgb(245, 245, 245)"),
+        color: cb!("rgb(25,25,25)"),
+        border_fill: cb!("rgb(210, 210, 210)"),
     },
     external_link: ExternalLinkTheme {
-        highlight_color: Cow::Borrowed("rgb(43,106,208)"),
+        highlight_color: cb!("rgb(43,106,208)"),
     },
     dropdown: DropdownTheme {
-        dropdown_background: Cow::Borrowed("white"),
-        background_button: Cow::Borrowed("rgb(245, 245, 245)"),
-        hover_background: Cow::Borrowed("rgb(235, 235, 235)"),
+        dropdown_background: cb!("white"),
+        background_button: cb!("rgb(245, 245, 245)"),
+        hover_background: cb!("rgb(235, 235, 235)"),
         font_theme: FontTheme {
-            color: Cow::Borrowed("rgb(10, 10, 10)"),
+            color: cb!("rgb(10, 10, 10)"),
         },
-        border_fill: Cow::Borrowed("rgb(210, 210, 210)"),
-        arrow_fill: Cow::Borrowed("rgb(40, 40, 40)"),
+        border_fill: cb!("rgb(210, 210, 210)"),
+        arrow_fill: cb!("rgb(40, 40, 40)"),
     },
     dropdown_item: DropdownItemTheme {
-        background: Cow::Borrowed("white"),
-        select_background: Cow::Borrowed("rgb(240, 240, 240)"),
-        hover_background: Cow::Borrowed("rgb(220, 220, 220)"),
+        background: cb!("white"),
+        select_background: cb!("rgb(240, 240, 240)"),
+        hover_background: cb!("rgb(220, 220, 220)"),
         font_theme: FontTheme {
-            color: Cow::Borrowed("rgb(10, 10, 10)"),
+            color: cb!("rgb(10, 10, 10)"),
         },
     },
     accordion: AccordionTheme {
-        color: Cow::Borrowed("black"),
-        background: Cow::Borrowed("rgb(245, 245, 245)"),
-        border_fill: Cow::Borrowed("rgb(210, 210, 210)"),
+        color: cb!("black"),
+        background: cb!("rgb(245, 245, 245)"),
+        border_fill: cb!("rgb(210, 210, 210)"),
     },
     loader: LoaderTheme {
-        primary_color: Cow::Borrowed("rgb(50, 50, 50)"),
-        secondary_color: Cow::Borrowed("rgb(150, 150, 150)"),
+        primary_color: cb!("rgb(50, 50, 50)"),
+        secondary_color: cb!("rgb(150, 150, 150)"),
     },
     progress_bar: ProgressBarTheme {
-        color: Cow::Borrowed("white"),
-        background: Cow::Borrowed("rgb(210, 210, 210)"),
-        progress_background: Cow::Borrowed("rgb(103, 80, 164)"),
+        color: cb!("white"),
+        background: cb!("rgb(210, 210, 210)"),
+        progress_background: cb!("rgb(103, 80, 164)"),
+        width: cb!("100%"),
+        height: cb!("20"),
     },
     table: TableTheme {
         font_theme: FontTheme {
-            color: Cow::Borrowed("black"),
+            color: cb!("black"),
         },
-        background: Cow::Borrowed("white"),
-        arrow_fill: Cow::Borrowed("rgb(40, 40, 40)"),
-        row_background: Cow::Borrowed("transparent"),
-        alternate_row_background: Cow::Borrowed("rgb(240, 240, 240)"),
-        divider_fill: Cow::Borrowed("rgb(200, 200, 200)"),
+        background: cb!("white"),
+        arrow_fill: cb!("rgb(40, 40, 40)"),
+        row_background: cb!("transparent"),
+        alternate_row_background: cb!("rgb(240, 240, 240)"),
+        divider_fill: cb!("rgb(200, 200, 200)"),
+        height: cb!("auto"),
+        corner_radius: cb!("6"),
+        shadow: cb!("0 2 15 5 rgb(35, 35, 35, 70)"),
+    },
+    canvas: CanvasTheme {
+        width: cb!("300"),
+        height: cb!("150"),
+        background: cb!("white"),
+    },
+    graph: GraphTheme {
+        width: cb!("100%"),
+        height: cb!("100%"),
+    },
+    network_image: NetworkImageTheme {
+        width: cb!("100%"),
+        height: cb!("100%"),
+    },
+    arrow_icon: ArrowIconTheme {
+        width: cb!("10"),
+        height: cb!("10"),
+        margin: cb!("none"),
     },
 };
 
 pub const DARK_THEME: Theme = Theme {
     name: "dark",
     body: BodyTheme {
-        background: Cow::Borrowed("rgb(25, 25, 25)"),
-        color: Cow::Borrowed("white"),
+        background: cb!("rgb(25, 25, 25)"),
+        color: cb!("white"),
+        padding: LIGHT_THEME.body.padding,
     },
     slider: SliderTheme {
-        background: Cow::Borrowed("rgb(60, 60, 60)"),
-        thumb_background: Cow::Borrowed("rgb(60, 60, 60)"),
-        thumb_inner_background: Cow::Borrowed("rgb(255, 95, 0)"),
+        background: cb!("rgb(60, 60, 60)"),
+        thumb_background: cb!("rgb(60, 60, 60)"),
+        thumb_inner_background: cb!("rgb(255, 95, 0)"),
     },
     button: ButtonTheme {
-        background: Cow::Borrowed("rgb(35, 35, 35)"),
-        hover_background: Cow::Borrowed("rgb(45, 45, 45)"),
+        background: cb!("rgb(35, 35, 35)"),
+        hover_background: cb!("rgb(45, 45, 45)"),
         font_theme: FontTheme {
-            color: Cow::Borrowed("white"),
+            color: cb!("white"),
         },
-        border_fill: Cow::Borrowed("rgb(80, 80, 80)"),
-        padding: Cow::Borrowed("8 16"),
-        margin: Cow::Borrowed("4"),
-        corner_radius: Cow::Borrowed("8"),
-        width: Cow::Borrowed("auto"),
-        height: Cow::Borrowed("auto"),
+        border_fill: cb!("rgb(80, 80, 80)"),
+        padding: LIGHT_THEME.button.padding,
+        margin: LIGHT_THEME.button.margin,
+        corner_radius: LIGHT_THEME.button.corner_radius,
+        width: LIGHT_THEME.button.width,
+        height: LIGHT_THEME.button.height,
     },
     input: InputTheme {
-        background: Cow::Borrowed("rgb(35, 35, 35)"),
-        hover_background: Cow::Borrowed("rgb(45, 45, 45)"),
+        background: cb!("rgb(35, 35, 35)"),
+        hover_background: cb!("rgb(45, 45, 45)"),
         font_theme: FontTheme {
-            color: Cow::Borrowed("white"),
+            color: cb!("white"),
         },
-        border_fill: Cow::Borrowed("rgb(80, 80, 80)"),
+        border_fill: cb!("rgb(80, 80, 80)"),
+        width: LIGHT_THEME.input.width,
+        margin: LIGHT_THEME.input.margin,
     },
     switch: SwitchTheme {
-        background: Cow::Borrowed("rgb(60, 60, 60)"),
-        thumb_background: Cow::Borrowed("rgb(200, 200, 200)"),
-        enabled_background: Cow::Borrowed("rgb(255, 95, 0)"),
-        enabled_thumb_background: Cow::Borrowed("rgb(234, 221, 255)"),
+        background: cb!("rgb(60, 60, 60)"),
+        thumb_background: cb!("rgb(200, 200, 200)"),
+        enabled_background: cb!("rgb(255, 95, 0)"),
+        enabled_thumb_background: cb!("rgb(234, 221, 255)"),
     },
-    scrollbar: ScrollbarTheme {
-        background: Cow::Borrowed("rgb(35, 35, 35)"),
-        thumb_background: Cow::Borrowed("rgb(100, 100, 100)"),
-        hover_thumb_background: Cow::Borrowed("rgb(120, 120, 120)"),
-        active_thumb_background: Cow::Borrowed("rgb(140, 140, 140)"),
+    scroll_bar: ScrollBarTheme {
+        background: cb!("rgb(35, 35, 35)"),
+        thumb_background: cb!("rgb(100, 100, 100)"),
+        hover_thumb_background: cb!("rgb(120, 120, 120)"),
+        active_thumb_background: cb!("rgb(140, 140, 140)"),
+        offset_x: LIGHT_THEME.scroll_bar.offset_x,
+        offset_y: LIGHT_THEME.scroll_bar.offset_y,
+    },
+    scroll_view: ScrollViewTheme {
+        height: LIGHT_THEME.scroll_view.height,
+        width: LIGHT_THEME.scroll_view.width,
+        padding: LIGHT_THEME.scroll_view.padding,
     },
     tooltip: TooltipTheme {
-        background: Cow::Borrowed("rgb(35,35,35)"),
-        color: Cow::Borrowed("rgb(240,240,240)"),
-        border_fill: Cow::Borrowed("rgb(80, 80, 80)"),
+        background: cb!("rgb(35,35,35)"),
+        color: cb!("rgb(240,240,240)"),
+        border_fill: cb!("rgb(80, 80, 80)"),
     },
     external_link: ExternalLinkTheme {
-        highlight_color: Cow::Borrowed("rgb(43,106,208)"),
+        highlight_color: cb!("rgb(43,106,208)"),
     },
     dropdown: DropdownTheme {
-        dropdown_background: Cow::Borrowed("rgb(25, 25, 25)"),
-        background_button: Cow::Borrowed("rgb(35, 35, 35)"),
-        hover_background: Cow::Borrowed("rgb(45, 45, 45)"),
+        dropdown_background: cb!("rgb(25, 25, 25)"),
+        background_button: cb!("rgb(35, 35, 35)"),
+        hover_background: cb!("rgb(45, 45, 45)"),
         font_theme: FontTheme {
-            color: Cow::Borrowed("white"),
+            color: cb!("white"),
         },
-        border_fill: Cow::Borrowed("rgb(80, 80, 80)"),
-        arrow_fill: Cow::Borrowed("rgb(40, 40, 40)"),
+        border_fill: cb!("rgb(80, 80, 80)"),
+        arrow_fill: cb!("rgb(40, 40, 40)"),
     },
     dropdown_item: DropdownItemTheme {
-        background: Cow::Borrowed("rgb(35, 35, 35)"),
-        select_background: Cow::Borrowed("rgb(80, 80, 80)"),
-        hover_background: Cow::Borrowed("rgb(55, 55, 55)"),
+        background: cb!("rgb(35, 35, 35)"),
+        select_background: cb!("rgb(80, 80, 80)"),
+        hover_background: cb!("rgb(55, 55, 55)"),
         font_theme: FontTheme {
-            color: Cow::Borrowed("white"),
+            color: cb!("white"),
         },
     },
     accordion: AccordionTheme {
-        color: Cow::Borrowed("white"),
-        background: Cow::Borrowed("rgb(60, 60, 60)"),
-        border_fill: Cow::Borrowed("rgb(80, 80, 80)"),
+        color: cb!("white"),
+        background: cb!("rgb(60, 60, 60)"),
+        border_fill: cb!("rgb(80, 80, 80)"),
     },
     loader: LoaderTheme {
-        primary_color: Cow::Borrowed("rgb(150, 150, 150)"),
-        secondary_color: Cow::Borrowed("rgb(255, 255, 255)"),
+        primary_color: cb!("rgb(150, 150, 150)"),
+        secondary_color: cb!("rgb(255, 255, 255)"),
     },
     progress_bar: ProgressBarTheme {
-        color: Cow::Borrowed("white"),
-        background: Cow::Borrowed("rgb(60, 60, 60)"),
-        progress_background: Cow::Borrowed("rgb(255, 95, 0)"),
+        color: cb!("white"),
+        background: cb!("rgb(60, 60, 60)"),
+        progress_background: cb!("rgb(255, 95, 0)"),
+        width: LIGHT_THEME.progress_bar.width,
+        height: LIGHT_THEME.progress_bar.height,
     },
     table: TableTheme {
         font_theme: FontTheme {
-            color: Cow::Borrowed("white"),
+            color: cb!("white"),
         },
-        background: Cow::Borrowed("rgb(25, 25, 25)"),
-        arrow_fill: Cow::Borrowed("rgb(150, 150, 150)"),
-        row_background: Cow::Borrowed("transparent"),
-        alternate_row_background: Cow::Borrowed("rgb(50, 50, 50)"),
-        divider_fill: Cow::Borrowed("rgb(100, 100, 100)"),
+        background: cb!("rgb(25, 25, 25)"),
+        arrow_fill: cb!("rgb(150, 150, 150)"),
+        row_background: cb!("transparent"),
+        alternate_row_background: cb!("rgb(50, 50, 50)"),
+        divider_fill: cb!("rgb(100, 100, 100)"),
+        height: LIGHT_THEME.table.height,
+        corner_radius: LIGHT_THEME.table.corner_radius,
+        shadow: LIGHT_THEME.table.shadow,
+    },
+    canvas: CanvasTheme {
+        width: LIGHT_THEME.canvas.width,
+        height: LIGHT_THEME.canvas.height,
+        background: cb!("white"),
+    },
+    graph: GraphTheme {
+        width: LIGHT_THEME.graph.width,
+        height: LIGHT_THEME.graph.height,
+    },
+    network_image: NetworkImageTheme {
+        width: LIGHT_THEME.network_image.width,
+        height: LIGHT_THEME.network_image.height,
+    },
+    arrow_icon: ArrowIconTheme {
+        width: LIGHT_THEME.arrow_icon.width,
+        height: LIGHT_THEME.arrow_icon.height,
+        margin: LIGHT_THEME.arrow_icon.margin,
     },
 };

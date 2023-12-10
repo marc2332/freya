@@ -34,17 +34,16 @@ fn app(cx: Scope) -> Element {
                     background: Some(Cow::Borrowed("red")),
                     ..Default::default()
                 },
-                onclick: move |_| count += 1, label { "Increase" }
+                onclick: move |_| count += 1,
+                label { "Increase" }
             }
             Button {
-                theme: theme_with!(ButtonTheme {
-                    width: width.into(),
-                    background: "blue".into(),
-                    font_theme: theme_with!(FontTheme {
-                        color: "white".into(),
-                    }),
-                }),
-                onclick: move |_| count -= 1, label { "Decrease" }
+                theme: theme_with!(
+                    ButtonTheme { width : width.into(), background : "blue".into(), font_theme :
+                    theme_with!(FontTheme { color : "white".into(), }), }
+                ),
+                onclick: move |_| count -= 1,
+                label { "Decrease" }
             }
         }
     )

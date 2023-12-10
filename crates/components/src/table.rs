@@ -15,10 +15,7 @@ fn TableArrow(cx: Scope, order_direction: OrderDirection) -> Element {
         OrderDirection::Up => "180",
     };
 
-    render!(ArrowIcon {
-        rotate: "{rotate}",
-        fill: "{arrow_fill}"
-    })
+    render!( ArrowIcon { rotate: "{rotate}", fill: "{arrow_fill}" } )
 }
 
 /// [`TableHead`] component properties.
@@ -81,7 +78,7 @@ pub struct TableRowProps<'a> {
 ///
 #[allow(non_snake_case)]
 pub fn TableRow<'a>(cx: Scope<'a, TableRowProps<'a>>) -> Element {
-    let theme = get_theme!(cx, &cx.props.theme, table);
+    let theme = get_theme!( cx, &cx.props.theme, table );
     let TableTheme {
         divider_fill,
         alternate_row_background,
@@ -187,15 +184,6 @@ pub struct TableProps<'a> {
     pub columns: usize,
     /// The content of the table.
     pub children: Element<'a>,
-    /// The height of the table.
-    #[props(default = "auto".to_string(), into)]
-    pub height: String,
-    /// The corner radius of the table.
-    #[props(default = "6".to_string(), into)]
-    pub corner_radius: String,
-    /// The drop shadow of the table.
-    #[props(default = "0 2 15 5 rgb(35, 35, 35, 70)".to_string(), into)]
-    pub shadow: String,
 }
 
 /// `Table` component.
@@ -212,27 +200,28 @@ pub fn Table<'a>(cx: Scope<'a, TableProps<'a>>) -> Element {
         theme,
         columns,
         children,
+    } = cx.props;
+    let TableTheme {
+        background,
         height,
         corner_radius,
         shadow,
-    } = cx.props;
-    let theme = get_theme!(cx, theme, table);
-    let TableTheme {
-        background,
         font_theme: FontTheme { color },
         ..
-    } = theme;
+    } = get_theme!( cx, theme, table );
     cx.provide_context(TableConfig { columns: *columns });
 
-    render!(rect {
-        overflow: "clip",
-        color: "{color}",
-        background: "{background}",
-        corner_radius: "{corner_radius}",
-        shadow: "{shadow}",
-        height: "{height}",
-        children
-    })
+    render!(
+        rect {
+            overflow: "clip",
+            color: "{color}",
+            background: "{background}",
+            corner_radius: "{corner_radius}",
+            shadow: "{shadow}",
+            height: "{height}",
+            children
+        }
+    )
 }
 
 #[derive(Clone)]

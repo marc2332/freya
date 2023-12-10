@@ -7,7 +7,8 @@ use freya_elements::elements as dioxus_elements;
 use freya_elements::events::keyboard::Key;
 use freya_elements::events::{KeyboardEvent, MouseEvent};
 use freya_hooks::{
-    use_focus, use_get_theme, use_platform, DropdownItemThemeWith, DropdownTheme, DropdownThemeWith,
+    theme_with, use_focus, use_get_theme, use_platform, ArrowIconTheme, ArrowIconThemeWith,
+    DropdownItemThemeWith, DropdownTheme, DropdownThemeWith,
 };
 use winit::window::CursorIcon;
 
@@ -17,12 +18,12 @@ pub struct DropdownItemProps<'a, T: 'static> {
     /// Theme override.
     pub theme: Option<DropdownItemThemeWith>,
     /// Selectable items, like [`DropdownItem`]
-    children: Element<'a>,
+    pub children: Element<'a>,
     /// Selected value.
-    value: T,
+    pub value: T,
     /// Handler for the `onclick` event.
     #[props(optional)]
-    onclick: Option<EventHandler<'a, ()>>,
+    pub onclick: Option<EventHandler<'a, ()>>,
 }
 
 /// Current status of the DropdownItem.
@@ -48,7 +49,7 @@ where
     T: PartialEq + 'static,
 {
     let selected = use_shared_state::<T>(cx).unwrap();
-    let theme = get_theme!(cx, &cx.props.theme, dropdown_item);
+    let theme = get_theme!( cx, &cx.props.theme, dropdown_item );
     let focus = use_focus(cx);
     let status = use_state(cx, DropdownItemStatus::default);
     let platform = use_platform(cx);
@@ -66,7 +67,7 @@ where
     let color = theme.font_theme.color;
 
     use_on_destroy(cx, {
-        to_owned![status, platform];
+        to_owned![ status, platform ];
         move || {
             if *status.current() == DropdownItemStatus::Hovering {
                 platform.set_cursor(CursorIcon::default());
@@ -126,9 +127,9 @@ pub struct DropdownProps<'a, T: 'static> {
     /// Theme override.
     pub theme: Option<DropdownThemeWith>,
     /// Selectable items, like [`DropdownItem`]
-    children: Element<'a>,
+    pub children: Element<'a>,
     /// Selected value.
-    value: T,
+    pub value: T,
 }
 
 /// Current status of the Dropdown.
@@ -179,7 +180,7 @@ where
 {
     use_shared_state_provider(cx, || cx.props.value.clone());
     let selected = use_shared_state::<T>(cx).unwrap();
-    let theme = get_theme!(cx, &cx.props.theme, dropdown);
+    let theme = get_theme!( cx, &cx.props.theme, dropdown );
     let focus = use_focus(cx);
     let status = use_state(cx, DropdownStatus::default);
     let opened = use_state(cx, || false);
@@ -195,7 +196,7 @@ where
     });
 
     use_on_destroy(cx, {
-        to_owned![status, platform];
+        to_owned![ status, platform ];
         move || {
             if *status.current() == DropdownStatus::Hovering {
                 platform.set_cursor(CursorIcon::default());
@@ -228,7 +229,7 @@ where
     };
 
     let onmouseenter = {
-        to_owned![status, platform];
+        to_owned![ status, platform ];
         move |_| {
             platform.set_cursor(CursorIcon::Hand);
             status.set(DropdownStatus::Hovering);
@@ -274,7 +275,11 @@ where
             main_align: "center",
             cross_align: "center",
             label { text_align: "center", "{selected}" }
-            ArrowIcon { rotate: "0", fill: "{arrow_fill}", margin: "0 0 0 8" }
+            ArrowIcon {
+                rotate: "0",
+                fill: "{arrow_fill}",
+                theme: theme_with!(ArrowIconTheme { margin : "0 0 0 8".into(), })
+            }
         }
         if *opened.get() {
             rsx!(

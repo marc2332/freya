@@ -41,6 +41,7 @@ pub enum InputStatus {
 #[derive(Props)]
 pub struct InputProps<'a> {
     /// Theme override.
+    #[props(optional)]
     pub theme: Option<InputThemeWith>,
     /// Current value of the Input
     pub value: String,
@@ -48,13 +49,7 @@ pub struct InputProps<'a> {
     pub onchange: EventHandler<'a, String>,
     /// Is input hidden with a character. By default input text is shown.
     #[props(default = InputMode::Shown, into)]
-    hidden: InputMode,
-    /// Width of the Input. Default 150.
-    #[props(default = "150".to_string(), into)]
-    width: String,
-    /// Margin of the Input. Default 4.
-    #[props(default = "4".to_string(), into)]
-    margin: String,
+    pub hidden: InputMode,
 }
 
 /// `Input` component.
@@ -95,7 +90,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
         || EditableConfig::new(cx.props.value.to_string()),
         EditableMode::MultipleLinesSingleEditor,
     );
-    let theme = get_theme!(cx, &cx.props.theme, input);
+    let theme = get_theme!( cx, &cx.props.theme, input );
     let focus_manager = use_focus(cx);
 
     if &cx.props.value != editable.editor().current().rope() {
@@ -110,7 +105,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     };
 
     use_on_destroy(cx, {
-        to_owned![status, platform];
+        to_owned![ status, platform ];
         move || {
             if *status.read() == InputStatus::Hovering {
                 platform.set_cursor(CursorIcon::default());
@@ -119,7 +114,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     });
 
     let onkeydown = {
-        to_owned![editable, focus_manager];
+        to_owned![ editable, focus_manager ];
         move |e: Event<KeyboardData>| {
             if focus_manager.is_focused() && e.data.key != Key::Enter {
                 editable.process_event(&EditableEvent::KeyDown(e.data));
@@ -173,8 +168,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
 
     let cursor_attr = editable.cursor_attr(cx);
     let highlights_attr = editable.highlights_attr(cx, 0);
-    let width = &cx.props.width;
-    let margin = &cx.props.margin;
+
     let (background, cursor_char) = if focus_manager.is_focused() {
         (
             theme.hover_background,
@@ -185,7 +179,9 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
     };
     let InputTheme {
         border_fill,
-        font_theme: FontTheme { color, .. },
+        width,
+        margin,
+        font_theme: FontTheme { color },
         ..
     } = theme;
 

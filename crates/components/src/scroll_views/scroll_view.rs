@@ -1,8 +1,9 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{keyboard::Key, KeyboardEvent, MouseEvent, WheelEvent};
-use freya_hooks::{use_focus, use_node};
+use freya_hooks::{theme_with, use_focus, use_node, ScrollBarThemeWith, ScrollViewThemeWith};
 
+use crate::theme::get_theme;
 use crate::{
     get_container_size, get_corrected_scroll_position, get_scroll_position_from_cursor,
     get_scroll_position_from_wheel, get_scrollbar_pos_and_size, is_scrollbar_visible,
@@ -12,20 +13,14 @@ use crate::{
 /// [`ScrollView`] component properties.
 #[derive(Props)]
 pub struct ScrollViewProps<'a> {
+    /// Theme override.
+    #[props(optional)]
+    pub theme: Option<ScrollViewThemeWith>,
     /// Inner children for the ScrollView.
     pub children: Element<'a>,
     /// Direction of the ScrollView, `vertical` or `horizontal`.
     #[props(default = "vertical".to_string(), into)]
     pub direction: String,
-    /// Height of the ScrollView.
-    #[props(default = "100%".to_string(), into)]
-    pub height: String,
-    /// Width of the ScrollView.
-    #[props(default = "100%".to_string(), into)]
-    pub width: String,
-    /// Padding of the ScrollView.
-    #[props(default = "0".to_string(), into)]
-    pub padding: String,
     /// Show the scrollbar, visible by default.
     #[props(default = true, into)]
     pub show_scrollbar: bool,
@@ -68,10 +63,11 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     let scrolled_x = use_ref(cx, || 0);
     let (node_ref, size) = use_node(cx);
     let focus = use_focus(cx);
+    let theme = get_theme!( cx, &cx.props.theme, scroll_view );
 
-    let padding = &cx.props.padding;
-    let user_container_width = &cx.props.width;
-    let user_container_height = &cx.props.height;
+    let padding = &theme.padding;
+    let user_container_width = &theme.width;
+    let user_container_height = &theme.height;
     let user_direction = &cx.props.direction;
     let show_scrollbar = cx.props.show_scrollbar;
     let scroll_with_arrows = cx.props.scroll_with_arrows;
@@ -292,7 +288,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
                 ScrollBar {
                     width: "100%",
                     height: "{horizontal_scrollbar_size}",
-                    offset_x: "{scrollbar_x}",
+                    theme: theme_with!(ScrollBarTheme { offset_x : scrollbar_x.to_string().into(), }),
                     clicking_scrollbar: is_scrolling_x,
                     ScrollThumb {
                         clicking_scrollbar: is_scrolling_x,
@@ -305,7 +301,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
             ScrollBar {
                 width: "{vertical_scrollbar_size}",
                 height: "100%",
-                offset_y: "{scrollbar_y}",
+                theme: theme_with!(ScrollBarTheme { offset_y : scrollbar_y.to_string().into(), }),
                 clicking_scrollbar: is_scrolling_y,
                 ScrollThumb {
                     clicking_scrollbar: is_scrolling_y,

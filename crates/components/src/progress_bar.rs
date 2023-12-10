@@ -7,18 +7,11 @@ use freya_hooks::{use_get_theme, ProgressBarTheme, ProgressBarThemeWith};
 #[derive(Props, PartialEq)]
 pub struct ProgressBarProps {
     /// Theme override.
+    #[props(optional)]
     pub theme: Option<ProgressBarThemeWith>,
     /// Show a label with the current progress. Default to false.
     #[props(default = false)]
-    show_progress: bool,
-
-    /// Width of the progress bar. Default to 100%.
-    #[props(default = "100%".to_string(), into)]
-    width: String,
-
-    /// Height of the progress bar. Default to 20px.
-    #[props(default = "20".to_string(), into)]
-    height: String,
+    pub show_progress: bool,
     /// Percentage of the progress bar.
     pub progress: f32,
 }
@@ -46,15 +39,13 @@ pub struct ProgressBarProps {
 ///
 #[allow(non_snake_case)]
 pub fn ProgressBar(cx: Scope<ProgressBarProps>) -> Element {
-    let theme = get_theme!(cx, &cx.props.theme, progress_bar);
-
     let ProgressBarTheme {
         color,
         background,
         progress_background,
-    } = theme;
-    let width = &cx.props.width;
-    let height = &cx.props.height;
+        width,
+        height,
+    } = get_theme!( cx, &cx.props.theme, progress_bar );
     let show_progress = cx.props.show_progress;
     let progress = cx.props.progress;
 

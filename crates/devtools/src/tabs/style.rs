@@ -3,6 +3,7 @@ use dioxus_native_core::NodeId;
 use freya_components::*;
 use freya_core::prelude::*;
 use freya_elements::elements as dioxus_elements;
+use freya_hooks::{theme_with, ScrollViewThemeWith};
 
 use crate::{
     hooks::use_selected_node,
@@ -22,7 +23,11 @@ pub fn NodeInspectorStyle(cx: Scope, node_id: NodeId) -> Element {
         render!(
             rect { overflow: "clip", width: "100%", height: "50%",
                 NodeInspectorBar { node_id: *node_id }
-                ScrollView { show_scrollbar: true, height: "calc(100% - 35)", width: "100%",
+                ScrollView {
+                    show_scrollbar: true,
+                    theme: theme_with!(
+                        ScrollViewTheme { height : "calc(100% - 35)".into(), width : "100%".into(), }
+                    ),
                     node.state.iter().enumerate().map(|(i, (name, attr))| {
                         match attr {
                             AttributeType::Measure(measure) => {

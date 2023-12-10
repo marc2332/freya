@@ -11,17 +11,18 @@ use crate::Tooltip;
 #[derive(Props)]
 pub struct ExternalLinkProps<'a> {
     /// Theme override.
+    #[props(optional)]
     pub theme: Option<ExternalLinkThemeWith>,
     /// Inner children for the ExternalLink.
-    children: Element<'a>,
+    pub children: Element<'a>,
     #[props(optional)]
     /// Handler for the `onerror` event.
-    onerror: Option<EventHandler<'a, ()>>,
+    pub onerror: Option<EventHandler<'a, ()>>,
     #[props(optional)]
     /// Whether  to show a tooltip with the URL or not.
-    show_tooltip: Option<bool>,
+    pub show_tooltip: Option<bool>,
     /// The ExternalLink destination URL.
-    url: &'a str,
+    pub url: &'a str,
 }
 
 /// `Link` for external locations, e.g websites.
@@ -50,7 +51,7 @@ pub struct ExternalLinkProps<'a> {
 ///
 #[allow(non_snake_case)]
 pub fn ExternalLink<'a>(cx: Scope<'a, ExternalLinkProps<'a>>) -> Element {
-    let theme = get_theme!(cx, &cx.props.theme, external_link);
+    let theme = get_theme!( cx, &cx.props.theme, external_link );
     let is_hovering = use_state(cx, || false);
     let show_tooltip = cx.props.show_tooltip.unwrap_or(true);
 

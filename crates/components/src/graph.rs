@@ -1,8 +1,9 @@
+use crate::theme::get_theme;
 use dioxus::prelude::*;
 use freya_common::EventMessage;
 use freya_elements::elements as dioxus_elements;
 use freya_engine::prelude::*;
-use freya_hooks::{use_canvas, use_platform};
+use freya_hooks::{use_canvas, use_platform, GraphTheme, GraphThemeWith};
 use freya_node_state::Parse;
 
 /// Data line for the [`Graph`] component.
@@ -24,16 +25,13 @@ impl GraphLine {
 /// [`Graph`] component properties.
 #[derive(Debug, Props, PartialEq, Clone)]
 pub struct GraphProps {
+    /// Theme override.
+    #[props(optional)]
+    pub theme: Option<GraphThemeWith>,
     /// X axis labels.
     labels: Vec<String>,
     /// Y axis data.
     data: Vec<GraphLine>,
-    /// Width of the Graph. Default 100%.
-    #[props(default = "100%".to_string(), into)]
-    width: String,
-    /// Height of the Graph. Default 100%.
-    #[props(default = "100%".to_string(), into)]
-    height: String,
 }
 
 /// Graph component.
@@ -154,8 +152,7 @@ pub fn Graph(cx: Scope<GraphProps>) -> Element {
         })
     });
 
-    let width = &cx.props.width;
-    let height = &cx.props.height;
+    let GraphTheme { width, height } = get_theme!( cx, &cx.props.theme, graph );
 
     render!(
         rect { width: "{width}", height: "{height}", padding: "15 5", background: "white", rect { canvas_reference: canvas.attribute(cx), width: "100%", height: "100%" } }
