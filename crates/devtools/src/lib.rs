@@ -120,7 +120,7 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
     let theme = use_theme(cx);
 
     let theme = theme.read();
-    let color = theme.body.color;
+    let color = &theme.body.color;
 
     #[allow(clippy::await_holding_lock)]
     use_effect(cx, (), move |_| {

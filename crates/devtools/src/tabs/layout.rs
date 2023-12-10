@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 use dioxus_native_core::NodeId;
 use freya_components::*;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::theme_with;
+use freya_hooks::{theme_with, ScrollViewThemeWith};
 
 use crate::{hooks::use_selected_node, NodeInspectorBar};
 
