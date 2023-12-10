@@ -95,8 +95,8 @@ fn Scaffold<'a>(cx: Scope<'a, ScaffoldProps<'a>>) -> Element<'a> {
             ScrollView {
                 theme: theme_with!(ScrollViewTheme {
                     height: height.into(),
+                    padding: "3 10 0 10".into(),
                 }),
-                padding: "3 10 0 10",
                 &cx.props.children
             }
             rect {
