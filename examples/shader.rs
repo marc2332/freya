@@ -91,11 +91,8 @@ fn app(cx: Scope) -> Element {
             Canvas {
                 canvas: canvas,
                 theme: theme_with!(
-                    CanvasTheme {
-                        background: "black".into(),
-                        width: "100%".into(),
-                        height: "100%".into(),
-                    }
+                    CanvasTheme { background : "black".into(), width : "100%".into(), height : "100%"
+                    .into(), }
                 )
             }
         }

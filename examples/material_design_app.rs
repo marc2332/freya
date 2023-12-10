@@ -74,8 +74,8 @@ fn Scaffold<'a>(cx: Scope<'a, ScaffoldProps<'a>>) -> Element<'a> {
             cx.props.navbar.as_ref(),
             ScrollView {
                 theme: theme_with!(
-                    ScrollViewTheme { height : height.into(), width : "100%".into(), padding : "3 10 0 10"
-                    .into(), }
+                    ScrollViewTheme { height : height.into(), width : "100%".into(), padding :
+                    "3 10 0 10".into(), }
                 ),
                 &cx.props.children
             }
