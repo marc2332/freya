@@ -28,8 +28,8 @@ fn app(cx: Scope) -> Element {
                 ScrollView {
                     theme: theme_with!(ScrollViewTheme {
                         height: "200".into(),
+                        padding: "0 20".into(),
                     }),
-                    padding: "0 20",
                     Card {
                         title: "Card 1",
                         content: "Content 1",

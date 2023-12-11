@@ -22,7 +22,6 @@ pub fn NodesTree<'a>(
         item_size: 27.0,
         builder_values: (nodes, selected_node_id, onselected, router),
         theme: theme_with!(ScrollViewTheme {
-            width: "100%".into(),
             height: height.to_string().into(),
             padding: "15".into(),
         }),

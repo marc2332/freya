@@ -79,8 +79,6 @@ fn get_render_range(
 /// fn app(cx: Scope) -> Element {
 ///     render!(
 ///         VirtualScrollView {
-///             width: "100%",
-///             height: "100%",
 ///             show_scrollbar: true,
 ///             length: 5,
 ///             item_size: 80.0,
