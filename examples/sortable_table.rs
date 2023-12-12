@@ -63,6 +63,7 @@ fn app(cx: Scope) -> Element {
         SortableTable {
             table: RefCell::new(table),
             default_order_direction: OrderDirection::Down,
+            alternate_colors: true,
         }
     )
 }
