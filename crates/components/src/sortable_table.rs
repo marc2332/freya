@@ -52,14 +52,6 @@ impl<T, TTitle> SortableTable<T, TTitle> where TTitle: Display {
 
         Ok(())
     }
-
-    pub fn push_header(&mut self, header: SortableTableHeader<T, TTitle>) {
-        self.headers.push(header);
-    }
-
-    pub fn push_row(&mut self, row: Vec<T>) {
-        self.rows.push(row);
-    }
 }
 
 #[derive(Props)]
