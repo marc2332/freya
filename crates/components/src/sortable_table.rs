@@ -1,17 +1,18 @@
-use freya::prelude::*;
+use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use std::cmp::Ordering;
 use std::fmt::Display;
 use std::cell::RefCell;
+use crate::*;
 
 type Sorter<T> = Box<dyn Fn(&T, &T) -> Ordering>;
 
-pub struct TableHeader<T, TTitle> where TTitle: Display {
+pub struct SortableTableHeader<T, TTitle> where TTitle: Display {
     title: TTitle,
     sorter: Sorter<T>,
 }
 
-impl<T, TTitle> TableHeader<T, TTitle> where TTitle: Display {
+impl<T, TTitle> SortableTableHeader<T, TTitle> where TTitle: Display {
     pub fn new(title: TTitle, sorter: Sorter<T>) -> Self {
         Self { title, sorter }
     }
@@ -19,12 +20,12 @@ impl<T, TTitle> TableHeader<T, TTitle> where TTitle: Display {
 
 // Define a struct for the sortable table
 pub struct SortableTable<T, TTitle> where TTitle: Display {
-    pub headers: Vec<TableHeader<T, TTitle>>,
+    pub headers: Vec<SortableTableHeader<T, TTitle>>,
     pub rows: Vec<Vec<T>>,
 }
 
 impl<T, TTitle> SortableTable<T, TTitle> where TTitle: Display {
-    pub fn new(headers: Vec<TableHeader<T, TTitle>>, rows: Vec<Vec<T>>) -> Self {
+    pub fn new(headers: Vec<SortableTableHeader<T, TTitle>>, rows: Vec<Vec<T>>) -> Self {
         Self { headers, rows }
     }
 
@@ -52,7 +53,7 @@ impl<T, TTitle> SortableTable<T, TTitle> where TTitle: Display {
         Ok(())
     }
 
-    pub fn push_header(&mut self, header: TableHeader<T, TTitle>) {
+    pub fn push_header(&mut self, header: SortableTableHeader<T, TTitle>) {
         self.headers.push(header);
     }
 
@@ -65,7 +66,7 @@ impl<T, TTitle> SortableTable<T, TTitle> where TTitle: Display {
 pub struct SortableTableProps<T, TTitle> where TTitle: Display {
     pub table: RefCell<SortableTable<T, TTitle>>,
     pub default_order_direction: OrderDirection,
-    #[props(defalt = false)]
+    #[props(default = false)]
     pub alternate_colors: bool,
 }
 
@@ -120,7 +121,7 @@ pub fn SortableTable<T, TTitle>(
                     for (row_i, row) in table.rows.iter().enumerate() {
                         TableRow {
                             key: "{row_i}",
-                            alternate_colors: if alternate_colors { row_i % 2 == 0 } else { false },
+                            alternate_colors: if *alternate_colors { row_i % 2 == 0 } else { false },
                             for (cell_i, cell) in row.iter().enumerate() {
                                 TableCell {
                                     key: "{cell_i}",

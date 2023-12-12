@@ -20,6 +20,7 @@ mod scroll_views;
 mod slider;
 mod switch;
 mod table;
+mod sortable_table;
 mod theme;
 mod tooltip;
 
@@ -42,5 +43,6 @@ pub use scroll_views::*;
 pub use slider::*;
 pub use switch::*;
 pub use table::*;
+pub use sortable_table::*;
 pub use theme::*;
 pub use tooltip::*;
