@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use std::cmp::Ordering;
@@ -18,7 +19,6 @@ impl<T, TTitle> SortableTableHeader<T, TTitle> where TTitle: Display {
     }
 }
 
-// Define a struct for the sortable table
 pub struct SortableTable<T, TTitle> where TTitle: Display {
     pub headers: Vec<SortableTableHeader<T, TTitle>>,
     pub rows: Vec<Vec<T>>,
@@ -54,19 +54,27 @@ impl<T, TTitle> SortableTable<T, TTitle> where TTitle: Display {
     }
 }
 
+pub enum SortableTableType {
+    NonScrollable,
+    Scrollable,
+    ScrollableVirtualized,
+}
+
 #[derive(Props)]
 pub struct SortableTableProps<T, TTitle> where TTitle: Display {
     pub table: RefCell<SortableTable<T, TTitle>>,
     pub default_order_direction: OrderDirection,
     #[props(default = false)]
     pub alternate_colors: bool,
+    #[props(default = SortableTableType::NonScrollable)]
+    pub r#type: SortableTableType,
 }
 
 #[allow(non_snake_case)]
 pub fn SortableTable<T, TTitle>(
     cx: Scope<SortableTableProps<T, TTitle>>,
 ) -> Element where T: Display, TTitle: Display {
-    let SortableTableProps { table, default_order_direction, alternate_colors } = &cx.props;
+    let SortableTableProps { table, default_order_direction, alternate_colors, r#type } = &cx.props;
     let current_header = use_state(cx, || 0);
     let order_direction = use_state(cx, || *default_order_direction);
 
@@ -89,14 +97,34 @@ pub fn SortableTable<T, TTitle>(
         table.borrow_mut().sort_by_header(*current_header.get(), true).unwrap();
     }
 
-    let table = table.borrow();
+    let table_ref = table.borrow();
+
+    let rows_rsx = rsx! {
+        for (row_i, row) in table_ref.rows.iter().enumerate() {
+            TableRow {
+                key: "{row_i}",
+                alternate_colors: if *alternate_colors { row_i % 2 == 0 } else { false },
+                for (cell_i, cell) in row.iter().enumerate() {
+                    TableCell {
+                        key: "{cell_i}",
+                        label {
+                            width: "100%",
+                            "{cell}"
+                        }
+                    }
+                }
+            }
+        }
+    };
+
+    let table_ref = table.borrow();
 
     render! {
         Table {
-            columns: table.headers.len(),
+            columns: table_ref.headers.len(),
             TableHead {
                 TableRow {
-                    for (header_i, header) in table.headers.iter().enumerate() {
+                    for (header_i, header) in table_ref.headers.iter().enumerate() {
                         TableCell {
                             key: "{header_i}",
                             order_direction: if *current_header.get() == header_i { Some(*order_direction.get()) } else { None },
@@ -109,22 +137,37 @@ pub fn SortableTable<T, TTitle>(
                 }
             }
             TableBody {
-                ScrollView {
-                    for (row_i, row) in table.rows.iter().enumerate() {
-                        TableRow {
-                            key: "{row_i}",
-                            alternate_colors: if *alternate_colors { row_i % 2 == 0 } else { false },
-                            for (cell_i, cell) in row.iter().enumerate() {
-                                TableCell {
-                                    key: "{cell_i}",
-                                    label {
-                                        width: "100%",
-                                        "{cell}"
+                match r#type {
+                    SortableTableType::NonScrollable => rows_rsx,
+                    SortableTableType::Scrollable => rsx! {ScrollView { rows_rsx } },
+                    SortableTableType::ScrollableVirtualized => rsx! {
+                        VirtualScrollView {
+                            height: "fill",
+                            length: table_ref.rows.len(),
+                            item_size: 25.0,
+                            builder_values: table,
+                            direction: "vertical",
+                            builder: Box::new(|(_k, i, _cx, values)| {
+                                let values = values.as_ref().unwrap();
+                                let table = values.borrow();
+                                rsx! {
+                                    TableRow {
+                                        key: "{i}",
+                                        for (cell_i, cell) in table.rows[i].iter().enumerate() {
+                                            TableCell {
+                                                key: "{cell_i}",
+                                                height: "25",
+                                                label {
+                                                    width: "100%",
+                                                    "{cell}"
+                                                }
+                                            }
+                                        }
                                     }
                                 }
-                            }
+                            })
                         }
-                    }
+                    },
                 }
             }
         }
