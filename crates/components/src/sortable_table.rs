@@ -1,4 +1,3 @@
-use std::borrow::Cow;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use std::cmp::Ordering;
