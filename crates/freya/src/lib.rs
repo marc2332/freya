@@ -6,6 +6,20 @@
 //! Build native & cross-platform GUI applications using 🦀 Rust.
 //!
 //! Powered by [🧬 Dioxus](https://dioxuslabs.com) and [🎨 Skia](https://skia.org/).
+//!
+//! - [`Elements`]()
+//! - [`Layout`](self::layout)
+//! - [`Style`]()
+//! - [`Font Style`]()
+//! - [`Effects`]()
+//! - [`Components`]()
+//! - [`Theming`]()
+//! - [`Hot reload`]()
+//! - [`Testing`]()
+//! - [`Animating`]()
+//! - [`Virtualization`]()
+//! - [`Devtools`]()
+//!
 //! ```no_run
 //! use freya::prelude::*;
 //!
@@ -37,6 +51,10 @@
 //! - `use_camera`: Enables the `use_camera` hook.
 //! - `log`: Enables internal logs.
 //!
+
+// Layout docs
+#[cfg(doc)]
+pub mod layout;
 
 /// Dioxus library.
 pub use dioxus;
