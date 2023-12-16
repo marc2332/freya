@@ -29,7 +29,7 @@ impl PartialOrd for DomEvent {
 impl Ord for DomEvent {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         match self.name.as_str() {
-            "mouseleave" | "pointerleave" => {
+            "mouseleave" | "pointerleave" | "pointerdown" | "touchstart" => {
                 if self.name == other.name {
                     std::cmp::Ordering::Equal
                 } else {
