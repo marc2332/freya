@@ -148,10 +148,10 @@ fn get_derivated_events(event_name: &str) -> Vec<&str> {
         "mouseover" => {
             vec![event_name, "mouseenter", "pointerenter", "pointerover"]
         }
-        "mousedown" | "touchdown" => {
+        "mousedown" | "touchstart" => {
             vec![event_name, "pointerdown"]
         }
-        "click" | "ontouchend" => {
+        "click" | "touchend" => {
             vec![event_name, "pointerup"]
         }
         "mouseleave" => {
