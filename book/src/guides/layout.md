@@ -81,6 +81,23 @@ fn app(cx: Scope) -> Element {
 
 ### Size Units
 
+#### Auto
+Will use it's inner children as size, so in this case, the `rect` width will be equivalent to the width of `label`:
+
+```rust, no_run
+fn app(cx: Scope) -> Element {
+    render!(
+        rect {
+            width: "auto",
+            height: "33",
+            label {
+                "hello!"
+            }
+        }
+    )
+}
+```
+
 #### Logical pixels
 
 ```rust, no_run
