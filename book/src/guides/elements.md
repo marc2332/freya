@@ -2,30 +2,10 @@
 
 Freya contains a set of primitive elements:
 
-- [`rect`](#rect)
 - [`label`](#label)
 - [`image`](#image)
 - [`svg`](#svg)
 - [`paragraph and text`](#paragraph-and-text-and-text)
-
-## rect
-
-The `rect` element (aka `rectangle`) is a box where you can place as many elements inside you want.
-You can specify things like [`width`](/guides/layout.html#width), [`paddings`](/guides/layout.html#padding) or even in what [`direction`](/guides/layout.html#direction) the inner elements are stacked.
-
-Example:
-
-```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
-        rect {
-            direction: "vertical",
-            label { "Hi!" }
-            label { "Hi again!"}
-        }
-    )
-}
-```
 
 ### label
 

@@ -7,11 +7,8 @@
 //!
 //! Powered by [🧬 Dioxus](https://dioxuslabs.com) and [🎨 Skia](https://skia.org/).
 //!
-//! - [`Elements`](self::_docs::elements)
-//! - [`Layout`](self::_docs::layout)
-//! - [`Style`](self::_docs::style)
-//! - [`Font Style`](self::_docs::font_style)
-//! - [`Effects`](self::_docs::effects)
+//! - [`Elements`](freya_elements::elements#structs)
+//! - [`Events`](freya_elements::elements#functions)
 //! - [`Components`](freya_components)
 //! - [`Hooks`](freya_hooks)
 //! - [`Theming`](self::_docs::theming)
@@ -77,10 +74,10 @@ pub mod common {
     pub use freya_common::*;
 }
 
-/// Events and their data.
+/// Events data.
 pub use freya_elements::events;
 
-/// Elements namespace and attributes.
+/// Elements, attributes and events definitions.
 pub use freya_elements::elements;
 
 /// Hotreload configuration.

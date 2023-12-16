@@ -1,10 +1,5 @@
 pub mod animating;
 pub mod devtools;
-pub mod effects;
-pub mod elements;
-pub mod font_style;
 pub mod hot_reload;
-pub mod layout;
-pub mod style;
 pub mod testing;
 pub mod theming;
