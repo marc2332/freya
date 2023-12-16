@@ -7,18 +7,18 @@
 //!
 //! Powered by [🧬 Dioxus](https://dioxuslabs.com) and [🎨 Skia](https://skia.org/).
 //!
-//! - [`Elements`]()
-//! - [`Layout`](self::layout)
-//! - [`Style`]()
-//! - [`Font Style`]()
-//! - [`Effects`]()
-//! - [`Components`]()
-//! - [`Theming`]()
-//! - [`Hot reload`]()
-//! - [`Testing`]()
-//! - [`Animating`]()
-//! - [`Virtualization`]()
-//! - [`Devtools`]()
+//! - [`Elements`](self::_docs::elements)
+//! - [`Layout`](self::_docs::layout)
+//! - [`Style`](self::_docs::style)
+//! - [`Font Style`](self::_docs::font_style)
+//! - [`Effects`](self::_docs::effects)
+//! - [`Components`](freya_components)
+//! - [`Hooks`](freya_hooks)
+//! - [`Theming`](self::_docs::theming)
+//! - [`Hot reload`](self::_docs::hot_reload)
+//! - [`Testing`](self::_docs::testing)
+//! - [`Animating`](self::_docs::animating)
+//! - [`Devtools`](self::_docs::devtools)
 //!
 //! ```no_run
 //! use freya::prelude::*;
@@ -52,9 +52,9 @@
 //! - `log`: Enables internal logs.
 //!
 
-// Layout docs
+/// Freya Docs
 #[cfg(doc)]
-pub mod layout;
+pub mod _docs;
 
 /// Dioxus library.
 pub use dioxus;
