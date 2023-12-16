@@ -36,13 +36,6 @@ impl Ord for DomEvent {
                     std::cmp::Ordering::Less
                 }
             }
-            "pointerdown" | "touchstart" => {
-                if self.name == other.name {
-                    std::cmp::Ordering::Greater
-                } else {
-                    std::cmp::Ordering::Equal
-                }
-            }
             _ => std::cmp::Ordering::Greater,
         }
     }
