@@ -46,9 +46,9 @@ pub struct InputProps<'a> {
     pub value: String,
     /// Handler for the `onchange` event.
     pub onchange: EventHandler<'a, String>,
-    /// Is input hidden with a character. By default input text is shown.
+    /// Display mode for Input. By default, input text is shown as it is provided.
     #[props(default = InputMode::Shown, into)]
-    pub hidden: InputMode,
+    pub mode: InputMode,
 }
 
 /// `Input` component.
@@ -98,7 +98,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
         });
     }
 
-    let text = match cx.props.hidden {
+    let text = match cx.props.mode {
         InputMode::Hidden(ch) => ch.to_string().repeat(cx.props.value.len()),
         InputMode::Shown => cx.props.value.clone(),
     };
