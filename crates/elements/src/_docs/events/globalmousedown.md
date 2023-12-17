@@ -8,7 +8,7 @@ Event Data: [MouseData][crate::events::MouseData]
 fn app(cx: Scope) -> Element {
     render!(
         rect {
-            onglobalmousedown: |_| println!("Started clicing somewhere else!")
+            onglobalmousedown: |_| println!("Started clicking somewhere else!")
         }
         rect {
             width: "100",

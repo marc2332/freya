@@ -1,4 +1,4 @@
-The `globalmouseover` event will fire when the user moves the mouse cursor anywhere in the app.
+The `globalmouseover` event will fire when the user moves the mouse anywhere in the app.
 
 Event Data: [MouseData][crate::events::MouseData]
 
@@ -8,13 +8,13 @@ Event Data: [MouseData][crate::events::MouseData]
 fn app(cx: Scope) -> Element {
     render!(
         rect {
-            onglobalmouseover: |_| println!("Moving somewhere else!")
+            onglobalmouseover: |_| println!("Moving the mouse somewhere!")
         }
         rect {
             width: "100",
             height: "100",
             background: "red",
-            onmouseover: |_| println!("Moving!")
+            onmousedown: |_| println!("Moving the mouse here!")
         }
     )
 }
