@@ -161,7 +161,7 @@ pub fn TableCell<'a>(cx: Scope<'a, TableCellProps<'a>>) -> Element {
             main_align: "center",
             cross_align: "center",
             height: "{height}",
-            align: "right",
+            text_align: "right",
             direction: "horizontal",
             onclick: |e| {
                 if let Some(onclick) = &cx.props.onclick {
