@@ -174,59 +174,59 @@ builder_constructors! {
     ///    }
     ///    ```
     rect {
-        #[doc = include_str!("_docs/elements/padding.md")]
+        #[doc = include_str!("_docs/attributes/padding.md")]
         padding: String,
-        #[doc = include_str!("_docs/elements/width_height.md")]
+        #[doc = include_str!("_docs/attributes/width_height.md")]
         height: String,
         width: String,
-        #[doc = include_str!("_docs/elements/min_width_min_height.md")]
+        #[doc = include_str!("_docs/attributes/min_width_min_height.md")]
         min_height: String,
         min_width: String,
-        #[doc = include_str!("_docs/elements/max_width_max_height.md")]
+        #[doc = include_str!("_docs/attributes/max_width_max_height.md")]
         max_height: String,
         max_width: String,
-        #[doc = include_str!("_docs/elements/background.md")]
+        #[doc = include_str!("_docs/attributes/background.md")]
         background: String,
-        #[doc = include_str!("_docs/elements/border.md")]
+        #[doc = include_str!("_docs/attributes/border.md")]
         border: String,
         border_align: String,
-        #[doc = include_str!("_docs/elements/direction.md")]
+        #[doc = include_str!("_docs/attributes/direction.md")]
         direction: String,
-        #[doc = include_str!("_docs/elements/shadow.md")]
+        #[doc = include_str!("_docs/attributes/shadow.md")]
         shadow: String,
-        #[doc = include_str!("_docs/elements/corner.md")]
+        #[doc = include_str!("_docs/attributes/corner.md")]
         corner_radius: String,
         corner_smoothing: String,
-        #[doc = include_str!("_docs/elements/color.md")]
+        #[doc = include_str!("_docs/attributes/color.md")]
         color: String,
-        #[doc = include_str!("_docs/elements/font_size.md")]
+        #[doc = include_str!("_docs/attributes/font_size.md")]
         font_size: String,
-        #[doc = include_str!("_docs/elements/font_family.md")]
+        #[doc = include_str!("_docs/attributes/font_family.md")]
         font_family: String,
-        #[doc = include_str!("_docs/elements/font_style.md")]
+        #[doc = include_str!("_docs/attributes/font_style.md")]
         font_style: String,
-        #[doc = include_str!("_docs/elements/font_weight.md")]
+        #[doc = include_str!("_docs/attributes/font_weight.md")]
         font_weight: String,
-        #[doc = include_str!("_docs/elements/font_width.md")]
+        #[doc = include_str!("_docs/attributes/font_width.md")]
         font_width: String,
-        #[doc = include_str!("_docs/elements/main_align_cross_align.md")]
+        #[doc = include_str!("_docs/attributes/main_align_cross_align.md")]
         main_align: String,
         cross_align: String,
-        #[doc = include_str!("_docs/elements/text_align.md")]
+        #[doc = include_str!("_docs/attributes/text_align.md")]
         text_align: String,
-        #[doc = include_str!("_docs/elements/rotate.md")]
+        #[doc = include_str!("_docs/attributes/rotate.md")]
         rotate: String,
-        #[doc = include_str!("_docs/elements/overflow.md")]
+        #[doc = include_str!("_docs/attributes/overflow.md")]
         overflow: String,
-        #[doc = include_str!("_docs/elements/margin.md")]
+        #[doc = include_str!("_docs/attributes/margin.md")]
         margin: String,
-        #[doc = include_str!("_docs/elements/position.md")]
+        #[doc = include_str!("_docs/attributes/position.md")]
         position: String,
         position_top: String,
         position_right: String,
         position_bottom: String,
         position_left: String,
-        #[doc = include_str!("_docs/elements/opacity.md")]
+        #[doc = include_str!("_docs/attributes/opacity.md")]
         opacity: String,
 
         name: String,
@@ -256,44 +256,44 @@ builder_constructors! {
     /// ```
     label {
         color: String,
-        #[doc = include_str!("_docs/elements/font_size.md")]
+        #[doc = include_str!("_docs/attributes/font_size.md")]
         text_shadow: String,
         layer: String,
-         #[doc = include_str!("_docs/elements/width_height.md")]
+         #[doc = include_str!("_docs/attributes/width_height.md")]
         height: String,
         width: String,
-        #[doc = include_str!("_docs/elements/font_size.md")]
+        #[doc = include_str!("_docs/attributes/font_size.md")]
         font_size: String,
-        #[doc = include_str!("_docs/elements/font_family.md")]
+        #[doc = include_str!("_docs/attributes/font_family.md")]
         font_family: String,
-        #[doc = include_str!("_docs/elements/font_style.md")]
+        #[doc = include_str!("_docs/attributes/font_style.md")]
         font_style: String,
-        #[doc = include_str!("_docs/elements/font_weight.md")]
+        #[doc = include_str!("_docs/attributes/font_weight.md")]
         font_weight: String,
-        #[doc = include_str!("_docs/elements/font_width.md")]
+        #[doc = include_str!("_docs/attributes/font_width.md")]
         font_width: String,
-        #[doc = include_str!("_docs/elements/text_align.md")]
+        #[doc = include_str!("_docs/attributes/text_align.md")]
         text_align: String,
-        #[doc = include_str!("_docs/elements/max_lines.md")]
+        #[doc = include_str!("_docs/attributes/max_lines.md")]
         max_lines: String,
-        #[doc = include_str!("_docs/elements/rotate.md")]
+        #[doc = include_str!("_docs/attributes/rotate.md")]
         rotate: String,
-        #[doc = include_str!("_docs/elements/letter_spacing.md")]
+        #[doc = include_str!("_docs/attributes/letter_spacing.md")]
         letter_spacing: String,
-        #[doc = include_str!("_docs/elements/word_spacing.md")]
+        #[doc = include_str!("_docs/attributes/word_spacing.md")]
         word_spacing: String,
-        #[doc = include_str!("_docs/elements/decoration.md")]
+        #[doc = include_str!("_docs/attributes/decoration.md")]
         decoration: String,
-        #[doc = include_str!("_docs/elements/decoration_style.md")]
+        #[doc = include_str!("_docs/attributes/decoration_style.md")]
         decoration_style: String,
-        #[doc = include_str!("_docs/elements/decoration_color.md")]
+        #[doc = include_str!("_docs/attributes/decoration_color.md")]
         decoration_color: String,
-        #[doc = include_str!("_docs/elements/text_overflow.md")]
+        #[doc = include_str!("_docs/attributes/text_overflow.md")]
         text_overflow: String,
         focusable: String,
-        #[doc = include_str!("_docs/elements/margin.md")]
+        #[doc = include_str!("_docs/attributes/margin.md")]
         margin: String,
-        #[doc = include_str!("_docs/elements/opacity.md")]
+        #[doc = include_str!("_docs/attributes/opacity.md")]
         opacity: String,
 
         role: String,
@@ -323,49 +323,49 @@ builder_constructors! {
     /// ```
     paragraph {
         layer: String,
-        #[doc = include_str!("_docs/elements/width_height.md")]
-         #[doc = include_str!("_docs/elements/width_height.md")]
+        #[doc = include_str!("_docs/attributes/width_height.md")]
+         #[doc = include_str!("_docs/attributes/width_height.md")]
         height: String,
         width: String,
-        #[doc = include_str!("_docs/elements/min_width_min_height.md")]
+        #[doc = include_str!("_docs/attributes/min_width_min_height.md")]
         min_height: String,
         min_width: String,
-        #[doc = include_str!("_docs/elements/max_width_max_height.md")]
+        #[doc = include_str!("_docs/attributes/max_width_max_height.md")]
         max_height: String,
         max_width: String,
-        #[doc = include_str!("_docs/elements/text_align.md")]
+        #[doc = include_str!("_docs/attributes/text_align.md")]
         text_align: String,
         direction: String,
-        #[doc = include_str!("_docs/elements/rotate.md")]
+        #[doc = include_str!("_docs/attributes/rotate.md")]
         rotate: String,
-        #[doc = include_str!("_docs/elements/font_size.md")]
+        #[doc = include_str!("_docs/attributes/font_size.md")]
         font_size: String,
-        #[doc = include_str!("_docs/elements/font_family.md")]
+        #[doc = include_str!("_docs/attributes/font_family.md")]
         font_family: String,
-        #[doc = include_str!("_docs/elements/font_style.md")]
+        #[doc = include_str!("_docs/attributes/font_style.md")]
         font_style: String,
-        #[doc = include_str!("_docs/elements/font_weight.md")]
+        #[doc = include_str!("_docs/attributes/font_weight.md")]
         font_weight: String,
-        #[doc = include_str!("_docs/elements/font_width.md")]
+        #[doc = include_str!("_docs/attributes/font_width.md")]
         font_width: String,
-        #[doc = include_str!("_docs/elements/line_height.md")]
+        #[doc = include_str!("_docs/attributes/line_height.md")]
         line_height: String,
-        #[doc = include_str!("_docs/elements/letter_spacing.md")]
+        #[doc = include_str!("_docs/attributes/letter_spacing.md")]
         letter_spacing: String,
-        #[doc = include_str!("_docs/elements/word_spacing.md")]
+        #[doc = include_str!("_docs/attributes/word_spacing.md")]
         word_spacing: String,
-        #[doc = include_str!("_docs/elements/decoration.md")]
+        #[doc = include_str!("_docs/attributes/decoration.md")]
         decoration: String,
-        #[doc = include_str!("_docs/elements/decoration_style.md")]
+        #[doc = include_str!("_docs/attributes/decoration_style.md")]
         decoration_style: String,
-        #[doc = include_str!("_docs/elements/decoration_color.md")]
+        #[doc = include_str!("_docs/attributes/decoration_color.md")]
         text_overflow: String,
-        #[doc = include_str!("_docs/elements/overflow.md")]
+        #[doc = include_str!("_docs/attributes/overflow.md")]
         overflow: String,
         focusable: String,
-        #[doc = include_str!("_docs/elements/margin.md")]
+        #[doc = include_str!("_docs/attributes/margin.md")]
         margin: String,
-        #[doc = include_str!("_docs/elements/opacity.md")]
+        #[doc = include_str!("_docs/attributes/opacity.md")]
         opacity: String,
 
         cursor_index: String,
@@ -383,33 +383,33 @@ builder_constructors! {
     /// `text` element is simply a text span used for the `paragraph` element.
     text {
         color: String,
-        #[doc = include_str!("_docs/elements/font_size.md")]
+        #[doc = include_str!("_docs/attributes/font_size.md")]
         text_shadow: String,
         layer: String,
-         #[doc = include_str!("_docs/elements/width_height.md")]
+         #[doc = include_str!("_docs/attributes/width_height.md")]
         height: String,
         width: String,
-        #[doc = include_str!("_docs/elements/font_size.md")]
+        #[doc = include_str!("_docs/attributes/font_size.md")]
         font_size: String,
-        #[doc = include_str!("_docs/elements/font_family.md")]
+        #[doc = include_str!("_docs/attributes/font_family.md")]
         font_family: String,
-        #[doc = include_str!("_docs/elements/font_style.md")]
+        #[doc = include_str!("_docs/attributes/font_style.md")]
         font_style: String,
-        #[doc = include_str!("_docs/elements/font_weight.md")]
+        #[doc = include_str!("_docs/attributes/font_weight.md")]
         font_weight: String,
-        #[doc = include_str!("_docs/elements/font_width.md")]
+        #[doc = include_str!("_docs/attributes/font_width.md")]
         font_width: String,
-        #[doc = include_str!("_docs/elements/line_height.md")]
+        #[doc = include_str!("_docs/attributes/line_height.md")]
         line_height: String,
-        #[doc = include_str!("_docs/elements/letter_spacing.md")]
+        #[doc = include_str!("_docs/attributes/letter_spacing.md")]
         letter_spacing: String,
-        #[doc = include_str!("_docs/elements/word_spacing.md")]
+        #[doc = include_str!("_docs/attributes/word_spacing.md")]
         word_spacing: String,
-        #[doc = include_str!("_docs/elements/decoration.md")]
+        #[doc = include_str!("_docs/attributes/decoration.md")]
         decoration: String,
-        #[doc = include_str!("_docs/elements/decoration_style.md")]
+        #[doc = include_str!("_docs/attributes/decoration_style.md")]
         decoration_style: String,
-        #[doc = include_str!("_docs/elements/decoration_color.md")]
+        #[doc = include_str!("_docs/attributes/decoration_color.md")]
         decoraton_color: String,
     };
     /// `image` element let's you show an image.
@@ -433,12 +433,12 @@ builder_constructors! {
     image {
         image_data: String,
         image_reference: String,
-       #[doc = include_str!("_docs/elements/width_height.md")]
+       #[doc = include_str!("_docs/attributes/width_height.md")]
         height: String,
         width: String,
-        #[doc = include_str!("_docs/elements/rotate.md")]
+        #[doc = include_str!("_docs/attributes/rotate.md")]
         rotate: String,
-        #[doc = include_str!("_docs/elements/opacity.md")]
+        #[doc = include_str!("_docs/attributes/opacity.md")]
         opacity: String,
 
         role: String,
@@ -466,14 +466,14 @@ builder_constructors! {
     /// }
     /// ```
     svg {
-        #[doc = include_str!("_docs/elements/margin.md")]
+        #[doc = include_str!("_docs/attributes/margin.md")]
         margin: String,
-       #[doc = include_str!("_docs/elements/width_height.md")]
+       #[doc = include_str!("_docs/attributes/width_height.md")]
         height: String,
         width: String,
-        #[doc = include_str!("_docs/elements/rotate.md")]
+        #[doc = include_str!("_docs/attributes/rotate.md")]
         rotate: String,
-        #[doc = include_str!("_docs/elements/opacity.md")]
+        #[doc = include_str!("_docs/attributes/opacity.md")]
         opacity: String,
 
         svg_data: String,
