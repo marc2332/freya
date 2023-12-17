@@ -7,6 +7,5 @@
 //! ```toml
 //! [dependencies]
 //! freya = { .., features = ["devtools"] }
-//!
 //! ```
 //!

@@ -1,9 +1,16 @@
 //! # Testing
 //!
-//! Freya comes with a special testing renderer (`freya-testing`) that let's you run your components in a headless environment.
+//! `freya-testing` is a special renderer that let's you run your components in a headless environment.
 //! This will let you easily write unit tests for your components.
 //!
 //! ## Getting started
+//! 
+//! Add `freya-testing`:
+//! 
+//! ```toml
+//! [dev-dependencies]
+//! freya-testing = "0.1"
+//! ```
 //!
 //! You can use the `launch_test` function to run the tests of your component, it will return you a set of utilities for you to interact with the component.
 //!
