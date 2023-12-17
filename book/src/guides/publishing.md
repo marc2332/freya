@@ -45,5 +45,5 @@ You can have a look at the list on [GitHub](https://github.com/crabnebula-dev/ca
 
 # Optimizing
 
-The ["Optimizing"" chapter](https://dioxuslabs.com/learn/0.4/cookbook/optimizing) in the Dioxus docs applies in Freya too.
+The ["Optimizing" chapter](https://dioxuslabs.com/learn/0.4/cookbook/optimizing) in the Dioxus docs applies in Freya too.
 Note that WebAssembly-related tips are irrelevant.
