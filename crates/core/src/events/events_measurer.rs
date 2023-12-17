@@ -145,7 +145,7 @@ pub fn measure_potential_event_listeners(
 /// A `mousedown` or a `touchdown` might also trigger a `pointerdown`
 fn get_derivated_events(event_name: &str) -> Vec<&str> {
     match event_name {
-        "mouseover" => {
+        "mouseover" | "touchmove" => {
             vec![event_name, "mouseenter", "pointerenter", "pointerover"]
         }
         "mousedown" | "touchstart" => {
