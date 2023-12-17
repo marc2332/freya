@@ -136,7 +136,7 @@
 //!
 //! >️ ⚠️ The comma after the last field in the `theme_with!` macro is required.
 //! As you can see, it removes the need for the "With" suffix, because that's already in the macro name.
-//! More importantly, though, it wraps each file in a `Some`, and adds the spread.
+//! More importantly, though, it wraps each field in a `Some`, and adds the spread.
 //!
 //!
 //! ## Custom theme
