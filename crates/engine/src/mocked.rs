@@ -248,6 +248,12 @@ impl Default for TextShadow {
     }
 }
 
+impl TextShadow {
+    pub fn new(color: Color, _: (f32, f32), _: f32) -> Self {
+        unimplemented!("This is mocked")
+    }
+}
+
 impl From<(f32, f32)> for Point {
     fn from(source: (f32, f32)) -> Self {
         Point::new(source.0, source.1)
@@ -359,6 +365,7 @@ pub enum TextAlign {
     End = 5,
 }
 
+#[derive(Default)]
 pub struct TextStyle;
 
 impl TextStyle {

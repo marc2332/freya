@@ -132,7 +132,9 @@ fn app(cx: Scope) -> Element {
                     "Create as many editors you want!"
                 }
                 Button {
-                    margin: "0 20",
+                    theme: theme_with!(ButtonTheme {
+                        margin: "0 20".into(),
+                    }),
                     onclick: create_node,
                     label {
                         "New Editor"
@@ -270,8 +272,6 @@ fn Editor(cx: Scope) -> Element {
                     height: "100%",
                     padding: "5",
                     ScrollView {
-                        width: "100%",
-                        height: "100%",
                         scroll_with_arrows: false,
                         editor.lines().map(move |l| {
                             let editable = editable.clone();

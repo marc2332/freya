@@ -35,7 +35,9 @@ fn app(cx: Scope) -> Element {
 
     render!(
         Body {
-            padding: "20",
+            theme: theme_with!(BodyTheme {
+                padding: "20".into(),
+            }),
             Switch {
                 enabled: *enabled.get(),
                 ontoggled: |_| {
