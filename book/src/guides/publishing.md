@@ -1,13 +1,13 @@
 # Publishing
 
-Freya produces a self-contained executable in `target/release`, so you can technically just distribute that.
+**Freya** produces a self-contained executable in `target/release`, so you can technically just distribute that.
 However, you might want to create an installer instead. You can use executable packagers of your choice, but
-for a more automated and "Rusty" version, you can use [cargo-packager](https://github.com/crabnebula-dev/cargo-packager), which is basically an abstraction
+for a more automated and "Rusty" version, you can use [**cargo-packager**](https://github.com/crabnebula-dev/cargo-packager), which is basically an abstraction
 over executable packagers which you would have to setup yourself.
 
-There's also a complete crate example [here](https://github.com/marc2332/freya/tree/main/examples/installer).
+There is an [example](https://github.com/marc2332/freya/tree/main/examples/installer) you can check out.
 
-## Packager installation
+## `cargo-packager` installation
 
 Run:
 
@@ -15,7 +15,7 @@ Run:
 cargo install cargo-packager --locked
 ```
 
-## Packager usage
+## Usage
 
 Add this to your `Cargo.toml`:
 
@@ -31,10 +31,10 @@ And run:
 cargo packager --release
 ```
 
-And there you go! You should now have an installer in `target/bundle` for your current OS.
-To publish your app on a different OS, see the next section, [packager configuration](#packager-configuration).
+And there you go! You should now have an installer in `target/release` for your current OS.
+To publish your app on a different OS, see the next section, [Configuration](#configuration).
 
-## Packager configuration
+## Configuration
 
 We used a very bare-bones example, so make sure to check out all configuration options in the [Config struct](https://docs.rs/cargo-packager/latest/cargo_packager/config/struct.Config.html)
 in the `cargo-packager` API docs. Note that underscores should be hyphens when you use TOML.
