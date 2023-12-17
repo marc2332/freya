@@ -5,7 +5,7 @@
 
 use freya::prelude::*;
 
-const ICON: &[u8] = include_bytes!("../32x32.png");
+const ICON: &[u8] = include_bytes!("../assets/icon.png");
 
 fn main() {
     launch_cfg(
