@@ -60,7 +60,7 @@ where
     };
     let color = theme.dropdown_item.font_theme.color;
 
-    use_on_unmount(cx, {
+    use_on_destroy(cx, {
         to_owned![status, platform];
         move || {
             if *status.current() == DropdownItemStatus::Hovering {
@@ -181,11 +181,11 @@ where
     let focus_id = focus.attribute(cx);
 
     // Update the provided value if the passed value changes
-    use_memo(cx, &cx.props.value, move |value| {
+    let _ = use_memo(cx, &cx.props.value, move |value| {
         *selected.write() = value;
     });
 
-    use_on_unmount(cx, {
+    use_on_destroy(cx, {
         to_owned![status, platform];
         move || {
             if *status.current() == DropdownStatus::Hovering {

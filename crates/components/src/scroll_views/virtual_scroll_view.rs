@@ -1,3 +1,5 @@
+#![allow(clippy::type_complexity)]
+
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{keyboard::Key, KeyboardEvent, MouseEvent, WheelEvent};

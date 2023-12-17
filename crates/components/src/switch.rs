@@ -56,7 +56,7 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
     let platform = use_platform(cx);
     let status = use_ref(cx, SwitchStatus::default);
 
-    use_on_unmount(cx, {
+    use_on_destroy(cx, {
         to_owned![status, platform];
         move || {
             if *status.read() == SwitchStatus::Hovering {
@@ -98,7 +98,7 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
         }
     };
 
-    use_memo(cx, &cx.props.enabled, move |enabled| {
+    let _ = use_memo(cx, &cx.props.enabled, move |enabled| {
         if enabled {
             animation.start(Animation::new_sine_in_out(0.0..=25.0, 200));
         } else if animation.value() > 0.0 {

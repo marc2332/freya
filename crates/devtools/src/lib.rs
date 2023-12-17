@@ -189,7 +189,7 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
     )
 }
 
-#[inline_props]
+#[component]
 #[allow(non_snake_case)]
 pub fn DevtoolsBar(cx: Scope) -> Element {
     render!(
@@ -204,7 +204,7 @@ pub fn DevtoolsBar(cx: Scope) -> Element {
 }
 
 #[allow(non_snake_case)]
-#[inline_props]
+#[component]
 pub fn NodeInspectorBar(cx: Scope, node_id: NodeId) -> Element {
     render!(
         TabsBar {
@@ -238,7 +238,7 @@ pub enum Route {
 }
 
 #[allow(non_snake_case)]
-#[inline_props]
+#[component]
 fn PageNotFound(cx: Scope) -> Element {
     render!(
         label {
@@ -248,7 +248,7 @@ fn PageNotFound(cx: Scope) -> Element {
 }
 
 #[allow(non_snake_case)]
-#[inline_props]
+#[component]
 fn TreeElementsTab(cx: Scope) -> Element {
     let hovered_node = use_shared_state::<HoveredNode>(cx).unwrap();
 

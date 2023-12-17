@@ -11,8 +11,8 @@ struct DummyPlugin;
 impl FreyaPlugin for DummyPlugin {
     fn on_event(&mut self, event: &PluginEvent) {
         match event {
-            PluginEvent::CanvasRendered(_canvas, _font_collection) => {
-                println!("The canvas just got rendered.");
+            PluginEvent::AfterRender { .. } => {
+                println!("The app just got rendered to the canvas.");
             }
             _ => {}
         }
