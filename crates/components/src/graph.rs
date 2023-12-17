@@ -1,9 +1,9 @@
-use crate::theme::get_theme;
 use dioxus::prelude::*;
 use freya_common::EventMessage;
 use freya_elements::elements as dioxus_elements;
 use freya_engine::prelude::*;
-use freya_hooks::{use_canvas, use_platform, GraphTheme, GraphThemeWith};
+
+use freya_hooks::{use_applied_theme, use_canvas, use_platform, GraphTheme, GraphThemeWith};
 use freya_node_state::Parse;
 
 /// Data line for the [`Graph`] component.
@@ -152,7 +152,7 @@ pub fn Graph(cx: Scope<GraphProps>) -> Element {
         })
     });
 
-    let GraphTheme { width, height } = get_theme!(cx, &cx.props.theme, graph);
+    let GraphTheme { width, height } = use_applied_theme!(cx, &cx.props.theme, graph);
 
     render!(
         rect {

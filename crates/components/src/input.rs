@@ -4,11 +4,10 @@ use freya_elements::events::keyboard::Key;
 use freya_elements::events::{KeyboardData, MouseEvent};
 use freya_hooks::use_platform;
 use freya_hooks::{
-    use_editable, use_focus, EditableConfig, EditableEvent, EditableMode, TextEditor,
+    use_applied_theme, use_editable, use_focus, EditableConfig, EditableEvent, EditableMode,
+    FontTheme, InputTheme, InputThemeWith, TextEditor,
 };
-use freya_hooks::{FontTheme, InputTheme, InputThemeWith};
 
-use crate::theme::get_theme;
 use winit::window::CursorIcon;
 
 /// Enum to declare is [`Input`] hidden.
@@ -90,7 +89,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
         || EditableConfig::new(cx.props.value.to_string()),
         EditableMode::MultipleLinesSingleEditor,
     );
-    let theme = get_theme!(cx, &cx.props.theme, input);
+    let theme = use_applied_theme!(cx, &cx.props.theme, input);
     let focus_manager = use_focus(cx);
 
     if &cx.props.value != editable.editor().current().rope() {

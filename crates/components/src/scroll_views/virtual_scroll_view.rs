@@ -3,10 +3,11 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{keyboard::Key, KeyboardEvent, MouseEvent, WheelEvent};
-use freya_hooks::{theme_with, use_focus, use_node, ScrollBarThemeWith, ScrollViewThemeWith};
+use freya_hooks::{
+    theme_with, use_applied_theme, use_focus, use_node, ScrollBarThemeWith, ScrollViewThemeWith,
+};
 use std::ops::Range;
 
-use crate::theme::get_theme;
 use crate::{
     get_container_size, get_corrected_scroll_position, get_scroll_position_from_cursor,
     get_scroll_position_from_wheel, get_scrollbar_pos_and_size, is_scrollbar_visible,
@@ -106,7 +107,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
     let scrolled_x = use_ref(cx, || 0);
     let (node_ref, size) = use_node(cx);
     let focus = use_focus(cx);
-    let theme = get_theme!(cx, &cx.props.theme, scroll_view);
+    let theme = use_applied_theme!(cx, &cx.props.theme, scroll_view);
 
     let padding = &theme.padding;
     let user_container_width = &theme.width;

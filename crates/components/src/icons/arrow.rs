@@ -1,7 +1,7 @@
-use crate::theme::get_theme;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::{ArrowIconTheme, ArrowIconThemeWith};
+
+use freya_hooks::{use_applied_theme, ArrowIconTheme, ArrowIconThemeWith};
 
 #[derive(Props, PartialEq)]
 pub struct ArrowIcon {
@@ -25,7 +25,7 @@ pub fn ArrowIcon(cx: Scope<ArrowIcon>) -> Element {
         height,
         width,
         margin,
-    } = get_theme!(cx, theme, arrow_icon);
+    } = use_applied_theme!(cx, theme, arrow_icon);
 
     render!(svg {
         height: "{height}",

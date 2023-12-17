@@ -1,14 +1,14 @@
 use std::fmt::Display;
 
 use crate::icons::ArrowIcon;
-use crate::theme::get_theme;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::keyboard::Key;
 use freya_elements::events::{KeyboardEvent, MouseEvent};
+
 use freya_hooks::{
-    theme_with, use_focus, use_platform, ArrowIconThemeWith, DropdownItemThemeWith, DropdownTheme,
-    DropdownThemeWith,
+    theme_with, use_applied_theme, use_focus, use_platform, ArrowIconThemeWith,
+    DropdownItemThemeWith, DropdownTheme, DropdownThemeWith,
 };
 use winit::window::CursorIcon;
 
@@ -49,7 +49,7 @@ where
     T: PartialEq + 'static,
 {
     let selected = use_shared_state::<T>(cx).unwrap();
-    let theme = get_theme!(cx, &cx.props.theme, dropdown_item);
+    let theme = use_applied_theme!(cx, &cx.props.theme, dropdown_item);
     let focus = use_focus(cx);
     let status = use_state(cx, DropdownItemStatus::default);
     let platform = use_platform(cx);
@@ -180,7 +180,7 @@ where
 {
     use_shared_state_provider(cx, || cx.props.value.clone());
     let selected = use_shared_state::<T>(cx).unwrap();
-    let theme = get_theme!(cx, &cx.props.theme, dropdown);
+    let theme = use_applied_theme!(cx, &cx.props.theme, dropdown);
     let focus = use_focus(cx);
     let status = use_state(cx, DropdownStatus::default);
     let opened = use_state(cx, || false);

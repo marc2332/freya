@@ -1,7 +1,7 @@
-use crate::theme::get_theme;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::{ScrollBarTheme, ScrollBarThemeWith};
+
+use freya_hooks::{use_applied_theme, ScrollBarTheme, ScrollBarThemeWith};
 
 #[derive(Props)]
 pub struct ScrollBarProps<'a> {
@@ -28,7 +28,7 @@ pub fn ScrollBar<'a>(cx: Scope<'a, ScrollBarProps<'a>>) -> Element<'a> {
         offset_x,
         offset_y,
         ..
-    } = get_theme!(cx, &cx.props.theme, scroll_bar);
+    } = use_applied_theme!(cx, &cx.props.theme, scroll_bar);
 
     let onmouseenter = |_| status.set(ScrollBarStatus::Hovering);
     let onmouseleave = |_| status.set(ScrollBarStatus::Idle);

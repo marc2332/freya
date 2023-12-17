@@ -1,8 +1,8 @@
-use crate::theme::get_theme;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
-use freya_hooks::{use_animation, use_platform, Animation, SwitchThemeWith};
+
+use freya_hooks::{use_animation, use_applied_theme, use_platform, Animation, SwitchThemeWith};
 use winit::window::CursorIcon;
 
 /// [`Switch`] component properties.
@@ -55,7 +55,7 @@ pub enum SwitchStatus {
 #[allow(non_snake_case)]
 pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
     let animation = use_animation(cx, || 0.0);
-    let theme = get_theme!(cx, &cx.props.theme, switch);
+    let theme = use_applied_theme!(cx, &cx.props.theme, switch);
     let platform = use_platform(cx);
     let status = use_ref(cx, SwitchStatus::default);
 

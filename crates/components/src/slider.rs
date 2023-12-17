@@ -1,8 +1,8 @@
-use crate::theme::get_theme;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{MouseEvent, WheelEvent};
-use freya_hooks::{use_node_ref, use_platform, SliderThemeWith};
+
+use freya_hooks::{use_applied_theme, use_node_ref, use_platform, SliderThemeWith};
 use tracing::info;
 use winit::window::CursorIcon;
 
@@ -75,7 +75,7 @@ pub enum SliderStatus {
 /// ```
 #[allow(non_snake_case)]
 pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
-    let theme = get_theme!(cx, &cx.props.theme, slider);
+    let theme = use_applied_theme!(cx, &cx.props.theme, slider);
     let status = use_ref(cx, SliderStatus::default);
     let clicking = use_state(cx, || false);
     let platform = use_platform(cx);

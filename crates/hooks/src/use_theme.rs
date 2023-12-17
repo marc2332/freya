@@ -25,3 +25,45 @@ pub fn use_get_theme(cx: &ScopeState) -> Theme {
         .map(|v| v.read().clone())
         .unwrap_or_default()
 }
+
+/// This macro has three arguments separator by commas.
+///
+/// 1. The context (`cx: Scope`). Just pass in `cx`.
+/// 2. The theme property. This should be `&cx.props.theme`.
+/// 3. The name of the theme that you want to use.
+///
+/// # Examples
+///
+/// ```rust,ignore
+/// use freya_hooks::{ButtonTheme, ButtonThemeWith};
+///
+/// #[derive(Props)]
+/// pub struct ButtonProps {
+///     /// Theme override.
+///     #[props(optional)]
+///     pub theme: Option<ButtonThemeWith>,
+///     // ...
+/// }
+///
+/// pub fn Button(cx: Scope<ButtonProps>) -> Element {
+///     let ButtonTheme {
+///         padding,
+///         width,
+///         background,
+///         ..
+///     } = use_applied_theme!(cx, &cx.props.theme, button);
+///     // ...
+/// }
+/// ```
+#[macro_export]
+macro_rules! use_applied_theme {
+    ($cx:expr, $theme_prop:expr, $theme_name:ident) => {{
+        let mut theme = ::freya_hooks::use_get_theme($cx).$theme_name;
+
+        if let Some(theme_override) = $theme_prop {
+            theme.apply_optional(theme_override);
+        }
+
+        theme
+    }};
+}

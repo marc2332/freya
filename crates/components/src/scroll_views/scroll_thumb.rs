@@ -1,8 +1,8 @@
-use crate::theme::get_theme;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
-use freya_hooks::ScrollBarThemeWith;
+
+use freya_hooks::{use_applied_theme, ScrollBarThemeWith};
 
 #[derive(Props)]
 pub struct ScrollThumbProps<'a> {
@@ -27,7 +27,7 @@ pub enum ScrollThumbState {
 
 #[allow(non_snake_case)]
 pub fn ScrollThumb<'a>(cx: Scope<'a, ScrollThumbProps<'a>>) -> Element<'a> {
-    let theme = get_theme!(cx, &cx.props.theme, scroll_bar);
+    let theme = use_applied_theme!(cx, &cx.props.theme, scroll_bar);
     let state = use_state(cx, ScrollThumbState::default);
     let thumb_background = match state.get() {
         _ if cx.props.clicking_scrollbar => theme.active_thumb_background,

@@ -1,7 +1,7 @@
-use crate::theme::get_theme;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::{ProgressBarTheme, ProgressBarThemeWith};
+
+use freya_hooks::{use_applied_theme, ProgressBarTheme, ProgressBarThemeWith};
 
 /// [`ProgressBar`] component properties.
 #[derive(Props, PartialEq)]
@@ -45,7 +45,7 @@ pub fn ProgressBar(cx: Scope<ProgressBarProps>) -> Element {
         progress_background,
         width,
         height,
-    } = get_theme!(cx, &cx.props.theme, progress_bar);
+    } = use_applied_theme!(cx, &cx.props.theme, progress_bar);
     let show_progress = cx.props.show_progress;
     let progress = cx.props.progress;
 

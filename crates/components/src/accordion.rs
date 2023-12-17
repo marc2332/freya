@@ -1,9 +1,10 @@
-use crate::theme::get_theme;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
+
 use freya_hooks::{
-    use_animation, use_node, use_platform, AccordionTheme, AccordionThemeWith, Animation,
+    use_animation, use_applied_theme, use_node, use_platform, AccordionTheme, AccordionThemeWith,
+    Animation,
 };
 use winit::window::CursorIcon;
 
@@ -39,7 +40,7 @@ pub struct AccordionProps<'a> {
 ///
 #[allow(non_snake_case)]
 pub fn Accordion<'a>(cx: Scope<'a, AccordionProps<'a>>) -> Element<'a> {
-    let theme = get_theme!(cx, &cx.props.theme, accordion);
+    let theme = use_applied_theme!(cx, &cx.props.theme, accordion);
     let animation = use_animation(cx, || 0.0);
     let open = use_state(cx, || false);
     let (node_ref, size) = use_node(cx);

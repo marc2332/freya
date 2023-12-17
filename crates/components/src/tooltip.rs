@@ -1,7 +1,7 @@
-use crate::theme::get_theme;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::{TooltipTheme, TooltipThemeWith};
+
+use freya_hooks::{use_applied_theme, TooltipTheme, TooltipThemeWith};
 
 /// [`Tooltip`] component properties.
 #[derive(Props)]
@@ -23,7 +23,7 @@ pub struct TooltipProps<'a> {
 #[allow(non_snake_case)]
 pub fn Tooltip<'a>(cx: Scope<'a, TooltipProps<'a>>) -> Element {
     let TooltipProps { url, theme } = cx.props;
-    let theme = get_theme!(cx, theme, tooltip);
+    let theme = use_applied_theme!(cx, theme, tooltip);
     let TooltipTheme {
         background,
         color,

@@ -1,8 +1,8 @@
-use crate::theme::get_theme;
 use crate::Loader;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::{use_focus, NetworkImageTheme, NetworkImageThemeWith};
+
+use freya_hooks::{use_applied_theme, use_focus, NetworkImageTheme, NetworkImageThemeWith};
 use freya_node_state::bytes_to_data;
 use reqwest::Url;
 
@@ -66,7 +66,8 @@ pub fn NetworkImage<'a>(cx: Scope<'a, NetworkImageProps<'a>>) -> Element<'a> {
     let image_bytes = use_state::<Option<Vec<u8>>>(cx, || None);
 
     let focus_id = focus.attribute(cx);
-    let NetworkImageTheme { width, height } = get_theme!(cx, &cx.props.theme, network_image);
+    let NetworkImageTheme { width, height } =
+        use_applied_theme!(cx, &cx.props.theme, network_image);
     let alt = cx.props.alt.as_deref();
 
     use_effect(cx, &cx.props.url, move |url| {
