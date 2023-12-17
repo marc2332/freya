@@ -13,8 +13,6 @@ fn app(cx: Scope) -> Element {
     let values = use_state(cx, || vec!["Hello World"].repeat(400));
 
     render!(VirtualScrollView {
-        width: "100%",
-        height: "100%",
         length: values.get().len(),
         item_size: 25.0,
         builder_values: values.get(),

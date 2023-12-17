@@ -17,15 +17,19 @@ fn app(cx: Scope) -> Element {
         }),
         body: render!(
             ScrollView {
-                height: "calc(100% - 75 - 75)",
+                theme: theme_with!(ScrollViewTheme {
+                    height: "calc(100% - 75 - 75)".into(),
+                }),
                 show_scrollbar: true,
                 Card {
                     title: "Card 0",
                     content: "Content 0",
                 }
                 ScrollView {
-                    height: "200",
-                    padding: "0 20",
+                    theme: theme_with!(ScrollViewTheme {
+                        height: "200".into(),
+                        padding: "0 20".into(),
+                    }),
                     Card {
                         title: "Card 1",
                         content: "Content 1",

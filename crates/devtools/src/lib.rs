@@ -118,7 +118,9 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
     use_init_theme(cx, DARK_THEME);
     let children = use_shared_state::<Vec<TreeNode>>(cx).unwrap();
     let theme = use_theme(cx);
+
     let theme = theme.read();
+    let color = &theme.body.color;
 
     #[allow(clippy::await_holding_lock)]
     use_effect(cx, (), move |_| {
@@ -183,7 +185,7 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
         rect {
             width: "100%",
             height: "100%",
-            color: theme.body.color,
+            color: "{color}",
             Router::<Route> { }
         }
     )

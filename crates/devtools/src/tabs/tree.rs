@@ -1,9 +1,9 @@
+use crate::{node::NodeElement, NodeIdSerializer, Route, TreeNode};
 use dioxus::prelude::*;
 use dioxus_native_core::NodeId;
 use dioxus_router::prelude::use_navigator;
 use freya_components::*;
-
-use crate::{node::NodeElement, NodeIdSerializer, Route, TreeNode};
+use freya_hooks::{theme_with, ScrollViewThemeWith};
 
 #[allow(non_snake_case)]
 #[component]
@@ -17,13 +17,14 @@ pub fn NodesTree<'a>(
     let nodes = use_shared_state::<Vec<TreeNode>>(cx).unwrap();
 
     render!(VirtualScrollView {
-        width: "100%",
-        height: "{height}",
-        padding: "15",
         show_scrollbar: true,
         length: nodes.read().len(),
         item_size: 27.0,
         builder_values: (nodes, selected_node_id, onselected, router),
+        theme: theme_with!(ScrollViewTheme {
+            height: height.to_string().into(),
+            padding: "15".into(),
+        }),
         builder: Box::new(move |(_k, i, _, values)| {
             let (nodes, selected_node_id, onselected, router) = values.unwrap();
             let nodes = nodes.read();
