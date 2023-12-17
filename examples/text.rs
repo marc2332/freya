@@ -41,7 +41,9 @@ fn app(cx: Scope) -> Element {
             }
             ScrollView {
                 show_scrollbar: true,
-                height: "calc(100% - 60)",
+                theme: theme_with!(ScrollViewTheme {
+                    height: "calc(100% - 60)".into(),
+                }),
                 rect {
                     background: "red",
                     label {

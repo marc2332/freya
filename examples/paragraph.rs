@@ -23,8 +23,9 @@ fn app(cx: Scope) -> Element {
                 height: "100%",
                 ScrollView {
                     show_scrollbar: true,
-                    width: "100%",
-                    height: "75%",
+                    theme: theme_with!(ScrollViewTheme {
+                        height: "75%".into(),
+                    }),
                     paragraph {
                         width: "100%",
                         text_align: "right",
@@ -40,7 +41,9 @@ fn app(cx: Scope) -> Element {
                 }
                 ScrollView {
                     show_scrollbar: true,
-                    height: "25%",
+                    theme: theme_with!(ScrollViewTheme {
+                        height: "25%".into(),
+                    }),
                     label {
                         font_size: "100",
                         font_family: "Inter",
