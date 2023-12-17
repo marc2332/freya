@@ -4,9 +4,9 @@
 //! This will let you easily write unit tests for your components.
 //!
 //! ## Getting started
-//! 
+//!
 //! Add `freya-testing`:
-//! 
+//!
 //! ```toml
 //! [dev-dependencies]
 //! freya-testing = "0.1"

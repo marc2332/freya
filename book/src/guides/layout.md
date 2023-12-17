@@ -2,9 +2,9 @@
 
 Learn how the layout attributes work.
 
-- [`width & height`](#width_&_height)
-- [`min_width & min_height`](#min_width_&_min_height)
-- [`max_width & max_height`](#max_width_&_max_height)
+- [`width & height`](#width--height)
+- [`min_width & min_height`](#min_width--min_height)
+- [`max_width & max_height`](#max_width--max_height)
 - [`Size units`](#size_units)
   - [`Logical pixels`](#logical-pixels)
   - [`Percentages`](#percentages)
