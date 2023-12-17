@@ -255,11 +255,11 @@ builder_constructors! {
     /// }
     /// ```
     label {
+        #[doc = include_str!("_docs/attributes/color.md")]
         color: String,
-        #[doc = include_str!("_docs/attributes/font_size.md")]
+        #[doc = include_str!("_docs/attributes/text_shadow.md")]
         text_shadow: String,
-        layer: String,
-         #[doc = include_str!("_docs/attributes/width_height.md")]
+        #[doc = include_str!("_docs/attributes/width_height.md")]
         height: String,
         width: String,
         #[doc = include_str!("_docs/attributes/font_size.md")]
@@ -296,6 +296,7 @@ builder_constructors! {
         #[doc = include_str!("_docs/attributes/opacity.md")]
         opacity: String,
 
+        layer: String,
         role: String,
         alt: String,
         focus_id: AccessibilityId,
@@ -322,9 +323,7 @@ builder_constructors! {
     /// }
     /// ```
     paragraph {
-        layer: String,
         #[doc = include_str!("_docs/attributes/width_height.md")]
-         #[doc = include_str!("_docs/attributes/width_height.md")]
         height: String,
         width: String,
         #[doc = include_str!("_docs/attributes/min_width_min_height.md")]
@@ -368,6 +367,7 @@ builder_constructors! {
         #[doc = include_str!("_docs/attributes/opacity.md")]
         opacity: String,
 
+        layer: String,
         cursor_index: String,
         max_lines: String,
         cursor_color: String,
@@ -382,11 +382,11 @@ builder_constructors! {
     };
     /// `text` element is simply a text span used for the `paragraph` element.
     text {
+        #[doc = include_str!("_docs/attributes/color.md")]
         color: String,
         #[doc = include_str!("_docs/attributes/font_size.md")]
         text_shadow: String,
-        layer: String,
-         #[doc = include_str!("_docs/attributes/width_height.md")]
+        #[doc = include_str!("_docs/attributes/width_height.md")]
         height: String,
         width: String,
         #[doc = include_str!("_docs/attributes/font_size.md")]
@@ -431,8 +431,6 @@ builder_constructors! {
     /// }
     /// ```
     image {
-        image_data: String,
-        image_reference: String,
        #[doc = include_str!("_docs/attributes/width_height.md")]
         height: String,
         width: String,
@@ -441,6 +439,8 @@ builder_constructors! {
         #[doc = include_str!("_docs/attributes/opacity.md")]
         opacity: String,
 
+        image_data: String,
+        image_reference: String,
         role: String,
         focus_id: AccessibilityId,
         alt: String,
