@@ -7,6 +7,7 @@ Learn how the style attributes work.
 - [`corner radius & corner smoothing`](#corner_radius--corner_smoothing)
 - [`border`](#border)
 - [`overflow`](#overflow)
+- [`opacity`](#opacity)
 - [`Color syntax`](#color-syntax)
     - [`Static colors`](#static-colors)
     - [`rgb() / hsl(`)](#rgb--hsl)
@@ -120,6 +121,28 @@ fn app(cx: Scope) -> Element {
 ```
 
 Compatible elements: [`rect`](/guides/elements.html#rect)
+
+
+### opacity
+
+> Only available on the `main` branch.
+
+Specify the opacity of an element and all its desdendants.
+
+Example:
+
+```rust, no_run
+fn app(cx: Scope) -> Element {
+    render!(
+        rect {
+            opacity: "0.5", // 50% visible
+            label {
+                "I am fading!"
+            }
+        }
+    )
+}
+```
 
 ### Color syntax
 

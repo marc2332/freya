@@ -50,7 +50,7 @@ pub fn Accordion<'a>(cx: Scope<'a, AccordionProps<'a>>) -> Element<'a> {
     } = theme.accordion;
 
     // Adapt the accordion if the body size changes
-    use_memo(
+    let _ = use_memo(
         cx,
         &(
             size.area.width(),
@@ -77,7 +77,7 @@ pub fn Accordion<'a>(cx: Scope<'a, AccordionProps<'a>>) -> Element<'a> {
         open.set(!*open.get());
     };
 
-    use_on_unmount(cx, {
+    use_on_destroy(cx, {
         to_owned![status, platform];
         move || {
             if *status.current() == AccordionStatus::Hovering {

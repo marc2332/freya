@@ -85,7 +85,7 @@ fn app(cx: Scope) -> Element {
 ### Size Units
 
 #### Auto
-Will use it's inner children as size, so in this case, the `rect` width will be defined bu the width of `label`:
+Will use it's inner children as size, so in this case, the `rect` width will be equivalent to the width of `label`:
 
 ```rust, no_run
 fn app(cx: Scope) -> Element {
