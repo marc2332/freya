@@ -90,57 +90,6 @@ fn Component(cx: Scope) -> Element {
 }
 ```
 
-## Change theme for an individual component
-
-Most built-in components have their own theme "override."
-You can specify which values to override like this:
-
-```rust,no_run
-fn app(cx: Scope) -> Element {
-    render! {
-        Button {
-            theme: ButtonThemeWith {
-                background: Some("blue").into(),
-                font_theme: FontThemeWith {
-                    Some("white").into(),
-                    ..Default::default()
-                },
-                ..Default::default()
-            },
-            label { "I'm blue now" }
-        }
-    }
-}
-```
-
-We need to use a different "type" of theme.
-In the "ThemeWith" structs, each field is optional, so that the component knows what to override and
-what to keep.
-Additionally, we need to also spread `..Default::default`, to make all the other fields `None`.
-
-To make this less verbose, you can use the `theme_with!` macro:
-
-```rust,no_run
-fn app(cx: Scope) -> Element {
-    render! {
-        Button {
-            theme: theme_with!(ButtonTheme {
-                background: "blue".into(),
-                font_theme: theme_with!(FontTheme {
-                    "white".into(),
-                }),
-            }),
-            label { "I'm blue now" }
-        }
-    }
-}
-```
-
->️ ⚠️ The comma after the last field in the `theme_with!` macro is required.
-
-As you can see, it removes the need for the "With" suffix, because that's already in the macro name.
-More importantly, though, it wraps each file in a `Some`, and adds the spread.
-
 ## Custom theme
 
 Themes can be built from scratch or extended from others, like here with `LIGHT_THEME`:
@@ -148,12 +97,9 @@ Themes can be built from scratch or extended from others, like here with `LIGHT_
 ```rust, no_run
 const CUSTOM_THEME: Theme = Theme {
     button: ButtonTheme {
-        background: Cow::Borrowed("rgb(230, 0, 0)"),
-        hover_background: Cow::Borrowed("rgb(150, 0, 0)"),
-        font_theme: FontTheme {
-            color: Cow::Borrowed("white"),
-        },
-        ..LIGHT_THEME.button
+        background: "rgb(230, 0, 0)",
+        hover_background: "rgb(150, 0, 0)",
+        font_theme: FontTheme { color:  "white" }
     },
     ..LIGHT_THEME
 };
