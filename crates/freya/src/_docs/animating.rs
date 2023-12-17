@@ -4,7 +4,7 @@
 //!
 //! ### `use_animation`
 //!
-//! This a very simple hook that will let you animate a certain value from an `inital` value to a `final` value, in a given `duration` of time. There are a few animations that you can choose from:
+//! This a very simple hook that will let you animate a certain value from an `initial` value to a `final` value, in a given `duration` of time. There are a few animations that you can choose from:
 //!
 //! - Linear
 //! - EaseIn
@@ -35,7 +35,7 @@
 //!
 //! ### `use_animation_transition`
 //!
-//! This hook let's you group a set of animations together with a certain type of `animation` and a given `duration`. You can also specifiy a set of dependencies that will make animations callback re run.
+//! This hook let's you group a set of animations together with a certain type of `animation` and a given `duration`. You can also specify a set of dependencies that will make animations callback re run.
 //!
 //! Just like `use_animation` you have these animations:
 //!
