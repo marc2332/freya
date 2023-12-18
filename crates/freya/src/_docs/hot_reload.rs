@@ -7,7 +7,7 @@
 //! Before launching your app, you need to initialize the hot-reload context:
 //!
 //! ```rust, no_run
-//! # use freya::prelude::*;
+//! use freya::prelude::*;
 //! use freya::hotreload::FreyaCtx;
 //!
 //! fn main() {
