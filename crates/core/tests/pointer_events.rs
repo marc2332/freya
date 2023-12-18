@@ -3,7 +3,7 @@ use freya_core::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_testing::{launch_test, MouseButton};
 use torin::prelude::CursorPoint;
-use winit::event::{Force, TouchPhase};
+use winit::event::TouchPhase;
 
 #[tokio::test]
 pub async fn pointer_events_from_mouse() {
