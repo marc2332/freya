@@ -1,13 +1,16 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{MouseEvent, WheelEvent};
-use freya_hooks::{use_get_theme, use_node_ref, use_platform};
+
+use freya_hooks::{use_applied_theme, use_node_ref, use_platform, SliderThemeWith};
 use tracing::info;
 use winit::window::CursorIcon;
 
 /// [`Slider`] component properties.
 #[derive(Props)]
 pub struct SliderProps<'a> {
+    /// Theme override.
+    pub theme: Option<SliderThemeWith>,
     /// Handler for the `onmoved` event.
     pub onmoved: EventHandler<'a, f64>,
     /// Width of the Slider.
@@ -72,8 +75,7 @@ pub enum SliderStatus {
 /// ```
 #[allow(non_snake_case)]
 pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
-    let theme = use_get_theme(cx);
-    let theme = &theme.slider;
+    let theme = use_applied_theme!(cx, &cx.props.theme, slider);
     let status = use_ref(cx, SliderStatus::default);
     let clicking = use_state(cx, || false);
     let platform = use_platform(cx);
@@ -164,7 +166,7 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
                     background: "{theme.thumb_inner_background}",
                     width: "{progress}",
                     height: "100%",
-                    corner_radius: "50",
+                    corner_radius: "50"
                 }
                 rect {
                     width: "{progress}",

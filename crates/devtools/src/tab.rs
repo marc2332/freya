@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 use dioxus_router::prelude::*;
 use freya_components::{ButtonStatus, ScrollView};
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::use_get_theme;
+use freya_hooks::{theme_with, use_get_theme, ScrollViewThemeWith};
 
 use crate::Route;
 
@@ -16,8 +16,9 @@ pub fn TabsBar<'a>(cx: Scope<'a, TabsBarProps<'a>>) -> Element<'a> {
     render!(
         ScrollView {
             direction: "horizontal",
-            height: "35",
-            width: "100%",
+            theme: theme_with!(ScrollViewTheme {
+                height : "35".into(),
+            }),
             &cx.props.children
         }
     )
