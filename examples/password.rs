@@ -25,7 +25,7 @@ fn app(cx: Scope) -> Element {
             rect {
                 direction: "horizontal",
                 Input {
-                    hidden: if !is_hidden {
+                    mode: if !is_hidden {
                         InputMode::Shown
                     } else {
                         InputMode::new_password()
