@@ -5,19 +5,25 @@ use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::keyboard::Key;
 use freya_elements::events::{KeyboardEvent, MouseEvent};
-use freya_hooks::{use_focus, use_get_theme, use_platform};
+
+use freya_hooks::{
+    theme_with, use_applied_theme, use_focus, use_platform, ArrowIconThemeWith,
+    DropdownItemThemeWith, DropdownTheme, DropdownThemeWith,
+};
 use winit::window::CursorIcon;
 
 /// [`DropdownItem`] component properties.
 #[derive(Props)]
 pub struct DropdownItemProps<'a, T: 'static> {
+    /// Theme override.
+    pub theme: Option<DropdownItemThemeWith>,
     /// Selectable items, like [`DropdownItem`]
-    children: Element<'a>,
+    pub children: Element<'a>,
     /// Selected value.
-    value: T,
+    pub value: T,
     /// Handler for the `onclick` event.
     #[props(optional)]
-    onclick: Option<EventHandler<'a, ()>>,
+    pub onclick: Option<EventHandler<'a, ()>>,
 }
 
 /// Current status of the DropdownItem.
@@ -43,7 +49,7 @@ where
     T: PartialEq + 'static,
 {
     let selected = use_shared_state::<T>(cx).unwrap();
-    let theme = use_get_theme(cx);
+    let theme = use_applied_theme!(cx, &cx.props.theme, dropdown_item);
     let focus = use_focus(cx);
     let status = use_state(cx, DropdownItemStatus::default);
     let platform = use_platform(cx);
@@ -53,14 +59,14 @@ where
     let is_selected = *selected.read() == cx.props.value;
 
     let background = match *status.get() {
-        _ if is_selected => theme.dropdown_item.select_background,
-        _ if is_focused => theme.dropdown_item.hover_background,
-        DropdownItemStatus::Hovering => theme.dropdown_item.hover_background,
-        DropdownItemStatus::Idle => theme.dropdown_item.background,
+        _ if is_selected => theme.select_background,
+        _ if is_focused => theme.hover_background,
+        DropdownItemStatus::Hovering => theme.hover_background,
+        DropdownItemStatus::Idle => theme.background,
     };
-    let color = theme.dropdown_item.font_theme.color;
+    let color = theme.font_theme.color;
 
-    use_on_unmount(cx, {
+    use_on_destroy(cx, {
         to_owned![status, platform];
         move || {
             if *status.current() == DropdownItemStatus::Hovering {
@@ -96,30 +102,34 @@ where
         }
     };
 
-    render!(rect {
-        color: "{color}",
-        focus_id: focus_id,
-        role: "button",
-        background: "{background}",
-        padding: "6 22 6 16",
-        corner_radius: "6",
-        main_align: "center",
-        cross_align: "center",
-        onmouseenter: onmouseenter,
-        onmouseleave: onmouseleave,
-        onclick: onclick,
-        onkeydown: onkeydown,
-        &cx.props.children
-    })
+    render!(
+        rect {
+            color: "{color}",
+            focus_id: focus_id,
+            role: "button",
+            background: "{background}",
+            padding: "6 22 6 16",
+            corner_radius: "6",
+            main_align: "center",
+            cross_align: "center",
+            onmouseenter: onmouseenter,
+            onmouseleave: onmouseleave,
+            onclick: onclick,
+            onkeydown: onkeydown,
+            &cx.props.children
+        }
+    )
 }
 
 /// [`Dropdown`] component properties.
 #[derive(Props)]
 pub struct DropdownProps<'a, T: 'static> {
+    /// Theme override.
+    pub theme: Option<DropdownThemeWith>,
     /// Selectable items, like [`DropdownItem`]
-    children: Element<'a>,
+    pub children: Element<'a>,
     /// Selected value.
-    value: T,
+    pub value: T,
 }
 
 /// Current status of the Dropdown.
@@ -170,7 +180,7 @@ where
 {
     use_shared_state_provider(cx, || cx.props.value.clone());
     let selected = use_shared_state::<T>(cx).unwrap();
-    let theme = use_get_theme(cx);
+    let theme = use_applied_theme!(cx, &cx.props.theme, dropdown);
     let focus = use_focus(cx);
     let status = use_state(cx, DropdownStatus::default);
     let opened = use_state(cx, || false);
@@ -181,11 +191,11 @@ where
     let focus_id = focus.attribute(cx);
 
     // Update the provided value if the passed value changes
-    use_memo(cx, &cx.props.value, move |value| {
+    let _ = use_memo(cx, &cx.props.value, move |value| {
         *selected.write() = value;
     });
 
-    use_on_unmount(cx, {
+    use_on_destroy(cx, {
         to_owned![status, platform];
         move || {
             if *status.current() == DropdownStatus::Hovering {
@@ -231,14 +241,19 @@ where
         status.set(DropdownStatus::default());
     };
 
-    let desplegable_background = theme.dropdown.desplegable_background;
+    let DropdownTheme {
+        font_theme,
+        dropdown_background,
+        background_button,
+        hover_background,
+        border_fill,
+        arrow_fill,
+    } = &theme;
+
     let button_background = match *status.get() {
-        DropdownStatus::Hovering => theme.dropdown.hover_background,
-        DropdownStatus::Idle => theme.dropdown.background_button,
+        DropdownStatus::Hovering => hover_background,
+        DropdownStatus::Idle => background_button,
     };
-    let border_fill = theme.dropdown.border_fill;
-    let color = theme.dropdown.font_theme.color;
-    let arrow_fill = theme.dropdown.arrow_fill;
 
     let selected = selected.read().to_string();
 
@@ -251,7 +266,7 @@ where
             margin: "4",
             focus_id: focus_id,
             background: "{button_background}",
-            color: "{color}",
+            color: "{font_theme.color}",
             corner_radius: "8",
             padding: "8 16",
             border: "1 solid {border_fill}",
@@ -266,7 +281,9 @@ where
             ArrowIcon {
                 rotate: "0",
                 fill: "{arrow_fill}",
-                margin: "0 0 0 8",
+                theme: theme_with!(ArrowIconTheme {
+                    margin : "0 0 0 8".into(),
+                })
             }
         }
         if *opened.get() {
@@ -281,7 +298,7 @@ where
                         border: "1 solid {border_fill}",
                         overflow: "clip",
                         corner_radius: "8",
-                        background: "{desplegable_background}",
+                        background: "{dropdown_background}",
                         shadow: "0 4 5 0 rgb(0, 0, 0, 0.3)",
                         padding: "6",
                         &cx.props.children

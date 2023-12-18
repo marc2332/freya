@@ -1,7 +1,11 @@
+#![allow(clippy::type_complexity)]
+
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{keyboard::Key, KeyboardEvent, MouseEvent, WheelEvent};
-use freya_hooks::{use_focus, use_node};
+use freya_hooks::{
+    theme_with, use_applied_theme, use_focus, use_node, ScrollBarThemeWith, ScrollViewThemeWith,
+};
 use std::ops::Range;
 
 use crate::{
@@ -22,27 +26,21 @@ type BuilderFunction<'a, T> = dyn Fn(
 /// [`VirtualScrollView`] component properties.
 #[derive(Props)]
 pub struct VirtualScrollViewProps<'a, T: 'a> {
+    /// Theme override.
+    #[props(optional)]
+    pub theme: Option<ScrollViewThemeWith>,
     /// Quantity of items in the VirtualScrollView.
-    length: usize,
+    pub length: usize,
     /// Size of the items, height for vertical direction and width for horizontal.
-    item_size: f32,
+    pub item_size: f32,
     /// The item builder function.
-    builder: Box<BuilderFunction<'a, T>>,
+    pub builder: Box<BuilderFunction<'a, T>>,
     /// Custom values to pass to the builder function.
     #[props(optional)]
     pub builder_values: Option<T>,
     /// Direction of the VirtualScrollView, `vertical` or `horizontal`.
     #[props(default = "vertical".to_string(), into)]
     pub direction: String,
-    /// Height of the VirtualScrollView.
-    #[props(default = "100%".to_string(), into)]
-    pub height: String,
-    /// Width of the VirtualScrollView.
-    #[props(default = "100%".to_string(), into)]
-    pub width: String,
-    /// Padding of the VirtualScrollView.
-    #[props(default = "0".to_string(), into)]
-    pub padding: String,
     /// Show the scrollbar, visible by default.
     #[props(default = true, into)]
     pub show_scrollbar: bool,
@@ -82,8 +80,6 @@ fn get_render_range(
 /// fn app(cx: Scope) -> Element {
 ///     render!(
 ///         VirtualScrollView {
-///             width: "100%",
-///             height: "100%",
 ///             show_scrollbar: true,
 ///             length: 5,
 ///             item_size: 80.0,
@@ -111,10 +107,11 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
     let scrolled_x = use_ref(cx, || 0);
     let (node_ref, size) = use_node(cx);
     let focus = use_focus(cx);
+    let theme = use_applied_theme!(cx, &cx.props.theme, scroll_view);
 
-    let padding = &cx.props.padding;
-    let user_container_width = &cx.props.width;
-    let user_container_height = &cx.props.height;
+    let padding = &theme.padding;
+    let user_container_width = &theme.width;
+    let user_container_height = &theme.height;
     let user_direction = &cx.props.direction;
     let show_scrollbar = cx.props.show_scrollbar;
     let items_length = cx.props.length;
@@ -325,7 +322,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
             direction: "horizontal",
             width: "{user_container_width}",
             height: "{user_container_height}",
-            onglobalclick: onclick, // TODO(marc2332): mouseup would be better
+            onglobalclick: onclick,
             onglobalmouseover: onmouseover,
             onkeydown: onkeydown,
             onkeyup: onkeyup,
@@ -346,26 +343,30 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
                 ScrollBar {
                     width: "100%",
                     height: "{horizontal_scrollbar_size}",
-                    offset_x: "{scrollbar_x}",
+                    theme: theme_with!(ScrollBarTheme {
+                        offset_x: scrollbar_x.to_string().into(),
+                    }),
                     clicking_scrollbar: is_scrolling_x,
                     ScrollThumb {
                         clicking_scrollbar: is_scrolling_x,
                         onmousedown: onmousedown_x,
                         width: "{scrollbar_width}",
-                        height: "100%",
-                    },
+                        height: "100%"
+                    }
                 }
             }
             ScrollBar {
                 width: "{vertical_scrollbar_size}",
                 height: "100%",
-                offset_y: "{scrollbar_y}",
+                theme: theme_with!(ScrollBarTheme {
+                    offset_y: scrollbar_y.to_string().into(),
+                }),
                 clicking_scrollbar: is_scrolling_y,
                 ScrollThumb {
                     clicking_scrollbar: is_scrolling_y,
                     onmousedown: onmousedown_y,
                     width: "100%",
-                    height: "{scrollbar_height}",
+                    height: "{scrollbar_height}"
                 }
             }
         }

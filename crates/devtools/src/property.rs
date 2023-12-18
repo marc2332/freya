@@ -4,7 +4,7 @@ use freya_engine::prelude::*;
 use freya_node_state::{Border, Fill, Shadow};
 
 #[allow(non_snake_case)]
-#[inline_props]
+#[component]
 pub fn Property<'a>(cx: Scope<'a>, name: &'a str, value: String) -> Element<'a> {
     render!(
         rect {
@@ -36,7 +36,7 @@ pub fn Property<'a>(cx: Scope<'a>, name: &'a str, value: String) -> Element<'a> 
 }
 
 #[allow(non_snake_case)]
-#[inline_props]
+#[component]
 pub fn LinearGradientProperty<'a>(cx: Scope<'a>, name: &'a str, fill: Fill) -> Element<'a> {
     render!(
         rect {
@@ -64,7 +64,7 @@ pub fn LinearGradientProperty<'a>(cx: Scope<'a>, name: &'a str, fill: Fill) -> E
 }
 
 #[allow(non_snake_case)]
-#[inline_props]
+#[component]
 pub fn ColorProperty<'a>(cx: Scope<'a>, name: &'a str, fill: Fill) -> Element<'a> {
     render!(
         rect {
@@ -112,7 +112,7 @@ pub fn ColorProperty<'a>(cx: Scope<'a>, name: &'a str, fill: Fill) -> Element<'a
 }
 
 #[allow(non_snake_case)]
-#[inline_props]
+#[component]
 pub fn ShadowProperty<'a>(cx: Scope<'a>, name: &'a str, shadow: Shadow) -> Element<'a> {
     render!(
         rect {
@@ -168,7 +168,7 @@ pub fn ShadowProperty<'a>(cx: Scope<'a>, name: &'a str, shadow: Shadow) -> Eleme
 }
 
 #[allow(non_snake_case)]
-#[inline_props]
+#[component]
 pub fn BorderProperty<'a>(cx: Scope<'a>, name: &'a str, border: Border) -> Element<'a> {
     render!(
         rect {
@@ -223,7 +223,7 @@ pub fn BorderProperty<'a>(cx: Scope<'a>, name: &'a str, border: Border) -> Eleme
 }
 
 #[allow(non_snake_case)]
-#[inline_props]
+#[component]
 pub fn TextShadowProperty<'a>(
     cx: Scope<'a>,
     name: &'a str,

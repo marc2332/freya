@@ -1,5 +1,6 @@
 use std::{io::Cursor, sync::Arc};
 
+use freya_core::plugins::{FreyaPlugin, PluginsManager};
 use freya_engine::prelude::Color;
 use freya_node_state::Parse;
 use image::io::Reader;
@@ -53,6 +54,7 @@ impl<T: Clone> Default for WindowConfig<T> {
 pub struct LaunchConfig<'a, T: Clone> {
     pub window: WindowConfig<T>,
     pub fonts: FontsConfig<'a>,
+    pub plugins: PluginsManager,
 }
 
 impl<'a, T: Clone> LaunchConfig<'a, T> {
@@ -95,6 +97,7 @@ pub struct LaunchConfigBuilder<'a, T> {
     pub(crate) icon: Option<Icon>,
     pub(crate) on_setup: Option<WindowCallback>,
     pub(crate) on_exit: Option<WindowCallback>,
+    pub(crate) plugins: PluginsManager,
     pub(crate) window_builder_hook: Option<WindowBuilderHook>,
 }
 
@@ -116,6 +119,7 @@ impl<T> Default for LaunchConfigBuilder<'_, T> {
             icon: None,
             on_setup: None,
             on_exit: None,
+            plugins: PluginsManager::default(),
             window_builder_hook: None,
         }
     }
@@ -212,6 +216,12 @@ impl<'a, T: Clone> LaunchConfigBuilder<'a, T> {
         self
     }
 
+    /// Add a new plugin.
+    pub fn with_plugin(mut self, plugin: impl FreyaPlugin + 'static) -> Self {
+        self.plugins.add_plugin(plugin);
+        self
+    }
+
     /// Register a Window Builder hook.
     pub fn with_window_builder(
         mut self,
@@ -242,6 +252,7 @@ impl<'a, T: Clone> LaunchConfigBuilder<'a, T> {
                 window_builder_hook: self.window_builder_hook,
             },
             fonts: self.fonts,
+            plugins: self.plugins,
         }
     }
 }

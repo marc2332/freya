@@ -2,11 +2,12 @@ use dioxus::prelude::*;
 use dioxus_native_core::NodeId;
 use freya_components::*;
 use freya_elements::elements as dioxus_elements;
+use freya_hooks::{theme_with, ScrollViewThemeWith};
 
 use crate::{hooks::use_selected_node, NodeInspectorBar};
 
 #[allow(non_snake_case)]
-#[inline_props]
+#[component]
 pub fn NodeInspectorLayout(cx: Scope, node_id: NodeId) -> Element {
     let node = use_selected_node(cx, &cx.props.node_id);
 
@@ -29,8 +30,9 @@ pub fn NodeInspectorLayout(cx: Scope, node_id: NodeId) -> Element {
                 }
                 ScrollView {
                     show_scrollbar: true,
-                    height: "calc(100% - 35)",
-                    width: "100%",
+                    theme: theme_with!(ScrollViewTheme {
+                        height : "calc(100% - 35)".into(),
+                    }),
                     rect {
                         width: "100%",
                         height: "200",
