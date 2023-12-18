@@ -1,5 +1,6 @@
+use std::borrow::Cow;
 use dioxus::hooks::use_state;
-use dioxus::prelude::{Element, EventHandler, Props, render, Scope, rsx, fc_to_builder};
+use dioxus::prelude::*;
 use dioxus_router::prelude::{IntoRoutable, use_navigator};
 use winit::event::MouseButton;
 use freya_elements::events::MouseEvent;
@@ -119,7 +120,7 @@ pub fn Link<'a>(cx: Scope<'a, LinkProps<'a>>) -> Element<'a> {
     let color = if *is_hovering.get() {
         theme.link.highlight_color
     } else {
-        "inherit"
+        Cow::Borrowed("inherit")
     };
 
     let tooltip = match tooltip {
@@ -135,7 +136,7 @@ pub fn Link<'a>(cx: Scope<'a, LinkProps<'a>>) -> Element<'a> {
     };
 
     render! {
-        rect { onmouseover: onmouseover, onmouseleave: onmouseleave, onclick: onclick, color: color, children }
+        rect { onmouseover: onmouseover, onmouseleave: onmouseleave, onclick: onclick, color: "{color}", children }
 
         rect {
             height: "0",
