@@ -80,7 +80,7 @@
 //!     )
 //! }
 //! ```
-//! 
+//!
 //! #### Viewport percentage
 //! Relative percentage to the viewport (Window) equivalent value.
 //!
