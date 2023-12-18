@@ -8,6 +8,8 @@
 //! You can access the whole current theme via the `use_get_theme` hook.
 //!
 //! ```rust, no_run
+//! # use freya::prelude::*;
+//!
 //! fn app(cx: Scope) -> Element {
 //!     render!(
 //!         ThemeProvider {
@@ -34,6 +36,8 @@
 //! By default, the selected theme is `LIGHT_THEME`. You can use the alternative, `DARK_THEME`.
 //!
 //! ```rust, no_run
+//! # use freya::prelude::*;
+//!
 //! fn app(cx: Scope) -> Element {
 //!     render!(
 //!         ThemeProvider {
@@ -61,6 +65,8 @@
 //! Changing the selected theme at runtime is possible by using the `use_theme` hook.
 //!
 //! ```rust, no_run
+//! # use freya::prelude::*;
+//!
 //! fn app(cx: Scope) -> Element {
 //!     render!(
 //!         ThemeProvider {
@@ -94,15 +100,17 @@
 //! You can specify which values to override like this:
 //!
 //! ```rust,no_run
+//! # use freya::prelude::*;
+//!
 //! fn app(cx: Scope) -> Element {
 //!     render! {
 //!         Button {
 //!             theme: ButtonThemeWith {
-//!                 background: Some("blue").into(),
-//!                 font_theme: FontThemeWith {
-//!                     Some("white").into(),
+//!                 background: Some("blue".into()),
+//!                 font_theme: Some(FontThemeWith {
+//!                     color: Some("white".into()),
 //!                     ..Default::default()
-//!                 },
+//!                 }),
 //!                 ..Default::default()
 //!             },
 //!             label { "I'm blue now" }
@@ -119,13 +127,15 @@
 //! To make this less verbose, you can use the `theme_with!` macro:
 //!
 //! ```rust,no_run
+//! # use freya::prelude::*;
+//!
 //! fn app(cx: Scope) -> Element {
 //!     render! {
 //!         Button {
 //!             theme: theme_with!(ButtonTheme {
 //!                 background: "blue".into(),
 //!                 font_theme: theme_with!(FontTheme {
-//!                     "white".into(),
+//!                     color: "white".into(),
 //!                 }),
 //!             }),
 //!             label { "I'm blue now" }
@@ -144,6 +154,7 @@
 //! Themes can be built from scratch or extended from others, like here with `LIGHT_THEME`:
 //!
 //! ```rust, no_run
+//! # use freya::prelude::*;
 //!
 //! const CUSTOM_THEME: Theme = Theme {
 //!     button: ButtonTheme {
