@@ -60,9 +60,6 @@ pub const DARK_THEME: Theme = Theme {
         color: cow_borrowed!("rgb(240,240,240)"),
         border_fill: cow_borrowed!("rgb(80, 80, 80)"),
     },
-    external_link: ExternalLinkTheme {
-        highlight_color: cow_borrowed!("rgb(43,106,208)"),
-    },
     dropdown: DropdownTheme {
         dropdown_background: cow_borrowed!("rgb(25, 25, 25)"),
         background_button: cow_borrowed!("rgb(35, 35, 35)"),
@@ -89,6 +86,9 @@ pub const DARK_THEME: Theme = Theme {
     loader: LoaderTheme {
         primary_color: cow_borrowed!("rgb(150, 150, 150)"),
         secondary_color: cow_borrowed!("rgb(255, 255, 255)"),
+    },
+    link: LinkTheme {
+        highlight_color: cow_borrowed!("rgb(43,106,208)"),
     },
     progress_bar: ProgressBarTheme {
         color: cow_borrowed!("white"),
