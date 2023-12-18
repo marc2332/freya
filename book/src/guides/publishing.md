@@ -43,6 +43,37 @@ One very important configuration field is `formats`.
 This is a list of installers that `cargo-packager` should generate, and by default, it's your current OS.
 You can have a look at the list on [GitHub](https://github.com/crabnebula-dev/cargo-packager#supported-packages), or on the [API docs](https://docs.rs/cargo-packager/latest/cargo_packager/config/enum.PackageFormat.html).
 
+### Changing the executable icon on Windows
+
+`cargo-packager` will change the icon for platforms other than Windows using the [`icons`](https://docs.rs/cargo-packager/latest/cargo_packager/config/struct.Config.html#structfield.icons)
+field, but it does not do it on Windows (yet?).
+
+Anyway, the `cargo-packager` team recommends using [`winresource`](https://crates.io/crates/winresource)
+(as opposed to [`winres`](https://crates.io/crates/winres) which is not maintained).
+Before using it, make sure that you have the requirements that are listed on its page.
+
+Add it to your build dependencies in `Cargo.toml`:
+
+```toml
+[build-dependencies]
+winresource = "0.1.7"
+```
+
+And add this to your `build.rs` file (make sure you link it in your `Cargo.toml`):
+
+```rs
+// Change this to your icon's location
+const ICON: &str = "assets/icons/icon.ico";
+
+fn main() {
+    if std::env::var("CARGO_CFG_TARGET_OS").unwrap() == "windows" {
+        let mut res = winresource::WindowsResource::new();
+        res.set_icon(ICON);
+        res.compile().unwrap();
+    }
+}
+```
+
 # Optimizing
 
 The ["Optimizing" chapter](https://dioxuslabs.com/learn/0.4/cookbook/optimizing) in the Dioxus docs applies in Freya too.
