@@ -3,6 +3,8 @@ use freya_elements::elements as dioxus_elements;
 use std::cmp::Ordering;
 use std::fmt::Display;
 use std::cell::RefCell;
+use freya_hooks::theme_with;
+use freya_hooks::ScrollViewThemeWith;
 use crate::*;
 
 type Sorter<T> = Box<dyn Fn(&T, &T) -> Ordering>;
@@ -141,7 +143,9 @@ pub fn SortableTable<T, TTitle>(
                     SortableTableType::Scrollable => rsx! {ScrollView { rows_rsx } },
                     SortableTableType::ScrollableVirtualized => rsx! {
                         VirtualScrollView {
-                            height: "fill",
+                            theme: theme_with!(ScrollViewTheme {
+                                height: "fill".into(),
+                            }),
                             length: table_ref.rows.len(),
                             item_size: 25.0,
                             builder_values: table,
