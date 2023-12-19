@@ -39,7 +39,7 @@ To publish your app on a different OS, see the next section, [Configuration](#co
 We used a very bare-bones example, so make sure to check out all configuration options in the [Config struct](https://docs.rs/cargo-packager/latest/cargo_packager/config/struct.Config.html)
 in the `cargo-packager` API docs. Note that underscores should be hyphens when you use TOML.
 
-One very important configuration field is `formats`.
+One crucial configuration field is `formats`.
 This is a list of installers that `cargo-packager` should generate, and by default, it's your current OS.
 You can have a look at the list on [GitHub](https://github.com/crabnebula-dev/cargo-packager#supported-packages), or on the [API docs](https://docs.rs/cargo-packager/latest/cargo_packager/config/enum.PackageFormat.html).
 
