@@ -17,7 +17,7 @@
 //! - [`Animating`](self::_docs::animating)
 //! - [`Devtools`](self::_docs::devtools)
 //!
-//! ```no_run
+//! ```rust,no_run
 //! use freya::prelude::*;
 //!
 //! fn main(){
@@ -39,7 +39,6 @@
 //!        }
 //!    )
 //! }
-//!
 //! ```
 //!
 //! ## Features flags
