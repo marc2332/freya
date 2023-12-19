@@ -21,5 +21,4 @@
 - [Animating](./guides/animating.md)
 - [Virtualizing](./guides/virtualizing.md)
 - [Devtools](./guides/devtools.md)
-- [Publishing]()
-
+- [Publishing](./guides/publishing.md)
