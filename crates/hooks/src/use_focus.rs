@@ -3,24 +3,24 @@ use std::num::NonZeroU128;
 use accesskit::NodeId as AccessibilityId;
 use dioxus_core::{AttributeValue, Scope, ScopeState};
 use dioxus_hooks::{use_shared_state, use_shared_state_provider, UseSharedState};
+use freya_core::navigation_mode::{NavigationMode, NavigatorState};
 use freya_node_state::CustomAttributeValues;
 use uuid::Uuid;
 
 pub type FocusId = AccessibilityId;
 
 /// Manage the focus operations of given Node
-#[derive(Clone, Copy)]
-pub struct UseFocus<'a> {
+#[derive(Clone)]
+pub struct UseFocus {
     id: AccessibilityId,
-    focused_id: Option<&'a UseSharedState<Option<AccessibilityId>>>,
+    focused_id: UseSharedState<Option<AccessibilityId>>,
+    navigation_state: NavigatorState,
 }
 
-impl UseFocus<'_> {
+impl UseFocus {
     /// Focus this node
     pub fn focus(&self) {
-        if let Some(focused_id) = self.focused_id {
-            *focused_id.write() = Some(self.id)
-        }
+        *self.focused_id.write() = Some(self.id)
     }
 
     /// Get the node focus ID
@@ -35,22 +35,36 @@ impl UseFocus<'_> {
 
     /// Check if this node is currently focused
     pub fn is_focused(&self) -> bool {
-        Some(Some(self.id)) == self.focused_id.map(|f| *f.read())
+        Some(self.id) == *self.focused_id.read()
+    }
+
+    /// Check if this node is currently focused
+    pub fn does_appear_focused(&self) -> bool {
+        self.is_focused() && self.navigation_state.get() == NavigationMode::Keyboard
     }
 
     /// Unfocus the currently focused node.
     pub fn unfocus(&self) {
-        if let Some(focused_id) = self.focused_id {
-            *focused_id.write() = None;
-        }
+        *self.focused_id.write() = None;
     }
 }
 
 /// Create a focus manager for a node.
-pub fn use_focus(cx: &ScopeState) -> UseFocus {
-    let id = *cx.use_hook(|| AccessibilityId(NonZeroU128::new(Uuid::new_v4().as_u128()).unwrap()));
+pub fn use_focus(cx: &ScopeState) -> &UseFocus {
     let focused_id = use_shared_state::<Option<FocusId>>(cx);
-    UseFocus { id, focused_id }
+
+    cx.use_hook(move || {
+        let focused_id = focused_id.unwrap().clone();
+        let id = AccessibilityId(NonZeroU128::new(Uuid::new_v4().as_u128()).unwrap());
+        let navigation_state = cx
+            .consume_context::<NavigatorState>()
+            .expect("This is not expected, and likely a bug. Please, report it.");
+        UseFocus {
+            id,
+            focused_id,
+            navigation_state,
+        }
+    })
 }
 
 /// Create a focus provider.

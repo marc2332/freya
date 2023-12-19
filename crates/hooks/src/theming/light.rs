@@ -20,6 +20,7 @@ pub const LIGHT_THEME: Theme = Theme {
             color: cow_borrowed!("rgb(10, 10, 10)"),
         },
         border_fill: cow_borrowed!("rgb(210, 210, 210)"),
+        focus_border_fill: cow_borrowed!("rgb(180, 180, 180)"),
         padding: cow_borrowed!("8 16"),
         margin: cow_borrowed!("4"),
         corner_radius: cow_borrowed!("8"),

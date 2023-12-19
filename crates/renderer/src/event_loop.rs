@@ -90,6 +90,8 @@ pub fn run_event_loop<State: Clone>(
                 match event {
                     WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
                     WindowEvent::MouseInput { state, button, .. } => {
+                        app.set_navigation_mode(NavigationMode::NotKeyboard);
+
                         let event_name = match state {
                             ElementState::Pressed => "mousedown",
                             ElementState::Released => "click",
@@ -151,6 +153,7 @@ pub fn run_event_loop<State: Clone>(
                     } => {
                         if state == ElementState::Pressed && virtual_keycode == VirtualKeyCode::Tab
                         {
+                            app.set_navigation_mode(NavigationMode::Keyboard);
                             let direction = if modifiers_state.shift() {
                                 AccessibilityFocusDirection::Backward
                             } else {

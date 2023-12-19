@@ -20,6 +20,7 @@ pub const DARK_THEME: Theme = Theme {
             color: cow_borrowed!("white"),
         },
         border_fill: cow_borrowed!("rgb(80, 80, 80)"),
+        focus_border_fill: cow_borrowed!("rgb(110, 110, 110)"),
         padding: LIGHT_THEME.button.padding,
         margin: LIGHT_THEME.button.margin,
         corner_radius: LIGHT_THEME.button.corner_radius,

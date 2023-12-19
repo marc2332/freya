@@ -248,6 +248,7 @@ define_theme! {
         background: str,
         hover_background: str,
         border_fill: str,
+        focus_border_fill: str,
         margin: str,
         corner_radius: str,
         width: str,

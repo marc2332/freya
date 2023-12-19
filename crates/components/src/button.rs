@@ -63,6 +63,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
         background,
         hover_background,
         border_fill,
+        focus_border_fill,
         padding,
         margin,
         corner_radius,
@@ -104,6 +105,11 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
         ButtonStatus::Hovering => hover_background,
         ButtonStatus::Idle => background,
     };
+    let border = if focus.does_appear_focused() {
+        format!("2 solid {focus_border_fill}")
+    } else {
+        format!("1 solid {border_fill}")
+    };
 
     render!(
         rect {
@@ -120,7 +126,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
             role: "button",
             color: "{font_theme.color}",
             shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)",
-            border: "1 solid {border_fill}",
+            border: "{border}",
             corner_radius: "{corner_radius}",
             background: "{background}",
             text_align: "center",
