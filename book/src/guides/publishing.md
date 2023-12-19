@@ -1,9 +1,9 @@
 # Publishing
 
-**Freya** produces a self-contained executable in `target/release`, so you can technically just distribute that.
+**Freya** produces a self-contained executable in `target/release`, so you can technically distribute that.
 However, you might want to create an installer instead. You can use executable packagers of your choice, but
 for a more automated and "Rusty" version, you can use [**cargo-packager**](https://github.com/crabnebula-dev/cargo-packager), which is basically an abstraction
-over executable packagers which you would have to setup yourself.
+over executable packagers which you would have to set up yourself.
 
 There is an [example](https://github.com/marc2332/freya/tree/main/examples/installer) you can check out.
 
