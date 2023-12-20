@@ -2,12 +2,16 @@ use std::time::Duration;
 
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::{use_get_theme, LoaderTheme};
+
+use freya_hooks::{use_applied_theme, LoaderTheme, LoaderThemeWith};
 use tokio::time::interval;
 
-/// [`Loader`] component properties. Currently empty.
+/// [`Loader`] component properties.
 #[derive(Props, PartialEq)]
-pub struct LoaderProps {}
+pub struct LoaderProps {
+    /// Theme override.
+    pub theme: Option<LoaderThemeWith>,
+}
 
 /// `Loader` component.
 ///
@@ -19,13 +23,13 @@ pub struct LoaderProps {}
 ///
 #[allow(non_snake_case)]
 pub fn Loader(cx: Scope<LoaderProps>) -> Element {
-    let theme = use_get_theme(cx);
+    let theme = use_applied_theme!(cx, &cx.props.theme, loader);
     let degrees = use_state(cx, || 0);
 
     let LoaderTheme {
         primary_color,
         secondary_color,
-    } = theme.loader;
+    } = theme;
 
     use_effect(cx, (), move |_| {
         to_owned![degrees];
