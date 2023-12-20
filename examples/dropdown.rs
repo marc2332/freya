@@ -10,8 +10,14 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    let values = cx.use_hook(|| vec!["A".to_string(), "B".to_string(), "C".to_string()]);
-    let selected_dropdown = use_state(cx, || "A".to_string());
+    let values = cx.use_hook(|| {
+        vec![
+            "Value A".to_string(),
+            "Value B".to_string(),
+            "Value C".to_string(),
+        ]
+    });
+    let selected_dropdown = use_state(cx, || "Value A".to_string());
 
     render!(
         Dropdown {

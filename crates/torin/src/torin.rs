@@ -12,6 +12,10 @@ use crate::{
     prelude::Gaps,
 };
 
+pub struct LayoutMetadata {
+    pub root_area: Area,
+}
+
 /// Contains the best Root node candidate from where to start measuring
 #[derive(PartialEq, Debug, Clone)]
 pub enum RootNodeCandidate<Key: NodeKey> {
@@ -105,6 +109,10 @@ impl<Key: NodeKey> Torin<Key> {
             dirty: FxHashSet::default(),
             root_node_candidate: RootNodeCandidate::None,
         }
+    }
+
+    pub fn size(&self) -> usize {
+        self.results.len()
     }
 
     /// Reset the layout
@@ -254,7 +262,7 @@ impl<Key: NodeKey> Torin<Key> {
     pub fn measure(
         &mut self,
         suggested_root_id: Key,
-        suggested_root_area: Area,
+        root_area: Area,
         measurer: &mut Option<impl LayoutMeasurer<Key>>,
         dom_adapter: &mut impl DOMAdapter<Key>,
     ) {
@@ -275,8 +283,8 @@ impl<Key: NodeKey> Torin<Key> {
         let areas = root_parent
             .and_then(|root_parent| self.get(root_parent).cloned())
             .unwrap_or(NodeAreas {
-                area: suggested_root_area,
-                inner_area: suggested_root_area,
+                area: root_area,
+                inner_area: root_area,
                 inner_sizes: Size2D::default(),
                 margin: Gaps::default(),
             });
@@ -290,6 +298,8 @@ impl<Key: NodeKey> Torin<Key> {
             root_height
         );
 
+        let metadata = LayoutMetadata { root_area };
+
         let (root_revalidated, root_areas) = measure_node(
             root_id,
             &root,
@@ -299,6 +309,7 @@ impl<Key: NodeKey> Torin<Key> {
             measurer,
             true,
             dom_adapter,
+            &metadata,
         );
 
         // Cache the root Node results if it was modified

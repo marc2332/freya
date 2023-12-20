@@ -358,7 +358,7 @@ pub fn from_winit_to_code(key: &VirtualKeyCode) -> Code {
 }
 
 /// Data of a Keyboard event.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct KeyboardData {
     pub key: Key,
     pub code: Code,

@@ -54,9 +54,17 @@ pub fn run_app<T: 'static + Clone>(
         });
     }
 
-    let window_env = WindowEnv::from_config(config.window.clone(), &event_loop);
+    let window_env = WindowEnv::from_config(config.window, &event_loop);
 
-    let mut app = App::new(rdom, vdom, &proxy, mutations_notifier, window_env, config);
+    let mut app = App::new(
+        rdom,
+        vdom,
+        &proxy,
+        mutations_notifier,
+        window_env,
+        config.fonts,
+        config.plugins,
+    );
 
     app.init_vdom();
     app.process_layout();

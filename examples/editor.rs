@@ -147,8 +147,6 @@ fn Body(cx: Scope) -> Element {
                     height: "100%",
                     padding: "15",
                     ScrollView {
-                        width: "100%",
-                        height: "100%",
                         scroll_with_arrows: false,
                         editor.lines().map(move |l| {
 
@@ -245,10 +243,8 @@ fn Body(cx: Scope) -> Element {
                     width: "50%",
                     height: "100%",
                     padding: "15",
-                    shadow: "0 0 30 0 rgb(0, 0, 0, 150)",
+                    shadow: "0 0 30 0 rgb(0, 0, 0, 0.6)",
                     ScrollView {
-                        width: "100%",
-                        height: "100%",
                         show_scrollbar: true,
                         paragraph {
                             width: "100%",

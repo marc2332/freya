@@ -1,5 +1,5 @@
 /// Data of a Wheel event.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct WheelData {
     #[allow(dead_code)]
     delta_x: f64,
