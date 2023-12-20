@@ -42,6 +42,8 @@ pub const DARK_THEME: Theme = Theme {
         thumb_background: cow_borrowed!("rgb(200, 200, 200)"),
         enabled_background: cow_borrowed!("rgb(255, 95, 0)"),
         enabled_thumb_background: cow_borrowed!("rgb(234, 221, 255)"),
+        focus_border_fill: cow_borrowed!("rgb(110, 110, 110)"),
+        enabled_focus_border_fill: cow_borrowed!("rgb(170, 170, 170)"),
     },
     scroll_bar: ScrollBarTheme {
         background: cow_borrowed!("rgb(35, 35, 35)"),

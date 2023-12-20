@@ -15,7 +15,7 @@ fn app(cx: Scope) -> Element {
 
     let set_to_max = {
         to_owned![progress_anim];
-        move |_: MouseEvent| {
+        move |_| {
             progress_anim.start(Animation::new_linear(progress_anim.value()..=100.0, 400));
         }
     };

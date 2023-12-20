@@ -289,6 +289,8 @@ define_theme! {
         thumb_background: str,
         enabled_background: str,
         enabled_thumb_background: str,
+        focus_border_fill: str,
+        enabled_focus_border_fill: str,
     }
 }
 

@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_elements::events::MouseEvent;
+use freya_elements::events::{KeyboardEvent, MouseEvent};
 
 use freya_hooks::{use_applied_theme, use_focus, use_platform, ButtonTheme, ButtonThemeWith};
 use winit::window::CursorIcon;
@@ -15,7 +15,7 @@ pub struct ButtonProps<'a> {
     pub children: Element<'a>,
     /// Handler for the `onclick` event.
     #[props(optional)]
-    pub onclick: Option<EventHandler<'a, MouseEvent>>,
+    pub onclick: Option<EventHandler<'a, Option<MouseEvent>>>,
 }
 
 /// Identifies the current status of the Button.
@@ -57,6 +57,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
     let focus = use_focus(cx);
     let status = use_state(cx, ButtonStatus::default);
     let platform = use_platform(cx);
+
     let focus_id = focus.attribute(cx);
 
     let ButtonTheme {
@@ -75,7 +76,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
     let onclick = move |ev| {
         focus.focus();
         if let Some(onclick) = &cx.props.onclick {
-            onclick.call(ev)
+            onclick.call(Some(ev))
         }
     };
 
@@ -101,11 +102,19 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
         status.set(ButtonStatus::default());
     };
 
+    let onkeydown = |e: KeyboardEvent| {
+        if focus.validate_keydown(e) {
+            if let Some(onclick) = &cx.props.onclick {
+                onclick.call(None)
+            }
+        }
+    };
+
     let background = match *status.get() {
         ButtonStatus::Hovering => hover_background,
         ButtonStatus::Idle => background,
     };
-    let border = if focus.does_appear_focused() {
+    let border = if focus.is_selected() {
         format!("2 solid {focus_border_fill}")
     } else {
         format!("1 solid {border_fill}")
@@ -116,6 +125,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
             onclick: onclick,
             onmouseenter: onmouseenter,
             onmouseleave: onmouseleave,
+            onkeydown: onkeydown,
             focus_id: focus_id,
             width: "{width}",
             height: "{height}",

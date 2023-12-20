@@ -42,6 +42,8 @@ pub const LIGHT_THEME: Theme = Theme {
         thumb_background: cow_borrowed!("rgb(231, 224, 236)"),
         enabled_background: cow_borrowed!("rgb(103, 80, 164)"),
         enabled_thumb_background: cow_borrowed!("rgb(234, 221, 255)"),
+        focus_border_fill: cow_borrowed!("rgb(180, 180, 180)"),
+        enabled_focus_border_fill: cow_borrowed!("rgb(180, 180, 180)"),
     },
     scroll_bar: ScrollBarTheme {
         background: cow_borrowed!("rgb(225, 225, 225)"),

@@ -4,6 +4,7 @@ use accesskit::NodeId as AccessibilityId;
 use dioxus_core::{AttributeValue, Scope, ScopeState};
 use dioxus_hooks::{use_shared_state, use_shared_state_provider, UseSharedState};
 use freya_core::navigation_mode::{NavigationMode, NavigatorState};
+use freya_elements::events::{keyboard::Code, KeyboardEvent};
 use freya_node_state::CustomAttributeValues;
 use uuid::Uuid;
 
@@ -38,14 +39,19 @@ impl UseFocus {
         Some(self.id) == *self.focused_id.read()
     }
 
-    /// Check if this node is currently focused
-    pub fn does_appear_focused(&self) -> bool {
+    /// Check if this node is currently selected
+    pub fn is_selected(&self) -> bool {
         self.is_focused() && self.navigation_state.get() == NavigationMode::Keyboard
     }
 
     /// Unfocus the currently focused node.
     pub fn unfocus(&self) {
         *self.focused_id.write() = None;
+    }
+
+    /// Validate keydown event
+    pub fn validate_keydown(&self, e: KeyboardEvent) -> bool {
+        e.data.code == Code::Enter && self.is_selected()
     }
 }
 
