@@ -7,6 +7,7 @@ pub mod node;
 pub mod scaled;
 pub mod torin;
 pub mod values;
+pub mod map;
 
 pub use values::*;
 

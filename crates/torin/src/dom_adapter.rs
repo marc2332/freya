@@ -29,9 +29,12 @@ impl NodeAreas {
     }
 }
 
-pub trait NodeKey: Clone + PartialEq + Eq + std::hash::Hash + Copy + std::fmt::Debug {}
+pub trait NodeKey: Clone + PartialEq + Eq + std::hash::Hash + Copy + std::fmt::Debug + crate::map::IsEnabled {}
 
 impl NodeKey for usize {}
+
+#[cfg(feature = "dioxus")]
+impl crate::map::IsEnabled for dioxus_native_core::NodeId {}
 
 #[cfg(feature = "dioxus")]
 impl NodeKey for dioxus_native_core::NodeId {}
