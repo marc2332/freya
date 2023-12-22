@@ -3,6 +3,7 @@ use dioxus_native_core::NodeId;
 use freya_components::*;
 use freya_core::prelude::*;
 use freya_elements::elements as dioxus_elements;
+use freya_hooks::{theme_with, ScrollViewThemeWith};
 
 use crate::{
     hooks::use_selected_node,
@@ -14,7 +15,7 @@ use crate::{
 };
 
 #[allow(non_snake_case)]
-#[inline_props]
+#[component]
 pub fn NodeInspectorStyle(cx: Scope, node_id: NodeId) -> Element {
     let node = use_selected_node(cx, &cx.props.node_id);
 
@@ -29,8 +30,12 @@ pub fn NodeInspectorStyle(cx: Scope, node_id: NodeId) -> Element {
                 }
                 ScrollView {
                     show_scrollbar: true,
-                    height: "calc(100% - 35)",
-                    width: "100%",
+                    theme: theme_with!(
+                        ScrollViewTheme {
+                            height : "calc(100% - 35)".into(),
+                            width: "100%".into(),
+                        }
+                    ),
                     node.state.iter().enumerate().map(|(i, (name, attr))| {
                         match attr {
                             AttributeType::Measure(measure) => {
@@ -114,12 +119,12 @@ pub fn NodeInspectorStyle(cx: Scope, node_id: NodeId) -> Element {
                                     }
                                 }
                             }
-                            AttributeType::Display(display) => {
+                            AttributeType::Alignment(alignment) => {
                                 rsx!{
                                     Property {
                                         key: "{i}",
                                         name: "{name}",
-                                        value: display.pretty()
+                                        value: alignment.pretty()
                                     }
                                 }
                             }
@@ -138,6 +143,24 @@ pub fn NodeInspectorStyle(cx: Scope, node_id: NodeId) -> Element {
                                         key: "{i}",
                                         name: "{name}",
                                         text_shadow: *text_shadow
+                                    }
+                                }
+                            }
+                            AttributeType::TextAlignment(text_align) => {
+                                rsx!{
+                                    Property {
+                                        key: "{i}",
+                                        name: "{name}",
+                                        value: text_align.pretty()
+                                    }
+                                }
+                            }
+                            AttributeType::TextOverflow(text_overflow) => {
+                                rsx!{
+                                    Property {
+                                        key: "{i}",
+                                        name: "{name}",
+                                        value: text_overflow.pretty()
                                     }
                                 }
                             }

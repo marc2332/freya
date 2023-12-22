@@ -65,8 +65,10 @@ fn app(cx: Scope) -> Element {
             }
             NetworkImage {
                 url: url,
-                width: "100",
-                height: "100",
+                theme: theme_with!(NetworkImageTheme {
+                    width: "100".into(),
+                    height: "100".into(),
+                }),
                 alt: "This is an image"
             }
         }

@@ -3,10 +3,22 @@
     html_favicon_url = "https://freyaui.dev/logo.svg"
 )]
 //! # Freya
+//!
 //! Build native & cross-platform GUI applications using 🦀 Rust.
 //!
 //! Powered by [🧬 Dioxus](https://dioxuslabs.com) and [🎨 Skia](https://skia.org/).
-//! ```no_run
+//!
+//! - [`Elements`](freya_elements::elements#structs)
+//! - [`Events`](freya_elements::elements#functions)
+//! - [`Components`](freya_components)
+//! - [`Hooks`](freya_hooks)
+//! - [`Theming`](self::_docs::theming)
+//! - [`Hot reload`](self::_docs::hot_reload)
+//! - [`Testing`](self::_docs::testing)
+//! - [`Animating`](self::_docs::animating)
+//! - [`Devtools`](self::_docs::devtools)
+//!
+//! ```rust,no_run
 //! use freya::prelude::*;
 //!
 //! fn main(){
@@ -28,20 +40,23 @@
 //!        }
 //!    )
 //! }
-//!
 //! ```
 //!
 //! ## Features flags
 //!
-//! - `devtools`: Enables a side panel to inspect your App tree, styles and computed layout.
-//! - `use_camera`: Enables the `use_camera` hook.
-//! - `log`: Enables internal logs.
+//! - `devtools`: enables a side panel to inspect your App tree, styles and computed layout.
+//! - `use_camera`: enables the `use_camera` hook.
+//! - `log`: enables internal logs.
 //!
+
+/// Freya Docs
+#[cfg(doc)]
+pub mod _docs;
 
 /// Dioxus library.
 pub use dioxus;
 
-/// Launch your application.
+/// Launch your app.
 pub mod launch;
 
 /// Collection of basic components.
@@ -59,18 +74,20 @@ pub mod common {
     pub use freya_common::*;
 }
 
-/// Events and their data.
+/// Events data.
 pub use freya_elements::events;
 
-/// Elements namespace and attributes.
+/// Elements, attributes and events definitions.
 pub use freya_elements::elements;
 
-/// Hotreload configuration.
+/// Hot reload configuration.
 pub mod hotreload {
     pub use freya_elements::elements::FreyaCtx;
 }
 
 pub use torin;
+
+pub mod plugins;
 
 /// Useful imports.
 pub mod prelude {
@@ -80,10 +97,10 @@ pub mod prelude {
     pub use dioxus_hot_reload::{self, hot_reload_init, Config};
 
     pub use crate::launch::*;
+    pub use crate::plugins::*;
     pub use freya_components::*;
     pub use freya_elements::elements as dioxus_elements;
     pub use freya_elements::events::*;
-    pub use freya_elements::*;
     pub use freya_hooks::*;
     pub use freya_node_state::{bytes_to_data, CustomAttributeValues};
     pub use freya_renderer::*;

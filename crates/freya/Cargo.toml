@@ -25,7 +25,6 @@ default = ["freya-engine/skia-engine"]
 [dependencies]
 freya-devtools = { workspace = true, optional = true }
 freya-node-state = { workspace = true }
-freya-layout = { workspace = true }
 freya-renderer = { workspace = true }
 freya-elements = { workspace = true }
 freya-common = { workspace = true }

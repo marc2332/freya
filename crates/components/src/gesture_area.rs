@@ -62,7 +62,7 @@ type EventsQueue = VecDeque<(Instant, TouchEvent)>;
 pub fn GestureArea<'a>(cx: Scope<'a, GestureAreaProps<'a>>) -> Element {
     let touch_events = use_ref::<EventsQueue>(cx, VecDeque::new);
 
-    use_memo(cx, touch_events, move |_| {
+    let _ = use_memo(cx, touch_events, move |_| {
         // Keep the touch events queue under a certain size
         if touch_events.read().len() > MAX_EVENTS_QUEUE {
             touch_events.write_silent().pop_front();

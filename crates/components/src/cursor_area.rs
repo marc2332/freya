@@ -1,5 +1,4 @@
 use dioxus::prelude::*;
-use freya_common::EventMessage;
 use freya_elements::elements as dioxus_elements;
 use freya_hooks::use_platform;
 use winit::window::CursorIcon;
@@ -47,7 +46,7 @@ pub fn CursorArea<'a>(cx: Scope<'a, CursorAreaProps<'a>>) -> Element<'a> {
         to_owned![platform];
         move |_| {
             *is_hovering.write_silent() = true;
-            platform.send(EventMessage::SetCursorIcon(icon)).unwrap();
+            platform.set_cursor(icon);
         }
     };
 
@@ -55,19 +54,15 @@ pub fn CursorArea<'a>(cx: Scope<'a, CursorAreaProps<'a>>) -> Element<'a> {
         to_owned![platform];
         move |_| {
             *is_hovering.write_silent() = false;
-            platform
-                .send(EventMessage::SetCursorIcon(CursorIcon::default()))
-                .unwrap();
+            platform.set_cursor(CursorIcon::default());
         }
     };
 
-    use_on_unmount(cx, {
+    use_on_destroy(cx, {
         to_owned![is_hovering];
         move || {
             if *is_hovering.read() {
-                platform
-                    .send(EventMessage::SetCursorIcon(CursorIcon::default()))
-                    .unwrap();
+                platform.set_cursor(CursorIcon::default());
             }
         }
     });

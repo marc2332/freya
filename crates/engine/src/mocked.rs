@@ -248,6 +248,12 @@ impl Default for TextShadow {
     }
 }
 
+impl TextShadow {
+    pub fn new(color: Color, _: (f32, f32), _: f32) -> Self {
+        unimplemented!("This is mocked")
+    }
+}
+
 impl From<(f32, f32)> for Point {
     fn from(source: (f32, f32)) -> Self {
         Point::new(source.0, source.1)
@@ -359,6 +365,7 @@ pub enum TextAlign {
     End = 5,
 }
 
+#[derive(Default)]
 pub struct TextStyle;
 
 impl TextStyle {
@@ -1003,6 +1010,10 @@ impl Canvas {
     pub fn draw_circle(&self, _center: impl Into<Point>, _radius: f32, _paint: &Paint) -> &Self {
         unimplemented!("This is mocked")
     }
+
+    pub fn save_layer_alpha_f(&self, bounds: impl Into<Option<Rect>>, alpha: f32) -> usize {
+        unimplemented!("This is mocked")
+    }
 }
 
 #[repr(i32)]
@@ -1344,7 +1355,7 @@ impl From<(i32, i32)> for Size {
 pub struct Surface;
 
 impl Surface {
-    pub fn canvas(&mut self) -> Canvas {
+    pub fn canvas(&mut self) -> &Canvas {
         unimplemented!("This is mocked")
     }
 

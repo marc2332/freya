@@ -1,12 +1,16 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{MouseEvent, WheelEvent};
-use freya_hooks::{use_get_theme, use_node_ref};
+
+use freya_hooks::{use_applied_theme, use_node_ref, use_platform, SliderThemeWith};
 use tracing::info;
+use winit::window::CursorIcon;
 
 /// [`Slider`] component properties.
 #[derive(Props)]
 pub struct SliderProps<'a> {
+    /// Theme override.
+    pub theme: Option<SliderThemeWith>,
     /// Handler for the `onmoved` event.
     pub onmoved: EventHandler<'a, f64>,
     /// Width of the Slider.
@@ -26,6 +30,16 @@ fn ensure_correct_slider_range(value: f64) -> f64 {
     } else {
         value
     }
+}
+
+/// Describes the current status of the Slider.
+#[derive(Debug, Default, PartialEq, Clone, Copy)]
+pub enum SliderStatus {
+    /// Default state.
+    #[default]
+    Idle,
+    /// Mouse is hovering the slider.
+    Hovering,
 }
 
 /// Controlled `Slider` component.
@@ -61,24 +75,40 @@ fn ensure_correct_slider_range(value: f64) -> f64 {
 /// ```
 #[allow(non_snake_case)]
 pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
-    let theme = use_get_theme(cx);
-    let theme = &theme.slider;
-    let hovering = use_state(cx, || false);
+    let theme = use_applied_theme!(cx, &cx.props.theme, slider);
+    let status = use_ref(cx, SliderStatus::default);
     let clicking = use_state(cx, || false);
+    let platform = use_platform(cx);
+
     let value = ensure_correct_slider_range(cx.props.value);
     let (node_reference, size) = use_node_ref(cx);
     let width = cx.props.width + 14.0;
 
     let progress = (value / 100.0) * cx.props.width + 0.5;
 
-    let onmouseleave = |_: MouseEvent| {
-        if !(*clicking.get()) {
-            hovering.set(false);
+    use_on_destroy(cx, {
+        to_owned![status, platform];
+        move || {
+            if *status.read() == SliderStatus::Hovering {
+                platform.set_cursor(CursorIcon::default());
+            }
+        }
+    });
+
+    let onmouseleave = {
+        to_owned![platform, status];
+        move |_: MouseEvent| {
+            *status.write_silent() = SliderStatus::Idle;
+            platform.set_cursor(CursorIcon::default());
         }
     };
 
+    let onmouseenter = move |_: MouseEvent| {
+        *status.write_silent() = SliderStatus::Hovering;
+        platform.set_cursor(CursorIcon::Hand);
+    };
+
     let onmouseover = move |e: MouseEvent| {
-        hovering.set(true);
         if *clicking.get() {
             let coordinates = e.get_element_coordinates();
             let mut x = coordinates.x - 7.5 - size.read().area.min_x() as f64;
@@ -103,7 +133,7 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
         let wheel_y = e.get_delta_y();
         let progress_x = (value / 100.0) * cx.props.width;
 
-        let mut x = progress_x + (wheel_y * 7.5);
+        let mut x = progress_x + (wheel_y / 4.0);
         x = x.clamp(0.0, width);
 
         let mut percentage = x / cx.props.width * 100.0;
@@ -119,11 +149,12 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
             height: "20",
             onmousedown: onmousedown,
             onglobalclick: onclick,
+            onmouseenter: onmouseenter,
             onglobalmouseover: onmouseover,
             onmouseleave: onmouseleave,
             onwheel: onwheel,
-            display: "center",
-            direction: "both",
+            main_align: "center",
+            cross_align: "center",
             padding: "1",
             rect {
                 background: "{theme.background}",
@@ -135,7 +166,7 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
                     background: "{theme.thumb_inner_background}",
                     width: "{progress}",
                     height: "100%",
-                    corner_radius: "50",
+                    corner_radius: "50"
                 }
                 rect {
                     width: "{progress}",

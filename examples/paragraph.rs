@@ -17,18 +17,18 @@ fn app(cx: Scope) -> Element {
             color: "black",
             width: "100%",
             height: "100%",
-            display: "center",
-            direction: "horizontal",
+            cross_align: "center",
             rect {
                 width: "50%",
                 height: "100%",
                 ScrollView {
                     show_scrollbar: true,
-                    width: "100%",
-                    height: "75%",
+                    theme: theme_with!(ScrollViewTheme {
+                        height: "75%".into(),
+                    }),
                     paragraph {
                         width: "100%",
-                        align: "right",
+                        text_align: "right",
                         text {
                             color: "rgb(240, 50, 100)",
                             "{loremipsum.repeat(2)}"
@@ -41,7 +41,9 @@ fn app(cx: Scope) -> Element {
                 }
                 ScrollView {
                     show_scrollbar: true,
-                    height: "25%",
+                    theme: theme_with!(ScrollViewTheme {
+                        height: "25%".into(),
+                    }),
                     label {
                         font_size: "100",
                         font_family: "Inter",

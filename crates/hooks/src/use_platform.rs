@@ -3,7 +3,7 @@ use std::sync::Arc;
 use dioxus_core::ScopeState;
 use freya_common::EventMessage;
 use tokio::sync::{broadcast, mpsc::UnboundedSender};
-use winit::event_loop::EventLoopProxy;
+use winit::{event_loop::EventLoopProxy, window::CursorIcon};
 
 #[derive(Clone)]
 pub struct UsePlatform {
@@ -30,6 +30,10 @@ impl UsePlatform {
                 .map_err(|_| UsePlatformError::PlatformEmitterFailed)?;
         }
         Ok(())
+    }
+
+    pub fn set_cursor(&self, cursor_icon: CursorIcon) {
+        self.send(EventMessage::SetCursorIcon(cursor_icon)).ok();
     }
 
     pub fn request_animation_frame(&self) {

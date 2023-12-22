@@ -11,11 +11,11 @@ fn main() {
 }
 
 #[allow(non_snake_case)]
-#[inline_props]
+#[component]
 fn Sidebar<'a>(cx: Scope<'a>, children: Element<'a>, sidebar: Element<'a>) -> Element<'a> {
     let theme = use_theme(cx);
-    let background = theme.read().body.background;
-    let color = theme.read().body.color;
+    let background = &theme.read().body.background;
+    let color = &theme.read().body.color;
 
     render!(
         rect {
@@ -27,12 +27,14 @@ fn Sidebar<'a>(cx: Scope<'a>, children: Element<'a>, sidebar: Element<'a>) -> El
                 overflow: "clip",
                 width: "200",
                 height: "100%",
-                background: "rgb(50, 50, 50)",
+                background: "rgb(20, 20, 20)",
                 corner_radius: "0 7 0 7",
                 padding: "20",
                 color: "{color}",
                 ScrollView {
-                    padding: "10",
+                    theme: theme_with!(ScrollViewTheme {
+                        padding: "10".into(),
+                    }),
                     sidebar
                 }
             }
@@ -49,7 +51,7 @@ fn Sidebar<'a>(cx: Scope<'a>, children: Element<'a>, sidebar: Element<'a>) -> El
 }
 
 #[allow(non_snake_case)]
-#[inline_props]
+#[component]
 fn SidebarItem<'a>(
     cx: Scope<'a>,
     children: Element<'a>,
@@ -92,7 +94,6 @@ fn SidebarItem<'a>(
             onmouseleave: onmouseleave,
             width: "100%",
             height: "auto",
-            direction: "both",
             color: "{color}",
             shadow: "0 2 10 1 rgb(0, 0, 0, 45)",
             corner_radius: "10",

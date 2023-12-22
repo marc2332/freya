@@ -12,7 +12,7 @@ use torin::geometry::{Area, Size2D};
 
 pub use freya_core::events::FreyaEvent;
 pub use freya_elements::events::mouse::MouseButton;
-use tokio::time::{sleep, timeout};
+use tokio::time::{interval, timeout};
 
 use crate::test_node::TestNode;
 use crate::test_utils::TestUtils;
@@ -30,9 +30,9 @@ pub struct TestingHandler {
     pub(crate) platform_event_receiver: UnboundedReceiver<EventMessage>,
 
     pub(crate) events_queue: Vec<FreyaEvent>,
-    pub(crate) events_processor: EventsProcessor,
+    pub(crate) elements_state: ElementsState,
     pub(crate) font_collection: FontCollection,
-    pub(crate) viewports: ViewportsCollection,
+    pub(crate) viewports: Viewports,
     pub(crate) accessibility_state: SharedAccessibilityState,
 
     pub(crate) config: TestingConfig,
@@ -71,7 +71,11 @@ impl TestingHandler {
 
         self.provide_vdom_contexts();
 
-        let vdom = &mut self.vdom;
+        let mut ticker = if self.config.run_ticker {
+            Some(interval(Duration::from_millis(16)))
+        } else {
+            None
+        };
 
         // Handle platform and VDOM events
         loop {
@@ -85,9 +89,12 @@ impl TestingHandler {
             if let Ok(ev) = platform_ev {
                 match ev {
                     EventMessage::RequestRerender => {
-                        if self.config.run_ticker {
-                            sleep(Duration::from_millis(16)).await;
+                        if let Some(ticker) = ticker.as_mut() {
+                            ticker.tick().await;
                             self.ticker_sender.send(()).unwrap();
+                            timeout(self.config.vdom_timeout(), self.vdom.wait_for_work())
+                                .await
+                                .ok();
                         }
                     }
                     EventMessage::FocusAccessibilityNode(node_id) => {
@@ -101,12 +108,13 @@ impl TestingHandler {
             }
 
             if let Ok(ev) = vdom_ev {
-                vdom.handle_event(&ev.name, ev.data.any(), ev.element_id, false);
-                vdom.process_events();
+                self.vdom
+                    .handle_event(&ev.name, ev.data.any(), ev.element_id, false);
+                self.vdom.process_events();
             }
         }
 
-        timeout(self.config.vdom_timeout(), vdom.wait_for_work())
+        timeout(self.config.vdom_timeout(), self.vdom.wait_for_work())
             .await
             .ok();
 
@@ -149,7 +157,7 @@ impl TestingHandler {
             &self.utils.layers().lock().unwrap(),
             &mut self.events_queue,
             &self.event_emitter,
-            &mut self.events_processor,
+            &mut self.elements_state,
             &self.viewports,
             SCALE_FACTOR,
         );

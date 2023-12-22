@@ -3,7 +3,6 @@ use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_dom::prelude::FreyaDOM;
 use freya_engine::prelude::*;
-use freya_layout::Layers;
 use glutin::prelude::{PossiblyCurrentContextGlSurfaceAccessor, PossiblyCurrentGlContext};
 use std::ffi::CString;
 use std::num::NonZeroU32;
@@ -60,7 +59,7 @@ impl<T: Clone> Drop for WindowEnv<T> {
 impl<T: Clone> WindowEnv<T> {
     /// Create a Window environment from a set of configuration
     pub fn from_config(
-        window_config: WindowConfig<T>,
+        mut window_config: WindowConfig<T>,
         event_loop: &EventLoop<EventMessage>,
     ) -> Self {
         let mut window_builder = WindowBuilder::new()
@@ -68,6 +67,7 @@ impl<T: Clone> WindowEnv<T> {
             .with_title(window_config.title)
             .with_decorations(window_config.decorations)
             .with_transparent(window_config.transparent)
+            .with_window_icon(window_config.icon.take())
             .with_inner_size(LogicalSize::<f64>::new(
                 window_config.width,
                 window_config.height,
@@ -79,6 +79,10 @@ impl<T: Clone> WindowEnv<T> {
 
         if let Some(max_size) = window_config.max_width.zip(window_config.max_height) {
             window_builder = window_builder.with_max_inner_size(LogicalSize::<f64>::from(max_size))
+        }
+
+        if let Some(with_window_builder) = &window_config.window_builder_hook {
+            (with_window_builder)(&mut window_builder);
         }
 
         let template = ConfigTemplateBuilder::new()
@@ -207,7 +211,7 @@ impl<T: Clone> WindowEnv<T> {
         &mut self,
         rdom: &FreyaDOM,
         font_collection: &mut FontCollection,
-    ) -> (Layers, ViewportsCollection) {
+    ) -> (Layers, Viewports) {
         let window_size = self.window.inner_size();
         let scale_factor = self.window.scale_factor() as f32;
         process_layout(
@@ -221,11 +225,15 @@ impl<T: Clone> WindowEnv<T> {
         )
     }
 
-    /// Render the RealDOM to Window
-    pub fn render(
+    pub fn canvas(&mut self) -> &Canvas {
+        self.surface.canvas()
+    }
+
+    /// Start rendering the RealDOM to Window
+    pub fn start_render(
         &mut self,
         layers: &Layers,
-        viewports_collection: &ViewportsCollection,
+        viewports: &Viewports,
         font_collection: &mut FontCollection,
         hovered_node: &HoveredNode,
         rdom: &FreyaDOM,
@@ -235,14 +243,15 @@ impl<T: Clone> WindowEnv<T> {
         canvas.clear(self.window_config.background);
 
         let mut matrices: Vec<(Matrix, Vec<NodeId>)> = Vec::default();
+        let mut opacities: Vec<(f32, Vec<NodeId>)> = Vec::default();
 
         process_render(
-            viewports_collection,
+            viewports,
             rdom,
             font_collection,
             layers,
-            &mut (canvas, (&mut matrices)),
-            |dom, node_id, area, font_collection, viewports_collection, (canvas, matrices)| {
+            &mut (canvas, &mut matrices, &mut opacities),
+            |dom, node_id, area, font_collection, viewports, (canvas, matrices, opacities)| {
                 let render_wireframe = if let Some(hovered_node) = &hovered_node {
                     hovered_node
                         .lock()
@@ -258,14 +267,18 @@ impl<T: Clone> WindowEnv<T> {
                         area,
                         &dioxus_node,
                         font_collection,
-                        viewports_collection,
+                        viewports,
                         render_wireframe,
                         matrices,
+                        opacities,
                     );
                 }
             },
         );
+    }
 
+    /// Finish all rendering in the Window
+    pub fn finish_render(&mut self) {
         self.gr_context.flush_and_submit();
         self.gl_surface.swap_buffers(&self.gl_context).unwrap();
     }

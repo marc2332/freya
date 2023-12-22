@@ -9,6 +9,8 @@ pub enum Size {
     Percentage(Length),
     Pixels(Length),
     DynamicCalculations(Vec<DynamicCalculation>),
+    Fill,
+    RootPercentage(Length),
 }
 
 impl Default for Size {
@@ -20,7 +22,7 @@ impl Default for Size {
 impl Size {
     pub fn pretty(&self) -> String {
         match self {
-            Size::Inner => "inner".to_string(),
+            Size::Inner => "auto".to_string(),
             Size::Pixels(s) => format!("{}", s.get()),
             Size::DynamicCalculations(calcs) => format!(
                 "calc({})",
@@ -31,32 +33,50 @@ impl Size {
                     .join(" ")
             ),
             Size::Percentage(p) => format!("{}%", p.get()),
+            Size::Fill => "fill".to_string(),
+            Size::RootPercentage(p) => format!("{}% of root", p.get()),
         }
     }
 
-    pub fn eval(&self, parent_value: f32) -> Option<f32> {
+    pub fn eval(
+        &self,
+        parent_value: f32,
+        available_parent_value: f32,
+        parent_margin: f32,
+        root_value: f32,
+    ) -> Option<f32> {
         match self {
-            Size::Pixels(px) => Some(px.get()),
+            Size::Pixels(px) => Some(px.get() + parent_margin),
             Size::Percentage(per) => Some(parent_value / 100.0 * per.get()),
             Size::DynamicCalculations(calculations) => {
                 Some(run_calculations(calculations, parent_value))
             }
+            Size::Fill => Some(available_parent_value),
+            Size::RootPercentage(per) => Some(root_value / 100.0 * per.get()),
             _ => None,
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn min_max(
         &self,
         value: f32,
         parent_value: f32,
+        available_parent_value: f32,
+        single_margin: f32,
         margin: f32,
         minimum: &Self,
         maximum: &Self,
+        root_value: f32,
     ) -> f32 {
-        let value = self.eval(parent_value).unwrap_or(value) + margin;
+        let value = self
+            .eval(parent_value, available_parent_value, margin, root_value)
+            .unwrap_or(value + margin);
 
-        let minimum_value = minimum.eval(parent_value);
-        let maximum_value = maximum.eval(parent_value);
+        let minimum_value = minimum
+            .eval(parent_value, available_parent_value, margin, root_value)
+            .map(|v| v + single_margin);
+        let maximum_value = maximum.eval(parent_value, available_parent_value, margin, root_value);
 
         let mut final_value = value;
 

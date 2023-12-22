@@ -13,9 +13,9 @@ fn app(cx: Scope) -> Element {
     render!(
         ScrollView {
             show_scrollbar: true,
-            padding: "5",
-            height: "100%",
-            width: "100%",
+            theme: theme_with!(ScrollViewTheme {
+               padding: "5".into(),
+            }),
             Accordion {
                 summary: render!(AccordionSummary {
                     label {

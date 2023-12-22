@@ -1,13 +1,18 @@
 use crate::Loader;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::use_focus;
+
+use freya_hooks::{use_applied_theme, use_focus, NetworkImageTheme, NetworkImageThemeWith};
 use freya_node_state::bytes_to_data;
 use reqwest::Url;
 
 /// [`NetworkImage`] component properties.
 #[derive(Props)]
 pub struct NetworkImageProps<'a> {
+    /// Theme override.
+    #[props(optional)]
+    pub theme: Option<NetworkImageThemeWith>,
+
     /// URL of the image
     pub url: Url,
 
@@ -18,14 +23,6 @@ pub struct NetworkImageProps<'a> {
     /// Loading element
     #[props(optional)]
     pub loading: Option<Element<'a>>,
-
-    /// Width of image, default is 100%
-    #[props(default = "100%".to_string(), into)]
-    pub width: String,
-
-    /// Height of image, default is 100%
-    #[props(default = "100%".to_string(), into)]
-    pub height: String,
 
     /// Information about the image.
     #[props(optional, into)]
@@ -69,8 +66,8 @@ pub fn NetworkImage<'a>(cx: Scope<'a, NetworkImageProps<'a>>) -> Element<'a> {
     let image_bytes = use_state::<Option<Vec<u8>>>(cx, || None);
 
     let focus_id = focus.attribute(cx);
-    let height = &cx.props.height;
-    let width = &cx.props.width;
+    let NetworkImageTheme { width, height } =
+        use_applied_theme!(cx, &cx.props.theme, network_image);
     let alt = cx.props.alt.as_deref();
 
     use_effect(cx, &cx.props.url, move |url| {
@@ -99,11 +96,9 @@ pub fn NetworkImage<'a>(cx: Scope<'a, NetworkImageProps<'a>>) -> Element<'a> {
                 rect {
                     height: "{height}",
                     width: "{width}",
-                    display: "center",
-                    direction: "both",
-                    Loader {
-
-                    }
+                    main_align: "center",
+                    cross_align: "center",
+                    Loader {}
                 }
             )
         }
@@ -115,9 +110,10 @@ pub fn NetworkImage<'a>(cx: Scope<'a, NetworkImageProps<'a>>) -> Element<'a> {
                 rect {
                     height: "{height}",
                     width: "{width}",
-                    display: "center",
+                    main_align: "center",
+                    cross_align: "center",
                     label {
-                        align: "center",
+                        text_align: "center",
                         "Error"
                     }
                 }

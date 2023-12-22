@@ -2,11 +2,12 @@ use dioxus::prelude::*;
 use dioxus_native_core::NodeId;
 use freya_components::*;
 use freya_elements::elements as dioxus_elements;
+use freya_hooks::{theme_with, ScrollViewThemeWith};
 
 use crate::{hooks::use_selected_node, NodeInspectorBar};
 
 #[allow(non_snake_case)]
-#[inline_props]
+#[component]
 pub fn NodeInspectorLayout(cx: Scope, node_id: NodeId) -> Element {
     let node = use_selected_node(cx, &cx.props.node_id);
 
@@ -29,8 +30,9 @@ pub fn NodeInspectorLayout(cx: Scope, node_id: NodeId) -> Element {
                 }
                 ScrollView {
                     show_scrollbar: true,
-                    height: "calc(100% - 35)",
-                    width: "100%",
+                    theme: theme_with!(ScrollViewTheme {
+                        height : "calc(100% - 35)".into(),
+                    }),
                     rect {
                         width: "100%",
                         height: "200",
@@ -42,8 +44,8 @@ pub fn NodeInspectorLayout(cx: Scope, node_id: NodeId) -> Element {
                         rect {
                             width: "100%",
                             height: "calc(100% - 25)",
-                            display: "center",
-                            direction: "both",
+                            main_align: "center",
+                            cross_align: "center",
                             background: "rgb(40, 40, 40)",
                             rect {
                                 width: "100%",
@@ -51,13 +53,13 @@ pub fn NodeInspectorLayout(cx: Scope, node_id: NodeId) -> Element {
                                 background: "rgb(71, 180, 240)",
                                 corner_radius: "5",
                                 rect {
-                                    direction: "both",
-                                    display: "center",
+                                    main_align: "center",
+                                    cross_align: "center",
                                     width: "100%",
                                     height: "25",
                                     label {
                                         width: "100%",
-                                        align: "center",
+                                        text_align: "center",
                                         "{paddings.top()}"
                                     }
                                 }
@@ -66,21 +68,21 @@ pub fn NodeInspectorLayout(cx: Scope, node_id: NodeId) -> Element {
                                     height: "calc(100% - 50)",
                                     direction: "horizontal",
                                     rect {
-                                        direction: "vertical",
-                                        display: "center",
+                                        main_align: "center",
+                                        cross_align: "center",
                                         width: "25",
                                         height: "100%",
                                         label {
                                             width: "100%",
-                                            align: "center",
+                                            text_align: "center",
                                             "{paddings.left()}"
                                         }
                                     }
                                     rect {
                                         width: "calc(100% - 50)",
                                         height: "100%",
-                                        display: "center",
-                                        direction: "both",
+                                        main_align: "center",
+                                        cross_align: "center",
                                         background: "rgb(40, 40, 40)",
                                         corner_radius: "5",
                                         label {
@@ -88,25 +90,25 @@ pub fn NodeInspectorLayout(cx: Scope, node_id: NodeId) -> Element {
                                         }
                                     }
                                     rect {
-                                        direction: "vertical",
-                                        display: "center",
+                                        main_align: "center",
+                                        cross_align: "center",
                                         width: "25",
                                         height: "100%",
                                         label {
                                             width: "100%",
-                                            align: "center",
+                                            text_align: "center",
                                             "{paddings.right()}"
                                         }
                                     }
                                 }
                                 rect {
-                                    direction: "both",
-                                    display: "center",
+                                    main_align: "center",
+                                    cross_align: "center",
                                     width: "100%",
                                     height: "25",
                                     label {
                                         width: "100%",
-                                        align: "center",
+                                        text_align: "center",
                                         "{paddings.bottom()}"
                                     }
                                 }

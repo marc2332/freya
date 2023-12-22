@@ -38,7 +38,7 @@ fn app(cx: Scope) -> Element {
         rect {
             overflow: "clip",
             background: "black",
-            display: "center",
+            main_align: "center",
             width: "100%",
             height: "100%",
             offset_x: "{size}",
@@ -48,12 +48,12 @@ fn app(cx: Scope) -> Element {
                 background: "{background}",
                 padding: "25",
                 corner_radius: "100",
-                display: "center",
+                main_align: "center",
                 onclick: anim,
                 label {
                     width: "100%",
                     font_size: "30",
-                    align: "center",
+                    text_align: "center",
                     color: "{text}",
                     "Click to move"
                 }

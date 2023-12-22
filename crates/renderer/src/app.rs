@@ -1,11 +1,10 @@
-use std::{collections::HashMap, sync::Arc, task::Waker};
+use std::{sync::Arc, task::Waker};
 
 use dioxus_core::{Template, VirtualDom};
 use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_dom::prelude::SafeDOM;
 use freya_engine::prelude::*;
-use freya_layout::Layers;
 use futures::FutureExt;
 use futures::{
     pin_mut,
@@ -22,8 +21,7 @@ use winit::event::WindowEvent;
 use winit::{dpi::PhysicalSize, event_loop::EventLoopProxy};
 
 use crate::accessibility::NativeAccessibility;
-use crate::config::LaunchConfig;
-use crate::{HoveredNode, WindowEnv};
+use crate::{FontsConfig, HoveredNode, WindowEnv};
 
 fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
     struct DomHandle(EventLoopProxy<EventMessage>);
@@ -57,8 +55,8 @@ pub struct App<State: 'static + Clone> {
     window_env: WindowEnv<State>,
 
     layers: Layers,
-    events_processor: EventsProcessor,
-    viewports_collection: ViewportsCollection,
+    elements_state: ElementsState,
+    viewports: Viewports,
 
     focus_sender: FocusSender,
     focus_receiver: FocusReceiver,
@@ -68,6 +66,8 @@ pub struct App<State: 'static + Clone> {
     font_collection: FontCollection,
 
     ticker_sender: broadcast::Sender<()>,
+
+    plugins: PluginsManager,
 }
 
 impl<State: 'static + Clone> App<State> {
@@ -77,7 +77,8 @@ impl<State: 'static + Clone> App<State> {
         proxy: &EventLoopProxy<EventMessage>,
         mutations_notifier: Option<Arc<Notify>>,
         mut window_env: WindowEnv<State>,
-        config: LaunchConfig<State>,
+        fonts_config: FontsConfig,
+        mut plugins: PluginsManager,
     ) -> Self {
         let accessibility = NativeAccessibility::new(&window_env.window, proxy.clone());
 
@@ -88,7 +89,7 @@ impl<State: 'static + Clone> App<State> {
 
         let mut provider = TypefaceFontProvider::new();
 
-        for (font_name, font_data) in config.fonts {
+        for (font_name, font_data) in fonts_config {
             let ft_type = def_mgr.new_from_data(font_data, None).unwrap();
             provider.register_typeface(ft_type, Some(font_name));
         }
@@ -99,6 +100,8 @@ impl<State: 'static + Clone> App<State> {
 
         let (event_emitter, event_receiver) = mpsc::unbounded_channel::<DomEvent>();
         let (focus_sender, focus_receiver) = watch::channel(None);
+
+        plugins.send(PluginEvent::WindowCreated(window_env.window()));
 
         Self {
             sdom,
@@ -111,13 +114,14 @@ impl<State: 'static + Clone> App<State> {
             event_receiver,
             window_env,
             layers: Layers::default(),
-            events_processor: EventsProcessor::default(),
-            viewports_collection: HashMap::default(),
+            elements_state: ElementsState::default(),
+            viewports: Viewports::default(),
             accessibility,
             focus_sender,
             focus_receiver,
             font_collection,
             ticker_sender: broadcast::channel(5).0,
+            plugins,
         }
     }
 
@@ -206,9 +210,7 @@ impl<State: 'static + Clone> App<State> {
             if must_relayout {
                 self.window_env.window.request_redraw();
             } else if must_repaint {
-                self.proxy
-                    .send_event(EventMessage::RequestRerender)
-                    .unwrap();
+                self.proxy.send_event(EventMessage::RequestRedraw).unwrap();
             }
         }
     }
@@ -221,8 +223,8 @@ impl<State: 'static + Clone> App<State> {
             &self.layers,
             &mut self.events,
             &self.event_emitter,
-            &mut self.events_processor,
-            &self.viewports_collection,
+            &mut self.elements_state,
+            &self.viewports,
             scale_factor,
         )
     }
@@ -233,11 +235,17 @@ impl<State: 'static + Clone> App<State> {
 
         {
             let dom = self.sdom.get();
+
+            self.plugins.send(PluginEvent::StartedLayout(&dom.layout()));
+
             let (layers, viewports) = self
                 .window_env
                 .process_layout(&dom, &mut self.font_collection);
             self.layers = layers;
-            self.viewports_collection = viewports;
+            self.viewports = viewports;
+
+            self.plugins
+                .send(PluginEvent::FinishedLayout(&dom.layout()));
         }
 
         info!(
@@ -245,7 +253,7 @@ impl<State: 'static + Clone> App<State> {
             self.layers.len_layers(),
             self.layers.len_paragraph_elements()
         );
-        info!("Processed {} viewports", self.viewports_collection.len());
+        info!("Processed {} viewports", self.viewports.size());
 
         if let Some(mutations_notifier) = &self.mutations_notifier {
             mutations_notifier.notify_one();
@@ -283,9 +291,16 @@ impl<State: 'static + Clone> App<State> {
 
     /// Render the RealDOM into the Window
     pub fn render(&mut self, hovered_node: &HoveredNode) {
-        self.window_env.render(
+        self.plugins.send(PluginEvent::BeforeRender {
+            canvas: self.window_env.canvas(),
+            font_collection: &self.font_collection,
+            freya_dom: &self.sdom.get(),
+            viewports: &self.viewports,
+        });
+
+        self.window_env.start_render(
             &self.layers,
-            &self.viewports_collection,
+            &self.viewports,
             &mut self.font_collection,
             hovered_node,
             &self.sdom.get(),
@@ -293,6 +308,15 @@ impl<State: 'static + Clone> App<State> {
 
         self.accessibility
             .render_accessibility(self.window_env.window.title().as_str());
+
+        self.plugins.send(PluginEvent::AfterRender {
+            canvas: self.window_env.canvas(),
+            font_collection: &self.font_collection,
+            freya_dom: &self.sdom.get(),
+            viewports: &self.viewports,
+        });
+
+        self.window_env.finish_render();
     }
 
     /// Resize the Window

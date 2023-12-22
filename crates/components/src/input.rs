@@ -1,14 +1,15 @@
-use crate::CursorArea;
-use crate::ScrollView;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
+use freya_elements::events::keyboard::Key;
 use freya_elements::events::{KeyboardData, MouseEvent};
-use freya_hooks::ButtonTheme;
-use freya_hooks::FontTheme;
+use freya_hooks::use_platform;
 use freya_hooks::{
-    use_editable, use_focus, use_get_theme, EditableConfig, EditableEvent, EditableMode, TextEditor,
+    use_applied_theme, use_editable, use_focus, EditableConfig, EditableEvent, EditableMode,
+    FontTheme, InputTheme, InputThemeWith, TextEditor,
 };
+
 use winit::window::CursorIcon;
+
 /// Enum to declare is [`Input`] hidden.
 #[derive(Default)]
 pub enum InputMode {
@@ -24,25 +25,30 @@ impl InputMode {
         Self::Hidden('*')
     }
 }
+
+/// Indicates the current status of the Input.
+#[derive(Debug, Default, PartialEq, Clone, Copy)]
+pub enum InputStatus {
+    /// Default state.
+    #[default]
+    Idle,
+    /// Mouse is hovering the input.
+    Hovering,
+}
+
 /// [`Input`] component properties.
 #[derive(Props)]
 pub struct InputProps<'a> {
+    /// Theme override.
+    #[props(optional)]
+    pub theme: Option<InputThemeWith>,
     /// Current value of the Input
     pub value: String,
     /// Handler for the `onchange` event.
     pub onchange: EventHandler<'a, String>,
-    /// Is input hidden with a character. By default input text is shown.
+    /// Display mode for Input. By default, input text is shown as it is provided.
     #[props(default = InputMode::Shown, into)]
-    hidden: InputMode,
-    /// Width of the Input. Default 100.
-    #[props(default = "150".to_string(), into)]
-    width: String,
-    /// Height of the Input. Default 100.
-    #[props(default = "35".to_string(), into)]
-    height: String,
-    /// Max lines for the Input. Default 1.
-    #[props(default = "1".to_string(), into)]
-    max_lines: String,
+    pub mode: InputMode,
 }
 
 /// `Input` component.
@@ -51,7 +57,7 @@ pub struct InputProps<'a> {
 /// See [`InputProps`].
 ///
 /// # Styling
-/// Inherits the [`ButtonTheme`](freya_hooks::ButtonTheme) theme.
+/// Inherits the [`InputTheme`](freya_hooks::InputTheme) theme.
 ///
 /// # Example
 ///
@@ -76,37 +82,40 @@ pub struct InputProps<'a> {
 /// ```
 #[allow(non_snake_case)]
 pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
+    let platform = use_platform(cx);
+    let status = use_ref(cx, InputStatus::default);
     let editable = use_editable(
         cx,
         || EditableConfig::new(cx.props.value.to_string()),
         EditableMode::MultipleLinesSingleEditor,
     );
-    let theme = use_get_theme(cx);
+    let theme = use_applied_theme!(cx, &cx.props.theme, input);
     let focus_manager = use_focus(cx);
 
-    let text = match cx.props.hidden {
+    if &cx.props.value != editable.editor().current().rope() {
+        editable.editor().with_mut(|editor| {
+            editor.set(&cx.props.value);
+        });
+    }
+
+    let text = match cx.props.mode {
         InputMode::Hidden(ch) => ch.to_string().repeat(cx.props.value.len()),
         InputMode::Shown => cx.props.value.clone(),
     };
-    let cursor_attr = editable.cursor_attr(cx);
-    let highlights_attr = editable.highlights_attr(cx, 0);
-    let width = &cx.props.width;
-    let height = &cx.props.height;
-    let max_lines = &cx.props.max_lines;
 
-    use_memo(cx, &(cx.props.value.to_string(),), {
-        to_owned![editable];
-        move |(text,)| {
-            editable.editor().with_mut(|editor| {
-                editor.set(&text);
-            });
+    use_on_destroy(cx, {
+        to_owned![status, platform];
+        move || {
+            if *status.read() == InputStatus::Hovering {
+                platform.set_cursor(CursorIcon::default());
+            }
         }
     });
 
     let onkeydown = {
         to_owned![editable, focus_manager];
         move |e: Event<KeyboardData>| {
-            if focus_manager.is_focused() {
+            if focus_manager.is_focused() && e.data.key != Key::Enter {
                 editable.process_event(&EditableEvent::KeyDown(e.data));
                 cx.props
                     .onchange
@@ -119,6 +128,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
         to_owned![editable];
         move |e: MouseEvent| {
             editable.process_event(&EditableEvent::MouseDown(e.data, 0));
+            focus_manager.focus();
         }
     };
 
@@ -129,63 +139,80 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
         }
     };
 
-    let onclick = {
-        to_owned![editable];
-        move |_: MouseEvent| {
-            editable.process_event(&EditableEvent::Click);
-            focus_manager.focus();
+    let onmouseenter = {
+        to_owned![platform];
+        move |_| {
+            platform.set_cursor(CursorIcon::Text);
+            *status.write_silent() = InputStatus::Hovering;
         }
     };
 
-    let cursor_char = if focus_manager.is_focused() {
-        editable.editor().cursor_pos().to_string()
-    } else {
-        "none".to_string()
+    let onmouseleave = move |_| {
+        platform.set_cursor(CursorIcon::default());
+        *status.write_silent() = InputStatus::default();
     };
-    let ButtonTheme {
-        background,
-        font_theme: FontTheme { color, .. },
+
+    let onglobalclick = {
+        to_owned![editable];
+        move |_| match *status.read() {
+            InputStatus::Idle if focus_manager.is_focused() => {
+                focus_manager.unfocus();
+            }
+            InputStatus::Hovering => {
+                editable.process_event(&EditableEvent::Click);
+            }
+            _ => {}
+        }
+    };
+
+    let cursor_attr = editable.cursor_attr(cx);
+    let highlights_attr = editable.highlights_attr(cx, 0);
+
+    let (background, cursor_char) = if focus_manager.is_focused() {
+        (
+            theme.hover_background,
+            editable.editor().cursor_pos().to_string(),
+        )
+    } else {
+        (theme.background, "none".to_string())
+    };
+    let InputTheme {
+        border_fill,
+        width,
+        margin,
+        font_theme: FontTheme { color },
         ..
-    } = theme.button;
+    } = theme;
 
     render!(
-        CursorArea {
-            icon: CursorIcon::Text,
-            rect {
+        rect {
+            width: "{width}",
+            direction: "vertical",
+            color: "{color}",
+            background: "{background}",
+            border: "1 solid {border_fill}",
+            shadow: "0 3 15 0 rgb(0, 0, 0, 0.3)",
+            corner_radius: "10",
+            margin: "{margin}",
+            cursor_reference: cursor_attr,
+            main_align: "center",
+            paragraph {
+                margin: "8 12",
                 onkeydown: onkeydown,
-                onclick: onclick,
-                width: "auto",
-                height: "auto",
-                direction: "both",
-                padding: "1.5",
-                rect {
-                    width: "{width}",
-                    height: "{height}",
-                    direction: "vertical",
-                    display: "center",
-                    color: "{color}",
-                    background: "{background}",
-                    shadow: "0 3 15 0 rgb(0, 0, 0, 70)",
-                    corner_radius: "5",
-                    padding: "8",
-                    cursor_reference: cursor_attr,
-                    ScrollView {
-                        scroll_with_arrows: false,
-                        paragraph {
-                            width: "100%",
-                            cursor_id: "0",
-                            cursor_index: "{cursor_char}",
-                            cursor_mode: "editable",
-                            cursor_color: "{color}",
-                            max_lines: "{max_lines}",
-                            onmouseover: onmouseover,
-                            onmousedown: onmousedown,
-                            highlights: highlights_attr,
-                            text {
-                                "{text}"
-                            }
-                        }
-                    }
+                onglobalclick: onglobalclick,
+                onmouseenter: onmouseenter,
+                onmouseleave: onmouseleave,
+                onmousedown: onmousedown,
+                onmouseover: onmouseover,
+                width: "100%",
+                cursor_id: "0",
+                cursor_index: "{cursor_char}",
+                cursor_mode: "editable",
+                cursor_color: "{color}",
+                max_lines: "1",
+                highlights: highlights_attr,
+                text {
+                    "{text}"
                 }
             }
         }

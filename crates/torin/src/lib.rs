@@ -1,6 +1,8 @@
 pub mod custom_measurer;
 pub mod dom_adapter;
 pub mod geometry;
+mod measure;
+mod measure_mode;
 pub mod node;
 pub mod scaled;
 pub mod torin;
@@ -18,3 +20,5 @@ pub mod prelude {
     pub use crate::torin::*;
     pub use crate::values::prelude::*;
 }
+
+pub mod test_utils;

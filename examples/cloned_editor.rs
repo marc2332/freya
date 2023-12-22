@@ -59,8 +59,9 @@ fn Body(cx: Scope) -> Element {
             onglobalclick: onclick,
             background: "{theme.body.background}",
             VirtualScrollView {
-                width: "50%",
-                height: "100%",
+                theme: theme_with!(ScrollViewTheme {
+                    width: "50%".into(),
+                }),
                 length: editor.len_lines(),
                 item_size: 35.0,
                 builder_values: editable.clone(),
@@ -112,7 +113,7 @@ fn Body(cx: Scope) -> Element {
                             rect {
                                 width: "30",
                                 height: "100%",
-                                display: "center",
+                                main_align: "center",
                                 direction: "horizontal",
                                 label {
                                     font_size: "15",
@@ -142,8 +143,9 @@ fn Body(cx: Scope) -> Element {
                 })
             }
             VirtualScrollView {
-                width: "50%",
-                height: "100%",
+                theme: theme_with!(ScrollViewTheme {
+                    height: "50".into(),
+                }),
                 length: editor.len_lines(),
                 item_size: 35.0,
                 builder_values: editable.clone(),
@@ -196,7 +198,7 @@ fn Body(cx: Scope) -> Element {
                             rect {
                                 width: "30",
                                 height: "100%",
-                                display: "center",
+                                main_align: "center",
                                 direction: "horizontal",
                                 label {
                                     font_size: "15",

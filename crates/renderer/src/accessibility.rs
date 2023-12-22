@@ -6,7 +6,7 @@ use freya_core::{
         AccessibilityFocusDirection, AccessibilityProvider, AccessibilityState,
         SharedAccessibilityState, ROOT_ID,
     },
-    FocusSender,
+    types::FocusSender,
 };
 use winit::{event::WindowEvent, event_loop::EventLoopProxy, window::Window};
 
