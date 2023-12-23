@@ -219,17 +219,6 @@ impl<Key: NodeKey> Torin<Key> {
                 } else {
                     let parent_children = dom_adapter.children_of(&parent_id);
                     let multiple_children = parent_children.len() > 1;
-                    let mut found_node = false;
-
-                    // Mark as dirty all the siblings that come after this node
-                    for child_id in parent_children {
-                        if found_node {
-                            self.check_dirty_dependants(child_id, dom_adapter, true);
-                        }
-                        if child_id == node_id {
-                            found_node = true;
-                        }
-                    }
 
                     // Try using the node's parent as root candidate if it has multiple children
                     if multiple_children {
