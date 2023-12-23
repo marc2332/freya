@@ -298,7 +298,7 @@ impl<Key: NodeKey> Torin<Key> {
 
         let metadata = LayoutMetadata { root_area };
 
-        let root_measurement = measure_node(
+        let (root_revalidated, root_areas) = measure_node(
             root_id,
             &root,
             self,
@@ -308,14 +308,11 @@ impl<Key: NodeKey> Torin<Key> {
             true,
             dom_adapter,
             &metadata,
-            false,
         );
 
-        if let Some((root_revalidated, root_areas)) = root_measurement {
-            // Cache the root Node results if it was modified
-            if root_revalidated {
-                self.cache_node(root_id, root_areas);
-            }
+        // Cache the root Node results if it was modified
+        if root_revalidated {
+            self.cache_node(root_id, root_areas);
         }
 
         self.dirty.clear();
