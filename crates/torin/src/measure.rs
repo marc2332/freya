@@ -28,9 +28,11 @@ pub fn measure_node<Key: NodeKey>(
     dom_adapter: &mut impl DOMAdapter<Key>,
 
     layout_metadata: &LayoutMetadata,
-) -> (bool, NodeAreas) {
-    let must_run = layout.dirty.contains(&node_id) || layout.results.get(&node_id).is_none();
-    if must_run {
+
+    reached_tree_to_revalidate: bool,
+) -> Option<(bool, NodeAreas)> {
+    let must_revalidate = layout.dirty.contains(&node_id) || !layout.results.contains_key(&node_id);
+    if must_revalidate {
         // 1. Create the initial Node area size
         let mut area_size = Size2D::new(node.padding.horizontal(), node.padding.vertical());
 
@@ -165,10 +167,11 @@ pub fn measure_node<Key: NodeKey>(
                 &mut measurement_mode,
                 dom_adapter,
                 layout_metadata,
+                true,
             );
         }
 
-        (
+        Some((
             must_cache_inner_nodes,
             NodeAreas {
                 area,
@@ -176,8 +179,8 @@ pub fn measure_node<Key: NodeKey>(
                 inner_area,
                 inner_sizes,
             },
-        )
-    } else {
+        ))
+    } else if !reached_tree_to_revalidate {
         let areas = layout.get(node_id).unwrap().clone();
 
         let mut inner_sizes = areas.inner_sizes;
@@ -200,9 +203,12 @@ pub fn measure_node<Key: NodeKey>(
             &mut measurement_mode,
             dom_adapter,
             layout_metadata,
+            false,
         );
 
-        (false, areas)
+        Some((false, areas))
+    } else {
+        None
     }
 }
 
@@ -225,6 +231,8 @@ pub fn measure_inner_nodes<Key: NodeKey>(
     dom_adapter: &mut impl DOMAdapter<Key>,
 
     layout_metadata: &LayoutMetadata,
+
+    reached_tree_to_revalidate: bool,
 ) {
     let mut measure_children = |mode: &mut MeasureMode,
                                 available_area: &mut Area,
@@ -241,7 +249,7 @@ pub fn measure_inner_nodes<Key: NodeKey>(
 
             if parent_node.cross_alignment.is_not_start() {
                 // 1. First measure: Cross axis is not aligned
-                let (_, child_areas) = measure_node(
+                let first_node_measurement = measure_node(
                     child_id,
                     &child_data,
                     layout,
@@ -251,20 +259,23 @@ pub fn measure_inner_nodes<Key: NodeKey>(
                     false,
                     dom_adapter,
                     layout_metadata,
+                    reached_tree_to_revalidate,
                 );
 
-                // 2. Align the Cross axis
-                adapted_available_area.align_content(
-                    available_area,
-                    &child_areas.area.size,
-                    &parent_node.cross_alignment,
-                    &parent_node.direction,
-                    AlignmentDirection::Cross,
-                );
+                if let Some((_, child_areas)) = first_node_measurement {
+                    // 2. Align the Cross axis
+                    adapted_available_area.align_content(
+                        available_area,
+                        &child_areas.area.size,
+                        &parent_node.cross_alignment,
+                        &parent_node.direction,
+                        AlignmentDirection::Cross,
+                    );
+                }
             }
 
             // 3. Second measure
-            let (child_revalidated, child_areas) = measure_node(
+            let second_node_measurement = measure_node(
                 child_id,
                 &child_data,
                 layout,
@@ -274,20 +285,23 @@ pub fn measure_inner_nodes<Key: NodeKey>(
                 must_cache_inner_nodes,
                 dom_adapter,
                 layout_metadata,
+                reached_tree_to_revalidate,
             );
 
-            // Stack the child into its parent
-            mode.stack_into_node(
-                parent_node,
-                available_area,
-                &child_areas.area,
-                inner_sizes,
-                &child_data,
-            );
+            if let Some((child_revalidated, child_areas)) = second_node_measurement {
+                // Stack the child into its parent
+                mode.stack_into_node(
+                    parent_node,
+                    available_area,
+                    &child_areas.area,
+                    inner_sizes,
+                    &child_data,
+                );
 
-            // Cache the child layout if it was mutated and inner nodes must be cache
-            if child_revalidated && must_cache_inner_nodes {
-                layout.cache_node(child_id, child_areas);
+                // Cache the child layout if it was mutated and inner nodes must be cache
+                if child_revalidated && must_cache_inner_nodes {
+                    layout.cache_node(child_id, child_areas);
+                }
             }
         }
     };

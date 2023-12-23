@@ -30,6 +30,26 @@ impl<Key: NodeKey> RootNodeCandidate<Key> {
     pub fn take(&mut self) -> Self {
         mem::replace(self, Self::None)
     }
+
+    /// Propose a new root candidate
+    pub fn propose_new_candidate(
+        &mut self,
+        proposed_candidate: &Key,
+        dom_adapter: &mut impl DOMAdapter<Key>,
+    ) {
+        if let RootNodeCandidate::Valid(current_candidate) = self {
+            if current_candidate != proposed_candidate {
+                let closest_parent =
+                    dom_adapter.closest_common_parent(proposed_candidate, current_candidate);
+
+                if let Some(closest_parent) = closest_parent {
+                    *self = RootNodeCandidate::Valid(closest_parent);
+                }
+            }
+        } else {
+            *self = RootNodeCandidate::Valid(*proposed_candidate)
+        }
+    }
 }
 
 pub struct Torin<Key: NodeKey> {
@@ -164,12 +184,6 @@ impl<Key: NodeKey> Torin<Key> {
         self.dirty.insert(node_id);
     }
 
-    pub fn safe_invalidate(&mut self, node_id: Key, dom_adapter: &mut impl DOMAdapter<Key>) {
-        if dom_adapter.is_node_valid(&node_id) {
-            self.invalidate(node_id)
-        }
-    }
-
     // Mark as dirty the given Node and all the nodes that depend on it
     pub fn check_dirty_dependants(
         &mut self,
@@ -184,17 +198,8 @@ impl<Key: NodeKey> Torin<Key> {
         // Mark this node as dirty
         self.invalidate(node_id);
 
-        if RootNodeCandidate::None == self.root_node_candidate {
-            self.root_node_candidate = RootNodeCandidate::Valid(node_id);
-        } else if let RootNodeCandidate::Valid(root_candidate) = &mut self.root_node_candidate {
-            if node_id != *root_candidate {
-                let closest_parent = dom_adapter.closest_common_parent(&node_id, root_candidate);
-
-                if let Some(closest_parent) = closest_parent {
-                    *root_candidate = closest_parent;
-                }
-            }
-        }
+        self.root_node_candidate
+            .propose_new_candidate(&node_id, dom_adapter);
 
         // Mark as dirty this Node's children
         for child in dom_adapter.children_of(&node_id) {
@@ -208,35 +213,28 @@ impl<Key: NodeKey> Torin<Key> {
             let parent = dom_adapter.get_node(&parent_id);
 
             if let Some(parent) = parent {
-                // Mark parent if it depeneds on it's inner children
                 if parent.does_depend_on_inner() {
+                    // Mark parent if it depends on it's inner children
                     self.check_dirty_dependants(parent_id, dom_adapter, true);
-                }
-                // Mark as dirty all the siblings that come after this node
-                else {
+                } else {
+                    let parent_children = dom_adapter.children_of(&parent_id);
+                    let multiple_children = parent_children.len() > 1;
                     let mut found_node = false;
-                    let mut multiple_children = false;
-                    for child_id in dom_adapter.children_of(&parent_id) {
+
+                    // Mark as dirty all the siblings that come after this node
+                    for child_id in parent_children {
                         if found_node {
                             self.check_dirty_dependants(child_id, dom_adapter, true);
                         }
                         if child_id == node_id {
                             found_node = true;
-                        } else {
-                            multiple_children = true;
                         }
                     }
 
-                    // Try saving using  node's parent as root candidate if it has multiple children
+                    // Try using the node's parent as root candidate if it has multiple children
                     if multiple_children {
-                        if let RootNodeCandidate::Valid(root_candidate) = self.root_node_candidate {
-                            let closest_parent =
-                                dom_adapter.closest_common_parent(&parent_id, &root_candidate);
-
-                            if let Some(closest_parent) = closest_parent {
-                                self.root_node_candidate = RootNodeCandidate::Valid(closest_parent);
-                            }
-                        }
+                        self.root_node_candidate
+                            .propose_new_candidate(&parent_id, dom_adapter);
                     }
                 }
             }
@@ -300,7 +298,7 @@ impl<Key: NodeKey> Torin<Key> {
 
         let metadata = LayoutMetadata { root_area };
 
-        let (root_revalidated, root_areas) = measure_node(
+        let root_measurement = measure_node(
             root_id,
             &root,
             self,
@@ -310,11 +308,14 @@ impl<Key: NodeKey> Torin<Key> {
             true,
             dom_adapter,
             &metadata,
+            false,
         );
 
-        // Cache the root Node results if it was modified
-        if root_revalidated {
-            self.cache_node(root_id, root_areas);
+        if let Some((root_revalidated, root_areas)) = root_measurement {
+            // Cache the root Node results if it was modified
+            if root_revalidated {
+                self.cache_node(root_id, root_areas);
+            }
         }
 
         self.dirty.clear();
