@@ -12,6 +12,7 @@ use crate::{
 
 /// Measure a Node layout
 #[allow(clippy::too_many_arguments)]
+#[inline(always)]
 pub fn measure_node<Key: NodeKey>(
     node_id: Key,
     node: &Node,
@@ -207,6 +208,7 @@ pub fn measure_node<Key: NodeKey>(
 
 /// Measure the children layouts of a Node
 #[allow(clippy::too_many_arguments)]
+#[inline(always)]
 pub fn measure_inner_nodes<Key: NodeKey>(
     parent_node_id: &Key,
     parent_node: &Node,
