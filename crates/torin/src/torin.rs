@@ -201,11 +201,6 @@ impl<Key: NodeKey> Torin<Key> {
         self.root_node_candidate
             .propose_new_candidate(&node_id, dom_adapter);
 
-        // Mark as dirty this Node's children
-        for child in dom_adapter.children_of(&node_id) {
-            self.check_dirty_dependants(child, dom_adapter, true)
-        }
-
         // Mark this Node's parent if it is affected
         let parent_id = dom_adapter.parent_of(&node_id);
 
@@ -297,6 +292,7 @@ impl<Key: NodeKey> Torin<Key> {
             true,
             dom_adapter,
             &metadata,
+            false,
         );
 
         // Cache the root Node results if it was modified
