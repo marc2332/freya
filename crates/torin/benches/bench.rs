@@ -84,8 +84,9 @@ struct BenchmarkConfig {
 impl BenchmarkConfig {
     pub fn name(&self) -> String {
         format!(
-            "nodes={}, depth={}, mode={:?}",
+            "nodes={}, depth={}, wide={}, mode={:?}",
             self.size(),
+            self.wide,
             self.depth,
             self.mode
         )
@@ -134,13 +135,13 @@ fn criterion_benchmark(c: &mut Criterion) {
             sample: 500
         },
         BenchmarkConfig {
-            depth: 12,
+            depth: 10,
             wide: 2,
             mode: BenchmarkMode::NoCache,
             sample: 500
         },
         BenchmarkConfig {
-            depth: 14,
+            depth: 12,
             wide: 2,
             mode: BenchmarkMode::NoCache,
             sample: 25
