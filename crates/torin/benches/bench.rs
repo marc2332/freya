@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion, black_box};
 use torin::prelude::*;
 
 struct TestingMeasurer;
@@ -96,7 +96,7 @@ impl BenchmarkConfig {
         let mut acc = 0;
         let mut prev = 1;
 
-        for _ in 0..self.depth {
+        for _ in 0..self.depth - 1 {
             prev *= self.wide;
             acc += prev;
         }
@@ -254,13 +254,15 @@ fn criterion_benchmark(c: &mut Criterion) {
                         layout.invalidate(invalidate_node);
                     }
 
-                    layout.find_best_root(&mut mocked_dom);
-                    layout.measure(
-                        0,
-                        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
-                        &mut measurer,
-                        &mut mocked_dom,
-                    )
+                    black_box({
+                        layout.find_best_root(&mut mocked_dom);
+                        layout.measure(
+                            0,
+                            Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+                            &mut measurer,
+                            &mut mocked_dom,
+                        )
+                    })
                 },
                 criterion::BatchSize::SmallInput,
             )
