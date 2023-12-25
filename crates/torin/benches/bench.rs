@@ -260,15 +260,13 @@ fn criterion_benchmark(c: &mut Criterion) {
                         layout.invalidate(invalidate_node);
                     }
 
-                    black_box({
-                        layout.find_best_root(&mut mocked_dom);
-                        layout.measure(
-                            0,
-                            Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
-                            &mut measurer,
-                            &mut mocked_dom,
-                        )
-                    })
+                    layout.find_best_root(&mut mocked_dom);
+                    layout.measure(
+                        0,
+                        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+                        &mut measurer,
+                        &mut mocked_dom,
+                    )
                 },
                 criterion::BatchSize::SmallInput,
             )
