@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use criterion::{criterion_group, criterion_main, Criterion, black_box};
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use torin::prelude::*;
 
 struct TestingMeasurer;
@@ -116,19 +116,19 @@ fn criterion_benchmark(c: &mut Criterion) {
 
     let benchmarks = [
         BenchmarkConfig {
-            depth: 2,
+            depth: 1,
             wide: 1000,
             mode: BenchmarkMode::NoCache,
             sample: 500,
         },
         BenchmarkConfig {
-            depth: 2,
+            depth: 1,
             wide: 10000,
             mode: BenchmarkMode::NoCache,
             sample: 500,
         },
         BenchmarkConfig {
-            depth: 2,
+            depth: 1,
             wide: 100000,
             mode: BenchmarkMode::NoCache,
             sample: 500,
@@ -146,8 +146,8 @@ fn criterion_benchmark(c: &mut Criterion) {
             sample: 25,
         },
         BenchmarkConfig {
-            depth: 7,
-            wide: 5,
+            depth: 17,
+            wide: 2,
             mode: BenchmarkMode::NoCache,
             sample: 25,
         },
@@ -156,6 +156,12 @@ fn criterion_benchmark(c: &mut Criterion) {
             wide: 3,
             mode: BenchmarkMode::InvalidatedCache,
             sample: 500,
+        },
+        BenchmarkConfig {
+            depth: 7,
+            wide: 5,
+            mode: BenchmarkMode::NoCache,
+            sample: 25,
         },
     ];
 
@@ -228,7 +234,7 @@ fn criterion_benchmark(c: &mut Criterion) {
                     }
 
                     let mut invalidate_node = 0;
-                    build_branch(&mut mocked_dom, 0, 0, depth, wide, &mut invalidate_node);
+                    build_branch(&mut mocked_dom, 0, 0, depth + 1, wide, &mut invalidate_node);
 
                     let layout = if mode == BenchmarkMode::NoCache {
                         None
