@@ -78,6 +78,7 @@ struct BenchmarkConfig {
     depth: usize,
     wide: usize,
     mode: BenchmarkMode,
+    sample: usize
 }
 
 impl BenchmarkConfig {
@@ -109,49 +110,58 @@ enum BenchmarkMode {
 
 fn criterion_benchmark(c: &mut Criterion) {
     let mut g = c.benchmark_group("benchmarks");
-    g.significance_level(0.05).sample_size(500);
+  
 
     let benchmarks = [
         BenchmarkConfig {
             depth: 1,
             wide: 1000,
             mode: BenchmarkMode::NoCache,
+            sample: 500
         },
         BenchmarkConfig {
             depth: 1,
             wide: 10000,
             mode: BenchmarkMode::NoCache,
+            sample: 500
         },
         BenchmarkConfig {
             depth: 1,
             wide: 100000,
             mode: BenchmarkMode::NoCache,
+            sample: 500
         },
         BenchmarkConfig {
             depth: 12,
             wide: 2,
             mode: BenchmarkMode::NoCache,
+            sample: 500
         },
         BenchmarkConfig {
             depth: 14,
             wide: 2,
             mode: BenchmarkMode::NoCache,
+            sample: 25
         },
         BenchmarkConfig {
             depth: 17,
             wide: 2,
             mode: BenchmarkMode::NoCache,
+            sample: 25
         },
         BenchmarkConfig {
             depth: 10,
             wide: 3,
             mode: BenchmarkMode::InvalidatedCache,
+            sample: 500
         },
     ];
 
     for bench in benchmarks {
         let name = bench.name();
-        let BenchmarkConfig { depth, mode, wide } = bench;
+        let BenchmarkConfig { depth, mode, wide, sample} = bench;
+
+        g.significance_level(0.05).sample_size(sample);
 
         g.bench_function(name, |b| {
             b.iter_batched(
