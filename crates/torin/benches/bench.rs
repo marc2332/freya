@@ -86,8 +86,8 @@ impl BenchmarkConfig {
         format!(
             "nodes={}, depth={}, wide={}, mode={:?}",
             self.size(),
-            self.wide,
             self.depth,
+            self.wide,
             self.mode
         )
     }
@@ -96,7 +96,7 @@ impl BenchmarkConfig {
         let mut acc = 0;
         let mut prev = 1;
 
-        for _ in 0..self.depth {
+        for _ in 0..self.depth - 1 {
             prev *= self.wide;
             acc += prev;
         }
@@ -146,8 +146,8 @@ fn criterion_benchmark(c: &mut Criterion) {
             sample: 25,
         },
         BenchmarkConfig {
-            depth: 7,
-            wide: 5,
+            depth: 17,
+            wide: 2,
             mode: BenchmarkMode::NoCache,
             sample: 25,
         },
@@ -156,6 +156,12 @@ fn criterion_benchmark(c: &mut Criterion) {
             wide: 3,
             mode: BenchmarkMode::InvalidatedCache,
             sample: 500,
+        },
+        BenchmarkConfig {
+            depth: 7,
+            wide: 5,
+            mode: BenchmarkMode::NoCache,
+            sample: 25,
         },
     ];
 
@@ -179,7 +185,7 @@ fn criterion_benchmark(c: &mut Criterion) {
                     mocked_dom.add(
                         0,
                         None,
-                        (0..wide).map(|i| (i + 1) + 100).collect(),
+                        (0..wide - 1).map(|i| (i + 1) + 100).collect(),
                         Node::from_size_and_direction(
                             Size::Percentage(Length::new(100.0)),
                             Size::Percentage(Length::new(100.0)),
@@ -197,11 +203,11 @@ fn criterion_benchmark(c: &mut Criterion) {
 
                         mid_node: &mut usize,
                     ) -> Vec<usize> {
-                        if level == depth {
+                        if level == depth - 1 {
                             return vec![];
                         }
 
-                        let nodes = (0..=wide)
+                        let nodes = (0..=wide - 1)
                             .map(|i| i + ((level + 1) * 100) + (root * 10))
                             .into_iter()
                             .collect::<Vec<usize>>();
@@ -228,7 +234,7 @@ fn criterion_benchmark(c: &mut Criterion) {
                     }
 
                     let mut invalidate_node = 0;
-                    build_branch(&mut mocked_dom, 0, 0, depth, wide, &mut invalidate_node);
+                    build_branch(&mut mocked_dom, 0, 0, depth + 1, wide, &mut invalidate_node);
 
                     let layout = if mode == BenchmarkMode::NoCache {
                         None
@@ -254,13 +260,15 @@ fn criterion_benchmark(c: &mut Criterion) {
                         layout.invalidate(invalidate_node);
                     }
 
-                    layout.find_best_root(&mut mocked_dom);
-                    layout.measure(
-                        0,
-                        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
-                        &mut measurer,
-                        &mut mocked_dom,
-                    )
+                    black_box({
+                        layout.find_best_root(&mut mocked_dom);
+                        layout.measure(
+                            0,
+                            Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+                            &mut measurer,
+                            &mut mocked_dom,
+                        )
+                    })
                 },
                 criterion::BatchSize::SmallInput,
             )
