@@ -78,7 +78,7 @@ struct BenchmarkConfig {
     depth: usize,
     wide: usize,
     mode: BenchmarkMode,
-    sample: usize
+    sample: usize,
 }
 
 impl BenchmarkConfig {
@@ -113,56 +113,60 @@ enum BenchmarkMode {
 
 fn criterion_benchmark(c: &mut Criterion) {
     let mut g = c.benchmark_group("benchmarks");
-  
 
     let benchmarks = [
         BenchmarkConfig {
             depth: 1,
             wide: 1000,
             mode: BenchmarkMode::NoCache,
-            sample: 500
+            sample: 500,
         },
         BenchmarkConfig {
             depth: 1,
             wide: 10000,
             mode: BenchmarkMode::NoCache,
-            sample: 500
+            sample: 500,
         },
         BenchmarkConfig {
             depth: 1,
             wide: 100000,
             mode: BenchmarkMode::NoCache,
-            sample: 500
+            sample: 500,
         },
         BenchmarkConfig {
             depth: 10,
             wide: 2,
             mode: BenchmarkMode::NoCache,
-            sample: 500
+            sample: 500,
         },
         BenchmarkConfig {
             depth: 12,
             wide: 2,
             mode: BenchmarkMode::NoCache,
-            sample: 25
+            sample: 25,
         },
         BenchmarkConfig {
             depth: 7,
             wide: 5,
             mode: BenchmarkMode::NoCache,
-            sample: 25
+            sample: 25,
         },
         BenchmarkConfig {
             depth: 10,
             wide: 3,
             mode: BenchmarkMode::InvalidatedCache,
-            sample: 500
+            sample: 500,
         },
     ];
 
     for bench in benchmarks {
         let name = bench.name();
-        let BenchmarkConfig { depth, mode, wide, sample} = bench;
+        let BenchmarkConfig {
+            depth,
+            mode,
+            wide,
+            sample,
+        } = bench;
 
         g.significance_level(0.05).sample_size(sample);
 
@@ -235,30 +239,28 @@ fn criterion_benchmark(c: &mut Criterion) {
                     (mocked_dom, measurer, layout)
                 },
                 |(mut mocked_dom, mut measurer, layout)| {
-                    black_box({
-                        let (mut layout, invalidate_node) =
-                            layout.unwrap_or_else(|| (Torin::<usize>::new(), None));
+                    let (mut layout, invalidate_node) =
+                        layout.unwrap_or_else(|| (Torin::<usize>::new(), None));
 
-                        if let Some(invalidate_node) = invalidate_node {
-                            mocked_dom.set_node(
-                                invalidate_node,
-                                Node::from_size_and_direction(
-                                    Size::Inner,
-                                    Size::Pixels(Length::new(10.0)),
-                                    DirectionMode::Vertical,
-                                ),
-                            );
-                            layout.invalidate(invalidate_node);
-                        }
+                    if let Some(invalidate_node) = invalidate_node {
+                        mocked_dom.set_node(
+                            invalidate_node,
+                            Node::from_size_and_direction(
+                                Size::Inner,
+                                Size::Pixels(Length::new(10.0)),
+                                DirectionMode::Vertical,
+                            ),
+                        );
+                        layout.invalidate(invalidate_node);
+                    }
 
-                        layout.find_best_root(&mut mocked_dom);
-                        layout.measure(
-                            0,
-                            Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
-                            &mut measurer,
-                            &mut mocked_dom,
-                        )
-                    });
+                    layout.find_best_root(&mut mocked_dom);
+                    layout.measure(
+                        0,
+                        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
+                        &mut measurer,
+                        &mut mocked_dom,
+                    )
                 },
                 criterion::BatchSize::SmallInput,
             )
