@@ -443,13 +443,14 @@ fn criterion_benchmark(c: &mut Criterion) {
                         ),
                     );
 
-                    const LEVELS: usize = 9;
-                    const WIDE: usize = 2;
+                    const LEVELS: usize = 14;
+                    const WIDE: usize = 4;
 
                     fn build_branch(
                         mocked_dom: &mut TestingDOM,
                         root: usize,
                         level: usize,
+                        mid_node: &mut usize
                     ) -> Vec<usize> {
                         if level == LEVELS {
                             return vec![];
@@ -459,8 +460,13 @@ fn criterion_benchmark(c: &mut Criterion) {
                             .map(|i| i + ((level + 1) * 100) + (root * 10))
                             .into_iter()
                             .collect::<Vec<usize>>();
-                        for id in nodes.iter() {
-                            let children = build_branch(mocked_dom, *id, level + 1);
+                        for (i, id) in nodes.iter().enumerate() {
+
+                            if level == LEVELS / 2 && i == nodes.len() / 2 {
+                                *mid_node = *id;
+                            }
+
+                            let children = build_branch(mocked_dom, *id, level + 1, mid_node);
                             mocked_dom.add_with_depth(
                                 *id,
                                 Some(root),
@@ -476,7 +482,8 @@ fn criterion_benchmark(c: &mut Criterion) {
                         nodes
                     }
 
-                    build_branch(&mut mocked_dom, 0, 0);
+                    let mut invalidate_node = 0;
+                    build_branch(&mut mocked_dom, 0, 0, &mut invalidate_node);
 
                     layout.find_best_root(&mut mocked_dom);
                     layout.measure(
@@ -485,19 +492,19 @@ fn criterion_benchmark(c: &mut Criterion) {
                         &mut measurer,
                         &mut mocked_dom,
                     );
-                    (mocked_dom, measurer, layout)
+                    (mocked_dom, measurer, layout, invalidate_node)
                 },
-                |(mut mocked_dom, mut measurer, mut layout)| {
+                |(mut mocked_dom, mut measurer, mut layout, invalidate_node)| {
                     black_box({
                         mocked_dom.set_node(
-                            1202,
+                            invalidate_node,
                             Node::from_size_and_direction(
                                 Size::Inner,
                                 Size::Pixels(Length::new(10.0)),
                                 DirectionMode::Vertical,
                             ),
                         );
-                        layout.invalidate(12456790001);
+                        layout.invalidate(invalidate_node);
                         layout.find_best_root(&mut mocked_dom);
                         layout.measure(
                             0,
