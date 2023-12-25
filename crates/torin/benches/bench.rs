@@ -116,19 +116,19 @@ fn criterion_benchmark(c: &mut Criterion) {
 
     let benchmarks = [
         BenchmarkConfig {
-            depth: 1,
+            depth: 2,
             wide: 1000,
             mode: BenchmarkMode::NoCache,
             sample: 500,
         },
         BenchmarkConfig {
-            depth: 1,
+            depth: 2,
             wide: 10000,
             mode: BenchmarkMode::NoCache,
             sample: 500,
         },
         BenchmarkConfig {
-            depth: 1,
+            depth: 2,
             wide: 100000,
             mode: BenchmarkMode::NoCache,
             sample: 500,
