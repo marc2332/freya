@@ -86,8 +86,8 @@ impl BenchmarkConfig {
         format!(
             "nodes={}, depth={}, wide={}, mode={:?}",
             self.size(),
-            self.wide,
             self.depth,
+            self.wide,
             self.mode
         )
     }
