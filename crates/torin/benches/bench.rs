@@ -179,7 +179,7 @@ fn criterion_benchmark(c: &mut Criterion) {
                     mocked_dom.add(
                         0,
                         None,
-                        (0..wide).map(|i| (i + 1) + 100).collect(),
+                        (0..wide - 1).map(|i| (i + 1) + 100).collect(),
                         Node::from_size_and_direction(
                             Size::Percentage(Length::new(100.0)),
                             Size::Percentage(Length::new(100.0)),
@@ -197,11 +197,11 @@ fn criterion_benchmark(c: &mut Criterion) {
 
                         mid_node: &mut usize,
                     ) -> Vec<usize> {
-                        if level == depth {
+                        if level == depth - 1 {
                             return vec![];
                         }
 
-                        let nodes = (0..=wide)
+                        let nodes = (0..=wide - 1)
                             .map(|i| i + ((level + 1) * 100) + (root * 10))
                             .into_iter()
                             .collect::<Vec<usize>>();
