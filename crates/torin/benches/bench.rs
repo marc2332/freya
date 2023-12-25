@@ -1,6 +1,6 @@
+use criterion::{criterion_group, criterion_main, Criterion};
 use std::collections::HashMap;
-
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use std::fmt::Display;
 use torin::prelude::*;
 
 struct TestingMeasurer;
@@ -84,9 +84,9 @@ struct BenchmarkConfig {
 impl BenchmarkConfig {
     pub fn name(&self) -> String {
         format!(
-            "nodes={}, depth={}, wide={}, mode={:?}",
+            "nodes={}, depth={}, wide={}, mode={}",
             self.size(),
-            self.depth,
+            self.depth - 1, // Exclude root
             self.wide,
             self.mode
         )
@@ -105,10 +105,19 @@ impl BenchmarkConfig {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(PartialEq, Eq)]
 enum BenchmarkMode {
     NoCache,
     InvalidatedCache,
+}
+
+impl Display for BenchmarkMode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::NoCache => f.write_str("not cached"),
+            Self::InvalidatedCache => f.write_str("cached"),
+        }
+    }
 }
 
 fn criterion_benchmark(c: &mut Criterion) {
@@ -116,49 +125,49 @@ fn criterion_benchmark(c: &mut Criterion) {
 
     let benchmarks = [
         BenchmarkConfig {
-            depth: 1,
+            depth: 2,
             wide: 1000,
             mode: BenchmarkMode::NoCache,
             sample: 500,
         },
         BenchmarkConfig {
-            depth: 1,
+            depth: 2,
             wide: 10000,
             mode: BenchmarkMode::NoCache,
             sample: 500,
         },
         BenchmarkConfig {
-            depth: 1,
+            depth: 2,
             wide: 100000,
             mode: BenchmarkMode::NoCache,
             sample: 500,
         },
         BenchmarkConfig {
-            depth: 10,
+            depth: 13,
             wide: 2,
             mode: BenchmarkMode::NoCache,
             sample: 500,
         },
         BenchmarkConfig {
-            depth: 12,
+            depth: 15,
             wide: 2,
             mode: BenchmarkMode::NoCache,
             sample: 25,
         },
         BenchmarkConfig {
-            depth: 17,
+            depth: 18,
             wide: 2,
             mode: BenchmarkMode::NoCache,
             sample: 25,
         },
         BenchmarkConfig {
-            depth: 10,
+            depth: 11,
             wide: 3,
             mode: BenchmarkMode::InvalidatedCache,
             sample: 500,
         },
         BenchmarkConfig {
-            depth: 7,
+            depth: 8,
             wide: 5,
             mode: BenchmarkMode::NoCache,
             sample: 25,
@@ -234,7 +243,7 @@ fn criterion_benchmark(c: &mut Criterion) {
                     }
 
                     let mut invalidate_node = 0;
-                    build_branch(&mut mocked_dom, 0, 0, depth + 1, wide, &mut invalidate_node);
+                    build_branch(&mut mocked_dom, 0, 0, depth, wide, &mut invalidate_node);
 
                     let layout = if mode == BenchmarkMode::NoCache {
                         None
