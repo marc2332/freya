@@ -96,7 +96,7 @@ impl BenchmarkConfig {
         let mut acc = 0;
         let mut prev = 1;
 
-        for _ in 0..self.depth - 1 {
+        for _ in 0..self.depth {
             prev *= self.wide;
             acc += prev;
         }
