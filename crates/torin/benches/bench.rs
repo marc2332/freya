@@ -443,7 +443,7 @@ fn criterion_benchmark(c: &mut Criterion) {
                         ),
                     );
 
-                    const LEVELS: usize = 11;
+                    const LEVELS: usize = 10;
                     const WIDE: usize = 3;
 
                     fn build_branch(
