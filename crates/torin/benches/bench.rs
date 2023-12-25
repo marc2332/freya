@@ -74,21 +74,84 @@ impl DOMAdapter<usize> for TestingDOM {
     }
 }
 
+struct BenchmarkConfig {
+    depth: usize,
+    wide: usize,
+    mode: BenchmarkMode,
+}
+
+impl BenchmarkConfig {
+    pub fn name(&self) -> String {
+        format!(
+            "nodes={}, depth={}, mode={:?}",
+            self.size(),
+            self.depth,
+            self.mode
+        )
+    }
+
+    pub fn size(&self) -> usize {
+        let mut acc = 1;
+
+        for _ in 0..self.depth {
+            acc *= self.wide;
+        }
+
+        acc
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+enum BenchmarkMode {
+    NoCache,
+    InvalidatedCache,
+}
+
 fn criterion_benchmark(c: &mut Criterion) {
     let mut g = c.benchmark_group("benchmarks");
     g.significance_level(0.05).sample_size(500);
 
-    let params = [
-        ("big trees (wide) nodes=1000, depth=1", 1000, 1),
-        ("big trees (wide) nodes=10000, depth=1", 10000, 1),
-        ("big trees (wide) nodes=100000, depth=1", 100000, 1),
-        ("big trees (deep) nodes=4000, depth=12", 4000, 12),
-        ("big trees (deep) nodes=10000, depth=14", 10000, 14),
-        ("big trees (deep) nodes=100000, depth=17", 100000, 17),
+    let benchmarks = [
+        BenchmarkConfig {
+            depth: 1,
+            wide: 1000,
+            mode: BenchmarkMode::NoCache,
+        },
+        BenchmarkConfig {
+            depth: 1,
+            wide: 10000,
+            mode: BenchmarkMode::NoCache,
+        },
+        BenchmarkConfig {
+            depth: 1,
+            wide: 100000,
+            mode: BenchmarkMode::NoCache,
+        },
+        BenchmarkConfig {
+            depth: 12,
+            wide: 2,
+            mode: BenchmarkMode::NoCache,
+        },
+        BenchmarkConfig {
+            depth: 14,
+            wide: 2,
+            mode: BenchmarkMode::NoCache,
+        },
+        BenchmarkConfig {
+            depth: 17,
+            wide: 2,
+            mode: BenchmarkMode::NoCache,
+        },
+        BenchmarkConfig {
+            depth: 10,
+            wide: 3,
+            mode: BenchmarkMode::InvalidatedCache,
+        },
     ];
 
-    for (name, size, depth) in params {
-        let size_per_layer = size / depth;
+    for bench in benchmarks {
+        let name = bench.name();
+        let BenchmarkConfig { depth, mode, wide } = bench;
 
         g.bench_function(name, |b| {
             b.iter_batched(
@@ -96,377 +159,42 @@ fn criterion_benchmark(c: &mut Criterion) {
                     let measurer = Some(TestingMeasurer);
                     let mut mocked_dom = TestingDOM::default();
 
-                    let children_ids = (1..=size_per_layer).into_iter().collect::<Vec<usize>>();
-
-                    let mut root = 0;
-
                     mocked_dom.add(
                         0,
                         None,
-                        children_ids.clone(),
+                        (0..wide).map(|i| (i + 1) + 100).collect(),
                         Node::from_size_and_direction(
                             Size::Percentage(Length::new(100.0)),
                             Size::Percentage(Length::new(100.0)),
                             DirectionMode::Vertical,
                         ),
                     );
-
-                    for level in 0..depth {
-                        for i in &children_ids {
-                            let id = (level * size) + *i;
-                            let children = if level == depth - 1 {
-                                vec![]
-                            } else if *i == size_per_layer - 1 {
-                                (1..101)
-                                    .map(move |i| i + ((level + 1) * size))
-                                    .collect::<Vec<usize>>()
-                            } else {
-                                vec![]
-                            };
-
-                            mocked_dom.add(
-                                id,
-                                Some(root),
-                                children,
-                                Node::from_size_and_direction(
-                                    Size::Pixels(Length::new(100.0)),
-                                    Size::Pixels(Length::new(100.0)),
-                                    DirectionMode::Vertical,
-                                ),
-                            );
-
-                            if *i == size_per_layer - 1 {
-                                root = id
-                            }
-                        }
-                    }
-                    (mocked_dom, measurer)
-                },
-                |(mut mocked_dom, mut measurer)| {
-                    black_box({
-                        let mut layout = Torin::<usize>::new();
-                        layout.find_best_root(&mut mocked_dom);
-                        layout.measure(
-                            0,
-                            Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
-                            &mut measurer,
-                            &mut mocked_dom,
-                        )
-                    });
-                },
-                criterion::BatchSize::SmallInput,
-            )
-        });
-    }
-
-    g.bench_function(
-        "big trees (deep + cached) + invalidated node in the top",
-        |b| {
-            b.iter_batched(
-                || {
-                    let mut layout = Torin::<usize>::new();
-                    let mut measurer = Some(TestingMeasurer);
-                    let mut mocked_dom = TestingDOM::default();
-
-                    let children_ids = (1..=101).into_iter().collect::<Vec<usize>>();
-
-                    let mut root = 0;
-
-                    mocked_dom.add(
-                        0,
-                        None,
-                        children_ids.clone(),
-                        Node::from_size_and_direction(
-                            Size::Percentage(Length::new(100.0)),
-                            Size::Percentage(Length::new(100.0)),
-                            DirectionMode::Vertical,
-                        ),
-                    );
-
-                    let levels = 20;
-
-                    for level in 0..levels {
-                        for i in &children_ids {
-                            let id = (level * 1000) + *i;
-                            let children = if *i == 101 && level < levels - 1 {
-                                (1..101)
-                                    .map(move |i| i + ((level + 1) * 1000))
-                                    .collect::<Vec<usize>>()
-                            } else {
-                                vec![]
-                            };
-
-                            mocked_dom.add(
-                                id,
-                                Some(root),
-                                children,
-                                Node::from_size_and_direction(
-                                    Size::Pixels(Length::new(100.0)),
-                                    Size::Pixels(Length::new(100.0)),
-                                    DirectionMode::Vertical,
-                                ),
-                            );
-
-                            if *i == 101 {
-                                root = id
-                            }
-                        }
-                    }
-
-                    layout.find_best_root(&mut mocked_dom);
-                    layout.measure(
-                        0,
-                        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
-                        &mut measurer,
-                        &mut mocked_dom,
-                    );
-                    (mocked_dom, measurer, layout)
-                },
-                |(mut mocked_dom, mut measurer, mut layout)| {
-                    black_box({
-                        mocked_dom.set_node(
-                            1,
-                            Node::from_size_and_direction(
-                                Size::Inner,
-                                Size::Pixels(Length::new(10.0)),
-                                DirectionMode::Vertical,
-                            ),
-                        );
-                        layout.invalidate(1);
-                        layout.find_best_root(&mut mocked_dom);
-                        layout.measure(
-                            0,
-                            Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
-                            &mut measurer,
-                            &mut mocked_dom,
-                        )
-                    });
-                },
-                criterion::BatchSize::SmallInput,
-            )
-        },
-    );
-
-    g.bench_function(
-        "big trees (deep + cached) + invalidated node in the bottom",
-        |b| {
-            b.iter_batched(
-                || {
-                    let mut layout = Torin::<usize>::new();
-                    let mut measurer = Some(TestingMeasurer);
-                    let mut mocked_dom = TestingDOM::default();
-
-                    let children_ids = (1..=101).into_iter().collect::<Vec<usize>>();
-
-                    let mut root = 0;
-
-                    mocked_dom.add(
-                        0,
-                        None,
-                        children_ids.clone(),
-                        Node::from_size_and_direction(
-                            Size::Percentage(Length::new(100.0)),
-                            Size::Percentage(Length::new(100.0)),
-                            DirectionMode::Vertical,
-                        ),
-                    );
-
-                    let levels = 20;
-
-                    for level in 0..levels {
-                        for i in &children_ids {
-                            let id = (level * 1000) + *i;
-                            let children = if *i == 101 && level < levels - 1 {
-                                (1..101)
-                                    .map(move |i| i + ((level + 1) * 1000))
-                                    .collect::<Vec<usize>>()
-                            } else {
-                                vec![]
-                            };
-
-                            mocked_dom.add(
-                                id,
-                                Some(root),
-                                children,
-                                Node::from_size_and_direction(
-                                    Size::Pixels(Length::new(100.0)),
-                                    Size::Pixels(Length::new(100.0)),
-                                    DirectionMode::Vertical,
-                                ),
-                            );
-
-                            if *i == 101 {
-                                root = id
-                            }
-                        }
-                    }
-
-                    layout.find_best_root(&mut mocked_dom);
-                    layout.measure(
-                        0,
-                        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
-                        &mut measurer,
-                        &mut mocked_dom,
-                    );
-                    (mocked_dom, measurer, layout)
-                },
-                |(mut mocked_dom, mut measurer, mut layout)| {
-                    black_box({
-                        mocked_dom.set_node(
-                            1,
-                            Node::from_size_and_direction(
-                                Size::Inner,
-                                Size::Pixels(Length::new(10.0)),
-                                DirectionMode::Vertical,
-                            ),
-                        );
-                        layout.invalidate(2001);
-                        layout.find_best_root(&mut mocked_dom);
-                        layout.measure(
-                            0,
-                            Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
-                            &mut measurer,
-                            &mut mocked_dom,
-                        )
-                    });
-                },
-                criterion::BatchSize::SmallInput,
-            )
-        },
-    );
-
-    g.bench_function(
-        "big trees (deep + cached) + invalidated node in the middle",
-        |b| {
-            b.iter_batched(
-                || {
-                    let mut layout = Torin::<usize>::new();
-                    let mut measurer = Some(TestingMeasurer);
-                    let mut mocked_dom = TestingDOM::default();
-
-                    let children_ids = (1..=101).into_iter().collect::<Vec<usize>>();
-
-                    let mut root = 0;
-
-                    mocked_dom.add(
-                        0,
-                        None,
-                        children_ids.clone(),
-                        Node::from_size_and_direction(
-                            Size::Percentage(Length::new(100.0)),
-                            Size::Percentage(Length::new(100.0)),
-                            DirectionMode::Vertical,
-                        ),
-                    );
-
-                    let levels = 20;
-
-                    for level in 0..levels {
-                        for i in &children_ids {
-                            let id = (level * 1000) + *i;
-                            let children = if *i == 101 && level < levels - 1 {
-                                (1..101)
-                                    .map(move |i| i + ((level + 1) * 1000))
-                                    .collect::<Vec<usize>>()
-                            } else {
-                                vec![]
-                            };
-
-                            mocked_dom.add(
-                                id,
-                                Some(root),
-                                children,
-                                Node::from_size_and_direction(
-                                    Size::Pixels(Length::new(100.0)),
-                                    Size::Pixels(Length::new(100.0)),
-                                    DirectionMode::Vertical,
-                                ),
-                            );
-
-                            if *i == 101 {
-                                root = id
-                            }
-                        }
-                    }
-
-                    layout.find_best_root(&mut mocked_dom);
-                    layout.measure(
-                        0,
-                        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
-                        &mut measurer,
-                        &mut mocked_dom,
-                    );
-                    (mocked_dom, measurer, layout)
-                },
-                |(mut mocked_dom, mut measurer, mut layout)| {
-                    black_box({
-                        mocked_dom.set_node(
-                            1001,
-                            Node::from_size_and_direction(
-                                Size::Inner,
-                                Size::Pixels(Length::new(10.0)),
-                                DirectionMode::Vertical,
-                            ),
-                        );
-                        layout.invalidate(1001);
-                        layout.find_best_root(&mut mocked_dom);
-                        layout.measure(
-                            0,
-                            Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
-                            &mut measurer,
-                            &mut mocked_dom,
-                        )
-                    });
-                },
-                criterion::BatchSize::SmallInput,
-            )
-        },
-    );
-
-    g.bench_function(
-        "big trees (deep + branches + cached) + invalidated node in the middle",
-        |b| {
-            b.iter_batched(
-                || {
-                    let mut layout = Torin::<usize>::new();
-                    let mut measurer = Some(TestingMeasurer);
-                    let mut mocked_dom = TestingDOM::default();
-
-                    mocked_dom.add(
-                        0,
-                        None,
-                        vec![101, 102],
-                        Node::from_size_and_direction(
-                            Size::Percentage(Length::new(100.0)),
-                            Size::Percentage(Length::new(100.0)),
-                            DirectionMode::Vertical,
-                        ),
-                    );
-
-                    const LEVELS: usize = 9;
-                    const WIDE: usize = 2;
 
                     fn build_branch(
                         mocked_dom: &mut TestingDOM,
                         root: usize,
                         level: usize,
-                        mid_node: &mut usize
+
+                        depth: usize,
+                        wide: usize,
+
+                        mid_node: &mut usize,
                     ) -> Vec<usize> {
-                        if level == LEVELS {
+                        if level == depth {
                             return vec![];
                         }
 
-                        let nodes = (0..=WIDE)
+                        let nodes = (0..=wide)
                             .map(|i| i + ((level + 1) * 100) + (root * 10))
                             .into_iter()
                             .collect::<Vec<usize>>();
                         for (i, id) in nodes.iter().enumerate() {
-
-                            if level == LEVELS / 2 && i == nodes.len() / 2 {
+                            if level == depth / 2 && i == nodes.len() / 2 {
                                 *mid_node = *id;
                             }
 
-                            let children = build_branch(mocked_dom, *id, level + 1, mid_node);
+                            let children =
+                                build_branch(mocked_dom, *id, level + 1, depth, wide, mid_node);
                             mocked_dom.add_with_depth(
                                 *id,
                                 Some(root),
@@ -483,28 +211,33 @@ fn criterion_benchmark(c: &mut Criterion) {
                     }
 
                     let mut invalidate_node = 0;
-                    build_branch(&mut mocked_dom, 0, 0, &mut invalidate_node);
+                    build_branch(&mut mocked_dom, 0, 0, depth, wide, &mut invalidate_node);
 
-                    layout.find_best_root(&mut mocked_dom);
-                    layout.measure(
-                        0,
-                        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
-                        &mut measurer,
-                        &mut mocked_dom,
-                    );
-                    (mocked_dom, measurer, layout, invalidate_node)
+                    let layout = if mode == BenchmarkMode::NoCache {
+                        None
+                    } else {
+                        Some((Torin::<usize>::new(), Some(invalidate_node)))
+                    };
+
+                    (mocked_dom, measurer, layout)
                 },
-                |(mut mocked_dom, mut measurer, mut layout, invalidate_node)| {
+                |(mut mocked_dom, mut measurer, layout)| {
                     black_box({
-                        mocked_dom.set_node(
-                            invalidate_node,
-                            Node::from_size_and_direction(
-                                Size::Inner,
-                                Size::Pixels(Length::new(10.0)),
-                                DirectionMode::Vertical,
-                            ),
-                        );
-                        layout.invalidate(invalidate_node);
+                        let (mut layout, invalidate_node) =
+                            layout.unwrap_or_else(|| (Torin::<usize>::new(), None));
+
+                        if let Some(invalidate_node) = invalidate_node {
+                            mocked_dom.set_node(
+                                invalidate_node,
+                                Node::from_size_and_direction(
+                                    Size::Inner,
+                                    Size::Pixels(Length::new(10.0)),
+                                    DirectionMode::Vertical,
+                                ),
+                            );
+                            layout.invalidate(invalidate_node);
+                        }
+
                         layout.find_best_root(&mut mocked_dom);
                         layout.measure(
                             0,
@@ -516,8 +249,8 @@ fn criterion_benchmark(c: &mut Criterion) {
                 },
                 criterion::BatchSize::SmallInput,
             )
-        },
-    );
+        });
+    }
 }
 
 criterion_group!(benches, criterion_benchmark);
