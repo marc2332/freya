@@ -92,10 +92,12 @@ impl BenchmarkConfig {
     }
 
     pub fn size(&self) -> usize {
-        let mut acc = 1;
+        let mut acc = 0;
+        let mut prev = 1;
 
         for _ in 0..self.depth {
-            acc *= self.wide;
+            prev *= self.wide;
+            acc += prev;
         }
 
         acc
@@ -144,7 +146,7 @@ fn criterion_benchmark(c: &mut Criterion) {
             sample: 25
         },
         BenchmarkConfig {
-            depth: 17,
+            depth: 16,
             wide: 2,
             mode: BenchmarkMode::NoCache,
             sample: 25
