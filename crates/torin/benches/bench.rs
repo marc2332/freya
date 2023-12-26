@@ -192,9 +192,10 @@ fn criterion_benchmark(c: &mut Criterion) {
         g.significance_level(0.05).sample_size(sample);
 
         g.bench_function(name, |b| {
+            let root_area = Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0));
             b.iter_batched(
                 || {
-                    let measurer = Some(TestingMeasurer);
+                    let mut measurer = Some(TestingMeasurer);
                     let mut mocked_dom = TestingDOM::default();
 
                     mocked_dom.add(
@@ -254,7 +255,10 @@ fn criterion_benchmark(c: &mut Criterion) {
                     let layout = if mode == BenchmarkMode::NoCache {
                         None
                     } else {
-                        Some((Torin::<usize>::new(), Some(invalidate_node)))
+                        let mut layout = Torin::<usize>::new();
+                        layout.find_best_root(&mut mocked_dom);
+                        layout.measure(0, root_area, &mut measurer, &mut mocked_dom);
+                        Some((layout, Some(invalidate_node)))
                     };
 
                     (mocked_dom, measurer, layout)
@@ -276,12 +280,7 @@ fn criterion_benchmark(c: &mut Criterion) {
                     }
 
                     layout.find_best_root(&mut mocked_dom);
-                    layout.measure(
-                        0,
-                        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(1000.0, 1000.0)),
-                        &mut measurer,
-                        &mut mocked_dom,
-                    )
+                    layout.measure(0, root_area, &mut measurer, &mut mocked_dom)
                 },
                 criterion::BatchSize::SmallInput,
             )
