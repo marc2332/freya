@@ -163,6 +163,12 @@ fn criterion_benchmark(c: &mut Criterion) {
         BenchmarkConfig {
             depth: 5,
             wide: 15,
+            mode: BenchmarkMode::NoCache,
+            sample: 500,
+        },
+        BenchmarkConfig {
+            depth: 5,
+            wide: 15,
             mode: BenchmarkMode::InvalidatedCache,
             sample: 500,
         },
