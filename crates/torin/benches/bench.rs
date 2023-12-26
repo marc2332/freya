@@ -252,22 +252,11 @@ fn criterion_benchmark(c: &mut Criterion) {
                     let mut invalidate_node = 0;
                     build_branch(&mut mocked_dom, 0, 0, depth, wide, &mut invalidate_node);
 
-                    let layout = if mode == BenchmarkMode::NoCache {
-                        None
-                    } else {
-                        let mut layout = Torin::<usize>::new();
+                    let mut layout = Torin::<usize>::new();
+
+                    if mode == BenchmarkMode::InvalidatedCache {
                         layout.find_best_root(&mut mocked_dom);
                         layout.measure(0, root_area, &mut measurer, &mut mocked_dom);
-                        Some((layout, Some(invalidate_node)))
-                    };
-
-                    (mocked_dom, measurer, layout)
-                },
-                |(mut mocked_dom, mut measurer, layout)| {
-                    let (mut layout, invalidate_node) =
-                        layout.unwrap_or_else(|| (Torin::<usize>::new(), None));
-
-                    if let Some(invalidate_node) = invalidate_node {
                         mocked_dom.set_node(
                             invalidate_node,
                             Node::from_size_and_direction(
@@ -279,6 +268,9 @@ fn criterion_benchmark(c: &mut Criterion) {
                         layout.invalidate(invalidate_node);
                     }
 
+                    (mocked_dom, measurer, layout)
+                },
+                |(mut mocked_dom, mut measurer, mut layout)| {
                     layout.find_best_root(&mut mocked_dom);
                     layout.measure(0, root_area, &mut measurer, &mut mocked_dom)
                 },
