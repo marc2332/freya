@@ -1,0 +1,24 @@
+[package]
+name = "freya-installer-example"
+version = "0.1.0"
+edition = "2021"
+build = "build.rs"
+
+[dependencies]
+freya = { workspace = true }
+dioxus = { workspace = true }
+
+[build-dependencies]
+winresource = "0.1"
+
+[package.metadata.packager]
+before-packaging-command = "cargo build --release"
+product-name = "Freya + cargo-packager"
+identifier = "com.freya-installer.example"
+icons = [
+  "icon.png",
+  "icon.ico"
+]
+
+[package.metadata.winresource]
+ProductName = "Freya Installer Example"

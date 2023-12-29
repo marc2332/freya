@@ -410,7 +410,7 @@ builder_constructors! {
         #[doc = include_str!("_docs/attributes/decoration_style.md")]
         decoration_style: String,
         #[doc = include_str!("_docs/attributes/decoration_color.md")]
-        decoraton_color: String,
+        decoration_color: String,
     };
     /// `image` element let's you show an image.
     ///
