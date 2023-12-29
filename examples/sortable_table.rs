@@ -59,32 +59,3 @@ fn app(cx: Scope) -> Element {
         }
     )
 }
-
-// fn app(cx: Scope) -> Element {
-//     let headers = vec!["Name", "Dollars"];
-//
-//     let rows = vec![
-//         vec![PersonColumn::Name("John Smith", 120)],
-//         vec![PersonColumn::Name("Alice", -81)],
-//         vec![PersonColumn::Name("John Doe", 18)],
-//         vec![PersonColumn::Name("Just made a bank account", 0)],
-//         vec![PersonColumn::Name("100 number guy 9", 1)],
-//         vec![PersonColumn::Name("Richie Rich", 999_999_999_999)],
-//         vec![PersonColumn::Name("Mose Schrute", 2)],
-//         vec![PersonColumn::Name("Michael Scott", 2500)],
-//         vec![PersonColumn::Name("Michael Scarn", 5000)],
-//         vec![PersonColumn::Name("Prison Mike", -25000)],
-//         vec![PersonColumn::Name("Gavin Belson", 4_500_000_000)],
-//         vec![PersonColumn::Dollars(710, 77)],
-//     ];
-//
-//     let table = SortableTable::new(headers, rows);
-//
-//     render!(
-//         SortableTable {
-//             table: RefCell::new(table),
-//             default_order_direction: OrderDirection::Down,
-//             alternate_colors: true,
-//         }
-//     )
-// }
