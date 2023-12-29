@@ -1,7 +1,12 @@
 use crate::{use_editable, EditableMode, TextEditor};
 use freya::prelude::*;
-use freya_elements::events::keyboard::{Code, Key, Modifiers};
-use freya_testing::{launch_test, FreyaEvent, MouseButton};
+use freya_testing::{
+    events::{
+        keyboard::{Code, Key, Modifiers},
+        pointer::MouseButton,
+    },
+    launch_test, FreyaEvent,
+};
 
 #[tokio::test]
 pub async fn multiple_lines_single_editor() {
