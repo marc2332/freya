@@ -110,9 +110,9 @@ pub fn TableRow<'a>(cx: Scope<'a, TableRowProps<'a>>) -> Element {
 
 #[derive(Clone, Copy, PartialEq, Debug, Default)]
 pub enum OrderDirection {
-    /// Alternatively: ascending.
-    Up,
     /// Alternatively: descending.
+    Up,
+    /// Alternatively: ascending.
     #[default]
     Down,
 }
