@@ -11,20 +11,10 @@ fn main() {
     launch_with_props(app, "Sortable table", (500.0, 500.0));
 }
 
-#[derive(PartialOrd, PartialEq, Eq)]
-enum PersonColumn {
-    Name(&'static str),
-    Dollars(i64),
-}
-
-impl Ord for PersonColumn {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        match (self, other) {
-            (PersonColumn::Name(s1), PersonColumn::Name(s2)) => s1.cmp(s2),
-            (PersonColumn::Dollars(n1), PersonColumn::Dollars(n2)) => n1.cmp(n2),
-            (PersonColumn::Name(_), PersonColumn::Dollars(_)) => std::cmp::Ordering::Equal,
-            (PersonColumn::Dollars(_), PersonColumn::Name(_)) => std::cmp::Ordering::Equal,
-        }
+impl_sortable_table_row! {
+    pub struct Person {
+        pub name: &'static str,
+        pub dollars: i64,
     }
 }
 
@@ -37,33 +27,64 @@ impl Display for PersonColumn {
     }
 }
 
+impl Person {
+    pub fn new(name: &'static str, dollars: i64) -> Self {
+        Person { name, dollars }
+    }
+}
+
 fn app(cx: Scope) -> Element {
-    let headers = vec![
-        SortableTableHeader::new("Name", Box::new(|a: &PersonColumn, b: &PersonColumn| a.cmp(b))),
-        SortableTableHeader::new("Dollars", Box::new(|a: &PersonColumn, b: &PersonColumn| a.cmp(b))),
-    ];
-
     let rows = vec![
-        vec![PersonColumn::Name("John Smith"), PersonColumn::Dollars(120)],
-        vec![PersonColumn::Name("Alice"), PersonColumn::Dollars(-81)],
-        vec![PersonColumn::Name("John Doe"), PersonColumn::Dollars(18)],
-        vec![PersonColumn::Name("Just made a bank account"), PersonColumn::Dollars(0)],
-        vec![PersonColumn::Name("100 number guy 9"), PersonColumn::Dollars(1)],
-        vec![PersonColumn::Name("Richie Rich"), PersonColumn::Dollars(999_999_999_999)],
-        vec![PersonColumn::Name("Mose Schrute"), PersonColumn::Dollars(2)],
-        vec![PersonColumn::Name("Michael Scott"), PersonColumn::Dollars(2500)],
-        vec![PersonColumn::Name("Michael Scarn"), PersonColumn::Dollars(5000)],
-        vec![PersonColumn::Name("Prison Mike"), PersonColumn::Dollars(-25000)],
-        vec![PersonColumn::Name("Gavin Belson"), PersonColumn::Dollars(4_500_000_000)],
+        Person::new("John Smith", 120),
+        Person::new("Alice", -81),
+        Person::new("John Doe", 18),
+        Person::new("Just made a bank account", 0),
+        Person::new("100 number guy 9", 1),
+        Person::new("Richie Rich", 999_999_999_999),
+        Person::new("Mose Schrute", 2),
+        Person::new("Michael Scott", 2500),
+        Person::new("Michael Scarn", 5000),
+        Person::new("Prison Mike", -25000),
+        Person::new("Gavin Belson", 4_500_000_000),
     ];
 
-    let table = SortableTable::new(headers, rows);
+    let table = SortableTable::new(rows);
 
     render!(
         SortableTable {
             table: RefCell::new(table),
+            default_sorted_column: PersonColumnPointer::Name,
             default_order_direction: OrderDirection::Down,
             alternate_colors: true,
         }
     )
 }
+
+// fn app(cx: Scope) -> Element {
+//     let headers = vec!["Name", "Dollars"];
+//
+//     let rows = vec![
+//         vec![PersonColumn::Name("John Smith", 120)],
+//         vec![PersonColumn::Name("Alice", -81)],
+//         vec![PersonColumn::Name("John Doe", 18)],
+//         vec![PersonColumn::Name("Just made a bank account", 0)],
+//         vec![PersonColumn::Name("100 number guy 9", 1)],
+//         vec![PersonColumn::Name("Richie Rich", 999_999_999_999)],
+//         vec![PersonColumn::Name("Mose Schrute", 2)],
+//         vec![PersonColumn::Name("Michael Scott", 2500)],
+//         vec![PersonColumn::Name("Michael Scarn", 5000)],
+//         vec![PersonColumn::Name("Prison Mike", -25000)],
+//         vec![PersonColumn::Name("Gavin Belson", 4_500_000_000)],
+//         vec![PersonColumn::Dollars(710, 77)],
+//     ];
+//
+//     let table = SortableTable::new(headers, rows);
+//
+//     render!(
+//         SortableTable {
+//             table: RefCell::new(table),
+//             default_order_direction: OrderDirection::Down,
+//             alternate_colors: true,
+//         }
+//     )
+// }

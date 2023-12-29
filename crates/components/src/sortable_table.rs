@@ -1,53 +1,110 @@
+use std::fmt::Display;
+use std::result::Result;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use std::cmp::Ordering;
-use std::fmt::Display;
 use std::cell::RefCell;
 use freya_hooks::theme_with;
 use freya_hooks::ScrollViewThemeWith;
 use crate::*;
+pub use paste::paste;
 
-type Sorter<T> = Box<dyn Fn(&T, &T) -> Ordering>;
-
-pub struct SortableTableHeader<T, TTitle> where TTitle: Display {
-    title: TTitle,
-    sorter: Sorter<T>,
+pub trait SortableTableColumnPointer: Copy where Self: 'static {
+    const COLUMN_TITLES: &'static [(Self, &'static str)];
 }
 
-impl<T, TTitle> SortableTableHeader<T, TTitle> where TTitle: Display {
-    pub fn new(title: TTitle, sorter: Sorter<T>) -> Self {
-        Self { title, sorter }
+pub trait SortableTableRow {
+    type Column;
+    type ColumnPointer: SortableTableColumnPointer;
+    fn compare(&self, with_other: &Self, by_column_pointer: Self::ColumnPointer) -> Ordering;
+    fn get_column(&self, column_pointer: Self::ColumnPointer) -> Self::Column;
+    fn get_columns(&self) -> Vec<Self::Column>;
+}
+
+#[macro_export]
+macro_rules! impl_sortable_table_row {
+    (
+        $(#[$attrs:meta])*
+        $vis:vis struct $name:ident {
+            $(
+            $(#[$field_attrs:meta])*
+            $field_vis:vis $field_name:ident: $field_type:ty,
+            )*
+        }
+    ) => {
+        $(#[$attrs])*
+        $vis struct $name {
+            $(
+            $(#[$field_attrs])*
+            $field_vis $field_name: $field_type,
+            )*
+        }
+
+        $crate::paste! {
+            #[derive(PartialEq, PartialOrd, Eq, Ord)]
+            $vis enum [<$name Column>] {
+                $(
+                [<$field_name:camel>] ($field_type),
+                )*
+            }
+
+            #[derive(PartialEq, Clone, Copy)]
+            $vis enum [<$name ColumnPointer>] {
+                $(
+                [<$field_name:camel>],
+                )*
+            }
+
+            impl $crate::SortableTableColumnPointer for [<$name ColumnPointer>] {
+                const COLUMN_TITLES: &'static [(Self, &'static str)] = &[$((Self::[<$field_name:camel>], stringify!([<$field_name:camel>])),)*];
+            }
+
+            impl $crate::SortableTableRow for $name {
+                type Column = [<$name Column>];
+                type ColumnPointer = [<$name ColumnPointer>];
+
+                fn compare(&self, with_other: &Self, by_column_pointer: Self::ColumnPointer) -> ::core::cmp::Ordering {
+                    self.get_column(by_column_pointer).cmp(&with_other.get_column(by_column_pointer))
+                }
+
+                fn get_column(&self, column_pointer: Self::ColumnPointer) -> Self::Column {
+                    match column_pointer {
+                        $(
+                        [<$name ColumnPointer>] :: [<$field_name:camel>] => [<$name Column>] :: [<$field_name:camel>] (self.$field_name),
+                        )*
+                    }
+                }
+
+                fn get_columns(&self) -> Vec<Self::Column> {
+                    vec![$([<$name Column>] :: [<$field_name:camel>] (self.$field_name),)*]
+                }
+            }
+        }
+    };
+}
+
+// impl_row! {
+//     pub struct Person {
+//         pub name: &'static str,
+//         pub dollars: i64,
+//     }
+// }
+
+pub struct SortableTable<R> where R: SortableTableRow {
+    pub rows: Vec<R>,
+}
+
+impl<R> SortableTable<R> where R: SortableTableRow {
+    pub fn new(rows: Vec<R>) -> Self {
+        Self { rows }
     }
-}
 
-pub struct SortableTable<T, TTitle> where TTitle: Display {
-    pub headers: Vec<SortableTableHeader<T, TTitle>>,
-    pub rows: Vec<Vec<T>>,
-}
-
-impl<T, TTitle> SortableTable<T, TTitle> where TTitle: Display {
-    pub fn new(headers: Vec<SortableTableHeader<T, TTitle>>, rows: Vec<Vec<T>>) -> Self {
-        Self { headers, rows }
-    }
-
-    pub fn sort_by_header(&mut self, header_index: usize, reverse_sort: bool) -> Result<(), String> {
-        let Some(header) = self.headers.get(header_index) else {
-            return Err(format!("the header at requested index {header_index} does not exist"));
-        };
-
-        let sorter = &header.sorter;
-
+    pub fn sort_by(&mut self, column_pointer: R::ColumnPointer, reverse_sort: bool) -> Result<(), String> {
         self.rows.sort_by(|a, b| {
-            let Some(cell_a) = a.get(header_index) else {
-                return Ordering::Equal;
-            };
-            let Some(cell_b) = b.get(header_index) else {
-                return Ordering::Equal;
-            };
             if reverse_sort {
-                sorter(cell_b, cell_a)
+                b.compare(a, column_pointer)
             } else {
-                sorter(cell_a, cell_b)
+                a.compare(b, column_pointer)
             }
         });
 
@@ -62,9 +119,10 @@ pub enum SortableTableType {
 }
 
 #[derive(Props)]
-pub struct SortableTableProps<T, TTitle> where TTitle: Display {
-    pub table: RefCell<SortableTable<T, TTitle>>,
+pub struct SortableTableProps<R> where R: SortableTableRow {
+    pub table: RefCell<SortableTable<R>>,
     pub default_order_direction: OrderDirection,
+    pub default_sorted_column: R::ColumnPointer,
     #[props(default = false)]
     pub alternate_colors: bool,
     #[props(default = SortableTableType::NonScrollable)]
@@ -72,30 +130,36 @@ pub struct SortableTableProps<T, TTitle> where TTitle: Display {
 }
 
 #[allow(non_snake_case)]
-pub fn SortableTable<T, TTitle>(
-    cx: Scope<SortableTableProps<T, TTitle>>,
-) -> Element where T: Display, TTitle: Display {
-    let SortableTableProps { table, default_order_direction, alternate_colors, r#type } = &cx.props;
-    let current_header = use_state(cx, || 0);
+pub fn SortableTable<R>(
+    cx: Scope<SortableTableProps<R>>,
+) -> Element where R: SortableTableRow, R::Column: Display, R::ColumnPointer: PartialEq {
+    let SortableTableProps {
+        table,
+        default_order_direction,
+        default_sorted_column,
+        alternate_colors,
+        r#type
+    } = &cx.props;
+    let current_sorted_column = use_state(cx, || *default_sorted_column);
     let order_direction = use_state(cx, || *default_order_direction);
 
-    let on_header_click = |new_header_i: usize| {
-        if *current_header.get() == new_header_i {
+    let on_header_click = |new_sorted_column: R::ColumnPointer| {
+        if *current_sorted_column.get() == new_sorted_column {
             if *order_direction.get() == OrderDirection::Up {
                 order_direction.set(OrderDirection::Down);
             } else {
                 order_direction.set(OrderDirection::Up);
             }
         } else {
-            current_header.set(new_header_i);
+            current_sorted_column.set(new_sorted_column);
             order_direction.set(*default_order_direction);
         }
     };
 
     if *order_direction.get() == OrderDirection::Down {
-        table.borrow_mut().sort_by_header(*current_header.get(), false).unwrap();
+        table.borrow_mut().sort_by(*current_sorted_column.get(), false).unwrap();
     } else {
-        table.borrow_mut().sort_by_header(*current_header.get(), true).unwrap();
+        table.borrow_mut().sort_by(*current_sorted_column.get(), true).unwrap();
     }
 
     let table_ref = table.borrow();
@@ -105,7 +169,7 @@ pub fn SortableTable<T, TTitle>(
             TableRow {
                 key: "{row_i}",
                 alternate_colors: if *alternate_colors { row_i % 2 == 0 } else { false },
-                for (cell_i, cell) in row.iter().enumerate() {
+                for (cell_i, cell) in row.get_columns().iter().enumerate() {
                     TableCell {
                         key: "{cell_i}",
                         label {
@@ -122,16 +186,16 @@ pub fn SortableTable<T, TTitle>(
 
     render! {
         Table {
-            columns: table_ref.headers.len(),
+            columns: R::ColumnPointer::COLUMN_TITLES.len(),
             TableHead {
                 TableRow {
-                    for (header_i, header) in table_ref.headers.iter().enumerate() {
+                    for (title_i, (pointer, title)) in R::ColumnPointer::COLUMN_TITLES.iter().enumerate() {
                         TableCell {
-                            key: "{header_i}",
-                            order_direction: if *current_header.get() == header_i { Some(*order_direction.get()) } else { None },
-                            onclick: move |_| on_header_click(header_i),
+                            key: "{title_i}",
+                            order_direction: if *current_sorted_column.get() == *pointer { Some(*order_direction.get()) } else { None },
+                            onclick: move |_| on_header_click(*pointer),
                             label {
-                                header.title.to_string()
+                                title.to_string()
                             }
                         }
                     }
@@ -156,7 +220,7 @@ pub fn SortableTable<T, TTitle>(
                                 rsx! {
                                     TableRow {
                                         key: "{i}",
-                                        for (cell_i, cell) in table.rows[i].iter().enumerate() {
+                                        for (cell_i, cell) in table.rows[i].get_columns().iter().enumerate() {
                                             TableCell {
                                                 key: "{cell_i}",
                                                 height: "25",

@@ -56,6 +56,8 @@ tracing = "0.1"
 tracing-subscriber = "0.3.17"
 rustc-hash = "1.1.0"
 
+paste = "1.0.14"
+
 [dev-dependencies]
 skia-safe = { workspace = true }
 winit = { workspace = true }
