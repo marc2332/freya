@@ -1,6 +1,3 @@
-pub use freya_core::events::FreyaEvent;
-pub use freya_elements::events::mouse::MouseButton;
-
 mod config;
 mod launch;
 mod test_handler;
