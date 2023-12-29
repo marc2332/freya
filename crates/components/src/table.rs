@@ -110,7 +110,9 @@ pub fn TableRow<'a>(cx: Scope<'a, TableRowProps<'a>>) -> Element {
 
 #[derive(Clone, Copy, PartialEq, Debug, Default)]
 pub enum OrderDirection {
+    /// Alternatively: ascending.
     Up,
+    /// Alternatively: descending.
     #[default]
     Down,
 }
@@ -123,6 +125,8 @@ pub struct TableCellProps<'a> {
     /// Onclick event handler for the TableCell.
     pub onclick: Option<EventHandler<'a, MouseEvent>>,
     /// The direction in which this TableCell's column will be ordered.
+    ///
+    /// **This is only a visual change (it changes the icon), you need to sort stuff yourself.**
     #[props(into)]
     pub order_direction: Option<Option<OrderDirection>>,
     /// The padding of the cell.
