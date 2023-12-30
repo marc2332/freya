@@ -1,7 +1,6 @@
 use std::{borrow::Cow, fmt::Display, ops::Range};
 
 use freya_elements::events::keyboard::{Code, Key, Modifiers};
-pub use ropey::Rope;
 
 /// Holds the position of a cursor in a text
 #[derive(Clone, Default, PartialEq, Debug)]
