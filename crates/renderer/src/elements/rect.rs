@@ -125,7 +125,11 @@ pub fn render_rect(
     }
 
     // Borders
-    if node_style.border.width > 0.0 && node_style.border.style != BorderStyle::None {
+    if node_style.border.width > 0.0
+        && node_style.border.style != BorderStyle::None
+        && !node_style.border.fill.is_transparent()
+    {
+        let half_border_width = node_style.border.width / 2.0;
         // Create a new paint and path
         let mut border_paint = paint.clone();
         let mut border_path = Path::new();
@@ -145,7 +149,7 @@ pub fn render_rect(
 
         // Skia draws strokes centered on the edge of the path. This means that half of the stroke is inside the path, and half outside.
         // For Inner and Outer borders, we need to grow or shrink the stroke path by half the border width.
-        let outset = Point::new(node_style.border.width / 2.0, node_style.border.width / 2.0)
+        let outset = Point::new(half_border_width, half_border_width)
             * match node_style.border.alignment {
                 BorderAlignment::Center => 0.0,
                 BorderAlignment::Inner => -1.0,

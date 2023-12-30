@@ -10,6 +10,15 @@ pub enum Fill {
     // ConicGradient(ConicGradient),
 }
 
+impl Fill {
+    pub fn is_transparent(&self) -> bool {
+        match self {
+            Self::Color(color) => *color == Color::TRANSPARENT,
+            Self::LinearGradient(grad) => grad.stops.iter().all(|stop| stop.color == Color::TRANSPARENT)
+        }
+    }
+}
+
 impl Default for Fill {
     fn default() -> Self {
         Self::Color(Color::default())
