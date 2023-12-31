@@ -1,6 +1,6 @@
 //! # Devtools
 //!
-//! Devtools can be enabled by adding the `devtools` to Freya.
+//! You can enable devtools by adding the `devtools` feature to Freya.
 //!
 //! In your `Cargo.toml`:
 //!

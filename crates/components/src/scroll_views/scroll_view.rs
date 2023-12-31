@@ -1,9 +1,7 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{keyboard::Key, KeyboardEvent, MouseEvent, WheelEvent};
-use freya_hooks::{
-    theme_with, use_applied_theme, use_focus, use_node, ScrollBarThemeWith, ScrollViewThemeWith,
-};
+use freya_hooks::{use_applied_theme, use_focus, use_node, ScrollViewThemeWith};
 
 use crate::{
     get_container_size, get_corrected_scroll_position, get_scroll_position_from_cursor,
@@ -294,9 +292,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
                 ScrollBar {
                     width: "100%",
                     height: "{horizontal_scrollbar_size}",
-                    theme: theme_with!(ScrollBarTheme {
-                        offset_x: scrollbar_x.to_string().into(),
-                    }),
+                    offset_x: "{scrollbar_x}",
                     clicking_scrollbar: is_scrolling_x,
                     ScrollThumb {
                         clicking_scrollbar: is_scrolling_x,
@@ -309,9 +305,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
             ScrollBar {
                 width: "{vertical_scrollbar_size}",
                 height: "100%",
-                theme: theme_with!(ScrollBarTheme {
-                    offset_y: scrollbar_y.to_string().into(),
-                }),
+                offset_y: "{scrollbar_y}",
                 clicking_scrollbar: is_scrolling_y,
                 ScrollThumb {
                     clicking_scrollbar: is_scrolling_y,
