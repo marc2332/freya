@@ -8,7 +8,6 @@ use dioxus_hooks::{use_effect, use_ref, use_state, UseRef, UseState};
 use freya_common::{CursorLayoutResponse, EventMessage};
 use freya_elements::events::{KeyboardData, MouseData};
 use freya_node_state::{CursorReference, CustomAttributeValues};
-pub use ropey::Rope;
 use tokio::sync::{mpsc::unbounded_channel, mpsc::UnboundedSender};
 use torin::geometry::CursorPoint;
 use uuid::Uuid;
