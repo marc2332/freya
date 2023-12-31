@@ -46,13 +46,10 @@ fn app(cx: Scope) -> Element {
         <div class="flex-1 text-black border border-stone-800 m-2 rounded-2xl p-4 bg-custom-dark-gray text-xs">
             <Code code={EXAMPLE_CODE} lang="rs" />
         </div>
-        <div class="flex-1 text-black m-2 rounded-md h-96 sm:h-auto">
-            <div class="bg-custom-yellow h-1/5 p-6 rounded-tl-2xl rounded-tr-2xl">
-                Number is: 37
-            </div>
-            <div class="bg-custom-blue h-4/5 p-6 rounded-bl-2xl rounded-br-2xl">
-                Click to increase
-            </div>
+        <div class="flex-1 flex text-black border border-stone-800 m-2 rounded-2xl p-2 bg-custom-dark-gray text-xs">
+            <video autoplay playsinline loop class="flex-1">
+                <source src="/demo.mp4" type="video/mp4" >
+            </video>
         </div>
     </div>
 </Layout>
