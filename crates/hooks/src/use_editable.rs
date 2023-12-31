@@ -109,7 +109,7 @@ impl UseEditable {
                 self.editor.with_mut(|editor| {
                     let event = editor.process_key(&e.key, &e.code, &e.modifiers);
 
-                    if event == TextEvent::TextChanged {
+                    if event.contains(TextEvent::TEXT_CHANGED) {
                         *self.selecting_text_with_mouse.write_silent() = None;
                     }
                 });
