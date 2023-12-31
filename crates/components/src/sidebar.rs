@@ -1,18 +1,25 @@
 use dioxus::prelude::*;
 use dioxus_router::{hooks::use_navigator, routable::Routable};
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::{use_get_theme, FontTheme, SidebarTheme};
+use freya_hooks::{theme_with, use_applied_theme, FontTheme, ScrollViewThemeWith, SidebarTheme, SidebarThemeWith, SidebarItemThemeWith};
 
 use crate::{ButtonStatus, ScrollView};
 
 #[allow(non_snake_case)]
-#[inline_props]
-pub fn Sidebar<'a>(cx: Scope<'a>, children: Element<'a>, sidebar: Element<'a>) -> Element<'a> {
-    let theme = use_get_theme(cx);
+#[component]
+pub fn Sidebar<'a>(
+    cx: Scope<'a>,
+    /// Theme override.
+    theme: Option<SidebarThemeWith>,
+    sidebar: Element<'a>,
+    children: Element<'a>,
+) -> Element<'a> {
+    //let SidebarProps { theme, sidebar, children } = &cx.props;
+    let theme = use_applied_theme!(cx, &theme, sidebar);
     let SidebarTheme {
         background,
         font_theme: FontTheme { color },
-    } = theme.sidebar;
+    } = theme;
 
     render!(
         rect {
@@ -27,7 +34,9 @@ pub fn Sidebar<'a>(cx: Scope<'a>, children: Element<'a>, sidebar: Element<'a>) -
                 color: "{color}",
                 shadow: "2 0 5 0 rgb(0, 0, 0, 30)",
                 ScrollView {
-                    padding: "16",
+                    theme: theme_with!(ScrollViewTheme {
+                        padding: "16".into(),
+                    }),
                     sidebar
                 }
             }
@@ -42,14 +51,16 @@ pub fn Sidebar<'a>(cx: Scope<'a>, children: Element<'a>, sidebar: Element<'a>) -
 }
 
 #[allow(non_snake_case)]
-#[inline_props]
+#[component]
 pub fn SidebarItem<'a, T: Routable>(
     cx: Scope<'a>,
+    /// Theme override.
+    theme: Option<SidebarItemThemeWith>,
     children: Element<'a>,
     onclick: Option<EventHandler<'a, ()>>,
     to: Option<T>,
 ) -> Element<'a> {
-    let theme = use_get_theme(cx);
+    let theme = use_applied_theme!(cx, theme, sidebar_item);
     let status = use_state(cx, ButtonStatus::default);
     let navigator = use_navigator(cx);
 
@@ -71,11 +82,11 @@ pub fn SidebarItem<'a, T: Routable>(
     };
 
     let background = match *status.get() {
-        ButtonStatus::Hovering => theme.sidebar_item.hover_background,
-        ButtonStatus::Idle => theme.sidebar_item.background,
+        ButtonStatus::Hovering => theme.hover_background,
+        ButtonStatus::Idle => theme.background,
     };
-    let color = theme.sidebar_item.font_theme.color;
-    let border_fill = theme.sidebar_item.border_fill;
+    let color = theme.font_theme.color;
+    let border_fill = theme.border_fill;
 
     render!(
         rect {
