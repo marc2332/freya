@@ -3,9 +3,9 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus_router::prelude::{Routable, Router, Outlet};
+use dioxus_router::prelude::{Outlet, Routable, Router};
+use freya::elements;
 use freya::prelude::*;
-use freya::elements as elements;
 
 fn main() {
     launch(app);

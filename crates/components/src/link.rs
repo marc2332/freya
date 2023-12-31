@@ -1,12 +1,12 @@
-use std::borrow::Cow;
+use crate::Tooltip;
 use dioxus::hooks::use_state;
 use dioxus::prelude::*;
-use dioxus_router::prelude::{IntoRoutable, use_navigator};
-use winit::event::MouseButton;
-use freya_elements::events::MouseEvent;
+use dioxus_router::prelude::{use_navigator, IntoRoutable};
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::use_get_theme;
-use crate::Tooltip;
+use freya_elements::events::MouseEvent;
+use freya_hooks::{use_applied_theme, LinkThemeWith};
+use std::borrow::Cow;
+use winit::event::MouseButton;
 
 pub enum LinkTooltip<'a> {
     /// No tooltip at all.
@@ -17,24 +17,7 @@ pub enum LinkTooltip<'a> {
     /// - For a URL, this is the value of that URL.
     Default,
     /// Custom tooltip to always show.
-    Custom(&'a str)
-}
-
-#[derive(Props)]
-pub struct LinkProps<'a> {
-    /// The route or external URL string to navigate to.
-    #[props(into)]
-    pub to: IntoRoutable,
-    pub children: Element<'a>,
-    /// This event will be fired if opening an external link fails.
-    #[props(optional)]
-    pub onerror: Option<EventHandler<'a, ()>>,
-    /// A little text hint to show when hovering over the anchor.
-    ///
-    /// Setting this to [`None`] is the same as [`LinkTooltip::Default`].
-    /// To remove the tooltip, set this to [`LinkTooltip::None`].
-    #[props(optional)]
-    pub tooltip: Option<LinkTooltip<'a>>,
+    Custom(&'a str),
 }
 
 /// **⚠️ Just like Dioxus's `Link`,
@@ -82,11 +65,28 @@ pub struct LinkProps<'a> {
 /// }
 /// # }
 /// ```
-#[allow(non_snake_case)]
-pub fn Link<'a>(cx: Scope<'a, LinkProps<'a>>) -> Element<'a> {
-    let theme = use_get_theme(cx);
+#[component]
+pub fn Link<'a>(
+    cx: Scope<'a>,
+    /// Theme override.
+    #[props(optional)]
+    theme: Option<LinkThemeWith>,
+    /// The route or external URL string to navigate to.
+    #[props(into)]
+    to: IntoRoutable,
+    children: Element<'a>,
+    /// This event will be fired if opening an external link fails.
+    #[props(optional)]
+    onerror: Option<EventHandler<'a, ()>>,
+    /// A little text hint to show when hovering over the anchor.
+    ///
+    /// Setting this to [`None`] is the same as [`LinkTooltip::Default`].
+    /// To remove the tooltip, set this to [`LinkTooltip::None`].
+    #[props(optional)]
+    tooltip: Option<LinkTooltip<'a>>,
+) -> Element<'a> {
+    let theme = use_applied_theme!(cx, theme, link);
     let nav = use_navigator(cx);
-    let LinkProps { to, children, onerror, tooltip } = cx.props;
     let is_hovering = use_state(cx, || false);
 
     let url = if let IntoRoutable::FromStr(url) = to {
@@ -108,19 +108,24 @@ pub fn Link<'a>(cx: Scope<'a, LinkProps<'a>>) -> Element<'a> {
             return;
         };
 
-        url.map_or_else(|| { nav.push(to.clone()); }, |url| {
-            let res = open::that(url);
+        url.map_or_else(
+            || {
+                nav.push(to.clone());
+            },
+            |url| {
+                let res = open::that(url);
 
-            if let (Err(_), Some(onerror)) = (res, onerror.as_ref()) {
-                onerror.call(());
-            }
+                if let (Err(_), Some(onerror)) = (res, onerror.as_ref()) {
+                    onerror.call(());
+                }
 
-            // TODO(marc2332): Log unhandled errors
-        });
+                // TODO(marc2332): Log unhandled errors
+            },
+        );
     };
 
     let color = if *is_hovering.get() {
-        theme.link.highlight_color
+        theme.highlight_color
     } else {
         Cow::Borrowed("inherit")
     };

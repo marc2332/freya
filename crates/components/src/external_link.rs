@@ -1,8 +1,8 @@
+use crate::{LinkTooltip, Tooltip};
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
 use freya_hooks::{use_applied_theme, LinkThemeWith};
-use crate::{LinkTooltip, Tooltip};
 
 /// **⚠️ If you use `dioxus-router`, you should use [`Link`](crate::Link).**]
 ///
@@ -27,7 +27,6 @@ use crate::{LinkTooltip, Tooltip};
 /// }
 /// ```
 ///
-#[allow(non_snake_case)]
 #[component]
 pub fn ExternalLink<'a>(
     cx: Scope<'a>,
@@ -83,7 +82,7 @@ pub fn ExternalLink<'a>(
     let Some(tooltip) = tooltip else {
         return render! {
             rect { onclick: onclick, children }
-        }
+        };
     };
 
     render!(
