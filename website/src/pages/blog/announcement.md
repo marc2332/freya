@@ -5,6 +5,9 @@ description: 'Initial release of Freya. A native GUI library for Rust.'
 author: 'marc2332'
 layout: ../../layouts/BlogPostLayout.astro
 ---
+
+[Original Hashnode Post](https://marc0.hashnode.dev/freya)
+
 ## hey 👋
 
 I'm [Marc](https://github.com/marc2332/) and I am happy to announce the first alpha (**v0.1**) of [**Freya**](https://github.com/marc2332/freya), an experimental cross-platform native GUI library for 🦀 [Rust](https://www.rust-lang.org/), built on top of **🧬** [**Dioxus**](https://dioxuslabs.com/) and powered by the 🖼️ [Skia](https://skia.org/) library.
@@ -91,7 +94,7 @@ fn app(cx: Scope) -> Element {
 }
 ```
 
-![Image description](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/xul317o98e0kjhs7fqek.png align="center")
+![Freya Demo Example](/blog/announcement/demo.png)
 
 ## ✨ Supported features
 
@@ -135,7 +138,7 @@ It could technically run on more platforms, like Mobile or Web via Wasm, feel fr
 
 Freya supports **Dioxus's hot reload**, which means that you can write and update the **layout**, **styling** and other static **attributes** of your components without having to recompile any rust code, it updates on the fly.
 
-%[https://twitter.com/mkenzo_8/status/1631956848176668672?s=20] 
+[Demo](https://twitter.com/mkenzo_8/status/1631956848176668672)
 
 ## 🧰 Testing
 
@@ -223,7 +226,7 @@ You can do:
 * Inspect the element's computed layout
     
 
-![](https://user-images.githubusercontent.com/38158676/257818618-fefcb5be-cdc9-4b9a-aa13-0abe67527736.png align="center")
+![DevTools](/blog/announcement/devtools.png)
 
 ## 🤓 Complex examples
 
@@ -231,11 +234,11 @@ For simpler examples see the Freya [repository](https://github.com/marc2332/frey
 
 [**Freya-editor**](https://github.com/marc2332/freya-editor): An experimental code editor.
 
-![Demo](https://github.com/marc2332/freya-editor/raw/main/demo.png align="left")
+![Freya Editor](/blog/announcement/freya_editor.jpg)
 
 [**Canvas**](https://github.com/marc2332/freya/blob/main/examples/canvas.rs): A canvas for floating editors that you can drag around.
 
-![Image description](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/ys0dpqzunwzqmaof73pi.png align="left")
+![Canvas](/blog/announcement/canvas.png)
 
 ## 📆 Roadmap
 

@@ -1,7 +1,7 @@
 ---
 import "@fontsource/inter";
 import Layout from "./Layout.astro";
-import { BlogPostTOC }  from "../components/BlogPostTOC"
+import BlogPostTOC  from "../components/BlogPostTOC.astro"
 const { frontmatter, headings  } = Astro.props;
 
 const formattedDate = (new Date(frontmatter.date)).toLocaleString().split(',')[0]
@@ -47,10 +47,10 @@ const formattedDate = (new Date(frontmatter.date)).toLocaleString().split(',')[0
 
     ul {
         list-style: circle;
+    }
 
-        & li {
-            margin-left: 24px;
-        }
+    ul li {
+        margin-left: 24px;
     }
 
     p {
@@ -85,5 +85,13 @@ const formattedDate = (new Date(frontmatter.date)).toLocaleString().split(',')[0
         font-size: 18px;
         margin: 16px 0px;
         font-weight: bold;
+    }
+
+    article a:not([aria-hidden="true"]) {
+        text-decoration: underline;
+    }
+
+    img {
+        margin: 0 auto;
     }
 </style>

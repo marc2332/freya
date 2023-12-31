@@ -1,0 +1,15 @@
+---
+const { headings } = Astro.props;
+---
+
+<div class="w-1/5 h-screen overflow-auto sticky top-5 mx-4 text-sm hidden sm:block">
+  {headings.map((section: any) => (
+    <a
+      href={`#${section.slug}`}
+      class="block hover:bg-zinc-800 p-2 rounded-xl cursor-pointer no-underline"
+      style={{ marginLeft: `${(section.depth - 2) * 10}px` }}
+    >
+      {section.text} <br />
+    </a>
+  ))}
+</div>

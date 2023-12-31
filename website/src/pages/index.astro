@@ -1,8 +1,6 @@
 ---
-import { CodeBlock } from '../components/Codeblock.jsx';
+import { Code } from 'astro:components';
 import Layout from '../layouts/Layout.astro';
-import { FaGithub, FaDiscord } from 'react-icons/fa'
-import { GoBook } from 'react-icons/go'
 
 const EXAMPLE_CODE = `
 fn app(cx: Scope) -> Element {
@@ -46,7 +44,7 @@ fn app(cx: Scope) -> Element {
     </div>
     <div class="block max-w-prose mx-auto sm:flex">
         <div class="flex-1 text-black border border-stone-800 m-2 rounded-2xl p-4 bg-custom-dark-gray text-xs">
-            <CodeBlock code={EXAMPLE_CODE} client:load/>
+            <Code code={EXAMPLE_CODE} lang="rs" />
         </div>
         <div class="flex-1 text-black m-2 rounded-md h-96 sm:h-auto">
             <div class="bg-custom-yellow h-1/5 p-6 rounded-tl-2xl rounded-tr-2xl">
