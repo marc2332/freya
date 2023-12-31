@@ -14,6 +14,20 @@ pub const DARK_THEME: Theme = Theme {
         thumb_inner_background: cow_borrowed!("rgb(255, 95, 0)"),
         border_fill: cow_borrowed!("rgb(110, 110, 110)"),
     },
+    sidebar: SidebarTheme {
+        background: cow_borrowed!("rgb(30, 30, 30)"),
+        font_theme: FontTheme {
+            color: cow_borrowed!("white"),
+        },
+    },
+    sidebar_item: SidebarItemTheme {
+        background: cow_borrowed!("rgb(35, 35, 35)"),
+        hover_background: cow_borrowed!("rgb(45, 45, 45)"),
+        border_fill: cow_borrowed!("rgb(80, 80, 80)"),
+        font_theme: FontTheme {
+            color: cow_borrowed!("white"),
+        },
+    },
     button: ButtonTheme {
         background: cow_borrowed!("rgb(35, 35, 35)"),
         hover_background: cow_borrowed!("rgb(45, 45, 45)"),
