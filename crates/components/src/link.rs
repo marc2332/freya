@@ -27,11 +27,13 @@ pub struct LinkProps<'a> {
     pub to: IntoRoutable,
     pub children: Element<'a>,
     /// This event will be fired if opening an external link fails.
+    #[props(optional)]
     pub onerror: Option<EventHandler<'a, ()>>,
     /// A little text hint to show when hovering over the anchor.
     ///
     /// Setting this to [`None`] is the same as [`LinkTooltip::Default`].
     /// To remove the tooltip, set this to [`LinkTooltip::None`].
+    #[props(optional)]
     pub tooltip: Option<LinkTooltip<'a>>,
 }
 
