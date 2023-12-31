@@ -12,7 +12,9 @@ export default {
 				"custom-yellow": "rgb(233, 196, 106)",
 				"custom-blue": "rgb(73, 151, 222)",
 				"custom-dark-gray": "#131315",
-				"custom-dark-black": "#18181b"
+				"custom-dark-black": "#18181b",
+				"custom-purple": "#6d4ee9",
+				"custom-purple-dark": "#573eba"
 			},
 			fontFamily: {
 				sans: ["InterVariable", "Inter", ...defaultTheme.fontFamily.sans],

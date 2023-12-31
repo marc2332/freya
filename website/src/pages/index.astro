@@ -4,30 +4,39 @@ import Layout from '../layouts/Layout.astro';
 
 const EXAMPLE_CODE = `
 fn app(cx: Scope) -> Element {
-  let mut count = use_state(cx, || 0);
+    let mut count = use_state(cx, || 0);
 
-  render!(
-      rect {
-          height: "20%",
-          width: "100%",
-          background: "rgb(233, 196, 106)",
-          padding: "25",
-          color: "rgb(20, 33, 61)",
-          label { 
-              font_size: "20", 
-              "Number is: {count}"
-          }
-      }
-      rect {
-          height: "80%",
-          width: "100%",
-          background: "rgb(73, 151, 222)",
-          color: "black",
-          padding: "25",
-          onclick: move |_| count += 1,
-          label { "Click to increase!" }
-      }
-  )
+    render!(
+        rect {
+            height: "50%",
+            width: "100%",
+            main_align: "center",
+            cross_align: "center",
+            background: "rgb(0, 119, 182)",
+            color: "white",
+            shadow: "0 4 20 5 rgb(0, 0, 0, 80)",
+            label {
+                font_size: "75",
+                font_weight: "bold",
+                "{count}"
+            }
+        }
+        rect {
+            height: "50%",
+            width: "100%",
+            main_align: "center",
+            cross_align: "center",
+            direction: "horizontal",
+            Button {
+                onclick: move |_| count += 1,
+                label { "Increase" }
+            }
+            Button {
+                onclick: move |_| count -= 1,
+                label { "Decrease" }
+            }
+        }
+    )
 }
 `.trim()
 ---
@@ -42,14 +51,15 @@ fn app(cx: Scope) -> Element {
             <a class="sm:inline-block sm:my-0 block my-2 mr-2 px-6 py-2 bg-orange-300 rounded-lg text-black hover:bg-orange-400 transition-colors delay-[10]" href="https://github.com/marc2332/freya">contribute -></a>
         </div>
     </div>
-    <div class="block max-w-prose mx-auto sm:flex">
-        <div class="flex-1 text-black border border-stone-800 m-2 rounded-2xl p-4 bg-custom-dark-gray text-xs">
+    <div class="p-6 py-8 w-[60rem] gap-10 flex justify-evenly items-center mx-auto sm:flex text-black border border-stone-800 m-2 rounded-2xl bg-custom-dark-gray">
+        <div class="text-xs">
             <Code code={EXAMPLE_CODE} lang="rs" />
         </div>
-        <div class="flex-1 flex text-black border border-stone-800 m-2 rounded-2xl p-2 bg-custom-dark-gray text-xs">
-            <video autoplay playsinline loop class="flex-1">
+        <div class="flex justify-center flex-col items-center">
+            <video autoplay playsinline loop>
                 <source src="/demo.mp4" type="video/mp4" >
             </video>
+            <a class="w-36 bg-custom-purple p-2 rounded-lg text-white hover:bg-custom-purple-dark transition-colors delay-[10]" href="https://github.com/marc2332/freya/blob/main/examples/counter.rs">Run locally -></a>
         </div>
     </div>
 </Layout>
