@@ -1,23 +1,27 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
-use freya_hooks::use_get_theme;
+
+use freya_hooks::{use_applied_theme, ExternalLinkThemeWith};
 
 use crate::Tooltip;
 
 /// [`ExternalLink`] component properties.
 #[derive(Props)]
 pub struct ExternalLinkProps<'a> {
+    /// Theme override.
+    #[props(optional)]
+    pub theme: Option<ExternalLinkThemeWith>,
     /// Inner children for the ExternalLink.
-    children: Element<'a>,
+    pub children: Element<'a>,
     #[props(optional)]
     /// Handler for the `onerror` event.
-    onerror: Option<EventHandler<'a, ()>>,
+    pub onerror: Option<EventHandler<'a, ()>>,
     #[props(optional)]
     /// Whether  to show a tooltip with the URL or not.
-    show_tooltip: Option<bool>,
+    pub show_tooltip: Option<bool>,
     /// The ExternalLink destination URL.
-    url: &'a str,
+    pub url: &'a str,
 }
 
 /// `Link` for external locations, e.g websites.
@@ -46,7 +50,7 @@ pub struct ExternalLinkProps<'a> {
 ///
 #[allow(non_snake_case)]
 pub fn ExternalLink<'a>(cx: Scope<'a, ExternalLinkProps<'a>>) -> Element {
-    let theme = use_get_theme(cx);
+    let theme = use_applied_theme!(cx, &cx.props.theme, external_link);
     let is_hovering = use_state(cx, || false);
     let show_tooltip = cx.props.show_tooltip.unwrap_or(true);
 
@@ -67,7 +71,7 @@ pub fn ExternalLink<'a>(cx: Scope<'a, ExternalLinkProps<'a>>) -> Element {
     };
 
     let color = if *is_hovering.get() {
-        theme.external_link.highlight_color
+        theme.highlight_color.as_ref()
     } else {
         "inherit"
     };
@@ -83,13 +87,17 @@ pub fn ExternalLink<'a>(cx: Scope<'a, ExternalLinkProps<'a>>) -> Element {
         rect {
             height: "0",
             width: "0",
-            (*is_hovering.get() && show_tooltip).then_some({
-                rsx!(
-                    Tooltip {
-                        url: cx.props.url
-                    }
-                )
-            })
+            layer: "-999",
+            rect {
+                width: "100v",
+                (*is_hovering.get() && show_tooltip).then_some({
+                    rsx!(
+                        Tooltip {
+                            url: cx.props.url
+                        }
+                    )
+                })
+            }
         }
     )
 }

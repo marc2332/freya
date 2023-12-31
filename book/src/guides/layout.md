@@ -12,7 +12,7 @@ Learn how the layout attributes work.
 - [`direction`](#direction)
 - [`padding`](#padding)
 - [`margin`](#margin)
-- [`main_align & cross_align`](#main_align--cross_align)
+- [`display`](#display)
 
 > ⚠️ Freya's layout is still somewhat limited.
 
@@ -81,6 +81,23 @@ fn app(cx: Scope) -> Element {
 
 ### Size Units
 
+#### Auto
+Will use it's inner children as size, so in this case, the `rect` width will be equivalent to the width of `label`:
+
+```rust, no_run
+fn app(cx: Scope) -> Element {
+    render!(
+        rect {
+            width: "auto",
+            height: "33",
+            label {
+                "hello!"
+            }
+        }
+    )
+}
+```
+
 #### Logical pixels
 
 ```rust, no_run
@@ -125,7 +142,7 @@ fn app(cx: Scope) -> Element {
 
 ### direction
 
-Control how the inner elements will be stacked, possible values are `vertical` (default) and `horizontal`.
+Control how the inner elements will be stacked, possible values are `horizontal`, `vertical` (default) or `both` (default for text elements, e.g label, paragraph, text, etc).
 
 ##### Usage
 
@@ -168,19 +185,9 @@ fn app(cx: Scope) -> Element {
 
 ```
 
-### main_align & cross_align
+### display
 
-Control how the inner elements are positioned inside the element. You can combine it with the `direction` attribute to create complex flows.
-
-Possible values for both attributes are:
-- `start` (default): At the begining of the axis
-- `center`: At the center of the axis
-- `end`: At the end of the axis
-
-When using the `vertical` direction, `main_align` will be the Y axis and `cross_align` will be the X axis. But when using the `horizontal` direction, the
-`main_align` will be the X axis and the `cross_align` will be the Y axis.
-
-Example on how to center the inner elements in both axis:
+Control how the inner elements are displayed, possible values are `normal` (default) or `center`.
 
 ```rust, no_run
 fn app(cx: Scope) -> Element {
@@ -188,8 +195,8 @@ fn app(cx: Scope) -> Element {
         rect {
             width: "100%",
             height: "100%",
-            main_align: "center",
-            cross_align: "center",
+            direction: "both",
+            display: "center",
             rect {
                 width: "50%",
                 height: "50%",

@@ -2,13 +2,14 @@ use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::keyboard::Key;
 use freya_elements::events::{KeyboardData, MouseEvent};
-use freya_hooks::FontTheme;
+use freya_hooks::use_platform;
 use freya_hooks::{
-    use_editable, use_focus, use_get_theme, EditableConfig, EditableEvent, EditableMode, TextEditor,
+    use_applied_theme, use_editable, use_focus, EditableConfig, EditableEvent, EditableMode,
+    FontTheme, InputTheme, InputThemeWith, TextEditor,
 };
-use freya_hooks::{use_platform, ButtonTheme};
 
 use winit::window::CursorIcon;
+
 /// Enum to declare is [`Input`] hidden.
 #[derive(Default)]
 pub enum InputMode {
@@ -38,19 +39,16 @@ pub enum InputStatus {
 /// [`Input`] component properties.
 #[derive(Props)]
 pub struct InputProps<'a> {
+    /// Theme override.
+    #[props(optional)]
+    pub theme: Option<InputThemeWith>,
     /// Current value of the Input
     pub value: String,
     /// Handler for the `onchange` event.
     pub onchange: EventHandler<'a, String>,
-    /// Is input hidden with a character. By default input text is shown.
+    /// Display mode for Input. By default, input text is shown as it is provided.
     #[props(default = InputMode::Shown, into)]
-    hidden: InputMode,
-    /// Width of the Input. Default 150.
-    #[props(default = "150".to_string(), into)]
-    width: String,
-    /// Margin of the Input. Default 4.
-    #[props(default = "4".to_string(), into)]
-    margin: String,
+    pub mode: InputMode,
 }
 
 /// `Input` component.
@@ -59,7 +57,7 @@ pub struct InputProps<'a> {
 /// See [`InputProps`].
 ///
 /// # Styling
-/// Inherits the [`ButtonTheme`](freya_hooks::ButtonTheme) theme.
+/// Inherits the [`InputTheme`](freya_hooks::InputTheme) theme.
 ///
 /// # Example
 ///
@@ -91,7 +89,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
         || EditableConfig::new(cx.props.value.to_string()),
         EditableMode::MultipleLinesSingleEditor,
     );
-    let theme = use_get_theme(cx);
+    let theme = use_applied_theme!(cx, &cx.props.theme, input);
     let focus_manager = use_focus(cx);
 
     if &cx.props.value != editable.editor().current().rope() {
@@ -100,12 +98,12 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
         });
     }
 
-    let text = match cx.props.hidden {
+    let text = match cx.props.mode {
         InputMode::Hidden(ch) => ch.to_string().repeat(cx.props.value.len()),
         InputMode::Shown => cx.props.value.clone(),
     };
 
-    use_on_unmount(cx, {
+    use_on_destroy(cx, {
         to_owned![status, platform];
         move || {
             if *status.read() == InputStatus::Hovering {
@@ -169,21 +167,22 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
 
     let cursor_attr = editable.cursor_attr(cx);
     let highlights_attr = editable.highlights_attr(cx, 0);
-    let width = &cx.props.width;
-    let margin = &cx.props.margin;
+
     let (background, cursor_char) = if focus_manager.is_focused() {
         (
-            theme.button.hover_background,
+            theme.hover_background,
             editable.editor().cursor_pos().to_string(),
         )
     } else {
-        (theme.button.background, "none".to_string())
+        (theme.background, "none".to_string())
     };
-    let ButtonTheme {
+    let InputTheme {
         border_fill,
-        font_theme: FontTheme { color, .. },
+        width,
+        margin,
+        font_theme: FontTheme { color },
         ..
-    } = theme.button;
+    } = theme;
 
     render!(
         rect {
@@ -192,7 +191,7 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
             color: "{color}",
             background: "{background}",
             border: "1 solid {border_fill}",
-            shadow: "0 3 15 0 rgb(0, 0, 0, 70)",
+            shadow: "0 3 15 0 rgb(0, 0, 0, 0.3)",
             corner_radius: "10",
             margin: "{margin}",
             cursor_reference: cursor_attr,

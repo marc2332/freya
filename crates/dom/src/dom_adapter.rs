@@ -31,29 +31,30 @@ impl<'a> DioxusDOMAdapter<'a> {
 impl DOMAdapter<NodeId> for DioxusDOMAdapter<'_> {
     fn get_node(&self, node_id: &NodeId) -> Option<Node> {
         let node = self.rdom.get(*node_id)?;
-        let mut size = node.get::<LayoutState>().unwrap().clone();
+        let mut layout = node.get::<LayoutState>().unwrap().clone();
 
         // The root node expands by default
         if *node_id == self.rdom.root_id() {
-            size.width = Size::Percentage(Length::new(100.0));
-            size.height = Size::Percentage(Length::new(100.0));
+            layout.width = Size::Percentage(Length::new(100.0));
+            layout.height = Size::Percentage(Length::new(100.0));
         }
 
         Some(Node {
-            width: size.width,
-            height: size.height,
-            minimum_width: size.minimum_width,
-            minimum_height: size.minimum_height,
-            maximum_width: size.maximum_width,
-            maximum_height: size.maximum_height,
-            direction: size.direction,
-            padding: size.padding,
-            margin: size.margin,
-            main_alignment: size.main_alignment,
-            cross_alignment: size.cross_alignment,
-            offset_x: Length::new(size.offset_x),
-            offset_y: Length::new(size.offset_y),
-            has_layout_references: size.node_ref.is_some(),
+            width: layout.width,
+            height: layout.height,
+            minimum_width: layout.minimum_width,
+            minimum_height: layout.minimum_height,
+            maximum_width: layout.maximum_width,
+            maximum_height: layout.maximum_height,
+            direction: layout.direction,
+            padding: layout.padding,
+            margin: layout.margin,
+            main_alignment: layout.main_alignment,
+            cross_alignment: layout.cross_alignment,
+            offset_x: Length::new(layout.offset_x),
+            offset_y: Length::new(layout.offset_y),
+            has_layout_references: layout.node_ref.is_some(),
+            position: layout.position,
         })
     }
 
@@ -66,12 +67,9 @@ impl DOMAdapter<NodeId> for DioxusDOMAdapter<'_> {
     }
 
     fn children_of(&mut self, node_id: &NodeId) -> Vec<NodeId> {
-        self.rdom
-            .tree_ref()
-            .children_ids(*node_id)
-            .into_iter()
-            .filter(|id| is_node_valid(self.rdom, &mut self.valid_nodes_cache, id))
-            .collect::<Vec<NodeId>>()
+        let mut children = self.rdom.tree_ref().children_ids(*node_id);
+        children.retain(|id| is_node_valid(self.rdom, &mut self.valid_nodes_cache, id));
+        children
     }
 
     fn is_node_valid(&mut self, node_id: &NodeId) -> bool {

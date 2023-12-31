@@ -24,7 +24,7 @@ async fn with_state() {
     fn stateful_app(cx: Scope) -> Element {
         let state = use_state(cx, || false);
 
-        use_memo(cx, (), |_| {
+        let _ = use_memo(cx, (), |_| {
             state.set(true);
         });
 

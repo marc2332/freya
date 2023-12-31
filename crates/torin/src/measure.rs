@@ -6,7 +6,7 @@ use crate::{
     geometry::{Area, Size2D},
     measure_mode::MeasureMode,
     node::Node,
-    prelude::{AlignmentDirection, AreaModel, Torin},
+    prelude::{AlignmentDirection, AreaModel, LayoutMetadata, Torin},
     size::Size,
 };
 
@@ -26,60 +26,78 @@ pub fn measure_node<Key: NodeKey>(
     must_cache_inner_nodes: bool,
     // Adapter for the provided DOM
     dom_adapter: &mut impl DOMAdapter<Key>,
+
+    layout_metadata: &LayoutMetadata,
+
+    invalidated_tree: bool,
 ) -> (bool, NodeAreas) {
-    let must_run = layout.dirty.contains(&node_id) || layout.results.get(&node_id).is_none();
-    if must_run {
-        // 1. Create the initial Node area
-        let mut area = Rect::new(
-            available_parent_area.origin,
-            Size2D::new(node.padding.horizontal(), node.padding.vertical()),
-        );
+    let must_revalidate = invalidated_tree
+        || layout.dirty.contains(&node_id)
+        || !layout.results.contains_key(&node_id);
+    if must_revalidate {
+        // 1. Create the initial Node area size
+        let mut area_size = Size2D::new(node.padding.horizontal(), node.padding.vertical());
 
         // 2. Compute the width and height given the size, the minimum size, the maximum size and margins
-        area.size.width = node.width.min_max(
-            area.size.width,
+        area_size.width = node.width.min_max(
+            area_size.width,
             parent_area.size.width,
+            available_parent_area.size.width,
             node.margin.left(),
             node.margin.horizontal(),
             &node.minimum_width,
             &node.maximum_width,
+            layout_metadata.root_area.width(),
         );
-        area.size.height = node.height.min_max(
-            area.size.height,
+        area_size.height = node.height.min_max(
+            area_size.height,
             parent_area.size.height,
+            available_parent_area.size.height,
             node.margin.top(),
             node.margin.vertical(),
             &node.minimum_height,
             &node.maximum_height,
+            layout_metadata.root_area.height(),
         );
 
-        // 3. If available, run a custom layout measure function
+        // 3. Compute the origin of the area
+        let area_origin = node
+            .position
+            .get_origin(available_parent_area, parent_area, &area_size);
+
+        let mut area = Rect::new(area_origin, area_size);
+
+        // 4. If available, run a custom layout measure function
         // This is useful when you use third-party libraries (e.g. rust-skia, cosmic-text) to measure text layouts
         // When a Node is measured by a custom measurer function the inner children will be skipped
         let measure_inner_children = if let Some(measurer) = measurer {
             let custom_area =
                 measurer.measure(node_id, node, &area, parent_area, available_parent_area);
 
-            // 3.1. Compute the width and height again using the new custom area sizes
+            // 4.1. Compute the width and height again using the new custom area sizes
             if let Some(custom_area) = custom_area {
                 if Size::Inner == node.width {
                     area.size.width = node.width.min_max(
                         custom_area.width(),
                         parent_area.size.width,
+                        available_parent_area.size.width,
                         node.margin.left(),
                         node.margin.horizontal(),
                         &node.minimum_width,
                         &node.maximum_width,
+                        layout_metadata.root_area.width(),
                     );
                 }
                 if Size::Inner == node.height {
                     area.size.height = node.height.min_max(
                         custom_area.height(),
                         parent_area.size.height,
+                        available_parent_area.size.height,
                         node.margin.top(),
                         node.margin.vertical(),
                         &node.minimum_height,
                         &node.maximum_height,
+                        layout_metadata.root_area.height(),
                     );
                 }
             }
@@ -90,29 +108,33 @@ pub fn measure_node<Key: NodeKey>(
             true
         };
 
-        // 4. Compute the inner area of the Node, which is basically the area inside the margins and paddings
+        // 5. Compute the inner area of the Node, which is basically the area inside the margins and paddings
         let mut inner_area = {
             let mut inner_area = area;
 
-            // 4.1. When having an unsized bound we set it to whatever is still available in the parent's area
+            // 5.1. When having an unsized bound we set it to whatever is still available in the parent's area
             if Size::Inner == node.width {
                 inner_area.size.width = node.width.min_max(
                     available_parent_area.width(),
                     parent_area.size.width,
+                    available_parent_area.width(),
                     node.margin.left(),
                     node.margin.horizontal(),
                     &node.minimum_width,
                     &node.maximum_width,
+                    layout_metadata.root_area.width(),
                 );
             }
             if Size::Inner == node.height {
                 inner_area.size.height = node.height.min_max(
                     available_parent_area.height(),
                     parent_area.size.height,
+                    available_parent_area.height(),
                     node.margin.top(),
                     node.margin.vertical(),
                     &node.minimum_height,
                     &node.maximum_height,
+                    layout_metadata.root_area.height(),
                 );
             }
 
@@ -124,10 +146,10 @@ pub fn measure_node<Key: NodeKey>(
         let mut inner_sizes = Size2D::default();
 
         if measure_inner_children {
-            // 5. Create an area containing the available space inside the inner area
+            // 6. Create an area containing the available space inside the inner area
             let mut available_area = inner_area;
 
-            // 5.1. Adjust the available area with the node offsets (mainly used by scrollviews)
+            // 6.1. Adjust the available area with the node offsets (mainly used by scrollviews)
             available_area.move_with_offsets(&node.offset_x, &node.offset_y);
 
             let mut measurement_mode = MeasureMode::ParentIsNotCached {
@@ -135,7 +157,7 @@ pub fn measure_node<Key: NodeKey>(
                 inner_area: &mut inner_area,
             };
 
-            // 6. Measure the layout of this Node's children
+            // 7. Measure the layout of this Node's children
             measure_inner_nodes(
                 &node_id,
                 node,
@@ -146,6 +168,8 @@ pub fn measure_node<Key: NodeKey>(
                 must_cache_inner_nodes,
                 &mut measurement_mode,
                 dom_adapter,
+                layout_metadata,
+                true,
             );
         }
 
@@ -180,6 +204,8 @@ pub fn measure_node<Key: NodeKey>(
             must_cache_inner_nodes,
             &mut measurement_mode,
             dom_adapter,
+            layout_metadata,
+            false,
         );
 
         (false, areas)
@@ -203,6 +229,10 @@ pub fn measure_inner_nodes<Key: NodeKey>(
     mode: &mut MeasureMode,
     // Adapter for the provided DOM
     dom_adapter: &mut impl DOMAdapter<Key>,
+
+    layout_metadata: &LayoutMetadata,
+
+    invalidated_tree: bool,
 ) {
     let mut measure_children = |mode: &mut MeasureMode,
                                 available_area: &mut Area,
@@ -228,6 +258,8 @@ pub fn measure_inner_nodes<Key: NodeKey>(
                     measurer,
                     false,
                     dom_adapter,
+                    layout_metadata,
+                    invalidated_tree,
                 );
 
                 // 2. Align the Cross axis
@@ -250,10 +282,18 @@ pub fn measure_inner_nodes<Key: NodeKey>(
                 measurer,
                 must_cache_inner_nodes,
                 dom_adapter,
+                layout_metadata,
+                invalidated_tree,
             );
 
             // Stack the child into its parent
-            mode.stack_into_node(parent_node, available_area, &child_areas.area, inner_sizes);
+            mode.stack_into_node(
+                parent_node,
+                available_area,
+                &child_areas.area,
+                inner_sizes,
+                &child_data,
+            );
 
             // Cache the child layout if it was mutated and inner nodes must be cache
             if child_revalidated && must_cache_inner_nodes {

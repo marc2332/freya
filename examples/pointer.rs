@@ -3,7 +3,6 @@
     windows_subsystem = "windows"
 )]
 
-use freya::prelude::events::PointerEvent;
 use freya::prelude::*;
 
 fn main() {

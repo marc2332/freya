@@ -5,7 +5,7 @@ use dioxus_native_core::NodeId;
 use freya_core::prelude::*;
 use freya_dom::prelude::DioxusNode;
 use freya_engine::prelude::*;
-use freya_node_state::Transform;
+use freya_node_state::{Style, Transform};
 use torin::geometry::Area;
 
 use crate::elements::{render_image, render_label, render_paragraph, render_rect, render_svg};
@@ -30,16 +30,19 @@ pub fn render_skia(
     area: &Area,
     dioxus_node: &DioxusNode,
     font_collection: &mut FontCollection,
-    viewports_collection: &ViewportsCollection,
+    viewports: &Viewports,
     render_wireframe: bool,
     matrices: &mut Vec<(Matrix, Vec<NodeId>)>,
+    opacities: &mut Vec<(f32, Vec<NodeId>)>,
 ) {
     let node_type = &*dioxus_node.node_type();
     if let NodeType::Element(ElementNode { tag, .. }) = node_type {
         canvas.save();
 
         let node_transform = &*dioxus_node.get::<Transform>().unwrap();
+        let node_style = &*dioxus_node.get::<Style>().unwrap();
 
+        // Pass rotate effect to children
         if let Some(rotate_degs) = node_transform.rotate_degs {
             let mut matrix = Matrix::new_identity();
             matrix.set_rotate(
@@ -50,11 +53,15 @@ pub fn render_skia(
                 }),
             );
 
-            matrices.push((matrix, dioxus_node.child_ids()));
-
-            canvas.concat(&matrix);
+            matrices.push((matrix, vec![dioxus_node.id()]));
         }
 
+        // Pass opacity effect to children
+        if let Some(opacity) = node_style.opacity {
+            opacities.push((opacity, vec![dioxus_node.id()]));
+        }
+
+        // Apply inherited matrices
         for (matrix, nodes) in matrices.iter_mut() {
             if nodes.contains(&dioxus_node.id()) {
                 canvas.concat(matrix);
@@ -63,10 +70,20 @@ pub fn render_skia(
             }
         }
 
-        let viewports = viewports_collection.get(&dioxus_node.id());
+        // Apply inherited opacity effects
+        for (opacity, nodes) in opacities.iter_mut() {
+            if nodes.contains(&dioxus_node.id()) {
+                canvas.save_layer_alpha_f(
+                    Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
+                    *opacity,
+                );
+
+                nodes.extend(dioxus_node.child_ids());
+            }
+        }
 
         // Clip all elements with their corresponding viewports
-        if let Some((element_viewport, viewports)) = viewports {
+        if let Some((element_viewport, node_viewports)) = viewports.get(&dioxus_node.id()) {
             // Only clip the element iself when it's paragraph because
             // it will render the inner text spans on it's own, so if these spans overflow the paragraph,
             // It is the paragraph job to make sure they are clipped
@@ -75,8 +92,8 @@ pub fn render_skia(
                     clip_viewport(canvas, element_viewport);
                 }
             }
-            for viewport_id in viewports {
-                let viewport = viewports_collection.get(viewport_id).unwrap().0;
+            for viewport_id in node_viewports {
+                let viewport = viewports.get(viewport_id).unwrap().0;
                 if let Some(viewport) = viewport {
                     clip_viewport(canvas, &viewport);
                 }

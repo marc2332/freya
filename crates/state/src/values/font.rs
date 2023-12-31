@@ -114,6 +114,14 @@ impl TextOverflow {
             Self::Custom(custom) => Some(custom),
         }
     }
+
+    pub fn pretty(&self) -> String {
+        match self {
+            TextOverflow::Clip => "clip".to_string(),
+            TextOverflow::Ellipsis => "ellipsis".to_string(),
+            TextOverflow::Custom(text_overflow) => text_overflow.to_string(),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Eq)]

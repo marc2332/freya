@@ -126,13 +126,15 @@ fn app(cx: Scope) -> Element {
                 cross_align: "center",
                 padding: "15",
                 layer: "-100",
-                shadow: "0 -2 5 0 rgb(0, 0, 0, 30)",
+                shadow: "0 -2 5 0 rgb(0, 0, 0, 0.1)",
                 direction: "horizontal",
                 label {
                     "Create as many editors you want!"
                 }
                 Button {
-                    margin: "0 20",
+                    theme: theme_with!(ButtonTheme {
+                        margin: "0 20".into(),
+                    }),
                     onclick: create_node,
                     label {
                         "New Editor"
@@ -169,8 +171,9 @@ fn Editor(cx: Scope) -> Element {
     let font_style = if *is_italic.get() { "italic" } else { "normal" };
     let font_weight = if *is_bold.get() { "bold" } else { "normal" };
 
-    use_memo(cx, (), |_| {
+    use_on_create(cx, move || {
         focus_manager.focus();
+        async move {}
     });
 
     let onclick = {
@@ -269,8 +272,6 @@ fn Editor(cx: Scope) -> Element {
                     height: "100%",
                     padding: "5",
                     ScrollView {
-                        width: "100%",
-                        height: "100%",
                         scroll_with_arrows: false,
                         editor.lines().map(move |l| {
                             let editable = editable.clone();

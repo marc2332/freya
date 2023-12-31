@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 use dioxus_router::prelude::*;
 use freya_components::{ButtonStatus, ScrollView};
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::use_get_theme;
+use freya_hooks::{theme_with, use_get_theme, ScrollViewThemeWith};
 
 use crate::Route;
 
@@ -16,8 +16,9 @@ pub fn TabsBar<'a>(cx: Scope<'a, TabsBarProps<'a>>) -> Element<'a> {
     render!(
         ScrollView {
             direction: "horizontal",
-            height: "35",
-            width: "100%",
+            theme: theme_with!(ScrollViewTheme {
+                height : "35".into(),
+            }),
             &cx.props.children
         }
     )
@@ -54,24 +55,25 @@ pub fn TabButton<'a>(cx: Scope<'a, TabButtonProps<'a>>) -> Element<'a> {
         ButtonStatus::Idle => theme.button.background,
     };
     let color = theme.button.font_theme.color;
+    let border_fill = theme.button.border_fill;
     let content = cx.props.label;
 
     render!(
         rect {
+            margin: "2",
             overflow: "clip",
             background: "{background}",
             onclick: onclick,
             onmouseover: onmouseover,
             onmouseleave: onmouseleave,
-            width: "125",
             corner_radius: "7",
             height: "100%",
             color: "{color}",
-            padding: "7.5",
+            padding: "6 14",
+            shadow: "0 4 5 0 rgb(0, 0, 0, 0.3)",
+            border: "1 solid {border_fill}",
+            main_align: "center",
             label {
-                text_align: "center",
-                height: "100%",
-                width: "100%",
                 content
             }
         }

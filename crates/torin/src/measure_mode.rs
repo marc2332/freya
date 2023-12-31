@@ -134,7 +134,12 @@ impl<'a> MeasureMode<'a> {
         available_area: &mut Area,
         content_area: &Area,
         inner_sizes: &mut Size2D,
+        node_data: &Node,
     ) {
+        if node_data.position.is_absolute() {
+            return;
+        }
+
         match parent_node.direction {
             DirectionMode::Horizontal => {
                 // Move the available area

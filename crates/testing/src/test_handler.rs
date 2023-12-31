@@ -8,11 +8,8 @@ use freya_core::prelude::*;
 use freya_engine::prelude::FontCollection;
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
-use torin::geometry::{Area, Size2D};
-
-pub use freya_core::events::FreyaEvent;
-pub use freya_elements::events::mouse::MouseButton;
 use tokio::time::{interval, timeout};
+use torin::geometry::{Area, Size2D};
 
 use crate::test_node::TestNode;
 use crate::test_utils::TestUtils;
@@ -30,9 +27,9 @@ pub struct TestingHandler {
     pub(crate) platform_event_receiver: UnboundedReceiver<EventMessage>,
 
     pub(crate) events_queue: Vec<FreyaEvent>,
-    pub(crate) events_processor: EventsProcessor,
+    pub(crate) elements_state: ElementsState,
     pub(crate) font_collection: FontCollection,
-    pub(crate) viewports: ViewportsCollection,
+    pub(crate) viewports: Viewports,
     pub(crate) accessibility_state: SharedAccessibilityState,
 
     pub(crate) config: TestingConfig,
@@ -157,7 +154,7 @@ impl TestingHandler {
             &self.utils.layers().lock().unwrap(),
             &mut self.events_queue,
             &self.event_emitter,
-            &mut self.events_processor,
+            &mut self.elements_state,
             &self.viewports,
             SCALE_FACTOR,
         );
