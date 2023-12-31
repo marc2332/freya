@@ -63,6 +63,7 @@ pub fn run_app<T: 'static + Clone>(
         mutations_notifier,
         window_env,
         config.fonts,
+        config.plugins,
     );
 
     app.init_vdom();

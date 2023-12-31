@@ -57,8 +57,10 @@ fn app(cx: Scope) -> Element {
             height: "100%",
             cursor_reference: cursor_attr,
             ScrollView {
-                height: "calc(100% - 30)",
-                width: "100%",
+                theme: theme_with!(ScrollViewTheme {
+                    width: "100%".into(),
+                    height: "calc(100% - 30)".into(),
+                }),
                 scroll_with_arrows: false,
                 paragraph {
                     width: "100%",

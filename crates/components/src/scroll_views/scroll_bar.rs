@@ -1,24 +1,22 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::use_get_theme;
+
+use freya_hooks::{use_applied_theme, ScrollBarTheme, ScrollBarThemeWith};
 
 #[derive(Props)]
 pub struct ScrollBarProps<'a> {
-    children: Element<'a>,
-
+    /// Theme override.
+    pub theme: Option<ScrollBarThemeWith>,
+    pub children: Element<'a>,
     #[props(into)]
-    width: String,
-
+    pub width: String,
     #[props(into)]
-    height: String,
-
+    pub height: String,
     #[props(default = "0".to_string(), into)]
-    offset_x: String,
-
+    pub offset_x: String,
     #[props(default = "0".to_string(), into)]
-    offset_y: String,
-
-    clicking_scrollbar: bool,
+    pub offset_y: String,
+    pub clicking_scrollbar: bool,
 }
 
 enum ScrollBarStatus {
@@ -29,15 +27,23 @@ enum ScrollBarStatus {
 #[allow(non_snake_case)]
 pub fn ScrollBar<'a>(cx: Scope<'a, ScrollBarProps<'a>>) -> Element<'a> {
     let status = use_state(cx, || ScrollBarStatus::Idle);
-    let theme = use_get_theme(cx);
+    let ScrollBarTheme { background, .. } = use_applied_theme!(cx, &cx.props.theme, scroll_bar);
+
+    let ScrollBarProps {
+        width,
+        height,
+        clicking_scrollbar,
+        offset_x,
+        offset_y,
+        ..
+    } = cx.props;
 
     let onmouseenter = |_| status.set(ScrollBarStatus::Hovering);
-
     let onmouseleave = |_| status.set(ScrollBarStatus::Idle);
 
     let background = match status.get() {
-        _ if cx.props.clicking_scrollbar => theme.scrollbar.background,
-        ScrollBarStatus::Hovering => theme.scrollbar.background,
+        _ if *clicking_scrollbar => background.as_ref(),
+        ScrollBarStatus::Hovering => background.as_ref(),
         ScrollBarStatus::Idle => "transparent",
     };
 
@@ -45,10 +51,10 @@ pub fn ScrollBar<'a>(cx: Scope<'a, ScrollBarProps<'a>>) -> Element<'a> {
         rect {
             overflow: "clip",
             role: "scrollBar",
-            width: "{cx.props.width}",
-            height: "{cx.props.height}",
-            offset_x: "{cx.props.offset_x}",
-            offset_y: "{cx.props.offset_y}",
+            width: "{width}",
+            height: "{height}",
+            offset_x: "{offset_x}",
+            offset_y: "{offset_y}",
             background: "{background}",
             onmouseenter: onmouseenter,
             onmouseleave: onmouseleave,

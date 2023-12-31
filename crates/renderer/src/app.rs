@@ -66,6 +66,8 @@ pub struct App<State: 'static + Clone> {
     font_collection: FontCollection,
 
     ticker_sender: broadcast::Sender<()>,
+
+    plugins: PluginsManager,
 }
 
 impl<State: 'static + Clone> App<State> {
@@ -76,6 +78,7 @@ impl<State: 'static + Clone> App<State> {
         mutations_notifier: Option<Arc<Notify>>,
         mut window_env: WindowEnv<State>,
         fonts_config: FontsConfig,
+        mut plugins: PluginsManager,
     ) -> Self {
         let accessibility = NativeAccessibility::new(&window_env.window, proxy.clone());
 
@@ -98,6 +101,8 @@ impl<State: 'static + Clone> App<State> {
         let (event_emitter, event_receiver) = mpsc::unbounded_channel::<DomEvent>();
         let (focus_sender, focus_receiver) = watch::channel(None);
 
+        plugins.send(PluginEvent::WindowCreated(window_env.window()));
+
         Self {
             sdom,
             vdom,
@@ -116,6 +121,7 @@ impl<State: 'static + Clone> App<State> {
             focus_receiver,
             font_collection,
             ticker_sender: broadcast::channel(5).0,
+            plugins,
         }
     }
 
@@ -229,11 +235,17 @@ impl<State: 'static + Clone> App<State> {
 
         {
             let dom = self.sdom.get();
+
+            self.plugins.send(PluginEvent::StartedLayout(&dom.layout()));
+
             let (layers, viewports) = self
                 .window_env
                 .process_layout(&dom, &mut self.font_collection);
             self.layers = layers;
             self.viewports = viewports;
+
+            self.plugins
+                .send(PluginEvent::FinishedLayout(&dom.layout()));
         }
 
         info!(
@@ -279,7 +291,14 @@ impl<State: 'static + Clone> App<State> {
 
     /// Render the RealDOM into the Window
     pub fn render(&mut self, hovered_node: &HoveredNode) {
-        self.window_env.render(
+        self.plugins.send(PluginEvent::BeforeRender {
+            canvas: self.window_env.canvas(),
+            font_collection: &self.font_collection,
+            freya_dom: &self.sdom.get(),
+            viewports: &self.viewports,
+        });
+
+        self.window_env.start_render(
             &self.layers,
             &self.viewports,
             &mut self.font_collection,
@@ -289,6 +308,15 @@ impl<State: 'static + Clone> App<State> {
 
         self.accessibility
             .render_accessibility(self.window_env.window.title().as_str());
+
+        self.plugins.send(PluginEvent::AfterRender {
+            canvas: self.window_env.canvas(),
+            font_collection: &self.font_collection,
+            freya_dom: &self.sdom.get(),
+            viewports: &self.viewports,
+        });
+
+        self.window_env.finish_render();
     }
 
     /// Resize the Window

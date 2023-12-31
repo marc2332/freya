@@ -1,12 +1,15 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
-use freya_hooks::{use_animation, use_get_theme, use_platform, Animation};
+
+use freya_hooks::{use_animation, use_applied_theme, use_platform, Animation, SwitchThemeWith};
 use winit::window::CursorIcon;
 
 /// [`Switch`] component properties.
 #[derive(Props)]
 pub struct SwitchProps<'a> {
+    /// Theme override.
+    pub theme: Option<SwitchThemeWith>,
     /// Whether the `Switch` is enabled or not.
     pub enabled: bool,
     /// Handler for the `ontoggled` event.
@@ -40,10 +43,10 @@ pub enum SwitchStatus {
 ///
 ///     render!(
 ///         Switch {
-///         enabled: *enabled.get(),
-///         ontoggled: |_| {
-///             enabled.set(!enabled.get());
-///         }
+///             enabled: *enabled.get(),
+///             ontoggled: |_| {
+///                 enabled.set(!enabled.get());
+///             }
 ///         }
 ///     )
 /// }
@@ -52,11 +55,11 @@ pub enum SwitchStatus {
 #[allow(non_snake_case)]
 pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
     let animation = use_animation(cx, || 0.0);
-    let theme = use_get_theme(cx);
+    let theme = use_applied_theme!(cx, &cx.props.theme, switch);
     let platform = use_platform(cx);
     let status = use_ref(cx, SwitchStatus::default);
 
-    use_on_unmount(cx, {
+    use_on_destroy(cx, {
         to_owned![status, platform];
         move || {
             if *status.read() == SwitchStatus::Hovering {
@@ -86,19 +89,15 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
         if cx.props.enabled {
             (
                 animation.value(),
-                theme.switch.enabled_background,
-                theme.switch.enabled_thumb_background,
+                theme.enabled_background,
+                theme.enabled_thumb_background,
             )
         } else {
-            (
-                animation.value(),
-                theme.switch.background,
-                theme.switch.thumb_background,
-            )
+            (animation.value(), theme.background, theme.thumb_background)
         }
     };
 
-    use_memo(cx, &cx.props.enabled, move |enabled| {
+    let _ = use_memo(cx, &cx.props.enabled, move |enabled| {
         if enabled {
             animation.start(Animation::new_sine_in_out(0.0..=25.0, 200));
         } else if animation.value() > 0.0 {

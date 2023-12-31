@@ -5,7 +5,7 @@ use freya_elements::elements as dioxus_elements;
 use crate::TreeNode;
 
 #[allow(non_snake_case)]
-#[inline_props]
+#[component]
 pub fn NodeElement<'a>(
     cx: Scope<'a>,
     node: TreeNode,

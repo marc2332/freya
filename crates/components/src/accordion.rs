@@ -1,8 +1,10 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
+
 use freya_hooks::{
-    use_animation, use_get_theme, use_node, use_platform, AccordionTheme, Animation,
+    use_animation, use_applied_theme, use_node, use_platform, AccordionTheme, AccordionThemeWith,
+    Animation,
 };
 use winit::window::CursorIcon;
 
@@ -19,10 +21,13 @@ pub enum AccordionStatus {
 /// [`Accordion`] component properties.
 #[derive(Props)]
 pub struct AccordionProps<'a> {
+    /// Theme override.
+    #[props(optional)]
+    pub theme: Option<AccordionThemeWith>,
     /// Inner children for the Accordion.
-    children: Element<'a>,
+    pub children: Element<'a>,
     /// Summary element.
-    summary: Element<'a>,
+    pub summary: Element<'a>,
 }
 
 /// `Accordion` component.
@@ -35,7 +40,7 @@ pub struct AccordionProps<'a> {
 ///
 #[allow(non_snake_case)]
 pub fn Accordion<'a>(cx: Scope<'a, AccordionProps<'a>>) -> Element<'a> {
-    let theme = use_get_theme(cx);
+    let theme = use_applied_theme!(cx, &cx.props.theme, accordion);
     let animation = use_animation(cx, || 0.0);
     let open = use_state(cx, || false);
     let (node_ref, size) = use_node(cx);
@@ -47,10 +52,10 @@ pub fn Accordion<'a>(cx: Scope<'a, AccordionProps<'a>>) -> Element<'a> {
         background,
         color,
         border_fill,
-    } = theme.accordion;
+    } = theme;
 
     // Adapt the accordion if the body size changes
-    use_memo(
+    let _ = use_memo(
         cx,
         &(
             size.area.width(),
@@ -77,7 +82,7 @@ pub fn Accordion<'a>(cx: Scope<'a, AccordionProps<'a>>) -> Element<'a> {
         open.set(!*open.get());
     };
 
-    use_on_unmount(cx, {
+    use_on_destroy(cx, {
         to_owned![status, platform];
         move || {
             if *status.current() == AccordionStatus::Hovering {

@@ -118,7 +118,9 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
     use_init_theme(cx, DARK_THEME);
     let children = use_shared_state::<Vec<TreeNode>>(cx).unwrap();
     let theme = use_theme(cx);
+
     let theme = theme.read();
+    let color = &theme.body.color;
 
     #[allow(clippy::await_holding_lock)]
     use_effect(cx, (), move |_| {
@@ -183,13 +185,13 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
         rect {
             width: "100%",
             height: "100%",
-            color: theme.body.color,
+            color: "{color}",
             Router::<Route> { }
         }
     )
 }
 
-#[inline_props]
+#[component]
 #[allow(non_snake_case)]
 pub fn DevtoolsBar(cx: Scope) -> Element {
     render!(
@@ -204,7 +206,7 @@ pub fn DevtoolsBar(cx: Scope) -> Element {
 }
 
 #[allow(non_snake_case)]
-#[inline_props]
+#[component]
 pub fn NodeInspectorBar(cx: Scope, node_id: NodeId) -> Element {
     render!(
         TabsBar {
@@ -238,7 +240,7 @@ pub enum Route {
 }
 
 #[allow(non_snake_case)]
-#[inline_props]
+#[component]
 fn PageNotFound(cx: Scope) -> Element {
     render!(
         label {
@@ -248,7 +250,7 @@ fn PageNotFound(cx: Scope) -> Element {
 }
 
 #[allow(non_snake_case)]
-#[inline_props]
+#[component]
 fn TreeElementsTab(cx: Scope) -> Element {
     let hovered_node = use_shared_state::<HoveredNode>(cx).unwrap();
 

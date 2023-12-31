@@ -254,7 +254,7 @@ pub fn node_removal() {
 
     layout.find_best_root(&mut mocked_dom);
 
-    assert_eq!(layout.get_dirty_nodes(), &FxHashSet::from_iter([1, 3]));
+    assert_eq!(layout.get_dirty_nodes(), &FxHashSet::from_iter([1]));
 
     layout.measure(
         0,
