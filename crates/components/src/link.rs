@@ -37,11 +37,11 @@ pub struct LinkProps<'a> {
     pub tooltip: Option<LinkTooltip<'a>>,
 }
 
-/// **Warning: Do not pass in a plain string as the children.
-/// The children get put inside a [`rect`](freya_elements::elements::rect),
-/// so wrap your text in a [`label`](freya_elements::elements::label).**
-///
-/// **Warning: Do not register the `onclick` event in the children.**
+/// **⚠️ Just like Dioxus's `Link`,
+/// this must be a descendant of a
+/// [`Router`](https://docs.rs/dioxus-router/latest/dioxus_router/components/fn.Router.html) component**
+/// **⚠️ Do not register the `onclick` event in the children,
+/// Dioxus event propagation doesn't work properly.**
 ///
 /// Similar to [`Link`](dioxus_router::components::Link), but you can use it in Freya.
 /// Both internal routes and external links are supported.
@@ -131,22 +131,27 @@ pub fn Link<'a>(cx: Scope<'a, LinkProps<'a>>) -> Element<'a> {
         Some(LinkTooltip::Custom(str)) => Some(*str),
     };
 
+    let main_rect = rsx! {
+        rect { onmouseover: onmouseover, onmouseleave: onmouseleave, onclick: onclick, color: "{color}", children }
+    };
+
     let Some(tooltip) = tooltip else {
-        return render! {
-            rect { onclick: onclick, children }
-        }
+        return render!(main_rect);
     };
 
     render! {
-        rect { onmouseover: onmouseover, onmouseleave: onmouseleave, onclick: onclick, color: "{color}", children }
+        main_rect
 
         rect {
             height: "0",
             layer: "-999",
-            if *is_hovering.get() {
-                rsx! {
-                    Tooltip {
-                        url: tooltip
+            rect {
+                width: "100v",
+                if *is_hovering.get() {
+                    rsx! {
+                        Tooltip {
+                            url: tooltip
+                        }
                     }
                 }
             }

@@ -3,35 +3,104 @@
     windows_subsystem = "windows"
 )]
 
+use dioxus_router::prelude::{Routable, Router, Outlet};
 use freya::prelude::*;
+use freya::elements as elements;
 
 fn main() {
     launch(app);
 }
 
 fn app(cx: Scope) -> Element {
-    render!(
-        Link {
-            to: "https://duckduckgo.com/",
-            label {
-                font_size: "25",
-                "https://duckduckgo.com/"
+    render! {
+        Router::<Route> {}
+    }
+}
+
+#[derive(Routable, Clone)]
+#[rustfmt::skip]
+enum Route {
+    #[layout(Layout)]
+    #[route("/")]
+    Cats,
+    #[route("/dogs")]
+    Dogs,
+    #[route("/bears")]
+    Bears,
+    #[route("/..routes")]
+    NotFound
+}
+
+#[component]
+fn Layout(cx: Scope) -> Element {
+    render! {
+        rect {
+            direction: "horizontal",
+            Link {
+                to: Route::Cats,
+                label { "Cats 🐱" }
+            }
+            Link {
+                to: Route::Dogs,
+                label { "Dogs 🐶" }
+            }
+            Link {
+                to: Route::Bears,
+                label { "Bears 🐻" }
             }
         }
-        Link {
-            to: "https://www.google.com/",
-            label {
-                font_size: "25",
-                "https://www.google.com/"
-            }
+        rect {
+            Outlet::<Route> {}
+        }
+    }
+}
+
+#[component]
+fn Cats(cx: Scope) -> Element {
+    render! {
+        label {
+            "Search for cats with DuckDuckGo: "
         }
         Link {
-            to: "https://github.com/marc2332/freya",
-            label {
-                font_size: "25",
-                "Freya Source Code (no tooltip)"
-            },
-            tooltip: LinkTooltip::None
+            to: "https://duckduckgo.com/?q=cat",
+            tooltip: LinkTooltip::Custom("Cats!"),
+            label { "DuckDuckGo search (custom tooltip)" }
         }
-    )
+    }
+}
+
+#[component]
+fn Dogs(cx: Scope) -> Element {
+    render! {
+        label {
+            "Search for dogs with DuckDuckGo: "
+        }
+        Link {
+            to: "https://duckduckgo.com/?q=dog",
+            label { "DuckDuckGo search (default tooltip)" }
+        }
+    }
+}
+
+#[component]
+fn Bears(cx: Scope) -> Element {
+    render! {
+        label {
+            "Search for bears with DuckDuckGo: "
+        }
+        Link {
+            to: "https://duckduckgo.com/?q=bear",
+            tooltip: LinkTooltip::None,
+            label { "DuckDuckGo search (no tooltip)" }
+        }
+    }
+}
+
+#[component]
+fn NotFound(cx: Scope) -> Element {
+    render! {
+        label {
+            "404!! 😵"
+        }
+    }
 }
