@@ -1,6 +1,6 @@
 The `color` attribute lets you specify the color of the text.
 
-You can learn about the syntax of this attribute in [`Color Syntax`][crate::_docs::color_syntax].
+You can learn about the syntax of this attribute in [`Color Syntax`](crate::_docs::color_syntax).
 
 ### Example
 

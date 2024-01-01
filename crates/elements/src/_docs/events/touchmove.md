@@ -1,6 +1,6 @@
 The `touchmove` event fires when the user is touching over an element.
 
-Event Data: [TouchData][crate::events::TouchData]
+Event Data: [`TouchData`](crate::events::TouchData)
 
 ### Example
 

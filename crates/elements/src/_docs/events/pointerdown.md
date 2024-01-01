@@ -1,6 +1,6 @@
 The `pointerdown` event fires when the user clicks/starts touching an element.
 
-Event Data: [PointerData][crate::events::PointerData]
+Event Data: [`PointerData`](crate::events::PointerData)
 
 ### Example
 

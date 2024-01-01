@@ -1,6 +1,6 @@
 The `pointerup` event fires when the user releases their mouse button or stops touching the element.
 
-Event Data: [PointerData][crate::events::PointerData]
+Event Data: [`PointerData`](crate::events::PointerData)
 
 ### Example
 

@@ -1,6 +1,6 @@
 The `keydown` event fires when the user starts pressing any key.
 
-Event Data: [KeyboardData][crate::events::KeyboardData]
+Event Data: [`KeyboardData`](crate::events::KeyboardData)
 
 ### Example
 

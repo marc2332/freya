@@ -1,7 +1,7 @@
 The `touchcancel` event fires when the user cancels the touching, this is usually caused by the hardware or the OS.
-Also see [`ontouchend`](crate::events::ontouchend).
+Also see [`ontouchend`](crate::elements::ontouchend).
 
-Event Data: [TouchData][crate::events::TouchData]
+Event Data: [`TouchData`](crate::events::TouchData)
 
 ### Example
 

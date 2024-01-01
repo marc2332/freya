@@ -1,6 +1,6 @@
 The `rotate` attribute let's you rotate an element.
 
-Compatible elements: all except [`text`][crate::elements::text].
+Compatible elements: all except [`text`](crate::elements::text).
 
 ### Example
 

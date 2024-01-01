@@ -1,6 +1,6 @@
 The `touchstart` event fires when the user starts touching an element.
 
-Event Data: [TouchData][crate::events::TouchData]
+Event Data: [`TouchData`](crate::events::TouchData)
 
 ### Example
 

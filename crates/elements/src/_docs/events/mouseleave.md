@@ -1,6 +1,6 @@
 The `mouseleave` event fires when the user stops hovering an element.
 
-Event Data: [MouseData][crate::events::MouseData]
+Event Data: [`MouseData`](crate::events::MouseData)
 
 ### Example
 

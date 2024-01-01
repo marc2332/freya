@@ -1,6 +1,6 @@
 The `mouseenter` event fires when the user starts hovering an element.
 
-Event Data: [MouseData][crate::events::MouseData]
+Event Data: [`MouseData`](crate::events::MouseData)
 
 ### Example
 

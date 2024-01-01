@@ -1,6 +1,6 @@
 The `globalmouseover` event fires when the user moves the mouse anywhere in the app.
 
-Event Data: [MouseData][crate::events::MouseData]
+Event Data: [`MouseData`](crate::events::MouseData)
 
 ### Example
 
