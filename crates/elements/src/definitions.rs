@@ -164,7 +164,6 @@ builder_constructors! {
     ///
     /// ```rust,no_run
     /// # use freya::prelude::*;
-    /// # use freya::dioxus as dioxus;
     /// fn app(cx: Scope) -> Element {
     ///     render!(
     ///         rect {
