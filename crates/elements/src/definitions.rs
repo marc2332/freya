@@ -282,6 +282,8 @@ builder_constructors! {
         max_lines: String,
         #[doc = include_str!("_docs/attributes/rotate.md")]
         rotate: String,
+        #[doc = include_str!("_docs/attributes/line_height.md")]
+        line_height: String,
         #[doc = include_str!("_docs/attributes/letter_spacing.md")]
         letter_spacing: String,
         #[doc = include_str!("_docs/attributes/word_spacing.md")]

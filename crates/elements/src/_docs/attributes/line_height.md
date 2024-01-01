@@ -9,11 +9,9 @@ Specify the height of the lines of the text.
 # use freya_elements::elements as dioxus_elements;
 fn app(cx: Scope) -> Element {
     render!(
-        paragraph {
+        label {
             line_height: "3",
-            text {
-                "Hello, World! \n Hello, again!"
-            }
+            "Hello, World! \n Hello, again!"
         }
     )
 }
