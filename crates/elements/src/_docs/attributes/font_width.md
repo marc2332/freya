@@ -1,5 +1,7 @@
 You can choose a width for a text using the `font_width` attribute.
 
+⚠️ Only fonts with variable widths will be affected.
+
 Accepted values:
 
 - `ultra-condensed`
