@@ -163,9 +163,8 @@ builder_constructors! {
     /// ### Example:
     ///
     /// ```rust,no_run
-    /// # use dioxus_core::prelude::*;
-    /// # use dioxus_core_macro::render;
-    /// # use freya_elements as dioxus_elements;
+    /// # use dioxus::prelude::*;
+    /// # use freya_elements::elements as dioxus_elements;
     /// fn app(cx: Scope) -> Element {
     ///     render!(
     ///         rect {
@@ -247,13 +246,10 @@ builder_constructors! {
     /// `label` simply let's you display some text.
     ///
     /// ### Example:
-    /// # use dioxus_core::prelude::*;
-    /// # use dioxus_core_macro::render;
-    /// # use freya_elements as dioxus_elements;
+    ///
     /// ```rust,no_run
-    /// # use dioxus_core::prelude::*;
-    /// # use dioxus_core_macro::render;
-    /// # use freya_elements as dioxus_elements;
+    /// # use dioxus::prelude::*;
+    /// # use freya_elements::elements as dioxus_elements;
     /// fn app(cx: Scope) -> Element {
     ///     render!(
     ///         label {
@@ -315,9 +311,8 @@ builder_constructors! {
     /// This used used with the `text` element.
     ///
     /// ```rust,no_run
-    /// # use dioxus_core::prelude::*;
-    /// # use dioxus_core_macro::render;
-    /// # use freya_elements as dioxus_elements;
+    /// # use dioxus::prelude::*;
+    /// # use freya_elements::elements as dioxus_elements;
     /// fn app(cx: Scope) -> Element {
     ///     render!(
     ///         paragraph {
@@ -427,10 +422,9 @@ builder_constructors! {
     ///
     /// ### Example:
     ///
-    /// ```rust, no_run
-    /// # use dioxus_core::prelude::*;
-    /// # use dioxus_core_macro::render;
-    /// # use freya_elements as dioxus_elements;
+    /// ```rust, ignore, no_run
+    /// # use dioxus::prelude::*;
+    /// # use freya_elements::elements as dioxus_elements;
     /// static RUST_LOGO: &[u8] = include_bytes!("./rust_logo.png");
     ///
     /// fn app(cx: Scope) -> Element {
@@ -469,9 +463,8 @@ builder_constructors! {
     /// ### Example:
     ///
     /// ```rust,ignore
-    /// # use dioxus_core::prelude::*;
-    /// # use dioxus_core_macro::render;
-    /// # use freya_elements as dioxus_elements;
+    /// # use dioxus::prelude::*;
+    /// # use freya_elements::elements as dioxus_elements;
     /// static FERRIS: &[u8] = include_bytes!("./ferris.svg");
     ///
     /// fn app(cx: Scope) -> Element {

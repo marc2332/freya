@@ -1,10 +1,12 @@
-The `click` event will fire when the user clicks an element with the left-click.
+The `click` event fires when the user clicks an element with the left-click.
 
 Event Data: [MouseData][crate::events::MouseData]
 
 ### Example:
 
 ```rust, no_run
+# use dioxus::prelude::*;
+# use freya_elements::elements as dioxus_elements;
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -15,3 +17,4 @@ fn app(cx: Scope) -> Element {
         }
     )
 }
+```

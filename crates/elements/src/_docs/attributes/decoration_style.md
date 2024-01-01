@@ -2,7 +2,7 @@
 
 Specify the decoration's style in a text.
 
-Accpted values:
+Accepted values:
 
 - `solid` (default)
 - `double`
@@ -13,6 +13,8 @@ Accpted values:
 Example:
 
 ```rust, no_run
+# use dioxus::prelude::*;
+# use freya_elements::elements as dioxus_elements;
 fn app(cx: Scope) -> Element {
     render!(
         label {

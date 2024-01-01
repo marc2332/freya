@@ -1,10 +1,12 @@
-The `wheel` event will fire when the user scrolls the mouse wheel.
+The `wheel` event fires when the user scrolls the mouse wheel.
 
 Event Data: [TouchData][crate::events::TouchData]
 
 ### Example:
 
 ```rust, no_run
+# use dioxus::prelude::*;
+# use freya_elements::elements as dioxus_elements;
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -15,3 +17,4 @@ fn app(cx: Scope) -> Element {
         }
     )
 }
+```

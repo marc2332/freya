@@ -1,10 +1,12 @@
-The `pointerover` event will fire when the user hovers/touches over an element.
+The `pointerover` event fires when the user hovers/touches over an element.
 
 Event Data: [PointerData][crate::events::PointerData]
 
 ### Example:
 
 ```rust, no_run
+# use dioxus::prelude::*;
+# use freya_elements::elements as dioxus_elements;
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -15,3 +17,4 @@ fn app(cx: Scope) -> Element {
         }
     )
 }
+```

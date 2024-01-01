@@ -5,6 +5,8 @@ Specify the inner paddings of an element. You can do so by three different ways,
 ### Example:
 
 ```rust, no_run
+# use dioxus::prelude::*;
+# use freya_elements::elements as dioxus_elements;
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -14,3 +16,4 @@ fn app(cx: Scope) -> Element {
         }
     )
 }
+```

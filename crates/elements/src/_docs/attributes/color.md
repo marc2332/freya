@@ -7,6 +7,8 @@ You can learn about the syntax of this attribute in [`Color Syntax`](/guides/sty
 Example:
 
 ```rust, no_run
+# use dioxus::prelude::*;
+# use freya_elements::elements as dioxus_elements;
 fn app(cx: Scope) -> Element {
     render!(
         label {
@@ -19,16 +21,17 @@ fn app(cx: Scope) -> Element {
 
  Another example showing [inheritance](#inheritance):
 
- ```rust, no_run
- fn app(cx: Scope) -> Element {
-     render!(
-         rect {
-             color: "blue",
-             label {
-                 "Hello, World!"
-             }
-         }
-     )
- }
-
- ```
+```rust, no_run
+# use dioxus::prelude::*;
+# use freya_elements::elements as dioxus_elements;
+fn app(cx: Scope) -> Element {
+    render!(
+        rect {
+            color: "blue",
+            label {
+                "Hello, World!"
+            }
+        }
+    )
+}
+```
