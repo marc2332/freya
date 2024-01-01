@@ -156,23 +156,26 @@ macro_rules! impl_element {
 }
 
 builder_constructors! {
-    ///    `rect` is a generic element that acts as a container for other elements.
+    /// `rect` is a generic element that acts as a container for other elements.
     ///
-    ///    You can specify things like [`width`](#width-and-height), [`padding`](#padding) or even in what [`direction`](#direction) the inner elements are stacked.
+    /// You can specify things like [`width`](#width-and-height), [`padding`](#padding) or even in what [`direction`](#direction) the inner elements are stacked.
     ///
-    ///    ### Example:
+    /// ### Example:
     ///
-    ///    ```rust, no_run
-    ///    fn app(cx: Scope) -> Element {
-    ///        render!(
-    ///            rect {
-    ///                direction: "vertical",
-    ///                label { "Hi!" }
-    ///                label { "Hi again!"}
-    ///            }
-    ///        )
-    ///    }
-    ///    ```
+    /// ```rust,no_run
+    /// # use dioxus_core::prelude::*;
+    /// # use dioxus_core_macro::render;
+    /// # use freya_elements as dioxus_elements;
+    /// fn app(cx: Scope) -> Element {
+    ///     render!(
+    ///         rect {
+    ///             direction: "vertical",
+    ///             label { "Hi!" }
+    ///             label { "Hi again!"}
+    ///         }
+    ///     )
+    /// }
+    /// ```
     rect {
         #[doc = include_str!("_docs/attributes/padding.md")]
         padding: String,
@@ -244,8 +247,13 @@ builder_constructors! {
     /// `label` simply let's you display some text.
     ///
     /// ### Example:
-    ///
-    /// ```rust, no_run
+    /// # use dioxus_core::prelude::*;
+    /// # use dioxus_core_macro::render;
+    /// # use freya_elements as dioxus_elements;
+    /// ```rust,no_run
+    /// # use dioxus_core::prelude::*;
+    /// # use dioxus_core_macro::render;
+    /// # use freya_elements as dioxus_elements;
     /// fn app(cx: Scope) -> Element {
     ///     render!(
     ///         label {
@@ -306,7 +314,10 @@ builder_constructors! {
     ///
     /// This used used with the `text` element.
     ///
-    /// ``` rust
+    /// ```rust,no_run
+    /// # use dioxus_core::prelude::*;
+    /// # use dioxus_core_macro::render;
+    /// # use freya_elements as dioxus_elements;
     /// fn app(cx: Scope) -> Element {
     ///     render!(
     ///         paragraph {
@@ -417,6 +428,9 @@ builder_constructors! {
     /// ### Example:
     ///
     /// ```rust, no_run
+    /// # use dioxus_core::prelude::*;
+    /// # use dioxus_core_macro::render;
+    /// # use freya_elements as dioxus_elements;
     /// static RUST_LOGO: &[u8] = include_bytes!("./rust_logo.png");
     ///
     /// fn app(cx: Scope) -> Element {
@@ -449,11 +463,15 @@ builder_constructors! {
     };
     /// `svg` element let's you display SVG code.
     ///
-    /// You will need to use the `bytes_to_data` to transform the bytes into data the element can recognize.
+    /// You will need to use the [`bytes_to_data`](https://docs.freyaui.dev/freya/prelude/fn.bytes_to_data.html)
+    /// to transform the bytes into data the element can recognize.
     ///
     /// ### Example:
     ///
-    /// ```rust, no_run
+    /// ```rust,ignore
+    /// # use dioxus_core::prelude::*;
+    /// # use dioxus_core_macro::render;
+    /// # use freya_elements as dioxus_elements;
     /// static FERRIS: &[u8] = include_bytes!("./ferris.svg");
     ///
     /// fn app(cx: Scope) -> Element {
