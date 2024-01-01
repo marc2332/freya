@@ -12,7 +12,7 @@ Accepted values: `clip` or `none`.
 fn app(cx: Scope) -> Element {
     render!(
         rect {
-            overflow: "clip"
+            overflow: "clip",
             width: "100",
             height: "100%",
             rect {

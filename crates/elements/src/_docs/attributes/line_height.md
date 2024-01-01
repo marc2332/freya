@@ -9,8 +9,8 @@ Example:
 # use freya_elements::elements as dioxus_elements;
 fn app(cx: Scope) -> Element {
     render!(
-        label {
-            lines_height: "3",
+        paragraph {
+            line_height: "3",
             "Hello, World! \n Hello, again!"
         }
     )

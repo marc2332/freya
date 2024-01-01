@@ -10,7 +10,7 @@ Event Data: [KeyboardData][crate::events::KeyboardData]
 fn app(cx: Scope) -> Element {
     render!(
         rect {
-            keydown: |e| println!("Event: {e:?}")
+            onkeydown: |e| println!("Event: {e:?}")
         }
     )
 }

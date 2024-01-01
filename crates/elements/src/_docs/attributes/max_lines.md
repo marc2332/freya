@@ -13,7 +13,7 @@ fn app(cx: Scope) -> Element {
             "Hello, World! \n Hello, World! \n Hello, world!" // Will show all three lines
         }
         label {
-            line_height: "2",
+            max_lines: "2",
             "Hello, World! \n Hello, World! \n Hello, world!" // Will only show two lines
         }
     )
