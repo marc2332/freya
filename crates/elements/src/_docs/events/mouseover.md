@@ -1,8 +1,10 @@
 The `mouseover` event fires when the user moves the mouse over an element.
+Unlike [`onmouseover`](crate::events::onmouseover), this fires even if the user was already hovering over
+the element. For that reason, it's less efficient.
 
 Event Data: [MouseData][crate::events::MouseData]
 
-### Example:
+### Example
 
 ```rust, no_run
 # use dioxus::prelude::*;

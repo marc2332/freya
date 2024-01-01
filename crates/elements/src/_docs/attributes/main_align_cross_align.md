@@ -2,7 +2,7 @@
 
 Control how the inner elements are positioned inside the element. You can combine it with the `direction` attribute to create complex flows.
 
-Possible values for both attributes are:
+Accepted values for both attributes are:
 
 - `start` (default): At the begining of the axis
 - `center`: At the center of the axis

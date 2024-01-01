@@ -1,10 +1,8 @@
-### text_shadow
-
 Specify the shadow of a text.
 
 Syntax: `<x> <y> <size> <color>`
 
-Example:
+### Example
 
 ```rust, no_run
 # use dioxus::prelude::*;

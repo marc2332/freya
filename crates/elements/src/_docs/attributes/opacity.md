@@ -1,8 +1,6 @@
-### opacity
+Specify the opacity of an element and all its descendants.
 
-Specify the opacity of an element and all its desdendants.
-
-### Example:
+### Example
 
 ```rust, no_run
 # use dioxus::prelude::*;

@@ -1,10 +1,11 @@
-### overflow
-
 Specify how overflow should be handled.
 
-Accepted values: `clip` or `none`.
+Accepted values:
 
-### Example:
+- `clip`
+- `none`
+
+### Example
 
 ```rust, no_run
 # use dioxus::prelude::*;

@@ -2,7 +2,7 @@ The `touchend` event fires when the user stops touching an element.
 
 Event Data: [TouchData][crate::events::TouchData]
 
-### Example:
+### Example
 
 ```rust, no_run
 # use dioxus::prelude::*;

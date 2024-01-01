@@ -160,7 +160,7 @@ builder_constructors! {
     ///
     /// You can specify things like [`width`](#width-and-height), [`padding`](#padding) or even in what [`direction`](#direction) the inner elements are stacked.
     ///
-    /// ### Example:
+    /// ### Example
     ///
     /// ```rust,no_run
     /// # use dioxus::prelude::*;
@@ -245,7 +245,7 @@ builder_constructors! {
     };
     /// `label` simply let's you display some text.
     ///
-    /// ### Example:
+    /// ### Example
     ///
     /// ```rust,no_run
     /// # use dioxus::prelude::*;
@@ -420,7 +420,7 @@ builder_constructors! {
     };
     /// `image` element let's you show an image.
     ///
-    /// ### Example:
+    /// ### Example
     ///
     /// ```rust, ignore, no_run
     /// # use dioxus::prelude::*;
@@ -460,7 +460,7 @@ builder_constructors! {
     /// You will need to use the [`bytes_to_data`](https://docs.freyaui.dev/freya/prelude/fn.bytes_to_data.html)
     /// to transform the bytes into data the element can recognize.
     ///
-    /// ### Example:
+    /// ### Example
     ///
     /// ```rust,ignore
     /// # use dioxus::prelude::*;

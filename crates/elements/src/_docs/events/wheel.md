@@ -1,8 +1,8 @@
-The `wheel` event fires when the user scrolls the mouse wheel.
+The `wheel` event fires when the user scrolls the mouse wheel while hovering over the element.
 
 Event Data: [TouchData][crate::events::TouchData]
 
-### Example:
+### Example
 
 ```rust, no_run
 # use dioxus::prelude::*;

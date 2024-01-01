@@ -1,8 +1,9 @@
 The `touchcancel` event fires when the user cancels the touching, this is usually caused by the hardware or the OS.
+Also see [`ontouchend`](crate::events::ontouchend).
 
 Event Data: [TouchData][crate::events::TouchData]
 
-### Example:
+### Example
 
 ```rust, no_run
 # use dioxus::prelude::*;

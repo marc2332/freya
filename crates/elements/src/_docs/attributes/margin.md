@@ -1,6 +1,7 @@
- ### margin
+Specify the margin of an element.
+You can do so by three different ways, just like in CSS.
 
- Specify the margin of an element. You can do so by three different ways, just like in CSS.
+### Example
 
 ```rust, no_run
 # use dioxus::prelude::*;

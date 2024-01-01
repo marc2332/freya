@@ -1,5 +1,3 @@
-### font_width
-
 You can choose a width for a text using the `font_width` attribute.
 
 Accepted values:
@@ -13,7 +11,7 @@ Accepted values:
 - `extra-expanded`
 - `ultra-expanded`
 
-Example:
+### Example
 
 ```rust, no_run
 # use dioxus::prelude::*;
@@ -21,8 +19,8 @@ Example:
 fn app(cx: Scope) -> Element {
     render!(
         label {
-            font_weight: "bold",
-            "Hello, World!"
+            font_width: "ultra-expanded",
+            "Hello, wide World!"
         }
     )
 }

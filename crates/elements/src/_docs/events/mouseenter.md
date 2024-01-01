@@ -2,7 +2,7 @@ The `mouseenter` event fires when the user starts hovering an element.
 
 Event Data: [MouseData][crate::events::MouseData]
 
-### Example:
+### Example
 
 ```rust, no_run
 # use dioxus::prelude::*;

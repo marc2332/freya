@@ -1,10 +1,8 @@
-### shadow
-
-Draw a shadow outside of the element.
+Draw a shadow of the element.
 
 Syntax: `<x> <y> <intensity> <size> <color>`
 
-### Example:
+### Example
 
 ```rust, no_run
 # use dioxus::prelude::*;

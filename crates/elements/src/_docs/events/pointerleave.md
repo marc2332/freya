@@ -2,7 +2,7 @@ The `pointerleave` event fires when the user stops hovering/touching an element.
 
 Event Data: [PointerData][crate::events::PointerData]
 
-### Example:
+### Example
 
 ```rust, no_run
 # use dioxus::prelude::*;

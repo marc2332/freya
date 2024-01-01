@@ -1,10 +1,10 @@
-### border
+### border & border_align
 
 You can add a border to an element using the `border` and `border_align` attributes.
 - `border` syntax: `[width] <solid | none> [color]`.
 - `border_align` syntax: `<inner | outer | center>`.
 
-Example:
+### Example
 ```rust, no_run
 # use dioxus::prelude::*;
 # use freya_elements::elements as dioxus_elements;

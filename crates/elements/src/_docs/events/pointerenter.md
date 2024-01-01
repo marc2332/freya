@@ -2,7 +2,7 @@ The `pointerenter` event fires when the user starts hovering/touching an element
 
 Event Data: [PointerData][crate::events::PointerData]
 
-### Example:
+### Example
 
 ```rust, no_run
 # use dioxus::prelude::*;

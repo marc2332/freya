@@ -1,5 +1,3 @@
-### decoration_style
-
 Specify the decoration's style in a text.
 
 Accepted values:
@@ -10,7 +8,7 @@ Accepted values:
 - `dashed`
 - `wavy`
 
-Example:
+### Example
 
 ```rust, no_run
 # use dioxus::prelude::*;

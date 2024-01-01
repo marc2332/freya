@@ -1,5 +1,3 @@
-### decoration
-
 Specify the decoration in a text.
 
 Accepted values:
@@ -8,7 +6,7 @@ Accepted values:
 - `line-through`
 - `overline`
 
-Example:
+### Example
 
 ```rust, no_run
 # use dioxus::prelude::*;

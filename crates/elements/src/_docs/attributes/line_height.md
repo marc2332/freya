@@ -2,7 +2,7 @@
 
 Specify the height of the lines of the text.
 
-Example:
+### Example
 
 ```rust, no_run
 # use dioxus::prelude::*;
@@ -11,7 +11,9 @@ fn app(cx: Scope) -> Element {
     render!(
         paragraph {
             line_height: "3",
-            "Hello, World! \n Hello, again!"
+            text {
+                "Hello, World! \n Hello, again!"
+            }
         }
     )
 }

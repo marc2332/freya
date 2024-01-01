@@ -1,10 +1,10 @@
- ### rotate
+The `rotate` attribute let's you rotate an element.
 
- The `rotate` attribute let's you rotate an element.
+Compatible elements: all except [`text`][crate::elements::text].
 
- Example:
+### Example
 
- ```rust, no_run
+```rust, no_run
 # use dioxus::prelude::*;
 # use freya_elements::elements as dioxus_elements;
 fn app(cx: Scope) -> Element {
@@ -16,5 +16,3 @@ fn app(cx: Scope) -> Element {
     )
 }
 ```
-
-Compatible elements: all except [`text`](/guides/elements.html#paragraph-and-text).

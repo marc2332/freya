@@ -2,7 +2,7 @@ The `globalmouseover` event fires when the user moves the mouse anywhere in the 
 
 Event Data: [MouseData][crate::events::MouseData]
 
-### Example:
+### Example
 
 ```rust, no_run
 # use dioxus::prelude::*;
