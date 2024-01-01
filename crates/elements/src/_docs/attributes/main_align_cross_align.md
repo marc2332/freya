@@ -14,8 +14,7 @@ When using the `vertical` direction, `main_align` will be the Y axis and `cross_
 Example on how to center the inner elements in both axis:
 
 ```rust, no_run
-# use dioxus::prelude::*;
-# use freya_elements::elements as dioxus_elements;
+# use freya::prelude::*;
 fn app(cx: Scope) -> Element {
     render!(
         rect {

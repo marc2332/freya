@@ -7,8 +7,7 @@ See syntax for [`Size Units`](crate::_docs::size_unit).
 ##### Usage
 
 ```rust, no_run
-# use dioxus::prelude::*;
-# use freya_elements::elements as dioxus_elements;
+# use freya::prelude::*;
 fn app(cx: Scope) -> Element {
     render!(
         rect {

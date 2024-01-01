@@ -3,8 +3,7 @@ Specify the opacity of an element and all its descendants.
 ### Example
 
 ```rust, no_run
-# use dioxus::prelude::*;
-# use freya_elements::elements as dioxus_elements;
+# use freya::prelude::*;
 fn app(cx: Scope) -> Element {
     render!(
         rect {

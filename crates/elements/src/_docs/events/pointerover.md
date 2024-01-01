@@ -7,8 +7,7 @@ Event Data: [`PointerData`](crate::events::PointerData)
 ### Example
 
 ```rust, no_run
-# use dioxus::prelude::*;
-# use freya_elements::elements as dioxus_elements;
+# use freya::prelude::*;
 fn app(cx: Scope) -> Element {
     render!(
         rect {

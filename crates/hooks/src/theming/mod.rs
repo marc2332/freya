@@ -170,7 +170,6 @@ macro_rules! define_theme {
 /// Without the macro:
 ///
 /// ```no_run
-/// # use dioxus::prelude::*;
 /// # use freya::prelude::*;
 /// # fn theme_with_example_no_macro(cx: Scope) -> Element {
 /// render! {
@@ -191,7 +190,6 @@ macro_rules! define_theme {
 /// With the macro:
 ///
 /// ```no_run
-/// # use dioxus::prelude::*;
 /// # use freya::prelude::*;
 /// # fn theme_with_example_no_macro(cx: Scope) -> Element {
 /// render! {

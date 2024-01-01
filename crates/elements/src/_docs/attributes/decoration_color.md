@@ -5,8 +5,7 @@ You can learn about the syntax of this attribute in [`Color Syntax`](crate::_doc
 ### Example
 
 ```rust, no_run
-# use dioxus::prelude::*;
-# use freya_elements::elements as dioxus_elements;
+# use freya::prelude::*;
 fn app(cx: Scope) -> Element {
     render!(
         label {

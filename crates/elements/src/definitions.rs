@@ -163,8 +163,8 @@ builder_constructors! {
     /// ### Example
     ///
     /// ```rust,no_run
-    /// # use dioxus::prelude::*;
-    /// # use freya_elements::elements as dioxus_elements;
+    /// # use freya::prelude::*;
+    /// # use freya::dioxus as dioxus;
     /// fn app(cx: Scope) -> Element {
     ///     render!(
     ///         rect {
@@ -248,8 +248,7 @@ builder_constructors! {
     /// ### Example
     ///
     /// ```rust,no_run
-    /// # use dioxus::prelude::*;
-    /// # use freya_elements::elements as dioxus_elements;
+    /// # use freya::prelude::*;
     /// fn app(cx: Scope) -> Element {
     ///     render!(
     ///         label {
@@ -313,8 +312,7 @@ builder_constructors! {
     /// This used used with the `text` element.
     ///
     /// ```rust,no_run
-    /// # use dioxus::prelude::*;
-    /// # use freya_elements::elements as dioxus_elements;
+    /// # use freya::prelude::*;
     /// fn app(cx: Scope) -> Element {
     ///     render!(
     ///         paragraph {
@@ -425,8 +423,7 @@ builder_constructors! {
     /// ### Example
     ///
     /// ```rust, ignore, no_run
-    /// # use dioxus::prelude::*;
-    /// # use freya_elements::elements as dioxus_elements;
+    /// # use freya::prelude::*;
     /// static RUST_LOGO: &[u8] = include_bytes!("./rust_logo.png");
     ///
     /// fn app(cx: Scope) -> Element {
@@ -465,8 +462,7 @@ builder_constructors! {
     /// ### Example
     ///
     /// ```rust,ignore
-    /// # use dioxus::prelude::*;
-    /// # use freya_elements::elements as dioxus_elements;
+    /// # use freya::prelude::*;
     /// static FERRIS: &[u8] = include_bytes!("./ferris.svg");
     ///
     /// fn app(cx: Scope) -> Element {

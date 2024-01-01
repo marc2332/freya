@@ -28,4 +28,5 @@ accesskit = { workspace = true }
 keyboard-types = "0.7.0"
 
 [dev-dependencies]
-dioxus = { workspace = true, features = ["macro"] }
+freya = { workspace = true }
+dioxus = { workspace = true }
