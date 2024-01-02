@@ -8,8 +8,8 @@
 //!
 //! Powered by [🧬 Dioxus](https://dioxuslabs.com) and [🎨 Skia](https://skia.org/).
 //!
-//! - [Elements](freya_elements::elements#structs)
-//! - [Events](freya_elements::elements#functions)
+//! - [Elements API reference](freya_elements::elements#structs)
+//! - [Events API reference](freya_elements::elements#functions)
 //! - [Elements and events guides](freya_elements::_docs)
 //! - [Components](freya_components)
 //! - [Hooks](freya_hooks)
