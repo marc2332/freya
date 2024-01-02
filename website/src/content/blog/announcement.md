@@ -4,6 +4,7 @@ date: 2023-09-02
 description: 'Initial release of Freya. A native GUI library for Rust.'
 author: 'marc2332'
 layout: ../../layouts/BlogPostLayout.astro
+slug: "announcement"
 ---
 
 [Original Hashnode Post](https://marc0.hashnode.dev/freya)

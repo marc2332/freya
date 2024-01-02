@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@astrojs/deno": "^5.0.0",
+    "@astrojs/rss": "^4.0.1",
     "@astrojs/tailwind": "^5.0.2",
     "astro": "3.5.3",
     "rehype-accessible-emojis": "^0.3.2",
