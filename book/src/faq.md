@@ -1,3 +1,5 @@
+# Frequently Asked Questions
+
 ## Will Freya have Mobile/Web support?
 Freya current focus is on Desktop (Windows, Linux, MacOS), so there is no plans for either Mobile (Android/iOS) or Web support. But, this doesn't mean it won't happen, from a technical point of view, it is possible to run Freya on these platforms with the right adjustements.
 
