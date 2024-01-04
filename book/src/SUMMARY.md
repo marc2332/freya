@@ -7,6 +7,7 @@
 - [Differences with Dioxus](differences_with_dioxus.md)
 - [Environment Setup](setup.md)
 - [Getting started](./guides/getting_started.md)
+- [Frequently Asked Questions](./faq.md)
 
 # Guides
 - [Elements](./guides/elements.md)
