@@ -62,7 +62,9 @@ pub fn use_init_focus(cx: &ScopeState) {
 mod test {
     use crate::use_focus;
     use freya::prelude::*;
-    use freya_testing::{launch_test_with_config, FreyaEvent, MouseButton, TestingConfig};
+    use freya_testing::{
+        events::pointer::MouseButton, launch_test_with_config, FreyaEvent, TestingConfig,
+    };
 
     #[tokio::test]
     pub async fn track_focus() {

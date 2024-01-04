@@ -67,12 +67,9 @@ impl DOMAdapter<NodeId> for DioxusDOMAdapter<'_> {
     }
 
     fn children_of(&mut self, node_id: &NodeId) -> Vec<NodeId> {
-        self.rdom
-            .tree_ref()
-            .children_ids(*node_id)
-            .into_iter()
-            .filter(|id| is_node_valid(self.rdom, &mut self.valid_nodes_cache, id))
-            .collect::<Vec<NodeId>>()
+        let mut children = self.rdom.tree_ref().children_ids(*node_id);
+        children.retain(|id| is_node_valid(self.rdom, &mut self.valid_nodes_cache, id));
+        children
     }
 
     fn is_node_valid(&mut self, node_id: &NodeId) -> bool {
