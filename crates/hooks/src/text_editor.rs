@@ -169,6 +169,9 @@ pub trait TextEditor: Sized + Clone + Display {
         self.cursor_mut().move_to(row, col)
     }
 
+    // Check if has any highlight at all
+    fn has_any_highlight(&self) -> bool;
+
     // Return the highlighted text from a given editor Id
     fn highlights(&self, editor_id: usize) -> Option<(usize, usize)>;
 
@@ -182,10 +185,20 @@ pub trait TextEditor: Sized + Clone + Display {
 
     // Process a Keyboard event
     fn process_key(&mut self, key: &Key, code: &Code, modifiers: &Modifiers) -> TextEvent {
-        let mut event = TextEvent::SELECTION_CHANGED;
+        let mut event = if self.has_any_highlight() {
+            TextEvent::SELECTION_CHANGED
+        } else {
+            TextEvent::empty()
+        };
 
         match key {
             Key::Shift => {
+                event.remove(TextEvent::SELECTION_CHANGED);
+            }
+            Key::Control => {
+                event.remove(TextEvent::SELECTION_CHANGED);
+            }
+            Key::Alt => {
                 event.remove(TextEvent::SELECTION_CHANGED);
             }
             Key::Escape => {
@@ -300,6 +313,10 @@ pub trait TextEditor: Sized + Clone + Display {
                     self.cursor_up();
                     self.cursor_mut().set_col(cursor_col);
 
+                    event.insert(TextEvent::CURSOR_CHANGED);
+                } else if self.cursor_col() > 0 {
+                    // Move the cursor to the begining of the line
+                    self.cursor_mut().set_col(0);
                     event.insert(TextEvent::CURSOR_CHANGED);
                 }
 
