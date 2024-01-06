@@ -26,7 +26,7 @@ pub struct TestingHandler {
     pub(crate) platform_event_emitter: UnboundedSender<EventMessage>,
     pub(crate) platform_event_receiver: UnboundedReceiver<EventMessage>,
 
-    pub(crate) events_queue: Vec<FreyaEvent>,
+    pub(crate) events_queue: EventsQueue,
     pub(crate) elements_state: ElementsState,
     pub(crate) font_collection: FontCollection,
     pub(crate) viewports: Viewports,
