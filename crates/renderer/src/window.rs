@@ -312,6 +312,8 @@ impl<T: Clone> WindowEnv<T> {
         if let Some(on_setup) = on_setup {
             (on_setup)(self.window_mut())
         }
+
+        self.window.set_ime_allowed(true);
     }
 
     /// Run the `on_exit` callback that was passed to the launch function

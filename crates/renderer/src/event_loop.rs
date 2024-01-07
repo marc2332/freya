@@ -8,7 +8,7 @@ use freya_elements::events::keyboard::{
 use torin::geometry::CursorPoint;
 use winit::event::{
     ElementState, Event, KeyboardInput, ModifiersState, MouseScrollDelta, StartCause, Touch,
-    TouchPhase, VirtualKeyCode, WindowEvent,
+    TouchPhase, VirtualKeyCode, WindowEvent, Ime,
 };
 use winit::event_loop::{ControlFlow, EventLoop, EventLoopProxy};
 
@@ -83,6 +83,19 @@ pub fn run_event_loop<State: Clone>(
             }
             Event::WindowEvent { event, .. } if app.on_window_event(&event) => {
                 match event {
+                    WindowEvent::Ime(e) => {
+                        match e {
+                            Ime::Commit(text) => {
+                                app.send_event(FreyaEvent::Keyboard {
+                                    name: "keydown".to_string(),
+                                    key: Key::Character(text),
+                                    code: last_code,
+                                    modifiers: get_modifiers(modifiers_state),
+                                });
+                            }
+                            _ => {}
+                        }
+                    }
                     WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
                     WindowEvent::MouseInput { state, button, .. } => {
                         let event_name = match state {
