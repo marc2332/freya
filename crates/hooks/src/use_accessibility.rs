@@ -24,12 +24,14 @@ pub fn use_init_accessibility(cx: &ScopeState) {
 
     let current_focused_id = *focused_id.read();
 
+    // Notify the platform that a new Node has been focused manually
     let _ = use_memo(cx, &(current_focused_id,), move |(focused_id,)| {
         platform
             .send(EventMessage::FocusAccessibilityNode(focused_id))
             .unwrap();
     });
 
+    // Notify the app that a new Node has been focusd by the platform
     use_effect(cx, (), {
         to_owned![focused_id];
         move |_| {

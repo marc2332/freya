@@ -83,9 +83,10 @@ impl NativeAccessibility {
             .accessibility_state
             .lock()
             .unwrap()
-            .set_focus_on_next_node(direction, focus_sender);
-        if let Some(tree) = tree {
-            self.accessibility_adapter.update_if_active(|| tree);
-        }
+            .set_focus_on_next_node(direction);
+
+        focus_sender.send(tree.focus).expect("Failed to focus the Node.");
+
+        self.accessibility_adapter.update_if_active(|| tree);
     }
 }

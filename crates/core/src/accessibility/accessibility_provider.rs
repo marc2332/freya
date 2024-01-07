@@ -10,7 +10,6 @@ use dioxus_native_core::{
 use freya_dom::prelude::{DioxusDOM, DioxusNode};
 use freya_node_state::AccessibilityNodeState;
 use std::slice::Iter;
-use tokio::sync::watch;
 use torin::{prelude::NodeAreas, torin::Torin};
 
 use crate::layout::*;
@@ -154,8 +153,7 @@ pub trait AccessibilityProvider {
     fn set_focus_on_next_node(
         &mut self,
         direction: AccessibilityFocusDirection,
-        focus_sender: &watch::Sender<AccessibilityId>,
-    ) -> Option<TreeUpdate> {
+    ) -> TreeUpdate {
         let current_node = self
             .nodes()
             .enumerate()
@@ -197,13 +195,11 @@ pub trait AccessibilityProvider {
             );
         }
 
-        focus_sender.send(self.focus_id()).ok();
-
-        Some(TreeUpdate {
+        TreeUpdate {
             nodes: Vec::new(),
             tree: None,
             focus: self.focus_id(),
-        })
+        }
     }
 }
 
