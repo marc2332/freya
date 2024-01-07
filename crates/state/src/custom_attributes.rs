@@ -111,7 +111,7 @@ pub enum CustomAttributeValues {
     CursorReference(CursorReference),
     Bytes(Vec<u8>),
     ImageReference(ImageReference),
-    FocusId(AccessibilityId),
+    AccessibilityId(AccessibilityId),
     TextHighlights(Vec<(usize, usize)>),
     Canvas(CanvasReference),
 }
@@ -123,7 +123,7 @@ impl Debug for CustomAttributeValues {
             Self::CursorReference(_) => f.debug_tuple("CursorReference").finish(),
             Self::Bytes(_) => f.debug_tuple("Bytes").finish(),
             Self::ImageReference(_) => f.debug_tuple("ImageReference").finish(),
-            Self::FocusId(_) => f.debug_tuple("FocusId").finish(),
+            Self::AccessibilityId(_) => f.debug_tuple("AccessibilityId").finish(),
             Self::TextHighlights(_) => f.debug_tuple("TextHighlights").finish(),
             Self::Canvas(_) => f.debug_tuple("Canvas").finish(),
         }

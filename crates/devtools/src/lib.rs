@@ -9,7 +9,7 @@ use freya_components::*;
 use freya_core::node::{get_node_state, NodeState};
 use freya_dom::prelude::SafeDOM;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::{use_init_accessibility, use_init_focus, use_init_theme, use_theme, DARK_THEME};
+use freya_hooks::{use_init_accessibility, use_init_theme, use_theme, DARK_THEME};
 
 use freya_renderer::HoveredNode;
 use std::sync::Arc;
@@ -52,7 +52,6 @@ struct AppWithDevtoolsProps {
 
 #[allow(non_snake_case)]
 fn AppWithDevtools(cx: Scope<AppWithDevtoolsProps>) -> Element {
-    use_init_focus(cx);
     use_init_accessibility(cx);
 
     #[allow(non_snake_case)]

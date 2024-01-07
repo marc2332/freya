@@ -94,7 +94,7 @@ pub fn Accordion<'a>(cx: Scope<'a, AccordionProps<'a>>) -> Element<'a> {
     let onmouseenter = {
         to_owned![status, platform];
         move |_| {
-            platform.set_cursor(CursorIcon::Hand);
+            platform.set_cursor(CursorIcon::Pointer);
             status.set(AccordionStatus::Hovering);
         }
     };

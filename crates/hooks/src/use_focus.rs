@@ -1,25 +1,23 @@
-use std::num::NonZeroU128;
-
 use accesskit::NodeId as AccessibilityId;
 use dioxus_core::{AttributeValue, Scope, ScopeState};
-use dioxus_hooks::{use_shared_state, use_shared_state_provider, UseSharedState};
+use dioxus_hooks::{use_context, use_shared_state, UseSharedState};
+use freya_core::accessibility::ACCESSIBILITY_ROOT_ID;
 use freya_node_state::CustomAttributeValues;
-use uuid::Uuid;
 
-pub type FocusId = AccessibilityId;
+use crate::AccessibilityIdCounter;
 
 /// Manage the focus operations of given Node
-#[derive(Clone, Copy)]
-pub struct UseFocus<'a> {
+#[derive(Clone)]
+pub struct UseFocus {
     id: AccessibilityId,
-    focused_id: Option<&'a UseSharedState<Option<AccessibilityId>>>,
+    focused_id: Option<UseSharedState<AccessibilityId>>,
 }
 
-impl UseFocus<'_> {
+impl UseFocus {
     /// Focus this node
     pub fn focus(&self) {
-        if let Some(focused_id) = self.focused_id {
-            *focused_id.write() = Some(self.id)
+        if let Some(focused_id) = &self.focused_id {
+            *focused_id.write() = self.id
         }
     }
 
@@ -30,32 +28,37 @@ impl UseFocus<'_> {
 
     /// Create a node focus ID attribute
     pub fn attribute<'b, T>(&self, cx: Scope<'b, T>) -> AttributeValue<'b> {
-        cx.any_value(CustomAttributeValues::FocusId(self.id))
+        cx.any_value(CustomAttributeValues::AccessibilityId(self.id))
     }
 
     /// Check if this node is currently focused
     pub fn is_focused(&self) -> bool {
-        Some(Some(self.id)) == self.focused_id.map(|f| *f.read())
+        Some(self.id) == self.focused_id.as_ref().map(|f| *f.read())
     }
 
     /// Unfocus the currently focused node.
     pub fn unfocus(&self) {
-        if let Some(focused_id) = self.focused_id {
-            *focused_id.write() = None;
+        if let Some(focused_id) = &self.focused_id {
+            *focused_id.write() = ACCESSIBILITY_ROOT_ID;
         }
     }
 }
 
 /// Create a focus manager for a node.
-pub fn use_focus(cx: &ScopeState) -> UseFocus {
-    let id = *cx.use_hook(|| AccessibilityId(NonZeroU128::new(Uuid::new_v4().as_u128()).unwrap()));
-    let focused_id = use_shared_state::<Option<FocusId>>(cx);
-    UseFocus { id, focused_id }
-}
+pub fn use_focus(cx: &ScopeState) -> &UseFocus {
+    let accessibility_id_counter = use_context::<AccessibilityIdCounter>(cx).unwrap();
+    let focused_id = use_shared_state::<AccessibilityId>(cx);
 
-/// Create a focus provider.
-pub fn use_init_focus(cx: &ScopeState) {
-    use_shared_state_provider::<Option<FocusId>>(cx, || None);
+    cx.use_hook(|| {
+        let mut counter = accessibility_id_counter.borrow_mut();
+        *counter += 1;
+        let id = AccessibilityId(*counter);
+
+        UseFocus {
+            id,
+            focused_id: focused_id.cloned(),
+        }
+    })
 }
 
 #[cfg(test)]
