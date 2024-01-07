@@ -64,7 +64,6 @@ pub struct InputProps<'a> {
 /// ```rust
 /// # use freya::prelude::*;
 /// fn app(cx: Scope) -> Element {
-///     use_init_focus(cx);
 ///     let value = use_state(cx, String::new);
 ///
 ///     render!(
