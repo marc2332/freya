@@ -102,6 +102,7 @@ impl<T: Clone> WindowEnv<T> {
             .unwrap();
 
         let mut window = window.expect("Could not create window with OpenGL context");
+        window.set_ime_allowed(true);
         let raw_window_handle = window.raw_window_handle();
 
         let context_attributes = ContextAttributesBuilder::new()
@@ -210,6 +211,11 @@ impl<T: Clone> WindowEnv<T> {
         &mut self.window
     }
 
+    /// Get a reference to the Window.
+    pub fn window(&self) -> &Window {
+        &self.window
+    }
+
     /// Measure the layout
     pub fn process_layout(
         &mut self,
@@ -310,8 +316,6 @@ impl<T: Clone> WindowEnv<T> {
         if let Some(on_setup) = on_setup {
             (on_setup)(self.window_mut())
         }
-
-        self.window.set_ime_allowed(true);
     }
 
     /// Run the `on_exit` callback that was passed to the launch function

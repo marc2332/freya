@@ -336,12 +336,16 @@ impl<State: 'static + Clone> App<State> {
         );
     }
 
-    pub fn window_env(&mut self) -> &mut WindowEnv<State> {
+    pub fn window_env_mut(&mut self) -> &mut WindowEnv<State> {
         &mut self.window_env
     }
 
-    pub fn accessibility(&mut self) -> &mut NativeAccessibility {
-        &mut self.accessibility
+    pub fn window_env(&self) -> &WindowEnv<State> {
+        &self.window_env
+    }
+
+    pub fn accessibility(&self) -> &NativeAccessibility {
+        &self.accessibility
     }
 
     pub fn process_accessibility_event(&mut self, event: &WindowEvent) {
@@ -349,9 +353,12 @@ impl<State: 'static + Clone> App<State> {
             .process_accessibility_event(&self.window_env.window, event)
     }
 
-    pub fn focus_next_node(&mut self, direction: AccessibilityFocusDirection) {
-        self.accessibility
-            .focus_next_node(direction, &self.focus_sender)
+    pub fn focus_next_node(&self, direction: AccessibilityFocusDirection) {
+        self.accessibility.focus_next_node(
+            direction,
+            &self.focus_sender,
+            self.window_env().window(),
+        )
     }
 
     pub fn tick(&self) {

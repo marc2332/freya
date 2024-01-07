@@ -8,7 +8,12 @@ use freya_core::{
     },
     types::FocusSender,
 };
-use winit::{event::WindowEvent, event_loop::EventLoopProxy, window::Window};
+use winit::{
+    dpi::{LogicalPosition, LogicalSize},
+    event::WindowEvent,
+    event_loop::EventLoopProxy,
+    window::Window,
+};
 
 /// Manages the accessibility integration with Accesskit.
 pub struct NativeAccessibility {
@@ -42,14 +47,39 @@ impl NativeAccessibility {
     }
 
     /// Focus a new accessibility node
-    pub fn set_accessibility_focus(&mut self, id: AccessibilityId) {
+    pub fn set_accessibility_focus(&self, id: AccessibilityId, window: &Window) {
         let tree = self
             .accessibility_state
             .lock()
             .unwrap()
             .set_focus_with_update(id);
         if let Some(tree) = tree {
+            // Update the IME Cursor area
+            self.update_ime_position(tree.focus, window);
+
+            // Update the adapter
             self.accessibility_adapter.update_if_active(|| tree);
+        }
+    }
+
+    fn update_ime_position(&self, accessibility_id: AccessibilityId, window: &Window) {
+        let accessibility_state = self.accessibility_state.lock().unwrap();
+        let node = accessibility_state
+            .nodes()
+            .find_map(|(id, n)| {
+                if *id == accessibility_id {
+                    Some(n)
+                } else {
+                    None
+                }
+            })
+            .unwrap();
+        let node_bounds = node.bounds();
+        if let Some(node_bounds) = node_bounds {
+            window.set_ime_cursor_area(
+                LogicalPosition::new(node_bounds.min_x(), node_bounds.min_y()),
+                LogicalSize::new(node_bounds.width(), node_bounds.height()),
+            )
         }
     }
 
@@ -75,9 +105,10 @@ impl NativeAccessibility {
 
     /// Focus the next accessibility node
     pub fn focus_next_node(
-        &mut self,
+        &self,
         direction: AccessibilityFocusDirection,
         focus_sender: &FocusSender,
+        window: &Window,
     ) {
         let tree = self
             .accessibility_state
@@ -85,10 +116,15 @@ impl NativeAccessibility {
             .unwrap()
             .set_focus_on_next_node(direction);
 
+        // Update the App
         focus_sender
             .send(tree.focus)
             .expect("Failed to focus the Node.");
 
+        // Update the IME Cursor area
+        self.update_ime_position(tree.focus, window);
+
+        // Update the Adapter
         self.accessibility_adapter.update_if_active(|| tree);
     }
 }
