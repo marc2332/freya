@@ -1433,6 +1433,10 @@ impl DirectContext {
     pub fn flush_and_submit(&self) {
         unimplemented!("This is mocked")
     }
+
+    pub fn abandon(&self) {
+        unimplemented!("This is mocked")
+    }
 }
 
 use std::ffi::c_void;

@@ -101,7 +101,7 @@ fn Body(cx: Scope) -> Element {
                         }
                     };
 
-                    let highlights = editable.highlights_attr(&cx, line_index);
+                    let highlights = editable.highlights_attr(cx, line_index);
 
                     rsx! {
                         rect {
@@ -186,7 +186,7 @@ fn Body(cx: Scope) -> Element {
                     };
 
 
-                    let highlights = editable.highlights_attr(&cx, line_index);
+                    let highlights = editable.highlights_attr(cx, line_index);
 
                     rsx! {
                         rect {

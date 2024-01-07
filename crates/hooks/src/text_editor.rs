@@ -1,7 +1,6 @@
-use std::{borrow::Cow, fmt::Display, ops::Range};
+use std::{borrow::Cow, cmp::Ordering, fmt::Display, ops::Range};
 
 use freya_elements::events::keyboard::{Code, Key, Modifiers};
-pub use ropey::Rope;
 
 /// Holds the position of a cursor in a text
 #[derive(Clone, Default, PartialEq, Debug)]
@@ -71,15 +70,17 @@ impl Display for Line<'_> {
     }
 }
 
-/// Events for [TextEditor]
-#[derive(Clone, PartialEq, Eq, Debug)]
-pub enum TextEvent {
-    /// Cursor position has been moved
-    CursorChanged,
-    /// Text has changed
-    TextChanged,
-    /// Nothing happened
-    None,
+bitflags::bitflags! {
+    /// Events for [TextEditor]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Default)]
+    pub struct TextEvent: u8 {
+         /// Cursor position has been moved
+        const CURSOR_CHANGED = 0x01;
+        /// Text has changed
+        const TEXT_CHANGED = 0x02;
+        /// Selected text has changed
+        const SELECTION_CHANGED = 0x04;
+    }
 }
 
 /// Common trait for editable texts
@@ -168,6 +169,9 @@ pub trait TextEditor: Sized + Clone + Display {
         self.cursor_mut().move_to(row, col)
     }
 
+    // Check if has any highlight at all
+    fn has_any_highlight(&self) -> bool;
+
     // Return the highlighted text from a given editor Id
     fn highlights(&self, editor_id: usize) -> Option<(usize, usize)>;
 
@@ -181,38 +185,58 @@ pub trait TextEditor: Sized + Clone + Display {
 
     // Process a Keyboard event
     fn process_key(&mut self, key: &Key, code: &Code, modifiers: &Modifiers) -> TextEvent {
-        let mut event = TextEvent::None;
-        let mut unhighlight = true;
+        let mut event = if self.has_any_highlight() {
+            TextEvent::SELECTION_CHANGED
+        } else {
+            TextEvent::empty()
+        };
 
         match key {
             Key::Shift => {
-                unhighlight = false;
+                event.remove(TextEvent::SELECTION_CHANGED);
+            }
+            Key::Control => {
+                event.remove(TextEvent::SELECTION_CHANGED);
+            }
+            Key::Alt => {
+                event.remove(TextEvent::SELECTION_CHANGED);
             }
             Key::Escape => {
-                unhighlight = true;
+                event.insert(TextEvent::SELECTION_CHANGED);
             }
             Key::ArrowDown => {
                 if modifiers.contains(Modifiers::SHIFT) {
-                    unhighlight = false;
+                    event.remove(TextEvent::SELECTION_CHANGED);
                     self.move_highlight_to_cursor();
                 }
 
-                let total_lines = self.len_lines() - 1;
+                let last_line = self.len_lines() - 1;
+
                 // Go one line down
-                if self.cursor_row() < total_lines {
-                    let next_line = self.line(self.cursor_row() + 1).unwrap();
+                match self.cursor_row().cmp(&last_line) {
+                    Ordering::Equal => {
+                        // Move the cursor to the end of the line
+                        let current_line = self.line(self.cursor_row()).unwrap();
+                        let last_char = current_line.len_chars();
+                        self.cursor_mut().set_col(last_char);
+                        event.insert(TextEvent::CURSOR_CHANGED);
+                    }
+                    Ordering::Less => {
+                        let next_line = self.line(self.cursor_row() + 1).unwrap();
 
-                    // Try to use the current cursor column, otherwise use the new line length
-                    let cursor_col = if self.cursor_col() <= next_line.len_chars() {
-                        self.cursor_col()
-                    } else {
-                        next_line.len_chars().max(1) - 1
-                    };
+                        // Try to use the current cursor column, otherwise use the new line length
+                        let cursor_col = if self.cursor_col() <= next_line.len_chars() {
+                            self.cursor_col()
+                        } else {
+                            next_line.len_chars().max(1) - 1
+                        };
 
-                    self.cursor_mut().set_col(cursor_col);
-                    self.cursor_down();
+                        self.cursor_mut().set_col(cursor_col);
+                        self.cursor_down();
 
-                    event = TextEvent::CursorChanged
+                        event.insert(TextEvent::CURSOR_CHANGED);
+                    }
+                    _ => {}
                 }
 
                 if modifiers.contains(Modifiers::SHIFT) {
@@ -221,7 +245,7 @@ pub trait TextEditor: Sized + Clone + Display {
             }
             Key::ArrowLeft => {
                 if modifiers.contains(Modifiers::SHIFT) {
-                    unhighlight = false;
+                    event.remove(TextEvent::SELECTION_CHANGED);
                     self.move_highlight_to_cursor();
                 }
 
@@ -229,7 +253,7 @@ pub trait TextEditor: Sized + Clone + Display {
                 if self.cursor_col() > 0 {
                     self.cursor_left();
 
-                    event = TextEvent::CursorChanged
+                    event.insert(TextEvent::CURSOR_CHANGED);
                 } else if self.cursor_row() > 0 {
                     // Go one line up if there is no more characters on the left
                     let prev_line = self.line(self.cursor_row() - 1);
@@ -244,7 +268,7 @@ pub trait TextEditor: Sized + Clone + Display {
                         self.cursor_up();
                         self.cursor_mut().set_col(cursor_col);
 
-                        event = TextEvent::CursorChanged
+                        event.insert(TextEvent::CURSOR_CHANGED);
                     }
                 }
 
@@ -254,26 +278,25 @@ pub trait TextEditor: Sized + Clone + Display {
             }
             Key::ArrowRight => {
                 if modifiers.contains(Modifiers::SHIFT) {
-                    unhighlight = false;
+                    event.remove(TextEvent::SELECTION_CHANGED);
                     self.move_highlight_to_cursor();
                 }
 
-                let total_lines = self.len_lines() - 1;
                 let current_line = self.line(self.cursor_row()).unwrap();
 
                 // Go one line down if there isn't more characters on the right
-                if self.cursor_row() < total_lines
+                if self.cursor_row() < self.len_lines()
                     && self.cursor_col() == current_line.len_chars().max(1) - 1
                 {
                     self.cursor_down();
                     self.cursor_mut().set_col(0);
 
-                    event = TextEvent::CursorChanged
+                    event.insert(TextEvent::CURSOR_CHANGED);
                 } else if self.cursor_col() < current_line.len_chars() {
                     // Go one character to the right if possible
                     self.cursor_right();
 
-                    event = TextEvent::CursorChanged
+                    event.insert(TextEvent::CURSOR_CHANGED);
                 }
 
                 if modifiers.contains(Modifiers::SHIFT) {
@@ -282,7 +305,7 @@ pub trait TextEditor: Sized + Clone + Display {
             }
             Key::ArrowUp => {
                 if modifiers.contains(Modifiers::SHIFT) {
-                    unhighlight = false;
+                    event.remove(TextEvent::SELECTION_CHANGED);
                     self.move_highlight_to_cursor();
                 }
 
@@ -300,7 +323,11 @@ pub trait TextEditor: Sized + Clone + Display {
                     self.cursor_up();
                     self.cursor_mut().set_col(cursor_col);
 
-                    event = TextEvent::CursorChanged
+                    event.insert(TextEvent::CURSOR_CHANGED);
+                } else if self.cursor_col() > 0 {
+                    // Move the cursor to the begining of the line
+                    self.cursor_mut().set_col(0);
+                    event.insert(TextEvent::CURSOR_CHANGED);
                 }
 
                 if modifiers.contains(Modifiers::SHIFT) {
@@ -315,7 +342,7 @@ pub trait TextEditor: Sized + Clone + Display {
 
                     self.cursor_left();
 
-                    event = TextEvent::TextChanged
+                    event.insert(TextEvent::TEXT_CHANGED);
                 } else if self.cursor_row() > 0 {
                     // Moves the whole current line to the end of the line above.
                     let prev_line_len = self.line(self.cursor_row() - 1).unwrap().len_chars();
@@ -335,7 +362,7 @@ pub trait TextEditor: Sized + Clone + Display {
                     self.cursor_up();
                     self.cursor_mut().set_col(prev_line_len - 1);
 
-                    event = TextEvent::TextChanged
+                    event.insert(TextEvent::TEXT_CHANGED);
                 }
             }
             Key::Enter => {
@@ -345,7 +372,7 @@ pub trait TextEditor: Sized + Clone + Display {
                 self.cursor_down();
                 self.cursor_mut().set_col(0);
 
-                event = TextEvent::TextChanged
+                event.insert(TextEvent::TEXT_CHANGED);
             }
             Key::Character(character) => {
                 match code {
@@ -356,7 +383,7 @@ pub trait TextEditor: Sized + Clone + Display {
                         self.insert_char(' ', char_idx);
                         self.cursor_right();
 
-                        event = TextEvent::TextChanged
+                        event.insert(TextEvent::TEXT_CHANGED);
                     }
                     _ => {
                         if let Ok(ch) = character.parse::<char>() {
@@ -367,7 +394,7 @@ pub trait TextEditor: Sized + Clone + Display {
                                 self.insert(character, char_idx);
                                 self.cursor_right();
 
-                                event = TextEvent::TextChanged
+                                event.insert(TextEvent::TEXT_CHANGED);
                             }
                         }
                     }
@@ -376,7 +403,7 @@ pub trait TextEditor: Sized + Clone + Display {
             _ => {}
         }
 
-        if unhighlight {
+        if event.contains(TextEvent::SELECTION_CHANGED) {
             self.unhighlight();
         }
 
