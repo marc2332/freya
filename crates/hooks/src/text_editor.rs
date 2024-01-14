@@ -387,7 +387,8 @@ pub trait TextEditor: Sized + Clone + Display {
                     }
                     _ => {
                         if let Ok(ch) = character.parse::<char>() {
-                            if !ch.is_ascii_control() {
+                            // https://github.com/marc2332/freya/issues/461
+                            if !ch.is_ascii_control() && ch.len_utf8() <= 2 {
                                 // Adds a new character
                                 let char_idx =
                                     self.line_to_char(self.cursor_row()) + self.cursor_col();
