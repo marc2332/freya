@@ -82,7 +82,7 @@ impl<State: 'static + Clone> App<State> {
     ) -> Self {
         let accessibility = NativeAccessibility::new(&window_env.window, proxy.clone());
 
-        window_env.window().set_visible(true);
+        window_env.window_mut().set_visible(true);
 
         let mut font_collection = FontCollection::new();
         let def_mgr = FontMgr::default();
@@ -101,12 +101,12 @@ impl<State: 'static + Clone> App<State> {
         let (event_emitter, event_receiver) = mpsc::unbounded_channel::<DomEvent>();
         let (focus_sender, focus_receiver) = watch::channel(None);
 
-        plugins.send(PluginEvent::WindowCreated(window_env.window()));
+        plugins.send(PluginEvent::WindowCreated(window_env.window_mut()));
 
         Self {
             sdom,
             vdom,
-            events: Vec::new(),
+            events: EventsQueue::new(),
             vdom_waker: winit_waker(proxy),
             proxy: proxy.clone(),
             mutations_notifier,
@@ -279,9 +279,10 @@ impl<State: 'static + Clone> App<State> {
         );
     }
 
-    /// Push an event to the events queue
-    pub fn push_event(&mut self, event: FreyaEvent) {
+    /// Send an event
+    pub fn send_event(&mut self, event: FreyaEvent) {
         self.events.push(event);
+        self.process_events();
     }
 
     /// Replace a VirtualDOM Template

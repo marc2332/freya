@@ -1,5 +1,5 @@
 use dioxus_core::Component;
-use freya_renderer::run_app;
+use freya_renderer::DesktopRenderer;
 use freya_renderer::{LaunchConfig, WindowConfig};
 
 /// Launch a new window with the default config.
@@ -223,7 +223,7 @@ pub fn launch_cfg<T: 'static + Clone + Send>(app: Component, config: LaunchConfi
             (vdom, None, None)
         }
     };
-    run_app(vdom, sdom, config, mutations_notifier, hovered_node);
+    DesktopRenderer::launch(vdom, sdom, config, mutations_notifier, hovered_node);
 }
 
 #[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
