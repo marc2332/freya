@@ -91,7 +91,7 @@
 //!             width: "200",
 //!             height: "200",
 //!             rect {
-//!                 height: "25%", // 25% of the window height no matter what height the parent has.
+//!                 height: "25v", // 25% of the window height no matter what height the parent has.
 //!                 width: "100%",
 //!             }
 //!         }
