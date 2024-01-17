@@ -202,8 +202,8 @@ macro_rules! define_theme {
 macro_rules! theme_with {
     ($theme_name:ident {
         $(
-            $theme_field_name:ident: $theme_field_val:expr,
-        )*
+            $theme_field_name:ident: $theme_field_val:expr
+        ),* $(,)?
     }) => {
         $crate::paste! {
             #[allow(clippy::needless_update)]
