@@ -278,6 +278,8 @@ builder_constructors! {
         max_lines: String,
         #[doc = include_str!("_docs/attributes/rotate.md")]
         rotate: String,
+        #[doc = include_str!("_docs/attributes/line_height.md")]
+        line_height: String,
         #[doc = include_str!("_docs/attributes/letter_spacing.md")]
         letter_spacing: String,
         #[doc = include_str!("_docs/attributes/word_spacing.md")]
@@ -410,7 +412,7 @@ builder_constructors! {
         #[doc = include_str!("_docs/attributes/decoration_style.md")]
         decoration_style: String,
         #[doc = include_str!("_docs/attributes/decoration_color.md")]
-        decoraton_color: String,
+        decoration_color: String,
     };
     /// `image` element let's you show an image.
     ///

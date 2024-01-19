@@ -143,7 +143,7 @@ pub fn DropZone<'a, T: 'static + Clone>(cx: Scope<'a, DropZoneProps<'a, T>>) -> 
 #[cfg(test)]
 mod test {
     use freya::prelude::*;
-    use freya_testing::{launch_test, FreyaEvent, MouseButton};
+    use freya_testing::{events::pointer::MouseButton, launch_test, FreyaEvent};
 
     #[tokio::test]
     pub async fn drag_drop() {

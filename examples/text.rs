@@ -32,7 +32,6 @@ fn app(cx: Scope) -> Element {
                     }
                 }
                 Slider {
-                    width: 100.0,
                     value: *percentage.get(),
                     onmoved: |p| {
                         percentage.set(p);

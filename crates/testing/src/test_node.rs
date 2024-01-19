@@ -5,9 +5,6 @@ use freya_core::node::NodeState;
 use freya_node_state::CustomAttributeValues;
 use torin::geometry::Area;
 
-pub use freya_core::events::FreyaEvent;
-pub use freya_elements::events::mouse::MouseButton;
-
 use crate::test_utils::TestUtils;
 
 /// Represents a `Node` in the DOM.
