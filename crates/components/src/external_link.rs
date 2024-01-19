@@ -86,18 +86,14 @@ pub fn ExternalLink<'a>(cx: Scope<'a, ExternalLinkProps<'a>>) -> Element {
         }
         rect {
             height: "0",
-            width: "0",
             layer: "-999",
-            rect {
-                width: "100v",
-                (*is_hovering.get() && show_tooltip).then_some({
-                    rsx!(
-                        Tooltip {
-                            url: cx.props.url
-                        }
-                    )
-                })
-            }
+            (*is_hovering.get() && show_tooltip).then_some({
+                rsx!(
+                    Tooltip {
+                        url: cx.props.url
+                    }
+                )
+            })
         }
     )
 }

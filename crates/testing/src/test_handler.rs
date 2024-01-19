@@ -8,8 +8,11 @@ use freya_core::prelude::*;
 use freya_engine::prelude::FontCollection;
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
-use tokio::time::{interval, timeout};
 use torin::geometry::{Area, Size2D};
+
+pub use freya_core::events::FreyaEvent;
+pub use freya_elements::events::mouse::MouseButton;
+use tokio::time::{interval, timeout};
 
 use crate::test_node::TestNode;
 use crate::test_utils::TestUtils;
@@ -26,7 +29,7 @@ pub struct TestingHandler {
     pub(crate) platform_event_emitter: UnboundedSender<EventMessage>,
     pub(crate) platform_event_receiver: UnboundedReceiver<EventMessage>,
 
-    pub(crate) events_queue: EventsQueue,
+    pub(crate) events_queue: Vec<FreyaEvent>,
     pub(crate) elements_state: ElementsState,
     pub(crate) font_collection: FontCollection,
     pub(crate) viewports: Viewports,

@@ -8,7 +8,7 @@ Example:
 fn app(cx: Scope) -> Element {
     render!(
         label {
-            line_height: "3",
+            lines_height: "3",
             "Hello, World! \n Hello, again!"
         }
     )

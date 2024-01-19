@@ -78,7 +78,7 @@ fn app(cx: Scope) -> Element {
             progress: progress * 0.20
         }
         Slider {
-            width: "300",
+            width: 300.0,
             value: progress as f64,
             onmoved: onmoved
         }

@@ -8,6 +8,7 @@ use dioxus_hooks::{use_effect, use_ref, use_state, UseRef, UseState};
 use freya_common::{CursorLayoutResponse, EventMessage};
 use freya_elements::events::{KeyboardData, MouseData};
 use freya_node_state::{CursorReference, CustomAttributeValues};
+pub use ropey::Rope;
 use tokio::sync::{mpsc::unbounded_channel, mpsc::UnboundedSender};
 use torin::geometry::CursorPoint;
 use uuid::Uuid;
@@ -109,7 +110,7 @@ impl UseEditable {
                 self.editor.with_mut(|editor| {
                     let event = editor.process_key(&e.key, &e.code, &e.modifiers);
 
-                    if event.contains(TextEvent::TEXT_CHANGED) {
+                    if event == TextEvent::TextChanged {
                         *self.selecting_text_with_mouse.write_silent() = None;
                     }
                 });

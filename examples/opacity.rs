@@ -35,7 +35,7 @@ fn app(cx: Scope) -> Element {
                 }
             }
             Slider {
-                width: "100",
+                width: 100.0,
                 value: *opacity.get(),
                 onmoved: |p| {
                     opacity.set(p);

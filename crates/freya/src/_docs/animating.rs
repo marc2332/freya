@@ -4,21 +4,16 @@
 //!
 //! ### `use_animation`
 //!
-//! This is a simple hook that lets you animate a certain value from an `initial`
-//! value to a `final` value, in a given `duration` of time.
-//! There are a few animations that you can select:
+//! This a very simple hook that will let you animate a certain value from an `inital` value to a `final` value, in a given `duration` of time. There are a few animations that you can choose from:
 //!
 //! - Linear
 //! - EaseIn
 //! - EaseInOut
 //! - BounceIns
 //!
-//! Here is an example that animates a value from `0.0` to `100.0` in `50` milliseconds,
-//! using the `linear` animation.
+//! Here is an example that will animate a value from `0.0` to `100.0` in `50` milliseconds, using the `linear` animation.
 //!
 //! ```rust, no_run
-//! # use freya::prelude::*;
-//!
 //! fn main() {
 //!     launch(app);
 //! }
@@ -40,21 +35,18 @@
 //!
 //! ### `use_animation_transition`
 //!
-//! This hook lets you group a set of animations together with a certain `animation` and a given `duration`.
-//! You can specify a set of dependencies that re-runs the animation callback.
+//! This hook let's you group a set of animations together with a certain type of `animation` and a given `duration`. You can also specifiy a set of dependencies that will make animations callback re run.
 //!
-//! You have these animations:
+//! Just like `use_animation` you have these animations:
 //!
 //! - Linear
 //! - EaseIn
 //! - EaseInOut
 //! - BounceIns
 //!
-//! Here is an example that animates a `size` and a color in `200` milliseconds, using the `new_sine_in_out` animation.
+//! Here is an example that will animate a `size` and a color in `200` milliseconds, using the `new_sine_in_out` animation.
 //!
 //! ```rust, no_run
-//! # use freya::prelude::*;
-//!
 //! fn main() {
 //!     launch(app);
 //! }
@@ -62,10 +54,10 @@
 //! const TARGET: f64 = 500.0;
 //!
 //! fn app(cx: Scope) -> Element {
-//!     let animation = use_animation_transition(cx, TransitionAnimation::new_sine_in_out(200), (), |()| {
+//!     let animation = use_animation_transition(cx, TransitionAnimation::new_sine_in_out(200), (), || {
 //!         vec![
-//!             Transition::new_size(0.0, TARGET),
-//!             Transition::new_color("rgb(33, 158, 188)", "white"),
+//!             Animate::new_size(0.0, TARGET),
+//!             Animate::new_color("rgb(33, 158, 188)", "white"),
 //!         ]
 //!     });
 //!
