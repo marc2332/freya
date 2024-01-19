@@ -10,7 +10,7 @@
 //!
 //! - [Elements API reference](freya_elements::elements#structs)
 //! - [Events API reference](freya_elements::elements#functions)
-//! - [Element guides](freya_elements::_docs)
+//! - [Elements guides](freya_elements::_docs)
 //! - [Components](freya_components)
 //! - [Hooks](freya_hooks)
 //! - [Theming](self::_docs::theming)
