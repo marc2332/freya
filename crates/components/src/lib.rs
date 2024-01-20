@@ -1,6 +1,8 @@
 //! # Freya Components
 //! A collection of basic components to be used in Freya.
 
+/*
+
 mod accordion;
 mod body;
 mod button;
@@ -44,3 +46,5 @@ pub use switch::*;
 pub use table::*;
 pub use theme::*;
 pub use tooltip::*;
+
+*/

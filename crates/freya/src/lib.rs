@@ -57,6 +57,8 @@ pub mod _docs;
 /// Dioxus library.
 pub use dioxus;
 
+pub use dioxus_core;
+
 /// Launch your app.
 pub mod launch;
 

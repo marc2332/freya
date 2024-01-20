@@ -231,24 +231,24 @@ use dioxus_core::VirtualDom;
 #[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
 fn with_accessibility(app: Component) -> VirtualDom {
     use dioxus_core::fc_to_builder;
-    use dioxus_core::{Element, Scope};
+    use dioxus_core::Element;
     use dioxus_core_macro::render;
-    use freya_hooks::{use_init_accessibility, use_init_focus};
+    //use freya_hooks::{use_init_accessibility, use_init_focus};
 
-    struct RootProps {
+   /* struct RootProps {
         app: Component,
     }
 
     #[allow(non_snake_case)]
-    fn Root(cx: Scope<RootProps>) -> Element {
-        use_init_focus(cx);
-        use_init_accessibility(cx);
+    fn Root(props: RootProps) -> Element {
+        //use_init_focus(cx);
+        //use_init_accessibility(cx);
 
         #[allow(non_snake_case)]
-        let App = cx.props.app;
+        let App = props.app;
 
         render!(App {})
-    }
+    } */
 
-    VirtualDom::new_with_props(Root, RootProps { app })
+    VirtualDom::new_with_props(app, ())
 }

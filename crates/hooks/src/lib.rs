@@ -1,5 +1,6 @@
 //! # Freya Hooks
 //! A collection of hooks to be used in Freya.
+/*
 
 mod animation;
 mod rope_editor;
@@ -38,3 +39,5 @@ pub use use_theme::*;
 
 #[cfg(feature = "use_camera")]
 pub use use_camera::*;
+
+*/

@@ -495,25 +495,73 @@ builder_constructors! {
 }
 
 pub mod events {
+    use std::any::Any;
+
     use crate::events::*;
+    
+    #[doc(hidden)]
+    pub trait EventReturn<P>: Sized {
+        fn spawn(self) {}
+    }
+
+    impl EventReturn<()> for () {}
+    #[doc(hidden)]
+    pub struct AsyncMarker;
+
+    impl<T> EventReturn<AsyncMarker> for T
+    where
+        T: std::future::Future<Output = ()> + 'static,
+    {
+        #[inline]
+        fn spawn(self) {
+            dioxus_core::prelude::spawn(self);
+        }
+    }
+
+    /// A platform specific event.
+    pub struct PlatformEventData {
+        event: Box<dyn Any>,
+    }
+
+    impl PlatformEventData {
+        pub fn new(event: Box<dyn Any>) -> Self {
+            Self { event }
+        }
+
+        pub fn downcast<T: 'static>(&self) -> Option<&T> {
+            self.event.downcast_ref::<T>()
+        }
+
+        pub fn downcast_mut<T: 'static>(&mut self) -> Option<&mut T> {
+            self.event.downcast_mut::<T>()
+        }
+
+        pub fn into_inner<T: 'static>(self) -> Option<T> {
+            self.event.downcast::<T>().ok().map(|e| *e)
+        }
+    }
+
 
     macro_rules! impl_event {
         (
             $data:ty;
             $(
                 $( #[$attr:meta] )*
-                $name:ident
+                $name:ident $(: $js_name:literal)?
             )*
         ) => {
             $(
                 $( #[$attr] )*
-                pub fn $name<'a>(_cx: &'a ::dioxus_core::ScopeState, _f: impl FnMut(::dioxus_core::Event<$data>) + 'a) -> ::dioxus_core::Attribute<'a> {
+                #[inline]
+                pub fn $name<E: EventReturn<T>, T>(mut _f: impl FnMut(::dioxus_core::Event<$data>) -> E + 'static) -> ::dioxus_core::Attribute {
                     ::dioxus_core::Attribute::new(
                         stringify!($name),
-                        _cx.listener(_f),
+    ::dioxus_core::AttributeValue::listener(move |e: ::dioxus_core::Event<PlatformEventData>| {
+                            _f(e.map(|e|e.into())).spawn();
+                        }),
                         None,
                         false,
-                    )
+                    ).into()
                 }
             )*
         };
@@ -584,6 +632,8 @@ pub mod events {
         onpointerleave
     ];
 }
+
+
 
 #[doc(hidden)]
 pub trait GlobalAttributes {}

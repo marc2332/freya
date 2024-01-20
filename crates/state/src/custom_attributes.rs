@@ -6,7 +6,7 @@ use std::sync::Mutex;
 
 use accesskit::NodeId as AccessibilityId;
 use bytes::Bytes;
-use dioxus_core::{AttributeValue, Scope};
+use dioxus_core::{AttributeValue};
 use dioxus_native_core::node::FromAnyValue;
 use freya_common::{CursorLayoutResponse, NodeReferenceLayout};
 use freya_engine::prelude::*;
@@ -137,6 +137,6 @@ impl FromAnyValue for CustomAttributeValues {
 }
 
 /// Transform some bytes (e.g: raw image, raw svg) into attribute data
-pub fn bytes_to_data<'a, T>(cx: Scope<'a, T>, bytes: &[u8]) -> AttributeValue<'a> {
-    cx.any_value(CustomAttributeValues::Bytes(bytes.to_vec()))
+pub fn bytes_to_data<T>(bytes: &[u8]) -> AttributeValue {
+    AttributeValue::any_value(CustomAttributeValues::Bytes(bytes.to_vec()))
 }

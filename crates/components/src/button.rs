@@ -105,7 +105,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
         ButtonStatus::Idle => background,
     };
 
-    render!(
+    rsx!(
         rect {
             onclick: onclick,
             onmouseenter: onmouseenter,
