@@ -68,6 +68,8 @@ pub struct App<State: 'static + Clone> {
     ticker_sender: broadcast::Sender<()>,
 
     plugins: PluginsManager,
+
+    navigator_state: NavigatorState,
 }
 
 impl<State: 'static + Clone> App<State> {
@@ -103,6 +105,8 @@ impl<State: 'static + Clone> App<State> {
 
         plugins.send(PluginEvent::WindowCreated(window_env.window_mut()));
 
+        let navigator_state = NavigatorState::new(NavigationMode::NotKeyboard);
+
         Self {
             sdom,
             vdom,
@@ -122,6 +126,7 @@ impl<State: 'static + Clone> App<State> {
             font_collection,
             ticker_sender: broadcast::channel(5).0,
             plugins,
+            navigator_state,
         }
     }
 
@@ -136,6 +141,8 @@ impl<State: 'static + Clone> App<State> {
             .insert_any_root_context(Box::new(self.focus_receiver.clone()));
         self.vdom
             .insert_any_root_context(Box::new(Arc::new(self.ticker_sender.subscribe())));
+        self.vdom
+            .insert_any_root_context(Box::new(self.navigator_state.clone()));
     }
 
     /// Make the first build of the VirtualDOM.
@@ -333,5 +340,9 @@ impl<State: 'static + Clone> App<State> {
 
     pub fn tick(&self) {
         self.ticker_sender.send(()).ok();
+    }
+
+    pub fn set_navigation_mode(&mut self, mode: NavigationMode) {
+        self.navigator_state.set(mode);
     }
 }
