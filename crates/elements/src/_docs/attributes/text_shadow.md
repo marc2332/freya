@@ -1,12 +1,11 @@
-### text_shadow
-
 Specify the shadow of a text.
 
 Syntax: `<x> <y> <size> <color>`
 
-Example:
+### Example
 
 ```rust, no_run
+# use freya::prelude::*;
 fn app(cx: Scope) -> Element {
     render!(
         label {

@@ -1,8 +1,6 @@
-### decoration_style
-
 Specify the decoration's style in a text.
 
-Accpted values:
+Accepted values:
 
 - `solid` (default)
 - `double`
@@ -10,9 +8,10 @@ Accpted values:
 - `dashed`
 - `wavy`
 
-Example:
+### Example
 
 ```rust, no_run
+# use freya::prelude::*;
 fn app(cx: Scope) -> Element {
     render!(
         label {

@@ -50,8 +50,6 @@ pub const DARK_THEME: Theme = Theme {
         thumb_background: cow_borrowed!("rgb(100, 100, 100)"),
         hover_thumb_background: cow_borrowed!("rgb(120, 120, 120)"),
         active_thumb_background: cow_borrowed!("rgb(140, 140, 140)"),
-        offset_x: LIGHT_THEME.scroll_bar.offset_x,
-        offset_y: LIGHT_THEME.scroll_bar.offset_y,
     },
     scroll_view: ScrollViewTheme {
         height: LIGHT_THEME.scroll_view.height,

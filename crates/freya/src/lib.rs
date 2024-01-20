@@ -3,19 +3,21 @@
     html_favicon_url = "https://freyaui.dev/logo.svg"
 )]
 //! # Freya
+//!
 //! Build native & cross-platform GUI applications using 🦀 Rust.
 //!
 //! Powered by [🧬 Dioxus](https://dioxuslabs.com) and [🎨 Skia](https://skia.org/).
 //!
-//! - [`Elements`](freya_elements::elements#structs)
-//! - [`Events`](freya_elements::elements#functions)
-//! - [`Components`](freya_components)
-//! - [`Hooks`](freya_hooks)
-//! - [`Theming`](self::_docs::theming)
-//! - [`Hot reload`](self::_docs::hot_reload)
-//! - [`Testing`](self::_docs::testing)
-//! - [`Animating`](self::_docs::animating)
-//! - [`Devtools`](self::_docs::devtools)
+//! - [Elements API reference](freya_elements::elements#structs)
+//! - [Events API reference](freya_elements::elements#functions)
+//! - [Elements guides](freya_elements::_docs)
+//! - [Components](freya_components)
+//! - [Hooks](freya_hooks)
+//! - [Theming](self::_docs::theming)
+//! - [Hot reload](self::_docs::hot_reload)
+//! - [Testing](self::_docs::testing)
+//! - [Animating](self::_docs::animating)
+//! - [Devtools](self::_docs::devtools)
 //!
 //! ```rust,no_run
 //! use freya::prelude::*;
@@ -43,19 +45,19 @@
 //!
 //! ## Features flags
 //!
-//! - `devtools`: Enables a side panel to inspect your App tree, styles and computed layout.
-//! - `use_camera`: Enables the `use_camera` hook.
-//! - `log`: Enables internal logs.
+//! - `devtools`: enables a side panel to inspect your App tree, styles and computed layout.
+//! - `use_camera`: enables the `use_camera` hook.
+//! - `log`: enables internal logs.
 //!
 
-/// Freya Docs
+/// Freya docs.
 #[cfg(doc)]
 pub mod _docs;
 
 /// Dioxus library.
 pub use dioxus;
 
-/// Launch your application.
+/// Launch your app.
 pub mod launch;
 
 /// Collection of basic components.
@@ -79,7 +81,7 @@ pub use freya_elements::events;
 /// Elements, attributes and events definitions.
 pub use freya_elements::elements;
 
-/// Hotreload configuration.
+/// Hot reload configuration.
 pub mod hotreload {
     pub use freya_elements::elements::FreyaCtx;
 }

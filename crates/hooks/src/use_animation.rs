@@ -84,7 +84,7 @@ impl<'a> AnimationManager<'a> {
 /// Run animations.
 ///
 /// ## Usage
-/// ```rust
+/// ```rust,no_run
 /// # use freya::prelude::*;
 /// fn app(cx: Scope) -> Element {
 ///     let animation = use_animation(cx, || 0.0);
@@ -125,7 +125,7 @@ mod test {
     use crate::{use_animation, Animation};
     use dioxus_hooks::{to_owned, use_memo};
     use freya::prelude::*;
-    use freya_testing::{launch_test, FreyaEvent, MouseButton};
+    use freya_testing::{events::pointer::MouseButton, launch_test, FreyaEvent};
     use tokio::time::sleep;
 
     #[tokio::test]

@@ -28,9 +28,13 @@ pub fn measure_node<Key: NodeKey>(
     dom_adapter: &mut impl DOMAdapter<Key>,
 
     layout_metadata: &LayoutMetadata,
+
+    invalidated_tree: bool,
 ) -> (bool, NodeAreas) {
-    let must_run = layout.dirty.contains(&node_id) || layout.results.get(&node_id).is_none();
-    if must_run {
+    let must_revalidate = invalidated_tree
+        || layout.dirty.contains(&node_id)
+        || !layout.results.contains_key(&node_id);
+    if must_revalidate {
         // 1. Create the initial Node area size
         let mut area_size = Size2D::new(node.padding.horizontal(), node.padding.vertical());
 
@@ -165,6 +169,7 @@ pub fn measure_node<Key: NodeKey>(
                 &mut measurement_mode,
                 dom_adapter,
                 layout_metadata,
+                true,
             );
         }
 
@@ -200,6 +205,7 @@ pub fn measure_node<Key: NodeKey>(
             &mut measurement_mode,
             dom_adapter,
             layout_metadata,
+            false,
         );
 
         (false, areas)
@@ -225,6 +231,8 @@ pub fn measure_inner_nodes<Key: NodeKey>(
     dom_adapter: &mut impl DOMAdapter<Key>,
 
     layout_metadata: &LayoutMetadata,
+
+    invalidated_tree: bool,
 ) {
     let mut measure_children = |mode: &mut MeasureMode,
                                 available_area: &mut Area,
@@ -251,6 +259,7 @@ pub fn measure_inner_nodes<Key: NodeKey>(
                     false,
                     dom_adapter,
                     layout_metadata,
+                    invalidated_tree,
                 );
 
                 // 2. Align the Cross axis
@@ -274,6 +283,7 @@ pub fn measure_inner_nodes<Key: NodeKey>(
                 must_cache_inner_nodes,
                 dom_adapter,
                 layout_metadata,
+                invalidated_tree,
             );
 
             // Stack the child into its parent

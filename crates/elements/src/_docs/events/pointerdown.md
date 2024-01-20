@@ -1,17 +1,19 @@
-The `pointerdown` event will fire when the user starts pressing an element.
+The `pointerdown` event fires when the user clicks/starts touching an element.
 
-Event Data: [PointerData][crate::events::PointerData]
+Event Data: [`PointerData`](crate::events::PointerData)
 
-### Example:
+### Example
 
 ```rust, no_run
+# use freya::prelude::*;
 fn app(cx: Scope) -> Element {
     render!(
         rect {
             width: "100",
             height: "100",
             background: "red",
-            onpointerdown: |_| println!("Started pressing!")
+            onpointerdown: |_| println!("Clicked/started pressing!")
         }
     )
 }
+```
