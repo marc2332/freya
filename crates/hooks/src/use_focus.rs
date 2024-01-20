@@ -1,8 +1,9 @@
 use std::num::NonZeroU128;
 
 use accesskit::NodeId as AccessibilityId;
-use dioxus_core::{AttributeValue, Scope, ScopeState};
-use dioxus_hooks::{use_shared_state, use_shared_state_provider, UseSharedState};
+use dioxus_core::{prelude::consume_context, use_hook, AttributeValue};
+use dioxus_hooks::{use_context, use_context_provider};
+use dioxus_signals::Signal;
 use freya_core::navigation_mode::{NavigationMode, NavigatorState};
 use freya_elements::events::{keyboard::Code, KeyboardEvent};
 use freya_node_state::CustomAttributeValues;
@@ -14,13 +15,13 @@ pub type FocusId = AccessibilityId;
 #[derive(Clone)]
 pub struct UseFocus {
     id: AccessibilityId,
-    focused_id: UseSharedState<Option<AccessibilityId>>,
+    focused_id: Signal<Option<AccessibilityId>>,
     navigation_state: NavigatorState,
 }
 
 impl UseFocus {
     /// Focus this node
-    pub fn focus(&self) {
+    pub fn focus(&mut self) {
         *self.focused_id.write() = Some(self.id)
     }
 
@@ -30,8 +31,8 @@ impl UseFocus {
     }
 
     /// Create a node focus ID attribute
-    pub fn attribute<'b, T>(&self, cx: Scope<'b, T>) -> AttributeValue<'b> {
-        cx.any_value(CustomAttributeValues::FocusId(self.id))
+    pub fn attribute<T>(&self) -> AttributeValue {
+        AttributeValue::any_value(CustomAttributeValues::FocusId(self.id))
     }
 
     /// Check if this node is currently focused
@@ -45,7 +46,7 @@ impl UseFocus {
     }
 
     /// Unfocus the currently focused node.
-    pub fn unfocus(&self) {
+    pub fn unfocus(&mut self) {
         *self.focused_id.write() = None;
     }
 
@@ -56,15 +57,12 @@ impl UseFocus {
 }
 
 /// Create a focus manager for a node.
-pub fn use_focus(cx: &ScopeState) -> &UseFocus {
-    let focused_id = use_shared_state::<Option<FocusId>>(cx);
+pub fn use_focus() -> UseFocus {
+    let focused_id = use_context::<Signal<Option<FocusId>>>();
 
-    cx.use_hook(move || {
-        let focused_id = focused_id.unwrap().clone();
+    use_hook(move || {
         let id = AccessibilityId(NonZeroU128::new(Uuid::new_v4().as_u128()).unwrap());
-        let navigation_state = cx
-            .consume_context::<NavigatorState>()
-            .expect("This is not expected, and likely a bug. Please, report it.");
+        let navigation_state = consume_context::<NavigatorState>();
         UseFocus {
             id,
             focused_id,
@@ -74,8 +72,8 @@ pub fn use_focus(cx: &ScopeState) -> &UseFocus {
 }
 
 /// Create a focus provider.
-pub fn use_init_focus(cx: &ScopeState) {
-    use_shared_state_provider::<Option<FocusId>>(cx, || None);
+pub fn use_init_focus() {
+    use_context_provider::<Signal<Option<FocusId>>>(|| Signal::new(None));
 }
 
 #[cfg(test)]
@@ -89,8 +87,8 @@ mod test {
     #[tokio::test]
     pub async fn track_focus() {
         #[allow(non_snake_case)]
-        fn OherChild(cx: Scope) -> Element {
-            let focus_manager = use_focus(cx);
+        fn OherChild() -> Element {
+            let focus_manager = use_focus();
 
             render!(
                 rect {
