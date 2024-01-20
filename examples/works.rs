@@ -8,10 +8,10 @@ use std::rc::Rc;
 use freya::prelude::*;
 
 fn main() {
-    launch_with_props(Rc::new(app), "Works", (400.0, 350.0));
+    launch_with_props(app, "Works", (400.0, 350.0));
 }
 
-fn app(_: ()) -> Element {
+fn app() -> Element {
     rsx!(
         rect {
             height: "100%",

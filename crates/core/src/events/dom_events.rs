@@ -2,9 +2,10 @@ use std::{any::Any, rc::Rc};
 
 use dioxus_core::ElementId;
 use dioxus_native_core::NodeId;
-use freya_elements::{events::{
-    pointer::PointerType, KeyboardData, MouseData, PointerData, TouchData, WheelData,
-}, elements::PlatformEventData};
+use freya_elements::{
+    elements::PlatformEventData,
+    events::{pointer::PointerType, KeyboardData, MouseData, PointerData, TouchData, WheelData},
+};
 use torin::prelude::*;
 
 use crate::events::FreyaEvent;
@@ -162,7 +163,7 @@ impl DomEventData {
             DomEventData::Keyboard(k) => Rc::new(PlatformEventData::new(Box::new(k))),
             DomEventData::Wheel(w) => Rc::new(PlatformEventData::new(Box::new(w))),
             DomEventData::Touch(t) => Rc::new(PlatformEventData::new(Box::new(t))),
-            DomEventData::Pointer(p) =>Rc::new(PlatformEventData::new(Box::new(p))),
+            DomEventData::Pointer(p) => Rc::new(PlatformEventData::new(Box::new(p))),
         }
     }
 }

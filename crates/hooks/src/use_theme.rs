@@ -1,8 +1,7 @@
 use crate::theming::*;
 use dioxus_core::prelude::try_consume_context;
+use dioxus_hooks::{use_context, use_context_provider};
 use dioxus_signals::Signal;
-use dioxus_hooks::{use_context_provider, use_context};
-
 
 /// Provide a custom [`Theme`].
 pub fn use_init_theme(theme: Theme) {

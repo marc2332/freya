@@ -498,7 +498,7 @@ pub mod events {
     use std::any::Any;
 
     use crate::events::*;
-    
+
     #[doc(hidden)]
     pub trait EventReturn<P>: Sized {
         fn spawn(self) {}
@@ -540,7 +540,6 @@ pub mod events {
             self.event.downcast::<T>().ok().map(|e| *e)
         }
     }
-
 
     macro_rules! impl_event {
         (
@@ -632,8 +631,6 @@ pub mod events {
         onpointerleave
     ];
 }
-
-
 
 #[doc(hidden)]
 pub trait GlobalAttributes {}

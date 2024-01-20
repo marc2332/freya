@@ -111,9 +111,8 @@ impl FreyaDOM {
 
     /// Create the initial DOM from the given Mutations
     pub fn init_dom(&mut self, vdom: &mut VirtualDom, scale_factor: f32) {
-
-        let mut rdom =  &mut self.rdom;
-        let mut state =  &mut  self.dioxus_integration_state;
+        let mut rdom = &mut self.rdom;
+        let mut state = &mut self.dioxus_integration_state;
         vdom.rebuild(&mut state.create_mutation_writer(&mut rdom));
 
         let mut ctx = SendAnyMap::new();
@@ -121,23 +120,21 @@ impl FreyaDOM {
         ctx.insert(self.torin.clone());
 
         self.rdom.update_state(ctx);
-
-       
     }
 
     /// Process the given mutations from the [`VirtualDOM`](dioxus_core::VirtualDom).
-    pub fn rebuild(&mut self, vdom: &mut VirtualDom,scale_factor: f32) -> (bool, bool) {
+    pub fn rebuild(&mut self, vdom: &mut VirtualDom, scale_factor: f32) -> (bool, bool) {
         let mut dom_adapter = DioxusDOMAdapter::new_with_cache(self.rdom());
         // Apply the mutations to the layout
-       // self.layout()
-            //.apply_mutations(&mutations, &self.dioxus_integration_state, &mut dom_adapter);
+        // self.layout()
+        //.apply_mutations(&mutations, &self.dioxus_integration_state, &mut dom_adapter);
 
         // Apply the mutations the integration state
         //self.dioxus_integration_state
-            //.apply_mutations(&mut self.rdom, mutations);
+        //.apply_mutations(&mut self.rdom, mutations);
 
-        let mut rdom =  &mut self.rdom;
-        let mut state =  &mut  self.dioxus_integration_state;
+        let mut rdom = &mut self.rdom;
+        let mut state = &mut self.dioxus_integration_state;
         vdom.rebuild(&mut state.create_mutation_writer(&mut rdom));
 
         // Update the Nodes states
@@ -174,6 +171,4 @@ impl FreyaDOM {
     pub fn state_mut(&mut self) -> &mut DioxusState {
         &mut self.dioxus_integration_state
     }
-
-
 }

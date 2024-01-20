@@ -28,10 +28,6 @@ impl WheelData {
 
 impl From<&PlatformEventData> for WheelData {
     fn from(val: &PlatformEventData) -> Self {
-        val
-            .downcast::<WheelData>()
-            .cloned()
-            .unwrap()
-            .into()
+        val.downcast::<WheelData>().cloned().unwrap().into()
     }
 }

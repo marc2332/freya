@@ -126,18 +126,16 @@ impl<State: 'static + Clone> App<State> {
     }
 
     /// Provide the launch state and few other utilities like the EventLoopProxy
-    pub fn provide_vdom_contexts(&self) {
-       /*
+    pub fn provide_vdom_contexts(&mut self) {
         if let Some(state) = self.window_env.window_config.state.clone() {
-            self.vdom.base_scope().provide_context(state);
+            self.vdom.insert_any_root_context(Box::new(state));
         }
-        self.vdom.base_scope().provide_context(self.proxy.clone());
         self.vdom
-            .base_scope()
-            .provide_context(self.focus_receiver.clone());
+            .insert_any_root_context(Box::new(self.proxy.clone()));
         self.vdom
-            .base_scope()
-            .provide_context(Arc::new(self.ticker_sender.subscribe())); */
+            .insert_any_root_context(Box::new(self.focus_receiver.clone()));
+        self.vdom
+            .insert_any_root_context(Box::new(Arc::new(self.ticker_sender.subscribe())));
     }
 
     /// Make the first build of the VirtualDOM.
@@ -146,7 +144,6 @@ impl<State: 'static + Clone> App<State> {
         self.provide_vdom_contexts();
 
         self.sdom.get_mut().init_dom(&mut self.vdom, scale_factor);
-
     }
 
     /// Update the DOM with the mutations from the VirtualDOM.

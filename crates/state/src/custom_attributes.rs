@@ -6,7 +6,7 @@ use std::sync::Mutex;
 
 use accesskit::NodeId as AccessibilityId;
 use bytes::Bytes;
-use dioxus_core::{AttributeValue};
+use dioxus_core::AttributeValue;
 use dioxus_native_core::node::FromAnyValue;
 use freya_common::{CursorLayoutResponse, NodeReferenceLayout};
 use freya_engine::prelude::*;
