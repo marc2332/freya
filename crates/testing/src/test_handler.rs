@@ -35,6 +35,8 @@ pub struct TestingHandler {
     pub(crate) config: TestingConfig,
 
     pub(crate) ticker_sender: broadcast::Sender<()>,
+
+    pub(crate) navigation_state: NavigatorState,
 }
 
 impl TestingHandler {
@@ -60,6 +62,9 @@ impl TestingHandler {
         self.vdom
             .base_scope()
             .provide_context(Arc::new(self.ticker_sender.subscribe()));
+        self.vdom
+            .base_scope()
+            .provide_context(self.navigation_state.clone());
     }
 
     /// Wait and apply new changes

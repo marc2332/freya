@@ -254,6 +254,7 @@ define_theme! {
         background: str,
         hover_background: str,
         border_fill: str,
+        focus_border_fill: str,
         margin: str,
         corner_radius: str,
         width: str,
@@ -294,6 +295,8 @@ define_theme! {
         thumb_background: str,
         enabled_background: str,
         enabled_thumb_background: str,
+        focus_border_fill: str,
+        enabled_focus_border_fill: str,
     }
 }
 

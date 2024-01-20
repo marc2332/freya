@@ -46,6 +46,7 @@ pub fn launch_test_with_config(root: Component<()>, config: TestingConfig) -> Te
         platform_event_receiver,
         accessibility_state: SharedAccessibilityState::default(),
         ticker_sender: broadcast::channel(5).0,
+        navigation_state: NavigatorState::new(NavigationMode::NotKeyboard),
     };
 
     handler.init_dom();
