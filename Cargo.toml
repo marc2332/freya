@@ -32,6 +32,7 @@ dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev = "fc0b0f02a16c
 dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev = "fc0b0f02a16c38dc4744bf7a1264a5cc62088269", features = ["dioxus"] }
 dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "fc0b0f02a16c38dc4744bf7a1264a5cc62088269" }
 dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev = "fc0b0f02a16c38dc4744bf7a1264a5cc62088269" }
+dioxus-signals = { git = "https://github.com/DioxusLabs/dioxus", rev = "fc0b0f02a16c38dc4744bf7a1264a5cc62088269" }
 dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev = "fc0b0f02a16c38dc4744bf7a1264a5cc62088269" }
 dioxus-hot-reload = { git = "https://github.com/DioxusLabs/dioxus", rev = "fc0b0f02a16c38dc4744bf7a1264a5cc62088269", features = ["file_watcher"], default-features = false }
 dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev = "fc0b0f02a16c38dc4744bf7a1264a5cc62088269", default-features = false }

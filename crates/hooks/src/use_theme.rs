@@ -1,27 +1,29 @@
 use crate::theming::*;
-use dioxus_core::ScopeState;
-use dioxus_hooks::{use_shared_state, use_shared_state_provider, UseSharedState};
+use dioxus_core::prelude::try_consume_context;
+use dioxus_signals::Signal;
+use dioxus_hooks::{use_context_provider, use_context};
+
 
 /// Provide a custom [`Theme`].
-pub fn use_init_theme(cx: &ScopeState, theme: Theme) {
-    use_shared_state_provider(cx, || theme);
+pub fn use_init_theme(theme: Theme) {
+    use_context_provider(|| Signal::new(theme));
 }
 
 /// Provide the default [`Theme`].
-pub fn use_init_default_theme(cx: &ScopeState) {
-    use_shared_state_provider(cx, Theme::default);
+pub fn use_init_default_theme() {
+    use_context_provider(|| Signal::new(Theme::default()));
 }
 
 /// Subscribe to [`Theme`] changes.
-pub fn use_theme(cx: &ScopeState) -> &UseSharedState<Theme> {
-    use_shared_state::<Theme>(cx).unwrap()
+pub fn use_theme() -> Signal<Theme> {
+    use_context::<Signal<Theme>>()
 }
 
 /// Subscribe to [`Theme`] changes, default theme will be used if there is no provided [`Theme`].
 ///
 /// Primarily used by built-in components that have no control of whether they will inherit a [`Theme`] or not.
-pub fn use_get_theme(cx: &ScopeState) -> Theme {
-    use_shared_state::<Theme>(cx)
+pub fn use_get_theme() -> Theme {
+    try_consume_context::<Signal<Theme>>()
         .map(|v| v.read().clone())
         .unwrap_or_default()
 }
@@ -45,20 +47,20 @@ pub fn use_get_theme(cx: &ScopeState) -> Theme {
 ///     // ...
 /// }
 ///
-/// pub fn Button(cx: Scope<ButtonProps>) -> Element {
+/// pub fn Button(props: ButtonProps) -> Element {
 ///     let ButtonTheme {
 ///         padding,
 ///         width,
 ///         background,
 ///         ..
-///     } = use_applied_theme!(cx, &cx.props.theme, button);
+///     } = use_applied_theme!(&props.theme, button);
 ///     // ...
 /// }
 /// ```
 #[macro_export]
 macro_rules! use_applied_theme {
-    ($cx:expr, $theme_prop:expr, $theme_name:ident) => {{
-        let mut theme = ::freya_hooks::use_get_theme($cx).$theme_name;
+    ($theme_prop:expr, $theme_name:ident) => {{
+        let mut theme = ::freya_hooks::use_get_theme().$theme_name;
 
         if let Some(theme_override) = $theme_prop {
             theme.apply_optional(theme_override);
