@@ -7,6 +7,7 @@ See syntax for [`Size Units`](crate::_docs::size_unit).
 ##### Usage
 
 ```rust, no_run
+# use freya::prelude::*;
 fn app(cx: Scope) -> Element {
     render!(
         rect {

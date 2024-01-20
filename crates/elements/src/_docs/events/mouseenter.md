@@ -1,10 +1,11 @@
-The `mouseenter` event will fire when the user starts hovering an element.
+The `mouseenter` event fires when the user starts hovering an element.
 
-Event Data: [MouseData][crate::events::MouseData]
+Event Data: [`MouseData`](crate::events::MouseData)
 
-### Example:
+### Example
 
 ```rust, no_run
+# use freya::prelude::*;
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -15,3 +16,4 @@ fn app(cx: Scope) -> Element {
         }
     )
 }
+```

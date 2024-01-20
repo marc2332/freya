@@ -250,7 +250,7 @@ impl<'a> TransitionsManager<'a> {
 /// Run a group of animated transitions.
 ///
 /// ## Usage
-/// ```rust
+/// ```rust,no_run
 /// # use freya::prelude::*;
 /// fn app(cx: Scope) -> Element {
 ///     let animation = use_animation_transition(cx, TransitionAnimation::new_linear(50), (), |_| vec![
