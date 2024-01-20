@@ -20,6 +20,7 @@ fn app(_: ()) -> Element {
             cross_align: "center",
             background: "rgb(0, 119, 182)",
             color: "white",
+            onclick: |e| println!("{e:?}"),
             label {
                 font_size: "50",
                 font_weight: "bold",

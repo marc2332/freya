@@ -2,9 +2,9 @@ use std::{any::Any, rc::Rc};
 
 use dioxus_core::ElementId;
 use dioxus_native_core::NodeId;
-use freya_elements::events::{
+use freya_elements::{events::{
     pointer::PointerType, KeyboardData, MouseData, PointerData, TouchData, WheelData,
-};
+}, elements::PlatformEventData};
 use torin::prelude::*;
 
 use crate::events::FreyaEvent;
@@ -158,11 +158,11 @@ pub enum DomEventData {
 impl DomEventData {
     pub fn any(self) -> Rc<dyn Any> {
         match self {
-            DomEventData::Mouse(m) => Rc::new(m),
-            DomEventData::Keyboard(k) => Rc::new(k),
-            DomEventData::Wheel(w) => Rc::new(w),
-            DomEventData::Touch(t) => Rc::new(t),
-            DomEventData::Pointer(p) => Rc::new(p),
+            DomEventData::Mouse(m) => Rc::new(PlatformEventData::new(Box::new(m))),
+            DomEventData::Keyboard(k) => Rc::new(PlatformEventData::new(Box::new(k))),
+            DomEventData::Wheel(w) => Rc::new(PlatformEventData::new(Box::new(w))),
+            DomEventData::Touch(t) => Rc::new(PlatformEventData::new(Box::new(t))),
+            DomEventData::Pointer(p) =>Rc::new(PlatformEventData::new(Box::new(p))),
         }
     }
 }
