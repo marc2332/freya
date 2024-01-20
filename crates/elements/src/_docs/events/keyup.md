@@ -1,14 +1,16 @@
-The `keyup` event will fire when the user releases any key being pressed.
+The `keyup` event fires when the user releases any key being pressed.
 
-Event Data: [KeyboardData][crate::events::KeyboardData]
+Event Data: [`KeyboardData`](crate::events::KeyboardData)
 
-### Example:
+### Example
 
 ```rust, no_run
+# use freya::prelude::*;
 fn app(cx: Scope) -> Element {
     render!(
         rect {
-            keyup: |e| println!("Event: {e:?}")
+            onkeyup: |e| println!("Event: {e:?}")
         }
     )
 }
+```

@@ -4,6 +4,7 @@
 //! Will use it's inner children as size, so in this case, the `rect` width will be equivalent to the width of `label`:
 //!
 //! ```rust, no_run
+//! # use freya::prelude::*;
 //! fn app(cx: Scope) -> Element {
 //!     render!(
 //!         rect {
@@ -20,6 +21,7 @@
 //! ##### Logical pixels
 //!
 //! ```rust, no_run
+//! # use freya::prelude::*;
 //! fn app(cx: Scope) -> Element {
 //!     render!(
 //!         rect {
@@ -34,6 +36,7 @@
 //! Relative percentage to the parent equivalent value.
 //!
 //! ```rust, no_run
+//! # use freya::prelude::*;
 //! fn app(cx: Scope) -> Element {
 //!     render!(
 //!         rect {
@@ -49,6 +52,7 @@
 //! For more complex logic you can use the `calc()` function.
 //!
 //! ```rust, no_run
+//! # use freya::prelude::*;
 //! fn app(cx: Scope) -> Element {
 //!     render!(
 //!         rect {
@@ -63,6 +67,7 @@
 //! Use the remaining available space from the parent area:
 //!
 //! ```rust, no_run
+//! # use freya::prelude::*;
 //! fn app(cx: Scope) -> Element {
 //!     render!(
 //!         rect {
@@ -73,7 +78,7 @@
 //!                 width: "100%",
 //!             }
 //!             rect {
-//!                 height: "fill", //! This is the same as calc(100% - 200)
+//!                 height: "fill", // This is the same as calc(100% - 200)
 //!                 width: "100%",
 //!             }
 //!         }
@@ -85,6 +90,7 @@
 //! Relative percentage to the viewport (Window) equivalent value.
 //!
 //! ```rust, no_run
+//! # use freya::prelude::*;
 //! fn app(cx: Scope) -> Element {
 //!     render!(
 //!         rect {

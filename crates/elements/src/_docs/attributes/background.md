@@ -1,12 +1,11 @@
-### background
-
 Specify a color as the background of an element.
 
 You can learn about the syntax of this attribute [here](#color-syntax).
 
-### Example:
+### Example
 
 ```rust, no_run
+# use freya::prelude::*;
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -14,3 +13,4 @@ fn app(cx: Scope) -> Element {
         }
     )
 }
+```
