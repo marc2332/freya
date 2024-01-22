@@ -19,7 +19,6 @@ type BuilderFunction<T> = dyn Fn((usize, usize, &Option<T>)) -> Element;
 #[derive(Props, Clone)]
 pub struct VirtualScrollViewProps<T: 'static + Clone> {
     /// Theme override.
-    #[props(optional)]
     pub theme: Option<ScrollViewThemeWith>,
     /// Quantity of items in the VirtualScrollView.
     pub length: usize,
@@ -28,7 +27,6 @@ pub struct VirtualScrollViewProps<T: 'static + Clone> {
     /// The item builder function.
     pub builder: Arc<BuilderFunction<T>>,
     /// Custom values to pass to the builder function.
-    #[props(optional)]
     pub builder_values: Option<T>,
     /// Direction of the VirtualScrollView, `vertical` or `horizontal`.
     #[props(default = "vertical".to_string(), into)]
@@ -69,7 +67,7 @@ fn get_render_range(
 ///
 /// ```no_run
 /// # use freya::prelude::*;
-/// fn app(cx: Scope) -> Element {
+/// fn app() -> Element {
 ///     rsx!(
 ///         VirtualScrollView {
 ///             show_scrollbar: true,
@@ -77,7 +75,7 @@ fn get_render_range(
 ///             item_size: 80.0,
 ///             builder_values: (),
 ///             direction: "vertical",
-///             builder: Box::new(move |(k, i, _, _)| {
+///             builder: Box::new(move |(k, i, _)| {
 ///                 rsx! {
 ///                     label {
 ///                         key: "{k}",
