@@ -1,6 +1,6 @@
 use dioxus_core::fc_to_builder;
 use dioxus_core::Element;
-use dioxus_core::{Component, VirtualDom};
+use dioxus_core::VirtualDom;
 use dioxus_core_macro::rsx;
 use freya_common::EventMessage;
 use freya_core::prelude::*;

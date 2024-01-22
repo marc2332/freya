@@ -1,6 +1,6 @@
 use std::sync::{Arc, Mutex};
 
-use dioxus_core::{Mutations, VirtualDom};
+use dioxus_core::VirtualDom;
 use dioxus_native_core::{
     prelude::{DioxusState, State},
     real_dom::{NodeRef, RealDom},
@@ -15,7 +15,7 @@ use std::sync::MutexGuard;
 use torin::prelude::*;
 use tracing::info;
 
-use crate::{dom_adapter::DioxusDOMAdapter, mutations_writer::MutationsWriter};
+use crate::mutations_writer::MutationsWriter;
 
 pub type DioxusDOM = RealDom<CustomAttributeValues>;
 pub type DioxusNode<'a> = NodeRef<'a, CustomAttributeValues>;
