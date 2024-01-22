@@ -137,6 +137,6 @@ impl FromAnyValue for CustomAttributeValues {
 }
 
 /// Transform some bytes (e.g: raw image, raw svg) into attribute data
-pub fn bytes_to_data<T>(bytes: &[u8]) -> AttributeValue {
+pub fn bytes_to_data(bytes: &[u8]) -> AttributeValue {
     AttributeValue::any_value(CustomAttributeValues::Bytes(bytes.to_vec()))
 }

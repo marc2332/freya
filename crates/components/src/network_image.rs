@@ -7,25 +7,21 @@ use freya_node_state::bytes_to_data;
 use reqwest::Url;
 
 /// [`NetworkImage`] component properties.
-#[derive(Props)]
-pub struct NetworkImageProps<'a> {
+#[derive(Props, Clone, PartialEq)]
+pub struct NetworkImageProps {
     /// Theme override.
-    #[props(optional)]
     pub theme: Option<NetworkImageThemeWith>,
 
     /// URL of the image
     pub url: Url,
 
     /// Fallback element
-    #[props(optional)]
-    pub fallback: Option<Element<'a>>,
+    pub fallback: Option<Element>,
 
     /// Loading element
-    #[props(optional)]
-    pub loading: Option<Element<'a>>,
+    pub loading: Option<Element>,
 
     /// Information about the image.
-    #[props(optional, into)]
     pub alt: Option<String>,
 }
 
@@ -60,37 +56,38 @@ pub enum ImageStatus {
 /// }
 ///
 #[allow(non_snake_case)]
-pub fn NetworkImage<'a>(cx: Scope<'a, NetworkImageProps<'a>>) -> Element<'a> {
-    let focus = use_focus(cx);
-    let status = use_state(cx, || ImageStatus::Loading);
-    let image_bytes = use_state::<Option<Vec<u8>>>(cx, || None);
+pub fn NetworkImage(props: NetworkImageProps) -> Element {
+    let focus = use_focus();
+    let status = use_signal(|| ImageStatus::Loading);
+    let image_bytes = use_signal::<Option<Vec<u8>>>(|| None);
 
-    let focus_id = focus.attribute(cx);
+    let focus_id = focus.attribute();
     let NetworkImageTheme { width, height } =
-        use_applied_theme!(cx, &cx.props.theme, network_image);
-    let alt = cx.props.alt.as_deref();
+        use_applied_theme!(&props.theme, network_image);
+    let alt = props.alt.as_deref();
 
-    use_effect(cx, &cx.props.url, move |url| {
+    use_effect(move || {
+        let url = props.url.clone(); // TODO: Waiting for a dependency-based use_effect
         to_owned![image_bytes, status];
-        async move {
-            // Loading image
-            status.set(ImageStatus::Loading);
-            let img = fetch_image(url).await;
-            if let Ok(img) = img {
-                // Image loaded
-                image_bytes.set(Some(img));
-                status.set(ImageStatus::Loaded)
-            } else if let Err(_err) = img {
-                // Image errored
-                image_bytes.set(None);
-                status.set(ImageStatus::Errored)
-            }
-        }
+        spawn(async move {
+             // Loading image
+             status.set(ImageStatus::Loading);
+             let img = fetch_image(url).await;
+             if let Ok(img) = img {
+                 // Image loaded
+                 image_bytes.set(Some(img));
+                 status.set(ImageStatus::Loaded)
+             } else if let Err(_err) = img {
+                 // Image errored
+                 image_bytes.set(None);
+                 status.set(ImageStatus::Errored)
+             }
+        });
     });
 
-    if *status.get() == ImageStatus::Loading {
-        if let Some(loading_element) = &cx.props.loading {
-            rsx!(loading_element)
+    if *status.read() == ImageStatus::Loading {
+        if let Some(loading_element) = &props.loading {
+            rsx!({loading_element})
         } else {
             rsx!(
                 rect {
@@ -102,9 +99,9 @@ pub fn NetworkImage<'a>(cx: Scope<'a, NetworkImageProps<'a>>) -> Element<'a> {
                 }
             )
         }
-    } else if *status.get() == ImageStatus::Errored {
-        if let Some(fallback_element) = &cx.props.fallback {
-            rsx!(fallback_element)
+    } else if *status.read() == ImageStatus::Errored {
+        if let Some(fallback_element) = &props.fallback {
+            rsx!({fallback_element})
         } else {
             rsx!(
                 rect {
@@ -120,21 +117,23 @@ pub fn NetworkImage<'a>(cx: Scope<'a, NetworkImageProps<'a>>) -> Element<'a> {
             )
         }
     } else {
-        rsx! {
-            image_bytes.as_ref().map(|bytes| {
-                let image_data = bytes_to_data(cx, bytes);
-                rsx!(
-                    image {
-                        height: "{height}",
-                        width: "{width}",
-                        focus_id: focus_id,
-                        image_data: image_data,
-                        role: "image",
-                        alt: alt
-                    }
-                )
-            })
-        }
+        rsx!(
+            {
+                image_bytes.as_ref().map(|bytes| {
+                    let image_data = bytes_to_data(&*bytes);
+                    rsx!(
+                        image {
+                            height: "{height}",
+                            width: "{width}",
+                            focus_id: focus_id,
+                            image_data: image_data,
+                            role: "image",
+                            alt: alt
+                        }
+                    )
+                })
+            }
+        )
     }
 }
 
