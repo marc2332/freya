@@ -111,6 +111,7 @@ impl FreyaDOM {
 
     /// Create the initial DOM from the given Mutations
     pub fn init_dom(&mut self, vdom: &mut VirtualDom, scale_factor: f32) {
+        // Build the RealDOM
         vdom.rebuild(&mut MutationsWriter {
             native_writer: self
                 .dioxus_integration_state
@@ -127,6 +128,7 @@ impl FreyaDOM {
 
     /// Process the given mutations from the [`VirtualDOM`](dioxus_core::VirtualDom).
     pub fn render_mutations(&mut self, vdom: &mut VirtualDom, scale_factor: f32) -> (bool, bool) {
+        // Update the RealDOM
         vdom.render_immediate(&mut MutationsWriter {
             native_writer: self
                 .dioxus_integration_state
