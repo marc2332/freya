@@ -13,7 +13,7 @@ mod use_accessibility;
 // mod use_canvas;
 // mod use_editable;
 mod use_focus;
-// mod use_node;
+mod use_node;
 mod use_platform;
 mod use_theme;
 
@@ -32,7 +32,7 @@ pub use use_accessibility::*;
 // pub use use_canvas::*;
 // pub use use_editable::*;
 pub use use_focus::*;
-// pub use use_node::*;
+pub use use_node::*;
 pub use use_platform::*;
 pub use use_theme::*;
 

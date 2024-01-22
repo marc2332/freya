@@ -235,6 +235,7 @@ fn with_accessibility(app: AppComponent) -> VirtualDom {
     use dioxus_core::use_hook;
     use dioxus_core::Element;
     use dioxus_core_macro::render;
+    use dioxus_core_macro::rsx;
     use freya_hooks::{use_init_accessibility, use_init_focus};
 
     #[derive(Props, Clone, PartialEq)]

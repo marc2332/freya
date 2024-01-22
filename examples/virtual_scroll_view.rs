@@ -3,39 +3,52 @@
     windows_subsystem = "windows"
 )]
 
+use dioxus::signals::use_signal;
 use freya::prelude::*;
+use std::sync::Arc;
 
 fn main() {
     launch(app);
 }
 
-fn app(cx: Scope) -> Element {
-    let values = use_state(cx, || ["Hello World"].repeat(400));
+fn app() -> Element {
+    let mut values = use_signal(|| ["Hello, World!"].repeat(100));
 
-    rsx!(VirtualScrollView {
-        length: values.get().len(),
-        item_size: 25.0,
-        builder_values: values.get(),
-        direction: "vertical",
-        builder: Box::new(move |(key, index, _, values)| {
-            let values = values.unwrap();
-            let value = values[index];
-            let background = if index % 2 == 0 {
-                "rgb(200, 200, 200)"
-            } else {
-                "white"
-            };
-            rsx! {
-                rect {
-                    key: "{key}",
-                    background: "{background}",
-                    label {
-                        height: "25",
-                        width: "100%",
-                        "{index} {value}"
+    rsx!(
+        Button {
+            onclick: move |_| values.push("Bye, World!"),
+            label {
+                "Bye!"
+            }
+        }
+        VirtualScrollView {
+            theme: theme_with!(ScrollViewTheme {
+                height: "fill".into(),
+            }),
+            length: values.read().len(),
+            item_size: 25.0,
+            builder_values: values.clone(),
+            direction: "vertical",
+            builder: Arc::new(move |(key, index, values)| {
+                let values = values.unwrap();
+                let value = values.read()[index];
+                let background = if index % 2 == 0 {
+                    "rgb(200, 200, 200)"
+                } else {
+                    "white"
+                };
+                rsx! {
+                    rect {
+                        key: "{key}",
+                        background: "{background}",
+                        label {
+                            height: "25",
+                            width: "100%",
+                            "{index} {value}"
+                        }
                     }
                 }
-            }
-        })
-    })
+            })
+        }
+    )
 }
