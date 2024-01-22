@@ -8,7 +8,15 @@ use freya::prelude::*;
 use std::sync::Arc;
 
 fn main() {
-    launch(app);
+    launch_cfg(
+        app,
+        LaunchConfig::<()>::builder()
+            .with_title("Performance Overlay Plugin")
+            .with_width(700.)
+            .with_height(500.)
+            .with_plugin(PerformanceOverlayPlugin::default())
+            .build(),
+    )
 }
 
 fn app() -> Element {

@@ -21,7 +21,7 @@ fn main() {
     launch(app);
 }
 
-fn app(cx: Scope) -> Element {
+fn app() -> Element {
     rsx!(
         ThemeProvider {
             theme: CUSTOM_THEME,

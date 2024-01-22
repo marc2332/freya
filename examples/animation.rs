@@ -13,8 +13,8 @@ fn main() {
 const TIME: i32 = 500;
 const TARGET: f64 = 500.0;
 
-fn app(cx: Scope) -> Element {
-    let animation = use_animation(cx, || 0.0);
+fn app() -> Element {
+    let mut animation = use_animation(|| 0.0);
 
     let progress = animation.value();
 
