@@ -4,7 +4,7 @@ use accesskit::NodeId as AccessibilityId;
 use dioxus_core::{prelude::consume_context, use_hook, AttributeValue};
 use dioxus_hooks::{use_context, use_context_provider};
 use dioxus_signals::Signal;
-use freya_core::navigation_mode::{NavigationMode, NavigatorState};
+use freya_core::navigation_mode::NavigationMode;
 use freya_elements::events::{keyboard::Code, KeyboardEvent};
 use freya_node_state::CustomAttributeValues;
 use uuid::Uuid;
@@ -16,7 +16,7 @@ pub type FocusId = AccessibilityId;
 pub struct UseFocus {
     id: AccessibilityId,
     focused_id: Signal<Option<AccessibilityId>>,
-    navigation_state: NavigatorState,
+    navigation_mode: Signal<NavigationMode>,
 }
 
 impl UseFocus {
@@ -31,7 +31,7 @@ impl UseFocus {
     }
 
     /// Create a node focus ID attribute
-    pub fn attribute<T>(&self) -> AttributeValue {
+    pub fn attribute(&self) -> AttributeValue {
         AttributeValue::any_value(CustomAttributeValues::FocusId(self.id))
     }
 
@@ -42,7 +42,7 @@ impl UseFocus {
 
     /// Check if this node is currently selected
     pub fn is_selected(&self) -> bool {
-        self.is_focused() && self.navigation_state.get() == NavigationMode::Keyboard
+        self.is_focused() && *self.navigation_mode.read() == NavigationMode::Keyboard
     }
 
     /// Unfocus the currently focused node.
@@ -59,14 +59,14 @@ impl UseFocus {
 /// Create a focus manager for a node.
 pub fn use_focus() -> UseFocus {
     let focused_id = use_context::<Signal<Option<FocusId>>>();
+    let navigation_mode = use_context::<Signal<NavigationMode>>();
 
     use_hook(move || {
         let id = AccessibilityId(NonZeroU128::new(Uuid::new_v4().as_u128()).unwrap());
-        let navigation_state = consume_context::<NavigatorState>();
         UseFocus {
             id,
             focused_id,
-            navigation_state,
+            navigation_mode,
         }
     })
 }
@@ -74,6 +74,7 @@ pub fn use_focus() -> UseFocus {
 /// Create a focus provider.
 pub fn use_init_focus() {
     use_context_provider::<Signal<Option<FocusId>>>(|| Signal::new(None));
+    use_context_provider::<Signal<NavigationMode>>(|| Signal::new(NavigationMode::Keyboard));
 }
 
 #[cfg(test)]

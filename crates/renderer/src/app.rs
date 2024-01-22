@@ -156,7 +156,9 @@ impl<State: 'static + Clone> App<State> {
     /// Update the DOM with the mutations from the VirtualDOM.
     pub fn apply_vdom_changes(&mut self) -> (bool, bool) {
         let scale_factor = self.window_env.window.scale_factor() as f32;
-        self.sdom.get_mut().rebuild(&mut self.vdom, scale_factor);
+        self.sdom
+            .get_mut()
+            .render_mutations(&mut self.vdom, scale_factor);
 
         (true, true)
     }

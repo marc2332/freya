@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use dioxus_core::ScopeState;
+use dioxus_core::prelude::{consume_context, try_consume_context};
 use freya_common::EventMessage;
 use tokio::sync::{broadcast, mpsc::UnboundedSender};
 use winit::{event_loop::EventLoopProxy, window::CursorIcon};
@@ -47,13 +47,11 @@ impl UsePlatform {
     }
 }
 
-pub fn use_platform(cx: &ScopeState) -> UsePlatform {
+pub fn use_platform() -> UsePlatform {
     UsePlatform {
-        event_loop_proxy: cx.consume_context::<EventLoopProxy<EventMessage>>(),
-        platform_emitter: cx.consume_context::<UnboundedSender<EventMessage>>(),
-        ticker: cx
-            .consume_context::<Arc<broadcast::Receiver<()>>>()
-            .expect("This is not expected, and likely a bug. Please, report it."),
+        event_loop_proxy: try_consume_context::<EventLoopProxy<EventMessage>>(),
+        platform_emitter: try_consume_context::<UnboundedSender<EventMessage>>(),
+        ticker: consume_context::<Arc<broadcast::Receiver<()>>>(),
     }
 }
 

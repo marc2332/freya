@@ -15,7 +15,7 @@ use std::sync::MutexGuard;
 use torin::prelude::*;
 use tracing::info;
 
-use crate::dom_adapter::DioxusDOMAdapter;
+use crate::{dom_adapter::DioxusDOMAdapter, mutations_writer::MutationsWriter};
 
 pub type DioxusDOM = RealDom<CustomAttributeValues>;
 pub type DioxusNode<'a> = NodeRef<'a, CustomAttributeValues>;
@@ -111,9 +111,12 @@ impl FreyaDOM {
 
     /// Create the initial DOM from the given Mutations
     pub fn init_dom(&mut self, vdom: &mut VirtualDom, scale_factor: f32) {
-        let mut rdom = &mut self.rdom;
-        let mut state = &mut self.dioxus_integration_state;
-        vdom.rebuild(&mut state.create_mutation_writer(&mut rdom));
+        vdom.rebuild(&mut MutationsWriter {
+            native_writer: self
+                .dioxus_integration_state
+                .create_mutation_writer(&mut self.rdom),
+            layout: &mut self.torin.lock().unwrap(),
+        });
 
         let mut ctx = SendAnyMap::new();
         ctx.insert(scale_factor);
@@ -123,19 +126,13 @@ impl FreyaDOM {
     }
 
     /// Process the given mutations from the [`VirtualDOM`](dioxus_core::VirtualDom).
-    pub fn rebuild(&mut self, vdom: &mut VirtualDom, scale_factor: f32) -> (bool, bool) {
-        let mut dom_adapter = DioxusDOMAdapter::new_with_cache(self.rdom());
-        // Apply the mutations to the layout
-        // self.layout()
-        //.apply_mutations(&mutations, &self.dioxus_integration_state, &mut dom_adapter);
-
-        // Apply the mutations the integration state
-        //self.dioxus_integration_state
-        //.apply_mutations(&mut self.rdom, mutations);
-
-        let mut rdom = &mut self.rdom;
-        let mut state = &mut self.dioxus_integration_state;
-        vdom.rebuild(&mut state.create_mutation_writer(&mut rdom));
+    pub fn render_mutations(&mut self, vdom: &mut VirtualDom, scale_factor: f32) -> (bool, bool) {
+        vdom.render_immediate(&mut MutationsWriter {
+            native_writer: self
+                .dioxus_integration_state
+                .create_mutation_writer(&mut self.rdom),
+            layout: &mut self.torin.lock().unwrap(),
+        });
 
         // Update the Nodes states
         let mut ctx = SendAnyMap::new();

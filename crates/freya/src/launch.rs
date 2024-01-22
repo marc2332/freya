@@ -230,27 +230,30 @@ pub fn launch_cfg<T: 'static + Clone + Send>(app: AppComponent, config: LaunchCo
 use dioxus_core::VirtualDom;
 #[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
 fn with_accessibility(app: AppComponent) -> VirtualDom {
+    use dioxus::prelude::Props;
     use dioxus_core::fc_to_builder;
+    use dioxus_core::use_hook;
     use dioxus_core::Element;
     use dioxus_core_macro::render;
-    //use freya_hooks::{use_init_accessibility, use_init_focus};
+    use freya_hooks::{use_init_accessibility, use_init_focus};
 
-    /* struct RootProps {
-        app: Component,
+    #[derive(Props, Clone, PartialEq)]
+    struct RootProps {
+        app: AppComponent,
     }
 
     #[allow(non_snake_case)]
     fn Root(props: RootProps) -> Element {
-        //use_init_focus(cx);
-        //use_init_accessibility(cx);
+        use_init_focus();
+        use_init_accessibility();
 
         #[allow(non_snake_case)]
         let App = props.app;
 
         render!(App {})
-    } */
+    }
 
-    VirtualDom::new_with_props(app, ())
+    VirtualDom::new_with_props(Root, RootProps { app })
 }
 
 type AppComponent = fn() -> Element;
