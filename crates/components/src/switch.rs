@@ -40,7 +40,7 @@ pub enum SwitchStatus {
 ///
 /// ```no_run
 /// # use freya::prelude::*;
-/// fn app(cx: Scope) -> Element {
+/// fn app() -> Element {
 ///     let enabled = use_state(&cx, || false);
 ///
 ///     rsx!(

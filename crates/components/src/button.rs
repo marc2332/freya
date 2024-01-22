@@ -40,7 +40,7 @@ pub enum ButtonStatus {
 ///
 /// ```no_run
 /// # use freya::prelude::*;
-/// fn app(cx: Scope) -> Element {
+/// fn app() -> Element {
 ///     rsx!(
 ///         Button {
 ///             onclick: |_| println!("clicked"),

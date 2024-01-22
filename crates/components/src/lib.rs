@@ -20,7 +20,7 @@ mod scroll_views;
 // mod slider;
 mod switch;
 // mod table;
-// mod theme;
+mod theme;
 // mod tooltip;
 
 // pub use accordion::*;
@@ -42,5 +42,5 @@ pub use scroll_views::*;
 // pub use slider::*;
 pub use switch::*;
 // pub use table::*;
-// pub use theme::*;
+pub use theme::*;
 // pub use tooltip::*;
