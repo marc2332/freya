@@ -3,6 +3,7 @@
     windows_subsystem = "windows"
 )]
 
+use dioxus::signals::use_signal;
 use freya::events::MouseEvent;
 use freya::prelude::*;
 
@@ -10,55 +11,67 @@ fn main() {
     launch_with_props(app, "Freya canvas experiment", (700.0, 570.0));
 }
 
-fn app(cx: Scope) -> Element {
-    use_init_theme(cx, DARK_THEME);
-    let hovering = use_state(cx, || false);
-    let canvas_pos = use_state(cx, || (0.0f64, 0.0f64));
-    let nodes = use_state(cx, || vec![(0.0f64, 0.0f64)]);
-    let clicking = use_state::<Option<(f64, f64)>>(cx, || None);
-    let clicking_drag = use_state::<Option<(usize, (f64, f64))>>(cx, || None);
+fn app() -> Element {
+    use_init_theme(DARK_THEME);
+    let mut hovering = use_signal(|| false);
+    let mut canvas_pos = use_signal(|| (0.0f64, 0.0f64));
+    let mut nodes = use_signal(|| vec![(0.0f64, 0.0f64)]);
+    let clicking = use_signal::<Option<(f64, f64)>>(|| None);
+    let mut clicking_drag = use_signal::<Option<(usize, (f64, f64))>>(|| None);
 
-    let onmouseleave = |_: MouseEvent| {
-        if clicking.is_none() {
-            hovering.set(false);
+    let onmouseleave = {
+        to_owned![clicking];
+        move |_: MouseEvent| {
+            if clicking.peek().is_none() {
+                hovering.set(false);
+            }
         }
     };
 
-    let onmouseover = |e: MouseEvent| {
-        hovering.set(true);
-        if let Some(clicking_cords) = clicking.get() {
+    let onmouseover = {
+        to_owned![clicking];
+        move |e: MouseEvent| {
+            hovering.set(true);
+            if let Some(clicking_cords) = *clicking.peek() {
+                let coordinates = e.get_screen_coordinates();
+                canvas_pos.set((
+                    coordinates.x + clicking_cords.0,
+                    coordinates.y + clicking_cords.1,
+                ));
+            }
+            if let Some((node_id, clicking_cords)) = *clicking_drag.peek() {
+                let coordinates = e.get_screen_coordinates();
+
+                nodes.with_mut(|nodes| {
+                    let node = nodes.get_mut(node_id).unwrap();
+                    node.0 = coordinates.x - clicking_cords.0 - canvas_pos.peek().0;
+                    node.1 = coordinates.y - clicking_cords.1 - canvas_pos.peek().1 - 25.0;
+                    // The 25 is because of label from below.
+                });
+            }
+        }
+    };
+
+    let onmousedown = {
+        to_owned![clicking];
+        move |e: MouseEvent| {
             let coordinates = e.get_screen_coordinates();
-            canvas_pos.set((
-                coordinates.x + clicking_cords.0,
-                coordinates.y + clicking_cords.1,
-            ));
-        }
-        if let Some((node_id, clicking_cords)) = clicking_drag.get() {
-            let coordinates = e.get_screen_coordinates();
-
-            nodes.with_mut(|nodes| {
-                let node = nodes.get_mut(*node_id).unwrap();
-                node.0 = coordinates.x - clicking_cords.0 - canvas_pos.0;
-                node.1 = coordinates.y - clicking_cords.1 - canvas_pos.1 - 25.0;
-                // The 25 is because of label from below.
-            });
+            clicking.set(Some((
+                canvas_pos.peek().0 - coordinates.x,
+                canvas_pos.peek().1 - coordinates.y,
+            )));
         }
     };
 
-    let onmousedown = |e: MouseEvent| {
-        let coordinates = e.get_screen_coordinates();
-        clicking.set(Some((
-            canvas_pos.0 - coordinates.x,
-            canvas_pos.1 - coordinates.y,
-        )));
+    let onclick = {
+        to_owned![clicking];
+        move |_: MouseEvent| {
+            clicking.set(None);
+            clicking_drag.set(None);
+        }
     };
 
-    let onclick = |_: MouseEvent| {
-        clicking.set(None);
-        clicking_drag.set(None);
-    };
-
-    let create_node = |_| {
+    let create_node = move |_| {
         nodes.with_mut(|nodes| {
             nodes.push((0.0f64, 0.0f64));
         });
@@ -73,8 +86,8 @@ fn app(cx: Scope) -> Element {
                 background: "rgb(35, 35, 35)",
                 width: "100%",
                 height: "calc(100% - 100)",
-                offset_x: "{canvas_pos.0}",
-                offset_y: "{canvas_pos.1}",
+                offset_x: "{canvas_pos.read().0}",
+                offset_y: "{canvas_pos.read().1}",
                 onmousedown: onmousedown,
                 onclick: onclick,
                 onmouseover: onmouseover,
@@ -83,40 +96,42 @@ fn app(cx: Scope) -> Element {
                     font_size: "25",
                     "What is this even about? I have no idea, but it's cool"
                 }
-                nodes.get().iter().enumerate().map(|(id, node)| {
-                    rsx! {
-                        rect {
-                            key: "{id}",
-                            direction: "horizontal",
+                {
+                    nodes.read().iter().enumerate().map(|(id, node)| {
+                        rsx! {
                             rect {
-                                offset_x: "{node.0}",
-                                offset_y: "{node.1}",
-                                width: "0",
-                                height: "0",
+                                key: "{id}",
+                                direction: "horizontal",
                                 rect {
-                                    overflow: "clip",
-                                    background: "rgb(20, 20, 20)",
-                                    width: "600",
-                                    height: "400",
-                                    corner_radius: "15",
-                                    padding: "10",
-                                    shadow: "0 0 30 0 rgb(0, 0, 0, 150)",
-                                    onmousedown:  move |e: MouseEvent| {
-                                        clicking_drag.set(Some((id, e.get_element_coordinates().to_tuple())));
-                                    },
-                                    onmouseleave: |_: MouseEvent| {
-                                        if clicking.is_none() {
-                                            hovering.set(false);
-                                        }
-                                    },
-                                    Editor {
+                                    offset_x: "{node.0}",
+                                    offset_y: "{node.1}",
+                                    width: "0",
+                                    height: "0",
+                                    rect {
+                                        overflow: "clip",
+                                        background: "rgb(20, 20, 20)",
+                                        width: "600",
+                                        height: "400",
+                                        corner_radius: "15",
+                                        padding: "10",
+                                        shadow: "0 0 30 0 rgb(0, 0, 0, 150)",
+                                        onmousedown:  move |e: MouseEvent| {
+                                            clicking_drag.set(Some((id, e.get_element_coordinates().to_tuple())));
+                                        },
+                                        onmouseleave: move |_: MouseEvent| {
+                                            if clicking.peek().is_none() {
+                                                hovering.set(false);
+                                            }
+                                        },
+                                        Editor {
 
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-                })
+                    })
+                }
             }
             rect {
                 background: "rgb(25, 25, 25)",
@@ -146,35 +161,39 @@ fn app(cx: Scope) -> Element {
 }
 
 #[allow(non_snake_case)]
-fn Editor(cx: Scope) -> Element {
-    let focus_manager = use_focus(cx);
+fn Editor() -> Element {
+    let focus_manager = use_focus();
     let editable = use_editable(
-        cx,
         || {
             EditableConfig::new("Lorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet".to_string())
         },
         EditableMode::SingleLineMultipleEditors,
     );
-    let cursor_attr = editable.cursor_attr(cx);
-    let editor = editable.editor().clone();
+    let cursor_attr = editable.cursor_attr();
+    let editor = editable.editor().read();
     let cursor = editor.cursor().clone();
 
-    let font_size_percentage = use_state(cx, || 15.0);
-    let line_height_percentage = use_state(cx, || 0.0);
-    let is_bold = use_state(cx, || false);
-    let is_italic = use_state(cx, || false);
+    let mut font_size_percentage = use_signal(|| 15.0);
+    let mut line_height_percentage = use_signal(|| 0.0);
+    let mut is_bold = use_signal(|| false);
+    let mut is_italic = use_signal(|| false);
 
     // minimum font size is 5
     let font_size = font_size_percentage + 5.0;
     let line_height = (line_height_percentage / 25.0) + 1.2;
     let mut line_index = 0;
-    let font_style = if *is_italic.get() { "italic" } else { "normal" };
-    let font_weight = if *is_bold.get() { "bold" } else { "normal" };
+    let font_style = if *is_italic.read() {
+        "italic"
+    } else {
+        "normal"
+    };
+    let font_weight = if *is_bold.read() { "bold" } else { "normal" };
 
-    use_on_create(cx, move || {
+    // TODO: Waiting for Dioxus to bring back this hook
+    /* use_on_create(move || {
         focus_manager.focus();
         async move {}
-    });
+    }); */
 
     let onclick = {
         to_owned![focus_manager];
@@ -210,8 +229,8 @@ fn Editor(cx: Scope) -> Element {
                     cross_align: "center",
                     margin: "0 10",
                     Slider {
-                        value: *font_size_percentage.get(),
-                        onmoved: |p| {
+                        value: *font_size_percentage.read(),
+                        onmoved: move |p| {
                             font_size_percentage.set(p);
                         }
                     }
@@ -224,8 +243,8 @@ fn Editor(cx: Scope) -> Element {
                     cross_align: "center",
                     margin: "0 10",
                     Slider {
-                        value: *line_height_percentage.get(),
-                        onmoved: |p| {
+                        value: *line_height_percentage.read(),
+                        onmoved: move |p| {
                             line_height_percentage.set(p);
                         }
                     }
@@ -237,9 +256,9 @@ fn Editor(cx: Scope) -> Element {
                     width: "80",
                     cross_align: "center",
                     Switch {
-                        enabled: *is_bold.get(),
-                        ontoggled: |_| {
-                            is_bold.set(!is_bold.get());
+                        enabled: *is_bold.read(),
+                        ontoggled: move |_| {
+                            is_bold.with_mut(|is_bold| *is_bold = !*is_bold)
                         }
                     }
                     label {
@@ -250,9 +269,9 @@ fn Editor(cx: Scope) -> Element {
                     width: "80",
                     cross_align: "center",
                     Switch {
-                        enabled: *is_italic.get(),
-                        ontoggled: |_| {
-                            is_italic.set(!is_italic.get());
+                        enabled: *is_italic.read(),
+                        ontoggled: move |_| {
+                            is_italic.with_mut(|is_italic| *is_italic = !*is_italic)
                         }
                     }
                     label {
@@ -273,93 +292,95 @@ fn Editor(cx: Scope) -> Element {
                     padding: "5",
                     ScrollView {
                         scroll_with_arrows: false,
-                        editor.lines().map(move |l| {
-                            let editable = editable.clone();
+                        {
+                            editor.lines().map(move |l| {
+                                let editable = editable.clone();
 
-                            let is_line_selected = cursor.row() == line_index;
+                                let is_line_selected = cursor.row() == line_index;
 
-                            // Only show the cursor in the active line
-                            let character_index = if is_line_selected {
-                                cursor.col().to_string()
-                            } else {
-                                "none".to_string()
-                            };
+                                // Only show the cursor in the active line
+                                let character_index = if is_line_selected {
+                                    cursor.col().to_string()
+                                } else {
+                                    "none".to_string()
+                                };
 
-                            // Only highlight the active line
-                            let line_background = if is_line_selected {
-                                "rgb(37, 37, 37)"
-                            } else {
-                                ""
-                            };
+                                // Only highlight the active line
+                                let line_background = if is_line_selected {
+                                    "rgb(37, 37, 37)"
+                                } else {
+                                    ""
+                                };
 
-                            let onmousedown = {
-                                to_owned![editable];
-                                move |e: MouseEvent| {
-                                    editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
-                                }
-                            };
+                                let onmousedown = {
+                                    to_owned![editable];
+                                    move |e: MouseEvent| {
+                                        editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
+                                    }
+                                };
 
-                            let onmouseover = {
-                                to_owned![editable];
-                                move |e: MouseEvent| {
-                                    editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
-                                }
-                            };
+                                let onmouseover = {
+                                    to_owned![editable];
+                                    move |e: MouseEvent| {
+                                        editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
+                                    }
+                                };
 
-                            let onclick = {
-                                to_owned![editable];
-                                move |_: MouseEvent| {
-                                    editable.process_event(&EditableEvent::Click);
-                                }
-                            };
+                                let onclick = {
+                                    to_owned![editable];
+                                    move |_: MouseEvent| {
+                                        editable.process_event(&EditableEvent::Click);
+                                    }
+                                };
 
-                            let manual_line_height = font_size * line_height;
+                                let manual_line_height = font_size * line_height;
 
-                            let cursor_id = line_index;
-                            let highlights = editable.highlights_attr(cx, cursor_id);
+                                let cursor_id = line_index;
+                                let highlights = editable.highlights_attr(cursor_id);
 
-                            line_index += 1;
-                            rsx! {
-                                rect {
-                                    key: "{line_index}",
-                                    width: "100%",
-                                    height: "{manual_line_height}",
-                                    direction: "horizontal",
-                                    background: "{line_background}",
-                                    corner_radius: "7",
+                                line_index += 1;
+                                rsx!(
                                     rect {
-                                        width: "{font_size * 2.0}",
-                                        height: "100%",
-                                        main_align: "center",
-                                        direction: "horizontal",
-                                        label {
-                                            font_size: "{font_size}",
-                                            color: "rgb(200, 200, 200)",
-                                            "{line_index} "
-                                        }
-                                    }
-                                    paragraph {
+                                        key: "{line_index}",
                                         width: "100%",
-                                        cursor_index: "{character_index}",
-                                        cursor_color: "white",
-                                        max_lines: "1",
-                                        cursor_mode: "editable",
-                                        cursor_id: "{cursor_id}",
-                                        onmousedown: onmousedown,
-                                        onmouseover: onmouseover,
-                                        onclick: onclick,
-                                        highlights: highlights,
-                                        text {
-                                            color: "rgb(240, 240, 240)",
-                                            font_size: "{font_size}",
-                                            font_style: "{font_style}",
-                                            font_weight: "{font_weight}",
-                                            "{l}"
+                                        height: "{manual_line_height}",
+                                        direction: "horizontal",
+                                        background: "{line_background}",
+                                        corner_radius: "7",
+                                        rect {
+                                            width: "{font_size}",
+                                            height: "100%",
+                                            main_align: "center",
+                                            direction: "horizontal",
+                                            label {
+                                                font_size: "{font_size}",
+                                                color: "rgb(200, 200, 200)",
+                                                "{line_index} "
+                                            }
+                                        }
+                                        paragraph {
+                                            width: "100%",
+                                            cursor_index: "{character_index}",
+                                            cursor_color: "white",
+                                            max_lines: "1",
+                                            cursor_mode: "editable",
+                                            cursor_id: "{cursor_id}",
+                                            onmousedown: onmousedown,
+                                            onmouseover: onmouseover,
+                                            onclick: onclick,
+                                            highlights: highlights,
+                                            text {
+                                                color: "rgb(240, 240, 240)",
+                                                font_size: "{font_size}",
+                                                font_style: "{font_style}",
+                                                font_weight: "{font_weight}",
+                                                "{l}"
+                                            }
                                         }
                                     }
-                                }
-                            }
-                        })
+                                )
+                            })
+                        }
                     }
                 }
             }

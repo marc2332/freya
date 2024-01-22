@@ -74,7 +74,7 @@ pub struct CursorReference {
     #[allow(clippy::type_complexity)]
     pub cursor_selections: Arc<Mutex<Option<(CursorPoint, CursorPoint)>>>,
     pub cursor_position: Arc<Mutex<Option<CursorPoint>>>,
-    pub agent: UnboundedSender<CursorLayoutResponse>,
+    pub cursor_sender: UnboundedSender<CursorLayoutResponse>,
     pub cursor_id: Arc<Mutex<Option<usize>>>,
 }
 

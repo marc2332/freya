@@ -7,12 +7,12 @@ use tracing::info;
 use winit::window::CursorIcon;
 
 /// [`Slider`] component properties.
-#[derive(Props)]
-pub struct SliderProps<'a> {
+#[derive(Props, Clone, PartialEq)]
+pub struct SliderProps {
     /// Theme override.
     pub theme: Option<SliderThemeWith>,
     /// Handler for the `onmoved` event.
-    pub onmoved: EventHandler<'a, f64>,
+    pub onmoved: EventHandler<f64>,
     /// Width of the Slider.
     #[props(into, default = "100%".to_string())]
     pub width: String,
@@ -75,20 +75,26 @@ pub enum SliderStatus {
 /// }
 /// ```
 #[allow(non_snake_case)]
-pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
-    let theme = use_applied_theme!(cx, &cx.props.theme, slider);
-    let status = use_ref(cx, SliderStatus::default);
-    let clicking = use_state(cx, || false);
-    let platform = use_platform(cx);
+pub fn Slider(
+    SliderProps {
+        value,
+        onmoved,
+        theme,
+        width,
+    }: SliderProps,
+) -> Element {
+    let theme = use_applied_theme!(&theme, slider);
+    let status = use_signal(SliderStatus::default);
+    let mut clicking = use_signal(|| false);
+    let platform = use_platform();
 
-    let value = ensure_correct_slider_range(cx.props.value);
-    let (node_reference, size) = use_node(cx);
-    let width = &cx.props.width;
+    let value = ensure_correct_slider_range(value);
+    let (node_reference, size) = use_node();
 
-    use_on_destroy(cx, {
+    use_on_destroy({
         to_owned![status, platform];
         move || {
-            if *status.read() == SliderStatus::Hovering {
+            if *status.peek() == SliderStatus::Hovering {
                 platform.set_cursor(CursorIcon::default());
             }
         }
@@ -97,38 +103,47 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
     let onmouseleave = {
         to_owned![platform, status];
         move |_: MouseEvent| {
-            *status.write_silent() = SliderStatus::Idle;
+            *status.write() = SliderStatus::Idle;
             platform.set_cursor(CursorIcon::default());
         }
     };
 
-    let onmouseenter = move |_: MouseEvent| {
-        *status.write_silent() = SliderStatus::Hovering;
-        platform.set_cursor(CursorIcon::Hand);
-    };
-
-    let onmouseover = move |e: MouseEvent| {
-        if *clicking.get() {
-            let coordinates = e.get_element_coordinates();
-            let x = coordinates.x - size.area.min_x() as f64 - 6.0;
-            let percentage = x / (size.area.width() as f64 - 15.0) * 100.0;
-            let percentage = percentage.clamp(0.0, 100.0);
-
-            cx.props.onmoved.call(percentage);
+    let onmouseenter = {
+        to_owned![status];
+        move |_: MouseEvent| {
+            *status.write() = SliderStatus::Hovering;
+            platform.set_cursor(CursorIcon::Hand);
         }
     };
 
-    let onmousedown = move |e: MouseEvent| {
-        clicking.set(true);
-        let coordinates = e.get_element_coordinates();
-        let x = coordinates.x - 6.0;
-        let percentage = x / (size.area.width() as f64 - 15.0) * 100.0;
-        let percentage = percentage.clamp(0.0, 100.0);
+    let onmouseover = {
+        to_owned![clicking, onmoved];
+        move |e: MouseEvent| {
+            if *clicking.peek() {
+                let coordinates = e.get_element_coordinates();
+                let x = coordinates.x - size.area.min_x() as f64 - 6.0;
+                let percentage = x / (size.area.width() as f64 - 15.0) * 100.0;
+                let percentage = percentage.clamp(0.0, 100.0);
 
-        cx.props.onmoved.call(percentage);
+                onmoved.call(percentage);
+            }
+        }
     };
 
-    let onclick = |_: MouseEvent| {
+    let onmousedown = {
+        to_owned![clicking, onmoved];
+        move |e: MouseEvent| {
+            clicking.set(true);
+            let coordinates = e.get_element_coordinates();
+            let x = coordinates.x - 6.0;
+            let percentage = x / (size.area.width() as f64 - 15.0) * 100.0;
+            let percentage = percentage.clamp(0.0, 100.0);
+
+            onmoved.call(percentage);
+        }
+    };
+
+    let onclick = move |_: MouseEvent| {
         clicking.set(false);
     };
 
@@ -137,7 +152,7 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
         let percentage = value + (wheel_y * 2.0);
         let percentage = percentage.clamp(0.0, 100.0);
 
-        cx.props.onmoved.call(percentage);
+        onmoved.call(percentage);
     };
 
     let inner_width = (size.area.width() - 15.0) * (value / 100.0) as f32;
