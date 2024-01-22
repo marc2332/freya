@@ -1,4 +1,4 @@
-use dioxus_core::{Component, Element};
+use dioxus_core::Element;
 use freya_renderer::DesktopRenderer;
 use freya_renderer::{LaunchConfig, WindowConfig};
 
@@ -232,9 +232,6 @@ use dioxus_core::VirtualDom;
 fn with_accessibility(app: AppComponent) -> VirtualDom {
     use dioxus::prelude::Props;
     use dioxus_core::fc_to_builder;
-    use dioxus_core::use_hook;
-    use dioxus_core::Element;
-    use dioxus_core_macro::render;
     use dioxus_core_macro::rsx;
     use freya_hooks::{use_init_accessibility, use_init_focus};
 

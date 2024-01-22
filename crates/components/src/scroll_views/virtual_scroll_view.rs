@@ -134,13 +134,13 @@ pub fn VirtualScrollView<T: Clone>(props: VirtualScrollViewProps<T>) -> Element 
     let onwheel = {
         to_owned![focus];
         move |e: WheelEvent| {
-            let speed_multiplier = if *clicking_alt.read() {
+            let speed_multiplier = if *clicking_alt.peek() {
                 SCROLL_SPEED_MULTIPLIER
             } else {
                 1.0
             };
 
-            if !*clicking_shift.read() {
+            if !*clicking_shift.peek() {
                 let wheel_y = e.get_delta_y() as f32 * speed_multiplier;
 
                 let scroll_position_y = get_scroll_position_from_wheel(
@@ -153,7 +153,7 @@ pub fn VirtualScrollView<T: Clone>(props: VirtualScrollViewProps<T>) -> Element 
                 scrolled_y.with_mut(|y| *y = scroll_position_y);
             }
 
-            let wheel_x = if *clicking_shift.read() {
+            let wheel_x = if *clicking_shift.peek() {
                 e.get_delta_y() as f32
             } else {
                 e.get_delta_x() as f32

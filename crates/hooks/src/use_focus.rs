@@ -1,7 +1,7 @@
 use std::num::NonZeroU128;
 
 use accesskit::NodeId as AccessibilityId;
-use dioxus_core::{prelude::consume_context, use_hook, AttributeValue};
+use dioxus_core::{use_hook, AttributeValue};
 use dioxus_hooks::{use_context, use_context_provider};
 use dioxus_signals::Signal;
 use freya_core::navigation_mode::NavigationMode;
