@@ -12,7 +12,7 @@ fn main() {
 fn app(cx: Scope) -> Element {
     let values = use_state(cx, || (String::new(), String::new()));
 
-    render!(
+    rsx!(
         rect {
             overflow: "clip",
             padding: "7",

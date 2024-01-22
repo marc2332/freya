@@ -22,7 +22,7 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    render!(
+    rsx!(
         label { "Close the window :)" }
     )
 }

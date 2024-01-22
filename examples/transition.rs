@@ -34,7 +34,7 @@ fn app(cx: Scope) -> Element {
         }
     };
 
-    render!(
+    rsx!(
         rect {
             overflow: "clip",
             background: "black",

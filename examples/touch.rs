@@ -28,7 +28,7 @@ fn app(cx: Scope) -> Element {
         state.set("started touch");
     };
 
-    render!(
+    rsx!(
         rect {
             width: "100%",
             height: "100%",

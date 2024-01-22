@@ -11,7 +11,7 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     let (node_ref, size) = use_node(cx);
-    render!(
+    rsx!(
         rect {
             width: "50%",
             height: "50%",

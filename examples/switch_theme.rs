@@ -15,7 +15,7 @@ fn TheOtherSwitch(cx: Scope) -> Element {
 
     let is_enabled = theme.read().name == "dark";
 
-    render!(Switch {
+    rsx!(Switch {
         enabled: is_enabled,
         ontoggled: move |_| {
             if is_enabled {
@@ -33,7 +33,7 @@ fn app(cx: Scope) -> Element {
 
     let is_enabled = if *enabled.get() { "Yes" } else { "No" };
 
-    render!(
+    rsx!(
         Body {
             theme: theme_with!(BodyTheme {
                 padding: "20".into(),

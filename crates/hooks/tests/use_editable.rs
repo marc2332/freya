@@ -35,7 +35,7 @@ pub async fn multiple_lines_single_editor() {
             }
         };
 
-        render!(
+        rsx!(
             rect {
                 width: "100%",
                 height: "100%",
@@ -136,7 +136,7 @@ pub async fn single_line_mulitple_editors() {
             }
         };
 
-        render!(
+        rsx!(
             rect {
                 width: "100%",
                 height: "100%",
@@ -272,7 +272,7 @@ pub async fn highlight_multiple_lines_single_editor() {
             }
         };
 
-        render!(
+        rsx!(
             rect {
                 width: "100%",
                 height: "100%",
@@ -359,7 +359,7 @@ pub async fn highlights_single_line_mulitple_editors() {
             }
         };
 
-        render!(
+        rsx!(
             rect {
                 width: "100%",
                 height: "100%",

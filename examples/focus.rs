@@ -13,7 +13,7 @@ fn main() {
 fn Child(cx: Scope) -> Element {
     let focus_manager = use_focus(cx);
     let is_focused = focus_manager.is_focused();
-    render!(
+    rsx!(
         rect {
             width: "100%",
             height: "60",
@@ -32,7 +32,7 @@ fn Child(cx: Scope) -> Element {
 }
 
 fn app(cx: Scope) -> Element {
-    render!(
+    rsx!(
         rect {
             width: "100%",
             height: "100%",

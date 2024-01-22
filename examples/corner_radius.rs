@@ -17,7 +17,7 @@ fn app(cx: Scope) -> Element {
         radius.set((*radius.get() + y).clamp(0.0, 300.0));
     };
 
-    render!(
+    rsx!(
         rect {
             overflow: "clip",
             height: "100%",

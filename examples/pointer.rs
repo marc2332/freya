@@ -30,7 +30,7 @@ fn app(cx: Scope) -> Element {
         println!("Leave -> {:?}", ev.data.get_pointer_type());
     };
 
-    render!(
+    rsx!(
         rect {
             overflow: "clip",
             height: "100%",

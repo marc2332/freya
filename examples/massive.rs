@@ -8,7 +8,7 @@ fn main() {
 fn StatefulSwitch(cx: Scope) -> Element {
     let enabled = use_state(cx, || false);
 
-    render!(Switch {
+    rsx!(Switch {
         enabled: *enabled.get(),
         ontoggled: |_| {
             enabled.set(!enabled.get());
@@ -20,7 +20,7 @@ fn app(cx: Scope) -> Element {
     let cols = 100;
     let rows = 100;
 
-    render!(
+    rsx!(
         rect {
             width: "100%",
             height: "100%",

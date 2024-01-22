@@ -19,7 +19,7 @@ const BOX_COUNT: usize = 80;
 
 #[allow(non_snake_case)]
 fn Box(cx: Scope) -> Element {
-    render!(
+    rsx!(
         rect {
             background: "rgb(65, 53, 67)",
             width: "250",
@@ -65,7 +65,7 @@ fn app(cx: Scope) -> Element {
         })
     };
 
-    render!(
+    rsx!(
         rect {
             onmouseover: onmouseover,
             width: "100%",

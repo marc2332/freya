@@ -24,7 +24,7 @@ fn app(cx: Scope) -> Element {
         progress_anim.set_value(value);
     };
 
-    render!(
+    rsx!(
         ProgressBar {
             show_progress: true,
             progress: progress

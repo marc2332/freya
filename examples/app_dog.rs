@@ -37,7 +37,7 @@ fn app(cx: Scope) -> Element {
         })
     };
 
-    render!(
+    rsx!(
         rect {
             background: "rgb(15, 15, 15)",
             width: "100%",

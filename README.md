@@ -23,7 +23,7 @@
 fn app(cx: Scope) -> Element {
     let mut count = use_state(cx, || 0);
 
-    render!(
+    rsx!(
         rect {
             height: "20%",
             width: "100%",

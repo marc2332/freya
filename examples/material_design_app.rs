@@ -7,18 +7,18 @@ use freya::prelude::*;
 
 fn main() {
     launch(|cx: Scope| -> Element {
-        render!(
+        rsx!(
             Scaffold {
-                floating_button: render!(
+                floating_button: rsx!(
                     FloatingButton {
                         label {
                             "+"
                         }
                     }
                 ),
-                navbar: render!(
+                navbar: rsx!(
                     Navbar {
-                        title: render!(
+                        title: rsx!(
                             label {
                                 "Hello, Freya!"
                             }
@@ -49,7 +49,7 @@ struct FloatingButtonProps<'a> {
 
 #[allow(non_snake_case)]
 fn FloatingButton<'a>(cx: Scope<'a, FloatingButtonProps<'a>>) -> Element<'a> {
-    render!(
+    rsx!(
         rect {
             height: "100%",
             width: "100%",
@@ -86,7 +86,7 @@ fn Scaffold<'a>(cx: Scope<'a, ScaffoldProps<'a>>) -> Element<'a> {
         "100%"
     };
 
-    render!(
+    rsx!(
         rect {
             direction: "vertical",
             height: "100%",
@@ -121,7 +121,7 @@ struct NavbarProps<'a> {
 
 #[allow(non_snake_case)]
 fn Navbar<'a>(cx: Scope<'a, NavbarProps<'a>>) -> Element<'a> {
-    render!(
+    rsx!(
         rect {
             height: "50",
             width: "100%",
@@ -148,7 +148,7 @@ struct CardProps<'a> {
 
 #[allow(non_snake_case)]
 fn Card<'a>(cx: Scope<'a, CardProps<'a>>) -> Element {
-    render!(
+    rsx!(
         rect {
             margin: "7 0",
             width: "100%",

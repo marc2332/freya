@@ -22,7 +22,7 @@ fn app(cx: Scope) -> Element {
         elements.write().pop();
     };
 
-    render!(
+    rsx!(
         Button {
             onclick: add,
             label {

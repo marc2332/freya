@@ -17,7 +17,7 @@ fn Sidebar<'a>(cx: Scope<'a>, children: Element<'a>, sidebar: Element<'a>) -> El
     let background = &theme.read().body.background;
     let color = &theme.read().body.color;
 
-    render!(
+    rsx!(
         rect {
             width: "100%",
             height: "100%",
@@ -85,7 +85,7 @@ fn SidebarItem<'a>(
     };
     let color = theme.button.font_theme.color;
 
-    render!(
+    rsx!(
         rect {
             overflow: "clip",
             margin: "5 0",
@@ -122,9 +122,9 @@ pub enum Route {
 
 #[allow(non_snake_case)]
 fn AppSidebar(cx: Scope) -> Element {
-    render!(
+    rsx!(
         Sidebar {
-            sidebar: render!(
+            sidebar: rsx!(
                 SidebarItem {
                     to: Route::Home,
                     "Go to Hey ! 👋"
@@ -145,7 +145,7 @@ fn AppSidebar(cx: Scope) -> Element {
 
 #[allow(non_snake_case)]
 fn Home(cx: Scope) -> Element {
-    render!(
+    rsx!(
         label {
             "Just some text 😗 in /"
         }
@@ -154,7 +154,7 @@ fn Home(cx: Scope) -> Element {
 
 #[allow(non_snake_case)]
 fn Wow(cx: Scope) -> Element {
-    render!(
+    rsx!(
         label {
             "Just more text 👈!! in /wow"
         }
@@ -163,7 +163,7 @@ fn Wow(cx: Scope) -> Element {
 
 #[allow(non_snake_case)]
 fn PageNotFound(cx: Scope) -> Element {
-    render!(
+    rsx!(
         label {
             "404!! 😵"
         }
@@ -172,5 +172,5 @@ fn PageNotFound(cx: Scope) -> Element {
 
 fn app(cx: Scope) -> Element {
     use_init_theme(cx, DARK_THEME);
-    render!(Router::<Route> {})
+    rsx!(Router::<Route> {})
 }

@@ -23,7 +23,7 @@ fn app(cx: Scope) -> Element {
         )
     });
 
-    render!(
+    rsx!(
         DragProvider::<String> {
             rect {
                 direction: "horizontal",
@@ -72,7 +72,7 @@ fn Column(
         SwapDirection::RightToLeft => ("black", "rgb(234, 226, 183)"),
     };
 
-    render!(
+    rsx!(
         rect {
             width: "50%",
             height: "100%",
@@ -90,7 +90,7 @@ fn Column(
                         rsx!(
                             DragZone {
                                 data: el.to_string(),
-                                drag_element: render!(
+                                drag_element: rsx!(
                                     label {
                                         width: "200",
                                         font_size: "20",

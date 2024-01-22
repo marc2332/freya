@@ -36,7 +36,7 @@ fn app(cx: Scope) -> Element {
         clicking.set(false);
     };
 
-    render!(
+    rsx!(
         rect {
             overflow: "clip",
             background: "rgb(35, 35, 35)",

@@ -10,12 +10,12 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    render!(App {
+    rsx!(App {
         title: "My App",
-        navbar: render!(Navbar {
+        navbar: rsx!(Navbar {
             title: "Top Navbar"
         }),
-        body: render!(
+        body: rsx!(
             ScrollView {
                 theme: theme_with!(ScrollViewTheme {
                     height: "calc(100% - 75 - 75)".into(),
@@ -78,7 +78,7 @@ struct NavbarProps<'a> {
 
 #[allow(non_snake_case)]
 fn Navbar<'a>(cx: Scope<'a, NavbarProps<'a>>) -> Element {
-    render!(
+    rsx!(
         rect {
             overflow: "clip",
             height: "75",
@@ -104,7 +104,7 @@ struct AppProps<'a> {
 
 #[allow(non_snake_case)]
 fn App<'a>(cx: Scope<'a, AppProps<'a>>) -> Element {
-    render!(
+    rsx!(
         rect {
             color: "white",
             width: "100%",
@@ -127,7 +127,7 @@ struct CardProps<'a> {
 
 #[allow(non_snake_case)]
 fn Card<'a>(cx: Scope<'a, CardProps<'a>>) -> Element {
-    render!(
+    rsx!(
         rect {
             width: "100%",
             height: "200",
@@ -176,7 +176,7 @@ fn Area(cx: Scope) -> Element {
         })
     };
 
-    render!(
+    rsx!(
         rect {
             height: "50%",
             width: "100%",

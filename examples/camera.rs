@@ -19,7 +19,7 @@ fn main() {
 fn app(cx: Scope) -> Element {
     let (image_reference, camera_error) = use_camera(cx, CameraSettings::default());
 
-    render!(
+    rsx!(
         rect {
             width: "100%",
             height: "100%",

@@ -22,7 +22,7 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    render!(
+    rsx!(
         ThemeProvider {
             theme: CUSTOM_THEME,
             rect {

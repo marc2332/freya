@@ -12,7 +12,7 @@ fn main() {
 fn app(cx: Scope) -> Element {
     let password = use_state(cx, || String::new());
     let is_hidden = use_state(cx, || true);
-    render!(
+    rsx!(
         rect {
             overflow: "clip",
             padding: "7",

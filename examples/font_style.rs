@@ -10,7 +10,7 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    render!(
+    rsx!(
         rect {
             overflow: "clip",
             width: "100%",

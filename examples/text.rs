@@ -14,7 +14,7 @@ fn app(cx: Scope) -> Element {
     let percentage = use_state(cx, || 20.0);
     let font_size = percentage + 20.0;
 
-    render!(
+    rsx!(
         rect {
             width: "100%",
             height: "100%",

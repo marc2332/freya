@@ -11,7 +11,7 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    render!(
+    rsx!(
         rect {
             width: "100%",
             height: "100%",

@@ -18,7 +18,7 @@ fn main() {
 fn app(cx: Scope) -> Element {
     let num = cx.consume_context::<i32>().unwrap();
 
-    render!(rect {
+    rsx!(rect {
         background: "white",
         padding: "10",
         width: "100%",

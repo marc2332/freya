@@ -10,7 +10,7 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    render!(
+    rsx!(
         rect {
             color: "white",
             height: "100%",
@@ -46,7 +46,7 @@ fn Area(cx: Scope) -> Element {
         })
     };
 
-    render!(
+    rsx!(
         rect {
             height: "50%",
             width: "100%",

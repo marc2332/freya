@@ -82,7 +82,7 @@ fn app(cx: Scope) -> Element {
         }
     };
 
-    render!(
+    rsx!(
         rect {
             padding: "10",
             label {

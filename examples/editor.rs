@@ -16,7 +16,7 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     use_init_theme(cx, DARK_THEME);
-    render!(Body {})
+    rsx!(Body {})
 }
 
 #[allow(non_snake_case)]
@@ -55,7 +55,7 @@ fn Body(cx: Scope) -> Element {
         }
     };
 
-    render!(
+    rsx!(
         rect {
             width: "100%",
             height: "100%",

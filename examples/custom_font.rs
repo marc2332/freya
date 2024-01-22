@@ -19,7 +19,7 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    render!(
+    rsx!(
         rect {
             main_align: "center",
             cross_align: "center",

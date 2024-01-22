@@ -42,7 +42,7 @@ fn app(cx: Scope) -> Element {
         })
     });
 
-    render!(
+    rsx!(
         rect {
             onclick: move |_| {
                 state += 1;

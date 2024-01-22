@@ -24,7 +24,7 @@ fn app(cx: Scope) -> Element {
         size.set(res);
     };
 
-    render!(
+    rsx!(
         rect {
             width: "100%",
             height: "100%",

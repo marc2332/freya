@@ -11,7 +11,7 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     let gesture = use_state(cx, || "Tap here".to_string());
-    render!(
+    rsx!(
         GestureArea {
             ongesture: move |g| gesture.set(format!("{g:?}")),
             rect {

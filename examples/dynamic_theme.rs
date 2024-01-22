@@ -13,7 +13,7 @@ fn app(cx: Scope) -> Element {
     let mut brightness = use_state(cx, || 50);
     let text_brightness = 100 - brightness.get();
 
-    render!(
+    rsx!(
         rect {
             height: "50%",
             width: "100%",

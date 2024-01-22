@@ -15,7 +15,7 @@ fn app(cx: Scope) -> Element {
     let ferris = bytes_to_data(cx, FERRIS);
     let opacity = use_state(cx, || 70.0);
 
-    render!(
+    rsx!(
         rect {
             height: "100%",
             width: "100%",

@@ -10,7 +10,7 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    render!(
+    rsx!(
         rect {
             height: "50%",
             min_height: "150",

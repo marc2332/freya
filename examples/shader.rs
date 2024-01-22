@@ -86,7 +86,7 @@ fn app(cx: Scope) -> Element {
         })
     });
 
-    render!(
+    rsx!(
         rect {
             Canvas {
                 canvas: canvas,

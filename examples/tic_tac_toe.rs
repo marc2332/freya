@@ -156,7 +156,7 @@ fn app(cx: Scope) -> Element {
         None => format!("Turn for player {:?}", current_player.read()),
     };
 
-    render!(
+    rsx!(
         rect {
             width: "100%",
             height: "100%",

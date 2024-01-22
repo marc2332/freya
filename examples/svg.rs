@@ -14,7 +14,7 @@ static FERRIS: &[u8] = include_bytes!("./ferris.svg");
 fn app(cx: Scope) -> Element {
     let ferris_a = bytes_to_data(cx, FERRIS);
     let ferris_b = bytes_to_data(cx, FERRIS);
-    render!(
+    rsx!(
         svg {
             width: "100%",
             height: "50%",
