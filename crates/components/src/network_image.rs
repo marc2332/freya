@@ -62,32 +62,31 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
     let image_bytes = use_signal::<Option<Vec<u8>>>(|| None);
 
     let focus_id = focus.attribute();
-    let NetworkImageTheme { width, height } =
-        use_applied_theme!(&props.theme, network_image);
+    let NetworkImageTheme { width, height } = use_applied_theme!(&props.theme, network_image);
     let alt = props.alt.as_deref();
 
-    use_effect(move || {
-        let url = props.url.clone(); // TODO: Waiting for a dependency-based use_effect
+    // TODO: Waiting for a dependency-based use_effect
+    let _ = use_memo_with_dependencies(&props.url, move |url| {
         to_owned![image_bytes, status];
         spawn(async move {
-             // Loading image
-             status.set(ImageStatus::Loading);
-             let img = fetch_image(url).await;
-             if let Ok(img) = img {
-                 // Image loaded
-                 image_bytes.set(Some(img));
-                 status.set(ImageStatus::Loaded)
-             } else if let Err(_err) = img {
-                 // Image errored
-                 image_bytes.set(None);
-                 status.set(ImageStatus::Errored)
-             }
+            // Loading image
+            status.set(ImageStatus::Loading);
+            let img = fetch_image(url).await;
+            if let Ok(img) = img {
+                // Image loaded
+                image_bytes.set(Some(img));
+                status.set(ImageStatus::Loaded)
+            } else if let Err(_err) = img {
+                // Image errored
+                image_bytes.set(None);
+                status.set(ImageStatus::Errored)
+            }
         });
     });
 
     if *status.read() == ImageStatus::Loading {
         if let Some(loading_element) = &props.loading {
-            rsx!({loading_element})
+            rsx!({ loading_element })
         } else {
             rsx!(
                 rect {
@@ -101,7 +100,7 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
         }
     } else if *status.read() == ImageStatus::Errored {
         if let Some(fallback_element) = &props.fallback {
-            rsx!({fallback_element})
+            rsx!({ fallback_element })
         } else {
             rsx!(
                 rect {
@@ -117,23 +116,19 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
             )
         }
     } else {
-        rsx!(
-            {
-                image_bytes.as_ref().map(|bytes| {
-                    let image_data = bytes_to_data(&*bytes);
-                    rsx!(
-                        image {
-                            height: "{height}",
-                            width: "{width}",
-                            focus_id: focus_id,
-                            image_data: image_data,
-                            role: "image",
-                            alt: alt
-                        }
-                    )
+        rsx!({
+            image_bytes.as_ref().map(|bytes| {
+                let image_data = bytes_to_data(&*bytes);
+                rsx!(image {
+                    height: "{height}",
+                    width: "{width}",
+                    focus_id: focus_id,
+                    image_data: image_data,
+                    role: "image",
+                    alt: alt
                 })
-            }
-        )
+            })
+        })
     }
 }
 

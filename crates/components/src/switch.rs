@@ -8,14 +8,14 @@ use freya_hooks::{
 use winit::window::CursorIcon;
 
 /// [`Switch`] component properties.
-#[derive(Props)]
-pub struct SwitchProps<'a> {
+#[derive(Props, Clone, PartialEq)]
+pub struct SwitchProps {
     /// Theme override.
     pub theme: Option<SwitchThemeWith>,
     /// Whether the `Switch` is enabled or not.
     pub enabled: bool,
     /// Handler for the `ontoggled` event.
-    pub ontoggled: EventHandler<'a, ()>,
+    pub ontoggled: EventHandler<()>,
 }
 
 /// Describes the current status of the Switch.
@@ -55,16 +55,16 @@ pub enum SwitchStatus {
 /// ```
 ///
 #[allow(non_snake_case)]
-pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
-    let animation = use_animation(cx, || 0.0);
-    let theme = use_applied_theme!(cx, &cx.props.theme, switch);
-    let platform = use_platform(cx);
-    let status = use_ref(cx, SwitchStatus::default);
-    let focus = use_focus(cx);
+pub fn Switch(props: SwitchProps) -> Element {
+    let mut animation = use_animation(|| 0.0);
+    let theme = use_applied_theme!(&props.theme, switch);
+    let platform = use_platform();
+    let mut status = use_signal(SwitchStatus::default);
+    let focus = use_focus();
 
-    let focus_id = focus.attribute(cx);
+    let focus_id = focus.attribute();
 
-    use_on_destroy(cx, {
+    use_on_destroy({
         to_owned![status, platform];
         move || {
             if *status.read() == SwitchStatus::Hovering {
@@ -76,29 +76,36 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
     let onmouseleave = {
         to_owned![platform];
         move |_: MouseEvent| {
-            *status.write_silent() = SwitchStatus::Idle;
+            *status.write() = SwitchStatus::Idle;
             platform.set_cursor(CursorIcon::default());
         }
     };
 
     let onmouseenter = move |_: MouseEvent| {
-        *status.write_silent() = SwitchStatus::Hovering;
+        *status.write() = SwitchStatus::Hovering;
         platform.set_cursor(CursorIcon::Hand);
     };
 
-    let onclick = |_: MouseEvent| {
-        focus.focus();
-        cx.props.ontoggled.call(());
+    let onclick = {
+        let ontoggled = props.ontoggled.clone();
+        to_owned![focus];
+        move |_: MouseEvent| {
+            focus.focus();
+            ontoggled.call(());
+        }
     };
 
-    let onkeydown = |e: KeyboardEvent| {
-        if focus.validate_keydown(e) {
-            cx.props.ontoggled.call(());
+    let onkeydown = {
+        to_owned![focus];
+        move |e: KeyboardEvent| {
+            if focus.validate_keydown(e) {
+                props.ontoggled.call(());
+            }
         }
     };
 
     let (offset_x, background, circle) = {
-        if cx.props.enabled {
+        if props.enabled {
             (
                 animation.value(),
                 theme.enabled_background,
@@ -109,7 +116,7 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
         }
     };
     let border = if focus.is_selected() {
-        if cx.props.enabled {
+        if props.enabled {
             format!("2 solid {}", theme.enabled_focus_border_fill)
         } else {
             format!("2 solid {}", theme.focus_border_fill)
@@ -118,10 +125,10 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
         "none".to_string()
     };
 
-    let _ = use_memo(cx, &cx.props.enabled, move |enabled| {
+    let _ = use_memo_with_dependencies(&props.enabled, move |enabled| {
         if enabled {
             animation.start(Animation::new_sine_in_out(0.0..=25.0, 200));
-        } else if animation.value() > 0.0 {
+        } else if animation.peek_value() > 0.0 {
             animation.start(Animation::new_sine_in_out(25.0..=0.0, 200));
         }
     });

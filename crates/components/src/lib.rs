@@ -2,7 +2,7 @@
 //! A collection of basic components to be used in Freya.
 
 // mod accordion;
-// mod body;
+mod body;
 mod button;
 // mod canvas;
 // mod cursor_area;
@@ -18,13 +18,13 @@ mod network_image;
 // mod progress_bar;
 mod scroll_views;
 // mod slider;
-// mod switch;
+mod switch;
 // mod table;
 // mod theme;
 // mod tooltip;
 
 // pub use accordion::*;
-// pub use body::*;
+pub use body::*;
 pub use button::*;
 // pub use canvas::*;
 // pub use cursor_area::*;
@@ -40,7 +40,7 @@ pub use network_image::*;
 // pub use progress_bar::*;
 pub use scroll_views::*;
 // pub use slider::*;
-// pub use switch::*;
+pub use switch::*;
 // pub use table::*;
 // pub use theme::*;
 // pub use tooltip::*;

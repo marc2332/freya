@@ -31,7 +31,7 @@ pub fn Loader(props: LoaderProps) -> Element {
         secondary_color,
     } = theme;
 
-    use_effect( move || {
+    use_effect(move || {
         to_owned![degrees];
         spawn(async move {
             let mut ticker = interval(Duration::from_millis(28));
