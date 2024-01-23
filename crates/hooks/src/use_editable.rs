@@ -60,6 +60,11 @@ impl UseEditable {
         &self.editor
     }
 
+    /// Mutable reference to the editor.
+    pub fn editor_mut(&mut self) -> &mut EditorState {
+        &mut self.editor
+    }
+
     /// Create a cursor attribute.
     pub fn cursor_attr(&self) -> AttributeValue {
         AttributeValue::any_value(CustomAttributeValues::CursorReference(

@@ -5,7 +5,7 @@
 
 use dioxus::signals::use_signal;
 use freya::prelude::*;
-use std::sync::Arc;
+use std::rc::Rc;
 
 fn main() {
     launch_cfg(
@@ -37,7 +37,7 @@ fn app() -> Element {
             item_size: 25.0,
             builder_values: values.clone(),
             direction: "vertical",
-            builder: Arc::new(move |(key, index, values)| {
+            builder: Rc::new(move |(key, index, values)| {
                 let values = values.unwrap();
                 let value = values.read()[index];
                 let background = if index % 2 == 0 {

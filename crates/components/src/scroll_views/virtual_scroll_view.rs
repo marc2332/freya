@@ -5,7 +5,7 @@ use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{keyboard::Key, KeyboardEvent, MouseEvent, WheelEvent};
 use freya_hooks::{use_applied_theme, use_focus, use_node, ScrollViewThemeWith};
 use std::ops::Range;
-use std::sync::Arc;
+use std::rc::Rc;
 
 use crate::{
     get_container_size, get_corrected_scroll_position, get_scroll_position_from_cursor,
@@ -25,7 +25,7 @@ pub struct VirtualScrollViewProps<T: 'static + Clone> {
     /// Size of the items, height for vertical direction and width for horizontal.
     pub item_size: f32,
     /// The item builder function.
-    pub builder: Arc<BuilderFunction<T>>,
+    pub builder: Rc<BuilderFunction<T>>,
     /// Custom values to pass to the builder function.
     pub builder_values: Option<T>,
     /// Direction of the VirtualScrollView, `vertical` or `horizontal`.
@@ -75,7 +75,7 @@ fn get_render_range(
 ///             item_size: 80.0,
 ///             builder_values: (),
 ///             direction: "vertical",
-///             builder: Box::new(move |(k, i, _)| {
+///             builder: Rc::new(move |(k, i, _)| {
 ///                 rsx! {
 ///                     label {
 ///                         key: "{k}",
