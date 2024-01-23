@@ -94,6 +94,7 @@ pub mod plugins;
 
 /// Useful imports.
 pub mod prelude {
+    pub use dioxus_core;
     pub use dioxus_core::prelude::*;
     pub use dioxus_core_macro::*;
     pub use dioxus_hooks::*;
