@@ -41,5 +41,3 @@ impl UniformsBuilder {
         values
     }
 }
-
-pub struct Image {}
