@@ -15,7 +15,7 @@ pub fn use_node() -> (AttributeValue, NodeReferenceLayout) {
         to_owned![status];
         spawn(async move {
             while let Some(new_status) = rx.recv().await {
-                if *status.read() != new_status {
+                if *status.peek() != new_status {
                     status.set(new_status);
                 }
             }
