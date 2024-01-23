@@ -43,8 +43,8 @@ fn main() {
     launch(app);
 }
 
-fn app(cx: Scope) -> Element {
-    let mut count = use_state(cx, || 0);
+fn app() -> Element {
+    let mut count = use_signal(|| 0);
 
     rsx!(
         rect {

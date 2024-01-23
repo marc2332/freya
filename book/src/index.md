@@ -16,8 +16,8 @@
 <td style="border:hidden;">
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    let mut count = use_state(cx, || 0);
+fn app() -> Element {
+    let mut count = use_signal(|| 0);
 
     rsx!(
         rect {

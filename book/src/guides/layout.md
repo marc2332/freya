@@ -24,7 +24,7 @@ See syntax for [`Size Units`](#size-units).
 ##### Usage
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
+fn app() -> Element {
     rsx!(
         rect {
             background: "red",
@@ -44,7 +44,7 @@ See syntax for [`Size Units`](#size-units).
 ##### Usage
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
+fn app() -> Element {
     rsx!(
         rect {
             background: "red",
@@ -66,7 +66,7 @@ See syntax for [`Size Units`](#size-units).
 ##### Usage
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
+fn app() -> Element {
     rsx!(
         rect {
             background: "red",
@@ -85,7 +85,7 @@ fn app(cx: Scope) -> Element {
 Will use it's inner children as size, so in this case, the `rect` width will be equivalent to the width of `label`:
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
+fn app() -> Element {
     rsx!(
         rect {
             width: "auto",
@@ -101,7 +101,7 @@ fn app(cx: Scope) -> Element {
 #### Logical pixels
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
+fn app() -> Element {
     rsx!(
         rect {
             width: "50",
@@ -115,7 +115,7 @@ fn app(cx: Scope) -> Element {
 Relative percentage to the parent equivalent value.
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
+fn app() -> Element {
     rsx!(
         rect {
             width: "50%", // Half the parent
@@ -130,7 +130,7 @@ fn app(cx: Scope) -> Element {
 For more complex logic you can use the `calc()` function.
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
+fn app() -> Element {
     rsx!(
         rect {
             width: "calc(33% - 60 + 15%)", // (1/3 of the parent minus 60) plus 15% of parent
@@ -147,7 +147,7 @@ Control how the inner elements will be stacked, possible values are `horizontal`
 ##### Usage
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
+fn app() -> Element {
     rsx!(
         rect {
             width: "100%",
@@ -173,7 +173,7 @@ fn app(cx: Scope) -> Element {
 Specify the inner paddings of an element. You can do so by three different ways, just like in CSS.
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
+fn app() -> Element {
     rsx!(
         rect {
             padding: "25" // 25 in all sides
@@ -190,7 +190,7 @@ fn app(cx: Scope) -> Element {
 Control how the inner elements are displayed, possible values are `normal` (default) or `center`.
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
+fn app() -> Element {
     rsx!(
         rect {
             width: "100%",
@@ -212,7 +212,7 @@ fn app(cx: Scope) -> Element {
 Specify the margin of an element. You can do so by three different ways, just like in CSS.
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
+fn app() -> Element {
     rsx!(
         rect {
             margin: "25" // 25 in all sides

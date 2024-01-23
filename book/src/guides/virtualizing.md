@@ -19,8 +19,8 @@ fn main() {
     launch(app);
 }
 
-fn app(cx: Scope) -> Element {
-    let values = use_state(cx, || vec!["Hello World"].repeat(400));
+fn app() -> Element {
+    let values = use_signal(|| vec!["Hello World"].repeat(400));
 
     rsx!(
         VirtualScrollView {
@@ -28,10 +28,10 @@ fn app(cx: Scope) -> Element {
             height: "100%",
             show_scrollbar: true,
             direction: "vertical",
-            length: values.get().len(),
+            length: values.read().len(),
             item_size: 25.0,
-            builder_values: values.get(),
-            builder: Box::new(move |(key, index, _cx, values)| {
+            builder_values: values.read().clone(),
+            builder: Rc::new(move |(key, index, values)| {
                 let values = values.unwrap();
                 let value = values[index];
                 rsx! {
@@ -72,4 +72,4 @@ Used to calculate how many elements can be fit in the viewport.
 Any data that you might need in the `builder` function
 
 #### `builder`
-This is a function that dinamically creates an element for the given index in the list. It receives 4 arguments, a `key` for the element, the `index` of the element, the Scope (`cx`) and the `builder_values` you previously passed.
+This is a function that dinamically creates an element for the given index in the list. It receives 4 arguments, a `key` for the element, the `index` of the element and the `builder_values` you previously passed.

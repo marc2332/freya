@@ -9,7 +9,7 @@ Freya has built-in support for Theming.
 You can access the whole current theme via the `use_get_theme` hook.
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
+fn app() -> Element {
     rsx!(
         ThemeProvider {
             Component { }
@@ -18,8 +18,8 @@ fn app(cx: Scope) -> Element {
 }
 
 #[allow(non_snake_case)]
-fn Component(cx: Scope) -> Element {
-    let theme = use_get_theme(cx);
+fn Component() -> Element {
+    let theme = use_get_theme();
 
     let button_theme = &theme.button;
 
@@ -35,7 +35,7 @@ fn Component(cx: Scope) -> Element {
 By default, the selected theme is `LIGHT_THEME`. You can use the alternative, `DARK_THEME`.
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
+fn app() -> Element {
     rsx!(
         ThemeProvider {
             theme: LIGHT_THEME,
@@ -45,8 +45,8 @@ fn app(cx: Scope) -> Element {
 }
 
 #[allow(non_snake_case)]
-fn Component(cx: Scope) -> Element {
-    let theme = use_get_theme(cx);
+fn Component() -> Element {
+    let theme = use_get_theme();
 
     let button_theme = &theme.button;
 
@@ -63,7 +63,7 @@ fn Component(cx: Scope) -> Element {
 Changing the selected theme at runtime is possible by using the `use_theme` hook.
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
+fn app() -> Element {
     rsx!(
         ThemeProvider {
             Component { }
@@ -72,10 +72,10 @@ fn app(cx: Scope) -> Element {
 }
 
 #[allow(non_snake_case)]
-fn Component(cx: Scope) -> Element {
-    let theme = use_theme(cx);
+fn Component() -> Element {
+    let mut theme = use_theme();
 
-    let onclick = |_| {
+    let onclick = move |_| {
         *theme.write() = LIGHT_THEME;
     };
 
@@ -104,7 +104,7 @@ const CUSTOM_THEME: Theme = Theme {
     ..LIGHT_THEME
 };
 
-fn app(cx: Scope) -> Element {
+fn app() -> Element {
     rsx!(
         ThemeProvider {
             theme: CUSTOM_THEME,
