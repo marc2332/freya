@@ -3,7 +3,7 @@ use dioxus_core::{
     use_hook,
 };
 use dioxus_hooks::use_context;
-use dioxus_signals::{use_memo, Signal};
+use dioxus_signals::{use_memo, Readable, Signal, Writable};
 use freya_common::EventMessage;
 use freya_core::{
     navigation_mode::{NavigationMode, NavigatorState},
@@ -15,8 +15,8 @@ use crate::{use_platform, FocusId};
 /// Sync both the Focus shared state and the platform accessibility focus
 pub fn use_init_accessibility() {
     let platform = use_platform();
-    let mut focused_id = use_context::<Signal<Option<FocusId>>>();
-    let mut navigation_mode = use_context::<Signal<NavigationMode>>();
+    let focused_id = use_context::<Signal<Option<FocusId>>>();
+    let navigation_mode = use_context::<Signal<NavigationMode>>();
 
     // Tell the renderer the new focused node
     let _ = use_memo(move || {

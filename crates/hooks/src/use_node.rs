@@ -1,6 +1,6 @@
 use dioxus_core::{prelude::spawn, use_hook, AttributeValue};
 use dioxus_hooks::to_owned;
-use dioxus_signals::{use_signal, Signal};
+use dioxus_signals::{use_signal, Readable, Signal, Writable};
 use freya_common::NodeReferenceLayout;
 use freya_node_state::{CustomAttributeValues, NodeReference};
 use tokio::sync::mpsc::unbounded_channel;

@@ -98,6 +98,7 @@ pub mod prelude {
     pub use dioxus_core_macro::*;
     pub use dioxus_hooks::*;
     pub use dioxus_hot_reload::{self, hot_reload_init, Config};
+    pub use dioxus_signals::*;
 
     pub use crate::launch::*;
     pub use crate::plugins::*;

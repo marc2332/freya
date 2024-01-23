@@ -9,7 +9,7 @@ fn main() {
     launch_with_props(app, "Pointer events", (200.0, 200.0));
 }
 
-fn app(cx: Scope) -> Element {
+fn app() -> Element {
     let onpointerdown = move |ev: PointerEvent| {
         println!("Down -> {:?}", ev.data.get_pointer_type());
     };

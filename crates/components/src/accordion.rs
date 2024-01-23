@@ -42,7 +42,7 @@ pub struct AccordionProps {
 pub fn Accordion(props: AccordionProps) -> Element {
     let theme = use_applied_theme!(&props.theme, accordion);
     let mut animation = use_animation(|| 0.0);
-    let mut open = use_signal(|| false);
+    let open = use_signal(|| false);
     let (node_ref, size) = use_node();
     let mut status = use_signal(AccordionStatus::default);
     let platform = use_platform();

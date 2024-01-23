@@ -20,8 +20,8 @@ fn main() {
 const TIME: i32 = 400;
 const TARGET: f64 = 650.0;
 
-fn app(cx: Scope) -> Element {
-    let animation = use_animation(cx, || 15.0);
+fn app() -> Element {
+    let mut animation = use_animation(|| 15.0);
 
     let progress = animation.value();
 
@@ -39,37 +39,35 @@ fn app(cx: Scope) -> Element {
             height: "100%",
             main_align: "center",
             for i in 0..32 {
-                rsx!(
+                rect {
+                    offset_x: "{progress - i as f64 * 10.0}",
+                    key: "{i}",
+                    direction: "horizontal",
                     rect {
-                        offset_x: "{progress - i as f64 * 10.0}",
-                        key: "{i}",
-                        direction: "horizontal",
-                        rect {
-                            height: "25",
-                            width: "45",
-                            background: "rgb(7, 102, 173)",
-                            corner_radius: "100",
-                        }
-                        rect {
-                            height: "25",
-                            width: "45",
-                            background: "rgb(166, 207, 152)",
-                            corner_radius: "100",
-                        }
-                        rect {
-                            height: "25",
-                            width: "45",
-                            background: "rgb(179, 19, 18)",
-                            corner_radius: "100",
-                        }
-                        rect {
-                            height: "25",
-                            width: "45",
-                            background: "rgb(255, 108, 34)",
-                            corner_radius: "100",
-                        }
+                        height: "25",
+                        width: "45",
+                        background: "rgb(7, 102, 173)",
+                        corner_radius: "100",
                     }
-                )
+                    rect {
+                        height: "25",
+                        width: "45",
+                        background: "rgb(166, 207, 152)",
+                        corner_radius: "100",
+                    }
+                    rect {
+                        height: "25",
+                        width: "45",
+                        background: "rgb(179, 19, 18)",
+                        corner_radius: "100",
+                    }
+                    rect {
+                        height: "25",
+                        width: "45",
+                        background: "rgb(255, 108, 34)",
+                        corner_radius: "100",
+                    }
+                }
             }
         }
     )

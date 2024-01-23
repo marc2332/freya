@@ -56,7 +56,7 @@ pub struct ScrollViewProps {
 ///
 #[allow(non_snake_case)]
 pub fn ScrollView(props: ScrollViewProps) -> Element {
-    let mut clicking_scrollbar = use_signal::<Option<(Axis, f64)>>(|| None);
+    let clicking_scrollbar = use_signal::<Option<(Axis, f64)>>(|| None);
     let mut clicking_shift = use_signal(|| false);
     let mut clicking_alt = use_signal(|| false);
     let mut scrolled_y = use_signal(|| 0);

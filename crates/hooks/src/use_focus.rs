@@ -3,7 +3,7 @@ use std::num::NonZeroU128;
 use accesskit::NodeId as AccessibilityId;
 use dioxus_core::{use_hook, AttributeValue};
 use dioxus_hooks::{use_context, use_context_provider};
-use dioxus_signals::Signal;
+use dioxus_signals::{Readable, Signal, Writable};
 use freya_core::navigation_mode::NavigationMode;
 use freya_elements::events::{keyboard::Code, KeyboardEvent};
 use freya_node_state::CustomAttributeValues;
