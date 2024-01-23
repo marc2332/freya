@@ -11,9 +11,9 @@ fn main() {
     launch_with_props(app, "Opacity", (400.0, 350.0));
 }
 
-fn app(cx: Scope) -> Element {
-    let ferris = bytes_to_data(cx, FERRIS);
-    let opacity = use_state(cx, || 70.0);
+fn app() -> Element {
+    let ferris = bytes_to_data(FERRIS);
+    let opacity = use_state(|| 70.0);
 
     rsx!(
         rect {

@@ -9,8 +9,8 @@ fn main() {
     launch(app);
 }
 
-fn app(cx: Scope) -> Element {
-    let (node_ref, size) = use_node(cx);
+fn app() -> Element {
+    let (node_ref, size) = use_node();
     rsx!(
         rect {
             width: "50%",

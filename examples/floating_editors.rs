@@ -8,7 +8,7 @@ use freya::events::MouseEvent;
 use freya::prelude::*;
 
 fn main() {
-    launch_with_props(app, "Freya canvas experiment", (700.0, 570.0));
+    launch_with_props(app, "Floating Editors", (700.0, 570.0));
 }
 
 fn app() -> Element {
@@ -94,7 +94,7 @@ fn app() -> Element {
                 onmouseleave: onmouseleave,
                 label {
                     font_size: "25",
-                    "What is this even about? I have no idea, but it's cool"
+                    "Floating Editors Example"
                 }
                 {
                     nodes.read().iter().enumerate().map(|(id, node)| {
