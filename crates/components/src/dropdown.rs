@@ -13,17 +13,17 @@ use freya_hooks::{
 use winit::window::CursorIcon;
 
 /// [`DropdownItem`] component properties.
-#[derive(Props)]
-pub struct DropdownItemProps<'a, T: 'static> {
+#[derive(Props, Clone, PartialEq)]
+pub struct DropdownItemProps<T: 'static + Clone> {
     /// Theme override.
     pub theme: Option<DropdownItemThemeWith>,
     /// Selectable items, like [`DropdownItem`]
-    pub children: Element<'a>,
+    pub children: Element,
     /// Selected value.
     pub value: T,
     /// Handler for the `onclick` event.
     #[props(optional)]
-    pub onclick: Option<EventHandler<'a, ()>>,
+    pub onclick: Option<EventHandler<()>>,
 }
 
 /// Current status of the DropdownItem.
@@ -44,21 +44,28 @@ pub enum DropdownItemStatus {
 /// # Styling
 /// Inherits the [`DropdownItemTheme`](freya_hooks::DropdownItemTheme) theme.
 #[allow(non_snake_case)]
-pub fn DropdownItem<'a, T>(cx: Scope<'a, DropdownItemProps<'a, T>>) -> Element<'a>
+pub fn DropdownItem<T: Clone>(
+    DropdownItemProps {
+        theme,
+        children,
+        value,
+        onclick,
+    }: DropdownItemProps<T>,
+) -> Element
 where
     T: PartialEq + 'static,
 {
-    let selected = use_shared_state::<T>(cx).unwrap();
-    let theme = use_applied_theme!(cx, &cx.props.theme, dropdown_item);
-    let focus = use_focus(cx);
-    let status = use_state(cx, DropdownItemStatus::default);
-    let platform = use_platform(cx);
+    let selected = use_context::<Signal<T>>();
+    let theme = use_applied_theme!(&theme, dropdown_item);
+    let focus = use_focus();
+    let mut status = use_signal(DropdownItemStatus::default);
+    let platform = use_platform();
 
-    let focus_id = focus.attribute(cx);
+    let focus_id = focus.attribute();
     let is_focused = focus.is_focused();
-    let is_selected = *selected.read() == cx.props.value;
+    let is_selected = *selected.read() == value;
 
-    let background = match *status.get() {
+    let background = match *status.read() {
         _ if is_selected => theme.select_background,
         _ if is_focused => theme.hover_background,
         DropdownItemStatus::Hovering => theme.hover_background,
@@ -66,20 +73,14 @@ where
     };
     let color = theme.font_theme.color;
 
-    use_on_destroy(cx, {
+    use_on_destroy({
         to_owned![status, platform];
         move || {
-            if *status.current() == DropdownItemStatus::Hovering {
+            if *status.peek() == DropdownItemStatus::Hovering {
                 platform.set_cursor(CursorIcon::default());
             }
         }
     });
-
-    let onclick = move |_: MouseEvent| {
-        if let Some(onclick) = &cx.props.onclick {
-            onclick.call(())
-        }
-    };
 
     let onmouseenter = {
         to_owned![platform];
@@ -94,11 +95,20 @@ where
         status.set(DropdownItemStatus::default());
     };
 
-    let onkeydown = move |ev: KeyboardEvent| {
-        if ev.key == Key::Enter && is_focused {
-            if let Some(onclick) = &cx.props.onclick {
-                onclick.call(())
+    let onkeydown = {
+        to_owned![onclick];
+        move |ev: KeyboardEvent| {
+            if ev.key == Key::Enter && is_focused {
+                if let Some(onclick) = &onclick {
+                    onclick.call(())
+                }
             }
+        }
+    };
+
+    let onclick = move |_: MouseEvent| {
+        if let Some(onclick) = &onclick {
+            onclick.call(())
         }
     };
 
@@ -116,18 +126,18 @@ where
             onmouseleave: onmouseleave,
             onclick: onclick,
             onkeydown: onkeydown,
-            &cx.props.children
+            {children}
         }
     )
 }
 
 /// [`Dropdown`] component properties.
-#[derive(Props)]
-pub struct DropdownProps<'a, T: 'static> {
+#[derive(Props, Clone, PartialEq)]
+pub struct DropdownProps<T: 'static + Clone> {
     /// Theme override.
     pub theme: Option<DropdownThemeWith>,
     /// Selectable items, like [`DropdownItem`]
-    pub children: Element<'a>,
+    pub children: Element,
     /// Selected value.
     pub value: T,
 }
@@ -154,13 +164,13 @@ pub enum DropdownStatus {
 /// ```no_run
 /// # use freya::prelude::*;
 ///
-/// fn app(cx: Scope) -> Element {
-///     let values = cx.use_hook(|| vec!["A".to_string(), "B".to_string(), "C".to_string()]);
-///     let selected_dropdown = use_state(cx, || "A".to_string());
+/// fn app() -> Element {
+///     let values = use_hook(|| vec!["A".to_string(), "B".to_string(), "C".to_string()]);
+///     let mut selected_dropdown = use_signal(|| "A".to_string());
 ///     rsx!(
 ///         Dropdown {
-///             value: selected_dropdown.get().clone(),
-///             values.iter().map(|ch| {
+///             value: selected_dropdown.read().clone(),
+///             values.read().iter().map(|ch| {
 ///                 rsx!(
 ///                     DropdownItem {
 ///                         value: ch.to_string(),
@@ -174,31 +184,30 @@ pub enum DropdownStatus {
 /// }
 /// ```
 #[allow(non_snake_case)]
-pub fn Dropdown<'a, T>(cx: Scope<'a, DropdownProps<'a, T>>) -> Element<'a>
+pub fn Dropdown<T>(props: DropdownProps<T>) -> Element
 where
     T: PartialEq + Clone + Display + 'static,
 {
-    use_shared_state_provider(cx, || cx.props.value.clone());
-    let selected = use_shared_state::<T>(cx).unwrap();
-    let theme = use_applied_theme!(cx, &cx.props.theme, dropdown);
-    let focus = use_focus(cx);
-    let status = use_state(cx, DropdownStatus::default);
-    let opened = use_state(cx, || false);
-    let platform = use_platform(cx);
+    let selected = use_context_provider(|| Signal::new(props.value.clone()));
+    let theme = use_applied_theme!(&props.theme, dropdown);
+    let mut focus = use_focus();
+    let mut status = use_signal(DropdownStatus::default);
+    let mut opened = use_signal(|| false);
+    let platform = use_platform();
 
-    let is_opened = *opened.get();
+    let is_opened = *opened.read();
     let is_focused = focus.is_focused();
-    let focus_id = focus.attribute(cx);
+    let focus_id = focus.attribute();
 
     // Update the provided value if the passed value changes
-    let _ = use_memo(cx, &cx.props.value, move |value| {
+    let _ = use_memo_with_dependencies(&props.value, move |value| {
         *selected.write() = value;
     });
 
-    use_on_destroy(cx, {
+    use_on_destroy({
         to_owned![status, platform];
         move || {
-            if *status.current() == DropdownStatus::Hovering {
+            if *status.peek() == DropdownStatus::Hovering {
                 platform.set_cursor(CursorIcon::default());
             }
         }
@@ -250,7 +259,7 @@ where
         arrow_fill,
     } = &theme;
 
-    let button_background = match *status.get() {
+    let button_background = match *status.read() {
         DropdownStatus::Hovering => hover_background,
         DropdownStatus::Idle => background_button,
     };
@@ -286,25 +295,23 @@ where
                 })
             }
         }
-        if *opened.get() {
-            rsx!(
+        if *opened.read() {
+            rect {
+                height: "0",
                 rect {
-                    height: "0",
-                    rect {
-                        onglobalclick: onglobalclick,
-                        onkeydown: onkeydown,
-                        layer: "-99",
-                        margin: "4",
-                        border: "1 solid {border_fill}",
-                        overflow: "clip",
-                        corner_radius: "8",
-                        background: "{dropdown_background}",
-                        shadow: "0 4 5 0 rgb(0, 0, 0, 0.3)",
-                        padding: "6",
-                        &cx.props.children
-                    }
+                    onglobalclick: onglobalclick,
+                    onkeydown: onkeydown,
+                    layer: "-99",
+                    margin: "4",
+                    border: "1 solid {border_fill}",
+                    overflow: "clip",
+                    corner_radius: "8",
+                    background: "{dropdown_background}",
+                    shadow: "0 4 5 0 rgb(0, 0, 0, 0.3)",
+                    padding: "6",
+                    {props.children}
                 }
-            )
+            }
         }
     )
 }
