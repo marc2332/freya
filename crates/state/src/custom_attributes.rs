@@ -31,12 +31,12 @@ impl Display for ImageReference {
 }
 
 /// Node Reference
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct NodeReference(pub UnboundedSender<NodeReferenceLayout>);
 
 impl PartialEq for NodeReference {
-    fn eq(&self, _other: &Self) -> bool {
-        true
+    fn eq(&self, other: &Self) -> bool {
+        self.0.same_channel(&other.0)
     }
 }
 

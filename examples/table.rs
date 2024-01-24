@@ -68,9 +68,9 @@ fn app() -> Element {
         }
     };
 
-    let mut on_column_head_click = move |column_order: OrderBy| {
+    let mut on_column_head_click = move |column_order: &OrderBy| {
         // Change order diection
-        if *order.read() == column_order {
+        if &*order.read() == column_order {
             if *order_direction.read() == OrderDirection::Up {
                 order_direction.set(OrderDirection::Down)
             } else {
@@ -94,14 +94,11 @@ fn app() -> Element {
                 columns: 3,
                 TableHead {
                     TableRow {
-                        for (n, (text, order_by)) in columns.iter().enumerate() {
+                        for (n, (text, order_by)) in columns.into_iter().enumerate() {
                             TableCell {
                                 key: "{n}",
-                                order_direction: if *order.read() == *order_by { Some(*order_direction.read()) } else { None },
-                                onclick: {
-                                    to_owned![order_by];
-                                    move |_| on_column_head_click(order_by.clone())
-                                },
+                                order_direction: if *order.read() == order_by { Some(*order_direction.read()) } else { None },
+                                onclick: move |_| on_column_head_click(&order_by),
                                 label {
                                     "{text}"
                                 }

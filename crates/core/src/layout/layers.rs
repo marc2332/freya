@@ -107,7 +107,7 @@ impl Layers {
                         inner: areas.inner_sizes,
                     };
                     node_layout.div(scale_factor);
-                    reference.send(node_layout).ok();
+                    reference.0.send(node_layout).ok();
                 }
 
                 traverse_inner_children
