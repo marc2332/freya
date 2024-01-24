@@ -68,6 +68,8 @@ pub struct App<State: 'static + Clone> {
     ticker_sender: broadcast::Sender<()>,
 
     plugins: PluginsManager,
+
+    navigator_state: NavigatorState,
 }
 
 impl<State: 'static + Clone> App<State> {
@@ -82,7 +84,7 @@ impl<State: 'static + Clone> App<State> {
     ) -> Self {
         let accessibility = NativeAccessibility::new(&window_env.window, proxy.clone());
 
-        window_env.window().set_visible(true);
+        window_env.window_mut().set_visible(true);
 
         let mut font_collection = FontCollection::new();
         let def_mgr = FontMgr::default();
@@ -101,12 +103,14 @@ impl<State: 'static + Clone> App<State> {
         let (event_emitter, event_receiver) = mpsc::unbounded_channel::<DomEvent>();
         let (focus_sender, focus_receiver) = watch::channel(None);
 
-        plugins.send(PluginEvent::WindowCreated(window_env.window()));
+        plugins.send(PluginEvent::WindowCreated(window_env.window_mut()));
+
+        let navigator_state = NavigatorState::new(NavigationMode::NotKeyboard);
 
         Self {
             sdom,
             vdom,
-            events: Vec::new(),
+            events: EventsQueue::new(),
             vdom_waker: winit_waker(proxy),
             proxy: proxy.clone(),
             mutations_notifier,
@@ -122,21 +126,23 @@ impl<State: 'static + Clone> App<State> {
             font_collection,
             ticker_sender: broadcast::channel(5).0,
             plugins,
+            navigator_state,
         }
     }
 
     /// Provide the launch state and few other utilities like the EventLoopProxy
-    pub fn provide_vdom_contexts(&self) {
+    pub fn provide_vdom_contexts(&mut self) {
         if let Some(state) = self.window_env.window_config.state.clone() {
-            self.vdom.base_scope().provide_context(state);
+            self.vdom.insert_any_root_context(Box::new(state));
         }
-        self.vdom.base_scope().provide_context(self.proxy.clone());
         self.vdom
-            .base_scope()
-            .provide_context(self.focus_receiver.clone());
+            .insert_any_root_context(Box::new(self.proxy.clone()));
         self.vdom
-            .base_scope()
-            .provide_context(Arc::new(self.ticker_sender.subscribe()));
+            .insert_any_root_context(Box::new(self.focus_receiver.clone()));
+        self.vdom
+            .insert_any_root_context(Box::new(Arc::new(self.ticker_sender.subscribe())));
+        self.vdom
+            .insert_any_root_context(Box::new(self.navigator_state.clone()));
     }
 
     /// Make the first build of the VirtualDOM.
@@ -144,29 +150,16 @@ impl<State: 'static + Clone> App<State> {
         let scale_factor = self.window_env.window.scale_factor() as f32;
         self.provide_vdom_contexts();
 
-        let mutations = self.vdom.rebuild();
-
-        self.sdom.get_mut().init_dom(mutations, scale_factor);
-
-        if let Some(mutations_notifier) = &self.mutations_notifier {
-            mutations_notifier.notify_one();
-        }
+        self.sdom.get_mut().init_dom(&mut self.vdom, scale_factor);
     }
 
     /// Update the DOM with the mutations from the VirtualDOM.
     pub fn apply_vdom_changes(&mut self) -> (bool, bool) {
         let scale_factor = self.window_env.window.scale_factor() as f32;
-        let mutations = self.vdom.render_immediate();
-
-        let is_empty = mutations.dirty_scopes.is_empty()
-            && mutations.edits.is_empty()
-            && mutations.templates.is_empty();
-
-        let (repaint, relayout) = if !is_empty {
-            self.sdom.get_mut().apply_mutations(mutations, scale_factor)
-        } else {
-            (false, false)
-        };
+        let (repaint, relayout) = self
+            .sdom
+            .get_mut()
+            .render_mutations(&mut self.vdom, scale_factor);
 
         if repaint {
             if let Some(mutations_notifier) = &self.mutations_notifier {
@@ -279,13 +272,14 @@ impl<State: 'static + Clone> App<State> {
         );
     }
 
-    /// Push an event to the events queue
-    pub fn push_event(&mut self, event: FreyaEvent) {
+    /// Send an event
+    pub fn send_event(&mut self, event: FreyaEvent) {
         self.events.push(event);
+        self.process_events();
     }
 
     /// Replace a VirtualDOM Template
-    pub fn vdom_replace_template(&mut self, template: Template<'static>) {
+    pub fn vdom_replace_template(&mut self, template: Template) {
         self.vdom.replace_template(template);
     }
 
@@ -354,6 +348,10 @@ impl<State: 'static + Clone> App<State> {
     }
 
     pub fn tick(&self) {
-        self.ticker_sender.send(()).unwrap();
+        self.ticker_sender.send(()).ok();
+    }
+
+    pub fn set_navigation_mode(&mut self, mode: NavigationMode) {
+        self.navigator_state.set(mode);
     }
 }

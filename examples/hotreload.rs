@@ -13,7 +13,7 @@ fn main() {
 
 fn app(cx: Scope) -> Element {
     let mut count = use_state(cx, || 0);
-    render!(
+    rsx!(
         rect {
             overflow: "clip",
             background: "rgb(15, 15, 15)",
@@ -42,7 +42,7 @@ fn app(cx: Scope) -> Element {
 
 #[allow(non_snake_case)]
 fn Comp(cx: Scope) -> Element {
-    render!(rect {
+    rsx!(rect {
         width: "50%",
         height: "100%",
         background: "yellow"

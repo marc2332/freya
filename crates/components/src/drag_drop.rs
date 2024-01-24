@@ -19,7 +19,7 @@ pub struct DragProviderProps<'a> {
 #[allow(non_snake_case)]
 pub fn DragProvider<'a, T: 'static>(cx: Scope<'a, DragProviderProps<'a>>) -> Element<'a> {
     use_shared_state_provider::<Option<T>>(cx, || None);
-    render!(&cx.props.children)
+    rsx!(&cx.props.children)
 }
 
 /// [`DragZone`] component properties.
@@ -81,9 +81,9 @@ pub fn DragZone<'a, T: 'static + Clone>(cx: Scope<'a, DragZoneProps<'a, T>>) -> 
         }
     };
 
-    render!(
+    rsx!(
         if *dragging.get() {
-            render!(
+            rsx!(
                 rect {
                     width: "0",
                     height: "0",
@@ -132,7 +132,7 @@ pub fn DropZone<'a, T: 'static + Clone>(cx: Scope<'a, DropZoneProps<'a, T>>) -> 
         }
     };
 
-    render!(
+    rsx!(
         rect {
             onclick: onclick,
             &cx.props.children
@@ -143,21 +143,21 @@ pub fn DropZone<'a, T: 'static + Clone>(cx: Scope<'a, DropZoneProps<'a, T>>) -> 
 #[cfg(test)]
 mod test {
     use freya::prelude::*;
-    use freya_testing::{launch_test, FreyaEvent, MouseButton};
+    use freya_testing::{events::pointer::MouseButton, launch_test, FreyaEvent};
 
     #[tokio::test]
     pub async fn drag_drop() {
         fn drop_app(cx: Scope) -> Element {
             let state = use_state::<bool>(cx, || false);
 
-            render!(
+            rsx!(
                 DragProvider::<bool> {
                     rect {
                         height: "50%",
                         width: "100%",
                         DragZone {
                             data: true,
-                            drag_element: render!(
+                            drag_element: rsx!(
                                 label {
                                     width: "200",
                                     "Moving"

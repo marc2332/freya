@@ -3,6 +3,7 @@
     windows_subsystem = "windows"
 )]
 
+use dioxus::signals::use_signal;
 use freya::prelude::*;
 use reqwest::Url;
 use serde::Deserialize;
@@ -24,20 +25,20 @@ async fn fetch_random_dog() -> Option<Url> {
     data.message.parse().ok()
 }
 
-fn app(cx: Scope) -> Element {
-    use_init_theme(cx, DARK_THEME);
-    let dog_url = use_state(cx, || None);
+fn app() -> Element {
+    use_init_theme(DARK_THEME);
+    let dog_url = use_signal(|| None);
 
     let fetch = move || {
         to_owned![dog_url];
-        cx.spawn(async move {
+        spawn(async move {
             if let Some(url) = fetch_random_dog().await {
                 dog_url.set(Some(url))
             }
         })
     };
 
-    render!(
+    rsx!(
         rect {
             background: "rgb(15, 15, 15)",
             width: "100%",
@@ -46,13 +47,11 @@ fn app(cx: Scope) -> Element {
                 overflow: "clip",
                 width: "100%",
                 height: "calc(100% - 60)",
-                if let Some(dog_url) = dog_url.get() {
-                   rsx!(
-                        NetworkImage {
-                            url: dog_url.clone()
-                        }
-                   )
-                }
+                {dog_url.read().as_ref().map(|dog_url| rsx!(
+                    NetworkImage {
+                        url: dog_url.clone()
+                    }
+               ))}
             }
             rect {
                 overflow: "clip",
@@ -61,7 +60,9 @@ fn app(cx: Scope) -> Element {
                 main_align: "center",
                 cross_align: "center",
                 Button {
-                    onclick: move |_|  fetch(),
+                    onclick: move |_| {
+                        fetch();
+                    },
                     label {
                         "Fetch random Doggo!"
                     }

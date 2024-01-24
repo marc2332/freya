@@ -10,7 +10,7 @@ fn main() {
 }
 
 fn app(cx: Scope) -> Element {
-    render!(
+    rsx!(
         ExternalLink {
             url: "https://duckduckgo.com/",
             label {

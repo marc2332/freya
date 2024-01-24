@@ -1,12 +1,11 @@
-### letter_spacing
-
 Specify the spacing between characters of the text.
 
-Example:
+### Example
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+# use freya::prelude::*;
+fn app() -> Element {
+    rsx!(
         label {
             letter_spacing: "10",
             "Hello, World!"

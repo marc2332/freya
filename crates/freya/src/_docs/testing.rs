@@ -22,7 +22,7 @@
 //! #[tokio::test]
 //! async fn test() {
 //!     fn our_component(cx: Scope) -> Element {
-//!         render!(
+//!         rsx!(
 //!             label {
 //!                 "Hello World!"
 //!             }
@@ -59,7 +59,7 @@
 //!             async move { }
 //!         });
 //!
-//!         render!(
+//!         rsx!(
 //!             label {
 //!                 "Is enabled? {state}"
 //!             }
@@ -89,7 +89,7 @@
 //! async fn event_test() {
 //!     fn event_component(cx: Scope) -> Element {
 //!         let enabled = use_state(cx, || false);
-//!         render!(
+//!         rsx!(
 //!             rect {
 //!                 width: "100%",
 //!                 height: "100%",
@@ -140,7 +140,7 @@
 //! #[tokio::test]
 //! async fn test() {
 //!     fn our_component(cx: Scope) -> Element {
-//!         render!(
+//!         rsx!(
 //!             label {
 //!                 "Hello World!"
 //!             }

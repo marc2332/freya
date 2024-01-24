@@ -20,7 +20,7 @@ pub fn NodeInspectorLayout(cx: Scope, node_id: NodeId) -> Element {
         let area = format!("{}x{}", node.areas.area.width(), node.areas.area.height());
         let paddings = node.state.size.padding;
 
-        render!(
+        rsx!(
             rect {
                 overflow: "clip",
                 width: "100%",

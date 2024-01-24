@@ -13,7 +13,7 @@ pub struct TabsBarProps<'a> {
 
 #[allow(non_snake_case)]
 pub fn TabsBar<'a>(cx: Scope<'a, TabsBarProps<'a>>) -> Element<'a> {
-    render!(
+    rsx!(
         ScrollView {
             direction: "horizontal",
             theme: theme_with!(ScrollViewTheme {
@@ -58,7 +58,7 @@ pub fn TabButton<'a>(cx: Scope<'a, TabButtonProps<'a>>) -> Element<'a> {
     let border_fill = theme.button.border_fill;
     let content = cx.props.label;
 
-    render!(
+    rsx!(
         rect {
             margin: "2",
             overflow: "clip",

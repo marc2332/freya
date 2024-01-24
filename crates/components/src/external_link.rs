@@ -37,7 +37,7 @@ pub struct ExternalLinkProps<'a> {
 /// ```no_run
 /// # use freya::prelude::*;
 /// fn app(cx: Scope) -> Element {
-///     render!(
+///     rsx!(
 ///         ExternalLink {
 ///             url: "https://github.com",
 ///             label {
@@ -76,7 +76,7 @@ pub fn ExternalLink<'a>(cx: Scope<'a, ExternalLinkProps<'a>>) -> Element {
         "inherit"
     };
 
-    render!(
+    rsx!(
         rect {
             onmouseover: onmouseover,
             onmouseleave: onmouseleave,

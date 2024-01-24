@@ -20,7 +20,7 @@ pub fn NodeInspectorStyle(cx: Scope, node_id: NodeId) -> Element {
     let node = use_selected_node(cx, &cx.props.node_id);
 
     if let Some(node) = node {
-        render!(
+        rsx!(
             rect {
                 overflow: "clip",
                 width: "100%",

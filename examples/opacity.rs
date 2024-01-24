@@ -11,11 +11,11 @@ fn main() {
     launch_with_props(app, "Opacity", (400.0, 350.0));
 }
 
-fn app(cx: Scope) -> Element {
-    let ferris = bytes_to_data(cx, FERRIS);
-    let opacity = use_state(cx, || 70.0);
+fn app() -> Element {
+    let ferris = bytes_to_data(FERRIS);
+    let opacity = use_state(|| 70.0);
 
-    render!(
+    rsx!(
         rect {
             height: "100%",
             width: "100%",
@@ -35,7 +35,7 @@ fn app(cx: Scope) -> Element {
                 }
             }
             Slider {
-                width: 100.0,
+                width: "100",
                 value: *opacity.get(),
                 onmoved: |p| {
                     opacity.set(p);

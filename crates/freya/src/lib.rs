@@ -8,15 +8,16 @@
 //!
 //! Powered by [🧬 Dioxus](https://dioxuslabs.com) and [🎨 Skia](https://skia.org/).
 //!
-//! - [`Elements`](freya_elements::elements#structs)
-//! - [`Events`](freya_elements::elements#functions)
-//! - [`Components`](freya_components)
-//! - [`Hooks`](freya_hooks)
-//! - [`Theming`](self::_docs::theming)
-//! - [`Hot reload`](self::_docs::hot_reload)
-//! - [`Testing`](self::_docs::testing)
-//! - [`Animating`](self::_docs::animating)
-//! - [`Devtools`](self::_docs::devtools)
+//! - [Elements API reference](freya_elements::elements#structs)
+//! - [Events API reference](freya_elements::elements#functions)
+//! - [Elements guides](freya_elements::_docs)
+//! - [Components](freya_components)
+//! - [Hooks](freya_hooks)
+//! - [Theming](self::_docs::theming)
+//! - [Hot reload](self::_docs::hot_reload)
+//! - [Testing](self::_docs::testing)
+//! - [Animating](self::_docs::animating)
+//! - [Devtools](self::_docs::devtools)
 //!
 //! ```rust,no_run
 //! use freya::prelude::*;
@@ -28,7 +29,7 @@
 //! fn app(cx: Scope) -> Element {
 //!    let mut count = use_state(cx, || 0);
 //!
-//!    render!(
+//!    rsx!(
 //!        rect {
 //!            height: "100%",
 //!            width: "100%",
@@ -49,12 +50,14 @@
 //! - `log`: enables internal logs.
 //!
 
-/// Freya Docs
+/// Freya docs.
 #[cfg(doc)]
 pub mod _docs;
 
 /// Dioxus library.
 pub use dioxus;
+
+pub use dioxus_core;
 
 /// Launch your app.
 pub mod launch;
@@ -91,10 +94,12 @@ pub mod plugins;
 
 /// Useful imports.
 pub mod prelude {
+    pub use dioxus_core;
     pub use dioxus_core::prelude::*;
     pub use dioxus_core_macro::*;
     pub use dioxus_hooks::*;
     pub use dioxus_hot_reload::{self, hot_reload_init, Config};
+    pub use dioxus_signals::*;
 
     pub use crate::launch::*;
     pub use crate::plugins::*;

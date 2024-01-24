@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use freya_core::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_testing::{launch_test, MouseButton};
+use freya_testing::{events::pointer::MouseButton, launch_test};
 use torin::prelude::CursorPoint;
 use winit::event::TouchPhase;
 
@@ -20,7 +20,7 @@ pub async fn pointer_events_from_mouse() {
 
         let onpointerleave = move |_| state.with_mut(|v| v.push("leave".to_string()));
 
-        render!(
+        rsx!(
             rect {
                 height: "100%",
                 width: "100%",
@@ -106,7 +106,7 @@ pub async fn pointer_events_from_touch() {
 
         let onpointerenter = move |_| state.with_mut(|v| v.push("enter".to_string()));
 
-        render!(
+        rsx!(
             rect {
                 height: "100%",
                 width: "100%",

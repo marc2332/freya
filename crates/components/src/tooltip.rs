@@ -30,7 +30,7 @@ pub fn Tooltip<'a>(cx: Scope<'a, TooltipProps<'a>>) -> Element {
         border_fill,
     } = theme;
 
-    render!(
+    rsx!(
         rect {
             padding: "4 10",
             shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)",

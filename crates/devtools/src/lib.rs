@@ -60,7 +60,7 @@ fn AppWithDevtools(cx: Scope<AppWithDevtoolsProps>) -> Element {
     let mutations_notifier = cx.props.mutations_notifier.clone();
     let hovered_node = cx.props.hovered_node.clone();
 
-    render!(
+    rsx!(
         rect {
             width: "100%",
             height: "100%",
@@ -181,7 +181,7 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
         }
     });
 
-    render!(
+    rsx!(
         rect {
             width: "100%",
             height: "100%",
@@ -194,7 +194,7 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
 #[component]
 #[allow(non_snake_case)]
 pub fn DevtoolsBar(cx: Scope) -> Element {
-    render!(
+    rsx!(
         TabsBar {
             TabButton {
                 to: Route::TreeElementsTab { },
@@ -208,7 +208,7 @@ pub fn DevtoolsBar(cx: Scope) -> Element {
 #[allow(non_snake_case)]
 #[component]
 pub fn NodeInspectorBar(cx: Scope, node_id: NodeId) -> Element {
-    render!(
+    rsx!(
         TabsBar {
             TabButton {
                 to: Route::TreeStyleTab { node_id: node_id.serialize() },
@@ -242,7 +242,7 @@ pub enum Route {
 #[allow(non_snake_case)]
 #[component]
 fn PageNotFound(cx: Scope) -> Element {
-    render!(
+    rsx!(
         label {
             "Page not found."
         }
@@ -254,7 +254,7 @@ fn PageNotFound(cx: Scope) -> Element {
 fn TreeElementsTab(cx: Scope) -> Element {
     let hovered_node = use_shared_state::<HoveredNode>(cx).unwrap();
 
-    render!(NodesTree {
+    rsx!(NodesTree {
         height: "calc(100% - 35)",
         onselected: |node: &TreeNode| {
             if let Some(hovered_node) = &hovered_node.read().as_ref() {
@@ -274,7 +274,7 @@ fn TreeStyleTab(cx: Scope<TreeTabProps>) -> Element {
     let hovered_node = use_shared_state::<HoveredNode>(cx).unwrap();
     let node_id = NodeId::deserialize(&cx.props.node_id);
 
-    render!(
+    rsx!(
         NodesTree {
             height: "calc(50% - 35)",
             selected_node_id: node_id,
@@ -295,7 +295,7 @@ fn TreeLayoutTab(cx: Scope<TreeTabProps>) -> Element {
     let hovered_node = use_shared_state::<HoveredNode>(cx).unwrap();
     let node_id = NodeId::deserialize(&cx.props.node_id);
 
-    render!(
+    rsx!(
         NodesTree {
             height: "calc(50% - 35)",
             selected_node_id: node_id,

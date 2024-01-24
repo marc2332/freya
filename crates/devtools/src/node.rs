@@ -41,7 +41,7 @@ pub fn NodeElement<'a>(
     };
     let margin_left = (node.height * 10) as f32 + 16.5;
 
-    render!(
+    rsx!(
         rect {
             corner_radius: "7",
             padding: "5",

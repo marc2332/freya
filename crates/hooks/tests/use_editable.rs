@@ -1,7 +1,12 @@
 use crate::{use_editable, EditableMode, TextEditor};
 use freya::prelude::*;
-use freya_elements::events::keyboard::{Code, Key, Modifiers};
-use freya_testing::{launch_test, FreyaEvent, MouseButton};
+use freya_testing::{
+    events::{
+        keyboard::{Code, Key, Modifiers},
+        pointer::MouseButton,
+    },
+    launch_test, FreyaEvent,
+};
 
 #[tokio::test]
 pub async fn multiple_lines_single_editor() {
@@ -30,7 +35,7 @@ pub async fn multiple_lines_single_editor() {
             }
         };
 
-        render!(
+        rsx!(
             rect {
                 width: "100%",
                 height: "100%",
@@ -131,7 +136,7 @@ pub async fn single_line_mulitple_editors() {
             }
         };
 
-        render!(
+        rsx!(
             rect {
                 width: "100%",
                 height: "100%",
@@ -267,7 +272,7 @@ pub async fn highlight_multiple_lines_single_editor() {
             }
         };
 
-        render!(
+        rsx!(
             rect {
                 width: "100%",
                 height: "100%",
@@ -354,7 +359,7 @@ pub async fn highlights_single_line_mulitple_editors() {
             }
         };
 
-        render!(
+        rsx!(
             rect {
                 width: "100%",
                 height: "100%",

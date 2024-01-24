@@ -22,7 +22,14 @@ macro_rules! cow_borrowed {
 
 /// Example usage:
 ///
-/// ```rust,ignore
+/// ```rust
+/// # use crate::freya_hooks::define_theme;
+/// # use crate::freya_hooks::FontTheme;
+/// # use crate::freya_hooks::FontThemeWith;
+/// # #[derive(Clone, Debug, PartialEq, Eq)]
+/// # struct Bar;
+/// # #[derive(Clone, Debug, PartialEq, Eq)]
+/// # struct Foo;
 /// define_theme! {
 ///     %[component]
 ///     pub Test<'a> {
@@ -32,7 +39,8 @@ macro_rules! cow_borrowed {
 ///         borrowed_data: &'a Foo,
 ///         %[owned]
 ///         owned_data: Bar,
-///         %[subthemes],
+///         %[subthemes]
+///         font_theme: FontTheme,
 ///     }
 /// }
 /// ```
@@ -162,15 +170,14 @@ macro_rules! define_theme {
 /// Without the macro:
 ///
 /// ```no_run
-/// # use dioxus::prelude::*;
 /// # use freya::prelude::*;
 /// # fn theme_with_example_no_macro(cx: Scope) -> Element {
-/// render! {
+/// rsx! {
 ///     Button {
 ///         theme: ButtonThemeWith {
-///             background: "blue".into(),
+///             background: Some("blue".into()),
 ///             font_theme: FontThemeWith {
-///                 color: "white".into(),
+///                 color: Some("white".into()),
 ///                 ..Default::default()
 ///             }.into(),
 ///             ..Default::default()
@@ -183,15 +190,14 @@ macro_rules! define_theme {
 /// With the macro:
 ///
 /// ```no_run
-/// # use dioxus::prelude::*;
 /// # use freya::prelude::*;
 /// # fn theme_with_example_no_macro(cx: Scope) -> Element {
-/// render! {
+/// rsx! {
 ///     Button {
 ///         theme: theme_with!(ButtonTheme {
-///             background: "blue",
+///             background: "blue".into(),
 ///             font_theme: theme_with!(FontTheme {
-///                 color: "white",
+///                 color: "white".into(),
 ///             }),
 ///         })
 ///     }
@@ -202,8 +208,8 @@ macro_rules! define_theme {
 macro_rules! theme_with {
     ($theme_name:ident {
         $(
-            $theme_field_name:ident: $theme_field_val:expr,
-        )*
+            $theme_field_name:ident: $theme_field_val:expr
+        ),* $(,)?
     }) => {
         $crate::paste! {
             #[allow(clippy::needless_update)]
@@ -248,6 +254,7 @@ define_theme! {
         background: str,
         hover_background: str,
         border_fill: str,
+        focus_border_fill: str,
         margin: str,
         corner_radius: str,
         width: str,
@@ -288,6 +295,8 @@ define_theme! {
         thumb_background: str,
         enabled_background: str,
         enabled_thumb_background: str,
+        focus_border_fill: str,
+        enabled_focus_border_fill: str,
     }
 }
 
@@ -299,8 +308,6 @@ define_theme! {
         thumb_background: str,
         hover_thumb_background: str,
         active_thumb_background: str,
-        offset_x: str,
-        offset_y: str,
     }
 }
 

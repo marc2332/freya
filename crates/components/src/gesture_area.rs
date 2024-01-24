@@ -43,11 +43,11 @@ type EventsQueue = VecDeque<(Instant, TouchEvent)>;
 ///
 /// # Example
 ///
-/// ```rust
+/// ```rust,no_run
 /// # use freya::prelude::*;
 /// fn app(cx: Scope) -> Element {
 ///    let gesture = use_state(cx, || "Tap here".to_string());
-///    render!(
+///    rsx!(
 ///        GestureArea {
 ///            ongesture: move |g| gesture.set(format!("{g:?}")),
 ///            label {
@@ -150,7 +150,7 @@ pub fn GestureArea<'a>(cx: Scope<'a, GestureAreaProps<'a>>) -> Element {
         touch_events.write().push_back((Instant::now(), e));
     };
 
-    render!(
+    rsx!(
         rect {
             ontouchcancel: ontouchcancel,
             ontouchend: ontouchend,
@@ -186,7 +186,7 @@ mod test {
                 value.set(format!("{e:?}"));
             };
 
-            render!(
+            rsx!(
                 GestureArea {
                     ongesture: ongesture,
                     "{value}"
@@ -246,7 +246,7 @@ mod test {
                 value.set(format!("{e:?}"));
             };
 
-            render!(
+            rsx!(
                 GestureArea {
                     ongesture: ongesture,
                     "{value}"

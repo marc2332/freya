@@ -29,7 +29,7 @@ pub struct ProgressBarProps {
 /// ```no_run
 /// # use freya::prelude::*;
 /// fn app(cx: Scope) -> Element {
-///     render!(
+///     rsx!(
 ///         ProgressBar {
 ///             progress: 75.0
 ///         }
@@ -49,7 +49,7 @@ pub fn ProgressBar(cx: Scope<ProgressBarProps>) -> Element {
     let show_progress = cx.props.show_progress;
     let progress = cx.props.progress;
 
-    render!(
+    rsx!(
         rect {
             width: "{width}",
             height: "{height}",

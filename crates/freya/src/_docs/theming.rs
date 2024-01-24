@@ -12,7 +12,7 @@
 //! # use freya::prelude::*;
 //!
 //! fn app(cx: Scope) -> Element {
-//!     render!(
+//!     rsx!(
 //!         ThemeProvider {
 //!             Component { }
 //!         }
@@ -25,7 +25,7 @@
 //!
 //!     let button_theme = &theme.button;
 //!
-//!     render!(
+//!     rsx!(
 //!         rect {
 //!             background: "{button_theme.background}",
 //!         }
@@ -41,7 +41,7 @@
 //! # use freya::prelude::*;
 //!
 //! fn app(cx: Scope) -> Element {
-//!     render!(
+//!     rsx!(
 //!         ThemeProvider {
 //!             theme: LIGHT_THEME,
 //!             Component { }
@@ -55,7 +55,7 @@
 //!
 //!     let button_theme = &theme.button;
 //!
-//!     render!(
+//!     rsx!(
 //!         rect {
 //!             background: "{button_theme.background}",
 //!         }
@@ -71,7 +71,7 @@
 //! # use freya::prelude::*;
 //!
 //! fn app(cx: Scope) -> Element {
-//!     render!(
+//!     rsx!(
 //!         ThemeProvider {
 //!             Component { }
 //!         }
@@ -86,7 +86,7 @@
 //!         *theme.write() = LIGHT_THEME;
 //!     };
 //!
-//!     render!(
+//!     rsx!(
 //!         Button {
 //!             onclick: onclick,
 //!             label {
@@ -106,7 +106,7 @@
 //! # use freya::prelude::*;
 //!
 //! fn app(cx: Scope) -> Element {
-//!     render! {
+//!     rsx! {
 //!         Button {
 //!             theme: ButtonThemeWith {
 //!                 background: Some("blue".into()),
@@ -133,7 +133,7 @@
 //! # use freya::prelude::*;
 //!
 //! fn app(cx: Scope) -> Element {
-//!     render! {
+//!     rsx! {
 //!         Button {
 //!             theme: theme_with!(ButtonTheme {
 //!                 background: "blue".into(),
@@ -172,7 +172,7 @@
 //! };
 //!
 //! fn app(cx: Scope) -> Element {
-//!     render!(
+//!     rsx!(
 //!         ThemeProvider {
 //!             theme: CUSTOM_THEME,
 //!             rect {

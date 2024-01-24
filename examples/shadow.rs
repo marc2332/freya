@@ -9,8 +9,8 @@ fn main() {
     launch(app);
 }
 
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         rect {
             overflow: "clip",
             height: "100%",

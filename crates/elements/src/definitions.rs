@@ -156,23 +156,24 @@ macro_rules! impl_element {
 }
 
 builder_constructors! {
-    ///    `rect` is a generic element that acts as a container for other elements.
+    /// `rect` is a generic element that acts as a container for other elements.
     ///
-    ///    You can specify things like [`width`](#width-and-height), [`padding`](#padding) or even in what [`direction`](#direction) the inner elements are stacked.
+    /// You can specify things like [`width`](#width-and-height), [`padding`](#padding) or even in what [`direction`](#direction) the inner elements are stacked.
     ///
-    ///    ### Example:
+    /// ### Example
     ///
-    ///    ```rust, no_run
-    ///    fn app(cx: Scope) -> Element {
-    ///        render!(
-    ///            rect {
-    ///                direction: "vertical",
-    ///                label { "Hi!" }
-    ///                label { "Hi again!"}
-    ///            }
-    ///        )
-    ///    }
-    ///    ```
+    /// ```rust,no_run
+    /// # use freya::prelude::*;
+    /// fn app(cx: Scope) -> Element {
+    ///     rsx!(
+    ///         rect {
+    ///             direction: "vertical",
+    ///             label { "Hi!" }
+    ///             label { "Hi again!"}
+    ///         }
+    ///     )
+    /// }
+    /// ```
     rect {
         #[doc = include_str!("_docs/attributes/padding.md")]
         padding: String,
@@ -243,11 +244,12 @@ builder_constructors! {
     };
     /// `label` simply let's you display some text.
     ///
-    /// ### Example:
+    /// ### Example
     ///
-    /// ```rust, no_run
+    /// ```rust,no_run
+    /// # use freya::prelude::*;
     /// fn app(cx: Scope) -> Element {
-    ///     render!(
+    ///     rsx!(
     ///         label {
     ///             "Hello World"
     ///         }
@@ -278,6 +280,8 @@ builder_constructors! {
         max_lines: String,
         #[doc = include_str!("_docs/attributes/rotate.md")]
         rotate: String,
+        #[doc = include_str!("_docs/attributes/line_height.md")]
+        line_height: String,
         #[doc = include_str!("_docs/attributes/letter_spacing.md")]
         letter_spacing: String,
         #[doc = include_str!("_docs/attributes/word_spacing.md")]
@@ -306,9 +310,10 @@ builder_constructors! {
     ///
     /// This used used with the `text` element.
     ///
-    /// ``` rust
+    /// ```rust,no_run
+    /// # use freya::prelude::*;
     /// fn app(cx: Scope) -> Element {
-    ///     render!(
+    ///     rsx!(
     ///         paragraph {
     ///             text {
     ///                 font_size: "15",
@@ -414,14 +419,15 @@ builder_constructors! {
     };
     /// `image` element let's you show an image.
     ///
-    /// ### Example:
+    /// ### Example
     ///
-    /// ```rust, no_run
+    /// ```rust, ignore, no_run
+    /// # use freya::prelude::*;
     /// static RUST_LOGO: &[u8] = include_bytes!("./rust_logo.png");
     ///
     /// fn app(cx: Scope) -> Element {
     ///     let image_data = bytes_to_data(cx, RUST_LOGO);
-    ///     render!(
+    ///     rsx!(
     ///         image {
     ///             image_data: image_data,
     ///             width: "{size}",
@@ -449,16 +455,18 @@ builder_constructors! {
     };
     /// `svg` element let's you display SVG code.
     ///
-    /// You will need to use the `bytes_to_data` to transform the bytes into data the element can recognize.
+    /// You will need to use the [`bytes_to_data`](https://docs.freyaui.dev/freya/prelude/fn.bytes_to_data.html)
+    /// to transform the bytes into data the element can recognize.
     ///
-    /// ### Example:
+    /// ### Example
     ///
-    /// ```rust, no_run
+    /// ```rust,ignore
+    /// # use freya::prelude::*;
     /// static FERRIS: &[u8] = include_bytes!("./ferris.svg");
     ///
     /// fn app(cx: Scope) -> Element {
     ///     let ferris = bytes_to_data(cx, FERRIS);
-    ///     render!(
+    ///     rsx!(
     ///         svg {
     ///             svg_data: ferris,
     ///         }
@@ -487,25 +495,72 @@ builder_constructors! {
 }
 
 pub mod events {
+    use std::any::Any;
+
     use crate::events::*;
+
+    #[doc(hidden)]
+    pub trait EventReturn<P>: Sized {
+        fn spawn(self) {}
+    }
+
+    impl EventReturn<()> for () {}
+    #[doc(hidden)]
+    pub struct AsyncMarker;
+
+    impl<T> EventReturn<AsyncMarker> for T
+    where
+        T: std::future::Future<Output = ()> + 'static,
+    {
+        #[inline]
+        fn spawn(self) {
+            dioxus_core::prelude::spawn(self);
+        }
+    }
+
+    /// A platform specific event.
+    pub struct PlatformEventData {
+        event: Box<dyn Any>,
+    }
+
+    impl PlatformEventData {
+        pub fn new(event: Box<dyn Any>) -> Self {
+            Self { event }
+        }
+
+        pub fn downcast<T: 'static>(&self) -> Option<&T> {
+            self.event.downcast_ref::<T>()
+        }
+
+        pub fn downcast_mut<T: 'static>(&mut self) -> Option<&mut T> {
+            self.event.downcast_mut::<T>()
+        }
+
+        pub fn into_inner<T: 'static>(self) -> Option<T> {
+            self.event.downcast::<T>().ok().map(|e| *e)
+        }
+    }
 
     macro_rules! impl_event {
         (
             $data:ty;
             $(
                 $( #[$attr:meta] )*
-                $name:ident
+                $name:ident $(: $js_name:literal)?
             )*
         ) => {
             $(
                 $( #[$attr] )*
-                pub fn $name<'a>(_cx: &'a ::dioxus_core::ScopeState, _f: impl FnMut(::dioxus_core::Event<$data>) + 'a) -> ::dioxus_core::Attribute<'a> {
+                #[inline]
+                pub fn $name<E: EventReturn<T>, T>(mut _f: impl FnMut(::dioxus_core::Event<$data>) -> E + 'static) -> ::dioxus_core::Attribute {
                     ::dioxus_core::Attribute::new(
                         stringify!($name),
-                        _cx.listener(_f),
+    ::dioxus_core::AttributeValue::listener(move |e: ::dioxus_core::Event<PlatformEventData>| {
+                            _f(e.map(|e|e.into())).spawn();
+                        }),
                         None,
                         false,
-                    )
+                    ).into()
                 }
             )*
         };

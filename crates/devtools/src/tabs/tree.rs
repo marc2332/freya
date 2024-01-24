@@ -16,7 +16,7 @@ pub fn NodesTree<'a>(
     let router = use_navigator(cx);
     let nodes = use_shared_state::<Vec<TreeNode>>(cx).unwrap();
 
-    render!(VirtualScrollView {
+    rsx!(VirtualScrollView {
         show_scrollbar: true,
         length: nodes.read().len(),
         item_size: 27.0,

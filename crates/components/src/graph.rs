@@ -154,7 +154,7 @@ pub fn Graph(cx: Scope<GraphProps>) -> Element {
 
     let GraphTheme { width, height } = use_applied_theme!(cx, &cx.props.theme, graph);
 
-    render!(
+    rsx!(
         rect {
             width: "{width}",
             height: "{height}",

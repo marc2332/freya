@@ -24,7 +24,7 @@ fn Body(cx: Scope) -> Element {
     let change_to_english = move |_| i18.set_language("en-US".parse().unwrap());
     let change_to_spanish = move |_| i18.set_language("es-ES".parse().unwrap());
 
-    render!(
+    rsx!(
         rect {
             main_align: "center",
             cross_align: "center",
@@ -65,5 +65,5 @@ fn app(cx: Scope) -> Element {
         },
     );
 
-    render!(Body {})
+    rsx!(Body {})
 }

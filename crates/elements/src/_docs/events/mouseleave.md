@@ -1,12 +1,13 @@
-The `mouseleave` event will fire when the user stops hovering an element.
+The `mouseleave` event fires when the user stops hovering an element.
 
-Event Data: [MouseData][crate::events::MouseData]
+Event Data: [`MouseData`](crate::events::MouseData)
 
-### Example:
+### Example
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+# use freya::prelude::*;
+fn app() -> Element {
+    rsx!(
         rect {
             width: "100",
             height: "100",
@@ -15,3 +16,4 @@ fn app(cx: Scope) -> Element {
         }
     )
 }
+```

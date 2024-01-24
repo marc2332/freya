@@ -1,17 +1,20 @@
-### font_style
-
 You can choose a style for a text using the `font_style` attribute.
 
-Accepted values: `upright` (default), `italic` and `oblique`.
+Accepted values:
 
-Example:
+- `upright` (default)
+- `italic`
+- `oblique`
+
+### Example
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+# use freya::prelude::*;
+fn app() -> Element {
+    rsx!(
         label {
             font_style: "italic",
-            "Hello, World!"
+            "Hello, italic World!"
         }
     )
 }

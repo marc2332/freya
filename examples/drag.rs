@@ -9,41 +9,41 @@ fn main() {
     launch(app);
 }
 
-fn app(cx: Scope) -> Element {
-    let hovering = use_state(cx, || false);
-    let positions = use_state(cx, || (0.0f64, 0.0f64));
-    let clicking = use_state(cx, || false);
+fn app() -> Element {
+    let mut hovering = use_signal(|| false);
+    let mut positions = use_signal(|| (0.0f64, 0.0f64));
+    let mut clicking = use_signal(|| false);
 
-    let onmouseleave = |_: MouseEvent| {
-        if !(*clicking.get()) {
+    let onmouseleave = move |_: MouseEvent| {
+        if !(*clicking.read()) {
             hovering.set(false);
         }
     };
 
-    let onmouseover = |e: MouseEvent| {
+    let onmouseover = move |e: MouseEvent| {
         hovering.set(true);
-        if *clicking.get() {
+        if *clicking.read() {
             let coordinates = e.get_screen_coordinates();
             positions.set((coordinates.x - 50.0, coordinates.y - 50.0));
         }
     };
 
-    let onmousedown = |_: MouseEvent| {
+    let onmousedown = move |_: MouseEvent| {
         clicking.set(true);
     };
 
-    let onclick = |_: MouseEvent| {
+    let onclick = move |_: MouseEvent| {
         clicking.set(false);
     };
 
-    render!(
+    rsx!(
         rect {
             overflow: "clip",
             background: "rgb(35, 35, 35)",
             width: "100%",
             height: "100%",
-            offset_x: "{positions.0}",
-            offset_y: "{positions.1}",
+            offset_x: "{positions.read().0}",
+            offset_y: "{positions.read().1}",
             onmousedown: onmousedown,
             onclick: onclick,
             label {

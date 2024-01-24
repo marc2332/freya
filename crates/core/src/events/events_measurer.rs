@@ -27,15 +27,15 @@ pub fn process_events(
     let potential_events = measure_potential_event_listeners(layers, events, viewports, dom);
 
     // 3. Get what events can be actually emitted based on what elements are listening
-    let dom_events = measure_dom_events(&mut potential_events, dom, scale_factor);
+    let dom_events = measure_dom_events(potential_events, dom, scale_factor);
 
     // 4. Emit the events and get potential derived events caused by the emitted ones, e.g mouseover -> mouseenter
-    let  (mut potential_colateral_events, mut to_emit_dom_events) =
+    let (potential_colateral_events, mut to_emit_dom_events) =
         elements_state.process_events(&dom_events, events);
 
     // 5. Get what derived events can actually be emitted
     let to_emit_dom_colateral_events =
-        measure_dom_events(&mut potential_colateral_events, dom, scale_factor);
+        measure_dom_events(potential_colateral_events, dom, scale_factor);
 
     // 6. Join both the dom and colateral dom events and sort them
     to_emit_dom_events.extend(to_emit_dom_colateral_events);
@@ -175,7 +175,7 @@ fn measure_dom_events(
 
         for derivated_event_name in derivated_events {
             let listeners = rdom.get_listening_sorted(derivated_event_name);
-            'event_nodes: for (node_id, request) in event_nodes.iter() {
+            'event_nodes: for (node_id, request) in event_nodes.iter().rev() {
                 for listener in &listeners {
                     if listener.id() == *node_id {
                         let mut request = request.clone();

@@ -18,8 +18,8 @@ fn main() {
     );
 }
 
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         rect {
             background: "white",
             padding: "10",

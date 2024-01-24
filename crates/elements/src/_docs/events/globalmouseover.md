@@ -1,12 +1,13 @@
-The `globalmouseover` event will fire when the user moves the mouse anywhere in the app.
+The `globalmouseover` event fires when the user moves the mouse anywhere in the app.
 
-Event Data: [MouseData][crate::events::MouseData]
+Event Data: [`MouseData`](crate::events::MouseData)
 
-### Example:
+### Example
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+# use freya::prelude::*;
+fn app() -> Element {
+    rsx!(
         rect {
             onglobalmouseover: |_| println!("Moving the mouse somewhere!")
         }
@@ -18,3 +19,4 @@ fn app(cx: Scope) -> Element {
         }
     )
 }
+```

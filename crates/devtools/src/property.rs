@@ -6,7 +6,7 @@ use freya_node_state::{Border, Fill, Shadow};
 #[allow(non_snake_case)]
 #[component]
 pub fn Property<'a>(cx: Scope<'a>, name: &'a str, value: String) -> Element<'a> {
-    render!(
+    rsx!(
         rect {
             overflow: "clip",
             height: "30",
@@ -38,7 +38,7 @@ pub fn Property<'a>(cx: Scope<'a>, name: &'a str, value: String) -> Element<'a> 
 #[allow(non_snake_case)]
 #[component]
 pub fn LinearGradientProperty<'a>(cx: Scope<'a>, name: &'a str, fill: Fill) -> Element<'a> {
-    render!(
+    rsx!(
         rect {
             padding: "5 10",
             paragraph {
@@ -66,7 +66,7 @@ pub fn LinearGradientProperty<'a>(cx: Scope<'a>, name: &'a str, fill: Fill) -> E
 #[allow(non_snake_case)]
 #[component]
 pub fn ColorProperty<'a>(cx: Scope<'a>, name: &'a str, fill: Fill) -> Element<'a> {
-    render!(
+    rsx!(
         rect {
             overflow: "clip",
             height: "30",
@@ -114,7 +114,7 @@ pub fn ColorProperty<'a>(cx: Scope<'a>, name: &'a str, fill: Fill) -> Element<'a
 #[allow(non_snake_case)]
 #[component]
 pub fn ShadowProperty<'a>(cx: Scope<'a>, name: &'a str, shadow: Shadow) -> Element<'a> {
-    render!(
+    rsx!(
         rect {
             overflow: "clip",
             height: "30",
@@ -170,7 +170,7 @@ pub fn ShadowProperty<'a>(cx: Scope<'a>, name: &'a str, shadow: Shadow) -> Eleme
 #[allow(non_snake_case)]
 #[component]
 pub fn BorderProperty<'a>(cx: Scope<'a>, name: &'a str, border: Border) -> Element<'a> {
-    render!(
+    rsx!(
         rect {
             overflow: "clip",
             height: "30",
@@ -230,7 +230,7 @@ pub fn TextShadowProperty<'a>(
     text_shadow: TextShadow,
 ) -> Element<'a> {
     let color = text_shadow.color.to_rgb();
-    render!(
+    rsx!(
         rect {
             overflow: "clip",
             height: "30",

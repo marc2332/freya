@@ -1,18 +1,17 @@
-### decoration
-
 Specify the decoration in a text.
 
-Accpted values:
+Accepted values:
 
 - `underline`
 - `line-through`
 - `overline`
 
-Example:
+### Example
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+# use freya::prelude::*;
+fn app() -> Element {
+    rsx!(
         label {
             decoration: "line-through",
             "Hello, World!"

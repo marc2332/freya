@@ -32,7 +32,7 @@
 //!         animation.start(Animation::new_linear(0.0..=100.0, 50));
 //!     });
 //!
-//!     render!(rect {
+//!     rsx!(rect {
 //!         width: "{progress}",
 //!     })
 //! }
@@ -80,7 +80,7 @@
 //!         }
 //!     };
 //!
-//!     render!(
+//!     rsx!(
 //!         rect {
 //!             overflow: "clip",
 //!             background: "black",
