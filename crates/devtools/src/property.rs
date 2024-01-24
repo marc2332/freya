@@ -5,7 +5,7 @@ use freya_node_state::{Border, Fill, Shadow};
 
 #[allow(non_snake_case)]
 #[component]
-pub fn Property<'a>(cx: Scope<'a>, name: &'a str, value: String) -> Element<'a> {
+pub fn Property(name: String, value: String) -> Element {
     rsx!(
         rect {
             overflow: "clip",
@@ -37,7 +37,7 @@ pub fn Property<'a>(cx: Scope<'a>, name: &'a str, value: String) -> Element<'a> 
 
 #[allow(non_snake_case)]
 #[component]
-pub fn LinearGradientProperty<'a>(cx: Scope<'a>, name: &'a str, fill: Fill) -> Element<'a> {
+pub fn LinearGradientProperty(name: String, fill: Fill) -> Element {
     rsx!(
         rect {
             padding: "5 10",
@@ -65,7 +65,7 @@ pub fn LinearGradientProperty<'a>(cx: Scope<'a>, name: &'a str, fill: Fill) -> E
 
 #[allow(non_snake_case)]
 #[component]
-pub fn ColorProperty<'a>(cx: Scope<'a>, name: &'a str, fill: Fill) -> Element<'a> {
+pub fn ColorProperty(name: String, fill: Fill) -> Element {
     rsx!(
         rect {
             overflow: "clip",
@@ -113,7 +113,7 @@ pub fn ColorProperty<'a>(cx: Scope<'a>, name: &'a str, fill: Fill) -> Element<'a
 
 #[allow(non_snake_case)]
 #[component]
-pub fn ShadowProperty<'a>(cx: Scope<'a>, name: &'a str, shadow: Shadow) -> Element<'a> {
+pub fn ShadowProperty(name: String, shadow: Shadow) -> Element {
     rsx!(
         rect {
             overflow: "clip",
@@ -169,7 +169,7 @@ pub fn ShadowProperty<'a>(cx: Scope<'a>, name: &'a str, shadow: Shadow) -> Eleme
 
 #[allow(non_snake_case)]
 #[component]
-pub fn BorderProperty<'a>(cx: Scope<'a>, name: &'a str, border: Border) -> Element<'a> {
+pub fn BorderProperty(name: String, border: Border) -> Element {
     rsx!(
         rect {
             overflow: "clip",
@@ -224,11 +224,7 @@ pub fn BorderProperty<'a>(cx: Scope<'a>, name: &'a str, border: Border) -> Eleme
 
 #[allow(non_snake_case)]
 #[component]
-pub fn TextShadowProperty<'a>(
-    cx: Scope<'a>,
-    name: &'a str,
-    text_shadow: TextShadow,
-) -> Element<'a> {
+pub fn TextShadowProperty(name: String, text_shadow: TextShadow) -> Element {
     let color = text_shadow.color.to_rgb();
     rsx!(
         rect {
