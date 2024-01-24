@@ -22,6 +22,7 @@ mod switch;
 mod table;
 mod theme;
 // mod tooltip;
+mod popup;
 
 pub use accordion::*;
 pub use body::*;
@@ -44,3 +45,4 @@ pub use switch::*;
 pub use table::*;
 pub use theme::*;
 // pub use tooltip::*;
+pub use popup::*;
