@@ -1,9 +1,11 @@
 use crate::layout::{Layers, Viewports};
-use dioxus_native_core::prelude::NodeImmutableDioxusExt;
 use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::NodeId;
-use freya_dom::prelude::FreyaDOM;
+use dioxus_native_core::{prelude::NodeImmutableDioxusExt, tree::TreeRef};
+use freya_dom::{dom::DioxusDOM, prelude::FreyaDOM};
 
+use freya_engine::prelude::*;
+use freya_node_state::{Fill, Style};
 use rustc_hash::FxHashMap;
 
 pub use crate::events::{DomEvent, ElementsState, FreyaEvent};
@@ -29,7 +31,7 @@ pub fn process_events(
     // 3. Get what events can be actually emitted based on what elements are listening
     let dom_events = measure_dom_events(potential_events, dom, scale_factor);
 
-    // 4. Emit the events and get potential derived events caused by the emitted ones, e.g mouseover -> mouseenter
+    // 4. Filter the dom events and get potential derived events, e.g mouseover -> mouseenter
     let (potential_colateral_events, mut to_emit_dom_events) =
         elements_state.process_events(&dom_events, events);
 
@@ -159,6 +161,25 @@ fn get_derivated_events(event_name: &str) -> Vec<&str> {
     }
 }
 
+fn is_node_parent_of(rdom: &DioxusDOM, node: NodeId, parent_node: NodeId) -> bool {
+    let mut stack = vec![parent_node];
+    while let Some(id) = stack.pop() {
+        let tree = rdom.tree_ref();
+        let mut children = tree.children_ids(id);
+        drop(tree);
+        if children.contains(&node) {
+            return true;
+        }
+
+        if rdom.contains(id) {
+            children.reverse();
+            stack.extend(children.iter());
+        }
+    }
+
+    false
+}
+
 /// Measure what DOM events could be emited
 fn measure_dom_events(
     potential_events: NodesEvents,
@@ -168,33 +189,60 @@ fn measure_dom_events(
     let mut new_events = Vec::new();
     let rdom = fdom.rdom();
 
+    // Iterate over all the events
     for (event_name, event_nodes) in potential_events {
         let derivated_events = get_derivated_events(event_name.as_str());
 
-        let mut found_events: Vec<(NodeId, FreyaEvent)> = Vec::new();
+        let mut found_nodes: Vec<(&NodeId, FreyaEvent)> = Vec::new();
 
-        for derivated_event_name in derivated_events {
+        // Iterate over the derivated event (including the source)
+        'event: for derivated_event_name in derivated_events.iter() {
+            let mut child_node: Option<NodeId> = None;
+
             let listeners = rdom.get_listening_sorted(derivated_event_name);
-            'event_nodes: for (node_id, request) in event_nodes.iter().rev() {
+
+            // Iterate over the event nodes
+            for (node_id, request) in event_nodes.iter().rev() {
+                let Some(node) = rdom.get(*node_id) else {
+                    continue;
+                };
+
+                // Iterate over the event listeners
                 for listener in &listeners {
                     if listener.id() == *node_id {
-                        let mut request = request.clone();
-                        request.set_name(derivated_event_name.to_string());
-                        found_events.push((*node_id, request));
+                        let valid_node = if let Some(child_node) = child_node {
+                            is_node_parent_of(&rdom, child_node, *node_id)
+                        } else {
+                            true
+                        };
 
-                        break 'event_nodes;
+                        if valid_node {
+                            let mut request = request.clone();
+                            request.set_name(derivated_event_name.to_string());
+                            found_nodes.push((node_id, request));
+                            continue 'event;
+                        }
                     }
+                }
+
+                let Style { background, .. } = &*node.get::<Style>().unwrap();
+
+                if background != &Fill::Color(Color::TRANSPARENT) {
+                    // If the background isn't transparent,
+                    // we must make sure that next nodes are parent of it
+                    child_node = Some(*node_id);
                 }
             }
         }
 
-        for (node_id, request_event) in found_events {
-            let areas = fdom.layout().get(node_id).cloned();
+        for (node_id, request_event) in found_nodes {
+            let layout = fdom.layout();
+            let areas = layout.get(*node_id);
             if let Some(areas) = areas {
-                let node_ref = fdom.rdom().get(node_id).unwrap();
+                let node_ref = fdom.rdom().get(*node_id).unwrap();
                 let element_id = node_ref.mounted_id().unwrap();
                 let event = DomEvent::new(
-                    node_id,
+                    *node_id,
                     element_id,
                     &request_event,
                     Some(areas.visible_area()),

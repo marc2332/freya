@@ -4,17 +4,17 @@ use dioxus_native_core::NodeId;
 use dioxus_router::prelude::use_navigator;
 use freya_components::*;
 use freya_hooks::{theme_with, ScrollViewThemeWith};
+use std::rc::Rc;
 
 #[allow(non_snake_case)]
 #[component]
-pub fn NodesTree<'a>(
-    cx: Scope<'a>,
-    height: &'a str,
+pub fn NodesTree(
+    height: String,
     selected_node_id: Option<NodeId>,
-    onselected: EventHandler<'a, &'a TreeNode>,
-) -> Element<'a> {
-    let router = use_navigator(cx);
-    let nodes = use_shared_state::<Vec<TreeNode>>(cx).unwrap();
+    onselected: EventHandler<TreeNode>,
+) -> Element {
+    let router = use_navigator();
+    let nodes = use_context::<Signal<Vec<TreeNode>>>();
 
     rsx!(VirtualScrollView {
         show_scrollbar: true,
@@ -25,16 +25,17 @@ pub fn NodesTree<'a>(
             height: height.to_string().into(),
             padding: "15".into(),
         }),
-        builder: Box::new(move |(_k, i, _, values)| {
-            let (nodes, selected_node_id, onselected, router) = values.unwrap();
+        builder: Rc::new(move |(_k, i, values)| {
+            let (nodes, selected_node_id, onselected, router) = values.as_ref().unwrap();
             let nodes = nodes.read();
             let node = nodes.get(i).cloned().unwrap();
+            to_owned![onselected, router];
             rsx! {
                 NodeElement {
                     key: "{node.id:?}",
                     is_selected: Some(node.id) == *selected_node_id,
-                    onselected: |node: &TreeNode| {
-                        onselected.call(node);
+                    onselected: move |node: TreeNode| {
+                        onselected.call(node.clone());
                         router.replace(Route::TreeStyleTab { node_id: node.id.serialize() });
                     },
                     node: node
