@@ -6,7 +6,7 @@ use crate::{
     geometry::{Area, Size2D},
     measure_mode::MeasureMode,
     node::Node,
-    prelude::{AlignmentDirection, AreaModel, Torin},
+    prelude::{AlignmentDirection, AreaModel, LayoutMetadata, Torin},
     size::Size,
 };
 
@@ -26,9 +26,15 @@ pub fn measure_node<Key: NodeKey>(
     must_cache_inner_nodes: bool,
     // Adapter for the provided DOM
     dom_adapter: &mut impl DOMAdapter<Key>,
+
+    layout_metadata: &LayoutMetadata,
+
+    invalidated_tree: bool,
 ) -> (bool, NodeAreas) {
-    let must_run = layout.dirty.contains(&node_id) || layout.results.get(&node_id).is_none();
-    if must_run {
+    let must_revalidate = invalidated_tree
+        || layout.dirty.contains(&node_id)
+        || !layout.results.contains_key(&node_id);
+    if must_revalidate {
         // 1. Create the initial Node area size
         let mut area_size = Size2D::new(node.padding.horizontal(), node.padding.vertical());
 
@@ -41,6 +47,7 @@ pub fn measure_node<Key: NodeKey>(
             node.margin.horizontal(),
             &node.minimum_width,
             &node.maximum_width,
+            layout_metadata.root_area.width(),
         );
         area_size.height = node.height.min_max(
             area_size.height,
@@ -50,6 +57,7 @@ pub fn measure_node<Key: NodeKey>(
             node.margin.vertical(),
             &node.minimum_height,
             &node.maximum_height,
+            layout_metadata.root_area.height(),
         );
 
         // 3. Compute the origin of the area
@@ -77,6 +85,7 @@ pub fn measure_node<Key: NodeKey>(
                         node.margin.horizontal(),
                         &node.minimum_width,
                         &node.maximum_width,
+                        layout_metadata.root_area.width(),
                     );
                 }
                 if Size::Inner == node.height {
@@ -88,6 +97,7 @@ pub fn measure_node<Key: NodeKey>(
                         node.margin.vertical(),
                         &node.minimum_height,
                         &node.maximum_height,
+                        layout_metadata.root_area.height(),
                     );
                 }
             }
@@ -112,6 +122,7 @@ pub fn measure_node<Key: NodeKey>(
                     node.margin.horizontal(),
                     &node.minimum_width,
                     &node.maximum_width,
+                    layout_metadata.root_area.width(),
                 );
             }
             if Size::Inner == node.height {
@@ -123,6 +134,7 @@ pub fn measure_node<Key: NodeKey>(
                     node.margin.vertical(),
                     &node.minimum_height,
                     &node.maximum_height,
+                    layout_metadata.root_area.height(),
                 );
             }
 
@@ -156,6 +168,8 @@ pub fn measure_node<Key: NodeKey>(
                 must_cache_inner_nodes,
                 &mut measurement_mode,
                 dom_adapter,
+                layout_metadata,
+                true,
             );
         }
 
@@ -190,6 +204,8 @@ pub fn measure_node<Key: NodeKey>(
             must_cache_inner_nodes,
             &mut measurement_mode,
             dom_adapter,
+            layout_metadata,
+            false,
         );
 
         (false, areas)
@@ -213,6 +229,10 @@ pub fn measure_inner_nodes<Key: NodeKey>(
     mode: &mut MeasureMode,
     // Adapter for the provided DOM
     dom_adapter: &mut impl DOMAdapter<Key>,
+
+    layout_metadata: &LayoutMetadata,
+
+    invalidated_tree: bool,
 ) {
     let mut measure_children = |mode: &mut MeasureMode,
                                 available_area: &mut Area,
@@ -238,6 +258,8 @@ pub fn measure_inner_nodes<Key: NodeKey>(
                     measurer,
                     false,
                     dom_adapter,
+                    layout_metadata,
+                    invalidated_tree,
                 );
 
                 // 2. Align the Cross axis
@@ -260,6 +282,8 @@ pub fn measure_inner_nodes<Key: NodeKey>(
                 measurer,
                 must_cache_inner_nodes,
                 dom_adapter,
+                layout_metadata,
+                invalidated_tree,
             );
 
             // Stack the child into its parent

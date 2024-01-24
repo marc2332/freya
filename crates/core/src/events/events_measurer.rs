@@ -4,8 +4,6 @@ use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::NodeId;
 use freya_dom::prelude::FreyaDOM;
 
-use freya_engine::prelude::*;
-use freya_node_state::{Fill, Style};
 use rustc_hash::FxHashMap;
 
 pub use crate::events::{DomEvent, ElementsState, FreyaEvent};
@@ -26,28 +24,32 @@ pub fn process_events(
     let global_events = measure_global_events(events);
 
     // 2. Get potential events that could be emitted based on the elements layout and viewports
-    let mut potential_events = measure_potential_event_listeners(layers, events, viewports, dom);
+    let potential_events = measure_potential_event_listeners(layers, events, viewports, dom);
 
     // 3. Get what events can be actually emitted based on what elements are listening
-    let emitted_events = measure_dom_events(&mut potential_events, dom, scale_factor);
+    let dom_events = measure_dom_events(potential_events, dom, scale_factor);
 
     // 4. Emit the events and get potential derived events caused by the emitted ones, e.g mouseover -> mouseenter
-    let mut potential_colateral_events =
-        elements_state.process_events(emitted_events, events, event_emitter);
+    let (potential_colateral_events, mut to_emit_dom_events) =
+        elements_state.process_events(&dom_events, events);
 
     // 5. Get what derived events can actually be emitted
-    let emitted_colateral_events =
-        measure_dom_events(&mut potential_colateral_events, dom, scale_factor);
+    let to_emit_dom_colateral_events =
+        measure_dom_events(potential_colateral_events, dom, scale_factor);
 
-    // 6. Emit the colateral events
-    for event in emitted_colateral_events {
+    // 6. Join both the dom and colateral dom events and sort them
+    to_emit_dom_events.extend(to_emit_dom_colateral_events);
+    to_emit_dom_events.sort_unstable();
+
+    // 7. Emit the DOM events
+    for event in to_emit_dom_events {
         event_emitter.send(event).unwrap();
     }
 
-    // 7. Emit the global events
+    // 8. Emit the global events
     emit_global_events_listeners(global_events, dom, event_emitter, scale_factor);
 
-    // 8. Clear the events queue
+    // 9. Clear the events queue
     events.clear();
 }
 
@@ -141,13 +143,13 @@ pub fn measure_potential_event_listeners(
 /// A `mousedown` or a `touchdown` might also trigger a `pointerdown`
 fn get_derivated_events(event_name: &str) -> Vec<&str> {
     match event_name {
-        "mouseover" => {
+        "mouseover" | "touchmove" => {
             vec![event_name, "mouseenter", "pointerenter", "pointerover"]
         }
-        "mousedown" | "touchdown" => {
+        "mousedown" | "touchstart" => {
             vec![event_name, "pointerdown"]
         }
-        "click" | "ontouchend" => {
+        "click" | "touchend" => {
             vec![event_name, "pointerup"]
         }
         "mouseleave" => {
@@ -157,81 +159,42 @@ fn get_derivated_events(event_name: &str) -> Vec<&str> {
     }
 }
 
-const STACKED_EVENTS: [&str; 13] = [
-    "mouseover",
-    "mouseenter",
-    "mouseleave",
-    "click",
-    "keydown",
-    "keyup",
-    "touchcancel",
-    "touchend",
-    "touchmove",
-    "touchstart",
-    "pointerover",
-    "pointerenter",
-    "pointerleave",
-];
-
-const FIRST_CAPTURED_EVENTS: [&str; 1] = ["wheel"];
-
-const LAST_CAPTURED_EVENTS: [&str; 3] = ["click", "touchstart", "touchend"];
-
 /// Measure what DOM events could be emited
 fn measure_dom_events(
-    potential_events: &mut NodesEvents,
+    potential_events: NodesEvents,
     fdom: &FreyaDOM,
     scale_factor: f64,
 ) -> Vec<DomEvent> {
     let mut new_events = Vec::new();
     let rdom = fdom.rdom();
 
-    for (event_name, event_nodes) in potential_events.iter_mut() {
+    for (event_name, event_nodes) in potential_events {
         let derivated_events = get_derivated_events(event_name.as_str());
 
-        let mut found_nodes: Vec<(&NodeId, FreyaEvent)> = Vec::new();
+        let mut found_events: Vec<(NodeId, FreyaEvent)> = Vec::new();
+
         for derivated_event_name in derivated_events {
             let listeners = rdom.get_listening_sorted(derivated_event_name);
-            'event_nodes: for (node_id, request) in event_nodes.iter() {
+            'event_nodes: for (node_id, request) in event_nodes.iter().rev() {
                 for listener in &listeners {
                     if listener.id() == *node_id {
-                        let Style { background, .. } = &*listener.get::<Style>().unwrap();
-
                         let mut request = request.clone();
                         request.set_name(derivated_event_name.to_string());
+                        found_events.push((*node_id, request));
 
-                        // Stop searching on first match
-                        if background != &Fill::Color(Color::TRANSPARENT)
-                            && FIRST_CAPTURED_EVENTS.contains(&derivated_event_name)
-                        {
-                            break 'event_nodes;
-                        }
-
-                        // Only keep the last matched event
-                        if background != &Fill::Color(Color::TRANSPARENT)
-                            && LAST_CAPTURED_EVENTS.contains(&derivated_event_name)
-                        {
-                            found_nodes.clear();
-                        }
-
-                        // Stack the matched events
-                        if STACKED_EVENTS.contains(&derivated_event_name) {
-                            found_nodes.push((node_id, request))
-                        } else {
-                            found_nodes = vec![(node_id, request)]
-                        }
+                        break 'event_nodes;
                     }
                 }
             }
         }
 
-        for (node_id, request_event) in found_nodes {
-            let areas = fdom.layout().get(*node_id).cloned();
+        for (node_id, request_event) in found_events {
+            let areas = fdom.layout().get(node_id).cloned();
             if let Some(areas) = areas {
-                let node_ref = fdom.rdom().get(*node_id).unwrap();
+                let node_ref = fdom.rdom().get(node_id).unwrap();
                 let element_id = node_ref.mounted_id().unwrap();
                 let event = DomEvent::new(
-                    *node_id,
+                    node_id,
                     element_id,
                     &request_event,
                     Some(areas.visible_area()),

@@ -20,10 +20,10 @@
 <td style="border:hidden;">
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
+fn app() -> Element {
     let mut count = use_state(cx, || 0);
 
-    render!(
+    rsx!(
         rect {
             height: "20%",
             width: "100%",
@@ -55,6 +55,12 @@ fn app(cx: Scope) -> Element {
 </td>
 </table>
 
+### Sponsors 🤗
+
+Thanks to my sponsors for supporting this project! 😄
+
+<!-- sponsors --><a href="https://github.com/piny4man"><img src="https://github.com/piny4man.png" width="60px" alt="Alberto Mendez" /></a><a href="https://github.com/stephenandary"><img src="https://github.com/stephenandary.png" width="60px" alt="Stephen Andary" /></a><!-- sponsors -->
+
 ### Want to try it? 🤔
 
 ⚠️ First, see [Environment setup](https://book.freyaui.dev/setup.html).
@@ -78,7 +84,7 @@ dioxus = { version = "0.4", features = ["macro", "hooks"], default-features = fa
 ### Features ✨
 - ⛏️ Built-in **components** (button, scroll views, switch and more) 
 - 🚇 Built-in **hooks** library (animations, text editing and more)
-- 🔍 Built-in **devtools** panel (experimental ⚠️) (experimental ⚠️)
+- 🔍 Built-in **devtools** panel (experimental ⚠️)
 - 🧰 Built-in **headless testing** runner for components
 - 🎨 **Theming** support (not extensible yet ⚠️)
 - 🛩️ Cross-platform (Windows, Linux, MacOS)

@@ -6,7 +6,7 @@ use std::sync::Mutex;
 
 use accesskit::NodeId as AccessibilityId;
 use bytes::Bytes;
-use dioxus_core::{AttributeValue, Scope};
+use dioxus_core::AttributeValue;
 use dioxus_native_core::node::FromAnyValue;
 use freya_common::{CursorLayoutResponse, NodeReferenceLayout};
 use freya_engine::prelude::*;
@@ -51,13 +51,12 @@ pub type CanvasRunner = dyn Fn(&Canvas, &FontCollection, Area) + Sync + Send + '
 /// Canvas Reference
 #[derive(Clone)]
 pub struct CanvasReference {
-    pub id: Uuid,
     pub runner: Arc<Box<CanvasRunner>>,
 }
 
 impl PartialEq for CanvasReference {
     fn eq(&self, other: &Self) -> bool {
-        self.id == other.id
+        Arc::ptr_eq(&self.runner, &other.runner)
     }
 }
 
@@ -74,7 +73,7 @@ pub struct CursorReference {
     #[allow(clippy::type_complexity)]
     pub cursor_selections: Arc<Mutex<Option<(CursorPoint, CursorPoint)>>>,
     pub cursor_position: Arc<Mutex<Option<CursorPoint>>>,
-    pub agent: UnboundedSender<CursorLayoutResponse>,
+    pub cursor_sender: UnboundedSender<CursorLayoutResponse>,
     pub cursor_id: Arc<Mutex<Option<usize>>>,
 }
 
@@ -137,6 +136,6 @@ impl FromAnyValue for CustomAttributeValues {
 }
 
 /// Transform some bytes (e.g: raw image, raw svg) into attribute data
-pub fn bytes_to_data<'a, T>(cx: Scope<'a, T>, bytes: &[u8]) -> AttributeValue<'a> {
-    cx.any_value(CustomAttributeValues::Bytes(bytes.to_vec()))
+pub fn bytes_to_data(bytes: &[u8]) -> AttributeValue {
+    AttributeValue::any_value(CustomAttributeValues::Bytes(bytes.to_vec()))
 }

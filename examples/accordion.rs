@@ -9,15 +9,15 @@ fn main() {
     launch(app);
 }
 
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         ScrollView {
             show_scrollbar: true,
-            padding: "5",
-            height: "100%",
-            width: "100%",
+            theme: theme_with!(ScrollViewTheme {
+               padding: "5".into(),
+            }),
             Accordion {
-                summary: render!(AccordionSummary {
+                summary: rsx!(AccordionSummary {
                     label {
                         "Accordion 1"
                     }
@@ -48,7 +48,7 @@ fn app(cx: Scope) -> Element {
                 }
             }
             Accordion {
-                summary: render!(AccordionSummary {
+                summary: rsx!(AccordionSummary {
                     label {
                         "Accordion 2"
                     }
@@ -60,7 +60,7 @@ fn app(cx: Scope) -> Element {
                 }
             }
             Accordion {
-                summary: render!(AccordionSummary {
+                summary: rsx!(AccordionSummary {
                     label {
                         "Accordion 3"
                     }

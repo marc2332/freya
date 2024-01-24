@@ -3,14 +3,13 @@
     windows_subsystem = "windows"
 )]
 
-use freya::prelude::events::PointerEvent;
 use freya::prelude::*;
 
 fn main() {
     launch_with_props(app, "Pointer events", (200.0, 200.0));
 }
 
-fn app(cx: Scope) -> Element {
+fn app() -> Element {
     let onpointerdown = move |ev: PointerEvent| {
         println!("Down -> {:?}", ev.data.get_pointer_type());
     };
@@ -31,7 +30,7 @@ fn app(cx: Scope) -> Element {
         println!("Leave -> {:?}", ev.data.get_pointer_type());
     };
 
-    render!(
+    rsx!(
         rect {
             overflow: "clip",
             height: "100%",

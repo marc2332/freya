@@ -11,8 +11,8 @@ fn main() {
 
 #[allow(non_snake_case)]
 #[inline_props]
-fn PopupBackground<'a>(cx: Scope<'a>, children: Element<'a>) -> Element {
-    render!(rect {
+fn PopupBackground(children: Element) -> Element {
+    rsx!(rect {
         height: "100%",
         width: "100%",
         background: "rgb(0, 0, 0, 150)",
@@ -20,14 +20,14 @@ fn PopupBackground<'a>(cx: Scope<'a>, children: Element<'a>) -> Element {
         layer: "-1",
         main_align: "center",
         cross_align: "center",
-        children
+        {children}
     })
 }
 
 #[allow(non_snake_case)]
-#[inline_props]
-fn Popup<'a>(cx: Scope<'a>, children: Element<'a>) -> Element {
-    render!(
+#[component]
+fn Popup(children: Element) -> Element {
+    rsx!(
         PopupBackground {
             rect {
                 padding: "10",
@@ -36,34 +36,32 @@ fn Popup<'a>(cx: Scope<'a>, children: Element<'a>) -> Element {
                 shadow: "0 4 5 0 rgb(0, 0, 0, 30)",
                 width: "300",
                 height: "200",
-                children
+                {children}
             }
         }
     )
 }
 
-fn app(cx: Scope) -> Element {
-    let show_popup = use_state(cx, || false);
+fn app() -> Element {
+    let mut show_popup = use_signal(|| false);
 
-    render!(
+    rsx!(
         rect {
-            if *show_popup.get() {
-                render!(
-                    Popup {
+            if *show_popup.read() {
+                Popup {
+                    label {
+                        "whatever"
+                    }
+                    Button {
+                        onclick: move |_| show_popup.set(false),
                         label {
-                            "whatever"
-                        }
-                        Button {
-                            onclick: |_| show_popup.set(false),
-                            label {
-                                "Close"
-                            }
+                            "Close"
                         }
                     }
-                )
+                }
             }
             Button {
-                onclick: |_| show_popup.set(true),
+                onclick: move |_| show_popup.set(true),
                 label {
                     "Open"
                 }

@@ -9,12 +9,12 @@ fn main() {
     launch(app);
 }
 
-fn app(cx: Scope) -> Element {
-    use_init_theme(cx, DARK_THEME);
-    let percentage = use_state(cx, || 20.0);
+fn app() -> Element {
+    use_init_theme(DARK_THEME);
+    let mut percentage = use_signal(|| 20.0);
     let font_size = percentage + 20.0;
 
-    render!(
+    rsx!(
         rect {
             width: "100%",
             height: "100%",
@@ -32,16 +32,17 @@ fn app(cx: Scope) -> Element {
                     }
                 }
                 Slider {
-                    width: 100.0,
-                    value: *percentage.get(),
-                    onmoved: |p| {
+                    value: *percentage.read(),
+                    onmoved: move |p| {
                         percentage.set(p);
                     }
                 }
             }
             ScrollView {
                 show_scrollbar: true,
-                height: "calc(100% - 60)",
+                theme: theme_with!(ScrollViewTheme {
+                    height: "calc(100% - 60)".into(),
+                }),
                 rect {
                     background: "red",
                     label {

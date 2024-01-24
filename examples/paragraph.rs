@@ -9,10 +9,10 @@ fn main() {
     launch(app);
 }
 
-fn app(cx: Scope) -> Element {
+fn app() -> Element {
     let loremipsum = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
 
-    render!(
+    rsx!(
         rect {
             color: "black",
             width: "100%",
@@ -23,8 +23,9 @@ fn app(cx: Scope) -> Element {
                 height: "100%",
                 ScrollView {
                     show_scrollbar: true,
-                    width: "100%",
-                    height: "75%",
+                    theme: theme_with!(ScrollViewTheme {
+                        height: "75%".into(),
+                    }),
                     paragraph {
                         width: "100%",
                         text_align: "right",
@@ -40,7 +41,9 @@ fn app(cx: Scope) -> Element {
                 }
                 ScrollView {
                     show_scrollbar: true,
-                    height: "25%",
+                    theme: theme_with!(ScrollViewTheme {
+                        height: "25%".into(),
+                    }),
                     label {
                         font_size: "100",
                         font_family: "Inter",

@@ -106,7 +106,7 @@ impl Board {
                         (
                             (row_n - 1, col_n + 1),
                             (row_n, col_n),
-                            (row_n - 1, col_n + 1),
+                            (row_n + 1, col_n - 1),
                         ),
                     ],
                     2 if col_n >= 2 => vec![(
@@ -147,16 +147,16 @@ impl Board {
     }
 }
 
-fn app(cx: Scope) -> Element {
-    let board = use_ref(cx, || Board::new(3));
-    let current_player = use_ref(cx, || Player::X);
+fn app() -> Element {
+    let board = use_signal(|| Board::new(3));
+    let current_player = use_signal(|| Player::X);
 
     let message = match &board.read().winner {
         Some(winner) => format!("Winner is player {winner:?}!!"),
         None => format!("Turn for player {:?}", current_player.read()),
     };
 
-    render!(
+    rsx!(
         rect {
             width: "100%",
             height: "100%",
@@ -194,11 +194,9 @@ fn app(cx: Scope) -> Element {
                                     current_player.write().change_turn();
                                 },
                                 if let Some(col) = col {
-                                    rsx!(
-                                        label {
-                                            "{col:?}"
-                                        }
-                                    )
+                                    label {
+                                        "{col:?}"
+                                    }
                                 }
                             }
                         }

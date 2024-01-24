@@ -23,6 +23,13 @@ impl Parse for Size {
                     .parse::<f32>()
                     .map_err(|_| ParseSizeError)?,
             )))
+        } else if value.contains('v') {
+            Ok(Size::RootPercentage(Length::new(
+                value
+                    .replace('v', "")
+                    .parse::<f32>()
+                    .map_err(|_| ParseSizeError)?,
+            )))
         } else {
             Ok(Size::Pixels(Length::new(
                 value.parse::<f32>().map_err(|_| ParseSizeError)?,

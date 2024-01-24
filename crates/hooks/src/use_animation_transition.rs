@@ -250,7 +250,7 @@ impl<'a> TransitionsManager<'a> {
 /// Run a group of animated transitions.
 ///
 /// ## Usage
-/// ```rust
+/// ```rust,no_run
 /// # use freya::prelude::*;
 /// fn app(cx: Scope) -> Element {
 ///     let animation = use_animation_transition(cx, TransitionAnimation::new_linear(50), (), |_| vec![
@@ -263,7 +263,7 @@ impl<'a> TransitionsManager<'a> {
 ///         animation.start();
 ///     });
 ///
-///     render!(
+///     rsx!(
 ///         rect {
 ///             width: "{progress}",
 ///         }
@@ -285,7 +285,7 @@ where
     let transitions_storage = use_state(cx, || animations_map(transitions));
     let platform = use_platform(cx);
 
-    use_memo(cx, dependencies, {
+    let _ = use_memo(cx, dependencies, {
         let storage_setter = transitions_storage.setter();
         move |v| {
             storage_setter(animations_map(&init(v)));
@@ -328,11 +328,11 @@ mod test {
 
             let progress = animation.get(0).unwrap().as_size();
 
-            use_memo(cx, (), move |_| {
+            let _ = use_memo(cx, (), move |_| {
                 animation.start();
             });
 
-            render!(rect {
+            rsx!(rect {
                 width: "{progress}",
             })
         }

@@ -7,10 +7,12 @@ use freya::prelude::*;
 
 const CUSTOM_THEME: Theme = Theme {
     button: ButtonTheme {
-        background: "rgb(230, 0, 0)",
-        hover_background: "rgb(150, 0, 0)",
-        border_fill: "rgb(120, 0, 0)",
-        font_theme: FontTheme { color: "white" },
+        background: Cow::Borrowed("rgb(230, 0, 0)"),
+        hover_background: Cow::Borrowed("rgb(150, 0, 0)"),
+        font_theme: FontTheme {
+            color: Cow::Borrowed("white"),
+        },
+        ..LIGHT_THEME.button
     },
     ..LIGHT_THEME
 };
@@ -19,8 +21,8 @@ fn main() {
     launch(app);
 }
 
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         ThemeProvider {
             theme: CUSTOM_THEME,
             rect {
@@ -28,7 +30,7 @@ fn app(cx: Scope) -> Element {
                 height: "100%",
                 Button {
                     label {
-                        "Report"
+                        "Cancel"
                     }
                 }
             }

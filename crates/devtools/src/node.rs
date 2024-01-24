@@ -5,7 +5,7 @@ use freya_elements::elements as dioxus_elements;
 use crate::TreeNode;
 
 #[allow(non_snake_case)]
-#[inline_props]
+#[component]
 pub fn NodeElement<'a>(
     cx: Scope<'a>,
     node: TreeNode,
@@ -41,7 +41,7 @@ pub fn NodeElement<'a>(
     };
     let margin_left = (node.height * 10) as f32 + 16.5;
 
-    render!(
+    rsx!(
         rect {
             corner_radius: "7",
             padding: "5",

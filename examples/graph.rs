@@ -44,7 +44,7 @@ fn app(cx: Scope) -> Element {
         ]
     });
 
-    render!(Graph {
+    rsx!(Graph {
         labels: labels.clone(),
         data: data.get().clone()
     })

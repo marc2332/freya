@@ -39,6 +39,8 @@ winit = { workspace = true }
 tokio = { workspace = true }
 accesskit = { workspace = true }
 
+smallvec = "1.11.2"
+
 [dev-dependencies]
 freya-components = { workspace = true }
 dioxus = { workspace = true }

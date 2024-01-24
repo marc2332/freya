@@ -12,6 +12,10 @@ use crate::{
     prelude::Gaps,
 };
 
+pub struct LayoutMetadata {
+    pub root_area: Area,
+}
+
 /// Contains the best Root node candidate from where to start measuring
 #[derive(PartialEq, Debug, Clone)]
 pub enum RootNodeCandidate<Key: NodeKey> {
@@ -25,6 +29,26 @@ pub enum RootNodeCandidate<Key: NodeKey> {
 impl<Key: NodeKey> RootNodeCandidate<Key> {
     pub fn take(&mut self) -> Self {
         mem::replace(self, Self::None)
+    }
+
+    /// Propose a new root candidate
+    pub fn propose_new_candidate(
+        &mut self,
+        proposed_candidate: &Key,
+        dom_adapter: &mut impl DOMAdapter<Key>,
+    ) {
+        if let RootNodeCandidate::Valid(current_candidate) = self {
+            if current_candidate != proposed_candidate {
+                let closest_parent =
+                    dom_adapter.closest_common_parent(proposed_candidate, current_candidate);
+
+                if let Some(closest_parent) = closest_parent {
+                    *self = RootNodeCandidate::Valid(closest_parent);
+                }
+            }
+        } else {
+            *self = RootNodeCandidate::Valid(*proposed_candidate)
+        }
     }
 }
 
@@ -45,58 +69,6 @@ impl<Key: NodeKey> Default for Torin<Key> {
     }
 }
 
-#[cfg(feature = "dioxus")]
-use dioxus_core::Mutations;
-#[cfg(feature = "dioxus")]
-use dioxus_native_core::prelude::*;
-
-#[cfg(feature = "dioxus")]
-impl Torin<NodeId> {
-    pub fn apply_mutations(
-        &mut self,
-        mutations: &Mutations,
-        dioxus_integration_state: &DioxusState,
-        dom_adapter: &mut impl DOMAdapter<NodeId>,
-    ) {
-        use dioxus_core::Mutation;
-
-        for mutation in &mutations.edits {
-            match mutation {
-                Mutation::SetText { id, .. } => {
-                    self.invalidate(dioxus_integration_state.element_to_node_id(*id));
-                }
-                Mutation::InsertAfter { id, m } => {
-                    if *m > 0 {
-                        self.invalidate(dioxus_integration_state.element_to_node_id(*id));
-                    }
-                }
-                Mutation::InsertBefore { id, m } => {
-                    if *m > 0 {
-                        self.invalidate(dioxus_integration_state.element_to_node_id(*id));
-                    }
-                }
-                Mutation::Remove { id } => {
-                    self.remove(
-                        dioxus_integration_state.element_to_node_id(*id),
-                        dom_adapter,
-                        true,
-                    );
-                }
-                Mutation::ReplaceWith { id, m } => {
-                    if *m > 0 {
-                        self.remove(
-                            dioxus_integration_state.element_to_node_id(*id),
-                            dom_adapter,
-                            true,
-                        );
-                    }
-                }
-                _ => {}
-            }
-        }
-    }
-}
-
 impl<Key: NodeKey> Torin<Key> {
     /// Create a new Layout
     pub fn new() -> Self {
@@ -105,6 +77,10 @@ impl<Key: NodeKey> Torin<Key> {
             dirty: FxHashSet::default(),
             root_node_candidate: RootNodeCandidate::None,
         }
+    }
+
+    pub fn size(&self) -> usize {
+        self.results.len()
     }
 
     /// Reset the layout
@@ -151,15 +127,16 @@ impl<Key: NodeKey> Torin<Key> {
         }
     }
 
+    /// Safely mark as dirty a Node
+    pub fn safe_invalidate(&mut self, node_id: Key, dom_adapter: &mut impl DOMAdapter<Key>) {
+        if dom_adapter.is_node_valid(&node_id) {
+            self.dirty.insert(node_id);
+        }
+    }
+
     /// Mark as dirty a Node
     pub fn invalidate(&mut self, node_id: Key) {
         self.dirty.insert(node_id);
-    }
-
-    pub fn safe_invalidate(&mut self, node_id: Key, dom_adapter: &mut impl DOMAdapter<Key>) {
-        if dom_adapter.is_node_valid(&node_id) {
-            self.invalidate(node_id)
-        }
     }
 
     // Mark as dirty the given Node and all the nodes that depend on it
@@ -176,22 +153,8 @@ impl<Key: NodeKey> Torin<Key> {
         // Mark this node as dirty
         self.invalidate(node_id);
 
-        if RootNodeCandidate::None == self.root_node_candidate {
-            self.root_node_candidate = RootNodeCandidate::Valid(node_id);
-        } else if let RootNodeCandidate::Valid(root_candidate) = &mut self.root_node_candidate {
-            if node_id != *root_candidate {
-                let closest_parent = dom_adapter.closest_common_parent(&node_id, root_candidate);
-
-                if let Some(closest_parent) = closest_parent {
-                    *root_candidate = closest_parent;
-                }
-            }
-        }
-
-        // Mark as dirty this Node's children
-        for child in dom_adapter.children_of(&node_id) {
-            self.check_dirty_dependants(child, dom_adapter, true)
-        }
+        self.root_node_candidate
+            .propose_new_candidate(&node_id, dom_adapter);
 
         // Mark this Node's parent if it is affected
         let parent_id = dom_adapter.parent_of(&node_id);
@@ -200,35 +163,27 @@ impl<Key: NodeKey> Torin<Key> {
             let parent = dom_adapter.get_node(&parent_id);
 
             if let Some(parent) = parent {
-                // Mark parent if it depeneds on it's inner children
                 if parent.does_depend_on_inner() {
+                    // Mark parent if it depends on it's inner children
                     self.check_dirty_dependants(parent_id, dom_adapter, true);
-                }
-                // Mark as dirty all the siblings that come after this node
-                else {
+                } else {
+                    let parent_children = dom_adapter.children_of(&parent_id);
+                    let multiple_children = parent_children.len() > 1;
+
                     let mut found_node = false;
-                    let mut multiple_children = false;
                     for child_id in dom_adapter.children_of(&parent_id) {
                         if found_node {
-                            self.check_dirty_dependants(child_id, dom_adapter, true);
+                            self.safe_invalidate(child_id, dom_adapter);
                         }
                         if child_id == node_id {
                             found_node = true;
-                        } else {
-                            multiple_children = true;
                         }
                     }
 
-                    // Try saving using  node's parent as root candidate if it has multiple children
+                    // Try using the node's parent as root candidate if it has multiple children
                     if multiple_children {
-                        if let RootNodeCandidate::Valid(root_candidate) = self.root_node_candidate {
-                            let closest_parent =
-                                dom_adapter.closest_common_parent(&parent_id, &root_candidate);
-
-                            if let Some(closest_parent) = closest_parent {
-                                self.root_node_candidate = RootNodeCandidate::Valid(closest_parent);
-                            }
-                        }
+                        self.root_node_candidate
+                            .propose_new_candidate(&parent_id, dom_adapter);
                     }
                 }
             }
@@ -254,7 +209,7 @@ impl<Key: NodeKey> Torin<Key> {
     pub fn measure(
         &mut self,
         suggested_root_id: Key,
-        suggested_root_area: Area,
+        root_area: Area,
         measurer: &mut Option<impl LayoutMeasurer<Key>>,
         dom_adapter: &mut impl DOMAdapter<Key>,
     ) {
@@ -275,8 +230,8 @@ impl<Key: NodeKey> Torin<Key> {
         let areas = root_parent
             .and_then(|root_parent| self.get(root_parent).cloned())
             .unwrap_or(NodeAreas {
-                area: suggested_root_area,
-                inner_area: suggested_root_area,
+                area: root_area,
+                inner_area: root_area,
                 inner_sizes: Size2D::default(),
                 margin: Gaps::default(),
             });
@@ -290,6 +245,8 @@ impl<Key: NodeKey> Torin<Key> {
             root_height
         );
 
+        let metadata = LayoutMetadata { root_area };
+
         let (root_revalidated, root_areas) = measure_node(
             root_id,
             &root,
@@ -299,6 +256,8 @@ impl<Key: NodeKey> Torin<Key> {
             measurer,
             true,
             dom_adapter,
+            &metadata,
+            false,
         );
 
         // Cache the root Node results if it was modified

@@ -21,8 +21,7 @@ use winit::event::WindowEvent;
 use winit::{dpi::PhysicalSize, event_loop::EventLoopProxy};
 
 use crate::accessibility::NativeAccessibility;
-use crate::config::LaunchConfig;
-use crate::{HoveredNode, WindowEnv};
+use crate::{FontsConfig, HoveredNode, WindowEnv};
 
 fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
     struct DomHandle(EventLoopProxy<EventMessage>);
@@ -67,6 +66,10 @@ pub struct App<State: 'static + Clone> {
     font_collection: FontCollection,
 
     ticker_sender: broadcast::Sender<()>,
+
+    plugins: PluginsManager,
+
+    navigator_state: NavigatorState,
 }
 
 impl<State: 'static + Clone> App<State> {
@@ -76,18 +79,19 @@ impl<State: 'static + Clone> App<State> {
         proxy: &EventLoopProxy<EventMessage>,
         mutations_notifier: Option<Arc<Notify>>,
         mut window_env: WindowEnv<State>,
-        config: LaunchConfig<State>,
+        fonts_config: FontsConfig,
+        mut plugins: PluginsManager,
     ) -> Self {
         let accessibility = NativeAccessibility::new(&window_env.window, proxy.clone());
 
-        window_env.window().set_visible(true);
+        window_env.window_mut().set_visible(true);
 
         let mut font_collection = FontCollection::new();
         let def_mgr = FontMgr::default();
 
         let mut provider = TypefaceFontProvider::new();
 
-        for (font_name, font_data) in config.fonts {
+        for (font_name, font_data) in fonts_config {
             let ft_type = def_mgr.new_from_data(font_data, None).unwrap();
             provider.register_typeface(ft_type, Some(font_name));
         }
@@ -99,10 +103,14 @@ impl<State: 'static + Clone> App<State> {
         let (event_emitter, event_receiver) = mpsc::unbounded_channel::<DomEvent>();
         let (focus_sender, focus_receiver) = watch::channel(None);
 
+        plugins.send(PluginEvent::WindowCreated(window_env.window_mut()));
+
+        let navigator_state = NavigatorState::new(NavigationMode::NotKeyboard);
+
         Self {
             sdom,
             vdom,
-            events: Vec::new(),
+            events: EventsQueue::new(),
             vdom_waker: winit_waker(proxy),
             proxy: proxy.clone(),
             mutations_notifier,
@@ -117,21 +125,24 @@ impl<State: 'static + Clone> App<State> {
             focus_receiver,
             font_collection,
             ticker_sender: broadcast::channel(5).0,
+            plugins,
+            navigator_state,
         }
     }
 
     /// Provide the launch state and few other utilities like the EventLoopProxy
-    pub fn provide_vdom_contexts(&self) {
+    pub fn provide_vdom_contexts(&mut self) {
         if let Some(state) = self.window_env.window_config.state.clone() {
-            self.vdom.base_scope().provide_context(state);
+            self.vdom.insert_any_root_context(Box::new(state));
         }
-        self.vdom.base_scope().provide_context(self.proxy.clone());
         self.vdom
-            .base_scope()
-            .provide_context(self.focus_receiver.clone());
+            .insert_any_root_context(Box::new(self.proxy.clone()));
         self.vdom
-            .base_scope()
-            .provide_context(Arc::new(self.ticker_sender.subscribe()));
+            .insert_any_root_context(Box::new(self.focus_receiver.clone()));
+        self.vdom
+            .insert_any_root_context(Box::new(Arc::new(self.ticker_sender.subscribe())));
+        self.vdom
+            .insert_any_root_context(Box::new(self.navigator_state.clone()));
     }
 
     /// Make the first build of the VirtualDOM.
@@ -139,29 +150,16 @@ impl<State: 'static + Clone> App<State> {
         let scale_factor = self.window_env.window.scale_factor() as f32;
         self.provide_vdom_contexts();
 
-        let mutations = self.vdom.rebuild();
-
-        self.sdom.get_mut().init_dom(mutations, scale_factor);
-
-        if let Some(mutations_notifier) = &self.mutations_notifier {
-            mutations_notifier.notify_one();
-        }
+        self.sdom.get_mut().init_dom(&mut self.vdom, scale_factor);
     }
 
     /// Update the DOM with the mutations from the VirtualDOM.
     pub fn apply_vdom_changes(&mut self) -> (bool, bool) {
         let scale_factor = self.window_env.window.scale_factor() as f32;
-        let mutations = self.vdom.render_immediate();
-
-        let is_empty = mutations.dirty_scopes.is_empty()
-            && mutations.edits.is_empty()
-            && mutations.templates.is_empty();
-
-        let (repaint, relayout) = if !is_empty {
-            self.sdom.get_mut().apply_mutations(mutations, scale_factor)
-        } else {
-            (false, false)
-        };
+        let (repaint, relayout) = self
+            .sdom
+            .get_mut()
+            .render_mutations(&mut self.vdom, scale_factor);
 
         if repaint {
             if let Some(mutations_notifier) = &self.mutations_notifier {
@@ -184,7 +182,7 @@ impl<State: 'static + Clone> App<State> {
                         ev = self.event_receiver.recv() => {
                             if let Some(ev) = ev {
                                 let data = ev.data.any();
-                                self.vdom.handle_event(&ev.name, data, ev.element_id, false);
+                                self.vdom.handle_event(&ev.name, data, ev.element_id, true);
 
                                 self.vdom.process_events();
                             }
@@ -230,11 +228,17 @@ impl<State: 'static + Clone> App<State> {
 
         {
             let dom = self.sdom.get();
+
+            self.plugins.send(PluginEvent::StartedLayout(&dom.layout()));
+
             let (layers, viewports) = self
                 .window_env
                 .process_layout(&dom, &mut self.font_collection);
             self.layers = layers;
             self.viewports = viewports;
+
+            self.plugins
+                .send(PluginEvent::FinishedLayout(&dom.layout()));
         }
 
         info!(
@@ -268,19 +272,27 @@ impl<State: 'static + Clone> App<State> {
         );
     }
 
-    /// Push an event to the events queue
-    pub fn push_event(&mut self, event: FreyaEvent) {
+    /// Send an event
+    pub fn send_event(&mut self, event: FreyaEvent) {
         self.events.push(event);
+        self.process_events();
     }
 
     /// Replace a VirtualDOM Template
-    pub fn vdom_replace_template(&mut self, template: Template<'static>) {
+    pub fn vdom_replace_template(&mut self, template: Template) {
         self.vdom.replace_template(template);
     }
 
     /// Render the RealDOM into the Window
     pub fn render(&mut self, hovered_node: &HoveredNode) {
-        self.window_env.render(
+        self.plugins.send(PluginEvent::BeforeRender {
+            canvas: self.window_env.canvas(),
+            font_collection: &self.font_collection,
+            freya_dom: &self.sdom.get(),
+            viewports: &self.viewports,
+        });
+
+        self.window_env.start_render(
             &self.layers,
             &self.viewports,
             &mut self.font_collection,
@@ -290,6 +302,15 @@ impl<State: 'static + Clone> App<State> {
 
         self.accessibility
             .render_accessibility(self.window_env.window.title().as_str());
+
+        self.plugins.send(PluginEvent::AfterRender {
+            canvas: self.window_env.canvas(),
+            font_collection: &self.font_collection,
+            freya_dom: &self.sdom.get(),
+            viewports: &self.viewports,
+        });
+
+        self.window_env.finish_render();
     }
 
     /// Resize the Window
@@ -327,6 +348,10 @@ impl<State: 'static + Clone> App<State> {
     }
 
     pub fn tick(&self) {
-        self.ticker_sender.send(()).unwrap();
+        self.ticker_sender.send(()).ok();
+    }
+
+    pub fn set_navigation_mode(&mut self, mode: NavigationMode) {
+        self.navigator_state.set(mode);
     }
 }

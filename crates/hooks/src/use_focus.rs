@@ -1,26 +1,28 @@
 use std::num::NonZeroU128;
 
 use accesskit::NodeId as AccessibilityId;
-use dioxus_core::{AttributeValue, Scope, ScopeState};
-use dioxus_hooks::{use_shared_state, use_shared_state_provider, UseSharedState};
+use dioxus_core::{use_hook, AttributeValue};
+use dioxus_hooks::{use_context, use_context_provider};
+use dioxus_signals::{Readable, Signal, Writable};
+use freya_core::navigation_mode::NavigationMode;
+use freya_elements::events::{keyboard::Code, KeyboardEvent};
 use freya_node_state::CustomAttributeValues;
 use uuid::Uuid;
 
 pub type FocusId = AccessibilityId;
 
 /// Manage the focus operations of given Node
-#[derive(Clone, Copy)]
-pub struct UseFocus<'a> {
+#[derive(Clone)]
+pub struct UseFocus {
     id: AccessibilityId,
-    focused_id: Option<&'a UseSharedState<Option<AccessibilityId>>>,
+    focused_id: Signal<Option<AccessibilityId>>,
+    navigation_mode: Signal<NavigationMode>,
 }
 
-impl UseFocus<'_> {
+impl UseFocus {
     /// Focus this node
-    pub fn focus(&self) {
-        if let Some(focused_id) = self.focused_id {
-            *focused_id.write() = Some(self.id)
-        }
+    pub fn focus(&mut self) {
+        *self.focused_id.write() = Some(self.id)
     }
 
     /// Get the node focus ID
@@ -29,48 +31,67 @@ impl UseFocus<'_> {
     }
 
     /// Create a node focus ID attribute
-    pub fn attribute<'b, T>(&self, cx: Scope<'b, T>) -> AttributeValue<'b> {
-        cx.any_value(CustomAttributeValues::FocusId(self.id))
+    pub fn attribute(&self) -> AttributeValue {
+        AttributeValue::any_value(CustomAttributeValues::FocusId(self.id))
     }
 
     /// Check if this node is currently focused
     pub fn is_focused(&self) -> bool {
-        Some(Some(self.id)) == self.focused_id.map(|f| *f.read())
+        Some(self.id) == *self.focused_id.read()
+    }
+
+    /// Check if this node is currently selected
+    pub fn is_selected(&self) -> bool {
+        self.is_focused() && *self.navigation_mode.read() == NavigationMode::Keyboard
     }
 
     /// Unfocus the currently focused node.
-    pub fn unfocus(&self) {
-        if let Some(focused_id) = self.focused_id {
-            *focused_id.write() = None;
-        }
+    pub fn unfocus(&mut self) {
+        *self.focused_id.write() = None;
+    }
+
+    /// Validate keydown event
+    pub fn validate_keydown(&self, e: KeyboardEvent) -> bool {
+        e.data.code == Code::Enter && self.is_selected()
     }
 }
 
 /// Create a focus manager for a node.
-pub fn use_focus(cx: &ScopeState) -> UseFocus {
-    let id = *cx.use_hook(|| AccessibilityId(NonZeroU128::new(Uuid::new_v4().as_u128()).unwrap()));
-    let focused_id = use_shared_state::<Option<FocusId>>(cx);
-    UseFocus { id, focused_id }
+pub fn use_focus() -> UseFocus {
+    let focused_id = use_context::<Signal<Option<FocusId>>>();
+    let navigation_mode = use_context::<Signal<NavigationMode>>();
+
+    use_hook(move || {
+        let id = AccessibilityId(NonZeroU128::new(Uuid::new_v4().as_u128()).unwrap());
+        UseFocus {
+            id,
+            focused_id,
+            navigation_mode,
+        }
+    })
 }
 
 /// Create a focus provider.
-pub fn use_init_focus(cx: &ScopeState) {
-    use_shared_state_provider::<Option<FocusId>>(cx, || None);
+pub fn use_init_focus() {
+    use_context_provider::<Signal<Option<FocusId>>>(|| Signal::new(None));
+    use_context_provider::<Signal<NavigationMode>>(|| Signal::new(NavigationMode::Keyboard));
 }
 
 #[cfg(test)]
 mod test {
     use crate::use_focus;
     use freya::prelude::*;
-    use freya_testing::{launch_test_with_config, FreyaEvent, MouseButton, TestingConfig};
+    use freya_testing::{
+        events::pointer::MouseButton, launch_test_with_config, FreyaEvent, TestingConfig,
+    };
 
     #[tokio::test]
     pub async fn track_focus() {
         #[allow(non_snake_case)]
-        fn OherChild(cx: Scope) -> Element {
-            let focus_manager = use_focus(cx);
+        fn OherChild() -> Element {
+            let focus_manager = use_focus();
 
-            render!(
+            rsx!(
                 rect {
                     width: "100%",
                     height: "50%",
@@ -81,7 +102,7 @@ mod test {
         }
 
         fn use_focus_app(cx: Scope) -> Element {
-            render!(
+            rsx!(
                 rect {
                     width: "100%",
                     height: "100%",

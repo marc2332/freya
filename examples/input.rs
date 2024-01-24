@@ -3,16 +3,17 @@
     windows_subsystem = "windows"
 )]
 
+use dioxus::signals::use_signal;
 use freya::prelude::*;
 
 fn main() {
     launch(app);
 }
 
-fn app(cx: Scope) -> Element {
-    let values = use_state(cx, || (String::new(), String::new()));
+fn app() -> Element {
+    let mut values = use_signal(|| (String::new(), String::new()));
 
-    render!(
+    rsx!(
         rect {
             overflow: "clip",
             padding: "7",
@@ -23,9 +24,9 @@ fn app(cx: Scope) -> Element {
                 "Your name:"
             }
             Input {
-                value: values.0.clone(),
-                onchange: |e| {
-                    values.set((e, values.1.clone()))
+                value: values.read().0.clone(),
+                onchange: move |t| {
+                    values.with_mut(|v| v.0 = t)
                 }
             },
             label {
@@ -33,14 +34,14 @@ fn app(cx: Scope) -> Element {
                 "Your age:"
             }
             Input {
-                value: values.1.clone(),
-                onchange: |e| {
-                    values.set((values.0.clone(), e))
+                value: values.read().1.clone(),
+                onchange: move |t| {
+                    values.with_mut(|v| v.1 = t)
                 }
             },
             label {
                 color: "black",
-                "You are {values.0} and you are {values.1} years old."
+                "You are {values.read().0} and you are {values.read().1} years old."
             }
         }
     )

@@ -26,3 +26,7 @@ tokio = { workspace = true }
 accesskit = { workspace = true }
 
 keyboard-types = "0.7.0"
+
+[dev-dependencies]
+freya = { workspace = true }
+dioxus = { workspace = true }
