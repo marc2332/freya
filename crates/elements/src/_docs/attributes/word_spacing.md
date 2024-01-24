@@ -4,7 +4,7 @@ Specify the spacing between words of the text.
 
 ```rust, no_run
 # use freya::prelude::*;
-fn app(cx: Scope) -> Element {
+fn app() -> Element {
     rsx!(
         label {
             word_spacing: "10",

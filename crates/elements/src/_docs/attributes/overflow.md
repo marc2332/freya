@@ -9,7 +9,7 @@ Accepted values:
 
 ```rust, no_run
 # use freya::prelude::*;
-fn app(cx: Scope) -> Element {
+fn app() -> Element {
     rsx!(
         rect {
             overflow: "clip",

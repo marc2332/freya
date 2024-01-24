@@ -6,7 +6,7 @@ Event Data: [`PointerData`](crate::events::PointerData)
 
 ```rust, no_run
 # use freya::prelude::*;
-fn app(cx: Scope) -> Element {
+fn app() -> Element {
     rsx!(
         rect {
             width: "100",

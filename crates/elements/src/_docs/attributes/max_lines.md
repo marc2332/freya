@@ -4,7 +4,7 @@ Determines the amount of lines that the text can have. It has unlimited lines by
 
 ```rust, no_run
 # use freya::prelude::*;
-fn app(cx: Scope) -> Element {
+fn app() -> Element {
     rsx!(
         label {
             "Hello, World! \n Hello, World! \n Hello, world!" // Will show all three lines

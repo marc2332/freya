@@ -6,7 +6,7 @@ Syntax: `<x> <y> <size> <color>`
 
 ```rust, no_run
 # use freya::prelude::*;
-fn app(cx: Scope) -> Element {
+fn app() -> Element {
     rsx!(
         label {
             text_shadow: "0 18 12 rgb(0, 0, 0)",

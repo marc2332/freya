@@ -6,7 +6,7 @@ Compatible elements: all except [`text`](crate::elements::text).
 
 ```rust, no_run
 # use freya::prelude::*;
-fn app(cx: Scope) -> Element {
+fn app() -> Element {
     rsx!(
         label {
             rotate: "180deg",

@@ -8,7 +8,7 @@ Event Data: [`MouseData`](crate::events::MouseData)
 
 ```rust, no_run
 # use freya::prelude::*;
-fn app(cx: Scope) -> Element {
+fn app() -> Element {
     rsx!(
         rect {
             onglobalclick: |_| println!("Clicked somewhere else!")

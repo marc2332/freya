@@ -4,7 +4,7 @@ Specify the inner paddings of an element. You can do so by three different ways,
 
 ```rust, no_run
 # use freya::prelude::*;
-fn app(cx: Scope) -> Element {
+fn app() -> Element {
     rsx!(
         rect {
             padding: "25", // 25 in all sides

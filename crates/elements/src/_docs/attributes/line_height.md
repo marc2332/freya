@@ -6,7 +6,7 @@ Specify the height of the lines of the text.
 
 ```rust, no_run
 # use freya::prelude::*;
-fn app(cx: Scope) -> Element {
+fn app() -> Element {
     rsx!(
         label {
             line_height: "3",
