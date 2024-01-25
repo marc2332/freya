@@ -91,7 +91,7 @@ impl AnimationManager {
 /// ```rust,no_run
 /// # use freya::prelude::*;
 /// fn app() -> Element {
-///     let animation = use_animation(|| 0.0);
+///     let mut animation = use_animation(|| 0.0);
 ///
 ///     let progress = animation.value();
 ///
