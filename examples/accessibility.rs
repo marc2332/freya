@@ -64,12 +64,12 @@ fn app() -> Element {
                 "Hello, World! This is an example."
             }
             NetworkImage {
-                url: url,
+                url,
                 theme: theme_with!(NetworkImageTheme {
                     width: "100".into(),
                     height: "100".into(),
                 }),
-                alt: "This is an image".to_string()
+                alt: "This is an image"
             }
         }
     )

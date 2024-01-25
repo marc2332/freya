@@ -57,7 +57,7 @@ pub fn CursorArea(CursorAreaProps { children, icon }: CursorAreaProps) -> Elemen
         }
     };
 
-    use_on_destroy(move || {
+    use_drop(move || {
         if *is_hovering.peek() {
             platform.set_cursor(CursorIcon::default());
         }

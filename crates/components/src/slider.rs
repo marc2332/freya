@@ -91,7 +91,7 @@ pub fn Slider(
     let value = ensure_correct_slider_range(value);
     let (node_reference, size) = use_node();
 
-    use_on_destroy({
+    use_drop({
         to_owned![status, platform];
         move || {
             if *status.peek() == SliderStatus::Hovering {

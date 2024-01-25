@@ -73,7 +73,7 @@ where
     };
     let color = theme.font_theme.color;
 
-    use_on_destroy({
+    use_drop({
         to_owned![status, platform];
         move || {
             if *status.peek() == DropdownItemStatus::Hovering {
@@ -204,7 +204,7 @@ where
         *selected.write() = value;
     });
 
-    use_on_destroy({
+    use_drop({
         to_owned![status, platform];
         move || {
             if *status.peek() == DropdownStatus::Hovering {

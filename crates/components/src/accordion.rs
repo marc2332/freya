@@ -81,7 +81,7 @@ pub fn Accordion(props: AccordionProps) -> Element {
         open.with_mut(|o| *o = !*o);
     };
 
-    use_on_destroy({
+    use_drop({
         to_owned![status, platform];
         move || {
             if *status.read() == AccordionStatus::Hovering {

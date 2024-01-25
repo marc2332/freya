@@ -64,7 +64,7 @@ pub fn Switch(props: SwitchProps) -> Element {
 
     let focus_id = focus.attribute();
 
-    use_on_destroy({
+    use_drop({
         to_owned![status, platform];
         move || {
             if *status.read() == SwitchStatus::Hovering {

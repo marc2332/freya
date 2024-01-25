@@ -84,7 +84,7 @@ pub fn Button(props: ButtonProps) -> Element {
         }
     };
 
-    use_on_destroy({
+    use_drop({
         to_owned![status, platform];
         move || {
             if *status.read() == ButtonStatus::Hovering {

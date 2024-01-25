@@ -24,15 +24,14 @@ pub struct LoaderProps {
 #[allow(non_snake_case)]
 pub fn Loader(props: LoaderProps) -> Element {
     let theme = use_applied_theme!(&props.theme, loader);
-    let degrees = use_signal(|| 0);
+    let mut degrees = use_signal(|| 0);
 
     let LoaderTheme {
         primary_color,
         secondary_color,
     } = theme;
 
-    use_effect(move || {
-        to_owned![degrees];
+    use_hook(move || {
         spawn(async move {
             let mut ticker = interval(Duration::from_millis(28));
             loop {
