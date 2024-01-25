@@ -189,11 +189,9 @@ fn Editor() -> Element {
     };
     let font_weight = if *is_bold.read() { "bold" } else { "normal" };
 
-    // TODO: Waiting for Dioxus to bring back this hook
-    /* use_on_create(move || {
+    use_hook(|| {
         focus_manager.focus();
-        async move {}
-    }); */
+    });
 
     let onclick = {
         to_owned![focus_manager];
