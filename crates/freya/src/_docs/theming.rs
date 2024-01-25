@@ -88,7 +88,7 @@
 //!
 //!     rsx!(
 //!         Button {
-//!             onclick: onclick,
+//!             onclick,
 //!             label {
 //!                 "Use Light theme"
 //!             }

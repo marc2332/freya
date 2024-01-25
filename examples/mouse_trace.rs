@@ -67,7 +67,7 @@ fn app() -> Element {
 
     rsx!(
         rect {
-            onmouseover: onmouseover,
+            onmouseover,
             width: "100%",
             height: "100%",
             positions.read().iter().map(|pos| rsx!(

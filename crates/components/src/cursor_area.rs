@@ -65,8 +65,8 @@ pub fn CursorArea(CursorAreaProps { children, icon }: CursorAreaProps) -> Elemen
 
     rsx!(
         rect {
-            onmouseover: onmouseover,
-            onmouseleave: onmouseleave,
+            onmouseover,
+            onmouseleave,
             {children}
         }
     )

@@ -44,8 +44,8 @@ fn app() -> Element {
             height: "100%",
             offset_x: "{positions.read().0}",
             offset_y: "{positions.read().1}",
-            onmousedown: onmousedown,
-            onclick: onclick,
+            onmousedown,
+            onclick,
             label {
                 width: "100",
                 color: "white",
@@ -58,7 +58,7 @@ fn app() -> Element {
                 height: "100",
                 corner_radius: "15",
                 shadow: "0 0 50 0 rgb(255, 255, 255, 0.6)",
-                onmouseover: onmouseover,
+                onmouseover,
                 onmouseleave: onmouseleave
             }
         }

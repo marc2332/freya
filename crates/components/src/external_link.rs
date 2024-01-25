@@ -81,9 +81,9 @@ pub fn ExternalLink(props: ExternalLinkProps) -> Element {
 
     rsx!(
         rect {
-            onmouseover: onmouseover,
-            onmouseleave: onmouseleave,
-            onclick: onclick,
+            onmouseover,
+            onmouseleave,
+            onclick,
             color: "{color}",
             {props.children}
         }

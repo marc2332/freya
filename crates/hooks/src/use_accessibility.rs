@@ -61,7 +61,7 @@ mod test {
     #[tokio::test]
     pub async fn focus_accessibility() {
         #[allow(non_snake_case)]
-        fn OherChild(cx: Scope) -> Element {
+        fn OherChild() -> Element {
             let focus_manager = use_focus(cx);
 
             rsx!(rect {
@@ -71,7 +71,7 @@ mod test {
             })
         }
 
-        fn use_focus_app(cx: Scope) -> Element {
+        fn use_focus_app() -> Element {
             rsx!(
                 rect {
                     width: "100%",

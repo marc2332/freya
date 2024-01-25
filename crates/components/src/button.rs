@@ -129,10 +129,10 @@ pub fn Button(props: ButtonProps) -> Element {
 
     rsx!(
         rect {
-            onclick: onclick,
-            onmouseenter: onmouseenter,
-            onmouseleave: onmouseleave,
-            onkeydown: onkeydown,
+            onclick,
+            onmouseenter,
+            onmouseleave,
+            onkeydown,
             focus_id: focus_id,
             width: "{width}",
             height: "{height}",

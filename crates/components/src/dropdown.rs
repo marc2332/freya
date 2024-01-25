@@ -122,10 +122,10 @@ where
             corner_radius: "6",
             main_align: "center",
             cross_align: "center",
-            onmouseenter: onmouseenter,
-            onmouseleave: onmouseleave,
-            onclick: onclick,
-            onkeydown: onkeydown,
+            onmouseenter,
+            onmouseleave,
+            onclick,
+            onkeydown,
             {children}
         }
     )
@@ -268,10 +268,10 @@ where
 
     rsx!(
         rect {
-            onmouseenter: onmouseenter,
-            onmouseleave: onmouseleave,
-            onclick: onclick,
-            onkeydown: onkeydown,
+            onmouseenter,
+            onmouseleave,
+            onclick,
+            onkeydown,
             margin: "4",
             focus_id: focus_id,
             background: "{button_background}",
@@ -299,8 +299,8 @@ where
             rect {
                 height: "0",
                 rect {
-                    onglobalclick: onglobalclick,
-                    onkeydown: onkeydown,
+                    onglobalclick,
+                    onkeydown,
                     layer: "-99",
                     margin: "4",
                     border: "1 solid {border_fill}",

@@ -84,9 +84,9 @@ fn SidebarItem(children: Element, onclick: Option<EventHandler<()>>, to: Option<
         rect {
             overflow: "clip",
             margin: "5 0",
-            onclick: onclick,
-            onmouseenter: onmouseenter,
-            onmouseleave: onmouseleave,
+            onclick,
+            onmouseenter,
+            onmouseleave,
             width: "100%",
             height: "auto",
             color: "{color}",
