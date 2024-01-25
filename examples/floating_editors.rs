@@ -162,7 +162,7 @@ fn app() -> Element {
 
 #[allow(non_snake_case)]
 fn Editor() -> Element {
-    let focus_manager = use_focus();
+    let mut focus_manager = use_focus();
     let editable = use_editable(
         || {
             EditableConfig::new("Lorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet".to_string())
