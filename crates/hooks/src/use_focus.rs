@@ -3,7 +3,7 @@ use std::num::NonZeroU128;
 use accesskit::NodeId as AccessibilityId;
 use dioxus_core::{use_hook, AttributeValue};
 use dioxus_hooks::{use_context, use_context_provider};
-use dioxus_signals::{Readable, Signal, Writable};
+use dioxus_signals::{use_memo, ReadOnlySignal, Readable, Signal, Writable};
 use freya_core::navigation_mode::NavigationMode;
 use freya_elements::events::{keyboard::Code, KeyboardEvent};
 use freya_node_state::CustomAttributeValues;
@@ -16,7 +16,8 @@ pub type FocusId = AccessibilityId;
 pub struct UseFocus {
     id: AccessibilityId,
     focused_id: Signal<Option<AccessibilityId>>,
-    navigation_mode: Signal<NavigationMode>,
+    is_selected: ReadOnlySignal<bool>,
+    is_focused: ReadOnlySignal<bool>,
 }
 
 impl UseFocus {
@@ -37,12 +38,12 @@ impl UseFocus {
 
     /// Check if this node is currently focused
     pub fn is_focused(&self) -> bool {
-        Some(self.id) == *self.focused_id.read()
+        *self.is_focused.read()
     }
 
     /// Check if this node is currently selected
     pub fn is_selected(&self) -> bool {
-        self.is_focused() && *self.navigation_mode.read() == NavigationMode::Keyboard
+        *self.is_selected.read()
     }
 
     /// Unfocus the currently focused node.
@@ -61,13 +62,18 @@ pub fn use_focus() -> UseFocus {
     let focused_id = use_context::<Signal<Option<FocusId>>>();
     let navigation_mode = use_context::<Signal<NavigationMode>>();
 
-    use_hook(move || {
-        let id = AccessibilityId(NonZeroU128::new(Uuid::new_v4().as_u128()).unwrap());
-        UseFocus {
-            id,
-            focused_id,
-            navigation_mode,
-        }
+    let id = use_hook(|| AccessibilityId(NonZeroU128::new(Uuid::new_v4().as_u128()).unwrap()));
+
+    let is_focused = use_memo(move || Some(id) == *focused_id.read());
+
+    let is_selected =
+        use_memo(move || *is_focused.read() && *navigation_mode.read() == NavigationMode::Keyboard);
+
+    use_hook(move || UseFocus {
+        id,
+        focused_id,
+        is_focused,
+        is_selected,
     })
 }
 
