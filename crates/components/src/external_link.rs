@@ -7,21 +7,22 @@ use freya_hooks::{use_applied_theme, ExternalLinkThemeWith};
 use crate::Tooltip;
 
 /// [`ExternalLink`] component properties.
-#[derive(Props)]
-pub struct ExternalLinkProps<'a> {
+#[derive(Props, Clone, PartialEq)]
+pub struct ExternalLinkProps {
     /// Theme override.
     #[props(optional)]
     pub theme: Option<ExternalLinkThemeWith>,
     /// Inner children for the ExternalLink.
-    pub children: Element<'a>,
-    #[props(optional)]
+    pub children: Element,
     /// Handler for the `onerror` event.
-    pub onerror: Option<EventHandler<'a, ()>>,
     #[props(optional)]
-    /// Whether  to show a tooltip with the URL or not.
-    pub show_tooltip: Option<bool>,
+    pub onerror: Option<EventHandler<()>>,
+    /// Whether to show a tooltip with the URL or not.
+    #[props(optional, default = true)]
+    pub show_tooltip: bool,
     /// The ExternalLink destination URL.
-    pub url: &'a str,
+    #[props(into)]
+    pub url: String,
 }
 
 /// `Link` for external locations, e.g websites.
@@ -36,7 +37,7 @@ pub struct ExternalLinkProps<'a> {
 ///
 /// ```no_run
 /// # use freya::prelude::*;
-/// fn app(cx: Scope) -> Element {
+/// fn app() -> Element {
 ///     rsx!(
 ///         ExternalLink {
 ///             url: "https://github.com",
@@ -49,28 +50,30 @@ pub struct ExternalLinkProps<'a> {
 /// ```
 ///
 #[allow(non_snake_case)]
-pub fn ExternalLink<'a>(cx: Scope<'a, ExternalLinkProps<'a>>) -> Element {
-    let theme = use_applied_theme!(cx, &cx.props.theme, external_link);
-    let is_hovering = use_state(cx, || false);
-    let show_tooltip = cx.props.show_tooltip.unwrap_or(true);
+pub fn ExternalLink(props: ExternalLinkProps) -> Element {
+    let theme = use_applied_theme!(&props.theme, external_link);
+    let is_hovering = use_signal(|| false);
 
-    let onmouseover = |_: MouseEvent| {
+    let onmouseover = move |_: MouseEvent| {
         is_hovering.with_mut(|v| *v = true);
     };
 
-    let onmouseleave = |_: MouseEvent| {
+    let onmouseleave = move |_: MouseEvent| {
         is_hovering.with_mut(|v| *v = false);
     };
 
-    let onclick = |_: MouseEvent| {
-        let res = open::that(cx.props.url);
-        if let (Err(_), Some(onerror)) = (res, cx.props.onerror.as_ref()) {
-            onerror.call(());
+    let onclick = {
+        let url = props.url.clone();
+        move |_: MouseEvent| {
+            let res = open::that(url.clone());
+            if let (Err(_), Some(onerror)) = (res, props.onerror.as_ref()) {
+                onerror.call(());
+            }
+            // TODO(marc2332): Log unhandled errors
         }
-        // TODO(marc2332): Log unhandled errors
     };
 
-    let color = if *is_hovering.get() {
+    let color = if *is_hovering.read() {
         theme.highlight_color.as_ref()
     } else {
         "inherit"
@@ -82,7 +85,7 @@ pub fn ExternalLink<'a>(cx: Scope<'a, ExternalLinkProps<'a>>) -> Element {
             onmouseleave: onmouseleave,
             onclick: onclick,
             color: "{color}",
-            &cx.props.children
+            {props.children}
         }
         rect {
             height: "0",
@@ -90,13 +93,11 @@ pub fn ExternalLink<'a>(cx: Scope<'a, ExternalLinkProps<'a>>) -> Element {
             layer: "-999",
             rect {
                 width: "100v",
-                (*is_hovering.get() && show_tooltip).then_some({
-                    rsx!(
-                        Tooltip {
-                            url: cx.props.url
-                        }
-                    )
-                })
+                if *is_hovering.read() && props.show_tooltip {
+                    Tooltip {
+                        url: props.url.clone()
+                    }
+                }
             }
         }
     )
