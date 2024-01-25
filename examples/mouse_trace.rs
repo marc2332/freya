@@ -46,7 +46,7 @@ fn Box() -> Element {
 }
 
 fn app() -> Element {
-    let mut positions = use_signal::<Vec<CursorPoint>>(Vec::new);
+    let positions = use_signal::<Vec<CursorPoint>>(Vec::new);
 
     let onmouseover = move |e: MouseEvent| {
         let coordinates = e.get_screen_coordinates();
@@ -70,7 +70,7 @@ fn app() -> Element {
             onmouseover,
             width: "100%",
             height: "100%",
-            positions.read().iter().map(|pos| rsx!(
+            {positions.read().iter().map(|pos| rsx!(
                 rect {
                     width: "0",
                     height: "0",
@@ -78,7 +78,7 @@ fn app() -> Element {
                     offset_y: "{pos.y}",
                     Box {}
                 }
-            ))
+            ))}
         }
     )
 }
