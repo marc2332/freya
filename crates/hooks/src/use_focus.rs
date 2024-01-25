@@ -101,7 +101,7 @@ mod test {
             )
         }
 
-        fn use_focus_app(cx: Scope) -> Element {
+        fn use_focus_app() -> Element {
             rsx!(
                 rect {
                     width: "100%",
