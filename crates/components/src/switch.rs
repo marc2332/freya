@@ -147,7 +147,7 @@ pub fn Switch(props: SwitchProps) -> Element {
             onmouseleave,
             onkeydown,
             onclick,
-            focus_id: focus_id,
+            focus_id,
             rect {
                 width: "100%",
                 height: "100%",

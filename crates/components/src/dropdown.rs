@@ -115,7 +115,7 @@ where
     rsx!(
         rect {
             color: "{color}",
-            focus_id: focus_id,
+            focus_id,
             role: "button",
             background: "{background}",
             padding: "6 22 6 16",
@@ -273,7 +273,7 @@ where
             onclick,
             onkeydown,
             margin: "4",
-            focus_id: focus_id,
+            focus_id,
             background: "{button_background}",
             color: "{font_theme.color}",
             corner_radius: "8",

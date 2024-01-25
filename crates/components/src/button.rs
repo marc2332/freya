@@ -133,7 +133,7 @@ pub fn Button(props: ButtonProps) -> Element {
             onmouseenter,
             onmouseleave,
             onkeydown,
-            focus_id: focus_id,
+            focus_id,
             width: "{width}",
             height: "{height}",
             padding: "{padding}",

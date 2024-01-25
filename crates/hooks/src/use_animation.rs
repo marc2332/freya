@@ -124,6 +124,7 @@ mod test {
     use std::time::Duration;
 
     use crate::{use_animation, Animation};
+    use dioxus_core::use_hook;
     use dioxus_hooks::to_owned;
     use freya::prelude::*;
     use freya_testing::{events::pointer::MouseButton, launch_test, FreyaEvent};
@@ -132,7 +133,7 @@ mod test {
     #[tokio::test]
     pub async fn track_progress() {
         fn use_animation_app() -> Element {
-            let animation = use_animation(|| 0.0);
+            let mut animation = use_animation(|| 0.0);
 
             let progress = animation.value();
 
@@ -175,18 +176,18 @@ mod test {
     #[tokio::test]
     pub async fn restart_progress() {
         fn use_animation_app() -> Element {
-            let animation = use_animation(|| 10.0);
+            let mut animation = use_animation(|| 10.0);
 
             let progress = animation.value();
 
-            let restart = {
+            let mut restart = {
                 to_owned![animation];
                 move || {
                     animation.clear();
                 }
             };
 
-            let _ = use_memo(move || {
+            use_hook(|| {
                 animation.start(Animation::new_linear(10.0..=100.0, 50));
             });
 
