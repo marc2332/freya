@@ -17,8 +17,8 @@ mod use_node;
 mod use_platform;
 mod use_theme;
 
-// #[cfg(feature = "use_camera")]
-// mod use_camera;
+#[cfg(feature = "use_camera")]
+mod use_camera;
 
 pub use animation::*;
 pub use rope_editor::*;
@@ -36,5 +36,5 @@ pub use use_node::*;
 pub use use_platform::*;
 pub use use_theme::*;
 
-// #[cfg(feature = "use_camera")]
-// pub use use_camera::*;
+#[cfg(feature = "use_camera")]
+pub use use_camera::*;
