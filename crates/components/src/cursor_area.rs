@@ -57,7 +57,7 @@ pub fn CursorArea(CursorAreaProps { children, icon }: CursorAreaProps) -> Elemen
         }
     };
 
-    use_on_destroy(move || {
+    use_drop(move || {
         if *is_hovering.peek() {
             platform.set_cursor(CursorIcon::default());
         }
@@ -65,8 +65,8 @@ pub fn CursorArea(CursorAreaProps { children, icon }: CursorAreaProps) -> Elemen
 
     rsx!(
         rect {
-            onmouseover: onmouseover,
-            onmouseleave: onmouseleave,
+            onmouseover,
+            onmouseleave,
             {children}
         }
     )

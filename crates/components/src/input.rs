@@ -107,7 +107,7 @@ pub fn Input(
         InputMode::Shown => value.clone(),
     };
 
-    use_on_destroy({
+    use_drop({
         to_owned![status, platform];
         move || {
             if *status.peek() == InputStatus::Hovering {
@@ -170,8 +170,8 @@ pub fn Input(
         }
     };
 
-    let cursor_attr = editable.cursor_attr();
-    let highlights_attr = editable.highlights_attr(0);
+    let cursor_reference = editable.cursor_attr();
+    let highlights = editable.highlights_attr(0);
 
     let (background, cursor_char) = if focus.is_focused() {
         (
@@ -199,23 +199,23 @@ pub fn Input(
             shadow: "0 3 15 0 rgb(0, 0, 0, 0.3)",
             corner_radius: "10",
             margin: "{margin}",
-            cursor_reference: cursor_attr,
+            cursor_reference,
             main_align: "center",
             paragraph {
                 margin: "8 12",
-                onkeydown: onkeydown,
-                onglobalclick: onglobalclick,
-                onmouseenter: onmouseenter,
-                onmouseleave: onmouseleave,
-                onmousedown: onmousedown,
-                onmouseover: onmouseover,
+                onkeydown,
+                onglobalclick,
+                onmouseenter,
+                onmouseleave,
+                onmousedown,
+                onmouseover,
                 width: "100%",
                 cursor_id: "0",
                 cursor_index: "{cursor_char}",
                 cursor_mode: "editable",
                 cursor_color: "{color}",
                 max_lines: "1",
-                highlights: highlights_attr,
+                highlights,
                 text {
                     "{text}"
                 }

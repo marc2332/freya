@@ -57,8 +57,8 @@ pub fn ScrollBar(
             offset_x: "{offset_x}",
             offset_y: "{offset_y}",
             background: "{background}",
-            onmouseenter: onmouseenter,
-            onmouseleave: onmouseleave,
+            onmouseenter,
+            onmouseleave,
             {children}
         }
     )

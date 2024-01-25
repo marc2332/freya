@@ -17,8 +17,8 @@ fn app() -> Element {
         EditableMode::MultipleLinesSingleEditor,
     );
 
-    let cursor_attr = editable.cursor_attr();
-    let highlights_attr = editable.highlights_attr(0);
+    let cursor_reference = editable.cursor_attr();
+    let highlights = editable.highlights_attr(0);
     let editor = editable.editor().read();
     let cursor = editor.cursor();
     let cursor_char = editor.cursor_pos();
@@ -55,7 +55,7 @@ fn app() -> Element {
         rect {
             width: "100%",
             height: "100%",
-            cursor_reference: cursor_attr,
+            cursor_reference,
             ScrollView {
                 theme: theme_with!(ScrollViewTheme {
                     width: "100%".into(),
@@ -68,11 +68,11 @@ fn app() -> Element {
                     cursor_index: "{cursor_char}",
                     cursor_mode: "editable",
                     cursor_color: "black",
-                    highlights: highlights_attr,
-                    onclick: onclick,
-                    onmouseover: onmouseover,
-                    onmousedown: onmousedown,
-                    onkeydown: onkeydown,
+                    highlights,
+                    onclick,
+                    onmouseover,
+                    onmousedown,
+                    onkeydown,
                     text {
                         "{editable.editor()}"
                     }

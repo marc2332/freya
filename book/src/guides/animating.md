@@ -83,7 +83,7 @@ fn app() -> Element {
                 height: "100%",
                 width: "200",
                 background: "{background}",
-                onclick: onclick,
+                onclick,
             }
         }
     )

@@ -288,8 +288,8 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
             height: "{user_container_height}",
             onglobalclick: onclick,
             onglobalmouseover: onmouseover,
-            onkeydown: onkeydown,
-            onkeyup: onkeyup,
+            onkeydown,
+            onkeyup,
             rect {
                 direction: "vertical",
                 width: "{container_width}",

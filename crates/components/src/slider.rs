@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{MouseEvent, WheelEvent};
 
-use freya_hooks::{use_applied_theme, use_node, use_platform, SliderThemeWith};
+use freya_hooks::{use_applied_theme, use_focus, use_node, use_platform, SliderThemeWith};
 use tracing::info;
 use winit::window::CursorIcon;
 
@@ -57,8 +57,8 @@ pub enum SliderStatus {
 /// # Example
 /// ```no_run
 /// # use freya::prelude::*;
-/// fn app(cx: Scope) -> Element {
-///     let percentage = use_state(cx, || 20.0);
+/// fn app() -> Element {
+///     let mut percentage = use_signal(|| 20.0);
 ///
 ///     rsx!(
 ///         label {
@@ -66,8 +66,8 @@ pub enum SliderStatus {
 ///         }
 ///         Slider {
 ///             width: "50%",
-///             value: *percentage.get(),
-///             onmoved: |p| {
+///             value: *percentage.read(),
+///             onmoved: move |p| {
 ///                 percentage.set(p);
 ///             }
 ///         }
@@ -84,14 +84,16 @@ pub fn Slider(
     }: SliderProps,
 ) -> Element {
     let theme = use_applied_theme!(&theme, slider);
+    let focus = use_focus();
     let status = use_signal(SliderStatus::default);
     let mut clicking = use_signal(|| false);
     let platform = use_platform();
-
-    let value = ensure_correct_slider_range(value);
     let (node_reference, size) = use_node();
 
-    use_on_destroy({
+    let value = ensure_correct_slider_range(value);
+    let focus_id = focus.attribute();
+
+    use_drop({
         to_owned![status, platform];
         move || {
             if *status.peek() == SliderStatus::Hovering {
@@ -134,9 +136,10 @@ pub fn Slider(
     };
 
     let onmousedown = {
-        to_owned![clicking, onmoved];
+        to_owned![clicking, onmoved, focus];
         move |e: MouseEvent| {
             e.stop_propagation();
+            focus.focus();
             clicking.set(true);
             let coordinates = e.get_element_coordinates();
             let x = coordinates.x - 6.0;
@@ -161,20 +164,28 @@ pub fn Slider(
     };
 
     let inner_width = (size.area.width() - 15.0) * (value / 100.0) as f32;
+    let border = if focus.is_selected() {
+        format!("2 solid {}", theme.border_fill)
+    } else {
+        format!("none")
+    };
 
     rsx!(
         rect {
             reference: node_reference,
             width: "{width}",
             height: "20",
-            onmousedown: onmousedown,
+            onmousedown,
             onglobalclick: onclick,
-            onmouseenter: onmouseenter,
+            focus_id,
+            onmouseenter,
             onglobalmouseover: onmouseover,
-            onmouseleave: onmouseleave,
+            onmouseleave,
             onwheel: onwheel,
             main_align: "center",
             cross_align: "center",
+            border: "{border}",
+            corner_radius: "8",
             rect {
                 background: "{theme.background}",
                 width: "100%",

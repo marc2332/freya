@@ -11,7 +11,7 @@ fn main() {
 }
 
 fn app() -> Element {
-    let mut radius = use_signal(|| 30f32);
+    let radius = use_signal(|| 30f32);
 
     let onwheel = move |e: WheelEvent| {
         let y = e.get_delta_y() as f32;

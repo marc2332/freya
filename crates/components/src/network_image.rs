@@ -47,7 +47,7 @@ pub enum ImageStatus {
 ///  
 /// ```rust,no_run
 /// # use freya::prelude::*;
-/// fn app(cx: Scope) -> Element {
+/// fn app() -> Element {
 ///     rsx!(
 ///         NetworkImage {
 ///             url: "https://raw.githubusercontent.com/jigsawpieces/dog-api-images/main/greyhound/Cordelia.jpg".parse().unwrap()
@@ -122,7 +122,7 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
                 rsx!(image {
                     height: "{height}",
                     width: "{width}",
-                    focus_id: focus_id,
+                    focus_id,
                     image_data: image_data,
                     role: "image",
                     alt: alt

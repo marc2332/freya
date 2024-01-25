@@ -81,7 +81,7 @@ pub fn Accordion(props: AccordionProps) -> Element {
         open.with_mut(|o| *o = !*o);
     };
 
-    use_on_destroy({
+    use_drop({
         to_owned![status, platform];
         move || {
             if *status.read() == AccordionStatus::Hovering {
@@ -105,8 +105,8 @@ pub fn Accordion(props: AccordionProps) -> Element {
 
     rsx!(
         rect {
-            onmouseenter: onmouseenter,
-            onmouseleave: onmouseleave,
+            onmouseenter,
+            onmouseleave,
             overflow: "clip",
             color: "{color}",
             padding: "10",
@@ -115,7 +115,7 @@ pub fn Accordion(props: AccordionProps) -> Element {
             width: "100%",
             height: "auto",
             background: "{background}",
-            onclick: onclick,
+            onclick,
             border: "1 solid {border_fill}",
             {&props.summary}
             rect {

@@ -81,7 +81,7 @@ fn Component() -> Element {
 
     rsx!(
         Button {
-            onclick: onclick,
+            onclick,
             label {
                 "Use Light theme"
             }

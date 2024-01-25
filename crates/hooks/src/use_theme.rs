@@ -29,9 +29,8 @@ pub fn use_get_theme() -> Theme {
 
 /// This macro has three arguments separator by commas.
 ///
-/// 1. The context (`cx: Scope`). Just pass in `cx`.
-/// 2. The theme property. This should be `&cx.props.theme`.
-/// 3. The name of the theme that you want to use.
+/// 1. The theme property. This should be `&cx.props.theme`.
+/// 2. The name of the theme that you want to use.
 ///
 /// # Examples
 ///

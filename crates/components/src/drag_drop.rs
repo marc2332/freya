@@ -99,9 +99,9 @@ pub fn DragZone<T: 'static + Clone>(
         }
         rect {
             reference: node_reference,
-            onglobalclick: onglobalclick,
+            onglobalclick,
             onglobalmouseover: onglobalmouseover,
-            onmousedown: onmousedown,
+            onmousedown,
             {children}
         }
     )
@@ -145,7 +145,7 @@ pub fn DropZone<T: 'static + Clone>(props: DropZoneProps<T>) -> Element {
 
     rsx!(
         rect {
-            onclick: onclick,
+            onclick,
             {props.children}
         }
     )

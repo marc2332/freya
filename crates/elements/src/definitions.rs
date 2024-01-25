@@ -164,7 +164,7 @@ builder_constructors! {
     ///
     /// ```rust,no_run
     /// # use freya::prelude::*;
-    /// fn app(cx: Scope) -> Element {
+    /// fn app() -> Element {
     ///     rsx!(
     ///         rect {
     ///             direction: "vertical",
@@ -248,7 +248,7 @@ builder_constructors! {
     ///
     /// ```rust,no_run
     /// # use freya::prelude::*;
-    /// fn app(cx: Scope) -> Element {
+    /// fn app() -> Element {
     ///     rsx!(
     ///         label {
     ///             "Hello World"
@@ -312,7 +312,7 @@ builder_constructors! {
     ///
     /// ```rust,no_run
     /// # use freya::prelude::*;
-    /// fn app(cx: Scope) -> Element {
+    /// fn app() -> Element {
     ///     rsx!(
     ///         paragraph {
     ///             text {
@@ -425,8 +425,8 @@ builder_constructors! {
     /// # use freya::prelude::*;
     /// static RUST_LOGO: &[u8] = include_bytes!("./rust_logo.png");
     ///
-    /// fn app(cx: Scope) -> Element {
-    ///     let image_data = bytes_to_data(cx, RUST_LOGO);
+    /// fn app() -> Element {
+    ///     let image_data = bytes_to_data(RUST_LOGO);
     ///     rsx!(
     ///         image {
     ///             image_data: image_data,
@@ -464,8 +464,8 @@ builder_constructors! {
     /// # use freya::prelude::*;
     /// static FERRIS: &[u8] = include_bytes!("./ferris.svg");
     ///
-    /// fn app(cx: Scope) -> Element {
-    ///     let ferris = bytes_to_data(cx, FERRIS);
+    /// fn app() -> Element {
+    ///     let ferris = bytes_to_data(FERRIS);
     ///     rsx!(
     ///         svg {
     ///             svg_data: ferris,

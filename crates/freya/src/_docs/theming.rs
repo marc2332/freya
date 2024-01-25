@@ -11,7 +11,7 @@
 //! ```rust, no_run
 //! # use freya::prelude::*;
 //!
-//! fn app(cx: Scope) -> Element {
+//! fn app() -> Element {
 //!     rsx!(
 //!         ThemeProvider {
 //!             Component { }
@@ -20,8 +20,8 @@
 //! }
 //!
 //! #[allow(non_snake_case)]
-//! fn Component(cx: Scope) -> Element {
-//!     let theme = use_get_theme(cx);
+//! fn Component() -> Element {
+//!     let theme = use_get_theme();
 //!
 //!     let button_theme = &theme.button;
 //!
@@ -40,7 +40,7 @@
 //! ```rust, no_run
 //! # use freya::prelude::*;
 //!
-//! fn app(cx: Scope) -> Element {
+//! fn app() -> Element {
 //!     rsx!(
 //!         ThemeProvider {
 //!             theme: LIGHT_THEME,
@@ -50,8 +50,8 @@
 //! }
 //!
 //! #[allow(non_snake_case)]
-//! fn Component(cx: Scope) -> Element {
-//!     let theme = use_get_theme(cx);
+//! fn Component() -> Element {
+//!     let theme = use_get_theme();
 //!
 //!     let button_theme = &theme.button;
 //!
@@ -70,7 +70,7 @@
 //! ```rust, no_run
 //! # use freya::prelude::*;
 //!
-//! fn app(cx: Scope) -> Element {
+//! fn app() -> Element {
 //!     rsx!(
 //!         ThemeProvider {
 //!             Component { }
@@ -79,16 +79,16 @@
 //! }
 //!
 //! #[allow(non_snake_case)]
-//! fn Component(cx: Scope) -> Element {
-//!     let theme = use_theme(cx);
+//! fn Component() -> Element {
+//!     let mut theme = use_theme();
 //!
-//!     let onclick = |_| {
+//!     let onclick = move |_| {
 //!         *theme.write() = LIGHT_THEME;
 //!     };
 //!
 //!     rsx!(
 //!         Button {
-//!             onclick: onclick,
+//!             onclick,
 //!             label {
 //!                 "Use Light theme"
 //!             }
@@ -105,7 +105,7 @@
 //! ```rust,no_run
 //! # use freya::prelude::*;
 //!
-//! fn app(cx: Scope) -> Element {
+//! fn app() -> Element {
 //!     rsx! {
 //!         Button {
 //!             theme: ButtonThemeWith {
@@ -132,7 +132,7 @@
 //! ```rust,no_run
 //! # use freya::prelude::*;
 //!
-//! fn app(cx: Scope) -> Element {
+//! fn app() -> Element {
 //!     rsx! {
 //!         Button {
 //!             theme: theme_with!(ButtonTheme {
@@ -171,7 +171,7 @@
 //!     ..LIGHT_THEME
 //! };
 //!
-//! fn app(cx: Scope) -> Element {
+//! fn app() -> Element {
 //!     rsx!(
 //!         ThemeProvider {
 //!             theme: CUSTOM_THEME,

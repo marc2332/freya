@@ -41,13 +41,13 @@ pub enum SwitchStatus {
 /// ```no_run
 /// # use freya::prelude::*;
 /// fn app() -> Element {
-///     let enabled = use_state(&cx, || false);
+///     let mut enabled = use_signal(|| false);
 ///
 ///     rsx!(
 ///         Switch {
-///             enabled: *enabled.get(),
-///             ontoggled: |_| {
-///                 enabled.set(!enabled.get());
+///             enabled: *enabled.read(),
+///             ontoggled: move |_| {
+///                 enabled.with_mut(|v| *v = !*v);
 ///             }
 ///         }
 ///     )
@@ -64,7 +64,7 @@ pub fn Switch(props: SwitchProps) -> Element {
 
     let focus_id = focus.attribute();
 
-    use_on_destroy({
+    use_drop({
         to_owned![status, platform];
         move || {
             if *status.read() == SwitchStatus::Hovering {
@@ -149,12 +149,12 @@ pub fn Switch(props: SwitchProps) -> Element {
             corner_radius: "50",
             background: "{background}",
             border: "{border}",
-            onmousedown: onmousedown,
-            onmouseenter: onmouseenter,
-            onmouseleave: onmouseleave,
-            onkeydown: onkeydown,
-            onclick: onclick,
-            focus_id: focus_id,
+            onmousedown,
+            onmouseenter,
+            onmouseleave,
+            onkeydown,
+            onclick,
+            focus_id,
             rect {
                 width: "100%",
                 height: "100%",

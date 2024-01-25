@@ -51,9 +51,9 @@ pub fn NodeElement(
             width: "100%",
             height: "27",
             offset_x: "{margin_left}",
-            onmousedown: onmousedown,
-            onmouseover: onmouseover,
-            onmouseleave: onmouseleave,
+            onmousedown,
+            onmouseover,
+            onmouseleave,
             label {
                 font_size: "14",
                 color: "{color}",
