@@ -23,7 +23,9 @@ pub struct UseFocus {
 impl UseFocus {
     /// Focus this node
     pub fn focus(&mut self) {
-        *self.focused_id.write() = Some(self.id)
+        if !*self.is_focused.peek() {
+            *self.focused_id.write() = Some(self.id)
+        }
     }
 
     /// Get the node focus ID
