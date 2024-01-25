@@ -62,7 +62,7 @@ mod test {
     pub async fn focus_accessibility() {
         #[allow(non_snake_case)]
         fn OherChild() -> Element {
-            let focus_manager = use_focus(cx);
+            let focus_manager = use_focus();
 
             rsx!(rect {
                 width: "100%",

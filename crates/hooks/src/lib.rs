@@ -9,7 +9,7 @@ mod theming;
 
 mod use_accessibility;
 mod use_animation;
-// mod use_animation_transition;
+mod use_animation_transition;
 mod use_canvas;
 mod use_editable;
 mod use_focus;
@@ -28,7 +28,7 @@ pub use theming::*;
 
 pub use use_accessibility::*;
 pub use use_animation::*;
-// pub use use_animation_transition::*;
+pub use use_animation_transition::*;
 pub use use_canvas::*;
 pub use use_editable::*;
 pub use use_focus::*;

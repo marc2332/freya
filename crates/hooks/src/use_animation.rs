@@ -90,12 +90,12 @@ impl AnimationManager {
 /// ## Usage
 /// ```rust,no_run
 /// # use freya::prelude::*;
-/// fn app(cx: Scope) -> Element {
-///     let animation = use_animation(cx, || 0.0);
+/// fn app() -> Element {
+///     let animation = use_animation(|| 0.0);
 ///
 ///     let progress = animation.value();
 ///
-///     use_memo(cx, (), move |_| {
+///     use_hook(move || {
 ///         animation.start(Animation::new_linear(0.0..=100.0, 50));
 ///     });
 ///
@@ -124,7 +124,7 @@ mod test {
     use std::time::Duration;
 
     use crate::{use_animation, Animation};
-    use dioxus_hooks::{to_owned, use_memo};
+    use dioxus_hooks::to_owned;
     use freya::prelude::*;
     use freya_testing::{events::pointer::MouseButton, launch_test, FreyaEvent};
     use tokio::time::sleep;

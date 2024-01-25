@@ -12,9 +12,9 @@ fn main() {
 
 const TARGET: f64 = 500.0;
 
-fn app(cx: Scope) -> Element {
-    let animation =
-        use_animation_transition(cx, TransitionAnimation::new_sine_in_out(500), (), |_| {
+fn app() -> Element {
+    let mut animation =
+        use_animation_transition(TransitionAnimation::new_sine_in_out(500), (), |_| {
             vec![
                 Transition::new_size(0.0, TARGET),
                 Transition::new_color("rgb(33, 158, 188)", "white"),
