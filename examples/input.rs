@@ -11,7 +11,7 @@ fn main() {
 }
 
 fn app() -> Element {
-    let mut values = use_signal(|| (String::new(), String::new()));
+    let values = use_signal(|| (String::new(), String::new()));
 
     rsx!(
         rect {

@@ -24,7 +24,7 @@ async fn with_state() {
     fn stateful_app() -> Element {
         let mut state = use_signal(|| false);
 
-        let _ = use_memo(move || {
+        use_effect(move || {
             state.set(true);
         });
 

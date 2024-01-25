@@ -170,15 +170,16 @@ pub enum DropdownStatus {
 ///     rsx!(
 ///         Dropdown {
 ///             value: selected_dropdown.read().clone(),
-///             values.read().iter().map(|ch| {
-///                 rsx!(
-///                     DropdownItem {
-///                         value: ch.to_string(),
-///                         onclick: move |_| selected_dropdown.set(ch.to_string()),
-///                         label { "{ch}" }
-///                     }
-///                 )
-///             })
+///             for ch in values {
+///                 DropdownItem {
+///                     value: ch.to_string(),
+///                     onclick: {
+///                         to_owned![ch];
+///                         move |_| selected_dropdown.set(ch.clone())
+///                     },
+///                     label { "{ch}" }
+///                 }
+///             }
 ///         }
 ///     )
 /// }

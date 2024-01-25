@@ -350,6 +350,9 @@ mod test {
         // Enable event loop ticker
         utils.config().enable_ticker(true);
 
+        // Already finished
+        sleep(Duration::from_millis(50)).await;
+
         // State in the end
         utils.wait_for_update().await;
 

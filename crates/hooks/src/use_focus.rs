@@ -97,7 +97,7 @@ mod test {
     pub async fn track_focus() {
         #[allow(non_snake_case)]
         fn OherChild() -> Element {
-            let focus_manager = use_focus();
+            let mut focus_manager = use_focus();
 
             rsx!(
                 rect {

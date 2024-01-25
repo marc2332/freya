@@ -28,7 +28,7 @@
 //!
 //!     let progress = animation.value();
 //!
-//!     use_hook(move |_| {
+//!     use_hook(move || {
 //!         animation.start(Animation::new_linear(0.0..=100.0, 50));
 //!     });
 //!

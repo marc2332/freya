@@ -47,7 +47,7 @@ pub enum SwitchStatus {
 ///         Switch {
 ///             enabled: *enabled.read(),
 ///             ontoggled: move |_| {
-///                 enabled.set(!enabled.get());
+///                 enabled.with_mut(|v| *v = !*v);
 ///             }
 ///         }
 ///     )

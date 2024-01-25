@@ -67,6 +67,7 @@ fn get_render_range(
 ///
 /// ```no_run
 /// # use freya::prelude::*;
+/// # use std::rc::Rc;
 /// fn app() -> Element {
 ///     rsx!(
 ///         VirtualScrollView {

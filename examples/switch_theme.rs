@@ -12,7 +12,7 @@ fn main() {
 
 #[allow(non_snake_case)]
 fn TheOtherSwitch() -> Element {
-    let mut theme = use_theme();
+    let theme = use_theme();
 
     let is_enabled = theme.read().name == "dark";
 
@@ -30,7 +30,7 @@ fn TheOtherSwitch() -> Element {
 
 fn app() -> Element {
     use_init_default_theme();
-    let mut enabled = use_signal(|| true);
+    let enabled = use_signal(|| true);
 
     let is_enabled = if *enabled.read() { "Yes" } else { "No" };
 
