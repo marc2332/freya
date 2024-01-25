@@ -74,7 +74,7 @@ pub fn use_focus() -> UseFocus {
 /// Create a focus provider.
 pub fn use_init_focus() {
     use_context_provider::<Signal<Option<FocusId>>>(|| Signal::new(None));
-    use_context_provider::<Signal<NavigationMode>>(|| Signal::new(NavigationMode::Keyboard));
+    use_context_provider::<Signal<NavigationMode>>(|| Signal::new(NavigationMode::NotKeyboard));
 }
 
 #[cfg(test)]

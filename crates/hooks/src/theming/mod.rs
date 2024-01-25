@@ -339,6 +339,7 @@ define_theme! {
         background: str,
         thumb_background: str,
         thumb_inner_background: str,
+        border_fill: str,
     }
 }
 

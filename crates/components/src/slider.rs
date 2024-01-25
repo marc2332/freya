@@ -2,7 +2,7 @@ use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{MouseEvent, WheelEvent};
 
-use freya_hooks::{use_applied_theme, use_node, use_platform, SliderThemeWith};
+use freya_hooks::{use_applied_theme, use_node, use_platform, use_focus, SliderThemeWith};
 use tracing::info;
 use winit::window::CursorIcon;
 
@@ -84,12 +84,14 @@ pub fn Slider(
     }: SliderProps,
 ) -> Element {
     let theme = use_applied_theme!(&theme, slider);
+    let focus = use_focus();
     let status = use_signal(SliderStatus::default);
     let mut clicking = use_signal(|| false);
     let platform = use_platform();
+    let (node_reference, size) = use_node();
 
     let value = ensure_correct_slider_range(value);
-    let (node_reference, size) = use_node();
+    let focus_id = focus.attribute();
 
     use_drop({
         to_owned![status, platform];
@@ -131,8 +133,9 @@ pub fn Slider(
     };
 
     let onmousedown = {
-        to_owned![clicking, onmoved];
+        to_owned![clicking, onmoved, focus];
         move |e: MouseEvent| {
+            focus.focus();
             clicking.set(true);
             let coordinates = e.get_element_coordinates();
             let x = coordinates.x - 6.0;
@@ -156,6 +159,11 @@ pub fn Slider(
     };
 
     let inner_width = (size.area.width() - 15.0) * (value / 100.0) as f32;
+    let border = if focus.is_selected() {
+        format!("2 solid {}", theme.border_fill)
+    } else {
+        format!("none")
+    };
 
     rsx!(
         rect {
@@ -164,12 +172,15 @@ pub fn Slider(
             height: "20",
             onmousedown,
             onglobalclick: onclick,
+            focus_id,
             onmouseenter,
             onglobalmouseover: onmouseover,
             onmouseleave,
             onwheel: onwheel,
             main_align: "center",
             cross_align: "center",
+            border: "{border}",
+            corner_radius: "8",
             rect {
                 background: "{theme.background}",
                 width: "100%",
