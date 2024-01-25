@@ -89,7 +89,7 @@ fn app() -> Element {
     rsx!(
         rect {
             Canvas {
-                canvas: canvas,
+                canvas,
                 theme: theme_with!(CanvasTheme {
                     background: "black".into(),
                     width: "100%".into(),

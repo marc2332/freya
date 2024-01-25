@@ -57,8 +57,8 @@ pub enum SliderStatus {
 /// # Example
 /// ```no_run
 /// # use freya::prelude::*;
-/// fn app(cx: Scope) -> Element {
-///     let percentage = use_state(cx, || 20.0);
+/// fn app() -> Element {
+///     let mut percentage = use_signal(|| 20.0);
 ///
 ///     rsx!(
 ///         label {
@@ -66,8 +66,8 @@ pub enum SliderStatus {
 ///         }
 ///         Slider {
 ///             width: "50%",
-///             value: *percentage.get(),
-///             onmoved: |p| {
+///             value: *percentage.read(),
+///             onmoved: move |p| {
 ///                 percentage.set(p);
 ///             }
 ///         }

@@ -41,12 +41,12 @@ pub enum SwitchStatus {
 /// ```no_run
 /// # use freya::prelude::*;
 /// fn app() -> Element {
-///     let enabled = use_state(&cx, || false);
+///     let mut enabled = use_signal(|| false);
 ///
 ///     rsx!(
 ///         Switch {
-///             enabled: *enabled.get(),
-///             ontoggled: |_| {
+///             enabled: *enabled.read(),
+///             ontoggled: move |_| {
 ///                 enabled.set(!enabled.get());
 ///             }
 ///         }

@@ -171,7 +171,7 @@ macro_rules! define_theme {
 ///
 /// ```no_run
 /// # use freya::prelude::*;
-/// # fn theme_with_example_no_macro(cx: Scope) -> Element {
+/// # fn theme_with_example_no_macro() -> Element {
 /// rsx! {
 ///     Button {
 ///         theme: ButtonThemeWith {
@@ -191,7 +191,7 @@ macro_rules! define_theme {
 ///
 /// ```no_run
 /// # use freya::prelude::*;
-/// # fn theme_with_example_no_macro(cx: Scope) -> Element {
+/// # fn theme_with_example_no_macro() -> Element {
 /// rsx! {
 ///     Button {
 ///         theme: theme_with!(ButtonTheme {
