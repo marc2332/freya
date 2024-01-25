@@ -22,18 +22,16 @@ fn app() -> Element {
     rsx!(
         Dropdown {
             value: selected_dropdown.read().clone(),
-            {values.into_iter().map(move |ch| {
-                rsx!(
-                    DropdownItem {
-                        value: ch.clone(),
-                        onclick: {
-                            to_owned![ch];
-                            move |_| selected_dropdown.set(ch.clone())
-                        },
-                        label { "{ch}" }
-                    }
-                )
-            })}
+            for ch in values {
+                DropdownItem {
+                    value: ch.clone(),
+                    onclick: {
+                        to_owned![ch];
+                        move |_| selected_dropdown.set(ch.clone())
+                    },
+                    label { "{ch}" }
+                }
+            }
         }
     )
 }
