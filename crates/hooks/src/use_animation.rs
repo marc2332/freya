@@ -90,12 +90,12 @@ impl AnimationManager {
 /// ## Usage
 /// ```rust,no_run
 /// # use freya::prelude::*;
-/// fn app(cx: Scope) -> Element {
-///     let animation = use_animation(cx, || 0.0);
+/// fn app() -> Element {
+///     let mut animation = use_animation(|| 0.0);
 ///
 ///     let progress = animation.value();
 ///
-///     use_memo(cx, (), move |_| {
+///     use_hook(move || {
 ///         animation.start(Animation::new_linear(0.0..=100.0, 50));
 ///     });
 ///
@@ -124,7 +124,8 @@ mod test {
     use std::time::Duration;
 
     use crate::{use_animation, Animation};
-    use dioxus_hooks::{to_owned, use_memo};
+    use dioxus_core::use_hook;
+    use dioxus_hooks::to_owned;
     use freya::prelude::*;
     use freya_testing::{events::pointer::MouseButton, launch_test, FreyaEvent};
     use tokio::time::sleep;
@@ -132,7 +133,7 @@ mod test {
     #[tokio::test]
     pub async fn track_progress() {
         fn use_animation_app() -> Element {
-            let animation = use_animation(|| 0.0);
+            let mut animation = use_animation(|| 0.0);
 
             let progress = animation.value();
 
@@ -165,6 +166,9 @@ mod test {
         // Enable event loop ticker
         utils.config().enable_ticker(true);
 
+        // Already finished
+        sleep(Duration::from_millis(50)).await;
+
         // State in the end
         utils.wait_for_update().await;
 
@@ -175,18 +179,18 @@ mod test {
     #[tokio::test]
     pub async fn restart_progress() {
         fn use_animation_app() -> Element {
-            let animation = use_animation(|| 10.0);
+            let mut animation = use_animation(|| 10.0);
 
             let progress = animation.value();
 
-            let restart = {
+            let mut restart = {
                 to_owned![animation];
                 move || {
                     animation.clear();
                 }
             };
 
-            let _ = use_memo(move || {
+            use_hook(|| {
                 animation.start(Animation::new_linear(10.0..=100.0, 50));
             });
 
@@ -224,6 +228,9 @@ mod test {
 
         // Enable event loop ticker
         utils.config().enable_ticker(true);
+
+        // Already finished
+        sleep(Duration::from_millis(50)).await;
 
         // State has been restarted
         utils.wait_for_update().await;

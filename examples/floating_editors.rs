@@ -15,7 +15,7 @@ fn app() -> Element {
     use_init_theme(DARK_THEME);
     let mut hovering = use_signal(|| false);
     let mut canvas_pos = use_signal(|| (0.0f64, 0.0f64));
-    let mut nodes = use_signal(|| vec![(0.0f64, 0.0f64)]);
+    let nodes = use_signal(|| vec![(0.0f64, 0.0f64)]);
     let clicking = use_signal::<Option<(f64, f64)>>(|| None);
     let mut clicking_drag = use_signal::<Option<(usize, (f64, f64))>>(|| None);
 
@@ -88,10 +88,10 @@ fn app() -> Element {
                 height: "calc(100% - 100)",
                 offset_x: "{canvas_pos.read().0}",
                 offset_y: "{canvas_pos.read().1}",
-                onmousedown: onmousedown,
-                onclick: onclick,
-                onmouseover: onmouseover,
-                onmouseleave: onmouseleave,
+                onmousedown,
+                onclick,
+                onmouseover,
+                onmouseleave,
                 label {
                     font_size: "25",
                     "Floating Editors Example"
@@ -163,7 +163,7 @@ fn app() -> Element {
 
 #[allow(non_snake_case)]
 fn Editor() -> Element {
-    let focus_manager = use_focus();
+    let mut focus_manager = use_focus();
     let editable = use_editable(
         || {
             EditableConfig::new("Lorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet".to_string())
@@ -176,8 +176,8 @@ fn Editor() -> Element {
 
     let mut font_size_percentage = use_signal(|| 15.0);
     let mut line_height_percentage = use_signal(|| 0.0);
-    let mut is_bold = use_signal(|| false);
-    let mut is_italic = use_signal(|| false);
+    let is_bold = use_signal(|| false);
+    let is_italic = use_signal(|| false);
 
     // minimum font size is 5
     let font_size = font_size_percentage + 5.0;
@@ -190,11 +190,9 @@ fn Editor() -> Element {
     };
     let font_weight = if *is_bold.read() { "bold" } else { "normal" };
 
-    // TODO: Waiting for Dioxus to bring back this hook
-    /* use_on_create(move || {
+    use_hook(|| {
         focus_manager.focus();
-        async move {}
-    }); */
+    });
 
     let onclick = {
         to_owned![focus_manager];
@@ -216,7 +214,7 @@ fn Editor() -> Element {
 
     rsx!(
         rect {
-            onclick: onclick,
+            onclick,
             width: "100%",
             height: "100%",
             rect {
@@ -284,7 +282,7 @@ fn Editor() -> Element {
                 width: "100%",
                 height: "calc(100% - 80)",
                 padding: "5",
-                onkeydown: onkeydown,
+                onkeydown,
                 cursor_reference: cursor_attr,
                 direction: "horizontal",
                 rect {
@@ -367,9 +365,9 @@ fn Editor() -> Element {
                                             max_lines: "1",
                                             cursor_mode: "editable",
                                             cursor_id: "{cursor_id}",
-                                            onmousedown: onmousedown,
-                                            onmouseover: onmouseover,
-                                            onclick: onclick,
+                                            onmousedown,
+                                            onmouseover,
+                                            onclick,
                                             highlights: highlights,
                                             text {
                                                 color: "rgb(240, 240, 240)",

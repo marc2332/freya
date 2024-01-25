@@ -20,7 +20,7 @@ use freya_renderer::{LaunchConfig, WindowConfig};
 ///     launch(app);
 /// }
 ///
-/// fn app(cx: Scope) -> Element {
+/// fn app() -> Element {
 ///    rsx!(
 ///         rect {
 ///             width: "100%",
@@ -66,7 +66,7 @@ pub fn launch(app: AppComponent) {
 ///     launch_with_title(app, "Whoa!");
 /// }
 ///
-/// fn app(cx: Scope) -> Element {
+/// fn app() -> Element {
 ///    rsx!(
 ///         rect {
 ///             width: "100%",
@@ -110,7 +110,7 @@ pub fn launch_with_title(app: AppComponent, title: &'static str) {
 ///     launch_with_props(app, "Whoa!", (400.0, 600.0));
 /// }
 ///
-/// fn app(cx: Scope) -> Element {
+/// fn app() -> Element {
 ///    rsx!(
 ///         rect {
 ///             width: "100%",
@@ -167,7 +167,7 @@ pub fn launch_with_props(app: AppComponent, title: &'static str, (width, height)
 ///     );
 /// }
 ///
-/// fn app(cx: Scope) -> Element {
+/// fn app() -> Element {
 ///    rsx!(
 ///         rect {
 ///             width: "100%",

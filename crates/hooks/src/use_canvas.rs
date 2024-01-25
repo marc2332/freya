@@ -32,8 +32,8 @@ impl UseCanvas {
 /// ## Usage
 /// ```rust,no_run
 /// # use freya::prelude::*;
-/// fn app(cx: Scope) -> Element {
-///     let canvas = use_canvas(cx, (), |_| {
+/// fn app() -> Element {
+///     let canvas = use_canvas((), |_| {
 ///         Box::new(|canvas, font_collection, area| {
 ///             // Draw using the canvas !
 ///         })
@@ -41,7 +41,7 @@ impl UseCanvas {
 ///
 ///     rsx!(
 ///         Canvas {
-///             canvas: canvas
+///             canvas
 ///         }
 ///     )
 /// }

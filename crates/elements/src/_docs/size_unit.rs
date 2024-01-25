@@ -5,7 +5,7 @@
 //!
 //! ```rust, no_run
 //! # use freya::prelude::*;
-//! fn app(cx: Scope) -> Element {
+//! fn app() -> Element {
 //!     rsx!(
 //!         rect {
 //!             width: "auto",
@@ -22,7 +22,7 @@
 //!
 //! ```rust, no_run
 //! # use freya::prelude::*;
-//! fn app(cx: Scope) -> Element {
+//! fn app() -> Element {
 //!     rsx!(
 //!         rect {
 //!             width: "50",
@@ -37,7 +37,7 @@
 //!
 //! ```rust, no_run
 //! # use freya::prelude::*;
-//! fn app(cx: Scope) -> Element {
+//! fn app() -> Element {
 //!     rsx!(
 //!         rect {
 //!             width: "50%", // Half the parent
@@ -53,7 +53,7 @@
 //!
 //! ```rust, no_run
 //! # use freya::prelude::*;
-//! fn app(cx: Scope) -> Element {
+//! fn app() -> Element {
 //!     rsx!(
 //!         rect {
 //!             width: "calc(33% - 60 + 15%)", // (1/3 of the parent minus 60) plus 15% of parent
@@ -68,7 +68,7 @@
 //!
 //! ```rust, no_run
 //! # use freya::prelude::*;
-//! fn app(cx: Scope) -> Element {
+//! fn app() -> Element {
 //!     rsx!(
 //!         rect {
 //!             width: "100%",
@@ -91,7 +91,7 @@
 //!
 //! ```rust, no_run
 //! # use freya::prelude::*;
-//! fn app(cx: Scope) -> Element {
+//! fn app() -> Element {
 //!     rsx!(
 //!         rect {
 //!             width: "200",

@@ -73,7 +73,7 @@ where
     };
     let color = theme.font_theme.color;
 
-    use_on_destroy({
+    use_drop({
         to_owned![status, platform];
         move || {
             if *status.peek() == DropdownItemStatus::Hovering {
@@ -115,17 +115,17 @@ where
     rsx!(
         rect {
             color: "{color}",
-            focus_id: focus_id,
+            focus_id,
             role: "button",
             background: "{background}",
             padding: "6 22 6 16",
             corner_radius: "6",
             main_align: "center",
             cross_align: "center",
-            onmouseenter: onmouseenter,
-            onmouseleave: onmouseleave,
-            onclick: onclick,
-            onkeydown: onkeydown,
+            onmouseenter,
+            onmouseleave,
+            onclick,
+            onkeydown,
             {children}
         }
     )
@@ -170,15 +170,16 @@ pub enum DropdownStatus {
 ///     rsx!(
 ///         Dropdown {
 ///             value: selected_dropdown.read().clone(),
-///             values.read().iter().map(|ch| {
-///                 rsx!(
-///                     DropdownItem {
-///                         value: ch.to_string(),
-///                         onclick: move |_| selected_dropdown.set(ch.to_string()),
-///                         label { "{ch}" }
-///                     }
-///                 )
-///             })
+///             for ch in values {
+///                 DropdownItem {
+///                     value: ch.to_string(),
+///                     onclick: {
+///                         to_owned![ch];
+///                         move |_| selected_dropdown.set(ch.clone())
+///                     },
+///                     label { "{ch}" }
+///                 }
+///             }
 ///         }
 ///     )
 /// }
@@ -204,7 +205,7 @@ where
         *selected.write() = value;
     });
 
-    use_on_destroy({
+    use_drop({
         to_owned![status, platform];
         move || {
             if *status.peek() == DropdownStatus::Hovering {
@@ -268,12 +269,12 @@ where
 
     rsx!(
         rect {
-            onmouseenter: onmouseenter,
-            onmouseleave: onmouseleave,
-            onclick: onclick,
-            onkeydown: onkeydown,
+            onmouseenter,
+            onmouseleave,
+            onclick,
+            onkeydown,
             margin: "4",
-            focus_id: focus_id,
+            focus_id,
             background: "{button_background}",
             color: "{font_theme.color}",
             corner_radius: "8",
@@ -299,8 +300,8 @@ where
             rect {
                 height: "0",
                 rect {
-                    onglobalclick: onglobalclick,
-                    onkeydown: onkeydown,
+                    onglobalclick,
+                    onkeydown,
                     layer: "-99",
                     margin: "4",
                     border: "1 solid {border_fill}",

@@ -21,7 +21,7 @@
 
 ```rust, no_run
 fn app() -> Element {
-    let mut count = use_state(cx, || 0);
+    let mut count = use_signal(|| 0);
 
     rsx!(
         rect {

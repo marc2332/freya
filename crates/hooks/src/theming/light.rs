@@ -12,6 +12,7 @@ pub const LIGHT_THEME: Theme = Theme {
         background: cow_borrowed!("rgb(210, 210, 210)"),
         thumb_background: cow_borrowed!("rgb(210, 210, 210)"),
         thumb_inner_background: cow_borrowed!("rgb(103, 80, 164)"),
+        border_fill: cow_borrowed!("rgb(210, 210, 210)"),
     },
     button: ButtonTheme {
         background: cow_borrowed!("rgb(245, 245, 245)"),

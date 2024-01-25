@@ -84,7 +84,7 @@ pub fn Button(props: ButtonProps) -> Element {
         }
     };
 
-    use_on_destroy({
+    use_drop({
         to_owned![status, platform];
         move || {
             if *status.read() == ButtonStatus::Hovering {
@@ -129,11 +129,11 @@ pub fn Button(props: ButtonProps) -> Element {
 
     rsx!(
         rect {
-            onclick: onclick,
-            onmouseenter: onmouseenter,
-            onmouseleave: onmouseleave,
-            onkeydown: onkeydown,
-            focus_id: focus_id,
+            onclick,
+            onmouseenter,
+            onmouseleave,
+            onkeydown,
+            focus_id,
             width: "{width}",
             height: "{height}",
             padding: "{padding}",

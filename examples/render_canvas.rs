@@ -47,7 +47,7 @@ fn app() -> Element {
                 state += 1;
             },
             Canvas {
-                canvas: canvas,
+                canvas,
                 theme: theme_with!(CanvasTheme {
                     background: "black".into(),
                     width: "100%".into(),

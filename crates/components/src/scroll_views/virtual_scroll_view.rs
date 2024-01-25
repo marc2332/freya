@@ -67,6 +67,7 @@ fn get_render_range(
 ///
 /// ```no_run
 /// # use freya::prelude::*;
+/// # use std::rc::Rc;
 /// fn app() -> Element {
 ///     rsx!(
 ///         VirtualScrollView {
@@ -322,8 +323,8 @@ pub fn VirtualScrollView<T: Clone>(props: VirtualScrollViewProps<T>) -> Element 
             height: "{user_container_height}",
             onglobalclick: onclick,
             onglobalmouseover: onmouseover,
-            onkeydown: onkeydown,
-            onkeyup: onkeyup,
+            onkeydown,
+            onkeyup,
             rect {
                 direction: "vertical",
                 width: "{container_width}",

@@ -13,7 +13,7 @@ fn main() {
 
 fn app() -> Element {
     let ferris = bytes_to_data(FERRIS);
-    let opacity = use_state(|| 70.0);
+    let mut opacity = use_signal(|| 70.0);
 
     rsx!(
         rect {
@@ -36,8 +36,8 @@ fn app() -> Element {
             }
             Slider {
                 width: "100",
-                value: *opacity.get(),
-                onmoved: |p| {
+                value: *opacity.read(),
+                onmoved: move |p| {
                     opacity.set(p);
                 }
             }
