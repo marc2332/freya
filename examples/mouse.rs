@@ -27,8 +27,8 @@ fn app() -> Element {
 
 #[allow(non_snake_case)]
 fn Area() -> Element {
-    let mut cursor_pos_over = use_signal(|| (0f64, 0f64));
-    let mut cursor_pos_click = use_signal(|| (0f64, 0f64));
+    let cursor_pos_over = use_signal(|| (0f64, 0f64));
+    let cursor_pos_click = use_signal(|| (0f64, 0f64));
 
     let cursor_moved = move |e: MouseEvent| {
         cursor_pos_over.with_mut(|cursor_pos| {
