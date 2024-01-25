@@ -30,7 +30,7 @@ fn TheOtherSwitch() -> Element {
 
 fn app() -> Element {
     use_init_default_theme();
-    let mut enabled = use_signal(|| true);
+    let enabled = use_signal(|| true);
 
     let is_enabled = if *enabled.read() { "Yes" } else { "No" };
 
