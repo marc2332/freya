@@ -15,7 +15,7 @@ fn app(cx: Scope) -> Element {
 
     let set_to_max = {
         to_owned![progress_anim];
-        move |_: MouseEvent| {
+        move |_| {
             progress_anim.start(Animation::new_linear(progress_anim.value()..=100.0, 400));
         }
     };
@@ -78,7 +78,7 @@ fn app(cx: Scope) -> Element {
             progress: progress * 0.20
         }
         Slider {
-            width: 300.0,
+            width: "300",
             value: progress as f64,
             onmoved: onmoved
         }

@@ -84,7 +84,7 @@ impl<'a> AnimationManager<'a> {
 /// Run animations.
 ///
 /// ## Usage
-/// ```rust
+/// ```rust,no_run
 /// # use freya::prelude::*;
 /// fn app(cx: Scope) -> Element {
 ///     let animation = use_animation(cx, || 0.0);

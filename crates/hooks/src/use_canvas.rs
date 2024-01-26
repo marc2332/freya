@@ -29,7 +29,7 @@ impl UseCanvas {
 /// Register a rendering hook to gain access to the Canvas.
 ///
 /// ## Usage
-/// ```rust
+/// ```rust,no_run
 /// # use freya::prelude::*;
 /// fn app(cx: Scope) -> Element {
 ///     let canvas = use_canvas(cx, (), |_| {

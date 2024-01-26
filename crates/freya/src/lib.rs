@@ -8,15 +8,16 @@
 //!
 //! Powered by [🧬 Dioxus](https://dioxuslabs.com) and [🎨 Skia](https://skia.org/).
 //!
-//! - [`Elements`](freya_elements::elements#structs)
-//! - [`Events`](freya_elements::elements#functions)
-//! - [`Components`](freya_components)
-//! - [`Hooks`](freya_hooks)
-//! - [`Theming`](self::_docs::theming)
-//! - [`Hot reload`](self::_docs::hot_reload)
-//! - [`Testing`](self::_docs::testing)
-//! - [`Animating`](self::_docs::animating)
-//! - [`Devtools`](self::_docs::devtools)
+//! - [Elements API reference](freya_elements::elements#structs)
+//! - [Events API reference](freya_elements::elements#functions)
+//! - [Elements guides](freya_elements::_docs)
+//! - [Components](freya_components)
+//! - [Hooks](freya_hooks)
+//! - [Theming](self::_docs::theming)
+//! - [Hot reload](self::_docs::hot_reload)
+//! - [Testing](self::_docs::testing)
+//! - [Animating](self::_docs::animating)
+//! - [Devtools](self::_docs::devtools)
 //!
 //! ```rust,no_run
 //! use freya::prelude::*;
@@ -49,7 +50,7 @@
 //! - `log`: enables internal logs.
 //!
 
-/// Freya Docs
+/// Freya docs.
 #[cfg(doc)]
 pub mod _docs;
 

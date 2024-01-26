@@ -1,10 +1,14 @@
-### direction
+Control how the inner elements stack.
 
-Control how the inner elements will be stacked, possible values are `vertical` (default) and `horizontal`.
+Accepted values:
+
+- `vertical` (default)
+- `horizontal`
 
 ##### Usage
 
 ```rust, no_run
+# use freya::prelude::*;
 fn app(cx: Scope) -> Element {
     render!(
         rect {
