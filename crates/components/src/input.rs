@@ -97,9 +97,7 @@ pub fn Input(
     let focus = use_focus();
 
     if &value != editable.editor().read().rope() {
-        editable.editor_mut().with_mut(|editor| {
-            editor.set(&value);
-        });
+        editable.editor_mut().write().set(&value);
     }
 
     let text = match mode {

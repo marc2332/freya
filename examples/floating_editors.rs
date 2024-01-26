@@ -15,7 +15,7 @@ fn app() -> Element {
     use_init_theme(DARK_THEME);
     let mut hovering = use_signal(|| false);
     let mut canvas_pos = use_signal(|| (0.0f64, 0.0f64));
-    let nodes = use_signal(|| vec![(0.0f64, 0.0f64)]);
+    let mut nodes = use_signal(|| vec![(0.0f64, 0.0f64)]);
     let clicking = use_signal::<Option<(f64, f64)>>(|| None);
     let mut clicking_drag = use_signal::<Option<(usize, (f64, f64))>>(|| None);
 
@@ -42,12 +42,10 @@ fn app() -> Element {
             if let Some((node_id, clicking_cords)) = *clicking_drag.peek() {
                 let coordinates = e.get_screen_coordinates();
 
-                nodes.with_mut(|nodes| {
-                    let node = nodes.get_mut(node_id).unwrap();
-                    node.0 = coordinates.x - clicking_cords.0 - canvas_pos.peek().0;
-                    node.1 = coordinates.y - clicking_cords.1 - canvas_pos.peek().1 - 25.0;
-                    // The 25 is because of label from below.
-                });
+                let mut node = nodes.get_mut(node_id).unwrap();
+                node.0 = coordinates.x - clicking_cords.0 - canvas_pos.peek().0;
+                node.1 = coordinates.y - clicking_cords.1 - canvas_pos.peek().1 - 25.0;
+                // The 25 is because of label from below.
             }
         }
     };
@@ -72,9 +70,7 @@ fn app() -> Element {
     };
 
     let create_node = move |_| {
-        nodes.with_mut(|nodes| {
-            nodes.push((0.0f64, 0.0f64));
-        });
+        nodes.push((0.0f64, 0.0f64));
     };
 
     rsx!(
@@ -176,8 +172,8 @@ fn Editor() -> Element {
 
     let mut font_size_percentage = use_signal(|| 15.0);
     let mut line_height_percentage = use_signal(|| 0.0);
-    let is_bold = use_signal(|| false);
-    let is_italic = use_signal(|| false);
+    let mut is_bold = use_signal(|| false);
+    let mut is_italic = use_signal(|| false);
 
     // minimum font size is 5
     let font_size = font_size_percentage + 5.0;
@@ -257,7 +253,7 @@ fn Editor() -> Element {
                     Switch {
                         enabled: *is_bold.read(),
                         ontoggled: move |_| {
-                            is_bold.with_mut(|is_bold| *is_bold = !*is_bold)
+                            is_bold.toggle();
                         }
                     }
                     label {
@@ -270,7 +266,7 @@ fn Editor() -> Element {
                     Switch {
                         enabled: *is_italic.read(),
                         ontoggled: move |_| {
-                            is_italic.with_mut(|is_italic| *is_italic = !*is_italic)
+                            is_italic.toggle();
                         }
                     }
                     label {

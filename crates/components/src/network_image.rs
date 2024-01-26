@@ -118,7 +118,7 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
     } else {
         rsx!({
             image_bytes.as_ref().map(|bytes| {
-                let image_data = bytes_to_data(&*bytes);
+                let image_data = bytes_to_data(&bytes);
                 rsx!(image {
                     height: "{height}",
                     width: "{width}",

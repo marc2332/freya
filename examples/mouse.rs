@@ -31,16 +31,16 @@ fn Area() -> Element {
     let cursor_pos_click = use_signal(|| (0f64, 0f64));
 
     let cursor_moved = move |e: MouseEvent| {
+        let pos = e.get_screen_coordinates();
         cursor_pos_over.with_mut(|cursor_pos| {
-            let pos = e.get_screen_coordinates();
             cursor_pos.0 = pos.x;
             cursor_pos.1 = pos.y;
         })
     };
 
     let cursor_clicked = move |e: MouseEvent| {
+        let pos = e.get_screen_coordinates();
         cursor_pos_click.with_mut(|cursor_pos| {
-            let pos = e.get_screen_coordinates();
             cursor_pos.0 = pos.x;
             cursor_pos.1 = pos.y;
         })

@@ -40,7 +40,6 @@ pub fn use_get_theme() -> Theme {
 /// #[derive(Props)]
 /// pub struct ButtonProps {
 ///     /// Theme override.
-///     #[props(optional)]
 ///     pub theme: Option<ButtonThemeWith>,
 ///     // ...
 /// }
