@@ -9,8 +9,8 @@ fn main() {
     launch_with_props(app, "Position", (400.0, 350.0));
 }
 
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         rect {
             height: "100%",
             width: "100%",

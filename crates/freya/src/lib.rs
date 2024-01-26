@@ -26,10 +26,10 @@
 //!     launch(app);
 //! }
 //!
-//! fn app(cx: Scope) -> Element {
-//!    let mut count = use_state(cx, || 0);
+//! fn app() -> Element {
+//!    let mut count = use_signal(|| 0);
 //!
-//!    render!(
+//!    rsx!(
 //!        rect {
 //!            height: "100%",
 //!            width: "100%",
@@ -56,6 +56,8 @@ pub mod _docs;
 
 /// Dioxus library.
 pub use dioxus;
+
+pub use dioxus_core;
 
 /// Launch your app.
 pub mod launch;
@@ -92,10 +94,12 @@ pub mod plugins;
 
 /// Useful imports.
 pub mod prelude {
+    pub use dioxus_core;
     pub use dioxus_core::prelude::*;
     pub use dioxus_core_macro::*;
     pub use dioxus_hooks::*;
     pub use dioxus_hot_reload::{self, hot_reload_init, Config};
+    pub use dioxus_signals::*;
 
     pub use crate::launch::*;
     pub use crate::plugins::*;

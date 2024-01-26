@@ -29,10 +29,10 @@ impl Display for OrderBy {
     }
 }
 
-fn app(cx: Scope) -> Element {
-    let order_direction = use_state(cx, || OrderDirection::Down);
-    let order = use_state(cx, || OrderBy::Name);
-    let data = use_state(cx, || {
+fn app() -> Element {
+    let mut order_direction = use_signal(|| OrderDirection::Down);
+    let mut order = use_signal(|| OrderBy::Name);
+    let data = use_signal(|| {
         vec![
             vec!["aaaa".to_string(), "bbbb".to_string(), "111".to_string()],
             vec!["bbbb".to_string(), "aaaa".to_string(), "333".to_string()],
@@ -45,32 +45,33 @@ fn app(cx: Scope) -> Element {
             vec!["rrrr".to_string(), "333".to_string(), "888".to_string()],
         ]
     });
-    let columns = cx.use_hook(|| {
+    let columns = use_hook(|| {
         vec![
             ("Name", OrderBy::Name),
             ("OtherName", OrderBy::OtherName),
             ("MoreData", OrderBy::MoreData),
         ]
     });
+    let data = data.read();
 
     let filtered_data = {
-        let filtered_data = data.iter().sorted_by(|a, b| match *order.get() {
+        let filtered_data = data.iter().sorted_by(|a, b| match *order.read() {
             OrderBy::Name => Ord::cmp(&a[0].to_lowercase(), &b[0].to_lowercase()),
             OrderBy::OtherName => Ord::cmp(&a[1].to_lowercase(), &b[1].to_lowercase()),
             OrderBy::MoreData => Ord::cmp(&a[2].to_lowercase(), &b[2].to_lowercase()),
         });
 
-        if *order_direction.get() == OrderDirection::Down {
+        if *order_direction.read() == OrderDirection::Down {
             Either::Left(filtered_data)
         } else {
             Either::Right(filtered_data.rev())
         }
     };
 
-    let on_column_head_click = |column_order: &OrderBy| {
+    let mut on_column_head_click = move |column_order: &OrderBy| {
         // Change order diection
-        if order.get() == column_order {
-            if *order_direction.get() == OrderDirection::Up {
+        if &*order.read() == column_order {
+            if *order_direction.read() == OrderDirection::Up {
                 order_direction.set(OrderDirection::Down)
             } else {
                 order_direction.set(OrderDirection::Up)
@@ -82,7 +83,7 @@ fn app(cx: Scope) -> Element {
         }
     };
 
-    render!(
+    rsx!(
         rect {
             padding: "10",
             label {
@@ -93,11 +94,11 @@ fn app(cx: Scope) -> Element {
                 columns: 3,
                 TableHead {
                     TableRow {
-                        for (n, (text, order_by)) in columns.iter().enumerate() {
+                        for (n, (text, order_by)) in columns.into_iter().enumerate() {
                             TableCell {
                                 key: "{n}",
-                                order_direction: if *order.get() == *order_by { Some(*order_direction.get()) } else { None },
-                                onclick: move  |_| on_column_head_click(order_by),
+                                order_direction: if *order.read() == order_by { Some(*order_direction.read()) } else { None },
+                                onclick: move |_| on_column_head_click(&order_by),
                                 label {
                                     "{text}"
                                 }

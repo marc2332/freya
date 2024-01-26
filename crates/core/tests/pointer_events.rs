@@ -7,20 +7,20 @@ use winit::event::TouchPhase;
 
 #[tokio::test]
 pub async fn pointer_events_from_mouse() {
-    fn pointer_events_app(cx: Scope) -> Element {
-        let state = use_state(cx, || vec![]);
+    fn pointer_events_app() -> Element {
+        let mut state = use_signal(|| vec![]);
 
-        let onpointerdown = move |_| state.with_mut(|v| v.push("down".to_string()));
+        let onpointerdown = move |_| state.push("down".to_string());
 
-        let onpointerup = move |_| state.with_mut(|v| v.push("up".to_string()));
+        let onpointerup = move |_| state.push("up".to_string());
 
-        let onpointerover = move |_| state.with_mut(|v| v.push("over".to_string()));
+        let onpointerover = move |_| state.push("over".to_string());
 
-        let onpointerenter = move |_| state.with_mut(|v| v.push("enter".to_string()));
+        let onpointerenter = move |_| state.push("enter".to_string());
 
-        let onpointerleave = move |_| state.with_mut(|v| v.push("leave".to_string()));
+        let onpointerleave = move |_| state.push("leave".to_string());
 
-        render!(
+        rsx!(
             rect {
                 height: "100%",
                 width: "100%",
@@ -95,18 +95,18 @@ pub async fn pointer_events_from_mouse() {
 
 #[tokio::test]
 pub async fn pointer_events_from_touch() {
-    fn pointer_events_app(cx: Scope) -> Element {
-        let state = use_state(cx, || vec![]);
+    fn pointer_events_app() -> Element {
+        let mut state = use_signal(|| vec![]);
 
-        let onpointerdown = move |_| state.with_mut(|v| v.push("down".to_string()));
+        let onpointerdown = move |_| state.push("down".to_string());
 
-        let onpointerup = move |_| state.with_mut(|v| v.push("up".to_string()));
+        let onpointerup = move |_| state.push("up".to_string());
 
-        let onpointerover = move |_| state.with_mut(|v| v.push("over".to_string()));
+        let onpointerover = move |_| state.push("over".to_string());
 
-        let onpointerenter = move |_| state.with_mut(|v| v.push("enter".to_string()));
+        let onpointerenter = move |_| state.push("enter".to_string());
 
-        render!(
+        rsx!(
             rect {
                 height: "100%",
                 width: "100%",
@@ -118,7 +118,6 @@ pub async fn pointer_events_from_touch() {
                     onpointerup: onpointerup,
                     onpointerover: onpointerover,
                     onpointerenter: onpointerenter,
-
                     label { "{state:?}" }
                 }
             }

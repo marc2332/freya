@@ -16,17 +16,17 @@ use crate::{
 
 #[allow(non_snake_case)]
 #[component]
-pub fn NodeInspectorStyle(cx: Scope, node_id: NodeId) -> Element {
-    let node = use_selected_node(cx, &cx.props.node_id);
+pub fn NodeInspectorStyle(node_id: NodeId) -> Element {
+    let node = use_selected_node(&node_id);
 
     if let Some(node) = node {
-        render!(
+        rsx!(
             rect {
                 overflow: "clip",
                 width: "100%",
                 height: "50%",
                 NodeInspectorBar {
-                    node_id: *node_id
+                    node_id
                 }
                 ScrollView {
                     show_scrollbar: true,
@@ -36,7 +36,7 @@ pub fn NodeInspectorStyle(cx: Scope, node_id: NodeId) -> Element {
                             width: "100%".into(),
                         }
                     ),
-                    node.state.iter().enumerate().map(|(i, (name, attr))| {
+                    {node.state.iter().enumerate().map(|(i, (name, attr))| {
                         match attr {
                             AttributeType::Measure(measure) => {
                                 rsx!{
@@ -165,7 +165,7 @@ pub fn NodeInspectorStyle(cx: Scope, node_id: NodeId) -> Element {
                                 }
                             }
                         }
-                    })
+                    })}
                 }
             }
         )

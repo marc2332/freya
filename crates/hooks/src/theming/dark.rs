@@ -12,6 +12,7 @@ pub const DARK_THEME: Theme = Theme {
         background: cow_borrowed!("rgb(60, 60, 60)"),
         thumb_background: cow_borrowed!("rgb(60, 60, 60)"),
         thumb_inner_background: cow_borrowed!("rgb(255, 95, 0)"),
+        border_fill: cow_borrowed!("rgb(110, 110, 110)"),
     },
     button: ButtonTheme {
         background: cow_borrowed!("rgb(35, 35, 35)"),

@@ -1,50 +1,51 @@
-use dioxus_core::ScopeState;
-use dioxus_hooks::{to_owned, use_memo, use_shared_state};
+use dioxus_core::{
+    prelude::{consume_context, spawn, try_consume_context},
+    use_hook,
+};
+use dioxus_hooks::use_context;
+use dioxus_signals::{use_memo, Readable, Signal, Writable};
 use freya_common::EventMessage;
-use freya_core::{navigation_mode::NavigatorState, types::FocusReceiver};
+use freya_core::{
+    navigation_mode::{NavigationMode, NavigatorState},
+    types::FocusReceiver,
+};
 
 use crate::{use_platform, FocusId};
 
 /// Sync both the Focus shared state and the platform accessibility focus
-pub fn use_init_accessibility(cx: &ScopeState) {
-    let platform = use_platform(cx);
-    let focused_id = use_shared_state::<Option<FocusId>>(cx).unwrap();
-
-    let current_focused_id = *focused_id.read();
+pub fn use_init_accessibility() {
+    let platform = use_platform();
+    let focused_id = use_context::<Signal<Option<FocusId>>>();
+    let navigation_mode = use_context::<Signal<NavigationMode>>();
 
     // Tell the renderer the new focused node
-    let _ = use_memo(cx, &(current_focused_id,), move |(focused_id,)| {
-        if let Some(focused_id) = focused_id {
+    let _ = use_memo(move || {
+        if let Some(focused_id) = *focused_id.read() {
             platform
                 .send(EventMessage::FocusAccessibilityNode(focused_id))
                 .unwrap();
         }
     });
 
-    cx.use_hook(|| {
-        to_owned![focused_id];
-
-        let focus_id_listener = cx.consume_context::<FocusReceiver>();
-        let navigation_state = cx.consume_context::<NavigatorState>().unwrap();
+    use_hook(|| {
+        let focus_id_listener = try_consume_context::<FocusReceiver>();
+        let navigation_state = consume_context::<NavigatorState>();
 
         // Listen for focus changes
-        cx.spawn({
-            to_owned![focused_id];
-            async move {
-                let focus_id_listener = focus_id_listener.clone();
-                if let Some(mut focus_id_listener) = focus_id_listener {
-                    while focus_id_listener.changed().await.is_ok() {
-                        *focused_id.write() = *focus_id_listener.borrow();
-                    }
+        spawn(async move {
+            let focus_id_listener = focus_id_listener.clone();
+            if let Some(mut focus_id_listener) = focus_id_listener {
+                while focus_id_listener.changed().await.is_ok() {
+                    *focused_id.write() = *focus_id_listener.borrow();
                 }
             }
         });
 
         // Listen for navigation mode changes
-        cx.spawn(async move {
+        spawn(async move {
             let mut getter = navigation_state.getter();
             while getter.changed().await.is_ok() {
-                focused_id.notify_consumers();
+                *navigation_mode.write() = *getter.borrow();
             }
         });
     });
@@ -60,18 +61,18 @@ mod test {
     #[tokio::test]
     pub async fn focus_accessibility() {
         #[allow(non_snake_case)]
-        fn OherChild(cx: Scope) -> Element {
-            let focus_manager = use_focus(cx);
+        fn OherChild() -> Element {
+            let mut focus_manager = use_focus();
 
-            render!(rect {
+            rsx!(rect {
                 width: "100%",
                 height: "50%",
                 onclick: move |_| focus_manager.focus(),
             })
         }
 
-        fn use_focus_app(cx: Scope) -> Element {
-            render!(
+        fn use_focus_app() -> Element {
+            rsx!(
                 rect {
                     width: "100%",
                     height: "100%",

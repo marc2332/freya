@@ -2,17 +2,17 @@ use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{MouseEvent, WheelEvent};
 
-use freya_hooks::{use_applied_theme, use_node, use_platform, SliderThemeWith};
+use freya_hooks::{use_applied_theme, use_focus, use_node, use_platform, SliderThemeWith};
 use tracing::info;
 use winit::window::CursorIcon;
 
 /// [`Slider`] component properties.
-#[derive(Props)]
-pub struct SliderProps<'a> {
+#[derive(Props, Clone, PartialEq)]
+pub struct SliderProps {
     /// Theme override.
     pub theme: Option<SliderThemeWith>,
     /// Handler for the `onmoved` event.
-    pub onmoved: EventHandler<'a, f64>,
+    pub onmoved: EventHandler<f64>,
     /// Width of the Slider.
     #[props(into, default = "100%".to_string())]
     pub width: String,
@@ -57,17 +57,17 @@ pub enum SliderStatus {
 /// # Example
 /// ```no_run
 /// # use freya::prelude::*;
-/// fn app(cx: Scope) -> Element {
-///     let percentage = use_state(cx, || 20.0);
+/// fn app() -> Element {
+///     let mut percentage = use_signal(|| 20.0);
 ///
-///     render!(
+///     rsx!(
 ///         label {
 ///             "Value: {percentage}"
 ///         }
 ///         Slider {
 ///             width: "50%",
-///             value: *percentage.get(),
-///             onmoved: |p| {
+///             value: *percentage.read(),
+///             onmoved: move |p| {
 ///                 percentage.set(p);
 ///             }
 ///         }
@@ -75,20 +75,28 @@ pub enum SliderStatus {
 /// }
 /// ```
 #[allow(non_snake_case)]
-pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
-    let theme = use_applied_theme!(cx, &cx.props.theme, slider);
-    let status = use_ref(cx, SliderStatus::default);
-    let clicking = use_state(cx, || false);
-    let platform = use_platform(cx);
+pub fn Slider(
+    SliderProps {
+        value,
+        onmoved,
+        theme,
+        width,
+    }: SliderProps,
+) -> Element {
+    let theme = use_applied_theme!(&theme, slider);
+    let focus = use_focus();
+    let status = use_signal(SliderStatus::default);
+    let mut clicking = use_signal(|| false);
+    let platform = use_platform();
+    let (node_reference, size) = use_node();
 
-    let value = ensure_correct_slider_range(cx.props.value);
-    let (node_reference, size) = use_node(cx);
-    let width = &cx.props.width;
+    let value = ensure_correct_slider_range(value);
+    let focus_id = focus.attribute();
 
-    use_on_destroy(cx, {
+    use_drop({
         to_owned![status, platform];
         move || {
-            if *status.read() == SliderStatus::Hovering {
+            if *status.peek() == SliderStatus::Hovering {
                 platform.set_cursor(CursorIcon::default());
             }
         }
@@ -97,38 +105,48 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
     let onmouseleave = {
         to_owned![platform, status];
         move |_: MouseEvent| {
-            *status.write_silent() = SliderStatus::Idle;
+            *status.write() = SliderStatus::Idle;
             platform.set_cursor(CursorIcon::default());
         }
     };
 
-    let onmouseenter = move |_: MouseEvent| {
-        *status.write_silent() = SliderStatus::Hovering;
-        platform.set_cursor(CursorIcon::Hand);
-    };
-
-    let onmouseover = move |e: MouseEvent| {
-        if *clicking.get() {
-            let coordinates = e.get_element_coordinates();
-            let x = coordinates.x - size.area.min_x() as f64 - 6.0;
-            let percentage = x / (size.area.width() as f64 - 15.0) * 100.0;
-            let percentage = percentage.clamp(0.0, 100.0);
-
-            cx.props.onmoved.call(percentage);
+    let onmouseenter = {
+        to_owned![status];
+        move |_: MouseEvent| {
+            *status.write() = SliderStatus::Hovering;
+            platform.set_cursor(CursorIcon::Hand);
         }
     };
 
-    let onmousedown = move |e: MouseEvent| {
-        clicking.set(true);
-        let coordinates = e.get_element_coordinates();
-        let x = coordinates.x - 6.0;
-        let percentage = x / (size.area.width() as f64 - 15.0) * 100.0;
-        let percentage = percentage.clamp(0.0, 100.0);
+    let onmouseover = {
+        to_owned![clicking, onmoved];
+        move |e: MouseEvent| {
+            if *clicking.peek() {
+                let coordinates = e.get_element_coordinates();
+                let x = coordinates.x - size.area.min_x() as f64 - 6.0;
+                let percentage = x / (size.area.width() as f64 - 15.0) * 100.0;
+                let percentage = percentage.clamp(0.0, 100.0);
 
-        cx.props.onmoved.call(percentage);
+                onmoved.call(percentage);
+            }
+        }
     };
 
-    let onclick = |_: MouseEvent| {
+    let onmousedown = {
+        to_owned![clicking, onmoved, focus];
+        move |e: MouseEvent| {
+            focus.focus();
+            clicking.set(true);
+            let coordinates = e.get_element_coordinates();
+            let x = coordinates.x - 6.0;
+            let percentage = x / (size.area.width() as f64 - 15.0) * 100.0;
+            let percentage = percentage.clamp(0.0, 100.0);
+
+            onmoved.call(percentage);
+        }
+    };
+
+    let onclick = move |_: MouseEvent| {
         clicking.set(false);
     };
 
@@ -137,24 +155,32 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
         let percentage = value + (wheel_y * 2.0);
         let percentage = percentage.clamp(0.0, 100.0);
 
-        cx.props.onmoved.call(percentage);
+        onmoved.call(percentage);
     };
 
     let inner_width = (size.area.width() - 15.0) * (value / 100.0) as f32;
+    let border = if focus.is_selected() {
+        format!("2 solid {}", theme.border_fill)
+    } else {
+        "none".to_string()
+    };
 
-    render!(
+    rsx!(
         rect {
             reference: node_reference,
             width: "{width}",
             height: "20",
-            onmousedown: onmousedown,
+            onmousedown,
             onglobalclick: onclick,
-            onmouseenter: onmouseenter,
+            focus_id,
+            onmouseenter,
             onglobalmouseover: onmouseover,
-            onmouseleave: onmouseleave,
+            onmouseleave,
             onwheel: onwheel,
             main_align: "center",
             cross_align: "center",
+            border: "{border}",
+            corner_radius: "8",
             rect {
                 background: "{theme.background}",
                 width: "100%",

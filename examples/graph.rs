@@ -9,8 +9,8 @@ fn main() {
     launch(app);
 }
 
-fn app(cx: Scope) -> Element {
-    let labels = cx.use_hook(|| {
+fn app() -> Element {
+    let labels = use_hook(|| {
         vec![
             "15/5/23".to_string(),
             "16/5/23".to_string(),
@@ -19,7 +19,7 @@ fn app(cx: Scope) -> Element {
             "19/5/23".to_string(),
         ]
     });
-    let data = use_state(cx, || {
+    let data = use_signal(|| {
         vec![
             GraphLine::new(
                 "rgb(255, 184, 76)",
@@ -44,8 +44,8 @@ fn app(cx: Scope) -> Element {
         ]
     });
 
-    render!(Graph {
+    rsx!(Graph {
         labels: labels.clone(),
-        data: data.get().clone()
+        data: data.read().clone()
     })
 }

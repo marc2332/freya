@@ -6,8 +6,8 @@ The `corner_radius` attribute lets you smooth the corners of the element, with `
 
 ```rust, no_run
 # use freya::prelude::*;
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         rect {
             corner_radius: "10",
             corner_smoothing: "75%"

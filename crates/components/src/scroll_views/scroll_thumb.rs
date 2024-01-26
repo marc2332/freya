@@ -4,17 +4,16 @@ use freya_elements::events::MouseEvent;
 
 use freya_hooks::{use_applied_theme, ScrollBarThemeWith};
 
-#[derive(Props)]
-pub struct ScrollThumbProps<'a> {
+#[derive(Props, Clone, PartialEq)]
+pub struct ScrollThumbProps {
     /// Theme override.
-    #[props(optional)]
     pub theme: Option<ScrollBarThemeWith>,
-    clicking_scrollbar: bool,
-    onmousedown: EventHandler<'a, MouseEvent>,
+    pub clicking_scrollbar: bool,
+    pub onmousedown: EventHandler<MouseEvent>,
     #[props(into)]
-    width: String,
+    pub width: String,
     #[props(into)]
-    height: String,
+    pub height: String,
 }
 
 #[derive(Debug, Default, PartialEq, Clone, Copy)]
@@ -26,24 +25,32 @@ pub enum ScrollThumbState {
 }
 
 #[allow(non_snake_case)]
-pub fn ScrollThumb<'a>(cx: Scope<'a, ScrollThumbProps<'a>>) -> Element<'a> {
-    let theme = use_applied_theme!(cx, &cx.props.theme, scroll_bar);
-    let state = use_state(cx, ScrollThumbState::default);
-    let thumb_background = match state.get() {
-        _ if cx.props.clicking_scrollbar => theme.active_thumb_background,
+pub fn ScrollThumb(
+    ScrollThumbProps {
+        theme,
+        clicking_scrollbar,
+        onmousedown,
+        width,
+        height,
+    }: ScrollThumbProps,
+) -> Element {
+    let theme = use_applied_theme!(&theme, scroll_bar);
+    let mut state = use_signal(ScrollThumbState::default);
+    let thumb_background = match *state.read() {
+        _ if clicking_scrollbar => theme.active_thumb_background,
         ScrollThumbState::Idle => theme.thumb_background,
         ScrollThumbState::Hovering => theme.hover_thumb_background,
     };
 
-    render!(
+    rsx!(
         rect {
-            onmouseenter: |_| { state.set(ScrollThumbState::Hovering) },
-            onmouseleave: |_| { state.set(ScrollThumbState::Idle) },
-            onmousedown: |e| {
-                cx.props.onmousedown.call(e);
+            onmouseenter: move |_| { state.set(ScrollThumbState::Hovering) },
+            onmouseleave: move |_| { state.set(ScrollThumbState::Idle) },
+            onmousedown: move |e| {
+                onmousedown.call(e);
             },
-            width: "{cx.props.width}",
-            height: "{cx.props.height}",
+            width: "{width}",
+            height: "{height}",
             padding: "2",
             rect {
                 width: "100%",

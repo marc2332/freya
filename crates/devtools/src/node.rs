@@ -6,18 +6,20 @@ use crate::TreeNode;
 
 #[allow(non_snake_case)]
 #[component]
-pub fn NodeElement<'a>(
-    cx: Scope<'a>,
+pub fn NodeElement(
     node: TreeNode,
     is_selected: bool,
-    onselected: EventHandler<'a, &'a TreeNode>,
-) -> Element<'a> {
-    let status = use_state(cx, ButtonStatus::default);
+    onselected: EventHandler<TreeNode>,
+) -> Element {
+    let mut status = use_signal(ButtonStatus::default);
 
-    let onmousedown = move |_| onselected.call(&cx.props.node);
+    let onmousedown = {
+        to_owned![node];
+        move |_| onselected.call(node.clone())
+    };
 
     let onmouseover = move |_| {
-        if *status.get() != ButtonStatus::Hovering {
+        if *status.read() != ButtonStatus::Hovering {
             status.set(ButtonStatus::Hovering);
         }
     };
@@ -26,22 +28,22 @@ pub fn NodeElement<'a>(
         status.set(ButtonStatus::default());
     };
 
-    let background = if *is_selected {
+    let background = if is_selected {
         "rgb(100, 100, 100)"
     } else {
         "transparent"
     };
-    let color = if *is_selected {
+    let color = if is_selected {
         "white"
     } else {
-        match *status.get() {
+        match *status.read() {
             ButtonStatus::Idle => "white",
             ButtonStatus::Hovering => "rgb(150, 150, 150)",
         }
     };
     let margin_left = (node.height * 10) as f32 + 16.5;
 
-    render!(
+    rsx!(
         rect {
             corner_radius: "7",
             padding: "5",
@@ -49,9 +51,9 @@ pub fn NodeElement<'a>(
             width: "100%",
             height: "27",
             offset_x: "{margin_left}",
-            onmousedown: onmousedown,
-            onmouseover: onmouseover,
-            onmouseleave: onmouseleave,
+            onmousedown,
+            onmouseover,
+            onmouseleave,
             label {
                 font_size: "14",
                 color: "{color}",

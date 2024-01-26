@@ -5,8 +5,8 @@ You can do so by three different ways, just like in CSS.
 
 ```rust, no_run
 # use freya::prelude::*;
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         rect {
             margin: "25", // 25 in all sides
             margin: "100 50", // 100 in top and bottom, and 50 in left and right

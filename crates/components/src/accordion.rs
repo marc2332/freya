@@ -19,15 +19,14 @@ pub enum AccordionStatus {
 }
 
 /// [`Accordion`] component properties.
-#[derive(Props)]
-pub struct AccordionProps<'a> {
+#[derive(Props, Clone, PartialEq)]
+pub struct AccordionProps {
     /// Theme override.
-    #[props(optional)]
     pub theme: Option<AccordionThemeWith>,
     /// Inner children for the Accordion.
-    pub children: Element<'a>,
+    pub children: Element,
     /// Summary element.
-    pub summary: Element<'a>,
+    pub summary: Element,
 }
 
 /// `Accordion` component.
@@ -39,13 +38,13 @@ pub struct AccordionProps<'a> {
 /// Inherits the [`AccordionTheme`](freya_hooks::AccordionTheme)
 ///
 #[allow(non_snake_case)]
-pub fn Accordion<'a>(cx: Scope<'a, AccordionProps<'a>>) -> Element<'a> {
-    let theme = use_applied_theme!(cx, &cx.props.theme, accordion);
-    let animation = use_animation(cx, || 0.0);
-    let open = use_state(cx, || false);
-    let (node_ref, size) = use_node(cx);
-    let status = use_state(cx, AccordionStatus::default);
-    let platform = use_platform(cx);
+pub fn Accordion(props: AccordionProps) -> Element {
+    let theme = use_applied_theme!(&props.theme, accordion);
+    let mut animation = use_animation(|| 0.0);
+    let mut open = use_signal(|| false);
+    let (node_ref, size) = use_node();
+    let mut status = use_signal(AccordionStatus::default);
+    let platform = use_platform();
 
     let animation_value = animation.value();
     let AccordionTheme {
@@ -55,8 +54,7 @@ pub fn Accordion<'a>(cx: Scope<'a, AccordionProps<'a>>) -> Element<'a> {
     } = theme;
 
     // Adapt the accordion if the body size changes
-    let _ = use_memo(
-        cx,
+    let _ = use_memo_with_dependencies(
         &(
             size.area.width(),
             size.area.height(),
@@ -74,18 +72,18 @@ pub fn Accordion<'a>(cx: Scope<'a, AccordionProps<'a>>) -> Element<'a> {
 
     let onclick = move |_: MouseEvent| {
         let bodyHeight = size.area.height() as f64;
-        if *open.get() {
+        if *open.read() {
             animation.start(Animation::new_sine_in_out(bodyHeight..=0.0, 200));
         } else {
             animation.start(Animation::new_sine_in_out(0.0..=bodyHeight, 200));
         }
-        open.set(!*open.get());
+        open.toggle();
     };
 
-    use_on_destroy(cx, {
+    use_drop({
         to_owned![status, platform];
         move || {
-            if *status.current() == AccordionStatus::Hovering {
+            if *status.read() == AccordionStatus::Hovering {
                 platform.set_cursor(CursorIcon::default());
             }
         }
@@ -104,10 +102,10 @@ pub fn Accordion<'a>(cx: Scope<'a, AccordionProps<'a>>) -> Element<'a> {
         status.set(AccordionStatus::default());
     };
 
-    render!(
+    rsx!(
         rect {
-            onmouseenter: onmouseenter,
-            onmouseleave: onmouseleave,
+            onmouseenter,
+            onmouseleave,
             overflow: "clip",
             color: "{color}",
             padding: "10",
@@ -116,9 +114,9 @@ pub fn Accordion<'a>(cx: Scope<'a, AccordionProps<'a>>) -> Element<'a> {
             width: "100%",
             height: "auto",
             background: "{background}",
-            onclick: onclick,
+            onclick,
             border: "1 solid {border_fill}",
-            &cx.props.summary
+            {&props.summary}
             rect {
                 overflow: "clip",
                 width: "100%",
@@ -127,7 +125,7 @@ pub fn Accordion<'a>(cx: Scope<'a, AccordionProps<'a>>) -> Element<'a> {
                     reference: node_ref,
                     height: "auto",
                     width: "100%",
-                    &cx.props.children
+                    {&props.children}
                 }
             }
         }
@@ -135,10 +133,10 @@ pub fn Accordion<'a>(cx: Scope<'a, AccordionProps<'a>>) -> Element<'a> {
 }
 
 /// [`AccordionSummary`] component properties.
-#[derive(Props)]
-pub struct AccordionSummaryProps<'a> {
+#[derive(Props, Clone, PartialEq)]
+pub struct AccordionSummaryProps {
     /// Inner children for the AccordionSummary.
-    children: Element<'a>,
+    children: Element,
 }
 
 /// `AccordionSummary` component.
@@ -147,15 +145,15 @@ pub struct AccordionSummaryProps<'a> {
 /// See [`AccordionSummaryProps`].
 ///
 #[allow(non_snake_case)]
-pub fn AccordionSummary<'a>(cx: Scope<'a, AccordionSummaryProps<'a>>) -> Element<'a> {
-    render!(&cx.props.children)
+pub fn AccordionSummary(props: AccordionSummaryProps) -> Element {
+    rsx!({ props.children })
 }
 
 /// [`AccordionBody`] component properties.
-#[derive(Props)]
-pub struct AccordionBodyProps<'a> {
+#[derive(Props, Clone, PartialEq)]
+pub struct AccordionBodyProps {
     /// Inner children for the AccordionBody.
-    children: Element<'a>,
+    children: Element,
 }
 
 /// `AccordionBody` component.
@@ -164,10 +162,10 @@ pub struct AccordionBodyProps<'a> {
 /// See [`AccordionBodyProps`].
 ///
 #[allow(non_snake_case)]
-pub fn AccordionBody<'a>(cx: Scope<'a, AccordionBodyProps<'a>>) -> Element<'a> {
-    render!(rect {
+pub fn AccordionBody(props: AccordionBodyProps) -> Element {
+    rsx!(rect {
         width: "100%",
         padding: "15 0 0 0",
-        &cx.props.children
+        {props.children}
     })
 }

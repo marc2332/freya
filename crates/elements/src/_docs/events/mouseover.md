@@ -8,8 +8,8 @@ Event Data: [`MouseData`](crate::events::MouseData)
 
 ```rust, no_run
 # use freya::prelude::*;
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         rect {
             width: "100",
             height: "100",

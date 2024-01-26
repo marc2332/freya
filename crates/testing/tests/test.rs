@@ -6,8 +6,8 @@ use freya_testing::launch_test;
 
 #[tokio::test]
 async fn no_state() {
-    fn no_state_app(cx: Scope) -> Element {
-        render!(
+    fn no_state_app() -> Element {
+        rsx!(
             label {
                 "Hello"
             }
@@ -21,14 +21,14 @@ async fn no_state() {
 
 #[tokio::test]
 async fn with_state() {
-    fn stateful_app(cx: Scope) -> Element {
-        let state = use_state(cx, || false);
+    fn stateful_app() -> Element {
+        let mut state = use_signal(|| false);
 
-        let _ = use_memo(cx, (), |_| {
+        use_effect(move || {
             state.set(true);
         });
 
-        render!(
+        rsx!(
             label {
                 "Is enabled? {state}"
             }
@@ -48,8 +48,8 @@ async fn with_state() {
 
 #[tokio::test]
 async fn check_size() {
-    fn stateful_app(cx: Scope) -> Element {
-        render!(rect {
+    fn stateful_app() -> Element {
+        rsx!(rect {
             width: "50%",
             height: "calc(100% - 70)"
         })
@@ -67,15 +67,15 @@ async fn check_size() {
 
 #[tokio::test]
 async fn simulate_events() {
-    fn stateful_app(cx: Scope) -> Element {
-        let enabled = use_state(cx, || false);
-        render!(
+    fn stateful_app() -> Element {
+        let mut enabled = use_signal(|| false);
+        rsx!(
             rect {
                 overflow: "clip",
                 width: "100%",
                 height: "100%",
                 background: "red",
-                onclick: |_| {
+                onclick: move |_| {
                     enabled.set(true);
                 },
                 label {

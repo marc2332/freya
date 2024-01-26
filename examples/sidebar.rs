@@ -12,12 +12,12 @@ fn main() {
 
 #[allow(non_snake_case)]
 #[component]
-fn Sidebar<'a>(cx: Scope<'a>, children: Element<'a>, sidebar: Element<'a>) -> Element<'a> {
-    let theme = use_theme(cx);
+fn Sidebar(children: Element, sidebar: Element) -> Element {
+    let theme = use_theme();
     let background = &theme.read().body.background;
     let color = &theme.read().body.color;
 
-    render!(
+    rsx!(
         rect {
             width: "100%",
             height: "100%",
@@ -35,7 +35,7 @@ fn Sidebar<'a>(cx: Scope<'a>, children: Element<'a>, sidebar: Element<'a>) -> El
                     theme: theme_with!(ScrollViewTheme {
                         padding: "10".into(),
                     }),
-                    sidebar
+                    {sidebar}
                 }
             }
             rect {
@@ -44,7 +44,7 @@ fn Sidebar<'a>(cx: Scope<'a>, children: Element<'a>, sidebar: Element<'a>) -> El
                 height: "100%",
                 padding: "30",
                 color: "{color}",
-                children,
+                {children}
             }
         }
     )
@@ -52,21 +52,16 @@ fn Sidebar<'a>(cx: Scope<'a>, children: Element<'a>, sidebar: Element<'a>) -> El
 
 #[allow(non_snake_case)]
 #[component]
-fn SidebarItem<'a>(
-    cx: Scope<'a>,
-    children: Element<'a>,
-    onclick: Option<EventHandler<'a, ()>>,
-    to: Option<Route>,
-) -> Element<'a> {
-    let theme = use_get_theme(cx);
-    let status = use_state(cx, ButtonStatus::default);
-    let navigator = use_navigator(cx);
+fn SidebarItem(children: Element, onclick: Option<EventHandler<()>>, to: Option<Route>) -> Element {
+    let theme = use_get_theme();
+    let mut status = use_signal(ButtonStatus::default);
+    let navigator = use_navigator();
 
     let onclick = move |_| {
-        if let Some(to) = to {
+        if let Some(to) = &to {
             navigator.replace(to.clone());
         }
-        if let Some(onclick) = onclick {
+        if let Some(onclick) = &onclick {
             onclick.call(());
         }
     };
@@ -79,19 +74,19 @@ fn SidebarItem<'a>(
         status.set(ButtonStatus::default());
     };
 
-    let background = match *status.get() {
+    let background = match *status.read() {
         ButtonStatus::Hovering => theme.button.hover_background,
         ButtonStatus::Idle => theme.button.background,
     };
     let color = theme.button.font_theme.color;
 
-    render!(
+    rsx!(
         rect {
             overflow: "clip",
             margin: "5 0",
-            onclick: onclick,
-            onmouseenter: onmouseenter,
-            onmouseleave: onmouseleave,
+            onclick,
+            onmouseenter,
+            onmouseleave,
             width: "100%",
             height: "auto",
             color: "{color}",
@@ -100,13 +95,13 @@ fn SidebarItem<'a>(
             padding: "12",
             background: "{background}",
             label {
-                children
+                {children}
             }
         }
     )
 }
 
-#[derive(Routable, Clone)]
+#[derive(Routable, Clone, PartialEq)]
 #[rustfmt::skip]
 pub enum Route {
     #[layout(AppSidebar)]
@@ -121,10 +116,10 @@ pub enum Route {
 }
 
 #[allow(non_snake_case)]
-fn AppSidebar(cx: Scope) -> Element {
-    render!(
+fn AppSidebar() -> Element {
+    rsx!(
         Sidebar {
-            sidebar: render!(
+            sidebar: rsx!(
                 SidebarItem {
                     to: Route::Home,
                     "Go to Hey ! 👋"
@@ -144,8 +139,8 @@ fn AppSidebar(cx: Scope) -> Element {
 }
 
 #[allow(non_snake_case)]
-fn Home(cx: Scope) -> Element {
-    render!(
+fn Home() -> Element {
+    rsx!(
         label {
             "Just some text 😗 in /"
         }
@@ -153,8 +148,8 @@ fn Home(cx: Scope) -> Element {
 }
 
 #[allow(non_snake_case)]
-fn Wow(cx: Scope) -> Element {
-    render!(
+fn Wow() -> Element {
+    rsx!(
         label {
             "Just more text 👈!! in /wow"
         }
@@ -162,15 +157,15 @@ fn Wow(cx: Scope) -> Element {
 }
 
 #[allow(non_snake_case)]
-fn PageNotFound(cx: Scope) -> Element {
-    render!(
+fn PageNotFound() -> Element {
+    rsx!(
         label {
             "404!! 😵"
         }
     )
 }
 
-fn app(cx: Scope) -> Element {
-    use_init_theme(cx, DARK_THEME);
-    render!(Router::<Route> {})
+fn app() -> Element {
+    use_init_theme(DARK_THEME);
+    rsx!(Router::<Route> {})
 }

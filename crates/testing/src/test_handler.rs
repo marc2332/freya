@@ -45,8 +45,7 @@ impl TestingHandler {
         self.provide_vdom_contexts();
         let sdom = self.utils.sdom();
         let mut fdom = sdom.get();
-        let mutations = self.vdom.rebuild();
-        fdom.init_dom(mutations, SCALE_FACTOR as f32);
+        fdom.init_dom(&mut self.vdom, SCALE_FACTOR as f32);
     }
 
     /// Get a mutable reference to the current [`TestingConfig`].
@@ -55,16 +54,13 @@ impl TestingHandler {
     }
 
     /// Provide some values to the app
-    fn provide_vdom_contexts(&self) {
+    fn provide_vdom_contexts(&mut self) {
         self.vdom
-            .base_scope()
-            .provide_context(self.platform_event_emitter.clone());
+            .insert_any_root_context(Box::new(self.platform_event_emitter.clone()));
         self.vdom
-            .base_scope()
-            .provide_context(Arc::new(self.ticker_sender.subscribe()));
+            .insert_any_root_context(Box::new(Arc::new(self.ticker_sender.subscribe())));
         self.vdom
-            .base_scope()
-            .provide_context(self.navigation_state.clone());
+            .insert_any_root_context(Box::new(self.navigation_state.clone()));
     }
 
     /// Wait and apply new changes
@@ -120,13 +116,11 @@ impl TestingHandler {
             .await
             .ok();
 
-        let mutations = self.vdom.render_immediate();
-
         let (must_repaint, must_relayout) = self
             .utils
             .sdom()
             .get_mut()
-            .apply_mutations(mutations, SCALE_FACTOR as f32);
+            .render_mutations(&mut self.vdom, SCALE_FACTOR as f32);
 
         self.wait_for_work(self.config.size());
 

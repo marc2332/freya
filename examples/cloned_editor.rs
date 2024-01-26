@@ -1,5 +1,6 @@
 use freya::events::MouseEvent;
 use freya::prelude::*;
+use std::rc::Rc;
 
 fn main() {
     launch_cfg(
@@ -14,25 +15,24 @@ fn main() {
     );
 }
 
-fn app(cx: Scope) -> Element {
-    use_init_theme(cx, DARK_THEME);
-    render!(Body {})
+fn app() -> Element {
+    use_init_theme(DARK_THEME);
+    rsx!(Body {})
 }
 
 #[allow(non_snake_case)]
-fn Body(cx: Scope) -> Element {
-    let theme = use_theme(cx);
+fn Body() -> Element {
+    let theme = use_theme();
     let theme = theme.read();
 
     let editable = use_editable(
-        cx,
         || {
             EditableConfig::new("Lorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet".to_string())
         },
         EditableMode::SingleLineMultipleEditors,
     );
-    let cursor_attr = editable.cursor_attr(cx);
-    let editor = editable.editor().clone();
+    let cursor_attr = editable.cursor_attr();
+    let editor = editable.editor().read();
 
     let onclick = {
         to_owned![editable];
@@ -48,12 +48,12 @@ fn Body(cx: Scope) -> Element {
         }
     };
 
-    render!(
+    rsx!(
         rect {
             width: "100%",
             height: "100%",
             padding: "10",
-            onkeydown: onkeydown,
+            onkeydown,
             cursor_reference: cursor_attr,
             direction: "horizontal",
             onglobalclick: onclick,
@@ -66,9 +66,9 @@ fn Body(cx: Scope) -> Element {
                 item_size: 35.0,
                 builder_values: editable.clone(),
                 scroll_with_arrows: false,
-                builder: Box::new(move |(key, line_index, cx, values)| {
+                builder: Rc::new(move |(key, line_index, values): (usize, usize, &Option<UseEditable>)| {
                     let editable = values.as_ref().unwrap();
-                    let editor = editable.editor();
+                    let editor = editable.editor().read();
                     let line = editor.line(line_index).unwrap();
 
                     let is_line_selected = editor.cursor_row() == line_index;
@@ -101,7 +101,7 @@ fn Body(cx: Scope) -> Element {
                         }
                     };
 
-                    let highlights = editable.highlights_attr(cx, line_index);
+                    let highlights = editable.highlights_attr(line_index);
 
                     rsx! {
                         rect {
@@ -129,8 +129,8 @@ fn Body(cx: Scope) -> Element {
                                 max_lines: "1",
                                 cursor_mode: "editable",
                                 cursor_id: "{line_index}",
-                                onmousedown: onmousedown,
-                                onmouseover: onmouseover,
+                                onmousedown,
+                                onmouseover,
                                 highlights: highlights,
                                 text {
                                     color: "rgb(240, 240, 240)",
@@ -150,9 +150,9 @@ fn Body(cx: Scope) -> Element {
                 item_size: 35.0,
                 builder_values: editable.clone(),
                 scroll_with_arrows: false,
-                builder: Box::new(move |(key, line_index, cx, values)| {
+                builder: Rc::new(move |(key, line_index, values): (usize, usize, &Option<UseEditable>)| {
                     let editable = values.as_ref().unwrap();
-                    let editor = editable.editor();
+                    let editor = editable.editor().read();
                     let line = editor.line(line_index).unwrap();
 
                     let is_line_selected = editor.cursor_row() == line_index;
@@ -186,7 +186,7 @@ fn Body(cx: Scope) -> Element {
                     };
 
 
-                    let highlights = editable.highlights_attr(cx, line_index);
+                    let highlights = editable.highlights_attr(line_index);
 
                     rsx! {
                         rect {
@@ -214,8 +214,8 @@ fn Body(cx: Scope) -> Element {
                                 max_lines: "1",
                                 cursor_mode: "editable",
                                 cursor_id: "{line_index}",
-                                onmousedown: onmousedown,
-                                onmouseover: onmouseover,
+                                onmousedown,
+                                onmouseover,
                                 highlights: highlights,
                                 text {
                                     color: "rgb(240, 240, 240)",

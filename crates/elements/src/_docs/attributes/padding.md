@@ -4,8 +4,8 @@ Specify the inner paddings of an element. You can do so by three different ways,
 
 ```rust, no_run
 # use freya::prelude::*;
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         rect {
             padding: "25", // 25 in all sides
             padding: "100 50", // 100 in top and bottom, and 50 in left and right
