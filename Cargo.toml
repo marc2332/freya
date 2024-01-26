@@ -36,7 +36,7 @@ dioxus-signals = { git = "https://github.com/DioxusLabs/dioxus", rev = "53380c99
 dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev = "53380c9956c7dda54d9251d3bc48eaa0ec4e89be" }
 dioxus-hot-reload = { git = "https://github.com/DioxusLabs/dioxus", rev = "53380c9956c7dda54d9251d3bc48eaa0ec4e89be", features = ["file_watcher"], default-features = false }
 dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev = "53380c9956c7dda54d9251d3bc48eaa0ec4e89be", default-features = false }
-dioxus-std = { git = "https://github.com/DioxusLabs/dioxus-std", rev = "d0841290a2c1ed43dc687201d5306d4c0e556c71", features = ["clipboard"] }
+dioxus-std = { git = "https://github.com/DioxusLabs/dioxus-std", rev = "7b4dbe3c98ec9cb09c2234f2713b0523ae2ddeba", features = ["clipboard"] }
 
 skia-safe = { version = "0.67.0", features = ["gl", "textlayout", "svg"] }
 
