@@ -41,7 +41,7 @@ impl<'a> WriteMutations for MutationsWriter<'a> {
 
     fn replace_node_with(&mut self, id: dioxus_core::ElementId, m: usize) {
         if m > 0 {
-            let mut dom_adapter = DioxusDOMAdapter::new_with_cache(&self.native_writer.rdom);
+            let mut dom_adapter = DioxusDOMAdapter::new_with_cache(self.native_writer.rdom);
             self.layout.remove(
                 self.native_writer.state.element_to_node_id(id),
                 &mut dom_adapter,
@@ -89,7 +89,7 @@ impl<'a> WriteMutations for MutationsWriter<'a> {
     }
 
     fn remove_node(&mut self, id: dioxus_core::ElementId) {
-        let mut dom_adapter = DioxusDOMAdapter::new_with_cache(&self.native_writer.rdom);
+        let mut dom_adapter = DioxusDOMAdapter::new_with_cache(self.native_writer.rdom);
         self.layout.remove(
             self.native_writer.state.element_to_node_id(id),
             &mut dom_adapter,

@@ -7,12 +7,12 @@ fn main() {
 
 #[allow(non_snake_case)]
 fn StatefulSwitch() -> Element {
-    let enabled = use_signal(|| false);
+    let mut enabled = use_signal(|| false);
 
     rsx!(Switch {
         enabled: *enabled.read(),
         ontoggled: move |_| {
-            enabled.with_mut(|enabled| *enabled = !*enabled);
+            enabled.toggle();
         }
     })
 }

@@ -22,7 +22,6 @@ pub enum AccordionStatus {
 #[derive(Props, Clone, PartialEq)]
 pub struct AccordionProps {
     /// Theme override.
-    #[props(optional)]
     pub theme: Option<AccordionThemeWith>,
     /// Inner children for the Accordion.
     pub children: Element,
@@ -42,7 +41,7 @@ pub struct AccordionProps {
 pub fn Accordion(props: AccordionProps) -> Element {
     let theme = use_applied_theme!(&props.theme, accordion);
     let mut animation = use_animation(|| 0.0);
-    let open = use_signal(|| false);
+    let mut open = use_signal(|| false);
     let (node_ref, size) = use_node();
     let mut status = use_signal(AccordionStatus::default);
     let platform = use_platform();
@@ -78,7 +77,7 @@ pub fn Accordion(props: AccordionProps) -> Element {
         } else {
             animation.start(Animation::new_sine_in_out(0.0..=bodyHeight, 200));
         }
-        open.with_mut(|o| *o = !*o);
+        open.toggle();
     };
 
     use_drop({

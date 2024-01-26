@@ -116,7 +116,7 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
                     corrected_scrolled_y,
                 );
 
-                scrolled_y.with_mut(|y| *y = scroll_position_y);
+                *scrolled_y.write() = scroll_position_y;
             }
 
             let wheel_x = if *clicking_shift.read() {
@@ -132,7 +132,7 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
                 corrected_scrolled_x,
             );
 
-            scrolled_x.with_mut(|x| *x = scroll_position_x);
+            *scrolled_x.write() = scroll_position_x;
 
             focus.focus();
         }
@@ -154,7 +154,7 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
                     size.area.height(),
                 );
 
-                scrolled_y.with_mut(|y| *y = scroll_position);
+                *scrolled_y.write() = scroll_position;
             } else if let Some((Axis::X, x)) = *clicking_scrollbar {
                 let coordinates = e.get_element_coordinates();
                 let cursor_x = coordinates.x - x - size.area.min_x() as f64;
@@ -165,7 +165,7 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
                     size.area.width(),
                 );
 
-                scrolled_x.with_mut(|x| *x = scroll_position);
+                *scrolled_x.write() = scroll_position;
             }
 
             if clicking_scrollbar.is_some() {

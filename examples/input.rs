@@ -25,8 +25,8 @@ fn app() -> Element {
             }
             Input {
                 value: values.read().0.clone(),
-                onchange: move |t| {
-                    values.with_mut(|v| v.0 = t)
+                onchange: move |txt| {
+                    values.write().0 = txt;
                 }
             },
             label {
@@ -35,8 +35,8 @@ fn app() -> Element {
             }
             Input {
                 value: values.read().1.clone(),
-                onchange: move |t| {
-                    values.with_mut(|v| v.1 = t)
+                onchange: move |txt| {
+                    values.write().1 = txt;
                 }
             },
             label {

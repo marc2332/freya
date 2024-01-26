@@ -10,12 +10,10 @@ use crate::Tooltip;
 #[derive(Props, Clone, PartialEq)]
 pub struct ExternalLinkProps {
     /// Theme override.
-    #[props(optional)]
     pub theme: Option<ExternalLinkThemeWith>,
     /// Inner children for the ExternalLink.
     pub children: Element,
     /// Handler for the `onerror` event.
-    #[props(optional)]
     pub onerror: Option<EventHandler<()>>,
     /// Whether to show a tooltip with the URL or not.
     #[props(optional, default = true)]
@@ -55,11 +53,11 @@ pub fn ExternalLink(props: ExternalLinkProps) -> Element {
     let is_hovering = use_signal(|| false);
 
     let onmouseover = move |_: MouseEvent| {
-        is_hovering.with_mut(|v| *v = true);
+        *is_hovering.write() = true;
     };
 
     let onmouseleave = move |_: MouseEvent| {
-        is_hovering.with_mut(|v| *v = false);
+        *is_hovering.write() = false;
     };
 
     let onclick = {

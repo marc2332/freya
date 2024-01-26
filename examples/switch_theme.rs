@@ -30,7 +30,7 @@ fn TheOtherSwitch() -> Element {
 
 fn app() -> Element {
     use_init_default_theme();
-    let enabled = use_signal(|| true);
+    let mut enabled = use_signal(|| true);
 
     let is_enabled = if *enabled.read() { "Yes" } else { "No" };
 
@@ -42,7 +42,7 @@ fn app() -> Element {
             Switch {
                 enabled: *enabled.read(),
                 ontoggled: move |_| {
-                    enabled.with_mut(|v| *v = !*v);
+                    enabled.toggle();
                 }
             }
             label {

@@ -10,7 +10,7 @@ use dioxus_std::clipboard::use_clipboard;
 use freya_common::{CursorLayoutResponse, EventMessage};
 use freya_elements::events::{KeyboardData, MouseData};
 use freya_node_state::{CursorReference, CustomAttributeValues};
-use tokio::sync::{mpsc::unbounded_channel, mpsc::UnboundedSender};
+use tokio::sync::mpsc::unbounded_channel;
 use torin::geometry::CursorPoint;
 use uuid::Uuid;
 
@@ -43,13 +43,10 @@ impl Default for EditableMode {
     }
 }
 
-pub type ClickNotifier = UnboundedSender<EditableEvent>;
-pub type EditorState = Signal<RopeEditor>;
-
 /// Manage an editable content.
 #[derive(Clone)]
 pub struct UseEditable {
-    pub(crate) editor: EditorState,
+    pub(crate) editor: Signal<RopeEditor>,
     pub(crate) cursor_reference: CursorReference,
     pub(crate) selecting_text_with_mouse: Signal<Option<CursorPoint>>,
     pub(crate) platform: UsePlatform,
@@ -57,12 +54,12 @@ pub struct UseEditable {
 
 impl UseEditable {
     /// Reference to the editor.
-    pub fn editor(&self) -> &EditorState {
+    pub fn editor(&self) -> &Signal<RopeEditor> {
         &self.editor
     }
 
     /// Mutable reference to the editor.
-    pub fn editor_mut(&mut self) -> &mut EditorState {
+    pub fn editor_mut(&mut self) -> &mut Signal<RopeEditor> {
         &mut self.editor
     }
 
@@ -94,9 +91,7 @@ impl UseEditable {
                 self.cursor_reference.set_id(Some(*id));
                 self.cursor_reference.set_cursor_position(Some(coords));
 
-                self.editor.with_mut(|editor| {
-                    editor.unhighlight();
-                });
+                self.editor.write().unhighlight();
             }
             EditableEvent::MouseOver(e, id) => {
                 self.selecting_text_with_mouse.with(|selecting_text| {
@@ -113,13 +108,13 @@ impl UseEditable {
                 *self.selecting_text_with_mouse.write() = None;
             }
             EditableEvent::KeyDown(e) => {
-                self.editor.with_mut(|editor| {
-                    let event = editor.process_key(&e.key, &e.code, &e.modifiers);
-
-                    if event.contains(TextEvent::TEXT_CHANGED) {
-                        *self.selecting_text_with_mouse.write() = None;
-                    }
-                });
+                let event = self
+                    .editor
+                    .write()
+                    .process_key(&e.key, &e.code, &e.modifiers);
+                if event.contains(TextEvent::TEXT_CHANGED) {
+                    *self.selecting_text_with_mouse.write() = None;
+                }
             }
         }
 
@@ -186,7 +181,7 @@ pub fn use_editable(initializer: impl Fn() -> EditableConfig, mode: EditableMode
                     match message {
                         // Update the cursor position calculated by the layout
                         CursorLayoutResponse::CursorPosition { position, id } => {
-                            let text_editor = editor.read();
+                            let mut text_editor = editor.write();
 
                             let new_cursor_row = match mode {
                                 EditableMode::MultipleLinesSingleEditor => {
@@ -213,12 +208,9 @@ pub fn use_editable(initializer: impl Fn() -> EditableConfig, mode: EditableMode
 
                             // Only update if it's actually different
                             if text_editor.cursor().as_tuple() != new_cursor {
-                                drop(text_editor);
-                                editor.with_mut(|text_editor| {
-                                    text_editor.cursor_mut().set_col(new_cursor.0);
-                                    text_editor.cursor_mut().set_row(new_cursor.1);
-                                    text_editor.unhighlight();
-                                })
+                                text_editor.cursor_mut().set_col(new_cursor.0);
+                                text_editor.cursor_mut().set_row(new_cursor.1);
+                                text_editor.unhighlight();
                             }
 
                             // Remove the current calcutions so the layout engine doesn't try to calculate again
@@ -226,9 +218,7 @@ pub fn use_editable(initializer: impl Fn() -> EditableConfig, mode: EditableMode
                         }
                         // Update the text selections calculated by the layout
                         CursorLayoutResponse::TextSelection { from, to, id } => {
-                            editor.with_mut(|text_editor| {
-                                text_editor.highlight_text(from, to, id);
-                            });
+                            editor.write().highlight_text(from, to, id);
                             cursor_reference.set_cursor_selections(None);
                         }
                     }
@@ -239,7 +229,7 @@ pub fn use_editable(initializer: impl Fn() -> EditableConfig, mode: EditableMode
         UseEditable {
             editor,
             cursor_reference: cursor_reference.clone(),
-            selecting_text_with_mouse: selecting_text_with_mouse.clone(),
+            selecting_text_with_mouse,
             platform,
         }
     })

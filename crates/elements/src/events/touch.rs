@@ -58,6 +58,6 @@ impl TouchData {
 
 impl From<&PlatformEventData> for TouchData {
     fn from(val: &PlatformEventData) -> Self {
-        val.downcast::<TouchData>().cloned().unwrap().into()
+        val.downcast::<TouchData>().cloned().unwrap()
     }
 }
