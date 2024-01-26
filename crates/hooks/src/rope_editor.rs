@@ -4,7 +4,7 @@ use dioxus_std::clipboard::UseClipboard;
 use ropey::iter::Lines;
 pub use ropey::Rope;
 
-use crate::{text_editor::*, EditableMode};
+use crate::{text_editor::*, EditableMode, EditorHistory, HistoryChange};
 
 /// TextEditor implementing a Rope
 #[derive(Clone)]
@@ -17,6 +17,8 @@ pub struct RopeEditor {
     selected: Option<(usize, usize)>,
 
     clipboard: UseClipboard,
+
+    history: EditorHistory,
 }
 
 impl Display for RopeEditor {
@@ -32,6 +34,7 @@ impl RopeEditor {
         cursor: TextCursor,
         mode: EditableMode,
         clipboard: UseClipboard,
+        history: EditorHistory,
     ) -> Self {
         Self {
             rope: Rope::from_str(&text),
@@ -39,6 +42,7 @@ impl RopeEditor {
             selected: None,
             mode,
             clipboard,
+            history,
         }
     }
 
@@ -55,12 +59,18 @@ impl TextEditor for RopeEditor {
         LinesIterator { lines }
     }
 
-    fn insert_char(&mut self, char: char, char_idx: usize) {
-        self.rope.insert_char(char_idx, char);
+    fn insert_char(&mut self, char: char, idx: usize) {
+        self.history
+            .push_change(HistoryChange::InsertChar { idx, char });
+        self.rope.insert_char(idx, char);
     }
 
-    fn insert(&mut self, text: &str, char_idx: usize) {
-        self.rope.insert(char_idx, text);
+    fn insert(&mut self, text: &str, idx: usize) {
+        self.history.push_change(HistoryChange::InsertText {
+            idx,
+            text: text.to_owned(),
+        });
+        self.rope.insert(idx, text);
     }
 
     fn remove(&mut self, range: Range<usize>) {
@@ -219,6 +229,14 @@ impl TextEditor for RopeEditor {
         };
 
         Some(self.rope().get_slice(start..end)?.to_string())
+    }
+
+    fn undo(&mut self) -> Option<usize> {
+        self.history.undo(&mut self.rope)
+    }
+
+    fn redo(&mut self) -> Option<usize> {
+        self.history.redo(&mut self.rope)
     }
 }
 

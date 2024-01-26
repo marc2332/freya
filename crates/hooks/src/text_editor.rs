@@ -409,6 +409,26 @@ pub trait TextEditor: Sized + Clone + Display {
                         }
                     }
 
+                    // Undo last change
+                    Code::KeyZ if modifiers.contains(Modifiers::CONTROL) => {
+                        let undo_result = self.undo();
+
+                        if let Some(idx) = undo_result {
+                            self.set_cursor_pos(idx);
+                            event.insert(TextEvent::TEXT_CHANGED);
+                        }
+                    }
+
+                    // Redo last change
+                    Code::KeyY if modifiers.contains(Modifiers::CONTROL) => {
+                        let undo_result = self.redo();
+
+                        if let Some(idx) = undo_result {
+                            self.set_cursor_pos(idx);
+                            event.insert(TextEvent::TEXT_CHANGED);
+                        }
+                    }
+
                     _ => {
                         if let Ok(ch) = character.parse::<char>() {
                             if !ch.is_ascii_control() {
@@ -435,4 +455,8 @@ pub trait TextEditor: Sized + Clone + Display {
     }
 
     fn get_selected_text(&self) -> Option<String>;
+
+    fn undo(&mut self) -> Option<usize>;
+
+    fn redo(&mut self) -> Option<usize>;
 }
