@@ -209,6 +209,12 @@ impl TextEditor for RopeEditor {
     }
 
     fn get_selected_text(&self) -> Option<String> {
+        let (start, end) = self.get_selection()?;
+
+        Some(self.rope().get_slice(start..end)?.to_string())
+    }
+
+    fn get_selection(&self) -> Option<(usize, usize)> {
         let (start, end) = self.selected?;
 
         // Use left-to-right selection
@@ -218,7 +224,7 @@ impl TextEditor for RopeEditor {
             (end, start)
         };
 
-        Some(self.rope().get_slice(start..end)?.to_string())
+        Some((start, end))
     }
 }
 
