@@ -171,7 +171,6 @@ impl TransitionsManager {
         // Set as current this new animation
         current_animation_id.set(Some(animation_id));
 
-        // Spawn the animation that will run at 1ms speed
         spawn(async move {
             platform.request_animation_frame();
 
