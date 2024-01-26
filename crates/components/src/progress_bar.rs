@@ -7,7 +7,6 @@ use freya_hooks::{use_applied_theme, ProgressBarTheme, ProgressBarThemeWith};
 #[derive(Props, Clone, PartialEq)]
 pub struct ProgressBarProps {
     /// Theme override.
-    #[props(optional)]
     pub theme: Option<ProgressBarThemeWith>,
     /// Show a label with the current progress. Default to false.
     #[props(default = false)]

@@ -44,6 +44,6 @@ impl MouseData {
 
 impl From<&PlatformEventData> for MouseData {
     fn from(val: &PlatformEventData) -> Self {
-        val.downcast::<MouseData>().cloned().unwrap().into()
+        val.downcast::<MouseData>().cloned().unwrap()
     }
 }

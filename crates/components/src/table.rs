@@ -79,7 +79,7 @@ pub struct TableRowProps {
 /// Inherits the [`TableTheme`](freya_hooks::TableTheme) theme.
 ///
 #[allow(non_snake_case)]
-pub fn TableRow<'a>(
+pub fn TableRow(
     TableRowProps {
         theme,
         children,
