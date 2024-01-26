@@ -39,6 +39,10 @@ pub fn run_event_loop<State: Clone>(
             Event::NewEvents(StartCause::Init) => {
                 _ = proxy.send_event(EventMessage::PollVDOM);
             }
+            Event::UserEvent(EventMessage::FocusAccessibilityNode(id)) => {
+                app.accessibility()
+                        .set_accessibility_focus(id, app.window_env().window());
+            }
             Event::UserEvent(EventMessage::RequestRerender) => {
                 app.window_env_mut().window_mut().request_redraw();
             }
