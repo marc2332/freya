@@ -2,7 +2,9 @@ use accesskit::Action;
 use accesskit_winit::ActionRequestEvent;
 use freya_common::EventMessage;
 use freya_core::prelude::*;
-use freya_elements::events::keyboard::{from_winit_to_code, get_modifiers, get_non_text_keys};
+use freya_elements::events::keyboard::{
+    map_winit_key, map_winit_modifiers, map_winit_physical_key,
+};
 use torin::geometry::CursorPoint;
 use winit::event::{
     ElementState, Event, KeyEvent, MouseScrollDelta, StartCause, Touch, TouchPhase, WindowEvent,
@@ -148,9 +150,9 @@ pub fn run_event_loop<State: Clone>(
                         };
                         app.send_event(FreyaEvent::Keyboard {
                             name: event_name.to_string(),
-                            key: get_non_text_keys(&logical_key),
-                            code: from_winit_to_code(&physical_key),
-                            modifiers: get_modifiers(modifiers_state),
+                            key: map_winit_key(&logical_key),
+                            code: map_winit_physical_key(&physical_key),
+                            modifiers: map_winit_modifiers(modifiers_state),
                         })
                     }
                     WindowEvent::CursorMoved { position, .. } => {
