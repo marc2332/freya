@@ -3,7 +3,7 @@ use accesskit_winit::ActionRequestEvent;
 use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_elements::events::keyboard::{
-    map_winit_key, map_winit_modifiers, map_winit_physical_key,
+    map_winit_key, map_winit_modifiers, map_winit_physical_key, Code, Key,
 };
 use torin::geometry::CursorPoint;
 use winit::event::{
@@ -39,8 +39,6 @@ pub fn run_event_loop<State: Clone>(
             Event::NewEvents(StartCause::Init) => {
                 _ = proxy.send_event(EventMessage::PollVDOM);
             }
-            app.accessibility()
-                        .set_accessibility_focus(id, app.window_env().window());
             Event::UserEvent(EventMessage::RequestRerender) => {
                 app.window_env_mut().window_mut().request_redraw();
             }
@@ -56,7 +54,8 @@ pub fn run_event_loop<State: Clone>(
                 ..
             })) => {
                 if Action::Focus == request.action {
-                    app.accessibility().set_accessibility_focus(request.target);
+                    app.accessibility()
+                        .set_accessibility_focus(request.target, app.window_env().window());
                 }
             }
             Event::UserEvent(EventMessage::SetCursorIcon(icon)) => {
@@ -82,7 +81,7 @@ pub fn run_event_loop<State: Clone>(
                             name: "keydown".to_string(),
                             key: Key::Character(text),
                             code: Code::Unidentified,
-                            modifiers: get_modifiers(modifiers_state),
+                            modifiers: map_winit_modifiers(modifiers_state),
                         });
                     }
                     WindowEvent::RedrawRequested => {

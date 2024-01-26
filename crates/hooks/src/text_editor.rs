@@ -398,9 +398,8 @@ pub trait TextEditor: Sized + Clone + Display {
                                 event.insert(TextEvent::TEXT_CHANGED);
                             }
                         } else if character.is_ascii() {
-                             // Inserts a text
-                             let char_idx =
-                                self.line_to_char(self.cursor_row()) + self.cursor_col();
+                            // Inserts a text
+                            let char_idx = self.line_to_char(self.cursor_row()) + self.cursor_col();
                             self.insert(character, char_idx);
                             self.set_cursor_pos(char_idx + character.len());
 
