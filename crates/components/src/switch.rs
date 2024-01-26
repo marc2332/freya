@@ -1,8 +1,10 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_elements::events::MouseEvent;
+use freya_elements::events::{KeyboardEvent, MouseEvent};
 
-use freya_hooks::{use_animation, use_applied_theme, use_platform, Animation, SwitchThemeWith};
+use freya_hooks::{
+    use_animation, use_applied_theme, use_focus, use_platform, Animation, SwitchThemeWith,
+};
 use winit::window::CursorIcon;
 
 /// [`Switch`] component properties.
@@ -58,6 +60,9 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
     let theme = use_applied_theme!(cx, &cx.props.theme, switch);
     let platform = use_platform(cx);
     let status = use_ref(cx, SwitchStatus::default);
+    let focus = use_focus(cx);
+
+    let focus_id = focus.attribute(cx);
 
     use_on_destroy(cx, {
         to_owned![status, platform];
@@ -82,10 +87,17 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
     };
 
     let onclick = |_: MouseEvent| {
+        focus.focus();
         cx.props.ontoggled.call(());
     };
 
-    let (offset_x, border, circle) = {
+    let onkeydown = |e: KeyboardEvent| {
+        if focus.validate_keydown(e) {
+            cx.props.ontoggled.call(());
+        }
+    };
+
+    let (offset_x, background, circle) = {
         if cx.props.enabled {
             (
                 animation.value(),
@@ -95,6 +107,15 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
         } else {
             (animation.value(), theme.background, theme.thumb_background)
         }
+    };
+    let border = if focus.is_selected() {
+        if cx.props.enabled {
+            format!("2 solid {}", theme.enabled_focus_border_fill)
+        } else {
+            format!("2 solid {}", theme.focus_border_fill)
+        }
+    } else {
+        "none".to_string()
     };
 
     let _ = use_memo(cx, &cx.props.enabled, move |enabled| {
@@ -112,11 +133,14 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
             height: "25",
             padding: "1",
             corner_radius: "50",
-            background: "{border}",
+            background: "{background}",
+            border: "{border}",
             onmousedown: |_| {},
             onmouseenter: onmouseenter,
             onmouseleave: onmouseleave,
+            onkeydown: onkeydown,
             onclick: onclick,
+            focus_id: focus_id,
             rect {
                 width: "100%",
                 height: "100%",

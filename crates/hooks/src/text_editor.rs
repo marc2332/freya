@@ -285,7 +285,7 @@ pub trait TextEditor: Sized + Clone + Display {
                 let current_line = self.line(self.cursor_row()).unwrap();
 
                 // Go one line down if there isn't more characters on the right
-                if self.cursor_row() < self.len_lines()
+                if self.cursor_row() < self.len_lines() - 1
                     && self.cursor_col() == current_line.len_chars().max(1) - 1
                 {
                     self.cursor_down();

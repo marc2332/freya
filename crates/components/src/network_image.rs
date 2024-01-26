@@ -49,7 +49,7 @@ pub enum ImageStatus {
 ///
 /// # Example
 ///  
-/// ```rust
+/// ```rust,no_run
 /// # use freya::prelude::*;
 /// fn app(cx: Scope) -> Element {
 ///     render!(
