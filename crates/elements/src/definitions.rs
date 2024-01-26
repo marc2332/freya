@@ -149,8 +149,6 @@ macro_rules! impl_element {
                     pub const $fil: AttributeDescription = (stringify!($fil), None, false);
                 )*
             }
-
-            impl GlobalAttributes for $name {}
         )*
     };
 }
@@ -631,9 +629,3 @@ pub mod events {
         onpointerleave
     ];
 }
-
-#[doc(hidden)]
-pub trait GlobalAttributes {}
-
-#[doc(hidden)]
-pub trait SvgAttributes {}

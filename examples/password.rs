@@ -11,7 +11,7 @@ fn main() {
 
 fn app() -> Element {
     let mut password = use_signal(|| String::new());
-    let is_hidden = use_signal(|| true);
+    let mut is_hidden = use_signal(|| true);
 
     rsx!(
         rect {
@@ -37,7 +37,7 @@ fn app() -> Element {
                     }
                 },
                 Button {
-                    onclick: move |_| is_hidden.with_mut(|v| *v = !*v),
+                    onclick: move |_| is_hidden.toggle(),
                     label {
                         if *is_hidden.read() {
                             "Show password"

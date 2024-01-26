@@ -128,11 +128,9 @@ pub fn DevTools(props: DevToolsProps) -> Element {
     let theme = theme.read();
     let color = &theme.body.color;
 
-    #[allow(clippy::await_holding_lock)]
     use_effect(move || {
         let rdom = props.rdom.clone();
         let mutations_notifier = props.mutations_notifier.clone();
-        let children = children.clone();
         spawn(async move {
             loop {
                 mutations_notifier.notified().await;

@@ -26,7 +26,6 @@ impl GraphLine {
 #[derive(Debug, Props, PartialEq, Clone)]
 pub struct GraphProps {
     /// Theme override.
-    #[props(optional)]
     pub theme: Option<GraphThemeWith>,
     /// X axis labels.
     labels: Vec<String>,

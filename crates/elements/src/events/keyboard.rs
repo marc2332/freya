@@ -390,6 +390,6 @@ impl KeyboardData {
 
 impl From<&PlatformEventData> for KeyboardData {
     fn from(val: &PlatformEventData) -> Self {
-        val.downcast::<KeyboardData>().cloned().unwrap().into()
+        val.downcast::<KeyboardData>().cloned().unwrap()
     }
 }
