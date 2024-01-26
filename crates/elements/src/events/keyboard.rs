@@ -1,6 +1,8 @@
 pub use keyboard_types::{Code, Key, Modifiers};
 use winit::event::{ModifiersState, VirtualKeyCode};
 
+use crate::definitions::PlatformEventData;
+
 // Map winit modifiers to keyboard_types modifiers
 pub fn get_modifiers(modifiers: ModifiersState) -> Modifiers {
     let mut new_modifiers = Modifiers::empty();
@@ -358,7 +360,7 @@ pub fn from_winit_to_code(key: &VirtualKeyCode) -> Code {
 }
 
 /// Data of a Keyboard event.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct KeyboardData {
     pub key: Key,
     pub code: Code,
@@ -383,5 +385,11 @@ impl KeyboardData {
         } else {
             None
         }
+    }
+}
+
+impl From<&PlatformEventData> for KeyboardData {
+    fn from(val: &PlatformEventData) -> Self {
+        val.downcast::<KeyboardData>().cloned().unwrap().into()
     }
 }

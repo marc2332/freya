@@ -100,6 +100,10 @@ impl TextEditor for RopeEditor {
     fn get_clipboard(&self) -> &UseClipboard {
         &self.clipboard
     }
+    
+    fn has_any_highlight(&self) -> bool {
+        self.selected.is_some()
+    }
 
     fn highlights(&self, editor_id: usize) -> Option<(usize, usize)> {
         let (selected_from, selected_to) = self.selected?;

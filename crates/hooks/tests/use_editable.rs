@@ -1,18 +1,22 @@
 use crate::{use_editable, EditableMode, TextEditor};
 use freya::prelude::*;
-use freya_elements::events::keyboard::{Code, Key, Modifiers};
-use freya_testing::{launch_test, FreyaEvent, MouseButton};
+use freya_testing::{
+    events::{
+        keyboard::{Code, Key, Modifiers},
+        pointer::MouseButton,
+    },
+    launch_test, FreyaEvent,
+};
 
 #[tokio::test]
 pub async fn multiple_lines_single_editor() {
-    fn use_editable_app(cx: Scope) -> Element {
+    fn use_editable_app() -> Element {
         let editable = use_editable(
-            cx,
             || EditableConfig::new("Hello Rustaceans".to_string()),
             EditableMode::MultipleLinesSingleEditor,
         );
-        let cursor_attr = editable.cursor_attr(cx);
-        let editor = editable.editor();
+        let cursor_attr = editable.cursor_attr();
+        let editor = editable.editor().read();
         let cursor = editor.cursor();
         let cursor_pos = editor.cursor_pos();
 
@@ -30,13 +34,13 @@ pub async fn multiple_lines_single_editor() {
             }
         };
 
-        render!(
+        rsx!(
             rect {
                 width: "100%",
                 height: "100%",
                 background: "white",
                 cursor_reference: cursor_attr,
-                onmousedown: onmousedown,
+                onmousedown,
                 paragraph {
                     height: "50%",
                     width: "100%",
@@ -44,7 +48,7 @@ pub async fn multiple_lines_single_editor() {
                     cursor_index: "{cursor_pos}",
                     cursor_color: "black",
                     cursor_mode: "editable",
-                    onkeydown: onkeydown,
+                    onkeydown,
                     text {
                         color: "black",
                         "{editor}"
@@ -115,14 +119,13 @@ pub async fn multiple_lines_single_editor() {
 
 #[tokio::test]
 pub async fn single_line_mulitple_editors() {
-    fn use_editable_app(cx: Scope) -> Element {
+    fn use_editable_app() -> Element {
         let editable = use_editable(
-            cx,
             || EditableConfig::new("Hello Rustaceans\nHello World".to_string()),
             EditableMode::SingleLineMultipleEditors,
         );
-        let cursor_attr = editable.cursor_attr(cx);
-        let editor = editable.editor().clone();
+        let cursor_attr = editable.cursor_attr();
+        let editor = editable.editor().read();
 
         let onkeydown = {
             to_owned![editable];
@@ -131,14 +134,14 @@ pub async fn single_line_mulitple_editors() {
             }
         };
 
-        render!(
+        rsx!(
             rect {
                 width: "100%",
                 height: "100%",
                 background: "white",
                 cursor_reference: cursor_attr,
-                onkeydown: onkeydown,
-                editor.lines().enumerate().map(move |(i, line)| {
+                onkeydown,
+                {editor.lines().enumerate().map(move |(i, line)| {
 
                     let onmousedown = {
                         to_owned![editable];
@@ -163,7 +166,7 @@ pub async fn single_line_mulitple_editors() {
                             }
                         }
                     )
-                })
+                })},
                 label {
                     color: "black",
                     height: "50%",
@@ -234,17 +237,16 @@ pub async fn single_line_mulitple_editors() {
 
 #[tokio::test]
 pub async fn highlight_multiple_lines_single_editor() {
-    fn use_editable_app(cx: Scope) -> Element {
+    fn use_editable_app() -> Element {
         let editable = use_editable(
-            cx,
             || EditableConfig::new("Hello Rustaceans\n".repeat(2)),
             EditableMode::MultipleLinesSingleEditor,
         );
-        let cursor_attr = editable.cursor_attr(cx);
-        let editor = editable.editor();
+        let editor = editable.editor().read();
         let cursor = editor.cursor();
         let cursor_pos = editor.cursor_pos();
-        let highlights_attr = editable.highlights_attr(cx, 0);
+        let cursor_reference = editable.cursor_attr();
+        let highlights = editable.highlights_attr(0);
 
         let onmousedown = {
             to_owned![editable];
@@ -267,12 +269,12 @@ pub async fn highlight_multiple_lines_single_editor() {
             }
         };
 
-        render!(
+        rsx!(
             rect {
                 width: "100%",
                 height: "100%",
                 background: "white",
-                cursor_reference: cursor_attr,
+                cursor_reference,
                 paragraph {
                     height: "50%",
                     width: "100%",
@@ -280,10 +282,10 @@ pub async fn highlight_multiple_lines_single_editor() {
                     cursor_index: "{cursor_pos}",
                     cursor_color: "black",
                     cursor_mode: "editable",
-                    highlights: highlights_attr,
-                    onkeydown: onkeydown,
-                    onmousedown: onmousedown,
-                    onmouseover: onmouseover,
+                    highlights,
+                    onkeydown,
+                    onmousedown,
+                    onmouseover,
                     text {
                         color: "black",
                         "{editor}"
@@ -338,14 +340,13 @@ pub async fn highlight_multiple_lines_single_editor() {
 
 #[tokio::test]
 pub async fn highlights_single_line_mulitple_editors() {
-    fn use_editable_app(cx: Scope) -> Element {
+    fn use_editable_app() -> Element {
         let editable = use_editable(
-            cx,
             || EditableConfig::new("Hello Rustaceans\n".repeat(2)),
             EditableMode::SingleLineMultipleEditors,
         );
-        let cursor_attr = editable.cursor_attr(cx);
-        let editor = editable.editor().clone();
+        let cursor_attr = editable.cursor_attr();
+        let editor = editable.editor().read();
 
         let onkeydown = {
             to_owned![editable];
@@ -354,23 +355,23 @@ pub async fn highlights_single_line_mulitple_editors() {
             }
         };
 
-        render!(
+        rsx!(
             rect {
                 width: "100%",
                 height: "100%",
                 background: "white",
                 cursor_reference: cursor_attr,
-                onkeydown: onkeydown,
+                onkeydown,
                 direction: "vertical",
-                editor.lines().enumerate().map(move |(i, line)| {
+                {editor.lines().enumerate().map(move |(i, line)| {
 
-                    let highlights_attr = editable.highlights_attr(cx, i);
+                    let highlights = editable.highlights_attr(i);
 
-                    let is_line_selected = editable.editor().cursor_row() == i;
+                    let is_line_selected = editable.editor().read().cursor_row() == i;
 
                     // Only show the cursor in the active line
                     let character_index = if is_line_selected {
-                        editable.editor().cursor_col().to_string()
+                        editable.editor().read().cursor_col().to_string()
                     } else {
                         "none".to_string()
                     };
@@ -398,16 +399,16 @@ pub async fn highlights_single_line_mulitple_editors() {
                             cursor_index: "{character_index}",
                             cursor_color: "black",
                             cursor_mode: "editable",
-                            onmouseover:  onmouseover,
-                            onmousedown:  onmousedown,
-                            highlights: highlights_attr,
+                            onmouseover,
+                            onmousedown,
+                            highlights,
                             text {
                                 color: "black",
                                 "{line}"
                             }
                         }
                     )
-                })
+                })},
                 label {
                     color: "black",
                     height: "50%",

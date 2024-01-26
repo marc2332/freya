@@ -10,16 +10,15 @@ fn main() {
     launch(app);
 }
 
-fn app(cx: Scope) -> Element {
-    let platform = use_platform(cx);
-    let mut state = use_state(cx, || 0);
+fn app() -> Element {
+    let platform = use_platform();
+    let mut state = use_signal(|| 0);
 
-    use_effect(cx, (state,), move |_| async move {
+    use_effect(move || {
         platform.send(EventMessage::RequestRerender).unwrap();
     });
 
-    let canvas = use_canvas(cx, state, |state| {
-        let state = *state.current();
+    let canvas = use_canvas(&*state.read(), |state| {
         Box::new(move |canvas, _, region| {
             canvas.translate((region.min_x(), region.min_y()));
 
@@ -42,16 +41,18 @@ fn app(cx: Scope) -> Element {
         })
     });
 
-    render!(
+    rsx!(
         rect {
             onclick: move |_| {
                 state += 1;
             },
             Canvas {
-                canvas: canvas,
-                background: "black",
-                width: "100%",
-                height: "100%"
+                canvas,
+                theme: theme_with!(CanvasTheme {
+                    background: "black".into(),
+                    width: "100%".into(),
+                    height: "100%".into(),
+                })
             }
         }
     )

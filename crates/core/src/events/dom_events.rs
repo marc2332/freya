@@ -2,20 +2,44 @@ use std::{any::Any, rc::Rc};
 
 use dioxus_core::ElementId;
 use dioxus_native_core::NodeId;
-use freya_elements::events::{
-    pointer::PointerType, KeyboardData, MouseData, PointerData, TouchData, WheelData,
+use freya_elements::{
+    elements::PlatformEventData,
+    events::{pointer::PointerType, KeyboardData, MouseData, PointerData, TouchData, WheelData},
 };
 use torin::prelude::*;
 
 use crate::events::FreyaEvent;
 
 /// Event emitted to the DOM.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct DomEvent {
     pub name: String,
     pub node_id: NodeId,
     pub element_id: ElementId,
     pub data: DomEventData,
+}
+
+impl Eq for DomEvent {}
+
+impl PartialOrd for DomEvent {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for DomEvent {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        match self.name.as_str() {
+            "mouseleave" | "pointerleave" => {
+                if self.name == other.name {
+                    std::cmp::Ordering::Equal
+                } else {
+                    std::cmp::Ordering::Less
+                }
+            }
+            _ => std::cmp::Ordering::Greater,
+        }
+    }
 }
 
 impl DomEvent {
@@ -123,7 +147,7 @@ impl DomEvent {
 }
 
 /// Data of a DOM event.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum DomEventData {
     Mouse(MouseData),
     Keyboard(KeyboardData),
@@ -135,11 +159,11 @@ pub enum DomEventData {
 impl DomEventData {
     pub fn any(self) -> Rc<dyn Any> {
         match self {
-            DomEventData::Mouse(m) => Rc::new(m),
-            DomEventData::Keyboard(k) => Rc::new(k),
-            DomEventData::Wheel(w) => Rc::new(w),
-            DomEventData::Touch(t) => Rc::new(t),
-            DomEventData::Pointer(p) => Rc::new(p),
+            DomEventData::Mouse(m) => Rc::new(PlatformEventData::new(Box::new(m))),
+            DomEventData::Keyboard(k) => Rc::new(PlatformEventData::new(Box::new(k))),
+            DomEventData::Wheel(w) => Rc::new(PlatformEventData::new(Box::new(w))),
+            DomEventData::Touch(t) => Rc::new(PlatformEventData::new(Box::new(t))),
+            DomEventData::Pointer(p) => Rc::new(PlatformEventData::new(Box::new(p))),
         }
     }
 }

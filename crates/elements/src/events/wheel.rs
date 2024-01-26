@@ -1,5 +1,7 @@
+use crate::definitions::PlatformEventData;
+
 /// Data of a Wheel event.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct WheelData {
     #[allow(dead_code)]
     delta_x: f64,
@@ -21,5 +23,11 @@ impl WheelData {
     /// Get the Y delta.
     pub fn get_delta_y(&self) -> f64 {
         self.delta_y
+    }
+}
+
+impl From<&PlatformEventData> for WheelData {
+    fn from(val: &PlatformEventData) -> Self {
+        val.downcast::<WheelData>().cloned().unwrap().into()
     }
 }

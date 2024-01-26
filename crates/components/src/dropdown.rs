@@ -1,26 +1,34 @@
 use std::fmt::Display;
 
+use crate::icons::ArrowIcon;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::keyboard::Key;
 use freya_elements::events::{KeyboardEvent, MouseEvent};
-use freya_hooks::{use_focus, use_get_theme};
+
+use freya_hooks::{
+    theme_with, use_applied_theme, use_focus, use_platform, ArrowIconThemeWith,
+    DropdownItemThemeWith, DropdownTheme, DropdownThemeWith,
+};
+use winit::window::CursorIcon;
 
 /// [`DropdownItem`] component properties.
-#[derive(Props)]
-pub struct DropdownItemProps<'a, T: 'static> {
+#[derive(Props, Clone, PartialEq)]
+pub struct DropdownItemProps<T: 'static + Clone> {
+    /// Theme override.
+    pub theme: Option<DropdownItemThemeWith>,
     /// Selectable items, like [`DropdownItem`]
-    children: Element<'a>,
+    pub children: Element,
     /// Selected value.
-    value: T,
+    pub value: T,
     /// Handler for the `onclick` event.
     #[props(optional)]
-    onclick: Option<EventHandler<'a, ()>>,
+    pub onclick: Option<EventHandler<()>>,
 }
 
 /// Current status of the DropdownItem.
 #[derive(Debug, Default, PartialEq, Clone, Copy)]
-pub enum DropdownItemState {
+pub enum DropdownItemStatus {
     /// Default state.
     #[default]
     Idle,
@@ -36,78 +44,107 @@ pub enum DropdownItemState {
 /// # Styling
 /// Inherits the [`DropdownItemTheme`](freya_hooks::DropdownItemTheme) theme.
 #[allow(non_snake_case)]
-pub fn DropdownItem<'a, T>(cx: Scope<'a, DropdownItemProps<'a, T>>) -> Element<'a>
+pub fn DropdownItem<T: Clone>(
+    DropdownItemProps {
+        theme,
+        children,
+        value,
+        onclick,
+    }: DropdownItemProps<T>,
+) -> Element
 where
     T: PartialEq + 'static,
 {
-    let selected = use_shared_state::<T>(cx).unwrap();
-    let theme = use_get_theme(cx);
-    let focus = use_focus(cx);
-    let state = use_state(cx, DropdownItemState::default);
+    let selected = use_context::<Signal<T>>();
+    let theme = use_applied_theme!(&theme, dropdown_item);
+    let focus = use_focus();
+    let mut status = use_signal(DropdownItemStatus::default);
+    let platform = use_platform();
 
-    let focus_id = focus.attribute(cx);
+    let focus_id = focus.attribute();
     let is_focused = focus.is_focused();
-    let is_selected = *selected.read() == cx.props.value;
+    let is_selected = *selected.read() == value;
 
-    let background = match *state.get() {
-        _ if is_selected => theme.dropdown_item.select_background,
-        _ if is_focused => theme.dropdown_item.hover_background,
-        DropdownItemState::Hovering => theme.dropdown_item.hover_background,
-        DropdownItemState::Idle => theme.dropdown_item.background,
+    let background = match *status.read() {
+        _ if is_selected => theme.select_background,
+        _ if is_focused => theme.hover_background,
+        DropdownItemStatus::Hovering => theme.hover_background,
+        DropdownItemStatus::Idle => theme.background,
     };
-    let color = theme.dropdown_item.font_theme.color;
+    let color = theme.font_theme.color;
 
-    let onclick = move |_: MouseEvent| {
-        if let Some(onclick) = &cx.props.onclick {
-            onclick.call(())
+    use_drop({
+        to_owned![status, platform];
+        move || {
+            if *status.peek() == DropdownItemStatus::Hovering {
+                platform.set_cursor(CursorIcon::default());
+            }
+        }
+    });
+
+    let onmouseenter = {
+        to_owned![platform];
+        move |_| {
+            platform.set_cursor(CursorIcon::Hand);
+            status.set(DropdownItemStatus::Hovering);
         }
     };
 
-    let onmouseenter = move |_| {
-        state.set(DropdownItemState::Hovering);
-    };
-
     let onmouseleave = move |_| {
-        state.set(DropdownItemState::default());
+        platform.set_cursor(CursorIcon::default());
+        status.set(DropdownItemStatus::default());
     };
 
-    let onkeydown = move |ev: KeyboardEvent| {
-        if ev.key == Key::Enter && is_focused {
-            if let Some(onclick) = &cx.props.onclick {
-                onclick.call(())
+    let onkeydown = {
+        to_owned![onclick];
+        move |ev: KeyboardEvent| {
+            if ev.key == Key::Enter && is_focused {
+                if let Some(onclick) = &onclick {
+                    onclick.call(())
+                }
             }
         }
     };
 
-    render!(rect {
-        color: color,
-        width: "100%",
-        height: "35",
-        focus_id: focus_id,
-        role: "button",
-        background: background,
-        padding: "6",
-        corner_radius: "3",
-        onmouseenter: onmouseenter,
-        onmouseleave: onmouseleave,
-        onclick: onclick,
-        onkeydown: onkeydown,
-        &cx.props.children
-    })
+    let onclick = move |_: MouseEvent| {
+        if let Some(onclick) = &onclick {
+            onclick.call(())
+        }
+    };
+
+    rsx!(
+        rect {
+            color: "{color}",
+            focus_id,
+            role: "button",
+            background: "{background}",
+            padding: "6 22 6 16",
+            corner_radius: "6",
+            main_align: "center",
+            cross_align: "center",
+            onmouseenter,
+            onmouseleave,
+            onclick,
+            onkeydown,
+            {children}
+        }
+    )
 }
 
 /// [`Dropdown`] component properties.
-#[derive(Props)]
-pub struct DropdownProps<'a, T: 'static> {
+#[derive(Props, Clone, PartialEq)]
+pub struct DropdownProps<T: 'static + Clone> {
+    /// Theme override.
+    pub theme: Option<DropdownThemeWith>,
     /// Selectable items, like [`DropdownItem`]
-    children: Element<'a>,
+    pub children: Element,
     /// Selected value.
-    value: T,
+    pub value: T,
 }
 
 /// Current status of the Dropdown.
 #[derive(Debug, Default, PartialEq, Clone, Copy)]
-pub enum DropdownState {
+pub enum DropdownStatus {
     /// Default state.
     #[default]
     Idle,
@@ -127,51 +164,54 @@ pub enum DropdownState {
 /// ```no_run
 /// # use freya::prelude::*;
 ///
-/// fn app(cx: Scope) -> Element {
-///     let values = cx.use_hook(|| vec!["A".to_string(), "B".to_string(), "C".to_string()]);
-///     let selected_dropdown = use_state(cx, || "A".to_string());
-///     render!(
+/// fn app() -> Element {
+///     let values = use_hook(|| vec!["A".to_string(), "B".to_string(), "C".to_string()]);
+///     let mut selected_dropdown = use_signal(|| "A".to_string());
+///     rsx!(
 ///         Dropdown {
-///             value: selected_dropdown.get().clone(),
-///             values.iter().map(|ch| {
-///                 rsx!(
-///                     DropdownItem {
-///                         value: ch.to_string(),
-///                         onclick: move |_| selected_dropdown.set(ch.to_string()),
-///                         label { "{ch}" }
-///                     }
-///                 )
-///             })
+///             value: selected_dropdown.read().clone(),
+///             for ch in values {
+///                 DropdownItem {
+///                     value: ch.to_string(),
+///                     onclick: {
+///                         to_owned![ch];
+///                         move |_| selected_dropdown.set(ch.clone())
+///                     },
+///                     label { "{ch}" }
+///                 }
+///             }
 ///         }
 ///     )
 /// }
 /// ```
 #[allow(non_snake_case)]
-pub fn Dropdown<'a, T>(cx: Scope<'a, DropdownProps<'a, T>>) -> Element<'a>
+pub fn Dropdown<T>(props: DropdownProps<T>) -> Element
 where
     T: PartialEq + Clone + Display + 'static,
 {
-    use_shared_state_provider(cx, || cx.props.value.clone());
-    let selected = use_shared_state::<T>(cx).unwrap();
-    let theme = use_get_theme(cx);
-    let focus = use_focus(cx);
-    let state = use_state(cx, DropdownState::default);
-    let opened = use_state(cx, || false);
+    let selected = use_context_provider(|| Signal::new(props.value.clone()));
+    let theme = use_applied_theme!(&props.theme, dropdown);
+    let mut focus = use_focus();
+    let mut status = use_signal(DropdownStatus::default);
+    let mut opened = use_signal(|| false);
+    let platform = use_platform();
 
-    let is_opened = *opened.get();
+    let is_opened = *opened.read();
     let is_focused = focus.is_focused();
-    let focus_id = focus.attribute(cx);
-
-    let desplegable_background = theme.dropdown.desplegable_background;
-    let button_background = match *state.get() {
-        DropdownState::Hovering => theme.dropdown.hover_background,
-        DropdownState::Idle => theme.dropdown.background_button,
-    };
-    let color = theme.dropdown.font_theme.color;
+    let focus_id = focus.attribute();
 
     // Update the provided value if the passed value changes
-    use_memo(cx, &cx.props.value, move |value| {
+    let _ = use_memo_with_dependencies(&props.value, move |value| {
         *selected.write() = value;
+    });
+
+    use_drop({
+        to_owned![status, platform];
+        move || {
+            if *status.peek() == DropdownStatus::Hovering {
+                platform.set_cursor(CursorIcon::default());
+            }
+        }
     });
 
     // Close the dropdown if clicked anywhere
@@ -198,53 +238,81 @@ where
         }
     };
 
-    if *opened.get() {
-        render!(
+    let onmouseenter = {
+        to_owned![status, platform];
+        move |_| {
+            platform.set_cursor(CursorIcon::Hand);
+            status.set(DropdownStatus::Hovering);
+        }
+    };
+
+    let onmouseleave = move |_| {
+        platform.set_cursor(CursorIcon::default());
+        status.set(DropdownStatus::default());
+    };
+
+    let DropdownTheme {
+        font_theme,
+        dropdown_background,
+        background_button,
+        hover_background,
+        border_fill,
+        arrow_fill,
+    } = &theme;
+
+    let button_background = match *status.read() {
+        DropdownStatus::Hovering => hover_background,
+        DropdownStatus::Idle => background_button,
+    };
+
+    let selected = selected.read().to_string();
+
+    rsx!(
+        rect {
+            onmouseenter,
+            onmouseleave,
+            onclick,
+            onkeydown,
+            margin: "4",
+            focus_id,
+            background: "{button_background}",
+            color: "{font_theme.color}",
+            corner_radius: "8",
+            padding: "8 16",
+            border: "1 solid {border_fill}",
+            shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)",
+            direction: "horizontal",
+            main_align: "center",
+            cross_align: "center",
+            label {
+                text_align: "center",
+                "{selected}"
+            }
+            ArrowIcon {
+                rotate: "0",
+                fill: "{arrow_fill}",
+                theme: theme_with!(ArrowIconTheme {
+                    margin : "0 0 0 8".into(),
+                })
+            }
+        }
+        if *opened.read() {
             rect {
-                width: "70",
-                height: "50",
-                margin: "5",
+                height: "0",
                 rect {
+                    onglobalclick,
+                    onkeydown,
+                    layer: "-99",
+                    margin: "4",
+                    border: "1 solid {border_fill}",
                     overflow: "clip",
-                    focus_id: focus_id,
-                    layer: "-1",
-                    corner_radius: "3",
-                    onglobalclick: onglobalclick,
-                    onkeydown: onkeydown,
-                    width: "130",
-                    height: "auto",
-                    background: desplegable_background,
-                    shadow: "0 0 20 0 rgb(0, 0, 0, 100)",
-                    padding: "7",
-                    &cx.props.children
+                    corner_radius: "8",
+                    background: "{dropdown_background}",
+                    shadow: "0 4 5 0 rgb(0, 0, 0, 0.3)",
+                    padding: "6",
+                    {props.children}
                 }
             }
-        )
-    } else {
-        let selected = selected.read().to_string();
-        render!(
-            rect {
-                margin: "5",
-                overflow: "clip",
-                focus_id: focus_id,
-                background: button_background,
-                color: color,
-                corner_radius: "3",
-                onclick: onclick,
-                onkeydown: onkeydown,
-                width: "70",
-                height: "auto",
-                padding: "7",
-                label {
-                    text_align: "center",
-                    "{selected}"
-                }
-                rect {
-                    width: "100%",
-                    height: "2",
-                    background: color,
-                }
-            }
-        )
-    }
+        }
+    )
 }

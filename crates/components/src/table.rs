@@ -1,94 +1,110 @@
+use crate::icons::ArrowIcon;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
-use freya_hooks::{use_get_theme, FontTheme, TableTheme};
+use freya_hooks::{use_applied_theme, use_get_theme, FontTheme, TableTheme, TableThemeWith};
 
 #[allow(non_snake_case)]
-#[inline_props]
-fn TableArrow(cx: Scope, order_direction: OrderDirection) -> Element {
-    let theme = use_get_theme(cx);
+#[component]
+fn TableArrow(order_direction: OrderDirection) -> Element {
+    let theme = use_get_theme();
     let TableTheme { arrow_fill, .. } = theme.table;
     let rotate = match order_direction {
         OrderDirection::Down => "0",
         OrderDirection::Up => "180",
     };
 
-    render!(svg {
-        height: "10",
-        width: "10",
-        rotate: "{rotate}deg",
-        svg_content: r#"
-            <svg viewBox="0 0 18 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M7.18177 9.58579L0 2.40401L1.81823 0.585785L9 7.76756L16.1818 0.585787L18 2.40402L10.8182 9.58579L10.8185 9.58601L9.00023 11.4042L9 11.404L8.99977 11.4042L7.18154 9.58602L7.18177 9.58579Z" fill="{arrow_fill}"  stroke="{arrow_fill}" stroke-width="2"/>
-            </svg>
-        "#
+    rsx!(ArrowIcon {
+        rotate: "{rotate}",
+        fill: "{arrow_fill}"
     })
 }
 
 /// [`TableHead`] component properties.
-#[derive(Props)]
-pub struct TableHeadProps<'a> {
+#[derive(Props, Clone, PartialEq)]
+pub struct TableHeadProps {
     /// The content of this table head.
-    children: Element<'a>,
+    pub children: Element,
 }
 
+/// `TableHead` component.
+///
+/// # Props
+/// See [`TableHeadProps`].
+///
 #[allow(non_snake_case)]
-pub fn TableHead<'a>(cx: Scope<'a, TableHeadProps<'a>>) -> Element {
-    render!(
-        rect {
-            width: "100%",
-            &cx.props.children
-        }
+pub fn TableHead(TableHeadProps { children }: TableHeadProps) -> Element {
+    rsx!(
+        rect { width: "100%", {children} }
     )
 }
 
 /// [`TableBody`] component properties.
-#[derive(Props)]
-pub struct TableBodyProps<'a> {
+#[derive(Props, Clone, PartialEq)]
+pub struct TableBodyProps {
     /// The content of this table body.
-    children: Element<'a>,
+    pub children: Element,
 }
 
+/// `TableBody` component.
+///
+/// # Props
+/// See [`TableBodyProps`].
+///
 #[allow(non_snake_case)]
-pub fn TableBody<'a>(cx: Scope<'a, TableBodyProps<'a>>) -> Element {
-    render!(
-        rect {
-            width: "100%",
-            &cx.props.children
-        }
+pub fn TableBody(TableBodyProps { children }: TableBodyProps) -> Element {
+    rsx!(
+        rect { width: "100%", {children} }
     )
 }
 
 /// [`TableRow`] component properties.
-#[derive(Props)]
-pub struct TableRowProps<'a> {
+#[derive(Props, Clone, PartialEq)]
+pub struct TableRowProps {
+    /// Theme override.
+    pub theme: Option<TableThemeWith>,
     /// The content of this row.
-    children: Element<'a>,
+    children: Element,
     /// Show the row with a different background, this allows to have a zebra-style table.
     #[props(default = false)]
     alternate_colors: bool,
 }
 
+/// `TableRow` component.
+///
+/// # Props
+/// See [`TableRowProps`].
+///
+/// # Styling
+/// Inherits the [`TableTheme`](freya_hooks::TableTheme) theme.
+///
 #[allow(non_snake_case)]
-pub fn TableRow<'a>(cx: Scope<'a, TableRowProps<'a>>) -> Element {
-    let theme = use_get_theme(cx);
+pub fn TableRow<'a>(
+    TableRowProps {
+        theme,
+        children,
+        alternate_colors,
+    }: TableRowProps,
+) -> Element {
+    let theme = use_applied_theme!(&theme, table);
     let TableTheme {
         divider_fill,
         alternate_row_background,
         row_background,
         ..
-    } = theme.table;
-    let background = if cx.props.alternate_colors {
+    } = theme;
+    let background = if alternate_colors {
         alternate_row_background
     } else {
         row_background
     };
-    render!(
+
+    rsx!(
         rect {
             direction: "horizontal",
             width: "100%",
             background: "{background}",
-            &cx.props.children
+            {children}
         }
         rect {
             height: "1",
@@ -100,32 +116,41 @@ pub fn TableRow<'a>(cx: Scope<'a, TableRowProps<'a>>) -> Element {
 
 #[derive(Clone, Copy, PartialEq, Debug, Default)]
 pub enum OrderDirection {
+    /// Alternatively: descending.
     Up,
+    /// Alternatively: ascending.
     #[default]
     Down,
 }
 
 /// [`TableCell`] component properties.
-#[derive(Props)]
-pub struct TableCellProps<'a> {
+#[derive(Props, Clone, PartialEq)]
+pub struct TableCellProps {
     /// The content of this cell.
-    children: Element<'a>,
+    pub children: Element,
     /// Onclick event handler for the TableCell.
-    onclick: Option<EventHandler<'a, MouseEvent>>,
+    pub onclick: Option<EventHandler<MouseEvent>>,
     /// The direction in which this TableCell's column will be ordered.
+    ///
+    /// **This is only a visual change (it changes the icon), you need to sort stuff yourself.**
     #[props(into)]
-    order_direction: Option<Option<OrderDirection>>,
+    pub order_direction: Option<Option<OrderDirection>>,
     /// The padding of the cell.
     #[props(default = "5 25".to_string(), into)]
-    padding: String,
+    pub padding: String,
     /// The height of the cell.
     #[props(default = "35".to_string(), into)]
-    height: String,
+    pub height: String,
 }
 
+/// `TableCell` component.
+///
+/// # Props
+/// See [`TableCellProps`].
+///
 #[allow(non_snake_case)]
-pub fn TableCell<'a>(cx: Scope<'a, TableCellProps<'a>>) -> Element {
-    let config = cx.consume_context::<TableConfig>().unwrap();
+pub fn TableCell(props: TableCellProps) -> Element {
+    let config = consume_context::<TableConfig>();
     let width = 100.0 / config.columns as f32;
     let TableCellProps {
         children,
@@ -133,9 +158,9 @@ pub fn TableCell<'a>(cx: Scope<'a, TableCellProps<'a>>) -> Element {
         padding,
         height,
         ..
-    } = &cx.props;
+    } = &props;
 
-    render!(
+    rsx!(
         rect {
             overflow: "clip",
             padding: "{padding}",
@@ -143,78 +168,76 @@ pub fn TableCell<'a>(cx: Scope<'a, TableCellProps<'a>>) -> Element {
             main_align: "center",
             cross_align: "center",
             height: "{height}",
-            align: "right",
+            text_align: "right",
             direction: "horizontal",
-            onclick: |e| {
-                if let Some(onclick) = &cx.props.onclick {
+            onclick: move |e| {
+                if let Some(onclick) = &props.onclick {
                     onclick.call(e);
                 }
             },
             if let Some(order_direction) = &order_direction {
-                rsx!(
-                    rect {
-                        margin: "10",
-                        width: "10",
-                        height: "10",
-                        if let Some(order_direction) = &order_direction {
-                            rsx!(
-                                TableArrow {
-                                    order_direction: *order_direction
-                                }
-                            )
+                rect {
+                    margin: "10",
+                    width: "10",
+                    height: "10",
+                    if let Some(order_direction) = &order_direction {
+                        TableArrow {
+                            order_direction: *order_direction
                         }
                     }
-                )
+                }
             }
-            children
+            {children}
         }
     )
 }
 
 /// [`Table`] component properties.
-#[derive(Props)]
-pub struct TableProps<'a> {
+#[derive(Props, Clone, PartialEq)]
+pub struct TableProps {
+    /// Theme override.
+    pub theme: Option<TableThemeWith>,
     /// Number of columns used in the table.
-    columns: usize,
+    pub columns: usize,
     /// The content of the table.
-    children: Element<'a>,
-    /// The height of the table.
-    #[props(default = "auto".to_string(), into)]
-    height: String,
-    /// The corner radius of the table.
-    #[props(default = "6".to_string(), into)]
-    corner_radius: String,
-    /// The drop shadow of the table.
-    #[props(default = "0 2 15 5 rgb(35, 35, 35, 70)".to_string(), into)]
-    shadow: String,
+    pub children: Element,
 }
 
+/// `Table` component.
+///
+/// # Props
+/// See [`TableProps`].
+///
+/// # Styling
+/// Inherits the [`TableTheme`](freya_hooks::TableTheme) theme.
+///
 #[allow(non_snake_case)]
-pub fn Table<'a>(cx: Scope<'a, TableProps<'a>>) -> Element {
-    let theme = use_get_theme(cx);
+pub fn Table(
+    TableProps {
+        theme,
+        columns,
+        children,
+    }: TableProps,
+) -> Element {
     let TableTheme {
         background,
+        height,
+        corner_radius,
+        shadow,
         font_theme: FontTheme { color },
         ..
-    } = theme.table;
-    cx.provide_context(TableConfig {
-        columns: cx.props.columns,
-    });
-    let height = &cx.props.height;
-    let corner_radius = &cx.props.corner_radius;
-    let shadow = &cx.props.shadow;
+    } = use_applied_theme!(&theme, table);
+    provide_context(TableConfig { columns });
 
-    render!(
-        rect {
-            overflow: "clip",
-            color: "{color}",
-            background: "{background}",
-            corner_radius: "{corner_radius}",
-            shadow: "{shadow}",
-            height: "{height}",
-            &cx.props.children
-        }
-    )
+    rsx!(rect {
+        overflow: "clip",
+        color: "{color}",
+        background: "{background}",
+        corner_radius: "{corner_radius}",
+        shadow: "{shadow}",
+        height: "{height}",
+        {children}
+    })
 }
 
 #[derive(Clone)]

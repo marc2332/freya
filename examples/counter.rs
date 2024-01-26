@@ -3,16 +3,17 @@
     windows_subsystem = "windows"
 )]
 
+use dioxus::signals::use_signal;
 use freya::prelude::*;
 
 fn main() {
     launch_with_props(app, "Counter", (400.0, 350.0));
 }
 
-fn app(cx: Scope) -> Element {
-    let mut count = use_state(cx, || 0);
+fn app() -> Element {
+    let mut count = use_signal(|| 0);
 
-    render!(
+    rsx!(
         rect {
             height: "50%",
             width: "100%",

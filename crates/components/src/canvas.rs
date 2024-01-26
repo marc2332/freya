@@ -1,21 +1,15 @@
-use dioxus::prelude::{render, Element, Props, Scope};
+use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::UseCanvas;
+
+use freya_hooks::{use_applied_theme, CanvasTheme, CanvasThemeWith, UseCanvas};
 
 /// [`Canvas`] component properties.
-#[derive(Props, PartialEq)]
+#[derive(Props, Clone, PartialEq)]
 pub struct CanvasProps {
-    /// Width of the canvas.
-    #[props(default = "300".to_string(), into)]
-    width: String,
-    /// Height of the canvas.
-    #[props(default = "150".to_string(), into)]
-    height: String,
-    /// Color of the canvas.
-    #[props(default = "white".to_string(), into)]
-    background: String,
+    /// Theme override.
+    pub theme: Option<CanvasThemeWith>,
     /// The Canvas reference.
-    canvas: UseCanvas,
+    pub canvas: UseCanvas,
 }
 
 /// Draw anything inside of this canvas.
@@ -24,12 +18,18 @@ pub struct CanvasProps {
 /// See [`CanvasProps`].
 ///
 #[allow(non_snake_case)]
-pub fn Canvas(cx: Scope<CanvasProps>) -> Element {
-    render!(rect {
+pub fn Canvas(props: CanvasProps) -> Element {
+    let CanvasTheme {
+        width,
+        height,
+        background,
+    } = use_applied_theme!(&props.theme, canvas);
+
+    rsx!(rect {
         overflow: "clip",
-        canvas_reference: cx.props.canvas.attribute(cx),
-        background: "{cx.props.background}",
-        width: "{cx.props.width}",
-        height: "{cx.props.height}",
+        canvas_reference: props.canvas.attribute(),
+        background: "{background}",
+        width: "{width}",
+        height: "{height}"
     })
 }

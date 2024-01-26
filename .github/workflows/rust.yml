@@ -11,7 +11,6 @@ env:
 
 jobs:
   build:
-
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -31,6 +30,8 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         sudo apt update && sudo apt install build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev
+    - name: Check examples
+      run: cargo check --examples
     - name: Lint
       run: cargo clippy
     - name: Run Linux tests
@@ -42,12 +43,14 @@ jobs:
     - name: Run MacOS and Windows tests
       if: runner.os != 'Linux'
       run: cargo nextest run --workspace --exclude examples
+    - name: Run doctests
+      run: cargo test --workspace --doc
     - name: Run coverage
       if: runner.os == 'Linux'
       run: |
         rustup component add llvm-tools-preview 
         curl -L https://github.com/mozilla/grcov/releases/latest/download/grcov-x86_64-unknown-linux-gnu.tar.bz2 | tar jxf -
-        ./grcov . --binary-path ./target/debug/deps -s . -t lcov --branch --ignore-not-existing --ignore "../*" --ignore "/*" -o cov.lcov 
+        ./grcov . --binary-path ./target/debug/deps -s . -t lcov --branch --ignore-not-existing --ignore "../*" --ignore "/*" -o cov.lcov
     - uses: codecov/codecov-action@v3
       if: runner.os == 'Linux'
       with:

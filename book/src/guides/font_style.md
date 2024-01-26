@@ -5,7 +5,7 @@ Learn how the font style attributes work.
 - [`color`](#color)
 - [`font_family`](#font_family)
 - [`font_size`](#font_size)
-- [`text_align`](#text_align)
+- [`align`](#align)
 - [`font_style`](#font_style)
 - [`font_weight`](#font_weight)
 - [`font_width`](#font_width)
@@ -29,8 +29,8 @@ You can learn about the syntax of this attribute in [`Color Syntax`](/guides/sty
 Example:
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         label {
             color: "green",
             "Hello, World!"
@@ -42,8 +42,8 @@ fn app(cx: Scope) -> Element {
 Another example showing [inheritance](#inheritance):
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         rect {
             color: "blue",
             label {
@@ -66,8 +66,8 @@ Limitation: Only fonts installed in the system are supported for now.
 Example: 
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         label {
             font_family: "Inter",
             "Hello, World!"
@@ -85,8 +85,8 @@ You can specify the size of the text using `font_size`.
 Example:
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         label {
             font_size: "50",
             "Hellooooo!"
@@ -97,19 +97,19 @@ fn app(cx: Scope) -> Element {
 
 Compatible elements: [`label`](/guides/elements.html#label), [`paragraph`](/guides/elements.html#paragraph-and-text), [`text`](/guides/elements.html#paragraph-and-text)
 
-### text_align
+### align
 
-You can change the alignment of the text using the `text_align` attribute.
+You can change the alignment of the text using the `align` attribute.
 
 Accepted values: `center`, `end`, `justify`, `left`, `right`, `start`
 
 Example
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         label {
-            text_align: "right",
+            align: "right",
             "Hello, World!"
         }
     )
@@ -127,8 +127,8 @@ Accepted values: `upright` (default), `italic` and `oblique`.
 Example:
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         label {
             font_style: "italic",
             "Hello, World!"
@@ -170,8 +170,8 @@ Accepted values:
 Example:
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         label {
             font_weight: "bold",
             "Hello, World!"
@@ -199,8 +199,8 @@ Accepted values:
 Example:
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         label {
             font_weight: "bold",
             "Hello, World!"
@@ -220,8 +220,8 @@ Specify the height of the lines of the text.
 Example:
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         label {
             lines_height: "3",
             "Hello, World! \n Hello, again!"
@@ -237,8 +237,8 @@ Determines the amount of lines that the text can have. It has unlimited lines by
 Example:
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         label {
             "Hello, World! \n Hello, World! \n Hello, world!" // Will show all three lines
         }
@@ -259,8 +259,8 @@ Specify the spacing between characters of the text.
 Example:
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         label {
             letter_spacing: "10",
             "Hello, World!"
@@ -278,8 +278,8 @@ Specify the spacing between words of the text.
 Example:
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         label {
             word_spacing: "10",
             "Hello, World!"
@@ -302,8 +302,8 @@ Accpted values:
 Example:
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         label {
             decoration: "line-through",
             "Hello, World!"
@@ -328,8 +328,8 @@ Accpted values:
 Example:
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         label {
             decoration: "line-through",
             decoration_style: "dotted",
@@ -350,8 +350,8 @@ You can learn about the syntax of this attribute in [`Color Syntax`](/guides/sty
 Example:
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         label {
             decoration: "line-through",
             decoration_color: "orange",
@@ -372,8 +372,8 @@ Syntax: `<x> <y> <size> <color>`
 Example:
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         label {
             text_shadow: "0 18 12 rgb(0, 0, 0)",
             "Hello, World!"
@@ -395,8 +395,8 @@ Accepted values:
 Example:
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         label {
             max_lines: "3",
             text_overflow: "ellipsis",

@@ -28,7 +28,7 @@ use tabs::{layout::*, style::*, tree::*};
 /// Run the [`VirtualDom`](dioxus_core::VirtualDom) with a sidepanel where the devtools are located.
 pub fn with_devtools(
     rdom: SafeDOM,
-    root: fn(cx: Scope) -> Element,
+    root: fn() -> Element,
     mutations_notifier: Arc<Notify>,
     hovered_node: HoveredNode,
 ) -> VirtualDom {
@@ -43,24 +43,31 @@ pub fn with_devtools(
     )
 }
 
+#[derive(Props, Clone)]
 struct AppWithDevtoolsProps {
-    root: fn(cx: Scope) -> Element,
+    root: fn() -> Element,
     rdom: SafeDOM,
     mutations_notifier: Arc<Notify>,
     hovered_node: HoveredNode,
 }
 
+impl PartialEq for AppWithDevtoolsProps {
+    fn eq(&self, _other: &Self) -> bool {
+        true
+    }
+}
+
 #[allow(non_snake_case)]
-fn AppWithDevtools(cx: Scope<AppWithDevtoolsProps>) -> Element {
-    use_init_focus(cx);
-    use_init_accessibility(cx);
+fn AppWithDevtools(props: AppWithDevtoolsProps) -> Element {
+    use_init_focus();
+    use_init_accessibility();
 
     #[allow(non_snake_case)]
-    let Root = cx.props.root;
-    let mutations_notifier = cx.props.mutations_notifier.clone();
-    let hovered_node = cx.props.hovered_node.clone();
+    let Root = props.root;
+    let mutations_notifier = props.mutations_notifier.clone();
+    let hovered_node = props.hovered_node.clone();
 
-    render!(
+    rsx!(
         rect {
             width: "100%",
             height: "100%",
@@ -77,7 +84,7 @@ fn AppWithDevtools(cx: Scope<AppWithDevtoolsProps>) -> Element {
                 width: "350",
                 ThemeProvider {
                     DevTools {
-                        rdom: cx.props.rdom.clone(),
+                        rdom: props.rdom.clone(),
                         mutations_notifier: mutations_notifier,
                         hovered_node: hovered_node
                     }
@@ -87,7 +94,7 @@ fn AppWithDevtools(cx: Scope<AppWithDevtoolsProps>) -> Element {
     )
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct TreeNode {
     tag: String,
     id: NodeId,
@@ -98,7 +105,7 @@ pub struct TreeNode {
     areas: NodeAreas,
 }
 
-#[derive(Props)]
+#[derive(Props, Clone)]
 pub struct DevToolsProps {
     rdom: SafeDOM,
     mutations_notifier: Arc<Notify>,
@@ -112,20 +119,21 @@ impl PartialEq for DevToolsProps {
 }
 
 #[allow(non_snake_case)]
-pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
-    use_shared_state_provider(cx, Vec::<TreeNode>::new);
-    use_shared_state_provider::<HoveredNode>(cx, || cx.props.hovered_node.clone());
-    use_init_theme(cx, DARK_THEME);
-    let children = use_shared_state::<Vec<TreeNode>>(cx).unwrap();
-    let theme = use_theme(cx);
+pub fn DevTools(props: DevToolsProps) -> Element {
+    let children = use_context_provider(|| Signal::new(Vec::<TreeNode>::new()));
+    use_context_provider::<Signal<HoveredNode>>(|| Signal::new(props.hovered_node.clone()));
+    use_init_theme(DARK_THEME);
+    let theme = use_theme();
+
     let theme = theme.read();
+    let color = &theme.body.color;
 
     #[allow(clippy::await_holding_lock)]
-    use_effect(cx, (), move |_| {
-        let rdom = cx.props.rdom.clone();
-        let mutations_notifier = cx.props.mutations_notifier.clone();
+    use_effect(move || {
+        let rdom = props.rdom.clone();
+        let mutations_notifier = props.mutations_notifier.clone();
         let children = children.clone();
-        async move {
+        spawn(async move {
             loop {
                 mutations_notifier.notified().await;
 
@@ -176,23 +184,23 @@ pub fn DevTools(cx: Scope<DevToolsProps>) -> Element {
                 });
                 *children.write() = new_children;
             }
-        }
+        });
     });
 
-    render!(
+    rsx!(
         rect {
             width: "100%",
             height: "100%",
-            color: theme.body.color,
+            color: "{color}",
             Router::<Route> { }
         }
     )
 }
 
-#[inline_props]
+#[component]
 #[allow(non_snake_case)]
-pub fn DevtoolsBar(cx: Scope) -> Element {
-    render!(
+pub fn DevtoolsBar() -> Element {
+    rsx!(
         TabsBar {
             TabButton {
                 to: Route::TreeElementsTab { },
@@ -204,9 +212,9 @@ pub fn DevtoolsBar(cx: Scope) -> Element {
 }
 
 #[allow(non_snake_case)]
-#[inline_props]
-pub fn NodeInspectorBar(cx: Scope, node_id: NodeId) -> Element {
-    render!(
+#[component]
+pub fn NodeInspectorBar(node_id: NodeId) -> Element {
+    rsx!(
         TabsBar {
             TabButton {
                 to: Route::TreeStyleTab { node_id: node_id.serialize() },
@@ -220,7 +228,7 @@ pub fn NodeInspectorBar(cx: Scope, node_id: NodeId) -> Element {
     )
 }
 
-#[derive(Routable, Clone)]
+#[derive(Routable, Clone, PartialEq)]
 #[rustfmt::skip]
 pub enum Route {
     #[layout(DevtoolsBar)]
@@ -238,9 +246,9 @@ pub enum Route {
 }
 
 #[allow(non_snake_case)]
-#[inline_props]
-fn PageNotFound(cx: Scope) -> Element {
-    render!(
+#[component]
+fn PageNotFound() -> Element {
+    rsx!(
         label {
             "Page not found."
         }
@@ -248,13 +256,13 @@ fn PageNotFound(cx: Scope) -> Element {
 }
 
 #[allow(non_snake_case)]
-#[inline_props]
-fn TreeElementsTab(cx: Scope) -> Element {
-    let hovered_node = use_shared_state::<HoveredNode>(cx).unwrap();
+#[component]
+fn TreeElementsTab() -> Element {
+    let hovered_node = use_context::<Signal<HoveredNode>>();
 
-    render!(NodesTree {
+    rsx!(NodesTree {
         height: "calc(100% - 35)",
-        onselected: |node: &TreeNode| {
+        onselected: move |node: TreeNode| {
             if let Some(hovered_node) = &hovered_node.read().as_ref() {
                 hovered_node.lock().unwrap().replace(node.id);
             }
@@ -262,21 +270,21 @@ fn TreeElementsTab(cx: Scope) -> Element {
     })
 }
 
-#[derive(Props, PartialEq)]
+#[derive(Props, Clone, PartialEq)]
 struct TreeTabProps {
     node_id: String,
 }
 
 #[allow(non_snake_case)]
-fn TreeStyleTab(cx: Scope<TreeTabProps>) -> Element {
-    let hovered_node = use_shared_state::<HoveredNode>(cx).unwrap();
-    let node_id = NodeId::deserialize(&cx.props.node_id);
+fn TreeStyleTab(props: TreeTabProps) -> Element {
+    let hovered_node = use_context::<Signal<HoveredNode>>();
+    let node_id = NodeId::deserialize(&props.node_id);
 
-    render!(
+    rsx!(
         NodesTree {
             height: "calc(50% - 35)",
             selected_node_id: node_id,
-            onselected: |node: &TreeNode| {
+            onselected: move |node: TreeNode| {
                 if let Some(hovered_node) = &hovered_node.read().as_ref() {
                     hovered_node.lock().unwrap().replace(node.id);
                 }
@@ -289,15 +297,15 @@ fn TreeStyleTab(cx: Scope<TreeTabProps>) -> Element {
 }
 
 #[allow(non_snake_case)]
-fn TreeLayoutTab(cx: Scope<TreeTabProps>) -> Element {
-    let hovered_node = use_shared_state::<HoveredNode>(cx).unwrap();
-    let node_id = NodeId::deserialize(&cx.props.node_id);
+fn TreeLayoutTab(props: TreeTabProps) -> Element {
+    let hovered_node = use_context::<Signal<HoveredNode>>();
+    let node_id = NodeId::deserialize(&props.node_id);
 
-    render!(
+    rsx!(
         NodesTree {
             height: "calc(50% - 35)",
             selected_node_id: node_id,
-            onselected: |node: &TreeNode| {
+            onselected: move |node: TreeNode| {
                 if let Some(hovered_node) = &hovered_node.read().as_ref() {
                     hovered_node.lock().unwrap().replace(node.id);
                 }

@@ -3,6 +3,7 @@
     windows_subsystem = "windows"
 )]
 
+use dioxus::signals::use_signal;
 use freya::prelude::*;
 
 fn main() {
@@ -10,12 +11,12 @@ fn main() {
 }
 
 #[allow(non_snake_case)]
-fn TheOtherSwitch(cx: Scope) -> Element {
-    let theme = use_theme(cx);
+fn TheOtherSwitch() -> Element {
+    let theme = use_theme();
 
     let is_enabled = theme.read().name == "dark";
 
-    render!(Switch {
+    rsx!(Switch {
         enabled: is_enabled,
         ontoggled: move |_| {
             if is_enabled {
@@ -27,22 +28,27 @@ fn TheOtherSwitch(cx: Scope) -> Element {
     })
 }
 
-fn app(cx: Scope) -> Element {
-    use_init_default_theme(cx);
-    let enabled = use_state(cx, || true);
+fn app() -> Element {
+    use_init_default_theme();
+    let enabled = use_signal(|| true);
 
-    let is_enabled = if *enabled.get() { "Yes" } else { "No" };
+    let is_enabled = if *enabled.read() { "Yes" } else { "No" };
 
-    render!(
-        Switch {
-            enabled: *enabled.get(),
-            ontoggled: |_| {
-                enabled.set(!enabled.get());
+    rsx!(
+        Body {
+            theme: theme_with!(BodyTheme {
+                padding: "20".into(),
+            }),
+            Switch {
+                enabled: *enabled.read(),
+                ontoggled: move |_| {
+                    enabled.with_mut(|v| *v = !*v);
+                }
             }
+            label {
+                "Is enabled? {is_enabled}"
+            }
+            TheOtherSwitch { }
         }
-        label {
-            "Is enabled? {is_enabled}"
-        }
-        TheOtherSwitch { }
     )
 }

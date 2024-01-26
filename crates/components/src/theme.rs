@@ -2,13 +2,12 @@ use dioxus::prelude::*;
 use freya_hooks::{use_init_theme, Theme};
 
 /// [`ThemeProvider`] component properties.
-#[derive(Props)]
-pub struct ThemeProviderProps<'a> {
+#[derive(Props, Clone, PartialEq)]
+pub struct ThemeProviderProps {
     /// Theme to provide.
-    #[props(optional)]
     pub theme: Option<Theme>,
     /// Inner children to provide a Theme to.
-    pub children: Element<'a>,
+    pub children: Element,
 }
 
 /// Provides a `Theme` for all its children.
@@ -17,8 +16,8 @@ pub struct ThemeProviderProps<'a> {
 /// See [`ThemeProviderProps`]
 ///
 #[allow(non_snake_case)]
-pub fn ThemeProvider<'a>(cx: Scope<'a, ThemeProviderProps<'a>>) -> Element<'a> {
-    use_init_theme(cx, cx.props.theme.clone().unwrap_or_default());
+pub fn ThemeProvider(props: ThemeProviderProps) -> Element {
+    use_init_theme(props.theme.unwrap_or_default());
 
-    render!(&cx.props.children)
+    rsx!({ props.children })
 }
