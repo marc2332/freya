@@ -388,16 +388,33 @@ pub trait TextEditor: Sized + Clone + Display {
 
                         event.insert(TextEvent::TEXT_CHANGED);
                     }
+
+                    // Copy selected text
                     Code::KeyC if modifiers.contains(Modifiers::CONTROL) => {
                         let selected = self.get_selected_text();
-                        println!("copying: >{selected:?}<");
+                        if let Some(selected) = selected {
+                            self.get_clipboard().set(selected).ok();
+                        }
                     }
+
+                    // Paste copied text
+                    Code::KeyV if modifiers.contains(Modifiers::CONTROL) => {
+                        let copied_text = self.get_clipboard().get();
+                        if let Ok(copied_text) = copied_text {
+                            let char_idx = self.line_to_char(self.cursor_row()) + self.cursor_col();
+                            self.insert(&copied_text, char_idx);
+                            let last_idx = copied_text.len() + char_idx;
+                            self.set_cursor_pos(last_idx);
+                            event.insert(TextEvent::TEXT_CHANGED);
+                        }
+                    }
+
                     _ => {
                         if let Ok(ch) = character.parse::<char>() {
                             if !ch.is_ascii_control() {
                                 // Adds a new character
                                 let char_idx =
-                                self.line_to_char(self.cursor_row()) + self.cursor_col();
+                                    self.line_to_char(self.cursor_row()) + self.cursor_col();
                                 self.insert(character, char_idx);
                                 self.cursor_right();
 

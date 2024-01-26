@@ -16,7 +16,7 @@ pub struct RopeEditor {
     /// Selected text range
     selected: Option<(usize, usize)>,
 
-    clipboard: UseClipboard
+    clipboard: UseClipboard,
 }
 
 impl Display for RopeEditor {
@@ -27,13 +27,18 @@ impl Display for RopeEditor {
 
 impl RopeEditor {
     // Create a new [`RopeEditor`]
-    pub fn new(text: String, cursor: TextCursor, mode: EditableMode, clipboard: UseClipboard) -> Self {
+    pub fn new(
+        text: String,
+        cursor: TextCursor,
+        mode: EditableMode,
+        clipboard: UseClipboard,
+    ) -> Self {
         Self {
             rope: Rope::from_str(&text),
             cursor,
             selected: None,
             mode,
-            clipboard
+            clipboard,
         }
     }
 
@@ -100,7 +105,7 @@ impl TextEditor for RopeEditor {
     fn get_clipboard(&self) -> &UseClipboard {
         &self.clipboard
     }
-    
+
     fn has_any_highlight(&self) -> bool {
         self.selected.is_some()
     }
@@ -204,9 +209,16 @@ impl TextEditor for RopeEditor {
     }
 
     fn get_selected_text(&self) -> Option<String> {
-        let selected = self.selected?;
+        let (start, end) = self.selected?;
 
-        Some(self.rope().get_slice(selected.0..selected.1)?.to_string())
+        // Use left-to-right selection
+        let (start, end) = if start < end {
+            (start, end)
+        } else {
+            (end, start)
+        };
+
+        Some(self.rope().get_slice(start..end)?.to_string())
     }
 }
 
