@@ -1,6 +1,5 @@
 use freya::events::MouseEvent;
 use freya::prelude::*;
-use std::rc::Rc;
 
 fn main() {
     launch_cfg(
@@ -31,8 +30,9 @@ fn Body() -> Element {
         },
         EditableMode::SingleLineMultipleEditors,
     );
-    let cursor_attr = editable.cursor_attr();
+    let cursor_reference = editable.cursor_attr();
     let editor = editable.editor().read();
+    let cloned_editable = editable.clone();
 
     let onclick = {
         to_owned![editable];
@@ -54,7 +54,7 @@ fn Body() -> Element {
             height: "100%",
             padding: "10",
             onkeydown,
-            cursor_reference: cursor_attr,
+            cursor_reference,
             direction: "horizontal",
             onglobalclick: onclick,
             background: "{theme.body.background}",
@@ -64,10 +64,8 @@ fn Body() -> Element {
                 }),
                 length: editor.len_lines(),
                 item_size: 35.0,
-                builder_values: editable.clone(),
                 scroll_with_arrows: false,
-                builder: Rc::new(move |(key, line_index, values): (usize, usize, &Option<UseEditable>)| {
-                    let editable = values.as_ref().unwrap();
+                builder: move |line_index| {
                     let editor = editable.editor().read();
                     let line = editor.line(line_index).unwrap();
 
@@ -105,7 +103,7 @@ fn Body() -> Element {
 
                     rsx! {
                         rect {
-                            key: "{key}",
+                            key: "{line_index}",
                             width: "100%",
                             height: "35",
                             direction: "horizontal",
@@ -140,7 +138,7 @@ fn Body() -> Element {
                             }
                         }
                     }
-                })
+                }
             }
             VirtualScrollView {
                 theme: theme_with!(ScrollViewTheme {
@@ -148,11 +146,9 @@ fn Body() -> Element {
                 }),
                 length: editor.len_lines(),
                 item_size: 35.0,
-                builder_values: editable.clone(),
                 scroll_with_arrows: false,
-                builder: Rc::new(move |(key, line_index, values): (usize, usize, &Option<UseEditable>)| {
-                    let editable = values.as_ref().unwrap();
-                    let editor = editable.editor().read();
+                builder: move |line_index| {
+                    let editor = cloned_editable.editor().read();
                     let line = editor.line(line_index).unwrap();
 
                     let is_line_selected = editor.cursor_row() == line_index;
@@ -172,25 +168,25 @@ fn Body() -> Element {
                     };
 
                     let onmousedown = {
-                        to_owned![editable];
+                        to_owned![cloned_editable];
                         move |e: MouseEvent| {
-                            editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
+                            cloned_editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
                         }
                     };
 
                     let onmouseover = {
-                        to_owned![editable];
+                        to_owned![cloned_editable];
                         move |e: MouseEvent| {
-                            editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
+                            cloned_editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
                         }
                     };
 
 
-                    let highlights = editable.highlights_attr(line_index);
+                    let highlights = cloned_editable.highlights_attr(line_index);
 
                     rsx! {
                         rect {
-                            key: "{key}",
+                            key: "{line_index}",
                             width: "100%",
                             height: "35",
                             direction: "horizontal",
@@ -225,7 +221,7 @@ fn Body() -> Element {
                             }
                         }
                     }
-                })
+                }
             }
         }
     )

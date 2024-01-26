@@ -5,7 +5,6 @@ use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{keyboard::Key, KeyboardEvent, MouseEvent, WheelEvent};
 use freya_hooks::{use_applied_theme, use_focus, use_node, ScrollViewThemeWith};
 use std::ops::Range;
-use std::rc::Rc;
 
 use crate::{
     get_container_size, get_corrected_scroll_position, get_scroll_position_from_cursor,
@@ -13,11 +12,9 @@ use crate::{
     manage_key_event, Axis, ScrollBar, ScrollThumb, SCROLLBAR_SIZE, SCROLL_SPEED_MULTIPLIER,
 };
 
-type BuilderFunction<T> = dyn Fn((usize, usize, &Option<T>)) -> Element;
-
 /// [`VirtualScrollView`] component properties.
 #[derive(Props, Clone)]
-pub struct VirtualScrollViewProps<T: 'static + Clone> {
+pub struct VirtualScrollViewProps<F: 'static + Clone + Fn(usize) -> Element> {
     /// Theme override.
     pub theme: Option<ScrollViewThemeWith>,
     /// Quantity of items in the VirtualScrollView.
@@ -25,9 +22,7 @@ pub struct VirtualScrollViewProps<T: 'static + Clone> {
     /// Size of the items, height for vertical direction and width for horizontal.
     pub item_size: f32,
     /// The item builder function.
-    pub builder: Rc<BuilderFunction<T>>,
-    /// Custom values to pass to the builder function.
-    pub builder_values: Option<T>,
+    pub builder: F,
     /// Direction of the VirtualScrollView, `vertical` or `horizontal`.
     #[props(default = "vertical".to_string(), into)]
     pub direction: String,
@@ -74,12 +69,11 @@ fn get_render_range(
 ///             show_scrollbar: true,
 ///             length: 5,
 ///             item_size: 80.0,
-///             builder_values: (),
 ///             direction: "vertical",
-///             builder: Rc::new(move |(k, i, _)| {
+///             builder: move |i| {
 ///                 rsx! {
 ///                     label {
-///                         key: "{k}",
+///                         key: "{i}",
 ///                         height: "80",
 ///                         "Number {i}"
 ///                     }
@@ -90,7 +84,9 @@ fn get_render_range(
 /// }
 /// ```
 #[allow(non_snake_case)]
-pub fn VirtualScrollView<T: Clone>(props: VirtualScrollViewProps<T>) -> Element {
+pub fn VirtualScrollView<F: Clone + Fn(usize) -> Element>(
+    props: VirtualScrollViewProps<F>,
+) -> Element {
     let clicking_scrollbar = use_signal::<Option<(Axis, f64)>>(|| None);
     let mut clicking_shift = use_signal(|| false);
     let mut clicking_alt = use_signal(|| false);
@@ -301,7 +297,7 @@ pub fn VirtualScrollView<T: Clone>(props: VirtualScrollViewProps<T>) -> Element 
         items_length as f32,
     );
 
-    let children = render_range.map(|i| (props.builder)((i + 1, i, &props.builder_values)));
+    let children = render_range.map(|i| (props.builder)(i));
 
     let is_scrolling_x = clicking_scrollbar
         .read()
