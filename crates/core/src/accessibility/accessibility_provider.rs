@@ -150,50 +150,37 @@ pub trait AccessibilityProvider {
     }
 
     /// Focus the next/previous Node starting from the currently focused Node.
-    fn set_focus_on_next_node(
-        &mut self,
-        direction: AccessibilityFocusDirection,
-    ) -> TreeUpdate {
-        let current_node = self
+    fn set_focus_on_next_node(&mut self, direction: AccessibilityFocusDirection) -> TreeUpdate {
+        let node_index = self
             .nodes()
             .enumerate()
             .find(|(_, node)| node.0 == self.focus_id())
-            .map(|(i, _)| i);
+            .map(|(i, _)| i)
+            .unwrap();
 
-        if let Some(node_index) = current_node {
-            let target_node_index = if direction == AccessibilityFocusDirection::Forward {
-                // Find the next Node
-                if node_index == self.nodes().len() - 1 {
-                    0
-                } else {
-                    node_index + 1
-                }
+        let target_node_index = if direction == AccessibilityFocusDirection::Forward {
+            // Find the next Node
+            if node_index == self.nodes().len() - 1 {
+                0
             } else {
-                // Find the previous Node
-                if node_index == 0 {
-                    self.nodes().len() - 1
-                } else {
-                    node_index - 1
-                }
-            };
-
-            let target_node = self
-                .nodes()
-                .enumerate()
-                .find(|(i, _)| *i == target_node_index)
-                .map(|(_, node)| node.0)
-                .unwrap_or(ACCESSIBILITY_ROOT_ID);
-
-            self.set_focus(target_node);
+                node_index + 1
+            }
         } else {
-            // Select the first Node
-            self.set_focus(
-                self.nodes()
-                    .next()
-                    .map(|(id, _)| *id)
-                    .unwrap_or(ACCESSIBILITY_ROOT_ID),
-            );
-        }
+            // Find the previous Node
+            if node_index == 0 {
+                self.nodes().len() - 1
+            } else {
+                node_index - 1
+            }
+        };
+
+        let target_node = self
+            .nodes()
+            .nth(target_node_index)
+            .map(|(id, _)| *id)
+            .unwrap_or(ACCESSIBILITY_ROOT_ID);
+
+        self.set_focus(target_node);
 
         TreeUpdate {
             nodes: Vec::new(),

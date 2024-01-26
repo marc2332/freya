@@ -1,17 +1,19 @@
-The `pointerleave` event will fire when the user stops hovering/touching an element.
+The `pointerup` event fires when the user releases their mouse button or stops touching the element.
 
-Event Data: [PointerData][crate::events::PointerData]
+Event Data: [`PointerData`](crate::events::PointerData)
 
-### Example:
+### Example
 
 ```rust, no_run
+# use freya::prelude::*;
 fn app(cx: Scope) -> Element {
     render!(
         rect {
             width: "100",
             height: "100",
             background: "red",
-            onpointerleave: |_| println!("Stopped hovering or touching!")
+            onpointerup: |_| println!("Released mouse button, or no longer touching!")
         }
     )
 }
+```

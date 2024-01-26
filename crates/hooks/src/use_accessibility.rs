@@ -1,15 +1,13 @@
 use std::rc::Rc;
 
 use dioxus_core::ScopeState;
-use dioxus_hooks::{
-    to_owned, use_context_provider, use_effect, use_memo, use_shared_state,
-    use_shared_state_provider, RefCell,
-};
 use freya_common::EventMessage;
-use freya_core::{
-    accessibility::ACCESSIBILITY_ROOT_ID,
-    types::{AccessibilityId, FocusReceiver},
+use freya_core::{navigation_mode::NavigatorState, types::FocusReceiver};
+
+use dioxus_hooks::{
+    to_owned, use_context_provider, use_memo, use_shared_state, use_shared_state_provider, RefCell,
 };
+use freya_core::{accessibility::ACCESSIBILITY_ROOT_ID, types::AccessibilityId};
 
 use crate::use_platform;
 
@@ -31,11 +29,15 @@ pub fn use_init_accessibility(cx: &ScopeState) {
             .unwrap();
     });
 
-    // Notify the app that a new Node has been focusd by the platform
-    use_effect(cx, (), {
+    cx.use_hook(|| {
         to_owned![focused_id];
-        move |_| {
-            let focus_id_listener = cx.consume_context::<FocusReceiver>();
+
+        let focus_id_listener = cx.consume_context::<FocusReceiver>();
+        let navigation_state = cx.consume_context::<NavigatorState>().unwrap();
+
+        // Listen for focus changes
+        cx.spawn({
+            to_owned![focused_id];
             async move {
                 let focus_id_listener = focus_id_listener.clone();
                 if let Some(mut focus_id_listener) = focus_id_listener {
@@ -44,7 +46,15 @@ pub fn use_init_accessibility(cx: &ScopeState) {
                     }
                 }
             }
-        }
+        });
+
+        // Listen for navigation mode changes
+        cx.spawn(async move {
+            let mut getter = navigation_state.getter();
+            while getter.changed().await.is_ok() {
+                focused_id.notify_consumers();
+            }
+        });
     });
 }
 

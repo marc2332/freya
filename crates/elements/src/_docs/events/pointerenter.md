@@ -1,10 +1,11 @@
-The `pointerenter` event will fire when the user starts hovering/touching an element.
+The `pointerenter` event fires when the user starts hovering/touching an element.
 
-Event Data: [PointerData][crate::events::PointerData]
+Event Data: [`PointerData`](crate::events::PointerData)
 
-### Example:
+### Example
 
 ```rust, no_run
+# use freya::prelude::*;
 fn app(cx: Scope) -> Element {
     render!(
         rect {
@@ -15,3 +16,4 @@ fn app(cx: Scope) -> Element {
         }
     )
 }
+```

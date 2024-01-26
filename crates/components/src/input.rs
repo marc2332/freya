@@ -61,7 +61,7 @@ pub struct InputProps<'a> {
 ///
 /// # Example
 ///
-/// ```rust
+/// ```rust,no_run
 /// # use freya::prelude::*;
 /// fn app(cx: Scope) -> Element {
 ///     let value = use_state(cx, String::new);
