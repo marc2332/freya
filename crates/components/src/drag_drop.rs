@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
-use freya_hooks::use_node_ref;
+use freya_hooks::use_node_signal;
 use torin::prelude::CursorPoint;
 
 /// [`DragProvider`] component properties.
@@ -49,7 +49,7 @@ pub fn DragZone<T: 'static + Clone>(
     let drags = use_context::<Signal<Option<T>>>();
     let mut dragging = use_signal(|| false);
     let mut pos = use_signal(CursorPoint::default);
-    let (node_reference, size) = use_node_ref();
+    let (node_reference, size) = use_node_signal();
 
     let onglobalmouseover = move |e: MouseEvent| {
         if *dragging.read() {
