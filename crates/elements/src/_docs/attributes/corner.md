@@ -1,10 +1,11 @@
 ### corner_radius & corner_smoothing
 
-The `corner_radius` attribute let's you smooth the corners of the element, with `corner_smoothing` you can give a "squircle" effect.
+The `corner_radius` attribute lets you smooth the corners of the element, with `corner_smoothing` you can give a "squircle" effect.
 
-### Example:
+### Example
 
 ```rust, no_run
+# use freya::prelude::*;
 fn app(cx: Scope) -> Element {
     render!(
         rect {

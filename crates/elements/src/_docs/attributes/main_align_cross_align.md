@@ -2,7 +2,7 @@
 
 Control how the inner elements are positioned inside the element. You can combine it with the `direction` attribute to create complex flows.
 
-Possible values for both attributes are:
+Accepted values for both attributes are:
 
 - `start` (default): At the begining of the axis
 - `center`: At the center of the axis
@@ -14,6 +14,7 @@ When using the `vertical` direction, `main_align` will be the Y axis and `cross_
 Example on how to center the inner elements in both axis:
 
 ```rust, no_run
+# use freya::prelude::*;
 fn app(cx: Scope) -> Element {
     render!(
         rect {

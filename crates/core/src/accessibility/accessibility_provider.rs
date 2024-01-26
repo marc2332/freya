@@ -154,7 +154,9 @@ pub trait AccessibilityProvider {
         direction: AccessibilityFocusDirection,
         focus_sender: &watch::Sender<Option<AccessibilityId>>,
     ) -> Option<TreeUpdate> {
-        if let Some(focused_node_id) = self.focus_id() {
+        // Start from the focused node or from the first registered node
+        let focused_node_id = self.focus_id().or(self.nodes().nth(0).map(|node| node.0));
+        if let Some(focused_node_id) = focused_node_id {
             let current_node = self
                 .nodes()
                 .enumerate()

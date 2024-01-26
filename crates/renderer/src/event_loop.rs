@@ -45,7 +45,7 @@ pub fn run_event_loop<State: Clone>(
                 app.accessibility().set_accessibility_focus(id);
             }
             Event::UserEvent(EventMessage::RequestRerender) => {
-                app.window_env().window().request_redraw();
+                app.window_env().window_mut().request_redraw();
             }
             Event::UserEvent(EventMessage::RequestRedraw) => app.render(&hovered_node),
             Event::UserEvent(EventMessage::RequestRelayout) => {
@@ -57,14 +57,9 @@ pub fn run_event_loop<State: Clone>(
             Event::UserEvent(EventMessage::ActionRequestEvent(ActionRequestEvent {
                 request,
                 ..
-            })) =>
-            {
-                #[allow(clippy::single_match)]
-                match request.action {
-                    Action::Focus => {
-                        app.accessibility().set_accessibility_focus(request.target);
-                    }
-                    _ => {}
+            })) => {
+                if Action::Focus == request.action {
+                    app.accessibility().set_accessibility_focus(request.target);
                 }
             }
             Event::UserEvent(EventMessage::SetCursorIcon(icon)) => {
@@ -90,18 +85,18 @@ pub fn run_event_loop<State: Clone>(
                 match event {
                     WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
                     WindowEvent::MouseInput { state, button, .. } => {
+                        app.set_navigation_mode(NavigationMode::NotKeyboard);
+
                         let event_name = match state {
                             ElementState::Pressed => "mousedown",
                             ElementState::Released => "click",
                         };
 
-                        app.push_event(FreyaEvent::Mouse {
+                        app.send_event(FreyaEvent::Mouse {
                             name: event_name.to_string(),
                             cursor: cursor_pos,
                             button: Some(button),
                         });
-
-                        app.process_events();
                     }
                     WindowEvent::MouseWheel { delta, phase, .. } => {
                         if TouchPhase::Moved == phase {
@@ -115,13 +110,11 @@ pub fn run_event_loop<State: Clone>(
                                 }
                             };
 
-                            app.push_event(FreyaEvent::Wheel {
+                            app.send_event(FreyaEvent::Wheel {
                                 name: "wheel".to_string(),
                                 scroll: CursorPoint::from(scroll_data),
                                 cursor: cursor_pos,
                             });
-
-                            app.process_events();
                         }
                     }
                     WindowEvent::ModifiersChanged(modifiers) => {
@@ -130,14 +123,12 @@ pub fn run_event_loop<State: Clone>(
                     WindowEvent::ReceivedCharacter(a) => {
                         // Emit the received character if the last pressed key wasn't text
                         if last_keydown == Key::Unidentified || !modifiers_state.is_empty() {
-                            app.push_event(FreyaEvent::Keyboard {
+                            app.send_event(FreyaEvent::Keyboard {
                                 name: "keydown".to_string(),
                                 key: Key::Character(a.to_string()),
                                 code: last_code,
                                 modifiers: get_modifiers(modifiers_state),
                             });
-
-                            app.process_events();
                         }
                     }
                     WindowEvent::KeyboardInput {
@@ -151,6 +142,7 @@ pub fn run_event_loop<State: Clone>(
                     } => {
                         if state == ElementState::Pressed && virtual_keycode == VirtualKeyCode::Tab
                         {
+                            app.set_navigation_mode(NavigationMode::Keyboard);
                             let direction = if modifiers_state.shift() {
                                 AccessibilityFocusDirection::Backward
                             } else {
@@ -188,7 +180,7 @@ pub fn run_event_loop<State: Clone>(
                                 // Uncache any key
                                 last_keydown = Key::Unidentified;
                             }
-                            app.push_event(FreyaEvent::Keyboard {
+                            app.send_event(FreyaEvent::Keyboard {
                                 name: event_name.to_string(),
                                 key,
                                 code: from_winit_to_code(&virtual_keycode),
@@ -205,19 +197,15 @@ pub fn run_event_loop<State: Clone>(
                             // Uncache any key code
                             last_code = Code::Unidentified;
                         }
-
-                        app.process_events();
                     }
                     WindowEvent::CursorMoved { position, .. } => {
                         cursor_pos = CursorPoint::from((position.x, position.y));
 
-                        app.push_event(FreyaEvent::Mouse {
+                        app.send_event(FreyaEvent::Mouse {
                             name: "mouseover".to_string(),
                             cursor: cursor_pos,
                             button: None,
                         });
-
-                        app.process_events();
                     }
                     WindowEvent::Touch(Touch {
                         location,
@@ -235,15 +223,13 @@ pub fn run_event_loop<State: Clone>(
                             TouchPhase::Started => "touchstart",
                         };
 
-                        app.push_event(FreyaEvent::Touch {
+                        app.send_event(FreyaEvent::Touch {
                             name: event_name.to_string(),
                             location: cursor_pos,
                             finger_id: id,
                             phase,
                             force,
                         });
-
-                        app.process_events();
                     }
                     WindowEvent::Resized(size) => {
                         app.resize(size);

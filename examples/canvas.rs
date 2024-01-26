@@ -58,7 +58,7 @@ fn app(cx: Scope) -> Element {
         clicking_drag.set(None);
     };
 
-    let create_node = |_: MouseEvent| {
+    let create_node = |_| {
         nodes.with_mut(|nodes| {
             nodes.push((0.0f64, 0.0f64));
         });
@@ -208,8 +208,8 @@ fn Editor(cx: Scope) -> Element {
                 rect {
                     width: "130",
                     cross_align: "center",
+                    margin: "0 10",
                     Slider {
-                        width: 100.0,
                         value: *font_size_percentage.get(),
                         onmoved: |p| {
                             font_size_percentage.set(p);
@@ -222,8 +222,8 @@ fn Editor(cx: Scope) -> Element {
                 rect {
                     width: "130",
                     cross_align: "center",
+                    margin: "0 10",
                     Slider {
-                        width: 100.0,
                         value: *line_height_percentage.get(),
                         onmoved: |p| {
                             line_height_percentage.set(p);
