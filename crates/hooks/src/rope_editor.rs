@@ -74,6 +74,11 @@ impl TextEditor for RopeEditor {
     }
 
     fn remove(&mut self, range: Range<usize>) {
+        let text = self.rope.slice(range.clone()).to_string();
+        self.history.push_change(HistoryChange::Remove {
+            idx: range.start,
+            text,
+        });
         self.rope.remove(range)
     }
 

@@ -468,8 +468,8 @@ pub trait TextEditor: Sized + Clone + Display {
     fn get_selected_text(&self) -> Option<String>;
 
     fn undo(&mut self) -> Option<usize>;
-  
+
     fn redo(&mut self) -> Option<usize>;
-  
+
     fn get_selection(&self) -> Option<(usize, usize)>;
 }
