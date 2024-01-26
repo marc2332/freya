@@ -107,7 +107,7 @@ impl TestingHandler {
 
             if let Ok(ev) = vdom_ev {
                 self.vdom
-                    .handle_event(&ev.name, ev.data.any(), ev.element_id, false);
+                    .handle_event(&ev.name, ev.data.any(), ev.element_id, true);
                 self.vdom.process_events();
             }
         }

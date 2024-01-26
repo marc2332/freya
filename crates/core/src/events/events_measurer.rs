@@ -211,7 +211,7 @@ fn measure_dom_events(
                 for listener in &listeners {
                     if listener.id() == *node_id {
                         let valid_node = if let Some(child_node) = child_node {
-                            is_node_parent_of(&rdom, child_node, *node_id)
+                            is_node_parent_of(rdom, child_node, *node_id)
                         } else {
                             true
                         };
