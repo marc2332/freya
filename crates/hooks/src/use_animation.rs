@@ -24,8 +24,8 @@ impl AnimationManager {
 
         let platform = self.platform.clone();
         let mut ticker = platform.new_ticker();
-        let mut value = self.value.clone();
-        let mut current_animation_id = self.current_animation_id.clone();
+        let mut value = self.value;
+        let mut current_animation_id = self.current_animation_id;
 
         // Spawn the animation that will run at 1ms speed
         spawn(async move {

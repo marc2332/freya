@@ -397,6 +397,17 @@ pub trait TextEditor: Sized + Clone + Display {
                         }
                     }
 
+                    // Cut selected text
+                    Code::KeyX if modifiers.contains(Modifiers::CONTROL) => {
+                        let selection = self.get_selection();
+                        if let Some((start, end)) = selection {
+                            let text = self.get_selected_text().unwrap();
+                            self.remove(start..end);
+                            self.get_clipboard().set(text).ok();
+                            self.set_cursor_pos(start);
+                        }
+                    }
+
                     // Paste copied text
                     Code::KeyV if modifiers.contains(Modifiers::CONTROL) => {
                         let copied_text = self.get_clipboard().get();
@@ -457,6 +468,8 @@ pub trait TextEditor: Sized + Clone + Display {
     fn get_selected_text(&self) -> Option<String>;
 
     fn undo(&mut self) -> Option<usize>;
-
+  
     fn redo(&mut self) -> Option<usize>;
+  
+    fn get_selection(&self) -> Option<(usize, usize)>;
 }

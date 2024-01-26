@@ -164,9 +164,9 @@ impl TransitionsManager {
 
         let platform = self.platform.clone();
         let mut ticker = platform.new_ticker();
-        let transitions = self.transitions.clone();
-        let transitions_storage = self.transitions_storage.clone();
-        let mut current_animation_id = self.current_animation_id.clone();
+        let transitions = self.transitions;
+        let transitions_storage = self.transitions_storage;
+        let mut current_animation_id = self.current_animation_id;
 
         // Set as current this new animation
         current_animation_id.set(Some(animation_id));

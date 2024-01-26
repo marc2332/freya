@@ -22,7 +22,6 @@ pub struct DropdownItemProps<T: 'static + Clone> {
     /// Selected value.
     pub value: T,
     /// Handler for the `onclick` event.
-    #[props(optional)]
     pub onclick: Option<EventHandler<()>>,
 }
 

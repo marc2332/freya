@@ -162,7 +162,7 @@ pub fn Slider(
     let border = if focus.is_selected() {
         format!("2 solid {}", theme.border_fill)
     } else {
-        format!("none")
+        "none".to_string()
     };
 
     rsx!(

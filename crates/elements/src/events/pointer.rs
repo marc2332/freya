@@ -58,6 +58,6 @@ impl PointerData {
 
 impl From<&PlatformEventData> for PointerData {
     fn from(val: &PlatformEventData) -> Self {
-        val.downcast::<PointerData>().cloned().unwrap().into()
+        val.downcast::<PointerData>().cloned().unwrap()
     }
 }
