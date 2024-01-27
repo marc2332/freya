@@ -56,11 +56,15 @@ impl UsePlatform {
         }
     }
 
+    /// Read information about the platform.
+    /// 
+    /// **Important**: This will not subscribe to any changes about the information.
     pub fn info(&self) -> MutexGuard<PlatformInformation> {
         self.platform_information.lock().unwrap()
     }
 }
 
+/// Get access to information and features of the platform.
 pub fn use_platform() -> UsePlatform {
     UsePlatform {
         event_loop_proxy: try_consume_context::<EventLoopProxy<EventMessage>>(),
@@ -80,6 +84,7 @@ impl Ticker {
     }
 }
 
+/// Information about the platform.
 #[derive(Clone)]
 pub struct PlatformInformation {
     pub window_size: Size2D,
