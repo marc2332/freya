@@ -6,7 +6,13 @@
 use freya::prelude::*;
 
 fn main() {
-    launch_with_props(app, "Counter", (400.0, 350.0));
+    launch_with_props(app, "Form", (300.0, 250.0));
+}
+
+#[derive(Hash, PartialEq, Eq, Clone, Debug)]
+enum FormEntry {
+    Name,
+    Description,
 }
 
 fn app() -> Element {
@@ -16,10 +22,10 @@ fn app() -> Element {
 
     rsx!(
         Input {
-            ..form.register("name".to_string())
+            ..form.register(FormEntry::Name)
         },
         Input {
-            ..form.register("description".to_string())
+            ..form.register(FormEntry::Description)
         },
         Button {
             ..form.submit(rsx!(
