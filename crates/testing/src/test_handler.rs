@@ -20,23 +20,17 @@ use crate::{TestingConfig, SCALE_FACTOR};
 pub struct TestingHandler {
     pub(crate) vdom: VirtualDom,
     pub(crate) utils: TestUtils,
-
     pub(crate) event_emitter: EventEmitter,
     pub(crate) event_receiver: EventReceiver,
-
     pub(crate) platform_event_emitter: UnboundedSender<EventMessage>,
     pub(crate) platform_event_receiver: UnboundedReceiver<EventMessage>,
-
     pub(crate) events_queue: EventsQueue,
     pub(crate) elements_state: ElementsState,
     pub(crate) font_collection: FontCollection,
     pub(crate) viewports: Viewports,
     pub(crate) accessibility_state: SharedAccessibilityState,
-
     pub(crate) config: TestingConfig,
-
     pub(crate) ticker_sender: broadcast::Sender<()>,
-
     pub(crate) navigation_state: NavigatorState,
 
     pub(crate) platform_information: Arc<Mutex<PlatformInformation>>,
