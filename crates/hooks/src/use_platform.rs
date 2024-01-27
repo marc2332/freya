@@ -57,7 +57,7 @@ impl UsePlatform {
     }
 
     /// Read information about the platform.
-    /// 
+    ///
     /// **Important**: This will not subscribe to any changes about the information.
     pub fn info(&self) -> MutexGuard<PlatformInformation> {
         self.platform_information.lock().unwrap()

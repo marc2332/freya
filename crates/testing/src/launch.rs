@@ -31,7 +31,6 @@ pub fn launch_test_with_config(root: AppComponent, config: TestingConfig) -> Tes
     let layers = Arc::new(Mutex::new(Layers::default()));
     let mut font_collection = FontCollection::new();
     font_collection.set_dynamic_font_manager(FontMgr::default());
-    let platform_information = Arc::new(Mutex::new(PlatformInformation::new(config.size)));
 
     let mut handler = TestingHandler {
         vdom,
@@ -48,7 +47,7 @@ pub fn launch_test_with_config(root: AppComponent, config: TestingConfig) -> Tes
         accessibility_state: SharedAccessibilityState::default(),
         ticker_sender: broadcast::channel(5).0,
         navigation_state: NavigatorState::new(NavigationMode::NotKeyboard),
-        platform_information,
+        platform_information: Arc::new(Mutex::new(PlatformInformation::new(config.size))),
     };
 
     handler.init_dom();

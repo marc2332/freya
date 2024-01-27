@@ -72,8 +72,6 @@ impl TestingHandler {
     pub async fn wait_for_update(&mut self) -> (bool, bool) {
         self.wait_for_work(self.config.size());
 
-        self.provide_vdom_contexts();
-
         let mut ticker = if self.config.run_ticker {
             Some(interval(Duration::from_millis(16)))
         } else {
@@ -183,5 +181,10 @@ impl TestingHandler {
 
     pub fn focus_id(&self) -> Option<AccessibilityId> {
         self.accessibility_state.lock().unwrap().focus_id()
+    }
+
+    pub fn resize(&mut self, size: Size2D) {
+        self.config.size = size;
+        self.platform_information.lock().unwrap().window_size = size;
     }
 }
