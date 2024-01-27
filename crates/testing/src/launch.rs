@@ -6,7 +6,7 @@ use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_dom::prelude::{FreyaDOM, SafeDOM};
 use freya_engine::prelude::*;
-use freya_hooks::{use_init_accessibility, use_init_focus};
+use freya_hooks::{use_init_accessibility, use_init_focus, PlatformInformation};
 use std::sync::{Arc, Mutex};
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::unbounded_channel;
@@ -31,6 +31,7 @@ pub fn launch_test_with_config(root: AppComponent, config: TestingConfig) -> Tes
     let layers = Arc::new(Mutex::new(Layers::default()));
     let mut font_collection = FontCollection::new();
     font_collection.set_dynamic_font_manager(FontMgr::default());
+    let platform_information = Arc::new(Mutex::new(PlatformInformation::new(config.size)));
 
     let mut handler = TestingHandler {
         vdom,
@@ -47,6 +48,7 @@ pub fn launch_test_with_config(root: AppComponent, config: TestingConfig) -> Tes
         accessibility_state: SharedAccessibilityState::default(),
         ticker_sender: broadcast::channel(5).0,
         navigation_state: NavigatorState::new(NavigationMode::NotKeyboard),
+        platform_information,
     };
 
     handler.init_dom();

@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use accesskit::NodeId as AccessibilityId;
@@ -6,6 +6,7 @@ use dioxus_core::VirtualDom;
 use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_engine::prelude::FontCollection;
+use freya_hooks::PlatformInformation;
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tokio::time::{interval, timeout};
@@ -37,6 +38,8 @@ pub struct TestingHandler {
     pub(crate) ticker_sender: broadcast::Sender<()>,
 
     pub(crate) navigation_state: NavigatorState,
+
+    pub(crate) platform_information: Arc<Mutex<PlatformInformation>>,
 }
 
 impl TestingHandler {
@@ -61,6 +64,8 @@ impl TestingHandler {
             .insert_any_root_context(Box::new(Arc::new(self.ticker_sender.subscribe())));
         self.vdom
             .insert_any_root_context(Box::new(self.navigation_state.clone()));
+        self.vdom
+            .insert_any_root_context(Box::new(self.platform_information.clone()));
     }
 
     /// Wait and apply new changes

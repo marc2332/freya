@@ -9,12 +9,12 @@ fn main() {
     launch_with_props(app, "Counter", (400.0, 350.0));
 }
 
-fn app(cx: Scope) -> Element {
-    let platform = use_platform(cx);
+fn app() -> Element {
+    let platform = use_platform();
 
     let PlatformInformation { window_size } = *platform.info();
 
-    render!(
+    rsx!(
         rect {
             height: "100%",
             width: "100%",
@@ -28,7 +28,7 @@ fn app(cx: Scope) -> Element {
                 "{window_size:?}"
             }
             Button {
-                onclick: |_| cx.needs_update(),
+                onclick: |_| needs_update(),
                 label {
                     "Refresh"
                 }

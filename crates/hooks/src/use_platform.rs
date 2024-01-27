@@ -3,6 +3,7 @@ use std::sync::{Arc, Mutex, MutexGuard};
 use dioxus_core::prelude::{consume_context, try_consume_context};
 use freya_common::EventMessage;
 use tokio::sync::{broadcast, mpsc::UnboundedSender};
+use torin::geometry::Size2D;
 use winit::{dpi::PhysicalSize, event_loop::EventLoopProxy, window::CursorIcon};
 
 #[derive(Clone)]
@@ -81,5 +82,17 @@ impl Ticker {
 
 #[derive(Clone)]
 pub struct PlatformInformation {
-    pub window_size: PhysicalSize<u32>,
+    pub window_size: Size2D,
+}
+
+impl PlatformInformation {
+    pub fn from_winit(physical_size: PhysicalSize<u32>) -> Self {
+        Self {
+            window_size: Size2D::new(physical_size.width as f32, physical_size.height as f32),
+        }
+    }
+
+    pub fn new(window_size: Size2D) -> Self {
+        Self { window_size }
+    }
 }

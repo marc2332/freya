@@ -111,9 +111,9 @@ impl<State: 'static + Clone> App<State> {
 
         let navigator_state = NavigatorState::new(NavigationMode::NotKeyboard);
 
-        let platform_information = Arc::new(Mutex::new(PlatformInformation {
-            window_size: window_env.window.inner_size(),
-        }));
+        let platform_information = Arc::new(Mutex::new(PlatformInformation::from_winit(
+            window_env.window.inner_size(),
+        )));
 
         Self {
             sdom,
@@ -328,6 +328,7 @@ impl<State: 'static + Clone> App<State> {
     pub fn resize(&mut self, size: PhysicalSize<u32>) {
         self.sdom.get().layout().reset();
         self.window_env.resize(size);
+        *self.platform_information.lock().unwrap() = PlatformInformation::from_winit(size);
     }
 
     pub fn measure_text_group(&self, text_id: &Uuid) {
@@ -359,7 +360,6 @@ impl<State: 'static + Clone> App<State> {
     }
 
     pub fn tick(&self) {
-        self.platform_information.lock().unwrap().window_size = self.window_env.window.inner_size();
         self.ticker_sender.send(()).ok();
     }
 
