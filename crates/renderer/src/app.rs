@@ -42,33 +42,22 @@ fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
 pub struct App<State: 'static + Clone> {
     sdom: SafeDOM,
     vdom: VirtualDom,
-
     events: EventsQueue,
-
     vdom_waker: Waker,
     proxy: EventLoopProxy<EventMessage>,
     mutations_notifier: Option<Arc<Notify>>,
-
     event_emitter: EventEmitter,
     event_receiver: EventReceiver,
-
     window_env: WindowEnv<State>,
-
     layers: Layers,
     elements_state: ElementsState,
     viewports: Viewports,
-
     focus_sender: FocusSender,
     focus_receiver: FocusReceiver,
-
     accessibility: NativeAccessibility,
-
     font_collection: FontCollection,
-
     ticker_sender: broadcast::Sender<()>,
-
     plugins: PluginsManager,
-
     navigator_state: NavigatorState,
 }
 
@@ -105,8 +94,6 @@ impl<State: 'static + Clone> App<State> {
 
         plugins.send(PluginEvent::WindowCreated(window_env.window_mut()));
 
-        let navigator_state = NavigatorState::new(NavigationMode::NotKeyboard);
-
         Self {
             sdom,
             vdom,
@@ -126,7 +113,7 @@ impl<State: 'static + Clone> App<State> {
             font_collection,
             ticker_sender: broadcast::channel(5).0,
             plugins,
-            navigator_state,
+            navigator_state: NavigatorState::new(NavigationMode::NotKeyboard),
         }
     }
 

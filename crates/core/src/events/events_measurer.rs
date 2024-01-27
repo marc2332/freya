@@ -10,7 +10,7 @@ use rustc_hash::FxHashMap;
 
 pub use crate::events::{DomEvent, ElementsState, FreyaEvent};
 
-use crate::types::{EventEmitter, EventsQueue, NodesEvents};
+use crate::types::{EventEmitter, EventsQueue, PotentialEvents};
 
 /// Process the events and emit them to the VirtualDOM
 pub fn process_events(
@@ -80,7 +80,7 @@ pub fn measure_potential_event_listeners(
     events: &EventsQueue,
     viewports: &Viewports,
     fdom: &FreyaDOM,
-) -> NodesEvents {
+) -> PotentialEvents {
     let mut potential_events = FxHashMap::default();
 
     let layout = fdom.layout();
@@ -183,7 +183,7 @@ const LAST_CAPTURED_EVENTS: [&str; 3] = ["click", "touchstart", "touchend"];
 
 /// Measure what DOM events could be emited
 fn measure_dom_events(
-    potential_events: &mut NodesEvents,
+    potential_events: &mut PotentialEvents,
     fdom: &FreyaDOM,
     scale_factor: f64,
 ) -> Vec<DomEvent> {
