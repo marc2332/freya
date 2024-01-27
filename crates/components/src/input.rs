@@ -194,7 +194,7 @@ pub fn Input(
             color: "{color}",
             background: "{background}",
             border: "1 solid {border_fill}",
-            shadow: "0 3 15 0 rgb(0, 0, 0, 0.3)",
+            shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)",
             corner_radius: "10",
             margin: "{margin}",
             cursor_reference,
