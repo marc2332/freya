@@ -8,7 +8,7 @@ use winit::window::CursorIcon;
 #[derive(Debug)]
 pub enum EventMessage {
     /// Update the given template
-    UpdateTemplate(Template<'static>),
+    UpdateTemplate(Template),
     /// Pull the VirtualDOM
     PollVDOM,
     /// Request a layout recalculation

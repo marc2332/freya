@@ -17,10 +17,10 @@
 
 ### Why 🧬 Dioxus?
 
-Dioxus is a React-like library for Rust. Its component and hooks model make it simple to use and scales to complex apps. 
-
-See it's [differences](./differences_with_dioxus.html) with Freya.
+[Dioxus](https://dioxuslabs.com) is a React-like library for Rust. Its component and hooks model make it simple to use and scale to complex apps. 
+Freya uses some of Dioxus core crates to build it's own renderer, this is because Dioxus is to it's core a renderer-agnostic UI library.
+See other [differences](./differences_with_dioxus.html) with Freya.
 
 ### Why 🎨 Skia?
 
-Skia is a battle-tested and well-maintained graphics library, and there are even some rusty [bindings](https://github.com/rust-skia/rust-skia). 
+[Skia](https://skia.org/) is a battle-tested and well-maintained graphics library, and there are even some rusty [bindings](https://github.com/rust-skia/rust-skia). 

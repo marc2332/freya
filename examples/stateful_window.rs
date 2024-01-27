@@ -15,17 +15,16 @@ fn main() {
     );
 }
 
-fn app(cx: Scope) -> Element {
-    let num = cx.consume_context::<i32>().unwrap();
+fn app() -> Element {
+    let num = consume_context::<i32>();
 
-    render!(rect {
-        background: "white",
-        padding: "10",
+    rsx!(rect {
         width: "100%",
         height: "100%",
-        corner_radius: "50",
+        main_align: "center",
+        cross_align: "center",
         label {
-            color: "black",
+            font_size: "50",
             "{num}"
         }
     })

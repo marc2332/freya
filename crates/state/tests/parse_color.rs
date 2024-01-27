@@ -19,6 +19,18 @@ fn parse_hsl_color() {
 }
 
 #[test]
+fn parse_argb_color_u8() {
+    let color = Color::parse("rgb(91, 123, 57, 127)");
+    assert_eq!(color, Ok(Color::from_argb(127, 91, 123, 57)));
+}
+
+#[test]
+fn parse_argb_color_f32() {
+    let color = Color::parse("rgb(91, 123, 57, 0.5)");
+    assert_eq!(color, Ok(Color::from_argb(128, 91, 123, 57)));
+}
+
+#[test]
 fn invalid_colors() {
     let incorrect_name = Color::parse("wow(0, 0, 0)");
     let extra_lparen = Color::parse("rgb((0, 0, 0)");

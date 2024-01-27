@@ -9,13 +9,13 @@ fn main() {
     launch(app);
 }
 
-fn app(cx: Scope) -> Element {
-    let progress_anim = use_animation(cx, || 0.0);
+fn app() -> Element {
+    let mut progress_anim = use_animation(|| 0.0);
     let progress = progress_anim.value() as f32;
 
     let set_to_max = {
         to_owned![progress_anim];
-        move |_: MouseEvent| {
+        move |_| {
             progress_anim.start(Animation::new_linear(progress_anim.value()..=100.0, 400));
         }
     };
@@ -24,7 +24,7 @@ fn app(cx: Scope) -> Element {
         progress_anim.set_value(value);
     };
 
-    render!(
+    rsx!(
         ProgressBar {
             show_progress: true,
             progress: progress
@@ -78,7 +78,7 @@ fn app(cx: Scope) -> Element {
             progress: progress * 0.20
         }
         Slider {
-            width: 300.0,
+            width: "300",
             value: progress as f64,
             onmoved: onmoved
         }

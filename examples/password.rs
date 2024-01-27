@@ -9,10 +9,11 @@ fn main() {
     launch(app);
 }
 
-fn app(cx: Scope) -> Element {
-    let password = use_state(cx, || String::new());
-    let is_hidden = use_state(cx, || true);
-    render!(
+fn app() -> Element {
+    let mut password = use_signal(|| String::new());
+    let mut is_hidden = use_signal(|| true);
+
+    rsx!(
         rect {
             overflow: "clip",
             padding: "7",
@@ -25,20 +26,20 @@ fn app(cx: Scope) -> Element {
             rect {
                 direction: "horizontal",
                 Input {
-                    hidden: if !is_hidden {
+                    mode: if !*is_hidden.read() {
                         InputMode::Shown
                     } else {
                         InputMode::new_password()
                     },
-                    value: password.get().clone(),
-                    onchange: |e| {
+                    value: password.read().clone(),
+                    onchange: move |e| {
                         password.set(e)
                     }
                 },
                 Button {
-                    onclick: |_| is_hidden.modify(|v| !v),
+                    onclick: move |_| is_hidden.toggle(),
                     label {
-                        if *is_hidden.get() {
+                        if *is_hidden.read() {
                             "Show password"
                         } else {
                             "Hide password"

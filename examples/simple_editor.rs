@@ -9,19 +9,19 @@ fn main() {
     launch(app);
 }
 
-fn app(cx: Scope) -> Element {
+fn app() -> Element {
     let editable = use_editable(
-        cx,
         || {
             EditableConfig::new("Hello Rustaceans Abcdefg12345 Hello Rustaceans Abcdefg12345 Hello Rustaceans Abcdefg12345\n".repeat(25).trim().to_string())
         },
         EditableMode::MultipleLinesSingleEditor,
     );
-    let cursor = editable.editor().cursor();
 
-    let cursor_attr = editable.cursor_attr(cx);
-    let highlights_attr = editable.highlights_attr(cx, 0);
-    let cursor_char = editable.editor().cursor_pos();
+    let cursor_reference = editable.cursor_attr();
+    let highlights = editable.highlights_attr(0);
+    let editor = editable.editor().read();
+    let cursor = editor.cursor();
+    let cursor_char = editor.cursor_pos();
 
     let onmousedown = {
         to_owned![editable];
@@ -51,14 +51,16 @@ fn app(cx: Scope) -> Element {
         }
     };
 
-    render!(
+    rsx!(
         rect {
             width: "100%",
             height: "100%",
-            cursor_reference: cursor_attr,
+            cursor_reference,
             ScrollView {
-                height: "calc(100% - 30)",
-                width: "100%",
+                theme: theme_with!(ScrollViewTheme {
+                    width: "100%".into(),
+                    height: "calc(100% - 30)".into(),
+                }),
                 scroll_with_arrows: false,
                 paragraph {
                     width: "100%",
@@ -66,11 +68,11 @@ fn app(cx: Scope) -> Element {
                     cursor_index: "{cursor_char}",
                     cursor_mode: "editable",
                     cursor_color: "black",
-                    highlights: highlights_attr,
-                    onclick: onclick,
-                    onmouseover: onmouseover,
-                    onmousedown: onmousedown,
-                    onkeydown: onkeydown,
+                    highlights,
+                    onclick,
+                    onmouseover,
+                    onmousedown,
+                    onkeydown,
                     text {
                         "{editable.editor()}"
                     }

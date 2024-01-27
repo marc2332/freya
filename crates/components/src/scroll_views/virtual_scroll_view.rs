@@ -1,8 +1,11 @@
+#![allow(clippy::type_complexity)]
+
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{keyboard::Key, KeyboardEvent, MouseEvent, WheelEvent};
-use freya_hooks::{use_focus, use_node};
+use freya_hooks::{use_applied_theme, use_focus, use_node, ScrollViewThemeWith};
 use std::ops::Range;
+use std::rc::Rc;
 
 use crate::{
     get_container_size, get_corrected_scroll_position, get_scroll_position_from_cursor,
@@ -10,39 +13,24 @@ use crate::{
     manage_key_event, Axis, ScrollBar, ScrollThumb, SCROLLBAR_SIZE, SCROLL_SPEED_MULTIPLIER,
 };
 
-type BuilderFunction<'a, T> = dyn Fn(
-    (
-        usize,
-        usize,
-        Scope<'a, VirtualScrollViewProps<'a, T>>,
-        &'a Option<T>,
-    ),
-) -> LazyNodes<'a, 'a>;
+type BuilderFunction<T> = dyn Fn((usize, usize, &Option<T>)) -> Element;
 
 /// [`VirtualScrollView`] component properties.
-#[derive(Props)]
-pub struct VirtualScrollViewProps<'a, T: 'a> {
+#[derive(Props, Clone)]
+pub struct VirtualScrollViewProps<T: 'static + Clone> {
+    /// Theme override.
+    pub theme: Option<ScrollViewThemeWith>,
     /// Quantity of items in the VirtualScrollView.
-    length: usize,
+    pub length: usize,
     /// Size of the items, height for vertical direction and width for horizontal.
-    item_size: f32,
+    pub item_size: f32,
     /// The item builder function.
-    builder: Box<BuilderFunction<'a, T>>,
+    pub builder: Rc<BuilderFunction<T>>,
     /// Custom values to pass to the builder function.
-    #[props(optional)]
     pub builder_values: Option<T>,
     /// Direction of the VirtualScrollView, `vertical` or `horizontal`.
     #[props(default = "vertical".to_string(), into)]
     pub direction: String,
-    /// Height of the VirtualScrollView.
-    #[props(default = "100%".to_string(), into)]
-    pub height: String,
-    /// Width of the VirtualScrollView.
-    #[props(default = "100%".to_string(), into)]
-    pub width: String,
-    /// Padding of the VirtualScrollView.
-    #[props(default = "0".to_string(), into)]
-    pub padding: String,
     /// Show the scrollbar, visible by default.
     #[props(default = true, into)]
     pub show_scrollbar: bool,
@@ -79,17 +67,16 @@ fn get_render_range(
 ///
 /// ```no_run
 /// # use freya::prelude::*;
-/// fn app(cx: Scope) -> Element {
-///     render!(
+/// # use std::rc::Rc;
+/// fn app() -> Element {
+///     rsx!(
 ///         VirtualScrollView {
-///             width: "100%",
-///             height: "100%",
 ///             show_scrollbar: true,
 ///             length: 5,
 ///             item_size: 80.0,
 ///             builder_values: (),
 ///             direction: "vertical",
-///             builder: Box::new(move |(k, i, _, _)| {
+///             builder: Rc::new(move |(k, i, _)| {
 ///                 rsx! {
 ///                     label {
 ///                         key: "{k}",
@@ -103,23 +90,24 @@ fn get_render_range(
 /// }
 /// ```
 #[allow(non_snake_case)]
-pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) -> Element {
-    let clicking_scrollbar = use_ref::<Option<(Axis, f64)>>(cx, || None);
-    let clicking_shift = use_ref(cx, || false);
-    let clicking_alt = use_ref(cx, || false);
-    let scrolled_y = use_ref(cx, || 0);
-    let scrolled_x = use_ref(cx, || 0);
-    let (node_ref, size) = use_node(cx);
-    let focus = use_focus(cx);
+pub fn VirtualScrollView<T: Clone>(props: VirtualScrollViewProps<T>) -> Element {
+    let clicking_scrollbar = use_signal::<Option<(Axis, f64)>>(|| None);
+    let mut clicking_shift = use_signal(|| false);
+    let mut clicking_alt = use_signal(|| false);
+    let mut scrolled_y = use_signal(|| 0);
+    let mut scrolled_x = use_signal(|| 0);
+    let (node_ref, size) = use_node();
+    let focus = use_focus();
+    let theme = use_applied_theme!(&props.theme, scroll_view);
 
-    let padding = &cx.props.padding;
-    let user_container_width = &cx.props.width;
-    let user_container_height = &cx.props.height;
-    let user_direction = &cx.props.direction;
-    let show_scrollbar = cx.props.show_scrollbar;
-    let items_length = cx.props.length;
-    let items_size = cx.props.item_size;
-    let scroll_with_arrows = cx.props.scroll_with_arrows;
+    let padding = &theme.padding;
+    let user_container_width = &theme.width;
+    let user_container_height = &theme.height;
+    let user_direction = &props.direction;
+    let show_scrollbar = props.show_scrollbar;
+    let items_length = props.length;
+    let items_size = props.item_size;
+    let scroll_with_arrows = props.scroll_with_arrows;
 
     let inner_size = items_size + (items_size * items_length as f32);
 
@@ -142,68 +130,77 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
         get_scrollbar_pos_and_size(inner_size, size.area.width(), corrected_scrolled_x);
 
     // Moves the Y axis when the user scrolls in the container
-    let onwheel = move |e: WheelEvent| {
-        let speed_multiplier = if *clicking_alt.read() {
-            SCROLL_SPEED_MULTIPLIER
-        } else {
-            1.0
-        };
+    let onwheel = {
+        to_owned![focus];
+        move |e: WheelEvent| {
+            let speed_multiplier = if *clicking_alt.peek() {
+                SCROLL_SPEED_MULTIPLIER
+            } else {
+                1.0
+            };
 
-        if !*clicking_shift.read() {
-            let wheel_y = e.get_delta_y() as f32 * speed_multiplier;
+            if !*clicking_shift.peek() {
+                let wheel_y = e.get_delta_y() as f32 * speed_multiplier;
 
-            let scroll_position_y = get_scroll_position_from_wheel(
-                wheel_y,
+                let scroll_position_y = get_scroll_position_from_wheel(
+                    wheel_y,
+                    inner_size,
+                    size.area.height(),
+                    corrected_scrolled_y,
+                );
+
+                *scrolled_y.write() = scroll_position_y;
+            }
+
+            let wheel_x = if *clicking_shift.peek() {
+                e.get_delta_y() as f32
+            } else {
+                e.get_delta_x() as f32
+            } * speed_multiplier;
+
+            let scroll_position_x = get_scroll_position_from_wheel(
+                wheel_x,
                 inner_size,
-                size.area.height(),
-                corrected_scrolled_y,
+                size.area.width(),
+                corrected_scrolled_x,
             );
 
-            scrolled_y.with_mut(|y| *y = scroll_position_y);
+            *scrolled_x.write() = scroll_position_x;
+
+            focus.focus();
         }
-
-        let wheel_x = if *clicking_shift.read() {
-            e.get_delta_y() as f32
-        } else {
-            e.get_delta_x() as f32
-        } * speed_multiplier;
-
-        let scroll_position_x = get_scroll_position_from_wheel(
-            wheel_x,
-            inner_size,
-            size.area.width(),
-            corrected_scrolled_x,
-        );
-
-        scrolled_x.with_mut(|x| *x = scroll_position_x);
-
-        focus.focus();
     };
 
     // Drag the scrollbars
-    let onmouseover = move |e: MouseEvent| {
-        let clicking_scrollbar = clicking_scrollbar.read();
+    let onmouseover = {
+        to_owned![focus];
+        move |e: MouseEvent| {
+            let clicking_scrollbar = clicking_scrollbar.read();
 
-        if let Some((Axis::Y, y)) = *clicking_scrollbar {
-            let coordinates = e.get_element_coordinates();
-            let cursor_y = coordinates.y - y - size.area.min_y() as f64;
+            if let Some((Axis::Y, y)) = *clicking_scrollbar {
+                let coordinates = e.get_element_coordinates();
+                let cursor_y = coordinates.y - y - size.area.min_y() as f64;
 
-            let scroll_position =
-                get_scroll_position_from_cursor(cursor_y as f32, inner_size, size.area.height());
+                let scroll_position = get_scroll_position_from_cursor(
+                    cursor_y as f32,
+                    inner_size,
+                    size.area.height(),
+                );
 
-            scrolled_y.with_mut(|y| *y = scroll_position);
-        } else if let Some((Axis::X, x)) = *clicking_scrollbar {
-            let coordinates = e.get_element_coordinates();
-            let cursor_x = coordinates.x - x - size.area.min_x() as f64;
+                *scrolled_y.write() = scroll_position;
+            } else if let Some((Axis::X, x)) = *clicking_scrollbar {
+                let coordinates = e.get_element_coordinates();
+                let cursor_x = coordinates.x - x - size.area.min_x() as f64;
 
-            let scroll_position =
-                get_scroll_position_from_cursor(cursor_x as f32, inner_size, size.area.width());
+                let scroll_position =
+                    get_scroll_position_from_cursor(cursor_x as f32, inner_size, size.area.width());
 
-            scrolled_x.with_mut(|x| *x = scroll_position);
-        }
+                *scrolled_x.write() = scroll_position;
+            }
 
-        if clicking_scrollbar.is_some() {
-            focus.focus();
+            if clicking_scrollbar.is_some() {
+                focus.focus();
+            }
         }
     };
 
@@ -251,7 +248,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
         };
     };
 
-    let onkeyup = |e: KeyboardEvent| {
+    let onkeyup = move |e: KeyboardEvent| {
         if e.key == Key::Shift {
             clicking_shift.set(false);
         } else if e.key == Key::Alt {
@@ -260,19 +257,19 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
     };
 
     // Mark the Y axis scrollbar as the one being dragged
-    let onmousedown_y = |e: MouseEvent| {
+    let onmousedown_y = move |e: MouseEvent| {
         let coordinates = e.get_element_coordinates();
         *clicking_scrollbar.write() = Some((Axis::Y, coordinates.y));
     };
 
     // Mark the X axis scrollbar as the one being dragged
-    let onmousedown_x = |e: MouseEvent| {
+    let onmousedown_x = move |e: MouseEvent| {
         let coordinates = e.get_element_coordinates();
         *clicking_scrollbar.write() = Some((Axis::X, coordinates.x));
     };
 
     // Unmark any scrollbar
-    let onclick = |_: MouseEvent| {
+    let onclick = move |_: MouseEvent| {
         if clicking_scrollbar.read().is_some() {
             *clicking_scrollbar.write() = None;
         }
@@ -304,8 +301,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
         items_length as f32,
     );
 
-    let children =
-        render_range.map(|i| (cx.props.builder)((i + 1, i, cx, &cx.props.builder_values)));
+    let children = render_range.map(|i| (props.builder)((i + 1, i, &props.builder_values)));
 
     let is_scrolling_x = clicking_scrollbar
         .read()
@@ -318,17 +314,17 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
         .map(|f| f.0 == Axis::Y)
         .unwrap_or_default();
 
-    render!(
+    rsx!(
         rect {
             role: "scrollView",
             overflow: "clip",
             direction: "horizontal",
             width: "{user_container_width}",
             height: "{user_container_height}",
-            onglobalclick: onclick, // TODO(marc2332): mouseup would be better
+            onglobalclick: onclick,
             onglobalmouseover: onmouseover,
-            onkeydown: onkeydown,
-            onkeyup: onkeyup,
+            onkeydown,
+            onkeyup,
             rect {
                 direction: "vertical",
                 width: "{container_width}",
@@ -341,7 +337,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
                     direction: "{user_direction}",
                     reference: node_ref,
                     onwheel: onwheel,
-                    children
+                    {children}
                 }
                 ScrollBar {
                     width: "100%",
@@ -352,8 +348,8 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
                         clicking_scrollbar: is_scrolling_x,
                         onmousedown: onmousedown_x,
                         width: "{scrollbar_width}",
-                        height: "100%",
-                    },
+                        height: "100%"
+                    }
                 }
             }
             ScrollBar {
@@ -365,7 +361,7 @@ pub fn VirtualScrollView<'a, T>(cx: Scope<'a, VirtualScrollViewProps<'a, T>>) ->
                     clicking_scrollbar: is_scrolling_y,
                     onmousedown: onmousedown_y,
                     width: "100%",
-                    height: "{scrollbar_height}",
+                    height: "{scrollbar_height}"
                 }
             }
         }

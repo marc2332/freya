@@ -3,6 +3,7 @@ use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_dom::prelude::FreyaDOM;
 use freya_engine::prelude::*;
+use glutin::prelude::{PossiblyCurrentContextGlSurfaceAccessor, PossiblyCurrentGlContext};
 use std::ffi::CString;
 use std::num::NonZeroU32;
 use torin::geometry::{Area, Size2D};
@@ -34,9 +35,9 @@ use crate::HoveredNode;
 
 /// Manager for a Window
 pub struct WindowEnv<T: Clone> {
+    gr_context: DirectContext,
     surface: Surface,
     gl_surface: GlutinSurface<WindowSurface>,
-    gr_context: DirectContext,
     gl_context: PossiblyCurrentContext,
     pub(crate) window: Window,
     fb_info: FramebufferInfo,
@@ -45,12 +46,18 @@ pub struct WindowEnv<T: Clone> {
     pub(crate) window_config: WindowConfig<T>,
 }
 
+impl<T: Clone> Drop for WindowEnv<T> {
+    fn drop(&mut self) {
+        if !self.gl_context.is_current() && self.gl_context.make_current(&self.gl_surface).is_err()
+        {
+            self.gr_context.abandon();
+        }
+    }
+}
+
 impl<T: Clone> WindowEnv<T> {
-    /// Create a Window environment from a set of configuration
-    pub fn from_config(
-        mut window_config: WindowConfig<T>,
-        event_loop: &EventLoop<EventMessage>,
-    ) -> Self {
+    /// Setup the Window and related features
+    pub fn new(mut window_config: WindowConfig<T>, event_loop: &EventLoop<EventMessage>) -> Self {
         let mut window_builder = WindowBuilder::new()
             .with_visible(false)
             .with_title(window_config.title)
@@ -68,6 +75,10 @@ impl<T: Clone> WindowEnv<T> {
 
         if let Some(max_size) = window_config.max_width.zip(window_config.max_height) {
             window_builder = window_builder.with_max_inner_size(LogicalSize::<f64>::from(max_size))
+        }
+
+        if let Some(with_window_builder) = &window_config.window_builder_hook {
+            (with_window_builder)(&mut window_builder);
         }
 
         let template = ConfigTemplateBuilder::new()
@@ -191,6 +202,16 @@ impl<T: Clone> WindowEnv<T> {
         }
     }
 
+    /// Get a reference to the Canvas.
+    pub fn canvas(&mut self) -> &Canvas {
+        self.surface.canvas()
+    }
+
+    /// Get a mutable reference to the Window.
+    pub fn window_mut(&mut self) -> &mut Window {
+        &mut self.window
+    }
+
     /// Measure the layout
     pub fn process_layout(
         &mut self,
@@ -210,8 +231,8 @@ impl<T: Clone> WindowEnv<T> {
         )
     }
 
-    /// Render the RealDOM to Window
-    pub fn render(
+    /// Start rendering the RealDOM to Window
+    pub fn start_render(
         &mut self,
         layers: &Layers,
         viewports: &Viewports,
@@ -224,14 +245,15 @@ impl<T: Clone> WindowEnv<T> {
         canvas.clear(self.window_config.background);
 
         let mut matrices: Vec<(Matrix, Vec<NodeId>)> = Vec::default();
+        let mut opacities: Vec<(f32, Vec<NodeId>)> = Vec::default();
 
         process_render(
             viewports,
             rdom,
             font_collection,
             layers,
-            &mut (canvas, (&mut matrices)),
-            |dom, node_id, area, font_collection, viewports, (canvas, matrices)| {
+            &mut (canvas, &mut matrices, &mut opacities),
+            |dom, node_id, area, font_collection, viewports, (canvas, matrices, opacities)| {
                 let render_wireframe = if let Some(hovered_node) = &hovered_node {
                     hovered_node
                         .lock()
@@ -250,17 +272,17 @@ impl<T: Clone> WindowEnv<T> {
                         viewports,
                         render_wireframe,
                         matrices,
+                        opacities,
                     );
                 }
             },
         );
-
-        self.gr_context.flush_and_submit();
-        self.gl_surface.swap_buffers(&self.gl_context).unwrap();
     }
 
-    pub fn window(&mut self) -> &mut Window {
-        &mut self.window
+    /// Finish all rendering in the Window
+    pub fn finish_render(&mut self) {
+        self.gr_context.flush_and_submit();
+        self.gl_surface.swap_buffers(&self.gl_context).unwrap();
     }
 
     /// Resize the Window
@@ -288,7 +310,7 @@ impl<T: Clone> WindowEnv<T> {
     pub fn run_on_setup(&mut self) {
         let on_setup = self.window_config.on_setup.clone();
         if let Some(on_setup) = on_setup {
-            (on_setup)(self.window())
+            (on_setup)(self.window_mut())
         }
     }
 
@@ -296,7 +318,7 @@ impl<T: Clone> WindowEnv<T> {
     pub fn run_on_exit(&mut self) {
         let on_exit = self.window_config.on_exit.clone();
         if let Some(on_exit) = on_exit {
-            (on_exit)(self.window())
+            (on_exit)(self.window_mut())
         }
     }
 }

@@ -1,6 +1,9 @@
+> ⚠️ Warning: This Book might contain APIs from the latest [git version](https://github.com/marc2332/freya) that might not be available on the stable versions released on crates.io.
+> As a general rule, don't expect everything to be documented here.
+
 # Welcome
 
-**Freya** is __work in progress__ cross-platform native GUI library for 🦀 Rust, built on top of 🧬 [Dioxus](https://dioxuslabs.com) and 🎨 [Skia](https://skia.org/) as graphics library. 
+**Freya** is a **work in progress** cross-platform native GUI library for 🦀 Rust, built on top of 🧬 [Dioxus](https://dioxuslabs.com) and 🎨 [Skia](https://skia.org/) as graphics library. 
 
 - [What is Freya?](./what_is_freya.html)
 - [Main differences with Dioxus](./differences_with_dioxus.html)
@@ -13,10 +16,10 @@
 <td style="border:hidden;">
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    let mut count = use_state(cx, || 0);
+fn app() -> Element {
+    let mut count = use_signal(|| 0);
 
-    render!(
+    rsx!(
         rect {
             height: "20%",
             width: "100%",

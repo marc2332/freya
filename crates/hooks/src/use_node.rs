@@ -1,21 +1,22 @@
-use dioxus_core::{AttributeValue, ScopeState};
-use dioxus_hooks::{to_owned, use_ref, use_state, UseRef};
+use dioxus_core::{prelude::spawn, use_hook, AttributeValue};
+use dioxus_hooks::to_owned;
+use dioxus_signals::{use_signal, Readable, Signal, Writable};
 use freya_common::NodeReferenceLayout;
 use freya_node_state::{CustomAttributeValues, NodeReference};
 use tokio::sync::mpsc::unbounded_channel;
 
 /// Subscribe to a Node layout changes.
-pub fn use_node(cx: &ScopeState) -> (AttributeValue, NodeReferenceLayout) {
-    let status = use_state::<NodeReferenceLayout>(cx, NodeReferenceLayout::default);
+pub fn use_node() -> (AttributeValue, NodeReferenceLayout) {
+    let layout = use_signal::<NodeReferenceLayout>(NodeReferenceLayout::default);
 
-    let tx = cx.use_hook(|| {
+    let tx = use_hook(|| {
         let (tx, mut rx) = unbounded_channel::<NodeReferenceLayout>();
 
-        to_owned![status];
-        cx.spawn(async move {
-            while let Some(new_status) = rx.recv().await {
-                if status.current().as_ref() != &new_status {
-                    status.set(new_status);
+        to_owned![layout];
+        spawn(async move {
+            while let Some(new_layout) = rx.recv().await {
+                if *layout.peek() != new_layout {
+                    layout.set(new_layout);
                 }
             }
         });
@@ -24,23 +25,23 @@ pub fn use_node(cx: &ScopeState) -> (AttributeValue, NodeReferenceLayout) {
     });
 
     (
-        cx.any_value(CustomAttributeValues::Reference(NodeReference(tx.clone()))),
-        status.get().clone(),
+        AttributeValue::any_value(CustomAttributeValues::Reference(NodeReference(tx.clone()))),
+        layout.read().clone(),
     )
 }
 
-/// Silently read the latest layout from a Node.
-pub fn use_node_ref(cx: &ScopeState) -> (AttributeValue, &UseRef<NodeReferenceLayout>) {
-    let status = use_ref::<NodeReferenceLayout>(cx, NodeReferenceLayout::default);
+/// Get a signal to read the latest layout from a Node.
+pub fn use_node_signal() -> (AttributeValue, Signal<NodeReferenceLayout>) {
+    let layout = use_signal::<NodeReferenceLayout>(NodeReferenceLayout::default);
 
-    let tx = cx.use_hook(|| {
+    let tx = use_hook(|| {
         let (tx, mut rx) = unbounded_channel::<NodeReferenceLayout>();
 
-        to_owned![status];
-        cx.spawn(async move {
-            while let Some(new_status) = rx.recv().await {
-                if *status.read() != new_status {
-                    *status.write_silent() = new_status;
+        to_owned![layout];
+        spawn(async move {
+            while let Some(new_layout) = rx.recv().await {
+                if *layout.peek() != new_layout {
+                    layout.set(new_layout);
                 }
             }
         });
@@ -49,8 +50,8 @@ pub fn use_node_ref(cx: &ScopeState) -> (AttributeValue, &UseRef<NodeReferenceLa
     });
 
     (
-        cx.any_value(CustomAttributeValues::Reference(NodeReference(tx.clone()))),
-        status,
+        AttributeValue::any_value(CustomAttributeValues::Reference(NodeReference(tx.clone()))),
+        layout,
     )
 }
 
@@ -62,10 +63,10 @@ mod test {
 
     #[tokio::test]
     pub async fn track_size() {
-        fn use_node_app(cx: Scope) -> Element {
-            let (reference, size) = use_node(cx);
+        fn use_node_app() -> Element {
+            let (reference, size) = use_node();
 
-            render!(
+            rsx!(
                 rect {
                     reference: reference,
                     width: "50%",

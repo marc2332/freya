@@ -8,7 +8,7 @@ use dioxus_native_core_macro::partial_derive_state;
 
 use crate::CustomAttributeValues;
 
-#[derive(Default, Clone, Debug, Component)]
+#[derive(Default, Clone, Debug, Component, PartialEq)]
 pub struct Transform {
     pub rotate_degs: Option<f32>,
 }
