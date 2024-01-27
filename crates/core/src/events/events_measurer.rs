@@ -202,7 +202,7 @@ fn measure_dom_events(
             let listeners = rdom.get_listening_sorted(derivated_event_name);
 
             // Iterate over the event nodes
-            for (node_id, request) in event_nodes.iter().rev() {
+            for (node_id, event) in event_nodes.iter().rev() {
                 let Some(node) = rdom.get(*node_id) else {
                     continue;
                 };
@@ -217,10 +217,14 @@ fn measure_dom_events(
                         };
 
                         if valid_node {
-                            let mut request = request.clone();
-                            request.set_name(derivated_event_name.to_string());
-                            found_nodes.push((node_id, request));
-                            continue 'event;
+                            let mut valid_event = event.clone();
+                            valid_event.set_name(derivated_event_name.to_string());
+                            found_nodes.push((node_id, valid_event));
+
+                            // Only stop looking for valid nodes when the event isn't of type keyboard
+                            if !event.is_keyboard_event() {
+                                continue 'event;
+                            }
                         }
                     }
                 }
