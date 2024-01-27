@@ -28,11 +28,12 @@ fn app() -> Element {
             ..form.register(FormEntry::Description)
         },
         Button {
-            ..form.submit(rsx!(
+            children: rsx!(
                 label {
                     "Submit"
                 }
-            )),
+            ),
+            ..form.submit(),
         }
     )
 }

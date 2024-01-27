@@ -22,7 +22,7 @@ impl<Id: Clone + Hash + Eq> UseForm<Id> {
         }
     }
 
-    pub fn submit(&self, children: Element) -> ButtonProps {
+    pub fn submit(&self) -> ButtonProps {
         let submit = self.onsubmit;
         let data = self.data;
         ButtonProps {
@@ -30,7 +30,7 @@ impl<Id: Clone + Hash + Eq> UseForm<Id> {
             onclick: Some(EventHandler::new(move |_| {
                 (submit.peek())(&data.read());
             })),
-            children,
+            children: None,
         }
     }
 }
