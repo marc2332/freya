@@ -44,7 +44,7 @@ pub fn launch_test_with_config(root: Component<()>, config: TestingConfig) -> Te
         config,
         platform_event_emitter,
         platform_event_receiver,
-        accessibility_state: Arc::new(Mutex::new(AccessibilityState::new(ACCESSIBILITY_ROOT_ID))),
+        accessibility_manager: AccessibilityManager::new(ACCESSIBILITY_ROOT_ID).wrap(),
         ticker_sender: broadcast::channel(5).0,
         navigation_state: NavigatorState::new(NavigationMode::NotKeyboard),
     };
