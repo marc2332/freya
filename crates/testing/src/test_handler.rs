@@ -30,7 +30,7 @@ pub struct TestingHandler {
     pub(crate) elements_state: ElementsState,
     pub(crate) font_collection: FontCollection,
     pub(crate) viewports: Viewports,
-    pub(crate) accessibility_state: SharedAccessibilityState,
+    pub(crate) accessibility_manager: SharedAccessibilityManager,
 
     pub(crate) config: TestingConfig,
 
@@ -100,7 +100,7 @@ impl TestingHandler {
                         }
                     }
                     EventMessage::FocusAccessibilityNode(node_id) => {
-                        self.accessibility_state.lock().unwrap().set_focus(node_id);
+                        self.accessibility_manager.lock().unwrap().focused_id = node_id;
                     }
                     _ => {}
                 }
@@ -180,6 +180,6 @@ impl TestingHandler {
     }
 
     pub fn focus_id(&self) -> AccessibilityId {
-        self.accessibility_state.lock().unwrap().focus_id()
+        self.accessibility_manager.lock().unwrap().focused_id
     }
 }

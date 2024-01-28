@@ -3,12 +3,11 @@ use accesskit_winit::ActionRequestEvent;
 use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_elements::events::keyboard::{
-    map_winit_key, map_winit_modifiers, map_winit_physical_key, Code, Key,
+    map_winit_key, map_winit_modifiers, map_winit_physical_key,
 };
 use torin::geometry::CursorPoint;
 use winit::event::{
-    ElementState, Event, Ime, KeyEvent, MouseScrollDelta, StartCause, Touch, TouchPhase,
-    WindowEvent,
+    ElementState, Event, KeyEvent, MouseScrollDelta, StartCause, Touch, TouchPhase, WindowEvent,
 };
 use winit::event_loop::{EventLoop, EventLoopProxy};
 use winit::keyboard::{KeyCode, ModifiersState, PhysicalKey};
@@ -41,7 +40,7 @@ pub fn run_event_loop<State: Clone>(
             }
             Event::UserEvent(EventMessage::FocusAccessibilityNode(id)) => {
                 app.accessibility()
-                        .set_accessibility_focus(id, app.window_env().window());
+                    .set_accessibility_focus(id, app.window_env().window());
             }
             Event::UserEvent(EventMessage::RequestRerender) => {
                 app.window_env_mut().window_mut().request_redraw();
@@ -80,14 +79,6 @@ pub fn run_event_loop<State: Clone>(
                 app.process_accessibility_event(&event);
                 match event {
                     WindowEvent::CloseRequested => event_loop.exit(),
-                    WindowEvent::Ime(Ime::Commit(text)) => {
-                        app.send_event(FreyaEvent::Keyboard {
-                            name: "keydown".to_string(),
-                            key: Key::Character(text),
-                            code: Code::Unidentified,
-                            modifiers: map_winit_modifiers(modifiers_state),
-                        });
-                    }
                     WindowEvent::RedrawRequested => {
                         app.process_layout();
                         app.render(&hovered_node);
