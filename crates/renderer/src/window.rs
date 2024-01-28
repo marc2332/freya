@@ -102,6 +102,7 @@ impl<T: Clone> WindowEnv<T> {
             .unwrap();
 
         let mut window = window.expect("Could not create window with OpenGL context");
+        window.set_ime_allowed(true);
         let raw_window_handle = window.raw_window_handle();
 
         let context_attributes = ContextAttributesBuilder::new()
@@ -208,6 +209,11 @@ impl<T: Clone> WindowEnv<T> {
     /// Get a mutable reference to the Window.
     pub fn window_mut(&mut self) -> &mut Window {
         &mut self.window
+    }
+
+    /// Get a reference to the Window.
+    pub fn window(&self) -> &Window {
+        &self.window
     }
 
     /// Measure the layout

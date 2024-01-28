@@ -3,11 +3,12 @@ use accesskit_winit::ActionRequestEvent;
 use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_elements::events::keyboard::{
-    map_winit_key, map_winit_modifiers, map_winit_physical_key,
+    map_winit_key, map_winit_modifiers, map_winit_physical_key, Code, Key,
 };
 use torin::geometry::CursorPoint;
 use winit::event::{
-    ElementState, Event, KeyEvent, MouseScrollDelta, StartCause, Touch, TouchPhase, WindowEvent,
+    ElementState, Event, Ime, KeyEvent, MouseScrollDelta, StartCause, Touch, TouchPhase,
+    WindowEvent,
 };
 use winit::event_loop::{EventLoop, EventLoopProxy};
 use winit::keyboard::{KeyCode, ModifiersState, PhysicalKey};
@@ -29,7 +30,7 @@ pub fn run_event_loop<State: Clone>(
     let mut cursor_pos = CursorPoint::default();
     let mut modifiers_state = ModifiersState::empty();
 
-    let window_env = app.window_env();
+    let window_env = app.window_env_mut();
 
     window_env.run_on_setup();
 
@@ -39,10 +40,11 @@ pub fn run_event_loop<State: Clone>(
                 _ = proxy.send_event(EventMessage::PollVDOM);
             }
             Event::UserEvent(EventMessage::FocusAccessibilityNode(id)) => {
-                app.accessibility().set_accessibility_focus(id);
+                app.accessibility()
+                    .set_accessibility_focus(id, app.window_env().window());
             }
             Event::UserEvent(EventMessage::RequestRerender) => {
-                app.window_env().window_mut().request_redraw();
+                app.window_env_mut().window_mut().request_redraw();
             }
             Event::UserEvent(EventMessage::RequestRedraw) => app.render(&hovered_node),
             Event::UserEvent(EventMessage::RequestRelayout) => {
@@ -56,7 +58,8 @@ pub fn run_event_loop<State: Clone>(
                 ..
             })) => {
                 if Action::Focus == request.action {
-                    app.accessibility().set_accessibility_focus(request.target);
+                    app.accessibility()
+                        .set_accessibility_focus(request.target, app.window_env().window());
                 }
             }
             Event::UserEvent(EventMessage::SetCursorIcon(icon)) => {
@@ -77,6 +80,14 @@ pub fn run_event_loop<State: Clone>(
                 app.process_accessibility_event(&event);
                 match event {
                     WindowEvent::CloseRequested => event_loop.exit(),
+                    WindowEvent::Ime(Ime::Commit(text)) => {
+                        app.send_event(FreyaEvent::Keyboard {
+                            name: "keydown".to_string(),
+                            key: Key::Character(text),
+                            code: Code::Unidentified,
+                            modifiers: map_winit_modifiers(modifiers_state),
+                        });
+                    }
                     WindowEvent::RedrawRequested => {
                         app.process_layout();
                         app.render(&hovered_node);
@@ -195,7 +206,7 @@ pub fn run_event_loop<State: Clone>(
                 }
             }
             Event::LoopExiting => {
-                app.window_env().run_on_exit();
+                app.window_env_mut().run_on_exit();
             }
             _ => (),
         })
