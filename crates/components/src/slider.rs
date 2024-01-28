@@ -114,7 +114,7 @@ pub fn Slider(
         to_owned![status];
         move |_: MouseEvent| {
             *status.write() = SliderStatus::Hovering;
-            platform.set_cursor(CursorIcon::Hand);
+            platform.set_cursor(CursorIcon::Pointer);
         }
     };
 

@@ -18,7 +18,7 @@ use uuid::Uuid;
 use winit::event::WindowEvent;
 use winit::{dpi::PhysicalSize, event_loop::EventLoopProxy};
 
-use crate::accessibility::NativeAccessibility;
+use crate::accessibility::AccessKitManager;
 use crate::{FontsConfig, HoveredNode, WindowEnv};
 
 fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
@@ -52,7 +52,7 @@ pub struct App<State: 'static + Clone> {
     viewports: Viewports,
     focus_sender: FocusSender,
     focus_receiver: FocusReceiver,
-    accessibility: NativeAccessibility,
+    accessibility: AccessKitManager,
     font_collection: FontCollection,
     ticker_sender: broadcast::Sender<()>,
     plugins: PluginsManager,
@@ -69,7 +69,7 @@ impl<State: 'static + Clone> App<State> {
         fonts_config: FontsConfig,
         mut plugins: PluginsManager,
     ) -> Self {
-        let accessibility = NativeAccessibility::new(&window_env.window, proxy.clone());
+        let accessibility = AccessKitManager::new(&window_env.window, proxy.clone());
 
         window_env.window_mut().set_visible(true);
 
@@ -88,7 +88,7 @@ impl<State: 'static + Clone> App<State> {
         font_collection.set_dynamic_font_manager(mgr);
 
         let (event_emitter, event_receiver) = mpsc::unbounded_channel::<DomEvent>();
-        let (focus_sender, focus_receiver) = watch::channel(None);
+        let (focus_sender, focus_receiver) = watch::channel(ACCESSIBILITY_ROOT_ID);
 
         plugins.send(PluginEvent::WindowCreated(window_env.window_mut()));
 
@@ -253,7 +253,7 @@ impl<State: 'static + Clone> App<State> {
             layers,
             &layout,
             rdom,
-            &mut *self.accessibility.accessibility_state().lock().unwrap(),
+            &mut self.accessibility.accessibility_manager().lock().unwrap(),
         );
     }
 
@@ -314,22 +314,29 @@ impl<State: 'static + Clone> App<State> {
         );
     }
 
-    pub fn window_env(&mut self) -> &mut WindowEnv<State> {
+    pub fn window_env(&self) -> &WindowEnv<State> {
+        &self.window_env
+    }
+
+    pub fn window_env_mut(&mut self) -> &mut WindowEnv<State> {
         &mut self.window_env
     }
 
-    pub fn accessibility(&mut self) -> &mut NativeAccessibility {
-        &mut self.accessibility
+    pub fn accessibility(&self) -> &AccessKitManager {
+        &self.accessibility
     }
 
-    pub fn on_window_event(&mut self, event: &WindowEvent) -> bool {
+    pub fn process_accessibility_event(&mut self, event: &WindowEvent) {
         self.accessibility
-            .on_accessibility_window_event(&self.window_env.window, event)
+            .process_accessibility_event(&self.window_env.window, event)
     }
 
-    pub fn focus_next_node(&mut self, direction: AccessibilityFocusDirection) {
-        self.accessibility
-            .focus_next_node(direction, &self.focus_sender)
+    pub fn focus_next_node(&self, direction: AccessibilityFocusDirection) {
+        self.accessibility.focus_next_node(
+            direction,
+            &self.focus_sender,
+            self.window_env().window(),
+        )
     }
 
     pub fn tick(&self) {
