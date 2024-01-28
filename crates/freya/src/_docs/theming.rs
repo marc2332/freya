@@ -1,5 +1,7 @@
 //! # Theming
 //!
+//! <div class="warning">⚠️ As of 2023-12-19, extending the base theme is not supported.</div>
+//!
 //! Freya has built-in support for Theming.
 //!
 //! ### Accessing the current theme
