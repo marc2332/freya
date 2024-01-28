@@ -1,16 +1,12 @@
 use crate::accessibility::*;
 use accesskit::{Node, NodeClassSet, NodeId as AccessibilityId};
-use std::{
-    num::NonZeroU128,
-    sync::{Arc, Mutex},
-};
+use std::sync::{Arc, Mutex};
 
 pub type SharedAccessibilityState = Arc<Mutex<AccessibilityState>>;
 
-pub const ROOT_ID: AccessibilityId = AccessibilityId(unsafe { NonZeroU128::new_unchecked(1) });
+pub const ACCESSIBILITY_ROOT_ID: AccessibilityId = AccessibilityId(0);
 
 /// Manages the Accessibility integration.
-#[derive(Default)]
 pub struct AccessibilityState {
     /// Accessibility Nodes
     pub nodes: Vec<(AccessibilityId, Node)>,
@@ -19,12 +15,16 @@ pub struct AccessibilityState {
     pub node_classes: NodeClassSet,
 
     /// Current focused Accessibility Node.
-    pub focus: Option<AccessibilityId>,
+    pub focused_id: AccessibilityId,
 }
 
 impl AccessibilityState {
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new(focused_id: AccessibilityId) -> Self {
+        Self {
+            focused_id,
+            node_classes: NodeClassSet::default(),
+            nodes: Vec::default(),
+        }
     }
 
     /// Wrap it in a `Arc<Mutex<T>>`.
@@ -47,12 +47,12 @@ impl AccessibilityProvider for AccessibilityState {
         self.nodes.iter()
     }
 
-    fn focus_id(&self) -> Option<AccessibilityId> {
-        self.focus
+    fn focus_id(&self) -> AccessibilityId {
+        self.focused_id
     }
 
-    fn set_focus(&mut self, new_focus_id: Option<AccessibilityId>) {
-        self.focus = new_focus_id;
+    fn set_focus(&mut self, new_focus_id: AccessibilityId) {
+        self.focused_id = new_focus_id;
     }
 
     fn push_node(&mut self, id: AccessibilityId, node: Node) {

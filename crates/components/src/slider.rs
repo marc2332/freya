@@ -104,7 +104,7 @@ pub fn Slider<'a>(cx: Scope<'a, SliderProps>) -> Element<'a> {
 
     let onmouseenter = move |_: MouseEvent| {
         *status.write_silent() = SliderStatus::Hovering;
-        platform.set_cursor(CursorIcon::Hand);
+        platform.set_cursor(CursorIcon::Pointer);
     };
 
     let onmouseover = move |e: MouseEvent| {

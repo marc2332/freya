@@ -83,7 +83,7 @@ pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
 
     let onmouseenter = move |_: MouseEvent| {
         *status.write_silent() = SwitchStatus::Hovering;
-        platform.set_cursor(CursorIcon::Hand);
+        platform.set_cursor(CursorIcon::Pointer);
     };
 
     let onclick = |_: MouseEvent| {

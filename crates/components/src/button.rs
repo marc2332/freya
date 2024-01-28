@@ -92,7 +92,7 @@ pub fn Button<'a>(cx: Scope<'a, ButtonProps<'a>>) -> Element {
     let onmouseenter = {
         to_owned![status, platform];
         move |_| {
-            platform.set_cursor(CursorIcon::Hand);
+            platform.set_cursor(CursorIcon::Pointer);
             status.set(ButtonStatus::Hovering);
         }
     };
