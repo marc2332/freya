@@ -101,7 +101,7 @@ impl<State: 'static + Clone> App<State> {
         font_collection.set_dynamic_font_manager(mgr);
 
         let (event_emitter, event_receiver) = mpsc::unbounded_channel::<DomEvent>();
-        let (focus_sender, focus_receiver) = watch::channel(None);
+        let (focus_sender, focus_receiver) = watch::channel(ACCESSIBILITY_ROOT_ID);
 
         plugins.send(PluginEvent::WindowCreated(window_env.window_mut()));
 
@@ -352,9 +352,9 @@ impl<State: 'static + Clone> App<State> {
         &mut self.accessibility
     }
 
-    pub fn on_window_event(&mut self, event: &WindowEvent) -> bool {
+    pub fn process_accessibility_event(&mut self, event: &WindowEvent) {
         self.accessibility
-            .on_accessibility_window_event(&self.window_env.window, event)
+            .process_accessibility_event(&self.window_env.window, event)
     }
 
     pub fn focus_next_node(&mut self, direction: AccessibilityFocusDirection) {

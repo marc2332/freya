@@ -41,7 +41,9 @@ impl DesktopRenderer {
 
         let _guard = rt.enter();
 
-        let event_loop = EventLoopBuilder::<EventMessage>::with_user_event().build();
+        let event_loop = EventLoopBuilder::<EventMessage>::with_user_event()
+            .build()
+            .expect("Failed to create event loop.");
         let proxy = event_loop.create_proxy();
 
         // Hotreload support for Dioxus

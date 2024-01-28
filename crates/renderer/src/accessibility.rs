@@ -4,7 +4,7 @@ use freya_common::EventMessage;
 use freya_core::{
     prelude::{
         AccessibilityFocusDirection, AccessibilityProvider, AccessibilityState,
-        SharedAccessibilityState, ROOT_ID,
+        SharedAccessibilityState, ACCESSIBILITY_ROOT_ID,
     },
     types::FocusSender,
 };
@@ -19,14 +19,14 @@ pub struct NativeAccessibility {
 impl NativeAccessibility {
     pub fn new(window: &Window, proxy: EventLoopProxy<EventMessage>) -> Self {
         let title = window.title();
-        let accessibility_state = AccessibilityState::new().wrap();
+        let accessibility_state = AccessibilityState::new(ACCESSIBILITY_ROOT_ID).wrap();
         let accessibility_adapter = {
             let accessibility_state = accessibility_state.clone();
             Adapter::new(
                 window,
                 move || {
                     let mut accessibility_state = accessibility_state.lock().unwrap();
-                    accessibility_state.process(ROOT_ID, title.as_str())
+                    accessibility_state.process(ACCESSIBILITY_ROOT_ID, title.as_str())
                 },
                 proxy,
             )
@@ -47,15 +47,15 @@ impl NativeAccessibility {
             .accessibility_state
             .lock()
             .unwrap()
-            .set_focus_with_update(Some(id));
+            .set_focus_with_update(id);
         if let Some(tree) = tree {
-            self.accessibility_adapter.update(tree);
+            self.accessibility_adapter.update_if_active(|| tree);
         }
     }
 
-    /// Validate a winit event for accessibility
-    pub fn on_accessibility_window_event(&mut self, window: &Window, event: &WindowEvent) -> bool {
-        self.accessibility_adapter.on_event(window, event)
+    /// Process an Accessibility event
+    pub fn process_accessibility_event(&mut self, window: &Window, event: &WindowEvent) {
+        self.accessibility_adapter.process_event(window, event)
     }
 
     /// Remove the accessibility nodes
@@ -69,8 +69,8 @@ impl NativeAccessibility {
             .accessibility_state
             .lock()
             .unwrap()
-            .process(ROOT_ID, title);
-        self.accessibility_adapter.update(tree);
+            .process(ACCESSIBILITY_ROOT_ID, title);
+        self.accessibility_adapter.update_if_active(|| tree);
     }
 
     /// Focus the next accessibility node
@@ -83,9 +83,12 @@ impl NativeAccessibility {
             .accessibility_state
             .lock()
             .unwrap()
-            .set_focus_on_next_node(direction, focus_sender);
-        if let Some(tree) = tree {
-            self.accessibility_adapter.update(tree);
-        }
+            .set_focus_on_next_node(direction);
+
+        focus_sender
+            .send(tree.focus)
+            .expect("Failed to focus the Node.");
+
+        self.accessibility_adapter.update_if_active(|| tree);
     }
 }
