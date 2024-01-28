@@ -1,30 +1,61 @@
+use crate::accessibility::*;
 use accesskit::{
     Action, DefaultActionVerb, Node, NodeBuilder, NodeClassSet, NodeId as AccessibilityId, Rect,
     Role, Tree, TreeUpdate,
 };
-use dioxus_native_core::{
-    prelude::{NodeType, TextNode},
-    real_dom::NodeImmutable,
-    NodeId,
-};
-use freya_dom::prelude::{DioxusDOM, DioxusNode};
+use freya_dom::dom::DioxusNode;
 use freya_node_state::AccessibilityState;
-use std::slice::Iter;
+use std::{
+    num::NonZeroU128,
+    sync::{Arc, Mutex},
+};
 use tokio::sync::watch;
-use torin::{prelude::NodeAreas, torin::Torin};
+use torin::dom_adapter::NodeAreas;
 
-use crate::layout::*;
+pub type SharedAccessibilityManager = Arc<Mutex<AccessibilityManager>>;
 
-/// Direction for the next Accessibility Node to be focused.
-#[derive(PartialEq)]
-pub enum AccessibilityFocusDirection {
-    Forward,
-    Backward,
+pub const ROOT_ID: AccessibilityId = AccessibilityId(unsafe { NonZeroU128::new_unchecked(1) });
+
+/// Manages the Accessibility integration.
+#[derive(Default)]
+pub struct AccessibilityManager {
+    /// Accessibility Nodes
+    pub nodes: Vec<(AccessibilityId, Node)>,
+    /// Accessibility tree
+    pub node_classes: NodeClassSet,
+    /// Current focused Accessibility Node.
+    pub focus: Option<AccessibilityId>,
 }
 
-pub trait AccessibilityProvider {
+impl AccessibilityManager {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Wrap it in a `Arc<Mutex<T>>`.
+    pub fn wrap(self) -> SharedAccessibilityManager {
+        Arc::new(Mutex::new(self))
+    }
+
+    /// Clear the Accessibility Nodes.
+    pub fn clear(&mut self) {
+        self.nodes.clear();
+    }
+
+    pub fn focus_id(&self) -> Option<AccessibilityId> {
+        self.focus
+    }
+
+    pub fn set_focus(&mut self, new_focus_id: Option<AccessibilityId>) {
+        self.focus = new_focus_id;
+    }
+
+    pub fn push_node(&mut self, id: AccessibilityId, node: Node) {
+        self.nodes.push((id, node))
+    }
+
     /// Add a Node to the Accessibility Tree.
-    fn add_node(
+    pub fn add_node(
         &mut self,
         dioxus_node: &DioxusNode,
         node_areas: &NodeAreas,
@@ -74,34 +105,19 @@ pub trait AccessibilityProvider {
         }
 
         // Insert the node into the Tree
-        let node = builder.build(self.node_classes());
+        let node = builder.build(&mut self.node_classes);
         self.push_node(accessibility_id, node);
     }
 
-    /// Push a Node into the Accesibility Tree.
-    fn push_node(&mut self, id: AccessibilityId, node: Node);
-
-    /// Mutable reference to the NodeClassSet.
-    fn node_classes(&mut self) -> &mut NodeClassSet;
-
-    /// Iterator over the Accessibility Tree of Nodes.
-    fn nodes(&self) -> Iter<(AccessibilityId, Node)>;
-
-    /// Get the currently focused Node's ID.
-    fn focus_id(&self) -> Option<AccessibilityId>;
-
-    /// Update the focused Node ID.
-    fn set_focus(&mut self, new_focus_id: Option<AccessibilityId>);
-
     /// Update the focused Node ID and generate a TreeUpdate if necessary.
-    fn set_focus_with_update(
+    pub fn set_focus_with_update(
         &mut self,
         new_focus_id: Option<AccessibilityId>,
     ) -> Option<TreeUpdate> {
         self.set_focus(new_focus_id);
 
         // Only focus the element if it exists
-        let node_focused_exists = self.nodes().any(|node| Some(node.0) == new_focus_id);
+        let node_focused_exists = self.nodes.iter().any(|node| Some(node.0) == new_focus_id);
         if node_focused_exists {
             Some(TreeUpdate {
                 nodes: Vec::new(),
@@ -114,26 +130,27 @@ pub trait AccessibilityProvider {
     }
 
     /// Create the root Accessibility Node.
-    fn build_root(&mut self, root_name: &str) -> Node {
+    pub fn build_root(&mut self, root_name: &str) -> Node {
         let mut builder = NodeBuilder::new(Role::Window);
         builder.set_name(root_name.to_string());
         builder.set_children(
-            self.nodes()
+            self.nodes
+                .iter()
                 .map(|(id, _)| *id)
                 .collect::<Vec<AccessibilityId>>(),
         );
 
-        builder.build(self.node_classes())
+        builder.build(&mut self.node_classes)
     }
 
     /// Process the Nodes accessibility Tree
-    fn process(&mut self, root_id: AccessibilityId, root_name: &str) -> TreeUpdate {
+    pub fn process(&mut self, root_id: AccessibilityId, root_name: &str) -> TreeUpdate {
         let root = self.build_root(root_name);
         let mut nodes = vec![(root_id, root)];
-        nodes.extend(self.nodes().cloned());
+        nodes.extend(self.nodes.clone());
         nodes.reverse();
 
-        let focus = self.nodes().find_map(|node| {
+        let focus = self.nodes.iter().find_map(|node| {
             if Some(node.0) == self.focus_id() {
                 Some(node.0)
             } else {
@@ -149,16 +166,17 @@ pub trait AccessibilityProvider {
     }
 
     /// Focus the next/previous Node starting from the currently focused Node.
-    fn set_focus_on_next_node(
+    pub fn set_focus_on_next_node(
         &mut self,
         direction: AccessibilityFocusDirection,
         focus_sender: &watch::Sender<Option<AccessibilityId>>,
     ) -> Option<TreeUpdate> {
         // Start from the focused node or from the first registered node
-        let focused_node_id = self.focus_id().or(self.nodes().nth(0).map(|node| node.0));
+        let focused_node_id = self.focus_id().or(self.nodes.first().map(|node| node.0));
         if let Some(focused_node_id) = focused_node_id {
             let current_node = self
-                .nodes()
+                .nodes
+                .iter()
                 .enumerate()
                 .find(|(_, node)| node.0 == focused_node_id)
                 .map(|(i, _)| i);
@@ -166,7 +184,7 @@ pub trait AccessibilityProvider {
             if let Some(node_index) = current_node {
                 let target_node_index = if direction == AccessibilityFocusDirection::Forward {
                     // Find the next Node
-                    if node_index == self.nodes().len() - 1 {
+                    if node_index == self.nodes.len() - 1 {
                         0
                     } else {
                         node_index + 1
@@ -174,14 +192,15 @@ pub trait AccessibilityProvider {
                 } else {
                     // Find the previous Node
                     if node_index == 0 {
-                        self.nodes().len() - 1
+                        self.nodes.len() - 1
                     } else {
                         node_index - 1
                     }
                 };
 
                 let target_node = self
-                    .nodes()
+                    .nodes
+                    .iter()
                     .enumerate()
                     .find(|(i, _)| *i == target_node_index)
                     .map(|(_, node)| node.0);
@@ -189,7 +208,7 @@ pub trait AccessibilityProvider {
                 self.set_focus(target_node);
             } else {
                 // Select the first Node
-                self.set_focus(self.nodes().next().map(|(id, _)| *id))
+                self.set_focus(self.nodes.first().map(|(id, _)| *id))
             }
 
             focus_sender.send(self.focus_id()).ok();
@@ -201,65 +220,6 @@ pub trait AccessibilityProvider {
             })
         } else {
             None
-        }
-    }
-}
-
-/// Shortcut functions to retrieve Acessibility info from a Dioxus Node
-trait NodeAccessibility {
-    /// Return the first TextNode from this Node
-    fn get_inner_texts(&self) -> Option<String>;
-
-    /// Collect all the AccessibilityIDs from a Node's children
-    fn get_accessibility_children(&self) -> Vec<AccessibilityId>;
-}
-
-impl NodeAccessibility for DioxusNode<'_> {
-    /// Return the first TextNode from this Node
-    fn get_inner_texts(&self) -> Option<String> {
-        let children = self.children();
-        let first_child = children.first()?;
-        let node_type = first_child.node_type();
-        if let NodeType::Text(TextNode { text, .. }) = &*node_type {
-            Some(text.to_owned())
-        } else {
-            None
-        }
-    }
-
-    /// Collect all the AccessibilityIDs from a Node's children
-    fn get_accessibility_children(&self) -> Vec<AccessibilityId> {
-        self.children()
-            .iter()
-            .filter_map(|child| {
-                let node_accessibility = &*child.get::<AccessibilityState>().unwrap();
-                node_accessibility.focus_id
-            })
-            .collect::<Vec<AccessibilityId>>()
-    }
-}
-
-pub fn process_accessibility(
-    layers: &Layers,
-    layout: &Torin<NodeId>,
-    rdom: &DioxusDOM,
-    access_provider: &mut impl AccessibilityProvider,
-) {
-    for layer in layers.layers.values() {
-        for node_id in layer {
-            let node_areas = layout.get(*node_id).unwrap();
-            let dioxus_node = rdom.get(*node_id);
-            if let Some(dioxus_node) = dioxus_node {
-                let node_accessibility = &*dioxus_node.get::<AccessibilityState>().unwrap();
-                if let Some(accessibility_id) = node_accessibility.focus_id {
-                    access_provider.add_node(
-                        &dioxus_node,
-                        node_areas,
-                        accessibility_id,
-                        node_accessibility,
-                    );
-                }
-            }
         }
     }
 }
