@@ -3,7 +3,8 @@ use accesskit_winit::Adapter;
 use freya_common::EventMessage;
 use freya_core::{
     prelude::{
-        AccessibilityFocusDirection, AccessibilityManager, SharedAccessibilityManager, ROOT_ID,
+        AccessibilityFocusDirection, AccessibilityManager, SharedAccessibilityManager,
+        ACCESSIBILITY_ROOT_ID,
     },
     types::FocusSender,
 };
@@ -18,14 +19,14 @@ pub struct AccessKitManager {
 impl AccessKitManager {
     pub fn new(window: &Window, proxy: EventLoopProxy<EventMessage>) -> Self {
         let title = window.title();
-        let accessibility_manager = AccessibilityManager::new().wrap();
+        let accessibility_manager = AccessibilityManager::new(ACCESSIBILITY_ROOT_ID).wrap();
         let accessibility_adapter = {
             let accessibility_manager = accessibility_manager.clone();
             Adapter::new(
                 window,
                 move || {
                     let mut accessibility_manager = accessibility_manager.lock().unwrap();
-                    accessibility_manager.process(ROOT_ID, title.as_str())
+                    accessibility_manager.process(ACCESSIBILITY_ROOT_ID, title.as_str())
                 },
                 proxy,
             )
@@ -46,15 +47,15 @@ impl AccessKitManager {
             .accessibility_manager
             .lock()
             .unwrap()
-            .set_focus_with_update(Some(id));
+            .set_focus_with_update(id);
         if let Some(tree) = tree {
-            self.accessibility_adapter.update(tree);
+            self.accessibility_adapter.update_if_active(|| tree);
         }
     }
 
-    /// Validate a winit event for accessibility
-    pub fn on_accessibility_window_event(&mut self, window: &Window, event: &WindowEvent) -> bool {
-        self.accessibility_adapter.on_event(window, event)
+    /// Process an Accessibility event
+    pub fn process_accessibility_event(&mut self, window: &Window, event: &WindowEvent) {
+        self.accessibility_adapter.process_event(window, event)
     }
 
     /// Remove the accessibility nodes
@@ -68,8 +69,8 @@ impl AccessKitManager {
             .accessibility_manager
             .lock()
             .unwrap()
-            .process(ROOT_ID, title);
-        self.accessibility_adapter.update(tree);
+            .process(ACCESSIBILITY_ROOT_ID, title);
+        self.accessibility_adapter.update_if_active(|| tree);
     }
 
     /// Focus the next accessibility node
@@ -82,9 +83,12 @@ impl AccessKitManager {
             .accessibility_manager
             .lock()
             .unwrap()
-            .set_focus_on_next_node(direction, focus_sender);
-        if let Some(tree) = tree {
-            self.accessibility_adapter.update(tree);
-        }
+            .set_focus_on_next_node(direction);
+
+        focus_sender
+            .send(tree.focus)
+            .expect("Failed to focus the Node.");
+
+        self.accessibility_adapter.update_if_active(|| tree);
     }
 }

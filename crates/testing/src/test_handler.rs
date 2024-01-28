@@ -100,10 +100,7 @@ impl TestingHandler {
                         }
                     }
                     EventMessage::FocusAccessibilityNode(node_id) => {
-                        self.accessibility_manager
-                            .lock()
-                            .unwrap()
-                            .set_focus(Some(node_id));
+                        self.accessibility_manager.lock().unwrap().focused_id = node_id;
                     }
                     _ => {}
                 }
@@ -182,7 +179,7 @@ impl TestingHandler {
         self.utils.get_node_by_id(root_id)
     }
 
-    pub fn focus_id(&self) -> Option<AccessibilityId> {
-        self.accessibility_manager.lock().unwrap().focus_id()
+    pub fn focus_id(&self) -> AccessibilityId {
+        self.accessibility_manager.lock().unwrap().focused_id
     }
 }

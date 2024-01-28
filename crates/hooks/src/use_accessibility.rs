@@ -1,24 +1,32 @@
+use std::rc::Rc;
+
 use dioxus_core::ScopeState;
-use dioxus_hooks::{to_owned, use_memo, use_shared_state};
 use freya_common::EventMessage;
 use freya_core::{navigation_mode::NavigatorState, types::FocusReceiver};
 
-use crate::{use_platform, FocusId};
+use dioxus_hooks::{
+    to_owned, use_context_provider, use_memo, use_shared_state, use_shared_state_provider, RefCell,
+};
+use freya_core::{accessibility::ACCESSIBILITY_ROOT_ID, types::AccessibilityId};
+
+use crate::use_platform;
+
+pub type AccessibilityIdCounter = Rc<RefCell<u64>>;
 
 /// Sync both the Focus shared state and the platform accessibility focus
 pub fn use_init_accessibility(cx: &ScopeState) {
     let platform = use_platform(cx);
-    let focused_id = use_shared_state::<Option<FocusId>>(cx).unwrap();
+    use_context_provider(cx, || Rc::new(RefCell::new(0u64)));
+    use_shared_state_provider::<AccessibilityId>(cx, || ACCESSIBILITY_ROOT_ID);
+    let focused_id = use_shared_state::<AccessibilityId>(cx).unwrap();
 
     let current_focused_id = *focused_id.read();
 
-    // Tell the renderer the new focused node
+    // Notify the platform that a new Node has been focused manually
     let _ = use_memo(cx, &(current_focused_id,), move |(focused_id,)| {
-        if let Some(focused_id) = focused_id {
-            platform
-                .send(EventMessage::FocusAccessibilityNode(focused_id))
-                .unwrap();
-        }
+        platform
+            .send(EventMessage::FocusAccessibilityNode(focused_id))
+            .unwrap();
     });
 
     cx.use_hook(|| {
@@ -53,6 +61,7 @@ pub fn use_init_accessibility(cx: &ScopeState) {
 #[cfg(test)]
 mod test {
     use freya::prelude::*;
+    use freya_core::accessibility::ACCESSIBILITY_ROOT_ID;
     use freya_testing::{
         events::pointer::MouseButton, launch_test_with_config, FreyaEvent, TestingConfig,
     };
@@ -88,7 +97,7 @@ mod test {
 
         // Initial state
         utils.wait_for_update().await;
-        assert!(utils.focus_id().is_none());
+        assert_eq!(utils.focus_id(), ACCESSIBILITY_ROOT_ID);
 
         // Click on the first rect
         utils.push_event(FreyaEvent::Mouse {
@@ -101,7 +110,7 @@ mod test {
         utils.wait_for_update().await;
         utils.wait_for_update().await;
         let first_focus_id = utils.focus_id();
-        assert!(first_focus_id.is_some());
+        assert_ne!(first_focus_id, ACCESSIBILITY_ROOT_ID);
 
         // Click on the second rect
         utils.push_event(FreyaEvent::Mouse {
@@ -115,6 +124,6 @@ mod test {
         utils.wait_for_update().await;
         let second_focus_id = utils.focus_id();
         assert_ne!(first_focus_id, second_focus_id);
-        assert!(second_focus_id.is_some());
+        assert_ne!(second_focus_id, ACCESSIBILITY_ROOT_ID);
     }
 }

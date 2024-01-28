@@ -8,7 +8,7 @@ use dioxus_native_core::{
     NodeId,
 };
 use freya_dom::dom::{DioxusDOM, DioxusNode};
-use freya_node_state::AccessibilityState;
+use freya_node_state::AccessibilityNodeState;
 use torin::torin::Torin;
 
 use crate::layout::Layers;
@@ -47,8 +47,8 @@ impl NodeAccessibility for DioxusNode<'_> {
         self.children()
             .iter()
             .filter_map(|child| {
-                let node_accessibility = &*child.get::<AccessibilityState>().unwrap();
-                node_accessibility.focus_id
+                let node_accessibility = &*child.get::<AccessibilityNodeState>().unwrap();
+                node_accessibility.accessibility_id
             })
             .collect::<Vec<AccessibilityId>>()
     }
@@ -65,8 +65,8 @@ pub fn process_accessibility(
             let node_areas = layout.get(*node_id).unwrap();
             let dioxus_node = rdom.get(*node_id);
             if let Some(dioxus_node) = dioxus_node {
-                let node_accessibility = &*dioxus_node.get::<AccessibilityState>().unwrap();
-                if let Some(accessibility_id) = node_accessibility.focus_id {
+                let node_accessibility = &*dioxus_node.get::<AccessibilityNodeState>().unwrap();
+                if let Some(accessibility_id) = node_accessibility.accessibility_id {
                     accessibility_manager.add_node(
                         &dioxus_node,
                         node_areas,
