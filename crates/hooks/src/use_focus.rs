@@ -1,28 +1,25 @@
-use std::num::NonZeroU128;
-
 use accesskit::NodeId as AccessibilityId;
 use dioxus_core::{use_hook, AttributeValue};
-use dioxus_hooks::{use_context, use_context_provider};
+use dioxus_hooks::use_context;
 use dioxus_signals::{Readable, Signal, Writable};
-use freya_core::navigation_mode::NavigationMode;
+use freya_core::{accessibility::ACCESSIBILITY_ROOT_ID, navigation_mode::NavigationMode};
 use freya_elements::events::{keyboard::Code, KeyboardEvent};
 use freya_node_state::CustomAttributeValues;
-use uuid::Uuid;
 
-pub type FocusId = AccessibilityId;
+use crate::AccessibilityIdCounter;
 
 /// Manage the focus operations of given Node
 #[derive(Clone)]
 pub struct UseFocus {
     id: AccessibilityId,
-    focused_id: Signal<Option<AccessibilityId>>,
+    focused_id: Signal<AccessibilityId>,
     navigation_mode: Signal<NavigationMode>,
 }
 
 impl UseFocus {
     /// Focus this node
     pub fn focus(&mut self) {
-        *self.focused_id.write() = Some(self.id)
+        *self.focused_id.write() = self.id
     }
 
     /// Get the node focus ID
@@ -32,12 +29,12 @@ impl UseFocus {
 
     /// Create a node focus ID attribute
     pub fn attribute(&self) -> AttributeValue {
-        AttributeValue::any_value(CustomAttributeValues::FocusId(self.id))
+        AttributeValue::any_value(CustomAttributeValues::AccessibilityId(self.id))
     }
 
     /// Check if this node is currently focused
     pub fn is_focused(&self) -> bool {
-        Some(self.id) == *self.focused_id.read()
+        self.id == *self.focused_id.read()
     }
 
     /// Check if this node is currently selected
@@ -47,7 +44,7 @@ impl UseFocus {
 
     /// Unfocus the currently focused node.
     pub fn unfocus(&mut self) {
-        *self.focused_id.write() = None;
+        *self.focused_id.write() = ACCESSIBILITY_ROOT_ID;
     }
 
     /// Validate keydown event
@@ -58,11 +55,14 @@ impl UseFocus {
 
 /// Create a focus manager for a node.
 pub fn use_focus() -> UseFocus {
-    let focused_id = use_context::<Signal<Option<FocusId>>>();
+    let accessibility_id_counter = use_context::<AccessibilityIdCounter>();
+    let focused_id = use_context::<Signal<AccessibilityId>>();
     let navigation_mode = use_context::<Signal<NavigationMode>>();
 
     use_hook(move || {
-        let id = AccessibilityId(NonZeroU128::new(Uuid::new_v4().as_u128()).unwrap());
+        let mut counter = accessibility_id_counter.borrow_mut();
+        *counter += 1;
+        let id = AccessibilityId(*counter);
         UseFocus {
             id,
             focused_id,
@@ -70,13 +70,6 @@ pub fn use_focus() -> UseFocus {
         }
     })
 }
-
-/// Create a focus provider.
-pub fn use_init_focus() {
-    use_context_provider::<Signal<Option<FocusId>>>(|| Signal::new(None));
-    use_context_provider::<Signal<NavigationMode>>(|| Signal::new(NavigationMode::NotKeyboard));
-}
-
 #[cfg(test)]
 mod test {
     use crate::use_focus;

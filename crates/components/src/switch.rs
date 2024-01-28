@@ -83,7 +83,7 @@ pub fn Switch(props: SwitchProps) -> Element {
 
     let onmouseenter = move |_: MouseEvent| {
         *status.write() = SwitchStatus::Hovering;
-        platform.set_cursor(CursorIcon::Hand);
+        platform.set_cursor(CursorIcon::Pointer);
     };
 
     let onclick = {
