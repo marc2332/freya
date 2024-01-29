@@ -6,7 +6,7 @@
 use freya::prelude::*;
 
 fn main() {
-    launch_with_props(app, "Position", (500.0, 450.0));
+    launch_with_props(app, "Popup", (500.0, 450.0));
 }
 
 fn app() -> Element {
