@@ -22,7 +22,6 @@ pub struct DropdownItemProps<T: 'static + Clone> {
     /// Selected value.
     pub value: T,
     /// Handler for the `onclick` event.
-    #[props(optional)]
     pub onclick: Option<EventHandler<()>>,
 }
 
@@ -85,7 +84,7 @@ where
     let onmouseenter = {
         to_owned![platform];
         move |_| {
-            platform.set_cursor(CursorIcon::Hand);
+            platform.set_cursor(CursorIcon::Pointer);
             status.set(DropdownItemStatus::Hovering);
         }
     };
@@ -241,7 +240,7 @@ where
     let onmouseenter = {
         to_owned![status, platform];
         move |_| {
-            platform.set_cursor(CursorIcon::Hand);
+            platform.set_cursor(CursorIcon::Pointer);
             status.set(DropdownStatus::Hovering);
         }
     };

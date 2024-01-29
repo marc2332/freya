@@ -10,7 +10,7 @@ use rustc_hash::FxHashMap;
 
 pub use crate::events::{DomEvent, ElementsState, FreyaEvent};
 
-use crate::types::{EventEmitter, EventsQueue, NodesEvents};
+use crate::types::{EventEmitter, EventsQueue, PotentialEvents};
 
 /// Process the events and emit them to the VirtualDOM
 pub fn process_events(
@@ -80,7 +80,7 @@ pub fn measure_potential_event_listeners(
     events: &EventsQueue,
     viewports: &Viewports,
     fdom: &FreyaDOM,
-) -> NodesEvents {
+) -> PotentialEvents {
     let mut potential_events = FxHashMap::default();
 
     let layout = fdom.layout();
@@ -182,7 +182,7 @@ fn is_node_parent_of(rdom: &DioxusDOM, node: NodeId, parent_node: NodeId) -> boo
 
 /// Measure what DOM events could be emited
 fn measure_dom_events(
-    potential_events: NodesEvents,
+    potential_events: PotentialEvents,
     fdom: &FreyaDOM,
     scale_factor: f64,
 ) -> Vec<DomEvent> {
@@ -202,7 +202,7 @@ fn measure_dom_events(
             let listeners = rdom.get_listening_sorted(derivated_event_name);
 
             // Iterate over the event nodes
-            for (node_id, request) in event_nodes.iter().rev() {
+            for (node_id, event) in event_nodes.iter().rev() {
                 let Some(node) = rdom.get(*node_id) else {
                     continue;
                 };
@@ -211,16 +211,20 @@ fn measure_dom_events(
                 for listener in &listeners {
                     if listener.id() == *node_id {
                         let valid_node = if let Some(child_node) = child_node {
-                            is_node_parent_of(&rdom, child_node, *node_id)
+                            is_node_parent_of(rdom, child_node, *node_id)
                         } else {
                             true
                         };
 
                         if valid_node {
-                            let mut request = request.clone();
-                            request.set_name(derivated_event_name.to_string());
-                            found_nodes.push((node_id, request));
-                            continue 'event;
+                            let mut valid_event = event.clone();
+                            valid_event.set_name(derivated_event_name.to_string());
+                            found_nodes.push((node_id, valid_event));
+
+                            // Only stop looking for valid nodes when the event isn't of type keyboard
+                            if !event.is_keyboard_event() {
+                                continue 'event;
+                            }
                         }
                     }
                 }

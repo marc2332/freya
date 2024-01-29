@@ -6,7 +6,6 @@ use freya_hooks::{use_applied_theme, ArrowIconTheme, ArrowIconThemeWith};
 #[derive(Props, Clone, PartialEq)]
 pub struct ArrowIconProps {
     /// Theme override.
-    #[props(optional)]
     pub theme: Option<ArrowIconThemeWith>,
     #[props(into)]
     pub rotate: String,

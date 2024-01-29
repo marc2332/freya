@@ -1,3 +1,4 @@
+mod accessibility;
 mod cursor;
 mod custom_attributes;
 mod font_style;
@@ -8,6 +9,7 @@ mod style;
 mod transform;
 mod values;
 
+pub use accessibility::*;
 pub use cursor::*;
 pub use custom_attributes::*;
 pub use font_style::*;

@@ -62,8 +62,7 @@ impl State<CustomAttributeValues> for LayoutState {
             "position_bottom",
             "position_left",
         ]))
-        .with_tag()
-        .with_text();
+        .with_tag();
 
     fn update<'a>(
         &mut self,
@@ -82,8 +81,6 @@ impl State<CustomAttributeValues> for LayoutState {
             } else if let Some("paragraph") = node_view.tag() {
                 DirectionMode::Horizontal
             } else if let Some("text") = node_view.tag() {
-                DirectionMode::Horizontal
-            } else if node_view.text().is_some() {
                 DirectionMode::Horizontal
             } else {
                 DirectionMode::Vertical

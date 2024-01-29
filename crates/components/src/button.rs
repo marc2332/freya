@@ -9,12 +9,10 @@ use winit::window::CursorIcon;
 #[derive(Props, Clone, PartialEq)]
 pub struct ButtonProps {
     /// Theme override.
-    #[props(optional)]
     pub theme: Option<ButtonThemeWith>,
     /// Inner children for the Button.
     pub children: Element,
     /// Handler for the `onclick` event.
-    #[props(optional)]
     pub onclick: Option<EventHandler<Option<MouseEvent>>>,
 }
 
@@ -96,7 +94,7 @@ pub fn Button(props: ButtonProps) -> Element {
     let onmouseenter = {
         to_owned![status, platform];
         move |_| {
-            platform.set_cursor(CursorIcon::Hand);
+            platform.set_cursor(CursorIcon::Pointer);
             status.set(ButtonStatus::Hovering);
         }
     };

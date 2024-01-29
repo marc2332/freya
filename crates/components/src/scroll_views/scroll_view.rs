@@ -119,7 +119,7 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
                 // Only scroll when there is still area to scroll
                 if *scrolled_y.peek() != scroll_position_y {
                     e.stop_propagation();
-                    scrolled_y.with_mut(|y| *y = scroll_position_y);
+                    *scrolled_y.write() = scroll_position_y;
                 } else {
                     return;
                 }
@@ -141,7 +141,7 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
             // Only scroll when there is still area to scroll
             if *scrolled_x.peek() != scroll_position_x {
                 e.stop_propagation();
-                scrolled_x.with_mut(|x| *x = scroll_position_x);
+                *scrolled_x.write() = scroll_position_x;
             } else {
                 return;
             }
@@ -166,7 +166,7 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
                     size.area.height(),
                 );
 
-                scrolled_y.with_mut(|y| *y = scroll_position);
+                *scrolled_y.write() = scroll_position;
             } else if let Some((Axis::X, x)) = *clicking_scrollbar {
                 let coordinates = e.get_element_coordinates();
                 let cursor_x = coordinates.x - x - size.area.min_x() as f64;
@@ -177,7 +177,7 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
                     size.area.width(),
                 );
 
-                scrolled_x.with_mut(|x| *x = scroll_position);
+                *scrolled_x.write() = scroll_position;
             }
 
             if clicking_scrollbar.is_some() {

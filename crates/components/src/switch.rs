@@ -47,7 +47,7 @@ pub enum SwitchStatus {
 ///         Switch {
 ///             enabled: *enabled.read(),
 ///             ontoggled: move |_| {
-///                 enabled.with_mut(|v| *v = !*v);
+///                 enabled.toggle();
 ///             }
 ///         }
 ///     )
@@ -89,7 +89,7 @@ pub fn Switch(props: SwitchProps) -> Element {
     let onmouseenter = move |e: MouseEvent| {
         e.stop_propagation();
         *status.write() = SwitchStatus::Hovering;
-        platform.set_cursor(CursorIcon::Hand);
+        platform.set_cursor(CursorIcon::Pointer);
     };
 
     let onclick = {
