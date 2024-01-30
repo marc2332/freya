@@ -1,57 +1,56 @@
+use std::sync::Arc;
+
 use dioxus_core::{prelude::spawn, use_hook, AttributeValue};
-use dioxus_hooks::to_owned;
-use dioxus_signals::{use_signal, Readable, Signal, Writable};
+use dioxus_signals::{Readable, Signal, Writable};
 use freya_common::NodeReferenceLayout;
 use freya_node_state::{CustomAttributeValues, NodeReference};
-use tokio::sync::mpsc::unbounded_channel;
+use tokio::sync::watch::channel;
 
 /// Subscribe to a Node layout changes.
 pub fn use_node() -> (AttributeValue, NodeReferenceLayout) {
-    let layout = use_signal::<NodeReferenceLayout>(NodeReferenceLayout::default);
+  
 
-    let tx = use_hook(|| {
-        let (tx, mut rx) = unbounded_channel::<NodeReferenceLayout>();
+    let (tx, signal) = use_hook(|| {
+        let (tx, mut rx) = channel::<NodeReferenceLayout>(NodeReferenceLayout::default());
+        let mut signal = Signal::new(NodeReferenceLayout::default());
 
-        to_owned![layout];
         spawn(async move {
-            while let Some(new_layout) = rx.recv().await {
-                if *layout.peek() != new_layout {
-                    layout.set(new_layout);
+            while rx.changed().await.is_ok() {
+                if *signal.peek() != *rx.borrow() {
+                    signal.set(rx.borrow().clone());
                 }
             }
         });
 
-        tx
+        (Arc::new(tx), signal)
     });
 
     (
-        AttributeValue::any_value(CustomAttributeValues::Reference(NodeReference(tx.clone()))),
-        layout.read().clone(),
+        AttributeValue::any_value(CustomAttributeValues::Reference(NodeReference(tx))),
+        signal.read().clone(),
     )
 }
 
 /// Get a signal to read the latest layout from a Node.
 pub fn use_node_signal() -> (AttributeValue, Signal<NodeReferenceLayout>) {
-    let layout = use_signal::<NodeReferenceLayout>(NodeReferenceLayout::default);
+    let (tx, signal) = use_hook(|| {
+        let (tx, mut rx) = channel::<NodeReferenceLayout>(NodeReferenceLayout::default());
+        let mut signal = Signal::new(NodeReferenceLayout::default());
 
-    let tx = use_hook(|| {
-        let (tx, mut rx) = unbounded_channel::<NodeReferenceLayout>();
-
-        to_owned![layout];
         spawn(async move {
-            while let Some(new_layout) = rx.recv().await {
-                if *layout.peek() != new_layout {
-                    layout.set(new_layout);
+            while rx.changed().await.is_ok() {
+                if *signal.peek() != *rx.borrow() {
+                    signal.set(rx.borrow().clone());
                 }
             }
         });
 
-        tx
+        (Arc::new(tx), signal)
     });
 
     (
-        AttributeValue::any_value(CustomAttributeValues::Reference(NodeReference(tx.clone()))),
-        layout,
+        AttributeValue::any_value(CustomAttributeValues::Reference(NodeReference(tx))),
+        signal,
     )
 }
 
