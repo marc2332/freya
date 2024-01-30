@@ -170,7 +170,7 @@ fn app() -> Element {
 
 ### padding
 
-Specify the inner paddings of an element. You can do so by three different ways, just like in CSS.
+Specify the inner paddings of an element. You can do so by three different ways.
 
 ```rust, no_run
 fn app() -> Element {
@@ -209,7 +209,7 @@ fn app() -> Element {
 
 ### margin
 
-Specify the margin of an element. You can do so by three different ways, just like in CSS.
+Specify the margin of an element. You can do so by three different ways.
 
 ```rust, no_run
 fn app() -> Element {

@@ -8,6 +8,7 @@ pub enum NavigationMode {
     NotKeyboard,
 }
 
+/// Manages the navigation mode.
 #[derive(Clone)]
 pub struct NavigatorState {
     _setter: Arc<watch::Sender<NavigationMode>>,
