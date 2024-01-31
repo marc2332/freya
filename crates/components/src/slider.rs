@@ -116,7 +116,7 @@ pub fn Slider(
         move |e: MouseEvent| {
             e.stop_propagation();
             *status.write() = SliderStatus::Hovering;
-            platform.set_cursor(CursorIcon::Hand);
+            platform.set_cursor(CursorIcon::Pointer);
         }
     };
 

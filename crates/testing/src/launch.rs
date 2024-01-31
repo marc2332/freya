@@ -6,7 +6,7 @@ use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_dom::prelude::{FreyaDOM, SafeDOM};
 use freya_engine::prelude::*;
-use freya_hooks::{use_init_accessibility, use_init_focus};
+use freya_hooks::use_init_accessibility;
 use std::sync::{Arc, Mutex};
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::unbounded_channel;
@@ -44,7 +44,7 @@ pub fn launch_test_with_config(root: AppComponent, config: TestingConfig) -> Tes
         config,
         platform_event_emitter,
         platform_event_receiver,
-        accessibility_state: SharedAccessibilityState::default(),
+        accessibility_manager: AccessibilityManager::new(ACCESSIBILITY_ROOT_ID).wrap(),
         ticker_sender: broadcast::channel(5).0,
         navigation_state: NavigatorState::new(NavigationMode::NotKeyboard),
     };
@@ -62,7 +62,6 @@ fn with_accessibility(app: AppComponent) -> VirtualDom {
 
     #[allow(non_snake_case)]
     fn Root(props: RootProps) -> Element {
-        use_init_focus();
         use_init_accessibility();
 
         #[allow(non_snake_case)]
