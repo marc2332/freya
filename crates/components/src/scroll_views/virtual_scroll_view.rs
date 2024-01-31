@@ -297,7 +297,11 @@ pub fn VirtualScrollView<F: Clone + Fn(usize) -> Element>(
         items_length as f32,
     );
 
-    let children = render_range.map(|i| (props.builder)(i));
+    let children = use_memo_with_dependencies(&render_range, move |render_range| {
+        render_range
+            .map(|i| (props.builder)(i))
+            .collect::<Vec<Element>>()
+    });
 
     let is_scrolling_x = clicking_scrollbar
         .read()
@@ -333,7 +337,7 @@ pub fn VirtualScrollView<F: Clone + Fn(usize) -> Element>(
                     direction: "{user_direction}",
                     reference: node_ref,
                     onwheel: onwheel,
-                    {children}
+                    {children.read().iter()}
                 }
                 ScrollBar {
                     width: "100%",
