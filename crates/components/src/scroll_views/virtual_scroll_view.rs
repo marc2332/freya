@@ -4,7 +4,9 @@ use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{keyboard::Key, KeyboardEvent, MouseEvent, WheelEvent};
 use freya_hooks::{use_applied_theme, use_focus, use_node, ScrollViewThemeWith};
+use std::cell::RefCell;
 use std::ops::Range;
+use std::rc::Rc;
 
 use crate::{
     get_container_size, get_corrected_scroll_position, get_scroll_position_from_cursor,
@@ -297,11 +299,7 @@ pub fn VirtualScrollView<F: Clone + Fn(usize) -> Element>(
         items_length as f32,
     );
 
-    let children = use_memo_with_dependencies(&render_range, move |render_range| {
-        render_range
-            .map(|i| (props.builder)(i))
-            .collect::<Vec<Element>>()
-    });
+    let children = use_range_memo(render_range, props.builder);
 
     let is_scrolling_x = clicking_scrollbar
         .read()
@@ -337,7 +335,7 @@ pub fn VirtualScrollView<F: Clone + Fn(usize) -> Element>(
                     direction: "{user_direction}",
                     reference: node_ref,
                     onwheel: onwheel,
-                    {children.read().iter()}
+                    {children.borrow().iter()}
                 }
                 ScrollBar {
                     width: "100%",
@@ -366,4 +364,76 @@ pub fn VirtualScrollView<F: Clone + Fn(usize) -> Element>(
             }
         }
     )
+}
+
+fn use_range_memo<F: Fn(usize) -> T, T: 'static>(
+    range: Range<usize>,
+    builder: F,
+) -> Rc<RefCell<Vec<T>>> {
+    let old_range = use_hook({
+        to_owned![range];
+        move || Rc::new(RefCell::new(range))
+    });
+    let data = use_hook({
+        || {
+            Rc::new(RefCell::new(
+                old_range
+                    .borrow()
+                    .clone()
+                    .map(|i| (builder)(i))
+                    .collect::<Vec<T>>(),
+            ))
+        }
+    });
+    if *old_range.borrow() != range {
+        let before = old_range.borrow();
+        let after = range;
+
+        println!("{before:?} | {after:?}");
+
+        let min = if data.borrow().is_empty() { usize::MAX } else { after.end - after.start };
+
+        let indexes_added_start = before.start.checked_sub(after.start).unwrap_or_default().min(min);
+        let indexes_added_end = after.end.checked_sub(before.end).unwrap_or_default().min(min);
+
+        let indexes_removed_start = after.start.checked_sub(before.start).unwrap_or_default().min(min);
+        let indexes_removed_end = before.end.checked_sub(after.end).unwrap_or_default().min(min);
+
+        let remove_end = (data.borrow().len().checked_sub(indexes_removed_end)).unwrap_or_default()
+            ..data.borrow().len();
+        let remove_start = 0..indexes_removed_start;
+        let add_end = before.end..before.end + indexes_added_end;
+        let add_start = before.start - indexes_added_start..before.start;
+
+        println!("{remove_end:?} {remove_start:?} {add_end:?} {add_start:?}");
+
+        data.borrow_mut().drain(remove_end);
+        data.borrow_mut().drain(remove_start);
+        data.borrow_mut().extend(
+            add_end
+                .into_iter()
+                .map(|i| (builder)(i))
+                .collect::<Vec<T>>(),
+        );
+        for (i, n) in add_start.into_iter().enumerate() {
+            data.borrow_mut().insert(i, (builder)(n));
+        }
+
+        let removed = indexes_removed_end + indexes_removed_start;
+        if removed > 0 {
+            println!("Removed {removed}, len: {}", data.borrow().len());
+        }
+        let added = indexes_added_end + indexes_added_start;
+        if added > 0 {
+            println!("Added {added}, len: {}", data.borrow().len());
+        }
+
+        
+
+        drop(before);
+
+        *old_range.borrow_mut() = after;
+    }
+
+    data
 }
