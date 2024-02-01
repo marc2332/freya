@@ -59,7 +59,7 @@ fn app(cx: Scope) -> Element {
 
 Thanks to my sponsors for supporting this project! 😄
 
-<!-- sponsors --><a href="https://github.com/piny4man"><img src="https://github.com/piny4man.png" width="60px" alt="Alberto Mendez" /></a><a href="https://github.com/stephenandary"><img src="https://github.com/stephenandary.png" width="60px" alt="Stephen Andary" /></a><!-- sponsors -->
+<!-- sponsors --><a href="https://github.com/piny4man"><img src="https://github.com/piny4man.png" width="60px" alt="Alberto Mendez" /></a><a href="https://github.com/andar1an"><img src="https://github.com/andar1an.png" width="60px" alt="Andar1an" /></a><!-- sponsors -->
 
 ### Want to try it? 🤔
 
