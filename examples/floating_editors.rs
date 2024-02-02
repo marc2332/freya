@@ -320,7 +320,7 @@ fn Editor() -> Element {
                                     }
                                 };
 
-                                let onclick = {
+                                let onglobalclick = {
                                     to_owned![editable];
                                     move |_: MouseEvent| {
                                         editable.process_event(&EditableEvent::Click);
@@ -361,7 +361,7 @@ fn Editor() -> Element {
                                             cursor_id: "{cursor_id}",
                                             onmousedown,
                                             onmouseover,
-                                            onclick,
+                                            onglobalclick,
                                             highlights: highlights,
                                             text {
                                                 color: "rgb(240, 240, 240)",
