@@ -16,8 +16,8 @@ use crate::{
 type BuilderFunction<T> = dyn Fn((usize, usize, &Option<T>)) -> Element;
 
 /// [`VirtualScrollView`] component properties.
-#[derive(Props, Clone, PartialEq)]
-pub struct VirtualScrollViewProps<T: 'static + Clone + PartialEq> {
+#[derive(Props, Clone)]
+pub struct VirtualScrollViewProps<T: 'static + Clone> {
     /// Theme override.
     pub theme: Option<ScrollViewThemeWith>,
     /// Quantity of items in the VirtualScrollView.
@@ -37,6 +37,18 @@ pub struct VirtualScrollViewProps<T: 'static + Clone + PartialEq> {
     /// Enable scrolling with arrow keys.
     #[props(default = true, into)]
     pub scroll_with_arrows: bool,
+}
+
+impl<T: Clone> PartialEq for VirtualScrollViewProps<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.theme == other.theme
+            && self.length == other.length
+            && self.item_size == other.item_size
+            && Rc::ptr_eq(&self.builder, &other.builder)
+            && self.direction == other.direction
+            && self.show_scrollbar == other.show_scrollbar
+            && self.scroll_with_arrows == other.scroll_with_arrows
+    }
 }
 
 fn get_render_range(
@@ -90,7 +102,7 @@ fn get_render_range(
 /// }
 /// ```
 #[allow(non_snake_case)]
-pub fn VirtualScrollView<T: Clone + PartialEq>(props: VirtualScrollViewProps<T>) -> Element {
+pub fn VirtualScrollView<T: Clone>(props: VirtualScrollViewProps<T>) -> Element {
     let mut clicking_scrollbar = use_signal::<Option<(Axis, f64)>>(|| None);
     let mut clicking_shift = use_signal(|| false);
     let mut clicking_alt = use_signal(|| false);
