@@ -16,8 +16,8 @@ use crate::{
 type BuilderFunction<T> = dyn Fn((usize, usize, &Option<T>)) -> Element;
 
 /// [`VirtualScrollView`] component properties.
-#[derive(Props, Clone)]
-pub struct VirtualScrollViewProps<T: 'static + Clone> {
+#[derive(Props, Clone, PartialEq)]
+pub struct VirtualScrollViewProps<T: 'static + Clone + PartialEq> {
     /// Theme override.
     pub theme: Option<ScrollViewThemeWith>,
     /// Quantity of items in the VirtualScrollView.
@@ -90,8 +90,8 @@ fn get_render_range(
 /// }
 /// ```
 #[allow(non_snake_case)]
-pub fn VirtualScrollView<T: Clone>(props: VirtualScrollViewProps<T>) -> Element {
-    let clicking_scrollbar = use_signal::<Option<(Axis, f64)>>(|| None);
+pub fn VirtualScrollView<T: Clone + PartialEq>(props: VirtualScrollViewProps<T>) -> Element {
+    let mut clicking_scrollbar = use_signal::<Option<(Axis, f64)>>(|| None);
     let mut clicking_shift = use_signal(|| false);
     let mut clicking_alt = use_signal(|| false);
     let mut scrolled_y = use_signal(|| 0);

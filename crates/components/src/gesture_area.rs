@@ -173,7 +173,6 @@ pub fn GestureArea(props: GestureAreaProps) -> Element {
 mod test {
     use std::time::Duration;
 
-    use dioxus::signals::use_signal;
     use freya::prelude::*;
     use freya_elements::events::touch::TouchPhase;
     use freya_testing::{launch_test, FreyaEvent};

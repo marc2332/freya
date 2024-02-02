@@ -156,7 +156,7 @@ pub fn use_editable(initializer: impl Fn() -> EditableConfig, mode: EditableMode
     use_hook(|| {
         let text_id = Uuid::new_v4();
         let config = initializer();
-        let editor = Signal::new(RopeEditor::new(config.content, config.cursor, mode));
+        let mut editor = Signal::new(RopeEditor::new(config.content, config.cursor, mode));
         let selecting_text_with_mouse = Signal::new(None);
         let (cursor_sender, mut cursor_receiver) = unbounded_channel::<CursorLayoutResponse>();
         let cursor_reference = CursorReference {

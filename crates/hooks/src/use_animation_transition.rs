@@ -1,5 +1,6 @@
 use dioxus_core::prelude::spawn;
-use dioxus_signals::{use_memo_with_dependencies, Dependency, Readable, Signal, Writable};
+use dioxus_hooks::{use_memo_with_dependencies, Dependency};
+use dioxus_signals::{Readable, Signal, Writable};
 use freya_engine::prelude::Color;
 use freya_node_state::Parse;
 use tokio::time::Instant;
@@ -165,7 +166,7 @@ impl TransitionsManager {
         let platform = self.platform.clone();
         let mut ticker = platform.new_ticker();
         let transitions = self.transitions;
-        let transitions_storage = self.transitions_storage;
+        let mut transitions_storage = self.transitions_storage;
         let mut current_animation_id = self.current_animation_id;
 
         // Set as current this new animation
