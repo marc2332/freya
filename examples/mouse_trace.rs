@@ -46,7 +46,7 @@ fn Box() -> Element {
 }
 
 fn app() -> Element {
-    let positions = use_signal::<Vec<CursorPoint>>(Vec::new);
+    let mut positions = use_signal::<Vec<CursorPoint>>(Vec::new);
 
     let onmouseover = move |e: MouseEvent| {
         let coordinates = e.get_screen_coordinates();
