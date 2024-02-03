@@ -6,7 +6,7 @@ use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_dom::prelude::{FreyaDOM, SafeDOM};
 use freya_engine::prelude::*;
-use freya_hooks::{use_init_accessibility, use_init_focus};
+use freya_hooks::use_init_accessibility;
 use std::sync::{Arc, Mutex};
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::unbounded_channel;
@@ -29,16 +29,13 @@ pub fn launch_test_with_config(root: Component<()>, config: TestingConfig) -> Te
     let (event_emitter, event_receiver) = unbounded_channel::<DomEvent>();
     let (platform_event_emitter, platform_event_receiver) = unbounded_channel::<EventMessage>();
     let layers = Arc::new(Mutex::new(Layers::default()));
-    let freya_events = Vec::new();
-    let elements_state = ElementsState::default();
     let mut font_collection = FontCollection::new();
     font_collection.set_dynamic_font_manager(FontMgr::default());
-    let accessibility_state = SharedAccessibilityState::default();
 
     let mut handler = TestingHandler {
         vdom,
-        events_queue: freya_events,
-        elements_state,
+        events_queue: EventsQueue::new(),
+        elements_state: ElementsState::default(),
         font_collection,
         event_emitter,
         event_receiver,
@@ -47,8 +44,9 @@ pub fn launch_test_with_config(root: Component<()>, config: TestingConfig) -> Te
         config,
         platform_event_emitter,
         platform_event_receiver,
-        accessibility_state,
+        accessibility_manager: AccessibilityManager::new(ACCESSIBILITY_ROOT_ID).wrap(),
         ticker_sender: broadcast::channel(5).0,
+        navigation_state: NavigatorState::new(NavigationMode::NotKeyboard),
     };
 
     handler.init_dom();
@@ -63,7 +61,6 @@ fn with_accessibility(app: Component) -> VirtualDom {
 
     #[allow(non_snake_case)]
     fn Root(cx: Scope<RootProps>) -> Element {
-        use_init_focus(cx);
         use_init_accessibility(cx);
 
         #[allow(non_snake_case)]

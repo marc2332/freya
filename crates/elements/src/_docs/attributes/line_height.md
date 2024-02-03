@@ -2,9 +2,10 @@
 
 Specify the height of the lines of the text.
 
-Example:
+### Example
 
 ```rust, no_run
+# use freya::prelude::*;
 fn app(cx: Scope) -> Element {
     render!(
         label {

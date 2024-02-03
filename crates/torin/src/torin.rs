@@ -179,6 +179,13 @@ impl<Key: NodeKey> Torin<Key> {
         }
     }
 
+    /// Safely mark as dirty a Node
+    pub fn safe_invalidate(&mut self, node_id: Key, dom_adapter: &mut impl DOMAdapter<Key>) {
+        if dom_adapter.is_node_valid(&node_id) {
+            self.dirty.insert(node_id);
+        }
+    }
+
     /// Mark as dirty a Node
     pub fn invalidate(&mut self, node_id: Key) {
         self.dirty.insert(node_id);
@@ -214,6 +221,16 @@ impl<Key: NodeKey> Torin<Key> {
                 } else {
                     let parent_children = dom_adapter.children_of(&parent_id);
                     let multiple_children = parent_children.len() > 1;
+
+                    let mut found_node = false;
+                    for child_id in dom_adapter.children_of(&parent_id) {
+                        if found_node {
+                            self.safe_invalidate(child_id, dom_adapter);
+                        }
+                        if child_id == node_id {
+                            found_node = true;
+                        }
+                    }
 
                     // Try using the node's parent as root candidate if it has multiple children
                     if multiple_children {

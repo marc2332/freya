@@ -1,6 +1,4 @@
-### font_weight
-
-You can choose a weight for a text using the `font_weight` attribute.
+You can choose a weight for text using the `font_weight` attribute.
 
 Accepted values:
 
@@ -27,14 +25,15 @@ Accepted values:
 - `900`
 - `950`
 
-Example:
+### Example
 
 ```rust, no_run
+# use freya::prelude::*;
 fn app(cx: Scope) -> Element {
     render!(
         label {
             font_weight: "bold",
-            "Hello, World!"
+            "Hello, bold World!"
         }
     )
 }

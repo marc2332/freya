@@ -1,4 +1,4 @@
-use std::{borrow::Cow, fmt::Display, ops::Range};
+use std::{borrow::Cow, cmp::Ordering, fmt::Display, ops::Range};
 
 use freya_elements::events::keyboard::{Code, Key, Modifiers};
 
@@ -169,6 +169,9 @@ pub trait TextEditor: Sized + Clone + Display {
         self.cursor_mut().move_to(row, col)
     }
 
+    // Check if has any highlight at all
+    fn has_any_highlight(&self) -> bool;
+
     // Return the highlighted text from a given editor Id
     fn highlights(&self, editor_id: usize) -> Option<(usize, usize)>;
 
@@ -182,10 +185,20 @@ pub trait TextEditor: Sized + Clone + Display {
 
     // Process a Keyboard event
     fn process_key(&mut self, key: &Key, code: &Code, modifiers: &Modifiers) -> TextEvent {
-        let mut event = TextEvent::SELECTION_CHANGED;
+        let mut event = if self.has_any_highlight() {
+            TextEvent::SELECTION_CHANGED
+        } else {
+            TextEvent::empty()
+        };
 
         match key {
             Key::Shift => {
+                event.remove(TextEvent::SELECTION_CHANGED);
+            }
+            Key::Control => {
+                event.remove(TextEvent::SELECTION_CHANGED);
+            }
+            Key::Alt => {
                 event.remove(TextEvent::SELECTION_CHANGED);
             }
             Key::Escape => {
@@ -197,22 +210,33 @@ pub trait TextEditor: Sized + Clone + Display {
                     self.move_highlight_to_cursor();
                 }
 
-                let total_lines = self.len_lines() - 1;
+                let last_line = self.len_lines() - 1;
+
                 // Go one line down
-                if self.cursor_row() < total_lines {
-                    let next_line = self.line(self.cursor_row() + 1).unwrap();
+                match self.cursor_row().cmp(&last_line) {
+                    Ordering::Equal => {
+                        // Move the cursor to the end of the line
+                        let current_line = self.line(self.cursor_row()).unwrap();
+                        let last_char = current_line.len_chars();
+                        self.cursor_mut().set_col(last_char);
+                        event.insert(TextEvent::CURSOR_CHANGED);
+                    }
+                    Ordering::Less => {
+                        let next_line = self.line(self.cursor_row() + 1).unwrap();
 
-                    // Try to use the current cursor column, otherwise use the new line length
-                    let cursor_col = if self.cursor_col() <= next_line.len_chars() {
-                        self.cursor_col()
-                    } else {
-                        next_line.len_chars().max(1) - 1
-                    };
+                        // Try to use the current cursor column, otherwise use the new line length
+                        let cursor_col = if self.cursor_col() <= next_line.len_chars() {
+                            self.cursor_col()
+                        } else {
+                            next_line.len_chars().max(1) - 1
+                        };
 
-                    self.cursor_mut().set_col(cursor_col);
-                    self.cursor_down();
+                        self.cursor_mut().set_col(cursor_col);
+                        self.cursor_down();
 
-                    event.insert(TextEvent::CURSOR_CHANGED);
+                        event.insert(TextEvent::CURSOR_CHANGED);
+                    }
+                    _ => {}
                 }
 
                 if modifiers.contains(Modifiers::SHIFT) {
@@ -258,11 +282,10 @@ pub trait TextEditor: Sized + Clone + Display {
                     self.move_highlight_to_cursor();
                 }
 
-                let total_lines = self.len_lines() - 1;
                 let current_line = self.line(self.cursor_row()).unwrap();
 
                 // Go one line down if there isn't more characters on the right
-                if self.cursor_row() < total_lines
+                if self.cursor_row() < self.len_lines() - 1
                     && self.cursor_col() == current_line.len_chars().max(1) - 1
                 {
                     self.cursor_down();
@@ -300,6 +323,10 @@ pub trait TextEditor: Sized + Clone + Display {
                     self.cursor_up();
                     self.cursor_mut().set_col(cursor_col);
 
+                    event.insert(TextEvent::CURSOR_CHANGED);
+                } else if self.cursor_col() > 0 {
+                    // Move the cursor to the begining of the line
+                    self.cursor_mut().set_col(0);
                     event.insert(TextEvent::CURSOR_CHANGED);
                 }
 
@@ -360,8 +387,9 @@ pub trait TextEditor: Sized + Clone + Display {
                     }
                     _ => {
                         if let Ok(ch) = character.parse::<char>() {
-                            if !ch.is_ascii_control() {
-                                // Adds a new character
+                            // https://github.com/marc2332/freya/issues/461
+                            if !ch.is_ascii_control() && ch.len_utf8() <= 2 {
+                                // Inserts a character
                                 let char_idx =
                                     self.line_to_char(self.cursor_row()) + self.cursor_col();
                                 self.insert(character, char_idx);
@@ -369,6 +397,13 @@ pub trait TextEditor: Sized + Clone + Display {
 
                                 event.insert(TextEvent::TEXT_CHANGED);
                             }
+                        } else if character.is_ascii() {
+                            // Inserts a text
+                            let char_idx = self.line_to_char(self.cursor_row()) + self.cursor_col();
+                            self.insert(character, char_idx);
+                            self.set_cursor_pos(char_idx + character.len());
+
+                            event.insert(TextEvent::TEXT_CHANGED);
                         }
                     }
                 }

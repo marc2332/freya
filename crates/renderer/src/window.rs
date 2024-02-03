@@ -3,19 +3,17 @@ use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_dom::prelude::FreyaDOM;
 use freya_engine::prelude::*;
-use glutin::prelude::{PossiblyCurrentContextGlSurfaceAccessor, PossiblyCurrentGlContext};
+use glutin::prelude::PossiblyCurrentGlContext;
 use std::ffi::CString;
 use std::num::NonZeroU32;
 use torin::geometry::{Area, Size2D};
 
 use gl::{types::*, *};
 use glutin::context::GlProfile;
+use glutin::context::NotCurrentGlContext;
 use glutin::{
     config::{ConfigTemplateBuilder, GlConfig},
-    context::{
-        ContextApi, ContextAttributesBuilder, NotCurrentGlContextSurfaceAccessor,
-        PossiblyCurrentContext,
-    },
+    context::{ContextApi, ContextAttributesBuilder, PossiblyCurrentContext},
     display::{GetGlDisplay, GlDisplay},
     prelude::GlSurface,
     surface::{Surface as GlutinSurface, SurfaceAttributesBuilder, WindowSurface},
@@ -56,11 +54,8 @@ impl<T: Clone> Drop for WindowEnv<T> {
 }
 
 impl<T: Clone> WindowEnv<T> {
-    /// Create a Window environment from a set of configuration
-    pub fn from_config(
-        mut window_config: WindowConfig<T>,
-        event_loop: &EventLoop<EventMessage>,
-    ) -> Self {
+    /// Setup the Window and related features
+    pub fn new(mut window_config: WindowConfig<T>, event_loop: &EventLoop<EventMessage>) -> Self {
         let mut window_builder = WindowBuilder::new()
             .with_visible(false)
             .with_title(window_config.title)
@@ -107,6 +102,7 @@ impl<T: Clone> WindowEnv<T> {
             .unwrap();
 
         let mut window = window.expect("Could not create window with OpenGL context");
+        window.set_ime_allowed(true);
         let raw_window_handle = window.raw_window_handle();
 
         let context_attributes = ContextAttributesBuilder::new()
@@ -205,6 +201,21 @@ impl<T: Clone> WindowEnv<T> {
         }
     }
 
+    /// Get a reference to the Canvas.
+    pub fn canvas(&mut self) -> &Canvas {
+        self.surface.canvas()
+    }
+
+    /// Get a mutable reference to the Window.
+    pub fn window_mut(&mut self) -> &mut Window {
+        &mut self.window
+    }
+
+    /// Get a reference to the Window.
+    pub fn window(&self) -> &Window {
+        &self.window
+    }
+
     /// Measure the layout
     pub fn process_layout(
         &mut self,
@@ -222,10 +233,6 @@ impl<T: Clone> WindowEnv<T> {
             font_collection,
             scale_factor,
         )
-    }
-
-    pub fn canvas(&mut self) -> &Canvas {
-        self.surface.canvas()
     }
 
     /// Start rendering the RealDOM to Window
@@ -282,10 +289,6 @@ impl<T: Clone> WindowEnv<T> {
         self.gl_surface.swap_buffers(&self.gl_context).unwrap();
     }
 
-    pub fn window(&mut self) -> &mut Window {
-        &mut self.window
-    }
-
     /// Resize the Window
     pub fn resize(&mut self, size: PhysicalSize<u32>) {
         self.surface = create_surface(
@@ -311,7 +314,7 @@ impl<T: Clone> WindowEnv<T> {
     pub fn run_on_setup(&mut self) {
         let on_setup = self.window_config.on_setup.clone();
         if let Some(on_setup) = on_setup {
-            (on_setup)(self.window())
+            (on_setup)(self.window_mut())
         }
     }
 
@@ -319,7 +322,7 @@ impl<T: Clone> WindowEnv<T> {
     pub fn run_on_exit(&mut self) {
         let on_exit = self.window_config.on_exit.clone();
         if let Some(on_exit) = on_exit {
-            (on_exit)(self.window())
+            (on_exit)(self.window_mut())
         }
     }
 }

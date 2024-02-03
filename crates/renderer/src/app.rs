@@ -20,7 +20,7 @@ use uuid::Uuid;
 use winit::event::WindowEvent;
 use winit::{dpi::PhysicalSize, event_loop::EventLoopProxy};
 
-use crate::accessibility::NativeAccessibility;
+use crate::accessibility::AccessKitManager;
 use crate::{FontsConfig, HoveredNode, WindowEnv};
 
 fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
@@ -61,13 +61,15 @@ pub struct App<State: 'static + Clone> {
     focus_sender: FocusSender,
     focus_receiver: FocusReceiver,
 
-    accessibility: NativeAccessibility,
+    accessibility: AccessKitManager,
 
     font_collection: FontCollection,
 
     ticker_sender: broadcast::Sender<()>,
 
     plugins: PluginsManager,
+
+    navigator_state: NavigatorState,
 }
 
 impl<State: 'static + Clone> App<State> {
@@ -80,9 +82,9 @@ impl<State: 'static + Clone> App<State> {
         fonts_config: FontsConfig,
         mut plugins: PluginsManager,
     ) -> Self {
-        let accessibility = NativeAccessibility::new(&window_env.window, proxy.clone());
+        let accessibility = AccessKitManager::new(&window_env.window, proxy.clone());
 
-        window_env.window().set_visible(true);
+        window_env.window_mut().set_visible(true);
 
         let mut font_collection = FontCollection::new();
         let def_mgr = FontMgr::default();
@@ -99,14 +101,16 @@ impl<State: 'static + Clone> App<State> {
         font_collection.set_dynamic_font_manager(mgr);
 
         let (event_emitter, event_receiver) = mpsc::unbounded_channel::<DomEvent>();
-        let (focus_sender, focus_receiver) = watch::channel(None);
+        let (focus_sender, focus_receiver) = watch::channel(ACCESSIBILITY_ROOT_ID);
 
-        plugins.send(PluginEvent::WindowCreated(window_env.window()));
+        plugins.send(PluginEvent::WindowCreated(window_env.window_mut()));
+
+        let navigator_state = NavigatorState::new(NavigationMode::NotKeyboard);
 
         Self {
             sdom,
             vdom,
-            events: Vec::new(),
+            events: EventsQueue::new(),
             vdom_waker: winit_waker(proxy),
             proxy: proxy.clone(),
             mutations_notifier,
@@ -122,6 +126,7 @@ impl<State: 'static + Clone> App<State> {
             font_collection,
             ticker_sender: broadcast::channel(5).0,
             plugins,
+            navigator_state,
         }
     }
 
@@ -137,6 +142,9 @@ impl<State: 'static + Clone> App<State> {
         self.vdom
             .base_scope()
             .provide_context(Arc::new(self.ticker_sender.subscribe()));
+        self.vdom
+            .base_scope()
+            .provide_context(self.navigator_state.clone());
     }
 
     /// Make the first build of the VirtualDOM.
@@ -275,13 +283,14 @@ impl<State: 'static + Clone> App<State> {
             layers,
             &layout,
             rdom,
-            &mut *self.accessibility.accessibility_state().lock().unwrap(),
+            &mut self.accessibility.accessibility_manager().lock().unwrap(),
         );
     }
 
-    /// Push an event to the events queue
-    pub fn push_event(&mut self, event: FreyaEvent) {
+    /// Send an event
+    pub fn send_event(&mut self, event: FreyaEvent) {
         self.events.push(event);
+        self.process_events();
     }
 
     /// Replace a VirtualDOM Template
@@ -335,25 +344,36 @@ impl<State: 'static + Clone> App<State> {
         );
     }
 
-    pub fn window_env(&mut self) -> &mut WindowEnv<State> {
+    pub fn window_env(&self) -> &WindowEnv<State> {
+        &self.window_env
+    }
+
+    pub fn window_env_mut(&mut self) -> &mut WindowEnv<State> {
         &mut self.window_env
     }
 
-    pub fn accessibility(&mut self) -> &mut NativeAccessibility {
-        &mut self.accessibility
+    pub fn accessibility(&self) -> &AccessKitManager {
+        &self.accessibility
     }
 
-    pub fn on_window_event(&mut self, event: &WindowEvent) -> bool {
+    pub fn process_accessibility_event(&mut self, event: &WindowEvent) {
         self.accessibility
-            .on_accessibility_window_event(&self.window_env.window, event)
+            .process_accessibility_event(&self.window_env.window, event)
     }
 
-    pub fn focus_next_node(&mut self, direction: AccessibilityFocusDirection) {
-        self.accessibility
-            .focus_next_node(direction, &self.focus_sender)
+    pub fn focus_next_node(&self, direction: AccessibilityFocusDirection) {
+        self.accessibility.focus_next_node(
+            direction,
+            &self.focus_sender,
+            self.window_env().window(),
+        )
     }
 
     pub fn tick(&self) {
         self.ticker_sender.send(()).unwrap();
+    }
+
+    pub fn set_navigation_mode(&mut self, mode: NavigationMode) {
+        self.navigator_state.set(mode);
     }
 }

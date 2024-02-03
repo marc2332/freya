@@ -1,14 +1,16 @@
-The `keydown` event will fire when the user starts pressing any key.
+The `keydown` event fires when the user starts pressing any key.
 
-Event Data: [KeyboardData][crate::events::KeyboardData]
+Event Data: [`KeyboardData`](crate::events::KeyboardData)
 
-### Example:
+### Example
 
 ```rust, no_run
+# use freya::prelude::*;
 fn app(cx: Scope) -> Element {
     render!(
         rect {
-            keydown: |e| println!("Event: {e:?}")
+            onkeydown: |e| println!("Event: {e:?}")
         }
     )
 }
+```

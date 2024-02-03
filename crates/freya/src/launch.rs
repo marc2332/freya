@@ -1,5 +1,5 @@
 use dioxus_core::Component;
-use freya_renderer::run_app;
+use freya_renderer::DesktopRenderer;
 use freya_renderer::{LaunchConfig, WindowConfig};
 
 /// Launch a new window with the default config.
@@ -223,7 +223,7 @@ pub fn launch_cfg<T: 'static + Clone + Send>(app: Component, config: LaunchConfi
             (vdom, None, None)
         }
     };
-    run_app(vdom, sdom, config, mutations_notifier, hovered_node);
+    DesktopRenderer::launch(vdom, sdom, config, mutations_notifier, hovered_node);
 }
 
 #[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
@@ -233,7 +233,7 @@ fn with_accessibility(app: Component) -> VirtualDom {
     use dioxus_core::fc_to_builder;
     use dioxus_core::{Element, Scope};
     use dioxus_core_macro::render;
-    use freya_hooks::{use_init_accessibility, use_init_focus};
+    use freya_hooks::use_init_accessibility;
 
     struct RootProps {
         app: Component,
@@ -241,7 +241,6 @@ fn with_accessibility(app: Component) -> VirtualDom {
 
     #[allow(non_snake_case)]
     fn Root(cx: Scope<RootProps>) -> Element {
-        use_init_focus(cx);
         use_init_accessibility(cx);
 
         #[allow(non_snake_case)]

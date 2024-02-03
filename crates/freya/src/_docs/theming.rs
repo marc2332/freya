@@ -1,8 +1,8 @@
 //! # Theming
 //!
-//! Freya has built-in support for Theming.
-//!
 //! <div class="warning">⚠️ As of 2023-12-19, extending the base theme is not supported.</div>
+//!
+//! Freya has built-in support for Theming.
 //!
 //! ### Accessing the current theme
 //!
@@ -146,8 +146,6 @@
 //!     }
 //! }
 //! ```
-//!
-//! <div class="warning">⚠️ The comma after the last field in the `theme_with!` macro is required.</div>
 //!
 //! As you can see, it removes the need for the "With" suffix, because that is already in the macro name.
 //! More importantly, though, it wraps each field in a `Some`, and adds the spread.
