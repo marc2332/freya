@@ -58,7 +58,7 @@ fn app(cx: Scope) -> Element {
         clicking_drag.set(None);
     };
 
-    let create_node = |_: MouseEvent| {
+    let create_node = |_| {
         nodes.with_mut(|nodes| {
             nodes.push((0.0f64, 0.0f64));
         });

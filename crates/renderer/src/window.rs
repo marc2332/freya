@@ -3,19 +3,17 @@ use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_dom::prelude::FreyaDOM;
 use freya_engine::prelude::*;
-use glutin::prelude::{PossiblyCurrentContextGlSurfaceAccessor, PossiblyCurrentGlContext};
+use glutin::prelude::PossiblyCurrentGlContext;
 use std::ffi::CString;
 use std::num::NonZeroU32;
 use torin::geometry::{Area, Size2D};
 
 use gl::{types::*, *};
 use glutin::context::GlProfile;
+use glutin::context::NotCurrentGlContext;
 use glutin::{
     config::{ConfigTemplateBuilder, GlConfig},
-    context::{
-        ContextApi, ContextAttributesBuilder, NotCurrentGlContextSurfaceAccessor,
-        PossiblyCurrentContext,
-    },
+    context::{ContextApi, ContextAttributesBuilder, PossiblyCurrentContext},
     display::{GetGlDisplay, GlDisplay},
     prelude::GlSurface,
     surface::{Surface as GlutinSurface, SurfaceAttributesBuilder, WindowSurface},
@@ -104,6 +102,7 @@ impl<T: Clone> WindowEnv<T> {
             .unwrap();
 
         let mut window = window.expect("Could not create window with OpenGL context");
+        window.set_ime_allowed(true);
         let raw_window_handle = window.raw_window_handle();
 
         let context_attributes = ContextAttributesBuilder::new()
@@ -210,6 +209,11 @@ impl<T: Clone> WindowEnv<T> {
     /// Get a mutable reference to the Window.
     pub fn window_mut(&mut self) -> &mut Window {
         &mut self.window
+    }
+
+    /// Get a reference to the Window.
+    pub fn window(&self) -> &Window {
+        &self.window
     }
 
     /// Measure the layout

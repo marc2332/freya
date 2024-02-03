@@ -64,7 +64,6 @@ pub struct InputProps<'a> {
 /// ```rust,no_run
 /// # use freya::prelude::*;
 /// fn app(cx: Scope) -> Element {
-///     use_init_focus(cx);
 ///     let value = use_state(cx, String::new);
 ///
 ///     render!(
@@ -195,6 +194,8 @@ pub fn Input<'a>(cx: Scope<'a, InputProps<'a>>) -> Element {
             corner_radius: "10",
             margin: "{margin}",
             cursor_reference: cursor_attr,
+            focus_id: focus_manager.attribute(cx),
+            role: "textInput",
             main_align: "center",
             paragraph {
                 margin: "8 12",

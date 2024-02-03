@@ -387,8 +387,9 @@ pub trait TextEditor: Sized + Clone + Display {
                     }
                     _ => {
                         if let Ok(ch) = character.parse::<char>() {
-                            if !ch.is_ascii_control() {
-                                // Adds a new character
+                            // https://github.com/marc2332/freya/issues/461
+                            if !ch.is_ascii_control() && ch.len_utf8() <= 2 {
+                                // Inserts a character
                                 let char_idx =
                                     self.line_to_char(self.cursor_row()) + self.cursor_col();
                                 self.insert(character, char_idx);
@@ -396,6 +397,13 @@ pub trait TextEditor: Sized + Clone + Display {
 
                                 event.insert(TextEvent::TEXT_CHANGED);
                             }
+                        } else if character.is_ascii() {
+                            // Inserts a text
+                            let char_idx = self.line_to_char(self.cursor_row()) + self.cursor_col();
+                            self.insert(character, char_idx);
+                            self.set_cursor_pos(char_idx + character.len());
+
+                            event.insert(TextEvent::TEXT_CHANGED);
                         }
                     }
                 }

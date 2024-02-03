@@ -173,7 +173,6 @@ impl<'a> TransitionsManager<'a> {
         // Set as current this new animation
         current_animation_id.set(Some(animation_id));
 
-        // Spawn the animation that will run at 1ms speed
         self.cx.spawn(async move {
             platform.request_animation_frame();
 
