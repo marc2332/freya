@@ -84,8 +84,8 @@ impl AccessKitManager {
         }
     }
 
-    /// Process an Accessibility event
-    pub fn process_accessibility_event(&mut self, window: &Window, event: &WindowEvent) {
+    /// Process an accessibility event
+    pub fn process_accessibility_event(&mut self, event: &WindowEvent, window: &Window) {
         self.accessibility_adapter.process_event(window, event)
     }
 

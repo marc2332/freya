@@ -1,13 +1,8 @@
-use dioxus_native_core::NodeId;
 use freya_common::EventMessage;
-use freya_core::prelude::*;
-use freya_dom::prelude::FreyaDOM;
 use freya_engine::prelude::*;
 use glutin::prelude::PossiblyCurrentGlContext;
 use std::ffi::CString;
 use std::num::NonZeroU32;
-use torin::geometry::{Area, Size2D};
-
 use gl::{types::*, *};
 use glutin::context::GlProfile;
 use glutin::context::NotCurrentGlContext;
@@ -28,19 +23,17 @@ use winit::{
 };
 
 use crate::config::WindowConfig;
-use crate::renderer::render_skia;
-use crate::HoveredNode;
 
 /// Manager for a Window
 pub struct WindowEnv<State: Clone> {
-    gr_context: DirectContext,
-    surface: Surface,
-    gl_surface: GlutinSurface<WindowSurface>,
-    gl_context: PossiblyCurrentContext,
+    pub(crate) gr_context: DirectContext,
+    pub(crate) surface: Surface,
+    pub(crate) gl_surface: GlutinSurface<WindowSurface>,
+    pub(crate) gl_context: PossiblyCurrentContext,
     pub(crate) window: Window,
-    fb_info: FramebufferInfo,
-    num_samples: usize,
-    stencil_size: usize,
+    pub(crate) fb_info: FramebufferInfo,
+    pub(crate) num_samples: usize,
+    pub(crate) stencil_size: usize,
     pub(crate) window_config: WindowConfig<State>,
 }
 
@@ -202,7 +195,7 @@ impl<T: Clone> WindowEnv<T> {
     }
 
     /// Get a reference to the Canvas.
-    pub fn canvas(&mut self) -> &Canvas {
+    pub fn canvas_mut(&mut self) -> &Canvas {
         self.surface.canvas()
     }
 
@@ -211,80 +204,14 @@ impl<T: Clone> WindowEnv<T> {
         &mut self.window
     }
 
-    /// Get a reference to the Window.
-    pub fn window(&self) -> &Window {
-        &self.window
-    }
-
-    /// Measure the layout
-    pub fn process_layout(
-        &mut self,
-        rdom: &FreyaDOM,
-        font_collection: &mut FontCollection,
-    ) -> (Layers, Viewports) {
-        let window_size = self.window.inner_size();
-        let scale_factor = self.window.scale_factor() as f32;
-        process_layout(
-            rdom,
-            Area::from_size(Size2D::from((
-                window_size.width as f32,
-                window_size.height as f32,
-            ))),
-            font_collection,
-            scale_factor,
-        )
-    }
-
-    /// Start rendering the RealDOM to Window
-    pub fn start_render(
-        &mut self,
-        layers: &Layers,
-        viewports: &Viewports,
-        font_collection: &mut FontCollection,
-        hovered_node: &HoveredNode,
-        rdom: &FreyaDOM,
-    ) {
+    /// Clear the canvas.
+    pub fn clear(&mut self) {
         let canvas = self.surface.canvas();
-
         canvas.clear(self.window_config.background);
-
-        let mut matrices: Vec<(Matrix, Vec<NodeId>)> = Vec::default();
-        let mut opacities: Vec<(f32, Vec<NodeId>)> = Vec::default();
-
-        process_render(
-            viewports,
-            rdom,
-            font_collection,
-            layers,
-            &mut (canvas, &mut matrices, &mut opacities),
-            |dom, node_id, area, font_collection, viewports, (canvas, matrices, opacities)| {
-                let render_wireframe = if let Some(hovered_node) = &hovered_node {
-                    hovered_node
-                        .lock()
-                        .unwrap()
-                        .map(|id| id == *node_id)
-                        .unwrap_or_default()
-                } else {
-                    false
-                };
-                if let Some(dioxus_node) = dom.rdom().get(*node_id) {
-                    render_skia(
-                        canvas,
-                        area,
-                        &dioxus_node,
-                        font_collection,
-                        viewports,
-                        render_wireframe,
-                        matrices,
-                        opacities,
-                    );
-                }
-            },
-        );
     }
 
-    /// Finish all rendering in the Window
-    pub fn finish_render(&mut self) {
+    /// Flush and submit the canvas.
+    pub fn flush_and_submit(&mut self) {
         self.gr_context.flush_and_submit();
         self.gl_surface.swap_buffers(&self.gl_context).unwrap();
     }
