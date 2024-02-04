@@ -39,6 +39,18 @@ pub struct VirtualScrollViewProps<T: 'static + Clone> {
     pub scroll_with_arrows: bool,
 }
 
+impl<T: Clone> PartialEq for VirtualScrollViewProps<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.theme == other.theme
+            && self.length == other.length
+            && self.item_size == other.item_size
+            && Rc::ptr_eq(&self.builder, &other.builder)
+            && self.direction == other.direction
+            && self.show_scrollbar == other.show_scrollbar
+            && self.scroll_with_arrows == other.scroll_with_arrows
+    }
+}
+
 fn get_render_range(
     viewport_size: f32,
     scroll_position: f32,
@@ -91,7 +103,7 @@ fn get_render_range(
 /// ```
 #[allow(non_snake_case)]
 pub fn VirtualScrollView<T: Clone>(props: VirtualScrollViewProps<T>) -> Element {
-    let clicking_scrollbar = use_signal::<Option<(Axis, f64)>>(|| None);
+    let mut clicking_scrollbar = use_signal::<Option<(Axis, f64)>>(|| None);
     let mut clicking_shift = use_signal(|| false);
     let mut clicking_alt = use_signal(|| false);
     let mut scrolled_y = use_signal(|| 0);
