@@ -10,7 +10,7 @@ use rustc_hash::FxHashMap;
 
 pub use crate::events::{DomEvent, ElementsState, FreyaEvent};
 
-use crate::types::{EventEmitter, EventsQueue, NodesEvents};
+use crate::types::{EventEmitter, EventsQueue, PotentialEvents};
 
 /// Process the events and emit them to the VirtualDOM
 pub fn process_events(
@@ -80,7 +80,7 @@ pub fn measure_potential_event_listeners(
     events: &EventsQueue,
     viewports: &Viewports,
     fdom: &FreyaDOM,
-) -> NodesEvents {
+) -> PotentialEvents {
     let mut potential_events = FxHashMap::default();
 
     let layout = fdom.layout();
@@ -182,7 +182,7 @@ fn is_node_parent_of(rdom: &DioxusDOM, node: NodeId, parent_node: NodeId) -> boo
 
 /// Measure what DOM events could be emited
 fn measure_dom_events(
-    potential_events: NodesEvents,
+    potential_events: PotentialEvents,
     fdom: &FreyaDOM,
     scale_factor: f64,
 ) -> Vec<DomEvent> {

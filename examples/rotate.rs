@@ -15,7 +15,7 @@ fn main() {
 const SPEEDS: (i16, i16, i16) = (2, 3, 6);
 
 fn app() -> Element {
-    let degrees = use_signal(|| (0, 0, 0));
+    let mut degrees = use_signal(|| (0, 0, 0));
 
     use_hook(|| {
         spawn(async move {

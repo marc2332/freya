@@ -42,7 +42,9 @@ winit = { workspace = true }
 accesskit = { workspace = true }
 accesskit_winit = { workspace = true }
 tracing = { workspace = true }
+futures-task ={ workspace = true }
+futures-util = { workspace = true }
 
 uuid = { workspace = true }
-futures = { workspace = true }
 image = "0.24.7"
+pin-utils = "0.1.0"

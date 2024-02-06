@@ -1,4 +1,3 @@
-mod accessibility;
 mod alignment;
 mod border;
 mod color;
@@ -15,7 +14,6 @@ mod shadow;
 mod size;
 mod text_shadow;
 
-pub use accessibility::*;
 pub use alignment::*;
 pub use border::*;
 pub use color::*;

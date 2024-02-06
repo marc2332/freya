@@ -59,7 +59,7 @@ pub fn Switch(props: SwitchProps) -> Element {
     let mut animation = use_animation(|| 0.0);
     let theme = use_applied_theme!(&props.theme, switch);
     let platform = use_platform();
-    let status = use_signal(SwitchStatus::default);
+    let mut status = use_signal(SwitchStatus::default);
     let focus = use_focus();
 
     let focus_id = focus.attribute();
@@ -89,7 +89,7 @@ pub fn Switch(props: SwitchProps) -> Element {
     let onmouseenter = move |e: MouseEvent| {
         e.stop_propagation();
         *status.write() = SwitchStatus::Hovering;
-        platform.set_cursor(CursorIcon::Hand);
+        platform.set_cursor(CursorIcon::Pointer);
     };
 
     let onclick = {

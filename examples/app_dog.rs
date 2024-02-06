@@ -3,7 +3,6 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus::signals::use_signal;
 use freya::prelude::*;
 use reqwest::Url;
 use serde::Deserialize;

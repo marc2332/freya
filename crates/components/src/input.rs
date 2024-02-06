@@ -169,6 +169,7 @@ pub fn Input(
         }
     };
 
+    let focus_id = focus.attribute();
     let cursor_reference = editable.cursor_attr();
     let highlights = editable.highlights_attr(0);
 
@@ -202,6 +203,7 @@ pub fn Input(
             cursor_reference,
             focus_id,
             focusable: "true",
+            role: "textInput",
             main_align: "center",
             paragraph {
                 margin: "8 12",

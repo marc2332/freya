@@ -1,5 +1,6 @@
 use std::{cmp::Ordering, fmt::Display, ops::Range};
 
+use dioxus_std::clipboard::UseClipboard;
 use ropey::iter::Lines;
 pub use ropey::Rope;
 
@@ -14,6 +15,8 @@ pub struct RopeEditor {
 
     /// Selected text range
     selected: Option<(usize, usize)>,
+
+    clipboard: UseClipboard,
 }
 
 impl Display for RopeEditor {
@@ -24,12 +27,18 @@ impl Display for RopeEditor {
 
 impl RopeEditor {
     // Create a new [`RopeEditor`]
-    pub fn new(text: String, cursor: TextCursor, mode: EditableMode) -> Self {
+    pub fn new(
+        text: String,
+        cursor: TextCursor,
+        mode: EditableMode,
+        clipboard: UseClipboard,
+    ) -> Self {
         Self {
             rope: Rope::from_str(&text),
             cursor,
             selected: None,
             mode,
+            clipboard,
         }
     }
 
@@ -91,6 +100,10 @@ impl TextEditor for RopeEditor {
         } else {
             self.selected = Some((self.cursor_pos(), self.cursor_pos()))
         }
+    }
+
+    fn get_clipboard(&mut self) -> &mut UseClipboard {
+        &mut self.clipboard
     }
 
     fn has_any_highlight(&self) -> bool {
@@ -193,6 +206,25 @@ impl TextEditor for RopeEditor {
         } else {
             self.set_cursor_pos(to);
         }
+    }
+
+    fn get_selected_text(&self) -> Option<String> {
+        let (start, end) = self.get_selection()?;
+
+        Some(self.rope().get_slice(start..end)?.to_string())
+    }
+
+    fn get_selection(&self) -> Option<(usize, usize)> {
+        let (start, end) = self.selected?;
+
+        // Use left-to-right selection
+        let (start, end) = if start < end {
+            (start, end)
+        } else {
+            (end, start)
+        };
+
+        Some((start, end))
     }
 }
 

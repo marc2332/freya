@@ -39,6 +39,18 @@ pub struct VirtualScrollViewProps<T: 'static + Clone> {
     pub scroll_with_arrows: bool,
 }
 
+impl<T: Clone> PartialEq for VirtualScrollViewProps<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.theme == other.theme
+            && self.length == other.length
+            && self.item_size == other.item_size
+            && Rc::ptr_eq(&self.builder, &other.builder)
+            && self.direction == other.direction
+            && self.show_scrollbar == other.show_scrollbar
+            && self.scroll_with_arrows == other.scroll_with_arrows
+    }
+}
+
 fn get_render_range(
     viewport_size: f32,
     scroll_position: f32,
@@ -91,7 +103,7 @@ fn get_render_range(
 /// ```
 #[allow(non_snake_case)]
 pub fn VirtualScrollView<T: Clone>(props: VirtualScrollViewProps<T>) -> Element {
-    let clicking_scrollbar = use_signal::<Option<(Axis, f64)>>(|| None);
+    let mut clicking_scrollbar = use_signal::<Option<(Axis, f64)>>(|| None);
     let mut clicking_shift = use_signal(|| false);
     let mut clicking_alt = use_signal(|| false);
     let mut scrolled_y = use_signal(|| 0);
@@ -149,7 +161,13 @@ pub fn VirtualScrollView<T: Clone>(props: VirtualScrollViewProps<T>) -> Element 
                     corrected_scrolled_y,
                 );
 
-                *scrolled_y.write() = scroll_position_y;
+                // Only scroll when there is still area to scroll
+                if *scrolled_y.peek() != scroll_position_y {
+                    e.stop_propagation();
+                    *scrolled_y.write() = scroll_position_y;
+                } else {
+                    return;
+                }
             }
 
             let wheel_x = if *clicking_shift.peek() {
@@ -165,7 +183,13 @@ pub fn VirtualScrollView<T: Clone>(props: VirtualScrollViewProps<T>) -> Element 
                 corrected_scrolled_x,
             );
 
-            *scrolled_x.write() = scroll_position_x;
+            // Only scroll when there is still area to scroll
+            if *scrolled_x.peek() != scroll_position_x {
+                e.stop_propagation();
+                *scrolled_x.write() = scroll_position_x;
+            } else {
+                return;
+            }
 
             focus.focus();
         }

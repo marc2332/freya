@@ -39,7 +39,7 @@ pub struct CursorAreaProps {
 #[allow(non_snake_case)]
 pub fn CursorArea(CursorAreaProps { children, icon }: CursorAreaProps) -> Element {
     let platform = use_platform();
-    let is_hovering = use_signal(|| false);
+    let mut is_hovering = use_signal(|| false);
 
     let onmouseover = {
         to_owned![platform, is_hovering];
