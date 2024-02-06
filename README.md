@@ -20,10 +20,10 @@
 <td style="border:hidden;">
 
 ```rust, no_run
-fn app() -> Element {
-    let mut count = use_signal(|| 0);
+fn app(cx: Scope) -> Element {
+    let mut count = use_state(cx, || 0);
 
-    rsx!(
+    render!(
         rect {
             height: "20%",
             width: "100%",
