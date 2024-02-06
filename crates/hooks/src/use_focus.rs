@@ -1,6 +1,6 @@
 use accesskit::NodeId as AccessibilityId;
 use dioxus_core::{use_hook, AttributeValue};
-use dioxus_hooks::use_context;
+use dioxus_hooks::{use_context, use_memo};
 use dioxus_signals::{ReadOnlySignal, Readable, Signal, Writable};
 use freya_core::{accessibility::ACCESSIBILITY_ROOT_ID, navigation_mode::NavigationMode};
 use freya_elements::events::{keyboard::Code, KeyboardEvent};
