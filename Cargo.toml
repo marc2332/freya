@@ -12,19 +12,19 @@ devtools = ["freya/devtools"]
 use_camera = ["freya/use_camera"]
 
 [workspace.dependencies]
-freya = { path = "crates/freya", version = "0.1" }
-freya-devtools = { path = "crates/devtools", version = "0.1" }
-freya-node-state = { path = "crates/state", version = "0.1" }
-freya-renderer = { path = "crates/renderer", version = "0.1" }
-freya-elements = { path = "crates/elements", version = "0.1" }
-freya-common = { path = "crates/common", version = "0.1" }
-freya-hooks = { path = "crates/hooks", version = "0.1" }
-freya-core = { path = "crates/core", version = "0.1" }
-freya-components = { path = "crates/components", version = "0.1" }
-freya-dom = { path = "crates/dom", version = "0.1" }
-freya-testing = { path = "crates/testing", version = "0.1" }
-freya-engine = { path = "crates/engine", version = "0.1" }
-torin = { path = "crates/torin", version = "0.1" }
+freya = { path = "crates/freya", version = "0.2" }
+freya-devtools = { path = "crates/devtools", version = "0.2" }
+freya-node-state = { path = "crates/state", version = "0.2" }
+freya-renderer = { path = "crates/renderer", version = "0.2" }
+freya-elements = { path = "crates/elements", version = "0.2" }
+freya-common = { path = "crates/common", version = "0.2" }
+freya-hooks = { path = "crates/hooks", version = "0.2" }
+freya-core = { path = "crates/core", version = "0.2" }
+freya-components = { path = "crates/components", version = "0.2" }
+freya-dom = { path = "crates/dom", version = "0.2" }
+freya-testing = { path = "crates/testing", version = "0.2" }
+freya-engine = { path = "crates/engine", version = "0.2" }
+torin = { path = "crates/torin", version = "0.2" }
 
 dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "8324f5290a317b06c5e451ab4bb58d1c73deb591", default-features = false, features = ["macro", "signals", "hooks", "hot-reload", "html"]}
 dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "8324f5290a317b06c5e451ab4bb58d1c73deb591" }
