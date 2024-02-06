@@ -23,5 +23,5 @@ pub mod prelude {
     pub use crate::types::EventsQueue;
     pub use crate::types::FocusReceiver;
     pub use crate::types::FocusSender;
-    pub use crate::types::NodesEvents;
+    pub use crate::types::PotentialEvents;
 }

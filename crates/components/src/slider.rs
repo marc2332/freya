@@ -104,7 +104,8 @@ pub fn Slider(
 
     let onmouseleave = {
         to_owned![platform, status];
-        move |_: MouseEvent| {
+        move |e: MouseEvent| {
+            e.stop_propagation();
             *status.write() = SliderStatus::Idle;
             platform.set_cursor(CursorIcon::default());
         }
@@ -112,15 +113,17 @@ pub fn Slider(
 
     let onmouseenter = {
         to_owned![status];
-        move |_: MouseEvent| {
+        move |e: MouseEvent| {
+            e.stop_propagation();
             *status.write() = SliderStatus::Hovering;
-            platform.set_cursor(CursorIcon::Hand);
+            platform.set_cursor(CursorIcon::Pointer);
         }
     };
 
     let onmouseover = {
         to_owned![clicking, onmoved];
         move |e: MouseEvent| {
+            e.stop_propagation();
             if *clicking.peek() {
                 let coordinates = e.get_element_coordinates();
                 let x = coordinates.x - size.area.min_x() as f64 - 6.0;
@@ -135,6 +138,7 @@ pub fn Slider(
     let onmousedown = {
         to_owned![clicking, onmoved, focus];
         move |e: MouseEvent| {
+            e.stop_propagation();
             focus.focus();
             clicking.set(true);
             let coordinates = e.get_element_coordinates();
@@ -151,6 +155,7 @@ pub fn Slider(
     };
 
     let onwheel = move |e: WheelEvent| {
+        e.stop_propagation();
         let wheel_y = e.get_delta_y().clamp(-1.0, 1.0);
         let percentage = value + (wheel_y * 2.0);
         let percentage = percentage.clamp(0.0, 100.0);

@@ -3,7 +3,6 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus::signals::use_signal;
 use freya::prelude::*;
 
 fn main() {
@@ -12,7 +11,7 @@ fn main() {
 
 #[allow(non_snake_case)]
 fn TheOtherSwitch() -> Element {
-    let theme = use_theme();
+    let mut theme = use_theme();
 
     let is_enabled = theme.read().name == "dark";
 

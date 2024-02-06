@@ -3,7 +3,6 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus::signals::use_signal;
 use freya::prelude::*;
 
 fn main() {
@@ -11,7 +10,7 @@ fn main() {
 }
 
 fn app() -> Element {
-    let values = use_signal(|| (String::new(), String::new()));
+    let mut values = use_signal(|| (String::new(), String::new()));
 
     rsx!(
         rect {
