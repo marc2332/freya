@@ -5,11 +5,9 @@ use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_dom::prelude::SafeDOM;
 use freya_engine::prelude::*;
-use futures::FutureExt;
-use futures::{
-    pin_mut,
-    task::{self, ArcWake},
-};
+use futures_task::{waker, ArcWake};
+use futures_util::FutureExt;
+use pin_utils::pin_mut;
 use tokio::sync::broadcast;
 use tokio::{
     select,
@@ -35,7 +33,7 @@ fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
         }
     }
 
-    task::waker(Arc::new(DomHandle(proxy.clone())))
+    waker(Arc::new(DomHandle(proxy.clone())))
 }
 
 /// Manages the Application lifecycle
@@ -169,7 +167,7 @@ impl<State: 'static + Clone> App<State> {
                         ev = self.event_receiver.recv() => {
                             if let Some(ev) = ev {
                                 let data = ev.data.any();
-                                self.vdom.handle_event(&ev.name, data, ev.element_id, false);
+                                self.vdom.handle_event(&ev.name, data, ev.element_id, true);
 
                                 self.vdom.process_events();
                             }

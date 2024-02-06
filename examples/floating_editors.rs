@@ -111,6 +111,7 @@ fn app() -> Element {
                                         padding: "10",
                                         shadow: "0 0 30 0 rgb(0, 0, 0, 150)",
                                         onmousedown:  move |e: MouseEvent| {
+                                            e.stop_propagation();
                                             clicking_drag.set(Some((id, e.get_element_coordinates().to_tuple())));
                                         },
                                         onmouseleave: move |_: MouseEvent| {
@@ -308,6 +309,7 @@ fn Editor() -> Element {
                                 let onmousedown = {
                                     to_owned![editable];
                                     move |e: MouseEvent| {
+                                        e.stop_propagation();
                                         editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
                                     }
                                 };

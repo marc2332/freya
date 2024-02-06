@@ -1,5 +1,6 @@
 use std::{borrow::Cow, cmp::Ordering, fmt::Display, ops::Range};
 
+use dioxus_std::clipboard::UseClipboard;
 use freya_elements::events::keyboard::{Code, Key, Modifiers};
 
 /// Holds the position of a cursor in a text
@@ -182,6 +183,8 @@ pub trait TextEditor: Sized + Clone + Display {
     fn highlight_text(&mut self, from: usize, to: usize, editor_id: usize);
 
     fn move_highlight_to_cursor(&mut self);
+
+    fn get_clipboard(&mut self) -> &mut UseClipboard;
 
     // Process a Keyboard event
     fn process_key(&mut self, key: &Key, code: &Code, modifiers: &Modifiers) -> TextEvent {
@@ -375,6 +378,12 @@ pub trait TextEditor: Sized + Clone + Display {
                 event.insert(TextEvent::TEXT_CHANGED);
             }
             Key::Character(character) => {
+                let meta_or_ctrl = if cfg!(target_os = "macos") {
+                    modifiers.meta()
+                } else {
+                    modifiers.ctrl()
+                };
+
                 match code {
                     Code::Delete => {}
                     Code::Space => {
@@ -385,6 +394,39 @@ pub trait TextEditor: Sized + Clone + Display {
 
                         event.insert(TextEvent::TEXT_CHANGED);
                     }
+
+                    // Copy selected text
+                    Code::KeyC if meta_or_ctrl => {
+                        let selected = self.get_selected_text();
+                        if let Some(selected) = selected {
+                            self.get_clipboard().set(selected).ok();
+                        }
+                        event.remove(TextEvent::SELECTION_CHANGED);
+                    }
+
+                    // Cut selected text
+                    Code::KeyX if meta_or_ctrl => {
+                        let selection = self.get_selection();
+                        if let Some((start, end)) = selection {
+                            let text = self.get_selected_text().unwrap();
+                            self.remove(start..end);
+                            self.get_clipboard().set(text).ok();
+                            self.set_cursor_pos(start);
+                        }
+                    }
+
+                    // Paste copied text
+                    Code::KeyV if meta_or_ctrl => {
+                        let copied_text = self.get_clipboard().get();
+                        if let Ok(copied_text) = copied_text {
+                            let char_idx = self.line_to_char(self.cursor_row()) + self.cursor_col();
+                            self.insert(&copied_text, char_idx);
+                            let last_idx = copied_text.len() + char_idx;
+                            self.set_cursor_pos(last_idx);
+                            event.insert(TextEvent::TEXT_CHANGED);
+                        }
+                    }
+
                     _ => {
                         if let Ok(ch) = character.parse::<char>() {
                             // https://github.com/marc2332/freya/issues/461
@@ -417,4 +459,8 @@ pub trait TextEditor: Sized + Clone + Display {
 
         event
     }
+
+    fn get_selected_text(&self) -> Option<String>;
+
+    fn get_selection(&self) -> Option<(usize, usize)>;
 }

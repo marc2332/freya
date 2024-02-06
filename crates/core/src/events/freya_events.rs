@@ -56,4 +56,8 @@ impl FreyaEvent {
     pub fn is_pointer_event(&self) -> bool {
         self.get_name().starts_with("point")
     }
+
+    pub fn is_keyboard_event(&self) -> bool {
+        matches!(self, Self::Keyboard { .. })
+    }
 }

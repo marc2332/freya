@@ -181,9 +181,9 @@ impl AccessibilityManager {
             // Find the previous Node
             if let Some(node_index) = node_index {
                 if node_index == 0 {
-                    self.nodes.get(node_index - 1)
-                } else {
                     self.nodes.last()
+                } else {
+                    self.nodes.get(node_index - 1)
                 }
             } else {
                 self.nodes.last()

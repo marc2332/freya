@@ -73,15 +73,21 @@ pub fn Switch(props: SwitchProps) -> Element {
         }
     });
 
+    let onmousedown = |e: MouseEvent| {
+        e.stop_propagation();
+    };
+
     let onmouseleave = {
         to_owned![platform];
-        move |_: MouseEvent| {
+        move |e: MouseEvent| {
+            e.stop_propagation();
             *status.write() = SwitchStatus::Idle;
             platform.set_cursor(CursorIcon::default());
         }
     };
 
-    let onmouseenter = move |_: MouseEvent| {
+    let onmouseenter = move |e: MouseEvent| {
+        e.stop_propagation();
         *status.write() = SwitchStatus::Hovering;
         platform.set_cursor(CursorIcon::Pointer);
     };
@@ -89,7 +95,8 @@ pub fn Switch(props: SwitchProps) -> Element {
     let onclick = {
         let ontoggled = props.ontoggled.clone();
         to_owned![focus];
-        move |_: MouseEvent| {
+        move |e: MouseEvent| {
+            e.stop_propagation();
             focus.focus();
             ontoggled.call(());
         }
@@ -142,7 +149,7 @@ pub fn Switch(props: SwitchProps) -> Element {
             corner_radius: "50",
             background: "{background}",
             border: "{border}",
-            onmousedown: |_| {},
+            onmousedown,
             onmouseenter,
             onmouseleave,
             onkeydown,
