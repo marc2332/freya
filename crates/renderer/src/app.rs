@@ -169,7 +169,7 @@ impl<State: 'static + Clone> App<State> {
                         ev = self.event_receiver.recv() => {
                             if let Some(ev) = ev {
                                 let data = ev.data.any();
-                                self.vdom.handle_event(&ev.name, data, ev.element_id, false);
+                                self.vdom.handle_event(&ev.name, data, ev.element_id, true);
 
                                 self.vdom.process_events();
                             }

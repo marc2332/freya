@@ -158,7 +158,7 @@ pub fn use_editable(initializer: impl Fn() -> EditableConfig, mode: EditableMode
     use_hook(|| {
         let text_id = Uuid::new_v4();
         let config = initializer();
-        let editor = Signal::new(RopeEditor::new(
+        let mut editor = Signal::new(RopeEditor::new(
             config.content,
             config.cursor,
             mode,

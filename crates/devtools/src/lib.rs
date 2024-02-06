@@ -119,7 +119,7 @@ impl PartialEq for DevToolsProps {
 
 #[allow(non_snake_case)]
 pub fn DevTools(props: DevToolsProps) -> Element {
-    let children = use_context_provider(|| Signal::new(Vec::<TreeNode>::new()));
+    let mut children = use_context_provider(|| Signal::new(Vec::<TreeNode>::new()));
     use_context_provider::<Signal<HoveredNode>>(|| Signal::new(props.hovered_node.clone()));
     use_init_theme(DARK_THEME);
     let theme = use_theme();
