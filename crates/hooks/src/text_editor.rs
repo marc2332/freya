@@ -184,7 +184,7 @@ pub trait TextEditor: Sized + Clone + Display {
 
     fn move_highlight_to_cursor(&mut self);
 
-    fn get_clipboard(&self) -> &UseClipboard;
+    fn get_clipboard(&mut self) -> &mut UseClipboard;
 
     // Process a Keyboard event
     fn process_key(&mut self, key: &Key, code: &Code, modifiers: &Modifiers) -> TextEvent {
