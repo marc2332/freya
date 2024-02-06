@@ -63,6 +63,8 @@ Thanks to my sponsors for supporting this project! 😄
 
 ### Want to try it? 🤔
 
+Note: `main` branch currently depends on Dioxus 0.5.
+
 ⚠️ First, see [Environment setup](https://book.freyaui.dev/setup.html).
 
 Clone this repo and run:
