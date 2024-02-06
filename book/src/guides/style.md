@@ -21,8 +21,8 @@ You can learn about the syntax of this attribute [here](#color-syntax).
 Example:
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         rect {
             background: "red"
         }
@@ -42,8 +42,8 @@ Syntax: `<x> <y> <intensity> <size> <color>`
 Example:
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         rect {
             shadow: "0 0 25 2 rgb(0, 0, 0, 120)"
         }
@@ -60,8 +60,8 @@ The `corner_radius` attribute let's you smooth the corners of the element, with 
 Example:
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         rect {
             corner_radius: "10",
             corner_smoothing: "75%"
@@ -82,8 +82,8 @@ You can add a border to an element using the `border` and `border_align` attribu
 Example:
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         rect {
             border: "2 solid black",
             border_align: "inner"
@@ -103,8 +103,8 @@ Accepted values: `clip | none`.
 Example:
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         rect {
             overflow: "clip"
             width: "100",
