@@ -9,11 +9,11 @@ fn main() {
     launch_with_props(app, "Dynamic theme", (400.0, 350.0));
 }
 
-fn app(cx: Scope) -> Element {
-    let mut brightness = use_state(cx, || 50);
-    let text_brightness = 100 - brightness.get();
+fn app() -> Element {
+    let mut brightness = use_signal(|| 50);
+    let text_brightness = 100 - *brightness.read();
 
-    render!(
+    rsx!(
         rect {
             height: "50%",
             width: "100%",
@@ -48,7 +48,7 @@ fn app(cx: Scope) -> Element {
                     }),
                 }),
                 onclick: move |_| {
-                    if *brightness < 100 {
+                    if *brightness.read() < 100 {
                         brightness += 10;
                     }
                 },
@@ -65,7 +65,7 @@ fn app(cx: Scope) -> Element {
                     }),
                 }),
                 onclick: move |_| {
-                    if *brightness > 0 {
+                    if *brightness.read() > 0 {
                         brightness -= 10;
                     }
                 },

@@ -9,21 +9,21 @@ fn main() {
     launch(app);
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(Clone, PartialEq)]
 enum SwapDirection {
     LeftToRight,
     RightToLeft,
 }
 
-fn app(cx: Scope) -> Element {
-    let data = use_state::<(Vec<String>, Vec<String>)>(cx, || {
+fn app() -> Element {
+    let data = use_signal::<(Vec<String>, Vec<String>)>(|| {
         (
             vec!["I Like".to_string(), "Rust".to_string(), "🦀!".to_string()],
             vec![],
         )
     });
 
-    render!(
+    rsx!(
         DragProvider::<String> {
             rect {
                 direction: "horizontal",
@@ -32,12 +32,12 @@ fn app(cx: Scope) -> Element {
                 Column {
                     data: data.clone(),
                     direction: SwapDirection::RightToLeft,
-                    column: data.get().0.clone()
+                    column: data.read().0.clone()
                 }
                 Column {
                     data: data.clone(),
                     direction: SwapDirection::LeftToRight,
-                    column: data.get().1.clone()
+                    column: data.read().1.clone()
                 }
             }
         }
@@ -47,12 +47,11 @@ fn app(cx: Scope) -> Element {
 #[allow(non_snake_case)]
 #[component]
 fn Column(
-    cx: Scope,
     direction: SwapDirection,
-    data: UseState<(Vec<String>, Vec<String>)>,
+    data: Signal<(Vec<String>, Vec<String>)>,
     column: Vec<String>,
 ) -> Element {
-    let swap = |el: String, direction: &SwapDirection| {
+    let mut swap = move |el: String, direction: &SwapDirection| {
         data.with_mut(|data| {
             data.0.retain(|e| e != &el);
             data.1.retain(|e| e != &el);
@@ -72,13 +71,13 @@ fn Column(
         SwapDirection::RightToLeft => ("black", "rgb(234, 226, 183)"),
     };
 
-    render!(
+    rsx!(
         rect {
             width: "50%",
             height: "100%",
             DropZone {
                 ondrop: move |data: String| {
-                    swap(data, direction);
+                    swap(data, &direction);
                 },
                 rect {
                     width: "100%",
@@ -87,22 +86,20 @@ fn Column(
                     direction: "vertical",
                     color: color,
                     for el in column {
-                        rsx!(
-                            DragZone {
-                                data: el.to_string(),
-                                drag_element: render!(
-                                    label {
-                                        width: "200",
-                                        font_size: "20",
-                                       "Moving '{el}'"
-                                    }
-                                ),
+                        DragZone {
+                            data: el.to_string(),
+                            drag_element: rsx!(
                                 label {
-                                    font_size: "30",
-                                    "{el}"
+                                    width: "200",
+                                    font_size: "20",
+                                   "Moving '{el}'"
                                 }
+                            ),
+                            label {
+                                font_size: "30",
+                                "{el}"
                             }
-                        )
+                        }
                     }
                 }
             }

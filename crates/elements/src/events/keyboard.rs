@@ -1,3 +1,4 @@
+use crate::definitions::PlatformEventData;
 pub use keyboard_types::{Code, Key, Modifiers};
 use winit::keyboard::{self, NamedKey};
 
@@ -335,5 +336,11 @@ impl KeyboardData {
         } else {
             None
         }
+    }
+}
+
+impl From<&PlatformEventData> for KeyboardData {
+    fn from(val: &PlatformEventData) -> Self {
+        val.downcast::<KeyboardData>().cloned().unwrap()
     }
 }

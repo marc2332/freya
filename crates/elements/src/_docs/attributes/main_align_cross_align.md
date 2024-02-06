@@ -15,8 +15,8 @@ Example on how to center the inner elements in both axis:
 
 ```rust, no_run
 # use freya::prelude::*;
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         rect {
             width: "100%",
             height: "100%",

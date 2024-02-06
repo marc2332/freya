@@ -181,7 +181,7 @@ pub fn measure_paragraph(
 
                 // Notify the cursor reference listener
                 cursor_ref
-                    .agent
+                    .cursor_sender
                     .send(CursorLayoutResponse::CursorPosition {
                         position: char_position.position as usize,
                         id,
@@ -199,7 +199,7 @@ pub fn measure_paragraph(
                     .get_glyph_position_at_coordinate(dist.mul(scale_factors).to_i32().to_tuple());
 
                 cursor_ref
-                    .agent
+                    .cursor_sender
                     .send(CursorLayoutResponse::TextSelection {
                         from: origin_char.position as usize,
                         to: dist_char.position as usize,

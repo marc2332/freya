@@ -5,22 +5,22 @@ fn main() {
 }
 
 #[allow(non_snake_case)]
-fn StatefulSwitch(cx: Scope) -> Element {
-    let enabled = use_state(cx, || false);
+fn StatefulSwitch() -> Element {
+    let mut enabled = use_signal(|| false);
 
-    render!(Switch {
-        enabled: *enabled.get(),
-        ontoggled: |_| {
-            enabled.set(!enabled.get());
+    rsx!(Switch {
+        enabled: *enabled.read(),
+        ontoggled: move |_| {
+            enabled.toggle();
         }
     })
 }
 
-fn app(cx: Scope) -> Element {
+fn app() -> Element {
     let cols = 100;
     let rows = 100;
 
-    render!(
+    rsx!(
         rect {
             width: "100%",
             height: "100%",
@@ -29,22 +29,22 @@ fn app(cx: Scope) -> Element {
                 direction: "horizontal",
                 width: "100%",
                 height: "100%",
-                (0..cols).map(|col| {
+                {(0..cols).map(|col| {
                     rsx! {
                         rect {
                             key: "{col}",
                             width: "calc(100% / {cols})",
                             height: "100%",
-                            (0..rows).map(|row| {
+                            {(0..rows).map(|row| {
                                 rsx! {
                                     StatefulSwitch {
                                         key: "{row}{col}",
                                     }
                                 }
-                            })
+                            })}
                         }
                     }
-                })
+                })}
             }
         }
     )

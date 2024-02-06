@@ -6,8 +6,8 @@ You can learn about the syntax of this attribute in [`Color Syntax`](crate::_doc
 
 ```rust, no_run
 # use freya::prelude::*;
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         label {
             decoration: "line-through",
             decoration_color: "orange",

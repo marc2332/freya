@@ -171,8 +171,8 @@ macro_rules! define_theme {
 ///
 /// ```no_run
 /// # use freya::prelude::*;
-/// # fn theme_with_example_no_macro(cx: Scope) -> Element {
-/// render! {
+/// # fn theme_with_example_no_macro() -> Element {
+/// rsx! {
 ///     Button {
 ///         theme: ButtonThemeWith {
 ///             background: Some("blue".into()),
@@ -191,8 +191,8 @@ macro_rules! define_theme {
 ///
 /// ```no_run
 /// # use freya::prelude::*;
-/// # fn theme_with_example_no_macro(cx: Scope) -> Element {
-/// render! {
+/// # fn theme_with_example_no_macro() -> Element {
+/// rsx! {
 ///     Button {
 ///         theme: theme_with!(ButtonTheme {
 ///             background: "blue".into(),
@@ -339,6 +339,7 @@ define_theme! {
         background: str,
         thumb_background: str,
         thumb_inner_background: str,
+        border_fill: str,
     }
 }
 

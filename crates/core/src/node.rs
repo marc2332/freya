@@ -7,7 +7,7 @@ use freya_node_state::{
 };
 use torin::{alignment::Alignment, direction::DirectionMode, gaps::Gaps, size::Size};
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct NodeState {
     pub cursor: CursorSettings,
     pub font_style: FontStyleState,

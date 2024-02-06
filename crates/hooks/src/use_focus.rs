@@ -1,8 +1,8 @@
 use accesskit::NodeId as AccessibilityId;
-use dioxus_core::{AttributeValue, Scope, ScopeState};
-use dioxus_hooks::{use_context, use_shared_state, UseSharedState};
-use freya_core::accessibility::ACCESSIBILITY_ROOT_ID;
-use freya_core::navigation_mode::{NavigationMode, NavigatorState};
+use dioxus_core::{use_hook, AttributeValue};
+use dioxus_hooks::use_context;
+use dioxus_signals::{Readable, Signal, Writable};
+use freya_core::{accessibility::ACCESSIBILITY_ROOT_ID, navigation_mode::NavigationMode};
 use freya_elements::events::{keyboard::Code, KeyboardEvent};
 use freya_node_state::CustomAttributeValues;
 
@@ -12,13 +12,13 @@ use crate::AccessibilityIdCounter;
 #[derive(Clone)]
 pub struct UseFocus {
     id: AccessibilityId,
-    focused_id: UseSharedState<AccessibilityId>,
-    navigation_state: NavigatorState,
+    focused_id: Signal<AccessibilityId>,
+    navigation_mode: Signal<NavigationMode>,
 }
 
 impl UseFocus {
     /// Focus this node
-    pub fn focus(&self) {
+    pub fn focus(&mut self) {
         *self.focused_id.write() = self.id
     }
 
@@ -28,8 +28,8 @@ impl UseFocus {
     }
 
     /// Create a node focus ID attribute
-    pub fn attribute<'b, T>(&self, cx: Scope<'b, T>) -> AttributeValue<'b> {
-        cx.any_value(CustomAttributeValues::AccessibilityId(self.id))
+    pub fn attribute(&self) -> AttributeValue {
+        AttributeValue::any_value(CustomAttributeValues::AccessibilityId(self.id))
     }
 
     /// Check if this node is currently focused
@@ -39,11 +39,11 @@ impl UseFocus {
 
     /// Check if this node is currently selected
     pub fn is_selected(&self) -> bool {
-        self.is_focused() && self.navigation_state.get() == NavigationMode::Keyboard
+        self.is_focused() && *self.navigation_mode.read() == NavigationMode::Keyboard
     }
 
     /// Unfocus the currently focused node.
-    pub fn unfocus(&self) {
+    pub fn unfocus(&mut self) {
         *self.focused_id.write() = ACCESSIBILITY_ROOT_ID;
     }
 
@@ -54,27 +54,22 @@ impl UseFocus {
 }
 
 /// Create a focus manager for a node.
-pub fn use_focus(cx: &ScopeState) -> &UseFocus {
-    let accessibility_id_counter = use_context::<AccessibilityIdCounter>(cx).unwrap();
-    let focused_id = use_shared_state::<AccessibilityId>(cx).unwrap();
+pub fn use_focus() -> UseFocus {
+    let accessibility_id_counter = use_context::<AccessibilityIdCounter>();
+    let focused_id = use_context::<Signal<AccessibilityId>>();
+    let navigation_mode = use_context::<Signal<NavigationMode>>();
 
-    cx.use_hook(|| {
+    use_hook(move || {
         let mut counter = accessibility_id_counter.borrow_mut();
         *counter += 1;
         let id = AccessibilityId(*counter);
-
-        let navigation_state = cx
-            .consume_context::<NavigatorState>()
-            .expect("This is not expected, and likely a bug. Please, report it.");
-
         UseFocus {
             id,
-            focused_id: focused_id.clone(),
-            navigation_state,
+            focused_id,
+            navigation_mode,
         }
     })
 }
-
 #[cfg(test)]
 mod test {
     use crate::use_focus;
@@ -86,10 +81,10 @@ mod test {
     #[tokio::test]
     pub async fn track_focus() {
         #[allow(non_snake_case)]
-        fn OherChild(cx: Scope) -> Element {
-            let focus_manager = use_focus(cx);
+        fn OherChild() -> Element {
+            let mut focus_manager = use_focus();
 
-            render!(
+            rsx!(
                 rect {
                     width: "100%",
                     height: "50%",
@@ -99,8 +94,8 @@ mod test {
             )
         }
 
-        fn use_focus_app(cx: Scope) -> Element {
-            render!(
+        fn use_focus_app() -> Element {
+            rsx!(
                 rect {
                     width: "100%",
                     height: "100%",

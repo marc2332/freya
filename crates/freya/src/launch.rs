@@ -1,4 +1,4 @@
-use dioxus_core::Component;
+use dioxus_core::Element;
 use freya_renderer::DesktopRenderer;
 use freya_renderer::{LaunchConfig, WindowConfig};
 
@@ -20,8 +20,8 @@ use freya_renderer::{LaunchConfig, WindowConfig};
 ///     launch(app);
 /// }
 ///
-/// fn app(cx: Scope) -> Element {
-///    render!(
+/// fn app() -> Element {
+///    rsx!(
 ///         rect {
 ///             width: "100%",
 ///             height: "100%",
@@ -32,7 +32,7 @@ use freya_renderer::{LaunchConfig, WindowConfig};
 ///     )
 /// }
 /// ```
-pub fn launch(app: Component<()>) {
+pub fn launch(app: AppComponent) {
     launch_cfg(
         app,
         LaunchConfig {
@@ -66,8 +66,8 @@ pub fn launch(app: Component<()>) {
 ///     launch_with_title(app, "Whoa!");
 /// }
 ///
-/// fn app(cx: Scope) -> Element {
-///    render!(
+/// fn app() -> Element {
+///    rsx!(
 ///         rect {
 ///             width: "100%",
 ///             height: "100%",
@@ -78,7 +78,7 @@ pub fn launch(app: Component<()>) {
 ///     )
 /// }
 /// ```
-pub fn launch_with_title(app: Component<()>, title: &'static str) {
+pub fn launch_with_title(app: AppComponent, title: &'static str) {
     launch_cfg(
         app,
         LaunchConfig {
@@ -110,8 +110,8 @@ pub fn launch_with_title(app: Component<()>, title: &'static str) {
 ///     launch_with_props(app, "Whoa!", (400.0, 600.0));
 /// }
 ///
-/// fn app(cx: Scope) -> Element {
-///    render!(
+/// fn app() -> Element {
+///    rsx!(
 ///         rect {
 ///             width: "100%",
 ///             height: "100%",
@@ -122,7 +122,7 @@ pub fn launch_with_title(app: Component<()>, title: &'static str) {
 ///     )
 /// }
 /// ```
-pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height): (f64, f64)) {
+pub fn launch_with_props(app: AppComponent, title: &'static str, (width, height): (f64, f64)) {
     launch_cfg(
         app,
         LaunchConfig {
@@ -167,8 +167,8 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
 ///     );
 /// }
 ///
-/// fn app(cx: Scope) -> Element {
-///    render!(
+/// fn app() -> Element {
+///    rsx!(
 ///         rect {
 ///             width: "100%",
 ///             height: "100%",
@@ -179,7 +179,7 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
 ///     )
 /// }
 /// ```
-pub fn launch_cfg<T: 'static + Clone + Send>(app: Component, config: LaunchConfig<T>) {
+pub fn launch_cfg<T: 'static + Clone + Send>(app: AppComponent, config: LaunchConfig<T>) {
     use freya_dom::prelude::{FreyaDOM, SafeDOM};
 
     let fdom = FreyaDOM::default();
@@ -229,25 +229,28 @@ pub fn launch_cfg<T: 'static + Clone + Send>(app: Component, config: LaunchConfi
 #[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
 use dioxus_core::VirtualDom;
 #[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
-fn with_accessibility(app: Component) -> VirtualDom {
+fn with_accessibility(app: AppComponent) -> VirtualDom {
+    use dioxus::prelude::Props;
     use dioxus_core::fc_to_builder;
-    use dioxus_core::{Element, Scope};
-    use dioxus_core_macro::render;
+    use dioxus_core_macro::rsx;
     use freya_hooks::use_init_accessibility;
 
+    #[derive(Props, Clone, PartialEq)]
     struct RootProps {
-        app: Component,
+        app: AppComponent,
     }
 
     #[allow(non_snake_case)]
-    fn Root(cx: Scope<RootProps>) -> Element {
-        use_init_accessibility(cx);
+    fn Root(props: RootProps) -> Element {
+        use_init_accessibility();
 
         #[allow(non_snake_case)]
-        let App = cx.props.app;
+        let App = props.app;
 
-        render!(App {})
+        rsx!(App {})
     }
 
     VirtualDom::new_with_props(Root, RootProps { app })
 }
+
+type AppComponent = fn() -> Element;

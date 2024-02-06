@@ -19,23 +19,17 @@ use crate::{TestingConfig, SCALE_FACTOR};
 pub struct TestingHandler {
     pub(crate) vdom: VirtualDom,
     pub(crate) utils: TestUtils,
-
     pub(crate) event_emitter: EventEmitter,
     pub(crate) event_receiver: EventReceiver,
-
     pub(crate) platform_event_emitter: UnboundedSender<EventMessage>,
     pub(crate) platform_event_receiver: UnboundedReceiver<EventMessage>,
-
     pub(crate) events_queue: EventsQueue,
     pub(crate) elements_state: ElementsState,
     pub(crate) font_collection: FontCollection,
     pub(crate) viewports: Viewports,
     pub(crate) accessibility_manager: SharedAccessibilityManager,
-
     pub(crate) config: TestingConfig,
-
     pub(crate) ticker_sender: broadcast::Sender<()>,
-
     pub(crate) navigation_state: NavigatorState,
 }
 
@@ -45,8 +39,7 @@ impl TestingHandler {
         self.provide_vdom_contexts();
         let sdom = self.utils.sdom();
         let mut fdom = sdom.get();
-        let mutations = self.vdom.rebuild();
-        fdom.init_dom(mutations, SCALE_FACTOR as f32);
+        fdom.init_dom(&mut self.vdom, SCALE_FACTOR as f32);
     }
 
     /// Get a mutable reference to the current [`TestingConfig`].
@@ -55,16 +48,13 @@ impl TestingHandler {
     }
 
     /// Provide some values to the app
-    fn provide_vdom_contexts(&self) {
+    fn provide_vdom_contexts(&mut self) {
         self.vdom
-            .base_scope()
-            .provide_context(self.platform_event_emitter.clone());
+            .insert_any_root_context(Box::new(self.platform_event_emitter.clone()));
         self.vdom
-            .base_scope()
-            .provide_context(Arc::new(self.ticker_sender.subscribe()));
+            .insert_any_root_context(Box::new(Arc::new(self.ticker_sender.subscribe())));
         self.vdom
-            .base_scope()
-            .provide_context(self.navigation_state.clone());
+            .insert_any_root_context(Box::new(self.navigation_state.clone()));
     }
 
     /// Wait and apply new changes
@@ -117,13 +107,11 @@ impl TestingHandler {
             .await
             .ok();
 
-        let mutations = self.vdom.render_immediate();
-
         let (must_repaint, must_relayout) = self
             .utils
             .sdom()
             .get_mut()
-            .apply_mutations(mutations, SCALE_FACTOR as f32);
+            .render_mutations(&mut self.vdom, SCALE_FACTOR as f32);
 
         self.wait_for_work(self.config.size());
 

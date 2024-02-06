@@ -32,7 +32,7 @@ use crate::renderer::render_skia;
 use crate::HoveredNode;
 
 /// Manager for a Window
-pub struct WindowEnv<T: Clone> {
+pub struct WindowEnv<State: Clone> {
     gr_context: DirectContext,
     surface: Surface,
     gl_surface: GlutinSurface<WindowSurface>,
@@ -41,7 +41,7 @@ pub struct WindowEnv<T: Clone> {
     fb_info: FramebufferInfo,
     num_samples: usize,
     stencil_size: usize,
-    pub(crate) window_config: WindowConfig<T>,
+    pub(crate) window_config: WindowConfig<State>,
 }
 
 impl<T: Clone> Drop for WindowEnv<T> {

@@ -9,8 +9,8 @@ fn main() {
     launch(app);
 }
 
-fn app(cx: Scope) -> Element {
-    let progress_anim = use_animation(cx, || 0.0);
+fn app() -> Element {
+    let mut progress_anim = use_animation(|| 0.0);
     let progress = progress_anim.value() as f32;
 
     let set_to_max = {
@@ -24,7 +24,7 @@ fn app(cx: Scope) -> Element {
         progress_anim.set_value(value);
     };
 
-    render!(
+    rsx!(
         ProgressBar {
             show_progress: true,
             progress: progress

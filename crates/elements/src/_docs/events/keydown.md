@@ -6,8 +6,8 @@ Event Data: [`KeyboardData`](crate::events::KeyboardData)
 
 ```rust, no_run
 # use freya::prelude::*;
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         rect {
             onkeydown: |e| println!("Event: {e:?}")
         }

@@ -9,8 +9,8 @@ fn main() {
     launch(app);
 }
 
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         rect {
             color: "white",
             height: "100%",
@@ -26,27 +26,27 @@ fn app(cx: Scope) -> Element {
 }
 
 #[allow(non_snake_case)]
-fn Area(cx: Scope) -> Element {
-    let cursor_pos_over = use_state(cx, || (0f64, 0f64));
-    let cursor_pos_click = use_state(cx, || (0f64, 0f64));
+fn Area() -> Element {
+    let mut cursor_pos_over = use_signal(|| (0f64, 0f64));
+    let mut cursor_pos_click = use_signal(|| (0f64, 0f64));
 
-    let cursor_moved = |e: MouseEvent| {
+    let cursor_moved = move |e: MouseEvent| {
+        let pos = e.get_screen_coordinates();
         cursor_pos_over.with_mut(|cursor_pos| {
-            let pos = e.get_screen_coordinates();
             cursor_pos.0 = pos.x;
             cursor_pos.1 = pos.y;
         })
     };
 
-    let cursor_clicked = |e: MouseEvent| {
+    let cursor_clicked = move |e: MouseEvent| {
+        let pos = e.get_screen_coordinates();
         cursor_pos_click.with_mut(|cursor_pos| {
-            let pos = e.get_screen_coordinates();
             cursor_pos.0 = pos.x;
             cursor_pos.1 = pos.y;
         })
     };
 
-    render!(
+    rsx!(
         rect {
             height: "50%",
             width: "100%",
@@ -55,10 +55,10 @@ fn Area(cx: Scope) -> Element {
             onmouseover: cursor_moved,
             onclick: cursor_clicked,
             label {
-                "Mouse is at [x: {cursor_pos_over.0}, y: {cursor_pos_over.1}] ",
+                "Mouse is at [x: {cursor_pos_over.read().0}, y: {cursor_pos_over.read().1}] ",
             },
             label {
-                "Mouse clicked at [x: {cursor_pos_click.0}, y: {cursor_pos_click.1}]"
+                "Mouse clicked at [x: {cursor_pos_click.read().0}, y: {cursor_pos_click.read().1}]"
             }
         }
     )
