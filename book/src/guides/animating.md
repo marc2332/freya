@@ -18,16 +18,16 @@ fn main() {
     launch(app);
 }
 
- fn app() -> Element {
-    let mut animation = use_animation(|| 0.0);
+ fn app(cx: Scope) -> Element {
+    let animation = use_animation(cx, || 0.0);
 
     let progress = animation.value();
 
-    use_hook(move || {
+    use_memo(cx, (), move |_| {
         animation.start(Animation::new_linear(0.0..=100.0, 50));
-    })
+    });
 
-    rsx!(rect {
+    render!(rect {
         width: "{progress}",
     })
 }
@@ -53,8 +53,8 @@ fn main() {
 
 const TARGET: f64 = 500.0;
 
-fn app() -> Element {
-    let mut animation = use_animation_transition(TransitionAnimation::new_sine_in_out(200), (), || {
+fn app(cx: Scope) -> Element {
+    let animation = use_animation_transition(cx, TransitionAnimation::new_sine_in_out(200), (), || {
         vec![
             Animate::new_size(0.0, TARGET),
             Animate::new_color("rgb(33, 158, 188)", "white"),
@@ -72,7 +72,7 @@ fn app() -> Element {
         }
     };
 
-    rsx!(
+    render!(
         rect {
             overflow: "clip",
             background: "black",
@@ -83,7 +83,7 @@ fn app() -> Element {
                 height: "100%",
                 width: "200",
                 background: "{background}",
-                onclick,
+                onclick: onclick,
             }
         }
     )
