@@ -76,7 +76,7 @@ impl<T: Clone> WindowEnv<T> {
         }
 
         if let Some(with_window_builder) = &window_config.window_builder_hook {
-            (with_window_builder)(&mut window_builder);
+            window_builder = (with_window_builder)(window_builder);
         }
 
         let template = ConfigTemplateBuilder::new()
