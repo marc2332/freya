@@ -23,7 +23,7 @@ jobs:
           prefix-key: "2"   
 
       - name: cargo doc
-        run: cargo doc --package freya --no-default-features --features="freya-engine/mocked-engine"
+        run: cargo doc --package freya --no-deps --no-default-features --features="freya-engine/mocked-engine"
 
       - name: Upload to Deno Deploy
         uses: denoland/deployctl@v1
