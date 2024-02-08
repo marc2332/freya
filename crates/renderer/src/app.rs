@@ -166,8 +166,9 @@ impl<State: 'static + Clone> App<State> {
                     select! {
                         ev = self.event_receiver.recv() => {
                             if let Some(ev) = ev {
+                                let bubble = ev.should_bubble();
                                 let data = ev.data.any();
-                                self.vdom.handle_event(&ev.name, data, ev.element_id, true);
+                                self.vdom.handle_event(&ev.name, data, ev.element_id, bubble);
 
                                 self.vdom.process_events();
                             }
