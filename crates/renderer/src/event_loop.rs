@@ -47,9 +47,6 @@ pub fn run_event_loop<State: Clone>(
                 app.window_env_mut().window_mut().request_redraw();
             }
             Event::UserEvent(EventMessage::RequestRedraw) => app.render(&hovered_node),
-            Event::UserEvent(EventMessage::RequestRelayout) => {
-                app.process_layout();
-            }
             Event::UserEvent(EventMessage::RemeasureTextGroup(text_id)) => {
                 app.measure_text_group(&text_id);
             }
@@ -89,7 +86,11 @@ pub fn run_event_loop<State: Clone>(
                         });
                     }
                     WindowEvent::RedrawRequested => {
-                        app.process_layout();
+                        if app.measure_layout_on_next_render {
+                            app.process_layout();
+
+                            app.measure_layout_on_next_render = false;
+                        }
                         app.render(&hovered_node);
                         app.tick();
                     }

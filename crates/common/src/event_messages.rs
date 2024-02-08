@@ -11,8 +11,6 @@ pub enum EventMessage {
     UpdateTemplate(Template),
     /// Pull the VirtualDOM
     PollVDOM,
-    /// Request a layout recalculation
-    RequestRelayout,
     /// Request a rerender
     RequestRerender,
     /// Request a redraw
