@@ -1,7 +1,8 @@
 use std::sync::Arc;
 
 use dioxus_core::AttributeValue;
-use dioxus_signals::{use_memo_with_dependencies, Dependency, Readable};
+use dioxus_hooks::{use_memo_with_dependencies, Dependency};
+use dioxus_signals::Readable;
 use freya_node_state::{CanvasReference, CanvasRunner, CustomAttributeValues};
 
 /// Holds a rendering hook callback that allows to render to the Canvas.

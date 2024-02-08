@@ -3,7 +3,6 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus::signals::use_signal;
 use freya::events::MouseEvent;
 use freya::prelude::*;
 
@@ -112,6 +111,7 @@ fn app() -> Element {
                                         padding: "10",
                                         shadow: "0 0 30 0 rgb(0, 0, 0, 150)",
                                         onmousedown:  move |e: MouseEvent| {
+                                            e.stop_propagation();
                                             clicking_drag.set(Some((id, e.get_element_coordinates().to_tuple())));
                                         },
                                         onmouseleave: move |_: MouseEvent| {
@@ -309,6 +309,7 @@ fn Editor() -> Element {
                                 let onmousedown = {
                                     to_owned![editable];
                                     move |e: MouseEvent| {
+                                        e.stop_propagation();
                                         editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
                                     }
                                 };
@@ -320,7 +321,7 @@ fn Editor() -> Element {
                                     }
                                 };
 
-                                let onclick = {
+                                let onglobalclick = {
                                     to_owned![editable];
                                     move |_: MouseEvent| {
                                         editable.process_event(&EditableEvent::Click);
@@ -361,7 +362,7 @@ fn Editor() -> Element {
                                             cursor_id: "{cursor_id}",
                                             onmousedown,
                                             onmouseover,
-                                            onclick,
+                                            onglobalclick,
                                             highlights: highlights,
                                             text {
                                                 color: "rgb(240, 240, 240)",

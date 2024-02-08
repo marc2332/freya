@@ -14,7 +14,7 @@ use winit::window::CursorIcon;
 
 /// [`DropdownItem`] component properties.
 #[derive(Props, Clone, PartialEq)]
-pub struct DropdownItemProps<T: 'static + Clone> {
+pub struct DropdownItemProps<T: 'static + Clone + PartialEq> {
     /// Theme override.
     pub theme: Option<DropdownItemThemeWith>,
     /// Selectable items, like [`DropdownItem`]
@@ -132,7 +132,7 @@ where
 
 /// [`Dropdown`] component properties.
 #[derive(Props, Clone, PartialEq)]
-pub struct DropdownProps<T: 'static + Clone> {
+pub struct DropdownProps<T: 'static + Clone + PartialEq> {
     /// Theme override.
     pub theme: Option<DropdownThemeWith>,
     /// Selectable items, like [`DropdownItem`]
@@ -188,7 +188,7 @@ pub fn Dropdown<T>(props: DropdownProps<T>) -> Element
 where
     T: PartialEq + Clone + Display + 'static,
 {
-    let selected = use_context_provider(|| Signal::new(props.value.clone()));
+    let mut selected = use_context_provider(|| Signal::new(props.value.clone()));
     let theme = use_applied_theme!(&props.theme, dropdown);
     let mut focus = use_focus();
     let mut status = use_signal(DropdownStatus::default);

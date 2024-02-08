@@ -47,6 +47,11 @@ impl DomEvent {
         return does_event_move_cursor(self.name.as_str());
     }
 
+    // Bubble all events except keyboard
+    pub fn should_bubble(&self) -> bool {
+        !matches!(self.data, DomEventData::Keyboard(_))
+    }
+
     pub fn new(
         node_id: NodeId,
         element_id: ElementId,

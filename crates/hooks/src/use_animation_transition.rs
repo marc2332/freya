@@ -1,5 +1,6 @@
 use dioxus_core::prelude::spawn;
-use dioxus_signals::{use_memo_with_dependencies, Dependency, Readable, Signal, Writable};
+use dioxus_hooks::{use_memo_with_dependencies, Dependency};
+use dioxus_signals::{Readable, Signal, Writable};
 use freya_engine::prelude::Color;
 use freya_node_state::Parse;
 use tokio::time::Instant;
@@ -54,7 +55,7 @@ impl TransitionState {
             (Self::Size(current), Transition::Size(start, end)) => {
                 let road = *end - *start;
                 let walked = (road / 100.0) * value;
-                *current = walked;
+                *current = start + walked;
             }
             (Self::Color(current), Transition::Color(start, end)) => {
                 let apply_index = |v: u8, d: u8, value: f64| -> u8 {
@@ -147,7 +148,6 @@ pub struct TransitionsManager {
 impl TransitionsManager {
     /// Animate from the end to the start.
     pub fn reverse(&mut self) {
-        self.clear();
         let animation = self.transition_animation.to_animation(100.0..=0.0);
         self.run_with_animation(animation);
     }
@@ -165,7 +165,7 @@ impl TransitionsManager {
         let platform = self.platform.clone();
         let mut ticker = platform.new_ticker();
         let transitions = self.transitions;
-        let transitions_storage = self.transitions_storage;
+        let mut transitions_storage = self.transitions_storage;
         let mut current_animation_id = self.current_animation_id;
 
         // Set as current this new animation

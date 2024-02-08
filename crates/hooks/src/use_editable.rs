@@ -6,6 +6,7 @@ use std::{
 use dioxus_core::{prelude::spawn, use_hook, AttributeValue};
 use dioxus_hooks::to_owned;
 use dioxus_signals::{Readable, Signal, Writable};
+use dioxus_std::clipboard::use_clipboard;
 use freya_common::{CursorLayoutResponse, EventMessage};
 use freya_elements::events::{KeyboardData, MouseData};
 use freya_node_state::{CursorReference, CustomAttributeValues};
@@ -152,11 +153,17 @@ impl EditableConfig {
 /// Create a virtual text editor with it's own cursor and rope.
 pub fn use_editable(initializer: impl Fn() -> EditableConfig, mode: EditableMode) -> UseEditable {
     let platform = use_platform();
+    let clipboard = use_clipboard();
 
     use_hook(|| {
         let text_id = Uuid::new_v4();
         let config = initializer();
-        let editor = Signal::new(RopeEditor::new(config.content, config.cursor, mode));
+        let mut editor = Signal::new(RopeEditor::new(
+            config.content,
+            config.cursor,
+            mode,
+            clipboard,
+        ));
         let selecting_text_with_mouse = Signal::new(None);
         let (cursor_sender, mut cursor_receiver) = unbounded_channel::<CursorLayoutResponse>();
         let cursor_reference = CursorReference {
