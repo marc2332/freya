@@ -28,7 +28,7 @@ fn app() -> Element {
     use_init_theme(DARK_THEME);
     let dog_url = use_signal(|| None);
 
-    let onclick = move || {
+    let onclick = move |_| {
         spawn(async move {
             if let Some(url) = fetch_random_dog().await {
                 dog_url.set(Some(url))
