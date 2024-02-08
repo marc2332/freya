@@ -57,6 +57,7 @@ pub struct App<State: 'static + Clone> {
     ticker_sender: broadcast::Sender<()>,
     plugins: PluginsManager,
     navigator_state: NavigatorState,
+    pub(crate) measure_layout_on_next_render: bool,
 }
 
 impl<State: 'static + Clone> App<State> {
@@ -112,6 +113,7 @@ impl<State: 'static + Clone> App<State> {
             ticker_sender: broadcast::channel(5).0,
             plugins,
             navigator_state: NavigatorState::new(NavigationMode::NotKeyboard),
+            measure_layout_on_next_render: false,
         }
     }
 
@@ -186,9 +188,11 @@ impl<State: 'static + Clone> App<State> {
             let (must_repaint, must_relayout) = self.apply_vdom_changes();
 
             if must_relayout {
+                self.measure_layout_on_next_render = true;
+            }
+
+            if must_relayout || must_repaint {
                 self.window_env.window.request_redraw();
-            } else if must_repaint {
-                self.proxy.send_event(EventMessage::RequestRedraw).unwrap();
             }
         }
     }
@@ -300,6 +304,7 @@ impl<State: 'static + Clone> App<State> {
 
     /// Resize the Window
     pub fn resize(&mut self, size: PhysicalSize<u32>) {
+        self.measure_layout_on_next_render = true;
         self.sdom.get().layout().reset();
         self.window_env.resize(size);
     }
