@@ -55,7 +55,7 @@ impl TransitionState {
             (Self::Size(current), Transition::Size(start, end)) => {
                 let road = *end - *start;
                 let walked = (road / 100.0) * value;
-                *current = walked;
+                *current = start + walked;
             }
             (Self::Color(current), Transition::Color(start, end)) => {
                 let apply_index = |v: u8, d: u8, value: f64| -> u8 {
@@ -148,7 +148,6 @@ pub struct TransitionsManager {
 impl TransitionsManager {
     /// Animate from the end to the start.
     pub fn reverse(&mut self) {
-        self.clear();
         let animation = self.transition_animation.to_animation(100.0..=0.0);
         self.run_with_animation(animation);
     }
