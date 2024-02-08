@@ -113,7 +113,7 @@ impl<State: 'static + Clone> App<State> {
             ticker_sender: broadcast::channel(5).0,
             plugins,
             navigator_state: NavigatorState::new(NavigationMode::NotKeyboard),
-            measure_layout_on_next_render: false
+            measure_layout_on_next_render: false,
         }
     }
 
@@ -191,7 +191,7 @@ impl<State: 'static + Clone> App<State> {
                 self.measure_layout_on_next_render = true;
             }
 
-            if must_relayout || must_repaint{
+            if must_relayout || must_repaint {
                 self.window_env.window.request_redraw();
             }
         }
