@@ -25,7 +25,7 @@ mod tabs;
 use tab::*;
 use tabs::{layout::*, style::*, tree::*};
 
-/// Run the [`VirtualDom`](dioxus_core::VirtualDom) with a sidepanel where the devtools are located.
+/// Run the [`VirtualDom`] with a sidepanel where the devtools are located.
 pub fn with_devtools(
     rdom: SafeDOM,
     root: fn() -> Element,
