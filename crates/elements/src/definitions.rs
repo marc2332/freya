@@ -517,6 +517,7 @@ pub mod events {
     }
 
     /// A platform specific event.
+    #[doc(hidden)]
     pub struct PlatformEventData {
         event: Box<dyn Any>,
     }
