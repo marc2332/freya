@@ -66,8 +66,7 @@ pub fn use_focus() -> UseFocus {
     let id = use_hook(|| {
         let mut counter = accessibility_id_counter.borrow_mut();
         *counter += 1;
-        let id = AccessibilityId(*counter);
-        id
+        AccessibilityId(*counter)
     });
 
     let is_focused = use_memo(move || id == *focused_id.read());
