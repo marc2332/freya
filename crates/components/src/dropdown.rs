@@ -72,21 +72,15 @@ where
     };
     let color = theme.font_theme.color;
 
-    use_drop({
-        to_owned![status, platform];
-        move || {
-            if *status.peek() == DropdownItemStatus::Hovering {
-                platform.set_cursor(CursorIcon::default());
-            }
+    use_drop(move || {
+        if *status.peek() == DropdownItemStatus::Hovering {
+            platform.set_cursor(CursorIcon::default());
         }
     });
 
-    let onmouseenter = {
-        to_owned![platform];
-        move |_| {
-            platform.set_cursor(CursorIcon::Pointer);
-            status.set(DropdownItemStatus::Hovering);
-        }
+    let onmouseenter = move |_| {
+        platform.set_cursor(CursorIcon::Pointer);
+        status.set(DropdownItemStatus::Hovering);
     };
 
     let onmouseleave = move |_| {
@@ -204,12 +198,9 @@ where
         *selected.write() = value;
     });
 
-    use_drop({
-        to_owned![status, platform];
-        move || {
-            if *status.peek() == DropdownStatus::Hovering {
-                platform.set_cursor(CursorIcon::default());
-            }
+    use_drop(move || {
+        if *status.peek() == DropdownStatus::Hovering {
+            platform.set_cursor(CursorIcon::default());
         }
     });
 
@@ -237,12 +228,9 @@ where
         }
     };
 
-    let onmouseenter = {
-        to_owned![status, platform];
-        move |_| {
-            platform.set_cursor(CursorIcon::Pointer);
-            status.set(DropdownStatus::Hovering);
-        }
+    let onmouseenter = move |_| {
+        platform.set_cursor(CursorIcon::Pointer);
+        status.set(DropdownStatus::Hovering);
     };
 
     let onmouseleave = move |_| {

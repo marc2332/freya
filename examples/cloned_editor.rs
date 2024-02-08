@@ -34,18 +34,12 @@ fn Body() -> Element {
     let cursor_attr = editable.cursor_attr();
     let editor = editable.editor().read();
 
-    let onclick = {
-        to_owned![editable];
-        move |_: MouseEvent| {
-            editable.process_event(&EditableEvent::Click);
-        }
+    let onclick = move |_: MouseEvent| {
+        editable.process_event(&EditableEvent::Click);
     };
 
-    let onkeydown = {
-        to_owned![editable];
-        move |e: KeyboardEvent| {
-            editable.process_event(&EditableEvent::KeyDown(e.data));
-        }
+    let onkeydown = move |e: KeyboardEvent| {
+        editable.process_event(&EditableEvent::KeyDown(e.data));
     };
 
     rsx!(
@@ -87,18 +81,12 @@ fn Body() -> Element {
                         ""
                     };
 
-                    let onmousedown = {
-                        to_owned![editable];
-                        move |e: MouseEvent| {
-                            editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
-                        }
+                    let onmousedown = move |e: MouseEvent| {
+                        editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
                     };
 
-                    let onmouseover = {
-                        to_owned![editable];
-                        move |e: MouseEvent| {
-                            editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
-                        }
+                    let onmouseover = move |e: MouseEvent| {
+                        editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
                     };
 
                     let highlights = editable.highlights_attr(line_index);
@@ -171,18 +159,12 @@ fn Body() -> Element {
                         ""
                     };
 
-                    let onmousedown = {
-                        to_owned![editable];
-                        move |e: MouseEvent| {
-                            editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
-                        }
+                    let onmousedown = move |e: MouseEvent| {
+                        editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
                     };
 
-                    let onmouseover = {
-                        to_owned![editable];
-                        move |e: MouseEvent| {
-                            editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
-                        }
+                    let onmouseover = move |e: MouseEvent| {
+                        editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
                     };
 
 

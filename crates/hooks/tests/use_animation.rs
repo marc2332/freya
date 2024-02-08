@@ -60,11 +60,8 @@ pub async fn restart_progress() {
 
         let progress = animation.value();
 
-        let mut restart = {
-            to_owned![animation];
-            move || {
-                animation.clear();
-            }
+        let mut restart = move || {
+            animation.clear();
         };
 
         use_hook(|| {

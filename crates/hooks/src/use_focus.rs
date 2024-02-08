@@ -9,7 +9,7 @@ use freya_node_state::CustomAttributeValues;
 use crate::AccessibilityIdCounter;
 
 /// Manage the focus operations of given Node
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct UseFocus {
     id: AccessibilityId,
     is_selected: ReadOnlySignal<bool>,

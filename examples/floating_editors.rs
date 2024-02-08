@@ -15,57 +15,45 @@ fn app() -> Element {
     let mut hovering = use_signal(|| false);
     let mut canvas_pos = use_signal(|| (0.0f64, 0.0f64));
     let mut nodes = use_signal(|| vec![(0.0f64, 0.0f64)]);
-    let clicking = use_signal::<Option<(f64, f64)>>(|| None);
+    let mut clicking = use_signal::<Option<(f64, f64)>>(|| None);
     let mut clicking_drag = use_signal::<Option<(usize, (f64, f64))>>(|| None);
 
-    let onmouseleave = {
-        to_owned![clicking];
-        move |_: MouseEvent| {
-            if clicking.peek().is_none() {
-                hovering.set(false);
-            }
+    let onmouseleave = move |_: MouseEvent| {
+        if clicking.peek().is_none() {
+            hovering.set(false);
         }
     };
 
-    let onmouseover = {
-        to_owned![clicking];
-        move |e: MouseEvent| {
-            hovering.set(true);
-            if let Some(clicking_cords) = *clicking.peek() {
-                let coordinates = e.get_screen_coordinates();
-                canvas_pos.set((
-                    coordinates.x + clicking_cords.0,
-                    coordinates.y + clicking_cords.1,
-                ));
-            }
-            if let Some((node_id, clicking_cords)) = *clicking_drag.peek() {
-                let coordinates = e.get_screen_coordinates();
-
-                let mut node = nodes.get_mut(node_id).unwrap();
-                node.0 = coordinates.x - clicking_cords.0 - canvas_pos.peek().0;
-                node.1 = coordinates.y - clicking_cords.1 - canvas_pos.peek().1 - 25.0;
-                // The 25 is because of label from below.
-            }
-        }
-    };
-
-    let onmousedown = {
-        to_owned![clicking];
-        move |e: MouseEvent| {
+    let onmouseover = move |e: MouseEvent| {
+        hovering.set(true);
+        if let Some(clicking_cords) = *clicking.peek() {
             let coordinates = e.get_screen_coordinates();
-            clicking.set(Some((
-                canvas_pos.peek().0 - coordinates.x,
-                canvas_pos.peek().1 - coordinates.y,
-            )));
+            canvas_pos.set((
+                coordinates.x + clicking_cords.0,
+                coordinates.y + clicking_cords.1,
+            ));
+        }
+        if let Some((node_id, clicking_cords)) = *clicking_drag.peek() {
+            let coordinates = e.get_screen_coordinates();
+
+            let mut node = nodes.get_mut(node_id).unwrap();
+            node.0 = coordinates.x - clicking_cords.0 - canvas_pos.peek().0;
+            node.1 = coordinates.y - clicking_cords.1 - canvas_pos.peek().1 - 25.0;
+            // The 25 is because of label from below.
         }
     };
 
-    let onclick = {
-        to_owned![clicking];
-        move |_: MouseEvent| {
-            clicking.set(None);
-            clicking_drag.set(None);
-        }
+    let onmousedown = move |e: MouseEvent| {
+        let coordinates = e.get_screen_coordinates();
+        clicking.set(Some((
+            canvas_pos.peek().0 - coordinates.x,
+            canvas_pos.peek().1 - coordinates.y,
+        )));
+    };
+
+    let onclick = move |_: MouseEvent| {
+        clicking.set(None);
+        clicking_drag.set(None);
     };
 
     let create_node = move |_| {
@@ -159,7 +147,7 @@ fn app() -> Element {
 #[allow(non_snake_case)]
 fn Editor() -> Element {
     let mut focus_manager = use_focus();
-    let editable = use_editable(
+    let mut editable = use_editable(
         || {
             EditableConfig::new("Lorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet".to_string())
         },
@@ -189,21 +177,15 @@ fn Editor() -> Element {
         focus_manager.focus();
     });
 
-    let onclick = {
-        to_owned![focus_manager];
-        move |_: MouseEvent| {
-            if !focus_manager.is_focused() {
-                focus_manager.focus();
-            }
+    let onclick = move |_: MouseEvent| {
+        if !focus_manager.is_focused() {
+            focus_manager.focus();
         }
     };
 
-    let onkeydown = {
-        to_owned![editable];
-        move |e: KeyboardEvent| {
-            if focus_manager.is_focused() {
-                editable.process_event(&EditableEvent::KeyDown(e.data));
-            }
+    let onkeydown = move |e: KeyboardEvent| {
+        if focus_manager.is_focused() {
+            editable.process_event(&EditableEvent::KeyDown(e.data));
         }
     };
 
@@ -288,8 +270,6 @@ fn Editor() -> Element {
                         scroll_with_arrows: false,
                         {
                             editor.lines().map(move |l| {
-                                let editable = editable.clone();
-
                                 let is_line_selected = cursor.row() == line_index;
 
                                 // Only show the cursor in the active line
@@ -306,26 +286,17 @@ fn Editor() -> Element {
                                     ""
                                 };
 
-                                let onmousedown = {
-                                    to_owned![editable];
-                                    move |e: MouseEvent| {
-                                        e.stop_propagation();
-                                        editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
-                                    }
+                                let onmousedown = move |e: MouseEvent| {
+                                    e.stop_propagation();
+                                    editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
                                 };
 
-                                let onmouseover = {
-                                    to_owned![editable];
-                                    move |e: MouseEvent| {
-                                        editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
-                                    }
+                                let onmouseover = move |e: MouseEvent| {
+                                    editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
                                 };
 
-                                let onglobalclick = {
-                                    to_owned![editable];
-                                    move |_: MouseEvent| {
-                                        editable.process_event(&EditableEvent::Click);
-                                    }
+                                let onglobalclick = move |_: MouseEvent| {
+                                    editable.process_event(&EditableEvent::Click);
                                 };
 
                                 let manual_line_height = font_size * line_height;

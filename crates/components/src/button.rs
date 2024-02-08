@@ -52,7 +52,7 @@ pub enum ButtonStatus {
 ///
 #[allow(non_snake_case)]
 pub fn Button(props: ButtonProps) -> Element {
-    let focus = use_focus();
+    let mut focus = use_focus();
     let mut status = use_signal(ButtonStatus::default);
     let platform = use_platform();
 
@@ -73,7 +73,7 @@ pub fn Button(props: ButtonProps) -> Element {
     } = use_applied_theme!(&props.theme, button);
 
     let onclick = {
-        to_owned![focus, click];
+        to_owned![click];
         move |ev| {
             focus.focus();
             if let Some(onclick) = &click {
@@ -82,21 +82,15 @@ pub fn Button(props: ButtonProps) -> Element {
         }
     };
 
-    use_drop({
-        to_owned![status, platform];
-        move || {
-            if *status.read() == ButtonStatus::Hovering {
-                platform.set_cursor(CursorIcon::default());
-            }
+    use_drop(move || {
+        if *status.read() == ButtonStatus::Hovering {
+            platform.set_cursor(CursorIcon::default());
         }
     });
 
-    let onmouseenter = {
-        to_owned![status, platform];
-        move |_| {
-            platform.set_cursor(CursorIcon::Pointer);
-            status.set(ButtonStatus::Hovering);
-        }
+    let onmouseenter = move |_| {
+        platform.set_cursor(CursorIcon::Pointer);
+        status.set(ButtonStatus::Hovering);
     };
 
     let onmouseleave = move |_| {
@@ -104,13 +98,10 @@ pub fn Button(props: ButtonProps) -> Element {
         status.set(ButtonStatus::default());
     };
 
-    let onkeydown = {
-        to_owned![focus];
-        move |e: KeyboardEvent| {
-            if focus.validate_keydown(e) {
-                if let Some(onclick) = &props.onclick {
-                    onclick.call(None)
-                }
+    let onkeydown = move |e: KeyboardEvent| {
+        if focus.validate_keydown(e) {
+            if let Some(onclick) = &props.onclick {
+                onclick.call(None)
             }
         }
     };
