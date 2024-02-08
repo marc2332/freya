@@ -166,6 +166,15 @@ pub fn run_event_loop<State: Clone>(
                             modifiers: map_winit_modifiers(modifiers_state),
                         })
                     }
+                    WindowEvent::CursorLeft { .. } => {
+                        cursor_pos = CursorPoint::new(-1.0, -1.0);
+
+                        app.send_event(FreyaEvent::Mouse {
+                            name: "mouseover".to_string(),
+                            cursor: cursor_pos,
+                            button: None,
+                        });
+                    }
                     WindowEvent::CursorMoved { position, .. } => {
                         cursor_pos = CursorPoint::from((position.x, position.y));
 
