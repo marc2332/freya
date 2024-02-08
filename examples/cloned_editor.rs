@@ -25,7 +25,7 @@ fn Body() -> Element {
     let theme = use_theme();
     let theme = theme.read();
 
-    let editable = use_editable(
+    let mut editable = use_editable(
         || {
             EditableConfig::new("Lorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet".to_string())
         },
@@ -61,7 +61,7 @@ fn Body() -> Element {
                 builder_values: editable.clone(),
                 scroll_with_arrows: false,
                 builder: Rc::new(move |(key, line_index, values): (usize, usize, &Option<UseEditable>)| {
-                    let editable = values.as_ref().unwrap();
+                    let mut editable = values.as_ref().unwrap().clone();
                     let editor = editable.editor().read();
                     let line = editor.line(line_index).unwrap();
 
@@ -139,7 +139,7 @@ fn Body() -> Element {
                 builder_values: editable.clone(),
                 scroll_with_arrows: false,
                 builder: Rc::new(move |(key, line_index, values): (usize, usize, &Option<UseEditable>)| {
-                    let editable = values.as_ref().unwrap();
+                    let mut editable = values.as_ref().unwrap().clone();
                     let editor = editable.editor().read();
                     let line = editor.line(line_index).unwrap();
 
