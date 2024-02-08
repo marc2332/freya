@@ -195,13 +195,8 @@ impl<T: Clone> WindowEnv<T> {
     }
 
     /// Get a reference to the Canvas.
-    pub fn canvas_mut(&mut self) -> &Canvas {
+    pub fn canvas(&mut self) -> &Canvas {
         self.surface.canvas()
-    }
-
-    /// Get a mutable reference to the Window.
-    pub fn window_mut(&mut self) -> &mut Window {
-        &mut self.window
     }
 
     /// Clear the canvas.
@@ -242,7 +237,7 @@ impl<T: Clone> WindowEnv<T> {
     pub fn run_on_setup(&mut self) {
         let on_setup = self.window_config.on_setup.clone();
         if let Some(on_setup) = on_setup {
-            (on_setup)(self.window_mut())
+            (on_setup)(&mut self.window)
         }
     }
 
@@ -250,7 +245,7 @@ impl<T: Clone> WindowEnv<T> {
     pub fn run_on_exit(&mut self) {
         let on_exit = self.window_config.on_exit.clone();
         if let Some(on_exit) = on_exit {
-            (on_exit)(self.window_mut())
+            (on_exit)(&mut self.window)
         }
     }
 }

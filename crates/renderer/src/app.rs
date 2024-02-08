@@ -55,13 +55,13 @@ impl<State: 'static + Clone> App<State> {
         vdom: VirtualDom,
         proxy: &EventLoopProxy<EventMessage>,
         mutations_notifier: Option<Arc<Notify>>,
-        mut window_env: WindowEnv<State>,
+        window_env: WindowEnv<State>,
         fonts_config: FontsConfig,
         mut plugins: PluginsManager,
     ) -> Self {
         let accessibility = AccessKitManager::new(&window_env.window, proxy.clone());
 
-        window_env.window_mut().set_visible(true);
+        window_env.window.set_visible(true);
 
         let mut font_collection = FontCollection::new();
         let def_mgr = FontMgr::default();
@@ -80,7 +80,7 @@ impl<State: 'static + Clone> App<State> {
         let (event_emitter, event_receiver) = mpsc::unbounded_channel::<DomEvent>();
         let (focus_sender, focus_receiver) = watch::channel(ACCESSIBILITY_ROOT_ID);
 
-        plugins.send(PluginEvent::WindowCreated(window_env.window_mut()));
+        plugins.send(PluginEvent::WindowCreated(&window_env.window));
 
         Self {
             sdom,
@@ -232,7 +232,7 @@ impl<State: 'static + Clone> App<State> {
     /// Render the App into the Window Canvas
     pub fn render(&mut self, hovered_node: &HoveredNode) {
         self.plugins.send(PluginEvent::BeforeRender {
-            canvas: self.window_env.canvas_mut(),
+            canvas: self.window_env.canvas(),
             font_collection: &self.font_collection,
             freya_dom: &self.sdom.get(),
             viewports: &self.viewports,
@@ -244,7 +244,7 @@ impl<State: 'static + Clone> App<State> {
             .render_accessibility(self.window_env.window.title().as_str());
 
         self.plugins.send(PluginEvent::AfterRender {
-            canvas: self.window_env.canvas_mut(),
+            canvas: self.window_env.canvas(),
             font_collection: &self.font_collection,
             freya_dom: &self.sdom.get(),
             viewports: &self.viewports,
@@ -332,7 +332,7 @@ impl<State: 'static + Clone> App<State> {
     pub fn start_render(&mut self, hovered_node: &HoveredNode) {
         self.window_env.clear();
 
-        let canvas = self.window_env.canvas_mut();
+        let canvas = self.window_env.canvas();
         let fdom = self.sdom.get();
 
         let mut matrices: Vec<(Matrix, Vec<NodeId>)> = Vec::default();
