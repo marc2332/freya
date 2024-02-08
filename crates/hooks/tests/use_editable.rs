@@ -11,7 +11,7 @@ use freya_testing::{
 #[tokio::test]
 pub async fn multiple_lines_single_editor() {
     fn use_editable_app() -> Element {
-        let editable = use_editable(
+        let mut editable = use_editable(
             || EditableConfig::new("Hello Rustaceans".to_string()),
             EditableMode::MultipleLinesSingleEditor,
         );
@@ -114,7 +114,7 @@ pub async fn multiple_lines_single_editor() {
 #[tokio::test]
 pub async fn single_line_mulitple_editors() {
     fn use_editable_app() -> Element {
-        let editable = use_editable(
+        let mut editable = use_editable(
             || EditableConfig::new("Hello Rustaceans\nHello World".to_string()),
             EditableMode::SingleLineMultipleEditors,
         );
@@ -226,7 +226,7 @@ pub async fn single_line_mulitple_editors() {
 #[tokio::test]
 pub async fn highlight_multiple_lines_single_editor() {
     fn use_editable_app() -> Element {
-        let editable = use_editable(
+        let mut editable = use_editable(
             || EditableConfig::new("Hello Rustaceans\n".repeat(2)),
             EditableMode::MultipleLinesSingleEditor,
         );
@@ -320,7 +320,7 @@ pub async fn highlight_multiple_lines_single_editor() {
 #[tokio::test]
 pub async fn highlights_single_line_mulitple_editors() {
     fn use_editable_app() -> Element {
-        let editable = use_editable(
+        let mut editable = use_editable(
             || EditableConfig::new("Hello Rustaceans\n".repeat(2)),
             EditableMode::SingleLineMultipleEditors,
         );
