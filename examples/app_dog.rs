@@ -33,7 +33,7 @@ fn app() -> Element {
             if let Some(url) = fetch_random_dog().await {
                 dog_url.set(Some(url))
             }
-        })
+        });
     };
 
     rsx!(
