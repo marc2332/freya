@@ -26,7 +26,7 @@ async fn fetch_random_dog() -> Option<Url> {
 
 fn app() -> Element {
     use_init_theme(DARK_THEME);
-    let dog_url = use_signal(|| None);
+    let mut dog_url = use_signal(|| None);
 
     let onclick = move |_| {
         spawn(async move {
