@@ -15,10 +15,11 @@ mod accessibility;
 mod app;
 mod config;
 mod elements;
+mod event_loop;
 mod renderer;
 mod window;
-mod wireframe;
 mod winit_waker;
+mod wireframe;
 
 pub type HoveredNode = Option<Arc<Mutex<Option<NodeId>>>>;
 

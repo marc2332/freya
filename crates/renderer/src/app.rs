@@ -1,41 +1,29 @@
-use accesskit::Action;
-use accesskit_winit::ActionRequestEvent;
 use dioxus_core::{Template, VirtualDom};
 use dioxus_native_core::NodeId;
 use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_dom::prelude::SafeDOM;
-use freya_elements::events::keyboard::{
-    map_winit_key, map_winit_modifiers, map_winit_physical_key, Code, Key,
-};
 use freya_engine::prelude::*;
-use futures::pin_mut;
-use futures::FutureExt;
-use std::{sync::Arc, task::Waker};
+use futures_task::Waker;
+use futures_util::FutureExt;
+use pin_utils::pin_mut;
+use std::sync::Arc;
 use tokio::sync::broadcast;
 use tokio::{
     select,
     sync::{mpsc, watch, Notify},
 };
-use torin::geometry::CursorPoint;
 use torin::geometry::{Area, Size2D};
 use tracing::info;
 use uuid::Uuid;
 use winit::dpi::PhysicalSize;
-use winit::event::{
-    ElementState, Event, Ime, KeyEvent, MouseScrollDelta, StartCause, Touch, TouchPhase,
-    WindowEvent,
-};
 use winit::event_loop::{EventLoop, EventLoopProxy};
-use winit::keyboard::{KeyCode, ModifiersState, PhysicalKey};
 
-use crate::{accessibility::AccessKitManager, renderer::render_skia, winit_waker::winit_waker};
+use crate::{
+    accessibility::AccessKitManager, event_loop::run_event_loop, renderer::render_skia,
+    winit_waker::winit_waker,
+};
 use crate::{FontsConfig, HoveredNode, WindowEnv};
-
-// https://github.com/emilk/egui/issues/461
-// https://github.com/rust-windowing/winit/issues/22
-// https://github.com/flutter/flutter/issues/71385
-const WHEEL_SPEED_MODIFIER: f32 = 53.0;
 
 /// Manages the Application lifecycle
 pub struct App<State: 'static + Clone> {
@@ -58,6 +46,7 @@ pub struct App<State: 'static + Clone> {
     pub(crate) ticker_sender: broadcast::Sender<()>,
     pub(crate) plugins: PluginsManager,
     pub(crate) navigator_state: NavigatorState,
+    pub(crate) measure_layout_on_next_render: bool,
 }
 
 impl<State: 'static + Clone> App<State> {
@@ -113,6 +102,7 @@ impl<State: 'static + Clone> App<State> {
             ticker_sender: broadcast::channel(5).0,
             plugins,
             navigator_state: NavigatorState::new(NavigationMode::NotKeyboard),
+            measure_layout_on_next_render: false,
         }
     }
 
@@ -167,8 +157,9 @@ impl<State: 'static + Clone> App<State> {
                     select! {
                         ev = self.event_receiver.recv() => {
                             if let Some(ev) = ev {
+                                let bubble = ev.should_bubble();
                                 let data = ev.data.any();
-                                self.vdom.handle_event(&ev.name, data, ev.element_id, true);
+                                self.vdom.handle_event(&ev.name, data, ev.element_id, bubble);
 
                                 self.vdom.process_events();
                             }
@@ -187,9 +178,11 @@ impl<State: 'static + Clone> App<State> {
             let (must_repaint, must_relayout) = self.apply_vdom_changes();
 
             if must_relayout {
+                self.measure_layout_on_next_render = true;
+            }
+
+            if must_relayout || must_repaint {
                 self.window_env.window.request_redraw();
-            } else if must_repaint {
-                self.proxy.send_event(EventMessage::RequestRedraw).unwrap();
             }
         }
     }
@@ -262,6 +255,7 @@ impl<State: 'static + Clone> App<State> {
 
     /// Resize the Window
     pub fn resize(&mut self, size: PhysicalSize<u32>) {
+        self.measure_layout_on_next_render = true;
         self.sdom.get().layout().reset();
         self.window_env.resize(size);
     }
@@ -378,198 +372,16 @@ impl<State: 'static + Clone> App<State> {
 
     /// Finish all rendering in the Window
     pub fn finish_render(&mut self) {
-        self.window_env.flush_and_submit();
+        self.window_env.finish_render();
     }
 
     /// Run the application.
     pub fn run(
-        &mut self,
+        self,
         event_loop: EventLoop<EventMessage>,
         proxy: EventLoopProxy<EventMessage>,
         hovered_node: HoveredNode,
     ) {
-        let mut cursor_pos = CursorPoint::default();
-        let mut modifiers_state = ModifiersState::empty();
-
-        self.window_env.run_on_setup();
-
-        event_loop
-            .run(move |event, event_loop| match event {
-                Event::NewEvents(StartCause::Init) => {
-                    _ = proxy.send_event(EventMessage::PollVDOM);
-                }
-                Event::UserEvent(EventMessage::FocusAccessibilityNode(id)) => {
-                    self.accessibility
-                        .set_accessibility_focus(id, &self.window_env.window);
-                }
-                Event::UserEvent(EventMessage::RequestRerender) => {
-                    self.window_env.window_mut().request_redraw();
-                }
-                Event::UserEvent(EventMessage::RequestRedraw) => self.render(&hovered_node),
-                Event::UserEvent(EventMessage::RequestRelayout) => {
-                    self.process_layout();
-                }
-                Event::UserEvent(EventMessage::RemeasureTextGroup(text_id)) => {
-                    self.measure_text_group(&text_id);
-                }
-                Event::UserEvent(EventMessage::ActionRequestEvent(ActionRequestEvent {
-                    request,
-                    ..
-                })) => {
-                    if Action::Focus == request.action {
-                        self.accessibility
-                            .set_accessibility_focus(request.target, &self.window_env.window);
-                    }
-                }
-                Event::UserEvent(EventMessage::SetCursorIcon(icon)) => {
-                    self.window_env.window.set_cursor_icon(icon)
-                }
-                Event::UserEvent(ev) => {
-                    if let EventMessage::UpdateTemplate(template) = ev {
-                        self.vdom_replace_template(template);
-                    }
-
-                    if matches!(ev, EventMessage::PollVDOM)
-                        || matches!(ev, EventMessage::UpdateTemplate(_))
-                    {
-                        self.poll_vdom();
-                    }
-                }
-                Event::WindowEvent { event, .. } => {
-                    self.accessibility
-                        .process_accessibility_event(&event, &self.window_env.window);
-                    match event {
-                        WindowEvent::CloseRequested => event_loop.exit(),
-                        WindowEvent::Ime(Ime::Commit(text)) => {
-                            self.send_event(FreyaEvent::Keyboard {
-                                name: "keydown".to_string(),
-                                key: Key::Character(text),
-                                code: Code::Unidentified,
-                                modifiers: map_winit_modifiers(modifiers_state),
-                            });
-                        }
-                        WindowEvent::RedrawRequested => {
-                            self.process_layout();
-                            self.render(&hovered_node);
-                            self.event_loop_tick();
-                        }
-                        WindowEvent::MouseInput { state, button, .. } => {
-                            self.set_navigation_mode(NavigationMode::NotKeyboard);
-
-                            let event_name = match state {
-                                ElementState::Pressed => "mousedown",
-                                ElementState::Released => "click",
-                            };
-
-                            self.send_event(FreyaEvent::Mouse {
-                                name: event_name.to_string(),
-                                cursor: cursor_pos,
-                                button: Some(button),
-                            });
-                        }
-                        WindowEvent::MouseWheel { delta, phase, .. } => {
-                            if TouchPhase::Moved == phase {
-                                let scroll_data = {
-                                    match delta {
-                                        MouseScrollDelta::LineDelta(x, y) => (
-                                            (x * WHEEL_SPEED_MODIFIER) as f64,
-                                            (y * WHEEL_SPEED_MODIFIER) as f64,
-                                        ),
-                                        MouseScrollDelta::PixelDelta(pos) => (pos.x, pos.y),
-                                    }
-                                };
-
-                                self.send_event(FreyaEvent::Wheel {
-                                    name: "wheel".to_string(),
-                                    scroll: CursorPoint::from(scroll_data),
-                                    cursor: cursor_pos,
-                                });
-                            }
-                        }
-                        WindowEvent::ModifiersChanged(modifiers) => {
-                            modifiers_state = modifiers.state();
-                        }
-                        WindowEvent::KeyboardInput {
-                            event:
-                                KeyEvent {
-                                    physical_key,
-                                    logical_key,
-                                    state,
-                                    ..
-                                },
-                            ..
-                        } => {
-                            if state == ElementState::Pressed
-                                && physical_key == PhysicalKey::Code(KeyCode::Tab)
-                            {
-                                self.set_navigation_mode(NavigationMode::Keyboard);
-
-                                let direction = if modifiers_state.shift_key() {
-                                    AccessibilityFocusDirection::Backward
-                                } else {
-                                    AccessibilityFocusDirection::Forward
-                                };
-
-                                self.focus_next_node(direction);
-
-                                return;
-                            }
-
-                            let event_name = match state {
-                                ElementState::Pressed => "keydown",
-                                ElementState::Released => "keyup",
-                            };
-                            self.send_event(FreyaEvent::Keyboard {
-                                name: event_name.to_string(),
-                                key: map_winit_key(&logical_key),
-                                code: map_winit_physical_key(&physical_key),
-                                modifiers: map_winit_modifiers(modifiers_state),
-                            })
-                        }
-                        WindowEvent::CursorMoved { position, .. } => {
-                            cursor_pos = CursorPoint::from((position.x, position.y));
-
-                            self.send_event(FreyaEvent::Mouse {
-                                name: "mouseover".to_string(),
-                                cursor: cursor_pos,
-                                button: None,
-                            });
-                        }
-                        WindowEvent::Touch(Touch {
-                            location,
-                            phase,
-                            id,
-                            force,
-                            ..
-                        }) => {
-                            cursor_pos = CursorPoint::from((location.x, location.y));
-
-                            let event_name = match phase {
-                                TouchPhase::Cancelled => "touchcancel",
-                                TouchPhase::Ended => "touchend",
-                                TouchPhase::Moved => "touchmove",
-                                TouchPhase::Started => "touchstart",
-                            };
-
-                            self.send_event(FreyaEvent::Touch {
-                                name: event_name.to_string(),
-                                location: cursor_pos,
-                                finger_id: id,
-                                phase,
-                                force,
-                            });
-                        }
-                        WindowEvent::Resized(size) => {
-                            self.resize(size);
-                        }
-                        _ => {}
-                    }
-                }
-                Event::LoopExiting => {
-                    self.window_env.run_on_exit();
-                }
-                _ => (),
-            })
-            .expect("Failed to run Eventloop.");
+        run_event_loop(self, event_loop, proxy, hovered_node)
     }
 }

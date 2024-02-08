@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use freya_common::EventMessage;
-use futures::task::{self, ArcWake};
+use futures_task::{waker, ArcWake};
 use winit::event_loop::EventLoopProxy;
 
 pub fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
@@ -16,5 +16,5 @@ pub fn winit_waker(proxy: &EventLoopProxy<EventMessage>) -> std::task::Waker {
         }
     }
 
-    task::waker(Arc::new(DomHandle(proxy.clone())))
+    waker(Arc::new(DomHandle(proxy.clone())))
 }

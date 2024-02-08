@@ -6,7 +6,7 @@ use freya_node_state::Parse;
 use image::io::Reader;
 use winit::window::{Icon, Window, WindowBuilder};
 
-pub type WindowBuilderHook = Box<dyn Fn(&mut WindowBuilder)>;
+pub type WindowBuilderHook = Box<dyn Fn(WindowBuilder) -> WindowBuilder>;
 pub type FontsConfig<'a> = Vec<(&'a str, &'a [u8])>;
 
 /// Configuration for a Window.
@@ -225,7 +225,7 @@ impl<'a, T: Clone> LaunchConfigBuilder<'a, T> {
     /// Register a Window Builder hook.
     pub fn with_window_builder(
         mut self,
-        window_builder_hook: impl Fn(&mut WindowBuilder) + 'static,
+        window_builder_hook: impl Fn(WindowBuilder) -> WindowBuilder + 'static,
     ) -> Self {
         self.window_builder_hook = Some(Box::new(window_builder_hook));
         self

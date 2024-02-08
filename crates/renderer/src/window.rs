@@ -1,11 +1,9 @@
 use freya_common::EventMessage;
 use freya_engine::prelude::*;
-use glutin::prelude::PossiblyCurrentGlContext;
-use std::ffi::CString;
-use std::num::NonZeroU32;
 use gl::{types::*, *};
 use glutin::context::GlProfile;
 use glutin::context::NotCurrentGlContext;
+use glutin::prelude::PossiblyCurrentGlContext;
 use glutin::{
     config::{ConfigTemplateBuilder, GlConfig},
     context::{ContextApi, ContextAttributesBuilder, PossiblyCurrentContext},
@@ -15,6 +13,8 @@ use glutin::{
 };
 use glutin_winit::DisplayBuilder;
 use raw_window_handle::HasRawWindowHandle;
+use std::ffi::CString;
+use std::num::NonZeroU32;
 
 use winit::dpi::{LogicalSize, PhysicalSize};
 use winit::{
@@ -69,7 +69,7 @@ impl<T: Clone> WindowEnv<T> {
         }
 
         if let Some(with_window_builder) = &window_config.window_builder_hook {
-            (with_window_builder)(&mut window_builder);
+            window_builder = (with_window_builder)(window_builder);
         }
 
         let template = ConfigTemplateBuilder::new()
@@ -211,7 +211,8 @@ impl<T: Clone> WindowEnv<T> {
     }
 
     /// Flush and submit the canvas.
-    pub fn flush_and_submit(&mut self) {
+    pub fn finish_render(&mut self) {
+        self.window.pre_present_notify();
         self.gr_context.flush_and_submit();
         self.gl_surface.swap_buffers(&self.gl_context).unwrap();
     }

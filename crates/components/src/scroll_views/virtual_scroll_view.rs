@@ -161,7 +161,13 @@ pub fn VirtualScrollView<T: Clone>(props: VirtualScrollViewProps<T>) -> Element 
                     corrected_scrolled_y,
                 );
 
-                *scrolled_y.write() = scroll_position_y;
+                // Only scroll when there is still area to scroll
+                if *scrolled_y.peek() != scroll_position_y {
+                    e.stop_propagation();
+                    *scrolled_y.write() = scroll_position_y;
+                } else {
+                    return;
+                }
             }
 
             let wheel_x = if *clicking_shift.peek() {
@@ -177,7 +183,13 @@ pub fn VirtualScrollView<T: Clone>(props: VirtualScrollViewProps<T>) -> Element 
                 corrected_scrolled_x,
             );
 
-            *scrolled_x.write() = scroll_position_x;
+            // Only scroll when there is still area to scroll
+            if *scrolled_x.peek() != scroll_position_x {
+                e.stop_propagation();
+                *scrolled_x.write() = scroll_position_x;
+            } else {
+                return;
+            }
 
             focus.focus();
         }
