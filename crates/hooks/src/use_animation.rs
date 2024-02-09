@@ -3,10 +3,10 @@ use dioxus_signals::{Readable, Signal, Writable};
 use tokio::time::Instant;
 use uuid::Uuid;
 
-use crate::{use_platform, Animation, UsePlatform};
+use crate::{Animation, UsePlatform};
 
 /// Manage the lifecyle of an [Animation].
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct AnimationManager {
     init_value: f64,
     current_animation_id: Signal<Option<Uuid>>,
@@ -22,7 +22,7 @@ impl AnimationManager {
         // Set as current this new animation
         self.current_animation_id.set(Some(new_id));
 
-        let platform = self.platform.clone();
+        let platform = self.platform;
         let mut ticker = platform.new_ticker();
         let mut value = self.value;
         let mut current_animation_id = self.current_animation_id;
@@ -114,7 +114,7 @@ pub fn use_animation(init_value: impl FnOnce() -> f64) -> AnimationManager {
             current_animation_id: Signal::new(None),
             value: Signal::new(value),
             init_value: value,
-            platform: use_platform(),
+            platform: UsePlatform::new(),
         }
     })
 }

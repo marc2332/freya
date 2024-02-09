@@ -6,7 +6,7 @@ use freya_node_state::Parse;
 use tokio::time::Instant;
 use uuid::Uuid;
 
-use crate::{use_platform, Animation, TransitionAnimation, UsePlatform};
+use crate::{Animation, TransitionAnimation, UsePlatform};
 
 /// Configure a `Transition` animation.
 #[derive(Clone, Debug, Copy, PartialEq)]
@@ -131,7 +131,7 @@ impl TransitionState {
 }
 
 /// Manage the lifecyle of a collection of transitions.
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Copy)]
 pub struct TransitionsManager {
     /// Registered transitions
     transitions: Signal<Vec<Transition>>,
@@ -162,7 +162,7 @@ impl TransitionsManager {
     fn run_with_animation(&self, mut animation: Animation) {
         let animation_id = Uuid::new_v4();
 
-        let platform = self.platform.clone();
+        let platform = self.platform;
         let mut ticker = platform.new_ticker();
         let transitions = self.transitions;
         let mut transitions_storage = self.transitions_storage;
@@ -276,8 +276,8 @@ pub fn use_animation_transition<D>(
 where
     D: Dependency + 'static,
 {
-    use_memo_with_dependencies(dependencies.clone(), move |deps| {
-        let platform = use_platform();
+    *use_memo_with_dependencies(dependencies.clone(), move |deps| {
+        let platform = UsePlatform::new();
         let transitions = init(deps);
         let transitions_states = animations_map(&transitions);
 
@@ -290,7 +290,6 @@ where
         }
     })
     .read()
-    .clone()
 }
 
 fn animations_map(animations: &[Transition]) -> Vec<TransitionState> {

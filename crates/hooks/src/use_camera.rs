@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex};
 
 use crate::use_platform;
 use dioxus_core::{prelude::spawn, use_hook, AttributeValue};
-use dioxus_hooks::{to_owned, use_signal};
+use dioxus_hooks::use_signal;
 use dioxus_signals::{Signal, Writable};
 use freya_node_state::{CustomAttributeValues, ImageReference};
 pub use nokhwa::utils::{CameraIndex, RequestedFormatType, Resolution};
@@ -58,7 +58,6 @@ pub fn use_camera(
     ));
 
     use_hook(move || {
-        to_owned![image_reference, platform];
         spawn(async move {
             let mut handle_error = |e: NokhwaError| {
                 camera_error.set(Some(e));
