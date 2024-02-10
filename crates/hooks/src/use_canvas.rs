@@ -2,13 +2,13 @@ use std::sync::Arc;
 
 use dioxus_core::AttributeValue;
 use dioxus_hooks::{use_memo_with_dependencies, Dependency};
-use dioxus_signals::Readable;
+use dioxus_signals::{ReadOnlySignal, Readable};
 use freya_node_state::{CanvasReference, CanvasRunner, CustomAttributeValues};
 
 /// Holds a rendering hook callback that allows to render to the Canvas.
 #[derive(PartialEq, Clone)]
 pub struct UseCanvas {
-    runner: UseCanvasRunner,
+    runner: ReadOnlySignal<UseCanvasRunner>,
 }
 
 #[derive(Clone)]
@@ -23,7 +23,7 @@ impl PartialEq for UseCanvasRunner {
 impl UseCanvas {
     pub fn attribute(&self) -> AttributeValue {
         AttributeValue::any_value(CustomAttributeValues::Canvas(CanvasReference {
-            runner: self.runner.0.clone(),
+            runner: self.runner.read().0.clone(),
         }))
     }
 }
@@ -58,7 +58,5 @@ where
         UseCanvasRunner(Arc::new(renderer_cb(dependencies)))
     });
 
-    UseCanvas {
-        runner: runner.peek().clone(),
-    }
+    UseCanvas { runner }
 }

@@ -41,20 +41,14 @@ pub fn CursorArea(CursorAreaProps { children, icon }: CursorAreaProps) -> Elemen
     let platform = use_platform();
     let mut is_hovering = use_signal(|| false);
 
-    let onmouseover = {
-        to_owned![platform, is_hovering];
-        move |_| {
-            *is_hovering.write() = true;
-            platform.set_cursor(icon);
-        }
+    let onmouseover = move |_| {
+        *is_hovering.write() = true;
+        platform.set_cursor(icon);
     };
 
-    let onmouseleave = {
-        to_owned![platform];
-        move |_| {
-            *is_hovering.write() = false;
-            platform.set_cursor(CursorIcon::default());
-        }
+    let onmouseleave = move |_| {
+        *is_hovering.write() = false;
+        platform.set_cursor(CursorIcon::default());
     };
 
     use_drop(move || {

@@ -11,6 +11,7 @@ use dioxus_native_core::node::FromAnyValue;
 use freya_common::{CursorLayoutResponse, NodeReferenceLayout};
 use freya_engine::prelude::*;
 use tokio::sync::mpsc::UnboundedSender;
+use tokio::sync::watch;
 use torin::geometry::{Area, CursorPoint};
 use uuid::Uuid;
 
@@ -32,11 +33,11 @@ impl Display for ImageReference {
 
 /// Node Reference
 #[derive(Debug, Clone)]
-pub struct NodeReference(pub UnboundedSender<NodeReferenceLayout>);
+pub struct NodeReference(pub Arc<watch::Sender<NodeReferenceLayout>>);
 
 impl PartialEq for NodeReference {
     fn eq(&self, other: &Self) -> bool {
-        self.0.same_channel(&other.0)
+        Arc::ptr_eq(&self.0, &other.0)
     }
 }
 

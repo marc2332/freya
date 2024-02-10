@@ -13,11 +13,8 @@ fn app() -> Element {
     let mut progress_anim = use_animation(|| 0.0);
     let progress = progress_anim.value() as f32;
 
-    let set_to_max = {
-        to_owned![progress_anim];
-        move |_| {
-            progress_anim.start(Animation::new_linear(progress_anim.value()..=100.0, 400));
-        }
+    let set_to_max = move |_| {
+        progress_anim.start(Animation::new_linear(progress_anim.value()..=100.0, 400));
     };
 
     let onmoved = move |value: f64| {

@@ -37,6 +37,7 @@ pub const LIGHT_THEME: Theme = Theme {
         border_fill: cow_borrowed!("rgb(210, 210, 210)"),
         width: cow_borrowed!("150"),
         margin: cow_borrowed!("4"),
+        corner_radius: cow_borrowed!("10"),
     },
     switch: SwitchTheme {
         background: cow_borrowed!("rgb(121, 116, 126)"),
