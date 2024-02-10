@@ -274,6 +274,7 @@ define_theme! {
         border_fill: str,
         width: str,
         margin: str,
+        corner_radius: str,
         %[subthemes]
         font_theme: FontTheme,
     }

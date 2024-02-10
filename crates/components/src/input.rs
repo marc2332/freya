@@ -96,6 +96,7 @@ pub fn Input(
     let theme = use_applied_theme!(&theme, input);
     let mut focus = use_focus();
 
+    let focus_id = focus.attribute();
     if &value != editable.editor().read().rope() {
         editable.editor_mut().write().set(&value);
     }
@@ -163,6 +164,7 @@ pub fn Input(
         border_fill,
         width,
         margin,
+        corner_radius,
         font_theme: FontTheme { color },
         ..
     } = theme;
@@ -174,11 +176,12 @@ pub fn Input(
             color: "{color}",
             background: "{background}",
             border: "1 solid {border_fill}",
-            shadow: "0 3 15 0 rgb(0, 0, 0, 0.3)",
-            corner_radius: "10",
+            shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)",
+            corner_radius: "{corner_radius}",
             margin: "{margin}",
             cursor_reference,
             focus_id,
+            focusable: "true",
             role: "textInput",
             main_align: "center",
             paragraph {
