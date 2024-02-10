@@ -96,7 +96,6 @@ pub fn Input(
     let theme = use_applied_theme!(&theme, input);
     let mut focus = use_focus();
 
-    let focus_id = focus.attribute();
     if &value != editable.editor().read().rope() {
         editable.editor_mut().write().set(&value);
     }
