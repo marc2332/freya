@@ -4,10 +4,10 @@ use crate::prelude::{Area, Point2D, Size2D};
 
 #[derive(Default, PartialEq, Clone, Debug)]
 pub struct AbsolutePosition {
-    top: Option<f32>,
-    right: Option<f32>,
-    bottom: Option<f32>,
-    left: Option<f32>,
+    pub top: Option<f32>,
+    pub right: Option<f32>,
+    pub bottom: Option<f32>,
+    pub left: Option<f32>,
 }
 
 #[derive(Default, PartialEq, Clone, Debug)]
