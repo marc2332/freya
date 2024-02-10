@@ -5,7 +5,6 @@ use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{keyboard::Key, KeyboardEvent, MouseEvent, WheelEvent};
 use freya_hooks::{use_applied_theme, use_focus, use_node, ScrollViewThemeWith};
 use std::ops::Range;
-use std::rc::Rc;
 
 use crate::{
     get_container_size, get_corrected_scroll_position, get_scroll_position_from_cursor,
@@ -13,11 +12,12 @@ use crate::{
     manage_key_event, Axis, ScrollBar, ScrollThumb, SCROLLBAR_SIZE, SCROLL_SPEED_MULTIPLIER,
 };
 
-type BuilderFunction<T> = dyn Fn((usize, usize, &Option<T>)) -> Element;
-
 /// [`VirtualScrollView`] component properties.
 #[derive(Props, Clone)]
-pub struct VirtualScrollViewProps<T: 'static + Clone> {
+pub struct VirtualScrollViewProps<
+    Builder: 'static + Clone + Fn(usize, &Option<BuilderArgs>) -> Element,
+    BuilderArgs: Clone + 'static + PartialEq = (),
+> {
     /// Theme override.
     pub theme: Option<ScrollViewThemeWith>,
     /// Quantity of items in the VirtualScrollView.
@@ -25,9 +25,10 @@ pub struct VirtualScrollViewProps<T: 'static + Clone> {
     /// Size of the items, height for vertical direction and width for horizontal.
     pub item_size: f32,
     /// The item builder function.
-    pub builder: Rc<BuilderFunction<T>>,
-    /// Custom values to pass to the builder function.
-    pub builder_values: Option<T>,
+    pub builder: Builder,
+    /// The values for the item builder function.
+    #[props(into)]
+    pub builder_args: Option<BuilderArgs>,
     /// Direction of the VirtualScrollView, `vertical` or `horizontal`.
     #[props(default = "vertical".to_string(), into)]
     pub direction: String,
@@ -39,15 +40,19 @@ pub struct VirtualScrollViewProps<T: 'static + Clone> {
     pub scroll_with_arrows: bool,
 }
 
-impl<T: Clone> PartialEq for VirtualScrollViewProps<T> {
+impl<
+        BuilderArgs: Clone + PartialEq,
+        Builder: Clone + Fn(usize, &Option<BuilderArgs>) -> Element,
+    > PartialEq for VirtualScrollViewProps<Builder, BuilderArgs>
+{
     fn eq(&self, other: &Self) -> bool {
         self.theme == other.theme
             && self.length == other.length
             && self.item_size == other.item_size
-            && Rc::ptr_eq(&self.builder, &other.builder)
             && self.direction == other.direction
             && self.show_scrollbar == other.show_scrollbar
             && self.scroll_with_arrows == other.scroll_with_arrows
+            && self.builder_args == other.builder_args
     }
 }
 
@@ -86,23 +91,27 @@ fn get_render_range(
 ///             show_scrollbar: true,
 ///             length: 5,
 ///             item_size: 80.0,
-///             builder_values: (),
 ///             direction: "vertical",
-///             builder: Rc::new(move |(k, i, _)| {
+///             builder: move |i, _other_args: &Option<()>| {
 ///                 rsx! {
 ///                     label {
-///                         key: "{k}",
+///                         key: "{i}",
 ///                         height: "80",
 ///                         "Number {i}"
 ///                     }
 ///                 }
-///             })
+///             }
 ///         }
 ///     )
 /// }
 /// ```
 #[allow(non_snake_case)]
-pub fn VirtualScrollView<T: Clone>(props: VirtualScrollViewProps<T>) -> Element {
+pub fn VirtualScrollView<
+    Builder: Clone + Fn(usize, &Option<BuilderArgs>) -> Element,
+    BuilderArgs: Clone + PartialEq,
+>(
+    props: VirtualScrollViewProps<Builder, BuilderArgs>,
+) -> Element {
     let mut clicking_scrollbar = use_signal::<Option<(Axis, f64)>>(|| None);
     let mut clicking_shift = use_signal(|| false);
     let mut clicking_alt = use_signal(|| false);
@@ -316,7 +325,14 @@ pub fn VirtualScrollView<T: Clone>(props: VirtualScrollViewProps<T>) -> Element 
         items_length as f32,
     );
 
-    let children = render_range.map(|i| (props.builder)((i + 1, i, &props.builder_values)));
+    let children = use_memo_with_dependencies(
+        (&render_range, &props.builder_args),
+        move |(render_range, builder_args)| {
+            render_range
+                .map(|i| (props.builder)(i, &builder_args))
+                .collect::<Vec<Element>>()
+        },
+    );
 
     let is_scrolling_x = clicking_scrollbar
         .read()
@@ -352,7 +368,7 @@ pub fn VirtualScrollView<T: Clone>(props: VirtualScrollViewProps<T>) -> Element 
                     direction: "{user_direction}",
                     reference: node_ref,
                     onwheel: onwheel,
-                    {children}
+                    {children.read().iter()}
                 }
                 ScrollBar {
                     width: "100%",
