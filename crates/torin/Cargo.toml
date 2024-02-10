@@ -24,6 +24,7 @@ dioxus-core = { workspace = true, optional = true }
 
 [dev-dependencies]
 criterion = "0.5.1"
+codspeed-criterion-compat = { path ="../../../codspeed-rust/crates/criterion_compat" }
 
 [lib]
 bench = false

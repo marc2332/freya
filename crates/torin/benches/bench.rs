@@ -1,4 +1,4 @@
-use criterion::{criterion_group, criterion_main, Criterion};
+use codspeed_criterion_compat::{criterion_group, criterion_main, Criterion};
 use std::collections::HashMap;
 use std::fmt::Display;
 use torin::prelude::*;

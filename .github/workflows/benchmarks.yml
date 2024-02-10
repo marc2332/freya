@@ -12,8 +12,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: boa-dev/criterion-compare-action@59f4d964c5f19d7f13d36f5c0944b18ce6652cb0
+      - name: Install codspeed
+        uses: taiki-e/install-action@v2
         with:
-          package: torin
-          branchName: ${{ github.base_ref }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          tool: cargo-codspeed
+
+      - name: Build Benchmark
+        run: cargo codspeed build --package torin
+
+      - name: Run benchmark
+        uses: CodSpeedHQ/action@v2
+        timeout-minutes: 30
+        with:
+          run: cargo codspeed run --package torin
+          token: ${{ secrets.CODSPEED_TOKEN }}
