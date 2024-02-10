@@ -7,20 +7,12 @@ use tokio::sync::{broadcast, mpsc::UnboundedSender};
 use torin::geometry::Size2D;
 use winit::{dpi::PhysicalSize, event_loop::EventLoopProxy, window::CursorIcon};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub struct UsePlatform {
     ticker: Signal<Arc<broadcast::Receiver<()>>>,
     event_loop_proxy: Signal<Option<EventLoopProxy<EventMessage>>>,
     platform_emitter: Signal<Option<UnboundedSender<EventMessage>>>,
     platform_information: Signal<Arc<Mutex<PlatformInformation>>>,
-}
-
-impl PartialEq for UsePlatform {
-    fn eq(&self, _other: &Self) -> bool {
-        // The provided platform integrations will never change
-        // during when running the app, so it is safe to assume their equality.
-        true
-    }
 }
 
 #[derive(PartialEq, Eq, Debug)]
