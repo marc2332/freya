@@ -1,5 +1,5 @@
 use crate::events::{DomEvent, FreyaEvent};
-use accesskit::NodeId as AccessibilityId;
+pub use accesskit::NodeId as AccessibilityId;
 use dioxus_native_core::NodeId;
 use rustc_hash::FxHashMap;
 use smallvec::SmallVec;
@@ -7,10 +7,10 @@ use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tokio::sync::watch;
 
 /// Send focus updates to the Accessibility provider.
-pub type FocusSender = watch::Sender<Option<AccessibilityId>>;
+pub type FocusSender = watch::Sender<AccessibilityId>;
 
 /// Receive updates by the platform of the focused elements
-pub type FocusReceiver = watch::Receiver<Option<AccessibilityId>>;
+pub type FocusReceiver = watch::Receiver<AccessibilityId>;
 
 /// Emit events to the VirtualDOM
 pub type EventEmitter = UnboundedSender<DomEvent>;

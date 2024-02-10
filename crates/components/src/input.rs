@@ -88,13 +88,13 @@ pub fn Input(
     }: InputProps,
 ) -> Element {
     let platform = use_platform();
-    let status = use_signal(InputStatus::default);
+    let mut status = use_signal(InputStatus::default);
     let mut editable = use_editable(
         || EditableConfig::new(value.to_string()),
         EditableMode::MultipleLinesSingleEditor,
     );
     let theme = use_applied_theme!(&theme, input);
-    let focus = use_focus();
+    let mut focus = use_focus();
 
     if &value != editable.editor().read().rope() {
         editable.editor_mut().write().set(&value);
@@ -105,69 +105,49 @@ pub fn Input(
         InputMode::Shown => value.clone(),
     };
 
-    use_drop({
-        to_owned![status, platform];
-        move || {
-            if *status.peek() == InputStatus::Hovering {
-                platform.set_cursor(CursorIcon::default());
-            }
+    use_drop(move || {
+        if *status.peek() == InputStatus::Hovering {
+            platform.set_cursor(CursorIcon::default());
         }
     });
 
-    let onkeydown = {
-        to_owned![editable, focus];
-        move |e: Event<KeyboardData>| {
-            if focus.is_focused() && e.data.key != Key::Enter {
-                editable.process_event(&EditableEvent::KeyDown(e.data));
-                onchange.call(editable.editor().peek().to_string());
-            }
+    let onkeydown = move |e: Event<KeyboardData>| {
+        if focus.is_focused() && e.data.key != Key::Enter {
+            editable.process_event(&EditableEvent::KeyDown(e.data));
+            onchange.call(editable.editor().peek().to_string());
         }
     };
 
-    let onmousedown = {
-        to_owned![editable, focus];
-        move |e: MouseEvent| {
-            editable.process_event(&EditableEvent::MouseDown(e.data, 0));
-            focus.focus();
-        }
+    let onmousedown = move |e: MouseEvent| {
+        editable.process_event(&EditableEvent::MouseDown(e.data, 0));
+        focus.focus();
     };
 
-    let onmouseover = {
-        to_owned![editable];
-        move |e: MouseEvent| {
-            editable.process_event(&EditableEvent::MouseOver(e.data, 0));
-        }
+    let onmouseover = move |e: MouseEvent| {
+        editable.process_event(&EditableEvent::MouseOver(e.data, 0));
     };
 
-    let onmouseenter = {
-        to_owned![platform, status];
-        move |_| {
-            platform.set_cursor(CursorIcon::Text);
-            *status.write() = InputStatus::Hovering;
-        }
+    let onmouseenter = move |_| {
+        platform.set_cursor(CursorIcon::Text);
+        *status.write() = InputStatus::Hovering;
     };
 
-    let onmouseleave = {
-        to_owned![platform, status];
-        move |_| {
-            platform.set_cursor(CursorIcon::default());
-            *status.write() = InputStatus::default();
-        }
+    let onmouseleave = move |_| {
+        platform.set_cursor(CursorIcon::default());
+        *status.write() = InputStatus::default();
     };
 
-    let onglobalclick = {
-        to_owned![editable, focus];
-        move |_| match *status.read() {
-            InputStatus::Idle if focus.is_focused() => {
-                focus.unfocus();
-            }
-            InputStatus::Hovering => {
-                editable.process_event(&EditableEvent::Click);
-            }
-            _ => {}
+    let onglobalclick = move |_| match *status.read() {
+        InputStatus::Idle if focus.is_focused() => {
+            focus.unfocus();
         }
+        InputStatus::Hovering => {
+            editable.process_event(&EditableEvent::Click);
+        }
+        _ => {}
     };
 
+    let focus_id = focus.attribute();
     let cursor_reference = editable.cursor_attr();
     let highlights = editable.highlights_attr(0);
 
@@ -183,6 +163,7 @@ pub fn Input(
         border_fill,
         width,
         margin,
+        corner_radius,
         font_theme: FontTheme { color },
         ..
     } = theme;
@@ -194,10 +175,13 @@ pub fn Input(
             color: "{color}",
             background: "{background}",
             border: "1 solid {border_fill}",
-            shadow: "0 3 15 0 rgb(0, 0, 0, 0.3)",
-            corner_radius: "10",
+            shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)",
+            corner_radius: "{corner_radius}",
             margin: "{margin}",
             cursor_reference,
+            focus_id,
+            focusable: "true",
+            role: "textInput",
             main_align: "center",
             paragraph {
                 margin: "8 12",

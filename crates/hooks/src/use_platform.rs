@@ -1,17 +1,18 @@
 use std::sync::{Arc, Mutex, MutexGuard};
 
-use dioxus_core::prelude::{consume_context, try_consume_context};
+use dioxus_core::prelude::{consume_context, try_consume_context, use_hook};
+use dioxus_signals::{Readable, Signal};
 use freya_common::EventMessage;
 use tokio::sync::{broadcast, mpsc::UnboundedSender};
 use torin::geometry::Size2D;
 use winit::{dpi::PhysicalSize, event_loop::EventLoopProxy, window::CursorIcon};
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct UsePlatform {
-    ticker: Arc<broadcast::Receiver<()>>,
-    event_loop_proxy: Option<EventLoopProxy<EventMessage>>,
-    platform_emitter: Option<UnboundedSender<EventMessage>>,
-    platform_information: Arc<Mutex<PlatformInformation>>,
+    ticker: Signal<Arc<broadcast::Receiver<()>>>,
+    event_loop_proxy: Signal<Option<EventLoopProxy<EventMessage>>>,
+    platform_emitter: Signal<Option<UnboundedSender<EventMessage>>>,
+    platform_information: Signal<Arc<Mutex<PlatformInformation>>>,
 }
 
 impl PartialEq for UsePlatform {
@@ -29,12 +30,22 @@ pub enum UsePlatformError {
 }
 
 impl UsePlatform {
+    #[allow(clippy::new_without_default)]
+    pub fn new() -> Self {
+        UsePlatform {
+            event_loop_proxy: Signal::new(try_consume_context::<EventLoopProxy<EventMessage>>()),
+            platform_emitter: Signal::new(try_consume_context::<UnboundedSender<EventMessage>>()),
+            ticker: Signal::new(consume_context::<Arc<broadcast::Receiver<()>>>()),
+            platform_information: Signal::new(consume_context::<Arc<Mutex<PlatformInformation>>>()),
+        }
+    }
+
     pub fn send(&self, event: EventMessage) -> Result<(), UsePlatformError> {
-        if let Some(event_loop_proxy) = &self.event_loop_proxy {
+        if let Some(event_loop_proxy) = &*self.event_loop_proxy.peek() {
             event_loop_proxy
                 .send_event(event)
                 .map_err(|_| UsePlatformError::EventLoopProxyFailed)?;
-        } else if let Some(platform_emitter) = &self.platform_emitter {
+        } else if let Some(platform_emitter) = &*self.platform_emitter.peek() {
             platform_emitter
                 .send(event)
                 .map_err(|_| UsePlatformError::PlatformEmitterFailed)?;
@@ -52,7 +63,7 @@ impl UsePlatform {
 
     pub fn new_ticker(&self) -> Ticker {
         Ticker {
-            inner: self.ticker.resubscribe(),
+            inner: self.ticker.peek().resubscribe(),
         }
     }
 
@@ -66,12 +77,7 @@ impl UsePlatform {
 
 /// Get access to information and features of the platform.
 pub fn use_platform() -> UsePlatform {
-    UsePlatform {
-        event_loop_proxy: try_consume_context::<EventLoopProxy<EventMessage>>(),
-        platform_emitter: try_consume_context::<UnboundedSender<EventMessage>>(),
-        ticker: consume_context::<Arc<broadcast::Receiver<()>>>(),
-        platform_information: consume_context::<Arc<Mutex<PlatformInformation>>>(),
-    }
+    use_hook(UsePlatform::new)
 }
 
 pub struct Ticker {

@@ -4,7 +4,7 @@ use std::time::Instant;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{touch::TouchPhase, TouchEvent};
-use futures::StreamExt;
+use futures_util::StreamExt;
 
 /// Distance between the first tap and the second tap in `DoubleTap` gesture.
 const DOUBLE_TAP_DISTANCE: f64 = 100.0;
@@ -173,7 +173,6 @@ pub fn GestureArea(props: GestureAreaProps) -> Element {
 mod test {
     use std::time::Duration;
 
-    use dioxus::signals::use_signal;
     use freya::prelude::*;
     use freya_elements::events::touch::TouchPhase;
     use freya_testing::{launch_test, FreyaEvent};
@@ -198,8 +197,13 @@ mod test {
             rsx!(
                 GestureArea {
                     ongesture,
-                    "{value}"
+                    rect {
+                        width: "100%",
+                        height: "100%",
+
+                    }
                 }
+                "{value}"
             )
         }
 
@@ -208,7 +212,7 @@ mod test {
         // Initial state
         utils.wait_for_update().await;
 
-        assert_eq!(utils.root().get(0).get(0).text(), Some("EMPTY"));
+        assert_eq!(utils.root().get(1).text(), Some("EMPTY"));
 
         utils.push_event(FreyaEvent::Touch {
             name: "touchstart".to_string(),
@@ -242,7 +246,7 @@ mod test {
         utils.wait_for_update().await;
         utils.wait_for_update().await;
 
-        assert_eq!(utils.root().get(0).get(0).text(), Some("DoubleTap"));
+        assert_eq!(utils.root().get(1).text(), Some("DoubleTap"));
     }
 
     /// Simulates `TapUp` and `TapDown` gestures.
@@ -258,8 +262,13 @@ mod test {
             rsx!(
                 GestureArea {
                     ongesture,
-                    "{value}"
+                    rect {
+                        width: "100%",
+                        height: "100%",
+
+                    }
                 }
+                "{value}"
             )
         }
 
@@ -268,7 +277,7 @@ mod test {
         // Initial state
         utils.wait_for_update().await;
 
-        assert_eq!(utils.root().get(0).get(0).text(), Some("EMPTY"));
+        assert_eq!(utils.root().get(1).text(), Some("EMPTY"));
 
         utils.push_event(FreyaEvent::Touch {
             name: "touchstart".to_string(),
@@ -281,7 +290,7 @@ mod test {
         utils.wait_for_update().await;
         utils.wait_for_update().await;
 
-        assert_eq!(utils.root().get(0).get(0).text(), Some("TapDown"));
+        assert_eq!(utils.root().get(1).text(), Some("TapDown"));
 
         utils.push_event(FreyaEvent::Touch {
             name: "touchend".to_string(),
@@ -294,6 +303,6 @@ mod test {
         utils.wait_for_update().await;
         utils.wait_for_update().await;
 
-        assert_eq!(utils.root().get(0).get(0).text(), Some("TapUp"));
+        assert_eq!(utils.root().get(1).text(), Some("TapUp"));
     }
 }

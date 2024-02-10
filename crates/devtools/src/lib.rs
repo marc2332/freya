@@ -9,7 +9,7 @@ use freya_components::*;
 use freya_core::node::{get_node_state, NodeState};
 use freya_dom::prelude::SafeDOM;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::{use_init_accessibility, use_init_focus, use_init_theme, use_theme, DARK_THEME};
+use freya_hooks::{use_init_accessibility, use_init_theme, use_theme, DARK_THEME};
 
 use freya_renderer::HoveredNode;
 use std::sync::Arc;
@@ -25,7 +25,7 @@ mod tabs;
 use tab::*;
 use tabs::{layout::*, style::*, tree::*};
 
-/// Run the [`VirtualDom`](dioxus_core::VirtualDom) with a sidepanel where the devtools are located.
+/// Run the [`VirtualDom`] with a sidepanel where the devtools are located.
 pub fn with_devtools(
     rdom: SafeDOM,
     root: fn() -> Element,
@@ -59,7 +59,6 @@ impl PartialEq for AppWithDevtoolsProps {
 
 #[allow(non_snake_case)]
 fn AppWithDevtools(props: AppWithDevtoolsProps) -> Element {
-    use_init_focus();
     use_init_accessibility();
 
     #[allow(non_snake_case)]
@@ -120,7 +119,7 @@ impl PartialEq for DevToolsProps {
 
 #[allow(non_snake_case)]
 pub fn DevTools(props: DevToolsProps) -> Element {
-    let children = use_context_provider(|| Signal::new(Vec::<TreeNode>::new()));
+    let mut children = use_context_provider(|| Signal::new(Vec::<TreeNode>::new()));
     use_context_provider::<Signal<HoveredNode>>(|| Signal::new(props.hovered_node.clone()));
     use_init_theme(DARK_THEME);
     let theme = use_theme();
