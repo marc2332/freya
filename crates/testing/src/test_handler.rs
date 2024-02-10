@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use accesskit::NodeId as AccessibilityId;
@@ -6,6 +6,7 @@ use dioxus_core::VirtualDom;
 use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_engine::prelude::FontCollection;
+use freya_hooks::PlatformInformation;
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tokio::time::{interval, timeout};
@@ -31,6 +32,7 @@ pub struct TestingHandler {
     pub(crate) config: TestingConfig,
     pub(crate) ticker_sender: broadcast::Sender<()>,
     pub(crate) navigation_state: NavigatorState,
+    pub(crate) platform_information: Arc<Mutex<PlatformInformation>>,
 }
 
 impl TestingHandler {
@@ -55,13 +57,13 @@ impl TestingHandler {
             .insert_any_root_context(Box::new(Arc::new(self.ticker_sender.subscribe())));
         self.vdom
             .insert_any_root_context(Box::new(self.navigation_state.clone()));
+        self.vdom
+            .insert_any_root_context(Box::new(self.platform_information.clone()));
     }
 
     /// Wait and apply new changes
     pub async fn wait_for_update(&mut self) -> (bool, bool) {
         self.wait_for_work(self.config.size());
-
-        self.provide_vdom_contexts();
 
         let mut ticker = if self.config.run_ticker {
             Some(interval(Duration::from_millis(16)))
@@ -169,5 +171,10 @@ impl TestingHandler {
 
     pub fn focus_id(&self) -> AccessibilityId {
         self.accessibility_manager.lock().unwrap().focused_id
+    }
+
+    pub fn resize(&mut self, size: Size2D) {
+        self.config.size = size;
+        self.platform_information.lock().unwrap().window_size = size;
     }
 }

@@ -1,24 +1,18 @@
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use dioxus_core::prelude::{consume_context, try_consume_context, use_hook};
 use dioxus_signals::{Readable, Signal};
 use freya_common::EventMessage;
 use tokio::sync::{broadcast, mpsc::UnboundedSender};
-use winit::{event_loop::EventLoopProxy, window::CursorIcon};
+use torin::geometry::Size2D;
+use winit::{dpi::PhysicalSize, event_loop::EventLoopProxy, window::CursorIcon};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub struct UsePlatform {
     ticker: Signal<Arc<broadcast::Receiver<()>>>,
     event_loop_proxy: Signal<Option<EventLoopProxy<EventMessage>>>,
     platform_emitter: Signal<Option<UnboundedSender<EventMessage>>>,
-}
-
-impl PartialEq for UsePlatform {
-    fn eq(&self, _other: &Self) -> bool {
-        // The provided platform integrations will never change
-        // during when running the app, so it is safe to assume their equality.
-        true
-    }
+    platform_information: Signal<Arc<Mutex<PlatformInformation>>>,
 }
 
 #[derive(PartialEq, Eq, Debug)]
@@ -34,6 +28,7 @@ impl UsePlatform {
             event_loop_proxy: Signal::new(try_consume_context::<EventLoopProxy<EventMessage>>()),
             platform_emitter: Signal::new(try_consume_context::<UnboundedSender<EventMessage>>()),
             ticker: Signal::new(consume_context::<Arc<broadcast::Receiver<()>>>()),
+            platform_information: Signal::new(consume_context::<Arc<Mutex<PlatformInformation>>>()),
         }
     }
 
@@ -63,8 +58,16 @@ impl UsePlatform {
             inner: self.ticker.peek().resubscribe(),
         }
     }
+
+    /// Read information about the platform.
+    ///
+    /// **Important**: This will not subscribe to any changes about the information.
+    pub fn info(&self) -> PlatformInformation {
+        self.platform_information.read().lock().unwrap().clone()
+    }
 }
 
+/// Get access to information and features of the platform.
 pub fn use_platform() -> UsePlatform {
     use_hook(UsePlatform::new)
 }
@@ -76,5 +79,23 @@ pub struct Ticker {
 impl Ticker {
     pub async fn tick(&mut self) {
         self.inner.recv().await.ok();
+    }
+}
+
+/// Information about the platform.
+#[derive(Clone)]
+pub struct PlatformInformation {
+    pub window_size: Size2D,
+}
+
+impl PlatformInformation {
+    pub fn from_winit(physical_size: PhysicalSize<u32>) -> Self {
+        Self {
+            window_size: Size2D::new(physical_size.width as f32, physical_size.height as f32),
+        }
+    }
+
+    pub fn new(window_size: Size2D) -> Self {
+        Self { window_size }
     }
 }

@@ -6,7 +6,7 @@ use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_dom::prelude::{FreyaDOM, SafeDOM};
 use freya_engine::prelude::*;
-use freya_hooks::use_init_accessibility;
+use freya_hooks::{use_init_accessibility, PlatformInformation};
 use std::sync::{Arc, Mutex};
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::unbounded_channel;
@@ -47,6 +47,7 @@ pub fn launch_test_with_config(root: AppComponent, config: TestingConfig) -> Tes
         accessibility_manager: AccessibilityManager::new(ACCESSIBILITY_ROOT_ID).wrap(),
         ticker_sender: broadcast::channel(5).0,
         navigation_state: NavigatorState::new(NavigationMode::NotKeyboard),
+        platform_information: Arc::new(Mutex::new(PlatformInformation::new(config.size))),
     };
 
     handler.init_dom();
