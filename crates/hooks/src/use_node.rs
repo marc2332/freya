@@ -8,7 +8,6 @@ use tokio::sync::watch::channel;
 
 /// Subscribe to a Node layout changes.
 pub fn use_node() -> (AttributeValue, NodeReferenceLayout) {
-  
 
     let (tx, signal) = use_hook(|| {
         let (tx, mut rx) = channel::<NodeReferenceLayout>(NodeReferenceLayout::default());

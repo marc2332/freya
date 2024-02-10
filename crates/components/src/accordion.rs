@@ -54,12 +54,9 @@ pub fn Accordion(props: AccordionProps) -> Element {
     } = theme;
 
     // Adapt the accordion if the body size changes
-    use_memo({
-        to_owned![animation];
-        move || {
-            if (size().area.height() as f64) < animation.value() && !animation.is_animating() {
-                animation.set_value(size().area.height() as f64);
-            }
+    use_effect(move || {
+        if (size().area.height() as f64) < animation.value() && !animation.is_animating() {
+            animation.set_value(size().area.height() as f64);
         }
     });
 
@@ -73,21 +70,15 @@ pub fn Accordion(props: AccordionProps) -> Element {
         open.toggle();
     };
 
-    use_drop({
-        to_owned![status, platform];
-        move || {
-            if *status.read() == AccordionStatus::Hovering {
-                platform.set_cursor(CursorIcon::default());
-            }
+    use_drop(move || {
+        if *status.read() == AccordionStatus::Hovering {
+            platform.set_cursor(CursorIcon::default());
         }
     });
 
-    let onmouseenter = {
-        to_owned![status, platform];
-        move |_| {
-            platform.set_cursor(CursorIcon::Pointer);
-            status.set(AccordionStatus::Hovering);
-        }
+    let onmouseenter = move |_| {
+        platform.set_cursor(CursorIcon::Pointer);
+        status.set(AccordionStatus::Hovering);
     };
 
     let onmouseleave = move |_| {

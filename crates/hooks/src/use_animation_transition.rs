@@ -1,11 +1,12 @@
 use dioxus_core::prelude::spawn;
-use dioxus_signals::{use_memo_with_dependencies, Dependency, Readable, Signal, Writable};
+use dioxus_hooks::{use_memo_with_dependencies, Dependency};
+use dioxus_signals::{Readable, Signal, Writable};
 use freya_engine::prelude::Color;
 use freya_node_state::Parse;
 use tokio::time::Instant;
 use uuid::Uuid;
 
-use crate::{use_platform, Animation, TransitionAnimation, UsePlatform};
+use crate::{Animation, TransitionAnimation, UsePlatform};
 
 /// Configure a `Transition` animation.
 #[derive(Clone, Debug, Copy, PartialEq)]
@@ -54,7 +55,7 @@ impl TransitionState {
             (Self::Size(current), Transition::Size(start, end)) => {
                 let road = *end - *start;
                 let walked = (road / 100.0) * value;
-                *current = walked;
+                *current = start + walked;
             }
             (Self::Color(current), Transition::Color(start, end)) => {
                 let apply_index = |v: u8, d: u8, value: f64| -> u8 {
@@ -130,7 +131,7 @@ impl TransitionState {
 }
 
 /// Manage the lifecyle of a collection of transitions.
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Copy)]
 pub struct TransitionsManager {
     /// Registered transitions
     transitions: Signal<Vec<Transition>>,
@@ -147,7 +148,6 @@ pub struct TransitionsManager {
 impl TransitionsManager {
     /// Animate from the end to the start.
     pub fn reverse(&mut self) {
-        self.clear();
         let animation = self.transition_animation.to_animation(100.0..=0.0);
         self.run_with_animation(animation);
     }
@@ -162,10 +162,10 @@ impl TransitionsManager {
     fn run_with_animation(&self, mut animation: Animation) {
         let animation_id = Uuid::new_v4();
 
-        let platform = self.platform.clone();
+        let platform = self.platform;
         let mut ticker = platform.new_ticker();
         let transitions = self.transitions;
-        let transitions_storage = self.transitions_storage;
+        let mut transitions_storage = self.transitions_storage;
         let mut current_animation_id = self.current_animation_id;
 
         // Set as current this new animation
@@ -276,8 +276,8 @@ pub fn use_animation_transition<D>(
 where
     D: Dependency + 'static,
 {
-    use_memo_with_dependencies(dependencies.clone(), move |deps| {
-        let platform = use_platform();
+    *use_memo_with_dependencies(dependencies.clone(), move |deps| {
+        let platform = UsePlatform::new();
         let transitions = init(deps);
         let transitions_states = animations_map(&transitions);
 
@@ -290,7 +290,6 @@ where
         }
     })
     .read()
-    .clone()
 }
 
 fn animations_map(animations: &[Transition]) -> Vec<TransitionState> {

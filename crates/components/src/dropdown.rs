@@ -14,7 +14,7 @@ use winit::window::CursorIcon;
 
 /// [`DropdownItem`] component properties.
 #[derive(Props, Clone, PartialEq)]
-pub struct DropdownItemProps<T: 'static + Clone> {
+pub struct DropdownItemProps<T: 'static + Clone + PartialEq> {
     /// Theme override.
     pub theme: Option<DropdownItemThemeWith>,
     /// Selectable items, like [`DropdownItem`]
@@ -72,21 +72,15 @@ where
     };
     let color = theme.font_theme.color;
 
-    use_drop({
-        to_owned![status, platform];
-        move || {
-            if *status.peek() == DropdownItemStatus::Hovering {
-                platform.set_cursor(CursorIcon::default());
-            }
+    use_drop(move || {
+        if *status.peek() == DropdownItemStatus::Hovering {
+            platform.set_cursor(CursorIcon::default());
         }
     });
 
-    let onmouseenter = {
-        to_owned![platform];
-        move |_| {
-            platform.set_cursor(CursorIcon::Pointer);
-            status.set(DropdownItemStatus::Hovering);
-        }
+    let onmouseenter = move |_| {
+        platform.set_cursor(CursorIcon::Pointer);
+        status.set(DropdownItemStatus::Hovering);
     };
 
     let onmouseleave = move |_| {
@@ -132,7 +126,7 @@ where
 
 /// [`Dropdown`] component properties.
 #[derive(Props, Clone, PartialEq)]
-pub struct DropdownProps<T: 'static + Clone> {
+pub struct DropdownProps<T: 'static + Clone + PartialEq> {
     /// Theme override.
     pub theme: Option<DropdownThemeWith>,
     /// Selectable items, like [`DropdownItem`]
@@ -188,7 +182,7 @@ pub fn Dropdown<T>(props: DropdownProps<T>) -> Element
 where
     T: PartialEq + Clone + Display + 'static,
 {
-    let selected = use_context_provider(|| Signal::new(props.value.clone()));
+    let mut selected = use_context_provider(|| Signal::new(props.value.clone()));
     let theme = use_applied_theme!(&props.theme, dropdown);
     let mut focus = use_focus();
     let mut status = use_signal(DropdownStatus::default);
@@ -204,12 +198,9 @@ where
         *selected.write() = value;
     });
 
-    use_drop({
-        to_owned![status, platform];
-        move || {
-            if *status.peek() == DropdownStatus::Hovering {
-                platform.set_cursor(CursorIcon::default());
-            }
+    use_drop(move || {
+        if *status.peek() == DropdownStatus::Hovering {
+            platform.set_cursor(CursorIcon::default());
         }
     });
 
@@ -237,12 +228,9 @@ where
         }
     };
 
-    let onmouseenter = {
-        to_owned![status, platform];
-        move |_| {
-            platform.set_cursor(CursorIcon::Pointer);
-            status.set(DropdownStatus::Hovering);
-        }
+    let onmouseenter = move |_| {
+        platform.set_cursor(CursorIcon::Pointer);
+        status.set(DropdownStatus::Hovering);
     };
 
     let onmouseleave = move |_| {

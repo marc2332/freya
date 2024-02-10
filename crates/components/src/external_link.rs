@@ -50,7 +50,7 @@ pub struct ExternalLinkProps {
 #[allow(non_snake_case)]
 pub fn ExternalLink(props: ExternalLinkProps) -> Element {
     let theme = use_applied_theme!(&props.theme, external_link);
-    let is_hovering = use_signal(|| false);
+    let mut is_hovering = use_signal(|| false);
 
     let onmouseover = move |_: MouseEvent| {
         *is_hovering.write() = true;

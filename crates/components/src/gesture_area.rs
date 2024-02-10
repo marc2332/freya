@@ -4,7 +4,7 @@ use std::time::Instant;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{touch::TouchPhase, TouchEvent};
-use futures::StreamExt;
+use futures_util::StreamExt;
 
 /// Distance between the first tap and the second tap in `DoubleTap` gesture.
 const DOUBLE_TAP_DISTANCE: f64 = 100.0;
@@ -173,7 +173,6 @@ pub fn GestureArea(props: GestureAreaProps) -> Element {
 mod test {
     use std::time::Duration;
 
-    use dioxus::signals::use_signal;
     use freya::prelude::*;
     use freya_elements::events::touch::TouchPhase;
     use freya_testing::{launch_test, FreyaEvent};

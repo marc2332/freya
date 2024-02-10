@@ -84,8 +84,8 @@ pub fn Slider(
     }: SliderProps,
 ) -> Element {
     let theme = use_applied_theme!(&theme, slider);
-    let focus = use_focus();
-    let status = use_signal(SliderStatus::default);
+    let mut focus = use_focus();
+    let mut status = use_signal(SliderStatus::default);
     let mut clicking = use_signal(|| false);
     let platform = use_platform();
     let (node_reference, size) = use_node();
@@ -93,34 +93,28 @@ pub fn Slider(
     let value = ensure_correct_slider_range(value);
     let focus_id = focus.attribute();
 
-    use_drop({
-        to_owned![status, platform];
-        move || {
-            if *status.peek() == SliderStatus::Hovering {
-                platform.set_cursor(CursorIcon::default());
-            }
+    use_drop(move || {
+        if *status.peek() == SliderStatus::Hovering {
+            platform.set_cursor(CursorIcon::default());
         }
     });
 
-    let onmouseleave = {
-        to_owned![platform, status];
-        move |_: MouseEvent| {
-            *status.write() = SliderStatus::Idle;
-            platform.set_cursor(CursorIcon::default());
-        }
+    let onmouseleave = move |e: MouseEvent| {
+        e.stop_propagation();
+        *status.write() = SliderStatus::Idle;
+        platform.set_cursor(CursorIcon::default());
     };
 
-    let onmouseenter = {
-        to_owned![status];
-        move |_: MouseEvent| {
-            *status.write() = SliderStatus::Hovering;
-            platform.set_cursor(CursorIcon::Pointer);
-        }
+    let onmouseenter = move |e: MouseEvent| {
+        e.stop_propagation();
+        *status.write() = SliderStatus::Hovering;
+        platform.set_cursor(CursorIcon::Pointer);
     };
 
     let onmouseover = {
-        to_owned![clicking, onmoved];
+        to_owned![onmoved];
         move |e: MouseEvent| {
+            e.stop_propagation();
             if *clicking.peek() {
                 let coordinates = e.get_element_coordinates();
                 let x = coordinates.x - size.area.min_x() as f64 - 6.0;
@@ -133,8 +127,9 @@ pub fn Slider(
     };
 
     let onmousedown = {
-        to_owned![clicking, onmoved, focus];
+        to_owned![onmoved];
         move |e: MouseEvent| {
+            e.stop_propagation();
             focus.focus();
             clicking.set(true);
             let coordinates = e.get_element_coordinates();
@@ -151,6 +146,7 @@ pub fn Slider(
     };
 
     let onwheel = move |e: WheelEvent| {
+        e.stop_propagation();
         let wheel_y = e.get_delta_y().clamp(-1.0, 1.0);
         let percentage = value + (wheel_y * 2.0);
         let percentage = percentage.clamp(0.0, 100.0);

@@ -11,7 +11,7 @@ fn main() {
 }
 
 fn app() -> Element {
-    let elements = use_signal(|| Vec::new());
+    let mut elements = use_signal(|| Vec::new());
 
     let add = move |_| {
         let mut rng = rand::thread_rng();

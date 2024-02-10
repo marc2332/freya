@@ -25,7 +25,7 @@ fn Body() -> Element {
     let theme = use_theme();
     let theme = theme.read();
 
-    let editable = use_editable(
+    let mut editable = use_editable(
         || {
             EditableConfig::new("Lorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet".to_string())
         },
@@ -34,18 +34,12 @@ fn Body() -> Element {
     let cursor_attr = editable.cursor_attr();
     let editor = editable.editor().read();
 
-    let onclick = {
-        to_owned![editable];
-        move |_: MouseEvent| {
-            editable.process_event(&EditableEvent::Click);
-        }
+    let onclick = move |_: MouseEvent| {
+        editable.process_event(&EditableEvent::Click);
     };
 
-    let onkeydown = {
-        to_owned![editable];
-        move |e: KeyboardEvent| {
-            editable.process_event(&EditableEvent::KeyDown(e.data));
-        }
+    let onkeydown = move |e: KeyboardEvent| {
+        editable.process_event(&EditableEvent::KeyDown(e.data));
     };
 
     rsx!(
@@ -67,7 +61,7 @@ fn Body() -> Element {
                 builder_values: editable.clone(),
                 scroll_with_arrows: false,
                 builder: Rc::new(move |(key, line_index, values): (usize, usize, &Option<UseEditable>)| {
-                    let editable = values.as_ref().unwrap();
+                    let mut editable = values.as_ref().unwrap().clone();
                     let editor = editable.editor().read();
                     let line = editor.line(line_index).unwrap();
 
@@ -87,18 +81,12 @@ fn Body() -> Element {
                         ""
                     };
 
-                    let onmousedown = {
-                        to_owned![editable];
-                        move |e: MouseEvent| {
-                            editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
-                        }
+                    let onmousedown = move |e: MouseEvent| {
+                        editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
                     };
 
-                    let onmouseover = {
-                        to_owned![editable];
-                        move |e: MouseEvent| {
-                            editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
-                        }
+                    let onmouseover = move |e: MouseEvent| {
+                        editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
                     };
 
                     let highlights = editable.highlights_attr(line_index);
@@ -151,7 +139,7 @@ fn Body() -> Element {
                 builder_values: editable.clone(),
                 scroll_with_arrows: false,
                 builder: Rc::new(move |(key, line_index, values): (usize, usize, &Option<UseEditable>)| {
-                    let editable = values.as_ref().unwrap();
+                    let mut editable = values.as_ref().unwrap().clone();
                     let editor = editable.editor().read();
                     let line = editor.line(line_index).unwrap();
 
@@ -171,18 +159,12 @@ fn Body() -> Element {
                         ""
                     };
 
-                    let onmousedown = {
-                        to_owned![editable];
-                        move |e: MouseEvent| {
-                            editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
-                        }
+                    let onmousedown = move |e: MouseEvent| {
+                        editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
                     };
 
-                    let onmouseover = {
-                        to_owned![editable];
-                        move |e: MouseEvent| {
-                            editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
-                        }
+                    let onmouseover = move |e: MouseEvent| {
+                        editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
                     };
 
 

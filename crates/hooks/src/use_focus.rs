@@ -1,7 +1,7 @@
 use accesskit::NodeId as AccessibilityId;
 use dioxus_core::{use_hook, AttributeValue};
-use dioxus_hooks::use_context;
-use dioxus_signals::{Readable, Signal, Writable};
+use dioxus_hooks::{use_context, use_memo};
+use dioxus_signals::{ReadOnlySignal, Readable, Signal, Writable};
 use freya_core::{accessibility::ACCESSIBILITY_ROOT_ID, navigation_mode::NavigationMode};
 use freya_elements::events::{keyboard::Code, KeyboardEvent};
 use freya_node_state::CustomAttributeValues;
@@ -9,9 +9,11 @@ use freya_node_state::CustomAttributeValues;
 use crate::AccessibilityIdCounter;
 
 /// Manage the focus operations of given Node
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct UseFocus {
     id: AccessibilityId,
+    is_selected: ReadOnlySignal<bool>,
+    is_focused: ReadOnlySignal<bool>,
     focused_id: Signal<AccessibilityId>,
     navigation_mode: Signal<NavigationMode>,
 }
@@ -19,7 +21,9 @@ pub struct UseFocus {
 impl UseFocus {
     /// Focus this node
     pub fn focus(&mut self) {
-        *self.focused_id.write() = self.id
+        if !*self.is_focused.peek() {
+            *self.focused_id.write() = self.id
+        }
     }
 
     /// Get the node focus ID
@@ -34,12 +38,12 @@ impl UseFocus {
 
     /// Check if this node is currently focused
     pub fn is_focused(&self) -> bool {
-        self.id == *self.focused_id.read()
+        *self.is_focused.read()
     }
 
     /// Check if this node is currently selected
     pub fn is_selected(&self) -> bool {
-        self.is_focused() && *self.navigation_mode.read() == NavigationMode::Keyboard
+        *self.is_selected.read() && *self.navigation_mode.read() == NavigationMode::Keyboard
     }
 
     /// Unfocus the currently focused node.
@@ -59,15 +63,23 @@ pub fn use_focus() -> UseFocus {
     let focused_id = use_context::<Signal<AccessibilityId>>();
     let navigation_mode = use_context::<Signal<NavigationMode>>();
 
-    use_hook(move || {
+    let id = use_hook(|| {
         let mut counter = accessibility_id_counter.borrow_mut();
         *counter += 1;
-        let id = AccessibilityId(*counter);
-        UseFocus {
-            id,
-            focused_id,
-            navigation_mode,
-        }
+        AccessibilityId(*counter)
+    });
+
+    let is_focused = use_memo(move || id == *focused_id.read());
+
+    let is_selected =
+        use_memo(move || *is_focused.read() && *navigation_mode.read() == NavigationMode::Keyboard);
+
+    use_hook(move || UseFocus {
+        id,
+        focused_id,
+        is_focused,
+        is_selected,
+        navigation_mode,
     })
 }
 #[cfg(test)]
