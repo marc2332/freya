@@ -4,8 +4,8 @@ use dioxus_core::{
     prelude::{consume_context, spawn, try_consume_context},
     use_hook,
 };
-use dioxus_hooks::use_context_provider;
-use dioxus_signals::{use_effect, Readable, Signal, Writable};
+use dioxus_hooks::{use_context_provider, use_effect};
+use dioxus_signals::{Readable, Signal, Writable};
 use freya_common::EventMessage;
 use freya_core::{
     navigation_mode::{NavigationMode, NavigatorState},
@@ -20,9 +20,9 @@ pub type AccessibilityIdCounter = Rc<RefCell<u64>>;
 
 /// Sync both the Focus shared state and the platform accessibility focus
 pub fn use_init_accessibility() {
-    let focused_id =
+    let mut focused_id =
         use_context_provider::<Signal<AccessibilityId>>(|| Signal::new(ACCESSIBILITY_ROOT_ID));
-    let navigation_mode =
+    let mut navigation_mode =
         use_context_provider::<Signal<NavigationMode>>(|| Signal::new(NavigationMode::NotKeyboard));
     use_context_provider(|| Rc::new(RefCell::new(0u64)));
     let platform = use_platform();

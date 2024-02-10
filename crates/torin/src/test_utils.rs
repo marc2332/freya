@@ -8,10 +8,9 @@ impl LayoutMeasurer<usize> for TestingMeasurer {
         &mut self,
         _node_id: usize,
         _node: &Node,
-        _area: &Area,
         _parent_size: &Area,
         _available_parent_area: &Area,
-    ) -> Option<Area> {
+    ) -> Option<Size2D> {
         None
     }
 }

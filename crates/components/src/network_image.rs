@@ -58,8 +58,8 @@ pub enum ImageStatus {
 #[allow(non_snake_case)]
 pub fn NetworkImage(props: NetworkImageProps) -> Element {
     let focus = use_focus();
-    let status = use_signal(|| ImageStatus::Loading);
-    let image_bytes = use_signal::<Option<Vec<u8>>>(|| None);
+    let mut status = use_signal(|| ImageStatus::Loading);
+    let mut image_bytes = use_signal::<Option<Vec<u8>>>(|| None);
 
     let focus_id = focus.attribute();
     let NetworkImageTheme { width, height } = use_applied_theme!(&props.theme, network_image);
@@ -67,7 +67,6 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
 
     // TODO: Waiting for a dependency-based use_effect
     let _ = use_memo_with_dependencies(&props.url, move |url| {
-        to_owned![image_bytes, status];
         spawn(async move {
             // Loading image
             status.set(ImageStatus::Loading);

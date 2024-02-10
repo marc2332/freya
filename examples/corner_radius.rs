@@ -3,7 +3,6 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus::signals::use_signal;
 use freya::prelude::*;
 
 fn main() {
@@ -11,7 +10,7 @@ fn main() {
 }
 
 fn app() -> Element {
-    let radius = use_signal(|| 30f32);
+    let mut radius = use_signal(|| 30f32);
 
     let onwheel = move |e: WheelEvent| {
         let y = e.get_delta_y() as f32;

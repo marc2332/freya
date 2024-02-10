@@ -10,56 +10,46 @@ fn main() {
 }
 
 fn app() -> Element {
-    let mut hovering = use_signal(|| false);
     let mut positions = use_signal(|| (0.0f64, 0.0f64));
-    let mut clicking = use_signal(|| false);
+    let mut clicking = use_signal::<Option<CursorPoint>>(|| None);
 
-    let onmouseleave = move |_: MouseEvent| {
-        if !(*clicking.read()) {
-            hovering.set(false);
-        }
-    };
-
-    let onmouseover = move |e: MouseEvent| {
-        hovering.set(true);
-        if *clicking.read() {
+    let onglobalmouseover = move |e: MouseEvent| {
+        if let Some(clicked) = *clicking.read() {
             let coordinates = e.get_screen_coordinates();
-            positions.set((coordinates.x - 50.0, coordinates.y - 50.0));
+            positions.set((coordinates.x - clicked.x, coordinates.y - clicked.y));
         }
     };
 
-    let onmousedown = move |_: MouseEvent| {
-        clicking.set(true);
+    let onmousedown = move |e: MouseEvent| {
+        clicking.set(Some(e.get_element_coordinates()));
     };
 
-    let onclick = move |_: MouseEvent| {
-        clicking.set(false);
+    let onglobalclick = move |_: MouseEvent| {
+        clicking.set(None);
     };
 
     rsx!(
         rect {
-            overflow: "clip",
             background: "rgb(35, 35, 35)",
             width: "100%",
             height: "100%",
             offset_x: "{positions.read().0}",
             offset_y: "{positions.read().1}",
-            onmousedown,
-            onclick,
-            label {
-                width: "100",
-                color: "white",
-                "Drag me"
-            }
             rect {
-                overflow: "clip",
                 background: "rgb(255, 166, 0)",
-                width: "100",
-                height: "100",
-                corner_radius: "15",
-                shadow: "0 0 50 0 rgb(255, 255, 255, 0.6)",
-                onmouseover,
-                onmouseleave: onmouseleave
+                width: "120",
+                height: "120",
+                corner_radius: "16",
+                shadow: "0 0 35 10 rgb(255, 255, 255, 0.4)",
+                onglobalclick,
+                onglobalmouseover,
+                onmousedown,
+                main_align: "center",
+                cross_align: "center",
+                label {
+                    color: "white",
+                    "Drag me"
+                }
             }
         }
     )
