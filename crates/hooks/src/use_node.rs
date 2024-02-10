@@ -75,7 +75,7 @@ mod test {
 
         let mut utils = launch_test_with_config(
             use_node_app,
-            *TestingConfig::default().with_size((500.0, 800.0).into()),
+            TestingConfig::default().with_size((500.0, 800.0).into()),
         );
 
         utils.wait_for_update().await;

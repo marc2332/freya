@@ -12,7 +12,7 @@ fn main() {
 fn app() -> Element {
     let platform = use_platform();
 
-    let PlatformInformation { window_size } = *platform.info();
+    let PlatformInformation { window_size } = platform.info();
 
     rsx!(
         rect {

@@ -14,7 +14,7 @@ async fn window_size() {
 
     let mut utils = launch_test_with_config(
         use_animation_app,
-        *TestingConfig::new().with_size((333.0, 190.0).into()),
+        TestingConfig::new().with_size((333.0, 190.0).into()),
     );
 
     utils.wait_for_update().await;
