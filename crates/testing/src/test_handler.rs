@@ -19,23 +19,17 @@ use crate::{TestingConfig, SCALE_FACTOR};
 pub struct TestingHandler {
     pub(crate) vdom: VirtualDom,
     pub(crate) utils: TestUtils,
-
     pub(crate) event_emitter: EventEmitter,
     pub(crate) event_receiver: EventReceiver,
-
     pub(crate) platform_event_emitter: UnboundedSender<EventMessage>,
     pub(crate) platform_event_receiver: UnboundedReceiver<EventMessage>,
-
     pub(crate) events_queue: EventsQueue,
     pub(crate) elements_state: ElementsState,
     pub(crate) font_collection: FontCollection,
     pub(crate) viewports: Viewports,
-    pub(crate) accessibility_state: SharedAccessibilityState,
-
+    pub(crate) accessibility_manager: SharedAccessibilityManager,
     pub(crate) config: TestingConfig,
-
     pub(crate) ticker_sender: broadcast::Sender<()>,
-
     pub(crate) navigation_state: NavigatorState,
 }
 
@@ -96,10 +90,7 @@ impl TestingHandler {
                         }
                     }
                     EventMessage::FocusAccessibilityNode(node_id) => {
-                        self.accessibility_state
-                            .lock()
-                            .unwrap()
-                            .set_focus(Some(node_id));
+                        self.accessibility_manager.lock().unwrap().focused_id = node_id;
                     }
                     _ => {}
                 }
@@ -107,7 +98,7 @@ impl TestingHandler {
 
             if let Ok(ev) = vdom_ev {
                 self.vdom
-                    .handle_event(&ev.name, ev.data.any(), ev.element_id, false);
+                    .handle_event(&ev.name, ev.data.any(), ev.element_id, true);
                 self.vdom.process_events();
             }
         }
@@ -176,7 +167,7 @@ impl TestingHandler {
         self.utils.get_node_by_id(root_id)
     }
 
-    pub fn focus_id(&self) -> Option<AccessibilityId> {
-        self.accessibility_state.lock().unwrap().focus_id()
+    pub fn focus_id(&self) -> AccessibilityId {
+        self.accessibility_manager.lock().unwrap().focused_id
     }
 }

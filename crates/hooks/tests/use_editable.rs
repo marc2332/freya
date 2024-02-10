@@ -11,7 +11,7 @@ use freya_testing::{
 #[tokio::test]
 pub async fn multiple_lines_single_editor() {
     fn use_editable_app() -> Element {
-        let editable = use_editable(
+        let mut editable = use_editable(
             || EditableConfig::new("Hello Rustaceans".to_string()),
             EditableMode::MultipleLinesSingleEditor,
         );
@@ -20,18 +20,12 @@ pub async fn multiple_lines_single_editor() {
         let cursor = editor.cursor();
         let cursor_pos = editor.cursor_pos();
 
-        let onmousedown = {
-            to_owned![editable];
-            move |e: MouseEvent| {
-                editable.process_event(&EditableEvent::MouseDown(e.data, 0));
-            }
+        let onmousedown = move |e: MouseEvent| {
+            editable.process_event(&EditableEvent::MouseDown(e.data, 0));
         };
 
-        let onkeydown = {
-            to_owned![editable];
-            move |e: Event<KeyboardData>| {
-                editable.process_event(&EditableEvent::KeyDown(e.data));
-            }
+        let onkeydown = move |e: Event<KeyboardData>| {
+            editable.process_event(&EditableEvent::KeyDown(e.data));
         };
 
         rsx!(
@@ -120,18 +114,15 @@ pub async fn multiple_lines_single_editor() {
 #[tokio::test]
 pub async fn single_line_mulitple_editors() {
     fn use_editable_app() -> Element {
-        let editable = use_editable(
+        let mut editable = use_editable(
             || EditableConfig::new("Hello Rustaceans\nHello World".to_string()),
             EditableMode::SingleLineMultipleEditors,
         );
         let cursor_attr = editable.cursor_attr();
         let editor = editable.editor().read();
 
-        let onkeydown = {
-            to_owned![editable];
-            move |e: Event<KeyboardData>| {
-                editable.process_event(&EditableEvent::KeyDown(e.data));
-            }
+        let onkeydown = move |e: Event<KeyboardData>| {
+            editable.process_event(&EditableEvent::KeyDown(e.data));
         };
 
         rsx!(
@@ -143,11 +134,8 @@ pub async fn single_line_mulitple_editors() {
                 onkeydown,
                 {editor.lines().enumerate().map(move |(i, line)| {
 
-                    let onmousedown = {
-                        to_owned![editable];
-                        move |e: MouseEvent| {
-                            editable.process_event(&EditableEvent::MouseDown(e.data, 0));
-                        }
+                    let onmousedown = move |e: MouseEvent| {
+                        editable.process_event(&EditableEvent::MouseDown(e.data, 0));
                     };
 
                     rsx!(
@@ -159,7 +147,7 @@ pub async fn single_line_mulitple_editors() {
                             cursor_index: "{i}",
                             cursor_color: "black",
                             cursor_mode: "editable",
-                            onmousedown:  onmousedown,
+                            onmousedown,
                             text {
                                 color: "black",
                                 "{line}"
@@ -238,7 +226,7 @@ pub async fn single_line_mulitple_editors() {
 #[tokio::test]
 pub async fn highlight_multiple_lines_single_editor() {
     fn use_editable_app() -> Element {
-        let editable = use_editable(
+        let mut editable = use_editable(
             || EditableConfig::new("Hello Rustaceans\n".repeat(2)),
             EditableMode::MultipleLinesSingleEditor,
         );
@@ -248,25 +236,16 @@ pub async fn highlight_multiple_lines_single_editor() {
         let cursor_reference = editable.cursor_attr();
         let highlights = editable.highlights_attr(0);
 
-        let onmousedown = {
-            to_owned![editable];
-            move |e: MouseEvent| {
-                editable.process_event(&EditableEvent::MouseDown(e.data, 0));
-            }
+        let onmousedown = move |e: MouseEvent| {
+            editable.process_event(&EditableEvent::MouseDown(e.data, 0));
         };
 
-        let onmouseover = {
-            to_owned![editable];
-            move |e: MouseEvent| {
-                editable.process_event(&EditableEvent::MouseOver(e.data, 0));
-            }
+        let onmouseover = move |e: MouseEvent| {
+            editable.process_event(&EditableEvent::MouseOver(e.data, 0));
         };
 
-        let onkeydown = {
-            to_owned![editable];
-            move |e: Event<KeyboardData>| {
-                editable.process_event(&EditableEvent::KeyDown(e.data));
-            }
+        let onkeydown = move |e: Event<KeyboardData>| {
+            editable.process_event(&EditableEvent::KeyDown(e.data));
         };
 
         rsx!(
@@ -341,18 +320,15 @@ pub async fn highlight_multiple_lines_single_editor() {
 #[tokio::test]
 pub async fn highlights_single_line_mulitple_editors() {
     fn use_editable_app() -> Element {
-        let editable = use_editable(
+        let mut editable = use_editable(
             || EditableConfig::new("Hello Rustaceans\n".repeat(2)),
             EditableMode::SingleLineMultipleEditors,
         );
         let cursor_attr = editable.cursor_attr();
         let editor = editable.editor().read();
 
-        let onkeydown = {
-            to_owned![editable];
-            move |e: Event<KeyboardData>| {
-                editable.process_event(&EditableEvent::KeyDown(e.data));
-            }
+        let onkeydown = move |e: Event<KeyboardData>| {
+            editable.process_event(&EditableEvent::KeyDown(e.data));
         };
 
         rsx!(
@@ -376,18 +352,12 @@ pub async fn highlights_single_line_mulitple_editors() {
                         "none".to_string()
                     };
 
-                    let onmouseover = {
-                        to_owned![editable];
-                        move |e: MouseEvent| {
-                            editable.process_event(&EditableEvent::MouseOver(e.data, i));
-                        }
+                    let onmouseover = move |e: MouseEvent| {
+                        editable.process_event(&EditableEvent::MouseOver(e.data, i));
                     };
 
-                    let onmousedown = {
-                        to_owned![editable];
-                        move |e: MouseEvent| {
-                            editable.process_event(&EditableEvent::MouseDown(e.data, i));
-                        }
+                    let onmousedown = move |e: MouseEvent| {
+                        editable.process_event(&EditableEvent::MouseDown(e.data, i));
                     };
 
                     rsx!(

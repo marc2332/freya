@@ -1,4 +1,3 @@
-use dioxus::signals::use_signal;
 use freya::prelude::*;
 
 fn main() {

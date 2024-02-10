@@ -12,8 +12,8 @@ For example, this will launch a state-less component and assert that it renders 
 ```rust, no_run
 #[tokio::test]
 async fn test() {
-    fn our_component() -> Element {
-        rsx!(
+    fn our_component(cx: Scope) -> Element {
+        render!(
             label {
                 "Hello World!"
             }
@@ -41,12 +41,15 @@ Here, the component has a state that is `false` by default, but, once mounted it
 ```rust, no_run
 #[tokio::test]
 async fn dynamic_test() {
-    fn dynamic_component() -> Element {
-        let mut state = use_signal(|| false);
+    fn dynamic_component(cx: Scope) -> Element {
+        let state = use_state(cx, || false);
 
-        use_hook(move || state.set(true));
+        use_effect(cx, (), |_| {
+            state.set(true);
+            async move { }
+        });
 
-        rsx!(
+        render!(
             label {
                 "Is enabled? {state}"
             }
@@ -60,7 +63,7 @@ async fn dynamic_test() {
 
     assert_eq!(label.get(0).text(), Some("Is enabled? false"));
 
-    // This will run the `use_hook` and update the state.
+    // This will run the `use_effect` and update the state.
     utils.wait_for_update().await;
 
     assert_eq!(label.get(0).text(), Some("Is enabled? true"));
@@ -74,14 +77,14 @@ We can also simulate events on the component, for example, we can simulate a cli
 ```rust, no_run
 #[tokio::test]
 async fn event_test() {
-    fn event_component() -> Element {
-        let mut enabled = use_signal(|| false);
-        rsx!(
+    fn event_component(cx: Scope) -> Element {
+        let enabled = use_state(cx, || false);
+        render!(
             rect {
                 width: "100%",
                 height: "100%",
                 background: "red",
-                onclick: move |_| {
+                onclick: |_| {
                     enabled.set(true);
                 },
                 label {
@@ -126,8 +129,8 @@ Here is an example of how to can set our custom window size:
 ```rust, no_run
 #[tokio::test]
 async fn test() {
-    fn our_component() -> Element {
-        rsx!(
+    fn our_component(cx: Scope) -> Element {
+        render!(
             label {
                 "Hello World!"
             }
@@ -136,7 +139,7 @@ async fn test() {
 
     let mut utils = launch_test_with_config(
         our_component,
-        TestingConfig::default().with_size((500.0, 800.0).into()),
+        *TestingConfig::default().with_size((500.0, 800.0).into()),
     );
 
     let root = utils.root();

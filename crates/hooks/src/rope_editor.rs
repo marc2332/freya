@@ -117,8 +117,8 @@ impl TextEditor for RopeEditor {
         }
     }
 
-    fn get_clipboard(&self) -> &UseClipboard {
-        &self.clipboard
+    fn get_clipboard(&mut self) -> &mut UseClipboard {
+        &mut self.clipboard
     }
 
     fn has_any_highlight(&self) -> bool {

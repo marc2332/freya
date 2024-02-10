@@ -2,7 +2,6 @@ use app::App;
 pub use config::*;
 use dioxus_core::VirtualDom;
 use dioxus_native_core::NodeId;
-use event_loop::run_event_loop;
 use freya_common::EventMessage;
 use freya_dom::prelude::SafeDOM;
 use std::sync::{Arc, Mutex};
@@ -19,6 +18,7 @@ mod elements;
 mod event_loop;
 mod renderer;
 mod window;
+mod winit_waker;
 mod wireframe;
 
 pub type HoveredNode = Option<Arc<Mutex<Option<NodeId>>>>;
@@ -41,7 +41,9 @@ impl DesktopRenderer {
 
         let _guard = rt.enter();
 
-        let event_loop = EventLoopBuilder::<EventMessage>::with_user_event().build();
+        let event_loop = EventLoopBuilder::<EventMessage>::with_user_event()
+            .build()
+            .expect("Failed to create event loop.");
         let proxy = event_loop.create_proxy();
 
         // Hotreload support for Dioxus
@@ -69,9 +71,8 @@ impl DesktopRenderer {
             config.plugins,
         );
 
-        app.init_vdom();
+        app.init_doms();
         app.process_layout();
-
-        run_event_loop(app, event_loop, proxy, hovered_node)
+        app.run(event_loop, proxy, hovered_node)
     }
 }

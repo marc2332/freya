@@ -46,10 +46,10 @@ impl Default for EditableMode {
 }
 
 /// Manage an editable content.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct UseEditable {
     pub(crate) editor: Signal<RopeEditor>,
-    pub(crate) cursor_reference: CursorReference,
+    pub(crate) cursor_reference: Signal<CursorReference>,
     pub(crate) selecting_text_with_mouse: Signal<Option<CursorPoint>>,
     pub(crate) platform: UsePlatform,
 }
@@ -68,7 +68,7 @@ impl UseEditable {
     /// Create a cursor attribute.
     pub fn cursor_attr(&self) -> AttributeValue {
         AttributeValue::any_value(CustomAttributeValues::CursorReference(
-            self.cursor_reference.clone(),
+            self.cursor_reference.peek().clone(),
         ))
     }
 
@@ -90,8 +90,10 @@ impl UseEditable {
                 let coords = e.get_element_coordinates();
                 *self.selecting_text_with_mouse.write() = Some(coords);
 
-                self.cursor_reference.set_id(Some(*id));
-                self.cursor_reference.set_cursor_position(Some(coords));
+                self.cursor_reference.peek().set_id(Some(*id));
+                self.cursor_reference
+                    .peek()
+                    .set_cursor_position(Some(coords));
 
                 self.editor.write().unhighlight();
             }
@@ -100,8 +102,9 @@ impl UseEditable {
                     if let Some(current_dragging) = selecting_text {
                         let coords = e.get_element_coordinates();
 
-                        self.cursor_reference.set_id(Some(*id));
+                        self.cursor_reference.peek().set_id(Some(*id));
                         self.cursor_reference
+                            .peek()
                             .set_cursor_selections(Some((*current_dragging, coords)));
                     }
                 });
@@ -123,7 +126,7 @@ impl UseEditable {
         if self.selecting_text_with_mouse.peek().is_some() {
             self.platform
                 .send(EventMessage::RemeasureTextGroup(
-                    self.cursor_reference.text_id,
+                    self.cursor_reference.peek().text_id,
                 ))
                 .unwrap()
         }
@@ -160,7 +163,7 @@ pub fn use_editable(initializer: impl Fn() -> EditableConfig, mode: EditableMode
     use_hook(|| {
         let text_id = Uuid::new_v4();
         let config = initializer();
-        let editor = Signal::new(RopeEditor::new(
+        let mut editor = Signal::new(RopeEditor::new(
             config.content,
             config.cursor,
             mode,
@@ -231,7 +234,7 @@ pub fn use_editable(initializer: impl Fn() -> EditableConfig, mode: EditableMode
 
         UseEditable {
             editor,
-            cursor_reference: cursor_reference.clone(),
+            cursor_reference: Signal::new(cursor_reference.clone()),
             selecting_text_with_mouse,
             platform,
         }

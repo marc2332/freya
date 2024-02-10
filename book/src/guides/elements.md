@@ -16,8 +16,8 @@ You can specify things like [`width`](/guides/layout.html#width), [`paddings`](/
 Example:
 
 ```rust, no_run
-fn app() -> Element {
-    rsx!(
+fn app(cx: Scope) -> Element {
+    render!(
         rect {
             direction: "vertical",
             label { "Hi!" }
@@ -34,8 +34,8 @@ The `label` element simply shows some text.
 Example:
 
 ```rust, no_run
-fn app() -> Element {
-    rsx!(
+fn app(cx: Scope) -> Element {
+    render!(
         label {
             "Hello World"
         }
@@ -53,9 +53,9 @@ Example:
 
 static FERRIS: &[u8] = include_bytes!("./ferris.svg");
 
-fn app() -> Element {
-    let ferris = bytes_to_data(FERRIS);
-    rsx!(
+fn app(cx: Scope) -> Element {
+    let ferris = bytes_to_data(cx, FERRIS);
+    render!(
         svg {
             svg_data: ferris,
         }
@@ -70,9 +70,9 @@ The `image` element, just like `svg` element, require you to pass the image byte
 ```rust, no_run
 static RUST_LOGO: &[u8] = include_bytes!("./rust_logo.png");
 
-fn app() -> Element {
-    let image_data = bytes_to_data(RUST_LOGO);
-    rsx!(
+fn app(cx: Scope) -> Element {
+    let image_data = bytes_to_data(cx, RUST_LOGO);
+    render!(
         image {
             image_data: image_data,
             width: "{size}",
@@ -87,8 +87,8 @@ fn app() -> Element {
 Both `paragraph` and `text` elements are used together. They will let you build texts with different styles.
 
 ``` rust
-fn app() -> Element {
-    rsx!(
+fn app(cx: Scope) -> Element {
+    render!(
         paragraph {
             text {
                 font_size: "15",

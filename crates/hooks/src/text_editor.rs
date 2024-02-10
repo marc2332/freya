@@ -184,7 +184,7 @@ pub trait TextEditor: Sized + Clone + Display {
 
     fn move_highlight_to_cursor(&mut self);
 
-    fn get_clipboard(&self) -> &UseClipboard;
+    fn get_clipboard(&mut self) -> &mut UseClipboard;
 
     // Process a Keyboard event
     fn process_key(&mut self, key: &Key, code: &Code, modifiers: &Modifiers) -> TextEvent {
@@ -378,6 +378,12 @@ pub trait TextEditor: Sized + Clone + Display {
                 event.insert(TextEvent::TEXT_CHANGED);
             }
             Key::Character(character) => {
+                let meta_or_ctrl = if cfg!(target_os = "macos") {
+                    modifiers.meta()
+                } else {
+                    modifiers.ctrl()
+                };
+
                 match code {
                     Code::Delete => {}
                     Code::Space => {
@@ -390,15 +396,16 @@ pub trait TextEditor: Sized + Clone + Display {
                     }
 
                     // Copy selected text
-                    Code::KeyC if modifiers.contains(Modifiers::CONTROL) => {
+                    Code::KeyC if meta_or_ctrl => {
                         let selected = self.get_selected_text();
                         if let Some(selected) = selected {
                             self.get_clipboard().set(selected).ok();
                         }
+                        event.remove(TextEvent::SELECTION_CHANGED);
                     }
 
                     // Cut selected text
-                    Code::KeyX if modifiers.contains(Modifiers::CONTROL) => {
+                    Code::KeyX if meta_or_ctrl => {
                         let selection = self.get_selection();
                         if let Some((start, end)) = selection {
                             let text = self.get_selected_text().unwrap();
@@ -409,7 +416,7 @@ pub trait TextEditor: Sized + Clone + Display {
                     }
 
                     // Paste copied text
-                    Code::KeyV if modifiers.contains(Modifiers::CONTROL) => {
+                    Code::KeyV if meta_or_ctrl => {
                         let copied_text = self.get_clipboard().get();
                         if let Ok(copied_text) = copied_text {
                             let char_idx = self.line_to_char(self.cursor_row()) + self.cursor_col();
@@ -421,7 +428,7 @@ pub trait TextEditor: Sized + Clone + Display {
                     }
 
                     // Undo last change
-                    Code::KeyZ if modifiers.contains(Modifiers::CONTROL) => {
+                    Code::KeyZ if meta_or_ctrl => {
                         let undo_result = self.undo();
 
                         if let Some(idx) = undo_result {
@@ -431,7 +438,7 @@ pub trait TextEditor: Sized + Clone + Display {
                     }
 
                     // Redo last change
-                    Code::KeyY if modifiers.contains(Modifiers::CONTROL) => {
+                    Code::KeyY if meta_or_ctrl => {
                         let undo_result = self.redo();
 
                         if let Some(idx) = undo_result {
@@ -442,8 +449,9 @@ pub trait TextEditor: Sized + Clone + Display {
 
                     _ => {
                         if let Ok(ch) = character.parse::<char>() {
-                            if !ch.is_ascii_control() {
-                                // Adds a new character
+                            // https://github.com/marc2332/freya/issues/461
+                            if !ch.is_ascii_control() && ch.len_utf8() <= 2 {
+                                // Inserts a character
                                 let char_idx =
                                     self.line_to_char(self.cursor_row()) + self.cursor_col();
                                 self.insert(character, char_idx);
@@ -451,6 +459,13 @@ pub trait TextEditor: Sized + Clone + Display {
 
                                 event.insert(TextEvent::TEXT_CHANGED);
                             }
+                        } else if character.is_ascii() {
+                            // Inserts a text
+                            let char_idx = self.line_to_char(self.cursor_row()) + self.cursor_col();
+                            self.insert(character, char_idx);
+                            self.set_cursor_pos(char_idx + character.len());
+
+                            event.insert(TextEvent::TEXT_CHANGED);
                         }
                     }
                 }

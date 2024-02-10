@@ -51,7 +51,6 @@ fn app() -> Element {
         let shader_wrapper = Arc::new(Mutex::new(ShaderWrapper(shader)));
         let instant = Instant::now();
 
-        to_owned![shader_wrapper];
         Box::new(move |canvas, _, region| {
             let shader = shader_wrapper.lock().unwrap();
 

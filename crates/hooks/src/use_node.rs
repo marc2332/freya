@@ -1,22 +1,21 @@
 use dioxus_core::{prelude::spawn, use_hook, AttributeValue};
-use dioxus_hooks::to_owned;
-use dioxus_signals::{use_signal, Readable, Signal, Writable};
+use dioxus_hooks::use_signal;
+use dioxus_signals::{Readable, Signal, Writable};
 use freya_common::NodeReferenceLayout;
 use freya_node_state::{CustomAttributeValues, NodeReference};
 use tokio::sync::mpsc::unbounded_channel;
 
 /// Subscribe to a Node layout changes.
 pub fn use_node() -> (AttributeValue, NodeReferenceLayout) {
-    let status = use_signal::<NodeReferenceLayout>(NodeReferenceLayout::default);
+    let mut layout = use_signal::<NodeReferenceLayout>(NodeReferenceLayout::default);
 
     let tx = use_hook(|| {
         let (tx, mut rx) = unbounded_channel::<NodeReferenceLayout>();
 
-        to_owned![status];
         spawn(async move {
-            while let Some(new_status) = rx.recv().await {
-                if *status.peek() != new_status {
-                    status.set(new_status);
+            while let Some(new_layout) = rx.recv().await {
+                if *layout.peek() != new_layout {
+                    layout.set(new_layout);
                 }
             }
         });
@@ -26,22 +25,21 @@ pub fn use_node() -> (AttributeValue, NodeReferenceLayout) {
 
     (
         AttributeValue::any_value(CustomAttributeValues::Reference(NodeReference(tx.clone()))),
-        status.read().clone(),
+        layout.read().clone(),
     )
 }
 
-/// Silently read the latest layout from a Node.
-pub fn use_node_ref() -> (AttributeValue, Signal<NodeReferenceLayout>) {
-    let status = use_signal::<NodeReferenceLayout>(NodeReferenceLayout::default);
+/// Get a signal to read the latest layout from a Node.
+pub fn use_node_signal() -> (AttributeValue, Signal<NodeReferenceLayout>) {
+    let mut layout = use_signal::<NodeReferenceLayout>(NodeReferenceLayout::default);
 
     let tx = use_hook(|| {
         let (tx, mut rx) = unbounded_channel::<NodeReferenceLayout>();
 
-        to_owned![status];
         spawn(async move {
-            while let Some(new_status) = rx.recv().await {
-                if *status.read() != new_status {
-                    *status.write() = new_status;
+            while let Some(new_layout) = rx.recv().await {
+                if *layout.peek() != new_layout {
+                    layout.set(new_layout);
                 }
             }
         });
@@ -51,7 +49,7 @@ pub fn use_node_ref() -> (AttributeValue, Signal<NodeReferenceLayout>) {
 
     (
         AttributeValue::any_value(CustomAttributeValues::Reference(NodeReference(tx.clone()))),
-        status,
+        layout,
     )
 }
 
