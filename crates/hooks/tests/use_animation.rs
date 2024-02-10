@@ -2,7 +2,6 @@ use std::time::Duration;
 
 use crate::{use_animation, Animation};
 use dioxus_core::use_hook;
-use dioxus_hooks::to_owned;
 use freya::prelude::*;
 use freya_testing::{events::pointer::MouseButton, launch_test, FreyaEvent};
 use tokio::time::sleep;

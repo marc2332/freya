@@ -14,7 +14,9 @@ use tokio::sync::mpsc::unbounded_channel;
 use torin::geometry::CursorPoint;
 use uuid::Uuid;
 
-use crate::{use_platform, RopeEditor, TextCursor, TextEditor, TextEvent, UsePlatform};
+use crate::{
+    use_platform, EditorHistory, RopeEditor, TextCursor, TextEditor, TextEvent, UsePlatform,
+};
 
 /// Events emitted to the [`UseEditable`].
 pub enum EditableEvent {
@@ -166,6 +168,7 @@ pub fn use_editable(initializer: impl Fn() -> EditableConfig, mode: EditableMode
             config.cursor,
             mode,
             clipboard,
+            EditorHistory::new(),
         ));
         let selecting_text_with_mouse = Signal::new(None);
         let (cursor_sender, mut cursor_receiver) = unbounded_channel::<CursorLayoutResponse>();

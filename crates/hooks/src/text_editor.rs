@@ -427,6 +427,26 @@ pub trait TextEditor: Sized + Clone + Display {
                         }
                     }
 
+                    // Undo last change
+                    Code::KeyZ if meta_or_ctrl => {
+                        let undo_result = self.undo();
+
+                        if let Some(idx) = undo_result {
+                            self.set_cursor_pos(idx);
+                            event.insert(TextEvent::TEXT_CHANGED);
+                        }
+                    }
+
+                    // Redo last change
+                    Code::KeyY if meta_or_ctrl => {
+                        let undo_result = self.redo();
+
+                        if let Some(idx) = undo_result {
+                            self.set_cursor_pos(idx);
+                            event.insert(TextEvent::TEXT_CHANGED);
+                        }
+                    }
+
                     _ => {
                         if let Ok(ch) = character.parse::<char>() {
                             // https://github.com/marc2332/freya/issues/461
@@ -461,6 +481,10 @@ pub trait TextEditor: Sized + Clone + Display {
     }
 
     fn get_selected_text(&self) -> Option<String>;
+
+    fn undo(&mut self) -> Option<usize>;
+
+    fn redo(&mut self) -> Option<usize>;
 
     fn get_selection(&self) -> Option<(usize, usize)>;
 }
