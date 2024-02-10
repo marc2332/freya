@@ -10,7 +10,7 @@ fn main() {
 }
 
 fn app() -> Element {
-    let editable = use_editable(
+    let mut editable = use_editable(
         || {
             EditableConfig::new("Hello Rustaceans Abcdefg12345 Hello Rustaceans Abcdefg12345 Hello Rustaceans Abcdefg12345\n".repeat(25).trim().to_string())
         },
@@ -23,32 +23,20 @@ fn app() -> Element {
     let cursor = editor.cursor();
     let cursor_char = editor.cursor_pos();
 
-    let onmousedown = {
-        to_owned![editable];
-        move |e: MouseEvent| {
-            editable.process_event(&EditableEvent::MouseDown(e.data, 0));
-        }
+    let onmousedown = move |e: MouseEvent| {
+        editable.process_event(&EditableEvent::MouseDown(e.data, 0));
     };
 
-    let onmouseover = {
-        to_owned![editable];
-        move |e: MouseEvent| {
-            editable.process_event(&EditableEvent::MouseOver(e.data, 0));
-        }
+    let onmouseover = move |e: MouseEvent| {
+        editable.process_event(&EditableEvent::MouseOver(e.data, 0));
     };
 
-    let onclick = {
-        to_owned![editable];
-        move |_: MouseEvent| {
-            editable.process_event(&EditableEvent::Click);
-        }
+    let onclick = move |_: MouseEvent| {
+        editable.process_event(&EditableEvent::Click);
     };
 
-    let onkeydown = {
-        to_owned![editable];
-        move |e: KeyboardEvent| {
-            editable.process_event(&EditableEvent::KeyDown(e.data));
-        }
+    let onkeydown = move |e: KeyboardEvent| {
+        editable.process_event(&EditableEvent::KeyDown(e.data));
     };
 
     rsx!(
