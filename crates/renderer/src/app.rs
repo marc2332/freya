@@ -4,10 +4,11 @@ use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_dom::prelude::SafeDOM;
 use freya_engine::prelude::*;
+use freya_hooks::PlatformInformation;
 use futures_task::Waker;
 use futures_util::FutureExt;
 use pin_utils::pin_mut;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use tokio::sync::broadcast;
 use tokio::{
     select,

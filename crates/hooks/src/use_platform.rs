@@ -1,4 +1,4 @@
-use std::sync::{Arc, Mutex, MutexGuard};
+use std::sync::{Arc, Mutex};
 
 use dioxus_core::prelude::{consume_context, try_consume_context, use_hook};
 use dioxus_signals::{Readable, Signal};
@@ -70,8 +70,8 @@ impl UsePlatform {
     /// Read information about the platform.
     ///
     /// **Important**: This will not subscribe to any changes about the information.
-    pub fn info(&self) -> MutexGuard<PlatformInformation> {
-        self.platform_information.lock().unwrap()
+    pub fn info(&self) -> PlatformInformation {
+        self.platform_information.read().lock().unwrap().clone()
     }
 }
 

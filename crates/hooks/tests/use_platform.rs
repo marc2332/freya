@@ -1,28 +1,20 @@
 use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
-use freya_hooks::{use_animation, use_platform, Animation, PlatformInformation};
-use freya_testing::{launch_test, launch_test_with_config, TestingConfig};
-use torin::geometry::Size2D;
+use freya_hooks::use_platform;
+use freya_testing::{launch_test_with_config, TestingConfig};
 
 #[tokio::test]
 async fn window_size() {
     fn use_animation_app() -> Element {
-        let mut animation = use_animation(|| 0.0);
+        let platform = use_platform();
 
-        let progress = animation.value();
+        let platform = platform.info().window_size;
 
-        let _ = use_memo(move || {
-            animation.start(Animation::new_linear(0.0..=100.0, 50));
-        });
-
-        rsx!(rect {
-            width: "{progress}",
-        })
+        rsx!("{platform:?}")
     }
 
-    let mut utils = launch_test(use_animation_app);
+    let mut utils = launch_test_with_config(use_animation_app, *TestingConfig::new().with_size((333.0, 190.0).into()));
 
     utils.wait_for_update().await;
 
-    utils.root().get(0).layout().clone().unwrap();
+    assert_eq!(utils.root().get(0).text(), Some("333.0x190.0"));
 }
