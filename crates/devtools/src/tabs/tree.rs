@@ -23,14 +23,15 @@ pub fn NodesTree(
             height: height.to_string().into(),
             padding: "15".into(),
         }),
-        builder: move |i| {
+        builder_args: selected_node_id,
+        builder: move |i, selected_node_id: &Option<Option<NodeId>>| {
             let nodes = nodes.read();
             let node = nodes.get(i).cloned().unwrap();
-            to_owned![onselected, router];
+            to_owned![onselected];
             rsx! {
                 NodeElement {
                     key: "{node.id:?}",
-                    is_selected: Some(node.id) == selected_node_id,
+                    is_selected: Some(node.id) == selected_node_id.flatten(),
                     onselected: move |node: TreeNode| {
                         onselected.call(node.clone());
                         router.replace(Route::TreeStyleTab { node_id: node.id.serialize() });

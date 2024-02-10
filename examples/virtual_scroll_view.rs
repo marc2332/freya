@@ -16,7 +16,7 @@ fn app() -> Element {
         length: values.read().len(),
         item_size: 25.0,
         direction: "vertical",
-        builder: move |index: usize| {
+        builder: move |index, _: &Option<()>| {
             let value = values.read()[index];
             let background = if index % 2 == 0 {
                 "rgb(200, 200, 200)"

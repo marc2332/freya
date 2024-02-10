@@ -32,7 +32,6 @@ fn Body() -> Element {
     );
     let cursor_reference = editable.cursor_attr();
     let editor = editable.editor().read();
-    let cloned_editable = editable.clone();
 
     let onclick = move |_: MouseEvent| {
         editable.process_event(&EditableEvent::Click);
@@ -59,7 +58,7 @@ fn Body() -> Element {
                 length: editor.len_lines(),
                 item_size: 35.0,
                 scroll_with_arrows: false,
-                builder: move |line_index| {
+                builder: move |line_index, _: &Option<()>| {
                     let editor = editable.editor().read();
                     let line = editor.line(line_index).unwrap();
 
@@ -135,8 +134,8 @@ fn Body() -> Element {
                 length: editor.len_lines(),
                 item_size: 35.0,
                 scroll_with_arrows: false,
-                builder: move |line_index| {
-                    let editor = cloned_editable.editor().read();
+                builder: move |line_index, _: &Option<()>| {
+                    let editor = editable.editor().read();
                     let line = editor.line(line_index).unwrap();
 
                     let is_line_selected = editor.cursor_row() == line_index;
@@ -163,8 +162,7 @@ fn Body() -> Element {
                         editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
                     };
 
-
-                    let highlights = cloned_editable.highlights_attr(line_index);
+                    let highlights = editable.highlights_attr(line_index);
 
                     rsx! {
                         rect {
