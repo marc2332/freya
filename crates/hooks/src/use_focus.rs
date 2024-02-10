@@ -119,7 +119,10 @@ mod test {
 
         let mut utils = launch_test_with_config(
             use_focus_app,
-            TestingConfig::default().with_size((100.0, 100.0).into()),
+            TestingConfig {
+                size: (100.0, 100.0).into(),
+                ..TestingConfig::default()
+            },
         );
 
         // Initial state

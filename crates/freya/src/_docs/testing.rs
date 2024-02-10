@@ -149,7 +149,10 @@
 //!
 //!     let mut utils = launch_test_with_config(
 //!         our_component,
-//!         TestingConfig::default().with_size((500.0, 800.0).into()),
+//!         TestingConfig {
+//!             size: (500.0, 800.0).into(),
+//!             ..TestingConfig::default()
+//!         },
 //!     );
 //!
 //!     let root = utils.root();

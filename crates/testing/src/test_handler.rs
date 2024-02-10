@@ -65,7 +65,7 @@ impl TestingHandler {
     pub async fn wait_for_update(&mut self) -> (bool, bool) {
         self.wait_for_work(self.config.size());
 
-        let mut ticker = if self.config.enable_event_loop_ticker {
+        let mut ticker = if self.config.event_loop_ticker {
             Some(interval(Duration::from_millis(16)))
         } else {
             None

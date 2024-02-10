@@ -28,7 +28,7 @@ pub async fn track_progress() {
     let mut utils = launch_test(use_animation_transition_app);
 
     // Disable event loop ticker
-    utils.config().with_event_ticker(false);
+    utils.config().event_loop_ticker = false;
 
     // Initial state
     utils.wait_for_update().await;
@@ -43,7 +43,7 @@ pub async fn track_progress() {
     assert!(width > 0.0);
 
     // Enable event loop ticker
-    utils.config().with_event_ticker(true);
+    utils.config().event_loop_ticker = true;
 
     // Already finished
     sleep(Duration::from_millis(50)).await;
