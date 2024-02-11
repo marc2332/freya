@@ -372,12 +372,18 @@ pub struct UseAnimator<Animated> {
     ctx: Context,
     platform: UsePlatform,
     task: RefCell<Option<Task>>,
+    is_running: Signal<bool>,
 }
 
 impl<Animated> UseAnimator<Animated> {
     /// Get the containing animated value.
     pub fn get(&self) -> &Animated {
         &self.value
+    }
+
+    /// Checks if there is any animation running.
+    pub fn is_running(&self) -> bool {
+        *self.is_running.read()
     }
 
     /// Runs the animation in reverse direction.
@@ -393,6 +399,7 @@ impl<Animated> UseAnimator<Animated> {
     /// Run the animation with a given [`AnimDirection`]
     pub fn run(&self, direction: AnimDirection) {
         let platform = self.platform;
+        let mut is_running = self.is_running;
         let mut ticker = platform.new_ticker();
         let mut values = self.ctx.animated_values.clone();
 
@@ -400,6 +407,8 @@ impl<Animated> UseAnimator<Animated> {
         if let Some(task) = self.task.borrow_mut().take() {
             task.cancel();
         }
+
+        is_running.set(true);
 
         let task = spawn(async move {
             platform.request_animation_frame();
@@ -434,6 +443,8 @@ impl<Animated> UseAnimator<Animated> {
 
                 prev_frame = Instant::now();
             }
+
+            is_running.set(false);
         });
 
         *self.task.borrow_mut() = Some(task);
@@ -509,6 +520,7 @@ pub fn use_animation<Animated: PartialEq + 'static>(
             ctx,
             platform: UsePlatform::new(),
             task: RefCell::new(None),
+            is_running: Signal::new(false),
         }
     })
 }
@@ -529,6 +541,7 @@ where
             ctx,
             platform: UsePlatform::new(),
             task: RefCell::new(None),
+            is_running: Signal::new(false),
         }
     })
 }
