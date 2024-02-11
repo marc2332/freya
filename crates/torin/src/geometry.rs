@@ -45,7 +45,6 @@ impl AreaModel for Area {
         self.origin.y += offset_y.get();
     }
 
-    #[inline(always)]
     fn align_content(
         &mut self,
         available_area: &Area,
@@ -84,7 +83,6 @@ impl AreaModel for Area {
     }
 }
 
-#[inline(always)]
 pub fn get_align_axis(
     direction: &DirectionMode,
     alignment_direction: AlignmentDirection,

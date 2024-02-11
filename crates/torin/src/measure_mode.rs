@@ -43,7 +43,6 @@ impl<'a> MeasureMode<'a> {
     /// The intended usage is to call this after the first measurement and before the second,
     /// this way the second measurement will align the content relatively to the parent element instead
     /// of overflowing due to being aligned relatively to the upper parent element
-    #[inline(always)]
     pub fn fit_bounds_when_unspecified_and_aligned(
         &mut self,
         parent_node: &Node,
@@ -129,7 +128,6 @@ impl<'a> MeasureMode<'a> {
     }
 
     /// Stack a Node into another Node
-    #[inline(always)]
     pub fn stack_into_node(
         &mut self,
         parent_node: &Node,
