@@ -11,8 +11,8 @@ use dioxus_native_core_macro::partial_derive_state;
 use crate::CustomAttributeValues;
 
 #[derive(Clone, Debug, PartialEq, Eq, Default, Component)]
-pub struct AccessibilityState {
-    pub focus_id: Option<AccessibilityId>,
+pub struct AccessibilityNodeState {
+    pub accessibility_id: Option<AccessibilityId>,
     pub role: Option<Role>,
     pub alt: Option<String>,
     pub name: Option<String>,
@@ -20,7 +20,7 @@ pub struct AccessibilityState {
 }
 
 #[partial_derive_state]
-impl State<CustomAttributeValues> for AccessibilityState {
+impl State<CustomAttributeValues> for AccessibilityNodeState {
     type ParentDependencies = ();
 
     type ChildDependencies = ();
@@ -44,17 +44,18 @@ impl State<CustomAttributeValues> for AccessibilityState {
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
         _context: &SendAnyMap,
     ) -> bool {
-        let mut accessibility = AccessibilityState::default();
+        let mut accessibility = AccessibilityNodeState::default();
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
                 #[allow(clippy::single_match)]
                 match attr.attribute.name.as_str() {
                     "focus_id" => {
-                        if let OwnedAttributeValue::Custom(CustomAttributeValues::FocusId(id)) =
-                            attr.value
+                        if let OwnedAttributeValue::Custom(
+                            CustomAttributeValues::AccessibilityId(id),
+                        ) = attr.value
                         {
-                            accessibility.focus_id = Some(*id);
+                            accessibility.accessibility_id = Some(*id);
                         }
                     }
                     "role" => {

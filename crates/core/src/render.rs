@@ -4,20 +4,20 @@ use freya_dom::prelude::FreyaDOM;
 use freya_engine::prelude::*;
 use torin::prelude::Area;
 
-/// Render the layout
-pub fn process_render<HookOptions>(
+/// Call the render function for the nodes that should be rendered.
+pub fn process_render<RenderOptions>(
     viewports: &Viewports,
-    dom: &FreyaDOM,
+    fdom: &FreyaDOM,
     font_collection: &mut FontCollection,
     layers: &Layers,
-    hook_options: &mut HookOptions,
-    render_hook: impl Fn(&FreyaDOM, &NodeId, &Area, &mut FontCollection, &Viewports, &mut HookOptions),
+    render_options: &mut RenderOptions,
+    render_fn: impl Fn(&FreyaDOM, &NodeId, &Area, &mut FontCollection, &Viewports, &mut RenderOptions),
 ) {
     // Render all the layers from the bottom to the top
     for (_, layer) in layers.layers() {
         'elements: for node_id in layer {
             let node_viewports = viewports.get(node_id);
-            let layout = dom.layout();
+            let layout = fdom.layout();
             let areas = layout.get(*node_id);
 
             if let Some(areas) = areas {
@@ -34,13 +34,13 @@ pub fn process_render<HookOptions>(
                 }
 
                 // Render the element
-                render_hook(
-                    dom,
+                render_fn(
+                    fdom,
                     node_id,
                     &areas.visible_area(),
                     font_collection,
                     viewports,
-                    hook_options,
+                    render_options,
                 )
             }
         }

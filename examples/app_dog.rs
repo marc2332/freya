@@ -3,7 +3,6 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus::signals::use_signal;
 use freya::prelude::*;
 use reqwest::Url;
 use serde::Deserialize;
@@ -27,15 +26,14 @@ async fn fetch_random_dog() -> Option<Url> {
 
 fn app() -> Element {
     use_init_theme(DARK_THEME);
-    let dog_url = use_signal(|| None);
+    let mut dog_url = use_signal(|| None);
 
-    let fetch = move || {
-        to_owned![dog_url];
+    let onclick = move |_| {
         spawn(async move {
             if let Some(url) = fetch_random_dog().await {
                 dog_url.set(Some(url))
             }
-        })
+        });
     };
 
     rsx!(
@@ -60,9 +58,7 @@ fn app() -> Element {
                 main_align: "center",
                 cross_align: "center",
                 Button {
-                    onclick: move |_| {
-                        fetch();
-                    },
+                    onclick,
                     label {
                         "Fetch random Doggo!"
                     }

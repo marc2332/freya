@@ -59,17 +59,14 @@ pub fn Switch(props: SwitchProps) -> Element {
     let mut animation = use_animation(|| 0.0);
     let theme = use_applied_theme!(&props.theme, switch);
     let platform = use_platform();
-    let status = use_signal(SwitchStatus::default);
-    let focus = use_focus();
+    let mut status = use_signal(SwitchStatus::default);
+    let mut focus = use_focus();
 
     let focus_id = focus.attribute();
 
-    use_drop({
-        to_owned![status, platform];
-        move || {
-            if *status.read() == SwitchStatus::Hovering {
-                platform.set_cursor(CursorIcon::default());
-            }
+    use_drop(move || {
+        if *status.read() == SwitchStatus::Hovering {
+            platform.set_cursor(CursorIcon::default());
         }
     });
 
@@ -77,24 +74,20 @@ pub fn Switch(props: SwitchProps) -> Element {
         e.stop_propagation();
     };
 
-    let onmouseleave = {
-        to_owned![platform];
-        move |e: MouseEvent| {
-            e.stop_propagation();
-            *status.write() = SwitchStatus::Idle;
-            platform.set_cursor(CursorIcon::default());
-        }
+    let onmouseleave = move |e: MouseEvent| {
+        e.stop_propagation();
+        *status.write() = SwitchStatus::Idle;
+        platform.set_cursor(CursorIcon::default());
     };
 
     let onmouseenter = move |e: MouseEvent| {
         e.stop_propagation();
         *status.write() = SwitchStatus::Hovering;
-        platform.set_cursor(CursorIcon::Hand);
+        platform.set_cursor(CursorIcon::Pointer);
     };
 
     let onclick = {
         let ontoggled = props.ontoggled.clone();
-        to_owned![focus];
         move |e: MouseEvent| {
             e.stop_propagation();
             focus.focus();
@@ -102,12 +95,9 @@ pub fn Switch(props: SwitchProps) -> Element {
         }
     };
 
-    let onkeydown = {
-        to_owned![focus];
-        move |e: KeyboardEvent| {
-            if focus.validate_keydown(e) {
-                props.ontoggled.call(());
-            }
+    let onkeydown = move |e: KeyboardEvent| {
+        if focus.validate_keydown(e) {
+            props.ontoggled.call(());
         }
     };
 

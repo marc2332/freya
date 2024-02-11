@@ -1,6 +1,5 @@
 use freya::events::MouseEvent;
 use freya::prelude::*;
-use std::rc::Rc;
 
 fn main() {
     launch_cfg(
@@ -25,27 +24,21 @@ fn Body() -> Element {
     let theme = use_theme();
     let theme = theme.read();
 
-    let editable = use_editable(
+    let mut editable = use_editable(
         || {
             EditableConfig::new("Lorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet\nLorem ipsum dolor sit amet".to_string())
         },
         EditableMode::SingleLineMultipleEditors,
     );
-    let cursor_attr = editable.cursor_attr();
+    let cursor_reference = editable.cursor_attr();
     let editor = editable.editor().read();
 
-    let onclick = {
-        to_owned![editable];
-        move |_: MouseEvent| {
-            editable.process_event(&EditableEvent::Click);
-        }
+    let onclick = move |_: MouseEvent| {
+        editable.process_event(&EditableEvent::Click);
     };
 
-    let onkeydown = {
-        to_owned![editable];
-        move |e: KeyboardEvent| {
-            editable.process_event(&EditableEvent::KeyDown(e.data));
-        }
+    let onkeydown = move |e: KeyboardEvent| {
+        editable.process_event(&EditableEvent::KeyDown(e.data));
     };
 
     rsx!(
@@ -54,7 +47,7 @@ fn Body() -> Element {
             height: "100%",
             padding: "10",
             onkeydown,
-            cursor_reference: cursor_attr,
+            cursor_reference,
             direction: "horizontal",
             onglobalclick: onclick,
             background: "{theme.body.background}",
@@ -64,10 +57,8 @@ fn Body() -> Element {
                 }),
                 length: editor.len_lines(),
                 item_size: 35.0,
-                builder_values: editable.clone(),
                 scroll_with_arrows: false,
-                builder: Rc::new(move |(key, line_index, values): (usize, usize, &Option<UseEditable>)| {
-                    let editable = values.as_ref().unwrap();
+                builder: move |line_index, _: &Option<()>| {
                     let editor = editable.editor().read();
                     let line = editor.line(line_index).unwrap();
 
@@ -87,25 +78,19 @@ fn Body() -> Element {
                         ""
                     };
 
-                    let onmousedown = {
-                        to_owned![editable];
-                        move |e: MouseEvent| {
-                            editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
-                        }
+                    let onmousedown = move |e: MouseEvent| {
+                        editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
                     };
 
-                    let onmouseover = {
-                        to_owned![editable];
-                        move |e: MouseEvent| {
-                            editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
-                        }
+                    let onmouseover = move |e: MouseEvent| {
+                        editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
                     };
 
                     let highlights = editable.highlights_attr(line_index);
 
                     rsx! {
                         rect {
-                            key: "{key}",
+                            key: "{line_index}",
                             width: "100%",
                             height: "35",
                             direction: "horizontal",
@@ -140,7 +125,7 @@ fn Body() -> Element {
                             }
                         }
                     }
-                })
+                }
             }
             VirtualScrollView {
                 theme: theme_with!(ScrollViewTheme {
@@ -148,10 +133,8 @@ fn Body() -> Element {
                 }),
                 length: editor.len_lines(),
                 item_size: 35.0,
-                builder_values: editable.clone(),
                 scroll_with_arrows: false,
-                builder: Rc::new(move |(key, line_index, values): (usize, usize, &Option<UseEditable>)| {
-                    let editable = values.as_ref().unwrap();
+                builder: move |line_index, _: &Option<()>| {
                     let editor = editable.editor().read();
                     let line = editor.line(line_index).unwrap();
 
@@ -171,26 +154,19 @@ fn Body() -> Element {
                         ""
                     };
 
-                    let onmousedown = {
-                        to_owned![editable];
-                        move |e: MouseEvent| {
-                            editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
-                        }
+                    let onmousedown = move |e: MouseEvent| {
+                        editable.process_event(&EditableEvent::MouseDown(e.data, line_index));
                     };
 
-                    let onmouseover = {
-                        to_owned![editable];
-                        move |e: MouseEvent| {
-                            editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
-                        }
+                    let onmouseover = move |e: MouseEvent| {
+                        editable.process_event(&EditableEvent::MouseOver(e.data, line_index));
                     };
-
 
                     let highlights = editable.highlights_attr(line_index);
 
                     rsx! {
                         rect {
-                            key: "{key}",
+                            key: "{line_index}",
                             width: "100%",
                             height: "35",
                             direction: "horizontal",
@@ -225,7 +201,7 @@ fn Body() -> Element {
                             }
                         }
                     }
-                })
+                }
             }
         }
     )

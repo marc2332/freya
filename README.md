@@ -20,10 +20,10 @@
 <td style="border:hidden;">
 
 ```rust, no_run
-fn app() -> Element {
-    let mut count = use_signal(|| 0);
+fn app(cx: Scope) -> Element {
+    let mut count = use_state(cx, || 0);
 
-    rsx!(
+    render!(
         rect {
             height: "20%",
             width: "100%",
@@ -59,9 +59,11 @@ fn app() -> Element {
 
 Thanks to my sponsors for supporting this project! 😄
 
-<!-- sponsors --><a href="https://github.com/piny4man"><img src="https://github.com/piny4man.png" width="60px" alt="Alberto Mendez" /></a><a href="https://github.com/stephenandary"><img src="https://github.com/stephenandary.png" width="60px" alt="Stephen Andary" /></a><!-- sponsors -->
+<!-- sponsors --><a href="https://github.com/piny4man"><img src="https://github.com/piny4man.png" width="60px" alt="Alberto Mendez" /></a><a href="https://github.com/andar1an"><img src="https://github.com/andar1an.png" width="60px" alt="Andar1an" /></a><!-- sponsors -->
 
 ### Want to try it? 🤔
+
+Note: `main` branch currently depends on Dioxus 0.5.
 
 ⚠️ First, see [Environment setup](https://book.freyaui.dev/setup.html).
 

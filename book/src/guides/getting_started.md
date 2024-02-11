@@ -43,10 +43,10 @@ fn main() {
     launch(app);
 }
 
-fn app() -> Element {
-    let mut count = use_signal(|| 0);
+fn app(cx: Scope) -> Element {
+    let mut count = use_state(cx, || 0);
 
-    rsx!(
+    render!(
         rect {
             height: "100%",
             width: "100%",

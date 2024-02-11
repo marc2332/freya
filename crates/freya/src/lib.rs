@@ -54,6 +54,9 @@
 #[cfg(doc)]
 pub mod _docs;
 
+#[cfg(doc)]
+pub use freya_elements::_docs as elements_docs;
+
 /// Dioxus library.
 pub use dioxus;
 

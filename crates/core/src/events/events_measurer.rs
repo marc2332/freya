@@ -6,11 +6,10 @@ use freya_dom::{dom::DioxusDOM, prelude::FreyaDOM};
 
 use freya_engine::prelude::*;
 use freya_node_state::{Fill, Style};
-use rustc_hash::FxHashMap;
 
 pub use crate::events::{DomEvent, ElementsState, FreyaEvent};
 
-use crate::types::{EventEmitter, EventsQueue, NodesEvents};
+use crate::types::{EventEmitter, EventsQueue, PotentialEvents};
 
 /// Process the events and emit them to the VirtualDOM
 pub fn process_events(
@@ -80,8 +79,8 @@ pub fn measure_potential_event_listeners(
     events: &EventsQueue,
     viewports: &Viewports,
     fdom: &FreyaDOM,
-) -> NodesEvents {
-    let mut potential_events = FxHashMap::default();
+) -> PotentialEvents {
+    let mut potential_events = PotentialEvents::default();
 
     let layout = fdom.layout();
 
@@ -95,7 +94,7 @@ pub fn measure_potential_event_listeners(
                         let event_data = (*node_id, event.clone());
                         potential_events
                             .entry(name.clone())
-                            .or_insert_with(|| vec![event_data.clone()])
+                            .or_default()
                             .push(event_data);
                     } else {
                         let data = match event {
@@ -182,7 +181,7 @@ fn is_node_parent_of(rdom: &DioxusDOM, node: NodeId, parent_node: NodeId) -> boo
 
 /// Measure what DOM events could be emited
 fn measure_dom_events(
-    potential_events: NodesEvents,
+    potential_events: PotentialEvents,
     fdom: &FreyaDOM,
     scale_factor: f64,
 ) -> Vec<DomEvent> {
@@ -231,9 +230,10 @@ fn measure_dom_events(
 
                 let Style { background, .. } = &*node.get::<Style>().unwrap();
 
-                if background != &Fill::Color(Color::TRANSPARENT) {
+                if background != &Fill::Color(Color::TRANSPARENT) && !event.is_keyboard_event() {
                     // If the background isn't transparent,
                     // we must make sure that next nodes are parent of it
+                    // This only matters for pointer-based events, and not to e.g keyboard events
                     child_node = Some(*node_id);
                 }
             }
