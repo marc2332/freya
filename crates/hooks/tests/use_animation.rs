@@ -1,6 +1,5 @@
 use std::time::Duration;
 
-use crate::{use_animation, Animation};
 use dioxus_core::use_hook;
 use freya::prelude::*;
 use freya_testing::{events::pointer::MouseButton, launch_test, FreyaEvent};
@@ -9,12 +8,12 @@ use tokio::time::sleep;
 #[tokio::test]
 pub async fn track_progress() {
     fn use_animation_app() -> Element {
-        let mut animation = use_animation(|| 0.0);
+        let animation = use_animation(|ctx| ctx.with(AnimNum::new(0., 100.).time(50)));
 
-        let progress = animation.value();
+        let progress = animation.read().get().read().as_f32();
 
-        let _ = use_memo(move || {
-            animation.start(Animation::new_linear(0.0..=100.0, 50));
+        use_hook(|| {
+            animation.read().start();
         });
 
         rsx!(rect {
@@ -53,24 +52,22 @@ pub async fn track_progress() {
 }
 
 #[tokio::test]
-pub async fn restart_progress() {
+pub async fn reverse_progress() {
     fn use_animation_app() -> Element {
-        let mut animation = use_animation(|| 10.0);
+        let animation = use_animation(|ctx| ctx.with(AnimNum::new(10., 100.).time(50)));
 
-        let progress = animation.value();
-
-        let mut restart = move || {
-            animation.clear();
-        };
+        let progress = animation.read().get().read().as_f32();
 
         use_hook(|| {
-            animation.start(Animation::new_linear(10.0..=100.0, 50));
+            animation.read().start();
         });
 
         rsx!(rect {
             background: "white",
             height: "100%",
-            onclick: move |_| restart(),
+            onclick: move |_| {
+                animation.read().reverse();
+            },
             width: "{progress}",
         })
     }
@@ -111,12 +108,4 @@ pub async fn restart_progress() {
 
     let width = utils.root().get(0).layout().unwrap().width();
     assert_eq!(width, 10.0);
-}
-
-#[test]
-pub fn animation_mode_settings() {
-    let anim = Animation::new_sine_in_out(7.0..=99.0, 500);
-    assert_eq!(anim.duration(), 500);
-    assert_eq!(anim.initial_value(), 7.0);
-    assert_eq!(anim.final_value(), 99.0);
 }
