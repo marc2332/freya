@@ -466,7 +466,7 @@ impl<Animated> UseAnimator<Animated> {
 ///     let width = animations.read().as_f32();
 ///
 ///     use_hook(move || {
-///         animation.start();
+///         animation.read().start();
 ///     });
 ///
 ///     rsx!(
@@ -491,18 +491,18 @@ impl<Animated> UseAnimator<Animated> {
 ///         )
 ///     });
 ///
-///     let animations = animation.read().get();
-///     let (width, color) = animations.read().as_f32();
+///     let animations = animation.read()
+///     let (width, color) = animations.get();
 ///
 ///     use_hook(move || {
-///         animation.start();
+///         animation.read().start();
 ///     });
 ///
 ///     rsx!(
 ///         rect {
-///             width: "{width}",
+///             width: "{width.read().as_f32()}",
 ///             height: "100%",
-///             background: "{color}"
+///             background: "{color.read().as_string()}"
 ///         }
 ///     )
 /// }

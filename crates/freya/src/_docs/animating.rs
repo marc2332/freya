@@ -22,7 +22,7 @@
 //!
 //!     use_hook(move || {
 //!         // Start animation as soon as this component runs.
-//!         animation.start();
+//!         animation.read().start();
 //!     });
 //!
 //!     rsx!(
@@ -47,19 +47,18 @@
 //!         )
 //!     });
 //!
-//!     let animations = animation.read().get();
-//!     let (width, color) = animations.read().as_f32();
+//!     let animations = animation.read()
+//!     let (width, color) = animations.get();
 //!
 //!     use_hook(move || {
-//!         animation.start();
+//!         animation.read().start();
 //!     });
 //!
 //!     rsx!(
 //!         rect {
-//!             width: "{width}",
+//!             width: "{width.read().as_f32()}",
 //!             height: "100%",
-//!             background: "{color}"
+//!             background: "{color.read().as_string()}"
 //!         }
 //!     )
 //! }
-//! ```
