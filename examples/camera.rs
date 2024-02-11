@@ -16,29 +16,25 @@ fn main() {
     launch(app);
 }
 #[cfg(feature = "use_camera")]
-fn app(cx: Scope) -> Element {
-    let (image_reference, camera_error) = use_camera(cx, CameraSettings::default());
+fn app() -> Element {
+    let (image_reference, camera_error) = use_camera(CameraSettings::default());
 
-    render!(
+    rsx!(
         rect {
             width: "100%",
             height: "100%",
             padding: "50",
-            if let Some(err) = camera_error.get() {
-                rsx!(
-                    label {
-                        color: "black",
-                        "{err}"
-                    }
-                )
+            if let Some(err) = &*camera_error.read() {
+                label {
+                    color: "black",
+                    "{err}"
+                }
             } else {
-                rsx!(
-                    image {
-                        width: "100%",
-                        height: "100%",
-                        image_reference: image_reference
-                    }
-                )
+                image {
+                    width: "100%",
+                    height: "100%",
+                    image_reference
+                }
             }
         }
     )

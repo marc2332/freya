@@ -14,12 +14,11 @@ fn main() {
 
 const SPEEDS: (i16, i16, i16) = (2, 3, 6);
 
-fn app(cx: Scope) -> Element {
-    let degrees = use_state(cx, || (0, 0, 0));
+fn app() -> Element {
+    let mut degrees = use_signal(|| (0, 0, 0));
 
-    use_effect(cx, (), move |_| {
-        to_owned![degrees];
-        async move {
+    use_hook(|| {
+        spawn(async move {
             let mut ticker = interval(Duration::from_millis(25));
             loop {
                 ticker.tick().await;
@@ -36,39 +35,37 @@ fn app(cx: Scope) -> Element {
                     }
                 });
 
-                degrees.modify(|(a, b, c)| {
-                    (
-                        (a + SPEEDS.0).clamp(0, 360),
-                        (b - SPEEDS.1).clamp(0, 360),
-                        (c + SPEEDS.2).clamp(0, 360),
-                    )
+                degrees.with_mut(|(a, b, c)| {
+                    *a += SPEEDS.0.clamp(0, 360);
+                    *b += SPEEDS.1.clamp(0, 360);
+                    *c += SPEEDS.2.clamp(0, 360);
                 });
             }
-        }
+        });
     });
 
-    render!(
+    rsx!(
         rect {
             main_align: "center",
             cross_align: "center",
             width: "100%",
             height: "100%",
             rect {
-                rotate: "{degrees.0}deg",
+                rotate: "{degrees.read().0}deg",
                 background: "rgb(65, 53, 67)",
                 width: "250",
                 height: "250",
                 main_align: "center",
                 cross_align: "center",
                 rect {
-                    rotate: "{degrees.1}deg",
+                    rotate: "{degrees.read().1}deg",
                     background: "rgb(143, 67, 238)",
                     width: "180",
                     height: "180",
                     main_align: "center",
                     cross_align: "center",
                     rect {
-                        rotate: "{degrees.2}deg",
+                        rotate: "{degrees.read().2}deg",
                         background: "rgb(240, 235, 141)",
                         width: "100",
                         height: "100"

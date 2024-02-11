@@ -26,7 +26,6 @@ impl GraphLine {
 #[derive(Debug, Props, PartialEq, Clone)]
 pub struct GraphProps {
     /// Theme override.
-    #[props(optional)]
     pub theme: Option<GraphThemeWith>,
     /// X axis labels.
     labels: Vec<String>,
@@ -40,14 +39,15 @@ pub struct GraphProps {
 /// See [`GraphProps`].
 ///
 #[allow(non_snake_case)]
-pub fn Graph(cx: Scope<GraphProps>) -> Element {
-    let platform = use_platform(cx);
+pub fn Graph(props: GraphProps) -> Element {
+    let platform = use_platform();
+    let GraphTheme { width, height } = use_applied_theme!(&props.theme, graph);
 
-    let _ = use_memo(cx, (cx.props,), move |_| {
+    let _ = use_memo_with_dependencies(&props, move |_| {
         platform.send(EventMessage::RequestRerender)
     });
 
-    let canvas = use_canvas(cx, cx.props, |state| {
+    let canvas = use_canvas(&props, |state| {
         Box::new(move |canvas, font_collection, region| {
             canvas.translate((region.min_x(), region.min_y()));
 
@@ -152,16 +152,14 @@ pub fn Graph(cx: Scope<GraphProps>) -> Element {
         })
     });
 
-    let GraphTheme { width, height } = use_applied_theme!(cx, &cx.props.theme, graph);
-
-    render!(
+    rsx!(
         rect {
             width: "{width}",
             height: "{height}",
             padding: "15 5",
             background: "white",
             rect {
-                canvas_reference: canvas.attribute(cx),
+                canvas_reference: canvas.attribute(),
                 width: "100%",
                 height: "100%",
             }

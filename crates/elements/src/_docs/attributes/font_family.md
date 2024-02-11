@@ -1,14 +1,16 @@
-### font_family
+With the `font_family` you can specify what font you want to use for the inner text.
 
-With the `font_family` you can specify what font do you want to use for the inner text.
+Check out the [custom font example](https://github.com/marc2332/freya/blob/main/examples/custom_font.rs)
+to see how you can load your own fonts.
 
-Limitation: Only fonts installed in the system are supported for now.
+<!-- TODO: Example of checking if a font exists with skia_safe -->
 
-Example:
+### Example
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+# use freya::prelude::*;
+fn app() -> Element {
+    rsx!(
         label {
             font_family: "Inter",
             "Hello, World!"

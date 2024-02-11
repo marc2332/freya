@@ -1,6 +1,8 @@
 use torin::geometry::CursorPoint;
 pub use winit::event::{Force, TouchPhase};
 
+use crate::definitions::PlatformEventData;
+
 /// Data of a Touch event.
 #[derive(Debug, Clone, PartialEq)]
 pub struct TouchData {
@@ -51,5 +53,11 @@ impl TouchData {
     /// Get the touch force of this event.
     pub fn get_touch_force(&self) -> Option<Force> {
         self.force
+    }
+}
+
+impl From<&PlatformEventData> for TouchData {
+    fn from(val: &PlatformEventData) -> Self {
+        val.downcast::<TouchData>().cloned().unwrap()
     }
 }

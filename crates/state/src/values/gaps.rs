@@ -43,6 +43,25 @@ impl Parse for Gaps {
                         .map_err(|_| ParseGapError)?,
                 )
             }
+            // Individual vertical but same horizontal
+            3 => {
+                let top = values
+                    .next()
+                    .ok_or(ParseGapError)?
+                    .parse::<f32>()
+                    .map_err(|_| ParseGapError)?;
+                let left_and_right = values
+                    .next()
+                    .ok_or(ParseGapError)?
+                    .parse::<f32>()
+                    .map_err(|_| ParseGapError)?;
+                let bottom = values
+                    .next()
+                    .ok_or(ParseGapError)?
+                    .parse::<f32>()
+                    .map_err(|_| ParseGapError)?;
+                paddings = Gaps::new(top, left_and_right, bottom, left_and_right);
+            }
             // Each directions
             4 => {
                 paddings = Gaps::new(

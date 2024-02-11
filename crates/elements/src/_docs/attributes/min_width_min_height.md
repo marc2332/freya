@@ -7,8 +7,9 @@ See syntax for [`Size Units`](crate::_docs::size_unit).
 ##### Usage
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+# use freya::prelude::*;
+fn app() -> Element {
+    rsx!(
         rect {
             background: "red",
             min_width: "100",

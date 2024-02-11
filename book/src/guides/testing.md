@@ -139,7 +139,7 @@ async fn test() {
 
     let mut utils = launch_test_with_config(
         our_component,
-        TestingConfig::default().with_size((500.0, 800.0).into()),
+        *TestingConfig::default().with_size((500.0, 800.0).into()),
     );
 
     let root = utils.root();

@@ -23,16 +23,16 @@
 //!     launch(app);
 //! }
 //!
-//!  fn app(cx: Scope) -> Element {
-//!     let animation = use_animation(cx, || 0.0);
+//!  fn app() -> Element {
+//!     let mut animation = use_animation(|| 0.0);
 //!
 //!     let progress = animation.value();
 //!
-//!     use_memo(cx, (), move |_| {
+//!     use_hook(move || {
 //!         animation.start(Animation::new_linear(0.0..=100.0, 50));
 //!     });
 //!
-//!     render!(rect {
+//!     rsx!(rect {
 //!         width: "{progress}",
 //!     })
 //! }
@@ -61,8 +61,8 @@
 //!
 //! const TARGET: f64 = 500.0;
 //!
-//! fn app(cx: Scope) -> Element {
-//!     let animation = use_animation_transition(cx, TransitionAnimation::new_sine_in_out(200), (), |()| {
+//! fn app() -> Element {
+//!     let mut animation = use_animation_transition(TransitionAnimation::new_sine_in_out(200), (), |()| {
 //!         vec![
 //!             Transition::new_size(0.0, TARGET),
 //!             Transition::new_color("rgb(33, 158, 188)", "white"),
@@ -80,7 +80,7 @@
 //!         }
 //!     };
 //!
-//!     render!(
+//!     rsx!(
 //!         rect {
 //!             overflow: "clip",
 //!             background: "black",
@@ -91,7 +91,7 @@
 //!                 height: "100%",
 //!                 width: "200",
 //!                 background: "{background}",
-//!                 onclick: onclick,
+//!                 onclick,
 //!             }
 //!         }
 //!     )

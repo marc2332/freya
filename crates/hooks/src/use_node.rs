@@ -1,56 +1,54 @@
-use dioxus_core::{AttributeValue, ScopeState};
-use dioxus_hooks::{to_owned, use_ref, use_state, UseRef};
+use std::sync::Arc;
+
+use dioxus_core::{prelude::spawn, use_hook, AttributeValue};
+use dioxus_signals::{Readable, Signal, Writable};
 use freya_common::NodeReferenceLayout;
 use freya_node_state::{CustomAttributeValues, NodeReference};
-use tokio::sync::mpsc::unbounded_channel;
+use tokio::sync::watch::channel;
 
 /// Subscribe to a Node layout changes.
-pub fn use_node(cx: &ScopeState) -> (AttributeValue, NodeReferenceLayout) {
-    let status = use_state::<NodeReferenceLayout>(cx, NodeReferenceLayout::default);
+pub fn use_node() -> (AttributeValue, NodeReferenceLayout) {
+    let (tx, signal) = use_hook(|| {
+        let (tx, mut rx) = channel::<NodeReferenceLayout>(NodeReferenceLayout::default());
+        let mut signal = Signal::new(NodeReferenceLayout::default());
 
-    let tx = cx.use_hook(|| {
-        let (tx, mut rx) = unbounded_channel::<NodeReferenceLayout>();
-
-        to_owned![status];
-        cx.spawn(async move {
-            while let Some(new_status) = rx.recv().await {
-                if status.current().as_ref() != &new_status {
-                    status.set(new_status);
+        spawn(async move {
+            while rx.changed().await.is_ok() {
+                if *signal.peek() != *rx.borrow() {
+                    signal.set(rx.borrow().clone());
                 }
             }
         });
 
-        tx
+        (Arc::new(tx), signal)
     });
 
     (
-        cx.any_value(CustomAttributeValues::Reference(NodeReference(tx.clone()))),
-        status.get().clone(),
+        AttributeValue::any_value(CustomAttributeValues::Reference(NodeReference(tx))),
+        signal.read().clone(),
     )
 }
 
-/// Silently read the latest layout from a Node.
-pub fn use_node_ref(cx: &ScopeState) -> (AttributeValue, &UseRef<NodeReferenceLayout>) {
-    let status = use_ref::<NodeReferenceLayout>(cx, NodeReferenceLayout::default);
+/// Get a signal to read the latest layout from a Node.
+pub fn use_node_signal() -> (AttributeValue, Signal<NodeReferenceLayout>) {
+    let (tx, signal) = use_hook(|| {
+        let (tx, mut rx) = channel::<NodeReferenceLayout>(NodeReferenceLayout::default());
+        let mut signal = Signal::new(NodeReferenceLayout::default());
 
-    let tx = cx.use_hook(|| {
-        let (tx, mut rx) = unbounded_channel::<NodeReferenceLayout>();
-
-        to_owned![status];
-        cx.spawn(async move {
-            while let Some(new_status) = rx.recv().await {
-                if *status.read() != new_status {
-                    *status.write_silent() = new_status;
+        spawn(async move {
+            while rx.changed().await.is_ok() {
+                if *signal.peek() != *rx.borrow() {
+                    signal.set(rx.borrow().clone());
                 }
             }
         });
 
-        tx
+        (Arc::new(tx), signal)
     });
 
     (
-        cx.any_value(CustomAttributeValues::Reference(NodeReference(tx.clone()))),
-        status,
+        AttributeValue::any_value(CustomAttributeValues::Reference(NodeReference(tx))),
+        signal,
     )
 }
 
@@ -62,10 +60,10 @@ mod test {
 
     #[tokio::test]
     pub async fn track_size() {
-        fn use_node_app(cx: Scope) -> Element {
-            let (reference, size) = use_node(cx);
+        fn use_node_app() -> Element {
+            let (reference, size) = use_node();
 
-            render!(
+            rsx!(
                 rect {
                     reference: reference,
                     width: "50%",
@@ -77,14 +75,17 @@ mod test {
 
         let mut utils = launch_test_with_config(
             use_node_app,
-            *TestingConfig::default().with_size((500.0, 800.0).into()),
+            TestingConfig {
+                size: (500.0, 800.0).into(),
+                ..TestingConfig::default()
+            },
         );
 
         utils.wait_for_update().await;
         let root = utils.root().get(0);
         assert_eq!(root.get(0).text().unwrap().parse::<f32>(), Ok(500.0 * 0.5));
 
-        utils.config().with_size((300.0, 800.0).into());
+        utils.config().size = (300.0, 800.0).into();
         utils.wait_for_update().await;
 
         let root = utils.root().get(0);

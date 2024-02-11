@@ -30,7 +30,9 @@ dioxus-rsx = { workspace = true }
 dioxus-native-core = { workspace = true }
 dioxus-core-macro = { workspace = true }
 dioxus-hooks = { workspace = true }
+dioxus-signals = { workspace = true }
 dioxus-core = { workspace = true }
+dioxus-std = { workspace = true }
 
 tokio = { workspace = true }
 winit = { workspace = true }

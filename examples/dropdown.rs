@@ -9,28 +9,29 @@ fn main() {
     launch(app);
 }
 
-fn app(cx: Scope) -> Element {
-    let values = cx.use_hook(|| {
+fn app() -> Element {
+    let values = use_hook(|| {
         vec![
             "Value A".to_string(),
             "Value B".to_string(),
             "Value C".to_string(),
         ]
     });
-    let selected_dropdown = use_state(cx, || "Value A".to_string());
+    let mut selected_dropdown = use_signal(|| "Value A".to_string());
 
-    render!(
+    rsx!(
         Dropdown {
-            value: selected_dropdown.get().clone(),
-            values.iter().map(|ch| {
-                rsx!(
-                    DropdownItem {
-                        value: ch.to_string(),
-                        onclick: move |_| selected_dropdown.set(ch.to_string()),
-                        label { "{ch}" }
-                    }
-                )
-            })
+            value: selected_dropdown.read().clone(),
+            for ch in values {
+                DropdownItem {
+                    value: ch.clone(),
+                    onclick: {
+                        to_owned![ch];
+                        move |_| selected_dropdown.set(ch.clone())
+                    },
+                    label { "{ch}" }
+                }
+            }
         }
     )
 }

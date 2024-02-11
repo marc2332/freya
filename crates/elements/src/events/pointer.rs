@@ -2,6 +2,8 @@ use torin::geometry::CursorPoint;
 pub use winit::event::MouseButton;
 use winit::event::{Force, TouchPhase};
 
+use crate::definitions::PlatformEventData;
+
 /// The type of device that triggered a Pointer event.
 #[derive(Debug, Clone, PartialEq, Copy)]
 pub enum PointerType {
@@ -51,5 +53,11 @@ impl PointerData {
     /// Get the pointer type that triggered this event.
     pub fn get_pointer_type(&self) -> PointerType {
         self.point_type
+    }
+}
+
+impl From<&PlatformEventData> for PointerData {
+    fn from(val: &PlatformEventData) -> Self {
+        val.downcast::<PointerData>().cloned().unwrap()
     }
 }

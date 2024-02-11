@@ -4,12 +4,12 @@ use freya_hooks::use_platform;
 use winit::window::CursorIcon;
 
 /// [`CursorArea`] component properties.
-#[derive(Props)]
-pub struct CursorAreaProps<'a> {
+#[derive(Props, Clone, PartialEq)]
+pub struct CursorAreaProps {
     /// Cursor icon that will be used when hovering this area.
     icon: CursorIcon,
     /// Inner children for the CursorArea.
-    children: Element<'a>,
+    children: Element,
 }
 
 /// `CursorArea` component.
@@ -22,8 +22,8 @@ pub struct CursorAreaProps<'a> {
 /// ```no_run
 /// # use freya::prelude::*;
 /// # use winit::window::CursorIcon;
-/// fn app(cx: Scope) -> Element {
-///     render!(
+/// fn app() -> Element {
+///     rsx!(
 ///         CursorArea {
 ///             icon: CursorIcon::Progress,
 ///             label {
@@ -37,41 +37,31 @@ pub struct CursorAreaProps<'a> {
 /// ```
 ///
 #[allow(non_snake_case)]
-pub fn CursorArea<'a>(cx: Scope<'a, CursorAreaProps<'a>>) -> Element<'a> {
-    let platform = use_platform(cx);
-    let is_hovering = use_ref(cx, || false);
-    let icon = cx.props.icon;
+pub fn CursorArea(CursorAreaProps { children, icon }: CursorAreaProps) -> Element {
+    let platform = use_platform();
+    let mut is_hovering = use_signal(|| false);
 
-    let onmouseover = {
-        to_owned![platform];
-        move |_| {
-            *is_hovering.write_silent() = true;
-            platform.set_cursor(icon);
-        }
+    let onmouseover = move |_| {
+        *is_hovering.write() = true;
+        platform.set_cursor(icon);
     };
 
-    let onmouseleave = {
-        to_owned![platform];
-        move |_| {
-            *is_hovering.write_silent() = false;
+    let onmouseleave = move |_| {
+        *is_hovering.write() = false;
+        platform.set_cursor(CursorIcon::default());
+    };
+
+    use_drop(move || {
+        if *is_hovering.peek() {
             platform.set_cursor(CursorIcon::default());
-        }
-    };
-
-    use_on_destroy(cx, {
-        to_owned![is_hovering];
-        move || {
-            if *is_hovering.read() {
-                platform.set_cursor(CursorIcon::default());
-            }
         }
     });
 
-    render!(
+    rsx!(
         rect {
-            onmouseover: onmouseover,
-            onmouseleave: onmouseleave,
-            &cx.props.children
+            onmouseover,
+            onmouseleave,
+            {children}
         }
     )
 }

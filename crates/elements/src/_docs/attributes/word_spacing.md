@@ -1,12 +1,11 @@
-### word_spacing
-
 Specify the spacing between words of the text.
 
-Example:
+### Example
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+# use freya::prelude::*;
+fn app() -> Element {
+    rsx!(
         label {
             word_spacing: "10",
             "Hello, World!"

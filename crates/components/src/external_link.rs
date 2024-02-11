@@ -15,8 +15,8 @@ use freya_hooks::{use_applied_theme, LinkThemeWith};
 ///
 /// ```no_run
 /// # use freya::prelude::*;
-/// fn app(cx: Scope) -> Element {
-///     render!(
+/// fn app() -> Element {
+///     rsx!(
 ///         ExternalLink {
 ///             url: "https://github.com",
 ///             label {
@@ -27,47 +27,49 @@ use freya_hooks::{use_applied_theme, LinkThemeWith};
 /// }
 /// ```
 ///
+#[allow(non_snake_case)]
 #[component]
-pub fn ExternalLink<'a>(
-    cx: Scope<'a>,
+pub fn ExternalLink(
     /// Theme override.
     #[props(optional)]
     theme: Option<LinkThemeWith>,
     /// Inner children for the ExternalLink.
-    children: Element<'a>,
+    children: Element,
     #[props(optional)]
     /// Handler for the `onerror` event.
-    onerror: Option<EventHandler<'a, ()>>,
+    onerror: Option<EventHandler<()>>,
     #[props(optional)]
     /// A little text hint to show when hovering over the anchor.
     ///
     /// Setting this to [`None`] is the same as [`LinkTooltip::Default`].
     /// To remove the tooltip, set this to [`LinkTooltip::None`].
     #[props(optional)]
-    tooltip: Option<LinkTooltip<'a>>,
+    tooltip: Option<LinkTooltip>,
     /// The destination URL.
-    url: &'a str,
+    url: String,
 ) -> Element {
-    let theme = use_applied_theme!(cx, theme, link);
-    let is_hovering = use_state(cx, || false);
+    let theme = use_applied_theme!(&theme, link);
+    let mut is_hovering = use_signal(|| false);
 
-    let onmouseover = |_: MouseEvent| {
-        is_hovering.with_mut(|v| *v = true);
+    let onmouseover = move |_: MouseEvent| {
+        is_hovering.set(true);
     };
 
-    let onmouseleave = |_: MouseEvent| {
-        is_hovering.with_mut(|v| *v = false);
+    let onmouseleave = move |_: MouseEvent| {
+        is_hovering.set(false);
     };
 
-    let onclick = move |_: MouseEvent| {
-        let res = open::that(url);
-        if let (Err(_), Some(onerror)) = (res, onerror.as_ref()) {
-            onerror.call(());
+    let onclick = {
+        to_owned![url];
+        move |_: MouseEvent| {
+            let res = open::that(&url);
+            if let (Err(_), Some(onerror)) = (res, onerror.as_ref()) {
+                onerror.call(());
+            }
         }
-        // TODO(marc2332): Log unhandled errors
     };
 
-    let color = if *is_hovering.get() {
+    let color = if *is_hovering.read() {
         theme.highlight_color.as_ref()
     } else {
         "inherit"
@@ -80,18 +82,18 @@ pub fn ExternalLink<'a>(
     };
 
     let Some(tooltip) = tooltip else {
-        return render! {
-            rect { onclick: onclick, children }
+        return rsx! {
+            rect { onclick: onclick, color: "{color}", {children} }
         };
     };
 
-    render!(
+    rsx!(
         rect {
-            onmouseover: onmouseover,
-            onmouseleave: onmouseleave,
-            onclick: onclick,
+            onmouseover,
+            onmouseleave,
+            onclick,
             color: "{color}",
-            children
+            {children}
         }
         rect {
             height: "0",
@@ -99,11 +101,9 @@ pub fn ExternalLink<'a>(
             layer: "-999",
             rect {
                 width: "100v",
-                if *is_hovering.get() {
-                    rsx! {
-                        Tooltip {
-                            url: tooltip
-                        }
+                if *is_hovering.read() {
+                    Tooltip {
+                        url: tooltip
                     }
                 }
             }

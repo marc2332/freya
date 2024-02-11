@@ -1,8 +1,9 @@
 use std::sync::{Arc, Mutex};
 
 use crate::use_platform;
-use dioxus_core::{AttributeValue, ScopeState};
-use dioxus_hooks::{to_owned, use_effect, use_state, UseState};
+use dioxus_core::{prelude::spawn, use_hook, AttributeValue};
+use dioxus_hooks::use_signal;
+use dioxus_signals::{Signal, Writable};
 use freya_node_state::{CustomAttributeValues, ImageReference};
 pub use nokhwa::utils::{CameraIndex, RequestedFormatType, Resolution};
 use nokhwa::{pixel_format::RgbFormat, utils::RequestedFormat, Camera, NokhwaError};
@@ -46,21 +47,19 @@ impl Default for CameraSettings {
 
 /// Connect to a given camera and render its frames into an image element
 pub fn use_camera(
-    cx: &ScopeState,
     camera_settings: CameraSettings,
-) -> (AttributeValue, &UseState<Option<NokhwaError>>) {
-    let platform = use_platform(cx);
-    let camera_error = use_state(cx, || None);
-    let image_reference = cx.use_hook(|| Arc::new(Mutex::new(None)));
+) -> (AttributeValue, Signal<Option<NokhwaError>>) {
+    let platform = use_platform();
+    let mut camera_error = use_signal(|| None);
+    let image_reference = use_hook(|| Arc::new(Mutex::new(None)));
 
-    let image_reference_attr = cx.any_value(CustomAttributeValues::ImageReference(ImageReference(
-        image_reference.clone(),
-    )));
+    let image_reference_attr = AttributeValue::any_value(CustomAttributeValues::ImageReference(
+        ImageReference(image_reference.clone()),
+    ));
 
-    use_effect(cx, (), move |_| {
-        to_owned![image_reference, camera_error, platform];
-        async move {
-            let handle_error = |e: NokhwaError| {
+    use_hook(move || {
+        spawn(async move {
+            let mut handle_error = |e: NokhwaError| {
                 camera_error.set(Some(e));
             };
 
@@ -72,7 +71,7 @@ pub fn use_camera(
                 if let Some(resolution) = camera_settings.resolution {
                     camera
                         .set_resolution(resolution)
-                        .unwrap_or_else(handle_error);
+                        .unwrap_or_else(&mut handle_error);
                 }
 
                 let mut ticker = platform.new_ticker();
@@ -99,7 +98,7 @@ pub fn use_camera(
             } else if let Err(err) = camera {
                 handle_error(err);
             }
-        }
+        });
     });
 
     (image_reference_attr, camera_error)

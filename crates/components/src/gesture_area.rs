@@ -4,6 +4,7 @@ use std::time::Instant;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{touch::TouchPhase, TouchEvent};
+use futures_util::StreamExt;
 
 /// Distance between the first tap and the second tap in `DoubleTap` gesture.
 const DOUBLE_TAP_DISTANCE: f64 = 100.0;
@@ -26,12 +27,12 @@ pub enum Gesture {
 }
 
 /// [`GestureArea`] component properties.
-#[derive(Props)]
-pub struct GestureAreaProps<'a> {
+#[derive(Props, Clone, PartialEq)]
+pub struct GestureAreaProps {
     /// Inner children for the GestureArea.
-    pub children: Element<'a>,
+    pub children: Element,
     /// Handler for the `ongesture` event.
-    pub ongesture: EventHandler<'a, Gesture>,
+    pub ongesture: EventHandler<Gesture>,
 }
 
 type EventsQueue = VecDeque<(Instant, TouchEvent)>;
@@ -43,11 +44,11 @@ type EventsQueue = VecDeque<(Instant, TouchEvent)>;
 ///
 /// # Example
 ///
-/// ```rust
+/// ```rust,no_run
 /// # use freya::prelude::*;
-/// fn app(cx: Scope) -> Element {
-///    let gesture = use_state(cx, || "Tap here".to_string());
-///    render!(
+/// fn app() -> Element {
+///    let mut gesture = use_signal(|| "Tap here".to_string());
+///    rsx!(
 ///        GestureArea {
 ///            ongesture: move |g| gesture.set(format!("{g:?}")),
 ///            label {
@@ -59,104 +60,111 @@ type EventsQueue = VecDeque<(Instant, TouchEvent)>;
 /// ```
 ///
 #[allow(non_snake_case)]
-pub fn GestureArea<'a>(cx: Scope<'a, GestureAreaProps<'a>>) -> Element {
-    let touch_events = use_ref::<EventsQueue>(cx, VecDeque::new);
+pub fn GestureArea(props: GestureAreaProps) -> Element {
+    let event_emitter = use_coroutine(
+        |mut rx: UnboundedReceiver<(Instant, TouchEvent)>| async move {
+            let mut touch_events = VecDeque::<(Instant, TouchEvent)>::new();
 
-    let _ = use_memo(cx, touch_events, move |_| {
-        // Keep the touch events queue under a certain size
-        if touch_events.read().len() > MAX_EVENTS_QUEUE {
-            touch_events.write_silent().pop_front();
-        }
+            while let Some(new_event) = rx.next().await {
+                touch_events.push_back(new_event);
 
-        // Find the first event with the `target_phase` that happened before the `start_time`
-        let find_previous_event = |start_time: &Instant,
-                                   events: &EventsQueue,
-                                   target_phase: TouchPhase|
-         -> Option<(Instant, TouchEvent)> {
-            let mut start = false;
-            for (time, event) in events.iter().rev() {
-                if time == start_time {
-                    start = true;
-                    continue;
+                // Keep the touch events queue under a certain size
+                if touch_events.len() > MAX_EVENTS_QUEUE {
+                    touch_events.pop_front();
                 }
-                if event.phase == target_phase && start {
-                    return Some((*time, event.clone()));
-                }
-            }
-            None
-        };
 
-        let touch_events = touch_events.read();
-
-        // Process the most recent event
-        let event = touch_events.iter().last();
-
-        if let Some((time, event)) = event {
-            let phase = event.get_touch_phase();
-
-            match phase {
-                TouchPhase::Started => {
-                    // TapDown
-                    cx.props.ongesture.call(Gesture::TapDown);
-
-                    let last_ended_event =
-                        find_previous_event(time, &touch_events, TouchPhase::Ended);
-                    let last_started_event =
-                        find_previous_event(time, &touch_events, TouchPhase::Started);
-
-                    // DoubleTap
-                    if let Some(((ended_time, ended_event), (started_time, _))) =
-                        last_ended_event.zip(last_started_event)
-                    {
-                        // Has the latest `touchend` event went too far?
-                        let is_ended_close = event
-                            .get_screen_coordinates()
-                            .distance_to(ended_event.get_screen_coordinates())
-                            < DOUBLE_TAP_DISTANCE;
-                        // Is the latest `touchend` mature enough?
-                        let is_ended_mature = ended_time.elapsed().as_millis() >= DOUBLE_TAP_MIN;
-
-                        // Hast the latest `touchstart` event expired?
-                        let is_started_recent =
-                            started_time.elapsed().as_millis() <= DOUBLE_TAP_TIMEOUT;
-
-                        if is_ended_close && is_ended_mature && is_started_recent {
-                            cx.props.ongesture.call(Gesture::DoubleTap);
+                // Find the first event with the `target_phase` that happened before the `start_time`
+                let find_previous_event = |start_time: &Instant,
+                                           events: &EventsQueue,
+                                           target_phase: TouchPhase|
+                 -> Option<(Instant, TouchEvent)> {
+                    let mut start = false;
+                    for (time, event) in events.iter().rev() {
+                        if time == start_time {
+                            start = true;
+                            continue;
+                        }
+                        if event.phase == target_phase && start {
+                            return Some((*time, event.clone()));
                         }
                     }
+                    None
+                };
+
+                // Process the most recent event
+                let event = touch_events.iter().last();
+
+                if let Some((time, event)) = event {
+                    let phase = event.get_touch_phase();
+
+                    match phase {
+                        TouchPhase::Started => {
+                            // TapDown
+                            props.ongesture.call(Gesture::TapDown);
+
+                            let last_ended_event =
+                                find_previous_event(time, &touch_events, TouchPhase::Ended);
+                            let last_started_event =
+                                find_previous_event(time, &touch_events, TouchPhase::Started);
+
+                            // DoubleTap
+                            if let Some(((ended_time, ended_event), (started_time, _))) =
+                                last_ended_event.zip(last_started_event)
+                            {
+                                // Has the latest `touchend` event went too far?
+                                let is_ended_close = event
+                                    .get_screen_coordinates()
+                                    .distance_to(ended_event.get_screen_coordinates())
+                                    < DOUBLE_TAP_DISTANCE;
+                                // Is the latest `touchend` mature enough?
+                                let is_ended_mature =
+                                    ended_time.elapsed().as_millis() >= DOUBLE_TAP_MIN;
+
+                                // Hast the latest `touchstart` event expired?
+                                let is_started_recent =
+                                    started_time.elapsed().as_millis() <= DOUBLE_TAP_TIMEOUT;
+
+                                if is_ended_close && is_ended_mature && is_started_recent {
+                                    props.ongesture.call(Gesture::DoubleTap);
+                                }
+                            }
+                        }
+                        TouchPhase::Ended => {
+                            // TapUp
+                            props.ongesture.call(Gesture::TapUp);
+                        }
+                        _ => {}
+                    }
                 }
-                TouchPhase::Ended => {
-                    // TapUp
-                    cx.props.ongesture.call(Gesture::TapUp);
-                }
-                _ => {}
             }
-        }
-    });
+        },
+    );
 
-    let ontouchcancel = |e: TouchEvent| {
-        touch_events.write().push_back((Instant::now(), e));
+    use_effect(move || {});
+
+    let ontouchcancel = move |e: TouchEvent| {
+        event_emitter.send((Instant::now(), e));
     };
 
-    let ontouchend = |e: TouchEvent| {
-        touch_events.write().push_back((Instant::now(), e));
+    let ontouchend = move |e: TouchEvent| {
+        event_emitter.send((Instant::now(), e));
     };
 
-    let ontouchmove = |e: TouchEvent| {
-        touch_events.write().push_back((Instant::now(), e));
+    let ontouchmove = move |e: TouchEvent| {
+        event_emitter.send((Instant::now(), e));
     };
 
-    let ontouchstart = |e: TouchEvent| {
-        touch_events.write().push_back((Instant::now(), e));
+    let ontouchstart = move |e: TouchEvent| {
+        event_emitter.send((Instant::now(), e));
     };
 
-    render!(
+    rsx!(
         rect {
             ontouchcancel: ontouchcancel,
             ontouchend: ontouchend,
             ontouchmove: ontouchmove,
             ontouchstart: ontouchstart,
-            &cx.props.children
+            {props.children}
         }
     )
 }
@@ -179,18 +187,23 @@ mod test {
     /// 4. Touch start
     #[tokio::test]
     pub async fn double_tap() {
-        fn dobule_tap_app(cx: Scope) -> Element {
-            let value = use_state(cx, || "EMPTY".to_string());
+        fn dobule_tap_app() -> Element {
+            let mut value = use_signal(|| "EMPTY".to_string());
 
-            let ongesture = |e: Gesture| {
+            let ongesture = move |e: Gesture| {
                 value.set(format!("{e:?}"));
             };
 
-            render!(
+            rsx!(
                 GestureArea {
-                    ongesture: ongesture,
-                    "{value}"
+                    ongesture,
+                    rect {
+                        width: "100%",
+                        height: "100%",
+
+                    }
                 }
+                "{value}"
             )
         }
 
@@ -199,7 +212,7 @@ mod test {
         // Initial state
         utils.wait_for_update().await;
 
-        assert_eq!(utils.root().get(0).get(0).text(), Some("EMPTY"));
+        assert_eq!(utils.root().get(1).text(), Some("EMPTY"));
 
         utils.push_event(FreyaEvent::Touch {
             name: "touchstart".to_string(),
@@ -233,24 +246,29 @@ mod test {
         utils.wait_for_update().await;
         utils.wait_for_update().await;
 
-        assert_eq!(utils.root().get(0).get(0).text(), Some("DoubleTap"));
+        assert_eq!(utils.root().get(1).text(), Some("DoubleTap"));
     }
 
     /// Simulates `TapUp` and `TapDown` gestures.
     #[tokio::test]
     pub async fn tap_up_down() {
-        fn tap_up_down_app(cx: Scope) -> Element {
-            let value = use_state(cx, || "EMPTY".to_string());
+        fn tap_up_down_app() -> Element {
+            let mut value = use_signal(|| "EMPTY".to_string());
 
-            let ongesture = |e: Gesture| {
+            let ongesture = move |e: Gesture| {
                 value.set(format!("{e:?}"));
             };
 
-            render!(
+            rsx!(
                 GestureArea {
-                    ongesture: ongesture,
-                    "{value}"
+                    ongesture,
+                    rect {
+                        width: "100%",
+                        height: "100%",
+
+                    }
                 }
+                "{value}"
             )
         }
 
@@ -259,7 +277,7 @@ mod test {
         // Initial state
         utils.wait_for_update().await;
 
-        assert_eq!(utils.root().get(0).get(0).text(), Some("EMPTY"));
+        assert_eq!(utils.root().get(1).text(), Some("EMPTY"));
 
         utils.push_event(FreyaEvent::Touch {
             name: "touchstart".to_string(),
@@ -272,7 +290,7 @@ mod test {
         utils.wait_for_update().await;
         utils.wait_for_update().await;
 
-        assert_eq!(utils.root().get(0).get(0).text(), Some("TapDown"));
+        assert_eq!(utils.root().get(1).text(), Some("TapDown"));
 
         utils.push_event(FreyaEvent::Touch {
             name: "touchend".to_string(),
@@ -285,6 +303,6 @@ mod test {
         utils.wait_for_update().await;
         utils.wait_for_update().await;
 
-        assert_eq!(utils.root().get(0).get(0).text(), Some("TapUp"));
+        assert_eq!(utils.root().get(1).text(), Some("TapUp"));
     }
 }

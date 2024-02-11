@@ -9,9 +9,9 @@ fn main() {
     launch(app);
 }
 
-fn app(cx: Scope) -> Element {
-    let gesture = use_state(cx, || "Tap here".to_string());
-    render!(
+fn app() -> Element {
+    let mut gesture = use_signal(|| "Tap here".to_string());
+    rsx!(
         GestureArea {
             ongesture: move |g| gesture.set(format!("{g:?}")),
             rect {

@@ -1,6 +1,8 @@
 use torin::geometry::CursorPoint;
 pub use winit::event::MouseButton;
 
+use crate::definitions::PlatformEventData;
+
 /// Data of a Mouse event.
 #[derive(Debug, Clone, PartialEq)]
 pub struct MouseData {
@@ -37,5 +39,11 @@ impl MouseData {
     /// Get the button that triggered this event.
     pub fn get_trigger_button(&self) -> Option<MouseButton> {
         self.trigger_button
+    }
+}
+
+impl From<&PlatformEventData> for MouseData {
+    fn from(val: &PlatformEventData) -> Self {
+        val.downcast::<MouseData>().cloned().unwrap()
     }
 }

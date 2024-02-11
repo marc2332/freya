@@ -1,27 +1,29 @@
 use std::sync::Arc;
 
-use dioxus_core::{AttributeValue, Scope, ScopeState};
-use dioxus_hooks::{use_memo, UseFutureDep};
+use dioxus_core::AttributeValue;
+use dioxus_hooks::{use_memo_with_dependencies, Dependency};
+use dioxus_signals::{ReadOnlySignal, Readable};
 use freya_node_state::{CanvasReference, CanvasRunner, CustomAttributeValues};
-use uuid::Uuid;
 
 /// Holds a rendering hook callback that allows to render to the Canvas.
+#[derive(PartialEq, Clone)]
 pub struct UseCanvas {
-    id: Uuid,
-    runner: Arc<Box<CanvasRunner>>,
+    runner: ReadOnlySignal<UseCanvasRunner>,
 }
 
-impl PartialEq for UseCanvas {
+#[derive(Clone)]
+pub struct UseCanvasRunner(pub Arc<Box<CanvasRunner>>);
+
+impl PartialEq for UseCanvasRunner {
     fn eq(&self, other: &Self) -> bool {
-        self.id == other.id
+        Arc::ptr_eq(&self.0, &other.0)
     }
 }
 
 impl UseCanvas {
-    pub fn attribute<'a, T>(&self, cx: Scope<'a, T>) -> AttributeValue<'a> {
-        cx.any_value(CustomAttributeValues::Canvas(CanvasReference {
-            id: self.id,
-            runner: self.runner.clone(),
+    pub fn attribute(&self) -> AttributeValue {
+        AttributeValue::any_value(CustomAttributeValues::Canvas(CanvasReference {
+            runner: self.runner.read().0.clone(),
         }))
     }
 }
@@ -29,36 +31,32 @@ impl UseCanvas {
 /// Register a rendering hook to gain access to the Canvas.
 ///
 /// ## Usage
-/// ```rust
+/// ```rust,no_run
 /// # use freya::prelude::*;
-/// fn app(cx: Scope) -> Element {
-///     let canvas = use_canvas(cx, (), |_| {
+/// fn app() -> Element {
+///     let canvas = use_canvas((), |_| {
 ///         Box::new(|canvas, font_collection, area| {
 ///             // Draw using the canvas !
 ///         })
 ///     });
 ///
-///     render!(
+///     rsx!(
 ///         Canvas {
-///             canvas: canvas
+///             canvas
 ///         }
 ///     )
 /// }
 /// ```
-pub fn use_canvas<D>(
-    cx: &ScopeState,
+pub fn use_canvas<D: Dependency>(
     dependencies: D,
-    renderer_cb: impl Fn(D::Out) -> Box<CanvasRunner>,
+    renderer_cb: impl Fn(D::Out) -> Box<CanvasRunner> + 'static,
 ) -> UseCanvas
 where
-    D: UseFutureDep,
+    D::Out: 'static,
 {
-    let (id, runner) = use_memo(cx, dependencies, |dependencies| {
-        (Uuid::new_v4(), Arc::new(renderer_cb(dependencies)))
+    let runner = use_memo_with_dependencies(dependencies, move |dependencies| {
+        UseCanvasRunner(Arc::new(renderer_cb(dependencies)))
     });
 
-    UseCanvas {
-        id: *id,
-        runner: runner.clone(),
-    }
+    UseCanvas { runner }
 }

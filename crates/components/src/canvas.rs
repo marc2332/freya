@@ -1,10 +1,10 @@
-use dioxus::prelude::{render, Element, Props, Scope};
+use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 
 use freya_hooks::{use_applied_theme, CanvasTheme, CanvasThemeWith, UseCanvas};
 
 /// [`Canvas`] component properties.
-#[derive(Props, PartialEq)]
+#[derive(Props, Clone, PartialEq)]
 pub struct CanvasProps {
     /// Theme override.
     pub theme: Option<CanvasThemeWith>,
@@ -18,16 +18,16 @@ pub struct CanvasProps {
 /// See [`CanvasProps`].
 ///
 #[allow(non_snake_case)]
-pub fn Canvas(cx: Scope<CanvasProps>) -> Element {
+pub fn Canvas(props: CanvasProps) -> Element {
     let CanvasTheme {
         width,
         height,
         background,
-    } = use_applied_theme!(cx, &cx.props.theme, canvas);
+    } = use_applied_theme!(&props.theme, canvas);
 
-    render!(rect {
+    rsx!(rect {
         overflow: "clip",
-        canvas_reference: cx.props.canvas.attribute(cx),
+        canvas_reference: props.canvas.attribute(),
         background: "{background}",
         width: "{width}",
         height: "{height}"

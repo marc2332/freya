@@ -8,7 +8,7 @@ use dioxus_native_core_macro::partial_derive_state;
 
 use crate::CustomAttributeValues;
 
-#[derive(Default, Clone, Debug, Component)]
+#[derive(Default, Clone, Debug, Component, PartialEq)]
 pub struct Transform {
     pub rotate_degs: Option<f32>,
 }
@@ -21,10 +21,8 @@ impl State<CustomAttributeValues> for Transform {
 
     type NodeDependencies = ();
 
-    const NODE_MASK: NodeMaskBuilder<'static> = NodeMaskBuilder::new()
-        .with_attrs(AttributeMaskBuilder::Some(&["rotate"]))
-        .with_tag()
-        .with_text();
+    const NODE_MASK: NodeMaskBuilder<'static> =
+        NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&["rotate"]));
 
     fn update<'a>(
         &mut self,

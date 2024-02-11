@@ -4,15 +4,14 @@
 )]
 
 use dioxus_router::prelude::{Outlet, Routable, Router};
-use freya::elements;
 use freya::prelude::*;
 
 fn main() {
     launch(app);
 }
 
-fn app(cx: Scope) -> Element {
-    render! {
+fn app() -> Element {
+    rsx! {
         Router::<Route> {}
     }
 }
@@ -31,9 +30,10 @@ enum Route {
     NotFound
 }
 
+#[allow(non_snake_case)]
 #[component]
-fn Layout(cx: Scope) -> Element {
-    render! {
+fn Layout() -> Element {
+    rsx! {
         rect {
             direction: "horizontal",
             Link {
@@ -55,23 +55,25 @@ fn Layout(cx: Scope) -> Element {
     }
 }
 
+#[allow(non_snake_case)]
 #[component]
-fn Cats(cx: Scope) -> Element {
-    render! {
+fn Cats() -> Element {
+    rsx! {
         label {
             "Search for cats with DuckDuckGo: "
         }
         Link {
             to: "https://duckduckgo.com/?q=cat",
-            tooltip: LinkTooltip::Custom("Cats!"),
+            tooltip: LinkTooltip::Custom("Cats!".to_string()),
             label { "DuckDuckGo search (custom tooltip)" }
         }
     }
 }
 
+#[allow(non_snake_case)]
 #[component]
-fn Dogs(cx: Scope) -> Element {
-    render! {
+fn Dogs() -> Element {
+    rsx! {
         label {
             "Search for dogs with DuckDuckGo: "
         }
@@ -83,8 +85,8 @@ fn Dogs(cx: Scope) -> Element {
 }
 
 #[component]
-fn Bears(cx: Scope) -> Element {
-    render! {
+fn Bears() -> Element {
+    rsx! {
         label {
             "Search for bears with DuckDuckGo: "
         }
@@ -97,8 +99,8 @@ fn Bears(cx: Scope) -> Element {
 }
 
 #[component]
-fn NotFound(cx: Scope) -> Element {
-    render! {
+fn NotFound() -> Element {
+    rsx! {
         label {
             "404!! 😵"
         }

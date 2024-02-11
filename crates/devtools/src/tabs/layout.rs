@@ -8,8 +8,8 @@ use crate::{hooks::use_selected_node, NodeInspectorBar};
 
 #[allow(non_snake_case)]
 #[component]
-pub fn NodeInspectorLayout(cx: Scope, node_id: NodeId) -> Element {
-    let node = use_selected_node(cx, &cx.props.node_id);
+pub fn NodeInspectorLayout(node_id: NodeId) -> Element {
+    let node = use_selected_node(&node_id);
 
     if let Some(node) = node {
         let inner_area = format!(
@@ -20,13 +20,13 @@ pub fn NodeInspectorLayout(cx: Scope, node_id: NodeId) -> Element {
         let area = format!("{}x{}", node.areas.area.width(), node.areas.area.height());
         let paddings = node.state.size.padding;
 
-        render!(
+        rsx!(
             rect {
                 overflow: "clip",
                 width: "100%",
                 height: "50%",
                 NodeInspectorBar {
-                    node_id: *node_id
+                    node_id
                 }
                 ScrollView {
                     show_scrollbar: true,

@@ -1,16 +1,18 @@
-### overflow
-
 Specify how overflow should be handled.
 
-Accepted values: `clip` or `none`.
+Accepted values:
 
-### Example:
+- `clip`
+- `none`
+
+### Example
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+# use freya::prelude::*;
+fn app() -> Element {
+    rsx!(
         rect {
-            overflow: "clip"
+            overflow: "clip",
             width: "100",
             height: "100%",
             rect {

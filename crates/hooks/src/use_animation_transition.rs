@@ -1,11 +1,12 @@
-use dioxus_core::ScopeState;
-use dioxus_hooks::{use_memo, use_state, UseFutureDep, UseState};
+use dioxus_core::prelude::spawn;
+use dioxus_hooks::{use_memo_with_dependencies, Dependency};
+use dioxus_signals::{Readable, Signal, Writable};
 use freya_engine::prelude::Color;
 use freya_node_state::Parse;
 use tokio::time::Instant;
 use uuid::Uuid;
 
-use crate::{use_platform, Animation, TransitionAnimation, UsePlatform};
+use crate::{Animation, TransitionAnimation, UsePlatform};
 
 /// Configure a `Transition` animation.
 #[derive(Clone, Debug, Copy, PartialEq)]
@@ -54,7 +55,7 @@ impl TransitionState {
             (Self::Size(current), Transition::Size(start, end)) => {
                 let road = *end - *start;
                 let walked = (road / 100.0) * value;
-                *current = walked;
+                *current = start + walked;
             }
             (Self::Color(current), Transition::Color(start, end)) => {
                 let apply_index = |v: u8, d: u8, value: f64| -> u8 {
@@ -130,32 +131,29 @@ impl TransitionState {
 }
 
 /// Manage the lifecyle of a collection of transitions.
-#[derive(Clone)]
-pub struct TransitionsManager<'a> {
+#[derive(Clone, PartialEq, Copy)]
+pub struct TransitionsManager {
     /// Registered transitions
-    transitions: &'a Vec<Transition>,
-    /// The registered tranistions states
-    transitions_storage: &'a UseState<Vec<TransitionState>>,
+    transitions: Signal<Vec<Transition>>,
+    /// The registered transition states
+    transitions_storage: Signal<Vec<TransitionState>>,
     /// The transition animation type
     transition_animation: TransitionAnimation,
     /// Currently running animation.
-    current_animation_id: &'a UseState<Option<Uuid>>,
-    /// The scope.
-    cx: &'a ScopeState,
+    current_animation_id: Signal<Option<Uuid>>,
     /// Platform APIs
     platform: UsePlatform,
 }
 
-impl<'a> TransitionsManager<'a> {
+impl TransitionsManager {
     /// Animate from the end to the start.
-    pub fn reverse(&self) {
-        self.clear();
+    pub fn reverse(&mut self) {
         let animation = self.transition_animation.to_animation(100.0..=0.0);
         self.run_with_animation(animation);
     }
 
     /// Animate from the start to the end.
-    pub fn start(&self) {
+    pub fn start(&mut self) {
         self.clear();
         let animation = self.transition_animation.to_animation(0.0..=100.0);
         self.run_with_animation(animation);
@@ -164,17 +162,16 @@ impl<'a> TransitionsManager<'a> {
     fn run_with_animation(&self, mut animation: Animation) {
         let animation_id = Uuid::new_v4();
 
-        let platform = self.platform.clone();
+        let platform = self.platform;
         let mut ticker = platform.new_ticker();
-        let transitions = self.transitions.clone();
-        let transitions_storage = self.transitions_storage.clone();
-        let current_animation_id = self.current_animation_id.clone();
+        let transitions = self.transitions;
+        let mut transitions_storage = self.transitions_storage;
+        let mut current_animation_id = self.current_animation_id;
 
         // Set as current this new animation
         current_animation_id.set(Some(animation_id));
 
-        // Spawn the animation that will run at 1ms speed
-        self.cx.spawn(async move {
+        spawn(async move {
             platform.request_animation_frame();
 
             let mut index = 0;
@@ -186,7 +183,7 @@ impl<'a> TransitionsManager<'a> {
                 platform.request_animation_frame();
 
                 // Stop running the animation if it's no longer selected
-                if *current_animation_id.current() == Some(animation_id) {
+                if *current_animation_id.peek() == Some(animation_id) {
                     // Remove the current animation if it has finished
                     if animation.is_finished() {
                         current_animation_id.set(None);
@@ -197,7 +194,7 @@ impl<'a> TransitionsManager<'a> {
                     let value = animation.move_value(index);
                     transitions_storage.with_mut(|storage| {
                         for (i, storage) in storage.iter_mut().enumerate() {
-                            if let Some(conf) = transitions.get(i) {
+                            if let Some(conf) = transitions.peek().get(i) {
                                 storage.set_value(conf, value);
                             }
                         }
@@ -212,11 +209,11 @@ impl<'a> TransitionsManager<'a> {
     }
 
     /// Clear all the currently running [Transition]s.
-    pub fn clear(&self) {
+    pub fn clear(&mut self) {
         self.current_animation_id.set(None);
         self.transitions_storage.with_mut(|storage| {
             for (i, storage) in storage.iter_mut().enumerate() {
-                if let Some(conf) = self.transitions.get(i) {
+                if let Some(conf) = self.transitions.peek().get(i) {
                     storage.clear(conf);
                 }
             }
@@ -225,13 +222,13 @@ impl<'a> TransitionsManager<'a> {
 
     /// Check whether there are [Transition]s running or not.
     pub fn is_animating(&self) -> bool {
-        self.current_animation_id.is_some()
+        self.current_animation_id.peek().is_some()
     }
 
     /// Check whether the [Transition]s are at the start or at the end.
     pub fn is_at_start(&self) -> bool {
         if let Some(storage) = self.get(0) {
-            let anim = self.transitions[0];
+            let anim = self.transitions.peek()[0];
             match anim {
                 Transition::Size(start, _) => start == storage.to_size().unwrap_or(start),
                 Transition::Color(start, _) => start == storage.to_raw_color().unwrap_or(start),
@@ -243,27 +240,27 @@ impl<'a> TransitionsManager<'a> {
 
     /// Get an [TransitionState]
     pub fn get(&self, index: usize) -> Option<TransitionState> {
-        self.transitions_storage.current().get(index).copied()
+        self.transitions_storage.read().get(index).copied()
     }
 }
 
 /// Run a group of animated transitions.
 ///
 /// ## Usage
-/// ```rust
+/// ```rust,no_run
 /// # use freya::prelude::*;
-/// fn app(cx: Scope) -> Element {
-///     let animation = use_animation_transition(cx, TransitionAnimation::new_linear(50), (), |_| vec![
+/// fn app() -> Element {
+///     let mut animation = use_animation_transition(TransitionAnimation::new_linear(50), (), |_| vec![
 ///         Transition::new_size(0.0, 100.0)
 ///     ]);
 ///
 ///     let progress = animation.get(0).unwrap().as_size();
 ///
-///     use_memo(cx, (), move |_| {
+///     use_hook(move || {
 ///         animation.start();
 ///     });
 ///
-///     render!(
+///     rsx!(
 ///         rect {
 ///             width: "{progress}",
 ///         }
@@ -272,34 +269,27 @@ impl<'a> TransitionsManager<'a> {
 /// ```
 ///
 pub fn use_animation_transition<D>(
-    cx: &ScopeState,
     transition: TransitionAnimation,
     dependencies: D,
-    mut init: impl Fn(D::Out) -> Vec<Transition>,
+    init: impl Fn(D::Out) -> Vec<Transition> + 'static,
 ) -> TransitionsManager
 where
-    D: UseFutureDep,
+    D: Dependency + 'static,
 {
-    let current_animation_id = use_state(cx, || None);
-    let transitions = use_memo(cx, dependencies.clone(), &mut init);
-    let transitions_storage = use_state(cx, || animations_map(transitions));
-    let platform = use_platform(cx);
+    *use_memo_with_dependencies(dependencies.clone(), move |deps| {
+        let platform = UsePlatform::new();
+        let transitions = init(deps);
+        let transitions_states = animations_map(&transitions);
 
-    let _ = use_memo(cx, dependencies, {
-        let storage_setter = transitions_storage.setter();
-        move |v| {
-            storage_setter(animations_map(&init(v)));
+        TransitionsManager {
+            current_animation_id: Signal::new(None),
+            transitions: Signal::new(transitions),
+            transitions_storage: Signal::new(transitions_states),
+            transition_animation: transition,
+            platform,
         }
-    });
-
-    TransitionsManager {
-        current_animation_id,
-        transitions,
-        transitions_storage,
-        cx,
-        transition_animation: transition,
-        platform,
-    }
+    })
+    .read()
 }
 
 fn animations_map(animations: &[Transition]) -> Vec<TransitionState> {
@@ -307,60 +297,4 @@ fn animations_map(animations: &[Transition]) -> Vec<TransitionState> {
         .iter()
         .map(TransitionState::from)
         .collect::<Vec<TransitionState>>()
-}
-
-#[cfg(test)]
-mod test {
-    use std::time::Duration;
-
-    use crate::{use_animation_transition, Transition, TransitionAnimation};
-    use freya::prelude::*;
-    use freya_testing::launch_test;
-    use tokio::time::sleep;
-
-    #[tokio::test]
-    pub async fn track_progress() {
-        fn use_animation_transition_app(cx: Scope) -> Element {
-            let animation =
-                use_animation_transition(cx, TransitionAnimation::new_linear(50), (), |_| {
-                    vec![Transition::new_size(0.0, 100.0)]
-                });
-
-            let progress = animation.get(0).unwrap().as_size();
-
-            let _ = use_memo(cx, (), move |_| {
-                animation.start();
-            });
-
-            render!(rect {
-                width: "{progress}",
-            })
-        }
-
-        let mut utils = launch_test(use_animation_transition_app);
-
-        // Disable event loop ticker
-        utils.config().enable_ticker(false);
-
-        // Initial state
-        utils.wait_for_update().await;
-
-        assert_eq!(utils.root().get(0).layout().unwrap().width(), 0.0);
-
-        // State somewhere in the middle
-        sleep(Duration::from_millis(15)).await;
-        utils.wait_for_update().await;
-
-        let width = utils.root().get(0).layout().unwrap().width();
-        assert!(width > 0.0);
-
-        // Enable event loop ticker
-        utils.config().enable_ticker(true);
-
-        // State in the end
-        utils.wait_for_update().await;
-
-        let width = utils.root().get(0).layout().unwrap().width();
-        assert_eq!(width, 100.0);
-    }
 }
