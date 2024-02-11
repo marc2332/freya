@@ -37,25 +37,26 @@ pub enum LinkTooltip {
 ///
 /// ```rust
 /// # use dioxus::prelude::*;
+/// # use dioxus_router::prelude::*;
 /// # use freya_elements::elements as dioxus_elements;
 /// # use freya_components::Link;
 /// # #[derive(Routable, Clone)]
 /// # #[rustfmt::skip]
 /// # enum AppRouter {
 /// #     #[route("/")]
-/// #     Home,
+/// #     Settings,
 /// #     #[route("/..routes")]
 /// #     NotFound
 /// # }
 /// # #[component]
-/// # fn Home() -> Element { rsx!(rect { })}
+/// # fn Settings() -> Element { rsx!(rect { })}
 /// # #[component]
 /// # fn NotFound() -> Element { rsx!(rect { })}
 /// # fn link_example_good() -> Element {
-/// render! {
+/// rsx! {
 ///     Link {
 ///         to: AppRouter::Settings,
-///         label { "Freya crates.io" }
+///         label { "App Settings" }
 ///     }
 /// }
 /// # }
