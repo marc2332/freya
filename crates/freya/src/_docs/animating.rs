@@ -17,8 +17,8 @@
 //! fn app() -> Element {
 //!     let animation = use_animation(|ctx| ctx.with(AnimNum::new(0., 100.).time(50)));
 //!
-//!     let animations = animation.read().get();
-//!     let width = animations.read().as_f32();
+//!     let animations = animation.read();
+//!     let width = animations.get().read().as_f32();
 //!
 //!     use_hook(move || {
 //!         // Start animation as soon as this component runs.
@@ -47,7 +47,7 @@
 //!         )
 //!     });
 //!
-//!     let animations = animation.read()
+//!     let animations = animation.read();
 //!     let (width, color) = animations.get();
 //!
 //!     use_hook(move || {
