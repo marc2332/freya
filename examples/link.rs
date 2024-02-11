@@ -38,15 +38,21 @@ fn Layout() -> Element {
             direction: "horizontal",
             Link {
                 to: Route::Cats,
-                label { "Cats 🐱" }
+                Button {
+                    label { "Cats 🐱" }
+                }
             }
             Link {
                 to: Route::Dogs,
-                label { "Dogs 🐶" }
+                Button {
+                    label { "Dogs 🐶" }
+                }
             }
             Link {
                 to: Route::Bears,
-                label { "Bears 🐻" }
+                Button {
+                    label { "Bears 🐻" }
+                }
             }
         }
         rect {
@@ -84,6 +90,7 @@ fn Dogs() -> Element {
     }
 }
 
+#[allow(non_snake_case)]
 #[component]
 fn Bears() -> Element {
     rsx! {
@@ -98,6 +105,7 @@ fn Bears() -> Element {
     }
 }
 
+#[allow(non_snake_case)]
 #[component]
 fn NotFound() -> Element {
     rsx! {

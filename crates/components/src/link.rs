@@ -23,8 +23,6 @@ pub enum LinkTooltip {
 /// **⚠️ Just like Dioxus's `Link`,
 /// this must be a descendant of a
 /// [`Router`](https://docs.rs/dioxus-router/latest/dioxus_router/components/fn.Router.html) component**
-/// **⚠️ Do not register the `onclick` event in the children,
-/// Dioxus event propagation doesn't work properly.**
 ///
 /// Similar to [`Link`](dioxus_router::components::Link), but you can use it in Freya.
 /// Both internal routes and external links are supported.
@@ -35,22 +33,36 @@ pub enum LinkTooltip {
 ///
 /// # Example
 ///
-/// Bad (will not render the text):
+/// With Dioxus Router:
 ///
 /// ```rust
 /// # use dioxus::prelude::*;
+/// # use freya_elements::elements as dioxus_elements;
 /// # use freya_components::Link;
-/// # fn link_example_bad(cx: Scope) -> Element {
+/// # #[derive(Routable, Clone)]
+/// # #[rustfmt::skip]
+/// # enum Route {
+/// #     #[layout(Layout)]
+/// #     #[route("/")]
+/// #     Home,
+/// #     #[route("/..routes")]
+/// #     NotFound
+/// # }
+/// # #[component]
+/// # fn Home(cx: Scope) -> Element { rsx!(rect { })}
+/// # #[component]
+/// # fn NotFound(cx: Scope) -> Element { rsx!(rect { })}
+/// # fn link_example_good() -> Element {
 /// render! {
 ///     Link {
-///         to: "https://crates.io/crates/freya",
-///         "Freya crates.io"
+///         to: AppRouter::Settings,
+///         label { "Freya crates.io" }
 ///     }
 /// }
 /// # }
 /// ```
 ///
-/// Good:
+/// With external routes:
 ///
 /// ```rust
 /// # use dioxus::prelude::*;
@@ -65,6 +77,7 @@ pub enum LinkTooltip {
 /// }
 /// # }
 /// ```
+#[allow(non_snake_case)]
 #[component]
 pub fn Link(
     /// Theme override.
@@ -73,6 +86,7 @@ pub fn Link(
     /// The route or external URL string to navigate to.
     #[props(into)]
     to: IntoRoutable,
+    /// Inner children for the Link.
     children: Element,
     /// This event will be fired if opening an external link fails.
     #[props(optional)]
@@ -109,20 +123,19 @@ pub fn Link(
                 return;
             };
 
-            url.as_ref().map_or_else(
-                || {
-                    nav.push(to.clone());
-                },
-                |url| {
-                    let res = open::that(&url);
+            // Open the url if there is any
+            // otherwise change the dioxus router route
+            if let Some(url) = &url {
+                let res = open::that(url);
 
-                    if let (Err(_), Some(onerror)) = (res, onerror.as_ref()) {
-                        onerror.call(());
-                    }
+                if let (Err(_), Some(onerror)) = (res, onerror.as_ref()) {
+                    onerror.call(());
+                }
 
-                    // TODO(marc2332): Log unhandled errors
-                },
-            );
+                // TODO(marc2332): Log unhandled errors
+            } else {
+                nav.push(to.clone());
+            }
         }
     };
 
