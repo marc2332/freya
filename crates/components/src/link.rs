@@ -41,17 +41,16 @@ pub enum LinkTooltip {
 /// # use freya_components::Link;
 /// # #[derive(Routable, Clone)]
 /// # #[rustfmt::skip]
-/// # enum Route {
-/// #     #[layout(Layout)]
+/// # enum AppRouter {
 /// #     #[route("/")]
 /// #     Home,
 /// #     #[route("/..routes")]
 /// #     NotFound
 /// # }
 /// # #[component]
-/// # fn Home(cx: Scope) -> Element { rsx!(rect { })}
+/// # fn Home() -> Element { rsx!(rect { })}
 /// # #[component]
-/// # fn NotFound(cx: Scope) -> Element { rsx!(rect { })}
+/// # fn NotFound() -> Element { rsx!(rect { })}
 /// # fn link_example_good() -> Element {
 /// render! {
 ///     Link {
