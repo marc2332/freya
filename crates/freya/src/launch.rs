@@ -1,9 +1,9 @@
-use dioxus_core::Component;
-use freya_renderer::run_app;
+use dioxus_core::Element;
+use freya_renderer::DesktopRenderer;
 use freya_renderer::{LaunchConfig, WindowConfig};
 
-#[cfg(not(doctest))]
-/// Launch a new Window with the default config.
+/// Launch a new window with the default config.
+///
 /// - Width: `600.0`
 /// - Height: `600.0`
 /// - Decorations enabled
@@ -12,13 +12,16 @@ use freya_renderer::{LaunchConfig, WindowConfig};
 /// - Window background: white
 ///
 /// # Example
-/// ```rust
-/// # use dioxus::prelude::*;
-/// # use freya::{dioxus_elements, *};
-/// launch(app);
 ///
-/// fn app(cx: Scope) -> Element {
-///    render!(
+/// ```rust,no_run
+/// # use freya::prelude::*;
+///
+/// fn main() {
+///     launch(app);
+/// }
+///
+/// fn app() -> Element {
+///    rsx!(
 ///         rect {
 ///             width: "100%",
 ///             height: "100%",
@@ -29,7 +32,7 @@ use freya_renderer::{LaunchConfig, WindowConfig};
 ///     )
 /// }
 /// ```
-pub fn launch(app: Component<()>) {
+pub fn launch(app: AppComponent) {
     launch_cfg(
         app,
         LaunchConfig {
@@ -46,8 +49,8 @@ pub fn launch(app: Component<()>) {
     )
 }
 
-#[cfg(not(doctest))]
-/// Launch a new Window with a custom title and the default config.
+/// Launch a new window with a custom title and the default config.
+///
 /// - Width: `400`
 /// - Height: `300`
 /// - Decorations enabled
@@ -55,13 +58,16 @@ pub fn launch(app: Component<()>) {
 /// - Window background: white
 ///
 /// # Example
-/// ```rust
-/// # use dioxus::prelude::*;
-/// # use freya::{dioxus_elements, *};
-/// launch_with_title(app, "Whoah!");
 ///
-/// fn app(cx: Scope) -> Element {
-///    render!(
+/// ```rust,no_run
+/// # use freya::prelude::*;
+///
+/// fn main() {
+///     launch_with_title(app, "Whoa!");
+/// }
+///
+/// fn app() -> Element {
+///    rsx!(
 ///         rect {
 ///             width: "100%",
 ///             height: "100%",
@@ -72,7 +78,7 @@ pub fn launch(app: Component<()>) {
 ///     )
 /// }
 /// ```
-pub fn launch_with_title(app: Component<()>, title: &'static str) {
+pub fn launch_with_title(app: AppComponent, title: &'static str) {
     launch_cfg(
         app,
         LaunchConfig {
@@ -89,20 +95,23 @@ pub fn launch_with_title(app: Component<()>, title: &'static str) {
     )
 }
 
-#[cfg(not(doctest))]
-/// Launch a new Window with a custom title, width and height and the default config.
+/// Launch a new window with a custom title, width and height and the default config.
+///
 /// - Decorations enabled
 /// - Transparency disabled
 /// - Window background: white
 ///
 /// # Example
-/// ```rust
-/// # use dioxus::prelude::*;
-/// # use freya::{dioxus_elements, *};
-/// launch_with_props(app, "Whoah!", (400, 600));
 ///
-/// fn app(cx: Scope) -> Element {
-///    render!(
+/// ```rust,no_run
+/// # use freya::prelude::*;
+///
+/// fn main() {
+///     launch_with_props(app, "Whoa!", (400.0, 600.0));
+/// }
+///
+/// fn app() -> Element {
+///    rsx!(
 ///         rect {
 ///             width: "100%",
 ///             height: "100%",
@@ -113,7 +122,7 @@ pub fn launch_with_title(app: Component<()>, title: &'static str) {
 ///     )
 /// }
 /// ```
-pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height): (f64, f64)) {
+pub fn launch_with_props(app: AppComponent, title: &'static str, (width, height): (f64, f64)) {
     launch_cfg(
         app,
         LaunchConfig {
@@ -130,8 +139,9 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
     )
 }
 
-#[cfg(not(doctest))]
-/// Launch a new Window with custom config.
+/// Launch a new window with a custom config.
+/// You can use a builder if you wish.
+///
 /// - Width
 /// - Height
 /// - Decorations
@@ -140,23 +150,25 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
 /// - Window background color
 ///
 /// # Example
-/// ```rust
-/// # use dioxus::prelude::*;
-/// # use freya::{dioxus_elements, *};
-/// launch_cfg(
-///     app,
-///     WindowConfig::<()>::builder()
-///         .with_width(500.0)
-///         .with_height(400.0)
-///         .with_decorations(true)
-///         .with_transparency(false)
-///         .with_title("Freya App")
-///         .with_background("rgb(150, 100, 200")
-///         .build()
-/// );
+/// ```rust,no_run
+/// # use freya::prelude::*;
 ///
-/// fn app(cx: Scope) -> Element {
-///    render!(
+/// fn main() {
+///     launch_cfg(
+///         app,
+///         LaunchConfig::<()>::builder()
+///             .with_width(500.0)
+///             .with_height(400.0)
+///             .with_decorations(true)
+///             .with_transparency(false)
+///             .with_title("Freya App")
+///             .with_background("rgb(150, 100, 200")
+///             .build()
+///     );
+/// }
+///
+/// fn app() -> Element {
+///    rsx!(
 ///         rect {
 ///             width: "100%",
 ///             height: "100%",
@@ -167,7 +179,7 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
 ///     )
 /// }
 /// ```
-pub fn launch_cfg<T: 'static + Clone + Send>(app: Component, config: LaunchConfig<T>) {
+pub fn launch_cfg<T: 'static + Clone + Send>(app: AppComponent, config: LaunchConfig<T>) {
     use freya_dom::prelude::{FreyaDOM, SafeDOM};
 
     let fdom = FreyaDOM::default();
@@ -211,32 +223,34 @@ pub fn launch_cfg<T: 'static + Clone + Send>(app: Component, config: LaunchConfi
             (vdom, None, None)
         }
     };
-    run_app(vdom, sdom, config, mutations_notifier, hovered_node);
+    DesktopRenderer::launch(vdom, sdom, config, mutations_notifier, hovered_node);
 }
 
 #[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
 use dioxus_core::VirtualDom;
 #[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
-fn with_accessibility(app: Component) -> VirtualDom {
+fn with_accessibility(app: AppComponent) -> VirtualDom {
+    use dioxus::prelude::Props;
     use dioxus_core::fc_to_builder;
-    use dioxus_core::{Element, Scope};
-    use dioxus_core_macro::render;
-    use freya_hooks::{use_init_accessibility, use_init_focus};
+    use dioxus_core_macro::rsx;
+    use freya_hooks::use_init_accessibility;
 
+    #[derive(Props, Clone, PartialEq)]
     struct RootProps {
-        app: Component,
+        app: AppComponent,
     }
 
     #[allow(non_snake_case)]
-    fn Root(cx: Scope<RootProps>) -> Element {
-        use_init_focus(cx);
-        use_init_accessibility(cx);
+    fn Root(props: RootProps) -> Element {
+        use_init_accessibility();
 
         #[allow(non_snake_case)]
-        let App = cx.props.app;
+        let App = props.app;
 
-        render!(App {})
+        rsx!(App {})
     }
 
     VirtualDom::new_with_props(Root, RootProps { app })
 }
+
+type AppComponent = fn() -> Element;

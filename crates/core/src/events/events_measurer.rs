@@ -1,16 +1,15 @@
 use crate::layout::{Layers, Viewports};
-use dioxus_native_core::prelude::NodeImmutableDioxusExt;
 use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::NodeId;
-use freya_dom::prelude::FreyaDOM;
+use dioxus_native_core::{prelude::NodeImmutableDioxusExt, tree::TreeRef};
+use freya_dom::{dom::DioxusDOM, prelude::FreyaDOM};
 
 use freya_engine::prelude::*;
 use freya_node_state::{Fill, Style};
-use rustc_hash::FxHashMap;
 
 pub use crate::events::{DomEvent, ElementsState, FreyaEvent};
 
-use crate::types::{EventEmitter, EventsQueue, NodesEvents};
+use crate::types::{EventEmitter, EventsQueue, PotentialEvents};
 
 /// Process the events and emit them to the VirtualDOM
 pub fn process_events(
@@ -26,18 +25,18 @@ pub fn process_events(
     let global_events = measure_global_events(events);
 
     // 2. Get potential events that could be emitted based on the elements layout and viewports
-    let mut potential_events = measure_potential_event_listeners(layers, events, viewports, dom);
+    let potential_events = measure_potential_event_listeners(layers, events, viewports, dom);
 
     // 3. Get what events can be actually emitted based on what elements are listening
-    let dom_events = measure_dom_events(&mut potential_events, dom, scale_factor);
+    let dom_events = measure_dom_events(potential_events, dom, scale_factor);
 
     // 4. Filter the dom events and get potential derived events, e.g mouseover -> mouseenter
-    let (mut potential_colateral_events, mut to_emit_dom_events) =
+    let (potential_colateral_events, mut to_emit_dom_events) =
         elements_state.process_events(&dom_events, events);
 
     // 5. Get what derived events can actually be emitted
     let to_emit_dom_colateral_events =
-        measure_dom_events(&mut potential_colateral_events, dom, scale_factor);
+        measure_dom_events(potential_colateral_events, dom, scale_factor);
 
     // 6. Join both the dom and colateral dom events and sort them
     to_emit_dom_events.extend(to_emit_dom_colateral_events);
@@ -80,8 +79,8 @@ pub fn measure_potential_event_listeners(
     events: &EventsQueue,
     viewports: &Viewports,
     fdom: &FreyaDOM,
-) -> NodesEvents {
-    let mut potential_events = FxHashMap::default();
+) -> PotentialEvents {
+    let mut potential_events = PotentialEvents::default();
 
     let layout = fdom.layout();
 
@@ -95,7 +94,7 @@ pub fn measure_potential_event_listeners(
                         let event_data = (*node_id, event.clone());
                         potential_events
                             .entry(name.clone())
-                            .or_insert_with(|| vec![event_data.clone()])
+                            .or_default()
                             .push(event_data);
                     } else {
                         let data = match event {
@@ -145,13 +144,13 @@ pub fn measure_potential_event_listeners(
 /// A `mousedown` or a `touchdown` might also trigger a `pointerdown`
 fn get_derivated_events(event_name: &str) -> Vec<&str> {
     match event_name {
-        "mouseover" => {
+        "mouseover" | "touchmove" => {
             vec![event_name, "mouseenter", "pointerenter", "pointerover"]
         }
-        "mousedown" | "touchdown" => {
+        "mousedown" | "touchstart" => {
             vec![event_name, "pointerdown"]
         }
-        "click" | "ontouchend" => {
+        "click" | "touchend" => {
             vec![event_name, "pointerup"]
         }
         "mouseleave" => {
@@ -161,76 +160,88 @@ fn get_derivated_events(event_name: &str) -> Vec<&str> {
     }
 }
 
-const STACKED_EVENTS: [&str; 13] = [
-    "mouseover",
-    "mouseenter",
-    "mouseleave",
-    "click",
-    "keydown",
-    "keyup",
-    "touchcancel",
-    "touchend",
-    "touchmove",
-    "touchstart",
-    "pointerover",
-    "pointerenter",
-    "pointerleave",
-];
+fn is_node_parent_of(rdom: &DioxusDOM, node: NodeId, parent_node: NodeId) -> bool {
+    let mut stack = vec![parent_node];
+    while let Some(id) = stack.pop() {
+        let tree = rdom.tree_ref();
+        let mut children = tree.children_ids(id);
+        drop(tree);
+        if children.contains(&node) {
+            return true;
+        }
 
-const FIRST_CAPTURED_EVENTS: [&str; 1] = ["wheel"];
+        if rdom.contains(id) {
+            children.reverse();
+            stack.extend(children.iter());
+        }
+    }
 
-const LAST_CAPTURED_EVENTS: [&str; 3] = ["click", "touchstart", "touchend"];
+    false
+}
 
 /// Measure what DOM events could be emited
 fn measure_dom_events(
-    potential_events: &mut NodesEvents,
+    potential_events: PotentialEvents,
     fdom: &FreyaDOM,
     scale_factor: f64,
 ) -> Vec<DomEvent> {
     let mut new_events = Vec::new();
     let rdom = fdom.rdom();
 
-    for (event_name, event_nodes) in potential_events.iter_mut() {
+    // Iterate over all the events
+    for (event_name, event_nodes) in potential_events {
         let derivated_events = get_derivated_events(event_name.as_str());
 
         let mut found_nodes: Vec<(&NodeId, FreyaEvent)> = Vec::new();
-        for derivated_event_name in derivated_events {
+
+        // Iterate over the derivated event (including the source)
+        'event: for derivated_event_name in derivated_events.iter() {
+            let mut child_node: Option<NodeId> = None;
+
             let listeners = rdom.get_listening_sorted(derivated_event_name);
-            'event_nodes: for (node_id, request) in event_nodes.iter() {
+
+            // Iterate over the event nodes
+            for (node_id, event) in event_nodes.iter().rev() {
+                let Some(node) = rdom.get(*node_id) else {
+                    continue;
+                };
+
+                // Iterate over the event listeners
                 for listener in &listeners {
                     if listener.id() == *node_id {
-                        let Style { background, .. } = &*listener.get::<Style>().unwrap();
-
-                        let mut request = request.clone();
-                        request.set_name(derivated_event_name.to_string());
-
-                        // Stop searching on first match
-                        if background != &Fill::Color(Color::TRANSPARENT)
-                            && FIRST_CAPTURED_EVENTS.contains(&derivated_event_name)
-                        {
-                            break 'event_nodes;
-                        }
-
-                        // Only keep the last matched event
-                        if background != &Fill::Color(Color::TRANSPARENT)
-                            && LAST_CAPTURED_EVENTS.contains(&derivated_event_name)
-                        {
-                            found_nodes.clear();
-                        }
-
-                        // Stack the matched events
-                        if STACKED_EVENTS.contains(&derivated_event_name) {
-                            found_nodes.push((node_id, request))
+                        let valid_node = if let Some(child_node) = child_node {
+                            is_node_parent_of(rdom, child_node, *node_id)
                         } else {
-                            found_nodes = vec![(node_id, request)]
+                            true
+                        };
+
+                        if valid_node {
+                            let mut valid_event = event.clone();
+                            valid_event.set_name(derivated_event_name.to_string());
+                            found_nodes.push((node_id, valid_event));
+
+                            // Only stop looking for valid nodes when the event isn't of type keyboard
+                            if !event.is_keyboard_event() {
+                                continue 'event;
+                            }
                         }
                     }
+                }
+
+                let Style { background, .. } = &*node.get::<Style>().unwrap();
+
+                if background != &Fill::Color(Color::TRANSPARENT) && !event.is_keyboard_event() {
+                    // If the background isn't transparent,
+                    // we must make sure that next nodes are parent of it
+                    // This only matters for pointer-based events, and not to e.g keyboard events
+                    child_node = Some(*node_id);
                 }
             }
         }
 
         for (node_id, request_event) in found_nodes {
-            let areas = fdom.layout().get(*node_id).cloned();
+            let layout = fdom.layout();
+            let areas = layout.get(*node_id);
             if let Some(areas) = areas {
                 let node_ref = fdom.rdom().get(*node_id).unwrap();
                 let element_id = node_ref.mounted_id().unwrap();

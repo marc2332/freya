@@ -1,6 +1,6 @@
 use std::sync::{Arc, Mutex};
 
-use dioxus_core::Mutations;
+use dioxus_core::VirtualDom;
 use dioxus_native_core::{
     prelude::{DioxusState, State},
     real_dom::{NodeRef, RealDom},
@@ -8,14 +8,14 @@ use dioxus_native_core::{
 };
 
 use freya_node_state::{
-    AccessibilityState, CursorSettings, CustomAttributeValues, FontStyleState, LayoutState,
+    AccessibilityNodeState, CursorSettings, CustomAttributeValues, FontStyleState, LayoutState,
     References, Style, Transform,
 };
 use std::sync::MutexGuard;
 use torin::prelude::*;
 use tracing::info;
 
-use crate::dom_adapter::DioxusDOMAdapter;
+use crate::mutations_writer::MutationsWriter;
 
 pub type DioxusDOM = RealDom<CustomAttributeValues>;
 pub type DioxusNode<'a> = NodeRef<'a, CustomAttributeValues>;
@@ -93,7 +93,7 @@ impl Default for FreyaDOM {
             LayoutState::to_type_erased(),
             Style::to_type_erased(),
             Transform::to_type_erased(),
-            AccessibilityState::to_type_erased(),
+            AccessibilityNodeState::to_type_erased(),
         ]);
         let dioxus_integration_state = DioxusState::create(&mut rdom);
         Self {
@@ -110,9 +110,14 @@ impl FreyaDOM {
     }
 
     /// Create the initial DOM from the given Mutations
-    pub fn init_dom(&mut self, mutations: Mutations, scale_factor: f32) {
-        self.dioxus_integration_state
-            .apply_mutations(&mut self.rdom, mutations);
+    pub fn init_dom(&mut self, vdom: &mut VirtualDom, scale_factor: f32) {
+        // Build the RealDOM
+        vdom.rebuild(&mut MutationsWriter {
+            native_writer: self
+                .dioxus_integration_state
+                .create_mutation_writer(&mut self.rdom),
+            layout: &mut self.torin.lock().unwrap(),
+        });
 
         let mut ctx = SendAnyMap::new();
         ctx.insert(scale_factor);
@@ -122,15 +127,14 @@ impl FreyaDOM {
     }
 
     /// Process the given mutations from the [`VirtualDOM`](dioxus_core::VirtualDom).
-    pub fn apply_mutations(&mut self, mutations: Mutations, scale_factor: f32) -> (bool, bool) {
-        let mut dom_adapter = DioxusDOMAdapter::new_with_cache(self.rdom());
-        // Apply the mutations to the layout
-        self.layout()
-            .apply_mutations(&mutations, &self.dioxus_integration_state, &mut dom_adapter);
-
-        // Apply the mutations the integration state
-        self.dioxus_integration_state
-            .apply_mutations(&mut self.rdom, mutations);
+    pub fn render_mutations(&mut self, vdom: &mut VirtualDom, scale_factor: f32) -> (bool, bool) {
+        // Update the RealDOM
+        vdom.render_immediate(&mut MutationsWriter {
+            native_writer: self
+                .dioxus_integration_state
+                .create_mutation_writer(&mut self.rdom),
+            layout: &mut self.torin.lock().unwrap(),
+        });
 
         // Update the Nodes states
         let mut ctx = SendAnyMap::new();
@@ -161,5 +165,9 @@ impl FreyaDOM {
     /// Get a mutable reference to the [`DioxusDOM`].
     pub fn rdom_mut(&mut self) -> &mut DioxusDOM {
         &mut self.rdom
+    }
+
+    pub fn state_mut(&mut self) -> &mut DioxusState {
+        &mut self.dioxus_integration_state
     }
 }

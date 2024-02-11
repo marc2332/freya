@@ -9,8 +9,8 @@ fn main() {
     launch(app);
 }
 
-fn app(cx: Scope) -> Element {
-    render!(rect {
+fn app() -> Element {
+    rsx!(rect {
         height: "100%",
         width: "100%",
         background:

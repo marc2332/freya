@@ -1,26 +1,35 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 
-#[derive(Props, PartialEq)]
-pub struct ArrowIcon {
+use freya_hooks::{use_applied_theme, ArrowIconTheme, ArrowIconThemeWith};
+
+#[derive(Props, Clone, PartialEq)]
+pub struct ArrowIconProps {
+    /// Theme override.
+    pub theme: Option<ArrowIconThemeWith>,
     #[props(into)]
-    rotate: String,
+    pub rotate: String,
     #[props(into)]
-    fill: String,
-    #[props(into, default = "none".to_string())]
-    margin: String,
+    pub fill: String,
 }
 
 #[allow(non_snake_case)]
-pub fn ArrowIcon(cx: Scope<ArrowIcon>) -> Element {
-    let ArrowIcon {
+pub fn ArrowIcon(
+    ArrowIconProps {
+        theme,
         rotate,
         fill,
+    }: ArrowIconProps,
+) -> Element {
+    let ArrowIconTheme {
+        height,
+        width,
         margin,
-    } = &cx.props;
-    render!(svg {
-        height: "10",
-        width: "10",
+    } = use_applied_theme!(&theme, arrow_icon);
+
+    rsx!(svg {
+        height: "{height}",
+        width: "{width}",
         margin: "{margin}",
         rotate: "{rotate}deg",
         svg_content: r#"

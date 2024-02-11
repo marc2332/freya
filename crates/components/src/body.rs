@@ -1,15 +1,15 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::{use_get_theme, BodyTheme};
+
+use freya_hooks::{use_applied_theme, BodyTheme, BodyThemeWith};
 
 /// [`Body`] component properties.
-#[derive(Props)]
-pub struct BodyProps<'a> {
+#[derive(Props, Clone, PartialEq)]
+pub struct BodyProps {
+    /// Theme override.
+    pub theme: Option<BodyThemeWith>,
     /// Inner children for the Body.
-    children: Element<'a>,
-    /// Padding for the Body.
-    #[props(default = "none".to_string(), into)]
-    padding: String,
+    pub children: Element,
 }
 
 /// `Body` component.
@@ -26,8 +26,8 @@ pub struct BodyProps<'a> {
 ///
 /// ```no_run
 /// # use freya::prelude::*;
-/// fn app(cx: Scope) -> Element {
-///     render!(
+/// fn app() -> Element {
+///     rsx!(
 ///         Body {
 ///             label {
 ///                 "Click this"
@@ -38,17 +38,22 @@ pub struct BodyProps<'a> {
 /// ```
 ///
 #[allow(non_snake_case)]
-pub fn Body<'a>(cx: Scope<'a, BodyProps<'a>>) -> Element {
-    let theme = use_get_theme(cx);
-    let BodyTheme { background, color } = theme.body;
-    let BodyProps { children, padding } = cx.props;
+pub fn Body(props: BodyProps) -> Element {
+    let theme = use_applied_theme!(&props.theme, body);
+    let BodyTheme {
+        background,
+        color,
+        padding,
+    } = theme;
 
-    render!(rect {
-        width: "fill",
-        height: "fill",
-        color: "{color}",
-        background: "{background}",
-        padding: "{padding}",
-        children
-    })
+    rsx!(
+        rect {
+            width: "fill",
+            height: "fill",
+            color: "{color}",
+            background: "{background}",
+            padding: "{padding}",
+            {&props.children}
+        }
+    )
 }

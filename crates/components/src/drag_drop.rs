@@ -1,14 +1,14 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
-use freya_hooks::use_node_ref;
+use freya_hooks::use_node_signal;
 use torin::prelude::CursorPoint;
 
 /// [`DragProvider`] component properties.
-#[derive(Props)]
-pub struct DragProviderProps<'a> {
+#[derive(Props, Clone, PartialEq)]
+pub struct DragProviderProps {
     /// Inner children of the DragProvider.
-    children: Element<'a>,
+    children: Element,
 }
 
 /// Provide a common place for [`DragZone`]s and [`DropZone`]s to exchange their data.
@@ -17,18 +17,18 @@ pub struct DragProviderProps<'a> {
 /// See [`DragProviderProps`].
 ///
 #[allow(non_snake_case)]
-pub fn DragProvider<'a, T: 'static>(cx: Scope<'a, DragProviderProps<'a>>) -> Element<'a> {
-    use_shared_state_provider::<Option<T>>(cx, || None);
-    render!(&cx.props.children)
+pub fn DragProvider<T: 'static>(DragProviderProps { children }: DragProviderProps) -> Element {
+    use_context_provider::<Signal<Option<T>>>(|| Signal::new(None));
+    rsx!({ children })
 }
 
 /// [`DragZone`] component properties.
-#[derive(Props)]
-pub struct DragZoneProps<'a, T> {
+#[derive(Props, Clone, PartialEq)]
+pub struct DragZoneProps<T: Clone + 'static + PartialEq> {
     /// Element visible when dragging the element. This follows the cursor.
-    drag_element: Element<'a>,
+    drag_element: Element,
     /// Inner children for the DropZone.
-    children: Element<'a>,
+    children: Element,
     /// Data that will be handled to the destination [`DropZone`].
     data: T,
 }
@@ -39,14 +39,20 @@ pub struct DragZoneProps<'a, T> {
 /// See [`DragZoneProps`].
 ///
 #[allow(non_snake_case)]
-pub fn DragZone<'a, T: 'static + Clone>(cx: Scope<'a, DragZoneProps<'a, T>>) -> Element<'a> {
-    let drags = use_shared_state::<Option<T>>(cx);
-    let dragging = use_state(cx, || false);
-    let pos = use_state(cx, CursorPoint::default);
-    let (node_reference, size) = use_node_ref(cx);
+pub fn DragZone<T: 'static + Clone + PartialEq>(
+    DragZoneProps {
+        data,
+        children,
+        drag_element,
+    }: DragZoneProps<T>,
+) -> Element {
+    let mut drags = use_context::<Signal<Option<T>>>();
+    let mut dragging = use_signal(|| false);
+    let mut pos = use_signal(CursorPoint::default);
+    let (node_reference, size) = use_node_signal();
 
     let onglobalmouseover = move |e: MouseEvent| {
-        if *dragging.get() {
+        if *dragging.read() {
             let size = size.read();
             let coord = e.get_screen_coordinates();
             pos.set(
@@ -70,46 +76,44 @@ pub fn DragZone<'a, T: 'static + Clone>(cx: Scope<'a, DragZoneProps<'a, T>>) -> 
                 .into(),
         );
         dragging.set(true);
-        *drags.unwrap().write() = Some(cx.props.data.clone());
+        *drags.write() = Some(data.clone());
     };
 
     let onglobalclick = move |_: MouseEvent| {
-        if *dragging.get() {
+        if *dragging.read() {
             dragging.set(false);
             pos.set((0.0, 0.0).into());
-            *drags.unwrap().write() = None;
+            *drags.write() = None;
         }
     };
 
-    render!(
-        if *dragging.get() {
-            render!(
-                rect {
-                    width: "0",
-                    height: "0",
-                    offset_x: "{pos.x}",
-                    offset_y: "{pos.y}",
-                    &cx.props.drag_element
-                }
-            )
+    rsx!(
+        if *dragging.read() {
+            rect {
+                width: "0",
+                height: "0",
+                offset_x: "{pos.read().x}",
+                offset_y: "{pos.read().y}",
+                {drag_element}
+            }
         }
         rect {
             reference: node_reference,
-            onglobalclick: onglobalclick,
+            onglobalclick,
             onglobalmouseover: onglobalmouseover,
-            onmousedown: onmousedown,
-            &cx.props.children
+            onmousedown,
+            {children}
         }
     )
 }
 
 /// [`DropZone`] component properties.
-#[derive(Props)]
-pub struct DropZoneProps<'a, T> {
+#[derive(Props, PartialEq, Clone)]
+pub struct DropZoneProps<T: 'static + PartialEq + Clone> {
     /// Inner children for the DropZone.
-    children: Element<'a>,
+    children: Element,
     /// Handler for the `ondrop` event.
-    ondrop: EventHandler<'a, T>,
+    ondrop: EventHandler<T>,
 }
 
 /// Elements from [`DragZone`]s can be dropped here.
@@ -118,24 +122,22 @@ pub struct DropZoneProps<'a, T> {
 /// See [`DropZoneProps`].
 ///
 #[allow(non_snake_case)]
-pub fn DropZone<'a, T: 'static + Clone>(cx: Scope<'a, DropZoneProps<'a, T>>) -> Element<'a> {
-    let drags = use_shared_state::<Option<T>>(cx);
+pub fn DropZone<T: 'static + Clone + PartialEq>(props: DropZoneProps<T>) -> Element {
+    let mut drags = use_context::<Signal<Option<T>>>();
 
     let onclick = move |_: MouseEvent| {
-        if let Some(drags) = drags {
-            if let Some(current_drags) = &*drags.read() {
-                cx.props.ondrop.call(current_drags.clone());
-            }
-            if drags.read().is_some() {
-                *drags.write() = None;
-            }
+        if let Some(current_drags) = &*drags.read() {
+            props.ondrop.call(current_drags.clone());
+        }
+        if drags.read().is_some() {
+            *drags.write() = None;
         }
     };
 
-    render!(
+    rsx!(
         rect {
-            onclick: onclick,
-            &cx.props.children
+            onclick,
+            {props.children}
         }
     )
 }
@@ -143,21 +145,21 @@ pub fn DropZone<'a, T: 'static + Clone>(cx: Scope<'a, DropZoneProps<'a, T>>) -> 
 #[cfg(test)]
 mod test {
     use freya::prelude::*;
-    use freya_testing::{launch_test, FreyaEvent, MouseButton};
+    use freya_testing::{events::pointer::MouseButton, launch_test, FreyaEvent};
 
     #[tokio::test]
     pub async fn drag_drop() {
-        fn drop_app(cx: Scope) -> Element {
-            let state = use_state::<bool>(cx, || false);
+        fn drop_app() -> Element {
+            let mut state = use_signal::<bool>(|| false);
 
-            render!(
+            rsx!(
                 DragProvider::<bool> {
                     rect {
                         height: "50%",
                         width: "100%",
                         DragZone {
                             data: true,
-                            drag_element: render!(
+                            drag_element: rsx!(
                                 label {
                                     width: "200",
                                     "Moving"
@@ -176,7 +178,7 @@ mod test {
                             height: "50%",
                             width: "100%",
                             label {
-                                "Enabled: {state}"
+                                "Enabled: {state.read()}"
                             }
                         }
                     }

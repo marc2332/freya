@@ -1,16 +1,21 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_elements::events::MouseEvent;
-use freya_hooks::{use_animation, use_get_theme, use_platform, Animation};
+use freya_elements::events::{KeyboardEvent, MouseEvent};
+
+use freya_hooks::{
+    use_animation, use_applied_theme, use_focus, use_platform, Animation, SwitchThemeWith,
+};
 use winit::window::CursorIcon;
 
 /// [`Switch`] component properties.
-#[derive(Props)]
-pub struct SwitchProps<'a> {
+#[derive(Props, Clone, PartialEq)]
+pub struct SwitchProps {
+    /// Theme override.
+    pub theme: Option<SwitchThemeWith>,
     /// Whether the `Switch` is enabled or not.
     pub enabled: bool,
     /// Handler for the `ontoggled` event.
-    pub ontoggled: EventHandler<'a, ()>,
+    pub ontoggled: EventHandler<()>,
 }
 
 /// Describes the current status of the Switch.
@@ -35,89 +40,111 @@ pub enum SwitchStatus {
 ///
 /// ```no_run
 /// # use freya::prelude::*;
-/// fn app(cx: Scope) -> Element {
-///     let enabled = use_state(&cx, || false);
+/// fn app() -> Element {
+///     let mut enabled = use_signal(|| false);
 ///
-///     render!(
+///     rsx!(
 ///         Switch {
-///         enabled: *enabled.get(),
-///         ontoggled: |_| {
-///             enabled.set(!enabled.get());
-///         }
+///             enabled: *enabled.read(),
+///             ontoggled: move |_| {
+///                 enabled.toggle();
+///             }
 ///         }
 ///     )
 /// }
 /// ```
 ///
 #[allow(non_snake_case)]
-pub fn Switch<'a>(cx: Scope<'a, SwitchProps<'a>>) -> Element<'a> {
-    let animation = use_animation(cx, || 0.0);
-    let theme = use_get_theme(cx);
-    let platform = use_platform(cx);
-    let status = use_ref(cx, SwitchStatus::default);
+pub fn Switch(props: SwitchProps) -> Element {
+    let mut animation = use_animation(|| 0.0);
+    let theme = use_applied_theme!(&props.theme, switch);
+    let platform = use_platform();
+    let mut status = use_signal(SwitchStatus::default);
+    let mut focus = use_focus();
 
-    use_on_unmount(cx, {
-        to_owned![status, platform];
-        move || {
-            if *status.read() == SwitchStatus::Hovering {
-                platform.set_cursor(CursorIcon::default());
-            }
+    let focus_id = focus.attribute();
+
+    use_drop(move || {
+        if *status.read() == SwitchStatus::Hovering {
+            platform.set_cursor(CursorIcon::default());
         }
     });
 
-    let onmouseleave = {
-        to_owned![platform];
-        move |_: MouseEvent| {
-            *status.write_silent() = SwitchStatus::Idle;
-            platform.set_cursor(CursorIcon::default());
+    let onmousedown = |e: MouseEvent| {
+        e.stop_propagation();
+    };
+
+    let onmouseleave = move |e: MouseEvent| {
+        e.stop_propagation();
+        *status.write() = SwitchStatus::Idle;
+        platform.set_cursor(CursorIcon::default());
+    };
+
+    let onmouseenter = move |e: MouseEvent| {
+        e.stop_propagation();
+        *status.write() = SwitchStatus::Hovering;
+        platform.set_cursor(CursorIcon::Pointer);
+    };
+
+    let onclick = {
+        let ontoggled = props.ontoggled.clone();
+        move |e: MouseEvent| {
+            e.stop_propagation();
+            focus.focus();
+            ontoggled.call(());
         }
     };
 
-    let onmouseenter = move |_: MouseEvent| {
-        *status.write_silent() = SwitchStatus::Hovering;
-        platform.set_cursor(CursorIcon::Hand);
+    let onkeydown = move |e: KeyboardEvent| {
+        if focus.validate_keydown(e) {
+            props.ontoggled.call(());
+        }
     };
 
-    let onclick = |_: MouseEvent| {
-        cx.props.ontoggled.call(());
-    };
-
-    let (offset_x, border, circle) = {
-        if cx.props.enabled {
+    let (offset_x, background, circle) = {
+        if props.enabled {
             (
                 animation.value(),
-                theme.switch.enabled_background,
-                theme.switch.enabled_thumb_background,
+                theme.enabled_background,
+                theme.enabled_thumb_background,
             )
         } else {
-            (
-                animation.value(),
-                theme.switch.background,
-                theme.switch.thumb_background,
-            )
+            (animation.value(), theme.background, theme.thumb_background)
         }
     };
+    let border = if focus.is_selected() {
+        if props.enabled {
+            format!("2 solid {}", theme.enabled_focus_border_fill)
+        } else {
+            format!("2 solid {}", theme.focus_border_fill)
+        }
+    } else {
+        "none".to_string()
+    };
 
-    use_memo(cx, &cx.props.enabled, move |enabled| {
+    let _ = use_memo_with_dependencies(&props.enabled, move |enabled| {
         if enabled {
             animation.start(Animation::new_sine_in_out(0.0..=25.0, 200));
-        } else if animation.value() > 0.0 {
+        } else if animation.peek_value() > 0.0 {
             animation.start(Animation::new_sine_in_out(25.0..=0.0, 200));
         }
     });
 
-    render!(
+    rsx!(
         rect {
             margin: "1.5",
             width: "50",
             height: "25",
             padding: "1",
             corner_radius: "50",
-            background: "{border}",
-            onmousedown: |_| {},
-            onmouseenter: onmouseenter,
-            onmouseleave: onmouseleave,
-            onclick: onclick,
+            background: "{background}",
+            border: "{border}",
+            onmousedown,
+            onmouseenter,
+            onmouseleave,
+            onkeydown,
+            onclick,
+            focus_id,
             rect {
                 width: "100%",
                 height: "100%",

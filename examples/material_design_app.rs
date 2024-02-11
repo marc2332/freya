@@ -6,19 +6,19 @@
 use freya::prelude::*;
 
 fn main() {
-    launch(|cx: Scope| -> Element {
-        render!(
+    launch(|| -> Element {
+        rsx!(
             Scaffold {
-                floating_button: render!(
+                floating_button: rsx!(
                     FloatingButton {
                         label {
                             "+"
                         }
                     }
                 ),
-                navbar: render!(
+                navbar: rsx!(
                     Navbar {
-                        title: render!(
+                        title: rsx!(
                             label {
                                 "Hello, Freya!"
                             }
@@ -42,17 +42,15 @@ fn main() {
     });
 }
 
-#[derive(Props)]
-struct FloatingButtonProps<'a> {
-    children: Element<'a>,
+#[derive(Props, Clone, PartialEq)]
+struct FloatingButtonProps {
+    children: Element,
 }
 
 #[allow(non_snake_case)]
-fn FloatingButton<'a>(cx: Scope<'a, FloatingButtonProps<'a>>) -> Element<'a> {
-    render!(
+fn FloatingButton(FloatingButtonProps { children }: FloatingButtonProps) -> Element {
+    rsx!(
         rect {
-            height: "100%",
-            width: "100%",
             main_align: "center",
             cross_align: "center",
             height: "50",
@@ -63,64 +61,67 @@ fn FloatingButton<'a>(cx: Scope<'a, FloatingButtonProps<'a>>) -> Element<'a> {
             color: "white",
             font_size: "22",
             corner_radius: "50",
-            &cx.props.children
+            {children}
         }
     )
 }
 
-#[derive(Props)]
-struct ScaffoldProps<'a> {
-    navbar: Option<Element<'a>>,
-    floating_button: Option<Element<'a>>,
-    children: Element<'a>,
+#[derive(Props, Clone, PartialEq)]
+struct ScaffoldProps {
+    navbar: Option<Element>,
+    floating_button: Option<Element>,
+    children: Element,
 }
 
-const FLOATING_BUTTON_BOTTOM_MARGIN: i32 = 85;
-const FLOATING_BUTTON_RIGHT_MARGIN: i32 = 100;
-
 #[allow(non_snake_case)]
-fn Scaffold<'a>(cx: Scope<'a, ScaffoldProps<'a>>) -> Element<'a> {
-    let height = if cx.props.navbar.is_some() {
+fn Scaffold(props: ScaffoldProps) -> Element {
+    let height = if props.navbar.is_some() {
         "calc(100% - 50)"
     } else {
         "100%"
     };
 
-    render!(
+    rsx!(
         rect {
             direction: "vertical",
             height: "100%",
             width: "100%",
-            cx.props.navbar.as_ref(),
-            ScrollView {
-                height: "{height}",
-                width: "100%",
-                padding: "3 10 0 10",
-                &cx.props.children
-            }
             rect {
-                width: "100%",
+                width: "0",
                 height: "0",
-                offset_y: "-{FLOATING_BUTTON_BOTTOM_MARGIN}",
-                layer: "-100",
-                direction: "horizontal",
                 rect {
-                    width: "calc(100% - {FLOATING_BUTTON_RIGHT_MARGIN})",
+                    width: "100v",
+                    height: "100v",
+                    rect {
+                        layer: "-999",
+                        position: "absolute",
+                        position_bottom: "70",
+                        position_right: "70",
+                        {props.floating_button}
+                    }
+
                 }
-                cx.props.floating_button.as_ref()
+            }
+            {props.navbar},
+            ScrollView {
+                theme: theme_with!(ScrollViewTheme {
+                    height: height.into(),
+                    padding: "3 10 0 10".into(),
+                }),
+                {props.children}
             }
         }
     )
 }
 
-#[derive(Props)]
-struct NavbarProps<'a> {
-    title: Option<Element<'a>>,
+#[derive(Props, Clone, PartialEq)]
+struct NavbarProps {
+    title: Option<Element>,
 }
 
 #[allow(non_snake_case)]
-fn Navbar<'a>(cx: Scope<'a, NavbarProps<'a>>) -> Element<'a> {
-    render!(
+fn Navbar(NavbarProps { title }: NavbarProps) -> Element {
+    rsx!(
         rect {
             height: "50",
             width: "100%",
@@ -133,21 +134,21 @@ fn Navbar<'a>(cx: Scope<'a, NavbarProps<'a>>) -> Element<'a> {
                 direction: "horizontal",
                 padding: "0 20",
                 font_size: "20",
-                cx.props.title.as_ref()
+                {title}
             }
         }
     )
 }
 
-#[derive(Props)]
-struct CardProps<'a> {
-    title: &'a str,
-    content: &'a str,
+#[derive(Props, Clone, PartialEq)]
+struct CardProps {
+    title: String,
+    content: String,
 }
 
 #[allow(non_snake_case)]
-fn Card<'a>(cx: Scope<'a, CardProps<'a>>) -> Element {
-    render!(
+fn Card(CardProps { title, content }: CardProps) -> Element {
+    rsx!(
         rect {
             margin: "7 0",
             width: "100%",
@@ -158,10 +159,10 @@ fn Card<'a>(cx: Scope<'a, CardProps<'a>>) -> Element {
             corner_radius: "8",
             label {
                 font_size: "20",
-                "{&cx.props.title}"
+                "{title}"
             }
             label {
-                "{&cx.props.content}"
+                "{content}"
             }
         }
     )

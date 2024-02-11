@@ -18,8 +18,8 @@ const MOVEMENT_MARGIN: f64 = 75.0;
 const BOX_COUNT: usize = 80;
 
 #[allow(non_snake_case)]
-fn Box(cx: Scope) -> Element {
-    render!(
+fn Box() -> Element {
+    rsx!(
         rect {
             background: "rgb(65, 53, 67)",
             width: "250",
@@ -45,10 +45,10 @@ fn Box(cx: Scope) -> Element {
     )
 }
 
-fn app(cx: Scope) -> Element {
-    let positions = use_state::<Vec<CursorPoint>>(cx, Vec::new);
+fn app() -> Element {
+    let mut positions = use_signal::<Vec<CursorPoint>>(Vec::new);
 
-    let onmouseover = |e: MouseEvent| {
+    let onmouseover = move |e: MouseEvent| {
         let coordinates = e.get_screen_coordinates();
         positions.with_mut(|positions| {
             if let Some(pos) = positions.first() {
@@ -65,12 +65,12 @@ fn app(cx: Scope) -> Element {
         })
     };
 
-    render!(
+    rsx!(
         rect {
-            onmouseover: onmouseover,
+            onmouseover,
             width: "100%",
             height: "100%",
-            positions.get().iter().map(|pos| rsx!(
+            {positions.read().iter().map(|pos| rsx!(
                 rect {
                     width: "0",
                     height: "0",
@@ -78,7 +78,7 @@ fn app(cx: Scope) -> Element {
                     offset_y: "{pos.y}",
                     Box {}
                 }
-            ))
+            ))}
         }
     )
 }

@@ -9,15 +9,15 @@ fn main() {
     launch(app);
 }
 
-fn app(cx: Scope) -> Element {
-    let radius = use_state(cx, || 30f32);
+fn app() -> Element {
+    let mut radius = use_signal(|| 30f32);
 
     let onwheel = move |e: WheelEvent| {
         let y = e.get_delta_y() as f32;
-        radius.set((*radius.get() + y).clamp(0.0, 300.0));
+        radius.with_mut(|radius| *radius = (*radius + y).clamp(0.0, 300.0));
     };
 
-    render!(
+    rsx!(
         rect {
             overflow: "clip",
             height: "100%",

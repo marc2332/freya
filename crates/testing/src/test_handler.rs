@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use accesskit::NodeId as AccessibilityId;
@@ -6,13 +6,11 @@ use dioxus_core::VirtualDom;
 use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_engine::prelude::FontCollection;
+use freya_hooks::PlatformInformation;
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
-use torin::geometry::{Area, Size2D};
-
-pub use freya_core::events::FreyaEvent;
-pub use freya_elements::events::mouse::MouseButton;
 use tokio::time::{interval, timeout};
+use torin::geometry::{Area, Size2D};
 
 use crate::test_node::TestNode;
 use crate::test_utils::TestUtils;
@@ -22,22 +20,19 @@ use crate::{TestingConfig, SCALE_FACTOR};
 pub struct TestingHandler {
     pub(crate) vdom: VirtualDom,
     pub(crate) utils: TestUtils,
-
     pub(crate) event_emitter: EventEmitter,
     pub(crate) event_receiver: EventReceiver,
-
     pub(crate) platform_event_emitter: UnboundedSender<EventMessage>,
     pub(crate) platform_event_receiver: UnboundedReceiver<EventMessage>,
-
-    pub(crate) events_queue: Vec<FreyaEvent>,
+    pub(crate) events_queue: EventsQueue,
     pub(crate) elements_state: ElementsState,
     pub(crate) font_collection: FontCollection,
     pub(crate) viewports: Viewports,
-    pub(crate) accessibility_state: SharedAccessibilityState,
-
+    pub(crate) accessibility_manager: SharedAccessibilityManager,
     pub(crate) config: TestingConfig,
-
     pub(crate) ticker_sender: broadcast::Sender<()>,
+    pub(crate) navigation_state: NavigatorState,
+    pub(crate) platform_information: Arc<Mutex<PlatformInformation>>,
 }
 
 impl TestingHandler {
@@ -46,8 +41,7 @@ impl TestingHandler {
         self.provide_vdom_contexts();
         let sdom = self.utils.sdom();
         let mut fdom = sdom.get();
-        let mutations = self.vdom.rebuild();
-        fdom.init_dom(mutations, SCALE_FACTOR as f32);
+        fdom.init_dom(&mut self.vdom, SCALE_FACTOR as f32);
     }
 
     /// Get a mutable reference to the current [`TestingConfig`].
@@ -56,22 +50,22 @@ impl TestingHandler {
     }
 
     /// Provide some values to the app
-    fn provide_vdom_contexts(&self) {
+    fn provide_vdom_contexts(&mut self) {
         self.vdom
-            .base_scope()
-            .provide_context(self.platform_event_emitter.clone());
+            .insert_any_root_context(Box::new(self.platform_event_emitter.clone()));
         self.vdom
-            .base_scope()
-            .provide_context(Arc::new(self.ticker_sender.subscribe()));
+            .insert_any_root_context(Box::new(Arc::new(self.ticker_sender.subscribe())));
+        self.vdom
+            .insert_any_root_context(Box::new(self.navigation_state.clone()));
+        self.vdom
+            .insert_any_root_context(Box::new(self.platform_information.clone()));
     }
 
     /// Wait and apply new changes
     pub async fn wait_for_update(&mut self) -> (bool, bool) {
         self.wait_for_work(self.config.size());
 
-        self.provide_vdom_contexts();
-
-        let mut ticker = if self.config.run_ticker {
+        let mut ticker = if self.config.event_loop_ticker {
             Some(interval(Duration::from_millis(16)))
         } else {
             None
@@ -98,10 +92,7 @@ impl TestingHandler {
                         }
                     }
                     EventMessage::FocusAccessibilityNode(node_id) => {
-                        self.accessibility_state
-                            .lock()
-                            .unwrap()
-                            .set_focus(Some(node_id));
+                        self.accessibility_manager.lock().unwrap().focused_id = node_id;
                     }
                     _ => {}
                 }
@@ -109,7 +100,7 @@ impl TestingHandler {
 
             if let Ok(ev) = vdom_ev {
                 self.vdom
-                    .handle_event(&ev.name, ev.data.any(), ev.element_id, false);
+                    .handle_event(&ev.name, ev.data.any(), ev.element_id, true);
                 self.vdom.process_events();
             }
         }
@@ -118,13 +109,11 @@ impl TestingHandler {
             .await
             .ok();
 
-        let mutations = self.vdom.render_immediate();
-
         let (must_repaint, must_relayout) = self
             .utils
             .sdom()
             .get_mut()
-            .apply_mutations(mutations, SCALE_FACTOR as f32);
+            .render_mutations(&mut self.vdom, SCALE_FACTOR as f32);
 
         self.wait_for_work(self.config.size());
 
@@ -180,7 +169,12 @@ impl TestingHandler {
         self.utils.get_node_by_id(root_id)
     }
 
-    pub fn focus_id(&self) -> Option<AccessibilityId> {
-        self.accessibility_state.lock().unwrap().focus_id()
+    pub fn focus_id(&self) -> AccessibilityId {
+        self.accessibility_manager.lock().unwrap().focused_id
+    }
+
+    pub fn resize(&mut self, size: Size2D) {
+        self.config.size = size;
+        self.platform_information.lock().unwrap().window_size = size;
     }
 }

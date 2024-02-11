@@ -35,12 +35,12 @@ dioxus-core = { workspace = true }
 tokio = { workspace = true }
 winit = { workspace = true }
 accesskit = { workspace = true }
-zbus = { workspace = true }
 
 rustc-hash= { workspace = true }
 tracing = { workspace = true }
 uuid = { workspace = true }
 itertools = "0.11.0"
+smallvec = "1.11.2"
 
 [dev-dependencies]
 dioxus = { workspace = true }

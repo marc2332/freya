@@ -6,22 +6,18 @@
 use freya::prelude::*;
 
 fn main() {
-    launch(app);
+    launch(app)
 }
 
-fn app(cx: Scope) -> Element {
-    let values = use_state(cx, || vec!["Hello World"].repeat(400));
+fn app() -> Element {
+    let values = use_signal(|| ["Hello, World!"].repeat(300));
 
-    render!(VirtualScrollView {
-        width: "100%",
-        height: "100%",
-        length: values.get().len(),
+    rsx!(VirtualScrollView {
+        length: values.read().len(),
         item_size: 25.0,
-        builder_values: values.get(),
         direction: "vertical",
-        builder: Box::new(move |(key, index, _, values)| {
-            let values = values.unwrap();
-            let value = values[index];
+        builder: move |index, _: &Option<()>| {
+            let value = values.read()[index];
             let background = if index % 2 == 0 {
                 "rgb(200, 200, 200)"
             } else {
@@ -29,15 +25,15 @@ fn app(cx: Scope) -> Element {
             };
             rsx! {
                 rect {
-                    key: "{key}",
+                    key: "{index}",
                     background: "{background}",
+                    width: "100%",
                     label {
                         height: "25",
-                        width: "100%",
                         "{index} {value}"
                     }
                 }
             }
-        })
+        }
     })
 }
