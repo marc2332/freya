@@ -11,7 +11,8 @@ use dioxus_native_core_macro::partial_derive_state;
 use torin::scaled::Scaled;
 
 use crate::{
-    parsing::ExtSplit, AttributesBytes, Border, BorderAlignment, CornerRadius, CustomAttributeValues, Fill, OverflowMode, Parse, Shadow
+    parsing::ExtSplit, AttributesBytes, Border, BorderAlignment, CornerRadius,
+    CustomAttributeValues, Fill, OverflowMode, Parse, Shadow,
 };
 
 #[derive(Default, Debug, Clone, PartialEq, Component)]
@@ -143,7 +144,8 @@ impl State<CustomAttributeValues> for Style {
                     }
                     "svg_content" => {
                         let text = attr.value.as_text();
-                        style.svg_data = text.map(|v| AttributesBytes::Dynamic(Arc::new(v.as_bytes().to_owned())));
+                        style.svg_data = text
+                            .map(|v| AttributesBytes::Dynamic(Arc::new(v.as_bytes().to_owned())));
                     }
                     "overflow" => {
                         if let Some(value) = attr.value.as_text() {

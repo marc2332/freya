@@ -107,14 +107,14 @@ impl Display for CursorReference {
 #[derive(Debug, Clone, PartialEq)]
 pub enum AttributesBytes {
     Dynamic(Arc<Vec<u8>>),
-    Static(&'static [u8])
+    Static(&'static [u8]),
 }
 
 impl AttributesBytes {
     pub fn as_slice(&self) -> &[u8] {
         match self {
             Self::Dynamic(bytes) => bytes.as_slice(),
-            Self::Static(bytes) => bytes
+            Self::Static(bytes) => bytes,
         }
     }
 }
@@ -153,7 +153,9 @@ impl FromAnyValue for CustomAttributeValues {
 
 /// Transform some bytes (e.g: raw image, raw svg) into attribute data
 pub fn bytes_to_data(bytes: &[u8]) -> AttributeValue {
-    AttributeValue::any_value(CustomAttributeValues::Bytes(AttributesBytes::Dynamic(Arc::new(bytes.to_vec()))))
+    AttributeValue::any_value(CustomAttributeValues::Bytes(AttributesBytes::Dynamic(
+        Arc::new(bytes.to_vec()),
+    )))
 }
 
 /// Transform some static bytes (e.g: raw image, raw svg) into attribute data
