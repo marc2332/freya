@@ -11,7 +11,7 @@ pub fn render_svg(area: &Area, node_ref: &DioxusNode, canvas: &Canvas) {
     let x = area.min_x();
     let y = area.min_y();
     if let Some(svg_data) = &node_style.svg_data {
-        let svg_dom = svg::Dom::from_bytes(svg_data);
+        let svg_dom = svg::Dom::from_bytes(svg_data.as_slice());
         if let Ok(mut svg_dom) = svg_dom {
             canvas.save();
             canvas.translate((x, y));

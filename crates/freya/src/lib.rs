@@ -110,7 +110,7 @@ pub mod prelude {
     pub use freya_elements::elements as dioxus_elements;
     pub use freya_elements::events::*;
     pub use freya_hooks::*;
-    pub use freya_node_state::{bytes_to_data, CustomAttributeValues};
+    pub use freya_node_state::{bytes_to_data, static_bytes_to_data, CustomAttributeValues};
     pub use freya_renderer::*;
     pub use torin::prelude::*;
 }
