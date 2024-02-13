@@ -44,6 +44,7 @@ pub struct App<State: 'static + Clone> {
     pub(crate) focus_receiver: FocusReceiver,
     pub(crate) accessibility: AccessKitManager,
     pub(crate) font_collection: FontCollection,
+    pub(crate) font_mgr: FontMgr,
     pub(crate) ticker_sender: broadcast::Sender<()>,
     pub(crate) plugins: PluginsManager,
     pub(crate) navigator_state: NavigatorState,
@@ -75,9 +76,9 @@ impl<State: 'static + Clone> App<State> {
             provider.register_typeface(ft_type, Some(font_name));
         }
 
-        let mgr: FontMgr = provider.into();
+        let font_mgr: FontMgr = provider.into();
         font_collection.set_default_font_manager(def_mgr, "Fira Sans");
-        font_collection.set_dynamic_font_manager(mgr);
+        font_collection.set_dynamic_font_manager(font_mgr.clone());
 
         let (event_emitter, event_receiver) = mpsc::unbounded_channel::<DomEvent>();
         let (focus_sender, focus_receiver) = watch::channel(ACCESSIBILITY_ROOT_ID);
@@ -105,6 +106,7 @@ impl<State: 'static + Clone> App<State> {
             focus_sender,
             focus_receiver,
             font_collection,
+            font_mgr,
             ticker_sender: broadcast::channel(5).0,
             plugins,
             navigator_state: NavigatorState::new(NavigationMode::NotKeyboard),
@@ -370,6 +372,7 @@ impl<State: 'static + Clone> App<State> {
                         area,
                         &dioxus_node,
                         font_collection,
+                        &self.font_mgr,
                         viewports,
                         render_wireframe,
                         matrices,

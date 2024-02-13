@@ -38,7 +38,7 @@ dioxus-hot-reload = { git = "https://github.com/DioxusLabs/dioxus", rev = "ef101
 dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev = "ef101dd876ee8ecdd702a7e22addfd47f2ebd892", default-features = false }
 dioxus-std = { git = "https://github.com/DioxusLabs/dioxus-std", rev = "4424071a6f545d560e1a69134eefbf24fd991ace", features = ["clipboard"] }
 
-skia-safe = { version = "0.67.0", features = ["gl", "textlayout", "svg"] }
+skia-safe = { version = "0.70.0", features = ["gl", "textlayout", "svg"] }
 
 gl = "0.14.0"
 glutin = "0.31.2"
