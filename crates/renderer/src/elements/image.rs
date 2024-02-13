@@ -30,6 +30,6 @@ pub fn render_image(area: &Area, node_ref: &DioxusNode, canvas: &Canvas) {
             draw_img(image_data)
         }
     } else if let Some(image_data) = &node_style.image_data {
-        draw_img(image_data)
+        draw_img(image_data.as_slice())
     }
 }
