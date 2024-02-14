@@ -33,12 +33,12 @@ pub fn position() {
         Node::from_size_and_position(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            Position::Absolute {
+            Position::Absolute(Box::new(AbsolutePosition {
                 top: Some(100.0),
                 right: None,
                 bottom: None,
                 left: Some(50.0),
-            },
+            })),
         ),
     );
     mocked_dom.add(
@@ -48,12 +48,12 @@ pub fn position() {
         Node::from_size_and_position(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            Position::Absolute {
+            Position::Absolute(Box::new(AbsolutePosition {
                 top: Some(100.0),
                 right: Some(50.0),
                 bottom: None,
                 left: None,
-            },
+            })),
         ),
     );
     mocked_dom.add(
@@ -63,12 +63,12 @@ pub fn position() {
         Node::from_size_and_position(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            Position::Absolute {
+            Position::Absolute(Box::new(AbsolutePosition {
                 top: None,
                 right: Some(50.0),
                 bottom: Some(100.0),
                 left: None,
-            },
+            })),
         ),
     );
     mocked_dom.add(
@@ -78,12 +78,12 @@ pub fn position() {
         Node::from_size_and_position(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
-            Position::Absolute {
+            Position::Absolute(Box::new(AbsolutePosition {
                 top: None,
                 right: None,
                 bottom: Some(100.0),
                 left: Some(50.0),
-            },
+            })),
         ),
     );
 

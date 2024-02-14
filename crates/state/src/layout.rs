@@ -24,8 +24,8 @@ pub struct LayoutState {
     pub margin: Gaps,
     pub direction: DirectionMode,
     pub node_id: NodeId,
-    pub offset_y: f32,
-    pub offset_x: f32,
+    pub offset_y: Length,
+    pub offset_x: Length,
     pub main_alignment: Alignment,
     pub cross_alignment: Alignment,
     pub position: Position,
@@ -166,14 +166,14 @@ impl State<CustomAttributeValues> for LayoutState {
                     "offset_y" => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(scroll) = value.parse::<f32>() {
-                                layout.offset_y = scroll * scale_factor;
+                                layout.offset_y = Length::new(scroll * scale_factor);
                             }
                         }
                     }
                     "offset_x" => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(scroll) = value.parse::<f32>() {
-                                layout.offset_x = scroll * scale_factor;
+                                layout.offset_x = Length::new(scroll * scale_factor);
                             }
                         }
                     }

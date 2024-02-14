@@ -122,8 +122,14 @@ impl<'a> Iterator for NodeStateIterator<'a> {
                 "text_overflow",
                 AttributeType::TextOverflow(&self.state.font_style.text_overflow),
             )),
-            19 => Some(("offset_x", AttributeType::Measure(self.state.size.offset_x))),
-            20 => Some(("offset_y", AttributeType::Measure(self.state.size.offset_y))),
+            19 => Some((
+                "offset_x",
+                AttributeType::Measure(self.state.size.offset_x.get()),
+            )),
+            20 => Some((
+                "offset_y",
+                AttributeType::Measure(self.state.size.offset_y.get()),
+            )),
             n => {
                 let shadows = &self.state.style.shadows;
                 let shadow = shadows
