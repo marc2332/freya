@@ -3,8 +3,8 @@ use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
 
 use freya_hooks::{
-    use_animation, use_applied_theme, use_node_signal, use_platform, AccordionTheme,
-    AccordionThemeWith, Animation,
+    use_animation_with_dependencies, use_applied_theme, use_node_signal, use_platform,
+    AccordionTheme, AccordionThemeWith, AnimNum,
 };
 use winit::window::CursorIcon;
 
@@ -40,34 +40,29 @@ pub struct AccordionProps {
 #[allow(non_snake_case)]
 pub fn Accordion(props: AccordionProps) -> Element {
     let theme = use_applied_theme!(&props.theme, accordion);
-    let mut animation = use_animation(|| 0.0);
     let mut open = use_signal(|| false);
     let (node_ref, size) = use_node_signal();
+    let area = size().area;
+    let animation = use_animation_with_dependencies(&area.height(), move |ctx, height| {
+        ctx.with(AnimNum::new(0., height).time(200))
+    });
     let mut status = use_signal(AccordionStatus::default);
     let platform = use_platform();
 
-    let animation_value = animation.value();
+    let animation_value = animation.read().get().read().as_f32();
     let AccordionTheme {
         background,
         color,
         border_fill,
     } = theme;
 
-    // Adapt the accordion if the body size changes
-    use_effect(move || {
-        if (size().area.height() as f64) < animation.value() && !animation.is_animating() {
-            animation.set_value(size().area.height() as f64);
-        }
-    });
-
     let onclick = move |_: MouseEvent| {
-        let bodyHeight = size.peek().area.height() as f64;
-        if *open.read() {
-            animation.start(Animation::new_sine_in_out(bodyHeight..=0.0, 200));
-        } else {
-            animation.start(Animation::new_sine_in_out(0.0..=bodyHeight, 200));
-        }
         open.toggle();
+        if *open.read() {
+            animation.read().start();
+        } else {
+            animation.read().reverse();
+        }
     };
 
     use_drop(move || {

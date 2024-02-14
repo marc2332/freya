@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 pub use euclid::Rect;
 
 use crate::geometry::Length;
@@ -6,11 +8,11 @@ use crate::scaled::Scaled;
 #[derive(PartialEq, Clone, Debug)]
 pub enum Size {
     Inner,
+    Fill,
     Percentage(Length),
     Pixels(Length),
-    DynamicCalculations(Vec<DynamicCalculation>),
-    Fill,
     RootPercentage(Length),
+    DynamicCalculations(Box<Vec<DynamicCalculation>>),
 }
 
 impl Default for Size {
@@ -49,7 +51,7 @@ impl Size {
             Size::Pixels(px) => Some(px.get() + parent_margin),
             Size::Percentage(per) => Some(parent_value / 100.0 * per.get()),
             Size::DynamicCalculations(calculations) => {
-                Some(run_calculations(calculations, parent_value))
+                Some(run_calculations(calculations.deref(), parent_value))
             }
             Size::Fill => Some(available_parent_value),
             Size::RootPercentage(per) => Some(root_value / 100.0 * per.get()),

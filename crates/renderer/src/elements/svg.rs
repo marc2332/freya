@@ -5,13 +5,13 @@ use freya_node_state::Style;
 use torin::geometry::Area;
 
 /// Render a `svg` element
-pub fn render_svg(area: &Area, node_ref: &DioxusNode, canvas: &Canvas) {
+pub fn render_svg(area: &Area, node_ref: &DioxusNode, canvas: &Canvas, font_manager: &FontMgr) {
     let node_style = &*node_ref.get::<Style>().unwrap();
 
     let x = area.min_x();
     let y = area.min_y();
     if let Some(svg_data) = &node_style.svg_data {
-        let svg_dom = svg::Dom::from_bytes(svg_data);
+        let svg_dom = svg::Dom::from_bytes(svg_data.as_slice(), font_manager);
         if let Ok(mut svg_dom) = svg_dom {
             canvas.save();
             canvas.translate((x, y));
