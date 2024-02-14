@@ -69,8 +69,8 @@ pub enum LinkTooltip {
 /// # use dioxus::prelude::*;
 /// # use freya_elements::elements as dioxus_elements;
 /// # use freya_components::Link;
-/// # fn link_example_good(cx: Scope) -> Element {
-/// render! {
+/// # fn link_example_good() -> Element {
+/// rsx! {
 ///     Link {
 ///         to: "https://crates.io/crates/freya",
 ///         label { "Freya crates.io" }
