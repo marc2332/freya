@@ -20,9 +20,10 @@ pub enum LinkTooltip {
     Custom(String),
 }
 
-/// **⚠️ Just like Dioxus's `Link`,
-/// this must be a descendant of a
-/// [`Router`](https://docs.rs/dioxus-router/latest/dioxus_router/components/fn.Router.html) component**
+/// <div class="warning">
+/// ⚠️ Just like Dioxus's `Link`, this must be a descendant of a
+/// [`Router`](https://docs.rs/dioxus-router/latest/dioxus_router/components/fn.Router.html) component.
+/// </div>
 ///
 /// Similar to [`Link`](dioxus_router::components::Link), but you can use it in Freya.
 /// Both internal routes and external links are supported.
@@ -119,9 +120,9 @@ pub fn Link(
     let onclick = {
         to_owned![url, to];
         move |event: MouseEvent| {
-            let Some(MouseButton::Left) = event.trigger_button else {
+            if !matches!(event.trigger_button, Some(MouseButton::Left)) {
                 return;
-            };
+            }
 
             // Open the url if there is any
             // otherwise change the dioxus router route

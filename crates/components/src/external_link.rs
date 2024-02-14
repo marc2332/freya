@@ -1,10 +1,11 @@
 use crate::{LinkTooltip, Tooltip};
 use dioxus::prelude::*;
+use winit::event::MouseButton;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
 use freya_hooks::{use_applied_theme, LinkThemeWith};
 
-/// **⚠️ If you use `dioxus-router`, you should use [`Link`](crate::Link).**]
+/// <div class="warning">ℹ️ For linking to app routes, use [`Link`](crate::Link).</div>
 ///
 /// This is an alternative to [`Link`](crate::Link), but it only works for external URLs, not internal routes.
 ///
@@ -61,7 +62,11 @@ pub fn ExternalLink(
 
     let onclick = {
         to_owned![url];
-        move |_: MouseEvent| {
+        move |event: MouseEvent| {
+            if !matches!(event.trigger_button, Some(MouseButton::Left)) {
+                return;
+            }
+
             let res = open::that(&url);
             if let (Err(_), Some(onerror)) = (res, onerror.as_ref()) {
                 onerror.call(());
