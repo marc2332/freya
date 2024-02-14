@@ -25,12 +25,12 @@ fn parse_calc_size() {
     let size = Size::parse("calc(90% - 5% * 123.6)");
     assert_eq!(
         size,
-        Ok(Size::DynamicCalculations(vec![
+        Ok(Size::DynamicCalculations(Box::new(vec![
             DynamicCalculation::Percentage(90.0),
             DynamicCalculation::Sub,
             DynamicCalculation::Percentage(5.0),
             DynamicCalculation::Mul,
             DynamicCalculation::Pixels(123.6)
-        ]))
+        ])))
     );
 }

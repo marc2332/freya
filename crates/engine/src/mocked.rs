@@ -620,7 +620,7 @@ impl FontStyle {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct FontMgr;
 
 impl FontMgr {
@@ -1317,12 +1317,12 @@ pub enum BlurStyle {
 }
 
 pub mod svg {
-    use super::{Canvas, Size};
+    use super::{Canvas, FontMgr, Size};
 
     pub struct Dom;
 
     impl Dom {
-        pub fn from_bytes(_bytes: &[u8]) -> Result<Self, ()> {
+        pub fn from_bytes(_bytes: &[u8], font_mgr: &FontMgr) -> Result<Self, ()> {
             unimplemented!("This is mocked")
         }
 

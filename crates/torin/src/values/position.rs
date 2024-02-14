@@ -1,38 +1,46 @@
+use std::ops::Deref;
+
 use crate::prelude::{Area, Point2D, Size2D};
 
-#[derive(Default, PartialEq, Debug, Clone)]
+#[derive(Default, PartialEq, Clone, Debug)]
+pub struct AbsolutePosition {
+    pub top: Option<f32>,
+    pub right: Option<f32>,
+    pub bottom: Option<f32>,
+    pub left: Option<f32>,
+}
+
+#[derive(Default, PartialEq, Clone, Debug)]
 pub enum Position {
     #[default]
     Stacked,
 
-    Absolute {
-        top: Option<f32>,
-        right: Option<f32>,
-        bottom: Option<f32>,
-        left: Option<f32>,
-    },
+    Absolute(Box<AbsolutePosition>),
 }
 
 impl Position {
     pub fn is_empty(&self) -> bool {
         match self {
-            Self::Absolute {
-                top,
-                right,
-                bottom,
-                left,
-            } => top.is_some() && right.is_some() && bottom.is_some() && left.is_some(),
+            Self::Absolute(absolute_position) => {
+                let AbsolutePosition {
+                    top,
+                    right,
+                    bottom,
+                    left,
+                } = absolute_position.deref();
+                top.is_some() && right.is_some() && bottom.is_some() && left.is_some()
+            }
             Self::Stacked => true,
         }
     }
 
     pub fn new_absolute() -> Self {
-        Self::Absolute {
+        Self::Absolute(Box::new(AbsolutePosition {
             top: None,
             right: None,
             bottom: None,
             left: None,
-        }
+        }))
     }
 
     pub fn is_absolute(&self) -> bool {
@@ -43,8 +51,8 @@ impl Position {
         if !self.is_absolute() {
             *self = Self::new_absolute();
         }
-        if let Self::Absolute { top, .. } = self {
-            *top = Some(value)
+        if let Self::Absolute(absolute_position) = self {
+            absolute_position.top = Some(value)
         }
     }
 
@@ -52,8 +60,8 @@ impl Position {
         if !self.is_absolute() {
             *self = Self::new_absolute();
         }
-        if let Self::Absolute { right, .. } = self {
-            *right = Some(value)
+        if let Self::Absolute(absolute_position) = self {
+            absolute_position.right = Some(value)
         }
     }
 
@@ -61,8 +69,8 @@ impl Position {
         if !self.is_absolute() {
             *self = Self::new_absolute();
         }
-        if let Self::Absolute { bottom, .. } = self {
-            *bottom = Some(value)
+        if let Self::Absolute(absolute_position) = self {
+            absolute_position.bottom = Some(value)
         }
     }
 
@@ -70,8 +78,8 @@ impl Position {
         if !self.is_absolute() {
             *self = Self::new_absolute();
         }
-        if let Self::Absolute { left, .. } = self {
-            *left = Some(value)
+        if let Self::Absolute(absolute_position) = self {
+            absolute_position.left = Some(value)
         }
     }
 
@@ -83,12 +91,13 @@ impl Position {
     ) -> Point2D {
         match self {
             Position::Stacked => available_parent_area.origin,
-            Position::Absolute {
-                top,
-                right,
-                bottom,
-                left,
-            } => {
+            Position::Absolute(absolute_position) => {
+                let AbsolutePosition {
+                    top,
+                    right,
+                    bottom,
+                    left,
+                } = absolute_position.deref();
                 let y = {
                     let mut y = parent_area.min_y();
                     if let Some(top) = top {

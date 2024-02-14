@@ -4,8 +4,8 @@ Specify the spacing between characters of the text.
 
 ```rust, no_run
 # use freya::prelude::*;
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         label {
             letter_spacing: "10",
             "Hello, World!"

@@ -43,10 +43,9 @@ dioxus-hooks = { workspace = true }
 dioxus-core = { workspace = true }
 dioxus-router = { workspace = true }
 dioxus-hot-reload = { workspace = true }
+dioxus-signals = { workspace = true }
 
 tokio = { workspace = true }
 tracing = { workspace = true, optional = true }
 tracing-subscriber = { workspace = true, optional = true }
-
-anymap = { workspace = true }
 

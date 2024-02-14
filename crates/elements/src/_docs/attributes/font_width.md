@@ -17,8 +17,8 @@ Accepted values:
 
 ```rust, no_run
 # use freya::prelude::*;
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         label {
             font_width: "ultra-expanded",
             "Hello, wide World!"

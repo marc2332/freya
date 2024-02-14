@@ -10,13 +10,12 @@ use crate::{
 };
 
 /// [`ScrollView`] component properties.
-#[derive(Props)]
-pub struct ScrollViewProps<'a> {
+#[derive(Props, Clone, PartialEq)]
+pub struct ScrollViewProps {
     /// Theme override.
-    #[props(optional)]
     pub theme: Option<ScrollViewThemeWith>,
     /// Inner children for the ScrollView.
-    pub children: Element<'a>,
+    pub children: Element,
     /// Direction of the ScrollView, `vertical` or `horizontal`.
     #[props(default = "vertical".to_string(), into)]
     pub direction: String,
@@ -37,8 +36,8 @@ pub struct ScrollViewProps<'a> {
 ///
 /// ```no_run
 /// # use freya::prelude::*;
-/// fn app(cx: Scope) -> Element {
-///     render!(
+/// fn app() -> Element {
+///     rsx!(
 ///         ScrollView {
 ///              theme: theme_with!(ScrollViewTheme {
 ///                 width: "100%".into(),
@@ -56,22 +55,22 @@ pub struct ScrollViewProps<'a> {
 /// ```
 ///
 #[allow(non_snake_case)]
-pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
-    let clicking_scrollbar = use_ref::<Option<(Axis, f64)>>(cx, || None);
-    let clicking_shift = use_ref(cx, || false);
-    let clicking_alt = use_ref(cx, || false);
-    let scrolled_y = use_ref(cx, || 0);
-    let scrolled_x = use_ref(cx, || 0);
-    let (node_ref, size) = use_node(cx);
-    let focus = use_focus(cx);
-    let theme = use_applied_theme!(cx, &cx.props.theme, scroll_view);
+pub fn ScrollView(props: ScrollViewProps) -> Element {
+    let mut clicking_scrollbar = use_signal::<Option<(Axis, f64)>>(|| None);
+    let mut clicking_shift = use_signal(|| false);
+    let mut clicking_alt = use_signal(|| false);
+    let mut scrolled_y = use_signal(|| 0);
+    let mut scrolled_x = use_signal(|| 0);
+    let (node_ref, size) = use_node();
+    let mut focus = use_focus();
+    let theme = use_applied_theme!(&props.theme, scroll_view);
 
     let padding = &theme.padding;
     let user_container_width = &theme.width;
     let user_container_height = &theme.height;
-    let user_direction = &cx.props.direction;
-    let show_scrollbar = cx.props.show_scrollbar;
-    let scroll_with_arrows = cx.props.scroll_with_arrows;
+    let user_direction = &props.direction;
+    let show_scrollbar = props.show_scrollbar;
+    let scroll_with_arrows = props.scroll_with_arrows;
 
     let vertical_scrollbar_is_visible =
         is_scrollbar_visible(show_scrollbar, size.inner.height, size.area.height());
@@ -115,7 +114,13 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
                 corrected_scrolled_y,
             );
 
-            scrolled_y.with_mut(|y| *y = scroll_position_y);
+            // Only scroll when there is still area to scroll
+            if *scrolled_y.peek() != scroll_position_y {
+                e.stop_propagation();
+                *scrolled_y.write() = scroll_position_y;
+            } else {
+                return;
+            }
         }
 
         let wheel_x = if *clicking_shift.read() {
@@ -131,7 +136,13 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
             corrected_scrolled_x,
         );
 
-        scrolled_x.with_mut(|x| *x = scroll_position_x);
+        // Only scroll when there is still area to scroll
+        if *scrolled_x.peek() != scroll_position_x {
+            e.stop_propagation();
+            *scrolled_x.write() = scroll_position_x;
+        } else {
+            return;
+        }
 
         focus.focus();
     };
@@ -150,7 +161,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
                 size.area.height(),
             );
 
-            scrolled_y.with_mut(|y| *y = scroll_position);
+            *scrolled_y.write() = scroll_position;
         } else if let Some((Axis::X, x)) = *clicking_scrollbar {
             let coordinates = e.get_element_coordinates();
             let cursor_x = coordinates.x - x - size.area.min_x() as f64;
@@ -161,7 +172,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
                 size.area.width(),
             );
 
-            scrolled_x.with_mut(|x| *x = scroll_position);
+            *scrolled_x.write() = scroll_position;
         }
 
         if clicking_scrollbar.is_some() {
@@ -213,7 +224,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
         };
     };
 
-    let onkeyup = |e: KeyboardEvent| {
+    let onkeyup = move |e: KeyboardEvent| {
         if e.key == Key::Shift {
             clicking_shift.set(false);
         } else if e.key == Key::Alt {
@@ -222,19 +233,19 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
     };
 
     // Mark the Y axis scrollbar as the one being dragged
-    let onmousedown_y = |e: MouseEvent| {
+    let onmousedown_y = move |e: MouseEvent| {
         let coordinates = e.get_element_coordinates();
         *clicking_scrollbar.write() = Some((Axis::Y, coordinates.y));
     };
 
     // Mark the X axis scrollbar as the one being dragged
-    let onmousedown_x = |e: MouseEvent| {
+    let onmousedown_x = move |e: MouseEvent| {
         let coordinates = e.get_element_coordinates();
         *clicking_scrollbar.write() = Some((Axis::X, coordinates.x));
     };
 
     // Unmark any scrollbar
-    let onclick = |_: MouseEvent| {
+    let onclick = move |_: MouseEvent| {
         if clicking_scrollbar.read().is_some() {
             *clicking_scrollbar.write() = None;
         }
@@ -262,7 +273,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
         .map(|f| f.0 == Axis::Y)
         .unwrap_or_default();
 
-    render!(
+    rsx!(
         rect {
             role: "scrollView",
             overflow: "clip",
@@ -271,8 +282,8 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
             height: "{user_container_height}",
             onglobalclick: onclick,
             onglobalmouseover: onmouseover,
-            onkeydown: onkeydown,
-            onkeyup: onkeyup,
+            onkeydown,
+            onkeyup,
             rect {
                 direction: "vertical",
                 width: "{container_width}",
@@ -287,7 +298,7 @@ pub fn ScrollView<'a>(cx: Scope<'a, ScrollViewProps<'a>>) -> Element {
                     offset_x: "{corrected_scrolled_x}",
                     reference: node_ref,
                     onwheel: onwheel,
-                    &cx.props.children
+                    {props.children}
                 }
                 ScrollBar {
                     width: "100%",

@@ -11,20 +11,20 @@ fn main() {
 
 static RUST_LOGO: &[u8] = include_bytes!("./rust_logo.png");
 
-fn app(cx: Scope) -> Element {
-    let image_data = bytes_to_data(cx, RUST_LOGO);
-    let size = use_state(cx, || 250);
+fn app() -> Element {
+    let image_data = static_bytes_to_data(RUST_LOGO);
+    let mut size = use_signal(|| 250);
 
     let onwheel = move |e: WheelEvent| {
         let y = e.get_delta_y() as i32;
-        let res = *size.get() + y;
+        let res = *size.read() + y;
         if res >= 600 || res <= 20 {
             return;
         }
         size.set(res);
     };
 
-    render!(
+    rsx!(
         rect {
             width: "100%",
             height: "100%",

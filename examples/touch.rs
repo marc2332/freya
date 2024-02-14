@@ -9,26 +9,26 @@ fn main() {
     launch_with_props(app, "touch", (600.0, 500.0));
 }
 
-fn app(cx: Scope) -> Element {
-    let state = use_state(cx, || "waiting...");
+fn app() -> Element {
+    let mut state = use_signal(|| "waiting...");
 
-    let ontouchcancel = |_: TouchEvent| {
+    let ontouchcancel = move |_: TouchEvent| {
         state.set("canceled touch");
     };
 
-    let ontouchend = |_: TouchEvent| {
+    let ontouchend = move |_: TouchEvent| {
         state.set("ended touch");
     };
 
-    let ontouchmove = |_: TouchEvent| {
+    let ontouchmove = move |_: TouchEvent| {
         state.set("moved touch");
     };
 
-    let ontouchstart = |_: TouchEvent| {
+    let ontouchstart = move |_: TouchEvent| {
         state.set("started touch");
     };
 
-    render!(
+    rsx!(
         rect {
             width: "100%",
             height: "100%",

@@ -29,8 +29,8 @@ Accepted values:
 
 ```rust, no_run
 # use freya::prelude::*;
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         label {
             font_weight: "bold",
             "Hello, bold World!"

@@ -11,8 +11,8 @@
 //! ```rust, no_run
 //! # use freya::prelude::*;
 //!
-//! fn app(cx: Scope) -> Element {
-//!     render!(
+//! fn app() -> Element {
+//!     rsx!(
 //!         ThemeProvider {
 //!             Component { }
 //!         }
@@ -20,12 +20,12 @@
 //! }
 //!
 //! #[allow(non_snake_case)]
-//! fn Component(cx: Scope) -> Element {
-//!     let theme = use_get_theme(cx);
+//! fn Component() -> Element {
+//!     let theme = use_get_theme();
 //!
 //!     let button_theme = &theme.button;
 //!
-//!     render!(
+//!     rsx!(
 //!         rect {
 //!             background: "{button_theme.background}",
 //!         }
@@ -40,8 +40,8 @@
 //! ```rust, no_run
 //! # use freya::prelude::*;
 //!
-//! fn app(cx: Scope) -> Element {
-//!     render!(
+//! fn app() -> Element {
+//!     rsx!(
 //!         ThemeProvider {
 //!             theme: LIGHT_THEME,
 //!             Component { }
@@ -50,12 +50,12 @@
 //! }
 //!
 //! #[allow(non_snake_case)]
-//! fn Component(cx: Scope) -> Element {
-//!     let theme = use_get_theme(cx);
+//! fn Component() -> Element {
+//!     let theme = use_get_theme();
 //!
 //!     let button_theme = &theme.button;
 //!
-//!     render!(
+//!     rsx!(
 //!         rect {
 //!             background: "{button_theme.background}",
 //!         }
@@ -70,8 +70,8 @@
 //! ```rust, no_run
 //! # use freya::prelude::*;
 //!
-//! fn app(cx: Scope) -> Element {
-//!     render!(
+//! fn app() -> Element {
+//!     rsx!(
 //!         ThemeProvider {
 //!             Component { }
 //!         }
@@ -79,16 +79,16 @@
 //! }
 //!
 //! #[allow(non_snake_case)]
-//! fn Component(cx: Scope) -> Element {
-//!     let theme = use_theme(cx);
+//! fn Component() -> Element {
+//!     let mut theme = use_theme();
 //!
-//!     let onclick = |_| {
+//!     let onclick = move |_| {
 //!         *theme.write() = LIGHT_THEME;
 //!     };
 //!
-//!     render!(
+//!     rsx!(
 //!         Button {
-//!             onclick: onclick,
+//!             onclick,
 //!             label {
 //!                 "Use Light theme"
 //!             }
@@ -105,8 +105,8 @@
 //! ```rust,no_run
 //! # use freya::prelude::*;
 //!
-//! fn app(cx: Scope) -> Element {
-//!     render! {
+//! fn app() -> Element {
+//!     rsx! {
 //!         Button {
 //!             theme: ButtonThemeWith {
 //!                 background: Some("blue".into()),
@@ -132,8 +132,8 @@
 //! ```rust,no_run
 //! # use freya::prelude::*;
 //!
-//! fn app(cx: Scope) -> Element {
-//!     render! {
+//! fn app() -> Element {
+//!     rsx! {
 //!         Button {
 //!             theme: theme_with!(ButtonTheme {
 //!                 background: "blue".into(),
@@ -169,8 +169,8 @@
 //!     ..LIGHT_THEME
 //! };
 //!
-//! fn app(cx: Scope) -> Element {
-//!     render!(
+//! fn app() -> Element {
+//!     rsx!(
 //!         ThemeProvider {
 //!             theme: CUSTOM_THEME,
 //!             rect {

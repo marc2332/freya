@@ -28,6 +28,7 @@ torin = { workspace = true }
 
 dioxus = { workspace = true }
 dioxus-router = { workspace = true }
+futures-util = { workspace = true }
 
 winit = { workspace = true }
 tokio = { workspace = true }

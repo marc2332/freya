@@ -26,10 +26,10 @@
 //!     launch(app);
 //! }
 //!
-//! fn app(cx: Scope) -> Element {
-//!    let mut count = use_state(cx, || 0);
+//! fn app() -> Element {
+//!    let mut count = use_signal(|| 0);
 //!
-//!    render!(
+//!    rsx!(
 //!        rect {
 //!            height: "100%",
 //!            width: "100%",
@@ -54,8 +54,13 @@
 #[cfg(doc)]
 pub mod _docs;
 
+#[cfg(doc)]
+pub use freya_elements::_docs as elements_docs;
+
 /// Dioxus library.
 pub use dioxus;
+
+pub use dioxus_core;
 
 /// Launch your app.
 pub mod launch;
@@ -92,10 +97,12 @@ pub mod plugins;
 
 /// Useful imports.
 pub mod prelude {
+    pub use dioxus_core;
     pub use dioxus_core::prelude::*;
     pub use dioxus_core_macro::*;
     pub use dioxus_hooks::*;
     pub use dioxus_hot_reload::{self, hot_reload_init, Config};
+    pub use dioxus_signals::*;
 
     pub use crate::launch::*;
     pub use crate::plugins::*;
@@ -103,7 +110,7 @@ pub mod prelude {
     pub use freya_elements::elements as dioxus_elements;
     pub use freya_elements::events::*;
     pub use freya_hooks::*;
-    pub use freya_node_state::{bytes_to_data, CustomAttributeValues};
+    pub use freya_node_state::{bytes_to_data, static_bytes_to_data, CustomAttributeValues};
     pub use freya_renderer::*;
     pub use torin::prelude::*;
 }

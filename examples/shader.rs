@@ -32,13 +32,13 @@ const SHADER: &str = "
  }
  ";
 
-fn app(cx: Scope) -> Element {
-    let platform = use_platform(cx);
+fn app() -> Element {
+    let platform = use_platform();
 
-    cx.use_hook(|| {
+    use_hook(|| {
         let mut ticker = platform.new_ticker();
 
-        cx.spawn(async move {
+        spawn(async move {
             loop {
                 ticker.tick().await;
                 platform.request_animation_frame();
@@ -46,12 +46,11 @@ fn app(cx: Scope) -> Element {
         });
     });
 
-    let canvas = use_canvas(cx, (), |_| {
+    let canvas = use_canvas((), |_| {
         let shader = RuntimeEffect::make_for_shader(SHADER, None).unwrap();
         let shader_wrapper = Arc::new(Mutex::new(ShaderWrapper(shader)));
         let instant = Instant::now();
 
-        to_owned![shader_wrapper];
         Box::new(move |canvas, _, region| {
             let shader = shader_wrapper.lock().unwrap();
 
@@ -86,10 +85,10 @@ fn app(cx: Scope) -> Element {
         })
     });
 
-    render!(
+    rsx!(
         rect {
             Canvas {
-                canvas: canvas,
+                canvas,
                 theme: theme_with!(CanvasTheme {
                     background: "black".into(),
                     width: "100%".into(),

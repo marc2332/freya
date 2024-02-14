@@ -7,8 +7,8 @@ You can add a border to an element using the `border` and `border_align` attribu
 ### Example
 ```rust, no_run
 # use freya::prelude::*;
-fn app(cx: Scope) -> Element {
-    render!(
+fn app() -> Element {
+    rsx!(
         rect {
             border: "2 solid black",
             border_align: "inner"
