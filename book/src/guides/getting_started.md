@@ -43,17 +43,19 @@ fn main() {
     launch(app);
 }
 
-fn app(cx: Scope) -> Element {
-    let mut count = use_state(cx, || 0);
+fn app() -> Element {
+    let mut count = use_signal(|| 0);
 
-    render!(
+    rsx!(
         rect {
             height: "100%",
             width: "100%",
-            background: "rgb(35, 35, 35)",
+            background: "rgb(0, 119, 182)",
             color: "white",
-            padding: "12",
+            main_align: "center",
+            cross_align: "center",
             onclick: move |_| count += 1,
+            font_size: "35",
             label { "Click to increase -> {count}" }
         }
     )

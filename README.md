@@ -20,10 +20,10 @@
 <td style="border:hidden;">
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    let mut count = use_state(cx, || 0);
+fn app() -> Element {
+    let mut count = use_signal(|| 0);
 
-    render!(
+    rsx!(
         rect {
             height: "20%",
             width: "100%",
@@ -63,8 +63,6 @@ Thanks to my sponsors for supporting this project! 😄
 
 ### Want to try it? 🤔
 
-Note: `main` branch currently depends on Dioxus 0.5.
-
 ⚠️ First, see [Environment setup](https://book.freyaui.dev/setup.html).
 
 Clone this repo and run:
@@ -79,7 +77,7 @@ You can also try [`freya-template`](https://github.com/marc2332/freya-template)
 Add Freya and Dioxus as dependencies:
 
 ```toml
-freya = "0.1"
+freya = "0.2"
 dioxus = { version = "0.4", features = ["macro", "hooks"], default-features = false }
 ```
 
