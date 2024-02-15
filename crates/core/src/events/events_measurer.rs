@@ -231,7 +231,7 @@ fn measure_dom_events(
                             found_nodes.push((node_id, valid_event));
 
                             // Stack events that do not bubble up
-                            if !event.does_bubble() {
+                            if event.does_bubble() {
                                 continue 'event;
                             }
                         }
@@ -240,10 +240,10 @@ fn measure_dom_events(
 
                 let Style { background, .. } = &*node.get::<Style>().unwrap();
 
-                if background != &Fill::Color(Color::TRANSPARENT) && !event.does_bubble() {
+                if background != &Fill::Color(Color::TRANSPARENT) && event.does_bubble() {
                     // If the background isn't transparent,
                     // we must make sure that next nodes are parent of it
-                    // This only matters for pointer-based events, and not to e.g keyboard events
+                    // This only matters for events that bubble up (e.g cursor movement events)
                     child_node = Some(*node_id);
                 }
             }
