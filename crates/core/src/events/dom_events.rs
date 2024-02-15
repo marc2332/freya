@@ -17,6 +17,7 @@ pub struct DomEvent {
     pub node_id: NodeId,
     pub element_id: ElementId,
     pub data: DomEventData,
+    pub bubbles: bool,
 }
 
 impl Eq for DomEvent {}
@@ -43,15 +44,6 @@ impl Ord for DomEvent {
 }
 
 impl DomEvent {
-    pub fn does_move_cursor(&self) -> bool {
-        return does_event_move_cursor(self.name.as_str());
-    }
-
-    // Bubble all events except keyboard
-    pub fn should_bubble(&self) -> bool {
-        !matches!(self.data, DomEventData::Keyboard(_))
-    }
-
     pub fn new(
         node_id: NodeId,
         element_id: ElementId,
@@ -61,6 +53,8 @@ impl DomEvent {
     ) -> Self {
         let is_pointer_event = event.is_pointer_event();
         let event_name = event.get_name().to_string();
+
+        let bubbles = event.does_bubble();
 
         match event {
             FreyaEvent::Mouse { cursor, button, .. } => {
@@ -91,6 +85,7 @@ impl DomEvent {
                     element_id,
                     name: event_name,
                     data: event_data,
+                    bubbles,
                 }
             }
             FreyaEvent::Wheel { scroll, .. } => Self {
@@ -98,6 +93,7 @@ impl DomEvent {
                 element_id,
                 name: event_name,
                 data: DomEventData::Wheel(WheelData::new(scroll.x, scroll.y)),
+                bubbles,
             },
             FreyaEvent::Keyboard {
                 ref key,
@@ -109,6 +105,7 @@ impl DomEvent {
                 element_id,
                 name: event_name,
                 data: DomEventData::Keyboard(KeyboardData::new(key.clone(), *code, *modifiers)),
+                bubbles,
             },
             FreyaEvent::Touch {
                 location,
@@ -145,9 +142,19 @@ impl DomEvent {
                     element_id,
                     name: event_name,
                     data: event_data,
+                    bubbles,
                 }
             }
         }
+    }
+
+    pub fn does_move_cursor(&self) -> bool {
+        return does_event_move_cursor(self.name.as_str());
+    }
+
+    // Check if this even can change the hover state of an Element.
+    pub fn can_change_element_hover_state(&self) -> bool {
+        ["mouseover", "mousenter", "pointerover", "pointerenter"].contains(&self.name.as_str())
     }
 }
 

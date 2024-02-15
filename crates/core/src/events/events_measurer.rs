@@ -31,26 +31,36 @@ pub fn process_events(
     let dom_events = measure_dom_events(potential_events, dom, scale_factor);
 
     // 4. Filter the dom events and get potential derived events, e.g mouseover -> mouseenter
-    let (potential_colateral_events, mut to_emit_dom_events) =
+    let (mut potential_colateral_events, mut to_emit_dom_events) =
         elements_state.process_events(&dom_events, events);
 
-    // 5. Get what derived events can actually be emitted
+    // 5. Order potential colateral events by their Nodes height in the DOM
+    for events in potential_colateral_events.values_mut() {
+        let rdom = dom.rdom();
+        events.sort_by(|(l, _), (r, _)| {
+            let height_l = rdom.tree_ref().height(*l);
+            let height_r = rdom.tree_ref().height(*r);
+            height_l.cmp(&height_r)
+        })
+    }
+
+    // 6. Get what derived events can actually be emitted
     let to_emit_dom_colateral_events =
         measure_dom_events(potential_colateral_events, dom, scale_factor);
 
-    // 6. Join both the dom and colateral dom events and sort them
+    // 7. Join both the dom and colateral dom events and sort them
     to_emit_dom_events.extend(to_emit_dom_colateral_events);
     to_emit_dom_events.sort_unstable();
 
-    // 7. Emit the DOM events
+    // 8. Emit the DOM events
     for event in to_emit_dom_events {
         event_emitter.send(event).unwrap();
     }
 
-    // 8. Emit the global events
+    // 9. Emit the global events
     emit_global_events_listeners(global_events, dom, event_emitter, scale_factor);
 
-    // 9. Clear the events queue
+    // 10. Clear the events queue
     events.clear();
 }
 
@@ -220,9 +230,9 @@ fn measure_dom_events(
                             valid_event.set_name(derivated_event_name.to_string());
                             found_nodes.push((node_id, valid_event));
 
-                            // Only stop looking for valid nodes when the event isn't of type keyboard
-                            if !event.is_keyboard_event() {
-                                continue 'event;
+                            // Stop looking for valid nodes when the event bubbles up
+                            if event.does_bubble() {
+                                break 'event;
                             }
                         }
                     }
@@ -230,7 +240,7 @@ fn measure_dom_events(
 
                 let Style { background, .. } = &*node.get::<Style>().unwrap();
 
-                if background != &Fill::Color(Color::TRANSPARENT) && !event.is_keyboard_event() {
+                if background != &Fill::Color(Color::TRANSPARENT) && !event.does_bubble() {
                     // If the background isn't transparent,
                     // we must make sure that next nodes are parent of it
                     // This only matters for pointer-based events, and not to e.g keyboard events

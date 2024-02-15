@@ -48,35 +48,28 @@ impl ElementsState {
             true
         });
 
-        // All these events will mark the node as being hovered
-        // "mouseover" "mouseenter" "pointerover"  "pointerenter"
-
-        // We clone this here so events emitted in the same batch that mark an element as hovered will not affect the other events
+        // We clone this here so events emitted in the same batch that mark an element
+        // as hovered will not affect the other events
         let hovered_elements = self.hovered_elements.clone();
 
-        // Emit valid events
+        // Emit new colateral events
         for event in events_to_emit {
-            let id = &event.node_id;
+            let should_trigger = if event.can_change_element_hover_state() {
+                let is_hovered = hovered_elements.contains(&event.node_id);
 
-            let should_trigger = match event.name.as_str() {
-                name @ "mouseover"
-                | name @ "mouseenter"
-                | name @ "pointerover"
-                | name @ "pointerenter" => {
-                    let is_hovered = hovered_elements.contains(id);
-
-                    if !is_hovered {
-                        self.hovered_elements.insert(*id);
-                    }
-
-                    if name == "mouseenter" || name == "pointerenter" {
-                        // If the event is already being hovered then it's pointless to trigger the movement event
-                        !is_hovered
-                    } else {
-                        true
-                    }
+                // Mark the Node as hovered if it wasn't already
+                if !is_hovered {
+                    self.hovered_elements.insert(event.node_id);
                 }
-                _ => true,
+
+                if event.name == "mouseenter" || event.name == "pointerenter" {
+                    // If the Node was already hovered, we don't need to emit an `enter` event again.
+                    !is_hovered
+                } else {
+                    true
+                }
+            } else {
+                true
             };
 
             if should_trigger {
