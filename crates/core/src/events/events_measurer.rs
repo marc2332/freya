@@ -230,9 +230,9 @@ fn measure_dom_events(
                             valid_event.set_name(derivated_event_name.to_string());
                             found_nodes.push((node_id, valid_event));
 
-                            // Stop looking for valid nodes when the event bubbles up
-                            if event.does_bubble() {
-                                break 'event;
+                            // Stack events that do not bubble up
+                            if !event.does_bubble() {
+                                continue 'event;
                             }
                         }
                     }
