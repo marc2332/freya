@@ -1,6 +1,6 @@
 use crate::Tooltip;
 use dioxus::prelude::*;
-use dioxus_router::prelude::{use_navigator, IntoRoutable};
+use dioxus_router::prelude::{navigator, IntoRoutable};
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
 use freya_hooks::{use_applied_theme, LinkThemeWith};
@@ -20,13 +20,9 @@ pub enum LinkTooltip {
     Custom(String),
 }
 
-/// <div class="warning">
-/// ⚠️ Just like Dioxus's `Link`, this must be a descendant of a
-/// [`Router`](https://docs.rs/dioxus-router/latest/dioxus_router/components/fn.Router.html) component.
-/// </div>
-///
 /// Similar to [`Link`](dioxus_router::components::Link), but you can use it in Freya.
-/// Both internal routes and external links are supported.
+/// Both internal routes (dioxus-router) and external links are supported. When using internal routes
+/// make sure the Link is descendant of a [`Router`](dioxus_router::components::Router) component.
 ///
 /// # Styling
 ///
@@ -100,7 +96,6 @@ pub fn Link(
     tooltip: Option<LinkTooltip>,
 ) -> Element {
     let theme = use_applied_theme!(&theme, link);
-    let nav = use_navigator();
     let mut is_hovering = use_signal(|| false);
 
     let url = if let IntoRoutable::FromStr(ref url) = to {
@@ -109,7 +104,7 @@ pub fn Link(
         None
     };
 
-    let onmouseover = move |_: MouseEvent| {
+    let onmouseenter = move |_: MouseEvent| {
         is_hovering.set(true);
     };
 
@@ -135,7 +130,8 @@ pub fn Link(
 
                 // TODO(marc2332): Log unhandled errors
             } else {
-                nav.push(to.clone());
+                let router = navigator();
+                router.push(to.clone());
             }
         }
     };
@@ -154,7 +150,7 @@ pub fn Link(
 
     let main_rect = rsx! {
         rect {
-            onmouseover,
+            onmouseenter,
             onmouseleave,
             onclick,
             color: "{color}",
