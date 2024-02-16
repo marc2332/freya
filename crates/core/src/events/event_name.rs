@@ -122,7 +122,11 @@ impl EventName {
     pub fn is_pointer(&self) -> bool {
         matches!(
             &self,
-            Self::PointerEnter | Self::PointerLeave | Self::PointerOver
+            Self::PointerEnter
+                | Self::PointerLeave
+                | Self::PointerOver
+                | Self::PointerDown
+                | Self::PointerUp
         )
     }
 
