@@ -8,7 +8,7 @@ use freya_elements::{
 };
 use torin::prelude::*;
 
-use crate::events::FreyaEvent;
+use crate::{events::FreyaEvent, prelude::PotentialEvent};
 
 /// Event emitted to the DOM.
 #[derive(Debug, Clone, PartialEq)]
@@ -18,6 +18,7 @@ pub struct DomEvent {
     pub element_id: ElementId,
     pub data: DomEventData,
     pub bubbles: bool,
+    pub layer: Option<i16>,
 }
 
 impl Eq for DomEvent {}
@@ -45,12 +46,16 @@ impl Ord for DomEvent {
 
 impl DomEvent {
     pub fn new(
-        node_id: NodeId,
+        potential_event: PotentialEvent,
         element_id: ElementId,
-        event: &FreyaEvent,
         node_area: Option<Area>,
         scale_factor: f64,
     ) -> Self {
+        let PotentialEvent {
+            node_id,
+            layer,
+            event,
+        } = potential_event;
         let is_pointer_event = event.is_pointer_event();
         let event_name = event.get_name().to_string();
 
@@ -58,7 +63,7 @@ impl DomEvent {
 
         match event {
             FreyaEvent::Mouse { cursor, button, .. } => {
-                let screen_coordinates = *cursor / scale_factor;
+                let screen_coordinates = cursor / scale_factor;
                 let element_x =
                     (cursor.x - node_area.unwrap_or_default().min_x() as f64) / scale_factor;
                 let element_y =
@@ -69,14 +74,14 @@ impl DomEvent {
                         screen_coordinates,
                         (element_x, element_y).into(),
                         PointerType::Mouse {
-                            trigger_button: *button,
+                            trigger_button: button,
                         },
                     ))
                 } else {
                     DomEventData::Mouse(MouseData::new(
                         screen_coordinates,
                         (element_x, element_y).into(),
-                        *button,
+                        button,
                     ))
                 };
 
@@ -86,6 +91,7 @@ impl DomEvent {
                     name: event_name,
                     data: event_data,
                     bubbles,
+                    layer,
                 }
             }
             FreyaEvent::Wheel { scroll, .. } => Self {
@@ -94,6 +100,7 @@ impl DomEvent {
                 name: event_name,
                 data: DomEventData::Wheel(WheelData::new(scroll.x, scroll.y)),
                 bubbles,
+                layer,
             },
             FreyaEvent::Keyboard {
                 ref key,
@@ -104,8 +111,9 @@ impl DomEvent {
                 node_id,
                 element_id,
                 name: event_name,
-                data: DomEventData::Keyboard(KeyboardData::new(key.clone(), *code, *modifiers)),
+                data: DomEventData::Keyboard(KeyboardData::new(key.clone(), code, modifiers)),
                 bubbles,
+                layer,
             },
             FreyaEvent::Touch {
                 location,
@@ -119,21 +127,21 @@ impl DomEvent {
 
                 let event_data = if is_pointer_event {
                     DomEventData::Pointer(PointerData::new(
-                        *location,
+                        location,
                         (element_x, element_y).into(),
                         PointerType::Touch {
-                            finger_id: *finger_id,
-                            phase: *phase,
-                            force: *force,
+                            finger_id,
+                            phase,
+                            force,
                         },
                     ))
                 } else {
                     DomEventData::Touch(TouchData::new(
-                        *location,
+                        location,
                         (element_x, element_y).into(),
-                        *finger_id,
-                        *phase,
-                        *force,
+                        finger_id,
+                        phase,
+                        force,
                     ))
                 };
 
@@ -143,6 +151,7 @@ impl DomEvent {
                     name: event_name,
                     data: event_data,
                     bubbles,
+                    layer,
                 }
             }
         }

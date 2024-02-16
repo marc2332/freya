@@ -11,6 +11,8 @@ pub use crate::events::{DomEvent, ElementsState, FreyaEvent};
 
 use crate::types::{EventEmitter, EventsQueue, PotentialEvents};
 
+use super::potential_event::PotentialEvent;
+
 /// Process the events and emit them to the VirtualDOM
 pub fn process_events(
     dom: &FreyaDOM,
@@ -32,7 +34,7 @@ pub fn process_events(
 
     // 4. Filter the dom events and get potential derived events, e.g mouseover -> mouseenter
     let (potential_colateral_events, mut to_emit_dom_events) =
-        elements_state.process_events(&dom_events, events, dom);
+        elements_state.process_events(&dom_events, events);
 
     // 5. Get what derived events can actually be emitted
     let to_emit_dom_colateral_events =
@@ -85,13 +87,17 @@ pub fn measure_potential_event_listeners(
     let layout = fdom.layout();
 
     // Propagate events from the top to the bottom
-    for (_, layer) in layers.layers() {
-        for node_id in layer {
+    for (layer, layer_nodes) in layers.layers() {
+        for node_id in layer_nodes {
             let areas = layout.get(*node_id);
             if let Some(areas) = areas {
                 'events: for event in events.iter() {
                     if let FreyaEvent::Keyboard { name, .. } = event {
-                        let event_data = (*node_id, event.clone());
+                        let event_data = PotentialEvent {
+                            node_id: *node_id,
+                            layer: Some(*layer),
+                            event: event.clone(),
+                        };
                         potential_events
                             .entry(name.clone())
                             .or_default()
@@ -122,7 +128,11 @@ pub fn measure_potential_event_listeners(
                                     }
                                 }
 
-                                let event_data = (*node_id, event.clone());
+                                let event_data = PotentialEvent {
+                                    node_id: *node_id,
+                                    layer: Some(*layer),
+                                    event: event.clone(),
+                                };
 
                                 potential_events
                                     .entry(name.clone())
@@ -192,7 +202,7 @@ fn measure_dom_events(
     for (event_name, event_nodes) in potential_events {
         let derivated_events = get_derivated_events(event_name.as_str());
 
-        let mut found_nodes: Vec<(&NodeId, FreyaEvent)> = Vec::new();
+        let mut valid_events: Vec<PotentialEvent> = Vec::new();
 
         // Iterate over the derivated event (including the source)
         'event: for derivated_event_name in derivated_events.iter() {
@@ -201,7 +211,12 @@ fn measure_dom_events(
             let listeners = rdom.get_listening_sorted(derivated_event_name);
 
             // Iterate over the event nodes
-            for (node_id, event) in event_nodes.iter().rev() {
+            for PotentialEvent {
+                node_id,
+                event,
+                layer,
+            } in event_nodes.iter().rev()
+            {
                 let Some(node) = rdom.get(*node_id) else {
                     continue;
                 };
@@ -218,7 +233,11 @@ fn measure_dom_events(
                         if valid_node {
                             let mut valid_event = event.clone();
                             valid_event.set_name(derivated_event_name.to_string());
-                            found_nodes.push((node_id, valid_event));
+                            valid_events.push(PotentialEvent {
+                                node_id: *node_id,
+                                event: valid_event,
+                                layer: *layer,
+                            });
 
                             // Stack events that do not bubble up
                             if event.does_bubble() {
@@ -239,16 +258,15 @@ fn measure_dom_events(
             }
         }
 
-        for (node_id, request_event) in found_nodes {
+        for potential_event in valid_events {
             let layout = fdom.layout();
-            let areas = layout.get(*node_id);
+            let areas = layout.get(potential_event.node_id);
             if let Some(areas) = areas {
-                let node_ref = fdom.rdom().get(*node_id).unwrap();
+                let node_ref = fdom.rdom().get(potential_event.node_id).unwrap();
                 let element_id = node_ref.mounted_id().unwrap();
                 let event = DomEvent::new(
-                    *node_id,
+                    potential_event,
                     element_id,
-                    &request_event,
                     Some(areas.visible_area()),
                     scale_factor,
                 );
@@ -273,7 +291,16 @@ fn emit_global_events_listeners(
 
         for listener in listeners {
             let element_id = listener.mounted_id().unwrap();
-            let event = DomEvent::new(listener.id(), element_id, &global_event, None, scale_factor);
+            let event = DomEvent::new(
+                PotentialEvent {
+                    node_id: listener.id(),
+                    layer: None,
+                    event: global_event.clone(),
+                },
+                element_id,
+                None,
+                scale_factor,
+            );
             event_emitter.send(event).unwrap();
         }
     }

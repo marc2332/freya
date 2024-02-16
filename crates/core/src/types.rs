@@ -1,6 +1,8 @@
-use crate::events::{DomEvent, FreyaEvent};
+use crate::{
+    events::{DomEvent, FreyaEvent},
+    prelude::PotentialEvent,
+};
 pub use accesskit::NodeId as AccessibilityId;
-use dioxus_native_core::NodeId;
 use rustc_hash::FxHashMap;
 use smallvec::SmallVec;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
@@ -22,4 +24,4 @@ pub type EventReceiver = UnboundedReceiver<DomEvent>;
 pub type EventsQueue = SmallVec<[FreyaEvent; 2]>;
 
 /// Potential events that might be emitted.
-pub type PotentialEvents = FxHashMap<String, Vec<(NodeId, FreyaEvent)>>;
+pub type PotentialEvents = FxHashMap<String, Vec<PotentialEvent>>;
