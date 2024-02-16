@@ -154,7 +154,7 @@ impl DomEvent {
 
     // Check if this even can change the hover state of an Element.
     pub fn can_change_element_hover_state(&self) -> bool {
-        ["mouseover", "mousenter", "pointerover", "pointerenter"].contains(&self.name.as_str())
+        ["mouseover", "mouseenter", "pointerover", "pointerenter"].contains(&self.name.as_str())
     }
 }
 
