@@ -87,7 +87,7 @@ impl NodesState {
         // Update the internal states of nodes given the events
         // e.g `mouseover` will mark the node as hovered.
         for event in events_to_emit {
-            if event.name.does_move_cursor() && !self.hovered_nodes.contains_key(&event.node_id) {
+            if event.name.was_cursor_moved() && !self.hovered_nodes.contains_key(&event.node_id) {
                 self.hovered_nodes
                     .insert(event.node_id, NodeMetadata { layer: event.layer });
             }
@@ -105,7 +105,7 @@ impl NodesState {
 fn any_recent_mouse_movement(events: &[PlatformEvent]) -> Option<PlatformEvent> {
     events
         .iter()
-        .find(|event| event.get_name().does_move_cursor())
+        .find(|event| event.get_name().was_cursor_moved())
         .cloned()
 }
 
@@ -113,7 +113,7 @@ fn has_node_been_hovered_recently(events_to_emit: &[DomEvent], node_id: &NodeId)
     events_to_emit
         .iter()
         .find_map(|event| {
-            if event.name.does_move_cursor() && &event.node_id == node_id {
+            if event.name.was_cursor_moved() && &event.node_id == node_id {
                 Some(false)
             } else {
                 None

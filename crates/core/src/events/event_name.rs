@@ -126,7 +126,8 @@ impl EventName {
         )
     }
 
-    pub fn does_move_cursor(&self) -> bool {
+    /// Check if the event means the cursor was moved
+    pub fn was_cursor_moved(&self) -> bool {
         matches!(
             &self,
             Self::MouseOver | Self::MouseEnter | Self::PointerEnter | Self::PointerOver
