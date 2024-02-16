@@ -46,16 +46,15 @@ impl Ord for DomEvent {
 
 impl DomEvent {
     pub fn new(
-        potential_event: PotentialEvent,
+        PotentialEvent {
+            node_id,
+            layer,
+            event,
+        }: PotentialEvent,
         element_id: ElementId,
         node_area: Option<Area>,
         scale_factor: f64,
     ) -> Self {
-        let PotentialEvent {
-            node_id,
-            layer,
-            event,
-        } = potential_event;
         let is_pointer_event = event.is_pointer_event();
         let event_name = event.get_name().to_string();
 

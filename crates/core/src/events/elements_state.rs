@@ -65,7 +65,7 @@ impl ElementsState {
 
         // Emit new colateral events
         for event in events_to_emit {
-            let should_trigger = if event.can_change_element_hover_state() {
+            if event.can_change_element_hover_state() {
                 let is_hovered = hovered_elements.contains_key(&event.node_id);
 
                 // Mark the Node as hovered if it wasn't already
@@ -76,17 +76,13 @@ impl ElementsState {
 
                 if event.name == "mouseenter" || event.name == "pointerenter" {
                     // If the Node was already hovered, we don't need to emit an `enter` event again.
-                    !is_hovered
-                } else {
-                    true
+                    if is_hovered {
+                        continue;
+                    }
                 }
-            } else {
-                true
-            };
-
-            if should_trigger {
-                new_events_to_emit.push(event.clone());
             }
+
+            new_events_to_emit.push(event.clone());
         }
 
         // Update the internal states of elements given the events
