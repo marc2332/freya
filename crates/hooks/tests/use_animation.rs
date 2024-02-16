@@ -2,7 +2,8 @@ use std::time::Duration;
 
 use dioxus_core::use_hook;
 use freya::prelude::*;
-use freya_testing::{events::pointer::MouseButton, launch_test, FreyaEvent};
+use freya_core::events::EventName;
+use freya_testing::{events::pointer::MouseButton, launch_test, PlatformEvent};
 use tokio::time::sleep;
 
 #[tokio::test]
@@ -90,8 +91,8 @@ pub async fn reverse_progress() {
     assert!(width > 10.0);
 
     // Trigger the click event to restart the animation
-    utils.push_event(FreyaEvent::Mouse {
-        name: "click".to_string(),
+    utils.push_event(PlatformEvent::Mouse {
+        name: EventName::Click,
         cursor: (5.0, 5.0).into(),
         button: Some(MouseButton::Left),
     });

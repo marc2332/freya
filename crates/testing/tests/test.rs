@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use freya_core::events::FreyaEvent;
+use freya_core::events::{EventName, PlatformEvent};
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::mouse::MouseButton;
 use freya_testing::launch_test;
@@ -97,8 +97,8 @@ async fn simulate_events() {
 
     assert_eq!(text.text(), Some("Is enabled? false"));
 
-    utils.push_event(FreyaEvent::Mouse {
-        name: "click".to_string(),
+    utils.push_event(PlatformEvent::Mouse {
+        name: EventName::Click,
         cursor: (5.0, 5.0).into(),
         button: Some(MouseButton::Left),
     });
