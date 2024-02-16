@@ -41,7 +41,7 @@ impl From<EventName> for &str {
             EventName::Wheel => "wheel",
             EventName::PointerOver => "pointerover",
             EventName::PointerDown => "pointerdown",
-            EventName::PointerEnter => "poiter",
+            EventName::PointerEnter => "pointerenter",
             EventName::PointerLeave => "pointerleave",
             EventName::PointerUp => "pointerup",
             EventName::Keydown => "keydown",
