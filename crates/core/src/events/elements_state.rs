@@ -1,6 +1,7 @@
 #![allow(clippy::type_complexity)]
 
-use dioxus_native_core::NodeId;
+use dioxus_native_core::{tree::TreeRef, NodeId};
+use freya_dom::prelude::FreyaDOM;
 use rustc_hash::{FxHashMap, FxHashSet};
 
 use crate::events::{does_event_move_cursor, DomEvent, FreyaEvent};
@@ -17,6 +18,7 @@ impl ElementsState {
         &mut self,
         events_to_emit: &[DomEvent],
         events: &[FreyaEvent],
+        dom: &FreyaDOM,
     ) -> (FxHashMap<String, Vec<(NodeId, FreyaEvent)>>, Vec<DomEvent>) {
         let mut new_events_to_emit = Vec::default();
         let mut new_events = FxHashMap::<String, Vec<(NodeId, FreyaEvent)>>::default();
@@ -84,6 +86,16 @@ impl ElementsState {
             if does_event_move_cursor(event.name.as_str()) && !self.hovered_elements.contains(id) {
                 self.hovered_elements.insert(*id);
             }
+        }
+
+        // Order the events by their Nodes height in the DOM
+        for events in new_events.values_mut() {
+            let rdom = dom.rdom();
+            events.sort_by(|(l, _), (r, _)| {
+                let height_l = rdom.tree_ref().height(*l);
+                let height_r = rdom.tree_ref().height(*r);
+                height_l.cmp(&height_r)
+            })
         }
 
         (new_events, new_events_to_emit)

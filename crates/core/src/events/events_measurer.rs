@@ -31,36 +31,26 @@ pub fn process_events(
     let dom_events = measure_dom_events(potential_events, dom, scale_factor);
 
     // 4. Filter the dom events and get potential derived events, e.g mouseover -> mouseenter
-    let (mut potential_colateral_events, mut to_emit_dom_events) =
-        elements_state.process_events(&dom_events, events);
+    let (potential_colateral_events, mut to_emit_dom_events) =
+        elements_state.process_events(&dom_events, events, dom);
 
-    // 5. Order potential colateral events by their Nodes height in the DOM
-    for events in potential_colateral_events.values_mut() {
-        let rdom = dom.rdom();
-        events.sort_by(|(l, _), (r, _)| {
-            let height_l = rdom.tree_ref().height(*l);
-            let height_r = rdom.tree_ref().height(*r);
-            height_l.cmp(&height_r)
-        })
-    }
-
-    // 6. Get what derived events can actually be emitted
+    // 5. Get what derived events can actually be emitted
     let to_emit_dom_colateral_events =
         measure_dom_events(potential_colateral_events, dom, scale_factor);
 
-    // 7. Join both the dom and colateral dom events and sort them
+    // 6. Join both the dom and colateral dom events and sort them
     to_emit_dom_events.extend(to_emit_dom_colateral_events);
     to_emit_dom_events.sort_unstable();
 
-    // 8. Emit the DOM events
+    // 7. Emit the DOM events
     for event in to_emit_dom_events {
         event_emitter.send(event).unwrap();
     }
 
-    // 9. Emit the global events
+    // 8. Emit the global events
     emit_global_events_listeners(global_events, dom, event_emitter, scale_factor);
 
-    // 10. Clear the events queue
+    // 9. Clear the events queue
     events.clear();
 }
 
