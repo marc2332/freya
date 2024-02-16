@@ -103,11 +103,7 @@ impl ElementsState {
 
         // Order the events by their Nodes layer
         for events in potential_events.values_mut() {
-            events.sort_by(
-                |PotentialEvent { layer: layer_a, .. }, PotentialEvent { layer: layer_b, .. }| {
-                    layer_a.cmp(layer_b)
-                },
-            )
+            events.sort_by(|left, right| left.layer.cmp(&right.layer))
         }
 
         (potential_events, new_events_to_emit)
