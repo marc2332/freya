@@ -35,7 +35,7 @@ pub fn launch_test_with_config(root: AppComponent, config: TestingConfig) -> Tes
     let mut handler = TestingHandler {
         vdom,
         events_queue: EventsQueue::new(),
-        elements_state: NodesState::default(),
+        nodes_state: NodesState::default(),
         font_collection,
         event_emitter,
         event_receiver,

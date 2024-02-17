@@ -19,7 +19,7 @@ pub fn process_events(
     layers: &Layers,
     events: &mut EventsQueue,
     event_emitter: &EventEmitter,
-    elements_state: &mut NodesState,
+    nodes_state: &mut NodesState,
     viewports: &Viewports,
     scale_factor: f64,
 ) {
@@ -34,7 +34,7 @@ pub fn process_events(
 
     // 4. Filter the dom events and get potential colateral events, e.g mouseover -> mouseenter
     let (potential_colateral_events, mut to_emit_dom_events) =
-        elements_state.process_events(&dom_events, events);
+        nodes_state.process_events(&dom_events, events);
 
     // 5. Get what colateral events can actually be emitted
     let to_emit_dom_colateral_events =

@@ -25,7 +25,7 @@ pub struct TestingHandler {
     pub(crate) platform_event_emitter: UnboundedSender<EventMessage>,
     pub(crate) platform_event_receiver: UnboundedReceiver<EventMessage>,
     pub(crate) events_queue: EventsQueue,
-    pub(crate) elements_state: NodesState,
+    pub(crate) nodes_state: NodesState,
     pub(crate) font_collection: FontCollection,
     pub(crate) viewports: Viewports,
     pub(crate) accessibility_manager: SharedAccessibilityManager,
@@ -146,7 +146,7 @@ impl TestingHandler {
             &self.utils.layers().lock().unwrap(),
             &mut self.events_queue,
             &self.event_emitter,
-            &mut self.elements_state,
+            &mut self.nodes_state,
             &self.viewports,
             SCALE_FACTOR,
         );
