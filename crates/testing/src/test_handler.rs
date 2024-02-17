@@ -149,15 +149,17 @@ impl TestingHandler {
         *self.utils.layers().lock().unwrap() = layers;
         *self.utils.viewports().lock().unwrap() = viewports;
 
+        let dom = &self.utils.sdom().get_mut();
+
         process_accessibility(
             &self.utils.layers().lock().unwrap(),
-            &self.utils.sdom().get_mut().layout(),
-            self.utils.sdom().get_mut().rdom(),
+            &dom.layout(),
+            dom.rdom(),
             &mut self.accessibility_manager.lock().unwrap(),
         );
 
         process_events(
-            &self.utils.sdom().get(),
+            dom,
             &self.utils.layers().lock().unwrap(),
             &mut self.events_queue,
             &self.event_emitter,

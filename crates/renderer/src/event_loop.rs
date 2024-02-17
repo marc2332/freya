@@ -118,8 +118,6 @@ pub fn run_event_loop<State: Clone>(
                                 }
                             };
 
-                            println!("{scroll_data:?}");
-
                             app.send_event(PlatformEvent::Wheel {
                                 name: EventName::Wheel,
                                 scroll: CursorPoint::from(scroll_data),

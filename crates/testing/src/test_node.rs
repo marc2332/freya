@@ -103,4 +103,9 @@ impl TestNode {
 
         true
     }
+
+    /// Get the IDs of this Node children.
+    pub fn children_ids(&self) -> Vec<NodeId> {
+        self.children_ids.clone()
+    }
 }

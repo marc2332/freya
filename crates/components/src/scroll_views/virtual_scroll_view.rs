@@ -398,3 +398,73 @@ pub fn VirtualScrollView<
         }
     )
 }
+
+#[cfg(test)]
+mod test {
+    use freya::prelude::*;
+    use freya_core::events::{EventName, PlatformEvent};
+    use freya_testing::launch_test;
+
+    #[tokio::test]
+    pub async fn virtual_scroll_view() {
+        fn virtual_scroll_view_app() -> Element {
+            let values = use_signal(|| ["Hello, World!"].repeat(30));
+
+            rsx!(VirtualScrollView {
+                length: values.read().len(),
+                item_size: 50.0,
+                direction: "vertical",
+                builder: move |index, _: &Option<()>| {
+                    let value = values.read()[index];
+                    rsx! {
+                        label {
+                            key: "{index}",
+                            height: "50",
+                            "{index} {value}"
+                        }
+                    }
+                }
+            })
+        }
+
+        let mut utils = launch_test(virtual_scroll_view_app);
+        let root = utils.root();
+
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+
+        let content = root.get(0).get(0).get(0);
+        assert_eq!(content.children_ids().len(), 10);
+
+        // Check that visible items are from indexes 0 to 10, because 500 / 50 = 10.
+        for (n, i) in (0..10).enumerate() {
+            let child = content.get(n);
+            assert_eq!(
+                child.get(0).text(),
+                Some(format!("{i} Hello, World!").as_str())
+            );
+        }
+
+        utils.push_event(PlatformEvent::Wheel {
+            name: EventName::Wheel,
+            scroll: (0., -300.).into(),
+            cursor: (5., 5.).into(),
+        });
+
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+
+        let content = root.get(0).get(0).get(0);
+        assert_eq!(content.children_ids().len(), 10);
+
+        // It has scrolled 300 pixels, which equals to 6 items since because 300 / 50 = 6
+        // So we must start checking from 6 to +10, 16 in this case because 6 + 10 = 16
+        for (n, i) in (6..16).enumerate() {
+            let child = content.get(n);
+            assert_eq!(
+                child.get(0).text(),
+                Some(format!("{i} Hello, World!").as_str())
+            );
+        }
+    }
+}
