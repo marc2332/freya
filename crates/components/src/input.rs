@@ -237,7 +237,7 @@ mod test {
         // Focus the input in the end of the text
         utils.push_event(PlatformEvent::Mouse {
             name: EventName::MouseDown,
-            cursor: (100., 10.).into(),
+            cursor: (115., 10.).into(),
             button: Some(MouseButton::Left),
         });
         utils.wait_for_update().await;
