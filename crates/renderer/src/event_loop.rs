@@ -100,8 +100,6 @@ pub fn run_event_loop<State: Clone>(
                             ElementState::Released => EventName::Click,
                         };
 
-                        println!("{:?}", cursor_pos);
-
                         app.send_event(PlatformEvent::Mouse {
                             name,
                             cursor: cursor_pos,
