@@ -1,12 +1,11 @@
-### opacity
+Specify the opacity of an element and all its descendants.
 
-Specify the opacity of an element and all its desdendants.
-
-### Example:
+### Example
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+# use freya::prelude::*;
+fn app() -> Element {
+    rsx!(
         rect {
             opacity: "0.5", // 50% visible
             label {

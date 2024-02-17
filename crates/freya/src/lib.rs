@@ -3,31 +3,33 @@
     html_favicon_url = "https://freyaui.dev/logo.svg"
 )]
 //! # Freya
+//!
 //! Build native & cross-platform GUI applications using 🦀 Rust.
 //!
 //! Powered by [🧬 Dioxus](https://dioxuslabs.com) and [🎨 Skia](https://skia.org/).
 //!
-//! - [`Elements`](freya_elements::elements#structs)
-//! - [`Events`](freya_elements::elements#functions)
-//! - [`Components`](freya_components)
-//! - [`Hooks`](freya_hooks)
-//! - [`Theming`](self::_docs::theming)
-//! - [`Hot reload`](self::_docs::hot_reload)
-//! - [`Testing`](self::_docs::testing)
-//! - [`Animating`](self::_docs::animating)
-//! - [`Devtools`](self::_docs::devtools)
+//! - [Elements API reference](freya_elements::elements#structs)
+//! - [Events API reference](freya_elements::elements#functions)
+//! - [Elements guides](freya_elements::_docs)
+//! - [Components](freya_components)
+//! - [Hooks](freya_hooks)
+//! - [Theming](self::_docs::theming)
+//! - [Hot reload](self::_docs::hot_reload)
+//! - [Testing](self::_docs::testing)
+//! - [Animating](self::_docs::animating)
+//! - [Devtools](self::_docs::devtools)
 //!
-//! ```no_run
+//! ```rust,no_run
 //! use freya::prelude::*;
 //!
 //! fn main(){
 //!     launch(app);
 //! }
 //!
-//! fn app(cx: Scope) -> Element {
-//!    let mut count = use_state(cx, || 0);
+//! fn app() -> Element {
+//!    let mut count = use_signal(|| 0);
 //!
-//!    render!(
+//!    rsx!(
 //!        rect {
 //!            height: "100%",
 //!            width: "100%",
@@ -39,24 +41,28 @@
 //!        }
 //!    )
 //! }
-//!
 //! ```
 //!
 //! ## Features flags
 //!
-//! - `devtools`: Enables a side panel to inspect your App tree, styles and computed layout.
-//! - `use_camera`: Enables the `use_camera` hook.
-//! - `log`: Enables internal logs.
+//! - `devtools`: enables a side panel to inspect your App tree, styles and computed layout.
+//! - `use_camera`: enables the `use_camera` hook.
+//! - `log`: enables internal logs.
 //!
 
-/// Freya Docs
+/// Freya docs.
 #[cfg(doc)]
 pub mod _docs;
+
+#[cfg(doc)]
+pub use freya_elements::_docs as elements_docs;
 
 /// Dioxus library.
 pub use dioxus;
 
-/// Launch your application.
+pub use dioxus_core;
+
+/// Launch your app.
 pub mod launch;
 
 /// Collection of basic components.
@@ -80,7 +86,7 @@ pub use freya_elements::events;
 /// Elements, attributes and events definitions.
 pub use freya_elements::elements;
 
-/// Hotreload configuration.
+/// Hot reload configuration.
 pub mod hotreload {
     pub use freya_elements::elements::FreyaCtx;
 }
@@ -91,10 +97,12 @@ pub mod plugins;
 
 /// Useful imports.
 pub mod prelude {
+    pub use dioxus_core;
     pub use dioxus_core::prelude::*;
     pub use dioxus_core_macro::*;
     pub use dioxus_hooks::*;
     pub use dioxus_hot_reload::{self, hot_reload_init, Config};
+    pub use dioxus_signals::*;
 
     pub use crate::launch::*;
     pub use crate::plugins::*;
@@ -102,7 +110,7 @@ pub mod prelude {
     pub use freya_elements::elements as dioxus_elements;
     pub use freya_elements::events::*;
     pub use freya_hooks::*;
-    pub use freya_node_state::{bytes_to_data, CustomAttributeValues};
+    pub use freya_node_state::{bytes_to_data, static_bytes_to_data, CustomAttributeValues};
     pub use freya_renderer::*;
     pub use torin::prelude::*;
 }

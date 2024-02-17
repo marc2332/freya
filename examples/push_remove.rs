@@ -10,19 +10,19 @@ fn main() {
     launch(app);
 }
 
-fn app(cx: Scope) -> Element {
-    let elements = use_ref(cx, || Vec::new());
+fn app() -> Element {
+    let mut elements = use_signal(|| Vec::new());
 
-    let add = |_| {
+    let add = move |_| {
         let mut rng = rand::thread_rng();
         elements.write().push(rng.gen());
     };
 
-    let remove = |_| {
+    let remove = move |_| {
         elements.write().pop();
     };
 
-    render!(
+    rsx!(
         Button {
             onclick: add,
             label {
@@ -35,7 +35,7 @@ fn app(cx: Scope) -> Element {
                 "Remove"
             }
         }
-        elements.read().iter().map(|e: &usize| rsx!(
+        {elements.read().iter().map(|e: &usize| rsx!(
             rect {
                 key: "{e}",
                 background: "rgb(150, 200, 225)",
@@ -43,6 +43,6 @@ fn app(cx: Scope) -> Element {
                     "Element {e}"
                 }
             }
-        ))
+        ))}
     )
 }

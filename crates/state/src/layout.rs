@@ -8,13 +8,11 @@ use dioxus_native_core::{
     NodeId, SendAnyMap,
 };
 use dioxus_native_core_macro::partial_derive_state;
-use freya_common::NodeReferenceLayout;
-use tokio::sync::mpsc::UnboundedSender;
 use torin::prelude::*;
 
-use crate::{CustomAttributeValues, Parse};
+use crate::{CustomAttributeValues, NodeReference, Parse};
 
-#[derive(Default, Clone, Debug, Component)]
+#[derive(Default, Clone, Debug, Component, PartialEq)]
 pub struct LayoutState {
     pub width: Size,
     pub height: Size,
@@ -26,12 +24,12 @@ pub struct LayoutState {
     pub margin: Gaps,
     pub direction: DirectionMode,
     pub node_id: NodeId,
-    pub offset_y: f32,
-    pub offset_x: f32,
+    pub offset_y: Length,
+    pub offset_x: Length,
     pub main_alignment: Alignment,
     pub cross_alignment: Alignment,
     pub position: Position,
-    pub node_ref: Option<UnboundedSender<NodeReferenceLayout>>,
+    pub node_ref: Option<NodeReference>,
 }
 
 #[partial_derive_state]
@@ -64,8 +62,7 @@ impl State<CustomAttributeValues> for LayoutState {
             "position_bottom",
             "position_left",
         ]))
-        .with_tag()
-        .with_text();
+        .with_tag();
 
     fn update<'a>(
         &mut self,
@@ -84,8 +81,6 @@ impl State<CustomAttributeValues> for LayoutState {
             } else if let Some("paragraph") = node_view.tag() {
                 DirectionMode::Horizontal
             } else if let Some("text") = node_view.tag() {
-                DirectionMode::Horizontal
-            } else if node_view.text().is_some() {
                 DirectionMode::Horizontal
             } else {
                 DirectionMode::Vertical
@@ -171,14 +166,14 @@ impl State<CustomAttributeValues> for LayoutState {
                     "offset_y" => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(scroll) = value.parse::<f32>() {
-                                layout.offset_y = scroll * scale_factor;
+                                layout.offset_y = Length::new(scroll * scale_factor);
                             }
                         }
                     }
                     "offset_x" => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(scroll) = value.parse::<f32>() {
-                                layout.offset_x = scroll * scale_factor;
+                                layout.offset_x = Length::new(scroll * scale_factor);
                             }
                         }
                     }
@@ -238,7 +233,7 @@ impl State<CustomAttributeValues> for LayoutState {
                             reference,
                         )) = attr.value
                         {
-                            layout.node_ref = Some(reference.0.clone());
+                            layout.node_ref = Some(reference.clone());
                         }
                     }
                     _ => {

@@ -12,6 +12,7 @@ pub const LIGHT_THEME: Theme = Theme {
         background: cow_borrowed!("rgb(210, 210, 210)"),
         thumb_background: cow_borrowed!("rgb(210, 210, 210)"),
         thumb_inner_background: cow_borrowed!("rgb(103, 80, 164)"),
+        border_fill: cow_borrowed!("rgb(210, 210, 210)"),
     },
     sidebar: SidebarTheme {
         background: cow_borrowed!("rgb(245, 245, 245)"),
@@ -34,6 +35,7 @@ pub const LIGHT_THEME: Theme = Theme {
             color: cow_borrowed!("rgb(10, 10, 10)"),
         },
         border_fill: cow_borrowed!("rgb(210, 210, 210)"),
+        focus_border_fill: cow_borrowed!("rgb(180, 180, 180)"),
         padding: cow_borrowed!("8 16"),
         margin: cow_borrowed!("4"),
         corner_radius: cow_borrowed!("8"),
@@ -49,12 +51,15 @@ pub const LIGHT_THEME: Theme = Theme {
         border_fill: cow_borrowed!("rgb(210, 210, 210)"),
         width: cow_borrowed!("150"),
         margin: cow_borrowed!("4"),
+        corner_radius: cow_borrowed!("10"),
     },
     switch: SwitchTheme {
         background: cow_borrowed!("rgb(121, 116, 126)"),
         thumb_background: cow_borrowed!("rgb(231, 224, 236)"),
         enabled_background: cow_borrowed!("rgb(103, 80, 164)"),
         enabled_thumb_background: cow_borrowed!("rgb(234, 221, 255)"),
+        focus_border_fill: cow_borrowed!("rgb(180, 180, 180)"),
+        enabled_focus_border_fill: cow_borrowed!("rgb(180, 180, 180)"),
     },
     scroll_bar: ScrollBarTheme {
         background: cow_borrowed!("rgb(225, 225, 225)"),

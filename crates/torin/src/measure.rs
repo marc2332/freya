@@ -52,25 +52,17 @@ pub fn measure_node<Key: NodeKey>(
             &node.maximum_height,
         );
 
-        // 3. Compute the origin of the area
-        let area_origin = node
-            .position
-            .get_origin(available_parent_area, parent_area, &area_size);
-
-        let mut area = Rect::new(area_origin, area_size);
-
-        // 4. If available, run a custom layout measure function
+        // 3. If available, run a custom layout measure function
         // This is useful when you use third-party libraries (e.g. rust-skia, cosmic-text) to measure text layouts
         // When a Node is measured by a custom measurer function the inner children will be skipped
         let measure_inner_children = if let Some(measurer) = measurer {
-            let custom_area =
-                measurer.measure(node_id, node, &area, parent_area, available_parent_area);
+            let custom_size = measurer.measure(node_id, node, parent_area, available_parent_area);
 
-            // 4.1. Compute the width and height again using the new custom area sizes
-            if let Some(custom_area) = custom_area {
+            // 3.1. Compute the width and height again using the new custom area sizes
+            if let Some(custom_size) = custom_size {
                 if Size::Inner == node.width {
-                    area.size.width = node.width.min_max(
-                        custom_area.width(),
+                    area_size.width = node.width.min_max(
+                        custom_size.width,
                         parent_area.size.width,
                         available_parent_area.size.width,
                         node.margin.left(),
@@ -80,8 +72,8 @@ pub fn measure_node<Key: NodeKey>(
                     );
                 }
                 if Size::Inner == node.height {
-                    area.size.height = node.height.min_max(
-                        custom_area.height(),
+                    area_size.height = node.height.min_max(
+                        custom_size.height,
                         parent_area.size.height,
                         available_parent_area.size.height,
                         node.margin.top(),
@@ -93,18 +85,18 @@ pub fn measure_node<Key: NodeKey>(
             }
 
             // Do not measure inner children
-            custom_area.is_none()
+            custom_size.is_none()
         } else {
             true
         };
 
-        // 5. Compute the inner area of the Node, which is basically the area inside the margins and paddings
-        let mut inner_area = {
-            let mut inner_area = area;
+        // 4. Compute the inner size of the Node, which is basically the size inside the margins and paddings
+        let inner_size = {
+            let mut inner_size = area_size;
 
-            // 5.1. When having an unsized bound we set it to whatever is still available in the parent's area
+            // 4.1. When having an unsized bound we set it to whatever is still available in the parent's area
             if Size::Inner == node.width {
-                inner_area.size.width = node.width.min_max(
+                inner_size.width = node.width.min_max(
                     available_parent_area.width(),
                     parent_area.size.width,
                     available_parent_area.width(),
@@ -115,7 +107,7 @@ pub fn measure_node<Key: NodeKey>(
                 );
             }
             if Size::Inner == node.height {
-                inner_area.size.height = node.height.min_max(
+                inner_size.height = node.height.min_max(
                     available_parent_area.height(),
                     parent_area.size.height,
                     available_parent_area.height(),
@@ -125,11 +117,17 @@ pub fn measure_node<Key: NodeKey>(
                     &node.maximum_height,
                 );
             }
-
-            inner_area
-                .after_gaps(&node.padding)
-                .after_gaps(&node.margin)
+            inner_size
         };
+
+        // 5. Create the areas
+        let area_origin = node
+            .position
+            .get_origin(available_parent_area, parent_area, &area_size);
+        let mut area = Rect::new(area_origin, area_size);
+        let mut inner_area = Rect::new(area_origin, inner_size)
+            .after_gaps(&node.padding)
+            .after_gaps(&node.margin);
 
         let mut inner_sizes = Size2D::default();
 

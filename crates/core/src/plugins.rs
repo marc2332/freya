@@ -6,6 +6,7 @@ use winit::window::Window;
 
 use crate::layout::Viewports;
 
+/// Manages all loaded plugins.
 #[derive(Default)]
 pub struct PluginsManager {
     plugins: Vec<Box<dyn FreyaPlugin>>,

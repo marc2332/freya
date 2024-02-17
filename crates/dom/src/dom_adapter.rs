@@ -51,8 +51,8 @@ impl DOMAdapter<NodeId> for DioxusDOMAdapter<'_> {
             margin: layout.margin,
             main_alignment: layout.main_alignment,
             cross_alignment: layout.cross_alignment,
-            offset_x: Length::new(layout.offset_x),
-            offset_y: Length::new(layout.offset_y),
+            offset_x: layout.offset_x,
+            offset_y: layout.offset_y,
             has_layout_references: layout.node_ref.is_some(),
             position: layout.position,
         })

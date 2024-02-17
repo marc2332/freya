@@ -1,91 +1,64 @@
 //! # Animating
 //!
-//! Freya provides you with two hooks to help you animate your components.
+//! Freya comes with `use_animation`, a hook you can use to easily animate your elements.
 //!
-//! ### `use_animation`
+//! You can animate numeric values (e.g width, padding, rotation, offsets) or also colors.
+//! You can specify the duration, the easing functin and what type of easing you want.
 //!
-//! This a very simple hook that will let you animate a certain value from an `inital` value to a `final` value, in a given `duration` of time. There are a few animations that you can choose from:
-//!
-//! - Linear
-//! - EaseIn
-//! - EaseInOut
-//! - BounceIns
-//!
-//! Here is an example that will animate a value from `0.0` to `100.0` in `50` milliseconds, using the `linear` animation.
+//! Here is an example that animates a value from `0.0` to `100.0` in `50` milliseconds.
 //!
 //! ```rust, no_run
+//! # use freya::prelude::*;
+//!
 //! fn main() {
 //!     launch(app);
 //! }
 //!
-//!  fn app(cx: Scope) -> Element {
-//!     let animation = use_animation(cx, || 0.0);
+//! fn app() -> Element {
+//!     let animation = use_animation(|ctx| ctx.with(AnimNum::new(0., 100.).time(50)));
 //!
-//!     let progress = animation.value();
+//!     let animations = animation.read();
+//!     let width = animations.get().read().as_f32();
 //!
-//!     use_memo(cx, (), move |_| {
-//!         animation.start(Animation::new_linear(0.0..=100.0, 50));
+//!     use_hook(move || {
+//!         // Start animation as soon as this component runs.
+//!         animation.read().start();
 //!     });
 //!
-//!     render!(rect {
-//!         width: "{progress}",
-//!     })
-//! }
-//! ```
-//!
-//! ### `use_animation_transition`
-//!
-//! This hook let's you group a set of animations together with a certain type of `animation` and a given `duration`. You can also specifiy a set of dependencies that will make animations callback re run.
-//!
-//! Just like `use_animation` you have these animations:
-//!
-//! - Linear
-//! - EaseIn
-//! - EaseInOut
-//! - BounceIns
-//!
-//! Here is an example that will animate a `size` and a color in `200` milliseconds, using the `new_sine_in_out` animation.
-//!
-//! ```rust, no_run
-//! fn main() {
-//!     launch(app);
-//! }
-//!
-//! const TARGET: f64 = 500.0;
-//!
-//! fn app(cx: Scope) -> Element {
-//!     let animation = use_animation_transition(cx, TransitionAnimation::new_sine_in_out(200), (), || {
-//!         vec![
-//!             Animate::new_size(0.0, TARGET),
-//!             Animate::new_color("rgb(33, 158, 188)", "white"),
-//!         ]
-//!     });
-//!
-//!     let size = animation.get(0).unwrap().as_size();
-//!     let background = animation.get(1).unwrap().as_color();
-//!
-//!     let onclick = move |_: MouseEvent| {
-//!         if size == 0.0 {
-//!             animation.start();
-//!         } else if size == TARGET {
-//!             animation.reverse();
-//!         }
-//!     };
-//!
-//!     render!(
+//!     rsx!(
 //!         rect {
-//!             overflow: "clip",
-//!             background: "black",
-//!             width: "100%",
+//!             width: "{width}",
 //!             height: "100%",
-//!             offset_x: "{size}",
-//!             rect {
-//!                 height: "100%",
-//!                 width: "200",
-//!                 background: "{background}",
-//!                 onclick: onclick,
-//!             }
+//!             background: "blue"
 //!         }
 //!     )
 //! }
 //! ```
+//!
+//! You are not limited to just one animation per call, you can have as many as you want.
+//!
+//! ```rust,no_run
+//! # use freya::prelude::*;
+//! fn app() -> Element {
+//!     let animation = use_animation(|ctx| {
+//!         (
+//!             ctx.with(AnimNum::new(0., 100.).time(50)),
+//!             ctx.with(AnimColor::new("red", "blue").time(50))
+//!         )
+//!     });
+//!
+//!     let animations = animation.read();
+//!     let (width, color) = animations.get();
+//!
+//!     use_hook(move || {
+//!         animation.read().start();
+//!     });
+//!
+//!     rsx!(
+//!         rect {
+//!             width: "{width.read().as_f32()}",
+//!             height: "100%",
+//!             background: "{color.read().as_string()}"
+//!         }
+//!     )
+//! }

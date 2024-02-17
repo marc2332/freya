@@ -1,19 +1,17 @@
- ### rotate
+The `rotate` attribute let's you rotate an element.
 
- The `rotate` attribute let's you rotate an element.
+Compatible elements: all except [`text`](crate::elements::text).
 
- Example:
+### Example
 
- ```rust, no_run
- fn app(cx: Scope) -> Element {
-     render!(
-         label {
-             rotate: "180deg",
-             "Hello, World!"
-         }
-     )
- }
- ```
-
-
- Compatible elements: all except [`text`](/guides/elements.html#paragraph-and-text).
+```rust, no_run
+# use freya::prelude::*;
+fn app() -> Element {
+    rsx!(
+        label {
+            rotate: "180deg",
+            "Hello, World!"
+        }
+    )
+}
+```

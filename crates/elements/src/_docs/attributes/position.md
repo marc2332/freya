@@ -1,8 +1,6 @@
-### position
+Specify how you want the element to be positioned inside it's parent area.
 
-Specify how you want the element to be positioned inside it's parent Area
-
-Possible values for `position`:
+Accepted values:
 
 - `stacked` (default)
 - `absolute`
@@ -16,11 +14,12 @@ When using the `absolute` mode, you can also combine it with the following attri
 
 These only support pixels.
 
-Example:
+### Example
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+# use freya::prelude::*;
+fn app() -> Element {
+    rsx!(
         rect {
             width: "100%",
             height: "100%",

@@ -6,11 +6,12 @@ use std::sync::Mutex;
 
 use accesskit::NodeId as AccessibilityId;
 use bytes::Bytes;
-use dioxus_core::{AttributeValue, Scope};
+use dioxus_core::AttributeValue;
 use dioxus_native_core::node::FromAnyValue;
 use freya_common::{CursorLayoutResponse, NodeReferenceLayout};
 use freya_engine::prelude::*;
 use tokio::sync::mpsc::UnboundedSender;
+use tokio::sync::watch;
 use torin::geometry::{Area, CursorPoint};
 use uuid::Uuid;
 
@@ -31,12 +32,12 @@ impl Display for ImageReference {
 }
 
 /// Node Reference
-#[derive(Clone)]
-pub struct NodeReference(pub UnboundedSender<NodeReferenceLayout>);
+#[derive(Debug, Clone)]
+pub struct NodeReference(pub Arc<watch::Sender<NodeReferenceLayout>>);
 
 impl PartialEq for NodeReference {
-    fn eq(&self, _other: &Self) -> bool {
-        true
+    fn eq(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.0, &other.0)
     }
 }
 
@@ -51,13 +52,12 @@ pub type CanvasRunner = dyn Fn(&Canvas, &FontCollection, Area) + Sync + Send + '
 /// Canvas Reference
 #[derive(Clone)]
 pub struct CanvasReference {
-    pub id: Uuid,
     pub runner: Arc<Box<CanvasRunner>>,
 }
 
 impl PartialEq for CanvasReference {
     fn eq(&self, other: &Self) -> bool {
-        self.id == other.id
+        Arc::ptr_eq(&self.runner, &other.runner)
     }
 }
 
@@ -74,7 +74,7 @@ pub struct CursorReference {
     #[allow(clippy::type_complexity)]
     pub cursor_selections: Arc<Mutex<Option<(CursorPoint, CursorPoint)>>>,
     pub cursor_position: Arc<Mutex<Option<CursorPoint>>>,
-    pub agent: UnboundedSender<CursorLayoutResponse>,
+    pub cursor_sender: UnboundedSender<CursorLayoutResponse>,
     pub cursor_id: Arc<Mutex<Option<usize>>>,
 }
 
@@ -104,14 +104,29 @@ impl Display for CursorReference {
     }
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum AttributesBytes {
+    Dynamic(Arc<Vec<u8>>),
+    Static(&'static [u8]),
+}
+
+impl AttributesBytes {
+    pub fn as_slice(&self) -> &[u8] {
+        match self {
+            Self::Dynamic(bytes) => bytes.as_slice(),
+            Self::Static(bytes) => bytes,
+        }
+    }
+}
+
 /// Group all the custom attribute types
 #[derive(Clone, PartialEq)]
 pub enum CustomAttributeValues {
     Reference(NodeReference),
     CursorReference(CursorReference),
-    Bytes(Vec<u8>),
+    Bytes(AttributesBytes),
     ImageReference(ImageReference),
-    FocusId(AccessibilityId),
+    AccessibilityId(AccessibilityId),
     TextHighlights(Vec<(usize, usize)>),
     Canvas(CanvasReference),
 }
@@ -123,7 +138,7 @@ impl Debug for CustomAttributeValues {
             Self::CursorReference(_) => f.debug_tuple("CursorReference").finish(),
             Self::Bytes(_) => f.debug_tuple("Bytes").finish(),
             Self::ImageReference(_) => f.debug_tuple("ImageReference").finish(),
-            Self::FocusId(_) => f.debug_tuple("FocusId").finish(),
+            Self::AccessibilityId(_) => f.debug_tuple("AccessibilityId").finish(),
             Self::TextHighlights(_) => f.debug_tuple("TextHighlights").finish(),
             Self::Canvas(_) => f.debug_tuple("Canvas").finish(),
         }
@@ -137,6 +152,13 @@ impl FromAnyValue for CustomAttributeValues {
 }
 
 /// Transform some bytes (e.g: raw image, raw svg) into attribute data
-pub fn bytes_to_data<'a, T>(cx: Scope<'a, T>, bytes: &[u8]) -> AttributeValue<'a> {
-    cx.any_value(CustomAttributeValues::Bytes(bytes.to_vec()))
+pub fn bytes_to_data(bytes: &[u8]) -> AttributeValue {
+    AttributeValue::any_value(CustomAttributeValues::Bytes(AttributesBytes::Dynamic(
+        Arc::new(bytes.to_vec()),
+    )))
+}
+
+/// Transform some static bytes (e.g: raw image, raw svg) into attribute data
+pub fn static_bytes_to_data(bytes: &'static [u8]) -> AttributeValue {
+    AttributeValue::any_value(CustomAttributeValues::Bytes(AttributesBytes::Static(bytes)))
 }

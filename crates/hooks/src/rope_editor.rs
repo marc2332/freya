@@ -1,9 +1,10 @@
 use std::{cmp::Ordering, fmt::Display, ops::Range};
 
+use dioxus_std::clipboard::UseClipboard;
 use ropey::iter::Lines;
 pub use ropey::Rope;
 
-use crate::{text_editor::*, EditableMode};
+use crate::{text_editor::*, EditableMode, EditorHistory, HistoryChange};
 
 /// TextEditor implementing a Rope
 #[derive(Clone)]
@@ -14,6 +15,10 @@ pub struct RopeEditor {
 
     /// Selected text range
     selected: Option<(usize, usize)>,
+
+    clipboard: UseClipboard,
+
+    history: EditorHistory,
 }
 
 impl Display for RopeEditor {
@@ -24,12 +29,20 @@ impl Display for RopeEditor {
 
 impl RopeEditor {
     // Create a new [`RopeEditor`]
-    pub fn new(text: String, cursor: TextCursor, mode: EditableMode) -> Self {
+    pub fn new(
+        text: String,
+        cursor: TextCursor,
+        mode: EditableMode,
+        clipboard: UseClipboard,
+        history: EditorHistory,
+    ) -> Self {
         Self {
             rope: Rope::from_str(&text),
             cursor,
             selected: None,
             mode,
+            clipboard,
+            history,
         }
     }
 
@@ -46,15 +59,26 @@ impl TextEditor for RopeEditor {
         LinesIterator { lines }
     }
 
-    fn insert_char(&mut self, char: char, char_idx: usize) {
-        self.rope.insert_char(char_idx, char);
+    fn insert_char(&mut self, char: char, idx: usize) {
+        self.history
+            .push_change(HistoryChange::InsertChar { idx, char });
+        self.rope.insert_char(idx, char);
     }
 
-    fn insert(&mut self, text: &str, char_idx: usize) {
-        self.rope.insert(char_idx, text);
+    fn insert(&mut self, text: &str, idx: usize) {
+        self.history.push_change(HistoryChange::InsertText {
+            idx,
+            text: text.to_owned(),
+        });
+        self.rope.insert(idx, text);
     }
 
     fn remove(&mut self, range: Range<usize>) {
+        let text = self.rope.slice(range.clone()).to_string();
+        self.history.push_change(HistoryChange::Remove {
+            idx: range.start,
+            text,
+        });
         self.rope.remove(range)
     }
 
@@ -91,6 +115,14 @@ impl TextEditor for RopeEditor {
         } else {
             self.selected = Some((self.cursor_pos(), self.cursor_pos()))
         }
+    }
+
+    fn get_clipboard(&mut self) -> &mut UseClipboard {
+        &mut self.clipboard
+    }
+
+    fn has_any_highlight(&self) -> bool {
+        self.selected.is_some()
     }
 
     fn highlights(&self, editor_id: usize) -> Option<(usize, usize)> {
@@ -189,6 +221,33 @@ impl TextEditor for RopeEditor {
         } else {
             self.set_cursor_pos(to);
         }
+    }
+
+    fn get_selected_text(&self) -> Option<String> {
+        let (start, end) = self.get_selection()?;
+
+        Some(self.rope().get_slice(start..end)?.to_string())
+    }
+
+    fn get_selection(&self) -> Option<(usize, usize)> {
+        let (start, end) = self.selected?;
+
+        // Use left-to-right selection
+        let (start, end) = if start < end {
+            (start, end)
+        } else {
+            (end, start)
+        };
+
+        Some((start, end))
+    }
+
+    fn undo(&mut self) -> Option<usize> {
+        self.history.undo(&mut self.rope)
+    }
+
+    fn redo(&mut self) -> Option<usize> {
+        self.history.redo(&mut self.rope)
     }
 }
 

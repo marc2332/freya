@@ -1,14 +1,13 @@
-### shadow
-
-Draw a shadow outside of the element.
+Draw a shadow of the element.
 
 Syntax: `<x> <y> <intensity> <size> <color>`
 
-### Example:
+### Example
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+# use freya::prelude::*;
+fn app() -> Element {
+    rsx!(
         rect {
             shadow: "0 0 25 2 rgb(0, 0, 0, 120)"
         }

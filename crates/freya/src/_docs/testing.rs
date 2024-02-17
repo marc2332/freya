@@ -19,8 +19,8 @@
 //! ```rust, no_run
 //! #[tokio::test]
 //! async fn test() {
-//!     fn our_component(cx: Scope) -> Element {
-//!         render!(
+//!     fn our_component() -> Element {
+//!         rsx!(
 //!             label {
 //!                 "Hello World!"
 //!             }
@@ -48,15 +48,14 @@
 //! ```rust, no_run
 //! #[tokio::test]
 //! async fn dynamic_test() {
-//!     fn dynamic_component(cx: Scope) -> Element {
-//!         let state = use_state(cx, || false);
+//!     fn dynamic_component() -> Element {
+//!         let mut state = use_signal(|| false);
 //!
-//!         use_effect(cx, (), |_| {
+//!         use_hook(move || {
 //!             state.set(true);
-//!             async move { }
 //!         });
 //!
-//!         render!(
+//!         rsx!(
 //!             label {
 //!                 "Is enabled? {state}"
 //!             }
@@ -84,14 +83,15 @@
 //! ```rust, no_run
 //! #[tokio::test]
 //! async fn event_test() {
-//!     fn event_component(cx: Scope) -> Element {
-//!         let enabled = use_state(cx, || false);
-//!         render!(
+//!     fn event_component() -> Element {
+//!         let mut enabled = use_signal(|| false);
+//!
+//!         rsx!(
 //!             rect {
 //!                 width: "100%",
 //!                 height: "100%",
 //!                 background: "red",
-//!                 onclick: |_| {
+//!                 onclick: move |_| {
 //!                     enabled.set(true);
 //!                 },
 //!                 label {
@@ -136,8 +136,8 @@
 //! ```rust, no_run
 //! #[tokio::test]
 //! async fn test() {
-//!     fn our_component(cx: Scope) -> Element {
-//!         render!(
+//!     fn our_component() -> Element {
+//!         rsx!(
 //!             label {
 //!                 "Hello World!"
 //!             }
@@ -146,7 +146,10 @@
 //!
 //!     let mut utils = launch_test_with_config(
 //!         our_component,
-//!         TestingConfig::default().with_size((500.0, 800.0).into()),
+//!         TestingConfig {
+//!             size: (500.0, 800.0).into(),
+//!             ..TestingConfig::default()
+//!         },
 //!     );
 //!
 //!     let root = utils.root();

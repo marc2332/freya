@@ -35,70 +35,30 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
         &mut self,
         node_id: NodeId,
         _node: &Node,
-        area: &Area,
         _parent_area: &Area,
         available_parent_area: &Area,
-    ) -> Option<Area> {
+    ) -> Option<Size2D> {
         let node = self.rdom.get(node_id).unwrap();
         let node_type = node.node_type();
 
         match &*node_type {
-            NodeType::Text(TextNode { text, .. }) => {
-                let text_paragraph =
-                    create_text(&node, available_parent_area, self.font_collection, text);
+            NodeType::Element(ElementNode { tag, .. }) if tag == "label" => {
+                let label = create_label(&node, available_parent_area, self.font_collection);
 
-                Some(Area::new(
-                    area.origin,
-                    Size2D::new(text_paragraph.longest_line(), text_paragraph.height()),
-                ))
+                Some(Size2D::new(label.longest_line(), label.height()))
             }
             NodeType::Element(ElementNode { tag, .. }) if tag == "paragraph" => {
                 let paragraph =
                     create_paragraph(&node, available_parent_area, self.font_collection, false);
 
-                Some(Area::new(
-                    available_parent_area.origin,
-                    Size2D::new(paragraph.longest_line(), paragraph.height()),
-                ))
+                Some(Size2D::new(paragraph.longest_line(), paragraph.height()))
             }
             _ => None,
         }
     }
 }
 
-/// Collect all the texts and FontStyles from all the given Node's children
-pub fn get_inner_texts(node: &DioxusNode) -> Vec<(FontStyleState, String)> {
-    node.children()
-        .iter()
-        .filter_map(|child| {
-            if let NodeType::Element(ElementNode { tag, .. }) = &*child.node_type() {
-                if tag != "text" {
-                    return None;
-                }
-
-                let children = child.children();
-                let child_text = *children.first().unwrap();
-                let child_text_type = &*child_text.node_type();
-
-                if let NodeType::Text(TextNode { text, .. }) = child_text_type {
-                    let font_style = child.get::<FontStyleState>().unwrap();
-                    Some((font_style.clone(), text.to_owned()))
-                } else {
-                    None
-                }
-            } else {
-                None
-            }
-        })
-        .collect()
-}
-
-pub fn create_text(
-    node: &DioxusNode,
-    area: &Area,
-    font_collection: &FontCollection,
-    text: &str,
-) -> Paragraph {
+pub fn create_label(node: &DioxusNode, area: &Area, font_collection: &FontCollection) -> Paragraph {
     let font_style = &*node.get::<FontStyleState>().unwrap();
 
     let mut paragraph_style = ParagraphStyle::default();
@@ -112,7 +72,12 @@ pub fn create_text(
     }
 
     let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
-    paragraph_builder.add_text(text);
+
+    for child in node.children() {
+        if let NodeType::Text(TextNode { text, .. }) = &*child.node_type() {
+            paragraph_builder.add_text(text);
+        }
+    }
 
     let mut paragraph = paragraph_builder.build();
     paragraph.layout(area.width() + 1.0);
@@ -142,11 +107,21 @@ pub fn create_paragraph(
 
     paragraph_builder.push_style(&font_style.into());
 
-    let texts = get_inner_texts(node);
+    for text_span in node.children() {
+        match &*text_span.node_type() {
+            NodeType::Element(ElementNode { tag, .. }) if tag == "text" => {
+                let text_nodes = text_span.children();
+                let text_node = *text_nodes.first().unwrap();
+                let text_node_type = &*text_node.node_type();
 
-    for (font_style, text) in texts.into_iter() {
-        paragraph_builder.push_style(&TextStyle::from(&font_style));
-        paragraph_builder.add_text(text);
+                if let NodeType::Text(TextNode { text, .. }) = text_node_type {
+                    let font_style = text_node.get::<FontStyleState>().unwrap();
+                    paragraph_builder.push_style(&TextStyle::from(&*font_style));
+                    paragraph_builder.add_text(text);
+                }
+            }
+            _ => {}
+        }
     }
 
     if node_cursor_settings.position.is_some() && is_rendering {
@@ -181,7 +156,7 @@ pub fn measure_paragraph(
 
                 // Notify the cursor reference listener
                 cursor_ref
-                    .agent
+                    .cursor_sender
                     .send(CursorLayoutResponse::CursorPosition {
                         position: char_position.position as usize,
                         id,
@@ -199,7 +174,7 @@ pub fn measure_paragraph(
                     .get_glyph_position_at_coordinate(dist.mul(scale_factors).to_i32().to_tuple());
 
                 cursor_ref
-                    .agent
+                    .cursor_sender
                     .send(CursorLayoutResponse::TextSelection {
                         from: origin_char.position as usize,
                         to: dist_char.position as usize,

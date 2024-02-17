@@ -1,12 +1,15 @@
-The `globalmousedown` event will fire when the user starts clicking anywhere with the left-click.
+The `globalmousedown` event fires when the user starts clicking anywhere.
+Note that this fires for all mouse buttons.
+You can check the specific variant with the [`MouseData`](crate::events::MouseData)'s `trigger_button` property.
 
-Event Data: [MouseData][crate::events::MouseData]
+Event Data: [`MouseData`](crate::events::MouseData)
 
-### Example:
+### Example
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    render!(
+# use freya::prelude::*;
+fn app() -> Element {
+    rsx!(
         rect {
             onglobalmousedown: |_| println!("Started clicking somewhere else!")
         }
@@ -18,3 +21,4 @@ fn app(cx: Scope) -> Element {
         }
     )
 }
+```

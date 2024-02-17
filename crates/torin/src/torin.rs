@@ -45,58 +45,6 @@ impl<Key: NodeKey> Default for Torin<Key> {
     }
 }
 
-#[cfg(feature = "dioxus")]
-use dioxus_core::Mutations;
-#[cfg(feature = "dioxus")]
-use dioxus_native_core::prelude::*;
-
-#[cfg(feature = "dioxus")]
-impl Torin<NodeId> {
-    pub fn apply_mutations(
-        &mut self,
-        mutations: &Mutations,
-        dioxus_integration_state: &DioxusState,
-        dom_adapter: &mut impl DOMAdapter<NodeId>,
-    ) {
-        use dioxus_core::Mutation;
-
-        for mutation in &mutations.edits {
-            match mutation {
-                Mutation::SetText { id, .. } => {
-                    self.invalidate(dioxus_integration_state.element_to_node_id(*id));
-                }
-                Mutation::InsertAfter { id, m } => {
-                    if *m > 0 {
-                        self.invalidate(dioxus_integration_state.element_to_node_id(*id));
-                    }
-                }
-                Mutation::InsertBefore { id, m } => {
-                    if *m > 0 {
-                        self.invalidate(dioxus_integration_state.element_to_node_id(*id));
-                    }
-                }
-                Mutation::Remove { id } => {
-                    self.remove(
-                        dioxus_integration_state.element_to_node_id(*id),
-                        dom_adapter,
-                        true,
-                    );
-                }
-                Mutation::ReplaceWith { id, m } => {
-                    if *m > 0 {
-                        self.remove(
-                            dioxus_integration_state.element_to_node_id(*id),
-                            dom_adapter,
-                            true,
-                        );
-                    }
-                }
-                _ => {}
-            }
-        }
-    }
-}
-
 impl<Key: NodeKey> Torin<Key> {
     /// Create a new Layout
     pub fn new() -> Self {

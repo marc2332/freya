@@ -3,17 +3,20 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use dioxus_core::{AttributeValue, Scope, ScopeState};
-use dioxus_hooks::{use_effect, use_ref, use_state, UseRef, UseState};
+use dioxus_core::{prelude::spawn, use_hook, AttributeValue};
+use dioxus_hooks::to_owned;
+use dioxus_signals::{Readable, Signal, Writable};
+use dioxus_std::clipboard::use_clipboard;
 use freya_common::{CursorLayoutResponse, EventMessage};
 use freya_elements::events::{KeyboardData, MouseData};
 use freya_node_state::{CursorReference, CustomAttributeValues};
-pub use ropey::Rope;
-use tokio::sync::{mpsc::unbounded_channel, mpsc::UnboundedSender};
+use tokio::sync::mpsc::unbounded_channel;
 use torin::geometry::CursorPoint;
 use uuid::Uuid;
 
-use crate::{use_platform, RopeEditor, TextCursor, TextEditor, TextEvent, UsePlatform};
+use crate::{
+    use_platform, EditorHistory, RopeEditor, TextCursor, TextEditor, TextEvent, UsePlatform,
+};
 
 /// Events emitted to the [`UseEditable`].
 pub enum EditableEvent {
@@ -42,36 +45,38 @@ impl Default for EditableMode {
     }
 }
 
-pub type ClickNotifier = UnboundedSender<EditableEvent>;
-pub type EditorState = UseState<RopeEditor>;
-
 /// Manage an editable content.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct UseEditable {
-    pub(crate) editor: EditorState,
-    pub(crate) cursor_reference: CursorReference,
-    pub(crate) selecting_text_with_mouse: UseRef<Option<CursorPoint>>,
+    pub(crate) editor: Signal<RopeEditor>,
+    pub(crate) cursor_reference: Signal<CursorReference>,
+    pub(crate) selecting_text_with_mouse: Signal<Option<CursorPoint>>,
     pub(crate) platform: UsePlatform,
 }
 
 impl UseEditable {
     /// Reference to the editor.
-    pub fn editor(&self) -> &EditorState {
+    pub fn editor(&self) -> &Signal<RopeEditor> {
         &self.editor
     }
 
+    /// Mutable reference to the editor.
+    pub fn editor_mut(&mut self) -> &mut Signal<RopeEditor> {
+        &mut self.editor
+    }
+
     /// Create a cursor attribute.
-    pub fn cursor_attr<'a, T>(&self, cx: Scope<'a, T>) -> AttributeValue<'a> {
-        cx.any_value(CustomAttributeValues::CursorReference(
-            self.cursor_reference.clone(),
+    pub fn cursor_attr(&self) -> AttributeValue {
+        AttributeValue::any_value(CustomAttributeValues::CursorReference(
+            self.cursor_reference.peek().clone(),
         ))
     }
 
     /// Create a highlights attribute.
-    pub fn highlights_attr<'a, T>(&self, cx: Scope<'a, T>, editor_id: usize) -> AttributeValue<'a> {
-        cx.any_value(CustomAttributeValues::TextHighlights(
+    pub fn highlights_attr(&self, editor_id: usize) -> AttributeValue {
+        AttributeValue::any_value(CustomAttributeValues::TextHighlights(
             self.editor
-                .get()
+                .read()
                 .highlights(editor_id)
                 .map(|v| vec![v])
                 .unwrap_or_default(),
@@ -79,48 +84,49 @@ impl UseEditable {
     }
 
     /// Process a [`EditableEvent`] event.
-    pub fn process_event(&self, edit_event: &EditableEvent) {
+    pub fn process_event(&mut self, edit_event: &EditableEvent) {
         match edit_event {
             EditableEvent::MouseDown(e, id) => {
                 let coords = e.get_element_coordinates();
-                *self.selecting_text_with_mouse.write_silent() = Some(coords);
+                *self.selecting_text_with_mouse.write() = Some(coords);
 
-                self.cursor_reference.set_id(Some(*id));
-                self.cursor_reference.set_cursor_position(Some(coords));
+                self.cursor_reference.peek().set_id(Some(*id));
+                self.cursor_reference
+                    .peek()
+                    .set_cursor_position(Some(coords));
 
-                self.editor.with_mut(|editor| {
-                    editor.unhighlight();
-                });
+                self.editor.write().unhighlight();
             }
             EditableEvent::MouseOver(e, id) => {
                 self.selecting_text_with_mouse.with(|selecting_text| {
                     if let Some(current_dragging) = selecting_text {
                         let coords = e.get_element_coordinates();
 
-                        self.cursor_reference.set_id(Some(*id));
+                        self.cursor_reference.peek().set_id(Some(*id));
                         self.cursor_reference
+                            .peek()
                             .set_cursor_selections(Some((*current_dragging, coords)));
                     }
                 });
             }
             EditableEvent::Click => {
-                *self.selecting_text_with_mouse.write_silent() = None;
+                *self.selecting_text_with_mouse.write() = None;
             }
             EditableEvent::KeyDown(e) => {
-                self.editor.with_mut(|editor| {
-                    let event = editor.process_key(&e.key, &e.code, &e.modifiers);
-
-                    if event == TextEvent::TextChanged {
-                        *self.selecting_text_with_mouse.write_silent() = None;
-                    }
-                });
+                let event = self
+                    .editor
+                    .write()
+                    .process_key(&e.key, &e.code, &e.modifiers);
+                if event.contains(TextEvent::TEXT_CHANGED) {
+                    *self.selecting_text_with_mouse.write() = None;
+                }
             }
         }
 
-        if self.selecting_text_with_mouse.read().is_some() {
+        if self.selecting_text_with_mouse.peek().is_some() {
             self.platform
                 .send(EventMessage::RemeasureTextGroup(
-                    self.cursor_reference.text_id,
+                    self.cursor_reference.peek().text_id,
                 ))
                 .unwrap()
         }
@@ -150,104 +156,87 @@ impl EditableConfig {
 }
 
 /// Create a virtual text editor with it's own cursor and rope.
-pub fn use_editable(
-    cx: &ScopeState,
-    initializer: impl Fn() -> EditableConfig,
-    mode: EditableMode,
-) -> UseEditable {
-    let id = cx.use_hook(Uuid::new_v4);
-    let platform = use_platform(cx);
+pub fn use_editable(initializer: impl Fn() -> EditableConfig, mode: EditableMode) -> UseEditable {
+    let platform = use_platform();
+    let clipboard = use_clipboard();
 
-    // Hold the text editor
-    let text_editor = use_state(cx, || {
+    use_hook(|| {
+        let text_id = Uuid::new_v4();
         let config = initializer();
-        RopeEditor::new(config.content, config.cursor, mode)
-    });
+        let mut editor = Signal::new(RopeEditor::new(
+            config.content,
+            config.cursor,
+            mode,
+            clipboard,
+            EditorHistory::new(),
+        ));
+        let selecting_text_with_mouse = Signal::new(None);
+        let (cursor_sender, mut cursor_receiver) = unbounded_channel::<CursorLayoutResponse>();
+        let cursor_reference = CursorReference {
+            text_id,
+            cursor_sender,
+            cursor_position: Arc::new(Mutex::new(None)),
+            cursor_id: Arc::new(Mutex::new(None)),
+            cursor_selections: Arc::new(Mutex::new(None)),
+        };
 
-    let cursor_channels = cx.use_hook(|| {
-        let (tx, rx) = unbounded_channel::<CursorLayoutResponse>();
-        (tx, Some(rx))
-    });
+        spawn({
+            to_owned![cursor_reference];
+            async move {
+                while let Some(message) = cursor_receiver.recv().await {
+                    match message {
+                        // Update the cursor position calculated by the layout
+                        CursorLayoutResponse::CursorPosition { position, id } => {
+                            let mut text_editor = editor.write();
 
-    let selecting_text_with_mouse = use_ref(cx, || None);
+                            let new_cursor_row = match mode {
+                                EditableMode::MultipleLinesSingleEditor => {
+                                    text_editor.char_to_line(position)
+                                }
+                                EditableMode::SingleLineMultipleEditors => id,
+                            };
 
-    // Cursor reference passed to the layout engine
-    let cursor_reference = cx.use_hook(|| CursorReference {
-        text_id: *id,
-        agent: cursor_channels.0.clone(),
-        cursor_position: Arc::new(Mutex::new(None)),
-        cursor_id: Arc::new(Mutex::new(None)),
-        cursor_selections: Arc::new(Mutex::new(None)),
-    });
+                            let new_cursor_col = match mode {
+                                EditableMode::MultipleLinesSingleEditor => {
+                                    position - text_editor.line_to_char(new_cursor_row)
+                                }
+                                EditableMode::SingleLineMultipleEditors => position,
+                            };
 
-    let use_editable = UseEditable {
-        editor: text_editor.clone(),
-        cursor_reference: cursor_reference.clone(),
-        selecting_text_with_mouse: selecting_text_with_mouse.clone(),
-        platform,
-    };
+                            let new_current_line = text_editor.line(new_cursor_row).unwrap();
 
-    // Listen for new calculations from the layout engine
-    use_effect(cx, (), move |_| {
-        let cursor_reference = cursor_reference.clone();
-        let cursor_receiver = cursor_channels.1.take();
-        let editor = text_editor.clone();
+                            // Use the line length as new column if the clicked column surpases the length
+                            let new_cursor = if new_cursor_col >= new_current_line.len_chars() {
+                                (new_current_line.len_chars(), new_cursor_row)
+                            } else {
+                                (new_cursor_col, new_cursor_row)
+                            };
 
-        async move {
-            let mut cursor_receiver = cursor_receiver.unwrap();
-
-            while let Some(message) = cursor_receiver.recv().await {
-                match message {
-                    // Update the cursor position calculated by the layout
-                    CursorLayoutResponse::CursorPosition { position, id } => {
-                        let text_editor = editor.current();
-
-                        let new_cursor_row = match mode {
-                            EditableMode::MultipleLinesSingleEditor => {
-                                text_editor.char_to_line(position)
-                            }
-                            EditableMode::SingleLineMultipleEditors => id,
-                        };
-
-                        let new_cursor_col = match mode {
-                            EditableMode::MultipleLinesSingleEditor => {
-                                position - text_editor.line_to_char(new_cursor_row)
-                            }
-                            EditableMode::SingleLineMultipleEditors => position,
-                        };
-
-                        let new_current_line = text_editor.line(new_cursor_row).unwrap();
-
-                        // Use the line length as new column if the clicked column surpases the length
-                        let new_cursor = if new_cursor_col >= new_current_line.len_chars() {
-                            (new_current_line.len_chars(), new_cursor_row)
-                        } else {
-                            (new_cursor_col, new_cursor_row)
-                        };
-
-                        // Only update if it's actually different
-                        if text_editor.cursor().as_tuple() != new_cursor {
-                            editor.with_mut(|text_editor| {
+                            // Only update if it's actually different
+                            if text_editor.cursor().as_tuple() != new_cursor {
                                 text_editor.cursor_mut().set_col(new_cursor.0);
                                 text_editor.cursor_mut().set_row(new_cursor.1);
                                 text_editor.unhighlight();
-                            })
-                        }
+                            }
 
-                        // Remove the current calcutions so the layout engine doesn't try to calculate again
-                        cursor_reference.set_cursor_position(None);
-                    }
-                    // Update the text selections calculated by the layout
-                    CursorLayoutResponse::TextSelection { from, to, id } => {
-                        editor.with_mut(|text_editor| {
-                            text_editor.highlight_text(from, to, id);
-                        });
-                        cursor_reference.set_cursor_selections(None);
+                            // Remove the current calcutions so the layout engine doesn't try to calculate again
+                            cursor_reference.set_cursor_position(None);
+                        }
+                        // Update the text selections calculated by the layout
+                        CursorLayoutResponse::TextSelection { from, to, id } => {
+                            editor.write().highlight_text(from, to, id);
+                            cursor_reference.set_cursor_selections(None);
+                        }
                     }
                 }
             }
-        }
-    });
+        });
 
-    use_editable
+        UseEditable {
+            editor,
+            cursor_reference: Signal::new(cursor_reference.clone()),
+            selecting_text_with_mouse,
+            platform,
+        }
+    })
 }

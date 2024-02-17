@@ -3,60 +3,65 @@
     windows_subsystem = "windows"
 )]
 
-use freya::events::MouseEvent;
 use freya::prelude::*;
 
 fn main() {
-    launch_with_props(app, "Animation", (700.0, 250.0));
+    launch_with_props(app, "Animation", (400.0, 350.0));
 }
 
-const TIME: i32 = 500;
-const TARGET: f64 = 500.0;
+fn app() -> Element {
+    let mut toggle = use_signal(|| true);
+    let animator = use_animation(|ctx| {
+        (
+            ctx.with(
+                AnimNum::new(100., 200.)
+                    .time(500)
+                    .ease(Ease::Out)
+                    .function(Function::Expo),
+            ),
+            ctx.with(
+                AnimColor::new("rgb(131, 111, 255)", "rgb(255, 167, 50)")
+                    .time(170)
+                    .ease(Ease::InOut),
+            ),
+            ctx.with(
+                AnimNum::new(0., 360.)
+                    .time(1000)
+                    .ease(Ease::Out)
+                    .function(Function::Bounce),
+            ),
+            ctx.with(
+                AnimNum::new(50., 0.)
+                    .time(550)
+                    .ease(Ease::InOut)
+                    .function(Function::Bounce),
+            ),
+        )
+    });
 
-fn app(cx: Scope) -> Element {
-    let animation = use_animation(cx, || 0.0);
+    let animations = animator.read();
+    let (size, color, rotate, radius) = animations.get();
 
-    let progress = animation.value();
-
-    let anim = move |_: MouseEvent| {
-        if animation.is_animating() {
-            return;
-        }
-        if progress == 0.0 {
-            animation.start(Animation::new_sine_in_out(0.0..=TARGET, TIME));
-        } else if progress == TARGET {
-            animation.start(Animation::new_sine_in_out(TARGET..=0.0, TIME));
-        }
-    };
-
-    render!(
+    rsx!(
         rect {
-            overflow: "clip",
-            background: "black",
-            width: "100%",
+            main_align: "center",
+            cross_align: "center",
             height: "100%",
-            offset_x: "{progress}",
-            rect {
-                main_align: "center",
-                cross_align: "center",
-                height: "100%",
-                width: "200",
-                rect {
-                    height: "200",
-                    width: "100%",
-                    background: "rgb(100, 100, 100)",
-                    padding: "25",
-                    corner_radius: "100",
-                    main_align: "center",
-                    cross_align: "center",
-                    onclick: anim,
-                    label {
-                        font_size: "30",
-                        text_align: "center",
-                        color: "white",
-                        "Click to move"
-                    }
+            width: "100%",
+            onclick: move |_| {
+                if *toggle.peek() {
+                    animator.read().start();
+                } else {
+                    animator.read().reverse();
                 }
+                toggle.toggle();
+            },
+            rect {
+                width: "{size.read().as_f32()}",
+                rotate: "{rotate.read().as_f32()}deg",
+                height: "50%",
+                background: "{color.read().as_string()}",
+                corner_radius: "{radius.read().as_f32()}"
             }
         }
     )
