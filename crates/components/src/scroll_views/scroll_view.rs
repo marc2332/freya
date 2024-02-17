@@ -380,7 +380,7 @@ mod test {
 
         utils.wait_for_update().await;
 
-        // Only the first three items are visible
+        // Only the last three items are visible
         // Scrollview height is 500 but the user has scrolled 300 pixels
         assert!(!content.get(0).is_visible()); // 1. 0   -> 200, 200 is NOT > 300, which means it is not visible.
         assert!(content.get(1).is_visible()); // 2. 200 -> 400, 400 > 300
