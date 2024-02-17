@@ -208,7 +208,7 @@ pub fn node_removal() {
     mocked_dom.add(
         2,
         Some(1),
-        vec![],
+        vec![4],
         Node::from_size_and_direction(
             Size::Pixels(Length::new(200.0)),
             Size::Pixels(Length::new(200.0)),
@@ -225,6 +225,16 @@ pub fn node_removal() {
             DirectionMode::Vertical,
         ),
     );
+    mocked_dom.add(
+        4,
+        Some(2),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(200.0)),
+            Size::Pixels(Length::new(200.0)),
+            DirectionMode::Vertical,
+        ),
+    );
 
     layout.measure(
         0,
@@ -232,6 +242,8 @@ pub fn node_removal() {
         &mut measurer,
         &mut mocked_dom,
     );
+
+    assert_eq!(layout.size(), 5);
 
     assert_eq!(
         layout.get(0).unwrap().area,
@@ -255,6 +267,8 @@ pub fn node_removal() {
     layout.find_best_root(&mut mocked_dom);
 
     assert_eq!(layout.get_dirty_nodes(), &FxHashSet::from_iter([1]));
+
+    assert_eq!(layout.size(), 3);
 
     layout.measure(
         0,

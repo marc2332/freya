@@ -94,7 +94,10 @@ impl TestingHandler {
                         }
                     }
                     EventMessage::FocusAccessibilityNode(node_id) => {
-                        self.accessibility_manager.lock().unwrap().focused_id = node_id;
+                        self.accessibility_manager
+                            .lock()
+                            .unwrap()
+                            .set_focus_with_update(node_id);
                     }
                     EventMessage::SetCursorIcon(icon) => {
                         self.cursor_icon = icon;
@@ -145,6 +148,13 @@ impl TestingHandler {
 
         *self.utils.layers().lock().unwrap() = layers;
         *self.utils.viewports().lock().unwrap() = viewports;
+
+        process_accessibility(
+            &self.utils.layers().lock().unwrap(),
+            &self.utils.sdom().get_mut().layout(),
+            self.utils.sdom().get_mut().rdom(),
+            &mut self.accessibility_manager.lock().unwrap(),
+        );
 
         process_events(
             &self.utils.sdom().get(),
