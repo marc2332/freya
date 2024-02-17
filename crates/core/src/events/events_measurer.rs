@@ -23,7 +23,7 @@ pub fn process_events(
     viewports: &Viewports,
     scale_factor: f64,
 ) {
-    // 1. Get global events created from the incominge vents
+    // 1. Get global events created from the incoming events
     let global_events = measure_global_events(events);
 
     // 2. Get potential events that could be emitted based on the elements layout and viewports
