@@ -1,0 +1,57 @@
+name: Rust
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 2
+    - name: Install latest nextest release
+      uses: taiki-e/install-action@nextest
+    - name: Set up cargo cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        prefix-key: "5"
+    - name: Install linux dependencies
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt update && sudo apt install build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev
+    - name: Lint
+      run: cargo clippy
+    - name: Run Linux tests
+      if: runner.os == 'Linux'
+      run: |
+        export RUSTFLAGS="-Cinstrument-coverage"
+        export LLVM_PROFILE_FILE='cargo-test-%p-%m.profraw'
+        cargo nextest run --workspace --exclude examples
+    - name: Run MacOS and Windows tests
+      if: runner.os != 'Linux'
+      run: cargo nextest run --workspace --exclude examples
+    - name: Run coverage
+      if: runner.os == 'Linux'
+      run: |
+        rustup component add llvm-tools-preview 
+        curl -L https://github.com/mozilla/grcov/releases/latest/download/grcov-x86_64-unknown-linux-gnu.tar.bz2 | tar jxf -
+        ./grcov . --binary-path ./target/debug/deps -s . -t lcov --branch --ignore-not-existing --ignore "../*" --ignore "/*" -o cov.lcov 
+    - uses: codecov/codecov-action@v3
+      if: runner.os == 'Linux'
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+    - name: Make sure the mocked Skia bindings are on sync
+      if: runner.os == 'Linux'
+      run: cargo build --package freya --features mocked-engine-development --no-default-features
