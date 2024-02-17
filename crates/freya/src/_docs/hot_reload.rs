@@ -8,17 +8,13 @@
 //!
 //! ```rust, no_run
 //! use freya::prelude::*;
-//! use freya::hotreload::FreyaCtx;
+//! use freya::hot_reload::FreyaCtx;
 //!
 //! fn main() {
 //!     dioxus_hot_reload::hot_reload_init!(Config::<FreyaCtx>::default());
 //!
 //!     launch(app);
 //! }
-//!
-//! # fn app(cx: Scope) -> Element {
-//! #     None
-//! # }
 //! ```
 //!
-//! That is it!
+//! That's it!

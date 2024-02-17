@@ -28,7 +28,7 @@ pub enum PluginEvent<'a> {
     /// The Window just got created.
     WindowCreated(&'a Window),
 
-    /// Before starting to render the app to the Canvas.
+    /// Just before starting to render the app to the Canvas.
     BeforeRender {
         canvas: &'a Canvas,
         font_collection: &'a FontCollection,
@@ -36,7 +36,7 @@ pub enum PluginEvent<'a> {
         viewports: &'a Viewports,
     },
 
-    /// After rendering the app to the Canvas.
+    /// Just after rendering the app to the Canvas.
     AfterRender {
         canvas: &'a Canvas,
         font_collection: &'a FontCollection,
@@ -44,10 +44,10 @@ pub enum PluginEvent<'a> {
         viewports: &'a Viewports,
     },
 
-    /// Before starting to measure the layout.
+    /// Just before starting to measure the layout.
     StartedLayout(&'a Torin<NodeId>),
 
-    /// After measuring the layout.
+    /// Just fater measuring the layout.
     FinishedLayout(&'a Torin<NodeId>),
 }
 

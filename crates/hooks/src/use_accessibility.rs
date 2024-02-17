@@ -38,9 +38,7 @@ pub fn use_init_accessibility(cx: &ScopeState) {
 #[cfg(test)]
 mod test {
     use freya::prelude::*;
-    use freya_testing::{
-        events::pointer::MouseButton, launch_test_with_config, FreyaEvent, TestingConfig,
-    };
+    use freya_testing::{launch_test_with_config, FreyaEvent, MouseButton, TestingConfig};
 
     #[tokio::test]
     pub async fn focus_accessibility() {

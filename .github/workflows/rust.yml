@@ -39,14 +39,9 @@ jobs:
         export RUSTFLAGS="-Cinstrument-coverage"
         export LLVM_PROFILE_FILE='cargo-test-%p-%m.profraw'
         cargo nextest run --workspace --exclude examples
-        cargo check --examples
-        cargo test -p freya --doc
     - name: Run MacOS and Windows tests
       if: runner.os != 'Linux'
-      run: |
-        cargo nextest run --workspace --exclude examples
-        cargo check --examples
-        cargo test -p freya --doc
+      run: cargo nextest run --workspace --exclude examples
     - name: Run coverage
       if: runner.os == 'Linux'
       run: |

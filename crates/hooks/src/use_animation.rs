@@ -125,7 +125,7 @@ mod test {
     use crate::{use_animation, Animation};
     use dioxus_hooks::{to_owned, use_memo};
     use freya::prelude::*;
-    use freya_testing::{events::pointer::MouseButton, launch_test, FreyaEvent};
+    use freya_testing::{launch_test, FreyaEvent, MouseButton};
     use tokio::time::sleep;
 
     #[tokio::test]

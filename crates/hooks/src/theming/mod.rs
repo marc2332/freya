@@ -299,6 +299,8 @@ define_theme! {
         thumb_background: str,
         hover_thumb_background: str,
         active_thumb_background: str,
+        offset_x: str,
+        offset_y: str,
     }
 }
 

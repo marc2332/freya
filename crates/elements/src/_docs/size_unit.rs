@@ -30,7 +30,7 @@
 //! }
 //! ```
 //!
-//! ##### Parent percentage
+//! ##### Percentages
 //! Relative percentage to the parent equivalent value.
 //!
 //! ```rust, no_run
@@ -74,24 +74,6 @@
 //!             }
 //!             rect {
 //!                 height: "fill", //! This is the same as calc(100% - 200)
-//!                 width: "100%",
-//!             }
-//!         }
-//!     )
-//! }
-//! ```
-//!
-//! #### Viewport percentage
-//! Relative percentage to the viewport (Window) equivalent value.
-//!
-//! ```rust, no_run
-//! fn app(cx: Scope) -> Element {
-//!     render!(
-//!         rect {
-//!             width: "200",
-//!             height: "200",
-//!             rect {
-//!                 height: "25%", // 25% of the window height no matter what height the parent has.
 //!                 width: "100%",
 //!             }
 //!         }

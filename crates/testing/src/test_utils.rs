@@ -5,6 +5,9 @@ use freya_core::prelude::*;
 use freya_dom::prelude::{DioxusNode, SafeDOM};
 use std::sync::{Arc, Mutex};
 
+pub use freya_core::events::FreyaEvent;
+pub use freya_elements::events::mouse::MouseButton;
+
 use crate::test_node::TestNode;
 
 #[derive(Clone)]

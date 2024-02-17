@@ -144,7 +144,7 @@ fn Body(cx: Scope) -> Element {
             }
             VirtualScrollView {
                 theme: theme_with!(ScrollViewTheme {
-                    width: "50%".into(),
+                    height: "50".into(),
                 }),
                 length: editor.len_lines(),
                 item_size: 35.0,

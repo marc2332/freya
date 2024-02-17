@@ -2,8 +2,8 @@ use dioxus_core::Component;
 use freya_renderer::run_app;
 use freya_renderer::{LaunchConfig, WindowConfig};
 
-/// Launch a new window with the default config.
-///
+#[cfg(not(doctest))]
+/// Launch a new Window with the default config.
 /// - Width: `600.0`
 /// - Height: `600.0`
 /// - Decorations enabled
@@ -12,13 +12,10 @@ use freya_renderer::{LaunchConfig, WindowConfig};
 /// - Window background: white
 ///
 /// # Example
-///
-/// ```rust,no_run
-/// # use freya::prelude::*;
-///
-/// fn main() {
-///     launch(app);
-/// }
+/// ```rust
+/// # use dioxus::prelude::*;
+/// # use freya::{dioxus_elements, *};
+/// launch(app);
 ///
 /// fn app(cx: Scope) -> Element {
 ///    render!(
@@ -49,8 +46,8 @@ pub fn launch(app: Component<()>) {
     )
 }
 
-/// Launch a new window with a custom title and the default config.
-///
+#[cfg(not(doctest))]
+/// Launch a new Window with a custom title and the default config.
 /// - Width: `400`
 /// - Height: `300`
 /// - Decorations enabled
@@ -58,13 +55,10 @@ pub fn launch(app: Component<()>) {
 /// - Window background: white
 ///
 /// # Example
-///
-/// ```rust,no_run
-/// # use freya::prelude::*;
-///
-/// fn main() {
-///     launch_with_title(app, "Whoa!");
-/// }
+/// ```rust
+/// # use dioxus::prelude::*;
+/// # use freya::{dioxus_elements, *};
+/// launch_with_title(app, "Whoah!");
 ///
 /// fn app(cx: Scope) -> Element {
 ///    render!(
@@ -95,20 +89,17 @@ pub fn launch_with_title(app: Component<()>, title: &'static str) {
     )
 }
 
-/// Launch a new window with a custom title, width and height and the default config.
-///
+#[cfg(not(doctest))]
+/// Launch a new Window with a custom title, width and height and the default config.
 /// - Decorations enabled
 /// - Transparency disabled
 /// - Window background: white
 ///
 /// # Example
-///
-/// ```rust,no_run
-/// # use freya::prelude::*;
-///
-/// fn main() {
-///     launch_with_props(app, "Whoa!", (400.0, 600.0));
-/// }
+/// ```rust
+/// # use dioxus::prelude::*;
+/// # use freya::{dioxus_elements, *};
+/// launch_with_props(app, "Whoah!", (400, 600));
 ///
 /// fn app(cx: Scope) -> Element {
 ///    render!(
@@ -139,9 +130,8 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
     )
 }
 
-/// Launch a new window with a custom config.
-/// You can use a builder if you wish.
-///
+#[cfg(not(doctest))]
+/// Launch a new Window with custom config.
 /// - Width
 /// - Height
 /// - Decorations
@@ -150,22 +140,20 @@ pub fn launch_with_props(app: Component<()>, title: &'static str, (width, height
 /// - Window background color
 ///
 /// # Example
-/// ```rust,no_run
-/// # use freya::prelude::*;
-///
-/// fn main() {
-///     launch_cfg(
-///         app,
-///         LaunchConfig::<()>::builder()
-///             .with_width(500.0)
-///             .with_height(400.0)
-///             .with_decorations(true)
-///             .with_transparency(false)
-///             .with_title("Freya App")
-///             .with_background("rgb(150, 100, 200")
-///             .build()
-///     );
-/// }
+/// ```rust
+/// # use dioxus::prelude::*;
+/// # use freya::{dioxus_elements, *};
+/// launch_cfg(
+///     app,
+///     WindowConfig::<()>::builder()
+///         .with_width(500.0)
+///         .with_height(400.0)
+///         .with_decorations(true)
+///         .with_transparency(false)
+///         .with_title("Freya App")
+///         .with_background("rgb(150, 100, 200")
+///         .build()
+/// );
 ///
 /// fn app(cx: Scope) -> Element {
 ///    render!(

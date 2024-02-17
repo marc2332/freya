@@ -11,6 +11,9 @@ use std::sync::{Arc, Mutex};
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::unbounded_channel;
 
+pub use freya_core::events::FreyaEvent;
+pub use freya_elements::events::mouse::MouseButton;
+
 use crate::config::TestingConfig;
 use crate::test_handler::TestingHandler;
 use crate::test_utils::TestUtils;
