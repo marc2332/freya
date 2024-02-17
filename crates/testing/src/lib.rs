@@ -8,6 +8,7 @@ const SCALE_FACTOR: f64 = 1.0;
 
 pub use config::*;
 pub use freya_core::prelude::*;
+pub use freya_elements::events::*;
 pub use freya_elements::*;
 pub use launch::*;
 pub use test_handler::*;

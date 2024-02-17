@@ -328,3 +328,63 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
         }
     )
 }
+
+#[cfg(test)]
+mod test {
+    use freya::prelude::*;
+    use freya_core::events::{EventName, PlatformEvent};
+    use freya_testing::launch_test;
+
+    #[tokio::test]
+    pub async fn scroll_view() {
+        fn scroll_view_app() -> Element {
+            rsx!(
+                ScrollView {
+                    rect {
+                        height: "200",
+                        width: "200",
+                    },
+                    rect {
+                        height: "200",
+                        width: "200",
+                    },
+                    rect {
+                        height: "200",
+                        width: "200",
+                    }
+                    rect {
+                        height: "200",
+                        width: "200",
+                    }
+                }
+            )
+        }
+
+        let mut utils = launch_test(scroll_view_app);
+        let root = utils.root();
+        let content = root.get(0).get(0).get(0);
+        utils.wait_for_update().await;
+
+        // Only the first three items are visible
+        // Scrollview height is 500 and the user hasn't scrolled yet
+        assert!(content.get(0).is_visible()); // 1. 0   -> 200, 200 < 500
+        assert!(content.get(1).is_visible()); // 2. 200 -> 400, 200 < 500
+        assert!(content.get(2).is_visible()); // 3. 400 -> 600, 400 < 500
+        assert!(!content.get(3).is_visible()); // 4. 600 -> 800, 600 is NOT < 500, which means it is not visible.
+
+        utils.push_event(PlatformEvent::Wheel {
+            name: EventName::Wheel,
+            scroll: (0., -300.).into(),
+            cursor: (5., 5.).into(),
+        });
+
+        utils.wait_for_update().await;
+
+        // Only the first three items are visible
+        // Scrollview height is 500 but the user has scrolled 300 pixels
+        assert!(!content.get(0).is_visible()); // 1. 0   -> 200, 200 is NOT > 300, which means it is not visible.
+        assert!(content.get(1).is_visible()); // 2. 200 -> 400, 400 > 300
+        assert!(content.get(2).is_visible()); // 3. 400 -> 600, 600 > 300
+        assert!(content.get(3).is_visible()); // 4. 600 -> 800, 800 > 300
+    }
+}

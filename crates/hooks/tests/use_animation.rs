@@ -30,13 +30,13 @@ pub async fn track_progress() {
     // Initial state
     utils.wait_for_update().await;
 
-    assert_eq!(utils.root().get(0).layout().unwrap().width(), 0.0);
+    assert_eq!(utils.root().get(0).area().unwrap().width(), 0.0);
 
     // State somewhere in the middle
     sleep(Duration::from_millis(15)).await;
     utils.wait_for_update().await;
 
-    let width = utils.root().get(0).layout().unwrap().width();
+    let width = utils.root().get(0).area().unwrap().width();
     assert!(width > 0.0);
 
     // Enable event loop ticker
@@ -48,7 +48,7 @@ pub async fn track_progress() {
     // State in the end
     utils.wait_for_update().await;
 
-    let width = utils.root().get(0).layout().unwrap().width();
+    let width = utils.root().get(0).area().unwrap().width();
     assert_eq!(width, 100.0);
 }
 
@@ -81,13 +81,13 @@ pub async fn reverse_progress() {
     // Initial state
     utils.wait_for_update().await;
 
-    assert_eq!(utils.root().get(0).layout().unwrap().width(), 10.0);
+    assert_eq!(utils.root().get(0).area().unwrap().width(), 10.0);
 
     // State somewhere in the middle
     sleep(Duration::from_millis(32)).await;
     utils.wait_for_update().await;
 
-    let width = utils.root().get(0).layout().unwrap().width();
+    let width = utils.root().get(0).area().unwrap().width();
     assert!(width > 10.0);
 
     // Trigger the click event to restart the animation
@@ -107,6 +107,6 @@ pub async fn reverse_progress() {
     utils.wait_for_update().await;
     utils.wait_for_update().await;
 
-    let width = utils.root().get(0).layout().unwrap().width();
+    let width = utils.root().get(0).area().unwrap().width();
     assert_eq!(width, 10.0);
 }

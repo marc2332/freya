@@ -77,7 +77,7 @@ pub fn run_event_loop<State: Clone>(
                     WindowEvent::CloseRequested => event_loop.exit(),
                     WindowEvent::Ime(Ime::Commit(text)) => {
                         app.send_event(PlatformEvent::Keyboard {
-                            name: EventName::Keydown,
+                            name: EventName::KeyDown,
                             key: Key::Character(text),
                             code: Code::Unidentified,
                             modifiers: map_winit_modifiers(modifiers_state),
@@ -100,6 +100,8 @@ pub fn run_event_loop<State: Clone>(
                             ElementState::Released => EventName::Click,
                         };
 
+                        println!("{:?}", cursor_pos);
+
                         app.send_event(PlatformEvent::Mouse {
                             name,
                             cursor: cursor_pos,
@@ -117,6 +119,8 @@ pub fn run_event_loop<State: Clone>(
                                     MouseScrollDelta::PixelDelta(pos) => (pos.x, pos.y),
                                 }
                             };
+
+                            println!("{scroll_data:?}");
 
                             app.send_event(PlatformEvent::Wheel {
                                 name: EventName::Wheel,
@@ -155,8 +159,8 @@ pub fn run_event_loop<State: Clone>(
                         }
 
                         let name = match state {
-                            ElementState::Pressed => EventName::Keydown,
-                            ElementState::Released => EventName::Keyup,
+                            ElementState::Pressed => EventName::KeyDown,
+                            ElementState::Released => EventName::KeyUp,
                         };
                         app.send_event(PlatformEvent::Keyboard {
                             name,

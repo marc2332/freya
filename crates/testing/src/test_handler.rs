@@ -5,12 +5,14 @@ use accesskit::NodeId as AccessibilityId;
 use dioxus_core::VirtualDom;
 use freya_common::EventMessage;
 use freya_core::prelude::*;
+use freya_dom::prelude::SafeDOM;
 use freya_engine::prelude::FontCollection;
 use freya_hooks::PlatformInformation;
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tokio::time::{interval, timeout};
 use torin::geometry::{Area, Size2D};
+use winit::window::CursorIcon;
 
 use crate::test_node::TestNode;
 use crate::test_utils::TestUtils;
@@ -27,12 +29,12 @@ pub struct TestingHandler {
     pub(crate) events_queue: EventsQueue,
     pub(crate) nodes_state: NodesState,
     pub(crate) font_collection: FontCollection,
-    pub(crate) viewports: Viewports,
     pub(crate) accessibility_manager: SharedAccessibilityManager,
     pub(crate) config: TestingConfig,
     pub(crate) ticker_sender: broadcast::Sender<()>,
     pub(crate) navigation_state: NavigatorState,
     pub(crate) platform_information: Arc<Mutex<PlatformInformation>>,
+    pub(crate) cursor_icon: CursorIcon,
 }
 
 impl TestingHandler {
@@ -94,6 +96,9 @@ impl TestingHandler {
                     EventMessage::FocusAccessibilityNode(node_id) => {
                         self.accessibility_manager.lock().unwrap().focused_id = node_id;
                     }
+                    EventMessage::SetCursorIcon(icon) => {
+                        self.cursor_icon = icon;
+                    }
                     _ => {}
                 }
             }
@@ -139,7 +144,7 @@ impl TestingHandler {
         );
 
         *self.utils.layers().lock().unwrap() = layers;
-        self.viewports = viewports;
+        *self.utils.viewports().lock().unwrap() = viewports;
 
         process_events(
             &self.utils.sdom().get(),
@@ -147,7 +152,7 @@ impl TestingHandler {
             &mut self.events_queue,
             &self.event_emitter,
             &mut self.nodes_state,
-            &self.viewports,
+            &self.utils.viewports().lock().unwrap(),
             SCALE_FACTOR,
         );
     }
@@ -169,12 +174,24 @@ impl TestingHandler {
         self.utils.get_node_by_id(root_id)
     }
 
+    /// Get the current [AccessibilityId].
     pub fn focus_id(&self) -> AccessibilityId {
         self.accessibility_manager.lock().unwrap().focused_id
     }
 
+    /// Resize the simulated canvas.
     pub fn resize(&mut self, size: Size2D) {
         self.config.size = size;
         self.platform_information.lock().unwrap().window_size = size;
+    }
+
+    /// Get the current [CursorIcon].
+    pub fn cursor_icon(&self) -> CursorIcon {
+        self.cursor_icon
+    }
+
+    /// Get the [SafeDOM]
+    pub fn sdom(&self) -> &SafeDOM {
+        self.utils.sdom()
     }
 }

@@ -17,8 +17,8 @@ pub enum EventName {
     PointerLeave,
     PointerUp,
 
-    Keydown,
-    Keyup,
+    KeyDown,
+    KeyUp,
 
     TouchCancel,
     TouchStart,
@@ -44,8 +44,8 @@ impl From<EventName> for &str {
             EventName::PointerEnter => "pointerenter",
             EventName::PointerLeave => "pointerleave",
             EventName::PointerUp => "pointerup",
-            EventName::Keydown => "keydown",
-            EventName::Keyup => "keyup",
+            EventName::KeyDown => "keydown",
+            EventName::KeyUp => "keyup",
             EventName::TouchCancel => "touchcancel",
             EventName::TouchStart => "touchstart",
             EventName::TouchMove => "touchmove",
@@ -144,7 +144,7 @@ impl EventName {
     pub fn does_bubble(&self) -> bool {
         !matches!(
             self,
-            Self::Keydown | Self::Keyup | Self::MouseLeave | Self::PointerLeave
+            Self::KeyDown | Self::KeyUp | Self::MouseLeave | Self::PointerLeave
         )
     }
 

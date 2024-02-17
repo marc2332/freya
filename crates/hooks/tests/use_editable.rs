@@ -88,7 +88,7 @@ pub async fn multiple_lines_single_editor() {
 
     // Insert text
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::Keydown,
+        name: EventName::KeyDown,
         key: Key::Character("!".to_string()),
         code: Code::Unidentified,
         modifiers: Modifiers::empty(),
@@ -195,7 +195,7 @@ pub async fn single_line_mulitple_editors() {
 
     // Insert text
     utils.push_event(PlatformEvent::Keyboard {
-        name: EventName::Keydown,
+        name: EventName::KeyDown,
         key: Key::Character("!".to_string()),
         code: Code::Unidentified,
         modifiers: Modifiers::empty(),

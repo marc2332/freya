@@ -3,8 +3,8 @@ use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
 
 use freya_hooks::{
-    use_animation_with_dependencies, use_applied_theme, use_node_signal, use_platform,
-    AccordionTheme, AccordionThemeWith, AnimNum,
+    use_animation_with_dependencies, use_applied_theme, use_node, use_platform, AccordionTheme,
+    AccordionThemeWith, AnimNum,
 };
 use winit::window::CursorIcon;
 
@@ -41,9 +41,9 @@ pub struct AccordionProps {
 pub fn Accordion(props: AccordionProps) -> Element {
     let theme = use_applied_theme!(&props.theme, accordion);
     let mut open = use_signal(|| false);
-    let (node_ref, size) = use_node_signal();
-    let area = size().area;
-    let animation = use_animation_with_dependencies(&area.height(), move |ctx, height| {
+    let (node_ref, size) = use_node();
+
+    let animation = use_animation_with_dependencies(&size.area.height(), move |ctx, height| {
         ctx.with(AnimNum::new(0., height).time(200))
     });
     let mut status = use_signal(AccordionStatus::default);
@@ -147,4 +147,55 @@ pub fn AccordionBody(props: AccordionBodyProps) -> Element {
         padding: "15 0 0 0",
         {props.children}
     })
+}
+
+#[cfg(test)]
+mod test {
+    use freya::prelude::*;
+    use freya_core::events::{EventName, PlatformEvent};
+    use freya_testing::launch_test;
+    use winit::event::MouseButton;
+
+    #[tokio::test]
+    pub async fn accordion() {
+        fn accordion_app() -> Element {
+            rsx!(
+                Accordion {
+                    summary: rsx!(AccordionSummary {
+                        label {
+                            "Accordion Summary"
+                        }
+                    }),
+                    AccordionBody {
+                        label {
+                            "Accordion Body"
+                        }
+                    }
+                }
+            )
+        }
+
+        let mut utils = launch_test(accordion_app);
+
+        let root = utils.root();
+        let content = root.get(0).get(1).get(0);
+        let label = content.get(0);
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+
+        // Accordion is closed, therefore label is hidden.
+        assert!(!label.is_visible());
+
+        // Click on the accordion
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (5., 5.).into(),
+            button: Some(MouseButton::Left),
+        });
+
+        utils.wait_for_update().await;
+
+        // Accordion is open, therefore label is visible.
+        assert!(label.is_visible());
+    }
 }
