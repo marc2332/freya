@@ -14,20 +14,6 @@ pub const LIGHT_THEME: Theme = Theme {
         thumb_inner_background: cow_borrowed!("rgb(103, 80, 164)"),
         border_fill: cow_borrowed!("rgb(210, 210, 210)"),
     },
-    sidebar: SidebarTheme {
-        background: cow_borrowed!("rgb(245, 245, 245)"),
-        font_theme: FontTheme {
-            color: cow_borrowed!("rgb(10, 10, 10)"),
-        },
-    },
-    sidebar_item: SidebarItemTheme {
-        background: cow_borrowed!("rgb(245, 245, 245)"),
-        hover_background: cow_borrowed!("rgb(235, 235, 235)"),
-        font_theme: FontTheme {
-            color: cow_borrowed!("rgb(10, 10, 10)"),
-        },
-        border_fill: cow_borrowed!("rgb(210, 210, 210)"),
-    },
     button: ButtonTheme {
         background: cow_borrowed!("rgb(245, 245, 245)"),
         hover_background: cow_borrowed!("rgb(235, 235, 235)"),
