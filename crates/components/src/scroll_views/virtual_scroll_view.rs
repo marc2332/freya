@@ -203,7 +203,7 @@ pub fn VirtualScrollView<
 
     // Drag the scrollbars
     let onmouseover = move |e: MouseEvent| {
-        let clicking_scrollbar = clicking_scrollbar.read();
+        let clicking_scrollbar = clicking_scrollbar.peek();
 
         if let Some((Axis::Y, y)) = *clicking_scrollbar {
             let coordinates = e.get_element_coordinates();
@@ -294,7 +294,7 @@ pub fn VirtualScrollView<
 
     // Unmark any scrollbar
     let onclick = move |_: MouseEvent| {
-        if clicking_scrollbar.read().is_some() {
+        if clicking_scrollbar.peek().is_some() {
             *clicking_scrollbar.write() = None;
         }
     };
@@ -406,8 +406,8 @@ mod test {
     use freya_testing::launch_test;
 
     #[tokio::test]
-    pub async fn virtual_scroll_view() {
-        fn virtual_scroll_view_app() -> Element {
+    pub async fn virtual_scroll_view_wheel() {
+        fn virtual_scroll_view_wheel_app() -> Element {
             let values = use_signal(|| ["Hello, World!"].repeat(30));
 
             rsx!(VirtualScrollView {
@@ -427,7 +427,7 @@ mod test {
             })
         }
 
-        let mut utils = launch_test(virtual_scroll_view_app);
+        let mut utils = launch_test(virtual_scroll_view_wheel_app);
         let root = utils.root();
 
         utils.wait_for_update().await;
@@ -460,6 +460,84 @@ mod test {
         // It has scrolled 300 pixels, which equals to 6 items since because 300 / 50 = 6
         // So we must start checking from 6 to +10, 16 in this case because 6 + 10 = 16
         for (n, i) in (6..16).enumerate() {
+            let child = content.get(n);
+            assert_eq!(
+                child.get(0).text(),
+                Some(format!("{i} Hello, World!").as_str())
+            );
+        }
+    }
+
+    #[tokio::test]
+    pub async fn virtual_scroll_view_scrollbar() {
+        fn virtual_scroll_view_scrollar_app() -> Element {
+            let values = use_signal(|| ["Hello, World!"].repeat(30));
+
+            rsx!(VirtualScrollView {
+                length: values.read().len(),
+                item_size: 50.0,
+                direction: "vertical",
+                builder: move |index, _: &Option<()>| {
+                    let value = values.read()[index];
+                    rsx! {
+                        label {
+                            key: "{index}",
+                            height: "50",
+                            "{index} {value}"
+                        }
+                    }
+                }
+            })
+        }
+
+        let mut utils = launch_test(virtual_scroll_view_scrollar_app);
+        let root = utils.root();
+
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+
+        let content = root.get(0).get(0).get(0);
+        assert_eq!(content.children_ids().len(), 10);
+
+        // Check that visible items are from indexes 0 to 10, because 500 / 50 = 10.
+        for (n, i) in (0..10).enumerate() {
+            let child = content.get(n);
+            assert_eq!(
+                child.get(0).text(),
+                Some(format!("{i} Hello, World!").as_str())
+            );
+        }
+
+        // Simulate the user dragging the scrollbar
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseOver,
+            cursor: (490., 20.).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseDown,
+            cursor: (490., 20.).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseOver,
+            cursor: (490., 320.).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (490., 320.).into(),
+            button: Some(MouseButton::Left),
+        });
+
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+
+        let content = root.get(0).get(0).get(0);
+        assert_eq!(content.children_ids().len(), 10);
+
+        // It has dragged the scrollbar 300 pixels
+        for (n, i) in (18..28).enumerate() {
             let child = content.get(n);
             assert_eq!(
                 child.get(0).text(),

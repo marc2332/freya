@@ -98,13 +98,13 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
 
     // Moves the Y axis when the user scrolls in the container
     let onwheel = move |e: WheelEvent| {
-        let speed_multiplier = if *clicking_alt.read() {
+        let speed_multiplier = if *clicking_alt.peek() {
             SCROLL_SPEED_MULTIPLIER
         } else {
             1.0
         };
 
-        if !*clicking_shift.read() {
+        if !*clicking_shift.peek() {
             let wheel_y = e.get_delta_y() as f32 * speed_multiplier;
 
             let scroll_position_y = get_scroll_position_from_wheel(
@@ -123,7 +123,7 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
             }
         }
 
-        let wheel_x = if *clicking_shift.read() {
+        let wheel_x = if *clicking_shift.peek() {
             e.get_delta_y() as f32
         } else {
             e.get_delta_x() as f32
@@ -149,7 +149,7 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
 
     // Drag the scrollbars
     let onmouseover = move |e: MouseEvent| {
-        let clicking_scrollbar = clicking_scrollbar.read();
+        let clicking_scrollbar = clicking_scrollbar.peek();
 
         if let Some((Axis::Y, y)) = *clicking_scrollbar {
             let coordinates = e.get_element_coordinates();
@@ -246,7 +246,7 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
 
     // Unmark any scrollbar
     let onclick = move |_: MouseEvent| {
-        if clicking_scrollbar.read().is_some() {
+        if clicking_scrollbar.peek().is_some() {
             *clicking_scrollbar.write() = None;
         }
     };
@@ -333,11 +333,11 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
 mod test {
     use freya::prelude::*;
     use freya_core::events::{EventName, PlatformEvent};
-    use freya_testing::launch_test;
+    use freya_testing::{launch_test, MouseButton};
 
     #[tokio::test]
-    pub async fn scroll_view() {
-        fn scroll_view_app() -> Element {
+    pub async fn scroll_view_wheel() {
+        fn scroll_view_wheel_app() -> Element {
             rsx!(
                 ScrollView {
                     rect {
@@ -360,7 +360,7 @@ mod test {
             )
         }
 
-        let mut utils = launch_test(scroll_view_app);
+        let mut utils = launch_test(scroll_view_wheel_app);
         let root = utils.root();
         let content = root.get(0).get(0).get(0);
         utils.wait_for_update().await;
@@ -382,6 +382,75 @@ mod test {
 
         // Only the last three items are visible
         // Scrollview height is 500 but the user has scrolled 300 pixels
+        assert!(!content.get(0).is_visible()); // 1. 0   -> 200, 200 is NOT > 300, which means it is not visible.
+        assert!(content.get(1).is_visible()); // 2. 200 -> 400, 400 > 300
+        assert!(content.get(2).is_visible()); // 3. 400 -> 600, 600 > 300
+        assert!(content.get(3).is_visible()); // 4. 600 -> 800, 800 > 300
+    }
+
+    #[tokio::test]
+    pub async fn scroll_view_scrollbar() {
+        fn scroll_view_scrollbar_app() -> Element {
+            rsx!(
+                ScrollView {
+                    rect {
+                        height: "200",
+                        width: "200",
+                    },
+                    rect {
+                        height: "200",
+                        width: "200",
+                    },
+                    rect {
+                        height: "200",
+                        width: "200",
+                    }
+                    rect {
+                        height: "200",
+                        width: "200",
+                    }
+                }
+            )
+        }
+
+        let mut utils = launch_test(scroll_view_scrollbar_app);
+        let root = utils.root();
+        let content = root.get(0).get(0).get(0);
+        utils.wait_for_update().await;
+
+        // Only the first three items are visible
+        // Scrollview height is 500 and the user hasn't scrolled yet
+        assert!(content.get(0).is_visible()); // 1. 0   -> 200, 200 < 500
+        assert!(content.get(1).is_visible()); // 2. 200 -> 400, 200 < 500
+        assert!(content.get(2).is_visible()); // 3. 400 -> 600, 400 < 500
+        assert!(!content.get(3).is_visible()); // 4. 600 -> 800, 600 is NOT < 500, which means it is not visible.
+
+        // Simulate the user dragging the scrollbar
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseOver,
+            cursor: (490., 20.).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseDown,
+            cursor: (490., 20.).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseOver,
+            cursor: (490., 320.).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (490., 320.).into(),
+            button: Some(MouseButton::Left),
+        });
+
+        utils.wait_for_update().await;
+
+        // Only the last three items are visible
+        // Scrollview height is 500 but the user has dragged the scrollbar 300 pixels
         assert!(!content.get(0).is_visible()); // 1. 0   -> 200, 200 is NOT > 300, which means it is not visible.
         assert!(content.get(1).is_visible()); // 2. 200 -> 400, 400 > 300
         assert!(content.get(2).is_visible()); // 3. 400 -> 600, 600 > 300

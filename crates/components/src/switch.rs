@@ -165,3 +165,60 @@ pub fn Switch(props: SwitchProps) -> Element {
         }
     )
 }
+
+#[cfg(test)]
+mod test {
+    use dioxus::prelude::use_signal;
+    use freya::prelude::*;
+    use freya_core::events::{EventName, PlatformEvent};
+    use freya_testing::{events::pointer::MouseButton, launch_test};
+
+    #[tokio::test]
+    pub async fn button() {
+        fn button_app() -> Element {
+            let mut enabled = use_signal(|| false);
+
+            rsx!(
+                Switch {
+                    enabled: *enabled.read(),
+                    ontoggled: move |_| {
+                        enabled.toggle();
+                    }
+                }
+                label {
+                    "{enabled}"
+                }
+            )
+        }
+
+        let mut utils = launch_test(button_app);
+        let root = utils.root();
+        let label = root.get(1);
+        utils.wait_for_update().await;
+
+        // Default is false
+        assert_eq!(label.get(0).text(), Some("false"));
+
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (5.0, 5.0).into(),
+            button: Some(MouseButton::Left),
+        });
+
+        utils.wait_for_update().await;
+
+        // Check if after clicking it is now enabled
+        assert_eq!(label.get(0).text(), Some("true"));
+
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (5.0, 5.0).into(),
+            button: Some(MouseButton::Left),
+        });
+
+        utils.wait_for_update().await;
+
+        // Check if after clicking again it is now disabled
+        assert_eq!(label.get(0).text(), Some("false"));
+    }
+}
