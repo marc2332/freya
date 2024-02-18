@@ -11,6 +11,7 @@ use freya_hooks::{
     SidebarTheme, SidebarThemeWith,
 };
 
+#[allow(non_snake_case)]
 #[component]
 pub fn Sidebar(
     /// Theme override.
@@ -30,7 +31,6 @@ pub fn Sidebar(
             width: "100%",
             height: "100%",
             direction: "horizontal",
-            background: "{background}",
             rect {
                 overflow: "clip",
                 width: "170",
@@ -56,11 +56,14 @@ pub fn Sidebar(
     )
 }
 
+#[allow(non_snake_case)]
 #[component]
 pub fn SidebarItem(
     /// Theme override.
     theme: Option<SidebarItemThemeWith>,
+    /// Inner content for the SidebarItem.
     children: Element,
+    /// Optionally handle the `onclick` event in the SidebarItem.
     onclick: Option<EventHandler<()>>,
 ) -> Element {
     let SidebarItemTheme {

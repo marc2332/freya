@@ -11,17 +11,17 @@ fn main() {
 }
 
 fn app() -> Element {
-    rsx!(ThemeProvider { theme: DARK_THEME, Router::<Route> {} })
+    rsx!(Router::<Route> {})
 }
 
 #[derive(Routable, Clone)]
 #[rustfmt::skip]
 pub enum Route {
     #[layout(AppSidebar)]
-    #[route("/")]
-    Home,
-    #[route("/wow")]
-    Wow,
+        #[route("/")]
+        Home,
+        #[route("/wow")]
+        Wow,
     #[end_layout]
     #[route("/..route")]
     PageNotFound { },
@@ -49,17 +49,20 @@ fn AppSidebar() -> Element {
                     "Print Hello! 👀"
                 }
             ),
-            rect {
-                main_align: "center",
-                cross_align: "center",
-                width: "100%",
-                height: "100%",
-                Outlet::<Route> {  }
+            Body {
+                rect {
+                    main_align: "center",
+                    cross_align: "center",
+                    width: "100%",
+                    height: "100%",
+                    Outlet::<Route> {  }
+                }
             }
         }
     )
 }
 
+#[allow(non_snake_case)]
 #[component]
 fn Home() -> Element {
     rsx!(
@@ -69,6 +72,7 @@ fn Home() -> Element {
     )
 }
 
+#[allow(non_snake_case)]
 #[component]
 fn Wow() -> Element {
     rsx!(
@@ -78,6 +82,7 @@ fn Wow() -> Element {
     )
 }
 
+#[allow(non_snake_case)]
 #[component]
 fn PageNotFound() -> Element {
     rsx!(
