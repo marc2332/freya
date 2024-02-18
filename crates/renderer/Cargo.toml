@@ -27,10 +27,7 @@ freya-engine = { workspace = true }
 freya-hooks = { workspace = true }
 torin = { workspace = true }
 
-dioxus-rsx = { workspace = true }
 dioxus-native-core = { workspace = true }
-dioxus-core-macro = { workspace = true }
-dioxus-hooks = { workspace = true }
 dioxus-core = { workspace = true }
 dioxus-hot-reload = { workspace = true }
 
