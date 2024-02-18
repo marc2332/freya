@@ -325,6 +325,28 @@ define_theme! {
 
 define_theme! {
     %[component]
+    pub Sidebar {
+        %[cows]
+        background: str,
+        %[subthemes]
+        font_theme: FontTheme,
+    }
+}
+
+define_theme! {
+    %[component]
+    pub SidebarItem {
+        %[cows]
+        background: str,
+        hover_background: str,
+        border_fill: str,
+        %[subthemes]
+        font_theme: FontTheme,
+    }
+}
+
+define_theme! {
+    %[component]
     pub Body {
         %[cows]
         background: str,
@@ -457,6 +479,8 @@ pub struct Theme {
     pub scroll_bar: ScrollBarTheme,
     pub scroll_view: ScrollViewTheme,
     pub slider: SliderTheme,
+    pub sidebar: SidebarTheme,
+    pub sidebar_item: SidebarItemTheme,
     pub tooltip: TooltipTheme,
     pub external_link: ExternalLinkTheme,
     pub dropdown: DropdownTheme,
