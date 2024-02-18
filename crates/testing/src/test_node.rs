@@ -2,7 +2,7 @@ use dioxus_native_core::prelude::TextNode;
 use dioxus_native_core::NodeId;
 use dioxus_native_core::{node::NodeType, real_dom::NodeImmutable};
 use freya_core::node::NodeState;
-use freya_node_state::CustomAttributeValues;
+use freya_node_state::{CustomAttributeValues, Style};
 use torin::{geometry::Area, prelude::NodeAreas};
 
 use crate::test_utils::TestUtils;
@@ -60,6 +60,19 @@ impl TestNode {
     /// Get the Node layout Area
     pub fn area(&self) -> Option<Area> {
         self.layout().map(|l| l.area)
+    }
+
+    /// Get the Node style
+    pub fn style(&self) -> Style {
+        self.utils
+            .sdom
+            .get()
+            .rdom()
+            .get(self.node_id)
+            .unwrap()
+            .get::<Style>()
+            .unwrap()
+            .clone()
     }
 
     /// Get a mutable reference to the test utils.

@@ -544,5 +544,48 @@ mod test {
                 Some(format!("{i} Hello, World!").as_str())
             );
         }
+
+        // Scroll up with arrows
+        for _ in 0..10 {
+            utils.push_event(PlatformEvent::Keyboard {
+                name: EventName::KeyDown,
+                key: Key::ArrowUp,
+                code: Code::ArrowUp,
+                modifiers: Modifiers::default(),
+            });
+            utils.wait_for_update().await;
+        }
+
+        let content = root.get(0).get(0).get(0);
+        assert_eq!(content.children_ids().len(), 10);
+
+        for (n, i) in (0..10).enumerate() {
+            let child = content.get(n);
+            assert_eq!(
+                child.get(0).text(),
+                Some(format!("{i} Hello, World!").as_str())
+            );
+        }
+
+        // Scroll to the bottom with arrows
+        utils.push_event(PlatformEvent::Keyboard {
+            name: EventName::KeyDown,
+            key: Key::End,
+            code: Code::End,
+            modifiers: Modifiers::default(),
+        });
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+
+        let content = root.get(0).get(0).get(0);
+        assert_eq!(content.children_ids().len(), 9);
+
+        for (n, i) in (21..30).enumerate() {
+            let child = content.get(n);
+            assert_eq!(
+                child.get(0).text(),
+                Some(format!("{i} Hello, World!").as_str())
+            );
+        }
     }
 }

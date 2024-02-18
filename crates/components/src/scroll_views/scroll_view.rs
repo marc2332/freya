@@ -332,8 +332,7 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
 #[cfg(test)]
 mod test {
     use freya::prelude::*;
-    use freya_core::events::{EventName, PlatformEvent};
-    use freya_testing::{launch_test, MouseButton};
+    use freya_testing::*;
 
     #[tokio::test]
     pub async fn scroll_view_wheel() {
@@ -455,5 +454,35 @@ mod test {
         assert!(content.get(1).is_visible()); // 2. 200 -> 400, 400 > 300
         assert!(content.get(2).is_visible()); // 3. 400 -> 600, 600 > 300
         assert!(content.get(3).is_visible()); // 4. 600 -> 800, 800 > 300
+
+        // Scroll up with arrows
+        for _ in 0..5 {
+            utils.push_event(PlatformEvent::Keyboard {
+                name: EventName::KeyDown,
+                key: Key::ArrowUp,
+                code: Code::ArrowUp,
+                modifiers: Modifiers::default(),
+            });
+            utils.wait_for_update().await;
+        }
+
+        assert!(content.get(0).is_visible());
+        assert!(content.get(1).is_visible());
+        assert!(content.get(2).is_visible());
+        assert!(!content.get(3).is_visible());
+
+        // Scroll to the bottom with arrows
+        utils.push_event(PlatformEvent::Keyboard {
+            name: EventName::KeyDown,
+            key: Key::End,
+            code: Code::End,
+            modifiers: Modifiers::default(),
+        });
+        utils.wait_for_update().await;
+
+        assert!(!content.get(0).is_visible());
+        assert!(content.get(1).is_visible());
+        assert!(content.get(2).is_visible());
+        assert!(content.get(3).is_visible());
     }
 }
