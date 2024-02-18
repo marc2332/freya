@@ -1,0 +1,207 @@
+use dioxus::prelude::*;
+use freya_elements::elements as dioxus_elements;
+use freya_elements::events::keyboard::Key;
+use freya_elements::events::{KeyboardData, MouseEvent};
+use freya_hooks::use_platform;
+use freya_hooks::{
+    use_applied_theme, use_editable, use_focus, EditableConfig, EditableEvent, EditableMode,
+    FontTheme, InputTheme, InputThemeWith, TextEditor,
+};
+
+use winit::window::CursorIcon;
+
+/// Enum to declare is [`Input`] hidden.
+#[derive(Default, Clone, PartialEq)]
+pub enum InputMode {
+    /// The input text is shown
+    #[default]
+    Shown,
+    /// The input text is obfuscated with a character
+    Hidden(char),
+}
+
+impl InputMode {
+    pub fn new_password() -> Self {
+        Self::Hidden('*')
+    }
+}
+
+/// Indicates the current status of the Input.
+#[derive(Debug, Default, PartialEq, Clone, Copy)]
+pub enum InputStatus {
+    /// Default state.
+    #[default]
+    Idle,
+    /// Mouse is hovering the input.
+    Hovering,
+}
+
+/// [`Input`] component properties.
+#[derive(Props, Clone, PartialEq)]
+pub struct InputProps {
+    /// Theme override.
+    pub theme: Option<InputThemeWith>,
+    /// Current value of the Input
+    pub value: String,
+    /// Handler for the `onchange` event.
+    pub onchange: EventHandler<String>,
+    /// Display mode for Input. By default, input text is shown as it is provided.
+    #[props(default = InputMode::Shown, into)]
+    pub mode: InputMode,
+}
+
+/// `Input` component.
+///
+/// # Props
+/// See [`InputProps`].
+///
+/// # Styling
+/// Inherits the [`InputTheme`](freya_hooks::InputTheme) theme.
+///
+/// # Example
+///
+/// ```rust,no_run
+/// # use freya::prelude::*;
+/// fn app() -> Element {
+///     let mut value = use_signal(String::new);
+///
+///     rsx!(
+///         label {
+///             "Value: {value}"
+///         }
+///         Input {
+///             value: value.read().clone(),
+///             onchange: move |e| {
+///                  value.set(e)
+///             }
+///         }
+///     )
+/// }
+/// ```
+#[allow(non_snake_case)]
+pub fn Input(
+    InputProps {
+        theme,
+        value,
+        onchange,
+        mode,
+    }: InputProps,
+) -> Element {
+    let platform = use_platform();
+    let mut status = use_signal(InputStatus::default);
+    let mut editable = use_editable(
+        || EditableConfig::new(value.to_string()),
+        EditableMode::MultipleLinesSingleEditor,
+    );
+    let theme = use_applied_theme!(&theme, input);
+    let mut focus = use_focus();
+
+    if &value != editable.editor().read().rope() {
+        editable.editor_mut().write().set(&value);
+    }
+
+    let text = match mode {
+        InputMode::Hidden(ch) => ch.to_string().repeat(value.len()),
+        InputMode::Shown => value.clone(),
+    };
+
+    use_drop(move || {
+        if *status.peek() == InputStatus::Hovering {
+            platform.set_cursor(CursorIcon::default());
+        }
+    });
+
+    let onkeydown = move |e: Event<KeyboardData>| {
+        if focus.is_focused() && e.data.key != Key::Enter {
+            editable.process_event(&EditableEvent::KeyDown(e.data));
+            onchange.call(editable.editor().peek().to_string());
+        }
+    };
+
+    let onmousedown = move |e: MouseEvent| {
+        editable.process_event(&EditableEvent::MouseDown(e.data, 0));
+        focus.focus();
+    };
+
+    let onmouseover = move |e: MouseEvent| {
+        editable.process_event(&EditableEvent::MouseOver(e.data, 0));
+    };
+
+    let onmouseenter = move |_| {
+        platform.set_cursor(CursorIcon::Text);
+        *status.write() = InputStatus::Hovering;
+    };
+
+    let onmouseleave = move |_| {
+        platform.set_cursor(CursorIcon::default());
+        *status.write() = InputStatus::default();
+    };
+
+    let onglobalclick = move |_| match *status.read() {
+        InputStatus::Idle if focus.is_focused() => {
+            focus.unfocus();
+        }
+        InputStatus::Hovering => {
+            editable.process_event(&EditableEvent::Click);
+        }
+        _ => {}
+    };
+
+    let focus_id = focus.attribute();
+    let cursor_reference = editable.cursor_attr();
+    let highlights = editable.highlights_attr(0);
+
+    let (background, cursor_char) = if focus.is_focused() {
+        (
+            theme.hover_background,
+            editable.editor().read().cursor_pos().to_string(),
+        )
+    } else {
+        (theme.background, "none".to_string())
+    };
+    let InputTheme {
+        border_fill,
+        width,
+        margin,
+        corner_radius,
+        font_theme: FontTheme { color },
+        ..
+    } = theme;
+
+    rsx!(
+        rect {
+            width: "{width}",
+            direction: "vertical",
+            color: "{color}",
+            background: "{background}",
+            border: "1 solid {border_fill}",
+            shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)",
+            corner_radius: "{corner_radius}",
+            margin: "{margin}",
+            cursor_reference,
+            focus_id,
+            focusable: "true",
+            role: "textInput",
+            main_align: "center",
+            paragraph {
+                margin: "8 12",
+                onkeydown,
+                onglobalclick,
+                onmouseenter,
+                onmouseleave,
+                onmousedown,
+                onmouseover,
+                width: "100%",
+                cursor_id: "0",
+                cursor_index: "{cursor_char}",
+                cursor_mode: "editable",
+                cursor_color: "{color}",
+                max_lines: "1",
+                highlights,
+                text {
+                    "{text}"
+                }
+            }
+        }
+    )
+}

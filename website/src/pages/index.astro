@@ -1,0 +1,148 @@
+---
+import Card from '../components/Card.astro';
+import { CodeBlock } from '../components/Codeblock.jsx';
+import Layout from '../layouts/Layout.astro';
+import { FaGithub, FaDiscord } from 'react-icons/fa'
+import { GoBook } from 'react-icons/go'
+
+const EXAMPLE_CODE = `
+fn app(cx: Scope) -> Element {
+  let mut count = use_state(cx, || 0);
+
+  render!(
+      rect {
+          height: "20%",
+          width: "100%",
+          background: "rgb(233, 196, 106)",
+          padding: "25",
+          color: "rgb(20, 33, 61)",
+          label { 
+              font_size: "20", 
+              "Number is: {count}"
+          }
+      }
+      rect {
+          height: "80%",
+          width: "100%",
+          background: "rgb(73, 151, 222)",
+          color: "black",
+          padding: "25",
+          onclick: move |_| count += 1,
+          label { "Click to increase!" }
+      }
+  )
+}
+`.trim()
+---
+
+<Layout title="Freya - GUI Library for Rust">
+	<main>
+		<div id="header">
+			<div class="spaced" id="logo">
+				<img src="/logo.svg" width="150">
+				<img src="/freya.svg" width="150">
+			</div>
+			<p>Build native & cross-platform GUI applications  using 🦀 <a href="https://www.rust-lang.org/">Rust</a>. <br/>Powered by 🧬 <a href="https://dioxuslabs.com/">Dioxus</a> and 🎨 <a href="https://skia.org/" rel="noreferrer">Skia</a>.</p>
+			<a title="Freya Source Code" href="https://github.com/marc2332/freya" class="link"><FaGithub size={30}/></a>
+			<a title="Freya Discord" href="https://discord.gg/sYejxCdewG" class="link"><FaDiscord size={30}/></a>
+			<a title="Freya Docs" href="https://docs.rs/freya/latest/freya" class="link"><GoBook size={30}/></a>
+		</div>
+		<div class="spaced" id="learn-more">
+			<p>Freya is in development, you can learn more in the <a title="Freya Book" href="https://book.freyaui.dev" class="link">book</a>.</p>
+		</div>
+		<div class="flex">
+			<Card>
+				<CodeBlock code={EXAMPLE_CODE} client:load/>
+			</Card>
+			<Card>
+				<div class="demo-gui card-body">
+					<div>
+						Number is: 37
+					</div>
+					<div>
+						Click to increase
+					</div>
+				</div>
+			</Card>
+		</div>
+	</main>
+</Layout>
+
+<style>
+	main {
+		margin: auto;
+		padding: 5rem 5rem 0rem 5rem;
+		max-width: 70ch;
+		color: white;
+	}
+	h1 {
+		font-size: 3rem;
+		font-weight: 800;
+		margin: 0;
+	}
+	.flex  {
+		display: flex;
+	}
+	.spaced {
+		justify-content: space-between;
+	}
+	#logo {
+		padding: 10px 25px;
+		align-items: center;
+		display: flex;
+	}
+	#header {
+		margin: 0 auto 20px auto;
+		width: 390px;
+		text-align: center;
+	}
+	#header * {
+		line-height: 1.75rem;
+		color: rgb(229, 231, 235);
+	}
+	#header p {
+		font-size: 1.25rem;
+		line-height: 1.7;
+	}
+	#learn-more {
+		margin: 0px 20px;
+	}
+	.demo-gui {
+		height: 100%;
+		color: black;
+	}
+	.demo-gui div:nth-child(1){
+		background: rgb(233, 196, 106);
+		height: 20%;
+		border-top-left-radius: 10px;
+		border-top-right-radius: 10px;
+		padding: 25px;
+		box-sizing: border-box;
+	}
+	.demo-gui div:nth-child(2){
+		background: rgb(73, 151, 222);
+		height: 80%;
+		border-bottom-left-radius: 10px;
+		border-bottom-right-radius: 10px;
+		padding: 25px;
+		box-sizing: border-box;
+	}
+	.link {
+		color: rgb(229, 231, 235);
+		margin: 0 5px;
+	}
+	@media only screen and (max-width: 800px) {
+		.flex {
+			display: block;
+		}
+		main {
+			margin: auto;
+			padding: 1rem;
+			max-width: unset;
+			color: white;
+		}
+		.demo-gui {
+			height: 481px;
+		}
+	}
+</style>

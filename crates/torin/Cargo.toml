@@ -1,0 +1,33 @@
+[package]
+name = "torin"
+description = "UI layout Library designed for Freya."
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "./readme.md"
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
+categories = ["gui", "caching"]
+
+[features]
+dioxus = ["dep:dioxus-native-core", "dep:dioxus-core"]
+default = ["dioxus"]
+
+[dependencies]
+tracing = { workspace = true }
+euclid = { workspace = true }
+rustc-hash = { workspace = true }
+dioxus-native-core = { workspace = true, optional = true }
+dioxus-core = { workspace = true, optional = true }
+
+[dev-dependencies]
+criterion = "0.5.1"
+
+[lib]
+bench = false
+
+[[bench]]
+name = "bench"
+harness = false 

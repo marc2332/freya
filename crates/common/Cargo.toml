@@ -1,0 +1,28 @@
+[package]
+name = "freya-common"
+description = "Internal common utilities for Freya."
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["Marc Espín <mespinsanz@gmail.com>"]
+readme = "../../readme.md"
+homepage = "https://freyaui.dev/"
+repository = "https://github.com/marc2332/freya"
+keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
+categories = ["gui", "asynchronous"]
+
+[dependencies]
+torin = { workspace = true }
+
+dioxus-rsx = { workspace = true }
+dioxus-native-core = { workspace = true }
+dioxus-core-macro = { workspace = true }
+dioxus-hooks = { workspace = true }
+dioxus-core = { workspace = true }
+
+accesskit = { workspace = true }
+accesskit_winit = { workspace = true }
+winit = { workspace = true }
+
+euclid = { workspace = true }
+uuid = { workspace = true }
