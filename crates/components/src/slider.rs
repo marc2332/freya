@@ -217,8 +217,7 @@ pub fn Slider(
 mod test {
     use dioxus::prelude::use_signal;
     use freya::prelude::*;
-    use freya_core::events::{EventName, PlatformEvent};
-    use freya_testing::{events::pointer::MouseButton, launch_test};
+    use freya_testing::*;
 
     #[tokio::test]
     pub async fn slider() {

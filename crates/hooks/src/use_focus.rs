@@ -86,9 +86,9 @@ pub fn use_focus() -> UseFocus {
 mod test {
     use crate::use_focus;
     use freya::prelude::*;
-    use freya_core::events::EventName;
     use freya_testing::{
-        events::pointer::MouseButton, launch_test_with_config, PlatformEvent, TestingConfig,
+        events::pointer::MouseButton, launch_test_with_config, EventName, PlatformEvent,
+        TestingConfig,
     };
 
     #[tokio::test]

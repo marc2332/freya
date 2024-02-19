@@ -307,8 +307,7 @@ where
 #[cfg(test)]
 mod test {
     use freya::prelude::*;
-    use freya_core::events::{EventName, PlatformEvent};
-    use freya_testing::launch_test;
+    use freya_testing::*;
     use winit::event::MouseButton;
 
     #[tokio::test]

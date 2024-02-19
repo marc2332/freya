@@ -69,8 +69,7 @@ pub fn CursorArea(CursorAreaProps { children, icon }: CursorAreaProps) -> Elemen
 #[cfg(test)]
 mod test {
     use freya::prelude::*;
-    use freya_core::events::*;
-    use freya_testing::launch_test;
+    use freya_testing::*;
     use winit::{event::MouseButton, window::CursorIcon};
 
     #[tokio::test]
