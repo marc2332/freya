@@ -8,7 +8,7 @@ use freya_elements::{
 };
 use torin::prelude::*;
 
-use crate::events::FreyaEvent;
+use crate::{events::FreyaEvent, prelude::PotentialEvent};
 
 /// Event emitted to the DOM.
 #[derive(Debug, Clone, PartialEq)]
@@ -17,6 +17,8 @@ pub struct DomEvent {
     pub node_id: NodeId,
     pub element_id: ElementId,
     pub data: DomEventData,
+    pub bubbles: bool,
+    pub layer: Option<i16>,
 }
 
 impl Eq for DomEvent {}
@@ -43,28 +45,24 @@ impl Ord for DomEvent {
 }
 
 impl DomEvent {
-    pub fn does_move_cursor(&self) -> bool {
-        return does_event_move_cursor(self.name.as_str());
-    }
-
-    // Bubble all events except keyboard
-    pub fn should_bubble(&self) -> bool {
-        !matches!(self.data, DomEventData::Keyboard(_))
-    }
-
     pub fn new(
-        node_id: NodeId,
+        PotentialEvent {
+            node_id,
+            layer,
+            event,
+        }: PotentialEvent,
         element_id: ElementId,
-        event: &FreyaEvent,
         node_area: Option<Area>,
         scale_factor: f64,
     ) -> Self {
         let is_pointer_event = event.is_pointer_event();
         let event_name = event.get_name().to_string();
 
+        let bubbles = event.does_bubble();
+
         match event {
             FreyaEvent::Mouse { cursor, button, .. } => {
-                let screen_coordinates = *cursor / scale_factor;
+                let screen_coordinates = cursor / scale_factor;
                 let element_x =
                     (cursor.x - node_area.unwrap_or_default().min_x() as f64) / scale_factor;
                 let element_y =
@@ -75,14 +73,14 @@ impl DomEvent {
                         screen_coordinates,
                         (element_x, element_y).into(),
                         PointerType::Mouse {
-                            trigger_button: *button,
+                            trigger_button: button,
                         },
                     ))
                 } else {
                     DomEventData::Mouse(MouseData::new(
                         screen_coordinates,
                         (element_x, element_y).into(),
-                        *button,
+                        button,
                     ))
                 };
 
@@ -91,6 +89,8 @@ impl DomEvent {
                     element_id,
                     name: event_name,
                     data: event_data,
+                    bubbles,
+                    layer,
                 }
             }
             FreyaEvent::Wheel { scroll, .. } => Self {
@@ -98,6 +98,8 @@ impl DomEvent {
                 element_id,
                 name: event_name,
                 data: DomEventData::Wheel(WheelData::new(scroll.x, scroll.y)),
+                bubbles,
+                layer,
             },
             FreyaEvent::Keyboard {
                 ref key,
@@ -108,7 +110,9 @@ impl DomEvent {
                 node_id,
                 element_id,
                 name: event_name,
-                data: DomEventData::Keyboard(KeyboardData::new(key.clone(), *code, *modifiers)),
+                data: DomEventData::Keyboard(KeyboardData::new(key.clone(), code, modifiers)),
+                bubbles,
+                layer,
             },
             FreyaEvent::Touch {
                 location,
@@ -122,21 +126,21 @@ impl DomEvent {
 
                 let event_data = if is_pointer_event {
                     DomEventData::Pointer(PointerData::new(
-                        *location,
+                        location,
                         (element_x, element_y).into(),
                         PointerType::Touch {
-                            finger_id: *finger_id,
-                            phase: *phase,
-                            force: *force,
+                            finger_id,
+                            phase,
+                            force,
                         },
                     ))
                 } else {
                     DomEventData::Touch(TouchData::new(
-                        *location,
+                        location,
                         (element_x, element_y).into(),
-                        *finger_id,
-                        *phase,
-                        *force,
+                        finger_id,
+                        phase,
+                        force,
                     ))
                 };
 
@@ -145,9 +149,20 @@ impl DomEvent {
                     element_id,
                     name: event_name,
                     data: event_data,
+                    bubbles,
+                    layer,
                 }
             }
         }
+    }
+
+    pub fn does_move_cursor(&self) -> bool {
+        return does_event_move_cursor(self.name.as_str());
+    }
+
+    // Check if this even can change the hover state of an Element.
+    pub fn can_change_element_hover_state(&self) -> bool {
+        ["mouseover", "mouseenter", "pointerover", "pointerenter"].contains(&self.name.as_str())
     }
 }
 

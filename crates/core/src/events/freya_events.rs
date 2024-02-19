@@ -57,7 +57,11 @@ impl FreyaEvent {
         self.get_name().starts_with("point")
     }
 
-    pub fn is_keyboard_event(&self) -> bool {
-        matches!(self, Self::Keyboard { .. })
+    // Bubble all events except:
+    // - Keyboard events
+    // - Mouseleave events
+    pub fn does_bubble(&self) -> bool {
+        !(matches!(self, Self::Keyboard { .. })
+            || ["mouseleave", "pointerleave"].contains(&self.get_name()))
     }
 }
