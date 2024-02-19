@@ -145,8 +145,7 @@ pub fn DropZone<T: 'static + Clone + PartialEq>(props: DropZoneProps<T>) -> Elem
 #[cfg(test)]
 mod test {
     use freya::prelude::*;
-    use freya_core::events::EventName;
-    use freya_testing::{events::pointer::MouseButton, launch_test, PlatformEvent};
+    use freya_testing::{events::pointer::MouseButton, launch_test, EventName, PlatformEvent};
 
     #[tokio::test]
     pub async fn drag_drop() {
