@@ -927,7 +927,7 @@ impl ParagraphBuilder {
         unimplemented!("This is mocked")
     }
 
-    pub fn new(_style: &ParagraphStyle, _font_collection: FontCollection) -> Self {
+    pub fn new(_style: &ParagraphStyle, _font_collection: impl Into<FontCollection>) -> Self {
         unimplemented!("This is mocked")
     }
 }
