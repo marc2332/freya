@@ -9,7 +9,7 @@ pub fn render_rect(
     area: &Area,
     node_ref: &DioxusNode,
     canvas: &Canvas,
-    font_collection: &FontCollection,
+    font_collection: &mut FontCollection,
 ) {
     let node_style = &*node_ref.get::<Style>().unwrap();
 
