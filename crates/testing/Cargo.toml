@@ -27,19 +27,13 @@ freya-hooks = { workspace = true }
 freya-engine = { workspace = true }
 torin = { workspace = true }
 
-dioxus-rsx = { workspace = true }
 dioxus-native-core = { workspace = true }
 dioxus-core-macro = { workspace = true }
-dioxus-hooks = { workspace = true }
 dioxus-core = { workspace = true }
-dioxus-native-core-macro = { workspace = true }
 dioxus = { workspace = true }
 
-winit = { workspace = true }
 tokio = { workspace = true }
 accesskit = { workspace = true }
-
-smallvec = "1.11.2"
 
 [dev-dependencies]
 freya-components = { workspace = true }

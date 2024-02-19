@@ -30,8 +30,6 @@ torin = { workspace = true }
 
 dioxus = { workspace = true }
 dioxus-native-core = { workspace = true }
-dioxus-core-macro = { workspace = true }
-dioxus-core = { workspace = true }
 dioxus-router = { workspace = true }
 
 tokio = { workspace = true }
