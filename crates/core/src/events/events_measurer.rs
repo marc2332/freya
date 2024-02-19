@@ -7,7 +7,7 @@ use freya_dom::{dom::DioxusDOM, prelude::FreyaDOM};
 use freya_engine::prelude::*;
 use freya_node_state::{Fill, Style};
 
-pub use crate::events::{DomEvent, ElementsState, FreyaEvent};
+pub use crate::events::{DomEvent, NodesState, PlatformEvent};
 
 use crate::types::{EventEmitter, EventsQueue, PotentialEvents};
 
@@ -19,11 +19,11 @@ pub fn process_events(
     layers: &Layers,
     events: &mut EventsQueue,
     event_emitter: &EventEmitter,
-    elements_state: &mut ElementsState,
+    nodes_state: &mut NodesState,
     viewports: &Viewports,
     scale_factor: f64,
 ) {
-    // 1. Get global events created from the incominge vents
+    // 1. Get global events created from the incoming events
     let global_events = measure_global_events(events);
 
     // 2. Get potential events that could be emitted based on the elements layout and viewports
@@ -32,11 +32,11 @@ pub fn process_events(
     // 3. Get what events can be actually emitted based on what elements are listening
     let dom_events = measure_dom_events(potential_events, dom, scale_factor);
 
-    // 4. Filter the dom events and get potential derived events, e.g mouseover -> mouseenter
+    // 4. Filter the dom events and get potential colateral events, e.g mouseover -> mouseenter
     let (potential_colateral_events, mut to_emit_dom_events) =
-        elements_state.process_events(&dom_events, events);
+        nodes_state.process_events(&dom_events, events);
 
-    // 5. Get what derived events can actually be emitted
+    // 5. Get what colateral events can actually be emitted
     let to_emit_dom_colateral_events =
         measure_dom_events(potential_colateral_events, dom, scale_factor);
 
@@ -57,20 +57,15 @@ pub fn process_events(
 }
 
 /// Measure globale events
-pub fn measure_global_events(events: &EventsQueue) -> Vec<FreyaEvent> {
+pub fn measure_global_events(events: &EventsQueue) -> Vec<PlatformEvent> {
     let mut global_events = Vec::default();
     for event in events {
-        let event_name = match event.get_name() {
-            "click" => Some("globalclick"),
-            "mousedown" => Some("globalmousedown"),
-            "mouseover" => Some("globalmouseover"),
-            _ => None,
+        let Some(event_name) = event.get_name().get_global_event() else {
+            continue;
         };
-        if let Some(event_name) = event_name {
-            let mut global_event = event.clone();
-            global_event.set_name(event_name.to_string());
-            global_events.push(global_event);
-        }
+        let mut global_event = event.clone();
+        global_event.set_name(event_name);
+        global_events.push(global_event);
     }
     global_events
 }
@@ -92,21 +87,18 @@ pub fn measure_potential_event_listeners(
             let areas = layout.get(*node_id);
             if let Some(areas) = areas {
                 'events: for event in events.iter() {
-                    if let FreyaEvent::Keyboard { name, .. } = event {
+                    if let PlatformEvent::Keyboard { name, .. } = event {
                         let event_data = PotentialEvent {
                             node_id: *node_id,
                             layer: Some(*layer),
                             event: event.clone(),
                         };
-                        potential_events
-                            .entry(name.clone())
-                            .or_default()
-                            .push(event_data);
+                        potential_events.entry(*name).or_default().push(event_data);
                     } else {
                         let data = match event {
-                            FreyaEvent::Mouse { name, cursor, .. } => Some((name, cursor)),
-                            FreyaEvent::Wheel { name, cursor, .. } => Some((name, cursor)),
-                            FreyaEvent::Touch { name, location, .. } => Some((name, location)),
+                            PlatformEvent::Mouse { name, cursor, .. } => Some((name, cursor)),
+                            PlatformEvent::Wheel { name, cursor, .. } => Some((name, cursor)),
+                            PlatformEvent::Touch { name, location, .. } => Some((name, location)),
                             _ => None,
                         };
                         if let Some((name, cursor)) = data {
@@ -135,7 +127,7 @@ pub fn measure_potential_event_listeners(
                                 };
 
                                 potential_events
-                                    .entry(name.clone())
+                                    .entry(*name)
                                     .or_insert_with(Vec::new)
                                     .push(event_data);
                             }
@@ -147,27 +139,6 @@ pub fn measure_potential_event_listeners(
     }
 
     potential_events
-}
-
-/// Some events might cause other events, like for example:
-/// A `mouseover` might also trigger a `mouseenter`
-/// A `mousedown` or a `touchdown` might also trigger a `pointerdown`
-fn get_derivated_events(event_name: &str) -> Vec<&str> {
-    match event_name {
-        "mouseover" | "touchmove" => {
-            vec![event_name, "mouseenter", "pointerenter", "pointerover"]
-        }
-        "mousedown" | "touchstart" => {
-            vec![event_name, "pointerdown"]
-        }
-        "click" | "touchend" => {
-            vec![event_name, "pointerup"]
-        }
-        "mouseleave" => {
-            vec![event_name, "pointerleave"]
-        }
-        _ => vec![event_name],
-    }
 }
 
 fn is_node_parent_of(rdom: &DioxusDOM, node: NodeId, parent_node: NodeId) -> bool {
@@ -200,15 +171,15 @@ fn measure_dom_events(
 
     // Iterate over all the events
     for (event_name, event_nodes) in potential_events {
-        let derivated_events = get_derivated_events(event_name.as_str());
+        let colateral_events = event_name.get_colateral_events();
 
         let mut valid_events: Vec<PotentialEvent> = Vec::new();
 
-        // Iterate over the derivated event (including the source)
-        'event: for derivated_event_name in derivated_events.iter() {
+        // Iterate over the colateral events (including the source)
+        'event: for colateral_event in colateral_events {
             let mut child_node: Option<NodeId> = None;
 
-            let listeners = rdom.get_listening_sorted(derivated_event_name);
+            let listeners = rdom.get_listening_sorted(colateral_event.into());
 
             // Iterate over the event nodes
             for PotentialEvent {
@@ -232,7 +203,7 @@ fn measure_dom_events(
 
                         if valid_node {
                             let mut valid_event = event.clone();
-                            valid_event.set_name(derivated_event_name.to_string());
+                            valid_event.set_name(colateral_event);
                             valid_events.push(PotentialEvent {
                                 node_id: *node_id,
                                 event: valid_event,
@@ -240,7 +211,7 @@ fn measure_dom_events(
                             });
 
                             // Stack events that do not bubble up
-                            if event.does_bubble() {
+                            if event.get_name().does_bubble() {
                                 continue 'event;
                             }
                         }
@@ -249,7 +220,8 @@ fn measure_dom_events(
 
                 let Style { background, .. } = &*node.get::<Style>().unwrap();
 
-                if background != &Fill::Color(Color::TRANSPARENT) && event.does_bubble() {
+                if background != &Fill::Color(Color::TRANSPARENT) && event.get_name().does_bubble()
+                {
                     // If the background isn't transparent,
                     // we must make sure that next nodes are parent of it
                     // This only matters for events that bubble up (e.g cursor movement events)
@@ -280,14 +252,14 @@ fn measure_dom_events(
 
 /// Emit global events
 fn emit_global_events_listeners(
-    global_events: Vec<FreyaEvent>,
+    global_events: Vec<PlatformEvent>,
     fdom: &FreyaDOM,
     event_emitter: &EventEmitter,
     scale_factor: f64,
 ) {
     for global_event in global_events {
         let event_name = global_event.get_name();
-        let listeners = fdom.rdom().get_listening_sorted(event_name);
+        let listeners = fdom.rdom().get_listening_sorted(event_name.into());
 
         for listener in listeners {
             let element_id = listener.mounted_id().unwrap();

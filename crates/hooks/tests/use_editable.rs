@@ -1,11 +1,12 @@
 use crate::{use_editable, EditableMode, TextEditor};
 use freya::prelude::*;
+use freya_core::events::EventName;
 use freya_testing::{
     events::{
         keyboard::{Code, Key, Modifiers},
         pointer::MouseButton,
     },
-    launch_test, FreyaEvent,
+    launch_test, PlatformEvent,
 };
 
 #[tokio::test]
@@ -67,8 +68,8 @@ pub async fn multiple_lines_single_editor() {
     assert_eq!(content.text(), Some("Hello Rustaceans"));
 
     // Move cursor
-    utils.push_event(FreyaEvent::Mouse {
-        name: "mousedown".to_string(),
+    utils.push_event(PlatformEvent::Mouse {
+        name: EventName::MouseDown,
         cursor: (35.0, 3.0).into(),
         button: Some(MouseButton::Left),
     });
@@ -86,8 +87,8 @@ pub async fn multiple_lines_single_editor() {
     assert_eq!(cursor.text(), Some("4:0"));
 
     // Insert text
-    utils.push_event(FreyaEvent::Keyboard {
-        name: "keydown".to_string(),
+    utils.push_event(PlatformEvent::Keyboard {
+        name: EventName::Keydown,
         key: Key::Character("!".to_string()),
         code: Code::Unidentified,
         modifiers: Modifiers::empty(),
@@ -174,8 +175,8 @@ pub async fn single_line_mulitple_editors() {
     assert_eq!(content.text(), Some("Hello Rustaceans\n"));
 
     // Move cursor
-    utils.push_event(FreyaEvent::Mouse {
-        name: "mousedown".to_string(),
+    utils.push_event(PlatformEvent::Mouse {
+        name: EventName::MouseDown,
         cursor: (35.0, 3.0).into(),
         button: Some(MouseButton::Left),
     });
@@ -193,8 +194,8 @@ pub async fn single_line_mulitple_editors() {
     assert_eq!(cursor.text(), Some("4:0"));
 
     // Insert text
-    utils.push_event(FreyaEvent::Keyboard {
-        name: "keydown".to_string(),
+    utils.push_event(PlatformEvent::Keyboard {
+        name: EventName::Keydown,
         key: Key::Character("!".to_string()),
         code: Code::Unidentified,
         modifiers: Modifiers::empty(),
@@ -284,8 +285,8 @@ pub async fn highlight_multiple_lines_single_editor() {
     let root = utils.root().get(0);
 
     // Click cursor
-    utils.push_event(FreyaEvent::Mouse {
-        name: "mousedown".to_string(),
+    utils.push_event(PlatformEvent::Mouse {
+        name: EventName::MouseDown,
         cursor: (35.0, 3.0).into(),
         button: Some(MouseButton::Left),
     });
@@ -293,8 +294,8 @@ pub async fn highlight_multiple_lines_single_editor() {
     utils.wait_for_update().await;
 
     // Move cursor
-    utils.push_event(FreyaEvent::Mouse {
-        name: "mouseover".to_string(),
+    utils.push_event(PlatformEvent::Mouse {
+        name: EventName::MouseOver,
         cursor: (80.0, 20.0).into(),
         button: Some(MouseButton::Left),
     });
@@ -393,8 +394,8 @@ pub async fn highlights_single_line_mulitple_editors() {
     let root = utils.root().get(0);
 
     // Click cursor
-    utils.push_event(FreyaEvent::Mouse {
-        name: "mousedown".to_string(),
+    utils.push_event(PlatformEvent::Mouse {
+        name: EventName::MouseDown,
         cursor: (35.0, 3.0).into(),
         button: Some(MouseButton::Left),
     });
@@ -402,8 +403,8 @@ pub async fn highlights_single_line_mulitple_editors() {
     utils.wait_for_update().await;
 
     // Move cursor
-    utils.push_event(FreyaEvent::Mouse {
-        name: "mouseover".to_string(),
+    utils.push_event(PlatformEvent::Mouse {
+        name: EventName::MouseOver,
         cursor: (35.0, 3.0).into(),
         button: Some(MouseButton::Left),
     });
@@ -412,8 +413,8 @@ pub async fn highlights_single_line_mulitple_editors() {
     utils.wait_for_update().await;
 
     // Move cursor
-    utils.push_event(FreyaEvent::Mouse {
-        name: "mouseover".to_string(),
+    utils.push_event(PlatformEvent::Mouse {
+        name: EventName::MouseOver,
         cursor: (80.0, 35.0).into(),
         button: Some(MouseButton::Left),
     });
