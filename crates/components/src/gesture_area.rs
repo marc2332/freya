@@ -174,9 +174,7 @@ mod test {
     use std::time::Duration;
 
     use freya::prelude::*;
-    use freya_core::prelude::EventName;
-    use freya_elements::events::touch::TouchPhase;
-    use freya_testing::{launch_test, PlatformEvent};
+    use freya_testing::{events::touch::TouchPhase, launch_test, EventName, PlatformEvent};
     use tokio::time::sleep;
 
     use crate::gesture_area::DOUBLE_TAP_MIN;

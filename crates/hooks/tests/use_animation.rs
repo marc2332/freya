@@ -1,9 +1,9 @@
 use std::time::Duration;
 
 use dioxus_core::use_hook;
+use freya::events::pointer::MouseButton;
 use freya::prelude::*;
-use freya_core::events::EventName;
-use freya_testing::{events::pointer::MouseButton, launch_test, PlatformEvent};
+use freya_testing::*;
 use tokio::time::sleep;
 
 #[tokio::test]
