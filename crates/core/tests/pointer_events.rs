@@ -48,8 +48,8 @@ pub async fn pointer_events_from_mouse() {
     assert_eq!(label.get(0).text(), Some("[]"));
 
     // Moving the mouse for the first time will cause `mouseenter` and `mouseover` events
-    utils.push_event(FreyaEvent::Mouse {
-        name: "mouseover".to_string(),
+    utils.push_event(PlatformEvent::Mouse {
+        name: EventName::MouseOver,
         cursor: CursorPoint::new(100.0, 100.0),
         button: Some(MouseButton::Left),
     });
@@ -59,8 +59,8 @@ pub async fn pointer_events_from_mouse() {
         Some(format!("{:?}", vec!["enter", "over"]).as_str())
     );
 
-    utils.push_event(FreyaEvent::Mouse {
-        name: "mousedown".to_string(),
+    utils.push_event(PlatformEvent::Mouse {
+        name: EventName::MouseDown,
         cursor: CursorPoint::new(100.0, 100.0),
         button: Some(MouseButton::Left),
     });
@@ -70,8 +70,8 @@ pub async fn pointer_events_from_mouse() {
         Some(format!("{:?}", vec!["enter", "over", "down"]).as_str())
     );
 
-    utils.push_event(FreyaEvent::Mouse {
-        name: "click".to_string(),
+    utils.push_event(PlatformEvent::Mouse {
+        name: EventName::Click,
         cursor: CursorPoint::new(100.0, 100.0),
         button: Some(MouseButton::Left),
     });
@@ -81,8 +81,8 @@ pub async fn pointer_events_from_mouse() {
         Some(format!("{:?}", vec!["enter", "over", "down", "up"]).as_str())
     );
 
-    utils.push_event(FreyaEvent::Mouse {
-        name: "mouseover".to_string(),
+    utils.push_event(PlatformEvent::Mouse {
+        name: EventName::MouseOver,
         cursor: CursorPoint::new(0.0, 0.0),
         button: Some(MouseButton::Left),
     });
@@ -132,8 +132,8 @@ pub async fn pointer_events_from_touch() {
 
     assert_eq!(label.get(0).text(), Some("[]"));
 
-    utils.push_event(FreyaEvent::Touch {
-        name: "touchmove".to_string(),
+    utils.push_event(PlatformEvent::Touch {
+        name: EventName::TouchMove,
         location: CursorPoint::new(100.0, 100.0),
         finger_id: 1,
         phase: TouchPhase::Moved,
@@ -145,8 +145,8 @@ pub async fn pointer_events_from_touch() {
         Some(format!("{:?}", vec!["enter", "over"]).as_str())
     );
 
-    utils.push_event(FreyaEvent::Touch {
-        name: "touchstart".to_string(),
+    utils.push_event(PlatformEvent::Touch {
+        name: EventName::TouchStart,
         location: CursorPoint::new(100.0, 100.0),
         finger_id: 1,
         phase: TouchPhase::Started,
@@ -158,8 +158,8 @@ pub async fn pointer_events_from_touch() {
         Some(format!("{:?}", vec!["enter", "over", "down"]).as_str())
     );
 
-    utils.push_event(FreyaEvent::Touch {
-        name: "touchend".to_string(),
+    utils.push_event(PlatformEvent::Touch {
+        name: EventName::TouchEnd,
         location: CursorPoint::new(100.0, 100.0),
         finger_id: 1,
         phase: TouchPhase::Ended,

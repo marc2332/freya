@@ -657,6 +657,7 @@ impl From<TypefaceFontProvider> for FontMgr {
     }
 }
 
+#[derive(Clone)]
 pub struct FontCollection;
 
 impl FontCollection {
@@ -926,7 +927,7 @@ impl ParagraphBuilder {
         unimplemented!("This is mocked")
     }
 
-    pub fn new(_style: &ParagraphStyle, _font_collection: &FontCollection) -> Self {
+    pub fn new(_style: &ParagraphStyle, _font_collection: FontCollection) -> Self {
         unimplemented!("This is mocked")
     }
 }

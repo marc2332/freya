@@ -25,7 +25,7 @@ pub struct TestingHandler {
     pub(crate) platform_event_emitter: UnboundedSender<EventMessage>,
     pub(crate) platform_event_receiver: UnboundedReceiver<EventMessage>,
     pub(crate) events_queue: EventsQueue,
-    pub(crate) elements_state: ElementsState,
+    pub(crate) nodes_state: NodesState,
     pub(crate) font_collection: FontCollection,
     pub(crate) viewports: Viewports,
     pub(crate) accessibility_manager: SharedAccessibilityManager,
@@ -100,7 +100,7 @@ impl TestingHandler {
 
             if let Ok(ev) = vdom_ev {
                 self.vdom
-                    .handle_event(&ev.name, ev.data.any(), ev.element_id, true);
+                    .handle_event(ev.name.into(), ev.data.any(), ev.element_id, true);
                 self.vdom.process_events();
             }
         }
@@ -146,14 +146,14 @@ impl TestingHandler {
             &self.utils.layers().lock().unwrap(),
             &mut self.events_queue,
             &self.event_emitter,
-            &mut self.elements_state,
+            &mut self.nodes_state,
             &self.viewports,
             SCALE_FACTOR,
         );
     }
 
     /// Push an event to the events queue
-    pub fn push_event(&mut self, event: FreyaEvent) {
+    pub fn push_event(&mut self, event: PlatformEvent) {
         self.events_queue.push(event);
     }
 
