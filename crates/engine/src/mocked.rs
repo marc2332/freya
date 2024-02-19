@@ -932,6 +932,12 @@ impl ParagraphBuilder {
     }
 }
 
+impl From<&FontCollection> for FontCollection {
+    fn from(value: &FontCollection) -> Self {
+        value.clone()
+    }
+}
+
 pub struct StrutStyle;
 
 pub struct TextHeightBehavior;
