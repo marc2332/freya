@@ -657,6 +657,7 @@ impl From<TypefaceFontProvider> for FontMgr {
     }
 }
 
+#[derive(Clone)]
 pub struct FontCollection;
 
 impl FontCollection {
