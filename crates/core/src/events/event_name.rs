@@ -140,11 +140,18 @@ impl EventName {
 
     // Bubble all events except:
     // - Keyboard events
-    // - Mouseleave events
+    // - Mouse movements events
     pub fn does_bubble(&self) -> bool {
         !matches!(
             self,
-            Self::KeyDown | Self::KeyUp | Self::MouseLeave | Self::PointerLeave
+            Self::KeyDown
+                | Self::KeyUp
+                | Self::MouseLeave
+                | Self::PointerLeave
+                | Self::MouseEnter
+                | Self::PointerEnter
+                | Self::MouseOver
+                | Self::PointerOver
         )
     }
 

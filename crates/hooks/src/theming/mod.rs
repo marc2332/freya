@@ -448,6 +448,28 @@ define_theme! {
     }
 }
 
+define_theme! {
+    %[component]
+    pub Sidebar {
+        %[cows]
+        background: str,
+        %[subthemes]
+        font_theme: FontTheme,
+    }
+}
+
+define_theme! {
+    %[component]
+    pub SidebarItem {
+        %[cows]
+        background: str,
+        hover_background: str,
+        border_fill: str,
+        %[subthemes]
+        font_theme: FontTheme,
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Theme {
     pub name: &'static str,
@@ -470,6 +492,8 @@ pub struct Theme {
     pub graph: GraphTheme,
     pub network_image: NetworkImageTheme,
     pub arrow_icon: ArrowIconTheme,
+    pub sidebar: SidebarTheme,
+    pub sidebar_item: SidebarItemTheme,
 }
 
 impl Default for Theme {
