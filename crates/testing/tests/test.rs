@@ -61,8 +61,8 @@ async fn check_size() {
 
     let rect = utils.root().get(0);
 
-    assert_eq!(rect.layout().unwrap().width(), 250.0);
-    assert_eq!(rect.layout().unwrap().height(), 430.0);
+    assert_eq!(rect.area().unwrap().width(), 250.0);
+    assert_eq!(rect.area().unwrap().height(), 430.0);
 }
 
 #[tokio::test]
