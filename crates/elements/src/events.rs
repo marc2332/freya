@@ -5,11 +5,11 @@ pub mod touch;
 pub mod wheel;
 
 use dioxus_core::Event;
-pub use keyboard::KeyboardData;
-pub use mouse::MouseData;
-pub use pointer::PointerData;
-pub use touch::TouchData;
-pub use wheel::WheelData;
+pub use keyboard::*;
+pub use mouse::*;
+pub use pointer::*;
+pub use touch::*;
+pub use wheel::*;
 
 pub type KeyboardEvent = Event<KeyboardData>;
 pub type MouseEvent = Event<MouseData>;

@@ -212,3 +212,61 @@ pub fn Slider(
         }
     )
 }
+
+#[cfg(test)]
+mod test {
+    use dioxus::prelude::use_signal;
+    use freya::prelude::*;
+    use freya_testing::*;
+
+    #[tokio::test]
+    pub async fn slider() {
+        fn slider_app() -> Element {
+            let mut value = use_signal(|| 50.);
+
+            rsx!(
+                Slider {
+                    value: *value.read(),
+                    onmoved: move |p| {
+                        value.set(p);
+                    }
+                }
+                label {
+                    "{value}"
+                }
+            )
+        }
+
+        let mut utils = launch_test(slider_app);
+        let root = utils.root();
+        let label = root.get(1);
+        utils.wait_for_update().await;
+
+        assert_eq!(label.get(0).text(), Some("50"));
+
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseOver,
+            cursor: (250.0, 7.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseDown,
+            cursor: (250.0, 7.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseOver,
+            cursor: (500.0, 7.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (500.0, 7.0).into(),
+            button: Some(MouseButton::Left),
+        });
+
+        utils.wait_for_update().await;
+
+        assert_eq!(label.get(0).text(), Some("100"));
+    }
+}

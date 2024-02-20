@@ -68,8 +68,8 @@ impl DOMAdapter<usize> for TestingDOM {
         true
     }
 
-    fn closest_common_parent(&self, node_id_a: &usize, _node_id_b: &usize) -> Option<usize> {
-        self.parent_of(node_id_a)
+    fn root_id(&self) -> usize {
+        0
     }
 }
 

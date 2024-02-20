@@ -10,12 +10,15 @@ use freya_hooks::{use_init_accessibility, PlatformInformation};
 use std::sync::{Arc, Mutex};
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::unbounded_channel;
+use winit::window::CursorIcon;
 
 use crate::config::TestingConfig;
 use crate::test_handler::TestingHandler;
 use crate::test_utils::TestUtils;
 
-/// Run a Component in a headless testing environment
+/// Run a Component in a headless testing environment.
+///
+/// Default size is `500x500`.
 pub fn launch_test(root: AppComponent) -> TestingHandler {
     launch_test_with_config(root, TestingConfig::default())
 }
@@ -28,7 +31,8 @@ pub fn launch_test_with_config(root: AppComponent, config: TestingConfig) -> Tes
 
     let (event_emitter, event_receiver) = unbounded_channel::<DomEvent>();
     let (platform_event_emitter, platform_event_receiver) = unbounded_channel::<EventMessage>();
-    let layers = Arc::new(Mutex::new(Layers::default()));
+    let layers = Arc::default();
+    let viewports = Arc::default();
     let mut font_collection = FontCollection::new();
     font_collection.set_dynamic_font_manager(FontMgr::default());
 
@@ -39,8 +43,11 @@ pub fn launch_test_with_config(root: AppComponent, config: TestingConfig) -> Tes
         font_collection,
         event_emitter,
         event_receiver,
-        viewports: Viewports::default(),
-        utils: TestUtils { sdom, layers },
+        utils: TestUtils {
+            sdom,
+            layers,
+            viewports,
+        },
         config,
         platform_event_emitter,
         platform_event_receiver,
@@ -48,6 +55,7 @@ pub fn launch_test_with_config(root: AppComponent, config: TestingConfig) -> Tes
         ticker_sender: broadcast::channel(5).0,
         navigation_state: NavigatorState::new(NavigationMode::NotKeyboard),
         platform_information: Arc::new(Mutex::new(PlatformInformation::new(config.size))),
+        cursor_icon: CursorIcon::default(),
     };
 
     handler.init_dom();
