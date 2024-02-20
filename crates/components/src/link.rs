@@ -178,3 +178,109 @@ pub fn Link(
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use dioxus_router::prelude::{Outlet, Routable, Router};
+    use freya::prelude::*;
+    use freya_testing::*;
+
+    #[tokio::test]
+    pub async fn link() {
+        #[derive(Routable, Clone)]
+        #[rustfmt::skip]
+        enum Route {
+            #[layout(Layout)]
+            #[route("/")]
+            Home,
+            #[route("/somewhere")]
+            Somewhere,
+            #[route("/..routes")]
+            NotFound
+        }
+
+        #[allow(non_snake_case)]
+        #[component]
+        fn NotFound() -> Element {
+            rsx! {
+                label {
+                    "Not found"
+                }
+            }
+        }
+
+        #[allow(non_snake_case)]
+        #[component]
+        fn Home() -> Element {
+            rsx! {
+                label {
+                    "Home"
+                }
+            }
+        }
+
+        #[allow(non_snake_case)]
+        #[component]
+        fn Somewhere() -> Element {
+            rsx! {
+                label {
+                    "Somewhere"
+                }
+            }
+        }
+
+        #[allow(non_snake_case)]
+        #[component]
+        fn Layout() -> Element {
+            rsx!(
+                Link {
+                    to: Route::Home,
+                    Button {
+                        label { "Home" }
+                    }
+                }
+                Link {
+                    to: Route::Somewhere,
+                    Button {
+                        label { "Somewhere" }
+                    }
+                }
+                Outlet::<Route> {}
+            )
+        }
+
+        fn link_app() -> Element {
+            rsx!(Router::<Route> {})
+        }
+
+        let mut utils = launch_test(link_app);
+
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+
+        // Check route is Home
+        assert_eq!(utils.root().get(2).get(0).text(), Some("Home"));
+
+        // Go to the "Somewhere" route
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (5., 70.).into(),
+            button: Some(MouseButton::Left),
+        });
+
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+
+        // Check route is Somewhere
+        assert_eq!(utils.root().get(2).get(0).text(), Some("Somewhere"));
+
+        // Go to the "Home" route again
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (5., 5.).into(),
+            button: Some(MouseButton::Left),
+        });
+
+        utils.wait_for_update().await;
+    }
+}

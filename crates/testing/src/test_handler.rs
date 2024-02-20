@@ -108,7 +108,7 @@ impl TestingHandler {
 
             if let Ok(ev) = vdom_ev {
                 self.vdom
-                    .handle_event(ev.name.into(), ev.data.any(), ev.element_id, true);
+                    .handle_event(ev.name.into(), ev.data.any(), ev.element_id, ev.bubbles);
                 self.vdom.process_events();
             }
         }
