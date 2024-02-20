@@ -7,9 +7,10 @@ use crate::{ButtonStatus, ScrollView};
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_hooks::{
-    theme_with, use_applied_theme, ScrollViewThemeWith, SidebarItemTheme, SidebarItemThemeWith,
-    SidebarTheme, SidebarThemeWith,
+    theme_with, use_applied_theme, use_platform, ScrollViewThemeWith, SidebarItemTheme,
+    SidebarItemThemeWith, SidebarTheme, SidebarThemeWith,
 };
+use winit::window::CursorIcon;
 
 #[allow(non_snake_case)]
 #[component]
@@ -73,6 +74,13 @@ pub fn SidebarItem(
         border_fill,
     } = use_applied_theme!(&theme, sidebar_item);
     let mut status = use_signal(ButtonStatus::default);
+    let platform = use_platform();
+
+    use_drop(move || {
+        if *status.read() == ButtonStatus::Hovering {
+            platform.set_cursor(CursorIcon::default());
+        }
+    });
 
     let onclick = move |_| {
         if let Some(onclick) = &onclick {
@@ -81,10 +89,12 @@ pub fn SidebarItem(
     };
 
     let onmouseenter = move |_| {
+        platform.set_cursor(CursorIcon::Pointer);
         status.set(ButtonStatus::Hovering);
     };
 
     let onmouseleave = move |_| {
+        platform.set_cursor(CursorIcon::default());
         status.set(ButtonStatus::default());
     };
 
@@ -108,9 +118,7 @@ pub fn SidebarItem(
             corner_radius: "8",
             padding: "8",
             background: "{background}",
-            label {
-                {children}
-            }
+            {children}
         }
     )
 }

@@ -3,7 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus_router::prelude::*;
+use dioxus_router::prelude::{Outlet, Routable, Router};
 use freya::prelude::*;
 
 fn main() {
@@ -32,22 +32,28 @@ fn AppSidebar() -> Element {
     rsx!(
         Sidebar {
             sidebar: rsx!(
-                SidebarItem {
-                    //Link {
-                        //to: Route::Home,
-                        "Go to Hey ! 👋"
-                    //}
+                Link {
+                    to: Route::Home,
+                    SidebarItem {
+                        label {
+                            "Go to Hey ! 👋"
+                        }
+                    },
                 },
-                SidebarItem {
-                    //Link {
-                        //to: Route::Wow,
-                        "Go to Wow! 👈"
-                    //}
+                Link {
+                    to: Route::Wow,
+                    SidebarItem {
+                        label {
+                            "Go to Wow! 👈"
+                        }
+                    },
                 },
                 SidebarItem {
                     onclick: |_| println!("Hello!"),
-                    "Print Hello! 👀"
-                }
+                    label {
+                        "Print Hello! 👀"
+                    }
+                },
             ),
             Body {
                 rect {
