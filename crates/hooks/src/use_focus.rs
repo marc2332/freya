@@ -87,7 +87,8 @@ mod test {
     use crate::use_focus;
     use freya::prelude::*;
     use freya_testing::{
-        events::pointer::MouseButton, launch_test_with_config, FreyaEvent, TestingConfig,
+        events::pointer::MouseButton, launch_test_with_config, EventName, PlatformEvent,
+        TestingConfig,
     };
 
     #[tokio::test]
@@ -132,8 +133,8 @@ mod test {
         assert_eq!(root.get(1).get(0).text(), Some("false"));
 
         // Click on the first rect
-        utils.push_event(FreyaEvent::Mouse {
-            name: "click".to_string(),
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
             cursor: (5.0, 5.0).into(),
             button: Some(MouseButton::Left),
         });
@@ -144,8 +145,8 @@ mod test {
         assert_eq!(root.get(1).get(0).text(), Some("false"));
 
         // Click on the second rect
-        utils.push_event(FreyaEvent::Mouse {
-            name: "click".to_string(),
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
             cursor: (5.0, 75.0).into(),
             button: Some(MouseButton::Left),
         });

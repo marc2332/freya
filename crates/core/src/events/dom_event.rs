@@ -8,15 +8,19 @@ use freya_elements::{
 };
 use torin::prelude::*;
 
-use crate::events::FreyaEvent;
+use crate::{events::PlatformEvent, prelude::PotentialEvent};
+
+use super::event_name::EventName;
 
 /// Event emitted to the DOM.
 #[derive(Debug, Clone, PartialEq)]
 pub struct DomEvent {
-    pub name: String,
+    pub name: EventName,
     pub node_id: NodeId,
     pub element_id: ElementId,
     pub data: DomEventData,
+    pub bubbles: bool,
+    pub layer: Option<i16>,
 }
 
 impl Eq for DomEvent {}
@@ -29,77 +33,67 @@ impl PartialOrd for DomEvent {
 
 impl Ord for DomEvent {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        match self.name.as_str() {
-            "mouseleave" | "pointerleave" => {
-                if self.name == other.name {
-                    std::cmp::Ordering::Equal
-                } else {
-                    std::cmp::Ordering::Less
-                }
-            }
-            _ => std::cmp::Ordering::Greater,
-        }
+        self.name.cmp(&other.name)
     }
 }
 
 impl DomEvent {
-    pub fn does_move_cursor(&self) -> bool {
-        return does_event_move_cursor(self.name.as_str());
-    }
-
-    // Bubble all events except keyboard
-    pub fn should_bubble(&self) -> bool {
-        !matches!(self.data, DomEventData::Keyboard(_))
-    }
-
     pub fn new(
-        node_id: NodeId,
+        PotentialEvent {
+            node_id,
+            layer,
+            event,
+        }: PotentialEvent,
         element_id: ElementId,
-        event: &FreyaEvent,
         node_area: Option<Area>,
         scale_factor: f64,
     ) -> Self {
-        let is_pointer_event = event.is_pointer_event();
-        let event_name = event.get_name().to_string();
+        let name = event.get_name();
+
+        let bubbles = name.does_bubble();
 
         match event {
-            FreyaEvent::Mouse { cursor, button, .. } => {
-                let screen_coordinates = *cursor / scale_factor;
+            PlatformEvent::Mouse { cursor, button, .. } => {
+                let screen_coordinates = cursor / scale_factor;
                 let element_x =
                     (cursor.x - node_area.unwrap_or_default().min_x() as f64) / scale_factor;
                 let element_y =
                     (cursor.y - node_area.unwrap_or_default().min_y() as f64) / scale_factor;
 
-                let event_data = if is_pointer_event {
+                let event_data = if name.is_pointer() {
                     DomEventData::Pointer(PointerData::new(
                         screen_coordinates,
                         (element_x, element_y).into(),
                         PointerType::Mouse {
-                            trigger_button: *button,
+                            trigger_button: button,
                         },
                     ))
                 } else {
                     DomEventData::Mouse(MouseData::new(
                         screen_coordinates,
                         (element_x, element_y).into(),
-                        *button,
+                        button,
                     ))
                 };
 
                 Self {
                     node_id,
                     element_id,
-                    name: event_name,
+                    name,
                     data: event_data,
+                    bubbles,
+                    layer,
                 }
             }
-            FreyaEvent::Wheel { scroll, .. } => Self {
+            PlatformEvent::Wheel { scroll, .. } => Self {
                 node_id,
                 element_id,
-                name: event_name,
+                name,
                 data: DomEventData::Wheel(WheelData::new(scroll.x, scroll.y)),
+                bubbles,
+                layer,
             },
-            FreyaEvent::Keyboard {
+            PlatformEvent::Keyboard {
                 ref key,
                 code,
                 modifiers,
@@ -107,10 +101,12 @@ impl DomEvent {
             } => Self {
                 node_id,
                 element_id,
-                name: event_name,
-                data: DomEventData::Keyboard(KeyboardData::new(key.clone(), *code, *modifiers)),
+                name,
+                data: DomEventData::Keyboard(KeyboardData::new(key.clone(), code, modifiers)),
+                bubbles,
+                layer,
             },
-            FreyaEvent::Touch {
+            PlatformEvent::Touch {
                 location,
                 finger_id,
                 phase,
@@ -120,31 +116,33 @@ impl DomEvent {
                 let element_x = location.x - node_area.unwrap_or_default().min_x() as f64;
                 let element_y = location.y - node_area.unwrap_or_default().min_y() as f64;
 
-                let event_data = if is_pointer_event {
+                let event_data = if name.is_pointer() {
                     DomEventData::Pointer(PointerData::new(
-                        *location,
+                        location,
                         (element_x, element_y).into(),
                         PointerType::Touch {
-                            finger_id: *finger_id,
-                            phase: *phase,
-                            force: *force,
+                            finger_id,
+                            phase,
+                            force,
                         },
                     ))
                 } else {
                     DomEventData::Touch(TouchData::new(
-                        *location,
+                        location,
                         (element_x, element_y).into(),
-                        *finger_id,
-                        *phase,
-                        *force,
+                        finger_id,
+                        phase,
+                        force,
                     ))
                 };
 
                 Self {
                     node_id,
                     element_id,
-                    name: event_name,
+                    name,
                     data: event_data,
+                    bubbles,
+                    layer,
                 }
             }
         }
@@ -171,8 +169,4 @@ impl DomEventData {
             DomEventData::Pointer(p) => Rc::new(PlatformEventData::new(Box::new(p))),
         }
     }
-}
-
-pub fn does_event_move_cursor(event_name: &str) -> bool {
-    ["pointerover", "pointerenter", "mouseover", "mouseenter"].contains(&event_name)
 }

@@ -17,7 +17,7 @@ no-default-features = true
 
 [features]
 log = ["dep:tracing", "dep:tracing-subscriber"]
-devtools = ["dep:freya-devtools", "freya-dom/shared"]
+devtools = ["dep:freya-devtools"]
 use_camera = ["freya-hooks/use_camera"]
 mocked-engine-development = ["freya-engine/mocked-engine"] # This is just for the CI
 default = ["freya-engine/skia-engine"]
@@ -37,11 +37,9 @@ torin = { workspace = true }
 
 dioxus = { workspace = true }
 dioxus-rsx = { workspace = true }
-dioxus-native-core = { workspace = true }
 dioxus-core-macro = { workspace = true }
 dioxus-hooks = { workspace = true }
 dioxus-core = { workspace = true }
-dioxus-router = { workspace = true }
 dioxus-hot-reload = { workspace = true }
 dioxus-signals = { workspace = true }
 

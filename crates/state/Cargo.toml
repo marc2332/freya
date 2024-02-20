@@ -18,16 +18,12 @@ features = ["freya-engine/mocked-engine"]
 skia-engine = ["freya-engine/skia-engine"]
 
 [dependencies]
-freya-elements = { workspace = true }
 freya-common = { workspace = true }
 freya-engine = { workspace = true }
 torin = { workspace = true }
 
 dioxus-native-core-macro = { workspace = true }
-dioxus-rsx = { workspace = true }
 dioxus-native-core = { workspace = true }
-dioxus-core-macro = { workspace = true }
-dioxus-hooks = { workspace = true }
 dioxus-core = { workspace = true }
 
 tokio = { workspace = true }

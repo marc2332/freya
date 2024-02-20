@@ -38,7 +38,7 @@ pub struct App<State: 'static + Clone> {
     pub(crate) event_receiver: EventReceiver,
     pub(crate) window_env: WindowEnv<State>,
     pub(crate) layers: Layers,
-    pub(crate) elements_state: ElementsState,
+    pub(crate) nodes_state: NodesState,
     pub(crate) viewports: Viewports,
     pub(crate) focus_sender: FocusSender,
     pub(crate) focus_receiver: FocusReceiver,
@@ -100,7 +100,7 @@ impl<State: 'static + Clone> App<State> {
             event_receiver,
             window_env,
             layers: Layers::default(),
-            elements_state: ElementsState::default(),
+            nodes_state: NodesState::default(),
             viewports: Viewports::default(),
             accessibility,
             focus_sender,
@@ -168,9 +168,8 @@ impl<State: 'static + Clone> App<State> {
                     select! {
                         ev = self.event_receiver.recv() => {
                             if let Some(ev) = ev {
-                                let bubble = ev.should_bubble();
                                 let data = ev.data.any();
-                                self.vdom.handle_event(&ev.name, data, ev.element_id, bubble);
+                                self.vdom.handle_event(ev.name.into(), data, ev.element_id, ev.bubbles);
 
                                 self.vdom.process_events();
                             }
@@ -206,7 +205,7 @@ impl<State: 'static + Clone> App<State> {
             &self.layers,
             &mut self.events,
             &self.event_emitter,
-            &mut self.elements_state,
+            &mut self.nodes_state,
             &self.viewports,
             scale_factor,
         )
@@ -230,7 +229,7 @@ impl<State: 'static + Clone> App<State> {
     }
 
     /// Send an event
-    pub fn send_event(&mut self, event: FreyaEvent) {
+    pub fn send_event(&mut self, event: PlatformEvent) {
         self.events.push(event);
         self.process_events();
     }

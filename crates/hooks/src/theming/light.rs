@@ -63,9 +63,6 @@ pub const LIGHT_THEME: Theme = Theme {
         color: cow_borrowed!("rgb(25,25,25)"),
         border_fill: cow_borrowed!("rgb(210, 210, 210)"),
     },
-    external_link: ExternalLinkTheme {
-        highlight_color: cow_borrowed!("rgb(43,106,208)"),
-    },
     dropdown: DropdownTheme {
         dropdown_background: cow_borrowed!("white"),
         background_button: cow_borrowed!("rgb(245, 245, 245)"),
@@ -92,6 +89,9 @@ pub const LIGHT_THEME: Theme = Theme {
     loader: LoaderTheme {
         primary_color: cow_borrowed!("rgb(50, 50, 50)"),
         secondary_color: cow_borrowed!("rgb(150, 150, 150)"),
+    },
+    link: LinkTheme {
+        highlight_color: cow_borrowed!("rgb(43,106,208)"),
     },
     progress_bar: ProgressBarTheme {
         color: cow_borrowed!("white"),
@@ -130,5 +130,19 @@ pub const LIGHT_THEME: Theme = Theme {
         width: cow_borrowed!("10"),
         height: cow_borrowed!("10"),
         margin: cow_borrowed!("none"),
+    },
+    sidebar: SidebarTheme {
+        background: cow_borrowed!("rgb(245, 245, 245)"),
+        font_theme: FontTheme {
+            color: cow_borrowed!("rgb(10, 10, 10)"),
+        },
+    },
+    sidebar_item: SidebarItemTheme {
+        background: cow_borrowed!("rgb(245, 245, 245)"),
+        hover_background: cow_borrowed!("rgb(235, 235, 235)"),
+        font_theme: FontTheme {
+            color: cow_borrowed!("rgb(10, 10, 10)"),
+        },
+        border_fill: cow_borrowed!("rgb(210, 210, 210)"),
     },
 };
