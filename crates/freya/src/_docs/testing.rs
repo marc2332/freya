@@ -115,7 +115,7 @@
 //!     assert_eq!(text.text(), Some("Is enabled? false"));
 //!
 //!     // Push a click event to the events queue
-//!     utils.push_event(FreyaEvent::Mouse {
+//!     utils.push_event(PlatformEvent::Mouse {
 //!         name: "click",
 //!         cursor: (5.0, 5.0).into(),
 //!         button: Some(MouseButton::Left),

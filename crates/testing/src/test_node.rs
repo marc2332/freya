@@ -2,8 +2,8 @@ use dioxus_native_core::prelude::TextNode;
 use dioxus_native_core::NodeId;
 use dioxus_native_core::{node::NodeType, real_dom::NodeImmutable};
 use freya_core::node::NodeState;
-use freya_node_state::CustomAttributeValues;
-use torin::geometry::Area;
+use freya_node_state::{CustomAttributeValues, Style};
+use torin::{geometry::Area, prelude::NodeAreas};
 
 use crate::test_utils::TestUtils;
 
@@ -20,10 +20,10 @@ pub struct TestNode {
 
 impl TestNode {
     /// Quickly get a child of the Node by the given index, if the child is not found it will panic
+    #[track_caller]
     pub fn get(&self, child_index: usize) -> Self {
-        self.child(child_index).unwrap_or_else(|| {
-            panic!("Child by index {} not found", child_index);
-        })
+        self.child(child_index)
+            .unwrap_or_else(|| panic!("Child by index {child_index} not found"))
     }
 
     /// Get a child of the Node by the given index
@@ -48,13 +48,31 @@ impl TestNode {
     }
 
     /// Get the Node layout
-    pub fn layout(&self) -> Option<Area> {
+    pub fn layout(&self) -> Option<NodeAreas> {
         self.utils()
             .sdom()
             .get()
             .layout()
             .get(self.node_id)
-            .map(|l| l.area)
+            .cloned()
+    }
+
+    /// Get the Node layout Area
+    pub fn area(&self) -> Option<Area> {
+        self.layout().map(|l| l.area)
+    }
+
+    /// Get the Node style
+    pub fn style(&self) -> Style {
+        self.utils
+            .sdom
+            .get()
+            .rdom()
+            .get(self.node_id)
+            .unwrap()
+            .get::<Style>()
+            .unwrap()
+            .clone()
     }
 
     /// Get a mutable reference to the test utils.
@@ -74,5 +92,33 @@ impl TestNode {
     /// Get the Node height in the DOM
     pub fn dom_height(&self) -> u16 {
         self.height
+    }
+
+    /// Check if the Node is visible given it's viewports.
+    pub fn is_visible(&self) -> bool {
+        let viewports = self.utils.viewports().lock().unwrap();
+        let node_viewports = viewports.get(&self.node_id);
+        let Some(area) = self.area() else {
+            return false;
+        };
+
+        // Skip elements that are completely out of any their parent's viewport
+        if let Some((_, node_viewports)) = node_viewports {
+            for viewport_id in node_viewports {
+                let viewport = viewports.get(viewport_id).unwrap().0;
+                if let Some(viewport) = viewport {
+                    if !viewport.intersects(&area) {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        true
+    }
+
+    /// Get the IDs of this Node children.
+    pub fn children_ids(&self) -> Vec<NodeId> {
+        self.children_ids.clone()
     }
 }

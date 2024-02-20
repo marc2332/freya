@@ -356,14 +356,6 @@ define_theme! {
 
 define_theme! {
     %[component]
-    pub ExternalLink {
-        %[cows]
-        highlight_color: str,
-    }
-}
-
-define_theme! {
-    %[component]
     pub Accordion {
         %[cows]
         color: str,
@@ -378,6 +370,14 @@ define_theme! {
         %[cows]
         primary_color: str,
         secondary_color: str,
+    }
+}
+
+define_theme! {
+    %[component]
+    pub Link {
+        %[cows]
+        highlight_color: str,
     }
 }
 
@@ -480,11 +480,11 @@ pub struct Theme {
     pub scroll_view: ScrollViewTheme,
     pub slider: SliderTheme,
     pub tooltip: TooltipTheme,
-    pub external_link: ExternalLinkTheme,
     pub dropdown: DropdownTheme,
     pub dropdown_item: DropdownItemTheme,
     pub accordion: AccordionTheme,
     pub loader: LoaderTheme,
+    pub link: LinkTheme,
     pub progress_bar: ProgressBarTheme,
     pub table: TableTheme,
     pub input: InputTheme,

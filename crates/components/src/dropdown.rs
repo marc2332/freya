@@ -303,3 +303,96 @@ where
         }
     )
 }
+
+#[cfg(test)]
+mod test {
+    use freya::prelude::*;
+    use freya_testing::*;
+    use winit::event::MouseButton;
+
+    #[tokio::test]
+    pub async fn dropdown() {
+        fn dropdown_app() -> Element {
+            let values = use_hook(|| {
+                vec![
+                    "Value A".to_string(),
+                    "Value B".to_string(),
+                    "Value C".to_string(),
+                ]
+            });
+            let mut selected_dropdown = use_signal(|| "Value A".to_string());
+
+            rsx!(
+                Dropdown {
+                    value: selected_dropdown.read().clone(),
+                    for ch in values {
+                        DropdownItem {
+                            value: ch.clone(),
+                            onclick: {
+                                to_owned![ch];
+                                move |_| selected_dropdown.set(ch.clone())
+                            },
+                            label { "{ch}" }
+                        }
+                    }
+                }
+            )
+        }
+
+        let mut utils = launch_test(dropdown_app);
+        let root = utils.root();
+        let label = root.get(0).get(0);
+        utils.wait_for_update().await;
+
+        // Currently closed
+        let start_size = utils.sdom().get().layout().size();
+
+        // Default value
+        assert_eq!(label.get(0).text(), Some("Value A"));
+
+        // Open the dropdown
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (5.0, 5.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.wait_for_update().await;
+
+        // Now that the dropwdown is opened, there are more nodes in the layout
+        assert!(utils.sdom().get().layout().size() > start_size);
+
+        // Close the dropdown by clicking outside of it
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (200.0, 200.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.wait_for_update().await;
+
+        // Now the layout size is like in the begining
+        assert_eq!(utils.sdom().get().layout().size(), start_size);
+
+        // Open the dropdown again
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (5.0, 5.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.wait_for_update().await;
+
+        // Click on the second option
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (45.0, 100.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+
+        // Now the layout size is like in the begining, again
+        assert_eq!(utils.sdom().get().layout().size(), start_size);
+
+        // The second optio was selected
+        assert_eq!(label.get(0).text(), Some("Value B"));
+    }
+}

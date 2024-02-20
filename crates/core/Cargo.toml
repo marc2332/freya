@@ -26,10 +26,7 @@ freya-dom = { workspace = true }
 freya-engine = { workspace = true }
 torin = { workspace = true }
 
-dioxus-rsx = { workspace = true }
 dioxus-native-core = { workspace = true }
-dioxus-core-macro = { workspace = true }
-dioxus-hooks = { workspace = true }
 dioxus-core = { workspace = true }
 
 tokio = { workspace = true }
@@ -37,7 +34,6 @@ winit = { workspace = true }
 accesskit = { workspace = true }
 
 rustc-hash= { workspace = true }
-tracing = { workspace = true }
 uuid = { workspace = true }
 itertools = "0.11.0"
 smallvec = "1.11.2"
