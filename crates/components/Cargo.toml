@@ -25,6 +25,7 @@ freya-common = { workspace = true }
 freya-engine = { path = "../engine", version = "0.1" }
 torin = { workspace = true }
 
+dioxus-router = { workspace = true }
 dioxus = { workspace = true }
 futures-util = { workspace = true }
 
