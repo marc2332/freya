@@ -8,7 +8,7 @@ use crate::{
     custom_measurer::LayoutMeasurer,
     dom_adapter::{DOMAdapter, NodeAreas, NodeKey},
     geometry::{Area, Size2D},
-    measure::measure_node,
+    measure::{measure_node, Phase},
     prelude::Gaps,
 };
 
@@ -258,6 +258,7 @@ impl<Key: NodeKey> Torin<Key> {
             dom_adapter,
             &metadata,
             false,
+            Phase::Initial,
         );
 
         // Cache the root Node results if it was modified

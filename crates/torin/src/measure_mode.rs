@@ -1,5 +1,5 @@
 use crate::prelude::{
-    get_align_axis, AlignAxis, AlignmentDirection, Area, DirectionMode, Node, Size, Size2D,
+    get_align_axis, AlignAxis, AlignmentDirection, Area, DirectionMode, Node, Size2D,
 };
 
 /// Measurement data for the inner Nodes of a Node
@@ -39,11 +39,11 @@ impl<'a> MeasureMode<'a> {
     }
 
     /// This will fit the available area and inner area of a parent node when for example height is set to "auto",
-    /// direction is vertical and main_alignment is set to "center" or "end".
+    /// direction is vertical and main_alignment is set to "center" or "end" or the content is set to "fit".
     /// The intended usage is to call this after the first measurement and before the second,
     /// this way the second measurement will align the content relatively to the parent element instead
     /// of overflowing due to being aligned relatively to the upper parent element
-    pub fn fit_bounds_when_unspecified_and_aligned(
+    pub fn fit_bounds_when_unspecified(
         &mut self,
         parent_node: &Node,
         alignment_direction: AlignmentDirection,
@@ -64,17 +64,17 @@ impl<'a> MeasureMode<'a> {
         let axis = get_align_axis(&parent_node.direction, alignment_direction);
         let (is_vertical_not_start, is_horizontal_not_start) = match parent_node.direction {
             DirectionMode::Vertical => (
-                parent_node.main_alignment.is_not_start(),
-                parent_node.cross_alignment.is_not_start(),
+                parent_node.main_alignment.is_not_start() || parent_node.content.is_fit(),
+                parent_node.cross_alignment.is_not_start() || parent_node.content.is_fit(),
             ),
             DirectionMode::Horizontal => (
-                parent_node.cross_alignment.is_not_start(),
-                parent_node.main_alignment.is_not_start(),
+                parent_node.cross_alignment.is_not_start() || parent_node.content.is_fit(),
+                parent_node.main_alignment.is_not_start() || parent_node.content.is_fit(),
             ),
         };
         let params = if let MeasureMode::ParentIsNotCached { area, inner_area } = self {
             match axis {
-                AlignAxis::Height if Size::Inner == parent_node.height && is_vertical_not_start => {
+                AlignAxis::Height if parent_node.height.inner_sized() && is_vertical_not_start => {
                     Some(NodeData {
                         inner_origin: &mut inner_area.origin.y,
                         inner_size: &mut inner_area.size.height,
@@ -87,7 +87,7 @@ impl<'a> MeasureMode<'a> {
                         available_size: &mut available_area.size.height,
                     })
                 }
-                AlignAxis::Width if Size::Inner == parent_node.width && is_horizontal_not_start => {
+                AlignAxis::Width if parent_node.width.inner_sized() && is_horizontal_not_start => {
                     Some(NodeData {
                         inner_origin: &mut inner_area.origin.x,
                         inner_size: &mut inner_area.size.width,
@@ -151,7 +151,7 @@ impl<'a> MeasureMode<'a> {
                     inner_sizes.width += content_area.width();
 
                     // Keep the biggest height
-                    if parent_node.height == Size::Inner {
+                    if parent_node.height.inner_sized() {
                         area.size.height = area.size.height.max(
                             content_area.size.height
                                 + parent_node.padding.vertical()
@@ -164,7 +164,7 @@ impl<'a> MeasureMode<'a> {
                     }
 
                     // Accumulate width
-                    if parent_node.width == Size::Inner {
+                    if parent_node.width.inner_sized() {
                         area.size.width += content_area.size.width;
                     }
                 }
@@ -179,7 +179,7 @@ impl<'a> MeasureMode<'a> {
                     inner_sizes.height += content_area.height();
 
                     // Keep the biggest width
-                    if parent_node.width == Size::Inner {
+                    if parent_node.width.inner_sized() {
                         area.size.width = area.size.width.max(
                             content_area.size.width
                                 + parent_node.padding.horizontal()
@@ -192,7 +192,7 @@ impl<'a> MeasureMode<'a> {
                     }
 
                     // Accumulate height
-                    if parent_node.height == Size::Inner {
+                    if parent_node.height.inner_sized() {
                         area.size.height += content_area.size.height;
                     }
                 }

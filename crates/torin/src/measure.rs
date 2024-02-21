@@ -7,8 +7,15 @@ use crate::{
     measure_mode::MeasureMode,
     node::Node,
     prelude::{AlignmentDirection, AreaModel, LayoutMetadata, Torin},
-    size::Size,
 };
+
+/// Some layout strategies require two-phase measurements
+/// Example: Alignments or content-fit.
+#[derive(Clone, Copy, PartialEq)]
+pub enum Phase {
+    Initial,
+    Final,
+}
 
 /// Measure a Node layout
 #[allow(clippy::too_many_arguments)]
@@ -30,6 +37,8 @@ pub fn measure_node<Key: NodeKey>(
     layout_metadata: &LayoutMetadata,
 
     invalidated_tree: bool,
+
+    phase: Phase,
 ) -> (bool, NodeAreas) {
     let must_revalidate = invalidated_tree
         || layout.dirty.contains(&node_id)
@@ -48,6 +57,7 @@ pub fn measure_node<Key: NodeKey>(
             &node.minimum_width,
             &node.maximum_width,
             layout_metadata.root_area.width(),
+            phase,
         );
         area_size.height = node.height.min_max(
             area_size.height,
@@ -58,6 +68,7 @@ pub fn measure_node<Key: NodeKey>(
             &node.minimum_height,
             &node.maximum_height,
             layout_metadata.root_area.height(),
+            phase,
         );
 
         // 3. If available, run a custom layout measure function
@@ -68,7 +79,7 @@ pub fn measure_node<Key: NodeKey>(
 
             // 3.1. Compute the width and height again using the new custom area sizes
             if let Some(custom_size) = custom_size {
-                if Size::Inner == node.width {
+                if node.width.inner_sized() {
                     area_size.width = node.width.min_max(
                         custom_size.width,
                         parent_area.size.width,
@@ -78,9 +89,10 @@ pub fn measure_node<Key: NodeKey>(
                         &node.minimum_width,
                         &node.maximum_width,
                         layout_metadata.root_area.width(),
+                        phase,
                     );
                 }
-                if Size::Inner == node.height {
+                if node.height.inner_sized() {
                     area_size.height = node.height.min_max(
                         custom_size.height,
                         parent_area.size.height,
@@ -90,6 +102,7 @@ pub fn measure_node<Key: NodeKey>(
                         &node.minimum_height,
                         &node.maximum_height,
                         layout_metadata.root_area.height(),
+                        phase,
                     );
                 }
             }
@@ -105,7 +118,7 @@ pub fn measure_node<Key: NodeKey>(
             let mut inner_size = area_size;
 
             // 4.1. When having an unsized bound we set it to whatever is still available in the parent's area
-            if Size::Inner == node.width {
+            if node.width.inner_sized() {
                 inner_size.width = node.width.min_max(
                     available_parent_area.width(),
                     parent_area.size.width,
@@ -115,9 +128,10 @@ pub fn measure_node<Key: NodeKey>(
                     &node.minimum_width,
                     &node.maximum_width,
                     layout_metadata.root_area.width(),
+                    phase,
                 );
             }
-            if Size::Inner == node.height {
+            if node.height.inner_sized() {
                 inner_size.height = node.height.min_max(
                     available_parent_area.height(),
                     parent_area.size.height,
@@ -127,6 +141,7 @@ pub fn measure_node<Key: NodeKey>(
                     &node.minimum_height,
                     &node.maximum_height,
                     layout_metadata.root_area.height(),
+                    phase,
                 );
             }
             inner_size
@@ -235,7 +250,8 @@ pub fn measure_inner_nodes<Key: NodeKey>(
     let mut measure_children = |mode: &mut MeasureMode,
                                 available_area: &mut Area,
                                 inner_sizes: &mut Size2D,
-                                must_cache_inner_nodes: bool| {
+                                must_cache_inner_nodes: bool,
+                                phase: Phase| {
         let children = dom_adapter.children_of(parent_node_id);
 
         for child_id in children {
@@ -245,7 +261,7 @@ pub fn measure_inner_nodes<Key: NodeKey>(
 
             let mut adapted_available_area = *available_area;
 
-            if parent_node.cross_alignment.is_not_start() {
+            if parent_node.cross_alignment.is_not_start() || parent_node.content.is_fit() {
                 // 1. First measure: Cross axis is not aligned
                 let (_, child_areas) = measure_node(
                     child_id,
@@ -258,6 +274,7 @@ pub fn measure_inner_nodes<Key: NodeKey>(
                     dom_adapter,
                     layout_metadata,
                     invalidated_tree,
+                    phase,
                 );
 
                 // 2. Align the Cross axis
@@ -282,6 +299,7 @@ pub fn measure_inner_nodes<Key: NodeKey>(
                 dom_adapter,
                 layout_metadata,
                 invalidated_tree,
+                phase,
             );
 
             // Stack the child into its parent
@@ -307,19 +325,23 @@ pub fn measure_inner_nodes<Key: NodeKey>(
         let mut alignment_mode = alignment_mode.to_mut();
         let mut inner_sizes = *inner_sizes;
 
-        if parent_node.main_alignment.is_not_start() || parent_node.cross_alignment.is_not_start() {
+        if parent_node.main_alignment.is_not_start()
+            || parent_node.cross_alignment.is_not_start()
+            || parent_node.content.is_fit()
+        {
             // 1. First measure: Main axis is not aligned
             measure_children(
                 &mut alignment_mode,
                 &mut available_area.clone(),
                 &mut inner_sizes,
                 false,
+                Phase::Initial,
             );
         }
 
-        if parent_node.cross_alignment.is_not_start() {
+        if parent_node.cross_alignment.is_not_start() || parent_node.content.is_fit() {
             // 2. Adjust the available and inner areas of the Cross axis
-            alignment_mode.fit_bounds_when_unspecified_and_aligned(
+            alignment_mode.fit_bounds_when_unspecified(
                 parent_node,
                 AlignmentDirection::Cross,
                 available_area,
@@ -328,7 +350,7 @@ pub fn measure_inner_nodes<Key: NodeKey>(
 
         if parent_node.main_alignment.is_not_start() {
             // 3. Adjust the available and inner areas of the Main axis
-            alignment_mode.fit_bounds_when_unspecified_and_aligned(
+            alignment_mode.fit_bounds_when_unspecified(
                 parent_node,
                 AlignmentDirection::Main,
                 available_area,
@@ -346,5 +368,11 @@ pub fn measure_inner_nodes<Key: NodeKey>(
     }
 
     // 5. Second measure
-    measure_children(mode, available_area, inner_sizes, must_cache_inner_nodes);
+    measure_children(
+        mode,
+        available_area,
+        inner_sizes,
+        must_cache_inner_nodes,
+        Phase::Final,
+    );
 }
