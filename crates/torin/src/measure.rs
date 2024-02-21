@@ -259,6 +259,10 @@ pub fn measure_inner_nodes<Key: NodeKey>(
 
             let child_data = dom_adapter.get_node(&child_id).unwrap();
 
+            if child_data.position.is_absolute() && phase == Phase::Initial {
+                continue;
+            }
+
             let mut adapted_available_area = *available_area;
 
             if parent_node.cross_alignment.is_not_start() || parent_node.content.is_fit() {
