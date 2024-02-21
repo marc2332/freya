@@ -3,7 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use freya::{common::NodeReferenceLayout, prelude::*};
+use freya::prelude::*;
 
 fn main() {
     launch_with_props(app, "Menus", (400.0, 350.0));
@@ -22,7 +22,6 @@ fn app() -> Element {
             },
             if *show_menu.read() {
                 Menu {
-                    width: "100",
                     onclose: move |_| show_menu.set(false),
                     MenuButton {
                         label {
@@ -35,7 +34,6 @@ fn app() -> Element {
                         }
                     }
                     SubMenu {
-                        width: "125",
                         menu: rsx!(
                             MenuButton {
                                 label {
@@ -43,7 +41,6 @@ fn app() -> Element {
                                 }
                             }
                             SubMenu {
-                                width: "100",
                                 menu: rsx!(
                                     MenuButton {
                                         label {
@@ -76,11 +73,17 @@ fn app() -> Element {
     )
 }
 
+#[allow(non_snake_case)]
 #[component]
 fn MenuItem(
+
     children: Element,
+
     theme: Option<ButtonThemeWith>,
+
     onclick: Option<EventHandler<Option<MouseEvent>>>,
+
+    onmouseenter: Option<EventHandler<()>>
 ) -> Element {
     let mut focus = use_focus();
     let mut status = use_signal(ButtonStatus::default);
@@ -90,14 +93,8 @@ fn MenuItem(
     let click = &onclick;
 
     let ButtonTheme {
-        background,
         hover_background,
-        border_fill,
-        focus_border_fill,
-        padding,
-        margin,
         corner_radius,
-        height,
         font_theme,
         ..
     } = use_applied_theme!(&theme, button);
@@ -121,6 +118,10 @@ fn MenuItem(
     let onmouseenter = move |_| {
         platform.set_cursor(CursorIcon::Pointer);
         status.set(ButtonStatus::Hovering);
+
+        if let Some(onmouseenter) = &onmouseenter {
+            onmouseenter.call(());
+        }
     };
 
     let onmouseleave = move |_| {
@@ -132,11 +133,6 @@ fn MenuItem(
         ButtonStatus::Hovering => &hover_background,
         ButtonStatus::Idle => "transparent",
     };
-    let border = if focus.is_selected() {
-        format!("2 solid {focus_border_fill}")
-    } else {
-        format!("1 solid {border_fill}")
-    };
 
     rsx!(
         rect {
@@ -144,11 +140,10 @@ fn MenuItem(
             onmouseenter,
             onmouseleave,
             focus_id,
-            width: "100%",
+            width: "fill-min",
             padding: "6",
             margin: "2",
             focusable: "true",
-            overflow: "clip",
             role: "button",
             color: "{font_theme.color}",
             corner_radius: "{corner_radius}",
@@ -161,8 +156,9 @@ fn MenuItem(
     )
 }
 
+#[allow(non_snake_case)]
 #[component]
-fn SubMenu(menu: Element, children: Element, width: String) -> Element {
+fn SubMenu(menu: Element, children: Element) -> Element {
     let mut menus = use_context::<Signal<Vec<usize>>>();
     let mut ids = use_context::<Signal<usize>>();
     let id = use_hook(|| {
@@ -170,12 +166,10 @@ fn SubMenu(menu: Element, children: Element, width: String) -> Element {
         *ids.peek()
     });
     provide_context(id); // Use custom type
-    let mut show_menu = menus.read().contains(&id);
-    let container_size = consume_context::<Signal<NodeReferenceLayout>>();
-    let submenus_offsets = container_size.read().area.width() - 2.;
+    let show_menu = menus.read().contains(&id);
 
     rsx!(
-        rect {
+        MenuItem {
             onmouseenter: move |_| {
                 let last_menu_id = menus.read().last().cloned();
                 if let Some(last_menu_id) = last_menu_id {
@@ -186,16 +180,18 @@ fn SubMenu(menu: Element, children: Element, width: String) -> Element {
                     menus.write().push(id)
                 }
             },
-            MenuItem {
-                {children},
-            },
+            {children},
             if show_menu {
                 rect {
-                    position_left: "{submenus_offsets}",
+                    position_right: "-16",
                     position: "absolute",
-                    MenuContainer {
-                        width,
-                        {menu}
+                    width: "0",
+                    height: "0",
+                    rect {
+                        width: "100v",
+                        MenuContainer {
+                            {menu}
+                        }
                     }
                 }
             }
@@ -203,12 +199,13 @@ fn SubMenu(menu: Element, children: Element, width: String) -> Element {
     )
 }
 
+#[allow(non_snake_case)]
 #[component]
 fn MenuButton(children: Element) -> Element {
     let mut menus = use_context::<Signal<Vec<usize>>>();
     let my_id = consume_context::<usize>();
     rsx!(
-        rect {
+        MenuItem {
             onmouseenter: move |_| {
                 loop {
                     let last_menu_id = menus.read().last().cloned();
@@ -223,36 +220,31 @@ fn MenuButton(children: Element) -> Element {
                     }
                 }
             },
-            onmouseleave: |_| {},
-            MenuItem {
-                {children}
-            }
-        }
-    )
-}
-
-#[component]
-fn MenuContainer(children: Element, width: String) -> Element {
-    let mut menus = use_context::<Signal<Vec<usize>>>();
-    let (reference, size) = use_node_signal();
-    provide_context(size); // Use custom type
-    rsx!(
-        rect {
-            reference,
-            background: "rgb(245, 245, 245)",
-            corner_radius: "12",
-            width,
-            shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)",
-            padding: "4",
             {children}
         }
     )
 }
 
+#[allow(non_snake_case)]
 #[component]
-fn Menu(children: Element, onclose: Option<EventHandler<()>>, width: String) -> Element {
+fn MenuContainer(children: Element) -> Element {
+    rsx!(
+        rect {
+            background: "rgb(245, 245, 245)",
+            corner_radius: "12",
+            shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)",
+            padding: "4",
+            content: "fit",
+            {children}
+        }
+    )
+}
+
+#[allow(non_snake_case)]
+#[component]
+fn Menu(children: Element, onclose: Option<EventHandler<()>>) -> Element {
     use_context_provider(|| Signal::new(0usize));
-    let menus = use_context_provider::<Signal<Vec<usize>>>(|| Signal::new(vec![0]));
+    use_context_provider::<Signal<Vec<usize>>>(|| Signal::new(vec![0]));
     provide_context(0usize);
     rsx!(
         rect {
@@ -262,7 +254,6 @@ fn Menu(children: Element, onclose: Option<EventHandler<()>>, width: String) -> 
                 }
             },
             MenuContainer {
-                width,
                 {children}
             }
         }
