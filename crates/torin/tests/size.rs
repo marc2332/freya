@@ -643,7 +643,7 @@ pub fn root_percentage() {
 }
 
 #[test]
-pub fn fill_min() {
+pub fn content_fit_fill_min() {
     let (mut layout, mut measurer) = test_utils();
 
     let mut mocked_dom = TestingDOM::default();

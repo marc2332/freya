@@ -44,10 +44,10 @@ pub fn measure_node<Key: NodeKey>(
         || layout.dirty.contains(&node_id)
         || !layout.results.contains_key(&node_id);
     if must_revalidate {
-        // 1. Create the initial Node area size
+        // Create the initial Node area size
         let mut area_size = Size2D::new(node.padding.horizontal(), node.padding.vertical());
 
-        // 2. Compute the width and height given the size, the minimum size, the maximum size and margins
+        // Compute the width and height given the size, the minimum size, the maximum size and margins
         area_size.width = node.width.min_max(
             area_size.width,
             parent_area.size.width,
@@ -71,13 +71,13 @@ pub fn measure_node<Key: NodeKey>(
             phase,
         );
 
-        // 3. If available, run a custom layout measure function
+        // If available, run a custom layout measure function
         // This is useful when you use third-party libraries (e.g. rust-skia, cosmic-text) to measure text layouts
         // When a Node is measured by a custom measurer function the inner children will be skipped
         let measure_inner_children = if let Some(measurer) = measurer {
             let custom_size = measurer.measure(node_id, node, parent_area, available_parent_area);
 
-            // 3.1. Compute the width and height again using the new custom area sizes
+            // Compute the width and height again using the new custom area sizes
             if let Some(custom_size) = custom_size {
                 if node.width.inner_sized() {
                     area_size.width = node.width.min_max(
@@ -113,11 +113,19 @@ pub fn measure_node<Key: NodeKey>(
             true
         };
 
-        // 4. Compute the inner size of the Node, which is basically the size inside the margins and paddings
+        // There is no need to measure inner children in the initial phase if this Node size
+        // isn't decided by his children
+        let phase_measure_inner_children = if phase == Phase::Initial {
+            node.width.inner_sized() && node.height.inner_sized()
+        } else {
+            true
+        };
+
+        // Compute the inner size of the Node, which is basically the size inside the margins and paddings
         let inner_size = {
             let mut inner_size = area_size;
 
-            // 4.1. When having an unsized bound we set it to whatever is still available in the parent's area
+            // When having an unsized bound we set it to whatever is still available in the parent's area
             if node.width.inner_sized() {
                 inner_size.width = node.width.min_max(
                     available_parent_area.width(),
@@ -147,7 +155,7 @@ pub fn measure_node<Key: NodeKey>(
             inner_size
         };
 
-        // 5. Create the areas
+        // Create the areas
         let area_origin = node
             .position
             .get_origin(available_parent_area, parent_area, &area_size);
@@ -158,11 +166,11 @@ pub fn measure_node<Key: NodeKey>(
 
         let mut inner_sizes = Size2D::default();
 
-        if measure_inner_children {
-            // 6. Create an area containing the available space inside the inner area
+        if measure_inner_children && phase_measure_inner_children {
+            // Create an area containing the available space inside the inner area
             let mut available_area = inner_area;
 
-            // 6.1. Adjust the available area with the node offsets (mainly used by scrollviews)
+            // Adjust the available area with the node offsets (mainly used by scrollviews)
             available_area.move_with_offsets(&node.offset_x, &node.offset_y);
 
             let mut measurement_mode = MeasureMode::ParentIsNotCached {
@@ -170,7 +178,7 @@ pub fn measure_node<Key: NodeKey>(
                 inner_area: &mut inner_area,
             };
 
-            // 7. Measure the layout of this Node's children
+            // Measure the layout of this Node's children
             measure_inner_nodes(
                 &node_id,
                 node,
@@ -259,9 +267,13 @@ pub fn measure_inner_nodes<Key: NodeKey>(
 
             let child_data = dom_adapter.get_node(&child_id).unwrap();
 
+            if child_data.position.is_absolute() && phase == Phase::Initial {
+                continue;
+            }
+
             let mut adapted_available_area = *available_area;
 
-            if parent_node.cross_alignment.is_not_start() || parent_node.content.is_fit() {
+            if phase == Phase::Final && parent_node.cross_alignment.is_not_start() {
                 // 1. First measure: Cross axis is not aligned
                 let (_, child_areas) = measure_node(
                     child_id,
@@ -274,7 +286,7 @@ pub fn measure_inner_nodes<Key: NodeKey>(
                     dom_adapter,
                     layout_metadata,
                     invalidated_tree,
-                    phase,
+                    Phase::Initial,
                 );
 
                 // 2. Align the Cross axis
@@ -325,10 +337,7 @@ pub fn measure_inner_nodes<Key: NodeKey>(
         let mut alignment_mode = alignment_mode.to_mut();
         let mut inner_sizes = *inner_sizes;
 
-        if parent_node.main_alignment.is_not_start()
-            || parent_node.cross_alignment.is_not_start()
-            || parent_node.content.is_fit()
-        {
+        if parent_node.main_alignment.is_not_start() || parent_node.content.is_fit() {
             // 1. First measure: Main axis is not aligned
             measure_children(
                 &mut alignment_mode,

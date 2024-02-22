@@ -64,12 +64,12 @@ impl<'a> MeasureMode<'a> {
         let axis = get_align_axis(&parent_node.direction, alignment_direction);
         let (is_vertical_not_start, is_horizontal_not_start) = match parent_node.direction {
             DirectionMode::Vertical => (
-                parent_node.main_alignment.is_not_start() || parent_node.content.is_fit(),
+                parent_node.main_alignment.is_not_start(),
                 parent_node.cross_alignment.is_not_start() || parent_node.content.is_fit(),
             ),
             DirectionMode::Horizontal => (
                 parent_node.cross_alignment.is_not_start() || parent_node.content.is_fit(),
-                parent_node.main_alignment.is_not_start() || parent_node.content.is_fit(),
+                parent_node.main_alignment.is_not_start(),
             ),
         };
         let params = if let MeasureMode::ParentIsNotCached { area, inner_area } = self {
