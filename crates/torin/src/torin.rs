@@ -258,7 +258,7 @@ impl<Key: NodeKey> Torin<Key> {
             dom_adapter,
             &metadata,
             false,
-            Phase::Initial,
+            Phase::Final,
         );
 
         // Cache the root Node results if it was modified
