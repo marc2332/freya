@@ -1,4 +1,5 @@
 pub use euclid::Rect;
+use rustc_hash::FxHashMap;
 
 use crate::{
     custom_measurer::LayoutMeasurer,
@@ -255,133 +256,135 @@ pub fn measure_inner_nodes<Key: NodeKey>(
 
     invalidated_tree: bool,
 ) {
-    let mut measure_children = |mode: &mut MeasureMode,
-                                available_area: &mut Area,
-                                inner_sizes: &mut Size2D,
-                                must_cache_inner_nodes: bool,
-                                phase: Phase| {
-        let children = dom_adapter.children_of(parent_node_id);
+    let children = dom_adapter.children_of(parent_node_id);
 
-        for child_id in children {
-            let inner_area = *mode.inner_area();
+    let mut initial_phase_sizes = FxHashMap::default();
 
-            let child_data = dom_adapter.get_node(&child_id).unwrap();
+    // Initial phase: Measure the size and position of the children if the parent has a
+    // non-start cross alignment, non-start main aligment of a fit-content.
+    if parent_node.cross_alignment.is_not_start()
+        || parent_node.main_alignment.is_not_start()
+        || parent_node.content.is_fit()
+    {
+        let mut initial_phase_mode = mode.to_owned();
+        let mut initial_phase_mode = initial_phase_mode.to_mut();
+        let mut initial_phase_inner_sizes = *inner_sizes;
+        let mut initial_phase_available_area = *available_area;
 
-            if child_data.position.is_absolute() && phase == Phase::Initial {
+        // 1. Measure the children
+        for child_id in &children {
+            let inner_area = *initial_phase_mode.inner_area();
+
+            let child_data = dom_adapter.get_node(child_id).unwrap();
+
+            if child_data.position.is_absolute() {
                 continue;
             }
 
-            let mut adapted_available_area = *available_area;
-
-            if phase == Phase::Final && parent_node.cross_alignment.is_not_start() {
-                // 1. First measure: Cross axis is not aligned
-                let (_, child_areas) = measure_node(
-                    child_id,
-                    &child_data,
-                    layout,
-                    &inner_area,
-                    available_area,
-                    measurer,
-                    false,
-                    dom_adapter,
-                    layout_metadata,
-                    invalidated_tree,
-                    Phase::Initial,
-                );
-
-                // 2. Align the Cross axis
-                adapted_available_area.align_content(
-                    available_area,
-                    &child_areas.area.size,
-                    &parent_node.cross_alignment,
-                    &parent_node.direction,
-                    AlignmentDirection::Cross,
-                );
-            }
-
-            // 3. Second measure
-            let (child_revalidated, child_areas) = measure_node(
-                child_id,
+            let (_, child_areas) = measure_node(
+                *child_id,
                 &child_data,
                 layout,
                 &inner_area,
-                &adapted_available_area,
+                &initial_phase_available_area,
                 measurer,
-                must_cache_inner_nodes,
+                false,
                 dom_adapter,
                 layout_metadata,
                 invalidated_tree,
-                phase,
+                Phase::Initial,
             );
 
-            // Stack the child into its parent
-            mode.stack_into_node(
+            initial_phase_mode.stack_into_node(
                 parent_node,
-                available_area,
+                &mut initial_phase_available_area,
                 &child_areas.area,
-                inner_sizes,
+                &mut initial_phase_inner_sizes,
                 &child_data,
             );
 
-            // Cache the child layout if it was mutated and inner nodes must be cache
-            if child_revalidated && must_cache_inner_nodes {
-                layout.cache_node(child_id, child_areas);
+            if parent_node.cross_alignment.is_not_start() {
+                initial_phase_sizes.insert(*child_id, child_areas.area.size);
             }
-        }
-    };
-
-    {
-        // This is no the final measure, hence we make a temporary measurement mode
-        // so the affected values are not reused by the final measurement
-        let mut alignment_mode = mode.to_owned();
-        let mut alignment_mode = alignment_mode.to_mut();
-        let mut inner_sizes = *inner_sizes;
-
-        if parent_node.main_alignment.is_not_start() || parent_node.content.is_fit() {
-            // 1. First measure: Main axis is not aligned
-            measure_children(
-                &mut alignment_mode,
-                &mut available_area.clone(),
-                &mut inner_sizes,
-                false,
-                Phase::Initial,
-            );
-        }
-
-        if parent_node.cross_alignment.is_not_start() || parent_node.content.is_fit() {
-            // 2. Adjust the available and inner areas of the Cross axis
-            alignment_mode.fit_bounds_when_unspecified(
-                parent_node,
-                AlignmentDirection::Cross,
-                available_area,
-            );
         }
 
         if parent_node.main_alignment.is_not_start() {
-            // 3. Adjust the available and inner areas of the Main axis
-            alignment_mode.fit_bounds_when_unspecified(
+            // 2. Adjust the available and inner areas of the Main axis
+            initial_phase_mode.fit_bounds_when_unspecified(
                 parent_node,
                 AlignmentDirection::Main,
                 available_area,
             );
 
-            // 4. Align the Main axis
+            // 3. Align the Main axis
             available_area.align_content(
-                alignment_mode.inner_area(),
-                &inner_sizes,
+                initial_phase_mode.inner_area(),
+                &initial_phase_inner_sizes,
                 &parent_node.main_alignment,
                 &parent_node.direction,
                 AlignmentDirection::Main,
             );
         }
+
+        if parent_node.cross_alignment.is_not_start() || parent_node.content.is_fit() {
+            // 4. Adjust the available and inner areas of the Cross axis
+            initial_phase_mode.fit_bounds_when_unspecified(
+                parent_node,
+                AlignmentDirection::Cross,
+                available_area,
+            );
+        }
     }
 
-    // 5. Second measure
-    measure_children(
-        mode,
-        available_area,
-        inner_sizes,
-        must_cache_inner_nodes,
-        Phase::Final,
-    );
+    // Final phase: measure the children with all the axis and sizes adjusted
+    for child_id in children {
+        let mut adapted_available_area = *available_area;
+        if parent_node.cross_alignment.is_not_start() {
+            let initial_phase_size = initial_phase_sizes.get(&child_id);
+
+            if let Some(initial_phase_size) = initial_phase_size {
+                // 1. Align the Cross axis if necessary
+                adapted_available_area.align_content(
+                    available_area,
+                    initial_phase_size,
+                    &parent_node.cross_alignment,
+                    &parent_node.direction,
+                    AlignmentDirection::Cross,
+                );
+            }
+        }
+
+        let inner_area = *mode.inner_area();
+
+        let child_data = dom_adapter.get_node(&child_id).unwrap();
+
+        // Final measurement
+        let (child_revalidated, child_areas) = measure_node(
+            child_id,
+            &child_data,
+            layout,
+            &inner_area,
+            &adapted_available_area,
+            measurer,
+            must_cache_inner_nodes,
+            dom_adapter,
+            layout_metadata,
+            invalidated_tree,
+            Phase::Final,
+        );
+
+        // Stack the child into its parent
+        mode.stack_into_node(
+            parent_node,
+            available_area,
+            &child_areas.area,
+            inner_sizes,
+            &child_data,
+        );
+
+        // Cache the child layout if it was mutated and inner nodes must be cache
+        if child_revalidated && must_cache_inner_nodes {
+            layout.cache_node(child_id, child_areas);
+        }
+    }
 }
