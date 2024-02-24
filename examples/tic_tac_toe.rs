@@ -148,8 +148,8 @@ impl Board {
 }
 
 fn app() -> Element {
-    let board = use_signal(|| Board::new(3));
-    let current_player = use_signal(|| Player::X);
+    let mut board = use_signal(|| Board::new(3));
+    let mut current_player = use_signal(|| Player::X);
 
     let message = match &board.read().winner {
         Some(winner) => format!("Winner is player {winner:?}!!"),

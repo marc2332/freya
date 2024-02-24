@@ -4,8 +4,8 @@ use dioxus_core::{
     prelude::{consume_context, spawn, try_consume_context},
     use_hook,
 };
-use dioxus_hooks::use_context_provider;
-use dioxus_signals::{use_effect, Readable, Signal, Writable};
+use dioxus_hooks::{use_context_provider, use_effect};
+use dioxus_signals::{Readable, Signal, Writable};
 use freya_common::EventMessage;
 use freya_core::{
     navigation_mode::{NavigationMode, NavigatorState},
@@ -20,9 +20,9 @@ pub type AccessibilityIdCounter = Rc<RefCell<u64>>;
 
 /// Sync both the Focus shared state and the platform accessibility focus
 pub fn use_init_accessibility() {
-    let focused_id =
+    let mut focused_id =
         use_context_provider::<Signal<AccessibilityId>>(|| Signal::new(ACCESSIBILITY_ROOT_ID));
-    let navigation_mode =
+    let mut navigation_mode =
         use_context_provider::<Signal<NavigationMode>>(|| Signal::new(NavigationMode::NotKeyboard));
     use_context_provider(|| Rc::new(RefCell::new(0u64)));
     let platform = use_platform();
@@ -61,9 +61,9 @@ pub fn use_init_accessibility() {
 #[cfg(test)]
 mod test {
     use freya::prelude::*;
-    use freya_core::accessibility::ACCESSIBILITY_ROOT_ID;
+    use freya_core::{accessibility::ACCESSIBILITY_ROOT_ID, events::EventName};
     use freya_testing::{
-        events::pointer::MouseButton, launch_test_with_config, FreyaEvent, TestingConfig,
+        events::pointer::MouseButton, launch_test_with_config, PlatformEvent, TestingConfig,
     };
 
     #[tokio::test]
@@ -92,7 +92,10 @@ mod test {
 
         let mut utils = launch_test_with_config(
             use_focus_app,
-            *TestingConfig::default().with_size((100.0, 100.0).into()),
+            TestingConfig {
+                size: (100.0, 100.0).into(),
+                ..TestingConfig::default()
+            },
         );
 
         // Initial state
@@ -100,8 +103,8 @@ mod test {
         assert_eq!(utils.focus_id(), ACCESSIBILITY_ROOT_ID);
 
         // Click on the first rect
-        utils.push_event(FreyaEvent::Mouse {
-            name: "click".to_string(),
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
             cursor: (5.0, 5.0).into(),
             button: Some(MouseButton::Left),
         });
@@ -113,8 +116,8 @@ mod test {
         assert_ne!(first_focus_id, ACCESSIBILITY_ROOT_ID);
 
         // Click on the second rect
-        utils.push_event(FreyaEvent::Mouse {
-            name: "click".to_string(),
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
             cursor: (5.0, 75.0).into(),
             button: Some(MouseButton::Left),
         });

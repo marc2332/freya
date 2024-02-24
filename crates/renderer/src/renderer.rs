@@ -30,6 +30,7 @@ pub fn render_skia(
     area: &Area,
     dioxus_node: &DioxusNode,
     font_collection: &mut FontCollection,
+    font_manager: &FontMgr,
     viewports: &Viewports,
     render_wireframe: bool,
     matrices: &mut Vec<(Matrix, Vec<NodeId>)>,
@@ -111,7 +112,7 @@ pub fn render_skia(
                 render_paragraph(area, dioxus_node, canvas, font_collection);
             }
             "svg" => {
-                render_svg(area, dioxus_node, canvas);
+                render_svg(area, dioxus_node, canvas, font_manager);
             }
             "image" => {
                 render_image(area, dioxus_node, canvas);

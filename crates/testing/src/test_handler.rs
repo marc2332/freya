@@ -1,15 +1,18 @@
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use accesskit::NodeId as AccessibilityId;
 use dioxus_core::VirtualDom;
 use freya_common::EventMessage;
 use freya_core::prelude::*;
+use freya_dom::prelude::SafeDOM;
 use freya_engine::prelude::FontCollection;
+use freya_hooks::PlatformInformation;
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tokio::time::{interval, timeout};
 use torin::geometry::{Area, Size2D};
+use winit::window::CursorIcon;
 
 use crate::test_node::TestNode;
 use crate::test_utils::TestUtils;
@@ -24,13 +27,14 @@ pub struct TestingHandler {
     pub(crate) platform_event_emitter: UnboundedSender<EventMessage>,
     pub(crate) platform_event_receiver: UnboundedReceiver<EventMessage>,
     pub(crate) events_queue: EventsQueue,
-    pub(crate) elements_state: ElementsState,
+    pub(crate) nodes_state: NodesState,
     pub(crate) font_collection: FontCollection,
-    pub(crate) viewports: Viewports,
     pub(crate) accessibility_manager: SharedAccessibilityManager,
     pub(crate) config: TestingConfig,
     pub(crate) ticker_sender: broadcast::Sender<()>,
     pub(crate) navigation_state: NavigatorState,
+    pub(crate) platform_information: Arc<Mutex<PlatformInformation>>,
+    pub(crate) cursor_icon: CursorIcon,
 }
 
 impl TestingHandler {
@@ -55,15 +59,15 @@ impl TestingHandler {
             .insert_any_root_context(Box::new(Arc::new(self.ticker_sender.subscribe())));
         self.vdom
             .insert_any_root_context(Box::new(self.navigation_state.clone()));
+        self.vdom
+            .insert_any_root_context(Box::new(self.platform_information.clone()));
     }
 
     /// Wait and apply new changes
     pub async fn wait_for_update(&mut self) -> (bool, bool) {
         self.wait_for_work(self.config.size());
 
-        self.provide_vdom_contexts();
-
-        let mut ticker = if self.config.run_ticker {
+        let mut ticker = if self.config.event_loop_ticker {
             Some(interval(Duration::from_millis(16)))
         } else {
             None
@@ -90,7 +94,13 @@ impl TestingHandler {
                         }
                     }
                     EventMessage::FocusAccessibilityNode(node_id) => {
-                        self.accessibility_manager.lock().unwrap().focused_id = node_id;
+                        self.accessibility_manager
+                            .lock()
+                            .unwrap()
+                            .set_focus_with_update(node_id);
+                    }
+                    EventMessage::SetCursorIcon(icon) => {
+                        self.cursor_icon = icon;
                     }
                     _ => {}
                 }
@@ -98,7 +108,7 @@ impl TestingHandler {
 
             if let Ok(ev) = vdom_ev {
                 self.vdom
-                    .handle_event(&ev.name, ev.data.any(), ev.element_id, true);
+                    .handle_event(ev.name.into(), ev.data.any(), ev.element_id, ev.bubbles);
                 self.vdom.process_events();
             }
         }
@@ -137,21 +147,30 @@ impl TestingHandler {
         );
 
         *self.utils.layers().lock().unwrap() = layers;
-        self.viewports = viewports;
+        *self.utils.viewports().lock().unwrap() = viewports;
+
+        let dom = &self.utils.sdom().get_mut();
+
+        process_accessibility(
+            &self.utils.layers().lock().unwrap(),
+            &dom.layout(),
+            dom.rdom(),
+            &mut self.accessibility_manager.lock().unwrap(),
+        );
 
         process_events(
-            &self.utils.sdom().get(),
+            dom,
             &self.utils.layers().lock().unwrap(),
             &mut self.events_queue,
             &self.event_emitter,
-            &mut self.elements_state,
-            &self.viewports,
+            &mut self.nodes_state,
+            &self.utils.viewports().lock().unwrap(),
             SCALE_FACTOR,
         );
     }
 
     /// Push an event to the events queue
-    pub fn push_event(&mut self, event: FreyaEvent) {
+    pub fn push_event(&mut self, event: PlatformEvent) {
         self.events_queue.push(event);
     }
 
@@ -167,7 +186,24 @@ impl TestingHandler {
         self.utils.get_node_by_id(root_id)
     }
 
+    /// Get the current [AccessibilityId].
     pub fn focus_id(&self) -> AccessibilityId {
         self.accessibility_manager.lock().unwrap().focused_id
+    }
+
+    /// Resize the simulated canvas.
+    pub fn resize(&mut self, size: Size2D) {
+        self.config.size = size;
+        self.platform_information.lock().unwrap().window_size = size;
+    }
+
+    /// Get the current [CursorIcon].
+    pub fn cursor_icon(&self) -> CursorIcon {
+        self.cursor_icon
+    }
+
+    /// Get the [SafeDOM]
+    pub fn sdom(&self) -> &SafeDOM {
+        self.utils.sdom()
     }
 }

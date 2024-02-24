@@ -52,7 +52,7 @@ pub enum ButtonStatus {
 ///
 #[allow(non_snake_case)]
 pub fn Button(props: ButtonProps) -> Element {
-    let focus = use_focus();
+    let mut focus = use_focus();
     let mut status = use_signal(ButtonStatus::default);
     let platform = use_platform();
 
@@ -73,7 +73,7 @@ pub fn Button(props: ButtonProps) -> Element {
     } = use_applied_theme!(&props.theme, button);
 
     let onclick = {
-        to_owned![focus, click];
+        to_owned![click];
         move |ev| {
             focus.focus();
             if let Some(onclick) = &click {
@@ -82,21 +82,15 @@ pub fn Button(props: ButtonProps) -> Element {
         }
     };
 
-    use_drop({
-        to_owned![status, platform];
-        move || {
-            if *status.read() == ButtonStatus::Hovering {
-                platform.set_cursor(CursorIcon::default());
-            }
+    use_drop(move || {
+        if *status.read() == ButtonStatus::Hovering {
+            platform.set_cursor(CursorIcon::default());
         }
     });
 
-    let onmouseenter = {
-        to_owned![status, platform];
-        move |_| {
-            platform.set_cursor(CursorIcon::Pointer);
-            status.set(ButtonStatus::Hovering);
-        }
+    let onmouseenter = move |_| {
+        platform.set_cursor(CursorIcon::Pointer);
+        status.set(ButtonStatus::Hovering);
     };
 
     let onmouseleave = move |_| {
@@ -104,13 +98,10 @@ pub fn Button(props: ButtonProps) -> Element {
         status.set(ButtonStatus::default());
     };
 
-    let onkeydown = {
-        to_owned![focus];
-        move |e: KeyboardEvent| {
-            if focus.validate_keydown(e) {
-                if let Some(onclick) = &props.onclick {
-                    onclick.call(None)
-                }
+    let onkeydown = move |e: KeyboardEvent| {
+        if focus.validate_keydown(e) {
+            if let Some(onclick) = &props.onclick {
+                onclick.call(None)
             }
         }
     };
@@ -150,4 +141,44 @@ pub fn Button(props: ButtonProps) -> Element {
             {&props.children}
         }
     )
+}
+
+#[cfg(test)]
+mod test {
+    use dioxus::prelude::use_signal;
+    use freya::prelude::*;
+    use freya_testing::*;
+
+    #[tokio::test]
+    pub async fn button() {
+        fn button_app() -> Element {
+            let mut state = use_signal(|| false);
+
+            rsx!(
+                Button {
+                    onclick: move |_| state.toggle(),
+                    label {
+                        "{state}"
+                    }
+                }
+            )
+        }
+
+        let mut utils = launch_test(button_app);
+        let root = utils.root();
+        let label = root.get(0).get(0);
+        utils.wait_for_update().await;
+
+        assert_eq!(label.get(0).text(), Some("false"));
+
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (5.0, 5.0).into(),
+            button: Some(MouseButton::Left),
+        });
+
+        utils.wait_for_update().await;
+
+        assert_eq!(label.get(0).text(), Some("true"));
+    }
 }

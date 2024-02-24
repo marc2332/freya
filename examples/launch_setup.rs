@@ -17,6 +17,7 @@ fn main() {
             .on_exit(|window| {
                 println!("Window title was {}", window.title());
             })
+            .with_window_builder(|builder| builder.with_resizable(false))
             .build(),
     );
 }

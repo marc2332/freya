@@ -14,7 +14,7 @@ use winit::window::CursorIcon;
 
 /// [`DropdownItem`] component properties.
 #[derive(Props, Clone, PartialEq)]
-pub struct DropdownItemProps<T: 'static + Clone> {
+pub struct DropdownItemProps<T: 'static + Clone + PartialEq> {
     /// Theme override.
     pub theme: Option<DropdownItemThemeWith>,
     /// Selectable items, like [`DropdownItem`]
@@ -72,21 +72,15 @@ where
     };
     let color = theme.font_theme.color;
 
-    use_drop({
-        to_owned![status, platform];
-        move || {
-            if *status.peek() == DropdownItemStatus::Hovering {
-                platform.set_cursor(CursorIcon::default());
-            }
+    use_drop(move || {
+        if *status.peek() == DropdownItemStatus::Hovering {
+            platform.set_cursor(CursorIcon::default());
         }
     });
 
-    let onmouseenter = {
-        to_owned![platform];
-        move |_| {
-            platform.set_cursor(CursorIcon::Pointer);
-            status.set(DropdownItemStatus::Hovering);
-        }
+    let onmouseenter = move |_| {
+        platform.set_cursor(CursorIcon::Pointer);
+        status.set(DropdownItemStatus::Hovering);
     };
 
     let onmouseleave = move |_| {
@@ -132,7 +126,7 @@ where
 
 /// [`Dropdown`] component properties.
 #[derive(Props, Clone, PartialEq)]
-pub struct DropdownProps<T: 'static + Clone> {
+pub struct DropdownProps<T: 'static + Clone + PartialEq> {
     /// Theme override.
     pub theme: Option<DropdownThemeWith>,
     /// Selectable items, like [`DropdownItem`]
@@ -188,7 +182,7 @@ pub fn Dropdown<T>(props: DropdownProps<T>) -> Element
 where
     T: PartialEq + Clone + Display + 'static,
 {
-    let selected = use_context_provider(|| Signal::new(props.value.clone()));
+    let mut selected = use_context_provider(|| Signal::new(props.value.clone()));
     let theme = use_applied_theme!(&props.theme, dropdown);
     let mut focus = use_focus();
     let mut status = use_signal(DropdownStatus::default);
@@ -204,12 +198,9 @@ where
         *selected.write() = value;
     });
 
-    use_drop({
-        to_owned![status, platform];
-        move || {
-            if *status.peek() == DropdownStatus::Hovering {
-                platform.set_cursor(CursorIcon::default());
-            }
+    use_drop(move || {
+        if *status.peek() == DropdownStatus::Hovering {
+            platform.set_cursor(CursorIcon::default());
         }
     });
 
@@ -237,12 +228,9 @@ where
         }
     };
 
-    let onmouseenter = {
-        to_owned![status, platform];
-        move |_| {
-            platform.set_cursor(CursorIcon::Pointer);
-            status.set(DropdownStatus::Hovering);
-        }
+    let onmouseenter = move |_| {
+        platform.set_cursor(CursorIcon::Pointer);
+        status.set(DropdownStatus::Hovering);
     };
 
     let onmouseleave = move |_| {
@@ -314,4 +302,97 @@ where
             }
         }
     )
+}
+
+#[cfg(test)]
+mod test {
+    use freya::prelude::*;
+    use freya_testing::*;
+    use winit::event::MouseButton;
+
+    #[tokio::test]
+    pub async fn dropdown() {
+        fn dropdown_app() -> Element {
+            let values = use_hook(|| {
+                vec![
+                    "Value A".to_string(),
+                    "Value B".to_string(),
+                    "Value C".to_string(),
+                ]
+            });
+            let mut selected_dropdown = use_signal(|| "Value A".to_string());
+
+            rsx!(
+                Dropdown {
+                    value: selected_dropdown.read().clone(),
+                    for ch in values {
+                        DropdownItem {
+                            value: ch.clone(),
+                            onclick: {
+                                to_owned![ch];
+                                move |_| selected_dropdown.set(ch.clone())
+                            },
+                            label { "{ch}" }
+                        }
+                    }
+                }
+            )
+        }
+
+        let mut utils = launch_test(dropdown_app);
+        let root = utils.root();
+        let label = root.get(0).get(0);
+        utils.wait_for_update().await;
+
+        // Currently closed
+        let start_size = utils.sdom().get().layout().size();
+
+        // Default value
+        assert_eq!(label.get(0).text(), Some("Value A"));
+
+        // Open the dropdown
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (5.0, 5.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.wait_for_update().await;
+
+        // Now that the dropwdown is opened, there are more nodes in the layout
+        assert!(utils.sdom().get().layout().size() > start_size);
+
+        // Close the dropdown by clicking outside of it
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (200.0, 200.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.wait_for_update().await;
+
+        // Now the layout size is like in the begining
+        assert_eq!(utils.sdom().get().layout().size(), start_size);
+
+        // Open the dropdown again
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (5.0, 5.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.wait_for_update().await;
+
+        // Click on the second option
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (45.0, 100.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+
+        // Now the layout size is like in the begining, again
+        assert_eq!(utils.sdom().get().layout().size(), start_size);
+
+        // The second optio was selected
+        assert_eq!(label.get(0).text(), Some("Value B"));
+    }
 }

@@ -16,14 +16,9 @@ torin = { workspace = true }
 freya-common = { workspace = true }
 
 dioxus-rsx = { workspace = true }
-dioxus-native-core = { workspace = true }
-dioxus-core-macro = { workspace = true }
-dioxus-hooks = { workspace = true }
 dioxus-core = { workspace = true }
 
 winit = { workspace = true }
-tokio = { workspace = true }
-accesskit = { workspace = true }
 
 keyboard-types = "0.7.0"
 

@@ -424,7 +424,7 @@ builder_constructors! {
     /// static RUST_LOGO: &[u8] = include_bytes!("./rust_logo.png");
     ///
     /// fn app() -> Element {
-    ///     let image_data = bytes_to_data(RUST_LOGO);
+    ///     let image_data = static_bytes_to_data(RUST_LOGO);
     ///     rsx!(
     ///         image {
     ///             image_data: image_data,
@@ -517,6 +517,7 @@ pub mod events {
     }
 
     /// A platform specific event.
+    #[doc(hidden)]
     pub struct PlatformEventData {
         event: Box<dyn Any>,
     }

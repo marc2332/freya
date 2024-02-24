@@ -10,10 +10,9 @@ impl LayoutMeasurer<usize> for CustomMeasurer {
         &mut self,
         _node_id: usize,
         _node: &Node,
-        _area: &Area,
         _parent_size: &Area,
         _available_parent_area: &Area,
-    ) -> Option<Area> {
+    ) -> Option<Size2D> {
         None
     }
 }
@@ -101,10 +100,8 @@ impl DOMAdapter<usize> for DemoDOM {
         true
     }
 
-    fn closest_common_parent(&self, node_id_a: &usize, _node_id_b: &usize) -> Option<usize> {
-        // This is a simplified version but the idea is to get the closest
-        // common ancestor from both nodes, in the DOM
-        Some(self.parent_of(node_id_a).unwrap_or(*node_id_a))
+    fn root_id(&self) -> usize {
+        0 // We assume 0 is the root ID of the DOM
     }
 }
 

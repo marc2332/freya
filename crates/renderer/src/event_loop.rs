@@ -30,9 +30,7 @@ pub fn run_event_loop<State: Clone>(
     let mut cursor_pos = CursorPoint::default();
     let mut modifiers_state = ModifiersState::empty();
 
-    let window_env = app.window_env_mut();
-
-    window_env.run_on_setup();
+    app.window_env.run_on_setup();
 
     event_loop
         .run(move |event, event_loop| match event {
@@ -40,15 +38,11 @@ pub fn run_event_loop<State: Clone>(
                 _ = proxy.send_event(EventMessage::PollVDOM);
             }
             Event::UserEvent(EventMessage::FocusAccessibilityNode(id)) => {
-                app.accessibility()
-                    .set_accessibility_focus(id, app.window_env().window());
+                app.accessibility
+                    .set_accessibility_focus(id, &app.window_env.window);
             }
             Event::UserEvent(EventMessage::RequestRerender) => {
-                app.window_env_mut().window_mut().request_redraw();
-            }
-            Event::UserEvent(EventMessage::RequestRedraw) => app.render(&hovered_node),
-            Event::UserEvent(EventMessage::RequestRelayout) => {
-                app.process_layout();
+                app.window_env.window.request_redraw();
             }
             Event::UserEvent(EventMessage::RemeasureTextGroup(text_id)) => {
                 app.measure_text_group(&text_id);
@@ -58,12 +52,12 @@ pub fn run_event_loop<State: Clone>(
                 ..
             })) => {
                 if Action::Focus == request.action {
-                    app.accessibility()
-                        .set_accessibility_focus(request.target, app.window_env().window());
+                    app.accessibility
+                        .set_accessibility_focus(request.target, &app.window_env.window);
                 }
             }
             Event::UserEvent(EventMessage::SetCursorIcon(icon)) => {
-                app.window_env().window.set_cursor_icon(icon)
+                app.window_env.window.set_cursor_icon(icon)
             }
             Event::UserEvent(ev) => {
                 if let EventMessage::UpdateTemplate(template) = ev {
@@ -77,32 +71,37 @@ pub fn run_event_loop<State: Clone>(
                 }
             }
             Event::WindowEvent { event, .. } => {
-                app.process_accessibility_event(&event);
+                app.accessibility
+                    .process_accessibility_event(&event, &app.window_env.window);
                 match event {
                     WindowEvent::CloseRequested => event_loop.exit(),
                     WindowEvent::Ime(Ime::Commit(text)) => {
-                        app.send_event(FreyaEvent::Keyboard {
-                            name: "keydown".to_string(),
+                        app.send_event(PlatformEvent::Keyboard {
+                            name: EventName::KeyDown,
                             key: Key::Character(text),
                             code: Code::Unidentified,
                             modifiers: map_winit_modifiers(modifiers_state),
                         });
                     }
                     WindowEvent::RedrawRequested => {
-                        app.process_layout();
+                        if app.measure_layout_on_next_render {
+                            app.process_layout();
+
+                            app.measure_layout_on_next_render = false;
+                        }
                         app.render(&hovered_node);
-                        app.tick();
+                        app.event_loop_tick();
                     }
                     WindowEvent::MouseInput { state, button, .. } => {
                         app.set_navigation_mode(NavigationMode::NotKeyboard);
 
-                        let event_name = match state {
-                            ElementState::Pressed => "mousedown",
-                            ElementState::Released => "click",
+                        let name = match state {
+                            ElementState::Pressed => EventName::MouseDown,
+                            ElementState::Released => EventName::Click,
                         };
 
-                        app.send_event(FreyaEvent::Mouse {
-                            name: event_name.to_string(),
+                        app.send_event(PlatformEvent::Mouse {
+                            name,
                             cursor: cursor_pos,
                             button: Some(button),
                         });
@@ -119,8 +118,8 @@ pub fn run_event_loop<State: Clone>(
                                 }
                             };
 
-                            app.send_event(FreyaEvent::Wheel {
-                                name: "wheel".to_string(),
+                            app.send_event(PlatformEvent::Wheel {
+                                name: EventName::Wheel,
                                 scroll: CursorPoint::from(scroll_data),
                                 cursor: cursor_pos,
                             });
@@ -155,22 +154,31 @@ pub fn run_event_loop<State: Clone>(
                             return;
                         }
 
-                        let event_name = match state {
-                            ElementState::Pressed => "keydown",
-                            ElementState::Released => "keyup",
+                        let name = match state {
+                            ElementState::Pressed => EventName::KeyDown,
+                            ElementState::Released => EventName::KeyUp,
                         };
-                        app.send_event(FreyaEvent::Keyboard {
-                            name: event_name.to_string(),
+                        app.send_event(PlatformEvent::Keyboard {
+                            name,
                             key: map_winit_key(&logical_key),
                             code: map_winit_physical_key(&physical_key),
                             modifiers: map_winit_modifiers(modifiers_state),
                         })
                     }
+                    WindowEvent::CursorLeft { .. } => {
+                        cursor_pos = CursorPoint::new(-1.0, -1.0);
+
+                        app.send_event(PlatformEvent::Mouse {
+                            name: EventName::MouseOver,
+                            cursor: cursor_pos,
+                            button: None,
+                        });
+                    }
                     WindowEvent::CursorMoved { position, .. } => {
                         cursor_pos = CursorPoint::from((position.x, position.y));
 
-                        app.send_event(FreyaEvent::Mouse {
-                            name: "mouseover".to_string(),
+                        app.send_event(PlatformEvent::Mouse {
+                            name: EventName::MouseOver,
                             cursor: cursor_pos,
                             button: None,
                         });
@@ -184,15 +192,15 @@ pub fn run_event_loop<State: Clone>(
                     }) => {
                         cursor_pos = CursorPoint::from((location.x, location.y));
 
-                        let event_name = match phase {
-                            TouchPhase::Cancelled => "touchcancel",
-                            TouchPhase::Ended => "touchend",
-                            TouchPhase::Moved => "touchmove",
-                            TouchPhase::Started => "touchstart",
+                        let name = match phase {
+                            TouchPhase::Cancelled => EventName::TouchCancel,
+                            TouchPhase::Ended => EventName::TouchEnd,
+                            TouchPhase::Moved => EventName::TouchMove,
+                            TouchPhase::Started => EventName::TouchStart,
                         };
 
-                        app.send_event(FreyaEvent::Touch {
-                            name: event_name.to_string(),
+                        app.send_event(PlatformEvent::Touch {
+                            name,
                             location: cursor_pos,
                             finger_id: id,
                             phase,
@@ -206,7 +214,7 @@ pub fn run_event_loop<State: Clone>(
                 }
             }
             Event::LoopExiting => {
-                app.window_env_mut().run_on_exit();
+                app.window_env.run_on_exit();
             }
             _ => (),
         })

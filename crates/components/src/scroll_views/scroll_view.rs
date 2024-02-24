@@ -56,13 +56,13 @@ pub struct ScrollViewProps {
 ///
 #[allow(non_snake_case)]
 pub fn ScrollView(props: ScrollViewProps) -> Element {
-    let clicking_scrollbar = use_signal::<Option<(Axis, f64)>>(|| None);
+    let mut clicking_scrollbar = use_signal::<Option<(Axis, f64)>>(|| None);
     let mut clicking_shift = use_signal(|| false);
     let mut clicking_alt = use_signal(|| false);
     let mut scrolled_y = use_signal(|| 0);
     let mut scrolled_x = use_signal(|| 0);
     let (node_ref, size) = use_node();
-    let focus = use_focus();
+    let mut focus = use_focus();
     let theme = use_applied_theme!(&props.theme, scroll_view);
 
     let padding = &theme.padding;
@@ -97,92 +97,86 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
         get_scrollbar_pos_and_size(size.inner.width, size.area.width(), corrected_scrolled_x);
 
     // Moves the Y axis when the user scrolls in the container
-    let onwheel = {
-        to_owned![focus];
-        move |e: WheelEvent| {
-            let speed_multiplier = if *clicking_alt.read() {
-                SCROLL_SPEED_MULTIPLIER
-            } else {
-                1.0
-            };
+    let onwheel = move |e: WheelEvent| {
+        let speed_multiplier = if *clicking_alt.peek() {
+            SCROLL_SPEED_MULTIPLIER
+        } else {
+            1.0
+        };
 
-            if !*clicking_shift.read() {
-                let wheel_y = e.get_delta_y() as f32 * speed_multiplier;
+        if !*clicking_shift.peek() {
+            let wheel_y = e.get_delta_y() as f32 * speed_multiplier;
 
-                let scroll_position_y = get_scroll_position_from_wheel(
-                    wheel_y,
-                    size.inner.height,
-                    size.area.height(),
-                    corrected_scrolled_y,
-                );
-
-                // Only scroll when there is still area to scroll
-                if *scrolled_y.peek() != scroll_position_y {
-                    e.stop_propagation();
-                    *scrolled_y.write() = scroll_position_y;
-                } else {
-                    return;
-                }
-            }
-
-            let wheel_x = if *clicking_shift.read() {
-                e.get_delta_y() as f32
-            } else {
-                e.get_delta_x() as f32
-            } * speed_multiplier;
-
-            let scroll_position_x = get_scroll_position_from_wheel(
-                wheel_x,
-                size.inner.width,
-                size.area.width(),
-                corrected_scrolled_x,
+            let scroll_position_y = get_scroll_position_from_wheel(
+                wheel_y,
+                size.inner.height,
+                size.area.height(),
+                corrected_scrolled_y,
             );
 
             // Only scroll when there is still area to scroll
-            if *scrolled_x.peek() != scroll_position_x {
+            if *scrolled_y.peek() != scroll_position_y {
                 e.stop_propagation();
-                *scrolled_x.write() = scroll_position_x;
+                *scrolled_y.write() = scroll_position_y;
             } else {
                 return;
             }
-
-            focus.focus();
         }
+
+        let wheel_x = if *clicking_shift.peek() {
+            e.get_delta_y() as f32
+        } else {
+            e.get_delta_x() as f32
+        } * speed_multiplier;
+
+        let scroll_position_x = get_scroll_position_from_wheel(
+            wheel_x,
+            size.inner.width,
+            size.area.width(),
+            corrected_scrolled_x,
+        );
+
+        // Only scroll when there is still area to scroll
+        if *scrolled_x.peek() != scroll_position_x {
+            e.stop_propagation();
+            *scrolled_x.write() = scroll_position_x;
+        } else {
+            return;
+        }
+
+        focus.focus();
     };
 
     // Drag the scrollbars
-    let onmouseover = {
-        to_owned![focus];
-        move |e: MouseEvent| {
-            let clicking_scrollbar = clicking_scrollbar.read();
+    let onmouseover = move |e: MouseEvent| {
+        let clicking_scrollbar = clicking_scrollbar.peek();
 
-            if let Some((Axis::Y, y)) = *clicking_scrollbar {
-                let coordinates = e.get_element_coordinates();
-                let cursor_y = coordinates.y - y - size.area.min_y() as f64;
+        if let Some((Axis::Y, y)) = *clicking_scrollbar {
+            let coordinates = e.get_element_coordinates();
+            let cursor_y = coordinates.y - y - size.area.min_y() as f64;
 
-                let scroll_position = get_scroll_position_from_cursor(
-                    cursor_y as f32,
-                    size.inner.height,
-                    size.area.height(),
-                );
+            let scroll_position = get_scroll_position_from_cursor(
+                cursor_y as f32,
+                size.inner.height,
+                size.area.height(),
+            );
 
-                *scrolled_y.write() = scroll_position;
-            } else if let Some((Axis::X, x)) = *clicking_scrollbar {
-                let coordinates = e.get_element_coordinates();
-                let cursor_x = coordinates.x - x - size.area.min_x() as f64;
+            *scrolled_y.write() = scroll_position;
+        } else if let Some((Axis::X, x)) = *clicking_scrollbar {
+            let coordinates = e.get_element_coordinates();
+            let cursor_x = coordinates.x - x - size.area.min_x() as f64;
 
-                let scroll_position = get_scroll_position_from_cursor(
-                    cursor_x as f32,
-                    size.inner.width,
-                    size.area.width(),
-                );
+            let scroll_position = get_scroll_position_from_cursor(
+                cursor_x as f32,
+                size.inner.width,
+                size.area.width(),
+            );
 
-                *scrolled_x.write() = scroll_position;
-            }
+            *scrolled_x.write() = scroll_position;
+        }
 
-            if clicking_scrollbar.is_some() {
-                focus.focus();
-            }
+        if clicking_scrollbar.is_some() {
+            focus.focus();
         }
     };
 
@@ -252,7 +246,7 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
 
     // Unmark any scrollbar
     let onclick = move |_: MouseEvent| {
-        if clicking_scrollbar.read().is_some() {
+        if clicking_scrollbar.peek().is_some() {
             *clicking_scrollbar.write() = None;
         }
     };
@@ -333,4 +327,162 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
             }
         }
     )
+}
+
+#[cfg(test)]
+mod test {
+    use freya::prelude::*;
+    use freya_testing::*;
+
+    #[tokio::test]
+    pub async fn scroll_view_wheel() {
+        fn scroll_view_wheel_app() -> Element {
+            rsx!(
+                ScrollView {
+                    rect {
+                        height: "200",
+                        width: "200",
+                    },
+                    rect {
+                        height: "200",
+                        width: "200",
+                    },
+                    rect {
+                        height: "200",
+                        width: "200",
+                    }
+                    rect {
+                        height: "200",
+                        width: "200",
+                    }
+                }
+            )
+        }
+
+        let mut utils = launch_test(scroll_view_wheel_app);
+        let root = utils.root();
+        let content = root.get(0).get(0).get(0);
+        utils.wait_for_update().await;
+
+        // Only the first three items are visible
+        // Scrollview height is 500 and the user hasn't scrolled yet
+        assert!(content.get(0).is_visible()); // 1. 0   -> 200, 200 < 500
+        assert!(content.get(1).is_visible()); // 2. 200 -> 400, 200 < 500
+        assert!(content.get(2).is_visible()); // 3. 400 -> 600, 400 < 500
+        assert!(!content.get(3).is_visible()); // 4. 600 -> 800, 600 is NOT < 500, which means it is not visible.
+
+        utils.push_event(PlatformEvent::Wheel {
+            name: EventName::Wheel,
+            scroll: (0., -300.).into(),
+            cursor: (5., 5.).into(),
+        });
+
+        utils.wait_for_update().await;
+
+        // Only the last three items are visible
+        // Scrollview height is 500 but the user has scrolled 300 pixels
+        assert!(!content.get(0).is_visible()); // 1. 0   -> 200, 200 is NOT > 300, which means it is not visible.
+        assert!(content.get(1).is_visible()); // 2. 200 -> 400, 400 > 300
+        assert!(content.get(2).is_visible()); // 3. 400 -> 600, 600 > 300
+        assert!(content.get(3).is_visible()); // 4. 600 -> 800, 800 > 300
+    }
+
+    #[tokio::test]
+    pub async fn scroll_view_scrollbar() {
+        fn scroll_view_scrollbar_app() -> Element {
+            rsx!(
+                ScrollView {
+                    rect {
+                        height: "200",
+                        width: "200",
+                    },
+                    rect {
+                        height: "200",
+                        width: "200",
+                    },
+                    rect {
+                        height: "200",
+                        width: "200",
+                    }
+                    rect {
+                        height: "200",
+                        width: "200",
+                    }
+                }
+            )
+        }
+
+        let mut utils = launch_test(scroll_view_scrollbar_app);
+        let root = utils.root();
+        let content = root.get(0).get(0).get(0);
+        utils.wait_for_update().await;
+
+        // Only the first three items are visible
+        // Scrollview height is 500 and the user hasn't scrolled yet
+        assert!(content.get(0).is_visible()); // 1. 0   -> 200, 200 < 500
+        assert!(content.get(1).is_visible()); // 2. 200 -> 400, 200 < 500
+        assert!(content.get(2).is_visible()); // 3. 400 -> 600, 400 < 500
+        assert!(!content.get(3).is_visible()); // 4. 600 -> 800, 600 is NOT < 500, which means it is not visible.
+
+        // Simulate the user dragging the scrollbar
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseOver,
+            cursor: (490., 20.).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseDown,
+            cursor: (490., 20.).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseOver,
+            cursor: (490., 320.).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (490., 320.).into(),
+            button: Some(MouseButton::Left),
+        });
+
+        utils.wait_for_update().await;
+
+        // Only the last three items are visible
+        // Scrollview height is 500 but the user has dragged the scrollbar 300 pixels
+        assert!(!content.get(0).is_visible()); // 1. 0   -> 200, 200 is NOT > 300, which means it is not visible.
+        assert!(content.get(1).is_visible()); // 2. 200 -> 400, 400 > 300
+        assert!(content.get(2).is_visible()); // 3. 400 -> 600, 600 > 300
+        assert!(content.get(3).is_visible()); // 4. 600 -> 800, 800 > 300
+
+        // Scroll up with arrows
+        for _ in 0..5 {
+            utils.push_event(PlatformEvent::Keyboard {
+                name: EventName::KeyDown,
+                key: Key::ArrowUp,
+                code: Code::ArrowUp,
+                modifiers: Modifiers::default(),
+            });
+            utils.wait_for_update().await;
+        }
+
+        assert!(content.get(0).is_visible());
+        assert!(content.get(1).is_visible());
+        assert!(content.get(2).is_visible());
+        assert!(!content.get(3).is_visible());
+
+        // Scroll to the bottom with arrows
+        utils.push_event(PlatformEvent::Keyboard {
+            name: EventName::KeyDown,
+            key: Key::End,
+            code: Code::End,
+            modifiers: Modifiers::default(),
+        });
+        utils.wait_for_update().await;
+
+        assert!(!content.get(0).is_visible());
+        assert!(content.get(1).is_visible());
+        assert!(content.get(2).is_visible());
+        assert!(content.get(3).is_visible());
+    }
 }
