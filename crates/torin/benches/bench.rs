@@ -85,7 +85,7 @@ struct BenchmarkConfig {
 impl BenchmarkConfig {
     pub fn name(&self) -> String {
         format!(
-            "{} size={} depth={} wide={} mode={}",
+            "{}size={} depth={} wide={} mode={}",
             self.prefix,
             self.size(),
             self.depth,
@@ -240,7 +240,7 @@ fn criterion_benchmark(c: &mut Criterion) {
                     )
                 }
             },
-            prefix: "alignments=true".to_string(),
+            prefix: "alignments=true ".to_string(),
         },
     ];
 
