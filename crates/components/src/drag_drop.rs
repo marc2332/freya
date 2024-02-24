@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
-use freya_hooks::use_node_ref;
+use freya_hooks::use_node_signal;
 use torin::prelude::CursorPoint;
 
 /// [`DragProvider`] component properties.
@@ -24,7 +24,7 @@ pub fn DragProvider<T: 'static>(DragProviderProps { children }: DragProviderProp
 
 /// [`DragZone`] component properties.
 #[derive(Props, Clone, PartialEq)]
-pub struct DragZoneProps<T: Clone + 'static> {
+pub struct DragZoneProps<T: Clone + 'static + PartialEq> {
     /// Element visible when dragging the element. This follows the cursor.
     drag_element: Element,
     /// Inner children for the DropZone.
@@ -39,17 +39,17 @@ pub struct DragZoneProps<T: Clone + 'static> {
 /// See [`DragZoneProps`].
 ///
 #[allow(non_snake_case)]
-pub fn DragZone<T: 'static + Clone>(
+pub fn DragZone<T: 'static + Clone + PartialEq>(
     DragZoneProps {
         data,
         children,
         drag_element,
     }: DragZoneProps<T>,
 ) -> Element {
-    let drags = use_context::<Signal<Option<T>>>();
+    let mut drags = use_context::<Signal<Option<T>>>();
     let mut dragging = use_signal(|| false);
     let mut pos = use_signal(CursorPoint::default);
-    let (node_reference, size) = use_node_ref();
+    let (node_reference, size) = use_node_signal();
 
     let onglobalmouseover = move |e: MouseEvent| {
         if *dragging.read() {
@@ -108,21 +108,12 @@ pub fn DragZone<T: 'static + Clone>(
 }
 
 /// [`DropZone`] component properties.
-#[derive(Props, PartialEq)]
-pub struct DropZoneProps<T: 'static> {
+#[derive(Props, PartialEq, Clone)]
+pub struct DropZoneProps<T: 'static + PartialEq + Clone> {
     /// Inner children for the DropZone.
     children: Element,
     /// Handler for the `ondrop` event.
     ondrop: EventHandler<T>,
-}
-
-impl<T> Clone for DropZoneProps<T> {
-    fn clone(&self) -> Self {
-        Self {
-            children: self.children.clone(),
-            ondrop: self.ondrop.clone(),
-        }
-    }
 }
 
 /// Elements from [`DragZone`]s can be dropped here.
@@ -131,8 +122,8 @@ impl<T> Clone for DropZoneProps<T> {
 /// See [`DropZoneProps`].
 ///
 #[allow(non_snake_case)]
-pub fn DropZone<T: 'static + Clone>(props: DropZoneProps<T>) -> Element {
-    let drags = use_context::<Signal<Option<T>>>();
+pub fn DropZone<T: 'static + Clone + PartialEq>(props: DropZoneProps<T>) -> Element {
+    let mut drags = use_context::<Signal<Option<T>>>();
 
     let onclick = move |_: MouseEvent| {
         if let Some(current_drags) = &*drags.read() {
@@ -153,9 +144,8 @@ pub fn DropZone<T: 'static + Clone>(props: DropZoneProps<T>) -> Element {
 
 #[cfg(test)]
 mod test {
-    use dioxus::signals::use_signal;
     use freya::prelude::*;
-    use freya_testing::{events::pointer::MouseButton, launch_test, FreyaEvent};
+    use freya_testing::{events::pointer::MouseButton, launch_test, EventName, PlatformEvent};
 
     #[tokio::test]
     pub async fn drag_drop() {
@@ -200,24 +190,24 @@ mod test {
         let root = utils.root();
         utils.wait_for_update().await;
 
-        utils.push_event(FreyaEvent::Mouse {
-            name: "mousedown".to_string(),
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseDown,
             cursor: (5.0, 5.0).into(),
             button: Some(MouseButton::Left),
         });
 
         utils.wait_for_update().await;
 
-        utils.push_event(FreyaEvent::Mouse {
-            name: "mouseover".to_string(),
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseOver,
             cursor: (5.0, 5.0).into(),
             button: Some(MouseButton::Left),
         });
 
         utils.wait_for_update().await;
 
-        utils.push_event(FreyaEvent::Mouse {
-            name: "mouseover".to_string(),
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseOver,
             cursor: (5.0, 300.0).into(),
             button: Some(MouseButton::Left),
         });
@@ -226,8 +216,8 @@ mod test {
 
         assert_eq!(root.get(0).get(0).get(0).get(0).text(), Some("Moving"));
 
-        utils.push_event(FreyaEvent::Mouse {
-            name: "click".to_string(),
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
             cursor: (5.0, 300.0).into(),
             button: Some(MouseButton::Left),
         });

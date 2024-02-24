@@ -3,8 +3,8 @@ use freya_elements::elements as dioxus_elements;
 use freya_elements::events::MouseEvent;
 
 use freya_hooks::{
-    use_animation, use_applied_theme, use_node, use_platform, AccordionTheme, AccordionThemeWith,
-    Animation,
+    use_animation_with_dependencies, use_applied_theme, use_node, use_platform, AccordionTheme,
+    AccordionThemeWith, AnimNum,
 };
 use winit::window::CursorIcon;
 
@@ -40,61 +40,40 @@ pub struct AccordionProps {
 #[allow(non_snake_case)]
 pub fn Accordion(props: AccordionProps) -> Element {
     let theme = use_applied_theme!(&props.theme, accordion);
-    let mut animation = use_animation(|| 0.0);
     let mut open = use_signal(|| false);
     let (node_ref, size) = use_node();
+
+    let animation = use_animation_with_dependencies(&size.area.height(), move |ctx, height| {
+        ctx.with(AnimNum::new(0., height).time(200))
+    });
     let mut status = use_signal(AccordionStatus::default);
     let platform = use_platform();
 
-    let animation_value = animation.value();
+    let animation_value = animation.read().get().read().as_f32();
     let AccordionTheme {
         background,
         color,
         border_fill,
     } = theme;
 
-    // Adapt the accordion if the body size changes
-    let _ = use_memo_with_dependencies(
-        &(
-            size.area.width(),
-            size.area.height(),
-            animation.is_animating(),
-        ),
-        {
-            to_owned![animation];
-            move |(_, height, animating)| {
-                if (height as f64) < animation.value() && !animating {
-                    animation.set_value(size.area.height() as f64);
-                }
-            }
-        },
-    );
-
     let onclick = move |_: MouseEvent| {
-        let bodyHeight = size.area.height() as f64;
-        if *open.read() {
-            animation.start(Animation::new_sine_in_out(bodyHeight..=0.0, 200));
-        } else {
-            animation.start(Animation::new_sine_in_out(0.0..=bodyHeight, 200));
-        }
         open.toggle();
+        if *open.read() {
+            animation.read().start();
+        } else {
+            animation.read().reverse();
+        }
     };
 
-    use_drop({
-        to_owned![status, platform];
-        move || {
-            if *status.read() == AccordionStatus::Hovering {
-                platform.set_cursor(CursorIcon::default());
-            }
+    use_drop(move || {
+        if *status.read() == AccordionStatus::Hovering {
+            platform.set_cursor(CursorIcon::default());
         }
     });
 
-    let onmouseenter = {
-        to_owned![status, platform];
-        move |_| {
-            platform.set_cursor(CursorIcon::Hand);
-            status.set(AccordionStatus::Hovering);
-        }
+    let onmouseenter = move |_| {
+        platform.set_cursor(CursorIcon::Pointer);
+        status.set(AccordionStatus::Hovering);
     };
 
     let onmouseleave = move |_| {
@@ -168,4 +147,54 @@ pub fn AccordionBody(props: AccordionBodyProps) -> Element {
         padding: "15 0 0 0",
         {props.children}
     })
+}
+
+#[cfg(test)]
+mod test {
+    use freya::prelude::*;
+    use freya_testing::{launch_test, EventName, PlatformEvent};
+    use winit::event::MouseButton;
+
+    #[tokio::test]
+    pub async fn accordion() {
+        fn accordion_app() -> Element {
+            rsx!(
+                Accordion {
+                    summary: rsx!(AccordionSummary {
+                        label {
+                            "Accordion Summary"
+                        }
+                    }),
+                    AccordionBody {
+                        label {
+                            "Accordion Body"
+                        }
+                    }
+                }
+            )
+        }
+
+        let mut utils = launch_test(accordion_app);
+
+        let root = utils.root();
+        let content = root.get(0).get(1).get(0);
+        let label = content.get(0);
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+
+        // Accordion is closed, therefore label is hidden.
+        assert!(!label.is_visible());
+
+        // Click on the accordion
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (5., 5.).into(),
+            button: Some(MouseButton::Left),
+        });
+
+        utils.wait_for_update().await;
+
+        // Accordion is open, therefore label is visible.
+        assert!(label.is_visible());
+    }
 }

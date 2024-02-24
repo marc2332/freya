@@ -1,18 +1,13 @@
 use crate::{use_editable, EditableMode, TextEditor};
 use freya::prelude::*;
-use freya_testing::{
-    events::{
-        keyboard::{Code, Key, Modifiers},
-        pointer::MouseButton,
-    },
-    launch_test, FreyaEvent,
-};
+use freya_core::events::EventName;
+use freya_testing::*;
 
 #[tokio::test]
 pub async fn multiple_lines_single_editor() {
     fn use_editable_app() -> Element {
-        let editable = use_editable(
-            || EditableConfig::new("Hello Rustaceans".to_string()),
+        let mut editable = use_editable(
+            || EditableConfig::new("Hello Rustaceans\nHello Rustaceans".to_string()),
             EditableMode::MultipleLinesSingleEditor,
         );
         let cursor_attr = editable.cursor_attr();
@@ -20,18 +15,12 @@ pub async fn multiple_lines_single_editor() {
         let cursor = editor.cursor();
         let cursor_pos = editor.cursor_pos();
 
-        let onmousedown = {
-            to_owned![editable];
-            move |e: MouseEvent| {
-                editable.process_event(&EditableEvent::MouseDown(e.data, 0));
-            }
+        let onmousedown = move |e: MouseEvent| {
+            editable.process_event(&EditableEvent::MouseDown(e.data, 0));
         };
 
-        let onkeydown = {
-            to_owned![editable];
-            move |e: Event<KeyboardData>| {
-                editable.process_event(&EditableEvent::KeyDown(e.data));
-            }
+        let onkeydown = move |e: Event<KeyboardData>| {
+            editable.process_event(&EditableEvent::KeyDown(e.data));
         };
 
         rsx!(
@@ -57,7 +46,7 @@ pub async fn multiple_lines_single_editor() {
                 label {
                     color: "black",
                     height: "50%",
-                    "{cursor.col()}:{cursor.row()}"
+                    "{cursor.row()}:{cursor.col()}"
                 }
             }
         )
@@ -70,11 +59,11 @@ pub async fn multiple_lines_single_editor() {
     let cursor = root.get(1).get(0);
     let content = root.get(0).get(0).get(0);
     assert_eq!(cursor.text(), Some("0:0"));
-    assert_eq!(content.text(), Some("Hello Rustaceans"));
+    assert_eq!(content.text(), Some("Hello Rustaceans\nHello Rustaceans"));
 
     // Move cursor
-    utils.push_event(FreyaEvent::Mouse {
-        name: "mousedown".to_string(),
+    utils.push_event(PlatformEvent::Mouse {
+        name: EventName::MouseDown,
         cursor: (35.0, 3.0).into(),
         button: Some(MouseButton::Left),
     });
@@ -86,14 +75,14 @@ pub async fn multiple_lines_single_editor() {
     let root = utils.root().get(0);
     let cursor = root.get(1).get(0);
     #[cfg(not(target_os = "linux"))]
-    assert_eq!(cursor.text(), Some("5:0"));
+    assert_eq!(cursor.text(), Some("0:5"));
 
     #[cfg(target_os = "linux")]
-    assert_eq!(cursor.text(), Some("4:0"));
+    assert_eq!(cursor.text(), Some("0:4"));
 
     // Insert text
-    utils.push_event(FreyaEvent::Keyboard {
-        name: "keydown".to_string(),
+    utils.push_event(PlatformEvent::Keyboard {
+        name: EventName::KeyDown,
         key: Key::Character("!".to_string()),
         code: Code::Unidentified,
         modifiers: Modifiers::empty(),
@@ -106,32 +95,120 @@ pub async fn multiple_lines_single_editor() {
     let content = root.get(0).get(0).get(0);
     #[cfg(not(target_os = "linux"))]
     {
-        assert_eq!(content.text(), Some("Hello! Rustaceans"));
-        assert_eq!(cursor.text(), Some("6:0"));
+        assert_eq!(content.text(), Some("Hello! Rustaceans\nHello Rustaceans"));
+        assert_eq!(cursor.text(), Some("0:6"));
     }
 
     #[cfg(target_os = "linux")]
     {
-        assert_eq!(content.text(), Some("Hell!o Rustaceans"));
-        assert_eq!(cursor.text(), Some("5:0"));
+        assert_eq!(content.text(), Some("Hell!o Rustaceans\nHello Rustaceans"));
+        assert_eq!(cursor.text(), Some("0:5"));
     }
+
+    // Move cursor to the begining
+    utils.push_event(PlatformEvent::Mouse {
+        name: EventName::MouseDown,
+        cursor: (3.0, 3.0).into(),
+        button: Some(MouseButton::Left),
+    });
+    utils.wait_for_update().await;
+    utils.wait_for_update().await;
+    let cursor = root.get(1).get(0);
+    assert_eq!(cursor.text(), Some("0:0"));
+
+    // Move cursor with arrow down
+    utils.push_event(PlatformEvent::Keyboard {
+        name: EventName::KeyDown,
+        code: Code::ArrowDown,
+        key: Key::ArrowDown,
+        modifiers: Modifiers::default(),
+    });
+    utils.wait_for_update().await;
+    let cursor = root.get(1).get(0);
+    assert_eq!(cursor.text(), Some("1:0"));
+
+    // Move cursor with arrow right
+    utils.push_event(PlatformEvent::Keyboard {
+        name: EventName::KeyDown,
+        code: Code::ArrowRight,
+        key: Key::ArrowRight,
+        modifiers: Modifiers::default(),
+    });
+    utils.wait_for_update().await;
+    let cursor = root.get(1).get(0);
+    assert_eq!(cursor.text(), Some("1:1"));
+
+    // Move cursor with arrow up
+    utils.push_event(PlatformEvent::Keyboard {
+        name: EventName::KeyDown,
+        code: Code::ArrowUp,
+        key: Key::ArrowUp,
+        modifiers: Modifiers::default(),
+    });
+    utils.wait_for_update().await;
+    let cursor = root.get(1).get(0);
+    assert_eq!(cursor.text(), Some("0:1"));
+
+    // Move cursor with arrow left
+    utils.push_event(PlatformEvent::Keyboard {
+        name: EventName::KeyDown,
+        code: Code::ArrowLeft,
+        key: Key::ArrowLeft,
+        modifiers: Modifiers::default(),
+    });
+    utils.wait_for_update().await;
+    let cursor = root.get(1).get(0);
+    assert_eq!(cursor.text(), Some("0:0"));
+
+    // Move cursor with arrow down, twice
+    utils.push_event(PlatformEvent::Keyboard {
+        name: EventName::KeyDown,
+        code: Code::ArrowDown,
+        key: Key::ArrowDown,
+        modifiers: Modifiers::default(),
+    });
+    utils.push_event(PlatformEvent::Keyboard {
+        name: EventName::KeyDown,
+        code: Code::ArrowDown,
+        key: Key::ArrowDown,
+        modifiers: Modifiers::default(),
+    });
+    utils.wait_for_update().await;
+    let cursor = root.get(1).get(0);
+    // Because there is not a third line, the cursor will be moved to the max right
+    assert_eq!(cursor.text(), Some("1:16"));
+
+    // Move cursor with arrow up, twice
+    utils.push_event(PlatformEvent::Keyboard {
+        name: EventName::KeyDown,
+        code: Code::ArrowUp,
+        key: Key::ArrowUp,
+        modifiers: Modifiers::default(),
+    });
+    utils.push_event(PlatformEvent::Keyboard {
+        name: EventName::KeyDown,
+        code: Code::ArrowUp,
+        key: Key::ArrowUp,
+        modifiers: Modifiers::default(),
+    });
+    utils.wait_for_update().await;
+    let cursor = root.get(1).get(0);
+    // Because there is not a line above the first one, the cursor will be moved to the begining
+    assert_eq!(cursor.text(), Some("0:0"));
 }
 
 #[tokio::test]
 pub async fn single_line_mulitple_editors() {
     fn use_editable_app() -> Element {
-        let editable = use_editable(
+        let mut editable = use_editable(
             || EditableConfig::new("Hello Rustaceans\nHello World".to_string()),
             EditableMode::SingleLineMultipleEditors,
         );
         let cursor_attr = editable.cursor_attr();
         let editor = editable.editor().read();
 
-        let onkeydown = {
-            to_owned![editable];
-            move |e: Event<KeyboardData>| {
-                editable.process_event(&EditableEvent::KeyDown(e.data));
-            }
+        let onkeydown = move |e: Event<KeyboardData>| {
+            editable.process_event(&EditableEvent::KeyDown(e.data));
         };
 
         rsx!(
@@ -143,11 +220,8 @@ pub async fn single_line_mulitple_editors() {
                 onkeydown,
                 {editor.lines().enumerate().map(move |(i, line)| {
 
-                    let onmousedown = {
-                        to_owned![editable];
-                        move |e: MouseEvent| {
-                            editable.process_event(&EditableEvent::MouseDown(e.data, 0));
-                        }
+                    let onmousedown = move |e: MouseEvent| {
+                        editable.process_event(&EditableEvent::MouseDown(e.data, 0));
                     };
 
                     rsx!(
@@ -159,7 +233,7 @@ pub async fn single_line_mulitple_editors() {
                             cursor_index: "{i}",
                             cursor_color: "black",
                             cursor_mode: "editable",
-                            onmousedown:  onmousedown,
+                            onmousedown,
                             text {
                                 color: "black",
                                 "{line}"
@@ -170,7 +244,7 @@ pub async fn single_line_mulitple_editors() {
                 label {
                     color: "black",
                     height: "50%",
-                    "{editor.cursor_col()}:{editor.cursor_row()}"
+                    "{editor.cursor_row()}:{editor.cursor_col()}"
                 }
             }
         )
@@ -186,8 +260,8 @@ pub async fn single_line_mulitple_editors() {
     assert_eq!(content.text(), Some("Hello Rustaceans\n"));
 
     // Move cursor
-    utils.push_event(FreyaEvent::Mouse {
-        name: "mousedown".to_string(),
+    utils.push_event(PlatformEvent::Mouse {
+        name: EventName::MouseDown,
         cursor: (35.0, 3.0).into(),
         button: Some(MouseButton::Left),
     });
@@ -199,14 +273,14 @@ pub async fn single_line_mulitple_editors() {
     let root = utils.root().get(0);
     let cursor = root.get(2).get(0);
     #[cfg(not(target_os = "linux"))]
-    assert_eq!(cursor.text(), Some("5:0"));
+    assert_eq!(cursor.text(), Some("0:5"));
 
     #[cfg(target_os = "linux")]
-    assert_eq!(cursor.text(), Some("4:0"));
+    assert_eq!(cursor.text(), Some("0:4"));
 
     // Insert text
-    utils.push_event(FreyaEvent::Keyboard {
-        name: "keydown".to_string(),
+    utils.push_event(PlatformEvent::Keyboard {
+        name: EventName::KeyDown,
         key: Key::Character("!".to_string()),
         code: Code::Unidentified,
         modifiers: Modifiers::empty(),
@@ -221,13 +295,13 @@ pub async fn single_line_mulitple_editors() {
     #[cfg(not(target_os = "linux"))]
     {
         assert_eq!(content.text(), Some("Hello! Rustaceans\n"));
-        assert_eq!(cursor.text(), Some("6:0"));
+        assert_eq!(cursor.text(), Some("0:6"));
     }
 
     #[cfg(target_os = "linux")]
     {
         assert_eq!(content.text(), Some("Hell!o Rustaceans\n"));
-        assert_eq!(cursor.text(), Some("5:0"));
+        assert_eq!(cursor.text(), Some("0:5"));
     }
 
     // Second line
@@ -238,7 +312,7 @@ pub async fn single_line_mulitple_editors() {
 #[tokio::test]
 pub async fn highlight_multiple_lines_single_editor() {
     fn use_editable_app() -> Element {
-        let editable = use_editable(
+        let mut editable = use_editable(
             || EditableConfig::new("Hello Rustaceans\n".repeat(2)),
             EditableMode::MultipleLinesSingleEditor,
         );
@@ -248,25 +322,16 @@ pub async fn highlight_multiple_lines_single_editor() {
         let cursor_reference = editable.cursor_attr();
         let highlights = editable.highlights_attr(0);
 
-        let onmousedown = {
-            to_owned![editable];
-            move |e: MouseEvent| {
-                editable.process_event(&EditableEvent::MouseDown(e.data, 0));
-            }
+        let onmousedown = move |e: MouseEvent| {
+            editable.process_event(&EditableEvent::MouseDown(e.data, 0));
         };
 
-        let onmouseover = {
-            to_owned![editable];
-            move |e: MouseEvent| {
-                editable.process_event(&EditableEvent::MouseOver(e.data, 0));
-            }
+        let onmouseover = move |e: MouseEvent| {
+            editable.process_event(&EditableEvent::MouseOver(e.data, 0));
         };
 
-        let onkeydown = {
-            to_owned![editable];
-            move |e: Event<KeyboardData>| {
-                editable.process_event(&EditableEvent::KeyDown(e.data));
-            }
+        let onkeydown = move |e: Event<KeyboardData>| {
+            editable.process_event(&EditableEvent::KeyDown(e.data));
         };
 
         rsx!(
@@ -294,7 +359,7 @@ pub async fn highlight_multiple_lines_single_editor() {
                 label {
                     color: "black",
                     height: "50%",
-                    "{cursor.col()}:{cursor.row()}"
+                    "{cursor.row()}:{cursor.col()}"
                 }
             }
         )
@@ -305,8 +370,8 @@ pub async fn highlight_multiple_lines_single_editor() {
     let root = utils.root().get(0);
 
     // Click cursor
-    utils.push_event(FreyaEvent::Mouse {
-        name: "mousedown".to_string(),
+    utils.push_event(PlatformEvent::Mouse {
+        name: EventName::MouseDown,
         cursor: (35.0, 3.0).into(),
         button: Some(MouseButton::Left),
     });
@@ -314,8 +379,8 @@ pub async fn highlight_multiple_lines_single_editor() {
     utils.wait_for_update().await;
 
     // Move cursor
-    utils.push_event(FreyaEvent::Mouse {
-        name: "mouseover".to_string(),
+    utils.push_event(PlatformEvent::Mouse {
+        name: EventName::MouseOver,
         cursor: (80.0, 20.0).into(),
         button: Some(MouseButton::Left),
     });
@@ -341,18 +406,15 @@ pub async fn highlight_multiple_lines_single_editor() {
 #[tokio::test]
 pub async fn highlights_single_line_mulitple_editors() {
     fn use_editable_app() -> Element {
-        let editable = use_editable(
+        let mut editable = use_editable(
             || EditableConfig::new("Hello Rustaceans\n".repeat(2)),
             EditableMode::SingleLineMultipleEditors,
         );
         let cursor_attr = editable.cursor_attr();
         let editor = editable.editor().read();
 
-        let onkeydown = {
-            to_owned![editable];
-            move |e: Event<KeyboardData>| {
-                editable.process_event(&EditableEvent::KeyDown(e.data));
-            }
+        let onkeydown = move |e: Event<KeyboardData>| {
+            editable.process_event(&EditableEvent::KeyDown(e.data));
         };
 
         rsx!(
@@ -376,18 +438,12 @@ pub async fn highlights_single_line_mulitple_editors() {
                         "none".to_string()
                     };
 
-                    let onmouseover = {
-                        to_owned![editable];
-                        move |e: MouseEvent| {
-                            editable.process_event(&EditableEvent::MouseOver(e.data, i));
-                        }
+                    let onmouseover = move |e: MouseEvent| {
+                        editable.process_event(&EditableEvent::MouseOver(e.data, i));
                     };
 
-                    let onmousedown = {
-                        to_owned![editable];
-                        move |e: MouseEvent| {
-                            editable.process_event(&EditableEvent::MouseDown(e.data, i));
-                        }
+                    let onmousedown = move |e: MouseEvent| {
+                        editable.process_event(&EditableEvent::MouseDown(e.data, i));
                     };
 
                     rsx!(
@@ -412,7 +468,7 @@ pub async fn highlights_single_line_mulitple_editors() {
                 label {
                     color: "black",
                     height: "50%",
-                    "{editor.cursor_col()}:{editor.cursor_row()}"
+                    "{editor.cursor_row()}:{editor.cursor_col()}"
                 }
             }
         )
@@ -423,8 +479,8 @@ pub async fn highlights_single_line_mulitple_editors() {
     let root = utils.root().get(0);
 
     // Click cursor
-    utils.push_event(FreyaEvent::Mouse {
-        name: "mousedown".to_string(),
+    utils.push_event(PlatformEvent::Mouse {
+        name: EventName::MouseDown,
         cursor: (35.0, 3.0).into(),
         button: Some(MouseButton::Left),
     });
@@ -432,8 +488,8 @@ pub async fn highlights_single_line_mulitple_editors() {
     utils.wait_for_update().await;
 
     // Move cursor
-    utils.push_event(FreyaEvent::Mouse {
-        name: "mouseover".to_string(),
+    utils.push_event(PlatformEvent::Mouse {
+        name: EventName::MouseOver,
         cursor: (35.0, 3.0).into(),
         button: Some(MouseButton::Left),
     });
@@ -442,8 +498,8 @@ pub async fn highlights_single_line_mulitple_editors() {
     utils.wait_for_update().await;
 
     // Move cursor
-    utils.push_event(FreyaEvent::Mouse {
-        name: "mouseover".to_string(),
+    utils.push_event(PlatformEvent::Mouse {
+        name: EventName::MouseOver,
         cursor: (80.0, 35.0).into(),
         button: Some(MouseButton::Left),
     });

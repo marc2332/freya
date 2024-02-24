@@ -12,6 +12,7 @@ use freya_dom::prelude::FreyaDOM;
 use freya_node_state::{OverflowMode, Style};
 use rustc_hash::FxHashMap;
 
+/// Viewports of all elegible DOM elements.
 #[derive(Default)]
 pub struct Viewports {
     viewports: FxHashMap<NodeId, (Option<Area>, Vec<NodeId>)>,

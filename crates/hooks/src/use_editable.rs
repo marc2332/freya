@@ -6,6 +6,7 @@ use std::{
 use dioxus_core::{prelude::spawn, use_hook, AttributeValue};
 use dioxus_hooks::to_owned;
 use dioxus_signals::{Readable, Signal, Writable};
+use dioxus_std::clipboard::use_clipboard;
 use freya_common::{CursorLayoutResponse, EventMessage};
 use freya_elements::events::{KeyboardData, MouseData};
 use freya_node_state::{CursorReference, CustomAttributeValues};
@@ -13,7 +14,9 @@ use tokio::sync::mpsc::unbounded_channel;
 use torin::geometry::CursorPoint;
 use uuid::Uuid;
 
-use crate::{use_platform, RopeEditor, TextCursor, TextEditor, TextEvent, UsePlatform};
+use crate::{
+    use_platform, EditorHistory, RopeEditor, TextCursor, TextEditor, TextEvent, UsePlatform,
+};
 
 /// Events emitted to the [`UseEditable`].
 pub enum EditableEvent {
@@ -43,10 +46,10 @@ impl Default for EditableMode {
 }
 
 /// Manage an editable content.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct UseEditable {
     pub(crate) editor: Signal<RopeEditor>,
-    pub(crate) cursor_reference: CursorReference,
+    pub(crate) cursor_reference: Signal<CursorReference>,
     pub(crate) selecting_text_with_mouse: Signal<Option<CursorPoint>>,
     pub(crate) platform: UsePlatform,
 }
@@ -65,7 +68,7 @@ impl UseEditable {
     /// Create a cursor attribute.
     pub fn cursor_attr(&self) -> AttributeValue {
         AttributeValue::any_value(CustomAttributeValues::CursorReference(
-            self.cursor_reference.clone(),
+            self.cursor_reference.peek().clone(),
         ))
     }
 
@@ -87,8 +90,10 @@ impl UseEditable {
                 let coords = e.get_element_coordinates();
                 *self.selecting_text_with_mouse.write() = Some(coords);
 
-                self.cursor_reference.set_id(Some(*id));
-                self.cursor_reference.set_cursor_position(Some(coords));
+                self.cursor_reference.peek().set_id(Some(*id));
+                self.cursor_reference
+                    .peek()
+                    .set_cursor_position(Some(coords));
 
                 self.editor.write().unhighlight();
             }
@@ -97,8 +102,9 @@ impl UseEditable {
                     if let Some(current_dragging) = selecting_text {
                         let coords = e.get_element_coordinates();
 
-                        self.cursor_reference.set_id(Some(*id));
+                        self.cursor_reference.peek().set_id(Some(*id));
                         self.cursor_reference
+                            .peek()
                             .set_cursor_selections(Some((*current_dragging, coords)));
                     }
                 });
@@ -120,7 +126,7 @@ impl UseEditable {
         if self.selecting_text_with_mouse.peek().is_some() {
             self.platform
                 .send(EventMessage::RemeasureTextGroup(
-                    self.cursor_reference.text_id,
+                    self.cursor_reference.peek().text_id,
                 ))
                 .unwrap()
         }
@@ -152,11 +158,18 @@ impl EditableConfig {
 /// Create a virtual text editor with it's own cursor and rope.
 pub fn use_editable(initializer: impl Fn() -> EditableConfig, mode: EditableMode) -> UseEditable {
     let platform = use_platform();
+    let clipboard = use_clipboard();
 
     use_hook(|| {
         let text_id = Uuid::new_v4();
         let config = initializer();
-        let editor = Signal::new(RopeEditor::new(config.content, config.cursor, mode));
+        let mut editor = Signal::new(RopeEditor::new(
+            config.content,
+            config.cursor,
+            mode,
+            clipboard,
+            EditorHistory::new(),
+        ));
         let selecting_text_with_mouse = Signal::new(None);
         let (cursor_sender, mut cursor_receiver) = unbounded_channel::<CursorLayoutResponse>();
         let cursor_reference = CursorReference {
@@ -221,7 +234,7 @@ pub fn use_editable(initializer: impl Fn() -> EditableConfig, mode: EditableMode
 
         UseEditable {
             editor,
-            cursor_reference: cursor_reference.clone(),
+            cursor_reference: Signal::new(cursor_reference.clone()),
             selecting_text_with_mouse,
             platform,
         }

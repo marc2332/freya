@@ -620,7 +620,7 @@ impl FontStyle {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct FontMgr;
 
 impl FontMgr {
@@ -657,6 +657,7 @@ impl From<TypefaceFontProvider> for FontMgr {
     }
 }
 
+#[derive(Clone)]
 pub struct FontCollection;
 
 impl FontCollection {
@@ -926,8 +927,14 @@ impl ParagraphBuilder {
         unimplemented!("This is mocked")
     }
 
-    pub fn new(_style: &ParagraphStyle, _font_collection: &FontCollection) -> Self {
+    pub fn new(_style: &ParagraphStyle, _font_collection: impl Into<FontCollection>) -> Self {
         unimplemented!("This is mocked")
+    }
+}
+
+impl From<&FontCollection> for FontCollection {
+    fn from(value: &FontCollection) -> Self {
+        value.clone()
     }
 }
 
@@ -1317,12 +1324,12 @@ pub enum BlurStyle {
 }
 
 pub mod svg {
-    use super::{Canvas, Size};
+    use super::{Canvas, FontMgr, Size};
 
     pub struct Dom;
 
     impl Dom {
-        pub fn from_bytes(_bytes: &[u8]) -> Result<Self, ()> {
+        pub fn from_bytes(_bytes: &[u8], font_mgr: &FontMgr) -> Result<Self, ()> {
             unimplemented!("This is mocked")
         }
 

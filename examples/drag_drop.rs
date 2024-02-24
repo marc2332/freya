@@ -51,7 +51,7 @@ fn Column(
     data: Signal<(Vec<String>, Vec<String>)>,
     column: Vec<String>,
 ) -> Element {
-    let swap = move |el: String, direction: &SwapDirection| {
+    let mut swap = move |el: String, direction: &SwapDirection| {
         data.with_mut(|data| {
             data.0.retain(|e| e != &el);
             data.1.retain(|e| e != &el);

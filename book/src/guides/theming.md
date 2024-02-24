@@ -9,8 +9,8 @@ Freya has built-in support for Theming.
 You can access the whole current theme via the `use_get_theme` hook.
 
 ```rust, no_run
-fn app() -> Element {
-    rsx!(
+fn app(cx: Scope) -> Element {
+    render!(
         ThemeProvider {
             Component { }
         }
@@ -18,12 +18,12 @@ fn app() -> Element {
 }
 
 #[allow(non_snake_case)]
-fn Component() -> Element {
-    let theme = use_get_theme();
+fn Component(cx: Scope) -> Element {
+    let theme = use_get_theme(cx);
 
     let button_theme = &theme.button;
 
-    rsx!(
+    render!(
         rect {
             background: "{button_theme.background}",
         }
@@ -35,8 +35,8 @@ fn Component() -> Element {
 By default, the selected theme is `LIGHT_THEME`. You can use the alternative, `DARK_THEME`.
 
 ```rust, no_run
-fn app() -> Element {
-    rsx!(
+fn app(cx: Scope) -> Element {
+    render!(
         ThemeProvider {
             theme: LIGHT_THEME,
             Component { }
@@ -45,12 +45,12 @@ fn app() -> Element {
 }
 
 #[allow(non_snake_case)]
-fn Component() -> Element {
-    let theme = use_get_theme();
+fn Component(cx: Scope) -> Element {
+    let theme = use_get_theme(cx);
 
     let button_theme = &theme.button;
 
-    rsx!(
+    render!(
         rect {
             background: "{button_theme.background}",
         }
@@ -63,8 +63,8 @@ fn Component() -> Element {
 Changing the selected theme at runtime is possible by using the `use_theme` hook.
 
 ```rust, no_run
-fn app() -> Element {
-    rsx!(
+fn app(cx: Scope) -> Element {
+    render!(
         ThemeProvider {
             Component { }
         }
@@ -72,16 +72,16 @@ fn app() -> Element {
 }
 
 #[allow(non_snake_case)]
-fn Component() -> Element {
-    let mut theme = use_theme();
+fn Component(cx: Scope) -> Element {
+    let theme = use_theme(cx);
 
-    let onclick = move |_| {
+    let onclick = |_| {
         *theme.write() = LIGHT_THEME;
     };
 
-    rsx!(
+    render!(
         Button {
-            onclick,
+            onclick: onclick,
             label {
                 "Use Light theme"
             }
@@ -104,8 +104,8 @@ const CUSTOM_THEME: Theme = Theme {
     ..LIGHT_THEME
 };
 
-fn app() -> Element {
-    rsx!(
+fn app(cx: Scope) -> Element {
+    render!(
         ThemeProvider {
             theme: CUSTOM_THEME,
             rect {

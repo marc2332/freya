@@ -1,30 +1,37 @@
+use std::{cell::RefCell, rc::Rc};
+
 use dioxus_core::{
     prelude::{consume_context, spawn, try_consume_context},
     use_hook,
 };
-use dioxus_hooks::use_context;
-use dioxus_signals::{use_memo, Readable, Signal, Writable};
+use dioxus_hooks::{use_context_provider, use_effect};
+use dioxus_signals::{Readable, Signal, Writable};
 use freya_common::EventMessage;
 use freya_core::{
     navigation_mode::{NavigationMode, NavigatorState},
     types::FocusReceiver,
 };
 
-use crate::{use_platform, FocusId};
+use freya_core::{accessibility::ACCESSIBILITY_ROOT_ID, types::AccessibilityId};
+
+use crate::use_platform;
+
+pub type AccessibilityIdCounter = Rc<RefCell<u64>>;
 
 /// Sync both the Focus shared state and the platform accessibility focus
 pub fn use_init_accessibility() {
+    let mut focused_id =
+        use_context_provider::<Signal<AccessibilityId>>(|| Signal::new(ACCESSIBILITY_ROOT_ID));
+    let mut navigation_mode =
+        use_context_provider::<Signal<NavigationMode>>(|| Signal::new(NavigationMode::NotKeyboard));
+    use_context_provider(|| Rc::new(RefCell::new(0u64)));
     let platform = use_platform();
-    let focused_id = use_context::<Signal<Option<FocusId>>>();
-    let navigation_mode = use_context::<Signal<NavigationMode>>();
 
     // Tell the renderer the new focused node
-    let _ = use_memo(move || {
-        if let Some(focused_id) = *focused_id.read() {
-            platform
-                .send(EventMessage::FocusAccessibilityNode(focused_id))
-                .unwrap();
-        }
+    use_effect(move || {
+        platform
+            .send(EventMessage::FocusAccessibilityNode(*focused_id.read()))
+            .unwrap();
     });
 
     use_hook(|| {
@@ -54,8 +61,9 @@ pub fn use_init_accessibility() {
 #[cfg(test)]
 mod test {
     use freya::prelude::*;
+    use freya_core::{accessibility::ACCESSIBILITY_ROOT_ID, events::EventName};
     use freya_testing::{
-        events::pointer::MouseButton, launch_test_with_config, FreyaEvent, TestingConfig,
+        events::pointer::MouseButton, launch_test_with_config, PlatformEvent, TestingConfig,
     };
 
     #[tokio::test]
@@ -84,16 +92,19 @@ mod test {
 
         let mut utils = launch_test_with_config(
             use_focus_app,
-            *TestingConfig::default().with_size((100.0, 100.0).into()),
+            TestingConfig {
+                size: (100.0, 100.0).into(),
+                ..TestingConfig::default()
+            },
         );
 
         // Initial state
         utils.wait_for_update().await;
-        assert!(utils.focus_id().is_none());
+        assert_eq!(utils.focus_id(), ACCESSIBILITY_ROOT_ID);
 
         // Click on the first rect
-        utils.push_event(FreyaEvent::Mouse {
-            name: "click".to_string(),
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
             cursor: (5.0, 5.0).into(),
             button: Some(MouseButton::Left),
         });
@@ -102,11 +113,11 @@ mod test {
         utils.wait_for_update().await;
         utils.wait_for_update().await;
         let first_focus_id = utils.focus_id();
-        assert!(first_focus_id.is_some());
+        assert_ne!(first_focus_id, ACCESSIBILITY_ROOT_ID);
 
         // Click on the second rect
-        utils.push_event(FreyaEvent::Mouse {
-            name: "click".to_string(),
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
             cursor: (5.0, 75.0).into(),
             button: Some(MouseButton::Left),
         });
@@ -116,6 +127,6 @@ mod test {
         utils.wait_for_update().await;
         let second_focus_id = utils.focus_id();
         assert_ne!(first_focus_id, second_focus_id);
-        assert!(second_focus_id.is_some());
+        assert_ne!(second_focus_id, ACCESSIBILITY_ROOT_ID);
     }
 }

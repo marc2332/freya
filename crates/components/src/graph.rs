@@ -140,7 +140,8 @@ pub fn Graph(props: GraphProps) -> Element {
             for (i, point) in x_labels.iter().enumerate() {
                 let x = (space_x * i as f32) + start_x;
 
-                let mut paragrap_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
+                let mut paragrap_builder =
+                    ParagraphBuilder::new(&paragraph_style, font_collection.clone());
                 paragrap_builder.add_text(point);
                 let mut text = paragrap_builder.build();
 

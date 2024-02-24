@@ -2,31 +2,33 @@ use freya_elements::events::keyboard::{Code, Key, Modifiers};
 use torin::prelude::*;
 use winit::event::{Force, MouseButton, TouchPhase};
 
+use crate::prelude::EventName;
+
 /// Events emitted in Freya.
 #[derive(Clone, Debug)]
-pub enum FreyaEvent {
+pub enum PlatformEvent {
     /// A Mouse Event.
     Mouse {
-        name: String,
+        name: EventName,
         cursor: CursorPoint,
         button: Option<MouseButton>,
     },
     /// A Wheel event.
     Wheel {
-        name: String,
+        name: EventName,
         scroll: CursorPoint,
         cursor: CursorPoint,
     },
     /// A Keyboard event.
     Keyboard {
-        name: String,
+        name: EventName,
         key: Key,
         code: Code,
         modifiers: Modifiers,
     },
     /// A Touch event.
     Touch {
-        name: String,
+        name: EventName,
         location: CursorPoint,
         finger_id: u64,
         phase: TouchPhase,
@@ -34,26 +36,22 @@ pub enum FreyaEvent {
     },
 }
 
-impl FreyaEvent {
-    pub fn get_name(&self) -> &str {
+impl PlatformEvent {
+    pub fn get_name(&self) -> EventName {
         match self {
-            Self::Mouse { name, .. } => name,
-            Self::Wheel { name, .. } => name,
-            Self::Keyboard { name, .. } => name,
-            Self::Touch { name, .. } => name,
+            Self::Mouse { name, .. } => *name,
+            Self::Wheel { name, .. } => *name,
+            Self::Keyboard { name, .. } => *name,
+            Self::Touch { name, .. } => *name,
         }
     }
 
-    pub fn set_name(&mut self, new_name: String) {
+    pub fn set_name(&mut self, new_name: EventName) {
         match self {
             Self::Mouse { name, .. } => *name = new_name,
             Self::Wheel { name, .. } => *name = new_name,
             Self::Keyboard { name, .. } => *name = new_name,
             Self::Touch { name, .. } => *name = new_name,
         }
-    }
-
-    pub fn is_pointer_event(&self) -> bool {
-        self.get_name().starts_with("point")
     }
 }

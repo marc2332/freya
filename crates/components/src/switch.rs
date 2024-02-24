@@ -3,7 +3,7 @@ use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{KeyboardEvent, MouseEvent};
 
 use freya_hooks::{
-    use_animation, use_applied_theme, use_focus, use_platform, Animation, SwitchThemeWith,
+    use_animation, use_applied_theme, use_focus, use_platform, AnimNum, SwitchThemeWith,
 };
 use winit::window::CursorIcon;
 
@@ -56,63 +56,64 @@ pub enum SwitchStatus {
 ///
 #[allow(non_snake_case)]
 pub fn Switch(props: SwitchProps) -> Element {
-    let mut animation = use_animation(|| 0.0);
+    let animation = use_animation(|ctx| ctx.with(AnimNum::new(0., 25.).time(200)));
     let theme = use_applied_theme!(&props.theme, switch);
     let platform = use_platform();
-    let status = use_signal(SwitchStatus::default);
-    let focus = use_focus();
+    let mut status = use_signal(SwitchStatus::default);
+    let mut focus = use_focus();
 
     let focus_id = focus.attribute();
 
-    use_drop({
-        to_owned![status, platform];
-        move || {
-            if *status.read() == SwitchStatus::Hovering {
-                platform.set_cursor(CursorIcon::default());
-            }
+    use_drop(move || {
+        if *status.read() == SwitchStatus::Hovering {
+            platform.set_cursor(CursorIcon::default());
         }
     });
 
-    let onmouseleave = {
-        to_owned![platform];
-        move |_: MouseEvent| {
-            *status.write() = SwitchStatus::Idle;
-            platform.set_cursor(CursorIcon::default());
-        }
+    let onmousedown = |e: MouseEvent| {
+        e.stop_propagation();
     };
 
-    let onmouseenter = move |_: MouseEvent| {
+    let onmouseleave = move |e: MouseEvent| {
+        e.stop_propagation();
+        *status.write() = SwitchStatus::Idle;
+        platform.set_cursor(CursorIcon::default());
+    };
+
+    let onmouseenter = move |e: MouseEvent| {
+        e.stop_propagation();
         *status.write() = SwitchStatus::Hovering;
-        platform.set_cursor(CursorIcon::Hand);
+        platform.set_cursor(CursorIcon::Pointer);
     };
 
     let onclick = {
         let ontoggled = props.ontoggled.clone();
-        to_owned![focus];
-        move |_: MouseEvent| {
+        move |e: MouseEvent| {
+            e.stop_propagation();
             focus.focus();
             ontoggled.call(());
         }
     };
 
-    let onkeydown = {
-        to_owned![focus];
-        move |e: KeyboardEvent| {
-            if focus.validate_keydown(e) {
-                props.ontoggled.call(());
-            }
+    let onkeydown = move |e: KeyboardEvent| {
+        if focus.validate_keydown(e) {
+            props.ontoggled.call(());
         }
     };
 
     let (offset_x, background, circle) = {
         if props.enabled {
             (
-                animation.value(),
+                animation.read().get().read().as_f32(),
                 theme.enabled_background,
                 theme.enabled_thumb_background,
             )
         } else {
-            (animation.value(), theme.background, theme.thumb_background)
+            (
+                animation.read().get().read().as_f32(),
+                theme.background,
+                theme.thumb_background,
+            )
         }
     };
     let border = if focus.is_selected() {
@@ -127,9 +128,9 @@ pub fn Switch(props: SwitchProps) -> Element {
 
     let _ = use_memo_with_dependencies(&props.enabled, move |enabled| {
         if enabled {
-            animation.start(Animation::new_sine_in_out(0.0..=25.0, 200));
-        } else if animation.peek_value() > 0.0 {
-            animation.start(Animation::new_sine_in_out(25.0..=0.0, 200));
+            animation.read().start();
+        } else {
+            animation.read().reverse();
         }
     });
 
@@ -142,7 +143,7 @@ pub fn Switch(props: SwitchProps) -> Element {
             corner_radius: "50",
             background: "{background}",
             border: "{border}",
-            onmousedown: |_| {},
+            onmousedown,
             onmouseenter,
             onmouseleave,
             onkeydown,
@@ -163,4 +164,60 @@ pub fn Switch(props: SwitchProps) -> Element {
             }
         }
     )
+}
+
+#[cfg(test)]
+mod test {
+    use dioxus::prelude::use_signal;
+    use freya::prelude::*;
+    use freya_testing::*;
+
+    #[tokio::test]
+    pub async fn button() {
+        fn button_app() -> Element {
+            let mut enabled = use_signal(|| false);
+
+            rsx!(
+                Switch {
+                    enabled: *enabled.read(),
+                    ontoggled: move |_| {
+                        enabled.toggle();
+                    }
+                }
+                label {
+                    "{enabled}"
+                }
+            )
+        }
+
+        let mut utils = launch_test(button_app);
+        let root = utils.root();
+        let label = root.get(1);
+        utils.wait_for_update().await;
+
+        // Default is false
+        assert_eq!(label.get(0).text(), Some("false"));
+
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (5.0, 5.0).into(),
+            button: Some(MouseButton::Left),
+        });
+
+        utils.wait_for_update().await;
+
+        // Check if after clicking it is now enabled
+        assert_eq!(label.get(0).text(), Some("true"));
+
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (5.0, 5.0).into(),
+            button: Some(MouseButton::Left),
+        });
+
+        utils.wait_for_update().await;
+
+        // Check if after clicking again it is now disabled
+        assert_eq!(label.get(0).text(), Some("false"));
+    }
 }

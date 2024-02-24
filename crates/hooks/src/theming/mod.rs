@@ -274,6 +274,7 @@ define_theme! {
         border_fill: str,
         width: str,
         margin: str,
+        corner_radius: str,
         %[subthemes]
         font_theme: FontTheme,
     }
@@ -355,14 +356,6 @@ define_theme! {
 
 define_theme! {
     %[component]
-    pub ExternalLink {
-        %[cows]
-        highlight_color: str,
-    }
-}
-
-define_theme! {
-    %[component]
     pub Accordion {
         %[cows]
         color: str,
@@ -377,6 +370,14 @@ define_theme! {
         %[cows]
         primary_color: str,
         secondary_color: str,
+    }
+}
+
+define_theme! {
+    %[component]
+    pub Link {
+        %[cows]
+        highlight_color: str,
     }
 }
 
@@ -447,6 +448,28 @@ define_theme! {
     }
 }
 
+define_theme! {
+    %[component]
+    pub Sidebar {
+        %[cows]
+        background: str,
+        %[subthemes]
+        font_theme: FontTheme,
+    }
+}
+
+define_theme! {
+    %[component]
+    pub SidebarItem {
+        %[cows]
+        background: str,
+        hover_background: str,
+        border_fill: str,
+        %[subthemes]
+        font_theme: FontTheme,
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Theme {
     pub name: &'static str,
@@ -457,11 +480,11 @@ pub struct Theme {
     pub scroll_view: ScrollViewTheme,
     pub slider: SliderTheme,
     pub tooltip: TooltipTheme,
-    pub external_link: ExternalLinkTheme,
     pub dropdown: DropdownTheme,
     pub dropdown_item: DropdownItemTheme,
     pub accordion: AccordionTheme,
     pub loader: LoaderTheme,
+    pub link: LinkTheme,
     pub progress_bar: ProgressBarTheme,
     pub table: TableTheme,
     pub input: InputTheme,
@@ -469,6 +492,8 @@ pub struct Theme {
     pub graph: GraphTheme,
     pub network_image: NetworkImageTheme,
     pub arrow_icon: ArrowIconTheme,
+    pub sidebar: SidebarTheme,
+    pub sidebar_item: SidebarItemTheme,
 }
 
 impl Default for Theme {

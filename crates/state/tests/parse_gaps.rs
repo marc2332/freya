@@ -18,3 +18,9 @@ fn parse_sides_gaps() {
     let gaps = Gaps::parse("1 2 3 4");
     assert_eq!(gaps, Ok(Gaps::new(1.0, 2.0, 3.0, 4.0)));
 }
+
+#[test]
+fn parse_horizontal_axis_and_vertical_sides() {
+    let gaps = Gaps::parse("5 50 30");
+    assert_eq!(gaps, Ok(Gaps::new(5.0, 50.0, 30.0, 50.0)));
+}
