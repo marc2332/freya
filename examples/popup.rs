@@ -10,13 +10,14 @@ fn main() {
 }
 
 fn app() -> Element {
+    use_init_theme(DARK_THEME);
     let mut show_popup = use_signal(|| false);
 
     rsx!(
-        rect {
+        Body {
             if *show_popup.read() {
                 Popup {
-                    on_close_request: move |_| {
+                    oncloserequest: move |_| {
                         show_popup.set(false)
                     },
                     PopupTitle {

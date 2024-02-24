@@ -1,7 +1,7 @@
-use crate::Button;
+use crate::{Button, CrossIcon};
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::{theme_with, ButtonThemeWith};
+use freya_hooks::{theme_with, use_applied_theme, ButtonThemeWith, PopupTheme, PopupThemeWith};
 
 #[allow(non_snake_case)]
 #[component]
@@ -13,7 +13,7 @@ pub fn PopupBackground(children: Element) -> Element {
         position: "absolute",
         position_top: "0",
         position_left: "0",
-        layer: "-1",
+        layer: "-99",
         main_align: "center",
         cross_align: "center",
         {children}
@@ -23,39 +23,53 @@ pub fn PopupBackground(children: Element) -> Element {
 #[allow(non_snake_case)]
 #[component]
 pub fn Popup(
+    /// Theme override.
+    theme: Option<PopupThemeWith>,
+    /// Popup inner content.
     children: Element,
-    #[props(default = "325".into(), into)] width: String,
-    #[props(default = "225".into(), into)] height: String,
-
-    on_close_request: Option<EventHandler>,
+    /// Optional close request handler.
+    oncloserequest: Option<EventHandler>,
+    /// Whether to show or no the cross button in the top right corner.
+    #[props(default = true)]
+    show_close_button: bool,
 ) -> Element {
+    let PopupTheme {
+        background,
+        color,
+        cross_fill,
+        width,
+        height,
+    } = use_applied_theme!(&theme, popup);
     rsx!(
         PopupBackground {
             rect {
                 padding: "14",
                 corner_radius: "8",
-                background: "white",
+                background: "{background}",
+                color: "{color}",
                 shadow: "0 4 5 0 rgb(0, 0, 0, 30)",
                 width: "{width}",
                 height: "{height}",
-                rect {
-                    position: "absolute",
-                    position_right: "0",
-                    width: "30",
-                    Button {
-                        theme: theme_with!(ButtonTheme {
-                            padding: "6".into(),
-                            margin: "0".into(),
-                            width: "30".into(),
-                            height: "30".into(),
-                            corner_radius: "999".into(),
-                        }),
-                        onclick: move |_| if let Some(on_close_request) = &on_close_request {
-                            on_close_request.call(());
-                        },
-                        label {
-                            font_size: "14",
-                            "X"
+                if show_close_button {
+                    rect {
+                        height: "0",
+                        width: "fill",
+                        cross_align: "end",
+                        Button {
+                            theme: theme_with!(ButtonTheme {
+                                padding: "6".into(),
+                                margin: "0".into(),
+                                width: "30".into(),
+                                height: "30".into(),
+                                corner_radius: "999".into(),
+                                shadow: "none".into()
+                            }),
+                            onclick: move |_| if let Some(oncloserequest) = &oncloserequest {
+                                oncloserequest.call(());
+                            },
+                            CrossIcon {
+                                fill: cross_fill
+                             }
                         }
                     }
                 }
@@ -85,7 +99,6 @@ pub fn PopupContent(children: Element) -> Element {
         rect {
             font_size: "15",
             margin: "6 2",
-            color: "rgb(20, 20, 20)",
             {children}
         }
     )
