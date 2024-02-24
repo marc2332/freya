@@ -215,8 +215,8 @@ fn criterion_benchmark(c: &mut Criterion) {
             prefix: String::default(),
         },
         BenchmarkConfig {
-            depth: 9,
-            wide: 5,
+            depth: 6,
+            wide: 3,
             mode: BenchmarkMode::InvalidatedCache,
             sample: 100,
             node_generator: |depth: usize| {
