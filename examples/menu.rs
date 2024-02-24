@@ -16,9 +16,10 @@ fn app() -> Element {
         rect {
             height: "100%",
             width: "100%",
+            padding: "16",
             Button {
                 onclick: move |_| show_menu.toggle(),
-                label { "Show/Hide" }
+                label { "Open Menu" }
             },
             if *show_menu.read() {
                 Menu {
@@ -44,17 +45,56 @@ fn app() -> Element {
                                 menu: rsx!(
                                     MenuButton {
                                         label {
-                                            "Option 3"
+                                            "Option 2"
                                         }
                                     }
                                     MenuButton {
                                         label {
-                                            "Option 4"
+                                            "Option 3"
                                         }
                                     }
                                 ),
                                 label {
                                     "More Options"
+                                }
+                            }
+                            SubMenu {
+                                menu: rsx!(
+                                    MenuButton {
+                                        label {
+                                            "Option 4"
+                                        }
+                                    }
+                                    MenuButton {
+                                        label {
+                                            "Option 5"
+                                        }
+                                    }
+                                    SubMenu {
+                                        menu: rsx!(
+                                            MenuButton {
+                                                label {
+                                                    "Option 6"
+                                                }
+                                            }
+                                            MenuButton {
+                                                label {
+                                                    "Option 7"
+                                                }
+                                            }
+                                            MenuButton {
+                                                label {
+                                                    "Option 8"
+                                                }
+                                            }
+                                        ),
+                                        label {
+                                            "More Options"
+                                        }
+                                    }
+                                ),
+                                label {
+                                    "Even More Options"
                                 }
                             }
                         ),
@@ -76,14 +116,13 @@ fn app() -> Element {
 #[allow(non_snake_case)]
 #[component]
 fn MenuItem(
-
     children: Element,
 
     theme: Option<ButtonThemeWith>,
 
     onclick: Option<EventHandler<Option<MouseEvent>>>,
 
-    onmouseenter: Option<EventHandler<()>>
+    onmouseenter: Option<EventHandler<()>>,
 ) -> Element {
     let mut focus = use_focus();
     let mut status = use_signal(ButtonStatus::default);
@@ -150,7 +189,6 @@ fn MenuItem(
             background: "{background}",
             text_align: "start",
             main_align: "center",
-            cross_align: "center",
             {children}
         }
     )
@@ -159,18 +197,31 @@ fn MenuItem(
 #[allow(non_snake_case)]
 #[component]
 fn SubMenu(menu: Element, children: Element) -> Element {
+    let my_id = use_context::<usize>();
     let mut menus = use_context::<Signal<Vec<usize>>>();
     let mut ids = use_context::<Signal<usize>>();
     let id = use_hook(|| {
         ids += 1;
-        *ids.peek()
+        provide_context(*ids.peek()) // Use custom type
     });
-    provide_context(id); // Use custom type
     let show_menu = menus.read().contains(&id);
 
     rsx!(
         MenuItem {
             onmouseenter: move |_| {
+                loop {
+                    let last_menu_id = menus.read().last().cloned();
+                    if let Some(last_menu_id) = last_menu_id {
+                        if last_menu_id != my_id {
+                            menus.write().pop();
+                        } else {
+                            break;
+                        }
+                    }else {
+                        break;
+                    }
+                }
+
                 let last_menu_id = menus.read().last().cloned();
                 if let Some(last_menu_id) = last_menu_id {
                     if last_menu_id != id {
@@ -183,6 +234,7 @@ fn SubMenu(menu: Element, children: Element) -> Element {
             {children},
             if show_menu {
                 rect {
+                    position_top: "-12",
                     position_right: "-16",
                     position: "absolute",
                     width: "0",
@@ -203,7 +255,7 @@ fn SubMenu(menu: Element, children: Element) -> Element {
 #[component]
 fn MenuButton(children: Element) -> Element {
     let mut menus = use_context::<Signal<Vec<usize>>>();
-    let my_id = consume_context::<usize>();
+    let my_id = use_context::<usize>();
     rsx!(
         MenuItem {
             onmouseenter: move |_| {
