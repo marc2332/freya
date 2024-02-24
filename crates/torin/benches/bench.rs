@@ -215,10 +215,10 @@ fn criterion_benchmark(c: &mut Criterion) {
             prefix: String::default(),
         },
         BenchmarkConfig {
-            depth: 6,
-            wide: 3,
-            mode: BenchmarkMode::InvalidatedCache,
-            sample: 100,
+            depth: 8,
+            wide: 4,
+            mode: BenchmarkMode::NoCache,
+            sample: 70,
             node_generator: |depth: usize| {
                 if depth % 2 == 0 {
                     Node::from_size_and_alignments_and_direction_and_padding(
