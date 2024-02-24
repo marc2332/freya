@@ -78,13 +78,15 @@ struct BenchmarkConfig {
     wide: usize,
     mode: BenchmarkMode,
     sample: usize,
+    prefix: String,
     node_generator: fn(depth: usize) -> Node,
 }
 
 impl BenchmarkConfig {
     pub fn name(&self) -> String {
         format!(
-            "size={} depth={} wide={} mode={}",
+            "{} size={} depth={} wide={} mode={}",
+            self.prefix,
             self.size(),
             self.depth,
             self.wide,
@@ -138,6 +140,7 @@ fn criterion_benchmark(c: &mut Criterion) {
             mode: BenchmarkMode::NoCache,
             sample: 500,
             node_generator: simple_node_generator,
+            prefix: String::default(),
         },
         BenchmarkConfig {
             depth: 2,
@@ -145,6 +148,7 @@ fn criterion_benchmark(c: &mut Criterion) {
             mode: BenchmarkMode::NoCache,
             sample: 500,
             node_generator: simple_node_generator,
+            prefix: String::default(),
         },
         BenchmarkConfig {
             depth: 2,
@@ -152,6 +156,7 @@ fn criterion_benchmark(c: &mut Criterion) {
             mode: BenchmarkMode::NoCache,
             sample: 500,
             node_generator: simple_node_generator,
+            prefix: String::default(),
         },
         BenchmarkConfig {
             depth: 12,
@@ -159,6 +164,7 @@ fn criterion_benchmark(c: &mut Criterion) {
             mode: BenchmarkMode::NoCache,
             sample: 500,
             node_generator: simple_node_generator,
+            prefix: String::default(),
         },
         BenchmarkConfig {
             depth: 14,
@@ -166,6 +172,7 @@ fn criterion_benchmark(c: &mut Criterion) {
             mode: BenchmarkMode::NoCache,
             sample: 100,
             node_generator: simple_node_generator,
+            prefix: String::default(),
         },
         BenchmarkConfig {
             depth: 17,
@@ -173,6 +180,7 @@ fn criterion_benchmark(c: &mut Criterion) {
             mode: BenchmarkMode::NoCache,
             sample: 100,
             node_generator: simple_node_generator,
+            prefix: String::default(),
         },
         BenchmarkConfig {
             depth: 5,
@@ -180,6 +188,7 @@ fn criterion_benchmark(c: &mut Criterion) {
             mode: BenchmarkMode::NoCache,
             sample: 500,
             node_generator: simple_node_generator,
+            prefix: String::default(),
         },
         BenchmarkConfig {
             depth: 5,
@@ -187,6 +196,7 @@ fn criterion_benchmark(c: &mut Criterion) {
             mode: BenchmarkMode::InvalidatedCache,
             sample: 500,
             node_generator: simple_node_generator,
+            prefix: String::default(),
         },
         BenchmarkConfig {
             depth: 7,
@@ -194,6 +204,7 @@ fn criterion_benchmark(c: &mut Criterion) {
             mode: BenchmarkMode::NoCache,
             sample: 100,
             node_generator: simple_node_generator,
+            prefix: String::default(),
         },
         BenchmarkConfig {
             depth: 7,
@@ -201,9 +212,10 @@ fn criterion_benchmark(c: &mut Criterion) {
             mode: BenchmarkMode::InvalidatedCache,
             sample: 100,
             node_generator: simple_node_generator,
+            prefix: String::default(),
         },
         BenchmarkConfig {
-            depth: 7,
+            depth: 9,
             wide: 5,
             mode: BenchmarkMode::InvalidatedCache,
             sample: 100,
@@ -228,6 +240,7 @@ fn criterion_benchmark(c: &mut Criterion) {
                     )
                 }
             },
+            prefix: "alignments=true".to_string(),
         },
     ];
 
@@ -239,6 +252,7 @@ fn criterion_benchmark(c: &mut Criterion) {
             wide,
             sample,
             node_generator,
+            ..
         } = bench;
 
         g.significance_level(0.05).sample_size(sample);
