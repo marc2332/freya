@@ -337,7 +337,10 @@ pub fn measure_inner_nodes<Key: NodeKey>(
         let mut alignment_mode = alignment_mode.to_mut();
         let mut inner_sizes = *inner_sizes;
 
-        if parent_node.main_alignment.is_not_start() || parent_node.content.is_fit() {
+        if parent_node.main_alignment.is_not_start()
+            || parent_node.cross_alignment.is_not_start()
+            || parent_node.content.is_fit()
+        {
             // 1. First measure: Main axis is not aligned
             measure_children(
                 &mut alignment_mode,
