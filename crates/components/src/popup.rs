@@ -103,3 +103,63 @@ pub fn PopupContent(children: Element) -> Element {
         }
     )
 }
+
+#[cfg(test)]
+mod test {
+    use dioxus::prelude::use_signal;
+    use freya::prelude::*;
+    use freya_testing::*;
+
+    #[tokio::test]
+    pub async fn popup() {
+        fn popup_app() -> Element {
+            let mut show_popup = use_signal(|| false);
+
+            rsx!(
+                if *show_popup.read() {
+                    Popup {
+                        oncloserequest: move |_| {
+                            show_popup.set(false)
+                        },
+                        label {
+                            "Hello, World!"
+                        }
+                    }
+                }
+                Button {
+                    onclick: move |_| show_popup.set(true),
+                    label {
+                        "Open"
+                    }
+                }
+            )
+        }
+
+        let mut utils = launch_test(popup_app);
+        utils.wait_for_update().await;
+
+        // Check the popup is closed
+        assert_eq!(utils.sdom().get().layout().size(), 3);
+
+        // Open the popup
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (5.0, 5.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.wait_for_update().await;
+
+        // Check the popup is opened
+        assert_eq!(utils.sdom().get().layout().size(), 9);
+
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (395.0, 180.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.wait_for_update().await;
+
+        // Check the popup is closed
+        assert_eq!(utils.sdom().get().layout().size(), 3);
+    }
+}
