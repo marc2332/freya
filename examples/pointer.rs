@@ -30,6 +30,10 @@ fn app() -> Element {
         println!("Leave -> {:?}", ev.data.get_pointer_type());
     };
 
+    let onglobalpointerup = move |ev: PointerEvent| {
+        println!("Global Up -> {:?}", ev.data.get_pointer_type());
+    };
+
     rsx!(
         rect {
             overflow: "clip",
@@ -44,11 +48,12 @@ fn app() -> Element {
                 background: "rgb(168, 218, 220)",
                 color: "black",
                 padding: "12",
-                onpointerdown: onpointerdown,
-                onpointerup: onpointerup,
-                onpointerover: onpointerover,
-                onpointerenter: onpointerenter,
-                onpointerleave: onpointerleave,
+                onpointerdown,
+                onpointerup,
+                onpointerover,
+                onpointerenter,
+                onpointerleave,
+                onglobalpointerup,
                 label { "Click me" }
             }
         }

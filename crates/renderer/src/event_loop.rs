@@ -7,8 +7,8 @@ use freya_elements::events::keyboard::{
 };
 use torin::geometry::CursorPoint;
 use winit::event::{
-    ElementState, Event, Ime, KeyEvent, MouseScrollDelta, StartCause, Touch, TouchPhase,
-    WindowEvent,
+    ElementState, Event, Ime, KeyEvent, MouseButton, MouseScrollDelta, StartCause, Touch,
+    TouchPhase, WindowEvent,
 };
 use winit::event_loop::{EventLoop, EventLoopProxy};
 use winit::keyboard::{KeyCode, ModifiersState, PhysicalKey};
@@ -97,7 +97,12 @@ pub fn run_event_loop<State: Clone>(
 
                         let name = match state {
                             ElementState::Pressed => EventName::MouseDown,
-                            ElementState::Released => EventName::Click,
+                            ElementState::Released => match button {
+                                MouseButton::Middle => EventName::MiddleClick,
+                                MouseButton::Right => EventName::RightClick,
+                                MouseButton::Left => EventName::Click,
+                                _ => EventName::PointerUp,
+                            },
                         };
 
                         app.send_event(PlatformEvent::Mouse {
