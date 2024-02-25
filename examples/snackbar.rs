@@ -30,8 +30,12 @@ fn app() -> Element {
             direction: "horizontal",
             Button {
                 onclick: move |_| {
-                    animation.read().start();
                     show.toggle();
+                    if *show.read() {
+                        animation.read().start();
+                    } else {
+                        animation.read().reset();
+                    }
                 },
                 label { "Install" }
             }
@@ -69,7 +73,6 @@ fn SnackBarContainer(children: Element, show: Signal<bool>) -> Element {
     });
 
     let offset_y = animation.read().get().read().as_f32();
-    println!("{offset_y:?}");
 
     rsx!(
         rect {
@@ -78,6 +81,7 @@ fn SnackBarContainer(children: Element, show: Signal<bool>) -> Element {
             position: "absolute",
             position_bottom: "0",
             offset_y: "{offset_y}",
+            overflow: "clip",
             {children}
         }
     )
@@ -92,7 +96,6 @@ fn SnackBar(children: Element) -> Element {
             height: "40",
             background: "rgb(103, 80, 164)",
             overflow: "clip",
-            shadow: "0 -2 7 0 rgb(0, 0, 0, 0.2)",
             padding: "10",
             color: "white",
             direction: "horizontal",
