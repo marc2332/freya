@@ -23,6 +23,7 @@ mod switch;
 mod table;
 mod theme;
 mod tooltip;
+mod native_router;
 
 pub use accordion::*;
 pub use body::*;
@@ -46,3 +47,4 @@ pub use switch::*;
 pub use table::*;
 pub use theme::*;
 pub use tooltip::*;
+pub use native_router::*;

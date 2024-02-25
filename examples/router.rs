@@ -30,6 +30,7 @@ pub enum Route {
 #[allow(non_snake_case)]
 fn AppSidebar() -> Element {
     rsx!(
+        NativeRouter { }
         Sidebar {
             sidebar: rsx!(
                 Link {
