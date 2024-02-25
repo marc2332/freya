@@ -470,6 +470,27 @@ define_theme! {
     }
 }
 
+define_theme! {
+    %[component]
+    pub MenuItem {
+        %[cows]
+        hover_background: str,
+        corner_radius: str,
+        %[subthemes]
+        font_theme: FontTheme,
+    }
+}
+
+define_theme! {
+    %[component]
+    pub MenuContainer {
+        %[cows]
+        background: str,
+        padding: str,
+        shadow: str,
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Theme {
     pub name: &'static str,
@@ -494,6 +515,8 @@ pub struct Theme {
     pub arrow_icon: ArrowIconTheme,
     pub sidebar: SidebarTheme,
     pub sidebar_item: SidebarItemTheme,
+    pub menu_item: MenuItemTheme,
+    pub menu_container: MenuContainerTheme,
 }
 
 impl Default for Theme {

@@ -145,4 +145,16 @@ pub const LIGHT_THEME: Theme = Theme {
         },
         border_fill: cow_borrowed!("rgb(210, 210, 210)"),
     },
+    menu_item: MenuItemTheme {
+        hover_background: cow_borrowed!("rgb(235, 235, 235)"),
+        corner_radius: cow_borrowed!("8"),
+        font_theme: FontTheme {
+            color: cow_borrowed!("rgb(10, 10, 10)"),
+        },
+    },
+    menu_container: MenuContainerTheme {
+        background: cow_borrowed!("rgb(245, 245, 245)"),
+        padding: cow_borrowed!("4"),
+        shadow: cow_borrowed!("0 2 5 2 rgb(0, 0, 0, 0.1)"),
+    },
 };
