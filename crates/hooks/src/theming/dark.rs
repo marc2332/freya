@@ -145,4 +145,11 @@ pub const DARK_THEME: Theme = Theme {
             color: cow_borrowed!("white"),
         },
     },
+    tile: TileTheme {
+        padding: LIGHT_THEME.tile.padding,
+    },
+    radio: RadioTheme {
+        unselected_fill: cow_borrowed!("rgb(245, 245, 245)"),
+        selected_fill: cow_borrowed!("rgbrgb(103, 80, 164)"),
+    },
 };

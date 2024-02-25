@@ -145,4 +145,11 @@ pub const LIGHT_THEME: Theme = Theme {
         },
         border_fill: cow_borrowed!("rgb(210, 210, 210)"),
     },
+    tile: TileTheme {
+        padding: cow_borrowed!("4 6"),
+    },
+    radio: RadioTheme {
+        unselected_fill: cow_borrowed!("rgb(35, 35, 35)"),
+        selected_fill: cow_borrowed!("rgb(103, 80, 164)"),
+    },
 };

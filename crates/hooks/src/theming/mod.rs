@@ -470,6 +470,23 @@ define_theme! {
     }
 }
 
+define_theme! {
+    %[component]
+    pub Tile {
+        %[cows]
+        padding: str,
+    }
+}
+
+define_theme! {
+    %[component]
+    pub Radio {
+        %[cows]
+        unselected_fill: str,
+        selected_fill: str,
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Theme {
     pub name: &'static str,
@@ -494,6 +511,8 @@ pub struct Theme {
     pub arrow_icon: ArrowIconTheme,
     pub sidebar: SidebarTheme,
     pub sidebar_item: SidebarItemTheme,
+    pub tile: TileTheme,
+    pub radio: RadioTheme,
 }
 
 impl Default for Theme {
