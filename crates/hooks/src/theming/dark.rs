@@ -145,4 +145,8 @@ pub const DARK_THEME: Theme = Theme {
             color: cow_borrowed!("white"),
         },
     },
+    snackbar: SnackBarTheme {
+        background: cow_borrowed!("rgb(35, 35, 35)"),
+        color: cow_borrowed!("white"),
+    },
 };

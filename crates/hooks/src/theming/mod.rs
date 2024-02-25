@@ -470,6 +470,15 @@ define_theme! {
     }
 }
 
+define_theme! {
+    %[component]
+    pub SnackBar {
+        %[cows]
+        background: str,
+        color: str,
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Theme {
     pub name: &'static str,
@@ -494,6 +503,7 @@ pub struct Theme {
     pub arrow_icon: ArrowIconTheme,
     pub sidebar: SidebarTheme,
     pub sidebar_item: SidebarItemTheme,
+    pub snackbar: SnackBarTheme,
 }
 
 impl Default for Theme {

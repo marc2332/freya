@@ -39,67 +39,13 @@ fn app() -> Element {
                 },
                 label { "Install" }
             }
-            SnackBarContainer {
+            SnackBar {
                 show,
-                SnackBar {
-                    ProgressBar {
-                        show_progress: true,
-                        progress: progress
-                    }
+                ProgressBar {
+                    show_progress: true,
+                    progress: progress
                 }
             }
-        }
-    )
-}
-
-#[allow(non_snake_case)]
-#[component]
-fn SnackBarContainer(children: Element, show: Signal<bool>) -> Element {
-    let animation = use_animation(|ctx| {
-        ctx.with(
-            AnimNum::new(50., 0.)
-                .time(200)
-                .ease(Ease::Out)
-                .function(Function::Expo),
-        )
-    });
-
-    use_effect(move || {
-        if *show.read() {
-            animation.read().start();
-        } else if animation.read().peek_has_run_yet() {
-            animation.read().reverse();
-        }
-    });
-
-    let offset_y = animation.read().get().read().as_f32();
-
-    rsx!(
-        rect {
-            width: "100%",
-            height: "40",
-            position: "absolute",
-            position_bottom: "0",
-            offset_y: "{offset_y}",
-            overflow: "clip",
-            {children}
-        }
-    )
-}
-
-#[allow(non_snake_case)]
-#[component]
-fn SnackBar(children: Element) -> Element {
-    rsx!(
-        rect {
-            width: "fill",
-            height: "40",
-            background: "rgb(103, 80, 164)",
-            overflow: "clip",
-            padding: "10",
-            color: "white",
-            direction: "horizontal",
-            {children}
         }
     )
 }

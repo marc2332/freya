@@ -145,4 +145,8 @@ pub const LIGHT_THEME: Theme = Theme {
         },
         border_fill: cow_borrowed!("rgb(210, 210, 210)"),
     },
+    snackbar: SnackBarTheme {
+        background: cow_borrowed!("rgb(235, 235, 235)"),
+        color: cow_borrowed!("rgb(103, 80, 164)"),
+    },
 };
