@@ -176,7 +176,7 @@ pub fn run_event_loop<State: Clone>(
                     }
                     WindowEvent::CursorMoved { position, .. } => {
                         cursor_pos = CursorPoint::from((position.x, position.y));
-                        println!("{:?}", cursor_pos);
+
                         app.send_event(PlatformEvent::Mouse {
                             name: EventName::MouseOver,
                             cursor: cursor_pos,
