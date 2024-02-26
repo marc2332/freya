@@ -15,6 +15,7 @@ mod use_focus;
 mod use_node;
 mod use_platform;
 mod use_theme;
+mod use_activable_route;
 
 #[cfg(feature = "use_camera")]
 mod use_camera;
@@ -33,6 +34,7 @@ pub use use_focus::*;
 pub use use_node::*;
 pub use use_platform::*;
 pub use use_theme::*;
+pub use use_activable_route::*;
 
 #[cfg(feature = "use_camera")]
 pub use use_camera::*;

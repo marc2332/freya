@@ -2,8 +2,7 @@ use crate::{ButtonStatus, ScrollView};
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_hooks::{
-    theme_with, use_applied_theme, use_platform, ScrollViewThemeWith, SidebarItemTheme,
-    SidebarItemThemeWith, SidebarTheme, SidebarThemeWith,
+    theme_with, use_activable_route, use_applied_theme, use_platform, ScrollViewThemeWith, SidebarItemTheme, SidebarItemThemeWith, SidebarTheme, SidebarThemeWith
 };
 use winit::window::CursorIcon;
 
@@ -36,7 +35,7 @@ pub fn Sidebar(
                 shadow: "2 0 5 0 rgb(0, 0, 0, 30)",
                 ScrollView {
                     theme: theme_with!(ScrollViewTheme {
-                        padding: "16".into(),
+                        padding: "8".into(),
                     }),
                     {sidebar}
                 }
@@ -66,10 +65,10 @@ pub fn SidebarItem(
         hover_background,
         background,
         font_theme,
-        border_fill,
     } = use_applied_theme!(&theme, sidebar_item);
     let mut status = use_signal(ButtonStatus::default);
     let platform = use_platform();
+    let is_active = use_activable_route();
 
     use_drop(move || {
         if *status.read() == ButtonStatus::Hovering {
@@ -94,6 +93,7 @@ pub fn SidebarItem(
     };
 
     let background = match *status.read() {
+        _ if is_active => hover_background,
         ButtonStatus::Hovering => hover_background,
         ButtonStatus::Idle => background,
     };
@@ -101,17 +101,15 @@ pub fn SidebarItem(
     rsx!(
         rect {
             overflow: "clip",
-            margin: "5 0",
+            margin: "4 0",
             onclick,
             onmouseenter,
             onmouseleave,
             width: "100%",
             height: "auto",
             color: "{font_theme.color}",
-            border: "1 solid {border_fill}",
-            shadow: "0 4 5 0 rgb(0, 0, 0, 30)",
-            corner_radius: "8",
-            padding: "8",
+            corner_radius: "99",
+            padding: "8 10",
             background: "{background}",
             {children}
         }

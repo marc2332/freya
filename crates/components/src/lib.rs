@@ -24,6 +24,7 @@ mod table;
 mod theme;
 mod tooltip;
 mod native_router;
+mod activable_route;
 
 pub use accordion::*;
 pub use body::*;
@@ -48,3 +49,4 @@ pub use table::*;
 pub use theme::*;
 pub use tooltip::*;
 pub use native_router::*;
+pub use activable_route::*;

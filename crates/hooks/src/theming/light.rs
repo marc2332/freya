@@ -138,11 +138,10 @@ pub const LIGHT_THEME: Theme = Theme {
         },
     },
     sidebar_item: SidebarItemTheme {
-        background: cow_borrowed!("rgb(245, 245, 245)"),
-        hover_background: cow_borrowed!("rgb(235, 235, 235)"),
+        background: cow_borrowed!("transparent"),
+        hover_background: cow_borrowed!("rgb(230, 230, 230)"),
         font_theme: FontTheme {
             color: cow_borrowed!("rgb(10, 10, 10)"),
         },
-        border_fill: cow_borrowed!("rgb(210, 210, 210)"),
     },
 };

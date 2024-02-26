@@ -5,10 +5,10 @@ use freya_elements::events::{PointerType, MouseButton, PointerEvent};
 
 #[allow(non_snake_case)]
 #[component]
-pub fn NativeRouter() -> Element {
+pub fn NativeRouter(children: Element) -> Element {
     let router = use_navigator();
 
-    let onglobalpointerup = move |e: PointerEvent| {
+    let onpointerup = move |e: PointerEvent| {
         match e.data().get_pointer_type() {
             PointerType::Mouse { trigger_button } => {
                 match trigger_button {
@@ -27,7 +27,8 @@ pub fn NativeRouter() -> Element {
 
     rsx!(
         rect {
-            onglobalpointerup,
+            onpointerup,
+            {children}
         }
     )
 }
