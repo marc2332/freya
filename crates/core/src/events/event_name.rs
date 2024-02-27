@@ -68,7 +68,7 @@ impl PartialOrd for EventName {
 impl Ord for EventName {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         match self {
-            // Always priorize leave events before anything else
+            // Always prioritize leave events before anything else
             Self::MouseLeave | Self::PointerLeave => {
                 if self == other {
                     std::cmp::Ordering::Equal
@@ -95,7 +95,7 @@ impl EventName {
     /// Some events might cause other events, like for example:
     /// A `mouseover` might also trigger a `mouseenter`
     /// A `mousedown` or a `touchdown` might also trigger a `pointerdown`
-    pub fn get_colateral_events(&self) -> SmallVec<[Self; 4]> {
+    pub fn get_collateral_events(&self) -> SmallVec<[Self; 4]> {
         let mut events = SmallVec::new();
 
         events.push(*self);
@@ -113,7 +113,7 @@ impl EventName {
         events
     }
 
-    /// Check if the event event means that the pointer (e.g cursor) just entered a Node
+    /// Check if the event means that the pointer (e.g. cursor) just entered a Node
     pub fn is_enter(&self) -> bool {
         matches!(&self, Self::MouseEnter | Self::PointerEnter)
     }
