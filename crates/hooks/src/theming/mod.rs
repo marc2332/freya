@@ -369,7 +369,6 @@ define_theme! {
     pub Loader {
         %[cows]
         primary_color: str,
-        secondary_color: str,
     }
 }
 

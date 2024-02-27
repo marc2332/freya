@@ -344,6 +344,8 @@ pub trait AnimatedValue {
 #[derive(Default, PartialEq, Clone)]
 pub struct Context {
     animated_values: Vec<Signal<Box<dyn AnimatedValue>>>,
+    reverse: bool,
+    auto_start: bool,
 }
 
 impl Context {
@@ -356,6 +358,16 @@ impl Context {
         self.animated_values.push(signal);
         ReadOnlySignal::new(signal)
     }
+
+    pub fn reverse(&mut self, reverse: bool) -> &mut Self {
+        self.reverse = reverse;
+        self
+    }
+
+    pub fn auto_start(&mut self, auto_start: bool) -> &mut Self {
+        self.auto_start = auto_start;
+        self
+    }
 }
 
 /// Controls the direction of the animation.
@@ -363,6 +375,15 @@ impl Context {
 pub enum AnimDirection {
     Forward,
     Reverse,
+}
+
+impl AnimDirection {
+    pub fn toggle(&mut self) {
+        match self {
+            Self::Forward => *self = Self::Reverse,
+            Self::Reverse => *self = Self::Forward,
+        }
+    }
 }
 
 /// Animate your elements. Use [`use_animation`] to use this.
@@ -376,6 +397,28 @@ pub struct UseAnimator<Animated> {
 }
 
 impl<Animated> UseAnimator<Animated> {
+    pub fn new(
+        value: Animated,
+        ctx: Context,
+        platform: UsePlatform,
+        task: RefCell<Option<Task>>,
+        is_running: Signal<bool>,
+    ) -> Self {
+        let animator = Self {
+            value,
+            ctx,
+            platform,
+            task,
+            is_running,
+        };
+
+        if animator.ctx.auto_start {
+            animator.run(AnimDirection::Forward);
+        }
+
+        animator
+    }
+
     /// Get the containing animated value.
     pub fn get(&self) -> &Animated {
         &self.value
@@ -397,11 +440,12 @@ impl<Animated> UseAnimator<Animated> {
     }
 
     /// Run the animation with a given [`AnimDirection`]
-    pub fn run(&self, direction: AnimDirection) {
+    pub fn run(&self, mut direction: AnimDirection) {
         let platform = self.platform;
         let mut is_running = self.is_running;
         let mut ticker = platform.new_ticker();
         let mut values = self.ctx.animated_values.clone();
+        let reverse = self.ctx.reverse;
 
         // Cancel previous animations
         if let Some(task) = self.task.borrow_mut().take() {
@@ -428,12 +472,21 @@ impl<Animated> UseAnimator<Animated> {
 
                 index += prev_frame.elapsed().as_millis() as i32;
 
-                // Stop if all the animations are finished
-                if values
+                let is_finished = values
                     .iter()
-                    .all(|value| value.peek().is_finished(index, direction))
-                {
-                    break;
+                    .all(|value| value.peek().is_finished(index, direction));
+                if is_finished {
+                    if reverse {
+                        // Restart the animation in the opposite direction
+                        direction.toggle();
+                        index = 0;
+                        for value in values.iter_mut() {
+                            value.write().prepare(direction);
+                        }
+                    } else {
+                        // Stop if all the animations are finished
+                        break;
+                    }
                 }
 
                 // Advance the animations
@@ -515,13 +568,13 @@ pub fn use_animation<Animated: PartialEq + 'static>(
         let mut ctx = Context::default();
         let value = run(&mut ctx);
 
-        UseAnimator {
+        UseAnimator::new(
             value,
             ctx,
-            platform: UsePlatform::new(),
-            task: RefCell::new(None),
-            is_running: Signal::new(false),
-        }
+            UsePlatform::new(),
+            RefCell::new(None),
+            Signal::new(false),
+        )
     })
 }
 
@@ -536,12 +589,12 @@ where
         let mut ctx = Context::default();
         let value = run(&mut ctx, deps);
 
-        UseAnimator {
+        UseAnimator::new(
             value,
             ctx,
-            platform: UsePlatform::new(),
-            task: RefCell::new(None),
-            is_running: Signal::new(false),
-        }
+            UsePlatform::new(),
+            RefCell::new(None),
+            Signal::new(false),
+        )
     })
 }

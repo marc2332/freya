@@ -88,7 +88,6 @@ pub const LIGHT_THEME: Theme = Theme {
     },
     loader: LoaderTheme {
         primary_color: cow_borrowed!("rgb(50, 50, 50)"),
-        secondary_color: cow_borrowed!("rgb(150, 150, 150)"),
     },
     link: LinkTheme {
         highlight_color: cow_borrowed!("rgb(43,106,208)"),
