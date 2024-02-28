@@ -99,6 +99,7 @@ pub fn measure_potential_event_listeners(
                             PlatformEvent::Mouse { name, cursor, .. } => Some((name, cursor)),
                             PlatformEvent::Wheel { name, cursor, .. } => Some((name, cursor)),
                             PlatformEvent::Touch { name, location, .. } => Some((name, location)),
+                            PlatformEvent::File { name, cursor, .. } => Some((name, cursor)),
                             _ => None,
                         };
                         if let Some((name, cursor)) = data {

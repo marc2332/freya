@@ -210,6 +210,24 @@ pub fn run_event_loop<State: Clone>(
                     WindowEvent::Resized(size) => {
                         app.resize(size);
                     }
+                    WindowEvent::DroppedFile(file_path) => {
+                        app.send_event(PlatformEvent::File {
+                            name: EventName::FileDrop,
+                            file_path: Some(file_path),
+                        });
+                    }
+                    WindowEvent::HoveredFile(file_path) => {
+                        app.send_event(PlatformEvent::File {
+                            name: EventName::FileHover,
+                            file_path: Some(file_path),
+                        });
+                    }
+                    WindowEvent::HoveredFileCancelled => {
+                        app.send_event(PlatformEvent::File {
+                            name: EventName::FileHoverCancelled,
+                            file_path: None,
+                        });
+                    }
                     _ => {}
                 }
             }

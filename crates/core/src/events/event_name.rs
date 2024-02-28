@@ -28,6 +28,10 @@ pub enum EventName {
     GlobalClick,
     GlobalMouseDown,
     GlobalMouseOver,
+
+    FileDrop,
+    FileHover,
+    FileHoverCancelled
 }
 
 impl From<EventName> for &str {
@@ -53,6 +57,9 @@ impl From<EventName> for &str {
             EventName::GlobalClick => "globalclick",
             EventName::GlobalMouseDown => "globalmousedown",
             EventName::GlobalMouseOver => "globalmouseover",
+            EventName::FileDrop => "filedrop",
+            EventName::FileHover => "filehover",
+            EventName::FileHoverCancelled => "filehovercancelled",
         }
     }
 }

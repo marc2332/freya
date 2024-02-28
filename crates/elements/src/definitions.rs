@@ -629,4 +629,15 @@ pub mod events {
         #[doc = include_str!("_docs/events/pointerleave.md")]
         onpointerleave
     ];
+
+    impl_event! [
+        FileData;
+
+        // TODO
+        onfiledrop
+
+        onfilehover
+
+        onfilehovercancelled
+    ];
 }
