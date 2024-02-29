@@ -29,6 +29,7 @@ pub fn run_event_loop<State: Clone>(
 ) {
     let mut cursor_pos = CursorPoint::default();
     let mut modifiers_state = ModifiersState::empty();
+    let mut dropped_file_path = None;
 
     app.window_env.run_on_setup();
 
@@ -182,6 +183,14 @@ pub fn run_event_loop<State: Clone>(
                             cursor: cursor_pos,
                             button: None,
                         });
+
+                        if let Some(dropped_file_path) = dropped_file_path.take() {
+                            app.send_event(PlatformEvent::File {
+                                name: EventName::FileDrop,
+                                file_path: Some(dropped_file_path),
+                                cursor: cursor_pos,
+                            });
+                        }
                     }
                     WindowEvent::Touch(Touch {
                         location,
@@ -211,24 +220,20 @@ pub fn run_event_loop<State: Clone>(
                         app.resize(size);
                     }
                     WindowEvent::DroppedFile(file_path) => {
-                        app.send_event(PlatformEvent::File {
-                            name: EventName::FileDrop,
-                            file_path: Some(file_path),
-                            cursor: cursor_pos
-                        });
+                        dropped_file_path = Some(file_path);
                     }
                     WindowEvent::HoveredFile(file_path) => {
                         app.send_event(PlatformEvent::File {
-                            name: EventName::FileHover,
+                            name: EventName::GlobalFileHover,
                             file_path: Some(file_path),
-                            cursor: cursor_pos
+                            cursor: cursor_pos,
                         });
                     }
                     WindowEvent::HoveredFileCancelled => {
                         app.send_event(PlatformEvent::File {
-                            name: EventName::FileHoverCancelled,
+                            name: EventName::GlobalFileHoverCancelled,
                             file_path: None,
-                            cursor: cursor_pos
+                            cursor: cursor_pos,
                         });
                     }
                     _ => {}

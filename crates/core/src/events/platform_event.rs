@@ -40,8 +40,8 @@ pub enum PlatformEvent {
     File {
         name: EventName,
         cursor: CursorPoint,
-        file_path: Option<PathBuf>
-    }
+        file_path: Option<PathBuf>,
+    },
 }
 
 impl PlatformEvent {

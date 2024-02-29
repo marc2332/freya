@@ -4,7 +4,9 @@ use dioxus_core::ElementId;
 use dioxus_native_core::NodeId;
 use freya_elements::{
     elements::PlatformEventData,
-    events::{pointer::PointerType, KeyboardData, MouseData, PointerData, TouchData, WheelData, FileData},
+    events::{
+        pointer::PointerType, FileData, KeyboardData, MouseData, PointerData, TouchData, WheelData,
+    },
 };
 use torin::prelude::*;
 
@@ -145,10 +147,10 @@ impl DomEvent {
                     layer,
                 }
             }
-            PlatformEvent::File { name, file_path, .. } => {
-                let event_data = DomEventData::File(FileData {
-                    file_path
-                });
+            PlatformEvent::File {
+                name, file_path, ..
+            } => {
+                let event_data = DomEventData::File(FileData { file_path });
 
                 Self {
                     node_id,

@@ -12,7 +12,7 @@ fn main() {
 #[derive(PartialEq)]
 enum Status {
     Idle,
-    Hovering
+    Hovering,
 }
 
 fn app() -> Element {
@@ -35,8 +35,8 @@ fn app() -> Element {
             cross_align: "center",
             background: "{background}",
             color: "white",
-            onfilehover: move |_| status.set(Status::Hovering),
-            onfilehovercancelled: move |_| status.set(Status::Idle),
+            onglobalfilehover: move |_| status.set(Status::Hovering),
+            onglobalfilehovercancelled: move |_| status.set(Status::Idle),
             onfiledrop: move |e| {
                 status.set(Status::Idle);
                 path.set(Some(e.file_path.as_ref().unwrap().to_string_lossy().to_string()))

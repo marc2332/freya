@@ -636,8 +636,8 @@ pub mod events {
         // TODO
         onfiledrop
 
-        onfilehover
+        onglobalfilehover
 
-        onfilehovercancelled
+        onglobalfilehovercancelled
     ];
 }

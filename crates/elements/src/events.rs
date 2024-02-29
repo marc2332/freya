@@ -1,17 +1,17 @@
+pub mod file;
 pub mod keyboard;
 pub mod mouse;
 pub mod pointer;
 pub mod touch;
 pub mod wheel;
-pub mod file;
 
 use dioxus_core::Event;
+pub use file::*;
 pub use keyboard::*;
 pub use mouse::*;
 pub use pointer::*;
 pub use touch::*;
 pub use wheel::*;
-pub use file::*;
 
 pub type KeyboardEvent = Event<KeyboardData>;
 pub type MouseEvent = Event<MouseData>;
