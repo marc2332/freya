@@ -6,7 +6,7 @@
 use freya::prelude::*;
 
 fn main() {
-    launch_with_props(app, "Counter", (400.0, 350.0));
+    launch_with_props(app, "File Drop", (400.0, 350.0));
 }
 
 #[derive(PartialEq)]
@@ -42,7 +42,7 @@ fn app() -> Element {
                 path.set(Some(e.file_path.as_ref().unwrap().to_string_lossy().to_string()))
             },
             label {
-                font_size: "35",
+                font_size: "20",
                 "{msg}"
             }
         }
