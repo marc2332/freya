@@ -2,7 +2,7 @@ use crate::layout::*;
 use dioxus_native_core::NodeId;
 use freya_dom::prelude::FreyaDOM;
 use freya_engine::prelude::*;
-use torin::prelude::Area;
+use torin::prelude::{Area, NodeAreas};
 
 /// Call the render function for the nodes that should be rendered.
 pub fn process_render<RenderOptions>(
@@ -11,7 +11,14 @@ pub fn process_render<RenderOptions>(
     font_collection: &mut FontCollection,
     layers: &Layers,
     render_options: &mut RenderOptions,
-    render_fn: impl Fn(&FreyaDOM, &NodeId, &Area, &mut FontCollection, &Viewports, &mut RenderOptions),
+    render_fn: impl Fn(
+        &FreyaDOM,
+        &NodeId,
+        &NodeAreas,
+        &mut FontCollection,
+        &Viewports,
+        &mut RenderOptions,
+    ),
 ) {
     // Render all the layers from the bottom to the top
     for (_, layer) in layers.layers() {
@@ -37,7 +44,7 @@ pub fn process_render<RenderOptions>(
                 render_fn(
                     fdom,
                     node_id,
-                    &areas.visible_area(),
+                    areas,
                     font_collection,
                     viewports,
                     render_options,

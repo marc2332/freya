@@ -1,5 +1,7 @@
-use dioxus_native_core::real_dom::NodeImmutable;
-use freya_core::layout::create_paragraph;
+use std::sync::Arc;
+
+use dioxus_native_core::{real_dom::NodeImmutable, SendAnyMap};
+use freya_core::layout::{create_paragraph, SafeParagraph};
 use freya_dom::prelude::DioxusNode;
 use freya_engine::prelude::*;
 use freya_node_state::CursorSettings;
@@ -8,12 +10,13 @@ use torin::geometry::Area;
 /// Render a `paragraph` element
 pub fn render_paragraph(
     area: &Area,
+    data: &Option<Arc<SendAnyMap>>,
     dioxus_node: &DioxusNode,
     canvas: &Canvas,
     font_collection: &mut FontCollection,
 ) {
     let (x, y) = area.origin.to_tuple();
-    let paragraph = create_paragraph(dioxus_node, area, font_collection, true);
+    let paragraph = &data.as_ref().unwrap().get::<SafeParagraph>().unwrap().0;
 
     // Draw the highlights if specified
     draw_cursor_highlights(area, &paragraph, canvas, dioxus_node);

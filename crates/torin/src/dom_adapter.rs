@@ -1,3 +1,10 @@
+use std::{
+    any::Any,
+    rc::Rc,
+    sync::{Arc, Mutex},
+};
+
+use dioxus_native_core::SendAnyMap;
 pub use euclid::Rect;
 
 use crate::{
@@ -7,7 +14,7 @@ use crate::{
 };
 
 /// Cached layout results of a Node
-#[derive(Debug, PartialEq, Clone, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct NodeAreas {
     /// Area that ocuppies this node
     pub area: Area,
@@ -20,6 +27,9 @@ pub struct NodeAreas {
 
     /// Outer margin
     pub margin: Gaps,
+
+    /// Associated data
+    pub data: Option<Arc<SendAnyMap>>,
 }
 
 impl NodeAreas {

@@ -234,6 +234,7 @@ impl<Key: NodeKey> Torin<Key> {
                 inner_area: root_area,
                 inner_sizes: Size2D::default(),
                 margin: Gaps::default(),
+                data: None,
             });
         let root = dom_adapter.get_node(&root_id).unwrap();
         let root_height = dom_adapter.height(&root_id).unwrap();

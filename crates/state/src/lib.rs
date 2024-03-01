@@ -19,3 +19,7 @@ pub use references::*;
 pub use style::*;
 pub use transform::*;
 pub use values::*;
+
+pub struct TorinSkiaData {
+    paragraph: freya_engine::prelude::Paragraph,
+}

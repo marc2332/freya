@@ -1,7 +1,7 @@
-use std::ops::Mul;
+use std::{ops::Mul, sync::Arc};
 
 use dioxus_native_core::{
-    prelude::{ElementNode, NodeType, TextNode},
+    prelude::{ElementNode, NodeType, SendAnyMap, TextNode},
     real_dom::NodeImmutable,
     NodeId,
 };
@@ -14,6 +14,11 @@ use torin::{
     geometry::{Area, CursorPoint},
     prelude::{LayoutMeasurer, Node, Size2D},
 };
+
+pub struct SafeParagraph(pub Paragraph);
+
+unsafe impl Send for SafeParagraph {}
+unsafe impl Sync for SafeParagraph {}
 
 /// Provides Text measurements using Skia APIs like SkParagraph
 pub struct SkiaMeasurer<'a> {
@@ -37,21 +42,25 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
         _node: &Node,
         _parent_area: &Area,
         available_parent_area: &Area,
-    ) -> Option<Size2D> {
+    ) -> Option<(Size2D, Arc<SendAnyMap>)> {
         let node = self.rdom.get(node_id).unwrap();
         let node_type = node.node_type();
 
         match &*node_type {
             NodeType::Element(ElementNode { tag, .. }) if tag == "label" => {
                 let label = create_label(&node, available_parent_area, self.font_collection);
-
-                Some(Size2D::new(label.longest_line(), label.height()))
+                let res = Size2D::new(label.longest_line(), label.height());
+                let mut map = SendAnyMap::new();
+                map.insert(SafeParagraph(label));
+                Some((res, Arc::new(map)))
             }
             NodeType::Element(ElementNode { tag, .. }) if tag == "paragraph" => {
                 let paragraph =
                     create_paragraph(&node, available_parent_area, self.font_collection, false);
-
-                Some(Size2D::new(paragraph.longest_line(), paragraph.height()))
+                let res = Size2D::new(paragraph.longest_line(), paragraph.height());
+                let mut map = SendAnyMap::new();
+                map.insert(SafeParagraph(paragraph));
+                Some((res, Arc::new(map)))
             }
             _ => None,
         }
