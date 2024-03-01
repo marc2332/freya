@@ -487,6 +487,16 @@ define_theme! {
     }
 }
 
+define_theme! {
+    %[component]
+    pub Checkbox {
+        %[cows]
+        unselected_fill: str,
+        selected_fill: str,
+        selected_icon_fill: str,
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Theme {
     pub name: &'static str,
@@ -513,6 +523,7 @@ pub struct Theme {
     pub sidebar_item: SidebarItemTheme,
     pub tile: TileTheme,
     pub radio: RadioTheme,
+    pub checkbox: CheckboxTheme,
 }
 
 impl Default for Theme {

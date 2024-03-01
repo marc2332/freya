@@ -152,4 +152,9 @@ pub const LIGHT_THEME: Theme = Theme {
         unselected_fill: cow_borrowed!("rgb(35, 35, 35)"),
         selected_fill: cow_borrowed!("rgb(103, 80, 164)"),
     },
+    checkbox: CheckboxTheme {
+        unselected_fill: cow_borrowed!("rgb(80, 80, 80)"),
+        selected_fill: cow_borrowed!("rgb(103, 80, 164)"),
+        selected_icon_fill: cow_borrowed!("white"),
+    },
 };
