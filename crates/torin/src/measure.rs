@@ -2,7 +2,7 @@ pub use euclid::Rect;
 
 use crate::{
     custom_measurer::LayoutMeasurer,
-    dom_adapter::{DOMAdapter, NodeAreas, NodeKey},
+    dom_adapter::{DOMAdapter, LayoutNode, NodeKey},
     geometry::{Area, Size2D},
     measure_mode::MeasureMode,
     node::Node,
@@ -30,7 +30,7 @@ pub fn measure_node<Key: NodeKey>(
     layout_metadata: &LayoutMetadata,
 
     invalidated_tree: bool,
-) -> (bool, NodeAreas) {
+) -> (bool, LayoutNode) {
     let must_revalidate = invalidated_tree
         || layout.dirty.contains(&node_id)
         || !layout.results.contains_key(&node_id);
@@ -134,7 +134,7 @@ pub fn measure_node<Key: NodeKey>(
             inner_size
         };
 
-        // 5. Create the areas
+        // 5. Create the layout_node
         let area_origin = node
             .position
             .get_origin(available_parent_area, parent_area, &area_size);
@@ -175,7 +175,7 @@ pub fn measure_node<Key: NodeKey>(
 
         (
             must_cache_inner_nodes,
-            NodeAreas {
+            LayoutNode {
                 area,
                 margin: node.margin,
                 inner_area,
@@ -184,15 +184,15 @@ pub fn measure_node<Key: NodeKey>(
             },
         )
     } else {
-        let areas = layout.get(node_id).unwrap().clone();
+        let layout_node = layout.get(node_id).unwrap().clone();
 
-        let mut inner_sizes = areas.inner_sizes;
-        let mut available_area = areas.inner_area;
+        let mut inner_sizes = layout_node.inner_sizes;
+        let mut available_area = layout_node.inner_area;
 
         available_area.move_with_offsets(&node.offset_x, &node.offset_y);
 
         let mut measurement_mode = MeasureMode::ParentIsCached {
-            inner_area: &areas.inner_area,
+            inner_area: &layout_node.inner_area,
         };
 
         measure_inner_nodes(
@@ -209,7 +209,7 @@ pub fn measure_node<Key: NodeKey>(
             false,
         );
 
-        (false, areas)
+        (false, layout_node)
     }
 }
 
@@ -250,7 +250,7 @@ pub fn measure_inner_nodes<Key: NodeKey>(
 
             if parent_node.cross_alignment.is_not_start() {
                 // 1. First measure: Cross axis is not aligned
-                let (_, child_areas) = measure_node(
+                let (_, child_layout_node) = measure_node(
                     child_id,
                     &child_data,
                     layout,
@@ -266,7 +266,7 @@ pub fn measure_inner_nodes<Key: NodeKey>(
                 // 2. Align the Cross axis
                 adapted_available_area.align_content(
                     available_area,
-                    &child_areas.area.size,
+                    &child_layout_node.area.size,
                     &parent_node.cross_alignment,
                     &parent_node.direction,
                     AlignmentDirection::Cross,
@@ -274,7 +274,7 @@ pub fn measure_inner_nodes<Key: NodeKey>(
             }
 
             // 3. Second measure
-            let (child_revalidated, child_areas) = measure_node(
+            let (child_revalidated, child_layout_node) = measure_node(
                 child_id,
                 &child_data,
                 layout,
@@ -291,14 +291,14 @@ pub fn measure_inner_nodes<Key: NodeKey>(
             mode.stack_into_node(
                 parent_node,
                 available_area,
-                &child_areas.area,
+                &child_layout_node.area,
                 inner_sizes,
                 &child_data,
             );
 
             // Cache the child layout if it was mutated and inner nodes must be cache
             if child_revalidated && must_cache_inner_nodes {
-                layout.cache_node(child_id, child_areas);
+                layout.cache_node(child_id, child_layout_node);
             }
         }
     };
@@ -321,7 +321,7 @@ pub fn measure_inner_nodes<Key: NodeKey>(
         }
 
         if parent_node.cross_alignment.is_not_start() {
-            // 2. Adjust the available and inner areas of the Cross axis
+            // 2. Adjust the available and inner layout_node of the Cross axis
             alignment_mode.fit_bounds_when_unspecified_and_aligned(
                 parent_node,
                 AlignmentDirection::Cross,
@@ -330,7 +330,7 @@ pub fn measure_inner_nodes<Key: NodeKey>(
         }
 
         if parent_node.main_alignment.is_not_start() {
-            // 3. Adjust the available and inner areas of the Main axis
+            // 3. Adjust the available and inner layout_node of the Main axis
             alignment_mode.fit_bounds_when_unspecified_and_aligned(
                 parent_node,
                 AlignmentDirection::Main,

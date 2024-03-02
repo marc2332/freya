@@ -28,9 +28,9 @@ impl Viewports {
         for (_, layer) in layers.layers() {
             for node_id in layer {
                 let node = rdom.get(*node_id);
-                let node_areas = layout.get(*node_id);
+                let layout_node = layout.get(*node_id);
 
-                if let Some((node, node_areas)) = node.zip(node_areas) {
+                if let Some((node, layout_node)) = node.zip(layout_node) {
                     let node_type = &*node.node_type();
 
                     if let NodeType::Element(ElementNode { tag, .. }) = node_type {
@@ -46,7 +46,7 @@ impl Viewports {
                             let viewport = viewports
                                 .entry(*node_id)
                                 .or_insert_with(|| (None, Vec::new()));
-                            viewport.0 = Some(node_areas.visible_area());
+                            viewport.0 = Some(layout_node.visible_area());
                         }
 
                         // Pass viewports to the children

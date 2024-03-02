@@ -48,10 +48,10 @@ impl Layers {
         let mut inherit_layers = FxHashMap::default();
 
         traverse_dom(rdom, |node| {
-            let areas = layout.get(node.id());
+            let layout_node = layout.get(node.id());
 
             // Some elements like placeholders are not measured
-            if let Some(areas) = areas {
+            if let Some(layout_node) = layout_node {
                 // Add the Node to a Layer
                 let node_style = node.get::<Style>().unwrap();
 
@@ -103,8 +103,8 @@ impl Layers {
 
                 if let Some(reference) = &size_state.node_ref {
                     let mut node_layout = NodeReferenceLayout {
-                        area: areas.area,
-                        inner: areas.inner_sizes,
+                        area: layout_node.area,
+                        inner: layout_node.inner_sizes,
                     };
                     node_layout.div(scale_factor);
                     reference.0.send(node_layout).ok();
@@ -144,9 +144,15 @@ impl Layers {
         for group in self.paragraph_elements.values() {
             for node_id in group {
                 let node = rdom.get(*node_id);
-                let areas = layout.get(*node_id);
-                if let Some((node, areas)) = node.zip(areas) {
-                    measure_paragraph(&node, &areas.area, font_collection, true, scale_factor);
+                let layout_node = layout.get(*node_id);
+                if let Some((node, layout_node)) = node.zip(layout_node) {
+                    measure_paragraph(
+                        &node,
+                        &layout_node.area,
+                        font_collection,
+                        true,
+                        scale_factor,
+                    );
                 }
             }
         }
@@ -165,10 +171,16 @@ impl Layers {
         if let Some(group) = group {
             for node_id in group {
                 let node = dom.rdom().get(*node_id);
-                let areas = layout.get(*node_id);
+                let layout_node = layout.get(*node_id);
 
-                if let Some((node, areas)) = node.zip(areas) {
-                    measure_paragraph(&node, &areas.area, font_collection, true, scale_factor);
+                if let Some((node, layout_node)) = node.zip(layout_node) {
+                    measure_paragraph(
+                        &node,
+                        &layout_node.area,
+                        font_collection,
+                        true,
+                        scale_factor,
+                    );
                 }
             }
         }

@@ -15,10 +15,15 @@ use torin::{
     prelude::{LayoutMeasurer, Node, Size2D},
 };
 
-pub struct SafeParagraph(pub Paragraph);
+pub struct CachedParagraph(pub Paragraph);
 
-unsafe impl Send for SafeParagraph {}
-unsafe impl Sync for SafeParagraph {}
+/// # Safety
+/// Skia `Paragraph` are neither Sync or Send, but in order to store them in the Associated
+/// data of the Nodes in Torin (which will be used across threads when making the attributes diffing),
+/// we must manually mark the Paragraph as Send and Sync, this is fine because `Paragraph`s will only be accessed and modified
+/// In the main thread when measuring the layout and painting.
+unsafe impl Send for CachedParagraph {}
+unsafe impl Sync for CachedParagraph {}
 
 /// Provides Text measurements using Skia APIs like SkParagraph
 pub struct SkiaMeasurer<'a> {
@@ -51,7 +56,7 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
                 let label = create_label(&node, available_parent_area, self.font_collection);
                 let res = Size2D::new(label.longest_line(), label.height());
                 let mut map = SendAnyMap::new();
-                map.insert(SafeParagraph(label));
+                map.insert(CachedParagraph(label));
                 Some((res, Arc::new(map)))
             }
             NodeType::Element(ElementNode { tag, .. }) if tag == "paragraph" => {
@@ -59,7 +64,7 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
                     create_paragraph(&node, available_parent_area, self.font_collection, false);
                 let res = Size2D::new(paragraph.longest_line(), paragraph.height());
                 let mut map = SendAnyMap::new();
-                map.insert(SafeParagraph(paragraph));
+                map.insert(CachedParagraph(paragraph));
                 Some((res, Arc::new(map)))
             }
             _ => None,
@@ -101,12 +106,12 @@ pub fn create_paragraph(
     is_rendering: bool,
 ) -> Paragraph {
     let font_style = &*node.get::<FontStyleState>().unwrap();
-    let node_cursor_settings = &*node.get::<CursorSettings>().unwrap();
 
     let mut paragraph_style = ParagraphStyle::default();
     paragraph_style.set_text_align(font_style.text_align);
     paragraph_style.set_max_lines(font_style.max_lines);
     paragraph_style.set_replace_tab_characters(true);
+    paragraph_style.turn_hinting_off();
 
     if font_style.text_overflow == TextOverflow::Ellipsis {
         paragraph_style.set_ellipsis("…");
@@ -133,7 +138,7 @@ pub fn create_paragraph(
         }
     }
 
-    if node_cursor_settings.position.is_some() && is_rendering {
+    if is_rendering {
         // This is very tricky, but it works! It allows freya to render the cursor at the end of a line.
         paragraph_builder.add_text(" ");
     }
