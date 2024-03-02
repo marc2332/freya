@@ -12,7 +12,7 @@ use freya_node_state::{CursorReference, CursorSettings, FontStyleState, Referenc
 use freya_engine::prelude::*;
 use torin::{
     geometry::{Area, CursorPoint},
-    prelude::{LayoutMeasurer, Node, Size2D},
+    prelude::{LayoutMeasurer, LayoutNode, Node, Size2D},
 };
 
 pub struct CachedParagraph(pub Paragraph);
@@ -150,12 +150,17 @@ pub fn create_paragraph(
 
 pub fn measure_paragraph(
     node: &DioxusNode,
-    node_area: &Area,
-    font_collection: &FontCollection,
+    layout_node: &LayoutNode,
     is_editable: bool,
     scale_factor: f32,
-) -> Paragraph {
-    let paragraph = create_paragraph(node, node_area, font_collection, false);
+) {
+    let paragraph = &layout_node
+        .data
+        .as_ref()
+        .unwrap()
+        .get::<CachedParagraph>()
+        .unwrap()
+        .0;
     let scale_factors = scale_factor as f64;
 
     if is_editable {
@@ -198,8 +203,6 @@ pub fn measure_paragraph(
             }
         }
     }
-
-    paragraph
 }
 
 /// Get the info related to a cursor reference
