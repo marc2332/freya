@@ -1,8 +1,13 @@
+use std::time::Duration;
+
 use crate::Loader;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 
-use freya_hooks::{use_applied_theme, use_focus, NetworkImageTheme, NetworkImageThemeWith};
+use freya_hooks::{
+    use_applied_theme, use_asset_cacher, use_focus, AssetConfiguration, NetworkImageTheme,
+    NetworkImageThemeWith,
+};
 use freya_node_state::bytes_to_data;
 use reqwest::Url;
 
@@ -35,7 +40,7 @@ pub enum ImageStatus {
     Errored,
 
     /// Image has been fetched.
-    Loaded,
+    Loaded(Signal<Vec<u8>>),
 }
 
 /// `NetworkImage` component.
@@ -57,9 +62,9 @@ pub enum ImageStatus {
 ///
 #[allow(non_snake_case)]
 pub fn NetworkImage(props: NetworkImageProps) -> Element {
+    let asset_cacher = use_asset_cacher();
     let focus = use_focus();
     let mut status = use_signal(|| ImageStatus::Loading);
-    let mut image_bytes = use_signal::<Option<Vec<u8>>>(|| None);
 
     let focus_id = focus.attribute();
     let NetworkImageTheme { width, height } = use_applied_theme!(&props.theme, network_image);
@@ -67,23 +72,42 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
 
     // TODO: Waiting for a dependency-based use_effect
     let _ = use_memo_with_dependencies(&props.url, move |url| {
-        spawn(async move {
-            // Loading image
-            status.set(ImageStatus::Loading);
-            let img = fetch_image(url).await;
-            if let Ok(img) = img {
-                // Image loaded
-                image_bytes.set(Some(img));
-                status.set(ImageStatus::Loaded)
-            } else if let Err(_err) = img {
-                // Image errored
-                image_bytes.set(None);
-                status.set(ImageStatus::Errored)
-            }
-        });
+        let asset_configuration = AssetConfiguration {
+            duration: Duration::from_secs(3600),
+            id: url.to_string(),
+        };
+
+        // Loading image
+        status.set(ImageStatus::Loading);
+        if let Some(asset) = asset_cacher.get(&asset_configuration) {
+            // Image loaded from cache
+            status.set(ImageStatus::Loaded(asset))
+        } else {
+            spawn(async move {
+                let asset = fetch_image(url).await;
+                if let Ok(asset) = asset {
+                    let asset_signal = asset_cacher.insert(asset_configuration, asset);
+                    // Image loaded
+                    status.set(ImageStatus::Loaded(asset_signal))
+                } else if let Err(_err) = asset {
+                    // Image errored
+                    status.set(ImageStatus::Errored)
+                }
+            });
+        }
     });
 
-    if *status.read() == ImageStatus::Loading {
+    if let ImageStatus::Loaded(bytes) = &*status.read() {
+        let image_data = bytes_to_data(&bytes.read());
+        rsx!(image {
+            height: "{height}",
+            width: "{width}",
+            focus_id,
+            image_data,
+            role: "image",
+            alt
+        })
+    } else if *status.read() == ImageStatus::Loading {
         if let Some(loading_element) = &props.loading {
             rsx!({ loading_element })
         } else {
@@ -97,7 +121,7 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
                 }
             )
         }
-    } else if *status.read() == ImageStatus::Errored {
+    } else {
         if let Some(fallback_element) = &props.fallback {
             rsx!({ fallback_element })
         } else {
@@ -114,20 +138,6 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
                 }
             )
         }
-    } else {
-        rsx!({
-            image_bytes.as_ref().map(|bytes| {
-                let image_data = bytes_to_data(&bytes);
-                rsx!(image {
-                    height: "{height}",
-                    width: "{width}",
-                    focus_id,
-                    image_data: image_data,
-                    role: "image",
-                    alt: alt
-                })
-            })
-        })
     }
 }
 
