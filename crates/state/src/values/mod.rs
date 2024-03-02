@@ -1,6 +1,7 @@
 mod alignment;
 mod border;
 mod color;
+mod content;
 mod corner_radius;
 mod cursor;
 mod decoration;
@@ -17,6 +18,7 @@ mod text_shadow;
 pub use alignment::*;
 pub use border::*;
 pub use color::*;
+pub use content::*;
 pub use corner_radius::*;
 pub use cursor::*;
 pub use decoration::*;
