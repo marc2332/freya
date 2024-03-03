@@ -3,7 +3,8 @@ use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{KeyboardEvent, MouseEvent};
 
 use freya_hooks::{
-    use_animation, use_applied_theme, use_focus, use_platform, AnimNum, SwitchThemeWith,
+    use_animation, use_applied_theme, use_focus, use_platform, AnimNum, Ease, Function,
+    SwitchThemeWith,
 };
 use winit::window::CursorIcon;
 
@@ -56,7 +57,14 @@ pub enum SwitchStatus {
 ///
 #[allow(non_snake_case)]
 pub fn Switch(props: SwitchProps) -> Element {
-    let animation = use_animation(|ctx| ctx.with(AnimNum::new(0., 25.).time(200)));
+    let animation = use_animation(|ctx| {
+        ctx.with(
+            AnimNum::new(0., 25.)
+                .time(300)
+                .function(Function::Expo)
+                .ease(Ease::Out),
+        )
+    });
     let theme = use_applied_theme!(&props.theme, switch);
     let platform = use_platform();
     let mut status = use_signal(SwitchStatus::default);
