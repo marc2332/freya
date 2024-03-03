@@ -22,6 +22,7 @@ pub const LIGHT_THEME: Theme = Theme {
         },
         border_fill: cow_borrowed!("rgb(210, 210, 210)"),
         focus_border_fill: cow_borrowed!("rgb(180, 180, 180)"),
+        shadow: cow_borrowed!("0 4 5 0 rgb(0, 0, 0, 0.1)"),
         padding: cow_borrowed!("8 16"),
         margin: cow_borrowed!("4"),
         corner_radius: cow_borrowed!("8"),
@@ -96,7 +97,7 @@ pub const LIGHT_THEME: Theme = Theme {
         color: cow_borrowed!("white"),
         background: cow_borrowed!("rgb(210, 210, 210)"),
         progress_background: cow_borrowed!("rgb(103, 80, 164)"),
-        width: cow_borrowed!("100%"),
+        width: cow_borrowed!("fill"),
         height: cow_borrowed!("20"),
     },
     table: TableTheme {
@@ -125,7 +126,7 @@ pub const LIGHT_THEME: Theme = Theme {
         width: cow_borrowed!("100%"),
         height: cow_borrowed!("100%"),
     },
-    arrow_icon: ArrowIconTheme {
+    icon: IconTheme {
         width: cow_borrowed!("10"),
         height: cow_borrowed!("10"),
         margin: cow_borrowed!("none"),
@@ -143,5 +144,16 @@ pub const LIGHT_THEME: Theme = Theme {
             color: cow_borrowed!("rgb(10, 10, 10)"),
         },
         border_fill: cow_borrowed!("rgb(210, 210, 210)"),
+    },
+    snackbar: SnackBarTheme {
+        background: cow_borrowed!("rgb(235, 235, 235)"),
+        color: cow_borrowed!("rgb(103, 80, 164)"),
+    },
+    popup: PopupTheme {
+        background: cow_borrowed!("white"),
+        color: cow_borrowed!("black"),
+        cross_fill: cow_borrowed!("rgb(40, 40, 40)"),
+        width: cow_borrowed!("350"),
+        height: cow_borrowed!("200"),
     },
 };
