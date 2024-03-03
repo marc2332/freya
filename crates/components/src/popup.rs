@@ -55,6 +55,7 @@ pub fn PopupBackground(children: Element) -> Element {
 ///          }
 ///     )
 /// }
+/// ```
 #[allow(non_snake_case)]
 #[component]
 pub fn Popup(
