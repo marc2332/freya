@@ -255,6 +255,7 @@ define_theme! {
         hover_background: str,
         border_fill: str,
         focus_border_fill: str,
+        shadow: str,
         margin: str,
         corner_radius: str,
         width: str,
@@ -440,7 +441,7 @@ define_theme! {
 
 define_theme! {
     %[component]
-    pub ArrowIcon {
+    pub Icon {
         %[cows]
         margin: str,
         width: str,
@@ -470,6 +471,18 @@ define_theme! {
     }
 }
 
+define_theme! {
+    %[component]
+    pub Popup {
+        %[cows]
+        background: str,
+        color: str,
+        cross_fill: str,
+        width: str,
+        height: str,
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Theme {
     pub name: &'static str,
@@ -491,9 +504,10 @@ pub struct Theme {
     pub canvas: CanvasTheme,
     pub graph: GraphTheme,
     pub network_image: NetworkImageTheme,
-    pub arrow_icon: ArrowIconTheme,
+    pub icon: IconTheme,
     pub sidebar: SidebarTheme,
     pub sidebar_item: SidebarItemTheme,
+    pub popup: PopupTheme,
 }
 
 impl Default for Theme {
