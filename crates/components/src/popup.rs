@@ -20,6 +20,41 @@ pub fn PopupBackground(children: Element) -> Element {
     })
 }
 
+/// `Popup` component.
+///
+/// # Styling
+/// Inherits the [`PopupTheme`](freya_hooks::PopupTheme) theme.
+/// ```rust, no_run
+/// # use freya::prelude::*;
+/// fn app() -> Element {
+///     let mut show_popup = use_signal(|| false);
+///
+///     rsx!(
+///         if *show_popup.read() {
+///              Popup {
+///                  oncloserequest: move |_| {
+///                      show_popup.set(false)
+///                  },
+///                  PopupTitle {
+///                      label {
+///                          "Awesome Popup"
+///                      }
+///                  }
+///                  PopupContent {
+///                      label {
+///                          "Some content"
+///                      }
+///                  }
+///              }
+///          }
+///          Button {
+///              onclick: move |_| show_popup.set(true),
+///              label {
+///                  "Open"
+///              }
+///          }
+///     )
+/// }
 #[allow(non_snake_case)]
 #[component]
 pub fn Popup(
