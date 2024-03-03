@@ -398,18 +398,14 @@ pub struct UseAnimator<Animated> {
 }
 
 impl<Animated> UseAnimator<Animated> {
-    pub fn new(
-        value: Animated,
-        ctx: Context,
-        platform: UsePlatform
-    ) -> Self {
+    pub fn new(value: Animated, ctx: Context, platform: UsePlatform) -> Self {
         let animator = Self {
             value,
             ctx,
             platform,
             is_running: Signal::default(),
             task: Signal::default(),
-            has_run_yet: Signal::default()
+            has_run_yet: Signal::default(),
         };
 
         if animator.ctx.auto_start {
@@ -594,11 +590,7 @@ pub fn use_animation<Animated: PartialEq + 'static>(
         let mut ctx = Context::default();
         let value = run(&mut ctx);
 
-        UseAnimator::new(
-            value,
-            ctx,
-            UsePlatform::new(),
-        )
+        UseAnimator::new(value, ctx, UsePlatform::new())
     })
 }
 
@@ -613,10 +605,6 @@ where
         let mut ctx = Context::default();
         let value = run(&mut ctx, deps);
 
-        UseAnimator::new(
-            value,
-            ctx,
-            UsePlatform::new(),
-        )
+        UseAnimator::new(value, ctx, UsePlatform::new())
     })
 }
