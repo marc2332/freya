@@ -110,3 +110,33 @@ async fn simulate_events() {
 
     assert_eq!(text.text(), Some("Is enabled? true"));
 }
+
+#[tokio::test]
+async fn match_by_text() {
+    fn app() -> Element {
+        rsx!(
+            label {
+                "Hello, World!"
+            }
+            rect {
+                label {
+                    "Hello, Rust!"
+                }
+            }
+        )
+    }
+
+    let mut utils = launch_test(app);
+
+    assert_eq!(
+        utils.root().get_by_text("Hello, World!").unwrap().text(),
+        Some("Hello, World!")
+    );
+
+    assert!(utils.root().get_by_text("Blabla").is_none());
+
+    assert_eq!(
+        utils.root().get_by_text("Hello, Rust!").unwrap().text(),
+        Some("Hello, Rust!")
+    );
+}
