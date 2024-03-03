@@ -473,6 +473,15 @@ define_theme! {
 
 define_theme! {
     %[component]
+    pub SnackBar {
+        %[cows]
+        background: str,
+        color: str,
+  }
+}
+
+define_theme! {
+    %[component]
     pub Popup {
         %[cows]
         background: str,
@@ -507,6 +516,7 @@ pub struct Theme {
     pub icon: IconTheme,
     pub sidebar: SidebarTheme,
     pub sidebar_item: SidebarItemTheme,
+    pub snackbar: SnackBarTheme,
     pub popup: PopupTheme,
 }
 

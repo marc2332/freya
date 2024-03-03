@@ -98,7 +98,7 @@ pub const LIGHT_THEME: Theme = Theme {
         color: cow_borrowed!("white"),
         background: cow_borrowed!("rgb(210, 210, 210)"),
         progress_background: cow_borrowed!("rgb(103, 80, 164)"),
-        width: cow_borrowed!("100%"),
+        width: cow_borrowed!("fill"),
         height: cow_borrowed!("20"),
     },
     table: TableTheme {
@@ -145,6 +145,10 @@ pub const LIGHT_THEME: Theme = Theme {
             color: cow_borrowed!("rgb(10, 10, 10)"),
         },
         border_fill: cow_borrowed!("rgb(210, 210, 210)"),
+    },
+    snackbar: SnackBarTheme {
+        background: cow_borrowed!("rgb(235, 235, 235)"),
+        color: cow_borrowed!("rgb(103, 80, 164)"),
     },
     popup: PopupTheme {
         background: cow_borrowed!("white"),
