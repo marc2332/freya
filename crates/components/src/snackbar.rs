@@ -4,7 +4,7 @@ use freya_hooks::{
     use_animation, use_applied_theme, AnimNum, Ease, Function, SnackBarTheme, SnackBarThemeWith,
 };
 
-/// `SnackBar` component. Use in combination
+/// `SnackBar` component. Use in combination with other components.
 ///
 /// # Styling
 /// Inherits the [`SnackBarTheme`](freya_hooks::SnackBarTheme) theme.
