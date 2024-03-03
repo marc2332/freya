@@ -149,7 +149,7 @@ pub const LIGHT_THEME: Theme = Theme {
     snackbar: SnackBarTheme {
         background: cow_borrowed!("rgb(235, 235, 235)"),
         color: cow_borrowed!("rgb(103, 80, 164)"),
-    }
+    },
     popup: PopupTheme {
         background: cow_borrowed!("white"),
         color: cow_borrowed!("black"),
