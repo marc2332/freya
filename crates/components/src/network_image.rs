@@ -1,12 +1,9 @@
-use std::time::Duration;
-
 use crate::Loader;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-
 use freya_hooks::{
-    use_applied_theme, use_asset_cacher, use_focus, AssetConfiguration, NetworkImageTheme,
-    NetworkImageThemeWith,
+    use_applied_theme, use_asset_cacher, use_focus, AssetAge, AssetConfiguration,
+    NetworkImageTheme, NetworkImageThemeWith,
 };
 use freya_node_state::bytes_to_data;
 use reqwest::Url;
@@ -73,7 +70,7 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
     // TODO: Waiting for a dependency-based use_effect
     let _ = use_memo_with_dependencies(&props.url, move |url| {
         let asset_configuration = AssetConfiguration {
-            duration: Duration::from_secs(3600),
+            age: AssetAge::default(),
             id: url.to_string(),
         };
 
@@ -86,7 +83,7 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
             spawn(async move {
                 let asset = fetch_image(url).await;
                 if let Ok(asset) = asset {
-                    let asset_signal = asset_cacher.insert(asset_configuration, asset);
+                    let asset_signal = asset_cacher.cache(asset_configuration, asset);
                     // Image loaded
                     status.set(ImageStatus::Loaded(asset_signal))
                 } else if let Err(_err) = asset {

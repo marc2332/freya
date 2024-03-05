@@ -4,9 +4,27 @@ use dioxus_signals::{Readable, Writable};
 use std::{collections::HashMap, time::Duration};
 use tokio::time::sleep;
 
+pub enum AssetAge {
+    Duration(Duration),
+    Unspecified,
+}
+
+impl Default for AssetAge {
+    fn default() -> Self {
+        Self::Duration(Duration::from_secs(3600)) // 1h
+    }
+}
+
+impl From<Duration> for AssetAge {
+    fn from(value: Duration) -> Self {
+        Self::Duration(value)
+    }
+}
+
 #[derive(Hash, PartialEq, Eq, Clone)]
 pub struct AssetConfiguration {
-    pub duration: Duration,
+    pub age: AssetAge,
+    /// The ID of the asset. For example: For images their source URL or path can be used as ID.
     pub id: String,
 }
 
@@ -16,40 +34,42 @@ pub struct AssetCacher {
 }
 
 impl AssetCacher {
-    /// Register an asset
-    pub fn insert(&self, config: AssetConfiguration, asset: Vec<u8>) -> Signal<Vec<u8>> {
+    /// Cache the given [`AssetConfiguration`]
+    pub fn cache(&self, asset_config: AssetConfiguration, asset: Vec<u8>) -> Signal<Vec<u8>> {
         let asset = Signal::new(asset);
         self.registry
             .try_write()
             .unwrap()
-            .insert(config.clone(), asset);
+            .insert(asset_config.clone(), asset);
 
         let registry = self.registry;
 
-        spawn(async move {
-            sleep(config.duration).await;
-            registry.try_write().unwrap().remove(&config);
-        });
-
+        // Only clear the asset if a duration was specified
+        if let AssetAge::Duration(duration) = asset_config.age {
+            spawn(async move {
+                sleep(duration).await;
+                registry.try_write().unwrap().remove(&asset_config);
+            });
+        }
         asset
     }
 
-    /// Get an asset.
+    /// Get an asset Signal.
     pub fn get(&self, config: &AssetConfiguration) -> Option<Signal<Vec<u8>>> {
         self.registry.read().get(config).copied()
     }
 
-    /// Remoe an asset.
+    /// Remove an asset from the cache.
     pub fn remove(&self, config: &AssetConfiguration) {
         self.registry.try_write().unwrap().remove(config);
     }
 
-    /// Get the size of the registry;
+    /// Get the size of the cache registry.
     pub fn size(&self) -> usize {
         self.registry.read().len()
     }
 
-    /// Clear all the assets from the registry.
+    /// Clear all the assets from the cache registry.
     pub fn clear(&self) {
         self.registry.try_write().unwrap().clear();
     }
@@ -57,10 +77,8 @@ impl AssetCacher {
 
 /// Global caching system for assets.
 pub fn use_asset_cacher() -> AssetCacher {
-    let asset_cacher = match try_consume_context() {
+    match try_consume_context() {
         Some(asset_cacher) => asset_cacher,
         None => provide_root_context(AssetCacher::default()),
-    };
-
-    asset_cacher
+    }
 }
