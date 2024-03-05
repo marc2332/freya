@@ -4,6 +4,7 @@ use dioxus_signals::{Readable, Writable};
 use std::{collections::HashMap, time::Duration};
 use tokio::time::sleep;
 
+#[derive(Hash, PartialEq, Eq, Clone)]
 pub enum AssetAge {
     Duration(Duration),
     Unspecified,
