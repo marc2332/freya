@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use dioxus_native_core::{
     exports::shipyard::Component,
     node::OwnedAttributeValue,
@@ -144,8 +142,8 @@ impl State<CustomAttributeValues> for Style {
                     }
                     "svg_content" => {
                         let text = attr.value.as_text();
-                        style.svg_data = text
-                            .map(|v| AttributesBytes::Dynamic(Arc::new(v.as_bytes().to_owned())));
+                        style.svg_data =
+                            text.map(|v| AttributesBytes::Dynamic(v.as_bytes().to_vec().into()));
                     }
                     "overflow" => {
                         if let Some(value) = attr.value.as_text() {
