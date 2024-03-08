@@ -18,7 +18,7 @@ pub enum AssetAge {
 
 impl Default for AssetAge {
     fn default() -> Self {
-        Self::Duration(Duration::from_secs(3)) // 1h
+        Self::Duration(Duration::from_secs(3600)) // 1h
     }
 }
 
