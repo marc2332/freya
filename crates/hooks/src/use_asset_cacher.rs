@@ -1,7 +1,13 @@
-use dioxus_core::prelude::{provide_root_context, spawn, try_consume_context};
+use bytes::Bytes;
+use dioxus_core::prelude::{
+    current_scope_id, provide_root_context, spawn, try_consume_context, ScopeId, Task,
+};
 use dioxus_signals::Signal;
 use dioxus_signals::{Readable, Writable};
-use std::{collections::HashMap, time::Duration};
+use std::{
+    collections::{HashMap, HashSet},
+    time::Duration,
+};
 use tokio::time::sleep;
 
 #[derive(Hash, PartialEq, Eq, Clone)]
@@ -12,7 +18,7 @@ pub enum AssetAge {
 
 impl Default for AssetAge {
     fn default() -> Self {
-        Self::Duration(Duration::from_secs(3600)) // 1h
+        Self::Duration(Duration::from_secs(3)) // 1h
     }
 }
 
@@ -29,40 +35,118 @@ pub struct AssetConfiguration {
     pub id: String,
 }
 
+enum AssetUsers {
+    Scopes(HashSet<ScopeId>),
+    ClearTask(Task),
+}
+
+struct AssetState {
+    users: AssetUsers,
+    asset_bytes: Signal<Bytes>,
+}
+
 #[derive(Clone, Copy, Default)]
 pub struct AssetCacher {
-    registry: Signal<HashMap<AssetConfiguration, Signal<Vec<u8>>>>,
+    registry: Signal<HashMap<AssetConfiguration, AssetState>>,
 }
 
 impl AssetCacher {
     /// Cache the given [`AssetConfiguration`]
-    pub fn cache(&self, asset_config: AssetConfiguration, asset: Vec<u8>) -> Signal<Vec<u8>> {
-        let asset = Signal::new(asset);
-        self.registry
-            .try_write()
-            .unwrap()
-            .insert(asset_config.clone(), asset);
-
-        let registry = self.registry;
-
-        // Only clear the asset if a duration was specified
-        if let AssetAge::Duration(duration) = asset_config.age {
-            spawn(async move {
-                sleep(duration).await;
-                registry.try_write().unwrap().remove(&asset_config);
-            });
+    pub fn cache(&mut self, asset_config: AssetConfiguration, asset_bytes: Bytes) -> Signal<Bytes> {
+        // Cancel previous caches
+        if let Some(asset_state) = self.registry.write().remove(&asset_config) {
+            if let AssetUsers::ClearTask(task) = asset_state.users {
+                task.cancel();
+                asset_state.asset_bytes.take();
+            }
         }
-        asset
+
+        // Insert the asset into the cache
+        let asset_bytes = Signal::new(asset_bytes);
+        self.registry.write().insert(
+            asset_config.clone(),
+            AssetState {
+                asset_bytes,
+                users: AssetUsers::Scopes(HashSet::from([current_scope_id().unwrap()])),
+            },
+        );
+
+        asset_bytes
     }
 
-    /// Get an asset Signal.
-    pub fn get(&self, config: &AssetConfiguration) -> Option<Signal<Vec<u8>>> {
-        self.registry.read().get(config).copied()
+    /// Stop using an asset. It will get removed after the specified duration if it's not used until then.
+    pub fn unuse_asset(&mut self, asset_config: AssetConfiguration) {
+        let mut registry = self.registry;
+
+        let spawn_clear_task = {
+            let mut registry = registry.write();
+
+            let entry = registry.get_mut(&asset_config);
+            if let Some(asset_state) = entry {
+                match &mut asset_state.users {
+                    AssetUsers::Scopes(scopes) => {
+                        // Unsub
+                        scopes.remove(&current_scope_id().unwrap());
+
+                        // Only spawn a clear-task if there are no more scopes using this asset
+                        scopes.is_empty()
+                    }
+                    AssetUsers::ClearTask(task) => {
+                        // This case should never happen but... we leave it here anyway.
+                        task.cancel();
+                        true
+                    }
+                }
+            } else {
+                false
+            }
+        };
+
+        if spawn_clear_task {
+            // Only clear the asset if a duration was specified
+            if let AssetAge::Duration(duration) = asset_config.age {
+                let clear_task = spawn({
+                    let asset_config = asset_config.clone();
+                    async move {
+                        sleep(duration).await;
+                        if let Some(asset_state) = registry.write().remove(&asset_config) {
+                            // Clear the asset
+                            asset_state.asset_bytes.take();
+                        }
+                    }
+                });
+
+                // Registry the clear-task
+                let mut registry = registry.write();
+                let entry = registry.get_mut(&asset_config).unwrap();
+                entry.users = AssetUsers::ClearTask(clear_task);
+            }
+        }
     }
 
-    /// Remove an asset from the cache.
-    pub fn remove(&self, config: &AssetConfiguration) {
-        self.registry.try_write().unwrap().remove(config);
+    /// Start using an Asset. Your scope will get subscribed, to stop using an asset use [`unuse_asset`]
+    pub fn use_asset(&mut self, config: &AssetConfiguration) -> Option<Signal<Bytes>> {
+        let mut registry = self.registry.write();
+        if let Some(asset_state) = registry.get_mut(config) {
+            match &mut asset_state.users {
+                AssetUsers::ClearTask(task) => {
+                    // Cancel clear-tasks
+                    task.cancel();
+                    asset_state.asset_bytes.take();
+
+                    // Start using this asset
+                    asset_state.users =
+                        AssetUsers::Scopes(HashSet::from([current_scope_id().unwrap()]));
+                }
+                AssetUsers::Scopes(scopes) => {
+                    // Start using this asset
+                    scopes.insert(current_scope_id().unwrap());
+                }
+            }
+        }
+        drop(registry);
+
+        self.registry.peek().get(config).map(|s| s.asset_bytes)
     }
 
     /// Get the size of the cache registry.

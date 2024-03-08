@@ -424,7 +424,7 @@ builder_constructors! {
     /// static RUST_LOGO: &[u8] = include_bytes!("./rust_logo.png");
     ///
     /// fn app() -> Element {
-    ///     let image_data = static_bytes_to_data(RUST_LOGO);
+    ///     let image_data = static_bytes(RUST_LOGO);
     ///     rsx!(
     ///         image {
     ///             image_data: image_data,
@@ -453,7 +453,7 @@ builder_constructors! {
     };
     /// `svg` element let's you display SVG code.
     ///
-    /// You will need to use the [`bytes_to_data`](https://docs.freyaui.dev/freya/prelude/fn.bytes_to_data.html)
+    /// You will need to use the [`dynamic_bytes`](https://docs.freyaui.dev/freya/prelude/fn.dynamic_bytes.html)
     /// to transform the bytes into data the element can recognize.
     ///
     /// ### Example
@@ -463,7 +463,7 @@ builder_constructors! {
     /// static FERRIS: &[u8] = include_bytes!("./ferris.svg");
     ///
     /// fn app() -> Element {
-    ///     let ferris = bytes_to_data(FERRIS);
+    ///     let ferris = dynamic_bytes(FERRIS);
     ///     rsx!(
     ///         svg {
     ///             svg_data: ferris,
