@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use dioxus_core::prelude::{spawn, Task};
 use dioxus_hooks::{use_memo, use_memo_with_dependencies, Dependency};
-use dioxus_signals::{ReadOnlySignal, Readable, Signal, Writable};
+use dioxus_signals::{Memo, ReadOnlySignal, Readable, Signal, Writable};
 use easer::functions::*;
 use freya_engine::prelude::Color;
 use freya_node_state::Parse;
@@ -384,12 +384,15 @@ impl<Animated> UseAnimator<Animated> {
 
     /// Reset the animation to the default state.
     pub fn reset(&self) {
-        if let Some(task) = self.task.try_write().unwrap().take() {
+        let mut task = self.task;
+
+        if let Some(task) = task.write().take() {
             task.cancel();
         }
 
         for value in &self.ctx.animated_values {
-            value.try_write().unwrap().prepare(AnimDirection::Forward);
+            let mut value = *value;
+            value.write().prepare(AnimDirection::Forward);
         }
     }
 
@@ -424,19 +427,20 @@ impl<Animated> UseAnimator<Animated> {
         let mut is_running = self.is_running;
         let mut ticker = platform.new_ticker();
         let mut values = self.ctx.animated_values.clone();
-        let task = self.task;
+        let mut task = self.task;
+        let mut has_run_yet = self.has_run_yet;
 
         // Cancel previous animations
-        if let Some(task) = self.task.try_write().unwrap().take() {
+        if let Some(task) = task.write().take() {
             task.cancel();
         }
 
         if !self.peek_has_run_yet() {
-            *self.has_run_yet.try_write().unwrap() = true;
+            *has_run_yet.write() = true;
         }
         is_running.set(true);
 
-        let task = spawn(async move {
+        let animation_task = spawn(async move {
             platform.request_animation_frame();
 
             let mut index = 0;
@@ -474,7 +478,7 @@ impl<Animated> UseAnimator<Animated> {
             task.try_write().unwrap().take();
         });
 
-        self.task.try_write().unwrap().replace(task);
+        task.write().replace(animation_task);
     }
 }
 
@@ -537,7 +541,7 @@ impl<Animated> UseAnimator<Animated> {
 ///
 pub fn use_animation<Animated: PartialEq + 'static>(
     run: impl Fn(&mut Context) -> Animated + 'static,
-) -> ReadOnlySignal<UseAnimator<Animated>> {
+) -> Memo<UseAnimator<Animated>> {
     use_memo(move || {
         let mut ctx = Context::default();
         let value = run(&mut ctx);

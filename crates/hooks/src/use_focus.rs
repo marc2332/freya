@@ -1,7 +1,7 @@
 use accesskit::NodeId as AccessibilityId;
 use dioxus_core::{use_hook, AttributeValue};
 use dioxus_hooks::{use_context, use_memo};
-use dioxus_signals::{ReadOnlySignal, Readable, Signal, Writable};
+use dioxus_signals::{Memo, Readable, Signal, Writable};
 use freya_core::{accessibility::ACCESSIBILITY_ROOT_ID, navigation_mode::NavigationMode};
 use freya_elements::events::{keyboard::Code, KeyboardEvent};
 use freya_node_state::CustomAttributeValues;
@@ -12,8 +12,8 @@ use crate::AccessibilityIdCounter;
 #[derive(Clone, Copy)]
 pub struct UseFocus {
     id: AccessibilityId,
-    is_selected: ReadOnlySignal<bool>,
-    is_focused: ReadOnlySignal<bool>,
+    is_selected: Memo<bool>,
+    is_focused: Memo<bool>,
     focused_id: Signal<AccessibilityId>,
     navigation_mode: Signal<NavigationMode>,
 }

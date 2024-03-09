@@ -23,9 +23,10 @@ pub fn use_node() -> (AttributeValue, NodeReferenceLayout) {
         (Arc::new(tx), signal)
     });
 
+    let node_reference_layout = signal.read();
     (
         AttributeValue::any_value(CustomAttributeValues::Reference(NodeReference(tx))),
-        signal.read().clone(),
+        node_reference_layout.clone(),
     )
 }
 
