@@ -23,7 +23,7 @@ impl UseClipboard {
         self.clipboard
             .write()
             .as_mut()
-            .ok_or_else(|| ClipboardError::NotAvailable)?
+            .ok_or(ClipboardError::NotAvailable)?
             .get_contents()
             .map_err(|_| ClipboardError::FailedToRead)
     }
@@ -33,7 +33,7 @@ impl UseClipboard {
         self.clipboard
             .write()
             .as_mut()
-            .ok_or_else(|| ClipboardError::NotAvailable)?
+            .ok_or(ClipboardError::NotAvailable)?
             .set_contents(contents)
             .map_err(|_| ClipboardError::FailedToSet)
     }

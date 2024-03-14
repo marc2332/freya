@@ -147,6 +147,7 @@ mod test {
 
         // Wait a bit for the snackbar to show up
         utils.wait_for_update().await;
+        utils.wait_for_update().await;
         sleep(Duration::from_millis(15)).await;
         utils.wait_for_update().await;
 

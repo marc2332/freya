@@ -1,7 +1,6 @@
 pub mod accessibility_manager;
 pub use accessibility_manager::*;
 
-use accesskit::NodeId as AccessibilityId;
 use dioxus_native_core::{
     node::{NodeType, TextNode},
     real_dom::NodeImmutable,
@@ -12,6 +11,7 @@ use freya_node_state::AccessibilityNodeState;
 use torin::torin::Torin;
 
 use crate::layout::Layers;
+use crate::types::AccessibilityId;
 
 /// Direction for the next Accessibility Node to be focused.
 #[derive(PartialEq)]
