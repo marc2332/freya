@@ -25,7 +25,7 @@ pub fn use_node() -> (AttributeValue, NodeReferenceLayout) {
 
     (
         AttributeValue::any_value(CustomAttributeValues::Reference(NodeReference(tx))),
-        node_reference_layout.read().clone(),
+        signal.read_unchecked().clone(),
     )
 }
 
