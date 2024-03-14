@@ -154,6 +154,7 @@ mod test {
 
         // Second rect is now focused
         utils.wait_for_update().await;
+        utils.wait_for_update().await;
         assert_eq!(root.get(0).get(0).text(), Some("false"));
         assert_eq!(root.get(1).get(0).text(), Some("true"));
     }
