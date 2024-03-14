@@ -1,6 +1,6 @@
 use std::{borrow::Cow, cmp::Ordering, fmt::Display, ops::Range};
 
-use dioxus_std::clipboard::UseClipboard;
+use crate::UseClipboard;
 use freya_elements::events::keyboard::{Code, Key, Modifiers};
 
 /// Holds the position of a cursor in a text

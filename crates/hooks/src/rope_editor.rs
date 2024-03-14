@@ -1,10 +1,9 @@
 use std::{cmp::Ordering, fmt::Display, ops::Range};
 
-use dioxus_std::clipboard::UseClipboard;
 use ropey::iter::Lines;
 pub use ropey::Rope;
 
-use crate::{text_editor::*, EditableMode, EditorHistory, HistoryChange};
+use crate::{text_editor::*, EditableMode, EditorHistory, HistoryChange, UseClipboard};
 
 /// TextEditor implementing a Rope
 #[derive(Clone)]

@@ -16,6 +16,7 @@ features = ["freya-engine/mocked-engine"]
 no-default-features = true
 
 [features]
+hot-reload = ["freya-renderer/hot-reload"]
 log = ["dep:tracing", "dep:tracing-subscriber"]
 devtools = ["dep:freya-devtools"]
 use_camera = ["freya-hooks/use_camera"]

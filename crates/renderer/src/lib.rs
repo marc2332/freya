@@ -47,7 +47,7 @@ impl DesktopRenderer {
         let proxy = event_loop.create_proxy();
 
         // Hotreload support for Dioxus
-        #[cfg(debug_assertions)]
+        #[cfg(feature = "hot-reload")]
         {
             use std::process::exit;
             let proxy = proxy.clone();
@@ -56,6 +56,7 @@ impl DesktopRenderer {
                     let _ = proxy.send_event(EventMessage::UpdateTemplate(template));
                 }
                 dioxus_hot_reload::HotReloadMsg::Shutdown => exit(0),
+                dioxus_hot_reload::HotReloadMsg::UpdateAsset(_) => {}
             });
         }
 

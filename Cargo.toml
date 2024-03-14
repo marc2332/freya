@@ -26,17 +26,16 @@ freya-testing = { path = "crates/testing", version = "0.1" }
 freya-engine = { path = "crates/engine", version = "0.1" }
 torin = { path = "crates/torin", version = "0.1" }
 
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "2d2e9dc56a59b4f3ad4deb55d15c27f337cf564c", default-features = false, features = ["macro", "signals", "hooks", "hot-reload", "html"]}
-dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "2d2e9dc56a59b4f3ad4deb55d15c27f337cf564c" }
-dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev = "2d2e9dc56a59b4f3ad4deb55d15c27f337cf564c", features = ["hot_reload"] }
-dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev = "2d2e9dc56a59b4f3ad4deb55d15c27f337cf564c", features = ["dioxus"] }
-dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "2d2e9dc56a59b4f3ad4deb55d15c27f337cf564c" }
-dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev = "2d2e9dc56a59b4f3ad4deb55d15c27f337cf564c" }
-dioxus-signals = { git = "https://github.com/DioxusLabs/dioxus", rev = "2d2e9dc56a59b4f3ad4deb55d15c27f337cf564c" }
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev = "2d2e9dc56a59b4f3ad4deb55d15c27f337cf564c" }
-dioxus-hot-reload = { git = "https://github.com/DioxusLabs/dioxus", rev = "2d2e9dc56a59b4f3ad4deb55d15c27f337cf564c", features = ["file_watcher"], default-features = false }
-dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev = "2d2e9dc56a59b4f3ad4deb55d15c27f337cf564c", default-features = false }
-dioxus-std = { git = "https://github.com/marc2332/dioxus-std", rev = "0fe58a69df21013fc7e57c5a88f0cc2ee0eda857", features = ["clipboard"] }
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "efb21b24cac99139d6dd4617c9e0842ca7276489", default-features = false, features = ["macro", "signals", "hooks", "hot-reload", "html"]}
+dioxus-native-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "efb21b24cac99139d6dd4617c9e0842ca7276489" }
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev = "efb21b24cac99139d6dd4617c9e0842ca7276489", features = ["hot_reload"] }
+dioxus-native-core = { git = "https://github.com/DioxusLabs/dioxus", rev = "efb21b24cac99139d6dd4617c9e0842ca7276489", features = ["dioxus"] }
+dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "efb21b24cac99139d6dd4617c9e0842ca7276489" }
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev = "efb21b24cac99139d6dd4617c9e0842ca7276489" }
+dioxus-signals = { git = "https://github.com/DioxusLabs/dioxus", rev = "efb21b24cac99139d6dd4617c9e0842ca7276489" }
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev = "efb21b24cac99139d6dd4617c9e0842ca7276489" }
+dioxus-hot-reload = { git = "https://github.com/DioxusLabs/dioxus", rev = "efb21b24cac99139d6dd4617c9e0842ca7276489", features = ["file_watcher"], default-features = false }
+dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev = "efb21b24cac99139d6dd4617c9e0842ca7276489", default-features = false }
 
 skia-safe = { version = "0.70.0", features = ["gl", "textlayout", "svg"] }
 
