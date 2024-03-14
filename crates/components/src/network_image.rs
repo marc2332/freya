@@ -65,23 +65,28 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
     let NetworkImageTheme { width, height } = use_applied_theme!(&props.theme, network_image);
     let alt = props.alt.as_deref();
 
-    // TODO: Waiting for a dependency-based use_effect
-    let _ = use_memo_with_dependencies(&props.url, move |url| {
-        spawn(async move {
-            // Loading image
-            status.set(ImageStatus::Loading);
-            let img = fetch_image(url).await;
-            if let Ok(img) = img {
-                // Image loaded
-                image_bytes.set(Some(img));
-                status.set(ImageStatus::Loaded)
-            } else if let Err(_err) = img {
-                // Image errored
-                image_bytes.set(None);
-                status.set(ImageStatus::Errored)
-            }
-        });
-    });
+    let url = props.url.clone();
+    let _ = use_memo({
+        to_owned![url];
+        move || {
+            to_owned![url];
+            spawn(async move {
+                // Loading image
+                status.set(ImageStatus::Loading);
+                let img = fetch_image(url).await;
+                if let Ok(img) = img {
+                    // Image loaded
+                    image_bytes.set(Some(img));
+                    status.set(ImageStatus::Loaded)
+                } else if let Err(_err) = img {
+                    // Image errored
+                    image_bytes.set(None);
+                    status.set(ImageStatus::Errored)
+                }
+            });
+        }
+    })
+    .use_dependencies(&url);
 
     if *status.read() == ImageStatus::Loading {
         if let Some(loading_element) = &props.loading {

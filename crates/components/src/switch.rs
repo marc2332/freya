@@ -134,13 +134,14 @@ pub fn Switch(props: SwitchProps) -> Element {
         "none".to_string()
     };
 
-    let _ = use_memo_with_dependencies(&props.enabled, move |enabled| {
-        if enabled {
+    use_memo(move || {
+        if props.enabled {
             animation.read().start();
         } else if animation.read().peek_has_run_yet() {
             animation.read().reverse();
         }
-    });
+    })
+    .use_dependencies(&props.enabled);
 
     rsx!(
         rect {

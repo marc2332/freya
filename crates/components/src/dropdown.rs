@@ -194,9 +194,13 @@ where
     let focus_id = focus.attribute();
 
     // Update the provided value if the passed value changes
-    let _ = use_memo_with_dependencies(&props.value, move |value| {
-        *selected.write() = value;
-    });
+    let _ = use_memo({
+        let value = props.value.clone();
+        move || {
+            *selected.write() = value.clone();
+        }
+    })
+    .use_dependencies(&props.value);
 
     use_drop(move || {
         if *status.peek() == DropdownStatus::Hovering {

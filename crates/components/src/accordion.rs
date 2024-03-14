@@ -197,7 +197,7 @@ mod test {
 
         utils.wait_for_update().await;
 
-         // State somewhere in the middle
+        // State somewhere in the middle
         sleep(Duration::from_millis(70)).await;
         utils.wait_for_update().await;
 

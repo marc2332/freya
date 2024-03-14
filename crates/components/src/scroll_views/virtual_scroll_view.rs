@@ -325,14 +325,19 @@ pub fn VirtualScrollView<
         items_length as f32,
     );
 
-    let children = use_memo_with_dependencies(
-        (&render_range, &props.builder_args),
-        move |(render_range, builder_args)| {
+    println!("A: {render_range:?}");
+
+    let children = use_memo({
+        let render_range = render_range.clone();
+        move || {
+            println!("B: MMM?");
             render_range
-                .map(|i| (props.builder)(i, &builder_args))
+                .clone()
+                .map(|i| (props.builder)(i, &props.builder_args))
                 .collect::<Vec<Element>>()
-        },
-    );
+        }
+    })
+    .use_dependencies(&render_range);
 
     let is_scrolling_x = clicking_scrollbar
         .read()
