@@ -1,8 +1,8 @@
 use std::time::Duration;
 
 use dioxus_core::prelude::{spawn, Task};
-use dioxus_hooks::use_memo;
-use dioxus_signals::{Dependency, Memo, ReadOnlySignal, Readable, Signal, Writable};
+use dioxus_hooks::{use_memo, use_reactive, Dependency};
+use dioxus_signals::{Memo, ReadOnlySignal, Readable, Signal, Writable};
 use easer::functions::*;
 use freya_engine::prelude::Color;
 use freya_node_state::Parse;
@@ -565,22 +565,17 @@ pub fn use_animation_with_dependencies<Animated: PartialEq + 'static, D: Depende
 where
     D::Out: 'static + Clone,
 {
-    let vals = deps.out().clone();
-    use_memo({
-        let vals = vals.clone();
-        move || {
-            let mut ctx = Context::default();
-            let value = run(&mut ctx, vals.clone());
+    use_memo(use_reactive(deps, move |vals| {
+        let mut ctx = Context::default();
+        let value = run(&mut ctx, vals);
 
-            UseAnimator {
-                value,
-                ctx,
-                platform: UsePlatform::new(),
-                is_running: Signal::new(false),
-                has_run_yet: Signal::new(false),
-                task: Signal::default(),
-            }
+        UseAnimator {
+            value,
+            ctx,
+            platform: UsePlatform::new(),
+            is_running: Signal::new(false),
+            has_run_yet: Signal::new(false),
+            task: Signal::default(),
         }
-    })
-    .use_dependencies(&vals)
+    }))
 }

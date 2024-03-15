@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use dioxus_core::AttributeValue;
-use dioxus_hooks::use_memo;
-use dioxus_signals::{Dependency, Memo, Readable};
+use dioxus_hooks::{use_memo, use_reactive, Dependency};
+use dioxus_signals::{Memo, Readable};
 use freya_node_state::{CanvasReference, CanvasRunner, CustomAttributeValues};
 
 /// Holds a rendering hook callback that allows to render to the Canvas.
@@ -54,12 +54,9 @@ pub fn use_canvas<D: Dependency>(
 where
     D::Out: 'static,
 {
-    let vals = dependencies.out().clone();
-    let runner = use_memo({
-        let vals = vals.clone();
-        move || UseCanvasRunner(Arc::new(renderer_cb(vals.clone())))
-    })
-    .use_dependencies(&vals);
+    let runner = use_memo(use_reactive(dependencies, move |dependencies| {
+        UseCanvasRunner(Arc::new(renderer_cb(dependencies)))
+    }));
 
     UseCanvas { runner }
 }
