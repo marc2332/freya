@@ -10,6 +10,7 @@ members = ["crates/renderer", "crates/state", "crates/freya", "crates/elements",
 log = ["freya/log"]
 devtools = ["freya/devtools"]
 use_camera = ["freya/use_camera"]
+hot-reload = ["freya/hot-reload"]
 
 [workspace.dependencies]
 freya = { path = "crates/freya", version = "0.1" }
@@ -29,7 +30,7 @@ torin = { path = "crates/torin", version = "0.1" }
 dioxus-native-core-macro = { path = "crates/native-core-macro", version = "0.1" }
 dioxus-native-core = { path = "crates/native-core", version = "0.1" }
 
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "81182f99fff639d9a6f9583891fc418838f49d4a", default-features = false, features = ["macro", "signals", "hooks", "hot-reload", "html"]}
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "81182f99fff639d9a6f9583891fc418838f49d4a", default-features = false, features = ["macro", "signals", "hooks"]}
 dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev = "81182f99fff639d9a6f9583891fc418838f49d4a", features = ["hot_reload"] }
 dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "81182f99fff639d9a6f9583891fc418838f49d4a" }
 dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev = "81182f99fff639d9a6f9583891fc418838f49d4a" }
