@@ -388,6 +388,7 @@ mod test {
         });
         utils.wait_for_update().await;
         utils.wait_for_update().await;
+        utils.wait_for_update().await;
 
         // Now the layout size is like in the begining, again
         assert_eq!(utils.sdom().get().layout().size(), start_size);
