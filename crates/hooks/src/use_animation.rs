@@ -474,10 +474,11 @@ impl<Animated> UseAnimator<Animated> {
                 prev_frame = Instant::now();
             }
 
-            // Cancel previous animations
+            is_running.set(false);
             task.try_write().unwrap().take();
         });
 
+        // Cancel previous animations
         task.write().replace(animation_task);
     }
 }
