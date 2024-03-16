@@ -48,6 +48,7 @@ impl DOMAdapter<NodeId> for DioxusDOMAdapter<'_> {
             offset_y: layout.offset_y,
             has_layout_references: layout.node_ref.is_some(),
             position: layout.position,
+            content: layout.content,
         })
     }
 

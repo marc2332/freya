@@ -136,4 +136,18 @@ impl TestNode {
     pub fn is_placeholder(&self) -> bool {
         matches!(self.node_type, NodeType::Placeholder)
     }
+
+    /// Get a Node by a matching text.
+    pub fn get_by_text(&self, matching_text: &str) -> Option<Self> {
+        self.utils()
+            .get_node_matching_inside_id(self.node_id, |node| {
+                if let NodeType::Text(TextNode { text, .. }) = &*node.node_type() {
+                    matching_text == text
+                } else {
+                    false
+                }
+            })
+            .first()
+            .cloned()
+    }
 }
