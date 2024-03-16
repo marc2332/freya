@@ -24,8 +24,8 @@ impl State for Size {
     const NODE_MASK: NodeMaskBuilder<'static> = NodeMaskBuilder::new()
         // Get access to the width and height attributes
         .with_attrs(AttributeMaskBuilder::Some(&[
-            &AttributeName::Width,
-            &AttributeName::Height,
+            AttributeName::Width,
+            AttributeName::Height,
         ]))
         // Get access to the text of the node
         .with_text();
@@ -157,7 +157,7 @@ impl State for Border {
         let new = Self(
             node_view
                 .attributes()
-                .and_then(|mut attrs| attrs.next().map(|a| a.attribute == AttributeName::Border))
+                .and_then(|mut attrs| attrs.next().map(|a| *a.attribute == AttributeName::Border))
                 .is_some(),
         );
         // check if the member has changed
