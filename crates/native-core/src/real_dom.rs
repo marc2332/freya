@@ -9,15 +9,16 @@ use std::any::TypeId;
 use std::ops::{Deref, DerefMut};
 use std::sync::{Arc, RwLock};
 
-use crate::node::{
-    ElementNode, FromAnyValue, NodeType, OwnedAttributeDiscription, OwnedAttributeValue,
-};
 use crate::node_ref::{NodeMask, NodeMaskBuilder};
 use crate::node_watcher::{AttributeWatcher, NodeWatcher};
 use crate::passes::{Dependant, DirtyNodeStates, PassDirection, TypeErasedState};
 use crate::prelude::AttributeMaskBuilder;
 use crate::tree::{TreeMut, TreeMutView, TreeRef, TreeRefView};
 use crate::NodeId;
+use crate::{
+    events::EventName,
+    node::{ElementNode, FromAnyValue, NodeType, OwnedAttributeDiscription, OwnedAttributeValue},
+};
 use crate::{FxDashSet, SendAnyMap};
 
 /// The context passes can receive when they are executed
@@ -106,7 +107,7 @@ type AttributeWatchers<V> = Arc<RwLock<Vec<Box<dyn AttributeWatcher<V> + Send + 
 /// To allow custom values to be passed into attributes implement FromAnyValue on a type that can represent your custom value and specify the V generic to be that type. If you have many different custom values, it can be useful to use a enum type to represent the variants.
 pub struct RealDom<V: FromAnyValue + Send + Sync = ()> {
     pub(crate) world: World,
-    nodes_listening: FxHashMap<String, FxHashSet<NodeId>>,
+    nodes_listening: FxHashMap<EventName, FxHashSet<NodeId>>,
     pub(crate) dirty_nodes: NodesDirty<V>,
     node_watchers: NodeWatchers<V>,
     attribute_watchers: AttributeWatchers<V>,
@@ -243,7 +244,7 @@ impl<V: FromAnyValue + Send + Sync> RealDom<V> {
 
     /// Find all nodes that are listening for an event, sorted by there height in the dom progressing starting at the bottom and progressing up.
     /// This can be useful to avoid creating duplicate events.
-    pub fn get_listening_sorted(&self, event: &str) -> Vec<NodeRef<V>> {
+    pub fn get_listening_sorted(&self, event: &EventName) -> Vec<NodeRef<V>> {
         if let Some(nodes) = self.nodes_listening.get(event) {
             let mut listening: Vec<_> = nodes
                 .iter()
@@ -799,7 +800,7 @@ impl<'a, V: FromAnyValue + Send + Sync> NodeMut<'a, V> {
 
     /// Add an event listener
     #[inline]
-    pub fn add_event_listener(&mut self, event: &str) {
+    pub fn add_event_listener(&mut self, event: EventName) {
         let id = self.id();
         let RealDom {
             world,
@@ -811,15 +812,15 @@ impl<'a, V: FromAnyValue + Send + Sync> NodeMut<'a, V> {
         let node_type: &mut NodeType<V> = (&mut view).get(self.id).unwrap();
         if let NodeType::Element(ElementNode { listeners, .. }) = node_type {
             dirty_nodes.mark_dirty(self.id, NodeMaskBuilder::new().with_listeners().build());
-            listeners.insert(event.to_string());
-            match nodes_listening.get_mut(event) {
+            listeners.insert(event);
+            match nodes_listening.get_mut(&event) {
                 Some(hs) => {
                     hs.insert(id);
                 }
                 None => {
                     let mut hs = FxHashSet::default();
                     hs.insert(id);
-                    nodes_listening.insert(event.to_string(), hs);
+                    nodes_listening.insert(event, hs);
                 }
             }
         }
@@ -827,7 +828,7 @@ impl<'a, V: FromAnyValue + Send + Sync> NodeMut<'a, V> {
 
     /// Remove an event listener
     #[inline]
-    pub fn remove_event_listener(&mut self, event: &str) {
+    pub fn remove_event_listener(&mut self, event: &EventName) {
         let id = self.id();
         let RealDom {
             world,
@@ -1075,7 +1076,7 @@ impl<V: FromAnyValue + Send + Sync> ElementNodeMut<'_, V> {
     }
 
     /// Get the set of all events the element is listening to
-    pub fn listeners(&self) -> &FxHashSet<String> {
+    pub fn listeners(&self) -> &FxHashSet<EventName> {
         &self.element().listeners
     }
 }

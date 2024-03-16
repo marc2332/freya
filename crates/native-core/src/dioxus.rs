@@ -1,5 +1,7 @@
 //! Integration between Dioxus and the RealDom
 
+use std::str::FromStr;
+
 use crate::tree::TreeMut;
 use dioxus_core::{AttributeValue, ElementId, TemplateNode, WriteMutations};
 use rustc_hash::{FxHashMap, FxHashSet};
@@ -232,13 +234,13 @@ impl<V: FromAnyValue + Send + Sync> WriteMutations for DioxusNativeCoreMutationW
     fn create_event_listener(&mut self, name: &'static str, id: ElementId) {
         let node_id = self.state.element_to_node_id(id);
         let mut node = self.rdom.get_mut(node_id).unwrap();
-        node.add_event_listener(name);
+        node.add_event_listener(EventName::from_str(name).expect("Unexpected."));
     }
 
     fn remove_event_listener(&mut self, name: &'static str, id: ElementId) {
         let node_id = self.state.element_to_node_id(id);
         let mut node = self.rdom.get_mut(node_id).unwrap();
-        node.remove_event_listener(name);
+        node.remove_event_listener(&EventName::from_str(name).expect("Unexpected."));
     }
 
     fn remove_node(&mut self, id: ElementId) {

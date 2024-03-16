@@ -70,20 +70,6 @@ impl<'a, V: FromAnyValue> NodeView<'a, V> {
             .flatten()
             .map(|x| &**x)
     }
-
-    /// Get the listeners if it is enabled in the mask
-    pub fn listeners(&self) -> Option<impl Iterator<Item = &'a str> + '_> {
-        if self.mask.listeners {
-            match &self.inner {
-                NodeType::Element(ElementNode { listeners, .. }) => {
-                    Some(listeners.iter().map(|l| &**l))
-                }
-                _ => None,
-            }
-        } else {
-            None
-        }
-    }
 }
 
 /// A mask that contains a list of attributes that are visible.

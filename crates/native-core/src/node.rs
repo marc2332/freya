@@ -7,6 +7,8 @@ use std::{
     fmt::{Debug, Display},
 };
 
+use crate::events::EventName;
+
 /// A element node in the RealDom
 #[derive(Debug, Clone, Default)]
 pub struct ElementNode<V: FromAnyValue = ()> {
@@ -15,7 +17,7 @@ pub struct ElementNode<V: FromAnyValue = ()> {
     /// The attributes of the element
     pub attributes: FxHashMap<OwnedAttributeDiscription, OwnedAttributeValue<V>>,
     /// The events the element is listening for
-    pub listeners: FxHashSet<String>,
+    pub listeners: FxHashSet<EventName>,
 }
 
 /// A text node in the RealDom

@@ -179,7 +179,7 @@ fn measure_dom_events(
         'event: for collateral_event in collateral_events {
             let mut child_node: Option<NodeId> = None;
 
-            let listeners = rdom.get_listening_sorted(collateral_event.into());
+            let listeners = rdom.get_listening_sorted(&collateral_event);
 
             // Iterate over the event nodes
             for PotentialEvent {
@@ -260,7 +260,7 @@ fn emit_global_events_listeners(
 ) {
     for global_event in global_events {
         let event_name = global_event.get_name();
-        let listeners = fdom.rdom().get_listening_sorted(event_name.into());
+        let listeners = fdom.rdom().get_listening_sorted(&event_name);
 
         for listener in listeners {
             let element_id = listener.mounted_id().unwrap();

@@ -5,6 +5,7 @@ use node_ref::NodeMask;
 use rustc_hash::FxHasher;
 
 pub mod dioxus;
+pub mod events;
 pub mod node;
 pub mod node_ref;
 pub mod node_watcher;
@@ -26,6 +27,7 @@ pub mod exports {
 /// A prelude of commonly used items
 pub mod prelude {
     pub use crate::dioxus::*;
+    pub use crate::events::*;
     pub use crate::node::{ElementNode, FromAnyValue, NodeType, OwnedAttributeView, TextNode};
     pub use crate::node_ref::{AttributeMaskBuilder, NodeMaskBuilder, NodeView};
     pub use crate::passes::{run_pass, PassDirection, RunPassView, TypeErasedState};
