@@ -153,6 +153,18 @@ pub const DARK_THEME: Theme = Theme {
         unselected_fill: cow_borrowed!("rgb(245, 245, 245)"),
         selected_fill: cow_borrowed!("rgbrgb(103, 80, 164)"),
     },
+    menu_item: MenuItemTheme {
+        hover_background: cow_borrowed!("rgb(45, 45, 45)"),
+        corner_radius: LIGHT_THEME.menu_item.corner_radius,
+        font_theme: FontTheme {
+            color: cow_borrowed!("white"),
+        },
+    },
+    menu_container: MenuContainerTheme {
+        background: cow_borrowed!("rgb(35, 35, 35)"),
+        padding: LIGHT_THEME.menu_container.padding,
+        shadow: LIGHT_THEME.menu_container.shadow,
+    },
     snackbar: SnackBarTheme {
         background: cow_borrowed!("rgb(35, 35, 35)"),
         color: cow_borrowed!("white"),
