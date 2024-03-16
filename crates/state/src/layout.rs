@@ -29,6 +29,7 @@ pub struct LayoutState {
     pub main_alignment: Alignment,
     pub cross_alignment: Alignment,
     pub position: Position,
+    pub content: Content,
     pub node_ref: Option<NodeReference>,
 }
 
@@ -61,6 +62,7 @@ impl State<CustomAttributeValues> for LayoutState {
             "position_right",
             "position_bottom",
             "position_left",
+            "content",
         ]))
         .with_tag();
 
@@ -225,6 +227,13 @@ impl State<CustomAttributeValues> for LayoutState {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(left) = value.parse::<f32>() {
                                 layout.position.set_left(left * scale_factor);
+                            }
+                        }
+                    }
+                    "content" => {
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(content) = Content::parse(value) {
+                                layout.content = content;
                             }
                         }
                     }
