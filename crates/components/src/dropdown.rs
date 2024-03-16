@@ -7,8 +7,8 @@ use freya_elements::events::keyboard::Key;
 use freya_elements::events::{KeyboardEvent, MouseEvent};
 
 use freya_hooks::{
-    theme_with, use_applied_theme, use_focus, use_platform, ArrowIconThemeWith,
-    DropdownItemThemeWith, DropdownTheme, DropdownThemeWith,
+    theme_with, use_applied_theme, use_focus, use_platform, DropdownItemThemeWith, DropdownTheme,
+    DropdownThemeWith, IconThemeWith,
 };
 use winit::window::CursorIcon;
 
@@ -278,7 +278,7 @@ where
             ArrowIcon {
                 rotate: "0",
                 fill: "{arrow_fill}",
-                theme: theme_with!(ArrowIconTheme {
+                theme: theme_with!(IconTheme {
                     margin : "0 0 0 8".into(),
                 })
             }

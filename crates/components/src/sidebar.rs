@@ -1,8 +1,3 @@
-#![cfg_attr(
-    all(not(debug_assertions), target_os = "windows"),
-    windows_subsystem = "windows"
-)]
-
 use crate::{ButtonStatus, ScrollView};
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
