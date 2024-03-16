@@ -3,7 +3,7 @@ use dioxus_native_core::NodeId;
 use dioxus_native_core::{node::NodeType, real_dom::NodeImmutable};
 use freya_core::node::NodeState;
 use freya_node_state::{CustomAttributeValues, Style};
-use torin::{geometry::Area, prelude::NodeAreas};
+use torin::{geometry::Area, prelude::LayoutNode};
 
 use crate::test_utils::TestUtils;
 
@@ -48,7 +48,7 @@ impl TestNode {
     }
 
     /// Get the Node layout
-    pub fn layout(&self) -> Option<NodeAreas> {
+    pub fn layout(&self) -> Option<LayoutNode> {
         self.utils()
             .sdom()
             .get()

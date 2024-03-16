@@ -3,7 +3,7 @@ use rustc_hash::FxHashMap;
 
 use crate::{
     custom_measurer::LayoutMeasurer,
-    dom_adapter::{DOMAdapter, NodeAreas, NodeKey},
+    dom_adapter::{DOMAdapter, LayoutNode, NodeKey},
     geometry::{Area, Size2D},
     measure_mode::MeasureMode,
     node::Node,
@@ -40,7 +40,7 @@ pub fn measure_node<Key: NodeKey>(
     invalidated_tree: bool,
 
     phase: Phase,
-) -> (bool, NodeAreas) {
+) -> (bool, LayoutNode) {
     let must_revalidate = invalidated_tree
         || layout.dirty.contains(&node_id)
         || !layout.results.contains_key(&node_id);
@@ -75,11 +75,11 @@ pub fn measure_node<Key: NodeKey>(
         // If available, run a custom layout measure function
         // This is useful when you use third-party libraries (e.g. rust-skia, cosmic-text) to measure text layouts
         // When a Node is measured by a custom measurer function the inner children will be skipped
-        let measure_inner_children = if let Some(measurer) = measurer {
-            let custom_size = measurer.measure(node_id, node, parent_area, available_parent_area);
+        let (measure_inner_children, node_data) = if let Some(measurer) = measurer {
+            let res = measurer.measure(node_id, node, parent_area, available_parent_area);
 
             // Compute the width and height again using the new custom area sizes
-            if let Some(custom_size) = custom_size {
+            if let Some((custom_size, node_data)) = res {
                 if node.width.inner_sized() {
                     area_size.width = node.width.min_max(
                         custom_size.width,
@@ -106,12 +106,14 @@ pub fn measure_node<Key: NodeKey>(
                         phase,
                     );
                 }
-            }
 
-            // Do not measure inner children
-            custom_size.is_none()
+                // Do not measure inner children
+                (false, Some(node_data))
+            } else {
+                (true, None)
+            }
         } else {
-            true
+            (true, None)
         };
 
         // There is no need to measure inner children in the initial phase if this Node size
@@ -197,23 +199,24 @@ pub fn measure_node<Key: NodeKey>(
 
         (
             must_cache_inner_nodes,
-            NodeAreas {
+            LayoutNode {
                 area,
                 margin: node.margin,
                 inner_area,
                 inner_sizes,
+                data: node_data,
             },
         )
     } else {
-        let areas = layout.get(node_id).unwrap().clone();
+        let layout_node = layout.get(node_id).unwrap().clone();
 
-        let mut inner_sizes = areas.inner_sizes;
-        let mut available_area = areas.inner_area;
+        let mut inner_sizes = layout_node.inner_sizes;
+        let mut available_area = layout_node.inner_area;
 
         available_area.move_with_offsets(&node.offset_x, &node.offset_y);
 
         let mut measurement_mode = MeasureMode::ParentIsCached {
-            inner_area: &areas.inner_area,
+            inner_area: &layout_node.inner_area,
         };
 
         measure_inner_nodes(
@@ -230,7 +233,7 @@ pub fn measure_node<Key: NodeKey>(
             false,
         );
 
-        (false, areas)
+        (false, layout_node)
     }
 }
 

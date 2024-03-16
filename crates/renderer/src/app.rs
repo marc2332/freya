@@ -274,12 +274,8 @@ impl<State: 'static + Clone> App<State> {
     /// Measure the a text group given it's ID.
     pub fn measure_text_group(&self, text_id: &Uuid) {
         let scale_factor = self.window_env.window.scale_factor() as f32;
-        self.layers.measure_paragraph_elements(
-            text_id,
-            &self.sdom.get(),
-            &self.font_collection,
-            scale_factor,
-        );
+        self.layers
+            .measure_paragraph_elements(text_id, &self.sdom.get(), scale_factor);
     }
 
     pub fn focus_next_node(&self, direction: AccessibilityFocusDirection) {

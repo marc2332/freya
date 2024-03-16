@@ -62,14 +62,14 @@ pub fn process_accessibility(
 ) {
     for layer in layers.layers.values() {
         for node_id in layer {
-            let node_areas = layout.get(*node_id).unwrap();
+            let layout_node = layout.get(*node_id).unwrap();
             let dioxus_node = rdom.get(*node_id);
             if let Some(dioxus_node) = dioxus_node {
                 let node_accessibility = &*dioxus_node.get::<AccessibilityNodeState>().unwrap();
                 if let Some(accessibility_id) = node_accessibility.accessibility_id {
                     accessibility_manager.add_node(
                         &dioxus_node,
-                        node_areas,
+                        layout_node,
                         accessibility_id,
                         node_accessibility,
                     );

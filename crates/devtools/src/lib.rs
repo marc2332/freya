@@ -14,7 +14,7 @@ use freya_hooks::{use_init_accessibility, use_init_theme, use_theme, DARK_THEME}
 use freya_renderer::HoveredNode;
 use std::sync::Arc;
 use tokio::sync::Notify;
-use torin::prelude::NodeAreas;
+use torin::prelude::LayoutNode;
 
 mod hooks;
 mod node;
@@ -101,7 +101,7 @@ pub struct TreeNode {
     #[allow(dead_code)]
     text: Option<String>,
     state: NodeState,
-    areas: NodeAreas,
+    layout_node: LayoutNode,
 }
 
 #[derive(Props, Clone)]
@@ -154,8 +154,8 @@ pub fn DevTools(props: DevToolsProps) -> Element {
                     }
 
                     if !devtools_found && root_found {
-                        let areas = layout.get(node.id());
-                        if let Some(areas) = areas {
+                        let layout_node = layout.get(node.id());
+                        if let Some(layout_node) = layout_node {
                             let (text, tag) = match &*node.node_type() {
                                 NodeType::Text(TextNode { text, .. }) => {
                                     (Some(text.to_string()), "text".to_string())
@@ -174,7 +174,7 @@ pub fn DevTools(props: DevToolsProps) -> Element {
                                 tag,
                                 text,
                                 state,
-                                areas: areas.clone(),
+                                layout_node: layout_node.clone(),
                             });
                         }
                     }

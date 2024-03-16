@@ -1,6 +1,7 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use std::collections::HashMap;
+use dioxus_native_core::SendAnyMap;
 use std::fmt::Display;
+use std::{collections::HashMap, sync::Arc};
 use torin::prelude::*;
 
 struct TestingMeasurer;
@@ -12,7 +13,7 @@ impl LayoutMeasurer<usize> for TestingMeasurer {
         _node: &Node,
         _parent_size: &Area,
         _available_parent_area: &Area,
-    ) -> Option<Size2D> {
+    ) -> Option<(Size2D, Arc<SendAnyMap>)> {
         None
     }
 }
