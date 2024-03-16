@@ -219,19 +219,27 @@ pub fn measure_node<Key: NodeKey>(
             inner_area: &layout_node.inner_area,
         };
 
-        measure_inner_nodes(
-            &node_id,
-            node,
-            layout,
-            &mut available_area,
-            &mut inner_sizes,
-            measurer,
-            must_cache_inner_nodes,
-            &mut measurement_mode,
-            dom_adapter,
-            layout_metadata,
-            false,
-        );
+        let measure_inner_children = if let Some(measurer) = measurer {
+            measurer.should_measure_inner_children(node_id)
+        } else {
+            true
+        };
+
+        if measure_inner_children {
+            measure_inner_nodes(
+                &node_id,
+                node,
+                layout,
+                &mut available_area,
+                &mut inner_sizes,
+                measurer,
+                must_cache_inner_nodes,
+                &mut measurement_mode,
+                dom_adapter,
+                layout_metadata,
+                false,
+            );
+        }
 
         (false, layout_node)
     }

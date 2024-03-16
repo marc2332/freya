@@ -70,6 +70,13 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
             _ => None,
         }
     }
+
+    fn should_measure_inner_children(&mut self, node_id: NodeId) -> bool {
+        let node = self.rdom.get(node_id).unwrap();
+        let node_type: &NodeType<_> = &node.node_type();
+
+        !matches!(node_type.tag(), Some("label" | "paragraph"))
+    }
 }
 
 pub fn create_label(node: &DioxusNode, area: &Area, font_collection: &FontCollection) -> Paragraph {
@@ -126,10 +133,10 @@ pub fn create_paragraph(
                 let text_nodes = text_span.children();
                 let text_node = *text_nodes.first().unwrap();
                 let text_node_type = &*text_node.node_type();
+                let font_style = text_span.get::<FontStyleState>().unwrap();
+                paragraph_builder.push_style(&TextStyle::from(&*font_style));
 
                 if let NodeType::Text(TextNode { text, .. }) = text_node_type {
-                    let font_style = text_node.get::<FontStyleState>().unwrap();
-                    paragraph_builder.push_style(&TextStyle::from(&*font_style));
                     paragraph_builder.add_text(text);
                 }
             }

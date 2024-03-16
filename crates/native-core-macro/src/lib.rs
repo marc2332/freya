@@ -338,6 +338,9 @@ pub fn partial_derive_state(_: TokenStream, input: TokenStream) -> TokenStream {
                     let node_types = run_view.node_type.clone();
                     dioxus_native_core::prelude::run_pass(type_id, dependants.clone(), pass_direction, run_view, |id, context| {
                         let node_data: &NodeType<_> = node_types.get(id).unwrap_or_else(|err| panic!("Failed to get node type {:?}", err));
+                        if node_data.is_text() {
+                            return false;
+                        }
                         // get all of the states from the tree view
                         // Safety: No node has itself as a parent or child.
                         let raw_myself: Option<*mut Self> = (&mut #this_view).get(id).ok().map(|c| c as *mut _);

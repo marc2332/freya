@@ -43,6 +43,19 @@ pub enum NodeType<V: FromAnyValue = ()> {
     Placeholder,
 }
 
+impl<V: FromAnyValue> NodeType<V> {
+    pub fn is_text(&self) -> bool {
+        matches!(self, Self::Text(..))
+    }
+
+    pub fn tag(&self) -> Option<&str> {
+        match self {
+            Self::Element(ElementNode { tag, .. }) => Some(tag),
+            _ => None,
+        }
+    }
+}
+
 impl<V: FromAnyValue, S: Into<String>> From<S> for NodeType<V> {
     fn from(text: S) -> Self {
         Self::Text(TextNode::new(text.into()))
