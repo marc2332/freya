@@ -72,6 +72,7 @@ rustc-hash = "1.1.0"
 [dev-dependencies]
 skia-safe = { workspace = true }
 tokio = { workspace = true }
+dioxus = { workspace = true }
 freya = { workspace = true }
 freya-core = { workspace = true }
 reqwest = { version = "0.11.22", features = ["json"] }
