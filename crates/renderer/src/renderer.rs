@@ -6,7 +6,7 @@ use freya_core::prelude::*;
 use freya_dom::prelude::DioxusNode;
 use freya_engine::prelude::*;
 use freya_node_state::{Style, Transform};
-use torin::geometry::Area;
+use torin::{geometry::Area, prelude::LayoutNode};
 
 use crate::elements::{render_image, render_label, render_paragraph, render_rect, render_svg};
 
@@ -27,7 +27,7 @@ fn clip_viewport(canvas: &Canvas, viewport: &Area) {
 #[allow(clippy::too_many_arguments)]
 pub fn render_skia(
     canvas: &Canvas,
-    area: &Area,
+    layout_node: &LayoutNode,
     dioxus_node: &DioxusNode,
     font_collection: &mut FontCollection,
     font_manager: &FontMgr,
@@ -36,6 +36,8 @@ pub fn render_skia(
     matrices: &mut Vec<(Matrix, Vec<NodeId>)>,
     opacities: &mut Vec<(f32, Vec<NodeId>)>,
 ) {
+    let area = layout_node.visible_area();
+    let data = &layout_node.data;
     let node_type = &*dioxus_node.node_type();
     if let NodeType::Element(ElementNode { tag, .. }) = node_type {
         canvas.save();
@@ -103,25 +105,25 @@ pub fn render_skia(
 
         match tag.as_str() {
             "rect" => {
-                render_rect(area, dioxus_node, canvas, font_collection);
+                render_rect(&area, dioxus_node, canvas, font_collection);
             }
             "label" => {
-                render_label(area, dioxus_node, canvas, font_collection);
+                render_label(&area, data, canvas);
             }
             "paragraph" => {
-                render_paragraph(area, dioxus_node, canvas, font_collection);
+                render_paragraph(&area, data, dioxus_node, canvas, font_collection);
             }
             "svg" => {
-                render_svg(area, dioxus_node, canvas, font_manager);
+                render_svg(&area, dioxus_node, canvas, font_manager);
             }
             "image" => {
-                render_image(area, dioxus_node, canvas);
+                render_image(&area, dioxus_node, canvas);
             }
             _ => {}
         }
 
         if render_wireframe {
-            crate::wireframe::render_wireframe(canvas, area);
+            crate::wireframe::render_wireframe(canvas, &area);
         }
 
         canvas.restore();

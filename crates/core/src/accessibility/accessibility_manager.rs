@@ -6,7 +6,7 @@ use accesskit::{
 use freya_dom::prelude::DioxusNode;
 use freya_node_state::AccessibilityNodeState;
 use std::sync::{Arc, Mutex};
-use torin::prelude::NodeAreas;
+use torin::prelude::LayoutNode;
 
 pub type SharedAccessibilityManager = Arc<Mutex<AccessibilityManager>>;
 
@@ -49,7 +49,7 @@ impl AccessibilityManager {
     pub fn add_node(
         &mut self,
         dioxus_node: &DioxusNode,
-        node_areas: &NodeAreas,
+        layout_node: &LayoutNode,
         accessibility_id: AccessibilityId,
         node_accessibility: &AccessibilityNodeState,
     ) {
@@ -79,7 +79,7 @@ impl AccessibilityManager {
         }
 
         // Set the area
-        let area = node_areas.area.to_f64();
+        let area = layout_node.area.to_f64();
         builder.set_bounds(Rect {
             x0: area.min_x(),
             x1: area.max_x(),

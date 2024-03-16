@@ -1,3 +1,6 @@
+use dioxus_native_core::prelude::SendAnyMap;
+use std::sync::Arc;
+
 use crate::{
     dom_adapter::NodeKey,
     geometry::{Area, Size2D},
@@ -11,5 +14,5 @@ pub trait LayoutMeasurer<Key: NodeKey> {
         node: &Node,
         parent_area: &Area,
         available_parent_area: &Area,
-    ) -> Option<Size2D>;
+    ) -> Option<(Size2D, Arc<SendAnyMap>)>;
 }
