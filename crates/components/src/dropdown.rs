@@ -107,6 +107,7 @@ where
 
     rsx!(
         rect {
+            width: "fill-min",
             color: "{color}",
             focus_id,
             role: "button",
@@ -114,7 +115,6 @@ where
             padding: "6 22 6 16",
             corner_radius: "6",
             main_align: "center",
-            cross_align: "center",
             onmouseenter,
             onmouseleave,
             onclick,
@@ -297,6 +297,7 @@ where
                     background: "{dropdown_background}",
                     shadow: "0 4 5 0 rgb(0, 0, 0, 0.3)",
                     padding: "6",
+                    content: "fit",
                     {props.children}
                 }
             }

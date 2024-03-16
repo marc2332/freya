@@ -89,7 +89,6 @@ pub const LIGHT_THEME: Theme = Theme {
     },
     loader: LoaderTheme {
         primary_color: cow_borrowed!("rgb(50, 50, 50)"),
-        secondary_color: cow_borrowed!("rgb(150, 150, 150)"),
     },
     link: LinkTheme {
         highlight_color: cow_borrowed!("rgb(43,106,208)"),
@@ -145,6 +144,25 @@ pub const LIGHT_THEME: Theme = Theme {
             color: cow_borrowed!("rgb(10, 10, 10)"),
         },
         border_fill: cow_borrowed!("rgb(210, 210, 210)"),
+    },
+    tile: TileTheme {
+        padding: cow_borrowed!("4 6"),
+    },
+    radio: RadioTheme {
+        unselected_fill: cow_borrowed!("rgb(35, 35, 35)"),
+        selected_fill: cow_borrowed!("rgb(103, 80, 164)"),
+    },
+    menu_item: MenuItemTheme {
+        hover_background: cow_borrowed!("rgb(235, 235, 235)"),
+        corner_radius: cow_borrowed!("8"),
+        font_theme: FontTheme {
+            color: cow_borrowed!("rgb(10, 10, 10)"),
+        },
+    },
+    menu_container: MenuContainerTheme {
+        background: cow_borrowed!("rgb(245, 245, 245)"),
+        padding: cow_borrowed!("4"),
+        shadow: cow_borrowed!("0 2 5 2 rgb(0, 0, 0, 0.1)"),
     },
     snackbar: SnackBarTheme {
         background: cow_borrowed!("rgb(235, 235, 235)"),

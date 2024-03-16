@@ -166,3 +166,47 @@ pub async fn animate_color() {
         Fill::Color(Color::parse("rgb(50, 100, 200)").unwrap())
     );
 }
+
+#[tokio::test]
+pub async fn auto_start() {
+    fn use_animation_app() -> Element {
+        let animation = use_animation(|ctx| {
+            ctx.auto_start(true);
+            ctx.with(AnimNum::new(10., 100.).time(50))
+        });
+
+        let progress = animation.read().get().read().as_f32();
+
+        rsx!(rect {
+            background: "white",
+            height: "100%",
+            width: "{progress}",
+        })
+    }
+
+    let mut utils = launch_test(use_animation_app);
+
+    // Disable event loop ticker
+    utils.config().event_loop_ticker = false;
+
+    // Initial state
+    utils.wait_for_update().await;
+
+    assert_eq!(utils.root().get(0).area().unwrap().width(), 10.0);
+
+    // State somewhere in the middle
+    sleep(Duration::from_millis(32)).await;
+    utils.wait_for_update().await;
+
+    let width = utils.root().get(0).area().unwrap().width();
+    assert!(width > 10.0);
+
+    // Already finished
+    sleep(Duration::from_millis(32)).await;
+
+    // State has been restarted
+    utils.wait_for_update().await;
+
+    let width = utils.root().get(0).area().unwrap().width();
+    assert_eq!(width, 100.0);
+}
