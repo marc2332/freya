@@ -284,7 +284,7 @@ pub fn measure_inner_nodes<Key: NodeKey>(
                 continue;
             }
 
-            let (_, child_layout_node) = measure_node(
+            let (_, child_areas) = measure_node(
                 *child_id,
                 &child_data,
                 layout,
@@ -301,13 +301,13 @@ pub fn measure_inner_nodes<Key: NodeKey>(
             initial_phase_mode.stack_into_node(
                 parent_node,
                 &mut initial_phase_available_area,
-                &child_layout_node.area,
+                &child_areas.area,
                 &mut initial_phase_inner_sizes,
                 &child_data,
             );
 
             if parent_node.cross_alignment.is_not_start() {
-                initial_phase_sizes.insert(*child_id, child_layout_node.area.size);
+                initial_phase_sizes.insert(*child_id, child_areas.area.size);
             }
         }
 
@@ -362,7 +362,7 @@ pub fn measure_inner_nodes<Key: NodeKey>(
         let child_data = dom_adapter.get_node(&child_id).unwrap();
 
         // Final measurement
-        let (child_revalidated, child_layout_node) = measure_node(
+        let (child_revalidated, child_areas) = measure_node(
             child_id,
             &child_data,
             layout,
@@ -380,14 +380,14 @@ pub fn measure_inner_nodes<Key: NodeKey>(
         mode.stack_into_node(
             parent_node,
             available_area,
-            &child_layout_node.area,
+            &child_areas.area,
             inner_sizes,
             &child_data,
         );
 
         // Cache the child layout if it was mutated and inner nodes must be cache
         if child_revalidated && must_cache_inner_nodes {
-            layout.cache_node(child_id, child_layout_node);
+            layout.cache_node(child_id, child_areas);
         }
     }
 }

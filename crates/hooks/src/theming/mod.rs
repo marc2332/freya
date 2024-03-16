@@ -473,11 +473,32 @@ define_theme! {
 
 define_theme! {
     %[component]
+    pub MenuItem {
+        %[cows]
+        hover_background: str,
+        corner_radius: str,
+        %[subthemes]
+        font_theme: FontTheme,
+    }
+}
+
+define_theme! {
+    %[component]
+    pub MenuContainer {
+        %[cows]
+        background: str,
+        padding: str,
+        shadow: str,
+    }
+}
+
+define_theme! {
+    %[component]
     pub SnackBar {
         %[cows]
         background: str,
         color: str,
-  }
+     }
 }
 
 define_theme! {
@@ -516,6 +537,8 @@ pub struct Theme {
     pub icon: IconTheme,
     pub sidebar: SidebarTheme,
     pub sidebar_item: SidebarItemTheme,
+    pub menu_item: MenuItemTheme,
+    pub menu_container: MenuContainerTheme,
     pub snackbar: SnackBarTheme,
     pub popup: PopupTheme,
 }
