@@ -152,6 +152,11 @@ pub const DARK_THEME: Theme = Theme {
         unselected_fill: cow_borrowed!("rgb(245, 245, 245)"),
         selected_fill: cow_borrowed!("rgbrgb(103, 80, 164)"),
     },
+    checkbox: CheckboxTheme {
+        unselected_fill: cow_borrowed!("rgb(245, 245, 245)"),
+        selected_fill: cow_borrowed!("rgb(103, 80, 164)"),
+        selected_icon_fill: cow_borrowed!("white"),
+    },
     menu_item: MenuItemTheme {
         hover_background: cow_borrowed!("rgb(45, 45, 45)"),
         corner_radius: LIGHT_THEME.menu_item.corner_radius,
