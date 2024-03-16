@@ -12,8 +12,6 @@ use std::{
 pub struct ElementNode<V: FromAnyValue = ()> {
     /// The [tag](https://developer.mozilla.org/en-US/docs/Web/API/Element/tagName) of the element
     pub tag: String,
-    /// The [namespace](https://developer.mozilla.org/en-US/docs/Web/API/Element/namespaceURI) of the element
-    pub namespace: Option<String>,
     /// The attributes of the element
     pub attributes: FxHashMap<OwnedAttributeDiscription, OwnedAttributeValue<V>>,
     /// The events the element is listening for
@@ -22,10 +20,9 @@ pub struct ElementNode<V: FromAnyValue = ()> {
 
 impl ElementNode {
     /// Create a new element node
-    pub fn new(tag: impl Into<String>, namespace: impl Into<Option<String>>) -> Self {
+    pub fn new(tag: impl Into<String>) -> Self {
         Self {
             tag: tag.into(),
-            namespace: namespace.into(),
             attributes: Default::default(),
             listeners: Default::default(),
         }
@@ -85,19 +82,11 @@ impl<V: FromAnyValue> From<ElementNode<V>> for NodeType<V> {
 pub struct OwnedAttributeDiscription {
     /// The name of the attribute.
     pub name: String,
-    /// The namespace of the attribute used to identify what kind of attribute it is.
-    ///
-    /// For renderers that use HTML, this can be used to identify if the attribute is a style attribute.
-    /// Instead of parsing the style attribute every time a style is changed, you can set an attribute with the `style` namespace.
-    pub namespace: Option<String>,
 }
 
 impl From<String> for OwnedAttributeDiscription {
     fn from(name: String) -> Self {
-        Self {
-            name,
-            namespace: None,
-        }
+        Self { name }
     }
 }
 
@@ -105,7 +94,6 @@ impl<S: Into<String>, N: Into<String>> From<(S, N)> for OwnedAttributeDiscriptio
     fn from(name: (S, N)) -> Self {
         Self {
             name: name.0.into(),
-            namespace: Some(name.1.into()),
         }
     }
 }

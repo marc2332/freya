@@ -177,7 +177,6 @@ impl<V: FromAnyValue + Send + Sync> RealDom<V> {
         let mut world = World::new();
         let root_node: NodeType<V> = NodeType::Element(ElementNode {
             tag: "Root".to_string(),
-            namespace: Some("Root".to_string()),
             attributes: FxHashMap::default(),
             listeners: FxHashSet::default(),
         });
@@ -1021,18 +1020,6 @@ impl<V: FromAnyValue + Send + Sync> ElementNodeMut<'_, V> {
         self.dirty_nodes
             .mark_dirty(self.id, NodeMaskBuilder::new().with_tag().build());
         &mut self.element_mut().tag
-    }
-
-    /// Get a reference to the namespace the element is in
-    pub fn namespace(&self) -> Option<&str> {
-        self.element().namespace.as_deref()
-    }
-
-    /// Get a mutable reference to the namespace the element is in
-    pub fn namespace_mut(&mut self) -> &mut Option<String> {
-        self.dirty_nodes
-            .mark_dirty(self.id, NodeMaskBuilder::new().with_namespace().build());
-        &mut self.element_mut().namespace
     }
 
     /// Get a reference to all of the attributes currently set on the element

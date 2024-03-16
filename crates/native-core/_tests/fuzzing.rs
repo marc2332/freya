@@ -6,23 +6,12 @@ use dioxus_native_core::prelude::*;
 use dioxus_native_core_macro::partial_derive_state;
 use shipyard::Component;
 
-fn random_ns() -> Option<&'static str> {
-    let namespace = rand::random::<u8>() % 2;
-    match namespace {
-        0 => None,
-        1 => Some(Box::leak(
-            format!("ns{}", rand::random::<usize>()).into_boxed_str(),
-        )),
-        _ => unreachable!(),
-    }
-}
-
 fn create_random_attribute(attr_idx: &mut usize) -> TemplateAttribute<'static> {
     match rand::random::<u8>() % 2 {
         0 => TemplateAttribute::Static {
             name: Box::leak(format!("attr{}", rand::random::<usize>()).into_boxed_str()),
             value: Box::leak(format!("value{}", rand::random::<usize>()).into_boxed_str()),
-            namespace: random_ns(),
+            namespace: None,
         },
         1 => TemplateAttribute::Dynamic {
             id: {
@@ -51,7 +40,7 @@ fn create_random_template_node(
             };
             TemplateNode::Element {
                 tag: Box::leak(format!("tag{}", rand::random::<usize>()).into_boxed_str()),
-                namespace: random_ns(),
+                namespace: None,
                 attrs,
                 children: {
                     if depth > 4 {
@@ -304,7 +293,7 @@ impl State for BlablaState {
 
     const NODE_MASK: NodeMaskBuilder<'static> = NodeMaskBuilder::new()
         .with_attrs(AttributeMaskBuilder::Some(&["blabla"]))
-        .with_element();
+        .with_tag();
 
     fn update<'a>(
         &mut self,

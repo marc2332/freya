@@ -203,7 +203,7 @@ impl<V: FromAnyValue + Send + Sync> WriteMutations for DioxusNativeCoreMutationW
     fn set_attribute(
         &mut self,
         name: &'static str,
-        ns: Option<&'static str>,
+        _ns: Option<&'static str>,
         value: &AttributeValue,
         id: ElementId,
     ) {
@@ -214,13 +214,11 @@ impl<V: FromAnyValue + Send + Sync> WriteMutations for DioxusNativeCoreMutationW
             if let AttributeValue::None = &value {
                 element.remove_attribute(&OwnedAttributeDiscription {
                     name: name.to_string(),
-                    namespace: ns.map(|s| s.to_string()),
                 });
             } else {
                 element.set_attribute(
                     OwnedAttributeDiscription {
                         name: name.to_string(),
-                        namespace: ns.map(|s| s.to_string()),
                     },
                     OwnedAttributeValue::from(value),
                 );
@@ -267,23 +265,17 @@ fn create_template_node<V: FromAnyValue + Send + Sync>(
     match node {
         TemplateNode::Element {
             tag,
-            namespace,
             attrs,
             children,
+            ..
         } => {
             let node = NodeType::Element(ElementNode {
                 tag: tag.to_string(),
-                namespace: namespace.map(|s| s.to_string()),
                 attributes: attrs
                     .iter()
                     .filter_map(|attr| match attr {
-                        dioxus_core::TemplateAttribute::Static {
-                            name,
-                            value,
-                            namespace,
-                        } => Some((
+                        dioxus_core::TemplateAttribute::Static { name, value, .. } => Some((
                             OwnedAttributeDiscription {
-                                namespace: namespace.map(|s| s.to_string()),
                                 name: name.to_string(),
                             },
                             OwnedAttributeValue::Text(value.to_string()),

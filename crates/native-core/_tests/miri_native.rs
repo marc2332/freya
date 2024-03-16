@@ -17,7 +17,7 @@ impl State for BlablaState {
 
     const NODE_MASK: NodeMaskBuilder<'static> = NodeMaskBuilder::new()
         .with_attrs(AttributeMaskBuilder::Some(&["blabla"]))
-        .with_element();
+        .with_tag();
 
     fn update<'a>(
         &mut self,

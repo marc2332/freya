@@ -41,17 +41,6 @@ impl<'a, V: FromAnyValue> NodeView<'a, V> {
             .flatten()
     }
 
-    /// Get the tag of the node if the namespace is enabled in the mask
-    pub fn namespace(&self) -> Option<&'a str> {
-        self.mask
-            .namespace
-            .then_some(match &self.inner {
-                NodeType::Element(ElementNode { namespace, .. }) => namespace.as_deref(),
-                _ => None,
-            })
-            .flatten()
-    }
-
     /// Get any attributes that are enabled in the mask
     pub fn attributes<'b>(
         &'b self,
@@ -156,7 +145,6 @@ impl Default for AttributeMask {
 pub struct NodeMask {
     attritutes: AttributeMask,
     tag: bool,
-    namespace: bool,
     text: bool,
     listeners: bool,
 }
@@ -165,7 +153,6 @@ impl NodeMask {
     /// Check if two masks overlap
     pub fn overlaps(&self, other: &Self) -> bool {
         (self.tag && other.tag)
-            || (self.namespace && other.namespace)
             || self.attritutes.overlaps(&other.attritutes)
             || (self.text && other.text)
             || (self.listeners && other.listeners)
@@ -176,7 +163,6 @@ impl NodeMask {
         Self {
             attritutes: self.attritutes.union(&other.attritutes),
             tag: self.tag | other.tag,
-            namespace: self.namespace | other.namespace,
             text: self.text | other.text,
             listeners: self.listeners | other.listeners,
         }
@@ -200,16 +186,6 @@ impl NodeMask {
     /// Get the mask for the tag
     pub fn tag(&self) -> bool {
         self.tag
-    }
-
-    /// Set the mask to view the namespace
-    pub fn set_namespace(&mut self) {
-        self.namespace = true;
-    }
-
-    /// Get the mask for the namespace
-    pub fn namespace(&self) -> bool {
-        self.namespace
     }
 
     /// Set the mask to view the text
@@ -253,7 +229,6 @@ impl Default for AttributeMaskBuilder<'_> {
 pub struct NodeMaskBuilder<'a> {
     attritutes: AttributeMaskBuilder<'a>,
     tag: bool,
-    namespace: bool,
     text: bool,
     listeners: bool,
 }
@@ -265,7 +240,7 @@ impl<'a> NodeMaskBuilder<'a> {
     pub const ALL: Self = Self::new()
         .with_attrs(AttributeMaskBuilder::All)
         .with_text()
-        .with_element()
+        .with_tag()
         .with_listeners();
 
     /// Create a empty node mask
@@ -273,7 +248,6 @@ impl<'a> NodeMaskBuilder<'a> {
         Self {
             attritutes: AttributeMaskBuilder::Some(&[]),
             tag: false,
-            namespace: false,
             text: false,
             listeners: false,
         }
@@ -289,17 +263,6 @@ impl<'a> NodeMaskBuilder<'a> {
     pub const fn with_tag(mut self) -> Self {
         self.tag = true;
         self
-    }
-
-    /// Allow the mask to view the namespace
-    pub const fn with_namespace(mut self) -> Self {
-        self.namespace = true;
-        self
-    }
-
-    /// Allow the mask to view the namespace and tag
-    pub const fn with_element(self) -> Self {
-        self.with_namespace().with_tag()
     }
 
     /// Allow the mask to view the text
@@ -324,7 +287,6 @@ impl<'a> NodeMaskBuilder<'a> {
                 }
             },
             tag: self.tag,
-            namespace: self.namespace,
             text: self.text,
             listeners: self.listeners,
         }

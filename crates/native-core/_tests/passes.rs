@@ -7,7 +7,6 @@ use shipyard::Component;
 fn create_blank_element() -> NodeType {
     NodeType::Element(ElementNode {
         tag: "div".to_owned(),
-        namespace: None,
         attributes: FxHashMap::default(),
         listeners: FxHashSet::default(),
     })
