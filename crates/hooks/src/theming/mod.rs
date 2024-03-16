@@ -473,6 +473,14 @@ define_theme! {
 
 define_theme! {
     %[component]
+    pub Tile {
+        %[cows]
+        padding: str,
+    }
+}
+
+define_theme! {
+    %[component]
     pub MenuItem {
         %[cows]
         hover_background: str,
@@ -499,6 +507,15 @@ define_theme! {
         background: str,
         color: str,
      }
+}
+
+define_theme! {
+    %[component]
+    pub Radio {
+        %[cows]
+        unselected_fill: str,
+        selected_fill: str,
+    }
 }
 
 define_theme! {
@@ -537,6 +554,8 @@ pub struct Theme {
     pub icon: IconTheme,
     pub sidebar: SidebarTheme,
     pub sidebar_item: SidebarItemTheme,
+    pub tile: TileTheme,
+    pub radio: RadioTheme,
     pub menu_item: MenuItemTheme,
     pub menu_container: MenuContainerTheme,
     pub snackbar: SnackBarTheme,

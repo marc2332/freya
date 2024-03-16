@@ -122,6 +122,21 @@ impl TestNode {
         self.children_ids.clone()
     }
 
+    /// Check if this element is text
+    pub fn is_element(&self) -> bool {
+        matches!(self.node_type, NodeType::Element(..))
+    }
+
+    /// Check if this element is text
+    pub fn is_text(&self) -> bool {
+        matches!(self.node_type, NodeType::Text(..))
+    }
+
+    /// Check if this element is a placeholder
+    pub fn is_placeholder(&self) -> bool {
+        matches!(self.node_type, NodeType::Placeholder)
+    }
+
     /// Get a Node by a matching text.
     pub fn get_by_text(&self, matching_text: &str) -> Option<Self> {
         self.utils()
