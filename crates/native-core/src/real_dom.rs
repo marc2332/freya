@@ -6,14 +6,9 @@ use shipyard::track::Untracked;
 use shipyard::{Component, Get, IntoBorrow, ScheduledWorkload, Unique, View, ViewMut, Workload};
 use shipyard::{SystemModificator, World};
 use std::any::TypeId;
-use std::collections::VecDeque;
 use std::ops::{Deref, DerefMut};
 use std::sync::{Arc, RwLock};
 
-use crate::custom_element::{
-    CustomElement, CustomElementFactory, CustomElementManager, CustomElementRegistry,
-    CustomElementUpdater,
-};
 use crate::node::{
     ElementNode, FromAnyValue, NodeType, OwnedAttributeDiscription, OwnedAttributeValue, TextNode,
 };
@@ -117,7 +112,6 @@ pub struct RealDom<V: FromAnyValue + Send + Sync = ()> {
     attribute_watchers: AttributeWatchers<V>,
     workload: ScheduledWorkload,
     root_id: NodeId,
-    custom_elements: Arc<RwLock<CustomElementRegistry<V>>>,
     phantom: std::marker::PhantomData<V>,
 }
 
@@ -215,7 +209,6 @@ impl<V: FromAnyValue + Send + Sync> RealDom<V> {
             attribute_watchers: Default::default(),
             workload,
             root_id,
-            custom_elements: Default::default(),
             phantom: std::marker::PhantomData,
         }
     }
@@ -233,7 +226,6 @@ impl<V: FromAnyValue + Send + Sync> RealDom<V> {
     /// Create a new node of the given type in the dom and return a mutable reference to it.
     pub fn create_node(&mut self, node: impl Into<NodeType<V>>) -> NodeMut<'_, V> {
         let node = node.into();
-        let is_element = matches!(node, NodeType::Element(_));
 
         let id = self.world.add_entity(node);
         self.tree_mut().create_node(id);
@@ -246,15 +238,6 @@ impl<V: FromAnyValue + Send + Sync> RealDom<V> {
         self.dirty_nodes
             .mark_dirty(id, NodeMaskBuilder::ALL.build());
         self.dirty_nodes.nodes_created.insert(id);
-
-        // Create a custom element if needed
-        if is_element {
-            let custom_elements = self.custom_elements.clone();
-            custom_elements
-                .read()
-                .unwrap()
-                .add_shadow_dom(NodeMut::new(id, self));
-        }
 
         NodeMut::new(id, self)
     }
@@ -347,14 +330,6 @@ impl<V: FromAnyValue + Send + Sync> RealDom<V> {
                         );
                     }
                 };
-
-                // call custom element watchers
-                let node = self.get_mut(*node_id).unwrap();
-                let custom_element_manager =
-                    node.get::<CustomElementManager<V>>().map(|x| x.clone());
-                if let Some(custom_element_manager) = custom_element_manager {
-                    custom_element_manager.on_attributes_changed(node, mask.attributes());
-                }
             }
         }
 
@@ -383,6 +358,22 @@ impl<V: FromAnyValue + Send + Sync> RealDom<V> {
         (dirty.0, nodes_updated)
     }
 
+    /// Traverses the dom in a depth first manner,
+    /// calling the provided function on each node only when the parent returns `true`.
+    pub fn traverse_depth_first_advanced_stepped(&self, mut f: impl FnMut(NodeRef<V>) -> bool) {
+        let mut stack = vec![self.root_id()];
+        let tree = self.tree_ref();
+        while let Some(id) = stack.pop() {
+            if let Some(node) = self.get(id) {
+                let traverse_children = f(node);
+                if traverse_children {
+                    let children = tree.children_ids_advanced(id, false);
+                    stack.extend(children.iter().copied().rev());
+                }
+            }
+        }
+    }
+
     /// Traverses the dom in a depth first manner, calling the provided function on each node.
     /// If `enter_shadow_dom` is true, then the traversal will enter shadow doms in the tree.
     pub fn traverse_depth_first_advanced(
@@ -404,84 +395,6 @@ impl<V: FromAnyValue + Send + Sync> RealDom<V> {
     /// Traverses the dom in a depth first manner, calling the provided function on each node.
     pub fn traverse_depth_first(&self, f: impl FnMut(NodeRef<V>)) {
         self.traverse_depth_first_advanced(true, f)
-    }
-
-    /// Traverses the dom in a breadth first manner, calling the provided function on each node.
-    /// If `enter_shadow_dom` is true, then the traversal will enter shadow doms in the tree.
-    pub fn traverse_breadth_first_advanced(
-        &self,
-        enter_shadow_doms: bool,
-        mut f: impl FnMut(NodeRef<V>),
-    ) {
-        let mut queue = VecDeque::new();
-        queue.push_back(self.root_id());
-        let tree = self.tree_ref();
-        while let Some(id) = queue.pop_front() {
-            if let Some(node) = self.get(id) {
-                f(node);
-                let children = tree.children_ids_advanced(id, enter_shadow_doms);
-                for id in children {
-                    queue.push_back(id);
-                }
-            }
-        }
-    }
-
-    /// Traverses the dom in a breadth first manner, calling the provided function on each node.
-    pub fn traverse_breadth_first(&self, f: impl FnMut(NodeRef<V>)) {
-        self.traverse_breadth_first_advanced(true, f);
-    }
-
-    /// Traverses the dom in a depth first manner mutably, calling the provided function on each node.
-    /// If `enter_shadow_dom` is true, then the traversal will enter shadow doms in the tree.
-    pub fn traverse_depth_first_mut_advanced(
-        &mut self,
-        enter_shadow_doms: bool,
-        mut f: impl FnMut(NodeMut<V>),
-    ) {
-        let mut stack = vec![self.root_id()];
-        while let Some(id) = stack.pop() {
-            let tree = self.tree_ref();
-            let mut children = tree.children_ids_advanced(id, enter_shadow_doms);
-            drop(tree);
-            children.reverse();
-            if let Some(node) = self.get_mut(id) {
-                f(node);
-                stack.extend(children.iter());
-            }
-        }
-    }
-
-    /// Traverses the dom in a depth first manner mutably, calling the provided function on each node.
-    pub fn traverse_depth_first_mut(&mut self, f: impl FnMut(NodeMut<V>)) {
-        self.traverse_depth_first_mut_advanced(true, f)
-    }
-
-    /// Traverses the dom in a breadth first manner mutably, calling the provided function on each node.
-    /// If `enter_shadow_dom` is true, then the traversal will enter shadow doms in the tree.
-    pub fn traverse_breadth_first_mut_advanced(
-        &mut self,
-        enter_shadow_doms: bool,
-        mut f: impl FnMut(NodeMut<V>),
-    ) {
-        let mut queue = VecDeque::new();
-        queue.push_back(self.root_id());
-        while let Some(id) = queue.pop_front() {
-            let tree = self.tree_ref();
-            let children = tree.children_ids_advanced(id, enter_shadow_doms);
-            drop(tree);
-            if let Some(node) = self.get_mut(id) {
-                f(node);
-                for id in children {
-                    queue.push_back(id);
-                }
-            }
-        }
-    }
-
-    /// Traverses the dom in a breadth first manner mutably, calling the provided function on each node.
-    pub fn traverse_breadth_first_mut(&mut self, f: impl FnMut(NodeMut<V>)) {
-        self.traverse_breadth_first_mut_advanced(true, f);
     }
 
     /// Adds a [`NodeWatcher`] to the dom. Node watchers are called whenever a node is created or removed.
@@ -508,20 +421,6 @@ impl<V: FromAnyValue + Send + Sync> RealDom<V> {
     /// Returns a mutable reference to the underlying world. Any changes made to the world will not update the reactive system.
     pub fn raw_world_mut(&mut self) -> &mut World {
         &mut self.world
-    }
-
-    /// Registers a new custom element.
-    pub fn register_custom_element<E: CustomElement<V>>(&mut self) {
-        self.register_custom_element_with_factory::<E, E>()
-    }
-
-    /// Registers a new custom element with a custom factory.
-    pub fn register_custom_element_with_factory<F, U>(&mut self)
-    where
-        F: CustomElementFactory<U, V>,
-        U: CustomElementUpdater<V>,
-    {
-        self.custom_elements.write().unwrap().register::<F, U>()
     }
 }
 

@@ -4,7 +4,6 @@ use std::hash::BuildHasherDefault;
 use node_ref::NodeMask;
 use rustc_hash::FxHasher;
 
-pub mod custom_element;
 pub mod dioxus;
 pub mod node;
 pub mod node_ref;
