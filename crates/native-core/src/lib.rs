@@ -9,7 +9,6 @@ pub mod dioxus;
 pub mod events;
 pub mod node;
 pub mod node_ref;
-pub mod node_watcher;
 mod passes;
 pub mod real_dom;
 pub mod tags;
