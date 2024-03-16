@@ -103,7 +103,9 @@ mod test {
                     width: "100%",
                     height: "50%",
                     onclick: move |_| focus_manager.focus(),
-                    "{focus_manager.is_focused()}"
+                    label {
+                        "{focus_manager.is_focused()}"
+                    }
                 }
             )
         }
@@ -130,8 +132,8 @@ mod test {
         // Initial state
         utils.wait_for_update().await;
         let root = utils.root().get(0);
-        assert_eq!(root.get(0).get(0).text(), Some("false"));
-        assert_eq!(root.get(1).get(0).text(), Some("false"));
+        assert_eq!(root.get(0).get(0).get(0).text(), Some("false"));
+        assert_eq!(root.get(1).get(0).get(0).text(), Some("false"));
 
         // Click on the first rect
         utils.push_event(PlatformEvent::Mouse {
@@ -142,8 +144,8 @@ mod test {
 
         // First rect is now focused
         utils.wait_for_update().await;
-        assert_eq!(root.get(0).get(0).text(), Some("true"));
-        assert_eq!(root.get(1).get(0).text(), Some("false"));
+        assert_eq!(root.get(0).get(0).get(0).text(), Some("true"));
+        assert_eq!(root.get(1).get(0).get(0).text(), Some("false"));
 
         // Click on the second rect
         utils.push_event(PlatformEvent::Mouse {
@@ -155,7 +157,7 @@ mod test {
         // Second rect is now focused
         utils.wait_for_update().await;
         utils.wait_for_update().await;
-        assert_eq!(root.get(0).get(0).text(), Some("false"));
-        assert_eq!(root.get(1).get(0).text(), Some("true"));
+        assert_eq!(root.get(0).get(0).get(0).text(), Some("false"));
+        assert_eq!(root.get(1).get(0).get(0).text(), Some("true"));
     }
 }
