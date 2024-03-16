@@ -70,6 +70,7 @@ pub fn Button(props: ButtonProps) -> Element {
         width,
         height,
         font_theme,
+        shadow,
     } = use_applied_theme!(&props.theme, button);
 
     let onclick = {
@@ -131,7 +132,7 @@ pub fn Button(props: ButtonProps) -> Element {
             overflow: "clip",
             role: "button",
             color: "{font_theme.color}",
-            shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)",
+            shadow: "{shadow}",
             border: "{border}",
             corner_radius: "{corner_radius}",
             background: "{background}",

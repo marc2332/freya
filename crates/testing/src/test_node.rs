@@ -121,4 +121,18 @@ impl TestNode {
     pub fn children_ids(&self) -> Vec<NodeId> {
         self.children_ids.clone()
     }
+
+    /// Get a Node by a matching text.
+    pub fn get_by_text(&self, matching_text: &str) -> Option<Self> {
+        self.utils()
+            .get_node_matching_inside_id(self.node_id, |node| {
+                if let NodeType::Text(TextNode { text, .. }) = &*node.node_type() {
+                    matching_text == text
+                } else {
+                    false
+                }
+            })
+            .first()
+            .cloned()
+    }
 }
