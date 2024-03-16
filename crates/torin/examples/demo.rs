@@ -17,7 +17,7 @@ impl LayoutMeasurer<usize> for CustomMeasurer {
         None
     }
 
-    fn should_measure_inner_children(&mut self, node_id: usize) -> bool {
+    fn should_measure_inner_children(&mut self, _node_id: usize) -> bool {
         true
     }
 }
