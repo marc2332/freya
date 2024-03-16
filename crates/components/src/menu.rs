@@ -91,12 +91,12 @@ struct MenuId(usize);
 
 static ROOT_MENU: MenuId = MenuId(0);
 
-fn close_menus_until(menus: &Signal<Vec<MenuId>>, until_to: MenuId) {
+fn close_menus_until(menus: &mut Signal<Vec<MenuId>>, until_to: MenuId) {
     loop {
         let last_menu_id = menus.read().last().cloned();
         if let Some(last_menu_id) = last_menu_id {
             if last_menu_id != until_to {
-                menus.try_write().unwrap().pop();
+                menus.write().pop();
             } else {
                 break;
             }
@@ -106,14 +106,14 @@ fn close_menus_until(menus: &Signal<Vec<MenuId>>, until_to: MenuId) {
     }
 }
 
-fn push_menu(menus: &Signal<Vec<MenuId>>, menu_id: MenuId) {
+fn push_menu(menus: &mut Signal<Vec<MenuId>>, menu_id: MenuId) {
     let last_menu_id = menus.read().last().cloned();
     if let Some(last_menu_id) = last_menu_id {
         if last_menu_id != menu_id {
-            menus.try_write().unwrap().push(menu_id)
+            menus.write().push(menu_id)
         }
     } else {
-        menus.try_write().unwrap().push(menu_id)
+        menus.write().push(menu_id)
     }
 }
 
@@ -217,7 +217,7 @@ pub fn SubMenu(
     children: Element,
 ) -> Element {
     let parent_menu_id = use_context::<MenuId>();
-    let menus = use_context::<Signal<Vec<MenuId>>>();
+    let mut menus = use_context::<Signal<Vec<MenuId>>>();
     let mut menus_ids_generator = use_context::<Signal<usize>>();
     let submenu_id = use_hook(|| {
         menus_ids_generator += 1;
@@ -229,8 +229,8 @@ pub fn SubMenu(
     rsx!(
         MenuItem {
             onmouseenter: move |_| {
-                close_menus_until(&menus, parent_menu_id);
-                push_menu(&menus, submenu_id);
+                close_menus_until(&mut menus, parent_menu_id);
+                push_menu(&mut menus, submenu_id);
             },
             {children},
             if show_submenu {
@@ -260,11 +260,11 @@ pub fn MenuButton(
     /// Handler for the `onclick` event.
     onclick: Option<EventHandler<Option<MouseEvent>>>,
 ) -> Element {
-    let menus = use_context::<Signal<Vec<MenuId>>>();
+    let mut menus = use_context::<Signal<Vec<MenuId>>>();
     let parent_menu_id = use_context::<MenuId>();
     rsx!(
         MenuItem {
-            onmouseenter: move |_| close_menus_until(&menus, parent_menu_id),
+            onmouseenter: move |_| close_menus_until(&mut menus, parent_menu_id),
             onclick: move |e| {
                 if let Some(onclick) = &onclick {
                     onclick.call(e)

@@ -523,7 +523,7 @@ impl<Animated> UseAnimator<Animated> {
             }
 
             is_running.set(false);
-            task.try_write().unwrap().take();
+            task.write().take();
         });
 
         // Cancel previous animations
