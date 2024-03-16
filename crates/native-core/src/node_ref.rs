@@ -4,6 +4,7 @@ use rustc_hash::FxHashSet;
 
 use crate::{
     node::{ElementNode, FromAnyValue, NodeType, OwnedAttributeView},
+    tags::TagName,
     NodeId,
 };
 
@@ -31,11 +32,11 @@ impl<'a, V: FromAnyValue> NodeView<'a, V> {
     }
 
     /// Get the tag of the node if the tag is enabled in the mask
-    pub fn tag(&self) -> Option<&'a str> {
+    pub fn tag(&self) -> Option<&'a TagName> {
         self.mask
             .tag
             .then_some(match &self.inner {
-                NodeType::Element(ElementNode { tag, .. }) => Some(&**tag),
+                NodeType::Element(ElementNode { tag, .. }) => Some(tag),
                 _ => None,
             })
             .flatten()

@@ -11,6 +11,7 @@ pub mod node_ref;
 pub mod node_watcher;
 mod passes;
 pub mod real_dom;
+pub mod tags;
 pub mod tree;
 
 pub use shipyard::EntityId as NodeId;

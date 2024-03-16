@@ -7,13 +7,13 @@ use std::{
     fmt::{Debug, Display},
 };
 
-use crate::events::EventName;
+use crate::{events::EventName, tags::TagName};
 
 /// A element node in the RealDom
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct ElementNode<V: FromAnyValue = ()> {
-    /// The [tag](https://developer.mozilla.org/en-US/docs/Web/API/Element/tagName) of the element
-    pub tag: String,
+    /// The tag name of the element
+    pub tag: TagName,
     /// The attributes of the element
     pub attributes: FxHashMap<OwnedAttributeDiscription, OwnedAttributeValue<V>>,
     /// The events the element is listening for
@@ -50,7 +50,7 @@ impl<V: FromAnyValue> NodeType<V> {
         matches!(self, Self::Text(..))
     }
 
-    pub fn tag(&self) -> Option<&str> {
+    pub fn tag(&self) -> Option<&TagName> {
         match self {
             Self::Element(ElementNode { tag, .. }) => Some(tag),
             _ => None,

@@ -9,7 +9,6 @@ use std::any::TypeId;
 use std::ops::{Deref, DerefMut};
 use std::sync::{Arc, RwLock};
 
-use crate::node_ref::{NodeMask, NodeMaskBuilder};
 use crate::node_watcher::{AttributeWatcher, NodeWatcher};
 use crate::passes::{Dependant, DirtyNodeStates, PassDirection, TypeErasedState};
 use crate::prelude::AttributeMaskBuilder;
@@ -18,6 +17,10 @@ use crate::NodeId;
 use crate::{
     events::EventName,
     node::{ElementNode, FromAnyValue, NodeType, OwnedAttributeDiscription, OwnedAttributeValue},
+};
+use crate::{
+    node_ref::{NodeMask, NodeMaskBuilder},
+    tags::TagName,
 };
 use crate::{FxDashSet, SendAnyMap};
 
@@ -177,7 +180,7 @@ impl<V: FromAnyValue + Send + Sync> RealDom<V> {
         let (workload, _) = workload.build().unwrap();
         let mut world = World::new();
         let root_node: NodeType<V> = NodeType::Element(ElementNode {
-            tag: "Root".to_string(),
+            tag: TagName::Root,
             attributes: FxHashMap::default(),
             listeners: FxHashSet::default(),
         });
@@ -1003,18 +1006,6 @@ impl<V: FromAnyValue + Send + Sync> ElementNodeMut<'_, V> {
             NodeType::Element(element) => element,
             _ => unreachable!(),
         }
-    }
-
-    /// Get the tag of the element
-    pub fn tag(&self) -> &str {
-        &self.element().tag
-    }
-
-    /// Get a mutable reference to the tag of the element
-    pub fn tag_mut(&mut self) -> &mut String {
-        self.dirty_nodes
-            .mark_dirty(self.id, NodeMaskBuilder::new().with_tag().build());
-        &mut self.element_mut().tag
     }
 
     /// Get a reference to all of the attributes currently set on the element

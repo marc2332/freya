@@ -2,7 +2,7 @@
 
 use std::str::FromStr;
 
-use crate::tree::TreeMut;
+use crate::{tags::TagName, tree::TreeMut};
 use dioxus_core::{AttributeValue, ElementId, TemplateNode, WriteMutations};
 use rustc_hash::{FxHashMap, FxHashSet};
 use shipyard::Component;
@@ -266,7 +266,7 @@ fn create_template_node<V: FromAnyValue + Send + Sync>(
             ..
         } => {
             let node = NodeType::Element(ElementNode {
-                tag: tag.to_string(),
+                tag: TagName::from_str(tag).expect("Unexpected."),
                 attributes: attrs
                     .iter()
                     .filter_map(|attr| match attr {

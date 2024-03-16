@@ -3,6 +3,7 @@ use std::{ops::Mul, sync::Arc};
 use dioxus_native_core::{
     prelude::{ElementNode, NodeType, SendAnyMap, TextNode},
     real_dom::NodeImmutable,
+    tags::TagName,
     NodeId,
 };
 use freya_common::CursorLayoutResponse;
@@ -52,14 +53,14 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
         let node_type = node.node_type();
 
         match &*node_type {
-            NodeType::Element(ElementNode { tag, .. }) if tag == "label" => {
+            NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Label => {
                 let label = create_label(&node, available_parent_area, self.font_collection);
                 let res = Size2D::new(label.longest_line(), label.height());
                 let mut map = SendAnyMap::new();
                 map.insert(CachedParagraph(label));
                 Some((res, Arc::new(map)))
             }
-            NodeType::Element(ElementNode { tag, .. }) if tag == "paragraph" => {
+            NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Paragraph => {
                 let paragraph =
                     create_paragraph(&node, available_parent_area, self.font_collection, false);
                 let res = Size2D::new(paragraph.longest_line(), paragraph.height());
@@ -75,7 +76,7 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
         let node = self.rdom.get(node_id).unwrap();
         let node_type: &NodeType<_> = &node.node_type();
 
-        !matches!(node_type.tag(), Some("label" | "paragraph"))
+        !matches!(node_type.tag(), Some(TagName::Label | TagName::Paragraph))
     }
 }
 
@@ -129,7 +130,7 @@ pub fn create_paragraph(
 
     for text_span in node.children() {
         match &*text_span.node_type() {
-            NodeType::Element(ElementNode { tag, .. }) if tag == "text" => {
+            NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Text => {
                 let text_nodes = text_span.children();
                 let text_node = *text_nodes.first().unwrap();
                 let text_node_type = &*text_node.node_type();

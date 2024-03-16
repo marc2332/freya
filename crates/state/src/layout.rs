@@ -5,6 +5,7 @@ use dioxus_native_core::{
     node::OwnedAttributeValue,
     node_ref::NodeView,
     prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State},
+    tags::TagName,
     NodeId, SendAnyMap,
 };
 use dioxus_native_core_macro::partial_derive_state;
@@ -78,11 +79,11 @@ impl State<CustomAttributeValues> for LayoutState {
         let scale_factor = context.get::<f32>().unwrap();
 
         let mut layout = LayoutState {
-            direction: if let Some("label") = node_view.tag() {
+            direction: if let Some(TagName::Label) = node_view.tag() {
                 DirectionMode::Horizontal
-            } else if let Some("paragraph") = node_view.tag() {
+            } else if let Some(TagName::Paragraph) = node_view.tag() {
                 DirectionMode::Horizontal
-            } else if let Some("text") = node_view.tag() {
+            } else if let Some(TagName::Text) = node_view.tag() {
                 DirectionMode::Horizontal
             } else {
                 DirectionMode::Vertical

@@ -1,8 +1,8 @@
 use std::vec::IntoIter;
 
-use dioxus_native_core::prelude::ElementNode;
 use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::{node::NodeType, NodeId};
+use dioxus_native_core::{prelude::ElementNode, tags::TagName};
 use freya_common::NodeReferenceLayout;
 use freya_dom::prelude::{DioxusDOM, FreyaDOM};
 use freya_node_state::{CursorMode, CursorSettings, LayoutState, References, Style};
@@ -50,7 +50,7 @@ impl Layers {
 
                 let traverse_inner_children =
                     if let NodeType::Element(ElementNode { tag, .. }) = &*node.node_type() {
-                        let is_paragraph = tag == "paragraph";
+                        let is_paragraph = *tag == TagName::Paragraph;
                         if is_paragraph {
                             let cursor_settings = node.get::<CursorSettings>().unwrap();
                             let is_editable = CursorMode::Editable == cursor_settings.mode;
