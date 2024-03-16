@@ -7,10 +7,8 @@ use dioxus_native_core::{node::NodeType, NodeId};
 use freya_common::NodeReferenceLayout;
 use freya_dom::dom::DioxusNode;
 use freya_dom::prelude::{DioxusDOM, FreyaDOM};
-use itertools::sorted;
-
-use freya_engine::prelude::*;
 use freya_node_state::{CursorMode, CursorSettings, LayoutState, References, Style};
+use itertools::sorted;
 use rustc_hash::FxHashMap;
 use torin::torin::Torin;
 use uuid::Uuid;
@@ -38,20 +36,15 @@ pub struct Layers {
 }
 
 impl Layers {
-    pub fn new(
-        rdom: &DioxusDOM,
-        layout: &Torin<NodeId>,
-        font_collection: &FontCollection,
-        scale_factor: f32,
-    ) -> Self {
+    pub fn new(rdom: &DioxusDOM, layout: &Torin<NodeId>, scale_factor: f32) -> Self {
         let mut layers = Layers::default();
         let mut inherit_layers = FxHashMap::default();
 
         traverse_dom(rdom, |node| {
-            let areas = layout.get(node.id());
+            let layout_node = layout.get(node.id());
 
             // Some elements like placeholders are not measured
-            if let Some(areas) = areas {
+            if let Some(layout_node) = layout_node {
                 // Add the Node to a Layer
                 let node_style = node.get::<Style>().unwrap();
 
@@ -103,8 +96,8 @@ impl Layers {
 
                 if let Some(reference) = &size_state.node_ref {
                     let mut node_layout = NodeReferenceLayout {
-                        area: areas.area,
-                        inner: areas.inner_sizes,
+                        area: layout_node.area,
+                        inner: layout_node.inner_sizes,
                     };
                     node_layout.div(scale_factor);
                     reference.0.send(node_layout).ok();
@@ -116,7 +109,7 @@ impl Layers {
             }
         });
 
-        layers.measure_all_paragraph_elements(rdom, layout, font_collection, scale_factor);
+        layers.measure_all_paragraph_elements(rdom, layout, scale_factor);
 
         layers
     }
@@ -138,37 +131,30 @@ impl Layers {
         &self,
         rdom: &DioxusDOM,
         layout: &Torin<NodeId>,
-        font_collection: &FontCollection,
         scale_factor: f32,
     ) {
         for group in self.paragraph_elements.values() {
             for node_id in group {
                 let node = rdom.get(*node_id);
-                let areas = layout.get(*node_id);
-                if let Some((node, areas)) = node.zip(areas) {
-                    measure_paragraph(&node, &areas.area, font_collection, true, scale_factor);
+                let layout_node = layout.get(*node_id);
+                if let Some((node, layout_node)) = node.zip(layout_node) {
+                    measure_paragraph(&node, layout_node, true, scale_factor);
                 }
             }
         }
     }
 
     /// Measure all the paragraphs registered under the given TextId
-    pub fn measure_paragraph_elements(
-        &self,
-        text_id: &Uuid,
-        dom: &FreyaDOM,
-        font_collection: &FontCollection,
-        scale_factor: f32,
-    ) {
+    pub fn measure_paragraph_elements(&self, text_id: &Uuid, dom: &FreyaDOM, scale_factor: f32) {
         let group = self.paragraph_elements.get(text_id);
         let layout = dom.layout();
         if let Some(group) = group {
             for node_id in group {
                 let node = dom.rdom().get(*node_id);
-                let areas = layout.get(*node_id);
+                let layout_node = layout.get(*node_id);
 
-                if let Some((node, areas)) = node.zip(areas) {
-                    measure_paragraph(&node, &areas.area, font_collection, true, scale_factor);
+                if let Some((node, layout_node)) = node.zip(layout_node) {
+                    measure_paragraph(&node, layout_node, true, scale_factor);
                 }
             }
         }

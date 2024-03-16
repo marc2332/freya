@@ -22,6 +22,7 @@ pub const DARK_THEME: Theme = Theme {
         },
         border_fill: cow_borrowed!("rgb(80, 80, 80)"),
         focus_border_fill: cow_borrowed!("rgb(110, 110, 110)"),
+        shadow: cow_borrowed!("0 4 5 0 rgb(0, 0, 0, 0.1)"),
         padding: LIGHT_THEME.button.padding,
         margin: LIGHT_THEME.button.margin,
         corner_radius: LIGHT_THEME.button.corner_radius,
@@ -71,7 +72,7 @@ pub const DARK_THEME: Theme = Theme {
             color: cow_borrowed!("white"),
         },
         border_fill: cow_borrowed!("rgb(80, 80, 80)"),
-        arrow_fill: cow_borrowed!("rgb(40, 40, 40)"),
+        arrow_fill: cow_borrowed!("rgb(150, 150, 150)"),
     },
     dropdown_item: DropdownItemTheme {
         background: cow_borrowed!("rgb(35, 35, 35)"),
@@ -126,10 +127,10 @@ pub const DARK_THEME: Theme = Theme {
         width: LIGHT_THEME.network_image.width,
         height: LIGHT_THEME.network_image.height,
     },
-    arrow_icon: ArrowIconTheme {
-        width: LIGHT_THEME.arrow_icon.width,
-        height: LIGHT_THEME.arrow_icon.height,
-        margin: LIGHT_THEME.arrow_icon.margin,
+    icon: IconTheme {
+        width: LIGHT_THEME.icon.width,
+        height: LIGHT_THEME.icon.height,
+        margin: LIGHT_THEME.icon.margin,
     },
     sidebar: SidebarTheme {
         background: cow_borrowed!("rgb(20, 20, 20)"),
@@ -156,5 +157,28 @@ pub const DARK_THEME: Theme = Theme {
         unselected_fill: cow_borrowed!("rgb(245, 245, 245)"),
         selected_fill: cow_borrowed!("rgb(103, 80, 164)"),
         selected_icon_fill: cow_borrowed!("white"),
+    },
+    menu_item: MenuItemTheme {
+        hover_background: cow_borrowed!("rgb(45, 45, 45)"),
+        corner_radius: LIGHT_THEME.menu_item.corner_radius,
+        font_theme: FontTheme {
+            color: cow_borrowed!("white"),
+        },
+    },
+    menu_container: MenuContainerTheme {
+        background: cow_borrowed!("rgb(35, 35, 35)"),
+        padding: LIGHT_THEME.menu_container.padding,
+        shadow: LIGHT_THEME.menu_container.shadow,
+    },
+    snackbar: SnackBarTheme {
+        background: cow_borrowed!("rgb(35, 35, 35)"),
+        color: cow_borrowed!("white"),
+    },
+    popup: PopupTheme {
+        background: cow_borrowed!("rgb(25, 25, 25)"),
+        color: cow_borrowed!("white"),
+        cross_fill: cow_borrowed!("rgb(150, 150, 150)"),
+        width: LIGHT_THEME.popup.width,
+        height: LIGHT_THEME.popup.height,
     },
 };

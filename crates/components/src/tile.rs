@@ -20,9 +20,7 @@ pub enum TileStatus {
 ///
 /// # Example
 ///
-/// ```no_run
-/// todo!()
-/// ```
+/// Tile is meant to be used with other components, take a look at [`Radio`](freya_components::Radio) for instance.
 ///
 #[allow(non_snake_case)]
 #[component]
