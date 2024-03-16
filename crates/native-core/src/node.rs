@@ -18,33 +18,17 @@ pub struct ElementNode<V: FromAnyValue = ()> {
     pub listeners: FxHashSet<String>,
 }
 
-impl ElementNode {
-    /// Create a new element node
-    pub fn new(tag: impl Into<String>) -> Self {
-        Self {
-            tag: tag.into(),
-            attributes: Default::default(),
-            listeners: Default::default(),
-        }
-    }
-}
-
 /// A text node in the RealDom
 #[derive(Debug, Clone, Default)]
 pub struct TextNode {
     /// The text of the node
     pub text: String,
-    /// The events the node is listening for
-    pub listeners: FxHashSet<String>,
 }
 
 impl TextNode {
     /// Create a new text node
     pub fn new(text: String) -> Self {
-        Self {
-            text,
-            listeners: Default::default(),
-        }
+        Self { text }
     }
 }
 

@@ -10,7 +10,7 @@ use std::ops::{Deref, DerefMut};
 use std::sync::{Arc, RwLock};
 
 use crate::node::{
-    ElementNode, FromAnyValue, NodeType, OwnedAttributeDiscription, OwnedAttributeValue, TextNode,
+    ElementNode, FromAnyValue, NodeType, OwnedAttributeDiscription, OwnedAttributeValue,
 };
 use crate::node_ref::{NodeMask, NodeMaskBuilder};
 use crate::node_watcher::{AttributeWatcher, NodeWatcher};
@@ -757,9 +757,7 @@ impl<'a, V: FromAnyValue + Send + Sync> NodeMut<'a, V> {
                 ..
             } = &mut self.dom;
             let mut view: ViewMut<NodeType<V>> = world.borrow().unwrap();
-            if let NodeType::Element(ElementNode { listeners, .. })
-            | NodeType::Text(TextNode { listeners, .. }) = (&mut view).get(id).unwrap()
-            {
+            if let NodeType::Element(ElementNode { listeners, .. }) = (&mut view).get(id).unwrap() {
                 let listeners = std::mem::take(listeners);
                 for event in listeners {
                     nodes_listening.get_mut(&event).unwrap().remove(&id);
@@ -811,9 +809,7 @@ impl<'a, V: FromAnyValue + Send + Sync> NodeMut<'a, V> {
         } = &mut self.dom;
         let mut view: ViewMut<NodeType<V>> = world.borrow().unwrap();
         let node_type: &mut NodeType<V> = (&mut view).get(self.id).unwrap();
-        if let NodeType::Element(ElementNode { listeners, .. })
-        | NodeType::Text(TextNode { listeners, .. }) = node_type
-        {
+        if let NodeType::Element(ElementNode { listeners, .. }) = node_type {
             dirty_nodes.mark_dirty(self.id, NodeMaskBuilder::new().with_listeners().build());
             listeners.insert(event.to_string());
             match nodes_listening.get_mut(event) {
@@ -841,9 +837,7 @@ impl<'a, V: FromAnyValue + Send + Sync> NodeMut<'a, V> {
         } = &mut self.dom;
         let mut view: ViewMut<NodeType<V>> = world.borrow().unwrap();
         let node_type: &mut NodeType<V> = (&mut view).get(self.id).unwrap();
-        if let NodeType::Element(ElementNode { listeners, .. })
-        | NodeType::Text(TextNode { listeners, .. }) = node_type
-        {
+        if let NodeType::Element(ElementNode { listeners, .. }) = node_type {
             dirty_nodes.mark_dirty(self.id, NodeMaskBuilder::new().with_listeners().build());
             listeners.remove(event);
 
