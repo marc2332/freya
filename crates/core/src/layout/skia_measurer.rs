@@ -111,7 +111,6 @@ pub fn create_paragraph(
     paragraph_style.set_text_align(font_style.text_align);
     paragraph_style.set_max_lines(font_style.max_lines);
     paragraph_style.set_replace_tab_characters(true);
-    paragraph_style.turn_hinting_off();
 
     if font_style.text_overflow == TextOverflow::Ellipsis {
         paragraph_style.set_ellipsis("…");
