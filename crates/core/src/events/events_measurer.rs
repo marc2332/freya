@@ -220,7 +220,8 @@ fn measure_dom_events(
 
                 let Style { background, .. } = &*node.get::<Style>().unwrap();
 
-                if background != &Fill::Color(Color::TRANSPARENT) && event.get_name().does_bubble()
+                if background != &Fill::Color(Color::TRANSPARENT)
+                    && !event.get_name().does_go_through_solid()
                 {
                     // If the background isn't transparent,
                     // we must make sure that next nodes are parent of it

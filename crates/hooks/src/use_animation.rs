@@ -1,6 +1,6 @@
-use std::{cell::RefCell, time::Duration};
+use std::time::Duration;
 
-use dioxus_core::{prelude::spawn, Task};
+use dioxus_core::prelude::{spawn, Task};
 use dioxus_hooks::{use_memo, use_memo_with_dependencies, Dependency};
 use dioxus_signals::{ReadOnlySignal, Readable, Signal, Writable};
 use easer::functions::*;
@@ -371,8 +371,9 @@ pub struct UseAnimator<Animated> {
     value: Animated,
     ctx: Context,
     platform: UsePlatform,
-    task: RefCell<Option<Task>>,
     is_running: Signal<bool>,
+    has_run_yet: Signal<bool>,
+    task: Signal<Option<Task>>,
 }
 
 impl<Animated> UseAnimator<Animated> {
@@ -381,9 +382,30 @@ impl<Animated> UseAnimator<Animated> {
         &self.value
     }
 
+    /// Reset the animation to the default state.
+    pub fn reset(&self) {
+        if let Some(task) = self.task.try_write().unwrap().take() {
+            task.cancel();
+        }
+
+        for value in &self.ctx.animated_values {
+            value.try_write().unwrap().prepare(AnimDirection::Forward);
+        }
+    }
+
     /// Checks if there is any animation running.
     pub fn is_running(&self) -> bool {
         *self.is_running.read()
+    }
+
+    /// Checks if it has run yet, by subscribing.
+    pub fn has_run_yet(&self) -> bool {
+        *self.has_run_yet.read()
+    }
+
+    /// Checks if it has run yet, doesn't subscribe. Useful for when you just mounted your component.
+    pub fn peek_has_run_yet(&self) -> bool {
+        *self.has_run_yet.peek()
     }
 
     /// Runs the animation in reverse direction.
@@ -402,12 +424,16 @@ impl<Animated> UseAnimator<Animated> {
         let mut is_running = self.is_running;
         let mut ticker = platform.new_ticker();
         let mut values = self.ctx.animated_values.clone();
+        let task = self.task;
 
         // Cancel previous animations
-        if let Some(task) = self.task.borrow_mut().take() {
+        if let Some(task) = self.task.try_write().unwrap().take() {
             task.cancel();
         }
 
+        if !self.peek_has_run_yet() {
+            *self.has_run_yet.try_write().unwrap() = true;
+        }
         is_running.set(true);
 
         let task = spawn(async move {
@@ -444,10 +470,11 @@ impl<Animated> UseAnimator<Animated> {
                 prev_frame = Instant::now();
             }
 
-            is_running.set(false);
+            // Cancel previous animations
+            task.try_write().unwrap().take();
         });
 
-        *self.task.borrow_mut() = Some(task);
+        self.task.try_write().unwrap().replace(task);
     }
 }
 
@@ -519,8 +546,9 @@ pub fn use_animation<Animated: PartialEq + 'static>(
             value,
             ctx,
             platform: UsePlatform::new(),
-            task: RefCell::new(None),
             is_running: Signal::new(false),
+            has_run_yet: Signal::new(false),
+            task: Signal::default(),
         }
     })
 }
@@ -540,8 +568,9 @@ where
             value,
             ctx,
             platform: UsePlatform::new(),
-            task: RefCell::new(None),
             is_running: Signal::new(false),
+            has_run_yet: Signal::new(false),
+            task: Signal::default(),
         }
     })
 }
