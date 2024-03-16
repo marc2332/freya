@@ -121,4 +121,19 @@ impl TestNode {
     pub fn children_ids(&self) -> Vec<NodeId> {
         self.children_ids.clone()
     }
+
+    /// Check if this element is text
+    pub fn is_element(&self) -> bool {
+        matches!(self.node_type, NodeType::Element(..))
+    }
+
+    /// Check if this element is text
+    pub fn is_text(&self) -> bool {
+        matches!(self.node_type, NodeType::Text(..))
+    }
+
+    /// Check if this element is a placeholder
+    pub fn is_placeholder(&self) -> bool {
+        matches!(self.node_type, NodeType::Placeholder)
+    }
 }
