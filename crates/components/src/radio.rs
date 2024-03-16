@@ -134,7 +134,7 @@ mod test {
         let root = utils.root();
         utils.wait_for_update().await;
 
-        /// If the inner circle exists it means that the Radio is activated, otherwise it isn't
+        // If the inner circle exists it means that the Radio is activated, otherwise it isn't
         assert!(root.get(0).get(0).get(0).get(0).is_element());
         assert!(root.get(1).get(0).get(0).get(0).is_placeholder());
         assert!(root.get(2).get(0).get(0).get(0).is_placeholder());
