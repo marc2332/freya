@@ -119,7 +119,7 @@ pub fn measure_node<Key: NodeKey>(
         // There is no need to measure inner children in the initial phase if this Node size
         // isn't decided by his children
         let phase_measure_inner_children = if phase == Phase::Initial {
-            node.width.inner_sized() && node.height.inner_sized()
+            node.width.inner_sized() || node.height.inner_sized()
         } else {
             true
         };
