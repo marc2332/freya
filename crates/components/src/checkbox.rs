@@ -11,7 +11,49 @@ use freya_hooks::{use_applied_theme, CheckboxTheme, CheckboxThemeWith};
 /// # Example
 ///
 /// ```no_run
-/// todo!()
+/// # use std::collections::HashSet;
+/// # use freya::prelude::*;
+/// #[derive(PartialEq, Eq, Hash)]
+/// enum Choice {
+///     FirstChoice,
+///     SecondChoice,
+/// }
+///
+/// fn app() -> Element {
+///     let mut selected = use_signal::<HashSet<Choice>>(HashSet::default);
+///     rsx!(
+///         Tile {
+///             onselect: move |_| {
+///                 if selected.read().contains(&Choice::FirstChoice) {
+///                     selected.write().remove(&Choice::FirstChoice);
+///                 } else {
+///                     selected.write().insert(Choice::FirstChoice);
+///                 }
+///             },
+///             leading: rsx!(
+///                 Checkbox {
+///                     selected: selected.read().contains(&Choice::FirstChoice),
+///                 },
+///             ),
+///             label { "First choice" }
+///         }
+///         Tile {
+///             onselect: move |_| {
+///                 if selected.read().contains(&Choice::SecondChoice) {
+///                     selected.write().remove(&Choice::SecondChoice);
+///                 } else {
+///                     selected.write().insert(Choice::SecondChoice);
+///                 }
+///             },
+///             leading: rsx!(
+///                 Checkbox {
+///                     selected: selected.read().contains(&Choice::SecondChoice),
+///                 },
+///             ),
+///             label { "Second choice" }
+///         }
+///     )
+/// }
 /// ```
 ///
 #[allow(non_snake_case)]
@@ -50,4 +92,123 @@ pub fn Checkbox(
             }
         }
     )
+}
+
+#[cfg(test)]
+mod test {
+    use std::collections::HashSet;
+
+    use dioxus::prelude::use_signal;
+    use freya::prelude::*;
+    use freya_testing::*;
+
+    #[tokio::test]
+    pub async fn checkbox() {
+        #[derive(PartialEq, Eq, Hash)]
+        enum Choice {
+            FirstChoice,
+            SecondChoice,
+            ThirdChoice,
+        }
+
+        fn checkbox_app() -> Element {
+            let mut selected = use_signal::<HashSet<Choice>>(HashSet::default);
+
+            rsx!(
+                Tile {
+                    onselect: move |_| {
+                        if selected.read().contains(&Choice::FirstChoice) {
+                            selected.write().remove(&Choice::FirstChoice);
+                        } else {
+                            selected.write().insert(Choice::FirstChoice);
+                        }
+                    },
+                    leading: rsx!(
+                        Checkbox {
+                            selected: selected.read().contains(&Choice::FirstChoice),
+                        },
+                    ),
+                    label { "First choice" }
+                }
+                Tile {
+                    onselect: move |_| {
+                        if selected.read().contains(&Choice::SecondChoice) {
+                            selected.write().remove(&Choice::SecondChoice);
+                        } else {
+                            selected.write().insert(Choice::SecondChoice);
+                        }
+                    },
+                    leading: rsx!(
+                        Checkbox {
+                            selected: selected.read().contains(&Choice::SecondChoice),
+                        },
+                    ),
+                    label { "Second choice" }
+                }
+                Tile {
+                    onselect: move |_| {
+                        if selected.read().contains(&Choice::ThirdChoice) {
+                            selected.write().remove(&Choice::ThirdChoice);
+                        } else {
+                            selected.write().insert(Choice::ThirdChoice);
+                        }
+                    },
+                    leading: rsx!(
+                        Checkbox {
+                            selected: selected.read().contains(&Choice::ThirdChoice),
+                        },
+                    ),
+                    label { "Third choice" }
+                }
+            )
+        }
+
+        let mut utils = launch_test(checkbox_app);
+        let root = utils.root();
+        utils.wait_for_update().await;
+
+        // If the inner square exists it means that the Checkbox is selected, otherwise it isn't
+        assert!(root.get(0).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(1).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(2).get(0).get(0).get(0).is_placeholder());
+
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (20.0, 50.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.wait_for_update().await;
+
+        assert!(root.get(0).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(1).get(0).get(0).get(0).is_element());
+        assert!(root.get(2).get(0).get(0).get(0).is_placeholder());
+
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (10.0, 90.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.wait_for_update().await;
+
+        assert!(root.get(0).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(1).get(0).get(0).get(0).is_element());
+        assert!(root.get(2).get(0).get(0).get(0).is_element());
+
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (10.0, 10.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.wait_for_update().await;
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (10.0, 50.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.wait_for_update().await;
+
+        assert!(root.get(0).get(0).get(0).get(0).is_element());
+        assert!(root.get(1).get(0).get(0).get(0).is_placeholder());
+        assert!(root.get(2).get(0).get(0).get(0).is_element());
+    }
 }
