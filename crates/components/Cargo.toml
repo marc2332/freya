@@ -22,7 +22,6 @@ freya-elements = { workspace = true }
 freya-node-state = { workspace = true }
 freya-hooks = { workspace = true }
 freya-common = { workspace = true }
-freya-core = { workspace = true }
 freya-engine = { path = "../engine", version = "0.1" }
 torin = { workspace = true }
 

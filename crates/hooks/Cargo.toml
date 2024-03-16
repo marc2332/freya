@@ -33,7 +33,6 @@ dioxus-std = { workspace = true }
 
 tokio = { workspace = true }
 winit = { workspace = true }
-accesskit = { workspace = true }
 
 uuid = { workspace = true }
 easer = "0.3.0"
@@ -41,7 +40,6 @@ ropey = "1.6.0"
 nokhwa = { version = "0.10.4", features = ["input-native"], optional = true }
 paste = "1.0.14"
 bitflags = "2.4.1"
-copypasta = "0.8.2"
 
 [dev-dependencies]
 dioxus = { workspace = true }
