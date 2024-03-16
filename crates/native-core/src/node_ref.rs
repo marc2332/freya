@@ -4,6 +4,7 @@ use rustc_hash::FxHashSet;
 
 use crate::{
     node::{ElementNode, FromAnyValue, NodeType, OwnedAttributeView},
+    prelude::AttributeName,
     tags::TagName,
     NodeId,
 };
@@ -50,7 +51,7 @@ impl<'a, V: FromAnyValue> NodeView<'a, V> {
             NodeType::Element(ElementNode { attributes, .. }) => Some(
                 attributes
                     .iter()
-                    .filter(move |(attr, _)| self.mask.attritutes.contains(&attr.name))
+                    .filter(move |(attr, _)| self.mask.attritutes.contains(attr))
                     .map(|(attr, val)| OwnedAttributeView {
                         attribute: attr,
                         value: val,
@@ -79,23 +80,16 @@ pub enum AttributeMask {
     /// All attributes are visible
     All,
     /// Only the given attributes are visible
-    Some(FxHashSet<Box<str>>),
+    Some(FxHashSet<AttributeName>),
 }
 
 impl AttributeMask {
     /// Check if the mask contains the given attribute
-    pub fn contains(&self, attr: &str) -> bool {
+    pub fn contains(&self, attr: &AttributeName) -> bool {
         match self {
             AttributeMask::All => true,
             AttributeMask::Some(attrs) => attrs.contains(attr),
         }
-    }
-
-    /// Create a new dynamic attribute mask with a single attribute
-    pub fn single(new: &str) -> Self {
-        let mut set = FxHashSet::default();
-        set.insert(new.into());
-        Self::Some(set)
     }
 
     /// Combine two attribute masks
@@ -202,7 +196,7 @@ pub enum AttributeMaskBuilder<'a> {
     /// All attributes are visible
     All,
     /// Only the given attributes are visible
-    Some(&'a [&'a str]),
+    Some(&'a [AttributeName]),
 }
 
 impl Default for AttributeMaskBuilder<'_> {
@@ -270,7 +264,7 @@ impl<'a> NodeMaskBuilder<'a> {
             attritutes: match self.attritutes {
                 AttributeMaskBuilder::All => AttributeMask::All,
                 AttributeMaskBuilder::Some(attrs) => {
-                    AttributeMask::Some(attrs.iter().map(|s| (*s).into()).collect())
+                    AttributeMask::Some(FxHashSet::from_iter(attrs.iter().copied()))
                 }
             },
             tag: self.tag,

@@ -9,18 +9,21 @@ use std::any::TypeId;
 use std::ops::{Deref, DerefMut};
 use std::sync::{Arc, RwLock};
 
-use crate::node_watcher::{AttributeWatcher, NodeWatcher};
 use crate::passes::{Dependant, DirtyNodeStates, PassDirection, TypeErasedState};
 use crate::prelude::AttributeMaskBuilder;
 use crate::tree::{TreeMut, TreeMutView, TreeRef, TreeRefView};
 use crate::NodeId;
 use crate::{
     events::EventName,
-    node::{ElementNode, FromAnyValue, NodeType, OwnedAttributeDiscription, OwnedAttributeValue},
+    node::{ElementNode, FromAnyValue, NodeType, OwnedAttributeValue},
 };
 use crate::{
     node_ref::{NodeMask, NodeMaskBuilder},
     tags::TagName,
+};
+use crate::{
+    node_watcher::{AttributeWatcher, NodeWatcher},
+    prelude::AttributeName,
 };
 use crate::{FxDashSet, SendAnyMap};
 
@@ -1009,14 +1012,14 @@ impl<V: FromAnyValue + Send + Sync> ElementNodeMut<'_, V> {
     }
 
     /// Get a reference to all of the attributes currently set on the element
-    pub fn attributes(&self) -> &FxHashMap<OwnedAttributeDiscription, OwnedAttributeValue<V>> {
+    pub fn attributes(&self) -> &FxHashMap<AttributeName, OwnedAttributeValue<V>> {
         &self.element().attributes
     }
 
     /// Set an attribute in the element
     pub fn set_attribute(
         &mut self,
-        name: impl Into<OwnedAttributeDiscription>,
+        name: impl Into<AttributeName>,
         value: impl Into<OwnedAttributeValue<V>>,
     ) -> Option<OwnedAttributeValue<V>> {
         let name = name.into();
@@ -1024,21 +1027,18 @@ impl<V: FromAnyValue + Send + Sync> ElementNodeMut<'_, V> {
         self.dirty_nodes.mark_dirty(
             self.id,
             NodeMaskBuilder::new()
-                .with_attrs(AttributeMaskBuilder::Some(&[&name.name]))
+                .with_attrs(AttributeMaskBuilder::Some(&[name]))
                 .build(),
         );
         self.element_mut().attributes.insert(name, value)
     }
 
     /// Remove an attribute from the element
-    pub fn remove_attribute(
-        &mut self,
-        name: &OwnedAttributeDiscription,
-    ) -> Option<OwnedAttributeValue<V>> {
+    pub fn remove_attribute(&mut self, name: &AttributeName) -> Option<OwnedAttributeValue<V>> {
         self.dirty_nodes.mark_dirty(
             self.id,
             NodeMaskBuilder::new()
-                .with_attrs(AttributeMaskBuilder::Some(&[&name.name]))
+                .with_attrs(AttributeMaskBuilder::Some(&[*name]))
                 .build(),
         );
         self.element_mut().attributes.remove(name)
@@ -1047,22 +1047,19 @@ impl<V: FromAnyValue + Send + Sync> ElementNodeMut<'_, V> {
     /// Get an attribute of the element
     pub fn get_attribute_mut(
         &mut self,
-        name: &OwnedAttributeDiscription,
+        name: &AttributeName,
     ) -> Option<&mut OwnedAttributeValue<V>> {
         self.dirty_nodes.mark_dirty(
             self.id,
             NodeMaskBuilder::new()
-                .with_attrs(AttributeMaskBuilder::Some(&[&name.name]))
+                .with_attrs(AttributeMaskBuilder::Some(&[*name]))
                 .build(),
         );
         self.element_mut().attributes.get_mut(name)
     }
 
     /// Get an attribute of the element
-    pub fn get_attribute(
-        &self,
-        name: &OwnedAttributeDiscription,
-    ) -> Option<&OwnedAttributeValue<V>> {
+    pub fn get_attribute(&self, name: &AttributeName) -> Option<&OwnedAttributeValue<V>> {
         self.element().attributes.get(name)
     }
 

@@ -7,7 +7,7 @@ use std::{
     fmt::{Debug, Display},
 };
 
-use crate::{events::EventName, tags::TagName};
+use crate::{events::EventName, prelude::AttributeName, tags::TagName};
 
 /// A element node in the RealDom
 #[derive(Debug, Clone)]
@@ -15,7 +15,7 @@ pub struct ElementNode<V: FromAnyValue = ()> {
     /// The tag name of the element
     pub tag: TagName,
     /// The attributes of the element
-    pub attributes: FxHashMap<OwnedAttributeDiscription, OwnedAttributeValue<V>>,
+    pub attributes: FxHashMap<AttributeName, OwnedAttributeValue<V>>,
     /// The events the element is listening for
     pub listeners: FxHashSet<EventName>,
 }
@@ -76,33 +76,12 @@ impl<V: FromAnyValue> From<ElementNode<V>> for NodeType<V> {
     }
 }
 
-/// A discription of an attribute on a DOM node, such as `id` or `href`.
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct OwnedAttributeDiscription {
-    /// The name of the attribute.
-    pub name: String,
-}
-
-impl From<String> for OwnedAttributeDiscription {
-    fn from(name: String) -> Self {
-        Self { name }
-    }
-}
-
-impl<S: Into<String>, N: Into<String>> From<(S, N)> for OwnedAttributeDiscription {
-    fn from(name: (S, N)) -> Self {
-        Self {
-            name: name.0.into(),
-        }
-    }
-}
-
 /// An attribute on a DOM node, such as `id="my-thing"` or
 /// `href="https://example.com"`.
 #[derive(Clone, Copy, Debug)]
 pub struct OwnedAttributeView<'a, V: FromAnyValue = ()> {
     /// The discription of the attribute.
-    pub attribute: &'a OwnedAttributeDiscription,
+    pub attribute: &'a AttributeName,
 
     /// The value of the attribute.
     pub value: &'a OwnedAttributeValue<V>,

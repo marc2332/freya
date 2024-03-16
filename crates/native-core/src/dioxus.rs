@@ -8,10 +8,7 @@ use rustc_hash::{FxHashMap, FxHashSet};
 use shipyard::Component;
 
 use crate::{
-    node::{
-        ElementNode, FromAnyValue, NodeType, OwnedAttributeDiscription, OwnedAttributeValue,
-        TextNode,
-    },
+    node::{ElementNode, FromAnyValue, NodeType, OwnedAttributeValue, TextNode},
     prelude::*,
     real_dom::NodeTypeMut,
     NodeId,
@@ -207,17 +204,11 @@ impl<V: FromAnyValue + Send + Sync> WriteMutations for DioxusNativeCoreMutationW
         let mut node = self.rdom.get_mut(node_id).unwrap();
         let mut node_type_mut = node.node_type_mut();
         if let NodeTypeMut::Element(element) = &mut node_type_mut {
+            let attribute = AttributeName::from_str(name).expect("Unexpected");
             if let AttributeValue::None = &value {
-                element.remove_attribute(&OwnedAttributeDiscription {
-                    name: name.to_string(),
-                });
+                element.remove_attribute(&attribute);
             } else {
-                element.set_attribute(
-                    OwnedAttributeDiscription {
-                        name: name.to_string(),
-                    },
-                    OwnedAttributeValue::from(value),
-                );
+                element.set_attribute(attribute, OwnedAttributeValue::from(value));
             }
         }
     }
@@ -271,9 +262,7 @@ fn create_template_node<V: FromAnyValue + Send + Sync>(
                     .iter()
                     .filter_map(|attr| match attr {
                         dioxus_core::TemplateAttribute::Static { name, value, .. } => Some((
-                            OwnedAttributeDiscription {
-                                name: name.to_string(),
-                            },
+                            AttributeName::from_str(name).expect("Unexpected."),
                             OwnedAttributeValue::Text(value.to_string()),
                         )),
                         dioxus_core::TemplateAttribute::Dynamic { .. } => None,

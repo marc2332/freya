@@ -23,7 +23,10 @@ impl State for Size {
     // Size only cares about the width, height, and text parts of the current node
     const NODE_MASK: NodeMaskBuilder<'static> = NodeMaskBuilder::new()
         // Get access to the width and height attributes
-        .with_attrs(AttributeMaskBuilder::Some(&["width", "height"]))
+        .with_attrs(AttributeMaskBuilder::Some(&[
+            &AttributeName::Width,
+            &AttributeName::Height,
+        ]))
         // Get access to the text of the node
         .with_text();
 
@@ -58,9 +61,9 @@ impl State for Size {
         }
         // if the node contains a width or height attribute it overrides the other size
         for a in node_view.attributes().into_iter().flatten() {
-            match &*a.attribute.name {
-                "width" => width = a.value.as_float().unwrap(),
-                "height" => height = a.value.as_float().unwrap(),
+            match &*a.attribute {
+                AttributeName::Width => width = a.value.as_float().unwrap(),
+                AttributeName::Height => height = a.value.as_float().unwrap(),
                 // because Size only depends on the width and height, no other attributes will be passed to the member
                 _ => panic!(),
             }
@@ -91,7 +94,7 @@ impl State for TextColor {
     // TextColor only cares about the color attribute of the current node
     const NODE_MASK: NodeMaskBuilder<'static> =
         // Get access to the color attribute
-        NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&["color"]));
+        NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[AttributeName::Color]));
 
     fn update<'a>(
         &mut self,
@@ -140,7 +143,7 @@ impl State for Border {
     // Border does not depended on any other member in the current node
     const NODE_MASK: NodeMaskBuilder<'static> =
         // Get access to the border attribute
-        NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&["border"]));
+        NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[AttributeName::Border]));
 
     fn update<'a>(
         &mut self,
@@ -154,7 +157,7 @@ impl State for Border {
         let new = Self(
             node_view
                 .attributes()
-                .and_then(|mut attrs| attrs.next().map(|a| a.attribute.name == "border"))
+                .and_then(|mut attrs| attrs.next().map(|a| a.attribute == AttributeName::Border))
                 .is_some(),
         );
         // check if the member has changed
@@ -178,7 +181,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut root = rdom.get_mut(rdom.root_id()).unwrap();
     // set the color to red
     if let NodeTypeMut::Element(mut element) = root.node_type_mut() {
-        element.set_attribute(("color", "style"), "red".to_string());
+        element.set_attribute(AttributeName::Color, "red".to_string());
     }
     root.add_child(text_id);
 

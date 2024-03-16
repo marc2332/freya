@@ -36,3 +36,17 @@ impl FromStr for TagName {
         }
     }
 }
+
+impl ToString for TagName {
+    fn to_string(&self) -> String {
+        match self {
+            TagName::Root => "root".to_string(),
+            TagName::Rect => "rect".to_string(),
+            TagName::Paragraph => "p".to_string(),
+            TagName::Label => "label".to_string(),
+            TagName::Text => "text".to_string(),
+            TagName::Image => "img".to_string(),
+            TagName::Svg => "svg".to_string(),
+        }
+    }
+}
