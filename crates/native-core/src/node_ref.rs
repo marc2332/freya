@@ -63,14 +63,7 @@ impl<'a, V: FromAnyValue> NodeView<'a, V> {
 
     /// Get the text if it is enabled in the mask
     pub fn text(&self) -> Option<&str> {
-        self.mask
-            .text
-            .then_some(match &self.inner {
-                NodeType::Text(text) => Some(&text.text),
-                _ => None,
-            })
-            .flatten()
-            .map(|x| &**x)
+        self.mask.text.then_some(self.inner.text()).flatten()
     }
 }
 

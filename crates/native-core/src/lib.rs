@@ -30,7 +30,7 @@ pub mod prelude {
     pub use crate::attributes::*;
     pub use crate::dioxus::*;
     pub use crate::events::*;
-    pub use crate::node::{ElementNode, FromAnyValue, NodeType, OwnedAttributeView, TextNode};
+    pub use crate::node::{ElementNode, FromAnyValue, NodeType, OwnedAttributeView};
     pub use crate::node_ref::{AttributeMaskBuilder, NodeMaskBuilder, NodeView};
     pub use crate::passes::{run_pass, PassDirection, RunPassView, TypeErasedState};
     pub use crate::passes::{Dependancy, DependancyView, Dependants, State};

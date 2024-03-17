@@ -1,7 +1,7 @@
 use std::{ops::Mul, sync::Arc};
 
 use dioxus_native_core::{
-    prelude::{ElementNode, NodeType, SendAnyMap, TextNode},
+    prelude::{ElementNode, NodeType, SendAnyMap},
     real_dom::NodeImmutable,
     tags::TagName,
     NodeId,
@@ -96,7 +96,7 @@ pub fn create_label(node: &DioxusNode, area: &Area, font_collection: &FontCollec
     let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
 
     for child in node.children() {
-        if let NodeType::Text(TextNode { text, .. }) = &*child.node_type() {
+        if let NodeType::Text(text) = &*child.node_type() {
             paragraph_builder.add_text(text);
         }
     }
@@ -137,7 +137,7 @@ pub fn create_paragraph(
                 let font_style = text_span.get::<FontStyleState>().unwrap();
                 paragraph_builder.push_style(&TextStyle::from(&*font_style));
 
-                if let NodeType::Text(TextNode { text, .. }) = text_node_type {
+                if let NodeType::Text(text) = text_node_type {
                     paragraph_builder.add_text(text);
                 }
             }

@@ -8,7 +8,7 @@ use rustc_hash::{FxHashMap, FxHashSet};
 use shipyard::Component;
 
 use crate::{
-    node::{ElementNode, FromAnyValue, NodeType, OwnedAttributeValue, TextNode},
+    node::{ElementNode, FromAnyValue, NodeType, OwnedAttributeValue},
     prelude::*,
     real_dom::NodeTypeMut,
     NodeId,
@@ -127,7 +127,7 @@ impl<V: FromAnyValue + Send + Sync> WriteMutations for DioxusNativeCoreMutationW
     }
 
     fn create_text_node(&mut self, value: &str, id: ElementId) {
-        let node_data = NodeType::Text(TextNode::new(value.to_string()));
+        let node_data = NodeType::Text(value.to_string());
         let node = self.rdom.create_node(node_data);
         let node_id = node.id();
         self.state.set_element_id(node, id);
@@ -144,7 +144,7 @@ impl<V: FromAnyValue + Send + Sync> WriteMutations for DioxusNativeCoreMutationW
             *text.text_mut() = value.to_string();
         } else {
             drop(node_type_mut);
-            node.set_type(NodeType::Text(TextNode::new(value.to_string())));
+            node.set_type(NodeType::Text(value.to_string()));
         }
     }
 
@@ -277,12 +277,10 @@ fn create_template_node<V: FromAnyValue + Send + Sync>(
             }
             node_id
         }
-        TemplateNode::Text { text } => rdom
-            .create_node(NodeType::Text(TextNode::new(text.to_string())))
-            .id(),
+        TemplateNode::Text { text } => rdom.create_node(NodeType::Text(text.to_string())).id(),
         TemplateNode::Dynamic { .. } => rdom.create_node(NodeType::Placeholder).id(),
         TemplateNode::DynamicText { .. } => {
-            rdom.create_node(NodeType::Text(TextNode::default())).id()
+            rdom.create_node(NodeType::Text(String::default())).id()
         }
     }
 }

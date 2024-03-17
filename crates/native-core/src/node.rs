@@ -20,25 +20,11 @@ pub struct ElementNode<V: FromAnyValue = ()> {
     pub listeners: FxHashSet<EventName>,
 }
 
-/// A text node in the RealDom
-#[derive(Debug, Clone, Default)]
-pub struct TextNode {
-    /// The text of the node
-    pub text: String,
-}
-
-impl TextNode {
-    /// Create a new text node
-    pub fn new(text: String) -> Self {
-        Self { text }
-    }
-}
-
 /// A type of node with data specific to the node type.
 #[derive(Debug, Clone, Component)]
 pub enum NodeType<V: FromAnyValue = ()> {
     /// A text node
-    Text(TextNode),
+    Text(String),
     /// An element node
     Element(ElementNode<V>),
     /// A placeholder node. This can be used as a cheaper placeholder for a node that will be created later
@@ -50,23 +36,25 @@ impl<V: FromAnyValue> NodeType<V> {
         matches!(self, Self::Text(..))
     }
 
+    pub fn is_element(&self) -> bool {
+        matches!(self, Self::Element(..))
+    }
+    pub fn is_placeholder(&self) -> bool {
+        matches!(self, Self::Placeholder)
+    }
+
     pub fn tag(&self) -> Option<&TagName> {
         match self {
             Self::Element(ElementNode { tag, .. }) => Some(tag),
             _ => None,
         }
     }
-}
 
-impl<V: FromAnyValue, S: Into<String>> From<S> for NodeType<V> {
-    fn from(text: S) -> Self {
-        Self::Text(TextNode::new(text.into()))
-    }
-}
-
-impl<V: FromAnyValue> From<TextNode> for NodeType<V> {
-    fn from(text: TextNode) -> Self {
-        Self::Text(text)
+    pub fn text(&self) -> Option<&str> {
+        match self {
+            Self::Text(text) => Some(text.as_str()),
+            _ => None,
+        }
     }
 }
 

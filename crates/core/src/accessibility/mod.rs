@@ -1,11 +1,7 @@
 pub mod accessibility_manager;
 pub use accessibility_manager::*;
 
-use dioxus_native_core::{
-    node::{NodeType, TextNode},
-    real_dom::NodeImmutable,
-    NodeId,
-};
+use dioxus_native_core::{node::NodeType, real_dom::NodeImmutable, NodeId};
 use freya_dom::dom::{DioxusDOM, DioxusNode};
 use freya_node_state::AccessibilityNodeState;
 use torin::torin::Torin;
@@ -22,7 +18,7 @@ pub enum AccessibilityFocusDirection {
 
 /// Shortcut functions to retrieve Acessibility info from a Dioxus Node
 trait NodeAccessibility {
-    /// Return the first TextNode from this Node
+    /// Return the first text node from this Node
     fn get_inner_texts(&self) -> Option<String>;
 
     /// Collect all the AccessibilityIDs from a Node's children
@@ -30,12 +26,12 @@ trait NodeAccessibility {
 }
 
 impl NodeAccessibility for DioxusNode<'_> {
-    /// Return the first TextNode from this Node
+    /// Return the first text node from this Node
     fn get_inner_texts(&self) -> Option<String> {
         let children = self.children();
         let first_child = children.first()?;
         let node_type = first_child.node_type();
-        if let NodeType::Text(TextNode { text, .. }) = &*node_type {
+        if let NodeType::Text(text) = &*node_type {
             Some(text.to_owned())
         } else {
             None

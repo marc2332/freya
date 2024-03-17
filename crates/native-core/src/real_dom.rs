@@ -864,7 +864,7 @@ impl<V: FromAnyValue + Send + Sync> TextNodeMut<'_, V> {
     /// Get the underlying test of the node
     pub fn text(&self) -> &str {
         match &*self.text {
-            NodeType::Text(text) => &text.text,
+            NodeType::Text(text) => text,
             _ => unreachable!(),
         }
     }
@@ -874,7 +874,7 @@ impl<V: FromAnyValue + Send + Sync> TextNodeMut<'_, V> {
         self.dirty_nodes
             .mark_dirty(self.id, NodeMaskBuilder::new().with_text().build());
         match &mut *self.text {
-            NodeType::Text(text) => &mut text.text,
+            NodeType::Text(text) => text,
             _ => unreachable!(),
         }
     }
@@ -885,7 +885,7 @@ impl<V: FromAnyValue + Send + Sync> Deref for TextNodeMut<'_, V> {
 
     fn deref(&self) -> &Self::Target {
         match &*self.text {
-            NodeType::Text(text) => &text.text,
+            NodeType::Text(text) => text,
             _ => unreachable!(),
         }
     }
