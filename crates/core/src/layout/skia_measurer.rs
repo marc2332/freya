@@ -12,7 +12,7 @@ use freya_node_state::{CursorReference, CursorSettings, FontStyleState, Referenc
 
 use freya_engine::prelude::*;
 use torin::{
-    geometry::{Area, CursorPoint},
+    geometry::CursorPoint,
     prelude::{LayoutMeasurer, LayoutNode, Node, Size2D},
 };
 
@@ -46,23 +46,21 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
         &mut self,
         node_id: NodeId,
         _node: &Node,
-        _parent_area: &Area,
-        available_parent_area: &Area,
+        area_size: &Size2D,
     ) -> Option<(Size2D, Arc<SendAnyMap>)> {
         let node = self.rdom.get(node_id).unwrap();
         let node_type = node.node_type();
 
         match &*node_type {
             NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Label => {
-                let label = create_label(&node, available_parent_area, self.font_collection);
+                let label = create_label(&node, area_size, self.font_collection);
                 let res = Size2D::new(label.longest_line(), label.height());
                 let mut map = SendAnyMap::new();
                 map.insert(CachedParagraph(label));
                 Some((res, Arc::new(map)))
             }
             NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Paragraph => {
-                let paragraph =
-                    create_paragraph(&node, available_parent_area, self.font_collection, false);
+                let paragraph = create_paragraph(&node, area_size, self.font_collection, false);
                 let res = Size2D::new(paragraph.longest_line(), paragraph.height());
                 let mut map = SendAnyMap::new();
                 map.insert(CachedParagraph(paragraph));
@@ -80,7 +78,11 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
     }
 }
 
-pub fn create_label(node: &DioxusNode, area: &Area, font_collection: &FontCollection) -> Paragraph {
+pub fn create_label(
+    node: &DioxusNode,
+    area_size: &Size2D,
+    font_collection: &FontCollection,
+) -> Paragraph {
     let font_style = &*node.get::<FontStyleState>().unwrap();
 
     let mut paragraph_style = ParagraphStyle::default();
@@ -102,14 +104,14 @@ pub fn create_label(node: &DioxusNode, area: &Area, font_collection: &FontCollec
     }
 
     let mut paragraph = paragraph_builder.build();
-    paragraph.layout(area.width() + 1.0);
+    paragraph.layout(area_size.width + 1.0);
     paragraph
 }
 
 /// Compose a new SkParagraph
 pub fn create_paragraph(
     node: &DioxusNode,
-    node_area: &Area,
+    area_size: &Size2D,
     font_collection: &FontCollection,
     is_rendering: bool,
 ) -> Paragraph {
@@ -151,7 +153,7 @@ pub fn create_paragraph(
     }
 
     let mut paragraph = paragraph_builder.build();
-    paragraph.layout(node_area.width() + 1.0);
+    paragraph.layout(area_size.width + 1.0);
     paragraph
 }
 

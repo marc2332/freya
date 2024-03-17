@@ -76,7 +76,15 @@ pub fn measure_node<Key: NodeKey>(
         // This is useful when you use third-party libraries (e.g. rust-skia, cosmic-text) to measure text layouts
         // When a Node is measured by a custom measurer function the inner children will be skipped
         let (measure_inner_children, node_data) = if let Some(measurer) = measurer {
-            let res = measurer.measure(node_id, node, parent_area, available_parent_area);
+            let most_fitting_width = *node
+                .width
+                .most_fitting_size(&area_size.width, &available_parent_area.size.width);
+            let most_fitting_height = *node
+                .height
+                .most_fitting_size(&area_size.height, &available_parent_area.size.height);
+
+            let most_fitting_area_size = Size2D::new(most_fitting_width, most_fitting_height);
+            let res = measurer.measure(node_id, node, &most_fitting_area_size);
 
             // Compute the width and height again using the new custom area sizes
             if let Some((custom_size, node_data)) = res {

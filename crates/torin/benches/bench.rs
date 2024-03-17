@@ -11,8 +11,7 @@ impl LayoutMeasurer<usize> for TestingMeasurer {
         &mut self,
         _node_id: usize,
         _node: &Node,
-        _parent_size: &Area,
-        _available_parent_area: &Area,
+        _size: &Size2D,
     ) -> Option<(Size2D, Arc<SendAnyMap>)> {
         None
     }

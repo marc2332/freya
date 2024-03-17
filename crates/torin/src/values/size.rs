@@ -129,6 +129,13 @@ impl Size {
 
         final_value
     }
+
+    pub fn most_fitting_size<'a>(&self, size: &'a f32, available_size: &'a f32) -> &'a f32 {
+        match self {
+            Self::Inner => available_size,
+            _ => size,
+        }
+    }
 }
 
 impl Scaled for Size {
