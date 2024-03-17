@@ -15,7 +15,7 @@ pub struct Transform {
 
 #[partial_derive_state]
 impl State<CustomAttributeValues> for Transform {
-    type ParentDependencies = (Self,);
+    type ParentDependencies = ();
 
     type ChildDependencies = ();
 

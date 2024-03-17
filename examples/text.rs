@@ -20,29 +20,24 @@ fn app() -> Element {
             height: "100%",
             background: "black",
             color: "white",
-            rect {
-                height: "80",
-                Button {
-                    onclick: move |_| {
-                        percentage.set(20.0);
-                    },
-                    label {
-                        width: "80",
-                        "Reset size"
-                    }
+            Button {
+                onclick: move |_| {
+                    percentage.set(20.0);
+                },
+                label {
+                    width: "80",
+                    "Reset size"
                 }
-                Slider {
-                    value: *percentage.read(),
-                    onmoved: move |p| {
-                        percentage.set(p);
-                    }
+            }
+            Slider {
+                width: "200",
+                value: *percentage.read(),
+                onmoved: move |p| {
+                    percentage.set(p);
                 }
             }
             ScrollView {
                 show_scrollbar: true,
-                theme: theme_with!(ScrollViewTheme {
-                    height: "calc(100% - 60)".into(),
-                }),
                 rect {
                     background: "red",
                     label {

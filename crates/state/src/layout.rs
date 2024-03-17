@@ -6,7 +6,6 @@ use dioxus_native_core::{
     node::OwnedAttributeValue,
     node_ref::NodeView,
     prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State},
-    tags::TagName,
     NodeId, SendAnyMap,
 };
 use dioxus_native_core_macro::partial_derive_state;
@@ -43,8 +42,8 @@ impl State<CustomAttributeValues> for LayoutState {
 
     type NodeDependencies = ();
 
-    const NODE_MASK: NodeMaskBuilder<'static> = NodeMaskBuilder::new()
-        .with_attrs(AttributeMaskBuilder::Some(&[
+    const NODE_MASK: NodeMaskBuilder<'static> =
+        NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[
             AttributeName::Width,
             AttributeName::Height,
             AttributeName::MinWidth,
@@ -65,8 +64,7 @@ impl State<CustomAttributeValues> for LayoutState {
             AttributeName::PositionBottom,
             AttributeName::PositionLeft,
             AttributeName::Content,
-        ]))
-        .with_tag();
+        ]));
 
     fn update<'a>(
         &mut self,
@@ -79,18 +77,7 @@ impl State<CustomAttributeValues> for LayoutState {
         let torin_layout = context.get::<Arc<Mutex<Torin<NodeId>>>>().unwrap();
         let scale_factor = context.get::<f32>().unwrap();
 
-        let mut layout = LayoutState {
-            direction: if let Some(TagName::Label) = node_view.tag() {
-                DirectionMode::Horizontal
-            } else if let Some(TagName::Paragraph) = node_view.tag() {
-                DirectionMode::Horizontal
-            } else if let Some(TagName::Text) = node_view.tag() {
-                DirectionMode::Horizontal
-            } else {
-                DirectionMode::Vertical
-            },
-            ..Default::default()
-        };
+        let mut layout = LayoutState::default();
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
