@@ -519,6 +519,16 @@ define_theme! {
 
 define_theme! {
     %[component]
+    pub Checkbox {
+        %[cows]
+        unselected_fill: str,
+        selected_fill: str,
+        selected_icon_fill: str,
+    }
+}
+
+define_theme! {
+    %[component]
     pub Popup {
         %[cows]
         background: str,
@@ -555,6 +565,7 @@ pub struct Theme {
     pub sidebar_item: SidebarItemTheme,
     pub tile: TileTheme,
     pub radio: RadioTheme,
+    pub checkbox: CheckboxTheme,
     pub menu_item: MenuItemTheme,
     pub menu_container: MenuContainerTheme,
     pub snackbar: SnackBarTheme,
