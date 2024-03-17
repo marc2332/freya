@@ -454,14 +454,6 @@ pub trait NodeImmutable<V: FromAnyValue + Send + Sync = ()>: Sized {
             .collect()
     }
 
-    /// Get the id of the parent of the current node, if enter_shadow_dom is true and the current node is a shadow root, the node the shadow root is attached to will be returned
-    #[inline]
-    fn parent_id_advanced(&self, id: NodeId, enter_shadow_dom: bool) -> Option<NodeId> {
-        self.real_dom()
-            .tree_ref()
-            .parent_id_advanced(id, enter_shadow_dom)
-    }
-
     /// Get the id of the parent of the current node
     #[inline]
     fn parent_id(&self) -> Option<NodeId> {
@@ -475,38 +467,6 @@ pub trait NodeImmutable<V: FromAnyValue + Send + Sync = ()>: Sized {
             id,
             dom: self.real_dom(),
         })
-    }
-
-    /// Get the node after the current node
-    #[inline]
-    fn next(&self) -> Option<NodeRef<V>> {
-        let parent = self.parent_id()?;
-        let children = self.real_dom().tree_ref().children_ids(parent);
-        let index = children.iter().position(|id| *id == self.id())?;
-        if index + 1 < children.len() {
-            Some(NodeRef {
-                id: children[index + 1],
-                dom: self.real_dom(),
-            })
-        } else {
-            None
-        }
-    }
-
-    /// Get the node before the current node
-    #[inline]
-    fn prev(&self) -> Option<NodeRef<V>> {
-        let parent = self.parent_id()?;
-        let children = self.real_dom().tree_ref().children_ids(parent);
-        let index = children.iter().position(|id| *id == self.id())?;
-        if index > 0 {
-            Some(NodeRef {
-                id: children[index - 1],
-                dom: self.real_dom(),
-            })
-        } else {
-            None
-        }
     }
 
     /// Get the height of the current node in the tree (the number of nodes between the current node and the root)
@@ -568,24 +528,10 @@ impl<'a, V: FromAnyValue + Send + Sync> NodeImmutable<V> for NodeMut<'a, V> {
 }
 
 impl<'a, V: FromAnyValue + Send + Sync> NodeMut<'a, V> {
-    /// Reborrow the node mutably
-    pub fn reborrow(&mut self) -> NodeMut<'_, V> {
-        NodeMut {
-            id: self.id,
-            dom: self.dom,
-        }
-    }
-
     /// Get the real dom this node was created in mutably
     #[inline(always)]
     pub fn real_dom_mut(&mut self) -> &mut RealDom<V> {
         self.dom
-    }
-
-    /// Get the parent of this node mutably
-    #[inline]
-    pub fn parent_mut(&mut self) -> Option<NodeMut<V>> {
-        self.parent_id().map(|id| NodeMut { id, dom: self.dom })
     }
 
     /// Get a component from the current node mutably
@@ -619,32 +565,6 @@ impl<'a, V: FromAnyValue + Send + Sync> NodeMut<'a, V> {
             .or_default()
             .insert(TypeId::of::<T>());
         self.dom.world.add_component(self.id, value);
-    }
-
-    /// Get the next node
-    #[inline]
-    pub fn next_mut(self) -> Option<NodeMut<'a, V>> {
-        let parent = self.parent_id()?;
-        let children = self.dom.tree_mut().children_ids(parent);
-        let index = children.iter().position(|id| *id == self.id)?;
-        if index + 1 < children.len() {
-            Some(NodeMut::new(children[index + 1], self.dom))
-        } else {
-            None
-        }
-    }
-
-    /// Get the previous node
-    #[inline]
-    pub fn prev_mut(self) -> Option<NodeMut<'a, V>> {
-        let parent = self.parent_id()?;
-        let children = self.dom.tree_ref().children_ids(parent);
-        let index = children.iter().position(|id| *id == self.id)?;
-        if index > 0 {
-            Some(NodeMut::new(children[index - 1], self.dom))
-        } else {
-            None
-        }
     }
 
     /// Add the given node to the end of this nodes children
@@ -710,22 +630,6 @@ impl<'a, V: FromAnyValue + Send + Sync> NodeMut<'a, V> {
         }
         self.dom.tree_mut().remove(id);
         self.real_dom_mut().raw_world_mut().delete_entity(id);
-    }
-
-    /// Replace this node with a different node
-    #[inline]
-    pub fn replace(mut self, new: NodeId) {
-        if let Some(parent_id) = self.parent_id() {
-            self.real_dom_mut()
-                .dirty_nodes
-                .mark_child_changed(parent_id);
-            self.real_dom_mut()
-                .dirty_nodes
-                .mark_parent_added_or_removed(new);
-        }
-        let id = self.id();
-        self.dom.tree_mut().replace(id, new);
-        self.remove();
     }
 
     /// Add an event listener
@@ -900,25 +804,12 @@ impl std::fmt::Debug for ElementNodeMut<'_> {
 }
 
 impl<V: FromAnyValue + Send + Sync> ElementNodeMut<'_, V> {
-    /// Get the current element
-    fn element(&self) -> &ElementNode<V> {
-        match &*self.element {
-            NodeType::Element(element) => element,
-            _ => unreachable!(),
-        }
-    }
-
     /// Get the current element mutably (does not mark anything as dirty)
     fn element_mut(&mut self) -> &mut ElementNode<V> {
         match &mut *self.element {
             NodeType::Element(element) => element,
             _ => unreachable!(),
         }
-    }
-
-    /// Get a reference to all of the attributes currently set on the element
-    pub fn attributes(&self) -> &FxHashMap<AttributeName, OwnedAttributeValue<V>> {
-        &self.element().attributes
     }
 
     /// Set an attribute in the element
@@ -961,16 +852,6 @@ impl<V: FromAnyValue + Send + Sync> ElementNodeMut<'_, V> {
                 .build(),
         );
         self.element_mut().attributes.get_mut(name)
-    }
-
-    /// Get an attribute of the element
-    pub fn get_attribute(&self, name: &AttributeName) -> Option<&OwnedAttributeValue<V>> {
-        self.element().attributes.get(name)
-    }
-
-    /// Get the set of all events the element is listening to
-    pub fn listeners(&self) -> &FxHashSet<EventName> {
-        &self.element().listeners
     }
 }
 

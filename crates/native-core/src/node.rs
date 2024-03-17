@@ -2,10 +2,7 @@
 
 use rustc_hash::{FxHashMap, FxHashSet};
 use shipyard::Component;
-use std::{
-    any::Any,
-    fmt::{Debug, Display},
-};
+use std::{any::Any, fmt::Debug};
 
 use crate::{events::EventName, prelude::AttributeName, tags::TagName};
 
@@ -144,18 +141,6 @@ impl<V: FromAnyValue> Debug for OwnedAttributeValue<V> {
             Self::Int(arg0) => f.debug_tuple("Int").field(arg0).finish(),
             Self::Bool(arg0) => f.debug_tuple("Bool").field(arg0).finish(),
             Self::Custom(_) => f.debug_tuple("Any").finish(),
-        }
-    }
-}
-
-impl<V: FromAnyValue> Display for OwnedAttributeValue<V> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Text(arg0) => f.write_str(arg0),
-            Self::Float(arg0) => f.write_str(&arg0.to_string()),
-            Self::Int(arg0) => f.write_str(&arg0.to_string()),
-            Self::Bool(arg0) => f.write_str(&arg0.to_string()),
-            Self::Custom(_) => f.write_str("custom"),
         }
     }
 }
