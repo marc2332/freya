@@ -58,6 +58,12 @@ impl<V: FromAnyValue> NodeType<V> {
     }
 }
 
+impl<V: FromAnyValue, S: Into<String>> From<S> for NodeType<V> {
+    fn from(text: S) -> Self {
+        Self::Text(text.into())
+    }
+}
+
 impl<V: FromAnyValue> From<ElementNode<V>> for NodeType<V> {
     fn from(element: ElementNode<V>) -> Self {
         Self::Element(element)

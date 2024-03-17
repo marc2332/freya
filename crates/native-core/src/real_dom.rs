@@ -324,8 +324,9 @@ impl<V: FromAnyValue + Send + Sync> RealDom<V> {
     }
 
     /// Traverses the dom in a depth first manner,
-    /// calling the provided function on each node only when the parent returns `true`.
-    pub fn traverse_depth_first_advanced_stepped(&self, mut f: impl FnMut(NodeRef<V>) -> bool) {
+    /// calling the provided function on each node only when the parent function returns `true`.
+    /// This is useful to not traverse through text nodes for instance.
+    pub fn traverse_depth_first_advanced(&self, mut f: impl FnMut(NodeRef<V>) -> bool) {
         let mut stack = vec![self.root_id()];
         let tree = self.tree_ref();
         while let Some(id) = stack.pop() {
@@ -340,26 +341,11 @@ impl<V: FromAnyValue + Send + Sync> RealDom<V> {
     }
 
     /// Traverses the dom in a depth first manner, calling the provided function on each node.
-    /// If `enter_shadow_dom` is true, then the traversal will enter shadow doms in the tree.
-    pub fn traverse_depth_first_advanced(
-        &self,
-        enter_shadow_dom: bool,
-        mut f: impl FnMut(NodeRef<V>),
-    ) {
-        let mut stack = vec![self.root_id()];
-        let tree = self.tree_ref();
-        while let Some(id) = stack.pop() {
-            if let Some(node) = self.get(id) {
-                f(node);
-                let children = tree.children_ids_advanced(id, enter_shadow_dom);
-                stack.extend(children.iter().copied().rev());
-            }
-        }
-    }
-
-    /// Traverses the dom in a depth first manner, calling the provided function on each node.
-    pub fn traverse_depth_first(&self, f: impl FnMut(NodeRef<V>)) {
-        self.traverse_depth_first_advanced(true, f)
+    pub fn traverse_depth_first(&self, mut f: impl FnMut(NodeRef<V>)) {
+        self.traverse_depth_first_advanced(move |node| {
+            f(node);
+            true
+        })
     }
 
     /// Returns a reference to the underlying world. Any changes made to the world will not update the reactive system.

@@ -24,7 +24,7 @@ impl Layers {
         let mut layers = Layers::default();
         let mut inherit_layers = FxHashMap::default();
 
-        rdom.traverse_depth_first_advanced_stepped(|node| {
+        rdom.traverse_depth_first_advanced(|node| {
             let layout_node = layout.get(node.id());
 
             // Some elements like placeholders are not measured

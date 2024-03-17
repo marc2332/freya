@@ -146,9 +146,9 @@ macro_rules! test_state{
             dioxus_state.apply_mutations(&mut dom, mutations);
             dom.update_state(SendAnyMap::new());
 
-            dom.traverse_depth_first_advanced(false, |n| {
+            dom.traverse_depth_first(|node| {
                 $(
-                    assert_eq!(n.get::<$state>().unwrap().0, 1);
+                    assert_eq!(node.get::<$state>().unwrap().0, 1);
                 )*
             });
         }
