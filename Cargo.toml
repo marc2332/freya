@@ -13,14 +13,14 @@ use_camera = ["freya/use_camera"]
 hot-reload = ["freya/hot-reload"]
 
 [patch.crates-io]
-dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "df41df75d00bfb167259439a51fe6b2926f957de" }
-dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev = "df41df75d00bfb167259439a51fe6b2926f957de" }
-dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "df41df75d00bfb167259439a51fe6b2926f957de" }
-dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev = "df41df75d00bfb167259439a51fe6b2926f957de" }
-dioxus-signals = { git = "https://github.com/DioxusLabs/dioxus", rev = "df41df75d00bfb167259439a51fe6b2926f957de" }
-dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev = "df41df75d00bfb167259439a51fe6b2926f957de" }
-dioxus-hot-reload = { git = "https://github.com/DioxusLabs/dioxus", rev = "df41df75d00bfb167259439a51fe6b2926f957de" }
-dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev = "df41df75d00bfb167259439a51fe6b2926f957de" }
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "0c822d683c7315eb46e45adfbada9028db8aaab0" }
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev = "0c822d683c7315eb46e45adfbada9028db8aaab0" }
+dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "0c822d683c7315eb46e45adfbada9028db8aaab0" }
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev = "0c822d683c7315eb46e45adfbada9028db8aaab0" }
+dioxus-signals = { git = "https://github.com/DioxusLabs/dioxus", rev = "0c822d683c7315eb46e45adfbada9028db8aaab0" }
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev = "0c822d683c7315eb46e45adfbada9028db8aaab0" }
+dioxus-hot-reload = { git = "https://github.com/DioxusLabs/dioxus", rev = "0c822d683c7315eb46e45adfbada9028db8aaab0" }
+dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev = "0c822d683c7315eb46e45adfbada9028db8aaab0" }
 
 [workspace.dependencies]
 freya = { path = "crates/freya", version = "0.1" }
