@@ -159,10 +159,10 @@ pub fn DevTools(props: DevToolsProps) -> Element {
                             if let Some(layout_node) = layout_node {
                                 let (text, tag) = match &*node.node_type() {
                                     NodeType::Text(text) => {
-                                      (Some(text.to_string()), "text".to_string())
+                                        (Some(text.to_string()), "text".to_string())
                                     }
                                     NodeType::Element(ElementNode { tag, .. }) => {
-                                      (None, tag.to_string())
+                                        (None, tag.to_string())
                                     }
                                     NodeType::Placeholder => (None, "placeholder".to_string()),
                                 };
