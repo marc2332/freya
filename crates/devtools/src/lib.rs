@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use dioxus_native_core::node::NodeType;
-use dioxus_native_core::prelude::{ElementNode, TextNode};
+use dioxus_native_core::prelude::ElementNode;
 use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::tree::TreeRef;
 use dioxus_native_core::NodeId;
@@ -158,7 +158,7 @@ pub fn DevTools(props: DevToolsProps) -> Element {
                             let layout_node = layout.get(node.id());
                             if let Some(layout_node) = layout_node {
                                 let (text, tag) = match &*node.node_type() {
-                                    NodeType::Text(TextNode { text, .. }) => {
+                                    NodeType::Text(text) => {
                                         (Some(text.to_string()), "text".to_string())
                                     }
                                     NodeType::Element(ElementNode { tag, .. }) => {

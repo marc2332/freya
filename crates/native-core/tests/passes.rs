@@ -1,13 +1,12 @@
-use dioxus_native_core::node::NodeType;
 use dioxus_native_core::prelude::*;
+use dioxus_native_core::{node::NodeType, tags::TagName};
 use dioxus_native_core_macro::partial_derive_state;
 use rustc_hash::{FxHashMap, FxHashSet};
 use shipyard::Component;
 
 fn create_blank_element() -> NodeType {
     NodeType::Element(ElementNode {
-        tag: "div".to_owned(),
-        namespace: None,
+        tag: TagName::Rect,
         attributes: FxHashMap::default(),
         listeners: FxHashSet::default(),
     })

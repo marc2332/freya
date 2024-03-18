@@ -1,11 +1,9 @@
 use std::vec::IntoIter;
 
-use dioxus_native_core::prelude::ElementNode;
 use dioxus_native_core::real_dom::NodeImmutable;
-use dioxus_native_core::tree::TreeRef;
 use dioxus_native_core::{node::NodeType, NodeId};
+use dioxus_native_core::{prelude::ElementNode, tags::TagName};
 use freya_common::NodeReferenceLayout;
-use freya_dom::dom::DioxusNode;
 use freya_dom::prelude::{DioxusDOM, FreyaDOM};
 use freya_node_state::{CursorMode, CursorSettings, LayoutState, References, Style};
 use itertools::sorted;
@@ -14,20 +12,6 @@ use torin::torin::Torin;
 use uuid::Uuid;
 
 use crate::layout::*;
-
-fn traverse_dom(rdom: &DioxusDOM, mut f: impl FnMut(DioxusNode) -> bool) {
-    let mut stack = vec![rdom.root_id()];
-    let tree = rdom.tree_ref();
-    while let Some(id) = stack.pop() {
-        if let Some(node) = rdom.get(id) {
-            let traverse_children = f(node);
-            if traverse_children {
-                let children = tree.children_ids_advanced(id, true);
-                stack.extend(children.iter().copied().rev());
-            }
-        }
-    }
-}
 
 #[derive(Default, Clone)]
 pub struct Layers {
@@ -40,7 +24,7 @@ impl Layers {
         let mut layers = Layers::default();
         let mut inherit_layers = FxHashMap::default();
 
-        traverse_dom(rdom, |node| {
+        rdom.traverse_depth_first_advanced(|node| {
             let layout_node = layout.get(node.id());
 
             // Some elements like placeholders are not measured
@@ -66,7 +50,7 @@ impl Layers {
 
                 let traverse_inner_children =
                     if let NodeType::Element(ElementNode { tag, .. }) = &*node.node_type() {
-                        let is_paragraph = tag == "paragraph";
+                        let is_paragraph = *tag == TagName::Paragraph;
                         if is_paragraph {
                             let cursor_settings = node.get::<CursorSettings>().unwrap();
                             let is_editable = CursorMode::Editable == cursor_settings.mode;

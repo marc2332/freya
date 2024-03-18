@@ -4,13 +4,14 @@ use std::hash::BuildHasherDefault;
 use node_ref::NodeMask;
 use rustc_hash::FxHasher;
 
-pub mod custom_element;
+pub mod attributes;
 pub mod dioxus;
+pub mod events;
 pub mod node;
 pub mod node_ref;
-pub mod node_watcher;
 mod passes;
 pub mod real_dom;
+pub mod tags;
 pub mod tree;
 
 pub use shipyard::EntityId as NodeId;
@@ -26,8 +27,10 @@ pub mod exports {
 
 /// A prelude of commonly used items
 pub mod prelude {
+    pub use crate::attributes::*;
     pub use crate::dioxus::*;
-    pub use crate::node::{ElementNode, FromAnyValue, NodeType, OwnedAttributeView, TextNode};
+    pub use crate::events::*;
+    pub use crate::node::{ElementNode, FromAnyValue, NodeType, OwnedAttributeView};
     pub use crate::node_ref::{AttributeMaskBuilder, NodeMaskBuilder, NodeView};
     pub use crate::passes::{run_pass, PassDirection, RunPassView, TypeErasedState};
     pub use crate::passes::{Dependancy, DependancyView, Dependants, State};

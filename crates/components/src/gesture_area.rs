@@ -202,7 +202,9 @@ mod test {
 
                     }
                 }
-                "{value}"
+                label {
+                    "{value}"
+                }
             )
         }
 
@@ -211,7 +213,7 @@ mod test {
         // Initial state
         utils.wait_for_update().await;
 
-        assert_eq!(utils.root().get(1).text(), Some("EMPTY"));
+        assert_eq!(utils.root().get(1).get(0).text(), Some("EMPTY"));
 
         utils.push_event(PlatformEvent::Touch {
             name: EventName::TouchStart,
@@ -245,7 +247,7 @@ mod test {
         utils.wait_for_update().await;
         utils.wait_for_update().await;
 
-        assert_eq!(utils.root().get(1).text(), Some("DoubleTap"));
+        assert_eq!(utils.root().get(1).get(0).text(), Some("DoubleTap"));
     }
 
     /// Simulates `TapUp` and `TapDown` gestures.
@@ -267,7 +269,9 @@ mod test {
 
                     }
                 }
-                "{value}"
+                label {
+                    "{value}"
+                }
             )
         }
 
@@ -276,7 +280,7 @@ mod test {
         // Initial state
         utils.wait_for_update().await;
 
-        assert_eq!(utils.root().get(1).text(), Some("EMPTY"));
+        assert_eq!(utils.root().get(1).get(0).text(), Some("EMPTY"));
 
         utils.push_event(PlatformEvent::Touch {
             name: EventName::TouchStart,
@@ -289,7 +293,7 @@ mod test {
         utils.wait_for_update().await;
         utils.wait_for_update().await;
 
-        assert_eq!(utils.root().get(1).text(), Some("TapDown"));
+        assert_eq!(utils.root().get(1).get(0).text(), Some("TapDown"));
 
         utils.push_event(PlatformEvent::Touch {
             name: EventName::TouchEnd,
@@ -302,6 +306,6 @@ mod test {
         utils.wait_for_update().await;
         utils.wait_for_update().await;
 
-        assert_eq!(utils.root().get(1).text(), Some("TapUp"));
+        assert_eq!(utils.root().get(1).get(0).text(), Some("TapUp"));
     }
 }

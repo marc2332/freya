@@ -33,7 +33,6 @@ dioxus-std = { workspace = true }
 
 tokio = { workspace = true }
 winit = { workspace = true }
-accesskit = { workspace = true }
 
 uuid = { workspace = true }
 easer = "0.3.0"

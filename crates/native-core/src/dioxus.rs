@@ -1,15 +1,14 @@
 //! Integration between Dioxus and the RealDom
 
-use crate::tree::TreeMut;
+use std::str::FromStr;
+
+use crate::{tags::TagName, tree::TreeMut};
 use dioxus_core::{AttributeValue, ElementId, TemplateNode, WriteMutations};
 use rustc_hash::{FxHashMap, FxHashSet};
 use shipyard::Component;
 
 use crate::{
-    node::{
-        ElementNode, FromAnyValue, NodeType, OwnedAttributeDiscription, OwnedAttributeValue,
-        TextNode,
-    },
+    node::{ElementNode, FromAnyValue, NodeType, OwnedAttributeValue},
     prelude::*,
     real_dom::NodeTypeMut,
     NodeId,
@@ -128,10 +127,7 @@ impl<V: FromAnyValue + Send + Sync> WriteMutations for DioxusNativeCoreMutationW
     }
 
     fn create_text_node(&mut self, value: &str, id: ElementId) {
-        let node_data = NodeType::Text(TextNode {
-            listeners: FxHashSet::default(),
-            text: value.to_string(),
-        });
+        let node_data = NodeType::Text(value.to_string());
         let node = self.rdom.create_node(node_data);
         let node_id = node.id();
         self.state.set_element_id(node, id);
@@ -148,10 +144,7 @@ impl<V: FromAnyValue + Send + Sync> WriteMutations for DioxusNativeCoreMutationW
             *text.text_mut() = value.to_string();
         } else {
             drop(node_type_mut);
-            node.set_type(NodeType::Text(TextNode {
-                text: value.to_string(),
-                listeners: FxHashSet::default(),
-            }));
+            node.set_type(NodeType::Text(value.to_string()));
         }
     }
 
@@ -203,7 +196,7 @@ impl<V: FromAnyValue + Send + Sync> WriteMutations for DioxusNativeCoreMutationW
     fn set_attribute(
         &mut self,
         name: &'static str,
-        ns: Option<&'static str>,
+        _ns: Option<&'static str>,
         value: &AttributeValue,
         id: ElementId,
     ) {
@@ -211,19 +204,11 @@ impl<V: FromAnyValue + Send + Sync> WriteMutations for DioxusNativeCoreMutationW
         let mut node = self.rdom.get_mut(node_id).unwrap();
         let mut node_type_mut = node.node_type_mut();
         if let NodeTypeMut::Element(element) = &mut node_type_mut {
+            let attribute = AttributeName::from_str(name).expect("Unexpected");
             if let AttributeValue::None = &value {
-                element.remove_attribute(&OwnedAttributeDiscription {
-                    name: name.to_string(),
-                    namespace: ns.map(|s| s.to_string()),
-                });
+                element.remove_attribute(&attribute);
             } else {
-                element.set_attribute(
-                    OwnedAttributeDiscription {
-                        name: name.to_string(),
-                        namespace: ns.map(|s| s.to_string()),
-                    },
-                    OwnedAttributeValue::from(value),
-                );
+                element.set_attribute(attribute, OwnedAttributeValue::from(value));
             }
         }
     }
@@ -240,13 +225,13 @@ impl<V: FromAnyValue + Send + Sync> WriteMutations for DioxusNativeCoreMutationW
     fn create_event_listener(&mut self, name: &'static str, id: ElementId) {
         let node_id = self.state.element_to_node_id(id);
         let mut node = self.rdom.get_mut(node_id).unwrap();
-        node.add_event_listener(name);
+        node.add_event_listener(EventName::from_str(name).expect("Unexpected."));
     }
 
     fn remove_event_listener(&mut self, name: &'static str, id: ElementId) {
         let node_id = self.state.element_to_node_id(id);
         let mut node = self.rdom.get_mut(node_id).unwrap();
-        node.remove_event_listener(name);
+        node.remove_event_listener(&EventName::from_str(name).expect("Unexpected."));
     }
 
     fn remove_node(&mut self, id: ElementId) {
@@ -267,25 +252,17 @@ fn create_template_node<V: FromAnyValue + Send + Sync>(
     match node {
         TemplateNode::Element {
             tag,
-            namespace,
             attrs,
             children,
+            ..
         } => {
             let node = NodeType::Element(ElementNode {
-                tag: tag.to_string(),
-                namespace: namespace.map(|s| s.to_string()),
+                tag: TagName::from_str(tag).expect("Unexpected."),
                 attributes: attrs
                     .iter()
                     .filter_map(|attr| match attr {
-                        dioxus_core::TemplateAttribute::Static {
-                            name,
-                            value,
-                            namespace,
-                        } => Some((
-                            OwnedAttributeDiscription {
-                                namespace: namespace.map(|s| s.to_string()),
-                                name: name.to_string(),
-                            },
+                        dioxus_core::TemplateAttribute::Static { name, value, .. } => Some((
+                            AttributeName::from_str(name).expect("Unexpected."),
                             OwnedAttributeValue::Text(value.to_string()),
                         )),
                         dioxus_core::TemplateAttribute::Dynamic { .. } => None,
@@ -300,15 +277,10 @@ fn create_template_node<V: FromAnyValue + Send + Sync>(
             }
             node_id
         }
-        TemplateNode::Text { text } => rdom
-            .create_node(NodeType::Text(TextNode {
-                text: text.to_string(),
-                ..Default::default()
-            }))
-            .id(),
+        TemplateNode::Text { text } => rdom.create_node(NodeType::Text(text.to_string())).id(),
         TemplateNode::Dynamic { .. } => rdom.create_node(NodeType::Placeholder).id(),
         TemplateNode::DynamicText { .. } => {
-            rdom.create_node(NodeType::Text(TextNode::default())).id()
+            rdom.create_node(NodeType::Text(String::default())).id()
         }
     }
 }

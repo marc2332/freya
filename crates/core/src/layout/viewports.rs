@@ -4,9 +4,6 @@ use dioxus_native_core::{node::NodeType, NodeId};
 use torin::prelude::Area;
 
 use crate::layout::*;
-use crate::prelude::{
-    does_element_have_children_with_intrinsic_layout, does_element_have_intrinsic_layout,
-};
 use freya_dom::prelude::FreyaDOM;
 
 use freya_node_state::{OverflowMode, Style};
@@ -35,7 +32,7 @@ impl Viewports {
 
                     if let NodeType::Element(ElementNode { tag, .. }) = node_type {
                         // No need to consider text spans
-                        if !does_element_have_intrinsic_layout(tag) {
+                        if !tag.has_intrinsic_layout() {
                             continue;
                         }
 
@@ -60,7 +57,7 @@ impl Viewports {
                                 // Add itself
                                 inherited_viewports.push(*node_id);
 
-                                if does_element_have_children_with_intrinsic_layout(tag) {
+                                if tag.has_children_with_intrinsic_layout() {
                                     for child in node.children() {
                                         if let NodeType::Element(ElementNode { .. }) =
                                             &*child.node_type()

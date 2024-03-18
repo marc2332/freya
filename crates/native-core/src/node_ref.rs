@@ -4,6 +4,8 @@ use rustc_hash::FxHashSet;
 
 use crate::{
     node::{ElementNode, FromAnyValue, NodeType, OwnedAttributeView},
+    prelude::AttributeName,
+    tags::TagName,
     NodeId,
 };
 
@@ -31,22 +33,11 @@ impl<'a, V: FromAnyValue> NodeView<'a, V> {
     }
 
     /// Get the tag of the node if the tag is enabled in the mask
-    pub fn tag(&self) -> Option<&'a str> {
+    pub fn tag(&self) -> Option<&'a TagName> {
         self.mask
             .tag
             .then_some(match &self.inner {
-                NodeType::Element(ElementNode { tag, .. }) => Some(&**tag),
-                _ => None,
-            })
-            .flatten()
-    }
-
-    /// Get the tag of the node if the namespace is enabled in the mask
-    pub fn namespace(&self) -> Option<&'a str> {
-        self.mask
-            .namespace
-            .then_some(match &self.inner {
-                NodeType::Element(ElementNode { namespace, .. }) => namespace.as_deref(),
+                NodeType::Element(ElementNode { tag, .. }) => Some(tag),
                 _ => None,
             })
             .flatten()
@@ -60,7 +51,7 @@ impl<'a, V: FromAnyValue> NodeView<'a, V> {
             NodeType::Element(ElementNode { attributes, .. }) => Some(
                 attributes
                     .iter()
-                    .filter(move |(attr, _)| self.mask.attritutes.contains(&attr.name))
+                    .filter(move |(attr, _)| self.mask.attritutes.contains(attr))
                     .map(|(attr, val)| OwnedAttributeView {
                         attribute: attr,
                         value: val,
@@ -72,28 +63,7 @@ impl<'a, V: FromAnyValue> NodeView<'a, V> {
 
     /// Get the text if it is enabled in the mask
     pub fn text(&self) -> Option<&str> {
-        self.mask
-            .text
-            .then_some(match &self.inner {
-                NodeType::Text(text) => Some(&text.text),
-                _ => None,
-            })
-            .flatten()
-            .map(|x| &**x)
-    }
-
-    /// Get the listeners if it is enabled in the mask
-    pub fn listeners(&self) -> Option<impl Iterator<Item = &'a str> + '_> {
-        if self.mask.listeners {
-            match &self.inner {
-                NodeType::Element(ElementNode { listeners, .. }) => {
-                    Some(listeners.iter().map(|l| &**l))
-                }
-                _ => None,
-            }
-        } else {
-            None
-        }
+        self.mask.text.then_some(self.inner.text()).flatten()
     }
 }
 
@@ -103,23 +73,16 @@ pub enum AttributeMask {
     /// All attributes are visible
     All,
     /// Only the given attributes are visible
-    Some(FxHashSet<Box<str>>),
+    Some(FxHashSet<AttributeName>),
 }
 
 impl AttributeMask {
     /// Check if the mask contains the given attribute
-    pub fn contains(&self, attr: &str) -> bool {
+    pub fn contains(&self, attr: &AttributeName) -> bool {
         match self {
             AttributeMask::All => true,
             AttributeMask::Some(attrs) => attrs.contains(attr),
         }
-    }
-
-    /// Create a new dynamic attribute mask with a single attribute
-    pub fn single(new: &str) -> Self {
-        let mut set = FxHashSet::default();
-        set.insert(new.into());
-        Self::Some(set)
     }
 
     /// Combine two attribute masks
@@ -156,7 +119,6 @@ impl Default for AttributeMask {
 pub struct NodeMask {
     attritutes: AttributeMask,
     tag: bool,
-    namespace: bool,
     text: bool,
     listeners: bool,
 }
@@ -165,7 +127,6 @@ impl NodeMask {
     /// Check if two masks overlap
     pub fn overlaps(&self, other: &Self) -> bool {
         (self.tag && other.tag)
-            || (self.namespace && other.namespace)
             || self.attritutes.overlaps(&other.attritutes)
             || (self.text && other.text)
             || (self.listeners && other.listeners)
@@ -176,7 +137,6 @@ impl NodeMask {
         Self {
             attritutes: self.attritutes.union(&other.attritutes),
             tag: self.tag | other.tag,
-            namespace: self.namespace | other.namespace,
             text: self.text | other.text,
             listeners: self.listeners | other.listeners,
         }
@@ -200,16 +160,6 @@ impl NodeMask {
     /// Get the mask for the tag
     pub fn tag(&self) -> bool {
         self.tag
-    }
-
-    /// Set the mask to view the namespace
-    pub fn set_namespace(&mut self) {
-        self.namespace = true;
-    }
-
-    /// Get the mask for the namespace
-    pub fn namespace(&self) -> bool {
-        self.namespace
     }
 
     /// Set the mask to view the text
@@ -239,7 +189,7 @@ pub enum AttributeMaskBuilder<'a> {
     /// All attributes are visible
     All,
     /// Only the given attributes are visible
-    Some(&'a [&'a str]),
+    Some(&'a [AttributeName]),
 }
 
 impl Default for AttributeMaskBuilder<'_> {
@@ -253,7 +203,6 @@ impl Default for AttributeMaskBuilder<'_> {
 pub struct NodeMaskBuilder<'a> {
     attritutes: AttributeMaskBuilder<'a>,
     tag: bool,
-    namespace: bool,
     text: bool,
     listeners: bool,
 }
@@ -265,7 +214,7 @@ impl<'a> NodeMaskBuilder<'a> {
     pub const ALL: Self = Self::new()
         .with_attrs(AttributeMaskBuilder::All)
         .with_text()
-        .with_element()
+        .with_tag()
         .with_listeners();
 
     /// Create a empty node mask
@@ -273,7 +222,6 @@ impl<'a> NodeMaskBuilder<'a> {
         Self {
             attritutes: AttributeMaskBuilder::Some(&[]),
             tag: false,
-            namespace: false,
             text: false,
             listeners: false,
         }
@@ -289,17 +237,6 @@ impl<'a> NodeMaskBuilder<'a> {
     pub const fn with_tag(mut self) -> Self {
         self.tag = true;
         self
-    }
-
-    /// Allow the mask to view the namespace
-    pub const fn with_namespace(mut self) -> Self {
-        self.namespace = true;
-        self
-    }
-
-    /// Allow the mask to view the namespace and tag
-    pub const fn with_element(self) -> Self {
-        self.with_namespace().with_tag()
     }
 
     /// Allow the mask to view the text
@@ -320,11 +257,10 @@ impl<'a> NodeMaskBuilder<'a> {
             attritutes: match self.attritutes {
                 AttributeMaskBuilder::All => AttributeMask::All,
                 AttributeMaskBuilder::Some(attrs) => {
-                    AttributeMask::Some(attrs.iter().map(|s| (*s).into()).collect())
+                    AttributeMask::Some(FxHashSet::from_iter(attrs.iter().copied()))
                 }
             },
             tag: self.tag,
-            namespace: self.namespace,
             text: self.text,
             listeners: self.listeners,
         }

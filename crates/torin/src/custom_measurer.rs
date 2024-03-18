@@ -15,4 +15,6 @@ pub trait LayoutMeasurer<Key: NodeKey> {
         parent_area: &Area,
         available_parent_area: &Area,
     ) -> Option<(Size2D, Arc<SendAnyMap>)>;
+
+    fn should_measure_inner_children(&mut self, node_id: Key) -> bool;
 }

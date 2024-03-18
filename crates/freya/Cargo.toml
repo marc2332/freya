@@ -37,7 +37,6 @@ freya-engine = { workspace = true }
 torin = { workspace = true }
 
 dioxus = { workspace = true }
-dioxus-rsx = { workspace = true }
 dioxus-core-macro = { workspace = true }
 dioxus-hooks = { workspace = true }
 dioxus-core = { workspace = true }

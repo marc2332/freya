@@ -15,6 +15,10 @@ impl LayoutMeasurer<usize> for TestingMeasurer {
     ) -> Option<(Size2D, Arc<SendAnyMap>)> {
         None
     }
+
+    fn should_measure_inner_children(&mut self, _node_id: usize) -> bool {
+        true
+    }
 }
 
 #[derive(Default)]

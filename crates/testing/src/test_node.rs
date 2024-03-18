@@ -1,4 +1,3 @@
-use dioxus_native_core::prelude::TextNode;
 use dioxus_native_core::NodeId;
 use dioxus_native_core::{node::NodeType, real_dom::NodeImmutable};
 use freya_core::node::NodeState;
@@ -35,11 +34,7 @@ impl TestNode {
 
     /// Get the Node text
     pub fn text(&self) -> Option<&str> {
-        if let NodeType::Text(TextNode { text, .. }) = &self.node_type {
-            Some(text)
-        } else {
-            None
-        }
+        self.node_type.text()
     }
 
     /// Get the Node state
@@ -124,24 +119,24 @@ impl TestNode {
 
     /// Check if this element is text
     pub fn is_element(&self) -> bool {
-        matches!(self.node_type, NodeType::Element(..))
+        self.node_type.is_element()
     }
 
     /// Check if this element is text
     pub fn is_text(&self) -> bool {
-        matches!(self.node_type, NodeType::Text(..))
+        self.node_type.is_text()
     }
 
     /// Check if this element is a placeholder
     pub fn is_placeholder(&self) -> bool {
-        matches!(self.node_type, NodeType::Placeholder)
+        self.node_type.is_placeholder()
     }
 
     /// Get a Node by a matching text.
     pub fn get_by_text(&self, matching_text: &str) -> Option<Self> {
         self.utils()
             .get_node_matching_inside_id(self.node_id, |node| {
-                if let NodeType::Text(TextNode { text, .. }) = &*node.node_type() {
+                if let NodeType::Text(text) = &*node.node_type() {
                     matching_text == text
                 } else {
                     false

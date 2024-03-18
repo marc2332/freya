@@ -1,7 +1,7 @@
-use dioxus_native_core::node::NodeType;
 use dioxus_native_core::prelude::ElementNode;
 use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::NodeId;
+use dioxus_native_core::{node::NodeType, tags::TagName};
 use freya_core::prelude::*;
 use freya_dom::prelude::DioxusNode;
 use freya_engine::prelude::*;
@@ -90,7 +90,7 @@ pub fn render_skia(
             // Only clip the element iself when it's paragraph because
             // it will render the inner text spans on it's own, so if these spans overflow the paragraph,
             // It is the paragraph job to make sure they are clipped
-            if tag.as_str() == "paragraph" {
+            if *tag == TagName::Paragraph {
                 if let Some(element_viewport) = element_viewport {
                     clip_viewport(canvas, element_viewport);
                 }
@@ -103,20 +103,20 @@ pub fn render_skia(
             }
         }
 
-        match tag.as_str() {
-            "rect" => {
+        match tag {
+            TagName::Rect => {
                 render_rect(&area, dioxus_node, canvas, font_collection);
             }
-            "label" => {
+            TagName::Label => {
                 render_label(&area, data, canvas);
             }
-            "paragraph" => {
+            TagName::Paragraph => {
                 render_paragraph(&area, data, dioxus_node, canvas, font_collection);
             }
-            "svg" => {
+            TagName::Svg => {
                 render_svg(&area, dioxus_node, canvas, font_manager);
             }
-            "image" => {
+            TagName::Image => {
                 render_image(&area, dioxus_node, canvas);
             }
             _ => {}

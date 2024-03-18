@@ -9,7 +9,7 @@ async fn window_size() {
 
         let platform = platform.info().window_size;
 
-        rsx!("{platform:?}")
+        rsx!(label { "{platform:?}" })
     }
 
     let mut utils = launch_test_with_config(
@@ -22,5 +22,5 @@ async fn window_size() {
 
     utils.wait_for_update().await;
 
-    assert_eq!(utils.root().get(0).text(), Some("333.0x190.0"));
+    assert_eq!(utils.root().get(0).get(0).text(), Some("333.0x190.0"));
 }

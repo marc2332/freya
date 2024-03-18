@@ -2,75 +2,62 @@
 
 use rustc_hash::{FxHashMap, FxHashSet};
 use shipyard::Component;
-use std::{
-    any::Any,
-    fmt::{Debug, Display},
-};
+use std::{any::Any, fmt::Debug};
+
+use crate::{events::EventName, prelude::AttributeName, tags::TagName};
 
 /// A element node in the RealDom
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct ElementNode<V: FromAnyValue = ()> {
-    /// The [tag](https://developer.mozilla.org/en-US/docs/Web/API/Element/tagName) of the element
-    pub tag: String,
-    /// The [namespace](https://developer.mozilla.org/en-US/docs/Web/API/Element/namespaceURI) of the element
-    pub namespace: Option<String>,
+    /// The tag name of the element
+    pub tag: TagName,
     /// The attributes of the element
-    pub attributes: FxHashMap<OwnedAttributeDiscription, OwnedAttributeValue<V>>,
+    pub attributes: FxHashMap<AttributeName, OwnedAttributeValue<V>>,
     /// The events the element is listening for
-    pub listeners: FxHashSet<String>,
-}
-
-impl ElementNode {
-    /// Create a new element node
-    pub fn new(tag: impl Into<String>, namespace: impl Into<Option<String>>) -> Self {
-        Self {
-            tag: tag.into(),
-            namespace: namespace.into(),
-            attributes: Default::default(),
-            listeners: Default::default(),
-        }
-    }
-}
-
-/// A text node in the RealDom
-#[derive(Debug, Clone, Default)]
-pub struct TextNode {
-    /// The text of the node
-    pub text: String,
-    /// The events the node is listening for
-    pub listeners: FxHashSet<String>,
-}
-
-impl TextNode {
-    /// Create a new text node
-    pub fn new(text: String) -> Self {
-        Self {
-            text,
-            listeners: Default::default(),
-        }
-    }
+    pub listeners: FxHashSet<EventName>,
 }
 
 /// A type of node with data specific to the node type.
 #[derive(Debug, Clone, Component)]
 pub enum NodeType<V: FromAnyValue = ()> {
     /// A text node
-    Text(TextNode),
+    Text(String),
     /// An element node
     Element(ElementNode<V>),
     /// A placeholder node. This can be used as a cheaper placeholder for a node that will be created later
     Placeholder,
 }
 
-impl<V: FromAnyValue, S: Into<String>> From<S> for NodeType<V> {
-    fn from(text: S) -> Self {
-        Self::Text(TextNode::new(text.into()))
+impl<V: FromAnyValue> NodeType<V> {
+    pub fn is_text(&self) -> bool {
+        matches!(self, Self::Text(..))
+    }
+
+    pub fn is_element(&self) -> bool {
+        matches!(self, Self::Element(..))
+    }
+    pub fn is_placeholder(&self) -> bool {
+        matches!(self, Self::Placeholder)
+    }
+
+    pub fn tag(&self) -> Option<&TagName> {
+        match self {
+            Self::Element(ElementNode { tag, .. }) => Some(tag),
+            _ => None,
+        }
+    }
+
+    pub fn text(&self) -> Option<&str> {
+        match self {
+            Self::Text(text) => Some(text.as_str()),
+            _ => None,
+        }
     }
 }
 
-impl<V: FromAnyValue> From<TextNode> for NodeType<V> {
-    fn from(text: TextNode) -> Self {
-        Self::Text(text)
+impl<V: FromAnyValue, S: Into<String>> From<S> for NodeType<V> {
+    fn from(text: S) -> Self {
+        Self::Text(text.into())
     }
 }
 
@@ -80,42 +67,12 @@ impl<V: FromAnyValue> From<ElementNode<V>> for NodeType<V> {
     }
 }
 
-/// A discription of an attribute on a DOM node, such as `id` or `href`.
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct OwnedAttributeDiscription {
-    /// The name of the attribute.
-    pub name: String,
-    /// The namespace of the attribute used to identify what kind of attribute it is.
-    ///
-    /// For renderers that use HTML, this can be used to identify if the attribute is a style attribute.
-    /// Instead of parsing the style attribute every time a style is changed, you can set an attribute with the `style` namespace.
-    pub namespace: Option<String>,
-}
-
-impl From<String> for OwnedAttributeDiscription {
-    fn from(name: String) -> Self {
-        Self {
-            name,
-            namespace: None,
-        }
-    }
-}
-
-impl<S: Into<String>, N: Into<String>> From<(S, N)> for OwnedAttributeDiscription {
-    fn from(name: (S, N)) -> Self {
-        Self {
-            name: name.0.into(),
-            namespace: Some(name.1.into()),
-        }
-    }
-}
-
 /// An attribute on a DOM node, such as `id="my-thing"` or
 /// `href="https://example.com"`.
 #[derive(Clone, Copy, Debug)]
 pub struct OwnedAttributeView<'a, V: FromAnyValue = ()> {
     /// The discription of the attribute.
-    pub attribute: &'a OwnedAttributeDiscription,
+    pub attribute: &'a AttributeName,
 
     /// The value of the attribute.
     pub value: &'a OwnedAttributeValue<V>,
@@ -184,18 +141,6 @@ impl<V: FromAnyValue> Debug for OwnedAttributeValue<V> {
             Self::Int(arg0) => f.debug_tuple("Int").field(arg0).finish(),
             Self::Bool(arg0) => f.debug_tuple("Bool").field(arg0).finish(),
             Self::Custom(_) => f.debug_tuple("Any").finish(),
-        }
-    }
-}
-
-impl<V: FromAnyValue> Display for OwnedAttributeValue<V> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Text(arg0) => f.write_str(arg0),
-            Self::Float(arg0) => f.write_str(&arg0.to_string()),
-            Self::Int(arg0) => f.write_str(&arg0.to_string()),
-            Self::Bool(arg0) => f.write_str(&arg0.to_string()),
-            Self::Custom(_) => f.write_str("custom"),
         }
     }
 }

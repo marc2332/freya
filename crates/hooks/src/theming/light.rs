@@ -55,8 +55,8 @@ pub const LIGHT_THEME: Theme = Theme {
         active_thumb_background: cow_borrowed!("rgb(95, 95, 95)"),
     },
     scroll_view: ScrollViewTheme {
-        height: cow_borrowed!("100%"),
-        width: cow_borrowed!("100%"),
+        height: cow_borrowed!("fill"),
+        width: cow_borrowed!("fill"),
         padding: cow_borrowed!("0"),
     },
     tooltip: TooltipTheme {

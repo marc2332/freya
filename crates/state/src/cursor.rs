@@ -1,4 +1,4 @@
-use dioxus_native_core::exports::shipyard::Component;
+use dioxus_native_core::{attributes::AttributeName, exports::shipyard::Component};
 use dioxus_native_core::{
     node_ref::NodeView,
     prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State},
@@ -42,12 +42,12 @@ impl State<CustomAttributeValues> for CursorSettings {
 
     const NODE_MASK: NodeMaskBuilder<'static> =
         NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[
-            "cursor_index",
-            "cursor_color",
-            "cursor_mode",
-            "cursor_id",
-            "highlights",
-            "highlight_color",
+            AttributeName::CursorIndex,
+            AttributeName::CursorColor,
+            AttributeName::CursorMode,
+            AttributeName::CursorId,
+            AttributeName::Highlights,
+            AttributeName::HighlightColor,
         ]));
 
     fn update<'a>(
@@ -62,43 +62,43 @@ impl State<CustomAttributeValues> for CursorSettings {
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
-                match attr.attribute.name.as_str() {
-                    "cursor_index" => {
+                match attr.attribute {
+                    AttributeName::CursorIndex => {
                         let value = attr.value.as_text().unwrap();
                         if value != "none" {
                             let new_cursor_index = value.parse().unwrap();
                             cursor.position = Some(new_cursor_index);
                         }
                     }
-                    "cursor_color" => {
+                    AttributeName::CursorColor => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(color) = Color::parse(value) {
                                 cursor.color = color;
                             }
                         }
                     }
-                    "cursor_mode" => {
+                    AttributeName::CursorMode => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(mode) = CursorMode::parse(value) {
                                 cursor.mode = mode;
                             }
                         }
                     }
-                    "cursor_id" => {
+                    AttributeName::CursorId => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(id) = value.parse() {
                                 cursor.cursor_id = Some(id);
                             }
                         }
                     }
-                    "highlights" => {
+                    AttributeName::Highlights => {
                         if let Some(CustomAttributeValues::TextHighlights(highlights)) =
                             attr.value.as_custom()
                         {
                             cursor.highlights = Some(highlights.clone());
                         }
                     }
-                    "highlight_color" => {
+                    AttributeName::HighlightColor => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(highlight_color) = Color::parse(value) {
                                 cursor.highlight_color = highlight_color;
