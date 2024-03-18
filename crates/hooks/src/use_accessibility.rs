@@ -112,6 +112,7 @@ mod test {
         // First rect is now focused
         utils.wait_for_update().await;
         utils.wait_for_update().await;
+        utils.wait_for_update().await;
         let first_focus_id = utils.focus_id();
         assert_ne!(first_focus_id, ACCESSIBILITY_ROOT_ID);
 
@@ -123,6 +124,7 @@ mod test {
         });
 
         // Second rect is now focused
+        utils.wait_for_update().await;
         utils.wait_for_update().await;
         utils.wait_for_update().await;
         let second_focus_id = utils.focus_id();

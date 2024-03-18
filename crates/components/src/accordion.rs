@@ -151,8 +151,11 @@ pub fn AccordionBody(props: AccordionBodyProps) -> Element {
 
 #[cfg(test)]
 mod test {
+    use std::time::Duration;
+
     use freya::prelude::*;
     use freya_testing::{launch_test, EventName, PlatformEvent};
+    use tokio::time::sleep;
     use winit::event::MouseButton;
 
     #[tokio::test]
@@ -192,6 +195,10 @@ mod test {
             button: Some(MouseButton::Left),
         });
 
+        utils.wait_for_update().await;
+
+        // State somewhere in the middle
+        sleep(Duration::from_millis(70)).await;
         utils.wait_for_update().await;
 
         // Accordion is open, therefore label is visible.

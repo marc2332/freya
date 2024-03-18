@@ -1,0 +1,30 @@
+[package]
+name = "dioxus-native-core"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/DioxusLabs/dioxus/"
+homepage = "https://dioxuslabs.com"
+description = "Build natively rendered apps with Dioxus"
+keywords = ["dom", "ui", "gui", "react"]
+authors = ["Jonathan Kelley", "Evan Almloff"]
+
+[dependencies]
+dioxus-core = { workspace = true}
+
+keyboard-types = "0.7"
+smallvec = "1.6"
+rustc-hash = { workspace = true }
+anymap = "1.0.0-beta.2"
+parking_lot = { version = "0.12.1", features = ["send_guard"] }
+dashmap = "5.4.0"
+
+shipyard = { version = "0.6.2", features = ["proc", "std", "parallel"], default-features = false }
+
+[dev-dependencies]
+rand = "0.8.5"
+dioxus = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+dioxus-native-core = { workspace = true }
+dioxus-native-core-macro = { workspace = true }
+

@@ -1,7 +1,6 @@
 use crate::accessibility::*;
 use accesskit::{
-    Action, DefaultActionVerb, Node, NodeBuilder, NodeClassSet, NodeId as AccessibilityId, Rect,
-    Role, Tree, TreeUpdate,
+    Action, DefaultActionVerb, Node, NodeBuilder, NodeClassSet, Rect, Role, Tree, TreeUpdate,
 };
 use freya_dom::prelude::DioxusNode;
 use freya_node_state::AccessibilityNodeState;

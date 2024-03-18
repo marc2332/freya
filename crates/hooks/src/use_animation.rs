@@ -1,8 +1,8 @@
 use std::time::Duration;
 
 use dioxus_core::prelude::{spawn, Task};
-use dioxus_hooks::{use_memo, use_memo_with_dependencies, Dependency};
-use dioxus_signals::{ReadOnlySignal, Readable, Signal, Writable};
+use dioxus_hooks::{use_memo, use_reactive, Dependency};
+use dioxus_signals::{Memo, ReadOnlySignal, Readable, Signal, Writable};
 use easer::functions::*;
 use freya_engine::prelude::Color;
 use freya_node_state::Parse;
@@ -422,12 +422,15 @@ impl<Animated> UseAnimator<Animated> {
 
     /// Reset the animation to the default state.
     pub fn reset(&self) {
-        if let Some(task) = self.task.try_write().unwrap().take() {
+        let mut task = self.task;
+
+        if let Some(task) = task.write().take() {
             task.cancel();
         }
 
         for value in &self.ctx.animated_values {
-            value.try_write().unwrap().prepare(AnimDirection::Forward);
+            let mut value = *value;
+            value.write().prepare(AnimDirection::Forward);
         }
     }
 
@@ -462,20 +465,21 @@ impl<Animated> UseAnimator<Animated> {
         let mut is_running = self.is_running;
         let mut ticker = platform.new_ticker();
         let mut values = self.ctx.animated_values.clone();
+        let mut has_run_yet = self.has_run_yet;
         let reverse = self.ctx.reverse;
-        let task = self.task;
+        let mut task = self.task;
 
         // Cancel previous animations
-        if let Some(task) = self.task.try_write().unwrap().take() {
+        if let Some(task) = task.write().take() {
             task.cancel();
         }
 
         if !self.peek_has_run_yet() {
-            *self.has_run_yet.try_write().unwrap() = true;
+            *has_run_yet.write() = true;
         }
         is_running.set(true);
 
-        let task = spawn(async move {
+        let animation_task = spawn(async move {
             platform.request_animation_frame();
 
             let mut index = 0;
@@ -518,11 +522,12 @@ impl<Animated> UseAnimator<Animated> {
                 prev_frame = Instant::now();
             }
 
-            // Cancel previous animations
-            task.try_write().unwrap().take();
+            is_running.set(false);
+            task.write().take();
         });
 
-        self.task.try_write().unwrap().replace(task);
+        // Cancel previous animations
+        task.write().replace(animation_task);
     }
 }
 
@@ -585,7 +590,7 @@ impl<Animated> UseAnimator<Animated> {
 ///
 pub fn use_animation<Animated: PartialEq + 'static>(
     run: impl Fn(&mut Context) -> Animated + 'static,
-) -> ReadOnlySignal<UseAnimator<Animated>> {
+) -> Memo<UseAnimator<Animated>> {
     use_memo(move || {
         let mut ctx = Context::default();
         let value = run(&mut ctx);
@@ -597,14 +602,14 @@ pub fn use_animation<Animated: PartialEq + 'static>(
 pub fn use_animation_with_dependencies<Animated: PartialEq + 'static, D: Dependency>(
     deps: D,
     run: impl Fn(&mut Context, D::Out) -> Animated + 'static,
-) -> ReadOnlySignal<UseAnimator<Animated>>
+) -> Memo<UseAnimator<Animated>>
 where
-    D::Out: 'static,
+    D::Out: 'static + Clone,
 {
-    use_memo_with_dependencies(deps, move |deps| {
+    use_memo(use_reactive(deps, move |vals| {
         let mut ctx = Context::default();
-        let value = run(&mut ctx, deps);
+        let value = run(&mut ctx, vals);
 
         UseAnimator::new(value, ctx, UsePlatform::new())
-    })
+    }))
 }

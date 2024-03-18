@@ -18,6 +18,7 @@ pub mod prelude {
     pub use crate::render::*;
     pub use crate::utils::*;
 
+    pub use crate::types::AccessibilityId;
     pub use crate::types::EventEmitter;
     pub use crate::types::EventReceiver;
     pub use crate::types::EventsQueue;

@@ -98,6 +98,7 @@ pub async fn reverse_progress() {
         cursor: (5.0, 5.0).into(),
         button: Some(MouseButton::Left),
     });
+    utils.wait_for_update().await;
 
     // Enable event loop ticker
     utils.config().event_loop_ticker = true;
@@ -106,7 +107,6 @@ pub async fn reverse_progress() {
     sleep(Duration::from_millis(50)).await;
 
     // State has been restarted
-    utils.wait_for_update().await;
     utils.wait_for_update().await;
 
     let width = utils.root().get(0).area().unwrap().width();

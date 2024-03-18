@@ -194,9 +194,9 @@ where
     let focus_id = focus.attribute();
 
     // Update the provided value if the passed value changes
-    let _ = use_memo_with_dependencies(&props.value, move |value| {
+    use_effect(use_reactive(&props.value, move |value| {
         *selected.write() = value;
-    });
+    }));
 
     use_drop(move || {
         if *status.peek() == DropdownStatus::Hovering {
@@ -387,6 +387,7 @@ mod test {
             cursor: (45.0, 100.0).into(),
             button: Some(MouseButton::Left),
         });
+        utils.wait_for_update().await;
         utils.wait_for_update().await;
         utils.wait_for_update().await;
 
