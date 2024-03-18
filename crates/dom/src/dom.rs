@@ -54,8 +54,12 @@ impl SafeDOM {
 
     /// Get a reference to the DOM.
     #[cfg(not(feature = "shared"))]
-    pub fn get(&self) -> &FreyaDOM {
-        &self.fdom
+    pub fn get(&self) -> &FreyaDOM {}
+
+    /// Get a reference to the DOM.
+    #[cfg(not(feature = "shared"))]
+    pub fn try_get(&self) -> Option<FreyaDOM> {
+        Some(&self.fdom)
     }
 
     /// Get a mutable reference to the DOM.
@@ -68,6 +72,12 @@ impl SafeDOM {
     #[cfg(feature = "shared")]
     pub fn get(&self) -> MutexGuard<FreyaDOM> {
         return self.fdom.lock().unwrap();
+    }
+
+    /// Get a reference to the DOM.
+    #[cfg(feature = "shared")]
+    pub fn try_get(&self) -> Option<MutexGuard<FreyaDOM>> {
+        return self.fdom.try_lock().ok();
     }
 
     /// Get a mutable reference to the dom.
