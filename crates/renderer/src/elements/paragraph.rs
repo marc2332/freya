@@ -29,7 +29,7 @@ pub fn render_paragraph(
     };
 
     if node_cursor_settings.position.is_some() {
-        let paragraph = create_paragraph(dioxus_node, area, font_collection, true);
+        let paragraph = create_paragraph(dioxus_node, &area.size, font_collection, true);
         paint(&paragraph);
     } else {
         let paragraph = &data.as_ref().unwrap().get::<CachedParagraph>().unwrap().0;
