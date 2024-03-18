@@ -6,9 +6,7 @@
 use freya::{hotreload::FreyaCtx, prelude::*};
 
 fn main() {
-    println!("starting");
     dioxus_hot_reload::hot_reload_init!(Config::<FreyaCtx>::default());
-    println!(":eyes:");
 
     launch(app);
 }
