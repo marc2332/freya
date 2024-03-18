@@ -54,11 +54,13 @@ impl SafeDOM {
 
     /// Get a reference to the DOM.
     #[cfg(not(feature = "shared"))]
-    pub fn get(&self) -> &FreyaDOM {}
+    pub fn get(&self) -> &FreyaDOM {
+        &self.fdom
+    }
 
     /// Get a reference to the DOM.
     #[cfg(not(feature = "shared"))]
-    pub fn try_get(&self) -> Option<FreyaDOM> {
+    pub fn try_get(&self) -> Option<&FreyaDOM> {
         Some(&self.fdom)
     }
 
