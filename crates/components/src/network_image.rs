@@ -13,7 +13,7 @@ pub struct NetworkImageProps {
     pub theme: Option<NetworkImageThemeWith>,
 
     /// URL of the image
-    pub url: Url,
+    pub url: ReadOnlySignal<Url>,
 
     /// Fallback element
     pub fallback: Option<Element>,
@@ -65,7 +65,8 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
     let NetworkImageTheme { width, height } = use_applied_theme!(&props.theme, network_image);
     let alt = props.alt.as_deref();
 
-    use_effect(use_reactive(&props.url, move |url| {
+    use_memo(move || {
+        let url = props.url.read().clone();
         spawn(async move {
             // Loading image
             status.set(ImageStatus::Loading);
@@ -80,7 +81,7 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
                 status.set(ImageStatus::Errored)
             }
         });
-    }));
+    });
 
     if *status.read() == ImageStatus::Loading {
         if let Some(loading_element) = &props.loading {
