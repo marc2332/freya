@@ -32,4 +32,6 @@ pub fn render_image(area: &Area, node_ref: &DioxusNode, canvas: &Canvas) {
     } else if let Some(image_data) = &node_style.image_data {
         draw_img(image_data.as_slice())
     }
+
+    println!("{:?} / {:?}", resource_cache_total_bytes_used(), resource_cache_total_bytes_limit());
 }

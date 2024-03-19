@@ -20,5 +20,5 @@ pub use skia_safe::{
     },
     BlurStyle, Canvas, ClipOp, Color, ColorSpace, ColorType, Data, FilterMode, FontArguments,
     FontMgr, FontStyle, IRect, Image, MaskFilter, Matrix, Paint, PaintStyle, Path, PathDirection,
-    Point, RRect, Rect, RuntimeEffect, Shader, Surface, TileMode, Typeface, HSV, RGB,
+    Point, RRect, Rect, RuntimeEffect, Shader, Surface, TileMode, Typeface, HSV, RGB, graphics::set_resource_cache_total_bytes_limit
 };
