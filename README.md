@@ -50,7 +50,7 @@ fn app() -> Element {
 </td>
 <td style="border:hidden;">
 
-![Freya](./website/public/demo.mp4.png)
+![Freya](./website/public/demo.mp4)
 
 </td>
 </table>
