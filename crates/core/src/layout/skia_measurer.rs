@@ -47,24 +47,53 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
         node_id: NodeId,
         _node: &Node,
         area_size: &Size2D,
+        mut old_layout_node: Option<LayoutNode>,
     ) -> Option<(Size2D, Arc<SendAnyMap>)> {
         let node = self.rdom.get(node_id).unwrap();
         let node_type = node.node_type();
 
         match &*node_type {
             NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Label => {
-                let label = create_label(&node, area_size, self.font_collection);
-                let res = Size2D::new(label.longest_line(), label.height());
-                let mut map = SendAnyMap::new();
-                map.insert(CachedParagraph(label));
-                Some((res, Arc::new(map)))
+                let font_style = &*node.get::<FontStyleState>().unwrap();
+                let results = if let Some(old_layout_node) = old_layout_node.as_mut() {
+                    let map = old_layout_node.data.take().unwrap();
+
+                    let old_font_style = map.get::<FontStyleState>().unwrap();
+                    let old_area_size = map.get::<Size2D>().unwrap();
+
+                    if old_font_style == font_style && area_size == old_area_size {
+                        let label = &map.get::<CachedParagraph>().unwrap().0;
+                        let size = Size2D::new(label.longest_line(), label.height());
+                        Some((map, size))
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                };
+
+                let (map, res) = results.unwrap_or_else(|| {
+                    let mut map = SendAnyMap::new();
+                    let label = create_label(&node, area_size, self.font_collection);
+                    map.insert(CachedParagraph(label));
+                    map.insert(font_style.clone());
+                    map.insert(*area_size);
+                    let map = Arc::new(map);
+                    let label = &map.get::<CachedParagraph>().unwrap().0;
+                    let res = Size2D::new(label.longest_line(), label.height());
+                    (map, res)
+                });
+
+                Some((res, map))
             }
             NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Paragraph => {
-                let paragraph = create_paragraph(&node, area_size, self.font_collection, false);
-                let res = Size2D::new(paragraph.longest_line(), paragraph.height());
                 let mut map = SendAnyMap::new();
+                let paragraph = create_paragraph(&node, area_size, self.font_collection, false);
                 map.insert(CachedParagraph(paragraph));
-                Some((res, Arc::new(map)))
+                let map = Arc::new(map);
+                let paragraph = &map.get::<CachedParagraph>().unwrap().0;
+                let res = Size2D::new(paragraph.longest_line(), paragraph.height());
+                Some((res, map))
             }
             _ => None,
         }
