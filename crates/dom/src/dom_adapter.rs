@@ -24,7 +24,10 @@ impl<'a> DioxusDOMAdapter<'a> {
 impl DOMAdapter<NodeId> for DioxusDOMAdapter<'_> {
     fn get_node(&self, node_id: &NodeId) -> Option<Node> {
         let node = self.rdom.get(*node_id)?;
-        let mut layout = node.get::<LayoutState>().unwrap().clone();
+        let mut layout = node
+            .get::<LayoutState>()
+            .expect("This should exist.")
+            .clone();
 
         // The root node expands by default
         if *node_id == self.rdom.root_id() {
@@ -48,6 +51,7 @@ impl DOMAdapter<NodeId> for DioxusDOMAdapter<'_> {
             offset_y: layout.offset_y,
             has_layout_references: layout.node_ref.is_some(),
             position: layout.position,
+            content: layout.content,
         })
     }
 
