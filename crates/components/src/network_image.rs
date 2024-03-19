@@ -50,7 +50,7 @@ pub enum ImageStatus {
 /// fn app() -> Element {
 ///     rsx!(
 ///         NetworkImage {
-///             url: "https://raw.githubusercontent.com/jigsawpieces/dog-api-images/main/greyhound/Cordelia.jpg".parse().unwrap()
+///             url: "https://raw.githubusercontent.com/jigsawpieces/dog-api-images/main/greyhound/Cordelia.jpg".parse::<Url>().unwrap()
 ///         }
 ///     )
 /// }
