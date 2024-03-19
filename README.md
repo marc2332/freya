@@ -20,10 +20,10 @@
 <td style="border:hidden;">
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    let mut count = use_state(cx, || 0);
+fn app() -> Element {
+    let mut count = use_signal(|| 0);
 
-    render!(
+    rsx!(
         rect {
             height: "20%",
             width: "100%",
@@ -50,7 +50,7 @@ fn app(cx: Scope) -> Element {
 </td>
 <td style="border:hidden;">
 
-![Freya](./demo.png)
+![Freya](./website/public/demo.mp4.png)
 
 </td>
 </table>
