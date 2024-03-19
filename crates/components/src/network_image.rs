@@ -49,6 +49,7 @@ pub enum ImageStatus {
 /// # Example
 ///  
 /// ```rust,no_run
+/// # use reqwest::Url;
 /// # use freya::prelude::*;
 /// fn app() -> Element {
 ///     rsx!(
