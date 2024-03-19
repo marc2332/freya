@@ -15,6 +15,7 @@ categories = ["gui", "asynchronous"]
 features = ["freya-engine/mocked-engine"]
 
 [features]
+hot-reload = []
 skia-engine = ["freya-engine/skia-engine"]
 
 [dependencies]

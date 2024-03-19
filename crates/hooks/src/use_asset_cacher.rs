@@ -54,7 +54,7 @@ impl AssetCacher {
     /// Cache the given [`AssetConfiguration`]
     pub fn cache(&mut self, asset_config: AssetConfiguration, asset_bytes: Bytes) -> Signal<Bytes> {
         // Cancel previous caches
-        if let Some(asset_state) = self.registry.write().remove(&asset_config) {
+        if let Some(mut asset_state) = self.registry.write().remove(&asset_config) {
             if let AssetUsers::ClearTask(task) = asset_state.users {
                 task.cancel();
                 asset_state.asset_bytes.take();
@@ -109,7 +109,7 @@ impl AssetCacher {
                     let asset_config = asset_config.clone();
                     async move {
                         sleep(duration).await;
-                        if let Some(asset_state) = registry.write().remove(&asset_config) {
+                        if let Some(mut asset_state) = registry.write().remove(&asset_config) {
                             // Clear the asset
                             asset_state.asset_bytes.take();
                         }
@@ -155,7 +155,7 @@ impl AssetCacher {
     }
 
     /// Clear all the assets from the cache registry.
-    pub fn clear(&self) {
+    pub fn clear(&mut self) {
         self.registry.try_write().unwrap().clear();
     }
 }

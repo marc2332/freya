@@ -2,13 +2,14 @@ use std::ops::Deref;
 
 pub use euclid::Rect;
 
-use crate::geometry::Length;
 use crate::scaled::Scaled;
+use crate::{geometry::Length, measure::Phase};
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum Size {
     Inner,
     Fill,
+    FillMinimum,
     Percentage(Length),
     Pixels(Length),
     RootPercentage(Length),
@@ -22,6 +23,10 @@ impl Default for Size {
 }
 
 impl Size {
+    pub fn inner_sized(&self) -> bool {
+        matches!(self, Self::Inner | Self::FillMinimum)
+    }
+
     pub fn pretty(&self) -> String {
         match self {
             Size::Inner => "auto".to_string(),
@@ -36,6 +41,7 @@ impl Size {
             ),
             Size::Percentage(p) => format!("{}%", p.get()),
             Size::Fill => "fill".to_string(),
+            Size::FillMinimum => "fill-min".to_string(),
             Size::RootPercentage(p) => format!("{}% of root", p.get()),
         }
     }
@@ -46,6 +52,7 @@ impl Size {
         available_parent_value: f32,
         parent_margin: f32,
         root_value: f32,
+        phase: Phase,
     ) -> Option<f32> {
         match self {
             Size::Pixels(px) => Some(px.get() + parent_margin),
@@ -54,6 +61,13 @@ impl Size {
                 Some(run_calculations(calculations.deref(), parent_value))
             }
             Size::Fill => Some(available_parent_value),
+            Size::FillMinimum => {
+                if phase == Phase::Initial {
+                    None
+                } else {
+                    Some(available_parent_value)
+                }
+            }
             Size::RootPercentage(per) => Some(root_value / 100.0 * per.get()),
             _ => None,
         }
@@ -70,15 +84,34 @@ impl Size {
         minimum: &Self,
         maximum: &Self,
         root_value: f32,
+        phase: Phase,
     ) -> f32 {
         let value = self
-            .eval(parent_value, available_parent_value, margin, root_value)
+            .eval(
+                parent_value,
+                available_parent_value,
+                margin,
+                root_value,
+                phase,
+            )
             .unwrap_or(value + margin);
 
         let minimum_value = minimum
-            .eval(parent_value, available_parent_value, margin, root_value)
+            .eval(
+                parent_value,
+                available_parent_value,
+                margin,
+                root_value,
+                phase,
+            )
             .map(|v| v + single_margin);
-        let maximum_value = maximum.eval(parent_value, available_parent_value, margin, root_value);
+        let maximum_value = maximum.eval(
+            parent_value,
+            available_parent_value,
+            margin,
+            root_value,
+            phase,
+        );
 
         let mut final_value = value;
 
@@ -95,6 +128,13 @@ impl Size {
         }
 
         final_value
+    }
+
+    pub fn most_fitting_size<'a>(&self, size: &'a f32, available_size: &'a f32) -> &'a f32 {
+        match self {
+            Self::Inner => available_size,
+            _ => size,
+        }
     }
 }
 

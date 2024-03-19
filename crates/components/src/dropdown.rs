@@ -7,8 +7,8 @@ use freya_elements::events::keyboard::Key;
 use freya_elements::events::{KeyboardEvent, MouseEvent};
 
 use freya_hooks::{
-    theme_with, use_applied_theme, use_focus, use_platform, ArrowIconThemeWith,
-    DropdownItemThemeWith, DropdownTheme, DropdownThemeWith,
+    theme_with, use_applied_theme, use_focus, use_platform, DropdownItemThemeWith, DropdownTheme,
+    DropdownThemeWith, IconThemeWith,
 };
 use winit::window::CursorIcon;
 
@@ -107,6 +107,7 @@ where
 
     rsx!(
         rect {
+            width: "fill-min",
             color: "{color}",
             focus_id,
             role: "button",
@@ -114,7 +115,6 @@ where
             padding: "6 22 6 16",
             corner_radius: "6",
             main_align: "center",
-            cross_align: "center",
             onmouseenter,
             onmouseleave,
             onclick,
@@ -194,9 +194,9 @@ where
     let focus_id = focus.attribute();
 
     // Update the provided value if the passed value changes
-    let _ = use_memo_with_dependencies(&props.value, move |value| {
+    use_effect(use_reactive(&props.value, move |value| {
         *selected.write() = value;
-    });
+    }));
 
     use_drop(move || {
         if *status.peek() == DropdownStatus::Hovering {
@@ -278,7 +278,7 @@ where
             ArrowIcon {
                 rotate: "0",
                 fill: "{arrow_fill}",
-                theme: theme_with!(ArrowIconTheme {
+                theme: theme_with!(IconTheme {
                     margin : "0 0 0 8".into(),
                 })
             }
@@ -297,6 +297,7 @@ where
                     background: "{dropdown_background}",
                     shadow: "0 4 5 0 rgb(0, 0, 0, 0.3)",
                     padding: "6",
+                    content: "fit",
                     {props.children}
                 }
             }
@@ -386,6 +387,7 @@ mod test {
             cursor: (45.0, 100.0).into(),
             button: Some(MouseButton::Left),
         });
+        utils.wait_for_update().await;
         utils.wait_for_update().await;
         utils.wait_for_update().await;
 

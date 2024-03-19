@@ -1,5 +1,7 @@
+use dioxus_native_core::SendAnyMap;
+
 use crate::prelude::*;
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
 pub struct TestingMeasurer;
 
@@ -8,10 +10,13 @@ impl LayoutMeasurer<usize> for TestingMeasurer {
         &mut self,
         _node_id: usize,
         _node: &Node,
-        _parent_size: &Area,
-        _available_parent_area: &Area,
-    ) -> Option<Size2D> {
+        _area_size: &Size2D,
+    ) -> Option<(Size2D, Arc<SendAnyMap>)> {
         None
+    }
+
+    fn should_measure_inner_children(&mut self, _node_id: usize) -> bool {
+        true
     }
 }
 

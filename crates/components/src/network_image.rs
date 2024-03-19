@@ -16,7 +16,7 @@ pub struct NetworkImageProps {
     pub theme: Option<NetworkImageThemeWith>,
 
     /// URL of the image
-    pub url: Url,
+    pub url: ReadOnlySignal<Url>,
 
     /// Fallback element
     pub fallback: Option<Element>,
@@ -70,8 +70,8 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
     let NetworkImageTheme { width, height } = use_applied_theme!(&props.theme, network_image);
     let alt = props.alt.as_deref();
 
-    // TODO: Waiting for a dependency-based use_effect
-    let _ = use_memo_with_dependencies(&props.url, move |url| {
+    use_memo(move || {
+        let url = props.url.read().clone();
         // Cancel previous asset fetching requests
         for asset_task in assets_tasks.write().drain(..) {
             asset_task.cancel();
@@ -111,7 +111,7 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
         }
     });
 
-    if let ImageStatus::Loaded(bytes) = &*status.read() {
+    if let ImageStatus::Loaded(bytes) = &*status.read_unchecked() {
         let image_data = dynamic_bytes(bytes.read().clone());
         rsx!(image {
             height: "{height}",

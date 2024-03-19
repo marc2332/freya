@@ -1,8 +1,9 @@
-use accesskit::NodeId as AccessibilityId;
 use dioxus_core::{use_hook, AttributeValue};
 use dioxus_hooks::{use_context, use_memo};
-use dioxus_signals::{ReadOnlySignal, Readable, Signal, Writable};
-use freya_core::{accessibility::ACCESSIBILITY_ROOT_ID, navigation_mode::NavigationMode};
+use dioxus_signals::{Memo, Readable, Signal, Writable};
+use freya_core::{
+    accessibility::ACCESSIBILITY_ROOT_ID, navigation_mode::NavigationMode, types::AccessibilityId,
+};
 use freya_elements::events::{keyboard::Code, KeyboardEvent};
 use freya_node_state::CustomAttributeValues;
 
@@ -12,8 +13,8 @@ use crate::AccessibilityIdCounter;
 #[derive(Clone, Copy)]
 pub struct UseFocus {
     id: AccessibilityId,
-    is_selected: ReadOnlySignal<bool>,
-    is_focused: ReadOnlySignal<bool>,
+    is_selected: Memo<bool>,
+    is_focused: Memo<bool>,
     focused_id: Signal<AccessibilityId>,
     navigation_mode: Signal<NavigationMode>,
 }
@@ -102,7 +103,9 @@ mod test {
                     width: "100%",
                     height: "50%",
                     onclick: move |_| focus_manager.focus(),
-                    "{focus_manager.is_focused()}"
+                    label {
+                        "{focus_manager.is_focused()}"
+                    }
                 }
             )
         }
@@ -129,8 +132,8 @@ mod test {
         // Initial state
         utils.wait_for_update().await;
         let root = utils.root().get(0);
-        assert_eq!(root.get(0).get(0).text(), Some("false"));
-        assert_eq!(root.get(1).get(0).text(), Some("false"));
+        assert_eq!(root.get(0).get(0).get(0).text(), Some("false"));
+        assert_eq!(root.get(1).get(0).get(0).text(), Some("false"));
 
         // Click on the first rect
         utils.push_event(PlatformEvent::Mouse {
@@ -141,8 +144,8 @@ mod test {
 
         // First rect is now focused
         utils.wait_for_update().await;
-        assert_eq!(root.get(0).get(0).text(), Some("true"));
-        assert_eq!(root.get(1).get(0).text(), Some("false"));
+        assert_eq!(root.get(0).get(0).get(0).text(), Some("true"));
+        assert_eq!(root.get(1).get(0).get(0).text(), Some("false"));
 
         // Click on the second rect
         utils.push_event(PlatformEvent::Mouse {
@@ -153,7 +156,8 @@ mod test {
 
         // Second rect is now focused
         utils.wait_for_update().await;
-        assert_eq!(root.get(0).get(0).text(), Some("false"));
-        assert_eq!(root.get(1).get(0).text(), Some("true"));
+        utils.wait_for_update().await;
+        assert_eq!(root.get(0).get(0).get(0).text(), Some("false"));
+        assert_eq!(root.get(1).get(0).get(0).text(), Some("true"));
     }
 }

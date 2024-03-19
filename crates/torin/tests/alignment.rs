@@ -1,3 +1,4 @@
+use euclid::Length;
 use torin::{prelude::*, test_utils::*};
 
 #[test]
@@ -275,5 +276,57 @@ pub fn unsized_alignment() {
     assert_eq!(
         layout.get(2).unwrap().visible_area(),
         Rect::new(Point2D::new(115.0, 25.0), Size2D::new(150.0, 80.0)),
+    );
+}
+
+#[test]
+pub fn nested_unsized_alignment() {
+    let (mut layout, mut measurer) = test_utils();
+
+    let mut mocked_dom = TestingDOM::default();
+    mocked_dom.add(
+        0,
+        None,
+        vec![1],
+        Node::from_size_and_alignments_and_direction(
+            Size::Percentage(Length::new(100.)),
+            Size::Percentage(Length::new(100.)),
+            Alignment::Center,
+            Alignment::Center,
+            DirectionMode::Vertical,
+        ),
+    );
+    mocked_dom.add(
+        1,
+        Some(0),
+        vec![2],
+        Node::from_size_and_direction(Size::Inner, Size::Inner, DirectionMode::Vertical),
+    );
+    mocked_dom.add(
+        2,
+        Some(1),
+        vec![],
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(100.0)),
+            Size::Pixels(Length::new(100.0)),
+            DirectionMode::Vertical,
+        ),
+    );
+
+    layout.measure(
+        0,
+        Rect::new(Point2D::new(0.0, 0.0), Size2D::new(200.0, 200.0)),
+        &mut measurer,
+        &mut mocked_dom,
+    );
+
+    assert_eq!(
+        layout.get(1).unwrap().visible_area(),
+        Rect::new(Point2D::new(50.0, 50.0), Size2D::new(100.0, 100.0)),
+    );
+
+    assert_eq!(
+        layout.get(2).unwrap().visible_area(),
+        Rect::new(Point2D::new(50.0, 50.0), Size2D::new(100.0, 100.0)),
     );
 }

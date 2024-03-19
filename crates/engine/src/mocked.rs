@@ -1548,3 +1548,11 @@ pub mod backend_render_targets {
         unimplemented!("This is mocked")
     }
 }
+
+pub fn set_resource_cache_total_bytes_limit(new_limit: usize) -> usize {
+    unimplemented!("This is mocked")
+}
+
+pub fn set_resource_cache_single_allocation_byte_limit(new_limit: Option<usize>) -> Option<usize> {
+    unimplemented!("This is mocked")
+}

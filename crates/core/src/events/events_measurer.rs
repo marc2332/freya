@@ -84,8 +84,8 @@ pub fn measure_potential_event_listeners(
     // Propagate events from the top to the bottom
     for (layer, layer_nodes) in layers.layers() {
         for node_id in layer_nodes {
-            let areas = layout.get(*node_id);
-            if let Some(areas) = areas {
+            let layout_node = layout.get(*node_id);
+            if let Some(layout_node) = layout_node {
                 'events: for event in events.iter() {
                     if let PlatformEvent::Keyboard { name, .. } = event {
                         let event_data = PotentialEvent {
@@ -102,7 +102,7 @@ pub fn measure_potential_event_listeners(
                             _ => None,
                         };
                         if let Some((name, cursor)) = data {
-                            let cursor_is_inside = areas.area.contains(cursor.to_f32());
+                            let cursor_is_inside = layout_node.area.contains(cursor.to_f32());
 
                             // Make sure the cursor is inside the node area
                             if cursor_is_inside {
@@ -179,7 +179,7 @@ fn measure_dom_events(
         'event: for collateral_event in collateral_events {
             let mut child_node: Option<NodeId> = None;
 
-            let listeners = rdom.get_listening_sorted(collateral_event.into());
+            let listeners = rdom.get_listening_sorted(&collateral_event);
 
             // Iterate over the event nodes
             for PotentialEvent {
@@ -220,7 +220,8 @@ fn measure_dom_events(
 
                 let Style { background, .. } = &*node.get::<Style>().unwrap();
 
-                if background != &Fill::Color(Color::TRANSPARENT) && event.get_name().does_bubble()
+                if background != &Fill::Color(Color::TRANSPARENT)
+                    && !event.get_name().does_go_through_solid()
                 {
                     // If the background isn't transparent,
                     // we must make sure that next nodes are parent of it
@@ -232,14 +233,14 @@ fn measure_dom_events(
 
         for potential_event in valid_events {
             let layout = fdom.layout();
-            let areas = layout.get(potential_event.node_id);
-            if let Some(areas) = areas {
+            let layout_node = layout.get(potential_event.node_id);
+            if let Some(layout_node) = layout_node {
                 let node_ref = fdom.rdom().get(potential_event.node_id).unwrap();
                 let element_id = node_ref.mounted_id().unwrap();
                 let event = DomEvent::new(
                     potential_event,
                     element_id,
-                    Some(areas.visible_area()),
+                    Some(layout_node.visible_area()),
                     scale_factor,
                 );
                 new_events.push(event);
@@ -259,7 +260,7 @@ fn emit_global_events_listeners(
 ) {
     for global_event in global_events {
         let event_name = global_event.get_name();
-        let listeners = fdom.rdom().get_listening_sorted(event_name.into());
+        let listeners = fdom.rdom().get_listening_sorted(&event_name);
 
         for listener in listeners {
             let element_id = listener.mounted_id().unwrap();

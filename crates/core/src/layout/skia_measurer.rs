@@ -1,8 +1,9 @@
-use std::ops::Mul;
+use std::{ops::Mul, sync::Arc};
 
 use dioxus_native_core::{
-    prelude::{ElementNode, NodeType, TextNode},
+    prelude::{ElementNode, NodeType, SendAnyMap},
     real_dom::NodeImmutable,
+    tags::TagName,
     NodeId,
 };
 use freya_common::CursorLayoutResponse;
@@ -11,9 +12,19 @@ use freya_node_state::{CursorReference, CursorSettings, FontStyleState, Referenc
 
 use freya_engine::prelude::*;
 use torin::{
-    geometry::{Area, CursorPoint},
-    prelude::{LayoutMeasurer, Node, Size2D},
+    geometry::CursorPoint,
+    prelude::{LayoutMeasurer, LayoutNode, Node, Size2D},
 };
+
+pub struct CachedParagraph(pub Paragraph);
+
+/// # Safety
+/// Skia `Paragraph` are neither Sync or Send, but in order to store them in the Associated
+/// data of the Nodes in Torin (which will be used across threads when making the attributes diffing),
+/// we must manually mark the Paragraph as Send and Sync, this is fine because `Paragraph`s will only be accessed and modified
+/// In the main thread when measuring the layout and painting.
+unsafe impl Send for CachedParagraph {}
+unsafe impl Sync for CachedParagraph {}
 
 /// Provides Text measurements using Skia APIs like SkParagraph
 pub struct SkiaMeasurer<'a> {
@@ -35,30 +46,43 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
         &mut self,
         node_id: NodeId,
         _node: &Node,
-        _parent_area: &Area,
-        available_parent_area: &Area,
-    ) -> Option<Size2D> {
+        area_size: &Size2D,
+    ) -> Option<(Size2D, Arc<SendAnyMap>)> {
         let node = self.rdom.get(node_id).unwrap();
         let node_type = node.node_type();
 
         match &*node_type {
-            NodeType::Element(ElementNode { tag, .. }) if tag == "label" => {
-                let label = create_label(&node, available_parent_area, self.font_collection);
-
-                Some(Size2D::new(label.longest_line(), label.height()))
+            NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Label => {
+                let label = create_label(&node, area_size, self.font_collection);
+                let res = Size2D::new(label.longest_line(), label.height());
+                let mut map = SendAnyMap::new();
+                map.insert(CachedParagraph(label));
+                Some((res, Arc::new(map)))
             }
-            NodeType::Element(ElementNode { tag, .. }) if tag == "paragraph" => {
-                let paragraph =
-                    create_paragraph(&node, available_parent_area, self.font_collection, false);
-
-                Some(Size2D::new(paragraph.longest_line(), paragraph.height()))
+            NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Paragraph => {
+                let paragraph = create_paragraph(&node, area_size, self.font_collection, false);
+                let res = Size2D::new(paragraph.longest_line(), paragraph.height());
+                let mut map = SendAnyMap::new();
+                map.insert(CachedParagraph(paragraph));
+                Some((res, Arc::new(map)))
             }
             _ => None,
         }
     }
+
+    fn should_measure_inner_children(&mut self, node_id: NodeId) -> bool {
+        let node = self.rdom.get(node_id).unwrap();
+        let node_type: &NodeType<_> = &node.node_type();
+
+        !matches!(node_type.tag(), Some(TagName::Label | TagName::Paragraph))
+    }
 }
 
-pub fn create_label(node: &DioxusNode, area: &Area, font_collection: &FontCollection) -> Paragraph {
+pub fn create_label(
+    node: &DioxusNode,
+    area_size: &Size2D,
+    font_collection: &FontCollection,
+) -> Paragraph {
     let font_style = &*node.get::<FontStyleState>().unwrap();
 
     let mut paragraph_style = ParagraphStyle::default();
@@ -74,25 +98,24 @@ pub fn create_label(node: &DioxusNode, area: &Area, font_collection: &FontCollec
     let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
 
     for child in node.children() {
-        if let NodeType::Text(TextNode { text, .. }) = &*child.node_type() {
+        if let NodeType::Text(text) = &*child.node_type() {
             paragraph_builder.add_text(text);
         }
     }
 
     let mut paragraph = paragraph_builder.build();
-    paragraph.layout(area.width() + 1.0);
+    paragraph.layout(area_size.width + 1.0);
     paragraph
 }
 
 /// Compose a new SkParagraph
 pub fn create_paragraph(
     node: &DioxusNode,
-    node_area: &Area,
+    area_size: &Size2D,
     font_collection: &FontCollection,
     is_rendering: bool,
 ) -> Paragraph {
     let font_style = &*node.get::<FontStyleState>().unwrap();
-    let node_cursor_settings = &*node.get::<CursorSettings>().unwrap();
 
     let mut paragraph_style = ParagraphStyle::default();
     paragraph_style.set_text_align(font_style.text_align);
@@ -109,14 +132,14 @@ pub fn create_paragraph(
 
     for text_span in node.children() {
         match &*text_span.node_type() {
-            NodeType::Element(ElementNode { tag, .. }) if tag == "text" => {
+            NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Text => {
                 let text_nodes = text_span.children();
                 let text_node = *text_nodes.first().unwrap();
                 let text_node_type = &*text_node.node_type();
+                let font_style = text_span.get::<FontStyleState>().unwrap();
+                paragraph_builder.push_style(&TextStyle::from(&*font_style));
 
-                if let NodeType::Text(TextNode { text, .. }) = text_node_type {
-                    let font_style = text_node.get::<FontStyleState>().unwrap();
-                    paragraph_builder.push_style(&TextStyle::from(&*font_style));
+                if let NodeType::Text(text) = text_node_type {
                     paragraph_builder.add_text(text);
                 }
             }
@@ -124,24 +147,29 @@ pub fn create_paragraph(
         }
     }
 
-    if node_cursor_settings.position.is_some() && is_rendering {
+    if is_rendering {
         // This is very tricky, but it works! It allows freya to render the cursor at the end of a line.
         paragraph_builder.add_text(" ");
     }
 
     let mut paragraph = paragraph_builder.build();
-    paragraph.layout(node_area.width() + 1.0);
+    paragraph.layout(area_size.width + 1.0);
     paragraph
 }
 
 pub fn measure_paragraph(
     node: &DioxusNode,
-    node_area: &Area,
-    font_collection: &FontCollection,
+    layout_node: &LayoutNode,
     is_editable: bool,
     scale_factor: f32,
-) -> Paragraph {
-    let paragraph = create_paragraph(node, node_area, font_collection, false);
+) {
+    let paragraph = &layout_node
+        .data
+        .as_ref()
+        .unwrap()
+        .get::<CachedParagraph>()
+        .unwrap()
+        .0;
     let scale_factors = scale_factor as f64;
 
     if is_editable {
@@ -184,8 +212,6 @@ pub fn measure_paragraph(
             }
         }
     }
-
-    paragraph
 }
 
 /// Get the info related to a cursor reference

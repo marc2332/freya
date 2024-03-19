@@ -1,7 +1,7 @@
 use dioxus_native_core::{
     exports::shipyard::Component,
     node_ref::NodeView,
-    prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State},
+    prelude::{AttributeMaskBuilder, AttributeName, Dependancy, NodeMaskBuilder, State},
     SendAnyMap,
 };
 use dioxus_native_core_macro::partial_derive_state;
@@ -15,14 +15,14 @@ pub struct Transform {
 
 #[partial_derive_state]
 impl State<CustomAttributeValues> for Transform {
-    type ParentDependencies = (Self,);
+    type ParentDependencies = ();
 
     type ChildDependencies = ();
 
     type NodeDependencies = ();
 
     const NODE_MASK: NodeMaskBuilder<'static> =
-        NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&["rotate"]));
+        NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[AttributeName::Rotate]));
 
     fn update<'a>(
         &mut self,
@@ -36,8 +36,9 @@ impl State<CustomAttributeValues> for Transform {
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
-                match attr.attribute.name.as_str() {
-                    "rotate" => {
+                #[allow(clippy::single_match)]
+                match attr.attribute {
+                    AttributeName::Rotate => {
                         if let Some(value) = attr.value.as_text() {
                             if value.ends_with("deg") {
                                 if let Ok(degs) = value.replacen("deg", "", 1).parse::<f32>() {
@@ -46,9 +47,7 @@ impl State<CustomAttributeValues> for Transform {
                             }
                         }
                     }
-                    _ => {
-                        panic!("Unsupported attribute <{}>, this should not be happening, please report it.", attr.attribute.name);
-                    }
+                    _ => {}
                 }
             }
         }
