@@ -50,7 +50,7 @@ fn app() -> Element {
 </td>
 <td style="border:hidden;">
 
-![Freya](./website/public/demo.mp4)
+![Freya Demo](https://github.com/marc2332/freya/assets/38158676/f81a95a2-7add-4dbe-9820-3d3b6b42f6e5)
 
 </td>
 </table>
