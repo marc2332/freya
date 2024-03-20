@@ -5,20 +5,12 @@ use freya_engine::prelude::*;
 use torin::prelude::LayoutNode;
 
 /// Call the render function for the nodes that should be rendered.
-pub fn process_render<RenderOptions>(
+pub fn process_render(
     viewports: &Viewports,
     fdom: &FreyaDOM,
     font_collection: &mut FontCollection,
     layers: &Layers,
-    render_options: &mut RenderOptions,
-    render_fn: impl Fn(
-        &FreyaDOM,
-        &NodeId,
-        &LayoutNode,
-        &mut FontCollection,
-        &Viewports,
-        &mut RenderOptions,
-    ),
+    mut render_fn: impl FnMut(&FreyaDOM, &NodeId, &LayoutNode, &mut FontCollection, &Viewports),
 ) {
     // Render all the layers from the bottom to the top
     for (_, layer) in layers.layers() {
@@ -41,14 +33,7 @@ pub fn process_render<RenderOptions>(
                 }
 
                 // Render the element
-                render_fn(
-                    fdom,
-                    node_id,
-                    layout_node,
-                    font_collection,
-                    viewports,
-                    render_options,
-                )
+                render_fn(fdom, node_id, layout_node, font_collection, viewports)
             }
         }
     }
