@@ -74,6 +74,21 @@ fn app(cx: Scope) -> Element {
 }
 ```
 
+You can also specify multiple fonts in order of priority, if one is not found it will fallback to the next one.
+
+Example: 
+
+```rust, no_run
+fn app(cx: Scope) -> Element {
+    render!(
+        label {
+            font_family: "DoesntExist Font, Impact",
+            "Hello, World!"
+        }
+    )
+}
+```
+
 Compatible elements: [`label`](/guides/elements.html#label), [`paragraph`](/guides/elements.html#paragraph-and-text), 
 
 ### font_size
