@@ -61,8 +61,6 @@ Compatible elements: [`label`](/guides/elements.html#label), [`paragraph`](/guid
 
 With the `font_family` you can specify what font do you want to use for the inner text.
 
-Limitation: Only fonts installed in the system are supported for now.
-
 Example: 
 
 ```rust, no_run
