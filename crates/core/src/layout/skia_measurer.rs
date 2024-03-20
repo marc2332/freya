@@ -89,11 +89,9 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
             NodeType::Element(ElementNode { tag, .. }) if tag == &TagName::Paragraph => {
                 let mut map = SendAnyMap::new();
                 let paragraph = create_paragraph(&node, area_size, self.font_collection, false);
-                map.insert(CachedParagraph(paragraph));
-                let paragraph = &map.get::<CachedParagraph>().unwrap().0;
                 let res = Size2D::new(paragraph.longest_line(), paragraph.height());
-                let map = Arc::new(map);
-                Some((res, map))
+                map.insert(CachedParagraph(paragraph));
+                Some((res, Arc::new(map)))
             }
             _ => None,
         }
