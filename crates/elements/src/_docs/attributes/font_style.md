@@ -25,6 +25,7 @@ You can also specify multiple fonts in order of priority, if one is not found it
 Example: 
 
 ```rust, no_run
+# use freya::prelude::*;
 fn app() -> Element {
     rsx!(
         label {
