@@ -243,7 +243,6 @@ impl<State: 'static + Clone> App<State> {
             canvas: self.window_env.canvas(),
             font_collection: &self.font_collection,
             freya_dom: &self.sdom.get(),
-            //viewports: &self.viewports,
         });
 
         self.start_render(hovered_node);
@@ -255,7 +254,6 @@ impl<State: 'static + Clone> App<State> {
             canvas: self.window_env.canvas(),
             font_collection: &self.font_collection,
             freya_dom: &self.sdom.get(),
-            //viewports: &self.viewports,
         });
 
         self.finish_render();
