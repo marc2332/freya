@@ -350,7 +350,8 @@ impl<State: 'static + Clone> App<State> {
             &fdom,
             &mut self.font_collection,
             &self.layers,
-            |dom, node_id, area, font_collection, viewports| {
+            &mut (canvas, &mut matrices, &mut opacities),
+            |dom, node_id, area, font_collection, viewports, (canvas, matrices, opacities)| {
                 let render_wireframe = if let Some(hovered_node) = &hovered_node {
                     hovered_node
                         .lock()
@@ -369,8 +370,8 @@ impl<State: 'static + Clone> App<State> {
                         &self.font_mgr,
                         viewports,
                         render_wireframe,
-                        &mut matrices,
-                        &mut opacities,
+                        matrices,
+                        opacities,
                     );
                 }
             },
