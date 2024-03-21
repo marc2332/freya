@@ -47,6 +47,7 @@ pub fn ScrollThumb(
             onmouseenter: move |_| { state.set(ScrollThumbState::Hovering) },
             onmouseleave: move |_| { state.set(ScrollThumbState::Idle) },
             onmousedown: move |e| {
+                e.stop_propagation();
                 onmousedown.call(e);
             },
             width: "{width}",
