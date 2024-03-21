@@ -4,8 +4,6 @@ use freya_engine::prelude::{Canvas, FontCollection};
 use torin::torin::Torin;
 use winit::window::Window;
 
-use crate::layout::Viewports;
-
 /// Manages all loaded plugins.
 #[derive(Default)]
 pub struct PluginsManager {
@@ -34,7 +32,6 @@ pub enum PluginEvent<'a> {
         canvas: &'a Canvas,
         font_collection: &'a FontCollection,
         freya_dom: &'a FreyaDOM,
-        viewports: &'a Viewports,
     },
 
     /// After rendering the app to the Canvas.
@@ -42,7 +39,6 @@ pub enum PluginEvent<'a> {
         canvas: &'a Canvas,
         font_collection: &'a FontCollection,
         freya_dom: &'a FreyaDOM,
-        viewports: &'a Viewports,
     },
 
     /// Before starting to measure the layout.

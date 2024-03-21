@@ -1,7 +1,7 @@
 use dioxus_native_core::NodeId;
 use dioxus_native_core::{node::NodeType, real_dom::NodeImmutable};
 use freya_core::node::NodeState;
-use freya_node_state::{CustomAttributeValues, Style};
+use freya_node_state::{CustomAttributeValues, Style, ViewportState};
 use torin::{geometry::Area, prelude::LayoutNode};
 
 use crate::test_utils::TestUtils;
@@ -91,21 +91,22 @@ impl TestNode {
 
     /// Check if the Node is visible given it's viewports.
     pub fn is_visible(&self) -> bool {
-        let viewports = self.utils.viewports().lock().unwrap();
-        let node_viewports = viewports.get(&self.node_id);
+        let sdom = self.utils().sdom();
+        let fdom = sdom.get();
+        let dom = fdom.rdom();
+        let node = dom.get(self.node_id).unwrap();
+        let node_viewports = node.get::<ViewportState>().unwrap();
         let Some(area) = self.area() else {
             return false;
         };
 
+        let layout = fdom.layout();
+
         // Skip elements that are completely out of any their parent's viewport
-        if let Some((_, node_viewports)) = node_viewports {
-            for viewport_id in node_viewports {
-                let viewport = viewports.get(viewport_id).unwrap().0;
-                if let Some(viewport) = viewport {
-                    if !viewport.intersects(&area) {
-                        return false;
-                    }
-                }
+        for viewport_id in &node_viewports.viewports {
+            let viewport = layout.get(*viewport_id).unwrap().visible_area();
+            if !viewport.intersects(&area) {
+                return false;
             }
         }
 

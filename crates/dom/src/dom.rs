@@ -9,7 +9,7 @@ use dioxus_native_core::{
 
 use freya_node_state::{
     AccessibilityNodeState, CursorSettings, CustomAttributeValues, FontStyleState, LayoutState,
-    References, Style, Transform,
+    References, Style, Transform, ViewportState,
 };
 use std::sync::MutexGuard;
 use torin::prelude::*;
@@ -106,6 +106,7 @@ impl Default for FreyaDOM {
             Style::to_type_erased(),
             Transform::to_type_erased(),
             AccessibilityNodeState::to_type_erased(),
+            ViewportState::to_type_erased(),
         ]);
         let dioxus_integration_state = DioxusState::create(&mut rdom);
         Self {

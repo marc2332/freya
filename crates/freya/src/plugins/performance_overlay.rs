@@ -25,7 +25,6 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 canvas,
                 font_collection,
                 freya_dom,
-                viewports,
             } => {
                 let started_render = self.started_render.take().unwrap();
                 let finished_layout = self.finished_layout.unwrap();
@@ -83,13 +82,6 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 add_text(
                     &mut paragraph_builder,
                     format!("{} Layout Nodes \n", layout.size()),
-                    14.0,
-                );
-
-                // Viewports
-                add_text(
-                    &mut paragraph_builder,
-                    format!("{} Nodes viewports \n", viewports.size()),
                     14.0,
                 );
 
