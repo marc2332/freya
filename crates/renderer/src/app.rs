@@ -204,7 +204,6 @@ impl<State: 'static + Clone> App<State> {
             &mut self.events,
             &self.event_emitter,
             &mut self.nodes_state,
-            //&self.viewports,
             scale_factor,
         )
     }
@@ -327,7 +326,6 @@ impl<State: 'static + Clone> App<State> {
             self.layers.len_layers(),
             self.layers.len_paragraph_elements()
         );
-        //info!("Processed {} viewports", self.viewports.size());
     }
 
     /// Start rendering the RealDOM to Window
