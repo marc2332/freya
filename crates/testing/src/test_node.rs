@@ -91,14 +91,15 @@ impl TestNode {
 
     /// Check if the Node is visible given it's viewports.
     pub fn is_visible(&self) -> bool {
+        let Some(area) = self.area() else {
+            return false;
+        };
+
         let sdom = self.utils().sdom();
         let fdom = sdom.get();
         let dom = fdom.rdom();
         let node = dom.get(self.node_id).unwrap();
         let node_viewports = node.get::<ViewportState>().unwrap();
-        let Some(area) = self.area() else {
-            return false;
-        };
 
         let layout = fdom.layout();
 
