@@ -52,7 +52,6 @@ impl DesktopRenderer {
             use std::process::exit;
             let proxy = proxy.clone();
             dioxus_hot_reload::connect(move |msg| {
-                println!("{msg:?}");
                 match msg {
                     dioxus_hot_reload::HotReloadMsg::UpdateTemplate(template) => {
                         let _ = proxy.send_event(EventMessage::UpdateTemplate(template));

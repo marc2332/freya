@@ -1,6 +1,9 @@
+use std::sync::{Arc, Mutex};
+
 use dioxus_core::WriteMutations;
-use dioxus_native_core::{dioxus::DioxusNativeCoreMutationWriter, NodeId};
-use freya_node_state::CustomAttributeValues;
+use dioxus_native_core::{dioxus::DioxusNativeCoreMutationWriter, prelude::NodeImmutable, NodeId};
+use freya_node_state::{CustomAttributeValues, LayerState};
+use rustc_hash::FxHashMap;
 use torin::torin::Torin;
 
 use crate::prelude::DioxusDOMAdapter;
@@ -8,6 +11,7 @@ use crate::prelude::DioxusDOMAdapter;
 pub struct MutationsWriter<'a> {
     pub native_writer: DioxusNativeCoreMutationWriter<'a, CustomAttributeValues>,
     pub layout: &'a mut Torin<NodeId>,
+    pub layers: &'a Arc<Mutex<FxHashMap<i16, Vec<NodeId>>>>
 }
 
 impl<'a> WriteMutations for MutationsWriter<'a> {
@@ -41,12 +45,19 @@ impl<'a> WriteMutations for MutationsWriter<'a> {
 
     fn replace_node_with(&mut self, id: dioxus_core::ElementId, m: usize) {
         if m > 0 {
+            let node_id = self.native_writer.state.element_to_node_id(id);
             let mut dom_adapter = DioxusDOMAdapter::new_with_cache(self.native_writer.rdom);
             self.layout.remove(
-                self.native_writer.state.element_to_node_id(id),
+                node_id,
                 &mut dom_adapter,
                 true,
             );
+            let node = self.native_writer.rdom.get(node_id).unwrap();
+            let layer_state = node.get::<LayerState>().unwrap();
+            let mut layers = self.layers.lock().unwrap();
+            let layer_entry = layers.get_mut(&layer_state.layer).unwrap();
+            layer_entry.retain(|id| *id != node_id);
+            // TODO: Remove layer entry if empty
         }
 
         self.native_writer.replace_node_with(id, m);
@@ -89,13 +100,19 @@ impl<'a> WriteMutations for MutationsWriter<'a> {
     }
 
     fn remove_node(&mut self, id: dioxus_core::ElementId) {
+        let node_id = self.native_writer.state.element_to_node_id(id);
         let mut dom_adapter = DioxusDOMAdapter::new_with_cache(self.native_writer.rdom);
         self.layout.remove(
-            self.native_writer.state.element_to_node_id(id),
+            node_id,
             &mut dom_adapter,
             true,
         );
-        self.native_writer.remove_node(id);
+        let node = self.native_writer.rdom.get(node_id).unwrap();
+        let layer_state = node.get::<LayerState>().unwrap();
+        let mut layers = self.layers.lock().unwrap();
+        let layer_entry = layers.get_mut(&layer_state.layer).unwrap();
+        layer_entry.retain(|id| *id != node_id);
+        // TODO: Remove layer entry if empty
     }
 
     fn push_root(&mut self, id: dioxus_core::ElementId) {

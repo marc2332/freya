@@ -34,6 +34,7 @@ pub struct TestingHandler {
     pub(crate) navigation_state: NavigatorState,
     pub(crate) platform_information: Arc<Mutex<PlatformInformation>>,
     pub(crate) cursor_icon: CursorIcon,
+    pub(crate) layers: Layers,
 }
 
 impl TestingHandler {
@@ -142,6 +143,7 @@ impl TestingHandler {
                 size,
             },
             &mut self.font_collection,
+            &self.layers,
             SCALE_FACTOR as f32,
         );
 

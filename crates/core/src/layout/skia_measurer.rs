@@ -8,7 +8,7 @@ use dioxus_native_core::{
 };
 use freya_common::CursorLayoutResponse;
 use freya_dom::prelude::{DioxusDOM, DioxusNode};
-use freya_node_state::{CursorReference, CursorSettings, FontStyleState, References, TextOverflow};
+use freya_node_state::{CursorReference, CursorSettings, FontStyleState, TextOverflow};
 
 use freya_engine::prelude::*;
 use torin::{
@@ -251,10 +251,9 @@ fn get_cursor_reference(
     Option<CursorPoint>,
     Option<(CursorPoint, CursorPoint)>,
 )> {
-    let node_references = node.get::<References>().unwrap();
     let cursor_settings = node.get::<CursorSettings>().unwrap();
 
-    let cursor_ref = node_references.cursor_ref.clone()?;
+    let cursor_ref = cursor_settings.cursor_ref.clone()?;
     let cursor_id = cursor_settings.cursor_id?;
 
     let current_cursor_id = { *cursor_ref.cursor_id.lock().unwrap().as_ref()? };

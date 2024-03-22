@@ -135,16 +135,23 @@ impl<State: 'static + Clone> App<State> {
         let scale_factor = self.window_env.window.scale_factor() as f32;
         self.provide_vdom_contexts();
 
-        self.sdom.get_mut().init_dom(&mut self.vdom, scale_factor);
+        self.sdom.get_mut().init_dom(
+            &mut self.vdom,
+            scale_factor,
+            self.layers.layers.clone(),
+            self.layers.paragraph_elements.clone(),
+        );
     }
 
     /// Update the DOM with the mutations from the VirtualDOM.
     pub fn apply_vdom_changes(&mut self) -> (bool, bool) {
         let scale_factor = self.window_env.window.scale_factor() as f32;
-        let (repaint, relayout) = self
-            .sdom
-            .get_mut()
-            .render_mutations(&mut self.vdom, scale_factor);
+        let (repaint, relayout) = self.sdom.get_mut().render_mutations(
+            &mut self.vdom,
+            scale_factor,
+            self.layers.layers.clone(),
+            self.layers.paragraph_elements.clone(),
+        );
 
         if repaint {
             if let Some(mutations_notifier) = &self.mutations_notifier {
@@ -215,10 +222,8 @@ impl<State: 'static + Clone> App<State> {
         let fdom = &self.sdom.get();
         let layout = fdom.layout();
         let rdom = fdom.rdom();
-        let layers = &self.layers;
 
         process_accessibility(
-            layers,
             &layout,
             rdom,
             &mut self.accessibility.accessibility_manager().lock().unwrap(),
@@ -300,16 +305,16 @@ impl<State: 'static + Clone> App<State> {
 
             let window_size = self.window_env.window.inner_size();
             let scale_factor = self.window_env.window.scale_factor() as f32;
-            let layers = process_layout(
+            process_layout(
                 &fdom,
                 Area::from_size(Size2D::from((
                     window_size.width as f32,
                     window_size.height as f32,
                 ))),
                 &mut self.font_collection,
+                &self.layers,
                 scale_factor,
             );
-            self.layers = layers;
 
             self.plugins
                 .send(PluginEvent::FinishedLayout(&fdom.layout()));

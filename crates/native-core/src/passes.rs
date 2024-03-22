@@ -194,7 +194,7 @@ pub fn run_pass<V: FromAnyValue + Send + Sync>(
     dependants: Arc<Dependants>,
     pass_direction: PassDirection,
     view: RunPassView<V>,
-    mut update_node: impl FnMut(NodeId, &SendAnyMap) -> bool,
+    mut update_node: impl FnMut(NodeId, &SendAnyMap, u16) -> bool,
 ) {
     let RunPassView {
         tree,
@@ -207,7 +207,7 @@ pub fn run_pass<V: FromAnyValue + Send + Sync>(
     match pass_direction {
         PassDirection::ParentToChild => {
             while let Some((height, id)) = dirty.pop_front(type_id) {
-                if (update_node)(id, ctx) {
+                if (update_node)(id, ctx, height) {
                     nodes_updated.insert(id);
                     dependants.mark_dirty(&dirty, id, &tree, height);
                 }
@@ -215,7 +215,7 @@ pub fn run_pass<V: FromAnyValue + Send + Sync>(
         }
         PassDirection::ChildToParent => {
             while let Some((height, id)) = dirty.pop_back(type_id) {
-                if (update_node)(id, ctx) {
+                if (update_node)(id, ctx, height) {
                     nodes_updated.insert(id);
                     dependants.mark_dirty(&dirty, id, &tree, height);
                 }
@@ -223,7 +223,7 @@ pub fn run_pass<V: FromAnyValue + Send + Sync>(
         }
         PassDirection::AnyOrder => {
             while let Some((height, id)) = dirty.pop_back(type_id) {
-                if (update_node)(id, ctx) {
+                if (update_node)(id, ctx, height) {
                     nodes_updated.insert(id);
                     dependants.mark_dirty(&dirty, id, &tree, height);
                 }

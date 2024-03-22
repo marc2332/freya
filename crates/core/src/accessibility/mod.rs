@@ -1,12 +1,10 @@
 pub mod accessibility_manager;
 pub use accessibility_manager::*;
 
-use dioxus_native_core::{node::NodeType, real_dom::NodeImmutable, NodeId};
+use dioxus_native_core::{node::NodeType, real_dom::NodeImmutable, tags::TagName, NodeId};
 use freya_dom::dom::{DioxusDOM, DioxusNode};
 use freya_node_state::AccessibilityNodeState;
 use torin::torin::Torin;
-
-use crate::layout::Layers;
 use crate::types::AccessibilityId;
 
 /// Direction for the next Accessibility Node to be focused.
@@ -51,26 +49,28 @@ impl NodeAccessibility for DioxusNode<'_> {
 }
 
 pub fn process_accessibility(
-    layers: &Layers,
     layout: &Torin<NodeId>,
     rdom: &DioxusDOM,
     accessibility_manager: &mut AccessibilityManager,
 ) {
-    for layer in layers.layers.values() {
-        for node_id in layer {
-            let layout_node = layout.get(*node_id).unwrap();
-            let dioxus_node = rdom.get(*node_id);
-            if let Some(dioxus_node) = dioxus_node {
-                let node_accessibility = &*dioxus_node.get::<AccessibilityNodeState>().unwrap();
-                if let Some(accessibility_id) = node_accessibility.accessibility_id {
-                    accessibility_manager.add_node(
-                        &dioxus_node,
-                        layout_node,
-                        accessibility_id,
-                        node_accessibility,
-                    );
-                }
+    rdom.traverse_depth_first_advanced(|node| {
+        let layout_node = layout.get(node.id()).unwrap();
+        let node_accessibility = &*node.get::<AccessibilityNodeState>().unwrap();
+        if let Some(accessibility_id) = node_accessibility.accessibility_id {
+            accessibility_manager.add_node(
+                &node,
+                layout_node,
+                accessibility_id,
+                node_accessibility,
+            );
+        }
+        
+        if let Some(tag) = node.node_type().tag(){
+            if *tag == TagName::Paragraph || *tag == TagName::Label {
+                return false
             }
         }
-    }
+
+        true
+    });
 }

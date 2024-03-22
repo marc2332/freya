@@ -6,6 +6,7 @@ use freya_dom::{dom::DioxusDOM, prelude::FreyaDOM};
 
 use freya_engine::prelude::*;
 use freya_node_state::{Fill, Style, ViewportState};
+use itertools::sorted;
 
 pub use crate::events::{DomEvent, NodesState, PlatformEvent};
 
@@ -81,7 +82,8 @@ pub fn measure_potential_event_listeners(
     let rdom = fdom.rdom();
 
     // Propagate events from the top to the bottom
-    for (layer, layer_nodes) in layers.layers() {
+    // TODO: Sort
+    for (layer, layer_nodes) in sorted(layers.layers().iter()) {
         for node_id in layer_nodes {
             let layout_node = layout.get(*node_id);
             if let Some(layout_node) = layout_node {

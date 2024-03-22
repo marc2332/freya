@@ -8,8 +8,9 @@ pub fn process_layout(
     fdom: &FreyaDOM,
     area: Area,
     font_collection: &mut FontCollection,
+    layers: &Layers,
     scale_factor: f32,
-) -> Layers {
+) {
     let rdom = fdom.rdom();
     let mut dom_adapter = DioxusDOMAdapter::new_with_cache(rdom);
     let skia_measurer = SkiaMeasurer::new(rdom, font_collection);
@@ -23,8 +24,5 @@ pub fn process_layout(
     fdom.layout()
         .measure(root_id, area, &mut Some(skia_measurer), &mut dom_adapter);
 
-    // Create the layers
-    let layers = Layers::new(rdom, &fdom.layout(), scale_factor);
-
-    layers
+    layers.measure_all_paragraph_elements(rdom, &fdom.layout(), scale_factor);
 }

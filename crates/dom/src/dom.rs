@@ -8,12 +8,14 @@ use dioxus_native_core::{
 };
 
 use freya_node_state::{
-    AccessibilityNodeState, CursorSettings, CustomAttributeValues, FontStyleState, LayoutState,
-    References, Style, Transform, ViewportState,
+    AccessibilityNodeState, CursorSettings, CustomAttributeValues, FontStyleState, LayerState,
+    LayoutState, References, Style, Transform, ViewportState,
 };
+use rustc_hash::FxHashMap;
 use std::sync::MutexGuard;
 use torin::prelude::*;
 use tracing::info;
+use uuid::Uuid;
 
 use crate::mutations_writer::MutationsWriter;
 
@@ -107,6 +109,7 @@ impl Default for FreyaDOM {
             Transform::to_type_erased(),
             AccessibilityNodeState::to_type_erased(),
             ViewportState::to_type_erased(),
+            LayerState::to_type_erased(),
         ]);
         let dioxus_integration_state = DioxusState::create(&mut rdom);
         Self {
@@ -123,36 +126,54 @@ impl FreyaDOM {
     }
 
     /// Create the initial DOM from the given Mutations
-    pub fn init_dom(&mut self, vdom: &mut VirtualDom, scale_factor: f32) {
+    pub fn init_dom(
+        &mut self,
+        vdom: &mut VirtualDom,
+        scale_factor: f32,
+        layers: Arc<Mutex<FxHashMap<i16, Vec<NodeId>>>>,
+        paragraphs: Arc<Mutex<FxHashMap<Uuid, Vec<NodeId>>>>,
+    ) {
         // Build the RealDOM
         vdom.rebuild(&mut MutationsWriter {
             native_writer: self
                 .dioxus_integration_state
                 .create_mutation_writer(&mut self.rdom),
             layout: &mut self.torin.lock().unwrap(),
+            layers: &layers
         });
 
         let mut ctx = SendAnyMap::new();
         ctx.insert(scale_factor);
         ctx.insert(self.torin.clone());
+        ctx.insert(layers);
+        ctx.insert(paragraphs);
 
         self.rdom.update_state(ctx);
     }
 
     /// Process the given mutations from the [`VirtualDOM`](dioxus_core::VirtualDom).
-    pub fn render_mutations(&mut self, vdom: &mut VirtualDom, scale_factor: f32) -> (bool, bool) {
+    pub fn render_mutations(
+        &mut self,
+        vdom: &mut VirtualDom,
+        scale_factor: f32,
+        layers: Arc<Mutex<FxHashMap<i16, Vec<NodeId>>>>,
+        paragraphs: Arc<Mutex<FxHashMap<Uuid, Vec<NodeId>>>>,
+    ) -> (bool, bool) {
         // Update the RealDOM
         vdom.render_immediate(&mut MutationsWriter {
             native_writer: self
                 .dioxus_integration_state
                 .create_mutation_writer(&mut self.rdom),
             layout: &mut self.torin.lock().unwrap(),
+            layers: &layers
         });
 
         // Update the Nodes states
         let mut ctx = SendAnyMap::new();
         ctx.insert(scale_factor);
         ctx.insert(self.torin.clone());
+        ctx.insert(layers);
+        ctx.insert(paragraphs);
 
         // Update the Node's states
         let (_, diff) = self.rdom.update_state(ctx);
