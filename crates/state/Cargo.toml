@@ -32,5 +32,4 @@ shipyard = { workspace = true }
 
 uuid = { workspace = true }
 bytes = "1.5.0"
-smallvec = { workspace = true }
 serde_json = "1.0.107"
