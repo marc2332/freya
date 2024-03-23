@@ -61,6 +61,9 @@ impl FromStr for EventName {
             "globalclick" => Ok(EventName::GlobalClick),
             "globalmousedown" => Ok(EventName::GlobalMouseDown),
             "globalmouseover" => Ok(EventName::GlobalMouseOver),
+            "filedrop" => Ok(EventName::FileDrop),
+            "globalfilehover" => Ok(EventName::GlobalFileHover),
+            "globalfilehovercancelled" => Ok(EventName::GlobalFileHoverCancelled),
             _ => Err(()),
         }
     }
