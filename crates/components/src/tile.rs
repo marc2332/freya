@@ -20,14 +20,14 @@ pub enum TileStatus {
 ///
 /// # Example
 ///
-/// Tile is meant to be used with other components, take a look at [`Radio`](freya_components::Radio) for instance.
+/// Tile is meant to be used with other components, take a look at [`Radio`](crate::Radio) for instance.
 ///
 #[allow(non_snake_case)]
 #[component]
 pub fn Tile(
     /// Inner children for the Tile.
     children: Element,
-    /// Optional element to be placed before the inner children of the Tile. Such as a [`Radio`]
+    /// Optional element to be placed before the inner children of the Tile. Such as a [`Radio`](crate::Radio)
     leading: Option<Element>,
     /// Event handler for when the Tile is selected, e.g when clicking on it.
     onselect: Option<EventHandler<()>>,
