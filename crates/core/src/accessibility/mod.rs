@@ -54,6 +54,10 @@ pub fn process_accessibility(
     accessibility_manager: &mut AccessibilityManager,
 ) {
     rdom.traverse_depth_first_advanced(|node| {
+        if !node.node_type().is_element() {
+            return false;
+        }
+
         let layout_node = layout.get(node.id()).unwrap();
         let node_accessibility = &*node.get::<AccessibilityNodeState>().unwrap();
         if let Some(accessibility_id) = node_accessibility.accessibility_id {

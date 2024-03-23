@@ -1,5 +1,8 @@
-use dioxus_core::WriteMutations;
-use dioxus_native_core::{dioxus::DioxusNativeCoreMutationWriter, prelude::NodeImmutable, NodeId};
+use dioxus_core::{ElementId, WriteMutations};
+use dioxus_native_core::{
+    dioxus::DioxusNativeCoreMutationWriter, prelude::NodeImmutable, tags::TagName, tree::TreeRef,
+    NodeId,
+};
 use freya_common::Layers;
 use freya_node_state::{CustomAttributeValues, LayerState};
 use torin::torin::Torin;
@@ -10,6 +13,37 @@ pub struct MutationsWriter<'a> {
     pub native_writer: DioxusNativeCoreMutationWriter<'a, CustomAttributeValues>,
     pub layout: &'a mut Torin<NodeId>,
     pub layers: &'a Layers,
+}
+
+impl<'a> MutationsWriter<'a> {
+    pub fn remove(&mut self, id: ElementId) {
+        let node_id = self.native_writer.state.element_to_node_id(id);
+        let mut dom_adapter = DioxusDOMAdapter::new_with_cache(self.native_writer.rdom);
+
+        // Remove from layout
+        self.layout.remove(node_id, &mut dom_adapter, true);
+
+        // Remove from layers
+        let mut stack = vec![node_id];
+        let tree = self.native_writer.rdom.tree_ref();
+        while let Some(node_id) = stack.pop() {
+            if let Some(node) = self.native_writer.rdom.get(node_id) {
+                let traverse_children = if let Some(tag) = node.node_type().tag() {
+                    !(*tag == TagName::Paragraph || *tag == TagName::Label)
+                } else {
+                    true
+                };
+                if traverse_children {
+                    let children = tree.children_ids_advanced(node_id, false);
+                    stack.extend(children.iter().copied().rev());
+                }
+
+                let layer_state = node.get::<LayerState>().unwrap();
+                self.layers
+                    .remove_node_from_layer(node_id, layer_state.layer);
+            }
+        }
+    }
 }
 
 impl<'a> WriteMutations for MutationsWriter<'a> {
@@ -43,13 +77,7 @@ impl<'a> WriteMutations for MutationsWriter<'a> {
 
     fn replace_node_with(&mut self, id: dioxus_core::ElementId, m: usize) {
         if m > 0 {
-            let node_id = self.native_writer.state.element_to_node_id(id);
-            let mut dom_adapter = DioxusDOMAdapter::new_with_cache(self.native_writer.rdom);
-            self.layout.remove(node_id, &mut dom_adapter, true);
-            let node = self.native_writer.rdom.get(node_id).unwrap();
-            let layer_state = node.get::<LayerState>().unwrap();
-            self.layers
-                .remove_node_from_layer(node_id, layer_state.layer);
+            self.remove(id);
         }
 
         self.native_writer.replace_node_with(id, m);
@@ -95,12 +123,7 @@ impl<'a> WriteMutations for MutationsWriter<'a> {
         let node_id = self.native_writer.state.element_to_node_id(id);
         let mut dom_adapter = DioxusDOMAdapter::new_with_cache(self.native_writer.rdom);
         self.layout.remove(node_id, &mut dom_adapter, true);
-        {
-            let node = self.native_writer.rdom.get(node_id).unwrap();
-            let layer_state = node.get::<LayerState>().unwrap();
-            self.layers
-                .remove_node_from_layer(node_id, layer_state.layer);
-        }
+        self.remove(id);
         self.native_writer.remove_node(id);
     }
 
