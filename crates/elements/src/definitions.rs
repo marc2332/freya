@@ -635,11 +635,11 @@ pub mod events {
     impl_event! [
         FileData;
 
-        // TODO
+        #[doc = include_str!("_docs/events/onfiledrop.md")]
         onfiledrop
-
+        #[doc = include_str!("_docs/events/onglobalfilehover.md")]
         onglobalfilehover
-
+        #[doc = include_str!("_docs/events/onglobalfilehovercancelled.md")]
         onglobalfilehovercancelled
     ];
 }
