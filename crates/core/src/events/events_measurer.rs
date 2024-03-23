@@ -32,18 +32,18 @@ pub fn process_events(
     // 3. Get what events can be actually emitted based on what elements are listening
     let dom_events = measure_dom_events(potential_events, dom, scale_factor);
 
-    // 4. Filter the dom events and get potential colateral events, e.g mouseover -> mouseenter
-    let (potential_colateral_events, mut to_emit_dom_events) =
+    // 4. Filter the dom events and get potential collateral events, e.g. mouseover -> mouseenter
+    let (potential_collateral_events, mut to_emit_dom_events) =
         nodes_state.process_events(&dom_events, events);
 
-    // 5. Get what colateral events can actually be emitted
-    let to_emit_dom_colateral_events =
-        measure_dom_events(potential_colateral_events, dom, scale_factor);
+    // 5. Get what collateral events can actually be emitted
+    let to_emit_dom_collateral_events =
+        measure_dom_events(potential_collateral_events, dom, scale_factor);
 
-    let colateral_global_events = measure_colateral_global_events(&to_emit_dom_colateral_events);
+    let colateral_global_events = measure_colateral_global_events(&to_emit_dom_collateral_events);
 
     // 6. Join both the dom and colateral dom events and sort them
-    to_emit_dom_events.extend(to_emit_dom_colateral_events);
+    to_emit_dom_events.extend(to_emit_dom_collateral_events);
     to_emit_dom_events.sort_unstable();
 
     // 7. Emit the DOM events
@@ -107,8 +107,8 @@ pub fn measure_potential_event_listeners(
     // Propagate events from the top to the bottom
     for (layer, layer_nodes) in layers.layers() {
         for node_id in layer_nodes {
-            let areas = layout.get(*node_id);
-            if let Some(areas) = areas {
+            let layout_node = layout.get(*node_id);
+            if let Some(layout_node) = layout_node {
                 'events: for event in events.iter() {
                     if let PlatformEvent::Keyboard { name, .. } = event {
                         let event_data = PotentialEvent {
@@ -125,7 +125,7 @@ pub fn measure_potential_event_listeners(
                             _ => None,
                         };
                         if let Some((name, cursor)) = data {
-                            let cursor_is_inside = areas.area.contains(cursor.to_f32());
+                            let cursor_is_inside = layout_node.area.contains(cursor.to_f32());
 
                             // Make sure the cursor is inside the node area
                             if cursor_is_inside {
@@ -183,7 +183,7 @@ fn is_node_parent_of(rdom: &DioxusDOM, node: NodeId, parent_node: NodeId) -> boo
     false
 }
 
-/// Measure what DOM events could be emited
+/// Measure what DOM events could be emitted
 fn measure_dom_events(
     potential_events: PotentialEvents,
     fdom: &FreyaDOM,
@@ -194,15 +194,15 @@ fn measure_dom_events(
 
     // Iterate over all the events
     for (event_name, event_nodes) in potential_events {
-        let colateral_events = event_name.get_colateral_events();
+        let collateral_events = event_name.get_collateral_events();
 
         let mut valid_events: Vec<PotentialEvent> = Vec::new();
 
-        // Iterate over the colateral events (including the source)
-        'event: for colateral_event in colateral_events {
+        // Iterate over the collateral events (including the source)
+        'event: for collateral_event in collateral_events {
             let mut child_node: Option<NodeId> = None;
 
-            let listeners = rdom.get_listening_sorted(colateral_event.into());
+            let listeners = rdom.get_listening_sorted(&collateral_event);
 
             // Iterate over the event nodes
             for PotentialEvent {
@@ -226,7 +226,7 @@ fn measure_dom_events(
 
                         if valid_node {
                             let mut valid_event = event.clone();
-                            valid_event.set_name(colateral_event);
+                            valid_event.set_name(collateral_event);
                             valid_events.push(PotentialEvent {
                                 node_id: *node_id,
                                 event: valid_event,
@@ -243,11 +243,12 @@ fn measure_dom_events(
 
                 let Style { background, .. } = &*node.get::<Style>().unwrap();
 
-                if background != &Fill::Color(Color::TRANSPARENT) && event.get_name().does_bubble()
+                if background != &Fill::Color(Color::TRANSPARENT)
+                    && !event.get_name().does_go_through_solid()
                 {
                     // If the background isn't transparent,
                     // we must make sure that next nodes are parent of it
-                    // This only matters for events that bubble up (e.g cursor movement events)
+                    // This only matters for events that bubble up (e.g. cursor movement events)
                     child_node = Some(*node_id);
                 }
             }
@@ -255,14 +256,14 @@ fn measure_dom_events(
 
         for potential_event in valid_events {
             let layout = fdom.layout();
-            let areas = layout.get(potential_event.node_id);
-            if let Some(areas) = areas {
+            let layout_node = layout.get(potential_event.node_id);
+            if let Some(layout_node) = layout_node {
                 let node_ref = fdom.rdom().get(potential_event.node_id).unwrap();
                 let element_id = node_ref.mounted_id().unwrap();
                 let event = DomEvent::new(
                     potential_event,
                     element_id,
-                    Some(areas.visible_area()),
+                    Some(layout_node.visible_area()),
                     scale_factor,
                 );
                 new_events.push(event);
@@ -283,7 +284,7 @@ fn emit_global_events_listeners(
 ) {
     for global_event in global_events {
         let event_name = global_event.get_name();
-        let listeners = fdom.rdom().get_listening_sorted(event_name.into());
+        let listeners = fdom.rdom().get_listening_sorted(&event_name);
 
         for listener in listeners {
             let element_id = listener.mounted_id().unwrap();

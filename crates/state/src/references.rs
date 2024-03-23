@@ -1,4 +1,5 @@
 use dioxus_native_core::{
+    attributes::AttributeName,
     exports::shipyard::Component,
     node::OwnedAttributeValue,
     node_ref::NodeView,
@@ -26,9 +27,9 @@ impl State<CustomAttributeValues> for References {
 
     const NODE_MASK: NodeMaskBuilder<'static> =
         NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[
-            "cursor_reference",
-            "image_reference",
-            "canvas_reference",
+            AttributeName::CursorReference,
+            AttributeName::ImageReference,
+            AttributeName::CanvasReference,
         ]));
 
     fn update<'a>(
@@ -50,8 +51,8 @@ impl State<CustomAttributeValues> for References {
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
-                match attr.attribute.name.as_str() {
-                    "cursor_reference" => {
+                match attr.attribute {
+                    AttributeName::CursorReference => {
                         if let OwnedAttributeValue::Custom(
                             CustomAttributeValues::CursorReference(reference),
                         ) = attr.value
@@ -59,7 +60,7 @@ impl State<CustomAttributeValues> for References {
                             references.cursor_ref = Some(reference.clone());
                         }
                     }
-                    "image_reference" => {
+                    AttributeName::ImageReference => {
                         if let OwnedAttributeValue::Custom(CustomAttributeValues::ImageReference(
                             reference,
                         )) = attr.value
@@ -67,7 +68,7 @@ impl State<CustomAttributeValues> for References {
                             references.image_ref = Some(reference.clone());
                         }
                     }
-                    "canvas_reference" => {
+                    AttributeName::CanvasReference => {
                         if let OwnedAttributeValue::Custom(CustomAttributeValues::Canvas(
                             new_canvas,
                         )) = attr.value
@@ -75,9 +76,7 @@ impl State<CustomAttributeValues> for References {
                             references.canvas_ref = Some(new_canvas.clone());
                         }
                     }
-                    _ => {
-                        panic!("Unsupported attribute <{}>, this should not be happening, please report it.", attr.attribute.name);
-                    }
+                    _ => {}
                 }
             }
         }

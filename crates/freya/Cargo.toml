@@ -16,6 +16,7 @@ features = ["freya-engine/mocked-engine"]
 no-default-features = true
 
 [features]
+hot-reload = ["freya-renderer/hot-reload", "dioxus/hot-reload"]
 log = ["dep:tracing", "dep:tracing-subscriber"]
 devtools = ["dep:freya-devtools"]
 use_camera = ["freya-hooks/use_camera"]
@@ -36,7 +37,6 @@ freya-engine = { workspace = true }
 torin = { workspace = true }
 
 dioxus = { workspace = true }
-dioxus-rsx = { workspace = true }
 dioxus-core-macro = { workspace = true }
 dioxus-hooks = { workspace = true }
 dioxus-core = { workspace = true }

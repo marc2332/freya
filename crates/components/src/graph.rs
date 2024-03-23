@@ -43,9 +43,9 @@ pub fn Graph(props: GraphProps) -> Element {
     let platform = use_platform();
     let GraphTheme { width, height } = use_applied_theme!(&props.theme, graph);
 
-    let _ = use_memo_with_dependencies(&props, move |_| {
-        platform.send(EventMessage::RequestRerender)
-    });
+    use_effect(use_reactive(&props, move |_| {
+        platform.send(EventMessage::RequestRerender).ok();
+    }));
 
     let canvas = use_canvas(&props, |state| {
         Box::new(move |canvas, font_collection, region| {

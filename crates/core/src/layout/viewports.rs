@@ -4,9 +4,6 @@ use dioxus_native_core::{node::NodeType, NodeId};
 use torin::prelude::Area;
 
 use crate::layout::*;
-use crate::prelude::{
-    does_element_have_children_with_intrinsic_layout, does_element_have_intrinsic_layout,
-};
 use freya_dom::prelude::FreyaDOM;
 
 use freya_node_state::{OverflowMode, Style};
@@ -28,14 +25,14 @@ impl Viewports {
         for (_, layer) in layers.layers() {
             for node_id in layer {
                 let node = rdom.get(*node_id);
-                let node_areas = layout.get(*node_id);
+                let layout_node = layout.get(*node_id);
 
-                if let Some((node, node_areas)) = node.zip(node_areas) {
+                if let Some((node, layout_node)) = node.zip(layout_node) {
                     let node_type = &*node.node_type();
 
                     if let NodeType::Element(ElementNode { tag, .. }) = node_type {
                         // No need to consider text spans
-                        if !does_element_have_intrinsic_layout(tag) {
+                        if !tag.has_intrinsic_layout() {
                             continue;
                         }
 
@@ -46,7 +43,7 @@ impl Viewports {
                             let viewport = viewports
                                 .entry(*node_id)
                                 .or_insert_with(|| (None, Vec::new()));
-                            viewport.0 = Some(node_areas.visible_area());
+                            viewport.0 = Some(layout_node.visible_area());
                         }
 
                         // Pass viewports to the children
@@ -60,7 +57,7 @@ impl Viewports {
                                 // Add itself
                                 inherited_viewports.push(*node_id);
 
-                                if does_element_have_children_with_intrinsic_layout(tag) {
+                                if tag.has_children_with_intrinsic_layout() {
                                     for child in node.children() {
                                         if let NodeType::Element(ElementNode { .. }) =
                                             &*child.node_type()

@@ -227,6 +227,8 @@ builder_constructors! {
         position_left: String,
         #[doc = include_str!("_docs/attributes/opacity.md")]
         opacity: String,
+        #[doc = include_str!("_docs/attributes/content.md")]
+        content: String,
 
         name: String,
         focusable: String,

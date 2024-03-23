@@ -1,6 +1,7 @@
 use std::sync::{Arc, Mutex};
 
 use dioxus_native_core::{
+    attributes::AttributeName,
     exports::shipyard::Component,
     node_ref::NodeView,
     prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State},
@@ -102,22 +103,22 @@ impl State<CustomAttributeValues> for FontStyleState {
 
     const NODE_MASK: NodeMaskBuilder<'static> =
         NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[
-            "color",
-            "text_shadow",
-            "font_size",
-            "font_family",
-            "line_height",
-            "text_align",
-            "max_lines",
-            "font_style",
-            "font_weight",
-            "font_width",
-            "word_spacing",
-            "letter_spacing",
-            "decoration",
-            "decoration_color",
-            "decoration_style",
-            "text_overflow",
+            AttributeName::Color,
+            AttributeName::TextAlign,
+            AttributeName::TextShadow,
+            AttributeName::FontSize,
+            AttributeName::FontFamily,
+            AttributeName::LineHeight,
+            AttributeName::MaxLines,
+            AttributeName::FontStyle,
+            AttributeName::FontWeight,
+            AttributeName::FontWidth,
+            AttributeName::WordSpacing,
+            AttributeName::LetterSpacing,
+            AttributeName::Decoration,
+            AttributeName::DecorationColor,
+            AttributeName::DecorationStyle,
+            AttributeName::TextOverflow,
         ]));
 
     fn update<'a>(
@@ -137,15 +138,15 @@ impl State<CustomAttributeValues> for FontStyleState {
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
-                match attr.attribute.name.as_str() {
-                    "color" => {
+                match attr.attribute {
+                    AttributeName::Color => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(new_color) = Color::parse(value) {
                                 font_style.color = new_color;
                             }
                         }
                     }
-                    "text_shadow" => {
+                    AttributeName::TextShadow => {
                         if let Some(value) = attr.value.as_text() {
                             font_style.text_shadows = value
                                 .split_excluding_group(',', '(', ')')
@@ -159,7 +160,7 @@ impl State<CustomAttributeValues> for FontStyleState {
                                 .collect();
                         }
                     }
-                    "font_family" => {
+                    AttributeName::FontFamily => {
                         if let Some(value) = attr.value.as_text() {
                             let families = value.split(',');
                             font_style.font_family = SmallVec::from(
@@ -170,35 +171,35 @@ impl State<CustomAttributeValues> for FontStyleState {
                             );
                         }
                     }
-                    "font_size" => {
+                    AttributeName::FontSize => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(font_size) = value.parse::<f32>() {
                                 font_style.font_size = font_size * scale_factor;
                             }
                         }
                     }
-                    "line_height" => {
+                    AttributeName::LineHeight => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(line_height) = value.parse() {
                                 font_style.line_height = line_height;
                             }
                         }
                     }
-                    "text_align" => {
+                    AttributeName::TextAlign => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(text_align) = TextAlign::parse(value) {
                                 font_style.text_align = text_align;
                             }
                         }
                     }
-                    "max_lines" => {
+                    AttributeName::MaxLines => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(max_lines) = value.parse() {
                                 font_style.max_lines = Some(max_lines);
                             }
                         }
                     }
-                    "text_overflow" => {
+                    AttributeName::TextOverflow => {
                         let value = attr.value.as_text();
                         if let Some(value) = value {
                             if let Ok(text_overflow) = TextOverflow::parse(value) {
@@ -206,42 +207,42 @@ impl State<CustomAttributeValues> for FontStyleState {
                             }
                         }
                     }
-                    "font_style" => {
+                    AttributeName::FontStyle => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(font_slant) = Slant::parse(value) {
                                 font_style.font_slant = font_slant;
                             }
                         }
                     }
-                    "font_weight" => {
+                    AttributeName::FontWeight => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(font_weight) = Weight::parse(value) {
                                 font_style.font_weight = font_weight;
                             }
                         }
                     }
-                    "font_width" => {
+                    AttributeName::FontWidth => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(font_width) = Width::parse(value) {
                                 font_style.font_width = font_width;
                             }
                         }
                     }
-                    "decoration" => {
+                    AttributeName::Decoration => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(decoration) = TextDecoration::parse(value) {
                                 font_style.decoration.ty = decoration;
                             }
                         }
                     }
-                    "decoration_style" => {
+                    AttributeName::DecorationStyle => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(style) = TextDecorationStyle::parse(value) {
                                 font_style.decoration.style = style;
                             }
                         }
                     }
-                    "decoration_color" => {
+                    AttributeName::DecorationColor => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(new_decoration_color) = Color::parse(value) {
                                 font_style.decoration.color = new_decoration_color;
@@ -250,7 +251,7 @@ impl State<CustomAttributeValues> for FontStyleState {
                             font_style.decoration.color = font_style.color;
                         }
                     }
-                    "word_spacing" => {
+                    AttributeName::WordSpacing => {
                         let value = attr.value.as_text();
                         if let Some(value) = value {
                             if let Ok(word_spacing) = value.parse() {
@@ -258,7 +259,7 @@ impl State<CustomAttributeValues> for FontStyleState {
                             }
                         }
                     }
-                    "letter_spacing" => {
+                    AttributeName::LetterSpacing => {
                         let value = attr.value.as_text();
                         if let Some(value) = value {
                             if let Ok(letter_spacing) = value.parse() {
