@@ -45,8 +45,6 @@ pub fn measure_node<Key: NodeKey>(
         || layout.dirty.contains(&node_id)
         || !layout.results.contains_key(&node_id);
     if must_revalidate {
-        let old_node = layout.results.remove(&node_id);
-
         // Create the initial Node area size
         let mut area_size = Size2D::new(node.padding.horizontal(), node.padding.vertical());
 
@@ -86,7 +84,7 @@ pub fn measure_node<Key: NodeKey>(
                 .most_fitting_size(&area_size.height, &available_parent_area.size.height);
 
             let most_fitting_area_size = Size2D::new(most_fitting_width, most_fitting_height);
-            let res = measurer.measure(node_id, node, &most_fitting_area_size, old_node);
+            let res = measurer.measure(node_id, node, &most_fitting_area_size);
 
             // Compute the width and height again using the new custom area sizes
             if let Some((custom_size, node_data)) = res {
