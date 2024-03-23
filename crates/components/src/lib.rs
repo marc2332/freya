@@ -29,6 +29,7 @@ mod table;
 mod theme;
 mod tile;
 mod tooltip;
+mod use_form;
 
 pub use accordion::*;
 pub use body::*;
@@ -58,3 +59,4 @@ pub use table::*;
 pub use theme::*;
 pub use tile::*;
 pub use tooltip::*;
+pub use use_form::*;
