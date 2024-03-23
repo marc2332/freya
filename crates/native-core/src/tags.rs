@@ -15,6 +15,10 @@ impl TagName {
     pub fn has_intrinsic_layout(&self) -> bool {
         *self != Self::Text
     }
+
+    pub fn has_children_with_intrinsic_layout(&self) -> bool {
+        *self != Self::Paragraph && *self != Self::Label
+    }
 }
 
 impl FromStr for TagName {

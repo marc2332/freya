@@ -93,7 +93,10 @@ impl<'a> LayoutMeasurer<NodeId> for SkiaMeasurer<'a> {
         let node = self.rdom.get(node_id).unwrap();
         let node_type: &NodeType<_> = &node.node_type();
 
-        !matches!(node_type.tag(), Some(TagName::Label | TagName::Paragraph))
+        node_type
+            .tag()
+            .map(|tag| tag.has_children_with_intrinsic_layout())
+            .unwrap_or_default()
     }
 
     fn notify_layout_references(&self, node_id: NodeId, layout_node: &LayoutNode) {

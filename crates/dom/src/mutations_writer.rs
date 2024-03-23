@@ -1,7 +1,6 @@
 use dioxus_core::{ElementId, WriteMutations};
 use dioxus_native_core::{
-    dioxus::DioxusNativeCoreMutationWriter, prelude::NodeImmutable, tags::TagName, tree::TreeRef,
-    NodeId,
+    dioxus::DioxusNativeCoreMutationWriter, prelude::NodeImmutable, tree::TreeRef, NodeId,
 };
 use freya_common::Layers;
 use freya_node_state::{CustomAttributeValues, LayerState};
@@ -28,11 +27,11 @@ impl<'a> MutationsWriter<'a> {
         let tree = self.native_writer.rdom.tree_ref();
         while let Some(node_id) = stack.pop() {
             if let Some(node) = self.native_writer.rdom.get(node_id) {
-                let traverse_children = if let Some(tag) = node.node_type().tag() {
-                    !(*tag == TagName::Paragraph || *tag == TagName::Label)
-                } else {
-                    true
-                };
+                let traverse_children = node
+                    .node_type()
+                    .tag()
+                    .map(|tag| tag.has_children_with_intrinsic_layout())
+                    .unwrap_or_default();
                 if traverse_children {
                     let children = tree.children_ids_advanced(node_id, false);
                     stack.extend(children.iter().copied().rev());

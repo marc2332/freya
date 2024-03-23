@@ -3,7 +3,7 @@ use dioxus_native_core::{
     exports::shipyard::Component,
     node_ref::NodeView,
     prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State},
-    NodeId, SendAnyMap,
+    SendAnyMap,
 };
 use dioxus_native_core_macro::partial_derive_state;
 use freya_common::Layers;
@@ -12,10 +12,8 @@ use crate::CustomAttributeValues;
 
 #[derive(Default, PartialEq, Clone, Debug, Component)]
 pub struct LayerState {
-    pub provided_layer: i16,
     pub layer: i16,
-    pub children_element_layer: i16,
-    pub node_id: NodeId,
+    pub layer_for_children: i16,
 }
 
 #[partial_derive_state]
@@ -39,8 +37,9 @@ impl State<CustomAttributeValues> for LayerState {
         context: &SendAnyMap,
     ) -> bool {
         let layers = context.get::<Layers>().unwrap();
-        let mut layer_state = LayerState::default();
-        let inherited_relative_layer = parent.map(|(p,)| p.children_element_layer).unwrap_or(0i16);
+        let inherited_layer = parent.map(|(p,)| p.layer_for_children).unwrap_or(0i16);
+
+        let mut provided_layer = 0;
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
@@ -49,7 +48,7 @@ impl State<CustomAttributeValues> for LayerState {
                     AttributeName::Layer => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(relative_layer) = value.parse::<i16>() {
-                                layer_state.provided_layer = relative_layer;
+                                provided_layer = relative_layer;
                             }
                         }
                     }
@@ -58,17 +57,15 @@ impl State<CustomAttributeValues> for LayerState {
             }
         }
 
-        let element_layer =
-            -layer_state.provided_layer + node_view.height() as i16 - inherited_relative_layer;
-        let children_element_layer = layer_state.provided_layer + inherited_relative_layer;
-
-        layer_state.layer = element_layer;
-        layer_state.children_element_layer = children_element_layer;
+        let layer_state = LayerState {
+            layer: -provided_layer + node_view.height() as i16 - inherited_layer,
+            layer_for_children: provided_layer + inherited_layer,
+        };
 
         let changed = &layer_state != self;
 
         if changed {
-            layers.insert_node_in_layer(node_view.node_id(), element_layer);
+            layers.insert_node_in_layer(node_view.node_id(), layer_state.layer);
         }
 
         *self = layer_state;
