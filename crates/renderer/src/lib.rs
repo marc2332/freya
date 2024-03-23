@@ -51,14 +51,12 @@ impl DesktopRenderer {
         {
             use std::process::exit;
             let proxy = proxy.clone();
-            dioxus_hot_reload::connect(move |msg| {
-                match msg {
-                    dioxus_hot_reload::HotReloadMsg::UpdateTemplate(template) => {
-                        let _ = proxy.send_event(EventMessage::UpdateTemplate(template));
-                    }
-                    dioxus_hot_reload::HotReloadMsg::Shutdown => exit(0),
-                    dioxus_hot_reload::HotReloadMsg::UpdateAsset(_) => {}
+            dioxus_hot_reload::connect(move |msg| match msg {
+                dioxus_hot_reload::HotReloadMsg::UpdateTemplate(template) => {
+                    let _ = proxy.send_event(EventMessage::UpdateTemplate(template));
                 }
+                dioxus_hot_reload::HotReloadMsg::Shutdown => exit(0),
+                dioxus_hot_reload::HotReloadMsg::UpdateAsset(_) => {}
             });
         }
 

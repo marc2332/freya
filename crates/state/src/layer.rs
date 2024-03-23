@@ -1,5 +1,3 @@
-use std::sync::{Arc, Mutex};
-
 use dioxus_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
@@ -8,7 +6,7 @@ use dioxus_native_core::{
     NodeId, SendAnyMap,
 };
 use dioxus_native_core_macro::partial_derive_state;
-use rustc_hash::FxHashMap;
+use freya_common::Layers;
 
 use crate::CustomAttributeValues;
 
@@ -40,9 +38,7 @@ impl State<CustomAttributeValues> for LayerState {
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
         context: &SendAnyMap,
     ) -> bool {
-        let layers = context
-            .get::<Arc<Mutex<FxHashMap<i16, Vec<NodeId>>>>>()
-            .unwrap();
+        let layers = context.get::<Layers>().unwrap();
         let mut layer_state = LayerState::default();
         let inherited_relative_layer = parent.map(|(p,)| p.children_element_layer).unwrap_or(0i16);
 
@@ -72,10 +68,7 @@ impl State<CustomAttributeValues> for LayerState {
         let changed = &layer_state != self;
 
         if changed {
-            let mut layers = layers.lock().unwrap();
-            let layer = layers.entry(element_layer).or_default();
-
-            layer.push(node_view.node_id());
+            layers.insert_node_in_layer(node_view.node_id(), element_layer);
         }
 
         *self = layer_state;

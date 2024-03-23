@@ -1,4 +1,3 @@
-use crate::layout::*;
 use dioxus_native_core::{real_dom::NodeImmutable, NodeId};
 use freya_dom::prelude::FreyaDOM;
 use freya_engine::prelude::*;
@@ -10,11 +9,12 @@ use torin::prelude::{LayoutNode, Torin};
 pub fn process_render(
     fdom: &FreyaDOM,
     font_collection: &mut FontCollection,
-    layers: &Layers,
     mut render_fn: impl FnMut(&FreyaDOM, &NodeId, &LayoutNode, &mut FontCollection, &Torin<NodeId>),
 ) {
     let layout = fdom.layout();
     let rdom = fdom.rdom();
+    let layers = fdom.layers();
+
     // Render all the layers from the bottom to the top
     for (_, layer) in sorted(layers.layers().iter()) {
         'elements: for node_id in layer {

@@ -1,7 +1,8 @@
 use std::sync::Arc;
 
 use dioxus_native_core::{real_dom::NodeImmutable, SendAnyMap};
-use freya_core::layout::{create_paragraph, CachedParagraph};
+use freya_common::CachedParagraph;
+use freya_core::layout::create_paragraph;
 use freya_dom::prelude::DioxusNode;
 use freya_engine::prelude::*;
 use freya_node_state::CursorSettings;

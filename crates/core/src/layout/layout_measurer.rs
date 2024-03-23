@@ -8,21 +8,22 @@ pub fn process_layout(
     fdom: &FreyaDOM,
     area: Area,
     font_collection: &mut FontCollection,
-    layers: &Layers,
     scale_factor: f32,
 ) {
-    let rdom = fdom.rdom();
-    let mut dom_adapter = DioxusDOMAdapter::new_with_cache(rdom);
-    let skia_measurer = SkiaMeasurer::new(rdom, font_collection);
+    {
+        let rdom = fdom.rdom();
+        let mut dom_adapter = DioxusDOMAdapter::new_with_cache(rdom);
+        let skia_measurer = SkiaMeasurer::new(rdom, font_collection, scale_factor);
 
-    // Finds the best Node from where to start measuring
-    fdom.layout().find_best_root(&mut dom_adapter);
+        // Finds the best Node from where to start measuring
+        fdom.layout().find_best_root(&mut dom_adapter);
 
-    let root_id = fdom.rdom().root_id();
+        let root_id = fdom.rdom().root_id();
 
-    // Measure the layout
-    fdom.layout()
-        .measure(root_id, area, &mut Some(skia_measurer), &mut dom_adapter);
+        // Measure the layout
+        fdom.layout()
+            .measure(root_id, area, &mut Some(skia_measurer), &mut dom_adapter);
+    }
 
-    layers.measure_all_paragraph_elements(rdom, &fdom.layout(), scale_factor);
+    fdom.measure_all_paragraph_elements(scale_factor);
 }

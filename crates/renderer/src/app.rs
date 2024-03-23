@@ -37,7 +37,6 @@ pub struct App<State: 'static + Clone> {
     pub(crate) event_emitter: EventEmitter,
     pub(crate) event_receiver: EventReceiver,
     pub(crate) window_env: WindowEnv<State>,
-    pub(crate) layers: Layers,
     pub(crate) nodes_state: NodesState,
     pub(crate) focus_sender: FocusSender,
     pub(crate) focus_receiver: FocusReceiver,
@@ -98,7 +97,6 @@ impl<State: 'static + Clone> App<State> {
             event_emitter,
             event_receiver,
             window_env,
-            layers: Layers::default(),
             nodes_state: NodesState::default(),
             accessibility,
             focus_sender,
@@ -135,23 +133,16 @@ impl<State: 'static + Clone> App<State> {
         let scale_factor = self.window_env.window.scale_factor() as f32;
         self.provide_vdom_contexts();
 
-        self.sdom.get_mut().init_dom(
-            &mut self.vdom,
-            scale_factor,
-            self.layers.layers.clone(),
-            self.layers.paragraph_elements.clone(),
-        );
+        self.sdom.get_mut().init_dom(&mut self.vdom, scale_factor);
     }
 
     /// Update the DOM with the mutations from the VirtualDOM.
     pub fn apply_vdom_changes(&mut self) -> (bool, bool) {
         let scale_factor = self.window_env.window.scale_factor() as f32;
-        let (repaint, relayout) = self.sdom.get_mut().render_mutations(
-            &mut self.vdom,
-            scale_factor,
-            self.layers.layers.clone(),
-            self.layers.paragraph_elements.clone(),
-        );
+        let (repaint, relayout) = self
+            .sdom
+            .get_mut()
+            .render_mutations(&mut self.vdom, scale_factor);
 
         if repaint {
             if let Some(mutations_notifier) = &self.mutations_notifier {
@@ -207,7 +198,6 @@ impl<State: 'static + Clone> App<State> {
         let scale_factor = self.window_env.window.scale_factor();
         process_events(
             &self.sdom.get(),
-            &self.layers,
             &mut self.events,
             &self.event_emitter,
             &mut self.nodes_state,
@@ -274,8 +264,9 @@ impl<State: 'static + Clone> App<State> {
     /// Measure the a text group given it's ID.
     pub fn measure_text_group(&self, text_id: &Uuid) {
         let scale_factor = self.window_env.window.scale_factor() as f32;
-        self.layers
-            .measure_paragraph_elements(text_id, &self.sdom.get(), scale_factor);
+        self.sdom
+            .get()
+            .measure_paragraph_elements(text_id, scale_factor);
     }
 
     pub fn focus_next_node(&self, direction: AccessibilityFocusDirection) {
@@ -312,7 +303,6 @@ impl<State: 'static + Clone> App<State> {
                     window_size.height as f32,
                 ))),
                 &mut self.font_collection,
-                &self.layers,
                 scale_factor,
             );
 
@@ -328,8 +318,8 @@ impl<State: 'static + Clone> App<State> {
 
         info!(
             "Processed {} layers and {} group of paragraph elements",
-            self.layers.len_layers(),
-            self.layers.len_paragraph_elements()
+            self.sdom.get().layers().len_layers(),
+            self.sdom.get().paragraphs().len_paragraph_elements()
         );
     }
 
@@ -346,7 +336,6 @@ impl<State: 'static + Clone> App<State> {
         process_render(
             &fdom,
             &mut self.font_collection,
-            &self.layers,
             |fdom, node_id, area, font_collection, layout| {
                 let render_wireframe = if let Some(hovered_node) = &hovered_node {
                     hovered_node

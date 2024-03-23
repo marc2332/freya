@@ -1,8 +1,7 @@
-use crate::layout::Layers;
 use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::NodeId;
 use dioxus_native_core::{prelude::NodeImmutableDioxusExt, tree::TreeRef};
-use freya_dom::{dom::DioxusDOM, prelude::FreyaDOM};
+use freya_dom::prelude::*;
 
 use freya_engine::prelude::*;
 use freya_node_state::{Fill, Style, ViewportState};
@@ -17,7 +16,6 @@ use super::potential_event::PotentialEvent;
 /// Process the events and emit them to the VirtualDOM
 pub fn process_events(
     dom: &FreyaDOM,
-    layers: &Layers,
     events: &mut EventsQueue,
     event_emitter: &EventEmitter,
     nodes_state: &mut NodesState,
@@ -27,7 +25,7 @@ pub fn process_events(
     let global_events = measure_global_events(events);
 
     // 2. Get potential events that could be emitted based on the elements layout and viewports
-    let potential_events = measure_potential_event_listeners(layers, events, dom);
+    let potential_events = measure_potential_event_listeners(events, dom);
 
     // 3. Get what events can be actually emitted based on what elements are listening
     let dom_events = measure_dom_events(potential_events, dom, scale_factor);
@@ -71,18 +69,14 @@ pub fn measure_global_events(events: &EventsQueue) -> Vec<PlatformEvent> {
 }
 
 /// Measure what potential event listeners could be triggered
-pub fn measure_potential_event_listeners(
-    layers: &Layers,
-    events: &EventsQueue,
-    fdom: &FreyaDOM,
-) -> PotentialEvents {
+pub fn measure_potential_event_listeners(events: &EventsQueue, fdom: &FreyaDOM) -> PotentialEvents {
     let mut potential_events = PotentialEvents::default();
 
     let layout = fdom.layout();
     let rdom = fdom.rdom();
+    let layers = fdom.layers();
 
     // Propagate events from the top to the bottom
-    // TODO: Sort
     for (layer, layer_nodes) in sorted(layers.layers().iter()) {
         for node_id in layer_nodes {
             let layout_node = layout.get(*node_id);

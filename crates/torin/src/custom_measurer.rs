@@ -13,4 +13,6 @@ pub trait LayoutMeasurer<Key: NodeKey> {
     ) -> Option<(Size2D, Arc<SendAnyMap>)>;
 
     fn should_measure_inner_children(&mut self, node_id: Key) -> bool;
+
+    fn notify_layout_references(&self, _node_id: Key, _layout_node: &LayoutNode) {}
 }

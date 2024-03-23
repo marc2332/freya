@@ -1,11 +1,11 @@
 pub mod accessibility_manager;
 pub use accessibility_manager::*;
 
+use crate::types::AccessibilityId;
 use dioxus_native_core::{node::NodeType, real_dom::NodeImmutable, tags::TagName, NodeId};
 use freya_dom::dom::{DioxusDOM, DioxusNode};
 use freya_node_state::AccessibilityNodeState;
 use torin::torin::Torin;
-use crate::types::AccessibilityId;
 
 /// Direction for the next Accessibility Node to be focused.
 #[derive(PartialEq)]
@@ -64,10 +64,10 @@ pub fn process_accessibility(
                 node_accessibility,
             );
         }
-        
-        if let Some(tag) = node.node_type().tag(){
+
+        if let Some(tag) = node.node_type().tag() {
             if *tag == TagName::Paragraph || *tag == TagName::Label {
-                return false
+                return false;
             }
         }
 

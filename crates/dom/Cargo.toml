@@ -15,6 +15,7 @@ categories = ["gui", "asynchronous"]
 shared = []
 
 [dependencies]
+freya-common = { workspace = true }
 freya-node-state = { workspace = true }
 torin = { workspace = true }
 

@@ -405,6 +405,11 @@ pub fn measure_inner_nodes<Key: NodeKey>(
 
         // Cache the child layout if it was mutated and inner nodes must be cache
         if child_revalidated && must_cache_inner_nodes {
+            if let Some(measurer) = measurer {
+                if child_data.has_layout_references {
+                    measurer.notify_layout_references(child_id, &child_areas);
+                }
+            }
             layout.cache_node(child_id, child_areas);
         }
     }

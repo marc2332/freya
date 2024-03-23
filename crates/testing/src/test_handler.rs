@@ -34,7 +34,6 @@ pub struct TestingHandler {
     pub(crate) navigation_state: NavigatorState,
     pub(crate) platform_information: Arc<Mutex<PlatformInformation>>,
     pub(crate) cursor_icon: CursorIcon,
-    pub(crate) layers: Layers,
 }
 
 impl TestingHandler {
@@ -136,23 +135,19 @@ impl TestingHandler {
         self.utils.sdom().get_mut().layout().reset();
 
         // Measure layout
-        let layers = process_layout(
+        process_layout(
             &self.utils.sdom().get(),
             Area {
                 origin: (0.0, 0.0).into(),
                 size,
             },
             &mut self.font_collection,
-            &self.layers,
             SCALE_FACTOR as f32,
         );
-
-        *self.utils.layers().lock().unwrap() = layers;
 
         let dom = &self.utils.sdom().get_mut();
 
         process_accessibility(
-            &self.utils.layers().lock().unwrap(),
             &dom.layout(),
             dom.rdom(),
             &mut self.accessibility_manager.lock().unwrap(),
@@ -160,7 +155,6 @@ impl TestingHandler {
 
         process_events(
             dom,
-            &self.utils.layers().lock().unwrap(),
             &mut self.events_queue,
             &self.event_emitter,
             &mut self.nodes_state,

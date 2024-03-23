@@ -1,5 +1,3 @@
-use std::sync::{Arc, Mutex};
-
 use dioxus_native_core::{
     attributes::AttributeName, exports::shipyard::Component, node::OwnedAttributeValue,
     tags::TagName,
@@ -7,12 +5,11 @@ use dioxus_native_core::{
 use dioxus_native_core::{
     node_ref::NodeView,
     prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State},
-    NodeId, SendAnyMap,
+    SendAnyMap,
 };
 use dioxus_native_core_macro::partial_derive_state;
+use freya_common::ParagraphElements;
 use freya_engine::prelude::*;
-use rustc_hash::FxHashMap;
-use uuid::Uuid;
 
 use crate::{CursorMode, CursorReference, CustomAttributeValues, Parse};
 
@@ -69,9 +66,7 @@ impl State<CustomAttributeValues> for CursorSettings {
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
         context: &SendAnyMap,
     ) -> bool {
-        let paragraphs = context
-            .get::<Arc<Mutex<FxHashMap<Uuid, Vec<NodeId>>>>>()
-            .unwrap();
+        let paragraphs = context.get::<ParagraphElements>().unwrap();
         let mut cursor = parent.map(|(p,)| p.clone()).unwrap_or_default();
 
         if let Some(attributes) = node_view.attributes() {
@@ -133,18 +128,10 @@ impl State<CustomAttributeValues> for CursorSettings {
         }
         let changed = &cursor != self;
 
-        if changed {
-            if let Some(tag) = node_view.tag() {
+        if changed && CursorMode::Editable == cursor.mode {
+            if let Some((tag, cursor_ref)) = node_view.tag().zip(cursor.cursor_ref.as_ref()) {
                 if *tag == TagName::Paragraph {
-                    let is_editable = CursorMode::Editable == cursor.mode;
-                    if is_editable {
-                        if let Some(cursor_ref) = &cursor.cursor_ref {
-                            let mut paragraphs = paragraphs.lock().unwrap();
-                            let text_group = paragraphs.entry(cursor_ref.text_id).or_default();
-
-                            text_group.push(node_view.node_id());
-                        }
-                    }
+                    paragraphs.insert_paragraph(node_view.node_id(), cursor_ref.text_id)
                 }
             }
         }
