@@ -86,6 +86,10 @@
 //! }
 //! ```
 //!
+//! #### fill-min
+//! Will have the same size of the biggest sibling element inside a container who has `content: fit`.
+//! For an example, see `content`.
+//!
 //! #### Viewport percentage
 //! Relative percentage to the viewport (Window) equivalent value.
 //!

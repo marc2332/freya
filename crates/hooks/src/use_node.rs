@@ -25,7 +25,7 @@ pub fn use_node() -> (AttributeValue, NodeReferenceLayout) {
 
     (
         AttributeValue::any_value(CustomAttributeValues::Reference(NodeReference(tx))),
-        signal.read().clone(),
+        signal.read_unchecked().clone(),
     )
 }
 
@@ -68,7 +68,9 @@ mod test {
                     reference: reference,
                     width: "50%",
                     height: "25%",
-                    "{size.area.width()}"
+                    label {
+                        "{size.area.width()}"
+                    }
                 }
             )
         }
@@ -83,12 +85,18 @@ mod test {
 
         utils.wait_for_update().await;
         let root = utils.root().get(0);
-        assert_eq!(root.get(0).text().unwrap().parse::<f32>(), Ok(500.0 * 0.5));
+        assert_eq!(
+            root.get(0).get(0).text().unwrap().parse::<f32>(),
+            Ok(500.0 * 0.5)
+        );
 
         utils.config().size = (300.0, 800.0).into();
         utils.wait_for_update().await;
 
         let root = utils.root().get(0);
-        assert_eq!(root.get(0).text().unwrap().parse::<f32>(), Ok(300.0 * 0.5));
+        assert_eq!(
+            root.get(0).get(0).text().unwrap().parse::<f32>(),
+            Ok(300.0 * 0.5)
+        );
     }
 }

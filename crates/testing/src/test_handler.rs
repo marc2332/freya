@@ -1,7 +1,6 @@
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use accesskit::NodeId as AccessibilityId;
 use dioxus_core::VirtualDom;
 use freya_common::EventMessage;
 use freya_core::prelude::*;

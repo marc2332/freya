@@ -1,9 +1,8 @@
-use dioxus_native_core::prelude::TextNode;
 use dioxus_native_core::NodeId;
 use dioxus_native_core::{node::NodeType, real_dom::NodeImmutable};
 use freya_core::node::NodeState;
 use freya_node_state::{CustomAttributeValues, Style};
-use torin::{geometry::Area, prelude::NodeAreas};
+use torin::{geometry::Area, prelude::LayoutNode};
 
 use crate::test_utils::TestUtils;
 
@@ -35,11 +34,7 @@ impl TestNode {
 
     /// Get the Node text
     pub fn text(&self) -> Option<&str> {
-        if let NodeType::Text(TextNode { text, .. }) = &self.node_type {
-            Some(text)
-        } else {
-            None
-        }
+        self.node_type.text()
     }
 
     /// Get the Node state
@@ -48,7 +43,7 @@ impl TestNode {
     }
 
     /// Get the Node layout
-    pub fn layout(&self) -> Option<NodeAreas> {
+    pub fn layout(&self) -> Option<LayoutNode> {
         self.utils()
             .sdom()
             .get()
@@ -120,5 +115,34 @@ impl TestNode {
     /// Get the IDs of this Node children.
     pub fn children_ids(&self) -> Vec<NodeId> {
         self.children_ids.clone()
+    }
+
+    /// Check if this element is text
+    pub fn is_element(&self) -> bool {
+        self.node_type.is_element()
+    }
+
+    /// Check if this element is text
+    pub fn is_text(&self) -> bool {
+        self.node_type.is_text()
+    }
+
+    /// Check if this element is a placeholder
+    pub fn is_placeholder(&self) -> bool {
+        self.node_type.is_placeholder()
+    }
+
+    /// Get a Node by a matching text.
+    pub fn get_by_text(&self, matching_text: &str) -> Option<Self> {
+        self.utils()
+            .get_node_matching_inside_id(self.node_id, |node| {
+                if let NodeType::Text(text) = &*node.node_type() {
+                    matching_text == text
+                } else {
+                    false
+                }
+            })
+            .first()
+            .cloned()
     }
 }

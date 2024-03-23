@@ -22,6 +22,7 @@ pub const LIGHT_THEME: Theme = Theme {
         },
         border_fill: cow_borrowed!("rgb(210, 210, 210)"),
         focus_border_fill: cow_borrowed!("rgb(180, 180, 180)"),
+        shadow: cow_borrowed!("0 4 5 0 rgb(0, 0, 0, 0.1)"),
         padding: cow_borrowed!("8 16"),
         margin: cow_borrowed!("4"),
         corner_radius: cow_borrowed!("8"),
@@ -54,8 +55,8 @@ pub const LIGHT_THEME: Theme = Theme {
         active_thumb_background: cow_borrowed!("rgb(95, 95, 95)"),
     },
     scroll_view: ScrollViewTheme {
-        height: cow_borrowed!("100%"),
-        width: cow_borrowed!("100%"),
+        height: cow_borrowed!("fill"),
+        width: cow_borrowed!("fill"),
         padding: cow_borrowed!("0"),
     },
     tooltip: TooltipTheme {
@@ -88,7 +89,6 @@ pub const LIGHT_THEME: Theme = Theme {
     },
     loader: LoaderTheme {
         primary_color: cow_borrowed!("rgb(50, 50, 50)"),
-        secondary_color: cow_borrowed!("rgb(150, 150, 150)"),
     },
     link: LinkTheme {
         highlight_color: cow_borrowed!("rgb(43,106,208)"),
@@ -97,7 +97,7 @@ pub const LIGHT_THEME: Theme = Theme {
         color: cow_borrowed!("white"),
         background: cow_borrowed!("rgb(210, 210, 210)"),
         progress_background: cow_borrowed!("rgb(103, 80, 164)"),
-        width: cow_borrowed!("100%"),
+        width: cow_borrowed!("fill"),
         height: cow_borrowed!("20"),
     },
     table: TableTheme {
@@ -126,7 +126,7 @@ pub const LIGHT_THEME: Theme = Theme {
         width: cow_borrowed!("100%"),
         height: cow_borrowed!("100%"),
     },
-    arrow_icon: ArrowIconTheme {
+    icon: IconTheme {
         width: cow_borrowed!("10"),
         height: cow_borrowed!("10"),
         margin: cow_borrowed!("none"),
@@ -144,5 +144,40 @@ pub const LIGHT_THEME: Theme = Theme {
             color: cow_borrowed!("rgb(10, 10, 10)"),
         },
         border_fill: cow_borrowed!("rgb(210, 210, 210)"),
+    },
+    tile: TileTheme {
+        padding: cow_borrowed!("4 6"),
+    },
+    radio: RadioTheme {
+        unselected_fill: cow_borrowed!("rgb(35, 35, 35)"),
+        selected_fill: cow_borrowed!("rgb(103, 80, 164)"),
+    },
+    checkbox: CheckboxTheme {
+        unselected_fill: cow_borrowed!("rgb(80, 80, 80)"),
+        selected_fill: cow_borrowed!("rgb(103, 80, 164)"),
+        selected_icon_fill: cow_borrowed!("white"),
+    },
+    menu_item: MenuItemTheme {
+        hover_background: cow_borrowed!("rgb(235, 235, 235)"),
+        corner_radius: cow_borrowed!("8"),
+        font_theme: FontTheme {
+            color: cow_borrowed!("rgb(10, 10, 10)"),
+        },
+    },
+    menu_container: MenuContainerTheme {
+        background: cow_borrowed!("rgb(245, 245, 245)"),
+        padding: cow_borrowed!("4"),
+        shadow: cow_borrowed!("0 2 5 2 rgb(0, 0, 0, 0.1)"),
+    },
+    snackbar: SnackBarTheme {
+        background: cow_borrowed!("rgb(235, 235, 235)"),
+        color: cow_borrowed!("rgb(103, 80, 164)"),
+    },
+    popup: PopupTheme {
+        background: cow_borrowed!("white"),
+        color: cow_borrowed!("black"),
+        cross_fill: cow_borrowed!("rgb(40, 40, 40)"),
+        width: cow_borrowed!("350"),
+        height: cow_borrowed!("200"),
     },
 };

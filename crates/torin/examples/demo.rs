@@ -1,5 +1,6 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
+use dioxus_native_core::prelude::SendAnyMap;
 use torin::prelude::*;
 
 // Custom measurer, useful to measure certain elements such as text with other libraries
@@ -10,10 +11,13 @@ impl LayoutMeasurer<usize> for CustomMeasurer {
         &mut self,
         _node_id: usize,
         _node: &Node,
-        _parent_size: &Area,
-        _available_parent_area: &Area,
-    ) -> Option<Size2D> {
+        _size: &Size2D,
+    ) -> Option<(Size2D, Arc<SendAnyMap>)> {
         None
+    }
+
+    fn should_measure_inner_children(&mut self, _node_id: usize) -> bool {
+        true
     }
 }
 

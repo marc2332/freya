@@ -24,7 +24,7 @@ pub fn process_layout(
         .measure(root_id, area, &mut Some(skia_measurer), &mut dom_adapter);
 
     // Create the layers
-    let layers = Layers::new(rdom, &fdom.layout(), font_collection, scale_factor);
+    let layers = Layers::new(rdom, &fdom.layout(), scale_factor);
 
     // Calculate the viewports
     let viewports = Viewports::new(&layers, fdom);
