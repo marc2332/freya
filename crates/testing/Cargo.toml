@@ -33,9 +33,7 @@ dioxus-core = { workspace = true }
 dioxus = { workspace = true }
 
 tokio = { workspace = true }
-accesskit = { workspace = true }
 winit = { workspace = true }
 
 [dev-dependencies]
-freya-components = { workspace = true }
 dioxus = { workspace = true }

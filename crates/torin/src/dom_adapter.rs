@@ -1,3 +1,6 @@
+use std::sync::Arc;
+
+use dioxus_native_core::SendAnyMap;
 pub use euclid::Rect;
 
 use crate::{
@@ -7,8 +10,8 @@ use crate::{
 };
 
 /// Cached layout results of a Node
-#[derive(Debug, PartialEq, Clone, Default)]
-pub struct NodeAreas {
+#[derive(Debug, Default, Clone)]
+pub struct LayoutNode {
     /// Area that ocuppies this node
     pub area: Area,
 
@@ -20,9 +23,21 @@ pub struct NodeAreas {
 
     /// Outer margin
     pub margin: Gaps,
+
+    /// Associated data
+    pub data: Option<Arc<SendAnyMap>>,
 }
 
-impl NodeAreas {
+impl PartialEq for LayoutNode {
+    fn eq(&self, other: &Self) -> bool {
+        self.area == other.area
+            && self.inner_area == other.inner_area
+            && self.inner_sizes == other.inner_sizes
+            && self.margin == other.margin
+    }
+}
+
+impl LayoutNode {
     // The area without any margin
     pub fn visible_area(&self) -> Area {
         self.area.after_gaps(&self.margin)

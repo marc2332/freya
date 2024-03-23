@@ -1,10 +1,6 @@
-use std::time::Duration;
-
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-
-use freya_hooks::{use_applied_theme, LoaderTheme, LoaderThemeWith};
-use tokio::time::interval;
+use freya_hooks::{use_animation, use_applied_theme, AnimNum, LoaderTheme, LoaderThemeWith};
 
 /// [`Loader`] component properties.
 #[derive(Props, Clone, PartialEq)]
@@ -24,36 +20,26 @@ pub struct LoaderProps {
 #[allow(non_snake_case)]
 pub fn Loader(props: LoaderProps) -> Element {
     let theme = use_applied_theme!(&props.theme, loader);
-    let mut degrees = use_signal(|| 0);
-
-    let LoaderTheme {
-        primary_color,
-        secondary_color,
-    } = theme;
-
-    use_hook(move || {
-        spawn(async move {
-            let mut ticker = interval(Duration::from_millis(28));
-            loop {
-                ticker.tick().await;
-                if *degrees.peek() > 360 {
-                    degrees.set(0);
-                } else {
-                    degrees += 10;
-                }
-            }
-        });
+    let anim = use_animation(|ctx| {
+        ctx.auto_start(true);
+        ctx.with(AnimNum::new(0.0, 360.0).time(650))
     });
+
+    let LoaderTheme { primary_color } = theme;
+
+    let degrees = anim.read().get().read().as_f32();
 
     rsx!(svg {
         rotate: "{degrees}deg",
-        width: "31",
-        height: "31",
+        width: "48",
+        height: "48",
         svg_content: r#"
-                <svg width="31" height="31" viewBox="0 0 31 31" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M15.5235 27.6652C22.2292 27.6652 27.6652 22.2292 27.6652 15.5235C27.6652 8.81783 22.2292 3.38182 15.5235 3.38182C8.81783 3.38182 3.38182 8.81783 3.38182 15.5235C3.38182 22.2292 8.81783 27.6652 15.5235 27.6652Z" stroke="{primary_color}"  stroke-width="4"/>
-                    <path d="M27.6652 15.5235C27.6652 8.81859 22.2284 3.38182 15.5235 3.38182" stroke="{secondary_color}" stroke-width="4"/>
-                </svg>
-            "#
+            <svg viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+                <circle class="spin" cx="300" cy="300" fill="none"
+                r="250" stroke-width="64" stroke="{primary_color}"
+                stroke-dasharray="256 1400"
+                stroke-linecap="round" />
+            </svg>
+        "#
     })
 }

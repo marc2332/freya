@@ -20,7 +20,5 @@ torin = { workspace = true }
 
 dioxus-native-core = { workspace = true }
 dioxus-core = { workspace = true }
-
-uuid = { workspace = true }
 rustc-hash = { workspace = true }
 tracing = { workspace = true }
