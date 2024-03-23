@@ -574,9 +574,9 @@ pub mod events {
         onclick
         #[doc = include_str!("_docs/events/globalclick.md")]
         onglobalclick
-        /// TODO DOCS
+        #[doc = include_str!("_docs/events/onmiddleclick.md")]
         onmiddleclick
-        /// TODO DOCS
+        #[doc = include_str!("_docs/events/onrightclick.md")]
         onrightclick
         #[doc = include_str!("_docs/events/mousedown.md")]
         onmousedown
@@ -628,7 +628,7 @@ pub mod events {
         onpointerdown
         #[doc = include_str!("_docs/events/pointerup.md")]
         onpointerup
-        // TODOS DOCS
+        #[doc = include_str!("_docs/events/onglobalpointerup.md")]
         onglobalpointerup
         #[doc = include_str!("_docs/events/pointerover.md")]
         onpointerover

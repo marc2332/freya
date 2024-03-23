@@ -1,4 +1,4 @@
-The `click` event fires when the user clicks an element with the left button of the mouse.
+The `click` event fires when the user clicks an element with the right button of the mouse.
 
 Event Data: [`MouseData`](crate::events::MouseData)
 
@@ -12,7 +12,7 @@ fn app() -> Element {
             width: "100",
             height: "100",
             background: "red",
-            onclick: |_| println!("Clicked!")
+            onrightclick: |_| println!("Clicked!")
         }
     )
 }

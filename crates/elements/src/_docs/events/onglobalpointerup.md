@@ -1,6 +1,6 @@
-The `click` event fires when the user clicks an element with the left button of the mouse.
+The `globalpointerup` event fires when the user releases the point anywhere in the app.
 
-Event Data: [`MouseData`](crate::events::MouseData)
+Event Data: [`PointerData`](crate::events::PointerData)
 
 ### Example
 
@@ -8,6 +8,9 @@ Event Data: [`MouseData`](crate::events::MouseData)
 # use freya::prelude::*;
 fn app() -> Element {
     rsx!(
+        rect {
+            onglobalpointerup: |_| println!("Pointer released somewhere else!")
+        }
         rect {
             width: "100",
             height: "100",
