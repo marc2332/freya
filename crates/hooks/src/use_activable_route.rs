@@ -1,7 +1,6 @@
 use dioxus_hooks::try_use_context;
 use dioxus_signals::{Readable, Signal};
 
-
 #[derive(Default, Clone)]
 pub struct ActivableRouteContext(pub Signal<bool>);
 
