@@ -264,9 +264,7 @@ impl<State: 'static + Clone> App<State> {
     /// Measure the a text group given it's ID.
     pub fn measure_text_group(&self, text_id: &Uuid) {
         let scale_factor = self.window_env.window.scale_factor() as f32;
-        self.sdom
-            .get()
-            .measure_paragraph_elements(text_id, scale_factor);
+        self.sdom.get().measure_paragraphs(text_id, scale_factor);
     }
 
     pub fn focus_next_node(&self, direction: AccessibilityFocusDirection) {
@@ -319,7 +317,7 @@ impl<State: 'static + Clone> App<State> {
         info!(
             "Processed {} layers and {} group of paragraph elements",
             self.sdom.get().layers().len_layers(),
-            self.sdom.get().paragraphs().len_paragraph_elements()
+            self.sdom.get().paragraphs().len_paragraphs()
         );
     }
 

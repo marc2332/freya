@@ -96,7 +96,7 @@ pub struct FreyaDOM {
     rdom: DioxusDOM,
     dioxus_integration_state: DioxusState,
     torin: Arc<Mutex<Torin<NodeId>>>,
-    paragraph_elements: ParagraphElements,
+    paragraphs: ParagraphElements,
     layers: Layers,
 }
 
@@ -118,7 +118,7 @@ impl Default for FreyaDOM {
             rdom,
             dioxus_integration_state,
             torin: Arc::new(Mutex::new(Torin::new())),
-            paragraph_elements: ParagraphElements::default(),
+            paragraphs: ParagraphElements::default(),
             layers: Layers::default(),
         }
     }
@@ -134,7 +134,7 @@ impl FreyaDOM {
     }
 
     pub fn paragraphs(&self) -> &ParagraphElements {
-        &self.paragraph_elements
+        &self.paragraphs
     }
 
     /// Create the initial DOM from the given Mutations
@@ -152,7 +152,7 @@ impl FreyaDOM {
         ctx.insert(scale_factor);
         ctx.insert(self.torin.clone());
         ctx.insert(self.layers.clone());
-        ctx.insert(self.paragraph_elements.clone());
+        ctx.insert(self.paragraphs.clone());
 
         self.rdom.update_state(ctx);
     }
@@ -173,7 +173,7 @@ impl FreyaDOM {
         ctx.insert(scale_factor);
         ctx.insert(self.torin.clone());
         ctx.insert(self.layers.clone());
-        ctx.insert(self.paragraph_elements.clone());
+        ctx.insert(self.paragraphs.clone());
 
         // Update the Node's states
         let (_, diff) = self.rdom.update_state(ctx);
@@ -205,10 +205,10 @@ impl FreyaDOM {
         &mut self.dioxus_integration_state
     }
 
-    pub fn measure_all_paragraph_elements(&self, scale_factor: f32) {
+    pub fn measure_all_paragraphs(&self, scale_factor: f32) {
         let layout = self.layout();
         let rdom = self.rdom();
-        for group in self.paragraph_elements.paragraphs().values() {
+        for group in self.paragraphs.paragraphs().values() {
             for node_id in group {
                 let node = rdom.get(*node_id);
                 let layout_node = layout.get(*node_id);
@@ -220,8 +220,8 @@ impl FreyaDOM {
     }
 
     /// Measure all the paragraphs registered under the given TextId
-    pub fn measure_paragraph_elements(&self, text_id: &Uuid, scale_factor: f32) {
-        let paragraphs = self.paragraph_elements.paragraphs();
+    pub fn measure_paragraphs(&self, text_id: &Uuid, scale_factor: f32) {
+        let paragraphs = self.paragraphs.paragraphs();
         let group = paragraphs.get(text_id);
         let layout = self.layout();
         if let Some(group) = group {

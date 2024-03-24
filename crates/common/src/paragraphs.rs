@@ -31,7 +31,7 @@ impl ParagraphElements {
         }
     }
 
-    pub fn len_paragraph_elements(&self) -> usize {
+    pub fn len_paragraphs(&self) -> usize {
         self.paragraphs.lock().unwrap().len()
     }
 }
