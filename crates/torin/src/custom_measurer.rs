@@ -1,7 +1,7 @@
 use dioxus_native_core::prelude::SendAnyMap;
 use std::sync::Arc;
 
-use crate::{dom_adapter::NodeKey, geometry::Size2D, node::Node};
+use crate::{dom_adapter::NodeKey, geometry::Size2D, node::Node, prelude::LayoutNode};
 
 pub trait LayoutMeasurer<Key: NodeKey> {
     fn measure(
