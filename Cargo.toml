@@ -50,7 +50,7 @@ dioxus-hot-reload = { version = "0.5.0-alpha.0", features = ["file_watcher"], de
 dioxus-router = { version = "0.5.0-alpha.0", default-features = false }
 dioxus-std = { git = "https://github.com/marc2332/dioxus-std", rev = "4d8ae33b94537d54471cd924c32f03c1d949430f", features = ["clipboard"]}
 
-skia-safe = { version = "0.70.0", features = ["gl", "textlayout", "svg"] }
+skia-safe = { version = "0.72.0", features = ["gl", "textlayout", "svg"] }
 
 gl = "0.14.0"
 glutin = "0.31.2"
