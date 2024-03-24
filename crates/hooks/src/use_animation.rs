@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use dioxus_core::prelude::{spawn, use_hook, Task};
-use dioxus_hooks::{use_memo, use_reactive, Dependency};
+use dioxus_hooks::{use_memo, use_reactive, use_signal, Dependency};
 use dioxus_signals::{Memo, ReadOnlySignal, Readable, Signal, Writable};
 use easer::functions::*;
 use freya_engine::prelude::Color;
@@ -389,26 +389,16 @@ impl AnimDirection {
 /// Animate your elements. Use [`use_animation`] to use this.
 #[derive(PartialEq, Clone)]
 pub struct UseAnimator<Animated: PartialEq + Clone + 'static> {
-    value_and_ctx: Memo<(Animated, Context)>,
-    platform: UsePlatform,
-    is_running: Signal<bool>,
-    has_run_yet: Signal<bool>,
-    task: Signal<Option<Task>>,
+    pub(crate) value_and_ctx: Memo<(Animated, Context)>,
+    pub(crate) platform: UsePlatform,
+    pub(crate) is_running: Signal<bool>,
+    pub(crate) has_run_yet: Signal<bool>,
+    pub(crate) task: Signal<Option<Task>>,
 }
 
 impl<T: PartialEq + Clone + 'static> Copy for UseAnimator<T> {}
 
 impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
-    pub fn new(value_and_ctx: Memo<(Animated, Context)>, platform: UsePlatform) -> Self {
-        Self {
-            value_and_ctx,
-            platform,
-            is_running: Signal::default(),
-            task: Signal::default(),
-            has_run_yet: Signal::default(),
-        }
-    }
-
     /// Get the animated value.
     pub fn get(&self) -> Animated {
         self.value_and_ctx.read().0.clone()
@@ -585,13 +575,22 @@ pub fn use_animation<Animated: PartialEq + Clone + 'static>(
     run: impl Fn(&mut Context) -> Animated + Clone + 'static,
 ) -> UseAnimator<Animated> {
     let platform = use_platform();
+    let is_running = use_signal(|| false);
+    let has_run_yet = use_signal(|| false);
+    let task = use_signal(|| None);
 
     let value_and_ctx = use_memo(move || {
         let mut ctx = Context::default();
         (run(&mut ctx), ctx)
     });
 
-    let animator = UseAnimator::new(value_and_ctx, platform);
+    let animator = UseAnimator {
+        value_and_ctx,
+        platform,
+        is_running,
+        has_run_yet,
+        task,
+    };
 
     use_hook(move || {
         if animator.value_and_ctx.read().1.auto_start {
@@ -610,13 +609,22 @@ where
     D::Out: 'static + Clone,
 {
     let platform = use_platform();
+    let is_running = use_signal(|| false);
+    let has_run_yet = use_signal(|| false);
+    let task = use_signal(|| None);
 
     let value_and_ctx = use_memo(use_reactive(deps, move |vals| {
         let mut ctx = Context::default();
         (run(&mut ctx, vals), ctx)
     }));
 
-    let animator = UseAnimator::new(value_and_ctx, platform);
+    let animator = UseAnimator {
+        value_and_ctx,
+        platform,
+        is_running,
+        has_run_yet,
+        task,
+    };
 
     use_hook(move || {
         if animator.value_and_ctx.read().1.auto_start {
