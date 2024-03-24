@@ -4,7 +4,7 @@
 )]
 
 use freya::{common::EventMessage, prelude::*};
-use skia_safe::{Color, Font, FontStyle, Paint, Typeface};
+use skia_safe::{Color, Font, FontStyle, Paint};
 
 fn main() {
     launch(app);
@@ -19,14 +19,18 @@ fn app() -> Element {
     });
 
     let canvas = use_canvas(&*state.read(), |state| {
-        Box::new(move |canvas, _, region| {
+        Box::new(move |canvas, font_collection, region| {
             canvas.translate((region.min_x(), region.min_y()));
 
             let mut text_paint = Paint::default();
             text_paint.set_anti_alias(true);
             text_paint.set_color(Color::WHITE);
+            let typefaces =
+                font_collection.find_typefaces(&["Times New Roman"], FontStyle::default());
             let font = Font::new(
-                Typeface::from_name("Inter", FontStyle::default()).unwrap(),
+                typefaces
+                    .first()
+                    .expect("'Times New Roman' font not found."),
                 50.0,
             );
 
