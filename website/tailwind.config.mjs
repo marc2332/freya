@@ -17,7 +17,7 @@ export default {
 				"custom-purple-dark": "#573eba"
 			},
 			fontFamily: {
-				sans: ["InterVariable", "Inter", ...defaultTheme.fontFamily.sans],
+				sans: ["Inter var", ...defaultTheme.fontFamily.sans],
 			},
 		},
 	},
