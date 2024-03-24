@@ -7,6 +7,9 @@ pub use skia_safe::{
         BackendRenderTarget, DirectContext, RecordingContext, SurfaceOrigin,
     },
     gradient_shader::GradientShaderColors,
+    graphics::{
+        set_resource_cache_single_allocation_byte_limit, set_resource_cache_total_bytes_limit,
+    },
     path::ArcSize,
     rrect::Corner,
     runtime_effect::Uniform,

@@ -12,7 +12,7 @@ fn main() {
 }
 
 fn app() -> Element {
-    let ferris = static_bytes_to_data(FERRIS);
+    let ferris = static_bytes(FERRIS);
     let mut opacity = use_signal(|| 70.0);
 
     rsx!(

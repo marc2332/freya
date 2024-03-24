@@ -12,8 +12,8 @@ fn main() {
 static FERRIS: &[u8] = include_bytes!("./ferris.svg");
 
 fn app() -> Element {
-    let ferris_a = static_bytes_to_data(FERRIS);
-    let ferris_b = bytes_to_data(FERRIS);
+    let ferris_a = static_bytes(FERRIS);
+    let ferris_b = dynamic_bytes(FERRIS);
     rsx!(
         svg {
             width: "100%",
