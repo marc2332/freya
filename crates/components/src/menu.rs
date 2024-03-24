@@ -125,10 +125,10 @@ pub enum MenuItemStatus {
 }
 
 /// `MenuItem` component.
-/// 
+///
 /// # Styling
 /// Inherits the [`MenuItemTheme`](freya_hooks::MenuItemTheme) theme.
-/// 
+///
 #[allow(non_snake_case)]
 #[component]
 pub fn MenuItem(
