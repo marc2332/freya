@@ -36,6 +36,13 @@ impl State<CustomAttributeValues> for LayerState {
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
         context: &SendAnyMap,
     ) -> bool {
+        if let Some(tag) = node_view.tag() {
+            // No need to consider text spans
+            if !tag.has_intrinsic_layout() {
+                return false;
+            }
+        }
+
         let layers = context.get::<Layers>().unwrap();
         let inherited_layer = parent.map(|(p,)| p.layer_for_children).unwrap_or(0i16);
 
