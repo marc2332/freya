@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::{use_animation, use_applied_theme, AnimNum, LoaderTheme, LoaderThemeWith};
+use freya_hooks::{use_animation, use_applied_theme, AnimNum, LoaderTheme, LoaderThemeWith, OnFinish};
 
 /// [`Loader`] component properties.
 #[derive(Props, Clone, PartialEq)]
@@ -22,6 +22,7 @@ pub fn Loader(props: LoaderProps) -> Element {
     let theme = use_applied_theme!(&props.theme, loader);
     let anim = use_animation(|ctx| {
         ctx.auto_start(true);
+        ctx.on_finish(OnFinish::Restart);
         ctx.with(AnimNum::new(0.0, 360.0).time(650))
     });
 

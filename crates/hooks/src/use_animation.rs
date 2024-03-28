@@ -344,7 +344,7 @@ pub trait AnimatedValue {
 #[derive(Default, PartialEq, Clone)]
 pub struct Context {
     animated_values: Vec<Signal<Box<dyn AnimatedValue>>>,
-    reverse: bool,
+    on_finish: OnFinish,
     auto_start: bool,
 }
 
@@ -359,8 +359,8 @@ impl Context {
         ReadOnlySignal::new(signal)
     }
 
-    pub fn reverse(&mut self, reverse: bool) -> &mut Self {
-        self.reverse = reverse;
+    pub fn on_finish(&mut self, on_finish: OnFinish) -> &mut Self {
+        self.on_finish = on_finish;
         self
     }
 
@@ -384,6 +384,15 @@ impl AnimDirection {
             Self::Reverse => *self = Self::Forward,
         }
     }
+}
+
+/// What to do once the animation finishes. By default it is [`Stop`](OnFinish::Stop)
+#[derive(PartialEq, Clone, Copy, Default)]
+pub enum OnFinish {
+    #[default]
+    Stop,
+    Reverse,
+    Restart,
 }
 
 /// Animate your elements. Use [`use_animation`] to use this.
@@ -451,7 +460,7 @@ impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
         let mut ticker = platform.new_ticker();
         let mut values = ctx.animated_values.clone();
         let mut has_run_yet = self.has_run_yet;
-        let reverse = ctx.reverse;
+        let on_finish = ctx.on_finish;
         let mut task = self.task;
 
         // Cancel previous animations
@@ -486,16 +495,23 @@ impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
                     .iter()
                     .all(|value| value.peek().is_finished(index, direction));
                 if is_finished {
-                    if reverse {
-                        // Restart the animation in the opposite direction
+                    if OnFinish::Reverse == on_finish {
+                        // Toggle direction
                         direction.toggle();
-                        index = 0;
-                        for value in values.iter_mut() {
-                            value.write().prepare(direction);
+                    }
+                    match on_finish {
+                        OnFinish::Restart | OnFinish::Reverse => {
+                            index = 0;
+
+                            // Restart the animation
+                            for value in values.iter_mut() {
+                                value.write().prepare(direction);
+                            }
                         }
-                    } else {
-                        // Stop if all the animations are finished
-                        break;
+                        OnFinish::Stop => {
+                            // Stop if all the animations are finished
+                            break;
+                        }
                     }
                 }
 
