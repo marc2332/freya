@@ -19,7 +19,7 @@ mocked-engine = []
 skia-engine = ["dep:skia-safe"]
 
 [dependencies]
-bitflags = "2.4.0"
+bitflags = "2.5.0"
 skia-safe = { workspace = true, optional = true }
 glutin = { workspace = true }
 
