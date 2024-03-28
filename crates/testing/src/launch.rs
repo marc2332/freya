@@ -31,7 +31,6 @@ pub fn launch_test_with_config(root: AppComponent, config: TestingConfig) -> Tes
 
     let (event_emitter, event_receiver) = unbounded_channel::<DomEvent>();
     let (platform_event_emitter, platform_event_receiver) = unbounded_channel::<EventMessage>();
-    let layers = Arc::default();
     let mut font_collection = FontCollection::new();
     font_collection.set_dynamic_font_manager(FontMgr::default());
 
@@ -42,7 +41,7 @@ pub fn launch_test_with_config(root: AppComponent, config: TestingConfig) -> Tes
         font_collection,
         event_emitter,
         event_receiver,
-        utils: TestUtils { sdom, layers },
+        utils: TestUtils { sdom },
         config,
         platform_event_emitter,
         platform_event_receiver,

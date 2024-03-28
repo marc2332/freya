@@ -305,7 +305,6 @@ impl<'a> TreeMut for TreeMutView<'a> {
                 // Reset the height of the light root's children
                 let height = node.height;
                 for child in node.children.clone() {
-                    println!("child: {:?}", child);
                     set_height(self, child, height + 1);
                 }
 

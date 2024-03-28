@@ -1,3 +1,4 @@
+use freya_engine::prelude::Paragraph;
 use std::ops::Div;
 use torin::geometry::{Area, Size2D};
 
@@ -21,3 +22,13 @@ pub enum CursorLayoutResponse {
     CursorPosition { position: usize, id: usize },
     TextSelection { from: usize, to: usize, id: usize },
 }
+
+pub struct CachedParagraph(pub Paragraph);
+
+/// # Safety
+/// Skia `Paragraph` are neither Sync or Send, but in order to store them in the Associated
+/// data of the Nodes in Torin (which will be used across threads when making the attributes diffing),
+/// we must manually mark the Paragraph as Send and Sync, this is fine because `Paragraph`s will only be accessed and modified
+/// In the main thread when measuring the layout and painting.
+unsafe impl Send for CachedParagraph {}
+unsafe impl Sync for CachedParagraph {}

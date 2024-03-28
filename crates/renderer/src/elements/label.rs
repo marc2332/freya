@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use dioxus_native_core::prelude::SendAnyMap;
-use freya_core::layout::CachedParagraph;
+use freya_common::CachedParagraph;
 use freya_engine::prelude::*;
 use torin::geometry::Area;
 

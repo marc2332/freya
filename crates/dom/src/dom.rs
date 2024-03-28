@@ -7,15 +7,17 @@ use dioxus_native_core::{
     NodeId, SendAnyMap,
 };
 
+use freya_common::{Layers, ParagraphElements};
 use freya_node_state::{
-    AccessibilityNodeState, CursorSettings, CustomAttributeValues, FontStyleState, LayoutState,
-    References, Style, Transform, ViewportState,
+    AccessibilityNodeState, CursorSettings, CustomAttributeValues, FontStyleState, LayerState,
+    LayoutState, References, Style, Transform, ViewportState,
 };
 use std::sync::MutexGuard;
 use torin::prelude::*;
 use tracing::info;
+use uuid::Uuid;
 
-use crate::mutations_writer::MutationsWriter;
+use crate::{mutations_writer::MutationsWriter, paragraph_utils::measure_paragraph};
 
 pub type DioxusDOM = RealDom<CustomAttributeValues>;
 pub type DioxusNode<'a> = NodeRef<'a, CustomAttributeValues>;
@@ -94,6 +96,8 @@ pub struct FreyaDOM {
     rdom: DioxusDOM,
     dioxus_integration_state: DioxusState,
     torin: Arc<Mutex<Torin<NodeId>>>,
+    paragraphs: ParagraphElements,
+    layers: Layers,
 }
 
 impl Default for FreyaDOM {
@@ -107,12 +111,15 @@ impl Default for FreyaDOM {
             Transform::to_type_erased(),
             AccessibilityNodeState::to_type_erased(),
             ViewportState::to_type_erased(),
+            LayerState::to_type_erased(),
         ]);
         let dioxus_integration_state = DioxusState::create(&mut rdom);
         Self {
             rdom,
             dioxus_integration_state,
             torin: Arc::new(Mutex::new(Torin::new())),
+            paragraphs: ParagraphElements::default(),
+            layers: Layers::default(),
         }
     }
 }
@@ -120,6 +127,14 @@ impl Default for FreyaDOM {
 impl FreyaDOM {
     pub fn layout(&self) -> MutexGuard<Torin<NodeId>> {
         self.torin.lock().unwrap()
+    }
+
+    pub fn layers(&self) -> &Layers {
+        &self.layers
+    }
+
+    pub fn paragraphs(&self) -> &ParagraphElements {
+        &self.paragraphs
     }
 
     /// Create the initial DOM from the given Mutations
@@ -130,11 +145,14 @@ impl FreyaDOM {
                 .dioxus_integration_state
                 .create_mutation_writer(&mut self.rdom),
             layout: &mut self.torin.lock().unwrap(),
+            layers: &self.layers,
         });
 
         let mut ctx = SendAnyMap::new();
         ctx.insert(scale_factor);
         ctx.insert(self.torin.clone());
+        ctx.insert(self.layers.clone());
+        ctx.insert(self.paragraphs.clone());
 
         self.rdom.update_state(ctx);
     }
@@ -147,12 +165,15 @@ impl FreyaDOM {
                 .dioxus_integration_state
                 .create_mutation_writer(&mut self.rdom),
             layout: &mut self.torin.lock().unwrap(),
+            layers: &self.layers,
         });
 
         // Update the Nodes states
         let mut ctx = SendAnyMap::new();
         ctx.insert(scale_factor);
         ctx.insert(self.torin.clone());
+        ctx.insert(self.layers.clone());
+        ctx.insert(self.paragraphs.clone());
 
         // Update the Node's states
         let (_, diff) = self.rdom.update_state(ctx);
@@ -182,5 +203,36 @@ impl FreyaDOM {
 
     pub fn state_mut(&mut self) -> &mut DioxusState {
         &mut self.dioxus_integration_state
+    }
+
+    pub fn measure_all_paragraphs(&self, scale_factor: f32) {
+        let layout = self.layout();
+        let rdom = self.rdom();
+        for group in self.paragraphs.paragraphs().values() {
+            for node_id in group {
+                let node = rdom.get(*node_id);
+                let layout_node = layout.get(*node_id);
+                if let Some((node, layout_node)) = node.zip(layout_node) {
+                    measure_paragraph(&node, layout_node, true, scale_factor);
+                }
+            }
+        }
+    }
+
+    /// Measure all the paragraphs registered under the given TextId
+    pub fn measure_paragraphs(&self, text_id: &Uuid, scale_factor: f32) {
+        let paragraphs = self.paragraphs.paragraphs();
+        let group = paragraphs.get(text_id);
+        let layout = self.layout();
+        if let Some(group) = group {
+            for node_id in group {
+                let node = self.rdom().get(*node_id);
+                let layout_node = layout.get(*node_id);
+
+                if let Some((node, layout_node)) = node.zip(layout_node) {
+                    measure_paragraph(&node, layout_node, true, scale_factor);
+                }
+            }
+        }
     }
 }

@@ -15,6 +15,7 @@ categories = ["gui", "asynchronous"]
 shared = []
 
 [dependencies]
+freya-common = { workspace = true }
 freya-node-state = { workspace = true }
 torin = { workspace = true }
 
@@ -22,3 +23,4 @@ dioxus-native-core = { workspace = true }
 dioxus-core = { workspace = true }
 rustc-hash = { workspace = true }
 tracing = { workspace = true }
+uuid = { workspace = true }

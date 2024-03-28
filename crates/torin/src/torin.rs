@@ -264,6 +264,11 @@ impl<Key: NodeKey> Torin<Key> {
 
         // Cache the root Node results if it was modified
         if root_revalidated {
+            if let Some(measurer) = measurer {
+                if root.has_layout_references {
+                    measurer.notify_layout_references(root_id, &root_layout_node);
+                }
+            }
             self.cache_node(root_id, root_layout_node);
         }
 

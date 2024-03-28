@@ -3,25 +3,18 @@ use dioxus_native_core::tree::TreeRef;
 use dioxus_native_core::NodeId;
 use freya_core::prelude::*;
 use freya_dom::prelude::{DioxusDOM, DioxusNode, SafeDOM};
-use std::sync::{Arc, Mutex};
 
 use crate::test_node::TestNode;
 
 #[derive(Clone)]
 pub struct TestUtils {
     pub(crate) sdom: SafeDOM,
-    pub(crate) layers: Arc<Mutex<Layers>>,
 }
 
 impl TestUtils {
     /// Get the SafeDOM.
     pub fn sdom(&self) -> &SafeDOM {
         &self.sdom
-    }
-
-    /// Get the Layers.
-    pub fn layers(&self) -> &Arc<Mutex<Layers>> {
-        &self.layers
     }
 
     /// Get a Node by the given ID

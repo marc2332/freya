@@ -9,22 +9,21 @@ pub fn process_layout(
     area: Area,
     font_collection: &mut FontCollection,
     scale_factor: f32,
-) -> Layers {
-    let rdom = fdom.rdom();
-    let mut dom_adapter = DioxusDOMAdapter::new_with_cache(rdom);
-    let skia_measurer = SkiaMeasurer::new(rdom, font_collection);
+) {
+    {
+        let rdom = fdom.rdom();
+        let mut dom_adapter = DioxusDOMAdapter::new_with_cache(rdom);
+        let skia_measurer = SkiaMeasurer::new(rdom, font_collection, scale_factor);
 
-    // Finds the best Node from where to start measuring
-    fdom.layout().find_best_root(&mut dom_adapter);
+        // Finds the best Node from where to start measuring
+        fdom.layout().find_best_root(&mut dom_adapter);
 
-    let root_id = fdom.rdom().root_id();
+        let root_id = fdom.rdom().root_id();
 
-    // Measure the layout
-    fdom.layout()
-        .measure(root_id, area, &mut Some(skia_measurer), &mut dom_adapter);
+        // Measure the layout
+        fdom.layout()
+            .measure(root_id, area, &mut Some(skia_measurer), &mut dom_adapter);
+    }
 
-    // Create the layers
-    let layers = Layers::new(rdom, &fdom.layout(), scale_factor);
-
-    layers
+    fdom.measure_all_paragraphs(scale_factor);
 }

@@ -37,7 +37,6 @@ pub struct App<State: 'static + Clone> {
     pub(crate) event_emitter: EventEmitter,
     pub(crate) event_receiver: EventReceiver,
     pub(crate) window_env: WindowEnv<State>,
-    pub(crate) layers: Layers,
     pub(crate) nodes_state: NodesState,
     pub(crate) focus_sender: FocusSender,
     pub(crate) focus_receiver: FocusReceiver,
@@ -98,7 +97,6 @@ impl<State: 'static + Clone> App<State> {
             event_emitter,
             event_receiver,
             window_env,
-            layers: Layers::default(),
             nodes_state: NodesState::default(),
             accessibility,
             focus_sender,
@@ -200,7 +198,6 @@ impl<State: 'static + Clone> App<State> {
         let scale_factor = self.window_env.window.scale_factor();
         process_events(
             &self.sdom.get(),
-            &self.layers,
             &mut self.events,
             &self.event_emitter,
             &mut self.nodes_state,
@@ -215,10 +212,8 @@ impl<State: 'static + Clone> App<State> {
         let fdom = &self.sdom.get();
         let layout = fdom.layout();
         let rdom = fdom.rdom();
-        let layers = &self.layers;
 
         process_accessibility(
-            layers,
             &layout,
             rdom,
             &mut self.accessibility.accessibility_manager().lock().unwrap(),
@@ -269,8 +264,7 @@ impl<State: 'static + Clone> App<State> {
     /// Measure the a text group given it's ID.
     pub fn measure_text_group(&self, text_id: &Uuid) {
         let scale_factor = self.window_env.window.scale_factor() as f32;
-        self.layers
-            .measure_paragraph_elements(text_id, &self.sdom.get(), scale_factor);
+        self.sdom.get().measure_paragraphs(text_id, scale_factor);
     }
 
     pub fn focus_next_node(&self, direction: AccessibilityFocusDirection) {
@@ -300,7 +294,7 @@ impl<State: 'static + Clone> App<State> {
 
             let window_size = self.window_env.window.inner_size();
             let scale_factor = self.window_env.window.scale_factor() as f32;
-            let layers = process_layout(
+            process_layout(
                 &fdom,
                 Area::from_size(Size2D::from((
                     window_size.width as f32,
@@ -309,7 +303,6 @@ impl<State: 'static + Clone> App<State> {
                 &mut self.font_collection,
                 scale_factor,
             );
-            self.layers = layers;
 
             self.plugins
                 .send(PluginEvent::FinishedLayout(&fdom.layout()));
@@ -323,8 +316,8 @@ impl<State: 'static + Clone> App<State> {
 
         info!(
             "Processed {} layers and {} group of paragraph elements",
-            self.layers.len_layers(),
-            self.layers.len_paragraph_elements()
+            self.sdom.get().layers().len_layers(),
+            self.sdom.get().paragraphs().len_paragraphs()
         );
     }
 
@@ -341,7 +334,6 @@ impl<State: 'static + Clone> App<State> {
         process_render(
             &fdom,
             &mut self.font_collection,
-            &self.layers,
             |fdom, node_id, area, font_collection, layout| {
                 let render_wireframe = if let Some(hovered_node) = &hovered_node {
                     hovered_node
