@@ -12,7 +12,7 @@ fn app() -> Element {
             width: "100%",
             height: "100%",
             background: "black",
-            onglobalfilehovercancelled: |e| println!("File hover: {e:?}")
+            onglobalfilehovercancelled: |e| println!("File hover cancelled: {e:?}")
         }
     )
 }
