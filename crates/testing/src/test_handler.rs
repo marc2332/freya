@@ -143,6 +143,7 @@ impl TestingHandler {
             },
             &mut self.font_collection,
             SCALE_FACTOR as f32,
+            &["Fira Sans".to_string()],
         );
 
         let dom = &self.utils.sdom().get_mut();

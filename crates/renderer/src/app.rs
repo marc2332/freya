@@ -24,7 +24,7 @@ use crate::{
     accessibility::AccessKitManager, event_loop::run_event_loop, renderer::render_skia,
     winit_waker::winit_waker,
 };
-use crate::{FontsConfig, HoveredNode, WindowEnv};
+use crate::{EmbeddedFonts, HoveredNode, WindowEnv};
 
 /// Manages the Application lifecycle
 pub struct App<State: 'static + Clone> {
@@ -48,17 +48,20 @@ pub struct App<State: 'static + Clone> {
     pub(crate) navigator_state: NavigatorState,
     pub(crate) measure_layout_on_next_render: bool,
     pub(crate) platform_information: Arc<Mutex<PlatformInformation>>,
+    pub(crate) default_fonts: Vec<String>,
 }
 
 impl<State: 'static + Clone> App<State> {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         sdom: SafeDOM,
         vdom: VirtualDom,
         proxy: &EventLoopProxy<EventMessage>,
         mutations_notifier: Option<Arc<Notify>>,
         window_env: WindowEnv<State>,
-        fonts_config: FontsConfig,
+        fonts_config: EmbeddedFonts,
         mut plugins: PluginsManager,
+        default_fonts: Vec<String>,
     ) -> Self {
         let accessibility = AccessKitManager::new(&window_env.window, proxy.clone());
 
@@ -108,6 +111,7 @@ impl<State: 'static + Clone> App<State> {
             navigator_state: NavigatorState::new(NavigationMode::NotKeyboard),
             measure_layout_on_next_render: false,
             platform_information,
+            default_fonts,
         }
     }
 
@@ -302,6 +306,7 @@ impl<State: 'static + Clone> App<State> {
                 ))),
                 &mut self.font_collection,
                 scale_factor,
+                &self.default_fonts,
             );
 
             self.plugins
@@ -354,6 +359,7 @@ impl<State: 'static + Clone> App<State> {
                         render_wireframe,
                         &mut matrices,
                         &mut opacities,
+                        &self.default_fonts,
                         layout,
                     );
                 }

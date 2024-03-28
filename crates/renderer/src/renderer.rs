@@ -36,6 +36,7 @@ pub fn render_skia(
     render_wireframe: bool,
     matrices: &mut Vec<(Matrix, Vec<NodeId>)>,
     opacities: &mut Vec<(f32, Vec<NodeId>)>,
+    default_fonts: &[String],
     layout: &Torin<NodeId>,
 ) {
     let area = layout_node.visible_area();
@@ -109,7 +110,14 @@ pub fn render_skia(
                 render_label(&area, data, canvas);
             }
             TagName::Paragraph => {
-                render_paragraph(&area, data, dioxus_node, canvas, font_collection);
+                render_paragraph(
+                    &area,
+                    data,
+                    dioxus_node,
+                    canvas,
+                    font_collection,
+                    default_fonts,
+                );
             }
             TagName::Svg => {
                 render_svg(&area, dioxus_node, canvas, font_manager);

@@ -15,6 +15,7 @@ pub fn render_paragraph(
     dioxus_node: &DioxusNode,
     canvas: &Canvas,
     font_collection: &mut FontCollection,
+    default_fonts: &[String],
 ) {
     let (x, y) = area.origin.to_tuple();
     let node_cursor_settings = &*dioxus_node.get::<CursorSettings>().unwrap();
@@ -30,7 +31,13 @@ pub fn render_paragraph(
     };
 
     if node_cursor_settings.position.is_some() {
-        let paragraph = create_paragraph(dioxus_node, &area.size, font_collection, true);
+        let paragraph = create_paragraph(
+            dioxus_node,
+            &area.size,
+            font_collection,
+            true,
+            default_fonts,
+        );
         paint(&paragraph);
     } else {
         let paragraph = &data.as_ref().unwrap().get::<CachedParagraph>().unwrap().0;

@@ -9,11 +9,12 @@ pub fn process_layout(
     area: Area,
     font_collection: &mut FontCollection,
     scale_factor: f32,
+    default_fonts: &[String],
 ) {
     {
         let rdom = fdom.rdom();
         let mut dom_adapter = DioxusDOMAdapter::new_with_cache(rdom);
-        let skia_measurer = SkiaMeasurer::new(rdom, font_collection, scale_factor);
+        let skia_measurer = SkiaMeasurer::new(rdom, font_collection, default_fonts, scale_factor);
 
         // Finds the best Node from where to start measuring
         fdom.layout().find_best_root(&mut dom_adapter);

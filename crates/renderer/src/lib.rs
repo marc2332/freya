@@ -68,8 +68,9 @@ impl DesktopRenderer {
             &proxy,
             mutations_notifier,
             window_env,
-            config.fonts,
+            config.embedded_fonts,
             config.plugins,
+            config.default_fonts,
         );
 
         app.init_doms();
