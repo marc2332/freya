@@ -1,11 +1,11 @@
-use crate::layout::{Layers, Viewports};
 use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::NodeId;
 use dioxus_native_core::{prelude::NodeImmutableDioxusExt, tree::TreeRef};
-use freya_dom::{dom::DioxusDOM, prelude::FreyaDOM};
+use freya_dom::prelude::*;
 
 use freya_engine::prelude::*;
-use freya_node_state::{Fill, Style};
+use freya_node_state::{Fill, Style, ViewportState};
+use itertools::sorted;
 
 pub use crate::events::{DomEvent, NodesState, PlatformEvent};
 
@@ -16,18 +16,16 @@ use super::potential_event::PotentialEvent;
 /// Process the events and emit them to the VirtualDOM
 pub fn process_events(
     dom: &FreyaDOM,
-    layers: &Layers,
     events: &mut EventsQueue,
     event_emitter: &EventEmitter,
     nodes_state: &mut NodesState,
-    viewports: &Viewports,
     scale_factor: f64,
 ) {
     // 1. Get global events created from the incoming events
     let global_events = measure_global_events(events);
 
     // 2. Get potential events that could be emitted based on the elements layout and viewports
-    let potential_events = measure_potential_event_listeners(layers, events, viewports, dom);
+    let potential_events = measure_potential_event_listeners(events, dom);
 
     // 3. Get what events can be actually emitted based on what elements are listening
     let dom_events = measure_dom_events(potential_events, dom, scale_factor);
@@ -71,18 +69,15 @@ pub fn measure_global_events(events: &EventsQueue) -> Vec<PlatformEvent> {
 }
 
 /// Measure what potential event listeners could be triggered
-pub fn measure_potential_event_listeners(
-    layers: &Layers,
-    events: &EventsQueue,
-    viewports: &Viewports,
-    fdom: &FreyaDOM,
-) -> PotentialEvents {
+pub fn measure_potential_event_listeners(events: &EventsQueue, fdom: &FreyaDOM) -> PotentialEvents {
     let mut potential_events = PotentialEvents::default();
 
     let layout = fdom.layout();
+    let rdom = fdom.rdom();
+    let layers = fdom.layers();
 
     // Propagate events from the top to the bottom
-    for (layer, layer_nodes) in layers.layers() {
+    for (layer, layer_nodes) in sorted(layers.layers().iter()) {
         for node_id in layer_nodes {
             let layout_node = layout.get(*node_id);
             if let Some(layout_node) = layout_node {
@@ -106,17 +101,14 @@ pub fn measure_potential_event_listeners(
 
                             // Make sure the cursor is inside the node area
                             if cursor_is_inside {
-                                let node_viewports = viewports.get(node_id);
+                                let node = rdom.get(*node_id).unwrap();
+                                let node_viewports = node.get::<ViewportState>().unwrap();
 
                                 // Make sure the cursor is inside all the applicable viewports from the element
-                                if let Some((_, node_viewports)) = node_viewports {
-                                    for viewport_id in node_viewports {
-                                        let viewport = viewports.get(viewport_id).unwrap().0;
-                                        if let Some(viewport) = viewport {
-                                            if !viewport.contains(cursor.to_f32()) {
-                                                continue 'events;
-                                            }
-                                        }
+                                for viewport_id in &node_viewports.viewports {
+                                    let viewport = layout.get(*viewport_id).unwrap().visible_area();
+                                    if !viewport.contains(cursor.to_f32()) {
+                                        continue 'events;
                                     }
                                 }
 

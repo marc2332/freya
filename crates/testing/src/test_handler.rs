@@ -135,7 +135,7 @@ impl TestingHandler {
         self.utils.sdom().get_mut().layout().reset();
 
         // Measure layout
-        let (layers, viewports) = process_layout(
+        process_layout(
             &self.utils.sdom().get(),
             Area {
                 origin: (0.0, 0.0).into(),
@@ -146,13 +146,9 @@ impl TestingHandler {
             &["Fira Sans".to_string()],
         );
 
-        *self.utils.layers().lock().unwrap() = layers;
-        *self.utils.viewports().lock().unwrap() = viewports;
-
         let dom = &self.utils.sdom().get_mut();
 
         process_accessibility(
-            &self.utils.layers().lock().unwrap(),
             &dom.layout(),
             dom.rdom(),
             &mut self.accessibility_manager.lock().unwrap(),
@@ -160,11 +156,9 @@ impl TestingHandler {
 
         process_events(
             dom,
-            &self.utils.layers().lock().unwrap(),
             &mut self.events_queue,
             &self.event_emitter,
             &mut self.nodes_state,
-            &self.utils.viewports().lock().unwrap(),
             SCALE_FACTOR,
         );
     }

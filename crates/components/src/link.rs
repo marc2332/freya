@@ -13,7 +13,7 @@ pub enum LinkTooltip {
     None,
     /// Default tooltip.
     ///
-    /// - For a route, this is the same as [`None`](AnchorTooltip::None).
+    /// - For a route, this is the same as [`None`](crate::LinkTooltip::None).
     /// - For a URL, this is the value of that URL.
     Default,
     /// Custom tooltip to always show.
