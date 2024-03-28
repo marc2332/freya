@@ -49,7 +49,7 @@ pub fn Accordion(props: AccordionProps) -> Element {
     let mut status = use_signal(AccordionStatus::default);
     let platform = use_platform();
 
-    let animation_value = animation.read().get().read().as_f32();
+    let animation_value = animation.get().read().as_f32();
     let AccordionTheme {
         background,
         color,
@@ -59,9 +59,9 @@ pub fn Accordion(props: AccordionProps) -> Element {
     let onclick = move |_: MouseEvent| {
         open.toggle();
         if *open.read() {
-            animation.read().start();
+            animation.start();
         } else {
-            animation.read().reverse();
+            animation.reverse();
         }
     };
 

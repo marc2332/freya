@@ -27,7 +27,7 @@ pub fn Loader(props: LoaderProps) -> Element {
 
     let LoaderTheme { primary_color } = theme;
 
-    let degrees = anim.read().get().read().as_f32();
+    let degrees = anim.get().read().as_f32();
 
     rsx!(svg {
         rotate: "{degrees}deg",

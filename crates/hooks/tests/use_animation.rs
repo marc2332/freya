@@ -13,10 +13,10 @@ pub async fn track_progress() {
     fn use_animation_app() -> Element {
         let animation = use_animation(|ctx| ctx.with(AnimNum::new(0., 100.).time(50)));
 
-        let progress = animation.read().get().read().as_f32();
+        let progress = animation.get().read().as_f32();
 
         use_hook(|| {
-            animation.read().start();
+            animation.start();
         });
 
         rsx!(rect {
@@ -59,17 +59,17 @@ pub async fn reverse_progress() {
     fn use_animation_app() -> Element {
         let animation = use_animation(|ctx| ctx.with(AnimNum::new(10., 100.).time(50)));
 
-        let progress = animation.read().get().read().as_f32();
+        let progress = animation.get().read().as_f32();
 
         use_hook(|| {
-            animation.read().start();
+            animation.start();
         });
 
         rsx!(rect {
             background: "white",
             height: "100%",
             onclick: move |_| {
-                animation.read().reverse();
+                animation.reverse();
             },
             width: "{progress}",
         })
@@ -119,10 +119,10 @@ pub async fn animate_color() {
         let animation =
             use_animation(|ctx| ctx.with(AnimColor::new("red", "rgb(50, 100, 200)").time(50)));
 
-        let progress = animation.read().get().read().as_string();
+        let progress = animation.get().read().as_string();
 
         use_hook(|| {
-            animation.read().start();
+            animation.start();
         });
 
         rsx!(rect {
@@ -175,7 +175,7 @@ pub async fn auto_start() {
             ctx.with(AnimNum::new(10., 100.).time(50))
         });
 
-        let progress = animation.read().get().read().as_f32();
+        let progress = animation.get().read().as_f32();
 
         rsx!(rect {
             background: "white",
