@@ -2,6 +2,7 @@
 //! A collection of basic components to be used in Freya.
 
 mod accordion;
+mod activable_route;
 mod body;
 mod button;
 mod canvas;
@@ -16,6 +17,7 @@ mod input;
 mod link;
 mod loader;
 mod menu;
+mod native_router;
 mod network_image;
 mod popup;
 mod progress_bar;
@@ -31,6 +33,7 @@ mod tile;
 mod tooltip;
 
 pub use accordion::*;
+pub use activable_route::*;
 pub use body::*;
 pub use button::*;
 pub use canvas::*;
@@ -45,6 +48,7 @@ pub use input::*;
 pub use link::*;
 pub use loader::*;
 pub use menu::*;
+pub use native_router::*;
 pub use network_image::*;
 pub use popup::*;
 pub use progress_bar::*;

@@ -38,7 +38,9 @@ pub fn process_events(
     let to_emit_dom_collateral_events =
         measure_dom_events(potential_collateral_events, dom, scale_factor);
 
-    // 6. Join both the dom and collateral dom events and sort them
+    let colateral_global_events = measure_colateral_global_events(&to_emit_dom_collateral_events);
+
+    // 6. Join both the dom and colateral dom events and sort them
     to_emit_dom_events.extend(to_emit_dom_collateral_events);
     to_emit_dom_events.sort_unstable();
 
@@ -48,10 +50,31 @@ pub fn process_events(
     }
 
     // 8. Emit the global events
-    emit_global_events_listeners(global_events, dom, event_emitter, scale_factor);
+    emit_global_events_listeners(
+        global_events,
+        colateral_global_events,
+        dom,
+        event_emitter,
+        scale_factor,
+    );
 
     // 9. Clear the events queue
     events.clear();
+}
+
+/// Measure colateral global events
+pub fn measure_colateral_global_events(events: &[DomEvent]) -> Vec<DomEvent> {
+    let mut global_events = Vec::default();
+    for event in events {
+        let Some(event_name) = event.name.get_global_event() else {
+            continue;
+        };
+        let mut global_event = event.clone();
+        global_event.name = event_name;
+        global_event.layer = None;
+        global_events.push(global_event);
+    }
+    global_events
 }
 
 /// Measure global events
@@ -247,6 +270,7 @@ fn measure_dom_events(
 /// Emit global events
 fn emit_global_events_listeners(
     global_events: Vec<PlatformEvent>,
+    global_colateral_events: Vec<DomEvent>,
     fdom: &FreyaDOM,
     event_emitter: &EventEmitter,
     scale_factor: f64,
@@ -269,5 +293,8 @@ fn emit_global_events_listeners(
             );
             event_emitter.send(event).unwrap();
         }
+    }
+    for colateral_global_event in global_colateral_events {
+        event_emitter.send(colateral_global_event).unwrap();
     }
 }

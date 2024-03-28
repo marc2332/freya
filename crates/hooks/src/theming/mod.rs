@@ -464,7 +464,6 @@ define_theme! {
         %[cows]
         background: str,
         hover_background: str,
-        border_fill: str,
         %[subthemes]
         font_theme: FontTheme,
     }

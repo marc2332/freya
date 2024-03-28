@@ -20,6 +20,8 @@ pub async fn pointer_events_from_mouse() {
 
         let onpointerleave = move |_| state.push("leave".to_string());
 
+        let onglobalpointerup = move |_| state.push("globalup".to_string());
+
         rsx!(
             rect {
                 height: "100%",
@@ -28,11 +30,12 @@ pub async fn pointer_events_from_mouse() {
                 rect {
                     height: "100%",
                     width: "100%",
-                    onpointerdown: onpointerdown,
-                    onpointerup: onpointerup,
-                    onpointerover: onpointerover,
-                    onpointerenter: onpointerenter,
-                    onpointerleave: onpointerleave,
+                    onpointerdown,
+                    onpointerup,
+                    onpointerover,
+                    onpointerenter,
+                    onpointerleave,
+                    onglobalpointerup,
                     label { "{state:?}" }
                 }
             }
@@ -90,6 +93,23 @@ pub async fn pointer_events_from_mouse() {
     assert_eq!(
         label.get(0).text(),
         Some(format!("{:?}", vec!["enter", "over", "down", "up", "leave"]).as_str())
+    );
+
+    utils.push_event(PlatformEvent::Mouse {
+        name: EventName::PointerUp,
+        cursor: CursorPoint::new(0.0, 0.0),
+        button: Some(MouseButton::Left),
+    });
+    utils.wait_for_update().await;
+    assert_eq!(
+        label.get(0).text(),
+        Some(
+            format!(
+                "{:?}",
+                vec!["enter", "over", "down", "up", "leave", "globalup"]
+            )
+            .as_str()
+        )
     );
 }
 
