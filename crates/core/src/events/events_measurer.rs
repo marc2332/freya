@@ -1,11 +1,11 @@
-use crate::layout::{Layers, Viewports};
+use crate::layout::Layers;
 use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::NodeId;
 use dioxus_native_core::{prelude::NodeImmutableDioxusExt, tree::TreeRef};
 use freya_dom::{dom::DioxusDOM, prelude::FreyaDOM};
 
 use freya_engine::prelude::*;
-use freya_node_state::{Fill, Style};
+use freya_node_state::{Fill, Style, ViewportState};
 
 pub use crate::events::{DomEvent, NodesState, PlatformEvent};
 
@@ -20,14 +20,13 @@ pub fn process_events(
     events: &mut EventsQueue,
     event_emitter: &EventEmitter,
     nodes_state: &mut NodesState,
-    viewports: &Viewports,
     scale_factor: f64,
 ) {
     // 1. Get global events created from the incoming events
     let global_events = measure_global_events(events);
 
     // 2. Get potential events that could be emitted based on the elements layout and viewports
-    let potential_events = measure_potential_event_listeners(layers, events, viewports, dom);
+    let potential_events = measure_potential_event_listeners(layers, events, dom);
 
     // 3. Get what events can be actually emitted based on what elements are listening
     let dom_events = measure_dom_events(potential_events, dom, scale_factor);
@@ -74,12 +73,12 @@ pub fn measure_global_events(events: &EventsQueue) -> Vec<PlatformEvent> {
 pub fn measure_potential_event_listeners(
     layers: &Layers,
     events: &EventsQueue,
-    viewports: &Viewports,
     fdom: &FreyaDOM,
 ) -> PotentialEvents {
     let mut potential_events = PotentialEvents::default();
 
     let layout = fdom.layout();
+    let rdom = fdom.rdom();
 
     // Propagate events from the top to the bottom
     for (layer, layer_nodes) in layers.layers() {
@@ -106,17 +105,14 @@ pub fn measure_potential_event_listeners(
 
                             // Make sure the cursor is inside the node area
                             if cursor_is_inside {
-                                let node_viewports = viewports.get(node_id);
+                                let node = rdom.get(*node_id).unwrap();
+                                let node_viewports = node.get::<ViewportState>().unwrap();
 
                                 // Make sure the cursor is inside all the applicable viewports from the element
-                                if let Some((_, node_viewports)) = node_viewports {
-                                    for viewport_id in node_viewports {
-                                        let viewport = viewports.get(viewport_id).unwrap().0;
-                                        if let Some(viewport) = viewport {
-                                            if !viewport.contains(cursor.to_f32()) {
-                                                continue 'events;
-                                            }
-                                        }
+                                for viewport_id in &node_viewports.viewports {
+                                    let viewport = layout.get(*viewport_id).unwrap().visible_area();
+                                    if !viewport.contains(cursor.to_f32()) {
+                                        continue 'events;
                                     }
                                 }
 

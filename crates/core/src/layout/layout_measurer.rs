@@ -9,7 +9,7 @@ pub fn process_layout(
     area: Area,
     font_collection: &mut FontCollection,
     scale_factor: f32,
-) -> (Layers, Viewports) {
+) -> Layers {
     let rdom = fdom.rdom();
     let mut dom_adapter = DioxusDOMAdapter::new_with_cache(rdom);
     let skia_measurer = SkiaMeasurer::new(rdom, font_collection);
@@ -26,8 +26,5 @@ pub fn process_layout(
     // Create the layers
     let layers = Layers::new(rdom, &fdom.layout(), scale_factor);
 
-    // Calculate the viewports
-    let viewports = Viewports::new(&layers, fdom);
-
-    (layers, viewports)
+    layers
 }

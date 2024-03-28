@@ -8,6 +8,7 @@ mod references;
 mod style;
 mod transform;
 mod values;
+mod viewport;
 
 pub use accessibility::*;
 pub use cursor::*;
@@ -19,3 +20,4 @@ pub use references::*;
 pub use style::*;
 pub use transform::*;
 pub use values::*;
+pub use viewport::*;

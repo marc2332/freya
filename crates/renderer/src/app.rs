@@ -39,7 +39,6 @@ pub struct App<State: 'static + Clone> {
     pub(crate) window_env: WindowEnv<State>,
     pub(crate) layers: Layers,
     pub(crate) nodes_state: NodesState,
-    pub(crate) viewports: Viewports,
     pub(crate) focus_sender: FocusSender,
     pub(crate) focus_receiver: FocusReceiver,
     pub(crate) accessibility: AccessKitManager,
@@ -101,7 +100,6 @@ impl<State: 'static + Clone> App<State> {
             window_env,
             layers: Layers::default(),
             nodes_state: NodesState::default(),
-            viewports: Viewports::default(),
             accessibility,
             focus_sender,
             focus_receiver,
@@ -206,7 +204,6 @@ impl<State: 'static + Clone> App<State> {
             &mut self.events,
             &self.event_emitter,
             &mut self.nodes_state,
-            &self.viewports,
             scale_factor,
         )
     }
@@ -245,7 +242,6 @@ impl<State: 'static + Clone> App<State> {
             canvas: self.window_env.canvas(),
             font_collection: &self.font_collection,
             freya_dom: &self.sdom.get(),
-            viewports: &self.viewports,
         });
 
         self.start_render(hovered_node);
@@ -257,7 +253,6 @@ impl<State: 'static + Clone> App<State> {
             canvas: self.window_env.canvas(),
             font_collection: &self.font_collection,
             freya_dom: &self.sdom.get(),
-            viewports: &self.viewports,
         });
 
         self.finish_render();
@@ -305,7 +300,7 @@ impl<State: 'static + Clone> App<State> {
 
             let window_size = self.window_env.window.inner_size();
             let scale_factor = self.window_env.window.scale_factor() as f32;
-            let (layers, viewports) = process_layout(
+            let layers = process_layout(
                 &fdom,
                 Area::from_size(Size2D::from((
                     window_size.width as f32,
@@ -315,7 +310,6 @@ impl<State: 'static + Clone> App<State> {
                 scale_factor,
             );
             self.layers = layers;
-            self.viewports = viewports;
 
             self.plugins
                 .send(PluginEvent::FinishedLayout(&fdom.layout()));
@@ -332,7 +326,6 @@ impl<State: 'static + Clone> App<State> {
             self.layers.len_layers(),
             self.layers.len_paragraph_elements()
         );
-        info!("Processed {} viewports", self.viewports.size());
     }
 
     /// Start rendering the RealDOM to Window
@@ -346,11 +339,10 @@ impl<State: 'static + Clone> App<State> {
         let mut opacities: Vec<(f32, Vec<NodeId>)> = Vec::default();
 
         process_render(
-            &self.viewports,
             &fdom,
             &mut self.font_collection,
             &self.layers,
-            |dom, node_id, area, font_collection, viewports| {
+            |fdom, node_id, area, font_collection, layout| {
                 let render_wireframe = if let Some(hovered_node) = &hovered_node {
                     hovered_node
                         .lock()
@@ -360,17 +352,17 @@ impl<State: 'static + Clone> App<State> {
                 } else {
                     false
                 };
-                if let Some(dioxus_node) = dom.rdom().get(*node_id) {
+                if let Some(dioxus_node) = fdom.rdom().get(*node_id) {
                     render_skia(
                         canvas,
                         area,
                         &dioxus_node,
                         font_collection,
                         &self.font_mgr,
-                        viewports,
                         render_wireframe,
                         &mut matrices,
                         &mut opacities,
+                        layout,
                     );
                 }
             },
