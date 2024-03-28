@@ -30,6 +30,10 @@ pub enum EventName {
     GlobalClick,
     GlobalMouseDown,
     GlobalMouseOver,
+    GlobalFileHover,
+    GlobalFileHoverCancelled,
+
+    FileDrop,
 }
 
 impl FromStr for EventName {
@@ -57,6 +61,9 @@ impl FromStr for EventName {
             "globalclick" => Ok(EventName::GlobalClick),
             "globalmousedown" => Ok(EventName::GlobalMouseDown),
             "globalmouseover" => Ok(EventName::GlobalMouseOver),
+            "filedrop" => Ok(EventName::FileDrop),
+            "globalfilehover" => Ok(EventName::GlobalFileHover),
+            "globalfilehovercancelled" => Ok(EventName::GlobalFileHoverCancelled),
             _ => Err(()),
         }
     }
@@ -85,6 +92,9 @@ impl From<EventName> for &str {
             EventName::GlobalClick => "globalclick",
             EventName::GlobalMouseDown => "globalmousedown",
             EventName::GlobalMouseOver => "globalmouseover",
+            EventName::FileDrop => "filedrop",
+            EventName::GlobalFileHover => "globalfilehover",
+            EventName::GlobalFileHoverCancelled => "globalfilehovercancelled",
         }
     }
 }
@@ -120,6 +130,8 @@ impl EventName {
             Self::Click => Some(Self::GlobalClick),
             Self::MouseDown => Some(Self::GlobalMouseDown),
             Self::MouseOver => Some(Self::GlobalMouseOver),
+            Self::GlobalFileHover => Some(Self::GlobalFileHover),
+            Self::GlobalFileHoverCancelled => Some(Self::GlobalFileHoverCancelled),
             _ => None,
         }
     }
@@ -139,6 +151,7 @@ impl EventName {
             Self::MouseDown | Self::TouchStart => events.push(Self::PointerDown),
             Self::Click | Self::TouchEnd => events.push(Self::PointerUp),
             Self::MouseLeave => events.push(Self::PointerLeave),
+            Self::GlobalFileHover | Self::GlobalFileHoverCancelled => events.clear(),
             _ => {}
         }
 

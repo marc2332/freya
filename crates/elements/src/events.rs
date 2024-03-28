@@ -1,3 +1,4 @@
+pub mod file;
 pub mod keyboard;
 pub mod mouse;
 pub mod pointer;
@@ -5,6 +6,7 @@ pub mod touch;
 pub mod wheel;
 
 use dioxus_core::Event;
+pub use file::*;
 pub use keyboard::*;
 pub use mouse::*;
 pub use pointer::*;
