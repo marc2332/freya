@@ -24,7 +24,6 @@ pub struct LayoutState {
     pub padding: Gaps,
     pub margin: Gaps,
     pub direction: DirectionMode,
-    pub node_id: NodeId,
     pub offset_y: Length,
     pub offset_x: Length,
     pub main_alignment: Alignment,
@@ -246,7 +245,6 @@ impl State<CustomAttributeValues> for LayoutState {
             || (layout.maximum_width != self.maximum_width)
             || (layout.maximum_height != self.maximum_height)
             || (layout.padding != self.padding)
-            || (node_view.node_id() != self.node_id)
             || (layout.direction != self.direction)
             || (layout.offset_x != self.offset_x)
             || (layout.offset_y != self.offset_y)
