@@ -36,11 +36,11 @@ winit = { workspace = true }
 
 uuid = { workspace = true }
 easer = "0.3.0"
-ropey = "1.6.0"
+ropey = "1.6.1"
 nokhwa = { version = "0.10.4", features = ["input-native"], optional = true }
 paste = "1.0.14"
-bitflags = "2.4.1"
-copypasta = "0.8.2"
+bitflags = "2.5.0"
+copypasta = "0.10.1"
 
 [dev-dependencies]
 dioxus = { workspace = true }
