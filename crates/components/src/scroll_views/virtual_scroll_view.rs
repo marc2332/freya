@@ -38,6 +38,10 @@ pub struct VirtualScrollViewProps<
     /// Enable scrolling with arrow keys.
     #[props(default = true, into)]
     pub scroll_with_arrows: bool,
+    /// Cache elements or not, changing `builder_args` will invalidate the cache if enabled.
+    /// Default is `true`.
+    #[props(default = true, into)]
+    pub cache_elements: bool,
 }
 
 impl<
@@ -325,15 +329,24 @@ pub fn VirtualScrollView<
         items_length as f32,
     );
 
-    let children = use_memo(use_reactive(
-        &(render_range, props.builder_args),
-        move |(render_range, builder_args)| {
-            render_range
-                .clone()
-                .map(|i| (props.builder)(i, &builder_args))
-                .collect::<Vec<Element>>()
-        },
-    ));
+    let children = if props.cache_elements {
+        let children = use_memo(use_reactive(
+            &(render_range, props.builder_args),
+            move |(render_range, builder_args)| {
+                render_range
+                    .clone()
+                    .map(|i| (props.builder)(i, &builder_args))
+                    .collect::<Vec<Element>>()
+            },
+        ));
+        rsx!({ children.read().iter() })
+    } else {
+        let children = render_range
+            .clone()
+            .map(|i| (props.builder)(i, &props.builder_args))
+            .collect::<Vec<Element>>();
+        rsx!({ children.iter() })
+    };
 
     let is_scrolling_x = clicking_scrollbar
         .read()
@@ -369,7 +382,7 @@ pub fn VirtualScrollView<
                     direction: "{user_direction}",
                     reference: node_ref,
                     onwheel: onwheel,
-                    {children.read().iter()}
+                    {children}
                 }
                 ScrollBar {
                     width: "100%",
