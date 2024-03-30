@@ -68,10 +68,10 @@ pub enum AttributeName {
 }
 
 impl FromStr for AttributeName {
-    type Err = ();
+    type Err = String;
 
-    fn from_str(txt: &str) -> Result<Self, Self::Err> {
-        match txt {
+    fn from_str(attr: &str) -> Result<Self, Self::Err> {
+        match attr {
             "width" => Ok(AttributeName::Width),
             "height" => Ok(AttributeName::Height),
             "min_width" => Ok(AttributeName::MinWidth),
@@ -135,7 +135,7 @@ impl FromStr for AttributeName {
             "image_data" => Ok(AttributeName::ImageData),
             "svg_data" => Ok(AttributeName::SvgData),
             "svg_content" => Ok(AttributeName::SvgContent),
-            _ => Err(()),
+            _ => Err(format!("{attr} not supported.")),
         }
     }
 }
