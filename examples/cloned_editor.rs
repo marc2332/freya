@@ -58,6 +58,7 @@ fn Body() -> Element {
                 length: editor.len_lines(),
                 item_size: 35.0,
                 scroll_with_arrows: false,
+                cache_elements: false,
                 builder: move |line_index, _: &Option<()>| {
                     let editor = editable.editor().read();
                     let line = editor.line(line_index).unwrap();
@@ -134,6 +135,7 @@ fn Body() -> Element {
                 length: editor.len_lines(),
                 item_size: 35.0,
                 scroll_with_arrows: false,
+                cache_elements: false,
                 builder: move |line_index, _: &Option<()>| {
                     let editor = editable.editor().read();
                     let line = editor.line(line_index).unwrap();
