@@ -19,6 +19,10 @@ impl TagName {
     pub fn has_children_with_intrinsic_layout(&self) -> bool {
         *self != Self::Paragraph && *self != Self::Label
     }
+
+    pub fn contains_text(&self) -> bool {
+        matches!(self, Self::Paragraph | Self::Label | Self::Text)
+    }
 }
 
 impl FromStr for TagName {

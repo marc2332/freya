@@ -48,6 +48,8 @@ pub struct Node {
 
     /// A Node might depend on inner sizes but have a fixed position, like scroll views.
     pub has_layout_references: bool,
+
+    pub contains_text: bool,
 }
 
 impl Node {
@@ -183,5 +185,6 @@ impl Node {
             || self.has_layout_references
             || self.cross_alignment.is_not_start()
             || self.main_alignment.is_not_start()
+            || self.contains_text
     }
 }
