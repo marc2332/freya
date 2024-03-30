@@ -29,6 +29,18 @@ pub enum NodeType<V: FromAnyValue = ()> {
 }
 
 impl<V: FromAnyValue> NodeType<V> {
+
+    pub fn is_visible_element(&self) -> bool {
+        if let NodeType::Element(ElementNode { tag, .. }) = self {
+            // No need to consider text spans
+            if tag.has_intrinsic_layout() {
+                return true;
+            }
+        }
+
+        return false
+    }
+
     pub fn is_text(&self) -> bool {
         matches!(self, Self::Text(..))
     }
@@ -36,6 +48,7 @@ impl<V: FromAnyValue> NodeType<V> {
     pub fn is_element(&self) -> bool {
         matches!(self, Self::Element(..))
     }
+
     pub fn is_placeholder(&self) -> bool {
         matches!(self, Self::Placeholder)
     }

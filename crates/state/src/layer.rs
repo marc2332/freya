@@ -2,7 +2,7 @@ use dioxus_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
     node_ref::NodeView,
-    prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State},
+    prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, NodeType, State},
     SendAnyMap,
 };
 use dioxus_native_core_macro::partial_derive_state;
@@ -36,11 +36,8 @@ impl State<CustomAttributeValues> for LayerState {
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
         context: &SendAnyMap,
     ) -> bool {
-        if let Some(tag) = node_view.tag() {
-            // No need to consider text spans
-            if !tag.has_intrinsic_layout() {
-                return false;
-            }
+        if !node_view.node_type().is_visible_element(){
+            return false;
         }
 
         let layers = context.get::<Layers>().unwrap();
