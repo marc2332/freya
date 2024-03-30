@@ -29,6 +29,10 @@ impl<'a, V: FromAnyValue> NodeView<'a, V> {
         }
     }
 
+    pub fn node_type(&self) -> &'a NodeType<V> {
+        self.inner
+    }
+
     /// Get the node id of the node
     pub fn node_id(&self) -> NodeId {
         self.id
