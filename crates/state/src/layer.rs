@@ -2,7 +2,7 @@ use dioxus_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
     node_ref::NodeView,
-    prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, NodeType, State},
+    prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State},
     SendAnyMap,
 };
 use dioxus_native_core_macro::partial_derive_state;
@@ -36,7 +36,7 @@ impl State<CustomAttributeValues> for LayerState {
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
         context: &SendAnyMap,
     ) -> bool {
-        if !node_view.node_type().is_visible_element(){
+        if !node_view.node_type().is_visible_element() {
             return false;
         }
 

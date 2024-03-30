@@ -27,7 +27,6 @@ impl<'a> MutationsWriter<'a> {
         let tree = self.native_writer.rdom.tree_ref();
         while let Some(node_id) = stack.pop() {
             if let Some(node) = self.native_writer.rdom.get(node_id) {
-
                 if !node.node_type().is_visible_element() {
                     continue;
                 }

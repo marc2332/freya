@@ -29,7 +29,6 @@ pub enum NodeType<V: FromAnyValue = ()> {
 }
 
 impl<V: FromAnyValue> NodeType<V> {
-
     pub fn is_visible_element(&self) -> bool {
         if let NodeType::Element(ElementNode { tag, .. }) = self {
             // No need to consider text spans
@@ -38,7 +37,7 @@ impl<V: FromAnyValue> NodeType<V> {
             }
         }
 
-        return false
+        false
     }
 
     pub fn is_text(&self) -> bool {
