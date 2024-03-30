@@ -359,7 +359,6 @@ impl<State: 'static + Clone> App<State> {
                         render_wireframe,
                         &mut matrices,
                         &mut opacities,
-                        &self.default_fonts,
                         layout,
                     );
                 }
