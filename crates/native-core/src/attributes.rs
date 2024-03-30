@@ -130,7 +130,7 @@ impl FromStr for AttributeName {
             "cursor_mode" => Ok(AttributeName::CursorMode),
             "cursor_id" => Ok(AttributeName::CursorId),
             "highlights" => Ok(AttributeName::Highlights),
-            "highlights_color" => Ok(AttributeName::HighlightColor),
+            "highlight_color" => Ok(AttributeName::HighlightColor),
             "image_reference" => Ok(AttributeName::ImageReference),
             "image_data" => Ok(AttributeName::ImageData),
             "svg_data" => Ok(AttributeName::SvgData),
