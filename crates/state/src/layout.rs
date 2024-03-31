@@ -238,19 +238,7 @@ impl State<CustomAttributeValues> for LayoutState {
             }
         }
 
-        let changed = (layout.width != self.width)
-            || (layout.height != self.height)
-            || (layout.minimum_width != self.minimum_width)
-            || (layout.minimum_height != self.minimum_height)
-            || (layout.maximum_width != self.maximum_width)
-            || (layout.maximum_height != self.maximum_height)
-            || (layout.padding != self.padding)
-            || (layout.direction != self.direction)
-            || (layout.offset_x != self.offset_x)
-            || (layout.offset_y != self.offset_y)
-            || (layout.main_alignment != self.main_alignment)
-            || (layout.cross_alignment != self.cross_alignment)
-            || (layout.position != self.position);
+        let changed = layout != *self;
 
         if changed {
             torin_layout.lock().unwrap().invalidate(node_view.node_id());
