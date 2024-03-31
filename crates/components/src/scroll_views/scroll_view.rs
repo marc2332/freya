@@ -1,7 +1,9 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{keyboard::Key, KeyboardEvent, MouseEvent, WheelEvent};
-use freya_hooks::{use_applied_theme, use_focus, use_node, ScrollViewThemeWith, ScrollBarThemeWith};
+use freya_hooks::{
+    use_applied_theme, use_focus, use_node, ScrollBarThemeWith, ScrollViewThemeWith,
+};
 
 use crate::{
     get_container_size, get_corrected_scroll_position, get_scroll_position_from_cursor,
