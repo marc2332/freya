@@ -8,7 +8,7 @@ use freya_hooks::{
 use crate::{
     get_container_size, get_corrected_scroll_position, get_scroll_position_from_cursor,
     get_scroll_position_from_wheel, get_scrollbar_pos_and_size, is_scrollbar_visible,
-    manage_key_event, Axis, ScrollBar, ScrollThumb, SCROLLBAR_SIZE, SCROLL_SPEED_MULTIPLIER,
+    manage_key_event, Axis, ScrollBar, ScrollThumb, SCROLL_SPEED_MULTIPLIER,
 };
 
 /// [`ScrollView`] component properties.
@@ -68,6 +68,7 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
     let (node_ref, size) = use_node();
     let mut focus = use_focus();
     let theme = use_applied_theme!(&props.theme, scroll_view);
+    let scrollbar_theme = use_applied_theme!(&props.scrollbar_theme, scroll_bar);
 
     let padding = &theme.padding;
     let user_container_width = &theme.width;
@@ -81,8 +82,9 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
     let horizontal_scrollbar_is_visible =
         is_scrollbar_visible(show_scrollbar, size.inner.width, size.area.width());
 
-    let container_width = get_container_size(vertical_scrollbar_is_visible);
-    let container_height = get_container_size(horizontal_scrollbar_is_visible);
+    let container_width = get_container_size(vertical_scrollbar_is_visible, &scrollbar_theme.size);
+    let container_height =
+        get_container_size(horizontal_scrollbar_is_visible, &scrollbar_theme.size);
 
     let corrected_scrolled_y = get_corrected_scroll_position(
         size.inner.height,
@@ -256,14 +258,14 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
     };
 
     let horizontal_scrollbar_size = if horizontal_scrollbar_is_visible {
-        SCROLLBAR_SIZE
+        &scrollbar_theme.size
     } else {
-        0
+        "0"
     };
     let vertical_scrollbar_size = if vertical_scrollbar_is_visible {
-        SCROLLBAR_SIZE
+        &scrollbar_theme.size
     } else {
-        0
+        "0"
     };
 
     let is_scrolling_x = clicking_scrollbar
