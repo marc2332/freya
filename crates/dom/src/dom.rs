@@ -146,6 +146,7 @@ impl FreyaDOM {
                 .create_mutation_writer(&mut self.rdom),
             layout: &mut self.torin.lock().unwrap(),
             layers: &self.layers,
+            paragraphs: &self.paragraphs,
         });
 
         let mut ctx = SendAnyMap::new();
@@ -166,6 +167,7 @@ impl FreyaDOM {
                 .create_mutation_writer(&mut self.rdom),
             layout: &mut self.torin.lock().unwrap(),
             layers: &self.layers,
+            paragraphs: &self.paragraphs,
         });
 
         // Update the Nodes states
