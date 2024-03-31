@@ -2,7 +2,6 @@ use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::tree::TreeRef;
 use dioxus_native_core::NodeId;
 use freya_core::prelude::*;
-use freya_dom::prelude::{DioxusDOM, DioxusNode, SafeDOM};
 
 use crate::test_node::TestNode;
 

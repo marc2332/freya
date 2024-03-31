@@ -4,7 +4,6 @@ use std::time::Duration;
 use dioxus_core::VirtualDom;
 use freya_common::EventMessage;
 use freya_core::prelude::*;
-use freya_dom::prelude::SafeDOM;
 use freya_engine::prelude::FontCollection;
 use freya_hooks::PlatformInformation;
 use tokio::sync::broadcast;

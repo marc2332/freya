@@ -7,11 +7,13 @@ use dioxus_native_core::{
     NodeId,
 };
 use freya_common::{CachedParagraph, NodeReferenceLayout};
-use freya_dom::prelude::{DioxusDOM, DioxusNode};
 use freya_node_state::{FontStyleState, LayoutState, TextOverflow};
 
 use freya_engine::prelude::*;
 use torin::prelude::{LayoutMeasurer, LayoutNode, Node, Size2D};
+
+use crate::dom::*;
+
 /// Provides Text measurements using Skia APIs like SkParagraph
 pub struct SkiaMeasurer<'a> {
     pub font_collection: &'a FontCollection,

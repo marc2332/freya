@@ -2,7 +2,6 @@ use dioxus_core::{Template, VirtualDom};
 use dioxus_native_core::NodeId;
 use freya_common::EventMessage;
 use freya_core::prelude::*;
-use freya_dom::prelude::SafeDOM;
 use freya_engine::prelude::*;
 use freya_hooks::PlatformInformation;
 use futures_task::Waker;

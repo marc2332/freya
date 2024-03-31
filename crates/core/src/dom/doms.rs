@@ -17,7 +17,7 @@ use torin::prelude::*;
 use tracing::info;
 use uuid::Uuid;
 
-use crate::{mutations_writer::MutationsWriter, paragraph_utils::measure_paragraph};
+use super::{mutations_writer::MutationsWriter, paragraph_utils::measure_paragraph};
 
 pub type DioxusDOM = RealDom<CustomAttributeValues>;
 pub type DioxusNode<'a> = NodeRef<'a, CustomAttributeValues>;

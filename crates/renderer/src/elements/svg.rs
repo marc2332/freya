@@ -1,5 +1,6 @@
 use dioxus_native_core::real_dom::NodeImmutable;
-use freya_dom::prelude::DioxusNode;
+
+use freya_core::dom::DioxusNode;
 use freya_engine::prelude::*;
 use freya_node_state::Style;
 use torin::geometry::Area;

@@ -1,8 +1,9 @@
 use dioxus_native_core::NodeId;
-use freya_dom::dom::FreyaDOM;
 use freya_engine::prelude::{Canvas, FontCollection};
 use torin::torin::Torin;
 use winit::window::Window;
+
+use crate::dom::FreyaDOM;
 
 /// Manages all loaded plugins.
 #[derive(Default)]

@@ -4,7 +4,6 @@ use dioxus_core::VirtualDom;
 use dioxus_core_macro::rsx;
 use freya_common::EventMessage;
 use freya_core::prelude::*;
-use freya_dom::prelude::{FreyaDOM, SafeDOM};
 use freya_engine::prelude::*;
 use freya_hooks::{use_init_accessibility, PlatformInformation};
 use std::sync::{Arc, Mutex};
