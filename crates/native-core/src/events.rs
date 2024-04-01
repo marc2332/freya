@@ -215,7 +215,7 @@ impl EventName {
 
     // Only let events that do not move the mouse, go through solid nodes
     pub fn does_go_through_solid(&self) -> bool {
-        matches!(self, Self::KeyDown)
+        matches!(self, Self::KeyDown | Self::KeyUp)
     }
 
     // Check if this event can change the hover state of a Node.
