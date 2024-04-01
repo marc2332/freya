@@ -18,10 +18,8 @@ pub fn NodeElement(
         move |_| onselected.call(node.clone())
     };
 
-    let onmouseover = move |_| {
-        if *status.read() != ButtonStatus::Hovering {
-            status.set(ButtonStatus::Hovering);
-        }
+    let onmouseenter = move |_| {
+        status.set(ButtonStatus::Hovering);
     };
 
     let onmouseleave = move |_| {
@@ -47,16 +45,16 @@ pub fn NodeElement(
         rect {
             corner_radius: "7",
             padding: "5",
-            background: background,
+            background,
             width: "100%",
             height: "27",
             offset_x: "{margin_left}",
             onmousedown,
-            onmouseover,
+            onmouseenter,
             onmouseleave,
             label {
                 font_size: "14",
-                color: "{color}",
+                color,
                 "{node.tag} #{node.id:?}"
             }
         }
