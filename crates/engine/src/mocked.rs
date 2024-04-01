@@ -1141,7 +1141,7 @@ impl Image {
 pub struct Data;
 
 impl Data {
-    pub unsafe fn new_copy(_bytes: &[u8]) -> Self {
+    pub fn new_copy(_bytes: &[u8]) -> Self {
         unimplemented!("This is mocked")
     }
 
