@@ -186,5 +186,7 @@ impl Node {
             || self.cross_alignment.is_not_start()
             || self.main_alignment.is_not_start()
             || self.contains_text
+            || self.offset_x.get() != 0.0
+            || self.offset_y.get() != 0.0
     }
 }
