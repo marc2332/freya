@@ -162,11 +162,26 @@ pub fn VirtualScrollView<
             1.0
         };
 
-        if !*clicking_shift.peek() {
-            let wheel_y = e.get_delta_y() as f32 * speed_multiplier;
+        let wheel_movement = e.get_delta_y() as f32 * speed_multiplier;
 
+        if *clicking_shift.peek() {
+            let scroll_position_x = get_scroll_position_from_wheel(
+                wheel_movement,
+                inner_size,
+                size.area.width(),
+                corrected_scrolled_x,
+            );
+
+            // Only scroll when there is still area to scroll
+            if *scrolled_x.peek() != scroll_position_x {
+                e.stop_propagation();
+                *scrolled_x.write() = scroll_position_x;
+            } else {
+                return;
+            }
+        } else {
             let scroll_position_y = get_scroll_position_from_wheel(
-                wheel_y,
+                wheel_movement,
                 inner_size,
                 size.area.height(),
                 corrected_scrolled_y,
@@ -179,27 +194,6 @@ pub fn VirtualScrollView<
             } else {
                 return;
             }
-        }
-
-        let wheel_x = if *clicking_shift.peek() {
-            e.get_delta_y() as f32
-        } else {
-            e.get_delta_x() as f32
-        } * speed_multiplier;
-
-        let scroll_position_x = get_scroll_position_from_wheel(
-            wheel_x,
-            inner_size,
-            size.area.width(),
-            corrected_scrolled_x,
-        );
-
-        // Only scroll when there is still area to scroll
-        if *scrolled_x.peek() != scroll_position_x {
-            e.stop_propagation();
-            *scrolled_x.write() = scroll_position_x;
-        } else {
-            return;
         }
 
         focus.focus();
@@ -233,10 +227,6 @@ pub fn VirtualScrollView<
     };
 
     let onkeydown = move |e: KeyboardEvent| {
-        if !focus.is_focused() {
-            return;
-        }
-
         match &e.key {
             Key::Shift => {
                 clicking_shift.set(true);
@@ -245,6 +235,10 @@ pub fn VirtualScrollView<
                 clicking_alt.set(true);
             }
             k => {
+                if !focus.is_focused() {
+                    return;
+                }
+
                 if !scroll_with_arrows
                     && (k == &Key::ArrowUp
                         || k == &Key::ArrowRight
@@ -341,11 +335,8 @@ pub fn VirtualScrollView<
         ));
         rsx!({ children.read().iter() })
     } else {
-        let children = render_range
-            .clone()
-            .map(|i| (props.builder)(i, &props.builder_args))
-            .collect::<Vec<Element>>();
-        rsx!({ children.iter() })
+        let children = render_range.map(|i| (props.builder)(i, &props.builder_args));
+        rsx!({ children })
     };
 
     let is_scrolling_x = clicking_scrollbar
