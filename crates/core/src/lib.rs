@@ -1,4 +1,5 @@
 pub mod accessibility;
+pub mod dom;
 pub mod events;
 pub mod layout;
 pub mod navigation_mode;
@@ -9,6 +10,7 @@ pub mod types;
 
 pub mod prelude {
     pub use crate::accessibility::*;
+    pub use crate::dom::*;
     pub use crate::events::*;
     pub use crate::layout::*;
     pub use crate::navigation_mode::*;

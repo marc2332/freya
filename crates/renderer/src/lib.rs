@@ -3,7 +3,7 @@ pub use config::*;
 use dioxus_core::VirtualDom;
 use dioxus_native_core::NodeId;
 use freya_common::EventMessage;
-use freya_dom::prelude::SafeDOM;
+use freya_core::dom::SafeDOM;
 use std::sync::{Arc, Mutex};
 use tokio::sync::Notify;
 use winit::event_loop::EventLoopBuilder;

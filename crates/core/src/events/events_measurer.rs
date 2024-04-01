@@ -1,7 +1,6 @@
 use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::NodeId;
 use dioxus_native_core::{prelude::NodeImmutableDioxusExt, tree::TreeRef};
-use freya_dom::prelude::*;
 
 use freya_engine::prelude::*;
 use freya_node_state::{Fill, Style, ViewportState};
@@ -9,9 +8,7 @@ use itertools::sorted;
 
 pub use crate::events::{DomEvent, NodesState, PlatformEvent};
 
-use crate::types::{EventEmitter, EventsQueue, PotentialEvents};
-
-use super::potential_event::PotentialEvent;
+use crate::prelude::*;
 
 /// Process the events and emit them to the VirtualDOM
 pub fn process_events(

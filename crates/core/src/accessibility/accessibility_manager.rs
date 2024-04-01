@@ -1,8 +1,8 @@
-use crate::accessibility::*;
+use crate::{accessibility::*, dom::DioxusNode};
 use accesskit::{
     Action, DefaultActionVerb, Node, NodeBuilder, NodeClassSet, Rect, Role, Tree, TreeUpdate,
 };
-use freya_dom::prelude::DioxusNode;
+
 use freya_node_state::AccessibilityNodeState;
 use std::sync::{Arc, Mutex};
 use torin::prelude::LayoutNode;

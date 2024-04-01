@@ -2,7 +2,8 @@ use dioxus_native_core::prelude::ElementNode;
 use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::NodeId;
 use dioxus_native_core::{node::NodeType, tags::TagName};
-use freya_dom::prelude::DioxusNode;
+
+use freya_core::dom::DioxusNode;
 use freya_engine::prelude::*;
 use freya_node_state::{Style, Transform, ViewportState};
 use torin::{

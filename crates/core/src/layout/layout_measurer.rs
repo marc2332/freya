@@ -1,5 +1,4 @@
-use crate::layout::*;
-use freya_dom::prelude::{DioxusDOMAdapter, FreyaDOM};
+use crate::{dom::*, layout::*};
 use freya_engine::prelude::*;
 use torin::geometry::Area;
 
