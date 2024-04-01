@@ -270,15 +270,7 @@ impl State<CustomAttributeValues> for FontStyleState {
             }
         }
 
-        let changed_size = self.max_lines != font_style.max_lines
-            || self.line_height != font_style.line_height
-            || self.font_size != font_style.font_size
-            || self.font_family != font_style.font_family
-            || self.font_slant != font_style.font_slant
-            || self.font_weight != font_style.font_weight
-            || self.font_width != font_style.font_width
-            || self.word_spacing != font_style.word_spacing
-            || self.letter_spacing != font_style.letter_spacing;
+        let changed_size = font_style != *self;
 
         if changed_size {
             torin_layout.lock().unwrap().invalidate(node_view.node_id());
