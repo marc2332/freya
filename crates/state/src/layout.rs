@@ -31,6 +31,7 @@ pub struct LayoutState {
     pub position: Position,
     pub content: Content,
     pub node_ref: Option<NodeReference>,
+    pub node_id: NodeId
 }
 
 #[partial_derive_state]
@@ -76,7 +77,10 @@ impl State<CustomAttributeValues> for LayoutState {
         let torin_layout = context.get::<Arc<Mutex<Torin<NodeId>>>>().unwrap();
         let scale_factor = context.get::<f32>().unwrap();
 
-        let mut layout = LayoutState::default();
+        let mut layout = LayoutState {
+            node_id: node_view.node_id(),
+            ..Default::default()
+        };
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
