@@ -11,6 +11,8 @@ use std::{
 };
 use tokio::time::sleep;
 
+/// Defines the duration for which an Asset will remain cached after it's user has stopped using it.
+/// The default is 1h (3600s).
 #[derive(Hash, PartialEq, Eq, Clone)]
 pub enum AssetAge {
     Duration(Duration),
@@ -29,8 +31,10 @@ impl From<Duration> for AssetAge {
     }
 }
 
+/// Configuration for a given Asset.
 #[derive(Hash, PartialEq, Eq, Clone)]
 pub struct AssetConfiguration {
+    /// Asset age.
     pub age: AssetAge,
     /// The ID of the asset. For example: For images their source URL or path can be used as ID.
     pub id: String,
