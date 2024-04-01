@@ -55,13 +55,13 @@ pub fn SnackBar(
 
     use_effect(move || {
         if *show.read() {
-            animation.read().start();
-        } else if animation.read().peek_has_run_yet() {
-            animation.read().reverse();
+            animation.start();
+        } else if animation.peek_has_run_yet() {
+            animation.reverse();
         }
     });
 
-    let offset_y = animation.read().get().read().as_f32();
+    let offset_y = animation.get().read().as_f32();
 
     rsx!(
         rect {

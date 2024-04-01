@@ -18,7 +18,7 @@ fn app() -> Element {
                 .function(Function::Sine),
         )
     });
-    let progress = animation.read().get().read().as_f32();
+    let progress = animation.get().read().as_f32();
     let mut show = use_signal(|| false);
 
     rsx!(
@@ -32,9 +32,9 @@ fn app() -> Element {
                 onclick: move |_| {
                     show.toggle();
                     if *show.read() {
-                        animation.read().start();
+                        animation.start();
                     } else {
-                        animation.read().reset();
+                        animation.reset();
                     }
                 },
                 label { "Install" }

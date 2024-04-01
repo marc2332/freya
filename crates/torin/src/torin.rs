@@ -9,7 +9,7 @@ use crate::{
     dom_adapter::{DOMAdapter, LayoutNode, NodeKey},
     geometry::{Area, Size2D},
     measure::{measure_node, Phase},
-    prelude::Gaps,
+    prelude::{AreaModel, Gaps},
 };
 
 pub struct LayoutMetadata {
@@ -226,9 +226,9 @@ impl<Key: NodeKey> Torin<Key> {
         } else {
             suggested_root_id
         };
-        let root_parent = dom_adapter.parent_of(&root_id);
-        let layout_node = root_parent
-            .and_then(|root_parent| self.get(root_parent).cloned())
+        let root_parent_id = dom_adapter.parent_of(&root_id);
+        let layout_node = root_parent_id
+            .and_then(|root_parent_id| self.get(root_parent_id).cloned())
             .unwrap_or(LayoutNode {
                 area: root_area,
                 inner_area: root_area,
@@ -248,12 +248,18 @@ impl<Key: NodeKey> Torin<Key> {
 
         let metadata = LayoutMetadata { root_area };
 
+        let mut available_area = layout_node.inner_area;
+        if let Some(root_parent_id) = root_parent_id {
+            let root_parent = dom_adapter.get_node(&root_parent_id).unwrap();
+            available_area.move_with_offsets(&root_parent.offset_x, &root_parent.offset_y);
+        }
+
         let (root_revalidated, root_layout_node) = measure_node(
             root_id,
             &root,
             self,
             &layout_node.inner_area,
-            &layout_node.inner_area,
+            &available_area,
             measurer,
             true,
             dom_adapter,
@@ -264,6 +270,11 @@ impl<Key: NodeKey> Torin<Key> {
 
         // Cache the root Node results if it was modified
         if root_revalidated {
+            if let Some(measurer) = measurer {
+                if root.has_layout_references {
+                    measurer.notify_layout_references(root_id, &root_layout_node);
+                }
+            }
             self.cache_node(root_id, root_layout_node);
         }
 

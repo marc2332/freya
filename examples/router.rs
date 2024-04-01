@@ -14,7 +14,7 @@ fn app() -> Element {
     rsx!(Router::<Route> {})
 }
 
-#[derive(Routable, Clone)]
+#[derive(Routable, Clone, PartialEq)]
 #[rustfmt::skip]
 pub enum Route {
     #[layout(AppSidebar)]
@@ -30,38 +30,46 @@ pub enum Route {
 #[allow(non_snake_case)]
 fn AppSidebar() -> Element {
     rsx!(
-        Sidebar {
-            sidebar: rsx!(
-                Link {
-                    to: Route::Home,
-                    SidebarItem {
-                        label {
-                            "Go to Hey ! 👋"
+        NativeRouter {
+            Sidebar {
+                sidebar: rsx!(
+                    Link {
+                        to: Route::Home,
+                        ActivableRoute {
+                            route: Route::Home,
+                            SidebarItem {
+                                label {
+                                    "Go to Hey ! 👋"
+                                }
+                            },
                         }
                     },
-                },
-                Link {
-                    to: Route::Wow,
-                    SidebarItem {
-                        label {
-                            "Go to Wow! 👈"
+                    Link {
+                        to: Route::Wow,
+                        ActivableRoute {
+                            route: Route::Wow,
+                            SidebarItem {
+                                label {
+                                    "Go to Wow! 👈"
+                                }
+                            },
                         }
                     },
-                },
-                SidebarItem {
-                    onclick: |_| println!("Hello!"),
-                    label {
-                        "Print Hello! 👀"
+                    SidebarItem {
+                        onclick: |_| println!("Hello!"),
+                        label {
+                            "Print Hello! 👀"
+                        }
+                    },
+                ),
+                Body {
+                    rect {
+                        main_align: "center",
+                        cross_align: "center",
+                        width: "100%",
+                        height: "100%",
+                        Outlet::<Route> {  }
                     }
-                },
-            ),
-            Body {
-                rect {
-                    main_align: "center",
-                    cross_align: "center",
-                    width: "100%",
-                    height: "100%",
-                    Outlet::<Route> {  }
                 }
             }
         }

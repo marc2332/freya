@@ -4,7 +4,7 @@ version = "0.0.0"
 edition = "2021"
 
 [workspace]
-members = ["crates/renderer", "crates/state", "crates/freya", "crates/elements", "crates/components", "crates/hooks", "crates/common", "crates/core", "crates/testing", "crates/devtools", "crates/dom", "crates/torin", "crates/engine", "./examples/installer",  "crates/native-core",  "crates/native-core-macro"]
+members = ["crates/renderer", "crates/state", "crates/freya", "crates/elements", "crates/components", "crates/hooks", "crates/common", "crates/core", "crates/testing", "crates/devtools", "crates/torin", "crates/engine", "./examples/installer",  "crates/native-core",  "crates/native-core-macro"]
 
 [features]
 log = ["freya/log"]
@@ -32,7 +32,6 @@ freya-common = { path = "crates/common", version = "0.1" }
 freya-hooks = { path = "crates/hooks", version = "0.1" }
 freya-core = { path = "crates/core", version = "0.1" }
 freya-components = { path = "crates/components", version = "0.1" }
-freya-dom = { path = "crates/dom", version = "0.1" }
 freya-testing = { path = "crates/testing", version = "0.1" }
 freya-engine = { path = "crates/engine", version = "0.1" }
 torin = { path = "crates/torin", version = "0.1" }
@@ -50,7 +49,7 @@ dioxus-hot-reload = { version = "0.5.0-alpha.0", features = ["file_watcher"], de
 dioxus-router = { version = "0.5.0-alpha.0", default-features = false }
 dioxus-std = { git = "https://github.com/marc2332/dioxus-std", rev = "4d8ae33b94537d54471cd924c32f03c1d949430f", features = ["clipboard"]}
 
-skia-safe = { version = "0.70.0", features = ["gl", "textlayout", "svg"] }
+skia-safe = { version = "0.72.0", features = ["gl", "textlayout", "svg"] }
 
 gl = "0.14.0"
 glutin = "0.31.2"

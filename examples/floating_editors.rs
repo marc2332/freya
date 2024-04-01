@@ -7,15 +7,7 @@ use freya::events::MouseEvent;
 use freya::prelude::*;
 
 fn main() {
-    launch_cfg(
-        app,
-        LaunchConfig::<()>::builder()
-            .with_title("Performance Overlay Plugin")
-            .with_width(700.)
-            .with_height(500.)
-            .with_plugin(PerformanceOverlayPlugin::default())
-            .build(),
-    )
+    launch_with_props(app, "Floating Editors", (700., 600.))
 }
 
 fn app() -> Element {

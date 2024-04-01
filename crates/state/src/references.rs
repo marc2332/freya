@@ -8,58 +8,42 @@ use dioxus_native_core::{
 };
 use dioxus_native_core_macro::partial_derive_state;
 
-use crate::{CanvasReference, CursorReference, CustomAttributeValues, ImageReference};
+use crate::{CanvasReference, CustomAttributeValues, ImageReference};
 
 #[derive(Default, PartialEq, Clone, Debug, Component)]
 pub struct References {
     pub image_ref: Option<ImageReference>,
-    pub cursor_ref: Option<CursorReference>,
     pub canvas_ref: Option<CanvasReference>,
 }
 
 #[partial_derive_state]
 impl State<CustomAttributeValues> for References {
-    type ParentDependencies = (Self,);
+    type ParentDependencies = ();
 
     type ChildDependencies = ();
 
     type NodeDependencies = ();
 
-    const NODE_MASK: NodeMaskBuilder<'static> =
-        NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[
-            AttributeName::CursorReference,
+    const NODE_MASK: NodeMaskBuilder<'static> = NodeMaskBuilder::new()
+        .with_attrs(AttributeMaskBuilder::Some(&[
             AttributeName::ImageReference,
             AttributeName::CanvasReference,
-        ]));
+        ]))
+        .with_tag();
 
     fn update<'a>(
         &mut self,
         node_view: NodeView<CustomAttributeValues>,
         _node: <Self::NodeDependencies as Dependancy>::ElementBorrowed<'a>,
-        parent: Option<<Self::ParentDependencies as Dependancy>::ElementBorrowed<'a>>,
+        _parent: Option<<Self::ParentDependencies as Dependancy>::ElementBorrowed<'a>>,
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
         _context: &SendAnyMap,
     ) -> bool {
-        let mut references = References {
-            cursor_ref: if let Some(parent) = parent {
-                parent.0.cursor_ref.clone()
-            } else {
-                None
-            },
-            ..Default::default()
-        };
+        let mut references = References::default();
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
                 match attr.attribute {
-                    AttributeName::CursorReference => {
-                        if let OwnedAttributeValue::Custom(
-                            CustomAttributeValues::CursorReference(reference),
-                        ) = attr.value
-                        {
-                            references.cursor_ref = Some(reference.clone());
-                        }
-                    }
                     AttributeName::ImageReference => {
                         if let OwnedAttributeValue::Custom(CustomAttributeValues::ImageReference(
                             reference,
@@ -82,6 +66,7 @@ impl State<CustomAttributeValues> for References {
         }
 
         let changed = &references != self;
+
         *self = references;
         changed
     }

@@ -3,13 +3,15 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{keyboard::Key, KeyboardEvent, MouseEvent, WheelEvent};
-use freya_hooks::{use_applied_theme, use_focus, use_node, ScrollViewThemeWith};
+use freya_hooks::{
+    use_applied_theme, use_focus, use_node, ScrollBarThemeWith, ScrollViewThemeWith,
+};
 use std::ops::Range;
 
 use crate::{
     get_container_size, get_corrected_scroll_position, get_scroll_position_from_cursor,
     get_scroll_position_from_wheel, get_scrollbar_pos_and_size, is_scrollbar_visible,
-    manage_key_event, Axis, ScrollBar, ScrollThumb, SCROLLBAR_SIZE, SCROLL_SPEED_MULTIPLIER,
+    manage_key_event, Axis, ScrollBar, ScrollThumb, SCROLL_SPEED_MULTIPLIER,
 };
 
 /// [`VirtualScrollView`] component properties.
@@ -20,6 +22,8 @@ pub struct VirtualScrollViewProps<
 > {
     /// Theme override.
     pub theme: Option<ScrollViewThemeWith>,
+    /// Theme override for the scrollbars.
+    pub scrollbar_theme: Option<ScrollBarThemeWith>,
     /// Quantity of items in the VirtualScrollView.
     pub length: usize,
     /// Size of the items, height for vertical direction and width for horizontal.
@@ -38,6 +42,10 @@ pub struct VirtualScrollViewProps<
     /// Enable scrolling with arrow keys.
     #[props(default = true, into)]
     pub scroll_with_arrows: bool,
+    /// Cache elements or not, changing `builder_args` will invalidate the cache if enabled.
+    /// Default is `true`.
+    #[props(default = true, into)]
+    pub cache_elements: bool,
 }
 
 impl<
@@ -120,6 +128,7 @@ pub fn VirtualScrollView<
     let (node_ref, size) = use_node();
     let mut focus = use_focus();
     let theme = use_applied_theme!(&props.theme, scroll_view);
+    let scrollbar_theme = use_applied_theme!(&props.scrollbar_theme, scroll_bar);
 
     let padding = &theme.padding;
     let user_container_width = &theme.width;
@@ -137,8 +146,9 @@ pub fn VirtualScrollView<
     let horizontal_scrollbar_is_visible = user_direction != "vertical"
         && is_scrollbar_visible(show_scrollbar, inner_size, size.area.width());
 
-    let container_width = get_container_size(vertical_scrollbar_is_visible);
-    let container_height = get_container_size(horizontal_scrollbar_is_visible);
+    let container_width = get_container_size(vertical_scrollbar_is_visible, &scrollbar_theme.size);
+    let container_height =
+        get_container_size(horizontal_scrollbar_is_visible, &scrollbar_theme.size);
 
     let corrected_scrolled_y =
         get_corrected_scroll_position(inner_size, size.area.height(), *scrolled_y.read() as f32);
@@ -158,11 +168,26 @@ pub fn VirtualScrollView<
             1.0
         };
 
-        if !*clicking_shift.peek() {
-            let wheel_y = e.get_delta_y() as f32 * speed_multiplier;
+        let wheel_movement = e.get_delta_y() as f32 * speed_multiplier;
 
+        if *clicking_shift.peek() {
+            let scroll_position_x = get_scroll_position_from_wheel(
+                wheel_movement,
+                inner_size,
+                size.area.width(),
+                corrected_scrolled_x,
+            );
+
+            // Only scroll when there is still area to scroll
+            if *scrolled_x.peek() != scroll_position_x {
+                e.stop_propagation();
+                *scrolled_x.write() = scroll_position_x;
+            } else {
+                return;
+            }
+        } else {
             let scroll_position_y = get_scroll_position_from_wheel(
-                wheel_y,
+                wheel_movement,
                 inner_size,
                 size.area.height(),
                 corrected_scrolled_y,
@@ -175,27 +200,6 @@ pub fn VirtualScrollView<
             } else {
                 return;
             }
-        }
-
-        let wheel_x = if *clicking_shift.peek() {
-            e.get_delta_y() as f32
-        } else {
-            e.get_delta_x() as f32
-        } * speed_multiplier;
-
-        let scroll_position_x = get_scroll_position_from_wheel(
-            wheel_x,
-            inner_size,
-            size.area.width(),
-            corrected_scrolled_x,
-        );
-
-        // Only scroll when there is still area to scroll
-        if *scrolled_x.peek() != scroll_position_x {
-            e.stop_propagation();
-            *scrolled_x.write() = scroll_position_x;
-        } else {
-            return;
         }
 
         focus.focus();
@@ -229,10 +233,6 @@ pub fn VirtualScrollView<
     };
 
     let onkeydown = move |e: KeyboardEvent| {
-        if !focus.is_focused() {
-            return;
-        }
-
         match &e.key {
             Key::Shift => {
                 clicking_shift.set(true);
@@ -241,6 +241,10 @@ pub fn VirtualScrollView<
                 clicking_alt.set(true);
             }
             k => {
+                if !focus.is_focused() {
+                    return;
+                }
+
                 if !scroll_with_arrows
                     && (k == &Key::ArrowUp
                         || k == &Key::ArrowRight
@@ -300,15 +304,15 @@ pub fn VirtualScrollView<
     };
 
     let horizontal_scrollbar_size = if horizontal_scrollbar_is_visible {
-        SCROLLBAR_SIZE
+        &scrollbar_theme.size
     } else {
-        0
+        "0"
     };
 
     let vertical_scrollbar_size = if vertical_scrollbar_is_visible {
-        SCROLLBAR_SIZE
+        &scrollbar_theme.size
     } else {
-        0
+        "0"
     };
 
     let (viewport_size, scroll_position) = if user_direction == "vertical" {
@@ -325,15 +329,21 @@ pub fn VirtualScrollView<
         items_length as f32,
     );
 
-    let children = use_memo(use_reactive(
-        &(render_range, props.builder_args),
-        move |(render_range, builder_args)| {
-            render_range
-                .clone()
-                .map(|i| (props.builder)(i, &builder_args))
-                .collect::<Vec<Element>>()
-        },
-    ));
+    let children = if props.cache_elements {
+        let children = use_memo(use_reactive(
+            &(render_range, props.builder_args),
+            move |(render_range, builder_args)| {
+                render_range
+                    .clone()
+                    .map(|i| (props.builder)(i, &builder_args))
+                    .collect::<Vec<Element>>()
+            },
+        ));
+        rsx!({ children.read().iter() })
+    } else {
+        let children = render_range.map(|i| (props.builder)(i, &props.builder_args));
+        rsx!({ children })
+    };
 
     let is_scrolling_x = clicking_scrollbar
         .read()
@@ -369,18 +379,20 @@ pub fn VirtualScrollView<
                     direction: "{user_direction}",
                     reference: node_ref,
                     onwheel: onwheel,
-                    {children.read().iter()}
+                    {children}
                 }
                 ScrollBar {
                     width: "100%",
                     height: "{horizontal_scrollbar_size}",
                     offset_x: "{scrollbar_x}",
                     clicking_scrollbar: is_scrolling_x,
+                    theme: props.scrollbar_theme.clone(),
                     ScrollThumb {
                         clicking_scrollbar: is_scrolling_x,
                         onmousedown: onmousedown_x,
                         width: "{scrollbar_width}",
-                        height: "100%"
+                        height: "100%",
+                        theme: props.scrollbar_theme.clone(),
                     }
                 }
             }
@@ -389,11 +401,13 @@ pub fn VirtualScrollView<
                 height: "100%",
                 offset_y: "{scrollbar_y}",
                 clicking_scrollbar: is_scrolling_y,
+                theme: props.scrollbar_theme.clone(),
                 ScrollThumb {
                     clicking_scrollbar: is_scrolling_y,
                     onmousedown: onmousedown_y,
                     width: "100%",
-                    height: "{scrollbar_height}"
+                    height: "{scrollbar_height}",
+                    theme: props.scrollbar_theme,
                 }
             }
         }

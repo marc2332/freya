@@ -29,13 +29,13 @@ fn app() -> Element {
         )
     });
 
-    let progress = animation.read().get().read().as_f32();
+    let progress = animation.get().read().as_f32();
 
-    if !animation.read().is_running() {
+    if !animation.is_running() {
         if progress == 15.0 {
-            animation.read().start();
+            animation.start();
         } else if progress == TARGET {
-            animation.read().reverse();
+            animation.reverse();
         }
     }
 
