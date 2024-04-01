@@ -237,9 +237,6 @@ impl<Key: NodeKey> Torin<Key> {
                 data: None,
             });
         let root = dom_adapter.get_node(&root_id).unwrap();
-        let root_parent = root_parent_id
-            .map(|root_parent_id| dom_adapter.get_node(&root_parent_id).unwrap())
-            .unwrap_or_else(|| root.clone());
         let root_height = dom_adapter.height(&root_id).unwrap();
 
         info!(
@@ -252,7 +249,10 @@ impl<Key: NodeKey> Torin<Key> {
         let metadata = LayoutMetadata { root_area };
 
         let mut available_area = layout_node.inner_area;
-        available_area.move_with_offsets(&root_parent.offset_x, &root_parent.offset_y);
+        if let Some(root_parent_id) = root_parent_id {
+            let root_parent = dom_adapter.get_node(&root_parent_id).unwrap();
+            available_area.move_with_offsets(&root_parent.offset_x, &root_parent.offset_y);
+        }
 
         let (root_revalidated, root_layout_node) = measure_node(
             root_id,
