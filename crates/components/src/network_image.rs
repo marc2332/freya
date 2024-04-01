@@ -98,7 +98,8 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
             let asset_task = spawn(async move {
                 let asset = fetch_image(url).await;
                 if let Ok(asset_bytes) = asset {
-                    let asset_signal = asset_cacher.cache(asset_configuration.clone(), asset_bytes);
+                    let asset_signal =
+                        asset_cacher.cache(asset_configuration.clone(), asset_bytes, true);
                     // Image loaded
                     status.set(ImageStatus::Loaded(asset_signal));
                     cached_assets.write().push(asset_configuration);

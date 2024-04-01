@@ -52,7 +52,12 @@ pub struct AssetCacher {
 
 impl AssetCacher {
     /// Cache the given [`AssetConfiguration`]
-    pub fn cache(&mut self, asset_config: AssetConfiguration, asset_bytes: Bytes) -> Signal<Bytes> {
+    pub fn cache(
+        &mut self,
+        asset_config: AssetConfiguration,
+        asset_bytes: Bytes,
+        subscribe: bool,
+    ) -> Signal<Bytes> {
         // Cancel previous caches
         if let Some(mut asset_state) = self.registry.write().remove(&asset_config) {
             if let AssetUsers::ClearTask(task) = asset_state.users {
@@ -67,7 +72,11 @@ impl AssetCacher {
             asset_config.clone(),
             AssetState {
                 asset_bytes,
-                users: AssetUsers::Scopes(HashSet::from([current_scope_id().unwrap()])),
+                users: AssetUsers::Scopes(if subscribe {
+                    HashSet::from([current_scope_id().unwrap()])
+                } else {
+                    HashSet::default()
+                }),
             },
         );
 
@@ -144,9 +153,8 @@ impl AssetCacher {
                 }
             }
         }
-        drop(registry);
 
-        self.registry.peek().get(config).map(|s| s.asset_bytes)
+        registry.get(config).map(|s| s.asset_bytes)
     }
 
     /// Get the size of the cache registry.
