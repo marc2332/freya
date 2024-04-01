@@ -53,6 +53,7 @@ pub const LIGHT_THEME: Theme = Theme {
         thumb_background: cow_borrowed!("rgb(135, 135, 135)"),
         hover_thumb_background: cow_borrowed!("rgb(115, 115, 115)"),
         active_thumb_background: cow_borrowed!("rgb(95, 95, 95)"),
+        size: cow_borrowed!("15"),
     },
     scroll_view: ScrollViewTheme {
         height: cow_borrowed!("fill"),

@@ -1,12 +1,14 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{keyboard::Key, KeyboardEvent, MouseEvent, WheelEvent};
-use freya_hooks::{use_applied_theme, use_focus, use_node, ScrollViewThemeWith};
+use freya_hooks::{
+    use_applied_theme, use_focus, use_node, ScrollBarThemeWith, ScrollViewThemeWith,
+};
 
 use crate::{
     get_container_size, get_corrected_scroll_position, get_scroll_position_from_cursor,
     get_scroll_position_from_wheel, get_scrollbar_pos_and_size, is_scrollbar_visible,
-    manage_key_event, Axis, ScrollBar, ScrollThumb, SCROLLBAR_SIZE, SCROLL_SPEED_MULTIPLIER,
+    manage_key_event, Axis, ScrollBar, ScrollThumb, SCROLL_SPEED_MULTIPLIER,
 };
 
 /// [`ScrollView`] component properties.
@@ -14,6 +16,8 @@ use crate::{
 pub struct ScrollViewProps {
     /// Theme override.
     pub theme: Option<ScrollViewThemeWith>,
+    /// Theme override for the scrollbars.
+    pub scrollbar_theme: Option<ScrollBarThemeWith>,
     /// Inner children for the ScrollView.
     pub children: Element,
     /// Direction of the ScrollView, `vertical` or `horizontal`.
@@ -64,6 +68,7 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
     let (node_ref, size) = use_node();
     let mut focus = use_focus();
     let theme = use_applied_theme!(&props.theme, scroll_view);
+    let scrollbar_theme = use_applied_theme!(&props.scrollbar_theme, scroll_bar);
 
     let padding = &theme.padding;
     let user_container_width = &theme.width;
@@ -77,8 +82,9 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
     let horizontal_scrollbar_is_visible =
         is_scrollbar_visible(show_scrollbar, size.inner.width, size.area.width());
 
-    let container_width = get_container_size(vertical_scrollbar_is_visible);
-    let container_height = get_container_size(horizontal_scrollbar_is_visible);
+    let container_width = get_container_size(vertical_scrollbar_is_visible, &scrollbar_theme.size);
+    let container_height =
+        get_container_size(horizontal_scrollbar_is_visible, &scrollbar_theme.size);
 
     let corrected_scrolled_y = get_corrected_scroll_position(
         size.inner.height,
@@ -245,14 +251,14 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
     };
 
     let horizontal_scrollbar_size = if horizontal_scrollbar_is_visible {
-        SCROLLBAR_SIZE
+        &scrollbar_theme.size
     } else {
-        0
+        "0"
     };
     let vertical_scrollbar_size = if vertical_scrollbar_is_visible {
-        SCROLLBAR_SIZE
+        &scrollbar_theme.size
     } else {
-        0
+        "0"
     };
 
     let is_scrolling_x = clicking_scrollbar
@@ -298,11 +304,13 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
                     height: "{horizontal_scrollbar_size}",
                     offset_x: "{scrollbar_x}",
                     clicking_scrollbar: is_scrolling_x,
+                    theme: props.scrollbar_theme.clone(),
                     ScrollThumb {
                         clicking_scrollbar: is_scrolling_x,
                         onmousedown: onmousedown_x,
                         width: "{scrollbar_width}",
-                        height: "100%"
+                        height: "100%",
+                        theme: props.scrollbar_theme.clone().clone()
                     }
                 }
             }
@@ -311,11 +319,13 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
                 height: "100%",
                 offset_y: "{scrollbar_y}",
                 clicking_scrollbar: is_scrolling_y,
+                theme: props.scrollbar_theme.clone(),
                 ScrollThumb {
                     clicking_scrollbar: is_scrolling_y,
                     onmousedown: onmousedown_y,
                     width: "100%",
-                    height: "{scrollbar_height}"
+                    height: "{scrollbar_height}",
+                    theme: props.scrollbar_theme
                 }
             }
         }
