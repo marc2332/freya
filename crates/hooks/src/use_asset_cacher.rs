@@ -1,6 +1,7 @@
 use bytes::Bytes;
-use dioxus_core::prelude::{
-    current_scope_id, provide_root_context, spawn, try_consume_context, ScopeId, Task,
+use dioxus_core::{
+    prelude::{current_scope_id, provide_root_context, spawn, try_consume_context, ScopeId, Task},
+    Runtime,
 };
 use dioxus_signals::Signal;
 use dioxus_signals::{Readable, Writable};
@@ -114,15 +115,18 @@ impl AssetCacher {
         if spawn_clear_task {
             // Only clear the asset if a duration was specified
             if let AssetAge::Duration(duration) = asset_config.age {
-                let clear_task = spawn({
-                    let asset_config = asset_config.clone();
-                    async move {
-                        sleep(duration).await;
-                        if let Some(mut asset_state) = registry.write().remove(&asset_config) {
-                            // Clear the asset
-                            asset_state.asset_bytes.take();
+                // Why not use `spawn_forever`? Reason: https://github.com/DioxusLabs/dioxus/issues/2215
+                let clear_task = Runtime::current().unwrap().on_scope(ScopeId(0), || {
+                    spawn({
+                        let asset_config = asset_config.clone();
+                        async move {
+                            sleep(duration).await;
+                            if let Some(mut asset_state) = registry.write().remove(&asset_config) {
+                                // Clear the asset
+                                asset_state.asset_bytes.take();
+                            }
                         }
-                    }
+                    })
                 });
 
                 // Registry the clear-task

@@ -3,8 +3,7 @@ use std::time::Duration;
 use dioxus::prelude::*;
 use freya::prelude::{use_asset_cacher, AssetConfiguration, Button, MouseButton};
 use freya_core::prelude::PlatformEvent;
-use freya_hooks::use_platform;
-use freya_testing::{launch_test, launch_test_with_config, EventName, TestingConfig};
+use freya_testing::{launch_test, EventName};
 use tokio::time::sleep;
 
 #[tokio::test]
@@ -29,7 +28,7 @@ async fn asset_cacher() {
             cacher.unuse_asset(asset_config.clone());
         });
 
-        rsx!(label { "asd" })
+        rsx!(label { "{asset.read()[2]}" })
     }
 
     fn asset_cacher_app() -> Element {
@@ -84,6 +83,7 @@ async fn asset_cacher() {
     utils.wait_for_update().await;
 
     assert_eq!(utils.root().get(0).get(0).text(), Some("size 1"));
+    assert_eq!(utils.root().get(3).get(0).text(), Some("7"));
 
     utils.push_event(PlatformEvent::Mouse {
         name: EventName::Click,
@@ -94,6 +94,7 @@ async fn asset_cacher() {
     utils.wait_for_update().await;
 
     assert_eq!(utils.root().get(0).get(0).text(), Some("size 1"));
+    assert_eq!(utils.root().get(4).get(0).text(), Some("7"));
 
     utils.push_event(PlatformEvent::Mouse {
         name: EventName::Click,
@@ -112,8 +113,7 @@ async fn asset_cacher() {
     });
 
     utils.wait_for_update().await;
-    sleep(Duration::from_millis(25)).await;
-    utils.wait_for_update().await;
+    sleep(Duration::from_millis(5)).await;
     utils.wait_for_update().await;
     utils.wait_for_update().await;
 
