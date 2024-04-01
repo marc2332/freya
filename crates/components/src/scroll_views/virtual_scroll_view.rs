@@ -341,11 +341,8 @@ pub fn VirtualScrollView<
         ));
         rsx!({ children.read().iter() })
     } else {
-        let children = render_range
-            .clone()
-            .map(|i| (props.builder)(i, &props.builder_args))
-            .collect::<Vec<Element>>();
-        rsx!({ children.iter() })
+        let children = render_range.map(|i| (props.builder)(i, &props.builder_args));
+        rsx!({ children })
     };
 
     let is_scrolling_x = clicking_scrollbar
