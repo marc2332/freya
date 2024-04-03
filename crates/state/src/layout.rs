@@ -31,7 +31,7 @@ pub struct LayoutState {
     pub position: Position,
     pub content: Content,
     pub node_ref: Option<NodeReference>,
-    pub node_id: NodeId
+    pub node_id: NodeId,
 }
 
 #[partial_derive_state]

@@ -47,6 +47,10 @@ pub enum PluginEvent<'a> {
 
     /// After measuring the layout.
     FinishedLayout(&'a Torin<NodeId>),
+
+    StartedUpdatingDOM,
+
+    FinishedUpdatingDOM,
 }
 
 /// Skeleton for Freya plugins.

@@ -94,13 +94,10 @@ pub fn Switch(props: SwitchProps) -> Element {
         platform.set_cursor(CursorIcon::Pointer);
     };
 
-    let onclick = {
-        let ontoggled = props.ontoggled.clone();
-        move |e: MouseEvent| {
-            e.stop_propagation();
-            focus.focus();
-            ontoggled.call(());
-        }
+    let onclick = move |e: MouseEvent| {
+        e.stop_propagation();
+        focus.focus();
+        props.ontoggled.call(());
     };
 
     let onkeydown = move |e: KeyboardEvent| {

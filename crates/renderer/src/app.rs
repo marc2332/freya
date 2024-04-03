@@ -133,19 +133,24 @@ impl<State: 'static + Clone> App<State> {
 
     /// Make the first build of the VirtualDOM and sync it with the RealDOM.
     pub fn init_doms(&mut self) {
+        self.plugins.send(PluginEvent::StartedUpdatingDOM);
         let scale_factor = self.window_env.window.scale_factor() as f32;
         self.provide_vdom_contexts();
 
         self.sdom.get_mut().init_dom(&mut self.vdom, scale_factor);
+        self.plugins.send(PluginEvent::FinishedUpdatingDOM);
     }
 
     /// Update the DOM with the mutations from the VirtualDOM.
     pub fn apply_vdom_changes(&mut self) -> (bool, bool) {
+        self.plugins.send(PluginEvent::StartedUpdatingDOM);
         let scale_factor = self.window_env.window.scale_factor() as f32;
         let (repaint, relayout) = self
             .sdom
             .get_mut()
             .render_mutations(&mut self.vdom, scale_factor);
+
+        self.plugins.send(PluginEvent::FinishedUpdatingDOM);
 
         if repaint {
             if let Some(mutations_notifier) = &self.mutations_notifier {
