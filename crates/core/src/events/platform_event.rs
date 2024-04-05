@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use freya_elements::events::keyboard::{Code, Key, Modifiers};
 use torin::prelude::*;
 use winit::event::{Force, MouseButton, TouchPhase};
@@ -34,6 +36,12 @@ pub enum PlatformEvent {
         phase: TouchPhase,
         force: Option<Force>,
     },
+    /// A File event.
+    File {
+        name: EventName,
+        cursor: CursorPoint,
+        file_path: Option<PathBuf>,
+    },
 }
 
 impl PlatformEvent {
@@ -43,6 +51,7 @@ impl PlatformEvent {
             Self::Wheel { name, .. } => *name,
             Self::Keyboard { name, .. } => *name,
             Self::Touch { name, .. } => *name,
+            Self::File { name, .. } => *name,
         }
     }
 
@@ -52,6 +61,7 @@ impl PlatformEvent {
             Self::Wheel { name, .. } => *name = new_name,
             Self::Keyboard { name, .. } => *name = new_name,
             Self::Touch { name, .. } => *name = new_name,
+            Self::File { name, .. } => *name = new_name,
         }
     }
 }

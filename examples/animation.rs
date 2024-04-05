@@ -11,7 +11,7 @@ fn main() {
 
 fn app() -> Element {
     let mut toggle = use_signal(|| true);
-    let animator = use_animation(|ctx| {
+    let animations = use_animation(|ctx| {
         (
             ctx.with(
                 AnimNum::new(100., 200.)
@@ -39,7 +39,6 @@ fn app() -> Element {
         )
     });
 
-    let animations = animator.read();
     let (size, color, rotate, radius) = animations.get();
 
     rsx!(
@@ -50,9 +49,9 @@ fn app() -> Element {
             width: "100%",
             onclick: move |_| {
                 if *toggle.peek() {
-                    animator.read().start();
+                    animations.start();
                 } else {
-                    animator.read().reverse();
+                    animations.reverse();
                 }
                 toggle.toggle();
             },

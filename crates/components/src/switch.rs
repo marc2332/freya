@@ -94,13 +94,10 @@ pub fn Switch(props: SwitchProps) -> Element {
         platform.set_cursor(CursorIcon::Pointer);
     };
 
-    let onclick = {
-        let ontoggled = props.ontoggled.clone();
-        move |e: MouseEvent| {
-            e.stop_propagation();
-            focus.focus();
-            ontoggled.call(());
-        }
+    let onclick = move |e: MouseEvent| {
+        e.stop_propagation();
+        focus.focus();
+        props.ontoggled.call(());
     };
 
     let onkeydown = move |e: KeyboardEvent| {
@@ -112,13 +109,13 @@ pub fn Switch(props: SwitchProps) -> Element {
     let (offset_x, background, circle) = {
         if props.enabled {
             (
-                animation.read().get().read().as_f32(),
+                animation.get().read().as_f32(),
                 theme.enabled_background,
                 theme.enabled_thumb_background,
             )
         } else {
             (
-                animation.read().get().read().as_f32(),
+                animation.get().read().as_f32(),
                 theme.background,
                 theme.thumb_background,
             )
@@ -136,9 +133,9 @@ pub fn Switch(props: SwitchProps) -> Element {
 
     use_effect(use_reactive(&props.enabled, move |enabled| {
         if enabled {
-            animation.read().start();
-        } else if animation.read().peek_has_run_yet() {
-            animation.read().reverse();
+            animation.start();
+        } else if animation.peek_has_run_yet() {
+            animation.reverse();
         }
     }));
 

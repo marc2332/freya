@@ -15,14 +15,13 @@ categories = ["gui", "asynchronous"]
 features = ["freya-engine/mocked-engine"]
 
 [features]
-devtools = []
+shared = []
 skia-engine = ["freya-engine/skia-engine"]
 
 [dependencies]
 freya-node-state = { workspace = true }
 freya-elements = { workspace = true }
 freya-common = { workspace = true }
-freya-dom = { workspace = true }
 freya-engine = { workspace = true }
 torin = { workspace = true }
 
@@ -33,7 +32,8 @@ tokio = { workspace = true }
 winit = { workspace = true }
 accesskit = { workspace = true }
 
-rustc-hash= { workspace = true }
+rustc-hash = { workspace = true }
+tracing = { workspace = true }
 uuid = { workspace = true }
 itertools = "0.11.0"
 smallvec = { workspace = true }

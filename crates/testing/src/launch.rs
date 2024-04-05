@@ -4,7 +4,6 @@ use dioxus_core::VirtualDom;
 use dioxus_core_macro::rsx;
 use freya_common::EventMessage;
 use freya_core::prelude::*;
-use freya_dom::prelude::{FreyaDOM, SafeDOM};
 use freya_engine::prelude::*;
 use freya_hooks::{use_init_accessibility, PlatformInformation};
 use std::sync::{Arc, Mutex};
@@ -31,8 +30,6 @@ pub fn launch_test_with_config(root: AppComponent, config: TestingConfig) -> Tes
 
     let (event_emitter, event_receiver) = unbounded_channel::<DomEvent>();
     let (platform_event_emitter, platform_event_receiver) = unbounded_channel::<EventMessage>();
-    let layers = Arc::default();
-    let viewports = Arc::default();
     let mut font_collection = FontCollection::new();
     font_collection.set_dynamic_font_manager(FontMgr::default());
 
@@ -43,11 +40,7 @@ pub fn launch_test_with_config(root: AppComponent, config: TestingConfig) -> Tes
         font_collection,
         event_emitter,
         event_receiver,
-        utils: TestUtils {
-            sdom,
-            layers,
-            viewports,
-        },
+        utils: TestUtils { sdom },
         config,
         platform_event_emitter,
         platform_event_receiver,
