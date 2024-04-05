@@ -132,9 +132,6 @@ impl<'a> WriteMutations for MutationsWriter<'a> {
     }
 
     fn remove_node(&mut self, id: dioxus_core::ElementId) {
-        let node_id = self.native_writer.state.element_to_node_id(id);
-        let mut dom_adapter = DioxusDOMAdapter::new_with_cache(self.native_writer.rdom);
-        self.layout.remove(node_id, &mut dom_adapter, true);
         self.remove(id);
         self.native_writer.remove_node(id);
     }

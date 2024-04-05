@@ -192,8 +192,6 @@ fn measure_dom_events(
         'event: for collateral_event in collateral_events {
             let mut child_node: Option<NodeId> = None;
 
-            let listeners = rdom.get_listening_sorted(&collateral_event);
-
             // Iterate over the event nodes
             for PotentialEvent {
                 node_id,
@@ -205,28 +203,25 @@ fn measure_dom_events(
                     continue;
                 };
 
-                // Iterate over the event listeners
-                for listener in &listeners {
-                    if listener.id() == *node_id {
-                        let valid_node = if let Some(child_node) = child_node {
-                            is_node_parent_of(rdom, child_node, *node_id)
-                        } else {
-                            true
-                        };
+                if rdom.is_node_listening(node_id, &collateral_event) {
+                    let valid_node = if let Some(child_node) = child_node {
+                        is_node_parent_of(rdom, child_node, *node_id)
+                    } else {
+                        true
+                    };
 
-                        if valid_node {
-                            let mut valid_event = event.clone();
-                            valid_event.set_name(collateral_event);
-                            valid_events.push(PotentialEvent {
-                                node_id: *node_id,
-                                event: valid_event,
-                                layer: *layer,
-                            });
+                    if valid_node {
+                        let mut valid_event = event.clone();
+                        valid_event.set_name(collateral_event);
+                        valid_events.push(PotentialEvent {
+                            node_id: *node_id,
+                            event: valid_event,
+                            layer: *layer,
+                        });
 
-                            // Stack events that do not bubble up
-                            if event.get_name().does_bubble() {
-                                continue 'event;
-                            }
+                        // Stack events that do not bubble up
+                        if event.get_name().does_bubble() {
+                            continue 'event;
                         }
                     }
                 }
@@ -274,7 +269,7 @@ fn emit_global_events_listeners(
 ) {
     for global_event in global_events {
         let event_name = global_event.get_name();
-        let listeners = fdom.rdom().get_listening_sorted(&event_name);
+        let listeners = fdom.rdom().get_listeners(&event_name);
 
         for listener in listeners {
             let element_id = listener.mounted_id().unwrap();

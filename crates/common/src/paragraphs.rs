@@ -22,12 +22,14 @@ impl ParagraphElements {
 
     pub fn remove_paragraph(&self, node_id: NodeId, text_id: &Uuid) {
         let mut paragraphs = self.paragraphs.lock().unwrap();
-        let text_group = paragraphs.get_mut(text_id).unwrap();
+        let text_group = paragraphs.get_mut(text_id);
 
-        text_group.retain(|id| *id != node_id);
+        if let Some(text_group) = text_group {
+            text_group.retain(|id| *id != node_id);
 
-        if text_group.is_empty() {
-            paragraphs.remove(text_id);
+            if text_group.is_empty() {
+                paragraphs.remove(text_id);
+            }
         }
     }
 
