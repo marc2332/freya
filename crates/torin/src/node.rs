@@ -1,8 +1,12 @@
 pub use euclid::Rect;
 
 use crate::{
-    alignment::Alignment, direction::DirectionMode, gaps::Gaps, geometry::Length,
-    prelude::Position, size::Size,
+    alignment::Alignment,
+    direction::DirectionMode,
+    gaps::Gaps,
+    geometry::Length,
+    prelude::{Content, Position},
+    size::Size,
 };
 
 /// Node layout configuration
@@ -37,10 +41,15 @@ pub struct Node {
     /// Direction in which it's inner Nodes will be stacked
     pub direction: DirectionMode,
 
+    /// Position config
     pub position: Position,
+
+    pub content: Content,
 
     /// A Node might depend on inner sizes but have a fixed position, like scroll views.
     pub has_layout_references: bool,
+
+    pub contains_text: bool,
 }
 
 impl Node {
@@ -159,12 +168,23 @@ impl Node {
         }
     }
 
+    /// Construct a new Node given a size and content
+    pub fn from_size_and_content(width: Size, height: Size, content: Content) -> Self {
+        Self {
+            width,
+            height,
+            content,
+            ..Default::default()
+        }
+    }
+
     /// Has properties that depend on the inner Nodes?
     pub fn does_depend_on_inner(&self) -> bool {
-        Size::Inner == self.width
-            || Size::Inner == self.height
+        self.width.inner_sized()
+            || self.height.inner_sized()
             || self.has_layout_references
             || self.cross_alignment.is_not_start()
             || self.main_alignment.is_not_start()
+            || self.contains_text
     }
 }

@@ -7,7 +7,7 @@ use image::io::Reader;
 use winit::window::{Icon, Window, WindowBuilder};
 
 pub type WindowBuilderHook = Box<dyn Fn(WindowBuilder) -> WindowBuilder>;
-pub type FontsConfig<'a> = Vec<(&'a str, &'a [u8])>;
+pub type EmbeddedFonts<'a> = Vec<(&'a str, &'a [u8])>;
 
 /// Configuration for a Window.
 pub struct WindowConfig<T: Clone> {
@@ -50,11 +50,22 @@ impl<T: Clone> Default for WindowConfig<T> {
 }
 
 /// Launch configuration.
-#[derive(Default)]
 pub struct LaunchConfig<'a, T: Clone> {
     pub window: WindowConfig<T>,
-    pub fonts: FontsConfig<'a>,
+    pub embedded_fonts: EmbeddedFonts<'a>,
     pub plugins: PluginsManager,
+    pub default_fonts: Vec<String>,
+}
+
+impl<'a, T: Clone> Default for LaunchConfig<'a, T> {
+    fn default() -> Self {
+        Self {
+            window: Default::default(),
+            embedded_fonts: Default::default(),
+            plugins: Default::default(),
+            default_fonts: vec!["Fira Sans".to_string()],
+        }
+    }
 }
 
 impl<'a, T: Clone> LaunchConfig<'a, T> {
@@ -99,6 +110,7 @@ pub struct LaunchConfigBuilder<'a, T> {
     pub(crate) on_exit: Option<WindowCallback>,
     pub(crate) plugins: PluginsManager,
     pub(crate) window_builder_hook: Option<WindowBuilderHook>,
+    pub(crate) default_fonts: Vec<String>,
 }
 
 impl<T> Default for LaunchConfigBuilder<'_, T> {
@@ -121,6 +133,7 @@ impl<T> Default for LaunchConfigBuilder<'_, T> {
             on_exit: None,
             plugins: PluginsManager::default(),
             window_builder_hook: None,
+            default_fonts: vec!["Fira Sans".to_string()],
         }
     }
 }
@@ -192,9 +205,21 @@ impl<'a, T: Clone> LaunchConfigBuilder<'a, T> {
         self
     }
 
-    /// Register a font.
+    /// Embed a font.
     pub fn with_font(mut self, font_name: &'a str, font: &'a [u8]) -> Self {
         self.fonts.push((font_name, font));
+        self
+    }
+
+    /// Clear default fonts.
+    pub fn without_default_fonts(mut self) -> Self {
+        self.default_fonts.clear();
+        self
+    }
+
+    /// Resgiter a default font.
+    pub fn with_default_font(mut self, font_name: &str) -> Self {
+        self.default_fonts.push(font_name.to_string());
         self
     }
 
@@ -251,8 +276,9 @@ impl<'a, T: Clone> LaunchConfigBuilder<'a, T> {
                 on_exit: self.on_exit,
                 window_builder_hook: self.window_builder_hook,
             },
-            fonts: self.fonts,
+            embedded_fonts: self.fonts,
             plugins: self.plugins,
+            default_fonts: self.default_fonts,
         }
     }
 }

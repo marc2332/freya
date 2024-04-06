@@ -1,4 +1,3 @@
-use accesskit::NodeId as AccessibilityId;
 use accesskit_winit::Adapter;
 use freya_common::EventMessage;
 use freya_core::{
@@ -6,7 +5,7 @@ use freya_core::{
         AccessibilityFocusDirection, AccessibilityManager, SharedAccessibilityManager,
         ACCESSIBILITY_ROOT_ID,
     },
-    types::FocusSender,
+    types::{AccessibilityId, FocusSender},
 };
 use winit::{
     dpi::{LogicalPosition, LogicalSize},

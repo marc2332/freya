@@ -26,9 +26,6 @@ freya-core = { workspace = true }
 freya-engine = { workspace = true }
 torin = { workspace = true }
 
-dioxus-rsx = { workspace = true }
-dioxus-native-core = { workspace = true }
-dioxus-core-macro = { workspace = true }
 dioxus-hooks = { workspace = true }
 dioxus-signals = { workspace = true }
 dioxus-core = { workspace = true }
@@ -36,16 +33,14 @@ dioxus-std = { workspace = true }
 
 tokio = { workspace = true }
 winit = { workspace = true }
-accesskit = { workspace = true }
 
-euclid = { workspace = true }
 uuid = { workspace = true }
-tween = "2.0.1"
+easer = "0.3.0"
 ropey = "1.6.0"
 nokhwa = { version = "0.10.4", features = ["input-native"], optional = true }
-bytes = "1.5.0"
 paste = "1.0.14"
 bitflags = "2.4.1"
+copypasta = "0.8.2"
 
 [dev-dependencies]
 dioxus = { workspace = true }

@@ -1,47 +1,40 @@
-use crate::layout::*;
-use dioxus_native_core::NodeId;
-use freya_dom::prelude::FreyaDOM;
+use dioxus_native_core::{real_dom::NodeImmutable, NodeId};
 use freya_engine::prelude::*;
-use torin::prelude::Area;
+use freya_node_state::ViewportState;
+use itertools::sorted;
+use torin::prelude::{LayoutNode, Torin};
+
+use crate::dom::FreyaDOM;
 
 /// Call the render function for the nodes that should be rendered.
-pub fn process_render<RenderOptions>(
-    viewports: &Viewports,
+pub fn process_render(
     fdom: &FreyaDOM,
     font_collection: &mut FontCollection,
-    layers: &Layers,
-    render_options: &mut RenderOptions,
-    render_fn: impl Fn(&FreyaDOM, &NodeId, &Area, &mut FontCollection, &Viewports, &mut RenderOptions),
+    mut render_fn: impl FnMut(&FreyaDOM, &NodeId, &LayoutNode, &mut FontCollection, &Torin<NodeId>),
 ) {
-    // Render all the layers from the bottom to the top
-    for (_, layer) in layers.layers() {
-        'elements: for node_id in layer {
-            let node_viewports = viewports.get(node_id);
-            let layout = fdom.layout();
-            let areas = layout.get(*node_id);
+    let layout = fdom.layout();
+    let rdom = fdom.rdom();
+    let layers = fdom.layers();
 
-            if let Some(areas) = areas {
+    // Render all the layers from the bottom to the top
+    for (_, layer) in sorted(layers.layers().iter()) {
+        'elements: for node_id in layer {
+            let node = rdom.get(*node_id).unwrap();
+            let node_viewports = node.get::<ViewportState>().unwrap();
+
+            let layout_node = layout.get(*node_id);
+
+            if let Some(layout_node) = layout_node {
                 // Skip elements that are completely out of any their parent's viewport
-                if let Some((_, node_viewports)) = node_viewports {
-                    for viewport_id in node_viewports {
-                        let viewport = viewports.get(viewport_id).unwrap().0;
-                        if let Some(viewport) = viewport {
-                            if !viewport.intersects(&areas.area) {
-                                continue 'elements;
-                            }
-                        }
+                for viewport_id in &node_viewports.viewports {
+                    let viewport = layout.get(*viewport_id).unwrap().visible_area();
+                    if !viewport.intersects(&layout_node.area) {
+                        continue 'elements;
                     }
                 }
 
                 // Render the element
-                render_fn(
-                    fdom,
-                    node_id,
-                    &areas.visible_area(),
-                    font_collection,
-                    viewports,
-                    render_options,
-                )
+                render_fn(fdom, node_id, layout_node, font_collection, &layout)
             }
         }
     }

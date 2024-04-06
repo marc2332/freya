@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use freya_core::events::FreyaEvent;
+use freya_core::events::{EventName, PlatformEvent};
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::mouse::MouseButton;
 use freya_testing::launch_test;
@@ -61,8 +61,8 @@ async fn check_size() {
 
     let rect = utils.root().get(0);
 
-    assert_eq!(rect.layout().unwrap().width(), 250.0);
-    assert_eq!(rect.layout().unwrap().height(), 430.0);
+    assert_eq!(rect.area().unwrap().width(), 250.0);
+    assert_eq!(rect.area().unwrap().height(), 430.0);
 }
 
 #[tokio::test]
@@ -97,8 +97,8 @@ async fn simulate_events() {
 
     assert_eq!(text.text(), Some("Is enabled? false"));
 
-    utils.push_event(FreyaEvent::Mouse {
-        name: "click".to_string(),
+    utils.push_event(PlatformEvent::Mouse {
+        name: EventName::Click,
         cursor: (5.0, 5.0).into(),
         button: Some(MouseButton::Left),
     });
@@ -109,4 +109,34 @@ async fn simulate_events() {
     let text = label.get(0);
 
     assert_eq!(text.text(), Some("Is enabled? true"));
+}
+
+#[tokio::test]
+async fn match_by_text() {
+    fn app() -> Element {
+        rsx!(
+            label {
+                "Hello, World!"
+            }
+            rect {
+                label {
+                    "Hello, Rust!"
+                }
+            }
+        )
+    }
+
+    let mut utils = launch_test(app);
+
+    assert_eq!(
+        utils.root().get_by_text("Hello, World!").unwrap().text(),
+        Some("Hello, World!")
+    );
+
+    assert!(utils.root().get_by_text("Blabla").is_none());
+
+    assert_eq!(
+        utils.root().get_by_text("Hello, Rust!").unwrap().text(),
+        Some("Hello, Rust!")
+    );
 }

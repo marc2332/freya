@@ -17,19 +17,25 @@ fn main() {
     )
 }
 
-const TIME: i32 = 400;
-const TARGET: f64 = 650.0;
+const TARGET: f32 = 650.0;
 
 fn app() -> Element {
-    let mut animation = use_animation(|| 15.0);
+    let animation = use_animation(|ctx| {
+        ctx.with(
+            AnimNum::new(15., TARGET)
+                .time(400)
+                .ease(Ease::InOut)
+                .function(Function::Sine),
+        )
+    });
 
-    let progress = animation.value();
+    let progress = animation.get().read().as_f32();
 
-    if !animation.is_animating() {
+    if !animation.is_running() {
         if progress == 15.0 {
-            animation.start(Animation::new_sine_in_out(15.0..=TARGET, TIME));
+            animation.start();
         } else if progress == TARGET {
-            animation.start(Animation::new_sine_in_out(TARGET..=15.0, TIME));
+            animation.reverse();
         }
     }
 
@@ -40,7 +46,7 @@ fn app() -> Element {
             main_align: "center",
             for i in 0..32 {
                 rect {
-                    offset_x: "{progress - i as f64 * 10.0}",
+                    offset_x: "{progress - i as f32 * 10.0}",
                     key: "{i}",
                     direction: "horizontal",
                     rect {

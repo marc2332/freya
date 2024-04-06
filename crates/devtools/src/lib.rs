@@ -1,20 +1,22 @@
 use dioxus::prelude::*;
 use dioxus_native_core::node::NodeType;
-use dioxus_native_core::prelude::{ElementNode, TextNode};
+use dioxus_native_core::prelude::ElementNode;
 use dioxus_native_core::real_dom::NodeImmutable;
 use dioxus_native_core::tree::TreeRef;
 use dioxus_native_core::NodeId;
 use dioxus_router::prelude::*;
 use freya_components::*;
-use freya_core::node::{get_node_state, NodeState};
-use freya_dom::prelude::SafeDOM;
+use freya_core::{
+    dom::SafeDOM,
+    node::{get_node_state, NodeState},
+};
 use freya_elements::elements as dioxus_elements;
 use freya_hooks::{use_init_accessibility, use_init_theme, use_theme, DARK_THEME};
 
 use freya_renderer::HoveredNode;
 use std::sync::Arc;
 use tokio::sync::Notify;
-use torin::prelude::NodeAreas;
+use torin::prelude::LayoutNode;
 
 mod hooks;
 mod node;
@@ -101,7 +103,7 @@ pub struct TreeNode {
     #[allow(dead_code)]
     text: Option<String>,
     state: NodeState,
-    areas: NodeAreas,
+    layout_node: LayoutNode,
 }
 
 #[derive(Props, Clone)]
@@ -134,52 +136,54 @@ pub fn DevTools(props: DevToolsProps) -> Element {
             loop {
                 mutations_notifier.notified().await;
 
-                let dom = rdom.get();
-                let rdom = dom.rdom();
-                let layout = dom.layout();
+                let dom = rdom.try_get();
+                if let Some(dom) = dom {
+                    let rdom = dom.rdom();
+                    let layout = dom.layout();
 
-                let mut new_children = Vec::with_capacity(layout.results.len());
+                    let mut new_children = Vec::with_capacity(layout.results.len());
 
-                let mut root_found = false;
-                let mut devtools_found = false;
+                    let mut root_found = false;
+                    let mut devtools_found = false;
 
-                rdom.traverse_depth_first(|node| {
-                    let height = rdom.tree_ref().height(node.id()).unwrap();
-                    if height == 2 {
-                        if !root_found {
-                            root_found = true;
-                        } else {
-                            devtools_found = true;
+                    rdom.traverse_depth_first(|node| {
+                        let height = rdom.tree_ref().height(node.id()).unwrap();
+                        if height == 2 {
+                            if !root_found {
+                                root_found = true;
+                            } else {
+                                devtools_found = true;
+                            }
                         }
-                    }
 
-                    if !devtools_found && root_found {
-                        let areas = layout.get(node.id());
-                        if let Some(areas) = areas {
-                            let (text, tag) = match &*node.node_type() {
-                                NodeType::Text(TextNode { text, .. }) => {
-                                    (Some(text.to_string()), "text".to_string())
-                                }
-                                NodeType::Element(ElementNode { tag, .. }) => {
-                                    (None, tag.to_string())
-                                }
-                                NodeType::Placeholder => (None, "placeholder".to_string()),
-                            };
+                        if !devtools_found && root_found {
+                            let layout_node = layout.get(node.id());
+                            if let Some(layout_node) = layout_node {
+                                let (text, tag) = match &*node.node_type() {
+                                    NodeType::Text(text) => {
+                                        (Some(text.to_string()), "text".to_string())
+                                    }
+                                    NodeType::Element(ElementNode { tag, .. }) => {
+                                        (None, tag.to_string())
+                                    }
+                                    NodeType::Placeholder => (None, "placeholder".to_string()),
+                                };
 
-                            let state = get_node_state(&node);
+                                let state = get_node_state(&node);
 
-                            new_children.push(TreeNode {
-                                height,
-                                id: node.id(),
-                                tag,
-                                text,
-                                state,
-                                areas: areas.clone(),
-                            });
+                                new_children.push(TreeNode {
+                                    height,
+                                    id: node.id(),
+                                    tag,
+                                    text,
+                                    state,
+                                    layout_node: layout_node.clone(),
+                                });
+                            }
                         }
-                    }
-                });
-                *children.write() = new_children;
+                    });
+                    *children.write() = new_children;
+                }
             }
         });
     });

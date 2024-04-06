@@ -10,15 +10,23 @@ fn main() {
 }
 
 fn app() -> Element {
-    let mut progress_anim = use_animation(|| 0.0);
-    let progress = progress_anim.value() as f32;
+    let mut start_origin = use_signal(|| 50.);
+    let animation = use_animation(move |ctx| {
+        ctx.with(
+            AnimNum::new(*start_origin.read(), 100.)
+                .time(400)
+                .ease(Ease::InOut)
+                .function(Function::Sine),
+        )
+    });
+    let progress = animation.get().read().as_f32();
 
     let set_to_max = move |_| {
-        progress_anim.start(Animation::new_linear(progress_anim.value()..=100.0, 400));
+        animation.start();
     };
 
     let onmoved = move |value: f64| {
-        progress_anim.set_value(value);
+        start_origin.set(value as f32);
     };
 
     rsx!(

@@ -255,6 +255,7 @@ define_theme! {
         hover_background: str,
         border_fill: str,
         focus_border_fill: str,
+        shadow: str,
         margin: str,
         corner_radius: str,
         width: str,
@@ -309,6 +310,7 @@ define_theme! {
         thumb_background: str,
         hover_thumb_background: str,
         active_thumb_background: str,
+        size: str,
     }
 }
 
@@ -356,14 +358,6 @@ define_theme! {
 
 define_theme! {
     %[component]
-    pub ExternalLink {
-        %[cows]
-        highlight_color: str,
-    }
-}
-
-define_theme! {
-    %[component]
     pub Accordion {
         %[cows]
         color: str,
@@ -377,7 +371,14 @@ define_theme! {
     pub Loader {
         %[cows]
         primary_color: str,
-        secondary_color: str,
+    }
+}
+
+define_theme! {
+    %[component]
+    pub Link {
+        %[cows]
+        highlight_color: str,
     }
 }
 
@@ -440,9 +441,99 @@ define_theme! {
 
 define_theme! {
     %[component]
-    pub ArrowIcon {
+    pub Icon {
         %[cows]
         margin: str,
+        width: str,
+        height: str,
+    }
+}
+
+define_theme! {
+    %[component]
+    pub Sidebar {
+        %[cows]
+        background: str,
+        %[subthemes]
+        font_theme: FontTheme,
+    }
+}
+
+define_theme! {
+    %[component]
+    pub SidebarItem {
+        %[cows]
+        background: str,
+        hover_background: str,
+        %[subthemes]
+        font_theme: FontTheme,
+    }
+}
+
+define_theme! {
+    %[component]
+    pub Tile {
+        %[cows]
+        padding: str,
+    }
+}
+
+define_theme! {
+    %[component]
+    pub MenuItem {
+        %[cows]
+        hover_background: str,
+        corner_radius: str,
+        %[subthemes]
+        font_theme: FontTheme,
+    }
+}
+
+define_theme! {
+    %[component]
+    pub MenuContainer {
+        %[cows]
+        background: str,
+        padding: str,
+        shadow: str,
+    }
+}
+
+define_theme! {
+    %[component]
+    pub SnackBar {
+        %[cows]
+        background: str,
+        color: str,
+     }
+}
+
+define_theme! {
+    %[component]
+    pub Radio {
+        %[cows]
+        unselected_fill: str,
+        selected_fill: str,
+    }
+}
+
+define_theme! {
+    %[component]
+    pub Checkbox {
+        %[cows]
+        unselected_fill: str,
+        selected_fill: str,
+        selected_icon_fill: str,
+    }
+}
+
+define_theme! {
+    %[component]
+    pub Popup {
+        %[cows]
+        background: str,
+        color: str,
+        cross_fill: str,
         width: str,
         height: str,
     }
@@ -458,18 +549,27 @@ pub struct Theme {
     pub scroll_view: ScrollViewTheme,
     pub slider: SliderTheme,
     pub tooltip: TooltipTheme,
-    pub external_link: ExternalLinkTheme,
     pub dropdown: DropdownTheme,
     pub dropdown_item: DropdownItemTheme,
     pub accordion: AccordionTheme,
     pub loader: LoaderTheme,
+    pub link: LinkTheme,
     pub progress_bar: ProgressBarTheme,
     pub table: TableTheme,
     pub input: InputTheme,
     pub canvas: CanvasTheme,
     pub graph: GraphTheme,
     pub network_image: NetworkImageTheme,
-    pub arrow_icon: ArrowIconTheme,
+    pub icon: IconTheme,
+    pub sidebar: SidebarTheme,
+    pub sidebar_item: SidebarItemTheme,
+    pub tile: TileTheme,
+    pub radio: RadioTheme,
+    pub checkbox: CheckboxTheme,
+    pub menu_item: MenuItemTheme,
+    pub menu_container: MenuContainerTheme,
+    pub snackbar: SnackBarTheme,
+    pub popup: PopupTheme,
 }
 
 impl Default for Theme {

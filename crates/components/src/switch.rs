@@ -3,7 +3,8 @@ use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{KeyboardEvent, MouseEvent};
 
 use freya_hooks::{
-    use_animation, use_applied_theme, use_focus, use_platform, Animation, SwitchThemeWith,
+    use_animation, use_applied_theme, use_focus, use_platform, AnimNum, Ease, Function,
+    SwitchThemeWith,
 };
 use winit::window::CursorIcon;
 
@@ -56,7 +57,14 @@ pub enum SwitchStatus {
 ///
 #[allow(non_snake_case)]
 pub fn Switch(props: SwitchProps) -> Element {
-    let mut animation = use_animation(|| 0.0);
+    let animation = use_animation(|ctx| {
+        ctx.with(
+            AnimNum::new(0., 25.)
+                .time(300)
+                .function(Function::Expo)
+                .ease(Ease::Out),
+        )
+    });
     let theme = use_applied_theme!(&props.theme, switch);
     let platform = use_platform();
     let mut status = use_signal(SwitchStatus::default);
@@ -86,13 +94,10 @@ pub fn Switch(props: SwitchProps) -> Element {
         platform.set_cursor(CursorIcon::Pointer);
     };
 
-    let onclick = {
-        let ontoggled = props.ontoggled.clone();
-        move |e: MouseEvent| {
-            e.stop_propagation();
-            focus.focus();
-            ontoggled.call(());
-        }
+    let onclick = move |e: MouseEvent| {
+        e.stop_propagation();
+        focus.focus();
+        props.ontoggled.call(());
     };
 
     let onkeydown = move |e: KeyboardEvent| {
@@ -104,12 +109,16 @@ pub fn Switch(props: SwitchProps) -> Element {
     let (offset_x, background, circle) = {
         if props.enabled {
             (
-                animation.value(),
+                animation.get().read().as_f32(),
                 theme.enabled_background,
                 theme.enabled_thumb_background,
             )
         } else {
-            (animation.value(), theme.background, theme.thumb_background)
+            (
+                animation.get().read().as_f32(),
+                theme.background,
+                theme.thumb_background,
+            )
         }
     };
     let border = if focus.is_selected() {
@@ -122,13 +131,13 @@ pub fn Switch(props: SwitchProps) -> Element {
         "none".to_string()
     };
 
-    let _ = use_memo_with_dependencies(&props.enabled, move |enabled| {
+    use_effect(use_reactive(&props.enabled, move |enabled| {
         if enabled {
-            animation.start(Animation::new_sine_in_out(0.0..=25.0, 200));
-        } else if animation.peek_value() > 0.0 {
-            animation.start(Animation::new_sine_in_out(25.0..=0.0, 200));
+            animation.start();
+        } else if animation.peek_has_run_yet() {
+            animation.reverse();
         }
-    });
+    }));
 
     rsx!(
         rect {
@@ -160,4 +169,60 @@ pub fn Switch(props: SwitchProps) -> Element {
             }
         }
     )
+}
+
+#[cfg(test)]
+mod test {
+    use dioxus::prelude::use_signal;
+    use freya::prelude::*;
+    use freya_testing::*;
+
+    #[tokio::test]
+    pub async fn button() {
+        fn button_app() -> Element {
+            let mut enabled = use_signal(|| false);
+
+            rsx!(
+                Switch {
+                    enabled: *enabled.read(),
+                    ontoggled: move |_| {
+                        enabled.toggle();
+                    }
+                }
+                label {
+                    "{enabled}"
+                }
+            )
+        }
+
+        let mut utils = launch_test(button_app);
+        let root = utils.root();
+        let label = root.get(1);
+        utils.wait_for_update().await;
+
+        // Default is false
+        assert_eq!(label.get(0).text(), Some("false"));
+
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (5.0, 5.0).into(),
+            button: Some(MouseButton::Left),
+        });
+
+        utils.wait_for_update().await;
+
+        // Check if after clicking it is now enabled
+        assert_eq!(label.get(0).text(), Some("true"));
+
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (5.0, 5.0).into(),
+            button: Some(MouseButton::Left),
+        });
+
+        utils.wait_for_update().await;
+
+        // Check if after clicking again it is now disabled
+        assert_eq!(label.get(0).text(), Some("false"));
+    }
 }

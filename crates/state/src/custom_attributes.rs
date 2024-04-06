@@ -47,7 +47,7 @@ impl Display for NodeReference {
     }
 }
 
-pub type CanvasRunner = dyn Fn(&Canvas, &FontCollection, Area) + Sync + Send + 'static;
+pub type CanvasRunner = dyn Fn(&Canvas, &mut FontCollection, Area) + Sync + Send + 'static;
 
 /// Canvas Reference
 #[derive(Clone)]
@@ -104,12 +104,27 @@ impl Display for CursorReference {
     }
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum AttributesBytes {
+    Dynamic(Arc<Vec<u8>>),
+    Static(&'static [u8]),
+}
+
+impl AttributesBytes {
+    pub fn as_slice(&self) -> &[u8] {
+        match self {
+            Self::Dynamic(bytes) => bytes.as_slice(),
+            Self::Static(bytes) => bytes,
+        }
+    }
+}
+
 /// Group all the custom attribute types
 #[derive(Clone, PartialEq)]
 pub enum CustomAttributeValues {
     Reference(NodeReference),
     CursorReference(CursorReference),
-    Bytes(Vec<u8>),
+    Bytes(AttributesBytes),
     ImageReference(ImageReference),
     AccessibilityId(AccessibilityId),
     TextHighlights(Vec<(usize, usize)>),
@@ -138,5 +153,12 @@ impl FromAnyValue for CustomAttributeValues {
 
 /// Transform some bytes (e.g: raw image, raw svg) into attribute data
 pub fn bytes_to_data(bytes: &[u8]) -> AttributeValue {
-    AttributeValue::any_value(CustomAttributeValues::Bytes(bytes.to_vec()))
+    AttributeValue::any_value(CustomAttributeValues::Bytes(AttributesBytes::Dynamic(
+        Arc::new(bytes.to_vec()),
+    )))
+}
+
+/// Transform some static bytes (e.g: raw image, raw svg) into attribute data
+pub fn static_bytes_to_data(bytes: &'static [u8]) -> AttributeValue {
+    AttributeValue::any_value(CustomAttributeValues::Bytes(AttributesBytes::Static(bytes)))
 }

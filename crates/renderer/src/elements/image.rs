@@ -1,5 +1,6 @@
 use dioxus_native_core::real_dom::NodeImmutable;
-use freya_dom::prelude::DioxusNode;
+
+use freya_core::dom::DioxusNode;
 use freya_engine::prelude::*;
 use freya_node_state::{References, Style};
 use torin::geometry::Area;
@@ -30,6 +31,6 @@ pub fn render_image(area: &Area, node_ref: &DioxusNode, canvas: &Canvas) {
             draw_img(image_data)
         }
     } else if let Some(image_data) = &node_style.image_data {
-        draw_img(image_data)
+        draw_img(image_data.as_slice())
     }
 }

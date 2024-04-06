@@ -4,7 +4,6 @@
 )]
 
 use freya::prelude::*;
-use winit::window::CursorIcon;
 
 fn main() {
     launch(app);

@@ -180,7 +180,7 @@ pub fn launch_with_props(app: AppComponent, title: &'static str, (width, height)
 /// }
 /// ```
 pub fn launch_cfg<T: 'static + Clone + Send>(app: AppComponent, config: LaunchConfig<T>) {
-    use freya_dom::prelude::{FreyaDOM, SafeDOM};
+    use freya_core::prelude::{FreyaDOM, SafeDOM};
 
     let fdom = FreyaDOM::default();
     let sdom = SafeDOM::new(fdom);

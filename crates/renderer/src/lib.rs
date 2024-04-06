@@ -3,7 +3,7 @@ pub use config::*;
 use dioxus_core::VirtualDom;
 use dioxus_native_core::NodeId;
 use freya_common::EventMessage;
-use freya_dom::prelude::SafeDOM;
+use freya_core::dom::SafeDOM;
 use std::sync::{Arc, Mutex};
 use tokio::sync::Notify;
 use winit::event_loop::EventLoopBuilder;
@@ -47,7 +47,7 @@ impl DesktopRenderer {
         let proxy = event_loop.create_proxy();
 
         // Hotreload support for Dioxus
-        #[cfg(debug_assertions)]
+        #[cfg(feature = "hot-reload")]
         {
             use std::process::exit;
             let proxy = proxy.clone();
@@ -56,6 +56,7 @@ impl DesktopRenderer {
                     let _ = proxy.send_event(EventMessage::UpdateTemplate(template));
                 }
                 dioxus_hot_reload::HotReloadMsg::Shutdown => exit(0),
+                dioxus_hot_reload::HotReloadMsg::UpdateAsset(_) => {}
             });
         }
 
@@ -67,8 +68,9 @@ impl DesktopRenderer {
             &proxy,
             mutations_notifier,
             window_env,
-            config.fonts,
+            config.embedded_fonts,
             config.plugins,
+            config.default_fonts,
         );
 
         app.init_doms();

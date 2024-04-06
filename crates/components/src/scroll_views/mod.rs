@@ -9,9 +9,6 @@ pub use scroll_thumb::*;
 pub use scroll_view::*;
 pub use virtual_scroll_view::*;
 
-#[doc(hidden)]
-pub const SCROLLBAR_SIZE: u8 = 15;
-
 // Holding alt while scrolling makes it 5x faster (VSCode behavior).
 #[doc(hidden)]
 pub const SCROLL_SPEED_MULTIPLIER: f32 = 5.0;
@@ -24,9 +21,9 @@ pub enum Axis {
 }
 
 #[doc(hidden)]
-pub fn get_container_size(is_scrollbar_visible: bool) -> String {
+pub fn get_container_size(is_scrollbar_visible: bool, scrollbar_size: &str) -> String {
     if is_scrollbar_visible {
-        format!("calc(100% - {SCROLLBAR_SIZE})")
+        format!("calc(100% - {scrollbar_size})")
     } else {
         "100%".to_string()
     }
