@@ -1,1 +1,1 @@
-pub use dioxus_native_core::events::*;
+pub use freya_native_core::events::*;

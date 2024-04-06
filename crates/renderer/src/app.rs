@@ -1,9 +1,9 @@
 use dioxus_core::{Template, VirtualDom};
-use dioxus_native_core::NodeId;
 use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_engine::prelude::*;
 use freya_hooks::PlatformInformation;
+use freya_native_core::NodeId;
 use futures_task::Waker;
 use futures_util::FutureExt;
 use pin_utils::pin_mut;

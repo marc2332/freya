@@ -1,4 +1,4 @@
-use dioxus_native_core::real_dom::NodeImmutable;
+use freya_native_core::real_dom::NodeImmutable;
 
 use freya_common::{CachedParagraph, CursorLayoutResponse};
 use freya_node_state::{CursorReference, CursorSettings};

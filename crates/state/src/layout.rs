@@ -1,6 +1,6 @@
 use std::sync::{Arc, Mutex};
 
-use dioxus_native_core::{
+use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
     node::OwnedAttributeValue,
@@ -8,7 +8,7 @@ use dioxus_native_core::{
     prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State},
     NodeId, SendAnyMap,
 };
-use dioxus_native_core_macro::partial_derive_state;
+use freya_native_core_macro::partial_derive_state;
 use torin::prelude::*;
 
 use crate::{CustomAttributeValues, NodeReference, Parse};

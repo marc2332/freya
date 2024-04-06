@@ -5,7 +5,7 @@ use crate::{
     dom::{DioxusDOM, DioxusNode},
     types::AccessibilityId,
 };
-use dioxus_native_core::{node::NodeType, real_dom::NodeImmutable, tags::TagName, NodeId};
+use freya_native_core::{node::NodeType, real_dom::NodeImmutable, tags::TagName, NodeId};
 use freya_node_state::AccessibilityNodeState;
 use torin::torin::Torin;
 
