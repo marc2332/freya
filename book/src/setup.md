@@ -1,4 +1,4 @@
-# Environment Setup
+# Setup
 
 Make sure you have [Rust](https://www.rust-lang.org/) and your OS dependencies installed.
 

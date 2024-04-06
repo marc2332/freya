@@ -1,6 +1,6 @@
 # Differences with Dioxus
 
-**Freya** uses most of the core packages of Dioxus, but not all them.
+**Freya** uses some of the core packages of Dioxus, but not all them.
 
 These are the main differences between Freya and the official Dioxus renderers for Desktop (webview and Blitz):
 
