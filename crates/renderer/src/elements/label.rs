@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
-use dioxus_native_core::prelude::SendAnyMap;
 use freya_common::CachedParagraph;
 use freya_engine::prelude::*;
+use freya_native_core::prelude::SendAnyMap;
 use torin::geometry::Area;
 
 /// Render a `label` element

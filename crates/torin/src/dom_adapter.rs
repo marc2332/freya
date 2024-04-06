@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use dioxus_native_core::SendAnyMap;
 pub use euclid::Rect;
+use freya_native_core::SendAnyMap;
 
 use crate::{
     geometry::{Area, Size2D},
@@ -49,7 +49,7 @@ pub trait NodeKey: Clone + PartialEq + Eq + std::hash::Hash + Copy + std::fmt::D
 impl NodeKey for usize {}
 
 #[cfg(feature = "dioxus")]
-impl NodeKey for dioxus_native_core::NodeId {}
+impl NodeKey for freya_native_core::NodeId {}
 
 pub trait DOMAdapter<Key: NodeKey> {
     fn root_id(&self) -> Key;

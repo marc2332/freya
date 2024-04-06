@@ -1,9 +1,9 @@
 use app::App;
 pub use config::*;
 use dioxus_core::VirtualDom;
-use dioxus_native_core::NodeId;
 use freya_common::EventMessage;
 use freya_core::dom::SafeDOM;
+use freya_native_core::NodeId;
 use std::sync::{Arc, Mutex};
 use tokio::sync::Notify;
 use winit::event_loop::EventLoopBuilder;

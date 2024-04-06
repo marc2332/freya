@@ -1,6 +1,6 @@
-use dioxus_native_core::NodeId;
-use dioxus_native_core::{node::NodeType, real_dom::NodeImmutable};
 use freya_core::node::NodeState;
+use freya_native_core::NodeId;
+use freya_native_core::{node::NodeType, real_dom::NodeImmutable};
 use freya_node_state::{CustomAttributeValues, Style, ViewportState};
 use torin::{geometry::Area, prelude::LayoutNode};
 

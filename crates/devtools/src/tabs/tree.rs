@@ -1,9 +1,9 @@
 use crate::{node::NodeElement, NodeIdSerializer, Route, TreeNode};
 use dioxus::prelude::*;
-use dioxus_native_core::NodeId;
 use dioxus_router::prelude::use_navigator;
 use freya_components::*;
 use freya_hooks::{theme_with, ScrollViewThemeWith};
+use freya_native_core::NodeId;
 
 #[allow(non_snake_case)]
 #[component]

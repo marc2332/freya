@@ -1,4 +1,4 @@
-use dioxus_native_core::prelude::SendAnyMap;
+use freya_native_core::prelude::SendAnyMap;
 use std::sync::Arc;
 
 use crate::{dom_adapter::NodeKey, geometry::Size2D, node::Node, prelude::LayoutNode};

@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 
 use dioxus_core::VirtualDom;
-use dioxus_native_core::{
+use freya_native_core::{
     prelude::{DioxusState, State},
     real_dom::{NodeRef, RealDom},
     NodeId, SendAnyMap,

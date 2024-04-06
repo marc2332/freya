@@ -1,8 +1,8 @@
 use dioxus_core::{ElementId, WriteMutations};
-use dioxus_native_core::{
+use freya_common::{Layers, ParagraphElements};
+use freya_native_core::{
     dioxus::DioxusNativeCoreMutationWriter, prelude::NodeImmutable, tree::TreeRef, NodeId,
 };
-use freya_common::{Layers, ParagraphElements};
 use freya_node_state::{CursorSettings, CustomAttributeValues, LayerState};
 use torin::torin::Torin;
 
