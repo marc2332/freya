@@ -15,7 +15,7 @@ fn MyComponent() -> Element {
 
 ## RSX
 
-Dioxus uses a custom markdup syntax  called RSX, it's conceptually similar to React's JSX.
+Dioxus uses a custom markup syntax  called RSX, it's conceptually similar to React's JSX.
 
 Syntax:
 

@@ -66,7 +66,7 @@ Check out the examples in the Freya [repository](https://github.com/marc2332/fre
 - 🔄️ Dioxus **Hot-reload** support
 - 📒 Multi-line **text editing** (experimental ⚠️)
 - 🦾 Basic **Accessibility** Support (experimental ⚠️)
-- 🧩Compatible with dioxus-std and other Dioxus renderer-agnostic libraries
+- 🧩Compatible with Dioxus SDK and other Dioxus renderer-agnostic libraries
 
 ### Learn More
 
