@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use dioxus_native_core::NodeId;
+use freya_native_core::NodeId;
 
 use crate::TreeNode;
 

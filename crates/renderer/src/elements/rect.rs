@@ -1,4 +1,4 @@
-use dioxus_native_core::real_dom::NodeImmutable;
+use freya_native_core::real_dom::NodeImmutable;
 
 use freya_core::dom::DioxusNode;
 use freya_engine::prelude::*;

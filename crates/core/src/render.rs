@@ -1,5 +1,5 @@
-use dioxus_native_core::{real_dom::NodeImmutable, NodeId};
 use freya_engine::prelude::*;
+use freya_native_core::{real_dom::NodeImmutable, NodeId};
 use freya_node_state::ViewportState;
 use itertools::sorted;
 use torin::prelude::{LayoutNode, Torin};

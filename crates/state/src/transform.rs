@@ -1,10 +1,10 @@
-use dioxus_native_core::{
+use freya_native_core::{
     exports::shipyard::Component,
     node_ref::NodeView,
     prelude::{AttributeMaskBuilder, AttributeName, Dependancy, NodeMaskBuilder, State},
     SendAnyMap,
 };
-use dioxus_native_core_macro::partial_derive_state;
+use freya_native_core_macro::partial_derive_state;
 
 use crate::CustomAttributeValues;
 

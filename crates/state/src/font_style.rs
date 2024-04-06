@@ -1,14 +1,14 @@
 use std::sync::{Arc, Mutex};
 
-use dioxus_native_core::{
+use freya_engine::prelude::*;
+use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
     node_ref::NodeView,
     prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State},
     NodeId, SendAnyMap,
 };
-use dioxus_native_core_macro::partial_derive_state;
-use freya_engine::prelude::*;
+use freya_native_core_macro::partial_derive_state;
 use torin::torin::Torin;
 
 use crate::{CustomAttributeValues, ExtSplit, Parse, TextOverflow};

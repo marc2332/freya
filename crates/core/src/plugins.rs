@@ -1,5 +1,5 @@
-use dioxus_native_core::NodeId;
 use freya_engine::prelude::{Canvas, FontCollection};
+use freya_native_core::NodeId;
 use torin::torin::Torin;
 use winit::window::Window;
 

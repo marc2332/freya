@@ -1,13 +1,13 @@
 use std::{any::Any, rc::Rc};
 
 use dioxus_core::ElementId;
-use dioxus_native_core::NodeId;
 use freya_elements::{
     elements::PlatformEventData,
     events::{
         pointer::PointerType, FileData, KeyboardData, MouseData, PointerData, TouchData, WheelData,
     },
 };
+use freya_native_core::NodeId;
 use torin::prelude::*;
 
 use crate::{events::PlatformEvent, prelude::PotentialEvent};
