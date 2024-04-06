@@ -7,7 +7,7 @@ import { GoBook } from 'react-icons/go'
 
 const EXAMPLE_CODE = `
 fn app(cx: Scope) -> Element {
-  let mut count = use_state(|| 0);
+  let mut count = use_state(cx, || 0);
 
   render!(
       rect {
