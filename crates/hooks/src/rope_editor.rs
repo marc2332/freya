@@ -1,6 +1,6 @@
 use std::{cmp::Ordering, fmt::Display, ops::Range};
 
-use dioxus_std::clipboard::UseClipboard;
+use dioxus_sdk::clipboard::UseClipboard;
 use ropey::iter::Lines;
 pub use ropey::Rope;
 
