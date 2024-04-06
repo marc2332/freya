@@ -7,7 +7,7 @@ Devtools can be enabled by adding the `devtools` to Freya.
 // Cargo.toml
 
 [dependencies]
-freya = { version = "0.2", features = ["devtools"] }
+freya = { version = "0.1", features = ["devtools"] }
 
 ```
 
