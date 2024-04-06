@@ -15,7 +15,9 @@ use tokio::time::sleep;
 /// The default is 1h (3600s).
 #[derive(Hash, PartialEq, Eq, Clone)]
 pub enum AssetAge {
+    /// Asset will be cached for the specified duration
     Duration(Duration),
+    /// Asset will be cached until app is closed
     Unspecified,
 }
 
