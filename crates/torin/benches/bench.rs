@@ -1,6 +1,7 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use std::collections::HashMap;
+use dioxus_native_core::SendAnyMap;
 use std::fmt::Display;
+use std::{collections::HashMap, sync::Arc};
 use torin::prelude::*;
 
 struct TestingMeasurer;
@@ -10,11 +11,13 @@ impl LayoutMeasurer<usize> for TestingMeasurer {
         &mut self,
         _node_id: usize,
         _node: &Node,
-        _area: &Area,
-        _parent_size: &Area,
-        _available_parent_area: &Area,
-    ) -> Option<Area> {
+        _size: &Size2D,
+    ) -> Option<(Size2D, Arc<SendAnyMap>)> {
         None
+    }
+
+    fn should_measure_inner_children(&mut self, _node_id: usize) -> bool {
+        true
     }
 }
 
@@ -69,8 +72,8 @@ impl DOMAdapter<usize> for TestingDOM {
         true
     }
 
-    fn closest_common_parent(&self, node_id_a: &usize, _node_id_b: &usize) -> Option<usize> {
-        self.parent_of(node_id_a)
+    fn root_id(&self) -> usize {
+        0
     }
 }
 
@@ -79,12 +82,15 @@ struct BenchmarkConfig {
     wide: usize,
     mode: BenchmarkMode,
     sample: usize,
+    prefix: String,
+    node_generator: fn(depth: usize) -> Node,
 }
 
 impl BenchmarkConfig {
     pub fn name(&self) -> String {
         format!(
-            "size={} depth={} wide={} mode={}",
+            "{}size={} depth={} wide={} mode={}",
+            self.prefix,
             self.size(),
             self.depth,
             self.wide,
@@ -123,66 +129,122 @@ impl Display for BenchmarkMode {
 fn criterion_benchmark(c: &mut Criterion) {
     let mut g = c.benchmark_group("benchmarks");
 
+    fn simple_node_generator(_depth: usize) -> Node {
+        Node::from_size_and_direction(
+            Size::Pixels(Length::new(100.0)),
+            Size::Pixels(Length::new(100.0)),
+            DirectionMode::Vertical,
+        )
+    }
+
     let benchmarks = [
         BenchmarkConfig {
             depth: 2,
             wide: 1000,
             mode: BenchmarkMode::NoCache,
             sample: 500,
+            node_generator: simple_node_generator,
+            prefix: String::default(),
         },
         BenchmarkConfig {
             depth: 2,
             wide: 10000,
             mode: BenchmarkMode::NoCache,
             sample: 500,
+            node_generator: simple_node_generator,
+            prefix: String::default(),
         },
         BenchmarkConfig {
             depth: 2,
             wide: 100000,
             mode: BenchmarkMode::NoCache,
             sample: 500,
+            node_generator: simple_node_generator,
+            prefix: String::default(),
         },
         BenchmarkConfig {
             depth: 12,
             wide: 2,
             mode: BenchmarkMode::NoCache,
             sample: 500,
+            node_generator: simple_node_generator,
+            prefix: String::default(),
         },
         BenchmarkConfig {
             depth: 14,
             wide: 2,
             mode: BenchmarkMode::NoCache,
-            sample: 50,
+            sample: 100,
+            node_generator: simple_node_generator,
+            prefix: String::default(),
         },
         BenchmarkConfig {
             depth: 17,
             wide: 2,
             mode: BenchmarkMode::NoCache,
-            sample: 30,
+            sample: 100,
+            node_generator: simple_node_generator,
+            prefix: String::default(),
         },
         BenchmarkConfig {
             depth: 5,
             wide: 15,
             mode: BenchmarkMode::NoCache,
             sample: 500,
+            node_generator: simple_node_generator,
+            prefix: String::default(),
         },
         BenchmarkConfig {
             depth: 5,
             wide: 15,
             mode: BenchmarkMode::InvalidatedCache,
             sample: 500,
+            node_generator: simple_node_generator,
+            prefix: String::default(),
         },
         BenchmarkConfig {
             depth: 7,
             wide: 5,
             mode: BenchmarkMode::NoCache,
-            sample: 50,
+            sample: 100,
+            node_generator: simple_node_generator,
+            prefix: String::default(),
         },
         BenchmarkConfig {
             depth: 7,
             wide: 5,
             mode: BenchmarkMode::InvalidatedCache,
-            sample: 50,
+            sample: 100,
+            node_generator: simple_node_generator,
+            prefix: String::default(),
+        },
+        BenchmarkConfig {
+            depth: 8,
+            wide: 4,
+            mode: BenchmarkMode::NoCache,
+            sample: 70,
+            node_generator: |depth: usize| {
+                if depth % 2 == 0 {
+                    Node::from_size_and_alignments_and_direction_and_padding(
+                        Size::Pixels(Length::new(100.0)),
+                        Size::Inner,
+                        Alignment::Start,
+                        Alignment::Center,
+                        DirectionMode::Vertical,
+                        Gaps::default(),
+                    )
+                } else {
+                    Node::from_size_and_alignments_and_direction_and_padding(
+                        Size::Pixels(Length::new(100.0)),
+                        Size::Pixels(Length::new(100.0)),
+                        Alignment::Center,
+                        Alignment::End,
+                        DirectionMode::Vertical,
+                        Gaps::default(),
+                    )
+                }
+            },
+            prefix: "alignments=true ".to_string(),
         },
     ];
 
@@ -193,6 +255,8 @@ fn criterion_benchmark(c: &mut Criterion) {
             mode,
             wide,
             sample,
+            node_generator,
+            ..
         } = bench;
 
         g.significance_level(0.05).sample_size(sample);
@@ -217,6 +281,7 @@ fn criterion_benchmark(c: &mut Criterion) {
 
                     fn build_branch(
                         mocked_dom: &mut TestingDOM,
+                        node_generator: fn(depth: usize) -> Node,
                         root: usize,
                         level: usize,
 
@@ -238,17 +303,20 @@ fn criterion_benchmark(c: &mut Criterion) {
                                 *mid_node = *id;
                             }
 
-                            let children =
-                                build_branch(mocked_dom, *id, level + 1, depth, wide, mid_node);
+                            let children = build_branch(
+                                mocked_dom,
+                                node_generator,
+                                *id,
+                                level + 1,
+                                depth,
+                                wide,
+                                mid_node,
+                            );
                             mocked_dom.add_with_depth(
                                 *id,
                                 Some(root),
                                 children,
-                                Node::from_size_and_direction(
-                                    Size::Pixels(Length::new(100.0)),
-                                    Size::Pixels(Length::new(100.0)),
-                                    DirectionMode::Vertical,
-                                ),
+                                node_generator(depth),
                                 level as u16,
                             );
                         }
@@ -256,7 +324,15 @@ fn criterion_benchmark(c: &mut Criterion) {
                     }
 
                     let mut invalidate_node = 0;
-                    build_branch(&mut mocked_dom, 0, 0, depth, wide, &mut invalidate_node);
+                    build_branch(
+                        &mut mocked_dom,
+                        node_generator,
+                        0,
+                        0,
+                        depth,
+                        wide,
+                        &mut invalidate_node,
+                    );
 
                     let mut layout = Torin::<usize>::new();
 

@@ -61,9 +61,9 @@ pub fn use_init_accessibility() {
 #[cfg(test)]
 mod test {
     use freya::prelude::*;
-    use freya_core::accessibility::ACCESSIBILITY_ROOT_ID;
+    use freya_core::{accessibility::ACCESSIBILITY_ROOT_ID, events::EventName};
     use freya_testing::{
-        events::pointer::MouseButton, launch_test_with_config, FreyaEvent, TestingConfig,
+        events::pointer::MouseButton, launch_test_with_config, PlatformEvent, TestingConfig,
     };
 
     #[tokio::test]
@@ -92,7 +92,10 @@ mod test {
 
         let mut utils = launch_test_with_config(
             use_focus_app,
-            *TestingConfig::default().with_size((100.0, 100.0).into()),
+            TestingConfig {
+                size: (100.0, 100.0).into(),
+                ..TestingConfig::default()
+            },
         );
 
         // Initial state
@@ -100,8 +103,8 @@ mod test {
         assert_eq!(utils.focus_id(), ACCESSIBILITY_ROOT_ID);
 
         // Click on the first rect
-        utils.push_event(FreyaEvent::Mouse {
-            name: "click".to_string(),
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
             cursor: (5.0, 5.0).into(),
             button: Some(MouseButton::Left),
         });
@@ -109,17 +112,19 @@ mod test {
         // First rect is now focused
         utils.wait_for_update().await;
         utils.wait_for_update().await;
+        utils.wait_for_update().await;
         let first_focus_id = utils.focus_id();
         assert_ne!(first_focus_id, ACCESSIBILITY_ROOT_ID);
 
         // Click on the second rect
-        utils.push_event(FreyaEvent::Mouse {
-            name: "click".to_string(),
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
             cursor: (5.0, 75.0).into(),
             button: Some(MouseButton::Left),
         });
 
         // Second rect is now focused
+        utils.wait_for_update().await;
         utils.wait_for_update().await;
         utils.wait_for_update().await;
         let second_focus_id = utils.focus_id();

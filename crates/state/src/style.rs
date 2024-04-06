@@ -1,4 +1,7 @@
+use std::sync::Arc;
+
 use dioxus_native_core::{
+    attributes::AttributeName,
     exports::shipyard::Component,
     node::OwnedAttributeValue,
     node_ref::NodeView,
@@ -9,19 +12,18 @@ use dioxus_native_core_macro::partial_derive_state;
 use torin::scaled::Scaled;
 
 use crate::{
-    parsing::ExtSplit, Border, BorderAlignment, CornerRadius, CustomAttributeValues, Fill,
-    OverflowMode, Parse, Shadow,
+    parsing::ExtSplit, AttributesBytes, Border, BorderAlignment, CornerRadius,
+    CustomAttributeValues, Fill, OverflowMode, Parse, Shadow,
 };
 
 #[derive(Default, Debug, Clone, PartialEq, Component)]
 pub struct Style {
     pub background: Fill,
-    pub relative_layer: i16,
     pub border: Border,
     pub shadows: Vec<Shadow>,
     pub corner_radius: CornerRadius,
-    pub image_data: Option<Vec<u8>>,
-    pub svg_data: Option<Vec<u8>>,
+    pub image_data: Option<AttributesBytes>,
+    pub svg_data: Option<AttributesBytes>,
     pub overflow: OverflowMode,
     pub opacity: Option<f32>,
 }
@@ -36,18 +38,18 @@ impl State<CustomAttributeValues> for Style {
 
     const NODE_MASK: NodeMaskBuilder<'static> =
         NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[
-            "background",
-            "layer",
-            "border",
-            "border_align",
-            "shadow",
-            "corner_radius",
-            "corner_smoothing",
-            "image_data",
-            "svg_data",
-            "svg_content",
-            "overflow",
-            "opacity",
+            AttributeName::Background,
+            AttributeName::Layer,
+            AttributeName::Border,
+            AttributeName::BorderAlign,
+            AttributeName::Shadow,
+            AttributeName::CornerRadius,
+            AttributeName::CornerSmoothing,
+            AttributeName::ImageData,
+            AttributeName::SvgData,
+            AttributeName::SvgContent,
+            AttributeName::Overflow,
+            AttributeName::Opacity,
         ]));
 
     fn update<'a>(
@@ -63,22 +65,15 @@ impl State<CustomAttributeValues> for Style {
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
-                match attr.attribute.name.as_str() {
-                    "background" => {
+                match attr.attribute {
+                    AttributeName::Background => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(background) = Fill::parse(value) {
                                 style.background = background;
                             }
                         }
                     }
-                    "layer" => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(relative_layer) = value.parse::<i16>() {
-                                style.relative_layer = relative_layer;
-                            }
-                        }
-                    }
-                    "border" => {
+                    AttributeName::Border => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(mut border) = Border::parse(value) {
                                 border.alignment = style.border.alignment;
@@ -88,14 +83,14 @@ impl State<CustomAttributeValues> for Style {
                             }
                         }
                     }
-                    "border_align" => {
+                    AttributeName::BorderAlign => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(alignment) = BorderAlignment::parse(value) {
                                 style.border.alignment = alignment;
                             }
                         }
                     }
-                    "shadow" => {
+                    AttributeName::Shadow => {
                         if let Some(value) = attr.value.as_text() {
                             style.shadows = value
                                 .split_excluding_group(',', '(', ')')
@@ -107,7 +102,7 @@ impl State<CustomAttributeValues> for Style {
                                 .collect();
                         }
                     }
-                    "corner_radius" => {
+                    AttributeName::CornerRadius => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(mut radius) = CornerRadius::parse(value) {
                                 radius.scale(*scale_factor);
@@ -116,7 +111,7 @@ impl State<CustomAttributeValues> for Style {
                             }
                         }
                     }
-                    "corner_smoothing" => {
+                    AttributeName::CornerSmoothing => {
                         if let Some(value) = attr.value.as_text() {
                             if value.ends_with('%') {
                                 if let Ok(smoothing) = value.replacen('%', "", 1).parse::<f32>() {
@@ -126,41 +121,40 @@ impl State<CustomAttributeValues> for Style {
                             }
                         }
                     }
-                    "image_data" => {
+                    AttributeName::ImageData => {
                         if let OwnedAttributeValue::Custom(CustomAttributeValues::Bytes(bytes)) =
                             attr.value
                         {
                             style.image_data = Some(bytes.clone());
                         }
                     }
-                    "svg_data" => {
+                    AttributeName::SvgData => {
                         if let OwnedAttributeValue::Custom(CustomAttributeValues::Bytes(bytes)) =
                             attr.value
                         {
                             style.svg_data = Some(bytes.clone());
                         }
                     }
-                    "svg_content" => {
+                    AttributeName::SvgContent => {
                         let text = attr.value.as_text();
-                        style.svg_data = text.map(|v| v.as_bytes().to_owned());
+                        style.svg_data = text
+                            .map(|v| AttributesBytes::Dynamic(Arc::new(v.as_bytes().to_owned())));
                     }
-                    "overflow" => {
+                    AttributeName::Overflow => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(overflow) = OverflowMode::parse(value) {
                                 style.overflow = overflow;
                             }
                         }
                     }
-                    "opacity" => {
+                    AttributeName::Opacity => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(opacity) = value.parse::<f32>() {
                                 style.opacity = Some(opacity);
                             }
                         }
                     }
-                    _ => {
-                        panic!("Unsupported attribute <{}>, this should not be happening, please report it.", attr.attribute.name);
-                    }
+                    _ => {}
                 }
             }
         }

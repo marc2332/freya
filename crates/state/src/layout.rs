@@ -1,6 +1,7 @@
 use std::sync::{Arc, Mutex};
 
 use dioxus_native_core::{
+    attributes::AttributeName,
     exports::shipyard::Component,
     node::OwnedAttributeValue,
     node_ref::NodeView,
@@ -23,13 +24,14 @@ pub struct LayoutState {
     pub padding: Gaps,
     pub margin: Gaps,
     pub direction: DirectionMode,
-    pub node_id: NodeId,
-    pub offset_y: f32,
-    pub offset_x: f32,
+    pub offset_y: Length,
+    pub offset_x: Length,
     pub main_alignment: Alignment,
     pub cross_alignment: Alignment,
     pub position: Position,
+    pub content: Content,
     pub node_ref: Option<NodeReference>,
+    pub node_id: NodeId,
 }
 
 #[partial_derive_state]
@@ -40,29 +42,29 @@ impl State<CustomAttributeValues> for LayoutState {
 
     type NodeDependencies = ();
 
-    const NODE_MASK: NodeMaskBuilder<'static> = NodeMaskBuilder::new()
-        .with_attrs(AttributeMaskBuilder::Some(&[
-            "width",
-            "height",
-            "min_height",
-            "min_width",
-            "max_height",
-            "max_width",
-            "padding",
-            "direction",
-            "offset_y",
-            "offset_x",
-            "main_align",
-            "cross_align",
-            "reference",
-            "margin",
-            "position",
-            "position_top",
-            "position_right",
-            "position_bottom",
-            "position_left",
-        ]))
-        .with_tag();
+    const NODE_MASK: NodeMaskBuilder<'static> =
+        NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[
+            AttributeName::Width,
+            AttributeName::Height,
+            AttributeName::MinWidth,
+            AttributeName::MinHeight,
+            AttributeName::MaxWidth,
+            AttributeName::MaxHeight,
+            AttributeName::Padding,
+            AttributeName::Direction,
+            AttributeName::OffsetX,
+            AttributeName::OffsetY,
+            AttributeName::MainAlign,
+            AttributeName::CrossAlign,
+            AttributeName::Reference,
+            AttributeName::Margin,
+            AttributeName::Position,
+            AttributeName::PositionTop,
+            AttributeName::PositionRight,
+            AttributeName::PositionBottom,
+            AttributeName::PositionLeft,
+            AttributeName::Content,
+        ]));
 
     fn update<'a>(
         &mut self,
@@ -76,22 +78,14 @@ impl State<CustomAttributeValues> for LayoutState {
         let scale_factor = context.get::<f32>().unwrap();
 
         let mut layout = LayoutState {
-            direction: if let Some("label") = node_view.tag() {
-                DirectionMode::Horizontal
-            } else if let Some("paragraph") = node_view.tag() {
-                DirectionMode::Horizontal
-            } else if let Some("text") = node_view.tag() {
-                DirectionMode::Horizontal
-            } else {
-                DirectionMode::Vertical
-            },
+            node_id: node_view.node_id(),
             ..Default::default()
         };
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
-                match attr.attribute.name.as_str() {
-                    "width" => {
+                match attr.attribute {
+                    AttributeName::Width => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(mut width) = Size::parse(value) {
                                 width.scale(*scale_factor);
@@ -99,7 +93,7 @@ impl State<CustomAttributeValues> for LayoutState {
                             }
                         }
                     }
-                    "height" => {
+                    AttributeName::Height => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(mut height) = Size::parse(value) {
                                 height.scale(*scale_factor);
@@ -107,7 +101,7 @@ impl State<CustomAttributeValues> for LayoutState {
                             }
                         }
                     }
-                    "min_height" => {
+                    AttributeName::MinHeight => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(mut min_height) = Size::parse(value) {
                                 min_height.scale(*scale_factor);
@@ -115,7 +109,7 @@ impl State<CustomAttributeValues> for LayoutState {
                             }
                         }
                     }
-                    "min_width" => {
+                    AttributeName::MinWidth => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(mut min_width) = Size::parse(value) {
                                 min_width.scale(*scale_factor);
@@ -123,7 +117,7 @@ impl State<CustomAttributeValues> for LayoutState {
                             }
                         }
                     }
-                    "max_height" => {
+                    AttributeName::MaxHeight => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(mut max_height) = Size::parse(value) {
                                 max_height.scale(*scale_factor);
@@ -131,7 +125,7 @@ impl State<CustomAttributeValues> for LayoutState {
                             }
                         }
                     }
-                    "max_width" => {
+                    AttributeName::MaxWidth => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(mut max_width) = Size::parse(value) {
                                 max_width.scale(*scale_factor);
@@ -139,7 +133,7 @@ impl State<CustomAttributeValues> for LayoutState {
                             }
                         }
                     }
-                    "padding" => {
+                    AttributeName::Padding => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(mut padding) = Gaps::parse(value) {
                                 padding.scale(*scale_factor);
@@ -147,7 +141,7 @@ impl State<CustomAttributeValues> for LayoutState {
                             }
                         }
                     }
-                    "margin" => {
+                    AttributeName::Margin => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(mut margin) = Gaps::parse(value) {
                                 margin.scale(*scale_factor);
@@ -155,7 +149,7 @@ impl State<CustomAttributeValues> for LayoutState {
                             }
                         }
                     }
-                    "direction" => {
+                    AttributeName::Direction => {
                         if let Some(value) = attr.value.as_text() {
                             layout.direction = match value {
                                 "horizontal" => DirectionMode::Horizontal,
@@ -163,35 +157,35 @@ impl State<CustomAttributeValues> for LayoutState {
                             }
                         }
                     }
-                    "offset_y" => {
+                    AttributeName::OffsetY => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(scroll) = value.parse::<f32>() {
-                                layout.offset_y = scroll * scale_factor;
+                                layout.offset_y = Length::new(scroll * scale_factor);
                             }
                         }
                     }
-                    "offset_x" => {
+                    AttributeName::OffsetX => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(scroll) = value.parse::<f32>() {
-                                layout.offset_x = scroll * scale_factor;
+                                layout.offset_x = Length::new(scroll * scale_factor);
                             }
                         }
                     }
-                    "main_align" => {
+                    AttributeName::MainAlign => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(alignment) = Alignment::parse(value) {
                                 layout.main_alignment = alignment;
                             }
                         }
                     }
-                    "cross_align" => {
+                    AttributeName::CrossAlign => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(alignment) = Alignment::parse(value) {
                                 layout.cross_alignment = alignment;
                             }
                         }
                     }
-                    "position" => {
+                    AttributeName::Position => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(position) = Position::parse(value) {
                                 if layout.position.is_empty() {
@@ -200,35 +194,42 @@ impl State<CustomAttributeValues> for LayoutState {
                             }
                         }
                     }
-                    "position_top" => {
+                    AttributeName::PositionTop => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(top) = value.parse::<f32>() {
                                 layout.position.set_top(top * scale_factor);
                             }
                         }
                     }
-                    "position_right" => {
+                    AttributeName::PositionRight => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(right) = value.parse::<f32>() {
                                 layout.position.set_right(right * scale_factor);
                             }
                         }
                     }
-                    "position_bottom" => {
+                    AttributeName::PositionBottom => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(bottom) = value.parse::<f32>() {
                                 layout.position.set_bottom(bottom * scale_factor);
                             }
                         }
                     }
-                    "position_left" => {
+                    AttributeName::PositionLeft => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(left) = value.parse::<f32>() {
                                 layout.position.set_left(left * scale_factor);
                             }
                         }
                     }
-                    "reference" => {
+                    AttributeName::Content => {
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(content) = Content::parse(value) {
+                                layout.content = content;
+                            }
+                        }
+                    }
+                    AttributeName::Reference => {
                         if let OwnedAttributeValue::Custom(CustomAttributeValues::Reference(
                             reference,
                         )) = attr.value
@@ -236,27 +237,12 @@ impl State<CustomAttributeValues> for LayoutState {
                             layout.node_ref = Some(reference.clone());
                         }
                     }
-                    _ => {
-                        panic!("Unsupported attribute <{}>, this should not be happening, please report it.", attr.attribute.name);
-                    }
+                    _ => {}
                 }
             }
         }
 
-        let changed = (layout.width != self.width)
-            || (layout.height != self.height)
-            || (layout.minimum_width != self.minimum_width)
-            || (layout.minimum_height != self.minimum_height)
-            || (layout.maximum_width != self.maximum_width)
-            || (layout.maximum_height != self.maximum_height)
-            || (layout.padding != self.padding)
-            || (node_view.node_id() != self.node_id)
-            || (layout.direction != self.direction)
-            || (layout.offset_x != self.offset_x)
-            || (layout.offset_y != self.offset_y)
-            || (layout.main_alignment != self.main_alignment)
-            || (layout.cross_alignment != self.cross_alignment)
-            || (layout.position != self.position);
+        let changed = layout != *self;
 
         if changed {
             torin_layout.lock().unwrap().invalidate(node_view.node_id());

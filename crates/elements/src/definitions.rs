@@ -227,6 +227,8 @@ builder_constructors! {
         position_left: String,
         #[doc = include_str!("_docs/attributes/opacity.md")]
         opacity: String,
+        #[doc = include_str!("_docs/attributes/content.md")]
+        content: String,
 
         name: String,
         focusable: String,
@@ -424,7 +426,7 @@ builder_constructors! {
     /// static RUST_LOGO: &[u8] = include_bytes!("./rust_logo.png");
     ///
     /// fn app() -> Element {
-    ///     let image_data = bytes_to_data(RUST_LOGO);
+    ///     let image_data = static_bytes_to_data(RUST_LOGO);
     ///     rsx!(
     ///         image {
     ///             image_data: image_data,
@@ -517,6 +519,7 @@ pub mod events {
     }
 
     /// A platform specific event.
+    #[doc(hidden)]
     pub struct PlatformEventData {
         event: Box<dyn Any>,
     }
@@ -571,6 +574,10 @@ pub mod events {
         onclick
         #[doc = include_str!("_docs/events/globalclick.md")]
         onglobalclick
+        #[doc = include_str!("_docs/events/onmiddleclick.md")]
+        onmiddleclick
+        #[doc = include_str!("_docs/events/onrightclick.md")]
+        onrightclick
         #[doc = include_str!("_docs/events/mousedown.md")]
         onmousedown
         #[doc = include_str!("_docs/events/globalmousedown.md")]
@@ -621,11 +628,24 @@ pub mod events {
         onpointerdown
         #[doc = include_str!("_docs/events/pointerup.md")]
         onpointerup
+        #[doc = include_str!("_docs/events/onglobalpointerup.md")]
+        onglobalpointerup
         #[doc = include_str!("_docs/events/pointerover.md")]
         onpointerover
         #[doc = include_str!("_docs/events/pointerenter.md")]
         onpointerenter
         #[doc = include_str!("_docs/events/pointerleave.md")]
         onpointerleave
+    ];
+
+    impl_event! [
+        FileData;
+
+        #[doc = include_str!("_docs/events/onfiledrop.md")]
+        onfiledrop
+        #[doc = include_str!("_docs/events/onglobalfilehover.md")]
+        onglobalfilehover
+        #[doc = include_str!("_docs/events/onglobalfilehovercancelled.md")]
+        onglobalfilehovercancelled
     ];
 }

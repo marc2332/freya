@@ -1,4 +1,3 @@
-use accesskit::NodeId as AccessibilityId;
 use accesskit_winit::Adapter;
 use freya_common::EventMessage;
 use freya_core::{
@@ -6,7 +5,7 @@ use freya_core::{
         AccessibilityFocusDirection, AccessibilityManager, SharedAccessibilityManager,
         ACCESSIBILITY_ROOT_ID,
     },
-    types::FocusSender,
+    types::{AccessibilityId, FocusSender},
 };
 use winit::{
     dpi::{LogicalPosition, LogicalSize},
@@ -64,28 +63,31 @@ impl AccessKitManager {
 
     fn update_ime_position(&self, accessibility_id: AccessibilityId, window: &Window) {
         let accessibility_manager = self.accessibility_manager.lock().unwrap();
-        let node = accessibility_manager
-            .nodes
-            .iter()
-            .find_map(|(id, n)| {
-                if *id == accessibility_id {
-                    Some(n)
-                } else {
-                    None
-                }
-            })
-            .unwrap();
-        let node_bounds = node.bounds();
-        if let Some(node_bounds) = node_bounds {
-            window.set_ime_cursor_area(
-                LogicalPosition::new(node_bounds.min_x(), node_bounds.min_y()),
-                LogicalSize::new(node_bounds.width(), node_bounds.height()),
-            )
+        let node = accessibility_manager.nodes.iter().find_map(|(id, n)| {
+            if *id == accessibility_id {
+                Some(n)
+            } else {
+                None
+            }
+        });
+        if let Some(node) = node {
+            let node_bounds = node.bounds();
+            if let Some(node_bounds) = node_bounds {
+                return window.set_ime_cursor_area(
+                    LogicalPosition::new(node_bounds.min_x(), node_bounds.min_y()),
+                    LogicalSize::new(node_bounds.width(), node_bounds.height()),
+                );
+            }
         }
+
+        window.set_ime_cursor_area(
+            window.inner_position().unwrap_or_default(),
+            LogicalSize::<u32>::default(),
+        );
     }
 
-    /// Process an Accessibility event
-    pub fn process_accessibility_event(&mut self, window: &Window, event: &WindowEvent) {
+    /// Process an accessibility event
+    pub fn process_accessibility_event(&mut self, event: &WindowEvent, window: &Window) {
         self.accessibility_adapter.process_event(window, event)
     }
 

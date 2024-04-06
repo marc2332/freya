@@ -61,8 +61,6 @@ Compatible elements: [`label`](/guides/elements.html#label), [`paragraph`](/guid
 
 With the `font_family` you can specify what font do you want to use for the inner text.
 
-Limitation: Only fonts installed in the system are supported for now.
-
 Example: 
 
 ```rust, no_run
@@ -70,6 +68,21 @@ fn app() -> Element {
     rsx!(
         label {
             font_family: "Inter",
+            "Hello, World!"
+        }
+    )
+}
+```
+
+You can also specify multiple fonts in order of priority, if one is not found it will fallback to the next one.
+
+Example: 
+
+```rust, no_run
+fn app(cx: Scope) -> Element {
+    render!(
+        label {
+            font_family: "DoesntExist Font, Impact",
             "Hello, World!"
         }
     )
@@ -243,7 +256,7 @@ fn app() -> Element {
             "Hello, World! \n Hello, World! \n Hello, world!" // Will show all three lines
         }
         label {
-            lines_height: "2",
+            max_lines: "2",
             "Hello, World! \n Hello, World! \n Hello, world!" // Will only show two lines
         }
     )

@@ -15,6 +15,7 @@ categories = ["gui", "asynchronous"]
 features = ["freya-engine/mocked-engine"]
 
 [features]
+hot-reload = []
 skia-engine = ["freya-engine/skia-engine"]
 
 [dependencies]
@@ -22,14 +23,11 @@ freya-node-state = { workspace = true }
 freya-elements = { workspace = true }
 freya-common = { workspace = true }
 freya-core = { workspace = true }
-freya-dom = { workspace = true }
 freya-engine = { workspace = true }
+freya-hooks = { workspace = true }
 torin = { workspace = true }
 
-dioxus-rsx = { workspace = true }
 dioxus-native-core = { workspace = true }
-dioxus-core-macro = { workspace = true }
-dioxus-hooks = { workspace = true }
 dioxus-core = { workspace = true }
 dioxus-hot-reload = { workspace = true }
 
@@ -45,6 +43,7 @@ tracing = { workspace = true }
 futures-task ={ workspace = true }
 futures-util = { workspace = true }
 
+itertools = "0.11.0"
 uuid = { workspace = true }
 image = "0.24.7"
 pin-utils = "0.1.0"

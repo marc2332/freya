@@ -22,12 +22,12 @@ freya-elements = { workspace = true }
 freya-node-state = { workspace = true }
 freya-hooks = { workspace = true }
 freya-common = { workspace = true }
-freya-core = { path = "../core", version = "0.2" }
-freya-engine = { path = "../engine", version = "0.2" }
+freya-core = { workspace = true }
+freya-engine = { workspace = true }
 torin = { workspace = true }
 
-dioxus = { workspace = true }
 dioxus-router = { workspace = true }
+dioxus = { workspace = true }
 futures-util = { workspace = true }
 
 winit = { workspace = true }

@@ -1,10 +1,9 @@
 use dioxus_native_core::NodeId;
-use freya_dom::dom::FreyaDOM;
 use freya_engine::prelude::{Canvas, FontCollection};
 use torin::torin::Torin;
 use winit::window::Window;
 
-use crate::layout::Viewports;
+use crate::dom::FreyaDOM;
 
 /// Manages all loaded plugins.
 #[derive(Default)]
@@ -34,7 +33,6 @@ pub enum PluginEvent<'a> {
         canvas: &'a Canvas,
         font_collection: &'a FontCollection,
         freya_dom: &'a FreyaDOM,
-        viewports: &'a Viewports,
     },
 
     /// After rendering the app to the Canvas.
@@ -42,7 +40,6 @@ pub enum PluginEvent<'a> {
         canvas: &'a Canvas,
         font_collection: &'a FontCollection,
         freya_dom: &'a FreyaDOM,
-        viewports: &'a Viewports,
     },
 
     /// Before starting to measure the layout.
@@ -50,6 +47,10 @@ pub enum PluginEvent<'a> {
 
     /// After measuring the layout.
     FinishedLayout(&'a Torin<NodeId>),
+
+    StartedUpdatingDOM,
+
+    FinishedUpdatingDOM,
 }
 
 /// Skeleton for Freya plugins.

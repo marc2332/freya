@@ -43,9 +43,9 @@ pub fn Graph(props: GraphProps) -> Element {
     let platform = use_platform();
     let GraphTheme { width, height } = use_applied_theme!(&props.theme, graph);
 
-    let _ = use_memo_with_dependencies(&props, move |_| {
-        platform.send(EventMessage::RequestRerender)
-    });
+    use_effect(use_reactive(&props, move |_| {
+        platform.send(EventMessage::RequestRerender).ok();
+    }));
 
     let canvas = use_canvas(&props, |state| {
         Box::new(move |canvas, font_collection, region| {
@@ -140,7 +140,8 @@ pub fn Graph(props: GraphProps) -> Element {
             for (i, point) in x_labels.iter().enumerate() {
                 let x = (space_x * i as f32) + start_x;
 
-                let mut paragrap_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
+                let mut paragrap_builder =
+                    ParagraphBuilder::new(&paragraph_style, font_collection.clone());
                 paragrap_builder.add_text(point);
                 let mut text = paragrap_builder.build();
 

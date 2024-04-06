@@ -44,15 +44,15 @@ pub fn margin() {
         &mut mocked_dom,
     );
 
-    let node_areas = layout.get(1).unwrap();
+    let layout_node = layout.get(1).unwrap();
 
     assert_eq!(
-        node_areas.area,
+        layout_node.area,
         Rect::new(Point2D::new(0.0, 0.0), Size2D::new(210.0, 210.0)),
     );
 
     assert_eq!(
-        node_areas.visible_area(),
+        layout_node.visible_area(),
         Rect::new(Point2D::new(5.0, 5.0), Size2D::new(200.0, 200.0)),
     );
 }

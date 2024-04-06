@@ -13,7 +13,7 @@ pub struct NetworkImageProps {
     pub theme: Option<NetworkImageThemeWith>,
 
     /// URL of the image
-    pub url: Url,
+    pub url: ReadOnlySignal<Url>,
 
     /// Fallback element
     pub fallback: Option<Element>,
@@ -46,11 +46,12 @@ pub enum ImageStatus {
 /// # Example
 ///  
 /// ```rust,no_run
+/// # use reqwest::Url;
 /// # use freya::prelude::*;
 /// fn app() -> Element {
 ///     rsx!(
 ///         NetworkImage {
-///             url: "https://raw.githubusercontent.com/jigsawpieces/dog-api-images/main/greyhound/Cordelia.jpg".parse().unwrap()
+///             url: "https://raw.githubusercontent.com/jigsawpieces/dog-api-images/main/greyhound/Cordelia.jpg".parse::<Url>().unwrap()
 ///         }
 ///     )
 /// }
@@ -58,16 +59,15 @@ pub enum ImageStatus {
 #[allow(non_snake_case)]
 pub fn NetworkImage(props: NetworkImageProps) -> Element {
     let focus = use_focus();
-    let status = use_signal(|| ImageStatus::Loading);
-    let image_bytes = use_signal::<Option<Vec<u8>>>(|| None);
+    let mut status = use_signal(|| ImageStatus::Loading);
+    let mut image_bytes = use_signal::<Option<Vec<u8>>>(|| None);
 
     let focus_id = focus.attribute();
     let NetworkImageTheme { width, height } = use_applied_theme!(&props.theme, network_image);
     let alt = props.alt.as_deref();
 
-    // TODO: Waiting for a dependency-based use_effect
-    let _ = use_memo_with_dependencies(&props.url, move |url| {
-        to_owned![image_bytes, status];
+    use_memo(move || {
+        let url = props.url.read().clone();
         spawn(async move {
             // Loading image
             status.set(ImageStatus::Loading);

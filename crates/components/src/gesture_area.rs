@@ -174,8 +174,7 @@ mod test {
     use std::time::Duration;
 
     use freya::prelude::*;
-    use freya_elements::events::touch::TouchPhase;
-    use freya_testing::{launch_test, FreyaEvent};
+    use freya_testing::{events::touch::TouchPhase, launch_test, EventName, PlatformEvent};
     use tokio::time::sleep;
 
     use crate::gesture_area::DOUBLE_TAP_MIN;
@@ -197,6 +196,13 @@ mod test {
             rsx!(
                 GestureArea {
                     ongesture,
+                    rect {
+                        width: "100%",
+                        height: "100%",
+
+                    }
+                }
+                label {
                     "{value}"
                 }
             )
@@ -207,18 +213,18 @@ mod test {
         // Initial state
         utils.wait_for_update().await;
 
-        assert_eq!(utils.root().get(0).get(0).text(), Some("EMPTY"));
+        assert_eq!(utils.root().get(1).get(0).text(), Some("EMPTY"));
 
-        utils.push_event(FreyaEvent::Touch {
-            name: "touchstart".to_string(),
+        utils.push_event(PlatformEvent::Touch {
+            name: EventName::TouchStart,
             location: (1.0, 1.0).into(),
             phase: TouchPhase::Started,
             finger_id: 0,
             force: None,
         });
 
-        utils.push_event(FreyaEvent::Touch {
-            name: "touchend".to_string(),
+        utils.push_event(PlatformEvent::Touch {
+            name: EventName::TouchEnd,
             location: (1.0, 1.0).into(),
             phase: TouchPhase::Ended,
             finger_id: 0,
@@ -230,8 +236,8 @@ mod test {
 
         sleep(Duration::from_millis(DOUBLE_TAP_MIN as u64)).await;
 
-        utils.push_event(FreyaEvent::Touch {
-            name: "touchstart".to_string(),
+        utils.push_event(PlatformEvent::Touch {
+            name: EventName::TouchStart,
             location: (1.0, 1.0).into(),
             phase: TouchPhase::Started,
             finger_id: 0,
@@ -241,7 +247,7 @@ mod test {
         utils.wait_for_update().await;
         utils.wait_for_update().await;
 
-        assert_eq!(utils.root().get(0).get(0).text(), Some("DoubleTap"));
+        assert_eq!(utils.root().get(1).get(0).text(), Some("DoubleTap"));
     }
 
     /// Simulates `TapUp` and `TapDown` gestures.
@@ -257,6 +263,13 @@ mod test {
             rsx!(
                 GestureArea {
                     ongesture,
+                    rect {
+                        width: "100%",
+                        height: "100%",
+
+                    }
+                }
+                label {
                     "{value}"
                 }
             )
@@ -267,10 +280,10 @@ mod test {
         // Initial state
         utils.wait_for_update().await;
 
-        assert_eq!(utils.root().get(0).get(0).text(), Some("EMPTY"));
+        assert_eq!(utils.root().get(1).get(0).text(), Some("EMPTY"));
 
-        utils.push_event(FreyaEvent::Touch {
-            name: "touchstart".to_string(),
+        utils.push_event(PlatformEvent::Touch {
+            name: EventName::TouchStart,
             location: (1.0, 1.0).into(),
             phase: TouchPhase::Started,
             finger_id: 0,
@@ -280,10 +293,10 @@ mod test {
         utils.wait_for_update().await;
         utils.wait_for_update().await;
 
-        assert_eq!(utils.root().get(0).get(0).text(), Some("TapDown"));
+        assert_eq!(utils.root().get(1).get(0).text(), Some("TapDown"));
 
-        utils.push_event(FreyaEvent::Touch {
-            name: "touchend".to_string(),
+        utils.push_event(PlatformEvent::Touch {
+            name: EventName::TouchEnd,
             location: (1.0, 1.0).into(),
             phase: TouchPhase::Ended,
             finger_id: 0,
@@ -293,6 +306,6 @@ mod test {
         utils.wait_for_update().await;
         utils.wait_for_update().await;
 
-        assert_eq!(utils.root().get(0).get(0).text(), Some("TapUp"));
+        assert_eq!(utils.root().get(1).get(0).text(), Some("TapUp"));
     }
 }

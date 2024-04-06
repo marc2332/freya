@@ -2,9 +2,8 @@ use app::App;
 pub use config::*;
 use dioxus_core::VirtualDom;
 use dioxus_native_core::NodeId;
-use event_loop::run_event_loop;
 use freya_common::EventMessage;
-use freya_dom::prelude::SafeDOM;
+use freya_core::dom::SafeDOM;
 use std::sync::{Arc, Mutex};
 use tokio::sync::Notify;
 use winit::event_loop::EventLoopBuilder;
@@ -19,6 +18,7 @@ mod elements;
 mod event_loop;
 mod renderer;
 mod window;
+mod winit_waker;
 mod wireframe;
 
 pub type HoveredNode = Option<Arc<Mutex<Option<NodeId>>>>;
@@ -47,7 +47,7 @@ impl DesktopRenderer {
         let proxy = event_loop.create_proxy();
 
         // Hotreload support for Dioxus
-        #[cfg(debug_assertions)]
+        #[cfg(feature = "hot-reload")]
         {
             use std::process::exit;
             let proxy = proxy.clone();
@@ -56,6 +56,7 @@ impl DesktopRenderer {
                     let _ = proxy.send_event(EventMessage::UpdateTemplate(template));
                 }
                 dioxus_hot_reload::HotReloadMsg::Shutdown => exit(0),
+                dioxus_hot_reload::HotReloadMsg::UpdateAsset(_) => {}
             });
         }
 
@@ -67,13 +68,13 @@ impl DesktopRenderer {
             &proxy,
             mutations_notifier,
             window_env,
-            config.fonts,
+            config.embedded_fonts,
             config.plugins,
+            config.default_fonts,
         );
 
-        app.init_vdom();
+        app.init_doms();
         app.process_layout();
-
-        run_event_loop(app, event_loop, proxy, hovered_node)
+        app.run(event_loop, proxy, hovered_node)
     }
 }
