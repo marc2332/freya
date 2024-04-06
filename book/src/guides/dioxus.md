@@ -110,9 +110,9 @@ fn MyComponent() -> Element {
 
     // You can subscribe to a signal, by calling it (`signal()`), 
     // calling the `signal.read()` method, or just embedding it into the RSX.
-    // and thus producing a new Element with the updated counter.
-    // So, everytime the signal is mutated the component function will rerun
-    // because it has been subscribed
+    // Everytime the signal is mutated the component function will rerun
+    // because it has been subscribed, and thus producing a 
+    // new Element with the updated counter.
     println!("{}", state());
 
     rsx!(
