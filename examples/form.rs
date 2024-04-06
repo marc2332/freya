@@ -17,15 +17,15 @@ enum FormEntry {
 
 fn app() -> Element {
     let form = use_form(|data| {
-        println!("{data:?}");
+        println!("Submitting: {data:?}");
     });
 
     rsx!(
         Input {
-            ..form.register(FormEntry::Name)
+            ..form.input(FormEntry::Name)
         },
         Input {
-            ..form.register(FormEntry::Description)
+            ..form.input(FormEntry::Description)
         },
         Button {
             children: rsx!(
