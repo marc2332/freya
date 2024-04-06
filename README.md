@@ -94,7 +94,7 @@ dioxus = { version = "0.4", features = ["macro", "hooks"], default-features = fa
 - 🔄️ Dioxus **Hot-reload** support
 - 📒 Multi-line **text editing** (experimental ⚠️)
 - 🦾 Basic **Accessibility** Support (experimental ⚠️)
-- 🧩Compatible with dioxus-std and other Dioxus renderer-agnostic libraries
+- 🧩Compatible with dioxus-sdk and other Dioxus renderer-agnostic libraries
 
 ### Goals 😁
 - Performant and low memory usage
