@@ -1,6 +1,6 @@
 # Getting Started
 
-I encourage you to learn how [Dioxus works](https://dioxuslabs.com/learn/0.5/guide/your_first_component), when you are done you can continue here. Also make sure you have the followed the [environment setup](../setup.html) guide.
+I encourage you to first learn how [Dioxus works](https://dioxuslabs.com/learn/0.5/guide/your_first_component), when you are done you can continue here. Also make sure you have the followed the [environment setup](../setup.html) guide.
 
 Now, let's start by creating a hello world project.
 
@@ -29,7 +29,7 @@ dioxus = { version = "0.5", features = ["macro", "hooks"], default-features = fa
 
 ### src/main.rs
 
-In Freya, your run your app by calling a `launch` method and passing your root Component:
+In Freya, you run your app by calling a `launch` method and passing it your root Component:
 
 ```rust, no_run
 #![cfg_attr(

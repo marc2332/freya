@@ -1,6 +1,6 @@
 # Overview
 
-**Freya** is a **work in progress** cross-platform native GUI library for 🦀 Rust, built on top of 🧬 [Dioxus](https://dioxuslabs.com) and 🎨 [Skia](https://skia.org/) as graphics library. 
+**Freya** is a **work in progress** cross-platform native GUI library for 🦀 Rust, built on top of 🧬 [Dioxus](https://dioxuslabs.com) and 🎨 [Skia](https://skia.org/) as a graphics library. 
 
 
 <table>
@@ -66,7 +66,7 @@ Check out the examples in the Freya [repository](https://github.com/marc2332/fre
 - 🔄️ Dioxus **Hot-reload** support
 - 📒 Multi-line **text editing** (experimental ⚠️)
 - 🦾 Basic **Accessibility** Support (experimental ⚠️)
-- 🧩Compatible with Dioxus SDK and other Dioxus renderer-agnostic libraries
+- 🧩 Compatible with Dioxus SDK and other Dioxus renderer-agnostic libraries
 
 ### Learn More
 
