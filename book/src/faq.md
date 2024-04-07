@@ -1,7 +1,7 @@
 # Frequently Asked Questions
 
 ## Will Freya have Mobile/Web support?
-Freya's current focus is on Desktop (Windows, Linux, MacOS), so there are currently no plans to support either Mobile (Android/iOS) or Web support. But, this doesn't mean it won't happen in the future, who knows! From a technical point of view, it is possible to run Freya on these platforms with the right adjustments.
+Freya's current focus is on Desktop (Windows, Linux, MacOS), so there are currently no plans to support either Mobile (Android/iOS) or Web platforms. But, this doesn't mean it won't happen in the future, who knows! From a technical point of view, it is possible to run Freya on these platforms with the right adjustments.
 
 ## Why choose Skia instead of Webview?
 These are the main reasons for this:
