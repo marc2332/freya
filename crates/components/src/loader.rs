@@ -13,12 +13,8 @@ pub struct LoaderProps {
 
 /// `Loader` component.
 ///
-/// # Props
-/// See [`LoaderProps`].
-///
 /// # Styling
 /// Inherits the [`LoaderTheme`](freya_hooks::LoaderTheme) theme.
-///
 #[allow(non_snake_case)]
 pub fn Loader(props: LoaderProps) -> Element {
     let theme = use_applied_theme!(&props.theme, loader);

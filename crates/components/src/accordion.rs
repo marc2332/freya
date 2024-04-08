@@ -31,9 +31,6 @@ pub struct AccordionProps {
 
 /// `Accordion` component.
 ///
-/// # Props
-/// See [`AccordionProps`].
-///
 /// # Styling
 /// Inherits the [`AccordionTheme`](freya_hooks::AccordionTheme)
 ///
@@ -119,10 +116,6 @@ pub struct AccordionSummaryProps {
 }
 
 /// `AccordionSummary` component.
-///
-/// # Props
-/// See [`AccordionSummaryProps`].
-///
 #[allow(non_snake_case)]
 pub fn AccordionSummary(props: AccordionSummaryProps) -> Element {
     rsx!({ props.children })
@@ -136,10 +129,6 @@ pub struct AccordionBodyProps {
 }
 
 /// `AccordionBody` component.
-///
-/// # Props
-/// See [`AccordionBodyProps`].
-///
 #[allow(non_snake_case)]
 pub fn AccordionBody(props: AccordionBodyProps) -> Element {
     rsx!(rect {

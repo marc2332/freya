@@ -31,9 +31,6 @@ pub enum SwitchStatus {
 
 /// Controlled `Switch` component.
 ///
-/// # Props
-/// See [`SwitchProps`].
-///
 /// # Styling
 /// Inherits the [`SwitchTheme`](freya_hooks::SwitchTheme) theme.
 ///

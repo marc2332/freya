@@ -14,9 +14,6 @@ pub struct CursorAreaProps {
 
 /// `CursorArea` component.
 ///
-/// # Props
-/// See [`CursorAreaProps`].
-///
 /// # Example
 ///
 /// ```no_run

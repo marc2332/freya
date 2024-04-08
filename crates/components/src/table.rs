@@ -28,10 +28,6 @@ pub struct TableHeadProps {
 }
 
 /// `TableHead` component.
-///
-/// # Props
-/// See [`TableHeadProps`].
-///
 #[allow(non_snake_case)]
 pub fn TableHead(TableHeadProps { children }: TableHeadProps) -> Element {
     rsx!(
@@ -47,10 +43,6 @@ pub struct TableBodyProps {
 }
 
 /// `TableBody` component.
-///
-/// # Props
-/// See [`TableBodyProps`].
-///
 #[allow(non_snake_case)]
 pub fn TableBody(TableBodyProps { children }: TableBodyProps) -> Element {
     rsx!(
@@ -71,9 +63,6 @@ pub struct TableRowProps {
 }
 
 /// `TableRow` component.
-///
-/// # Props
-/// See [`TableRowProps`].
 ///
 /// # Styling
 /// Inherits the [`TableTheme`](freya_hooks::TableTheme) theme.
@@ -144,10 +133,6 @@ pub struct TableCellProps {
 }
 
 /// `TableCell` component.
-///
-/// # Props
-/// See [`TableCellProps`].
-///
 #[allow(non_snake_case)]
 pub fn TableCell(props: TableCellProps) -> Element {
     let config = consume_context::<TableConfig>();
@@ -205,12 +190,8 @@ pub struct TableProps {
 
 /// `Table` component.
 ///
-/// # Props
-/// See [`TableProps`].
-///
 /// # Styling
 /// Inherits the [`TableTheme`](freya_hooks::TableTheme) theme.
-///
 #[allow(non_snake_case)]
 pub fn Table(
     TableProps {

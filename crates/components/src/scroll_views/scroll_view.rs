@@ -33,9 +33,6 @@ pub struct ScrollViewProps {
 
 /// `ScrollView` component.
 ///
-/// # Props
-/// See [`ScrollViewProps`](ScrollViewProps).
-///
 /// # Example
 ///
 /// ```no_run

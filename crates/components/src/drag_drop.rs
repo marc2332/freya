@@ -12,10 +12,6 @@ pub struct DragProviderProps {
 }
 
 /// Provide a common place for [`DragZone`]s and [`DropZone`]s to exchange their data.
-///
-/// # Props
-/// See [`DragProviderProps`].
-///
 #[allow(non_snake_case)]
 pub fn DragProvider<T: 'static>(DragProviderProps { children }: DragProviderProps) -> Element {
     use_context_provider::<Signal<Option<T>>>(|| Signal::new(None));
@@ -34,10 +30,6 @@ pub struct DragZoneProps<T: Clone + 'static + PartialEq> {
 }
 
 /// Make the inner children draggable to other [`DropZone`].
-///
-/// # Props
-/// See [`DragZoneProps`].
-///
 #[allow(non_snake_case)]
 pub fn DragZone<T: 'static + Clone + PartialEq>(
     DragZoneProps {
@@ -117,10 +109,6 @@ pub struct DropZoneProps<T: 'static + PartialEq + Clone> {
 }
 
 /// Elements from [`DragZone`]s can be dropped here.
-///
-/// # Props
-/// See [`DropZoneProps`].
-///
 #[allow(non_snake_case)]
 pub fn DropZone<T: 'static + Clone + PartialEq>(props: DropZoneProps<T>) -> Element {
     let mut drags = use_context::<Signal<Option<T>>>();

@@ -52,9 +52,6 @@ pub struct InputProps {
 
 /// `Input` component.
 ///
-/// # Props
-/// See [`InputProps`].
-///
 /// # Styling
 /// Inherits the [`InputTheme`](freya_hooks::InputTheme) theme.
 ///

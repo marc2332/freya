@@ -39,9 +39,6 @@ type EventsQueue = VecDeque<(Instant, TouchEvent)>;
 
 /// `GestureArea` component.
 ///
-/// # Props
-/// See [`GestureAreaProps`].
-///
 /// # Example
 ///
 /// ```rust,no_run

@@ -28,9 +28,6 @@ pub enum ButtonStatus {
 
 /// `Button` component.
 ///
-/// # Props
-/// See [`ButtonProps`].
-///
 /// # Styling
 /// Inherits the [`ButtonTheme`](freya_hooks::ButtonTheme) theme.
 ///

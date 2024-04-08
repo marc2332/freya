@@ -85,9 +85,6 @@ fn get_render_range(
 
 /// `VirtualScrollView` component.
 ///
-/// # Props
-/// See [`VirtualScrollViewProps`](VirtualScrollViewProps).
-///
 /// # Example
 ///
 /// ```no_run

@@ -43,9 +43,6 @@ pub enum ImageStatus {
 
 /// `NetworkImage` component.
 ///
-/// # Props
-/// See [`NetworkImageProps`].
-///
 /// # Example
 ///  
 /// ```rust,no_run

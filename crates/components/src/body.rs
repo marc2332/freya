@@ -16,9 +16,6 @@ pub struct BodyProps {
 ///
 /// Usually just used one time and as a root component for all the app.
 ///
-/// # Props
-/// See [`BodyProps`].
-///
 /// # Styling
 /// Inherits the [`BodyTheme`](freya_hooks::BodyTheme) theme.
 ///
