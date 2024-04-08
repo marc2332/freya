@@ -18,7 +18,6 @@ pub enum AccordionStatus {
     Hovering,
 }
 
-/// [`Accordion`] component properties.
 #[derive(Props, Clone, PartialEq)]
 pub struct AccordionProps {
     /// Theme override.
@@ -29,8 +28,6 @@ pub struct AccordionProps {
     pub summary: Element,
 }
 
-/// `Accordion` component.
-///
 /// # Styling
 /// Inherits the [`AccordionTheme`](freya_hooks::AccordionTheme)
 ///
@@ -108,7 +105,6 @@ pub fn Accordion(props: AccordionProps) -> Element {
     )
 }
 
-/// [`AccordionSummary`] component properties.
 #[derive(Props, Clone, PartialEq)]
 pub struct AccordionSummaryProps {
     /// Inner children for the AccordionSummary.
@@ -121,7 +117,6 @@ pub fn AccordionSummary(props: AccordionSummaryProps) -> Element {
     rsx!({ props.children })
 }
 
-/// [`AccordionBody`] component properties.
 #[derive(Props, Clone, PartialEq)]
 pub struct AccordionBodyProps {
     /// Inner children for the AccordionBody.

@@ -20,8 +20,6 @@ pub fn PopupBackground(children: Element) -> Element {
     })
 }
 
-/// `Popup` component.
-///
 /// # Styling
 /// Inherits the [`PopupTheme`](freya_hooks::PopupTheme) theme.
 /// ```rust, no_run

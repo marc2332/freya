@@ -14,7 +14,6 @@ use crate::{
     manage_key_event, Axis, ScrollBar, ScrollThumb, SCROLL_SPEED_MULTIPLIER,
 };
 
-/// [`VirtualScrollView`] component properties.
 #[derive(Props, Clone)]
 pub struct VirtualScrollViewProps<
     Builder: 'static + Clone + Fn(usize, &Option<BuilderArgs>) -> Element,
@@ -83,8 +82,6 @@ fn get_render_range(
     render_index_start as usize..(render_index_end as usize)
 }
 
-/// `VirtualScrollView` component.
-///
 /// # Example
 ///
 /// ```no_run

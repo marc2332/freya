@@ -13,8 +13,6 @@ pub enum TileStatus {
     Hovering,
 }
 
-/// `Tile` component.
-///
 /// # Styling
 /// Inherits the [`TileTheme`](freya_hooks::TileTheme) theme.
 ///

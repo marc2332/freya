@@ -4,15 +4,12 @@ use freya_hooks::{
     use_animation, use_applied_theme, AnimNum, LoaderTheme, LoaderThemeWith, OnFinish,
 };
 
-/// [`Loader`] component properties.
 #[derive(Props, Clone, PartialEq)]
 pub struct LoaderProps {
     /// Theme override.
     pub theme: Option<LoaderThemeWith>,
 }
 
-/// `Loader` component.
-///
 /// # Styling
 /// Inherits the [`LoaderTheme`](freya_hooks::LoaderTheme) theme.
 #[allow(non_snake_case)]

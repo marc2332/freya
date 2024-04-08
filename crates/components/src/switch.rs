@@ -8,7 +8,6 @@ use freya_hooks::{
 };
 use winit::window::CursorIcon;
 
-/// [`Switch`] component properties.
 #[derive(Props, Clone, PartialEq)]
 pub struct SwitchProps {
     /// Theme override.

@@ -11,7 +11,6 @@ use crate::{
     manage_key_event, Axis, ScrollBar, ScrollThumb, SCROLL_SPEED_MULTIPLIER,
 };
 
-/// [`ScrollView`] component properties.
 #[derive(Props, Clone, PartialEq)]
 pub struct ScrollViewProps {
     /// Theme override.
@@ -31,8 +30,6 @@ pub struct ScrollViewProps {
     pub scroll_with_arrows: bool,
 }
 
-/// `ScrollView` component.
-///
 /// # Example
 ///
 /// ```no_run

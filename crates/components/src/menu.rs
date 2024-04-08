@@ -8,8 +8,6 @@ use freya_hooks::{
 };
 use winit::window::CursorIcon;
 
-/// `Menu` component.
-///
 /// # Example
 ///
 /// ```no_run
@@ -124,8 +122,6 @@ pub enum MenuItemStatus {
     Hovering,
 }
 
-/// `MenuItem` component.
-///
 /// # Styling
 /// Inherits the [`MenuItemTheme`](freya_hooks::MenuItemTheme) theme.
 ///

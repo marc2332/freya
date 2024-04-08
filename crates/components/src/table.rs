@@ -20,7 +20,6 @@ fn TableArrow(order_direction: OrderDirection) -> Element {
     })
 }
 
-/// [`TableHead`] component properties.
 #[derive(Props, Clone, PartialEq)]
 pub struct TableHeadProps {
     /// The content of this table head.
@@ -35,7 +34,6 @@ pub fn TableHead(TableHeadProps { children }: TableHeadProps) -> Element {
     )
 }
 
-/// [`TableBody`] component properties.
 #[derive(Props, Clone, PartialEq)]
 pub struct TableBodyProps {
     /// The content of this table body.
@@ -50,7 +48,6 @@ pub fn TableBody(TableBodyProps { children }: TableBodyProps) -> Element {
     )
 }
 
-/// [`TableRow`] component properties.
 #[derive(Props, Clone, PartialEq)]
 pub struct TableRowProps {
     /// Theme override.
@@ -62,8 +59,6 @@ pub struct TableRowProps {
     alternate_colors: bool,
 }
 
-/// `TableRow` component.
-///
 /// # Styling
 /// Inherits the [`TableTheme`](freya_hooks::TableTheme) theme.
 ///
@@ -112,7 +107,6 @@ pub enum OrderDirection {
     Down,
 }
 
-/// [`TableCell`] component properties.
 #[derive(Props, Clone, PartialEq)]
 pub struct TableCellProps {
     /// The content of this cell.
@@ -177,7 +171,6 @@ pub fn TableCell(props: TableCellProps) -> Element {
     )
 }
 
-/// [`Table`] component properties.
 #[derive(Props, Clone, PartialEq)]
 pub struct TableProps {
     /// Theme override.
@@ -188,8 +181,6 @@ pub struct TableProps {
     pub children: Element,
 }
 
-/// `Table` component.
-///
 /// # Styling
 /// Inherits the [`TableTheme`](freya_hooks::TableTheme) theme.
 #[allow(non_snake_case)]

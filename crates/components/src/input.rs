@@ -36,7 +36,6 @@ pub enum InputStatus {
     Hovering,
 }
 
-/// [`Input`] component properties.
 #[derive(Props, Clone, PartialEq)]
 pub struct InputProps {
     /// Theme override.
@@ -50,8 +49,6 @@ pub struct InputProps {
     pub mode: InputMode,
 }
 
-/// `Input` component.
-///
 /// # Styling
 /// Inherits the [`InputTheme`](freya_hooks::InputTheme) theme.
 ///

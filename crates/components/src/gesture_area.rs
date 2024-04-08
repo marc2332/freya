@@ -26,7 +26,6 @@ pub enum Gesture {
     DoubleTap,
 }
 
-/// [`GestureArea`] component properties.
 #[derive(Props, Clone, PartialEq)]
 pub struct GestureAreaProps {
     /// Inner children for the GestureArea.
@@ -37,8 +36,6 @@ pub struct GestureAreaProps {
 
 type EventsQueue = VecDeque<(Instant, TouchEvent)>;
 
-/// `GestureArea` component.
-///
 /// # Example
 ///
 /// ```rust,no_run

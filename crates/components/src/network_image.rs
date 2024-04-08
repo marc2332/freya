@@ -9,7 +9,6 @@ use freya_hooks::{
 use freya_node_state::dynamic_bytes;
 use reqwest::Url;
 
-/// [`NetworkImage`] component properties.
 #[derive(Props, Clone, PartialEq)]
 pub struct NetworkImageProps {
     /// Theme override.
@@ -41,8 +40,6 @@ pub enum ImageStatus {
     Loaded(Signal<Bytes>),
 }
 
-/// `NetworkImage` component.
-///
 /// # Example
 ///  
 /// ```rust,no_run
