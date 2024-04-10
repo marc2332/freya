@@ -170,11 +170,10 @@ mod test {
     use freya::prelude::*;
     use freya_testing::{events::touch::TouchPhase, launch_test, EventName, PlatformEvent};
     use tokio::time::sleep;
-    use crate::Gesture;
 
     use crate::gesture_area::DOUBLE_TAP_MIN;
 
-    /// This test simulates a [`Gesture::DoubleTap`] gesture in this order:
+    /// This test simulates a `DoubleTap` gesture in this order:
     /// 1. Touch start
     /// 2. Touch end
     /// 3. Wait 40ms
