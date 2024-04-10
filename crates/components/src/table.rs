@@ -58,6 +58,8 @@ pub struct TableRowProps {
     alternate_colors: bool,
 }
 
+/// Table row for [`Table`]. Use [`TableCell`] inside.
+///
 /// # Styling
 /// Inherits the [`TableTheme`](freya_hooks::TableTheme) theme.
 ///
