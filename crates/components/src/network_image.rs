@@ -40,6 +40,8 @@ pub enum ImageStatus {
     Loaded(Signal<Bytes>),
 }
 
+/// Image components that automatically fetches and caches remote (HTTP) images.
+///
 /// # Example
 ///  
 /// ```rust,no_run
