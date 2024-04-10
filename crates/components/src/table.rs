@@ -34,12 +34,14 @@ pub fn TableHead(TableHeadProps { children }: TableHeadProps) -> Element {
     )
 }
 
+/// The body of a [`Table`].
 #[derive(Props, Clone, PartialEq)]
 pub struct TableBodyProps {
     /// The content of this table body.
     pub children: Element,
 }
 
+/// The body of a [`Table`].
 #[allow(non_snake_case)]
 pub fn TableBody(TableBodyProps { children }: TableBodyProps) -> Element {
     rsx!(
