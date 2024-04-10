@@ -25,6 +25,8 @@ pub enum ButtonStatus {
     Hovering,
 }
 
+/// Clickable button.
+///
 /// # Styling
 /// Inherits the [`ButtonTheme`](freya_hooks::ButtonTheme) theme.
 ///
