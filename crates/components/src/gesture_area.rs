@@ -36,6 +36,8 @@ pub struct GestureAreaProps {
 
 type EventsQueue = VecDeque<(Instant, TouchEvent)>;
 
+/// Detect complex touch gestures such as `DoubleTap`.
+///
 /// # Example
 ///
 /// ```rust,no_run
