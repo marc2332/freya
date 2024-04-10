@@ -181,6 +181,8 @@ pub struct TableProps {
     pub children: Element,
 }
 
+/// Table component, composed with [`TableHead`] and [`TableBody`].
+///
 /// # Styling
 /// Inherits the [`TableTheme`](freya_hooks::TableTheme) theme.
 #[allow(non_snake_case)]
