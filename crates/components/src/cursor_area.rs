@@ -11,7 +11,7 @@ pub struct CursorAreaProps {
     children: Element,
 }
 
-/// Change the cursor icon when its hovering this component.
+/// Change the cursor icon when it's hovering over this component.
 ///
 /// # Example
 ///
