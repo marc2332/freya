@@ -28,6 +28,8 @@ pub struct AccordionProps {
     pub summary: Element,
 }
 
+/// Show other elements under a collapsable box.
+///
 /// # Styling
 /// Inherits the [`AccordionTheme`](freya_hooks::AccordionTheme)
 ///
