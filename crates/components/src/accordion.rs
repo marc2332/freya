@@ -113,7 +113,7 @@ pub struct AccordionSummaryProps {
     children: Element,
 }
 
-/// `AccordionSummary` component.
+/// Intended to use as summary for an [`Accordion`].
 #[allow(non_snake_case)]
 pub fn AccordionSummary(props: AccordionSummaryProps) -> Element {
     rsx!({ props.children })
