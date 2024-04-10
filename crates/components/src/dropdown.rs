@@ -138,6 +138,8 @@ pub enum DropdownStatus {
     Hovering,
 }
 
+/// Select from multiple options, use alongside [`DropdownItem`].
+///
 /// # Styling
 /// Inherits the [`DropdownTheme`](freya_hooks::DropdownTheme) theme.
 ///
