@@ -8,6 +8,8 @@ use freya_hooks::{
 };
 use winit::window::CursorIcon;
 
+/// Floating menu, use alongside [`MenuItem`].
+///
 /// # Example
 ///
 /// ```no_run
