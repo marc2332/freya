@@ -26,7 +26,7 @@ pub struct TableHeadProps {
     pub children: Element,
 }
 
-/// `TableHead` component.
+/// The head of a [`Table`]. Use [`TableRow`] inside.
 #[allow(non_snake_case)]
 pub fn TableHead(TableHeadProps { children }: TableHeadProps) -> Element {
     rsx!(
