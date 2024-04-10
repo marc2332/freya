@@ -30,6 +30,8 @@ pub struct ScrollViewProps {
     pub scroll_with_arrows: bool,
 }
 
+/// Scrollable area with bidirectional support and scrollbars.
+///
 /// # Example
 ///
 /// ```no_run
