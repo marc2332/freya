@@ -13,6 +13,7 @@ pub enum TileStatus {
     Hovering,
 }
 
+/// Tile component to be used with [`Radio`] and [`Checkbox`].
 /// # Styling
 /// Inherits the [`TileTheme`](freya_hooks::TileTheme) theme.
 ///
