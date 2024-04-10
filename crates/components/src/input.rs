@@ -49,6 +49,8 @@ pub struct InputProps {
     pub mode: InputMode,
 }
 
+/// Small box to edit text.
+///
 /// # Styling
 /// Inherits the [`InputTheme`](freya_hooks::InputTheme) theme.
 ///
