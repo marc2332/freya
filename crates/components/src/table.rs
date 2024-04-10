@@ -126,7 +126,7 @@ pub struct TableCellProps {
     pub height: String,
 }
 
-/// `TableCell` component.
+/// Cell for a [`Table`]. You can place any other element inside.
 #[allow(non_snake_case)]
 pub fn TableCell(props: TableCellProps) -> Element {
     let config = consume_context::<TableConfig>();
