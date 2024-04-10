@@ -136,8 +136,6 @@ pub fn GestureArea(props: GestureAreaProps) -> Element {
         },
     );
 
-    use_effect(move || {});
-
     let ontouchcancel = move |e: TouchEvent| {
         event_emitter.send((Instant::now(), e));
     };
