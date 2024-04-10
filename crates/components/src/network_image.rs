@@ -14,13 +14,13 @@ pub struct NetworkImageProps {
     /// Theme override.
     pub theme: Option<NetworkImageThemeWith>,
 
-    /// URL of the image
+    /// URL of the image.
     pub url: ReadOnlySignal<Url>,
 
-    /// Fallback element
+    /// Fallback element.
     pub fallback: Option<Element>,
 
-    /// Loading element
+    /// Loading element.
     pub loading: Option<Element>,
 
     /// Information about the image.
@@ -40,7 +40,7 @@ pub enum ImageStatus {
     Loaded(Signal<Bytes>),
 }
 
-/// Image components that automatically fetches and caches remote (HTTP) images.
+/// Image component that automatically fetches and caches remote (HTTP) images.
 ///
 /// # Example
 ///  
