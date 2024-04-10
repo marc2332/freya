@@ -125,7 +125,7 @@ pub struct AccordionBodyProps {
     children: Element,
 }
 
-/// `AccordionBody` component.
+/// Intended to wrap the body of an [`Accordion`].
 #[allow(non_snake_case)]
 pub fn AccordionBody(props: AccordionBodyProps) -> Element {
     rsx!(rect {
