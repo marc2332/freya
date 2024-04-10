@@ -40,7 +40,6 @@ pub struct TableBodyProps {
     pub children: Element,
 }
 
-/// `TableBody` component.
 #[allow(non_snake_case)]
 pub fn TableBody(TableBodyProps { children }: TableBodyProps) -> Element {
     rsx!(
@@ -126,7 +125,7 @@ pub struct TableCellProps {
     pub height: String,
 }
 
-/// Cell for a [`Table`]. You can place any other element inside.
+/// Cell for a [`Table`]. You can place anything inside.
 #[allow(non_snake_case)]
 pub fn TableCell(props: TableCellProps) -> Element {
     let config = consume_context::<TableConfig>();
