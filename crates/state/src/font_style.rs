@@ -1,14 +1,14 @@
 use std::sync::{Arc, Mutex};
 
-use dioxus_native_core::{
+use freya_engine::prelude::*;
+use freya_native_core::{
+    attributes::AttributeName,
     exports::shipyard::Component,
     node_ref::NodeView,
     prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State},
     NodeId, SendAnyMap,
 };
-use dioxus_native_core_macro::partial_derive_state;
-use freya_engine::prelude::*;
-use smallvec::{smallvec, SmallVec};
+use freya_native_core_macro::partial_derive_state;
 use torin::torin::Torin;
 
 use crate::{CustomAttributeValues, ExtSplit, Parse, TextOverflow};
@@ -17,7 +17,7 @@ use crate::{CustomAttributeValues, ExtSplit, Parse, TextOverflow};
 pub struct FontStyleState {
     pub color: Color,
     pub text_shadows: Vec<TextShadow>,
-    pub font_family: SmallVec<[String; 2]>,
+    pub font_family: Vec<String>,
     pub font_size: f32,
     pub font_slant: Slant,
     pub font_weight: Weight,
@@ -38,31 +38,32 @@ impl FontStyleState {
             ..FontStyleState::default()
         }
     }
-}
 
-impl From<&FontStyleState> for TextStyle {
-    fn from(value: &FontStyleState) -> Self {
+    pub fn text_style(&self, default_font_family: &[String]) -> TextStyle {
         let mut text_style = TextStyle::new();
+        let mut font_family = self.font_family.clone();
+
+        font_family.extend_from_slice(default_font_family);
 
         text_style
-            .set_color(value.color)
+            .set_color(self.color)
             .set_font_style(freya_engine::prelude::FontStyle::new(
-                value.font_weight,
-                value.font_width,
-                value.font_slant,
+                self.font_weight,
+                self.font_width,
+                self.font_slant,
             ))
-            .set_font_size(value.font_size)
-            .set_font_families(&value.font_family)
-            .set_word_spacing(value.word_spacing)
-            .set_letter_spacing(value.letter_spacing)
+            .set_font_size(self.font_size)
+            .set_font_families(&font_family)
+            .set_word_spacing(self.word_spacing)
+            .set_letter_spacing(self.letter_spacing)
             .set_height_override(true)
-            .set_height(value.line_height);
+            .set_height(self.line_height);
 
-        for shadow in value.text_shadows.iter() {
+        for shadow in self.text_shadows.iter() {
             text_style.add_shadow(*shadow);
         }
 
-        text_style.set_decoration(&value.decoration);
+        text_style.set_decoration(&self.decoration);
 
         text_style
     }
@@ -73,7 +74,7 @@ impl Default for FontStyleState {
         Self {
             color: Color::BLACK,
             text_shadows: Vec::new(),
-            font_family: smallvec!["Fira Sans".to_string()],
+            font_family: Vec::new(),
             font_size: 16.0,
             font_weight: Weight::NORMAL,
             font_slant: Slant::Upright,
@@ -102,22 +103,22 @@ impl State<CustomAttributeValues> for FontStyleState {
 
     const NODE_MASK: NodeMaskBuilder<'static> =
         NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[
-            "color",
-            "text_shadow",
-            "font_size",
-            "font_family",
-            "line_height",
-            "text_align",
-            "max_lines",
-            "font_style",
-            "font_weight",
-            "font_width",
-            "word_spacing",
-            "letter_spacing",
-            "decoration",
-            "decoration_color",
-            "decoration_style",
-            "text_overflow",
+            AttributeName::Color,
+            AttributeName::TextAlign,
+            AttributeName::TextShadow,
+            AttributeName::FontSize,
+            AttributeName::FontFamily,
+            AttributeName::LineHeight,
+            AttributeName::MaxLines,
+            AttributeName::FontStyle,
+            AttributeName::FontWeight,
+            AttributeName::FontWidth,
+            AttributeName::WordSpacing,
+            AttributeName::LetterSpacing,
+            AttributeName::Decoration,
+            AttributeName::DecorationColor,
+            AttributeName::DecorationStyle,
+            AttributeName::TextOverflow,
         ]));
 
     fn update<'a>(
@@ -137,15 +138,15 @@ impl State<CustomAttributeValues> for FontStyleState {
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
-                match attr.attribute.name.as_str() {
-                    "color" => {
+                match attr.attribute {
+                    AttributeName::Color => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(new_color) = Color::parse(value) {
                                 font_style.color = new_color;
                             }
                         }
                     }
-                    "text_shadow" => {
+                    AttributeName::TextShadow => {
                         if let Some(value) = attr.value.as_text() {
                             font_style.text_shadows = value
                                 .split_excluding_group(',', '(', ')')
@@ -159,46 +160,44 @@ impl State<CustomAttributeValues> for FontStyleState {
                                 .collect();
                         }
                     }
-                    "font_family" => {
+                    AttributeName::FontFamily => {
                         if let Some(value) = attr.value.as_text() {
                             let families = value.split(',');
-                            font_style.font_family = SmallVec::from(
-                                families
-                                    .into_iter()
-                                    .map(|f| f.trim().to_string())
-                                    .collect::<Vec<String>>(),
-                            );
+                            font_style.font_family = families
+                                .into_iter()
+                                .map(|f| f.trim().to_string())
+                                .collect::<Vec<String>>();
                         }
                     }
-                    "font_size" => {
+                    AttributeName::FontSize => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(font_size) = value.parse::<f32>() {
                                 font_style.font_size = font_size * scale_factor;
                             }
                         }
                     }
-                    "line_height" => {
+                    AttributeName::LineHeight => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(line_height) = value.parse() {
                                 font_style.line_height = line_height;
                             }
                         }
                     }
-                    "text_align" => {
+                    AttributeName::TextAlign => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(text_align) = TextAlign::parse(value) {
                                 font_style.text_align = text_align;
                             }
                         }
                     }
-                    "max_lines" => {
+                    AttributeName::MaxLines => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(max_lines) = value.parse() {
                                 font_style.max_lines = Some(max_lines);
                             }
                         }
                     }
-                    "text_overflow" => {
+                    AttributeName::TextOverflow => {
                         let value = attr.value.as_text();
                         if let Some(value) = value {
                             if let Ok(text_overflow) = TextOverflow::parse(value) {
@@ -206,42 +205,42 @@ impl State<CustomAttributeValues> for FontStyleState {
                             }
                         }
                     }
-                    "font_style" => {
+                    AttributeName::FontStyle => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(font_slant) = Slant::parse(value) {
                                 font_style.font_slant = font_slant;
                             }
                         }
                     }
-                    "font_weight" => {
+                    AttributeName::FontWeight => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(font_weight) = Weight::parse(value) {
                                 font_style.font_weight = font_weight;
                             }
                         }
                     }
-                    "font_width" => {
+                    AttributeName::FontWidth => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(font_width) = Width::parse(value) {
                                 font_style.font_width = font_width;
                             }
                         }
                     }
-                    "decoration" => {
+                    AttributeName::Decoration => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(decoration) = TextDecoration::parse(value) {
                                 font_style.decoration.ty = decoration;
                             }
                         }
                     }
-                    "decoration_style" => {
+                    AttributeName::DecorationStyle => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(style) = TextDecorationStyle::parse(value) {
                                 font_style.decoration.style = style;
                             }
                         }
                     }
-                    "decoration_color" => {
+                    AttributeName::DecorationColor => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(new_decoration_color) = Color::parse(value) {
                                 font_style.decoration.color = new_decoration_color;
@@ -250,7 +249,7 @@ impl State<CustomAttributeValues> for FontStyleState {
                             font_style.decoration.color = font_style.color;
                         }
                     }
-                    "word_spacing" => {
+                    AttributeName::WordSpacing => {
                         let value = attr.value.as_text();
                         if let Some(value) = value {
                             if let Ok(word_spacing) = value.parse() {
@@ -258,7 +257,7 @@ impl State<CustomAttributeValues> for FontStyleState {
                             }
                         }
                     }
-                    "letter_spacing" => {
+                    AttributeName::LetterSpacing => {
                         let value = attr.value.as_text();
                         if let Some(value) = value {
                             if let Ok(letter_spacing) = value.parse() {
@@ -271,15 +270,7 @@ impl State<CustomAttributeValues> for FontStyleState {
             }
         }
 
-        let changed_size = self.max_lines != font_style.max_lines
-            || self.line_height != font_style.line_height
-            || self.font_size != font_style.font_size
-            || self.font_family != font_style.font_family
-            || self.font_slant != font_style.font_slant
-            || self.font_weight != font_style.font_weight
-            || self.font_width != font_style.font_width
-            || self.word_spacing != font_style.word_spacing
-            || self.letter_spacing != font_style.letter_spacing;
+        let changed_size = font_style != *self;
 
         if changed_size {
             torin_layout.lock().unwrap().invalidate(node_view.node_id());

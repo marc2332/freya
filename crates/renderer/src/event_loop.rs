@@ -7,8 +7,8 @@ use freya_elements::events::keyboard::{
 };
 use torin::geometry::CursorPoint;
 use winit::event::{
-    ElementState, Event, Ime, KeyEvent, MouseScrollDelta, StartCause, Touch, TouchPhase,
-    WindowEvent,
+    ElementState, Event, Ime, KeyEvent, MouseButton, MouseScrollDelta, StartCause, Touch,
+    TouchPhase, WindowEvent,
 };
 use winit::event_loop::{EventLoop, EventLoopProxy};
 use winit::keyboard::{KeyCode, ModifiersState, PhysicalKey};
@@ -29,6 +29,7 @@ pub fn run_event_loop<State: Clone>(
 ) {
     let mut cursor_pos = CursorPoint::default();
     let mut modifiers_state = ModifiersState::empty();
+    let mut dropped_file_path = None;
 
     app.window_env.run_on_setup();
 
@@ -76,8 +77,8 @@ pub fn run_event_loop<State: Clone>(
                 match event {
                     WindowEvent::CloseRequested => event_loop.exit(),
                     WindowEvent::Ime(Ime::Commit(text)) => {
-                        app.send_event(FreyaEvent::Keyboard {
-                            name: "keydown".to_string(),
+                        app.send_event(PlatformEvent::Keyboard {
+                            name: EventName::KeyDown,
                             key: Key::Character(text),
                             code: Code::Unidentified,
                             modifiers: map_winit_modifiers(modifiers_state),
@@ -95,13 +96,18 @@ pub fn run_event_loop<State: Clone>(
                     WindowEvent::MouseInput { state, button, .. } => {
                         app.set_navigation_mode(NavigationMode::NotKeyboard);
 
-                        let event_name = match state {
-                            ElementState::Pressed => "mousedown",
-                            ElementState::Released => "click",
+                        let name = match state {
+                            ElementState::Pressed => EventName::MouseDown,
+                            ElementState::Released => match button {
+                                MouseButton::Middle => EventName::MiddleClick,
+                                MouseButton::Right => EventName::RightClick,
+                                MouseButton::Left => EventName::Click,
+                                _ => EventName::PointerUp,
+                            },
                         };
 
-                        app.send_event(FreyaEvent::Mouse {
-                            name: event_name.to_string(),
+                        app.send_event(PlatformEvent::Mouse {
+                            name,
                             cursor: cursor_pos,
                             button: Some(button),
                         });
@@ -118,8 +124,8 @@ pub fn run_event_loop<State: Clone>(
                                 }
                             };
 
-                            app.send_event(FreyaEvent::Wheel {
-                                name: "wheel".to_string(),
+                            app.send_event(PlatformEvent::Wheel {
+                                name: EventName::Wheel,
                                 scroll: CursorPoint::from(scroll_data),
                                 cursor: cursor_pos,
                             });
@@ -154,12 +160,12 @@ pub fn run_event_loop<State: Clone>(
                             return;
                         }
 
-                        let event_name = match state {
-                            ElementState::Pressed => "keydown",
-                            ElementState::Released => "keyup",
+                        let name = match state {
+                            ElementState::Pressed => EventName::KeyDown,
+                            ElementState::Released => EventName::KeyUp,
                         };
-                        app.send_event(FreyaEvent::Keyboard {
-                            name: event_name.to_string(),
+                        app.send_event(PlatformEvent::Keyboard {
+                            name,
                             key: map_winit_key(&logical_key),
                             code: map_winit_physical_key(&physical_key),
                             modifiers: map_winit_modifiers(modifiers_state),
@@ -168,8 +174,8 @@ pub fn run_event_loop<State: Clone>(
                     WindowEvent::CursorLeft { .. } => {
                         cursor_pos = CursorPoint::new(-1.0, -1.0);
 
-                        app.send_event(FreyaEvent::Mouse {
-                            name: "mouseover".to_string(),
+                        app.send_event(PlatformEvent::Mouse {
+                            name: EventName::MouseOver,
                             cursor: cursor_pos,
                             button: None,
                         });
@@ -177,11 +183,19 @@ pub fn run_event_loop<State: Clone>(
                     WindowEvent::CursorMoved { position, .. } => {
                         cursor_pos = CursorPoint::from((position.x, position.y));
 
-                        app.send_event(FreyaEvent::Mouse {
-                            name: "mouseover".to_string(),
+                        app.send_event(PlatformEvent::Mouse {
+                            name: EventName::MouseOver,
                             cursor: cursor_pos,
                             button: None,
                         });
+
+                        if let Some(dropped_file_path) = dropped_file_path.take() {
+                            app.send_event(PlatformEvent::File {
+                                name: EventName::FileDrop,
+                                file_path: Some(dropped_file_path),
+                                cursor: cursor_pos,
+                            });
+                        }
                     }
                     WindowEvent::Touch(Touch {
                         location,
@@ -192,15 +206,15 @@ pub fn run_event_loop<State: Clone>(
                     }) => {
                         cursor_pos = CursorPoint::from((location.x, location.y));
 
-                        let event_name = match phase {
-                            TouchPhase::Cancelled => "touchcancel",
-                            TouchPhase::Ended => "touchend",
-                            TouchPhase::Moved => "touchmove",
-                            TouchPhase::Started => "touchstart",
+                        let name = match phase {
+                            TouchPhase::Cancelled => EventName::TouchCancel,
+                            TouchPhase::Ended => EventName::TouchEnd,
+                            TouchPhase::Moved => EventName::TouchMove,
+                            TouchPhase::Started => EventName::TouchStart,
                         };
 
-                        app.send_event(FreyaEvent::Touch {
-                            name: event_name.to_string(),
+                        app.send_event(PlatformEvent::Touch {
+                            name,
                             location: cursor_pos,
                             finger_id: id,
                             phase,
@@ -209,6 +223,23 @@ pub fn run_event_loop<State: Clone>(
                     }
                     WindowEvent::Resized(size) => {
                         app.resize(size);
+                    }
+                    WindowEvent::DroppedFile(file_path) => {
+                        dropped_file_path = Some(file_path);
+                    }
+                    WindowEvent::HoveredFile(file_path) => {
+                        app.send_event(PlatformEvent::File {
+                            name: EventName::GlobalFileHover,
+                            file_path: Some(file_path),
+                            cursor: cursor_pos,
+                        });
+                    }
+                    WindowEvent::HoveredFileCancelled => {
+                        app.send_event(PlatformEvent::File {
+                            name: EventName::GlobalFileHoverCancelled,
+                            file_path: None,
+                            cursor: cursor_pos,
+                        });
                     }
                     _ => {}
                 }

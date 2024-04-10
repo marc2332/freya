@@ -657,6 +657,7 @@ impl From<TypefaceFontProvider> for FontMgr {
     }
 }
 
+#[derive(Clone)]
 pub struct FontCollection;
 
 impl FontCollection {
@@ -926,8 +927,14 @@ impl ParagraphBuilder {
         unimplemented!("This is mocked")
     }
 
-    pub fn new(_style: &ParagraphStyle, _font_collection: &FontCollection) -> Self {
+    pub fn new(_style: &ParagraphStyle, _font_collection: impl Into<FontCollection>) -> Self {
         unimplemented!("This is mocked")
+    }
+}
+
+impl From<&FontCollection> for FontCollection {
+    fn from(value: &FontCollection) -> Self {
+        value.clone()
     }
 }
 
@@ -1134,6 +1141,10 @@ impl Image {
 pub struct Data;
 
 impl Data {
+    pub fn new_copy(_bytes: &[u8]) -> Self {
+        unimplemented!("This is mocked")
+    }
+
     pub unsafe fn new_bytes(_bytes: &[u8]) -> Self {
         unimplemented!("This is mocked")
     }
@@ -1540,4 +1551,12 @@ pub mod backend_render_targets {
     ) -> BackendRenderTarget {
         unimplemented!("This is mocked")
     }
+}
+
+pub fn set_resource_cache_total_bytes_limit(new_limit: usize) -> usize {
+    unimplemented!("This is mocked")
+}
+
+pub fn set_resource_cache_single_allocation_byte_limit(new_limit: Option<usize>) -> Option<usize> {
+    unimplemented!("This is mocked")
 }

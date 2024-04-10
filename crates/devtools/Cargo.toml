@@ -22,16 +22,13 @@ freya-node-state = { workspace = true }
 freya-renderer = { workspace = true }
 freya-elements = { workspace = true }
 freya-hooks = { workspace = true }
-freya-core = { workspace = true }
+freya-core = { workspace = true, features = ["shared"] }
 freya-components = { workspace = true }
-freya-dom = { workspace = true, features = ["shared"] }
 freya-engine = { workspace = true }
 torin = { workspace = true }
 
 dioxus = { workspace = true }
-dioxus-native-core = { workspace = true }
-dioxus-core-macro = { workspace = true }
-dioxus-core = { workspace = true }
+freya-native-core = { workspace = true }
 dioxus-router = { workspace = true }
 
 tokio = { workspace = true }

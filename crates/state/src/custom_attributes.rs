@@ -7,9 +7,9 @@ use std::sync::Mutex;
 use accesskit::NodeId as AccessibilityId;
 use bytes::Bytes;
 use dioxus_core::AttributeValue;
-use dioxus_native_core::node::FromAnyValue;
 use freya_common::{CursorLayoutResponse, NodeReferenceLayout};
 use freya_engine::prelude::*;
+use freya_native_core::node::FromAnyValue;
 use tokio::sync::mpsc::UnboundedSender;
 use tokio::sync::watch;
 use torin::geometry::{Area, CursorPoint};
@@ -47,7 +47,7 @@ impl Display for NodeReference {
     }
 }
 
-pub type CanvasRunner = dyn Fn(&Canvas, &FontCollection, Area) + Sync + Send + 'static;
+pub type CanvasRunner = dyn Fn(&Canvas, &mut FontCollection, Area) + Sync + Send + 'static;
 
 /// Canvas Reference
 #[derive(Clone)]
@@ -106,14 +106,14 @@ impl Display for CursorReference {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum AttributesBytes {
-    Dynamic(Arc<Vec<u8>>),
+    Dynamic(Bytes),
     Static(&'static [u8]),
 }
 
 impl AttributesBytes {
     pub fn as_slice(&self) -> &[u8] {
         match self {
-            Self::Dynamic(bytes) => bytes.as_slice(),
+            Self::Dynamic(bytes) => bytes.as_ref(),
             Self::Static(bytes) => bytes,
         }
     }
@@ -151,14 +151,14 @@ impl FromAnyValue for CustomAttributeValues {
     }
 }
 
-/// Transform some bytes (e.g: raw image, raw svg) into attribute data
-pub fn bytes_to_data(bytes: &[u8]) -> AttributeValue {
+/// Transform some dynamic bytes (e.g: remote image fetched at runtime) into an attribute
+pub fn dynamic_bytes(bytes: impl Into<Bytes>) -> AttributeValue {
     AttributeValue::any_value(CustomAttributeValues::Bytes(AttributesBytes::Dynamic(
-        Arc::new(bytes.to_vec()),
+        bytes.into(),
     )))
 }
 
-/// Transform some static bytes (e.g: raw image, raw svg) into attribute data
-pub fn static_bytes_to_data(bytes: &'static [u8]) -> AttributeValue {
+/// Transform some static bytes (e.g: statically linked images or SVGs) into an attribute
+pub fn static_bytes(bytes: &'static [u8]) -> AttributeValue {
     AttributeValue::any_value(CustomAttributeValues::Bytes(AttributesBytes::Static(bytes)))
 }

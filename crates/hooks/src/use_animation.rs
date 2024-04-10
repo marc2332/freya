@@ -1,14 +1,14 @@
-use std::{cell::RefCell, time::Duration};
+use std::time::Duration;
 
-use dioxus_core::{prelude::spawn, Task};
-use dioxus_hooks::{use_memo, use_memo_with_dependencies, Dependency};
-use dioxus_signals::{ReadOnlySignal, Readable, Signal, Writable};
+use dioxus_core::prelude::{spawn, use_hook, Task};
+use dioxus_hooks::{use_memo, use_reactive, use_signal, Dependency};
+use dioxus_signals::{Memo, ReadOnlySignal, Readable, Signal, Writable};
 use easer::functions::*;
 use freya_engine::prelude::Color;
 use freya_node_state::Parse;
 use tokio::time::Instant;
 
-use crate::UsePlatform;
+use crate::{use_platform, UsePlatform};
 
 pub fn apply_value(
     origin: f32,
@@ -344,6 +344,8 @@ pub trait AnimatedValue {
 #[derive(Default, PartialEq, Clone)]
 pub struct Context {
     animated_values: Vec<Signal<Box<dyn AnimatedValue>>>,
+    on_finish: OnFinish,
+    auto_start: bool,
 }
 
 impl Context {
@@ -356,6 +358,16 @@ impl Context {
         self.animated_values.push(signal);
         ReadOnlySignal::new(signal)
     }
+
+    pub fn on_finish(&mut self, on_finish: OnFinish) -> &mut Self {
+        self.on_finish = on_finish;
+        self
+    }
+
+    pub fn auto_start(&mut self, auto_start: bool) -> &mut Self {
+        self.auto_start = auto_start;
+        self
+    }
 }
 
 /// Controls the direction of the animation.
@@ -365,25 +377,69 @@ pub enum AnimDirection {
     Reverse,
 }
 
-/// Animate your elements. Use [`use_animation`] to use this.
-#[derive(PartialEq)]
-pub struct UseAnimator<Animated> {
-    value: Animated,
-    ctx: Context,
-    platform: UsePlatform,
-    task: RefCell<Option<Task>>,
-    is_running: Signal<bool>,
+impl AnimDirection {
+    pub fn toggle(&mut self) {
+        match self {
+            Self::Forward => *self = Self::Reverse,
+            Self::Reverse => *self = Self::Forward,
+        }
+    }
 }
 
-impl<Animated> UseAnimator<Animated> {
-    /// Get the containing animated value.
-    pub fn get(&self) -> &Animated {
-        &self.value
+/// What to do once the animation finishes. By default it is [`Stop`](OnFinish::Stop)
+#[derive(PartialEq, Clone, Copy, Default)]
+pub enum OnFinish {
+    #[default]
+    Stop,
+    Reverse,
+    Restart,
+}
+
+/// Animate your elements. Use [`use_animation`] to use this.
+#[derive(PartialEq, Clone)]
+pub struct UseAnimator<Animated: PartialEq + Clone + 'static> {
+    pub(crate) value_and_ctx: Memo<(Animated, Context)>,
+    pub(crate) platform: UsePlatform,
+    pub(crate) is_running: Signal<bool>,
+    pub(crate) has_run_yet: Signal<bool>,
+    pub(crate) task: Signal<Option<Task>>,
+}
+
+impl<T: PartialEq + Clone + 'static> Copy for UseAnimator<T> {}
+
+impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
+    /// Get the animated value.
+    pub fn get(&self) -> Animated {
+        self.value_and_ctx.read().0.clone()
+    }
+
+    /// Reset the animation to the default state.
+    pub fn reset(&self) {
+        let mut task = self.task;
+
+        if let Some(task) = task.write().take() {
+            task.cancel();
+        }
+
+        for value in &self.value_and_ctx.read().1.animated_values {
+            let mut value = *value;
+            value.write().prepare(AnimDirection::Forward);
+        }
     }
 
     /// Checks if there is any animation running.
     pub fn is_running(&self) -> bool {
         *self.is_running.read()
+    }
+
+    /// Checks if it has run yet, by subscribing.
+    pub fn has_run_yet(&self) -> bool {
+        *self.has_run_yet.read()
+    }
+
+    /// Checks if it has run yet, doesn't subscribe. Useful for when you just mounted your component.
+    pub fn peek_has_run_yet(&self) -> bool {
+        *self.has_run_yet.peek()
     }
 
     /// Runs the animation in reverse direction.
@@ -397,20 +453,27 @@ impl<Animated> UseAnimator<Animated> {
     }
 
     /// Run the animation with a given [`AnimDirection`]
-    pub fn run(&self, direction: AnimDirection) {
+    pub fn run(&self, mut direction: AnimDirection) {
+        let ctx = &self.value_and_ctx.peek().1;
         let platform = self.platform;
         let mut is_running = self.is_running;
         let mut ticker = platform.new_ticker();
-        let mut values = self.ctx.animated_values.clone();
+        let mut values = ctx.animated_values.clone();
+        let mut has_run_yet = self.has_run_yet;
+        let on_finish = ctx.on_finish;
+        let mut task = self.task;
 
         // Cancel previous animations
-        if let Some(task) = self.task.borrow_mut().take() {
+        if let Some(task) = task.write().take() {
             task.cancel();
         }
 
+        if !self.peek_has_run_yet() {
+            *has_run_yet.write() = true;
+        }
         is_running.set(true);
 
-        let task = spawn(async move {
+        let animation_task = spawn(async move {
             platform.request_animation_frame();
 
             let mut index = 0;
@@ -428,12 +491,28 @@ impl<Animated> UseAnimator<Animated> {
 
                 index += prev_frame.elapsed().as_millis() as i32;
 
-                // Stop if all the animations are finished
-                if values
+                let is_finished = values
                     .iter()
-                    .all(|value| value.peek().is_finished(index, direction))
-                {
-                    break;
+                    .all(|value| value.peek().is_finished(index, direction));
+                if is_finished {
+                    if OnFinish::Reverse == on_finish {
+                        // Toggle direction
+                        direction.toggle();
+                    }
+                    match on_finish {
+                        OnFinish::Restart | OnFinish::Reverse => {
+                            index = 0;
+
+                            // Restart the animation
+                            for value in values.iter_mut() {
+                                value.write().prepare(direction);
+                            }
+                        }
+                        OnFinish::Stop => {
+                            // Stop if all the animations are finished
+                            break;
+                        }
+                    }
                 }
 
                 // Advance the animations
@@ -445,9 +524,11 @@ impl<Animated> UseAnimator<Animated> {
             }
 
             is_running.set(false);
+            task.write().take();
         });
 
-        *self.task.borrow_mut() = Some(task);
+        // Cancel previous animations
+        task.write().replace(animation_task);
     }
 }
 
@@ -462,11 +543,10 @@ impl<Animated> UseAnimator<Animated> {
 /// fn app() -> Element {
 ///     let animation = use_animation(|ctx| ctx.with(AnimNum::new(0., 100.).time(50)));
 ///
-///     let animations = animation.read();
-///     let width = animations.get().read().as_f32();
+///     let width = animation.get().read().as_f32();
 ///
 ///     use_hook(move || {
-///         animation.read().start();
+///         animation.start();
 ///     });
 ///
 ///     rsx!(
@@ -491,11 +571,10 @@ impl<Animated> UseAnimator<Animated> {
 ///         )
 ///     });
 ///
-///     let animations = animation.read();
-///     let (width, color) = animations.get();
+///     let (width, color) = animation.get();
 ///
 ///     use_hook(move || {
-///         animation.read().start();
+///         animation.start();
 ///     });
 ///
 ///     rsx!(
@@ -508,40 +587,66 @@ impl<Animated> UseAnimator<Animated> {
 /// }
 /// ```
 ///
-pub fn use_animation<Animated: PartialEq + 'static>(
-    run: impl Fn(&mut Context) -> Animated + 'static,
-) -> ReadOnlySignal<UseAnimator<Animated>> {
-    use_memo(move || {
-        let mut ctx = Context::default();
-        let value = run(&mut ctx);
+pub fn use_animation<Animated: PartialEq + Clone + 'static>(
+    run: impl Fn(&mut Context) -> Animated + Clone + 'static,
+) -> UseAnimator<Animated> {
+    let platform = use_platform();
+    let is_running = use_signal(|| false);
+    let has_run_yet = use_signal(|| false);
+    let task = use_signal(|| None);
 
-        UseAnimator {
-            value,
-            ctx,
-            platform: UsePlatform::new(),
-            task: RefCell::new(None),
-            is_running: Signal::new(false),
+    let value_and_ctx = use_memo(move || {
+        let mut ctx = Context::default();
+        (run(&mut ctx), ctx)
+    });
+
+    let animator = UseAnimator {
+        value_and_ctx,
+        platform,
+        is_running,
+        has_run_yet,
+        task,
+    };
+
+    use_hook(move || {
+        if animator.value_and_ctx.read().1.auto_start {
+            animator.run(AnimDirection::Forward);
         }
-    })
+    });
+
+    animator
 }
 
-pub fn use_animation_with_dependencies<Animated: PartialEq + 'static, D: Dependency>(
+pub fn use_animation_with_dependencies<Animated: PartialEq + Clone + 'static, D: Dependency>(
     deps: D,
     run: impl Fn(&mut Context, D::Out) -> Animated + 'static,
-) -> ReadOnlySignal<UseAnimator<Animated>>
+) -> UseAnimator<Animated>
 where
-    D::Out: 'static,
+    D::Out: 'static + Clone,
 {
-    use_memo_with_dependencies(deps, move |deps| {
-        let mut ctx = Context::default();
-        let value = run(&mut ctx, deps);
+    let platform = use_platform();
+    let is_running = use_signal(|| false);
+    let has_run_yet = use_signal(|| false);
+    let task = use_signal(|| None);
 
-        UseAnimator {
-            value,
-            ctx,
-            platform: UsePlatform::new(),
-            task: RefCell::new(None),
-            is_running: Signal::new(false),
+    let value_and_ctx = use_memo(use_reactive(deps, move |vals| {
+        let mut ctx = Context::default();
+        (run(&mut ctx, vals), ctx)
+    }));
+
+    let animator = UseAnimator {
+        value_and_ctx,
+        platform,
+        is_running,
+        has_run_yet,
+        task,
+    };
+
+    use_hook(move || {
+        if animator.value_and_ctx.read().1.auto_start {
+            animator.run(AnimDirection::Forward);
         }
-    })
+    });
+
+    animator
 }

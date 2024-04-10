@@ -12,7 +12,7 @@ fn main() {
 static RUST_LOGO: &[u8] = include_bytes!("./rust_logo.png");
 
 fn app() -> Element {
-    let image_data = static_bytes_to_data(RUST_LOGO);
+    let image_data = static_bytes(RUST_LOGO);
     let mut size = use_signal(|| 250);
 
     let onwheel = move |e: WheelEvent| {

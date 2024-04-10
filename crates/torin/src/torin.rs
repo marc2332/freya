@@ -6,10 +6,10 @@ use tracing::info;
 
 use crate::{
     custom_measurer::LayoutMeasurer,
-    dom_adapter::{DOMAdapter, NodeAreas, NodeKey},
+    dom_adapter::{DOMAdapter, LayoutNode, NodeKey},
     geometry::{Area, Size2D},
-    measure::measure_node,
-    prelude::Gaps,
+    measure::{measure_node, Phase},
+    prelude::{AreaModel, Gaps},
 };
 
 pub struct LayoutMetadata {
@@ -54,7 +54,7 @@ impl<Key: NodeKey> RootNodeCandidate<Key> {
 
 pub struct Torin<Key: NodeKey> {
     /// Layout results of the registered Nodes
-    pub results: FxHashMap<Key, NodeAreas>,
+    pub results: FxHashMap<Key, LayoutNode>,
 
     /// Invalid registered nodes since previous layout measurement
     pub dirty: FxHashSet<Key>,
@@ -226,14 +226,15 @@ impl<Key: NodeKey> Torin<Key> {
         } else {
             suggested_root_id
         };
-        let root_parent = dom_adapter.parent_of(&root_id);
-        let areas = root_parent
-            .and_then(|root_parent| self.get(root_parent).cloned())
-            .unwrap_or(NodeAreas {
+        let root_parent_id = dom_adapter.parent_of(&root_id);
+        let layout_node = root_parent_id
+            .and_then(|root_parent_id| self.get(root_parent_id).cloned())
+            .unwrap_or(LayoutNode {
                 area: root_area,
                 inner_area: root_area,
                 inner_sizes: Size2D::default(),
                 margin: Gaps::default(),
+                data: None,
             });
         let root = dom_adapter.get_node(&root_id).unwrap();
         let root_height = dom_adapter.height(&root_id).unwrap();
@@ -247,35 +248,47 @@ impl<Key: NodeKey> Torin<Key> {
 
         let metadata = LayoutMetadata { root_area };
 
-        let (root_revalidated, root_areas) = measure_node(
+        let mut available_area = layout_node.inner_area;
+        if let Some(root_parent_id) = root_parent_id {
+            let root_parent = dom_adapter.get_node(&root_parent_id).unwrap();
+            available_area.move_with_offsets(&root_parent.offset_x, &root_parent.offset_y);
+        }
+
+        let (root_revalidated, root_layout_node) = measure_node(
             root_id,
             &root,
             self,
-            &areas.inner_area,
-            &areas.inner_area,
+            &layout_node.inner_area,
+            &available_area,
             measurer,
             true,
             dom_adapter,
             &metadata,
             false,
+            Phase::Final,
         );
 
         // Cache the root Node results if it was modified
         if root_revalidated {
-            self.cache_node(root_id, root_areas);
+            if let Some(measurer) = measurer {
+                if root.has_layout_references {
+                    measurer.notify_layout_references(root_id, &root_layout_node);
+                }
+            }
+            self.cache_node(root_id, root_layout_node);
         }
 
         self.dirty.clear();
         self.root_node_candidate = RootNodeCandidate::None;
     }
 
-    /// Get the areas of a Node
-    pub fn get(&self, node_id: Key) -> Option<&NodeAreas> {
+    /// Get the layout_node of a Node
+    pub fn get(&self, node_id: Key) -> Option<&LayoutNode> {
         self.results.get(&node_id)
     }
 
-    /// Cache a Node's areas
-    pub fn cache_node(&mut self, node_id: Key, areas: NodeAreas) {
-        self.results.insert(node_id, areas);
+    /// Cache a Node's layout_node
+    pub fn cache_node(&mut self, node_id: Key, layout_node: LayoutNode) {
+        self.results.insert(node_id, layout_node);
     }
 }

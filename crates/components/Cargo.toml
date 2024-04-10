@@ -22,12 +22,12 @@ freya-elements = { workspace = true }
 freya-node-state = { workspace = true }
 freya-hooks = { workspace = true }
 freya-common = { workspace = true }
-freya-core = { path = "../core", version = "0.1" }
+freya-core = { workspace = true }
 freya-engine = { path = "../engine", version = "0.1" }
 torin = { workspace = true }
 
-dioxus = { workspace = true }
 dioxus-router = { workspace = true }
+dioxus = { workspace = true }
 futures-util = { workspace = true }
 
 winit = { workspace = true }
@@ -38,6 +38,7 @@ paste = { workspace = true }
 
 open = "5"
 reqwest = { version = "0.11.22", features = ["json"] }
+bytes = "1.5.0"
 
 [dev-dependencies]
 freya = { path = "../freya" }

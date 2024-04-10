@@ -70,6 +70,7 @@ pub fn Button(props: ButtonProps) -> Element {
         width,
         height,
         font_theme,
+        shadow,
     } = use_applied_theme!(&props.theme, button);
 
     let onclick = {
@@ -131,7 +132,7 @@ pub fn Button(props: ButtonProps) -> Element {
             overflow: "clip",
             role: "button",
             color: "{font_theme.color}",
-            shadow: "0 4 5 0 rgb(0, 0, 0, 0.1)",
+            shadow: "{shadow}",
             border: "{border}",
             corner_radius: "{corner_radius}",
             background: "{background}",
@@ -141,4 +142,44 @@ pub fn Button(props: ButtonProps) -> Element {
             {&props.children}
         }
     )
+}
+
+#[cfg(test)]
+mod test {
+    use dioxus::prelude::use_signal;
+    use freya::prelude::*;
+    use freya_testing::*;
+
+    #[tokio::test]
+    pub async fn button() {
+        fn button_app() -> Element {
+            let mut state = use_signal(|| false);
+
+            rsx!(
+                Button {
+                    onclick: move |_| state.toggle(),
+                    label {
+                        "{state}"
+                    }
+                }
+            )
+        }
+
+        let mut utils = launch_test(button_app);
+        let root = utils.root();
+        let label = root.get(0).get(0);
+        utils.wait_for_update().await;
+
+        assert_eq!(label.get(0).text(), Some("false"));
+
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (5.0, 5.0).into(),
+            button: Some(MouseButton::Left),
+        });
+
+        utils.wait_for_update().await;
+
+        assert_eq!(label.get(0).text(), Some("true"));
+    }
 }

@@ -1,8 +1,8 @@
 use dioxus::prelude::*;
-use dioxus_native_core::NodeId;
 use freya_components::*;
 use freya_elements::elements as dioxus_elements;
 use freya_hooks::{theme_with, ScrollViewThemeWith};
+use freya_native_core::NodeId;
 
 use crate::{hooks::use_selected_node, NodeInspectorBar};
 
@@ -14,10 +14,14 @@ pub fn NodeInspectorLayout(node_id: NodeId) -> Element {
     if let Some(node) = node {
         let inner_area = format!(
             "{}x{}",
-            node.areas.inner_area.width(),
-            node.areas.inner_area.height()
+            node.layout_node.inner_area.width(),
+            node.layout_node.inner_area.height()
         );
-        let area = format!("{}x{}", node.areas.area.width(), node.areas.area.height());
+        let area = format!(
+            "{}x{}",
+            node.layout_node.area.width(),
+            node.layout_node.area.height()
+        );
         let paddings = node.state.size.padding;
 
         rsx!(

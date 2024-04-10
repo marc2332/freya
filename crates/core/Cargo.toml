@@ -15,34 +15,29 @@ categories = ["gui", "asynchronous"]
 features = ["freya-engine/mocked-engine"]
 
 [features]
-devtools = []
+shared = []
 skia-engine = ["freya-engine/skia-engine"]
 
 [dependencies]
 freya-node-state = { workspace = true }
 freya-elements = { workspace = true }
 freya-common = { workspace = true }
-freya-dom = { workspace = true }
 freya-engine = { workspace = true }
 torin = { workspace = true }
 
-dioxus-rsx = { workspace = true }
-dioxus-native-core = { workspace = true }
-dioxus-core-macro = { workspace = true }
-dioxus-hooks = { workspace = true }
+freya-native-core = { workspace = true }
 dioxus-core = { workspace = true }
 
 tokio = { workspace = true }
 winit = { workspace = true }
 accesskit = { workspace = true }
 
-rustc-hash= { workspace = true }
+rustc-hash = { workspace = true }
 tracing = { workspace = true }
 uuid = { workspace = true }
 itertools = "0.11.0"
-smallvec = "1.11.2"
+smallvec = { workspace = true }
 
 [dev-dependencies]
 dioxus = { workspace = true }
-freya = { path = "../freya" }
 freya-testing = { path = "../testing" }

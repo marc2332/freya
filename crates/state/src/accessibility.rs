@@ -1,12 +1,12 @@
 use accesskit::{NodeId as AccessibilityId, Role};
-use dioxus_native_core::exports::shipyard::Component;
-use dioxus_native_core::node::OwnedAttributeValue;
-use dioxus_native_core::{
+use freya_native_core::node::OwnedAttributeValue;
+use freya_native_core::{attributes::AttributeName, exports::shipyard::Component};
+use freya_native_core::{
     node_ref::NodeView,
     prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State},
     SendAnyMap,
 };
-use dioxus_native_core_macro::partial_derive_state;
+use freya_native_core_macro::partial_derive_state;
 
 use crate::CustomAttributeValues;
 
@@ -29,11 +29,11 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
 
     const NODE_MASK: NodeMaskBuilder<'static> =
         NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[
-            "focus_id",
-            "role",
-            "alt",
-            "name",
-            "focusable",
+            AttributeName::FocusId,
+            AttributeName::Role,
+            AttributeName::Alt,
+            AttributeName::Name,
+            AttributeName::Focusable,
         ]));
 
     fn update<'a>(
@@ -48,9 +48,8 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
-                #[allow(clippy::single_match)]
-                match attr.attribute.name.as_str() {
-                    "focus_id" => {
+                match attr.attribute {
+                    AttributeName::FocusId => {
                         if let OwnedAttributeValue::Custom(
                             CustomAttributeValues::AccessibilityId(id),
                         ) = attr.value
@@ -58,7 +57,7 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
                             accessibility.accessibility_id = Some(*id);
                         }
                     }
-                    "role" => {
+                    AttributeName::Role => {
                         if let OwnedAttributeValue::Text(attr) = attr.value {
                             if let Ok(new_role) =
                                 serde_json::from_str::<Role>(&format!("\"{attr}\""))
@@ -67,17 +66,17 @@ impl State<CustomAttributeValues> for AccessibilityNodeState {
                             }
                         }
                     }
-                    "alt" => {
+                    AttributeName::Alt => {
                         if let OwnedAttributeValue::Text(attr) = attr.value {
                             accessibility.alt = Some(attr.to_owned())
                         }
                     }
-                    "name" => {
+                    AttributeName::Name => {
                         if let OwnedAttributeValue::Text(attr) = attr.value {
                             accessibility.name = Some(attr.to_owned())
                         }
                     }
-                    "focusable" => {
+                    AttributeName::Focusable => {
                         if let OwnedAttributeValue::Text(attr) = attr.value {
                             accessibility.focusable = attr.parse().unwrap_or_default()
                         }

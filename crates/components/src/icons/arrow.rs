@@ -1,12 +1,12 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 
-use freya_hooks::{use_applied_theme, ArrowIconTheme, ArrowIconThemeWith};
+use freya_hooks::{use_applied_theme, IconTheme, IconThemeWith};
 
 #[derive(Props, Clone, PartialEq)]
 pub struct ArrowIconProps {
     /// Theme override.
-    pub theme: Option<ArrowIconThemeWith>,
+    pub theme: Option<IconThemeWith>,
     #[props(into)]
     pub rotate: String,
     #[props(into)]
@@ -21,11 +21,11 @@ pub fn ArrowIcon(
         fill,
     }: ArrowIconProps,
 ) -> Element {
-    let ArrowIconTheme {
+    let IconTheme {
         height,
         width,
         margin,
-    } = use_applied_theme!(&theme, arrow_icon);
+    } = use_applied_theme!(&theme, icon);
 
     rsx!(svg {
         height: "{height}",

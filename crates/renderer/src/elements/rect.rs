@@ -1,5 +1,6 @@
-use dioxus_native_core::real_dom::NodeImmutable;
-use freya_dom::prelude::DioxusNode;
+use freya_native_core::real_dom::NodeImmutable;
+
+use freya_core::dom::DioxusNode;
 use freya_engine::prelude::*;
 use freya_node_state::{BorderAlignment, BorderStyle, Fill, References, ShadowPosition, Style};
 use torin::prelude::Area;
@@ -9,7 +10,7 @@ pub fn render_rect(
     area: &Area,
     node_ref: &DioxusNode,
     canvas: &Canvas,
-    font_collection: &FontCollection,
+    font_collection: &mut FontCollection,
 ) {
     let node_style = &*node_ref.get::<Style>().unwrap();
 

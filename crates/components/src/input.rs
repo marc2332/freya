@@ -205,3 +205,57 @@ pub fn Input(
         }
     )
 }
+
+#[cfg(test)]
+mod test {
+    use freya::prelude::*;
+    use freya_testing::*;
+
+    #[tokio::test]
+    pub async fn input() {
+        fn input_app() -> Element {
+            let mut value = use_signal(|| "Hello, Worl".to_string());
+
+            rsx!(Input {
+                value: value.read().clone(),
+                onchange: move |new_value| {
+                    value.set(new_value);
+                }
+            },)
+        }
+
+        let mut utils = launch_test(input_app);
+        let root = utils.root();
+        let text = root.get(0).get(0).get(0);
+        utils.wait_for_update().await;
+
+        // Default value
+        assert_eq!(text.get(0).text(), Some("Hello, Worl"));
+
+        assert_eq!(utils.focus_id(), ACCESSIBILITY_ROOT_ID);
+
+        // Focus the input in the end of the text
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseDown,
+            cursor: (115., 25.).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+
+        assert_ne!(utils.focus_id(), ACCESSIBILITY_ROOT_ID);
+
+        // Write "d"
+        utils.push_event(PlatformEvent::Keyboard {
+            name: EventName::KeyDown,
+            key: Key::Character("d".to_string()),
+            code: Code::KeyD,
+            modifiers: Modifiers::default(),
+        });
+        utils.wait_for_update().await;
+
+        // Check that "d" has been written into the input.
+        assert_eq!(text.get(0).text(), Some("Hello, World"));
+    }
+}

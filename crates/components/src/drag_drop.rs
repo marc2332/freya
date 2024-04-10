@@ -145,7 +145,7 @@ pub fn DropZone<T: 'static + Clone + PartialEq>(props: DropZoneProps<T>) -> Elem
 #[cfg(test)]
 mod test {
     use freya::prelude::*;
-    use freya_testing::{events::pointer::MouseButton, launch_test, FreyaEvent};
+    use freya_testing::{events::pointer::MouseButton, launch_test, EventName, PlatformEvent};
 
     #[tokio::test]
     pub async fn drag_drop() {
@@ -190,24 +190,24 @@ mod test {
         let root = utils.root();
         utils.wait_for_update().await;
 
-        utils.push_event(FreyaEvent::Mouse {
-            name: "mousedown".to_string(),
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseDown,
             cursor: (5.0, 5.0).into(),
             button: Some(MouseButton::Left),
         });
 
         utils.wait_for_update().await;
 
-        utils.push_event(FreyaEvent::Mouse {
-            name: "mouseover".to_string(),
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseOver,
             cursor: (5.0, 5.0).into(),
             button: Some(MouseButton::Left),
         });
 
         utils.wait_for_update().await;
 
-        utils.push_event(FreyaEvent::Mouse {
-            name: "mouseover".to_string(),
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseOver,
             cursor: (5.0, 300.0).into(),
             button: Some(MouseButton::Left),
         });
@@ -216,8 +216,8 @@ mod test {
 
         assert_eq!(root.get(0).get(0).get(0).get(0).text(), Some("Moving"));
 
-        utils.push_event(FreyaEvent::Mouse {
-            name: "click".to_string(),
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
             cursor: (5.0, 300.0).into(),
             button: Some(MouseButton::Left),
         });

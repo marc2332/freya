@@ -5,8 +5,8 @@ use std::{
 
 use dioxus_core::{prelude::spawn, use_hook, AttributeValue};
 use dioxus_hooks::to_owned;
+use dioxus_sdk::clipboard::use_clipboard;
 use dioxus_signals::{Readable, Signal, Writable};
-use dioxus_std::clipboard::use_clipboard;
 use freya_common::{CursorLayoutResponse, EventMessage};
 use freya_elements::events::{KeyboardData, MouseData};
 use freya_node_state::{CursorReference, CustomAttributeValues};

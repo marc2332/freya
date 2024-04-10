@@ -1,9 +1,12 @@
 use crate::Loader;
+use bytes::Bytes;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-
-use freya_hooks::{use_applied_theme, use_focus, NetworkImageTheme, NetworkImageThemeWith};
-use freya_node_state::bytes_to_data;
+use freya_hooks::{
+    use_applied_theme, use_asset_cacher, use_focus, AssetAge, AssetConfiguration,
+    NetworkImageTheme, NetworkImageThemeWith,
+};
+use freya_node_state::dynamic_bytes;
 use reqwest::Url;
 
 /// [`NetworkImage`] component properties.
@@ -13,7 +16,7 @@ pub struct NetworkImageProps {
     pub theme: Option<NetworkImageThemeWith>,
 
     /// URL of the image
-    pub url: Url,
+    pub url: ReadOnlySignal<Url>,
 
     /// Fallback element
     pub fallback: Option<Element>,
@@ -35,7 +38,7 @@ pub enum ImageStatus {
     Errored,
 
     /// Image has been fetched.
-    Loaded,
+    Loaded(Signal<Bytes>),
 }
 
 /// `NetworkImage` component.
@@ -46,44 +49,81 @@ pub enum ImageStatus {
 /// # Example
 ///  
 /// ```rust,no_run
+/// # use reqwest::Url;
 /// # use freya::prelude::*;
 /// fn app() -> Element {
 ///     rsx!(
 ///         NetworkImage {
-///             url: "https://raw.githubusercontent.com/jigsawpieces/dog-api-images/main/greyhound/Cordelia.jpg".parse().unwrap()
+///             url: "https://raw.githubusercontent.com/jigsawpieces/dog-api-images/main/greyhound/Cordelia.jpg".parse::<Url>().unwrap()
 ///         }
 ///     )
 /// }
 ///
 #[allow(non_snake_case)]
 pub fn NetworkImage(props: NetworkImageProps) -> Element {
+    let mut asset_cacher = use_asset_cacher();
     let focus = use_focus();
     let mut status = use_signal(|| ImageStatus::Loading);
-    let mut image_bytes = use_signal::<Option<Vec<u8>>>(|| None);
+    let mut cached_assets = use_signal::<Vec<AssetConfiguration>>(Vec::new);
+    let mut assets_tasks = use_signal::<Vec<Task>>(Vec::new);
 
     let focus_id = focus.attribute();
     let NetworkImageTheme { width, height } = use_applied_theme!(&props.theme, network_image);
     let alt = props.alt.as_deref();
 
-    // TODO: Waiting for a dependency-based use_effect
-    let _ = use_memo_with_dependencies(&props.url, move |url| {
-        spawn(async move {
-            // Loading image
-            status.set(ImageStatus::Loading);
-            let img = fetch_image(url).await;
-            if let Ok(img) = img {
-                // Image loaded
-                image_bytes.set(Some(img));
-                status.set(ImageStatus::Loaded)
-            } else if let Err(_err) = img {
-                // Image errored
-                image_bytes.set(None);
-                status.set(ImageStatus::Errored)
-            }
-        });
+    use_memo(move || {
+        let url = props.url.read().clone();
+        // Cancel previous asset fetching requests
+        for asset_task in assets_tasks.write().drain(..) {
+            asset_task.cancel();
+        }
+
+        // Stop using previous assets
+        for cached_asset in cached_assets.write().drain(..) {
+            asset_cacher.unuse_asset(cached_asset);
+        }
+
+        let asset_configuration = AssetConfiguration {
+            age: AssetAge::default(),
+            id: url.to_string(),
+        };
+
+        // Loading image
+        status.set(ImageStatus::Loading);
+        if let Some(asset) = asset_cacher.use_asset(&asset_configuration) {
+            // Image loaded from cache
+            status.set(ImageStatus::Loaded(asset));
+            cached_assets.write().push(asset_configuration);
+        } else {
+            let asset_task = spawn(async move {
+                let asset = fetch_image(url).await;
+                if let Ok(asset_bytes) = asset {
+                    let asset_signal =
+                        asset_cacher.cache(asset_configuration.clone(), asset_bytes, true);
+                    // Image loaded
+                    status.set(ImageStatus::Loaded(asset_signal));
+                    cached_assets.write().push(asset_configuration);
+                } else if let Err(_err) = asset {
+                    // Image errored
+                    status.set(ImageStatus::Errored);
+                }
+            });
+
+            assets_tasks.write().push(asset_task);
+        }
     });
 
-    if *status.read() == ImageStatus::Loading {
+    if let ImageStatus::Loaded(bytes) = &*status.read_unchecked() {
+        let image_data = dynamic_bytes(bytes.read().clone());
+        rsx!(image {
+            height: "{height}",
+            width: "{width}",
+            focus_id,
+            image_data,
+            role: "image",
+            alt
+        })
+    } else if *status.read() == ImageStatus::Loading {
         if let Some(loading_element) = &props.loading {
             rsx!({ loading_element })
         } else {
@@ -97,42 +137,25 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
                 }
             )
         }
-    } else if *status.read() == ImageStatus::Errored {
-        if let Some(fallback_element) = &props.fallback {
-            rsx!({ fallback_element })
-        } else {
-            rsx!(
-                rect {
-                    height: "{height}",
-                    width: "{width}",
-                    main_align: "center",
-                    cross_align: "center",
-                    label {
-                        text_align: "center",
-                        "Error"
-                    }
-                }
-            )
-        }
+    } else if let Some(fallback_element) = &props.fallback {
+        rsx!({ fallback_element })
     } else {
-        rsx!({
-            image_bytes.as_ref().map(|bytes| {
-                let image_data = bytes_to_data(&bytes);
-                rsx!(image {
-                    height: "{height}",
-                    width: "{width}",
-                    focus_id,
-                    image_data: image_data,
-                    role: "image",
-                    alt: alt
-                })
-            })
-        })
+        rsx!(
+            rect {
+                height: "{height}",
+                width: "{width}",
+                main_align: "center",
+                cross_align: "center",
+                label {
+                    text_align: "center",
+                    "Error"
+                }
+            }
+        )
     }
 }
 
-async fn fetch_image(url: Url) -> Result<Vec<u8>, reqwest::Error> {
+async fn fetch_image(url: Url) -> reqwest::Result<Bytes> {
     let res = reqwest::get(url).await?;
-    let data = res.bytes().await?;
-    Ok(data.to_vec())
+    res.bytes().await
 }
