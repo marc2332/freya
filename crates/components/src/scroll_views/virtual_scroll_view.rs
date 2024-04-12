@@ -14,6 +14,7 @@ use crate::{
     manage_key_event, Axis, ScrollBar, ScrollThumb, SCROLL_SPEED_MULTIPLIER,
 };
 
+/// [`VirtualScrollView`] component properties.
 #[derive(Props, Clone)]
 pub struct VirtualScrollViewProps<
     Builder: 'static + Clone + Fn(usize, &Option<BuilderArgs>) -> Element,

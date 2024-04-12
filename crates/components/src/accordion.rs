@@ -18,6 +18,7 @@ pub enum AccordionStatus {
     Hovering,
 }
 
+/// [`Accordion`] component properties.
 #[derive(Props, Clone, PartialEq)]
 pub struct AccordionProps {
     /// Theme override.
@@ -107,6 +108,7 @@ pub fn Accordion(props: AccordionProps) -> Element {
     )
 }
 
+/// [`AccordionSummary`] component properties.
 #[derive(Props, Clone, PartialEq)]
 pub struct AccordionSummaryProps {
     /// Inner children for the AccordionSummary.

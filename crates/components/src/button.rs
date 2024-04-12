@@ -5,6 +5,7 @@ use freya_elements::events::{KeyboardEvent, MouseEvent};
 use freya_hooks::{use_applied_theme, use_focus, use_platform, ButtonTheme, ButtonThemeWith};
 use winit::window::CursorIcon;
 
+/// [`Button`] component properties.
 #[derive(Props, Clone, PartialEq)]
 pub struct ButtonProps {
     /// Theme override.

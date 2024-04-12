@@ -12,6 +12,7 @@ use freya_hooks::{
 };
 use winit::window::CursorIcon;
 
+/// [`DropdownItem`] component properties.
 #[derive(Props, Clone, PartialEq)]
 pub struct DropdownItemProps<T: 'static + Clone + PartialEq> {
     /// Theme override.
@@ -118,6 +119,7 @@ where
     )
 }
 
+/// [`Dropdown`] component properties.
 #[derive(Props, Clone, PartialEq)]
 pub struct DropdownProps<T: 'static + Clone + PartialEq> {
     /// Theme override.

@@ -26,6 +26,7 @@ pub enum Gesture {
     DoubleTap,
 }
 
+/// [`GestureArea`] component properties.
 #[derive(Props, Clone, PartialEq)]
 pub struct GestureAreaProps {
     /// Inner children for the GestureArea.

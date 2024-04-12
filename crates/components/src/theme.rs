@@ -1,6 +1,7 @@
 use dioxus::prelude::*;
 use freya_hooks::{use_init_theme, Theme};
 
+/// [`ThemeProvider`] component properties.
 #[derive(Props, Clone, PartialEq)]
 pub struct ThemeProviderProps {
     /// Theme to provide.

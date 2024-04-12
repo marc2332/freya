@@ -4,6 +4,7 @@ use freya_elements::events::MouseEvent;
 use freya_hooks::use_node_signal;
 use torin::prelude::CursorPoint;
 
+/// [`DragProvider`] component properties.
 #[derive(Props, Clone, PartialEq)]
 pub struct DragProviderProps {
     /// Inner children of the DragProvider.
@@ -17,6 +18,7 @@ pub fn DragProvider<T: 'static>(DragProviderProps { children }: DragProviderProp
     rsx!({ children })
 }
 
+/// [`DragZone`] component properties.
 #[derive(Props, Clone, PartialEq)]
 pub struct DragZoneProps<T: Clone + 'static + PartialEq> {
     /// Element visible when dragging the element. This follows the cursor.
@@ -97,6 +99,7 @@ pub fn DragZone<T: 'static + Clone + PartialEq>(
     )
 }
 
+/// [`DropZone`] component properties.
 #[derive(Props, PartialEq, Clone)]
 pub struct DropZoneProps<T: 'static + PartialEq + Clone> {
     /// Inner children for the DropZone.
