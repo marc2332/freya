@@ -143,7 +143,7 @@ impl AssetCacher {
         }
     }
 
-    /// Start using an Asset. Your scope will get subscribed, to stop using an asset use [`unuse_asset`]
+    /// Start using an Asset. Your scope will get subscribed, to stop using an asset use [`Self::unuse_asset`]
     pub fn use_asset(&mut self, config: &AssetConfiguration) -> Option<Signal<Bytes>> {
         let mut registry = self.registry.write();
         if let Some(asset_state) = registry.get_mut(config) {
@@ -179,6 +179,8 @@ impl AssetCacher {
 }
 
 /// Global caching system for assets.
+///
+/// This is a "low level" hook, so you probably won't need it.
 pub fn use_asset_cacher() -> AssetCacher {
     match try_consume_context() {
         Some(asset_cacher) => asset_cacher,

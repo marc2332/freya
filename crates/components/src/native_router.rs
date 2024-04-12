@@ -3,6 +3,11 @@ use dioxus_router::prelude::use_navigator;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{MouseButton, PointerEvent, PointerType};
 
+/// Provides native functionalities for a dioxus-router.
+///
+/// Features:
+/// - Navigate using back and forward buttons of the mouse.
+///
 #[allow(non_snake_case)]
 #[component]
 pub fn NativeRouter(children: Element) -> Element {
@@ -31,7 +36,7 @@ mod test {
     use dioxus_router::prelude::{Outlet, Routable, Router};
     use freya::prelude::*;
     use freya_core::events::{EventName, PlatformEvent};
-    use freya_testing::*;
+    use freya_testing::prelude::*;
 
     #[tokio::test]
     pub async fn native_router() {

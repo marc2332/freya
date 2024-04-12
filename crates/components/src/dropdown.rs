@@ -12,7 +12,7 @@ use freya_hooks::{
 };
 use winit::window::CursorIcon;
 
-/// [`DropdownItem`] component properties.
+/// Properties for the [`DropdownItem`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct DropdownItemProps<T: 'static + Clone + PartialEq> {
     /// Theme override.
@@ -35,11 +35,6 @@ pub enum DropdownItemStatus {
     Hovering,
 }
 
-/// `DropdownItem` component.
-///
-/// # Props
-/// See [`DropdownItemProps`].
-///
 /// # Styling
 /// Inherits the [`DropdownItemTheme`](freya_hooks::DropdownItemTheme) theme.
 #[allow(non_snake_case)]
@@ -124,7 +119,7 @@ where
     )
 }
 
-/// [`Dropdown`] component properties.
+/// Properties for the [`Dropdown`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct DropdownProps<T: 'static + Clone + PartialEq> {
     /// Theme override.
@@ -145,10 +140,7 @@ pub enum DropdownStatus {
     Hovering,
 }
 
-/// `Dropdown` component.
-///
-/// # Props
-/// See [`DropdownProps`].
+/// Select from multiple options, use alongside [`DropdownItem`].
 ///
 /// # Styling
 /// Inherits the [`DropdownTheme`](freya_hooks::DropdownTheme) theme.
@@ -308,7 +300,7 @@ where
 #[cfg(test)]
 mod test {
     use freya::prelude::*;
-    use freya_testing::*;
+    use freya_testing::prelude::*;
     use winit::event::MouseButton;
 
     #[tokio::test]

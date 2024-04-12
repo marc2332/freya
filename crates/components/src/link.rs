@@ -7,6 +7,7 @@ use freya_hooks::{use_applied_theme, LinkThemeWith};
 use std::borrow::Cow;
 use winit::event::MouseButton;
 
+/// Tooltip configuration for the [`Link`] component.
 #[derive(Clone, PartialEq)]
 pub enum LinkTooltip {
     /// No tooltip at all.
@@ -183,7 +184,7 @@ pub fn Link(
 mod test {
     use dioxus_router::prelude::{Outlet, Routable, Router};
     use freya::prelude::*;
-    use freya_testing::*;
+    use freya_testing::prelude::*;
 
     #[tokio::test]
     pub async fn link() {

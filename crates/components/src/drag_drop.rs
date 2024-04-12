@@ -4,7 +4,7 @@ use freya_elements::events::MouseEvent;
 use freya_hooks::use_node_signal;
 use torin::prelude::CursorPoint;
 
-/// [`DragProvider`] component properties.
+/// Properties for the [`DragProvider`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct DragProviderProps {
     /// Inner children of the DragProvider.
@@ -12,17 +12,13 @@ pub struct DragProviderProps {
 }
 
 /// Provide a common place for [`DragZone`]s and [`DropZone`]s to exchange their data.
-///
-/// # Props
-/// See [`DragProviderProps`].
-///
 #[allow(non_snake_case)]
 pub fn DragProvider<T: 'static>(DragProviderProps { children }: DragProviderProps) -> Element {
     use_context_provider::<Signal<Option<T>>>(|| Signal::new(None));
     rsx!({ children })
 }
 
-/// [`DragZone`] component properties.
+/// Properties for the [`DragZone`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct DragZoneProps<T: Clone + 'static + PartialEq> {
     /// Element visible when dragging the element. This follows the cursor.
@@ -34,10 +30,6 @@ pub struct DragZoneProps<T: Clone + 'static + PartialEq> {
 }
 
 /// Make the inner children draggable to other [`DropZone`].
-///
-/// # Props
-/// See [`DragZoneProps`].
-///
 #[allow(non_snake_case)]
 pub fn DragZone<T: 'static + Clone + PartialEq>(
     DragZoneProps {
@@ -107,7 +99,7 @@ pub fn DragZone<T: 'static + Clone + PartialEq>(
     )
 }
 
-/// [`DropZone`] component properties.
+/// Properties for the [`DropZone`] component.
 #[derive(Props, PartialEq, Clone)]
 pub struct DropZoneProps<T: 'static + PartialEq + Clone> {
     /// Inner children for the DropZone.
@@ -117,10 +109,6 @@ pub struct DropZoneProps<T: 'static + PartialEq + Clone> {
 }
 
 /// Elements from [`DragZone`]s can be dropped here.
-///
-/// # Props
-/// See [`DropZoneProps`].
-///
 #[allow(non_snake_case)]
 pub fn DropZone<T: 'static + Clone + PartialEq>(props: DropZoneProps<T>) -> Element {
     let mut drags = use_context::<Signal<Option<T>>>();
@@ -145,7 +133,7 @@ pub fn DropZone<T: 'static + Clone + PartialEq>(props: DropZoneProps<T>) -> Elem
 #[cfg(test)]
 mod test {
     use freya::prelude::*;
-    use freya_testing::{events::pointer::MouseButton, launch_test, EventName, PlatformEvent};
+    use freya_testing::prelude::*;
 
     #[tokio::test]
     pub async fn drag_drop() {

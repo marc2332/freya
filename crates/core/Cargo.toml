@@ -40,4 +40,5 @@ smallvec = { workspace = true }
 
 [dev-dependencies]
 dioxus = { workspace = true }
-freya-testing = { path = "../testing" }
+freya-testing = { workspace = true }
+freya = { workspace = true }

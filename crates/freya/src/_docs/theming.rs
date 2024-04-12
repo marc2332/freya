@@ -10,7 +10,6 @@
 //!
 //! ```rust, no_run
 //! # use freya::prelude::*;
-//!
 //! fn app() -> Element {
 //!     rsx!(
 //!         ThemeProvider {
@@ -39,7 +38,6 @@
 //!
 //! ```rust, no_run
 //! # use freya::prelude::*;
-//!
 //! fn app() -> Element {
 //!     rsx!(
 //!         ThemeProvider {
@@ -69,7 +67,6 @@
 //!
 //! ```rust, no_run
 //! # use freya::prelude::*;
-//!
 //! fn app() -> Element {
 //!     rsx!(
 //!         ThemeProvider {
@@ -104,7 +101,6 @@
 //!
 //! ```rust,no_run
 //! # use freya::prelude::*;
-//!
 //! fn app() -> Element {
 //!     rsx! {
 //!         Button {
@@ -131,7 +127,6 @@
 //!
 //! ```rust,no_run
 //! # use freya::prelude::*;
-//!
 //! fn app() -> Element {
 //!     rsx! {
 //!         Button {
@@ -156,7 +151,6 @@
 //!
 //! ```rust, no_run
 //! # use freya::prelude::*;
-//!
 //! const CUSTOM_THEME: Theme = Theme {
 //!     button: ButtonTheme {
 //!         background: Cow::Borrowed("rgb(230, 0, 0)"),

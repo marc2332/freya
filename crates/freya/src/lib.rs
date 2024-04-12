@@ -15,8 +15,8 @@
 //! - [Hooks](freya_hooks)
 //! - [Theming](self::_docs::theming)
 //! - [Hot reload](self::_docs::hot_reload)
-//! - [Testing](self::_docs::testing)
-//! - [Animating](self::_docs::animating)
+//! - [Testing](freya_testing)
+//! - [Animating](freya_hooks::use_animation)
 //! - [Devtools](self::_docs::devtools)
 //!
 //! ```rust,no_run
