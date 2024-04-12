@@ -1,6 +1,6 @@
 # Getting Started
 
-I encourage you to first learn how [Dioxus works](https://dioxuslabs.com/learn/0.5/guide/your_first_component), when you are done you can continue here. Also make sure you have the followed the [environment setup](../setup.html) guide.
+I encourage you to first learn about [Dioxus](dioxus.html), when you are done you can continue here. Also make sure you have the followed the [Setup](./setup.html) guide.
 
 Now, let's start by creating a hello world project.
 
@@ -48,13 +48,13 @@ Let's define our root component, called `app`:
 
 ```rust, no_run
 fn app() -> Element {
-    render!(
+    rsx!(
         label { "Hello, World!" }
     )
 }
 ```
 
-Components in Freya/Dioxus are simply functions that return an `Element`.
+Components in Freya/Dioxus are simply functions that return an `Element` and might receive some properties as arguments.
 
 Let's make it stateful by using Dioxus Signals:
 
@@ -78,7 +78,7 @@ fn app() -> Element {
     // new Element with the updated counter.
     println!("{}", state());
 
-    render!(
+    rsx!(
         label { 
             onclick,
             "State is {state}"

@@ -11,7 +11,7 @@
 fn app() -> Element {
     let mut count = use_signal(|| 0);
 
-    render!(
+    rsx!(
         rect {
             height: "50%",
             width: "100%",
