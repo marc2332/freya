@@ -29,12 +29,12 @@ pub enum SwitchStatus {
     Hovering,
 }
 
-/// Controlled `Switch` component.
-///
-/// # Props
-/// See [`SwitchProps`].
+/// Display whether a state is `true` or `false`.
+/// Commonly used for enabled/disabled scenarios.
+/// Example: light/dark theme.
 ///
 /// # Styling
+/// 
 /// Inherits the [`SwitchTheme`](freya_hooks::SwitchTheme) theme.
 ///
 /// # Example

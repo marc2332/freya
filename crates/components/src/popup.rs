@@ -20,7 +20,7 @@ pub fn PopupBackground(children: Element) -> Element {
     })
 }
 
-/// `Popup` component.
+/// Floating window intended for quick interactions. Also called `Dialog` in other frameworks.
 ///
 /// # Styling
 /// Inherits the [`PopupTheme`](freya_hooks::PopupTheme) theme.

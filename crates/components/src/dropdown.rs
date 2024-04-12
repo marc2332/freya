@@ -35,11 +35,6 @@ pub enum DropdownItemStatus {
     Hovering,
 }
 
-/// `DropdownItem` component.
-///
-/// # Props
-/// See [`DropdownItemProps`].
-///
 /// # Styling
 /// Inherits the [`DropdownItemTheme`](freya_hooks::DropdownItemTheme) theme.
 #[allow(non_snake_case)]
@@ -145,10 +140,7 @@ pub enum DropdownStatus {
     Hovering,
 }
 
-/// `Dropdown` component.
-///
-/// # Props
-/// See [`DropdownProps`].
+/// Select from multiple options, use alongside [`DropdownItem`].
 ///
 /// # Styling
 /// Inherits the [`DropdownTheme`](freya_hooks::DropdownTheme) theme.

@@ -12,12 +12,7 @@ pub struct BodyProps {
     pub children: Element,
 }
 
-/// `Body` component.
-///
-/// Usually just used one time and as a root component for all the app.
-///
-/// # Props
-/// See [`BodyProps`].
+/// Usually used to wrap the application root component.
 ///
 /// # Styling
 /// Inherits the [`BodyTheme`](freya_hooks::BodyTheme) theme.

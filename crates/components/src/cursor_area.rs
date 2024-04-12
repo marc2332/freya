@@ -12,10 +12,7 @@ pub struct CursorAreaProps {
     children: Element,
 }
 
-/// `CursorArea` component.
-///
-/// # Props
-/// See [`CursorAreaProps`].
+/// Change the cursor icon when it's hovering over this component.
 ///
 /// # Example
 ///

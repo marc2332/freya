@@ -27,11 +27,7 @@ pub struct TableHeadProps {
     pub children: Element,
 }
 
-/// `TableHead` component.
-///
-/// # Props
-/// See [`TableHeadProps`].
-///
+/// The head of a [`Table`]. Use [`TableRow`] inside.
 #[allow(non_snake_case)]
 pub fn TableHead(TableHeadProps { children }: TableHeadProps) -> Element {
     rsx!(
@@ -39,18 +35,14 @@ pub fn TableHead(TableHeadProps { children }: TableHeadProps) -> Element {
     )
 }
 
-/// [`TableBody`] component properties.
+/// The body of a [`Table`].
 #[derive(Props, Clone, PartialEq)]
 pub struct TableBodyProps {
     /// The content of this table body.
     pub children: Element,
 }
 
-/// `TableBody` component.
-///
-/// # Props
-/// See [`TableBodyProps`].
-///
+/// The body of a [`Table`].
 #[allow(non_snake_case)]
 pub fn TableBody(TableBodyProps { children }: TableBodyProps) -> Element {
     rsx!(
@@ -70,10 +62,7 @@ pub struct TableRowProps {
     alternate_colors: bool,
 }
 
-/// `TableRow` component.
-///
-/// # Props
-/// See [`TableRowProps`].
+/// Table row for [`Table`]. Use [`TableCell`] inside.
 ///
 /// # Styling
 /// Inherits the [`TableTheme`](freya_hooks::TableTheme) theme.
@@ -143,11 +132,7 @@ pub struct TableCellProps {
     pub height: String,
 }
 
-/// `TableCell` component.
-///
-/// # Props
-/// See [`TableCellProps`].
-///
+/// Cell for a [`Table`]. You can place anything inside.
 #[allow(non_snake_case)]
 pub fn TableCell(props: TableCellProps) -> Element {
     let config = consume_context::<TableConfig>();
@@ -203,14 +188,10 @@ pub struct TableProps {
     pub children: Element,
 }
 
-/// `Table` component.
-///
-/// # Props
-/// See [`TableProps`].
+/// Table component, composed with [`TableHead`] and [`TableBody`].
 ///
 /// # Styling
 /// Inherits the [`TableTheme`](freya_hooks::TableTheme) theme.
-///
 #[allow(non_snake_case)]
 pub fn Table(
     TableProps {

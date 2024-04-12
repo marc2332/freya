@@ -48,9 +48,6 @@ pub enum SliderStatus {
 /// You must pass a percentage from 0.0 to 100.0 and listen for value changes with `onmoved` and then decide if this changes are applicable,
 /// and if so, apply them.
 ///
-/// # Props
-/// See [`SliderProps`].
-///
 /// # Styling
 /// Inherits a [`SliderTheme`](freya_hooks::SliderTheme) theme.
 ///

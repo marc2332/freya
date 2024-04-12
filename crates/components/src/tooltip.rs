@@ -14,12 +14,8 @@ pub struct TooltipProps {
 
 /// `Tooltip` component
 ///
-/// # Props
-/// See [`TooltipProps`].
-///
 /// # Styling
 /// Inherits the [`TooltipTheme`](freya_hooks::TooltipTheme)
-///
 #[allow(non_snake_case)]
 pub fn Tooltip(TooltipProps { url, theme }: TooltipProps) -> Element {
     let theme = use_applied_theme!(&theme, tooltip);

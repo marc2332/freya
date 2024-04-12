@@ -34,10 +34,6 @@ pub struct GraphProps {
 }
 
 /// Graph component.
-///
-/// # Props
-/// See [`GraphProps`].
-///
 #[allow(non_snake_case)]
 pub fn Graph(props: GraphProps) -> Element {
     let platform = use_platform();

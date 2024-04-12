@@ -15,10 +15,7 @@ pub struct ProgressBarProps {
     pub progress: f32,
 }
 
-/// `ProgressBar` component.
-///
-/// # Props
-/// See [`ProgressBarProps`].
+/// Display the progress of something visually. For example: downloading files, fetching data, etc.
 ///
 /// # Styling
 /// Inherits the [`ProgressBarTheme`](freya_hooks::ProgressBarTheme) theme.

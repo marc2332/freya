@@ -26,10 +26,7 @@ pub enum ButtonStatus {
     Hovering,
 }
 
-/// `Button` component.
-///
-/// # Props
-/// See [`ButtonProps`].
+/// Clickable button.
 ///
 /// # Styling
 /// Inherits the [`ButtonTheme`](freya_hooks::ButtonTheme) theme.

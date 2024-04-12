@@ -29,10 +29,7 @@ pub struct AccordionProps {
     pub summary: Element,
 }
 
-/// `Accordion` component.
-///
-/// # Props
-/// See [`AccordionProps`].
+/// Show other elements under a collapsable box.
 ///
 /// # Styling
 /// Inherits the [`AccordionTheme`](freya_hooks::AccordionTheme)
@@ -118,28 +115,19 @@ pub struct AccordionSummaryProps {
     children: Element,
 }
 
-/// `AccordionSummary` component.
-///
-/// # Props
-/// See [`AccordionSummaryProps`].
-///
+/// Intended to use as summary for an [`Accordion`].
 #[allow(non_snake_case)]
 pub fn AccordionSummary(props: AccordionSummaryProps) -> Element {
     rsx!({ props.children })
 }
 
-/// [`AccordionBody`] component properties.
 #[derive(Props, Clone, PartialEq)]
 pub struct AccordionBodyProps {
     /// Inner children for the AccordionBody.
     children: Element,
 }
 
-/// `AccordionBody` component.
-///
-/// # Props
-/// See [`AccordionBodyProps`].
-///
+/// Intended to wrap the body of an [`Accordion`].
 #[allow(non_snake_case)]
 pub fn AccordionBody(props: AccordionBodyProps) -> Element {
     rsx!(rect {

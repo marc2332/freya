@@ -83,10 +83,9 @@ fn get_render_range(
     render_index_start as usize..(render_index_end as usize)
 }
 
-/// `VirtualScrollView` component.
-///
-/// # Props
-/// See [`VirtualScrollViewProps`](VirtualScrollViewProps).
+/// One-directional scrollable area that dynamically builds and renders items based in their size and current available size in the screen,
+/// this is intended for apps using large sets of data that need good performance.
+/// Examples: text editors, chats, etc.
 ///
 /// # Example
 ///

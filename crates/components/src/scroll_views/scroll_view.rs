@@ -31,10 +31,7 @@ pub struct ScrollViewProps {
     pub scroll_with_arrows: bool,
 }
 
-/// `ScrollView` component.
-///
-/// # Props
-/// See [`ScrollViewProps`](ScrollViewProps).
+/// Scrollable area with bidirectional support and scrollbars.
 ///
 /// # Example
 ///

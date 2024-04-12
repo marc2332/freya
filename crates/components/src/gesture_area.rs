@@ -6,19 +6,19 @@ use freya_elements::elements as dioxus_elements;
 use freya_elements::events::{touch::TouchPhase, TouchEvent};
 use futures_util::StreamExt;
 
-/// Distance between the first tap and the second tap in `DoubleTap` gesture.
+/// Distance between the first tap and the second tap in [`Gesture::DoubleTap`] gesture.
 const DOUBLE_TAP_DISTANCE: f64 = 100.0;
 
-/// Maximum time between the start of the first tap and the start of the second tap in a `DoubleTap` gesture.
+/// Maximum time between the start of the first tap and the start of the second tap in a [`Gesture::DoubleTap`] gesture.
 const DOUBLE_TAP_TIMEOUT: u128 = 300; // 300ms
 
-/// Minimum time between the end of the first time to the start of the second tap in a `DoubleTap` gesture.
+/// Minimum time between the end of the first time to the start of the second tap in a [`Gesture::DoubleTap`] gesture.
 const DOUBLE_TAP_MIN: u128 = 40; // 40ms
 
 /// In-memory events queue maximum size.
 const MAX_EVENTS_QUEUE: usize = 20;
 
-/// Gesture emitted by the `GestureArea` component.
+/// Gesture emitted by the [`GestureArea`] component.
 #[derive(Debug, PartialEq, Eq)]
 pub enum Gesture {
     TapUp,
@@ -37,10 +37,7 @@ pub struct GestureAreaProps {
 
 type EventsQueue = VecDeque<(Instant, TouchEvent)>;
 
-/// `GestureArea` component.
-///
-/// # Props
-/// See [`GestureAreaProps`].
+/// Detect complex touch gestures such as [`Gesture::DoubleTap`].
 ///
 /// # Example
 ///
