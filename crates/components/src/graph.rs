@@ -22,7 +22,7 @@ impl GraphLine {
     }
 }
 
-/// [`Graph`] component properties.
+/// Properties for the [`Graph`] component.
 #[derive(Debug, Props, PartialEq, Clone)]
 pub struct GraphProps {
     /// Theme override.

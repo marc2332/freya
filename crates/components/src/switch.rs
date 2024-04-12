@@ -8,7 +8,7 @@ use freya_hooks::{
 };
 use winit::window::CursorIcon;
 
-/// [`Switch`] component properties.
+/// Properties for the [`Switch`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct SwitchProps {
     /// Theme override.
@@ -34,7 +34,7 @@ pub enum SwitchStatus {
 /// Example: light/dark theme.
 ///
 /// # Styling
-/// 
+///
 /// Inherits the [`SwitchTheme`](freya_hooks::SwitchTheme) theme.
 ///
 /// # Example
@@ -175,7 +175,7 @@ pub fn Switch(props: SwitchProps) -> Element {
 mod test {
     use dioxus::prelude::use_signal;
     use freya::prelude::*;
-    use freya_testing::*;
+    use freya_testing::prelude::*;
 
     #[tokio::test]
     pub async fn button() {

@@ -4,7 +4,7 @@ use freya_hooks::{
     use_animation, use_applied_theme, AnimNum, LoaderTheme, LoaderThemeWith, OnFinish,
 };
 
-/// [`Loader`] component properties.
+/// Properties for the [`Loader`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct LoaderProps {
     /// Theme override.

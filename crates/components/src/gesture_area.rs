@@ -26,7 +26,7 @@ pub enum Gesture {
     DoubleTap,
 }
 
-/// [`GestureArea`] component properties.
+/// Properties for the [`GestureArea`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct GestureAreaProps {
     /// Inner children for the GestureArea.
@@ -169,7 +169,7 @@ mod test {
     use std::time::Duration;
 
     use freya::prelude::*;
-    use freya_testing::{events::touch::TouchPhase, launch_test, EventName, PlatformEvent};
+    use freya_testing::prelude::*;
     use tokio::time::sleep;
 
     use crate::gesture_area::DOUBLE_TAP_MIN;

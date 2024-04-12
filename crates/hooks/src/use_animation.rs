@@ -101,6 +101,7 @@ pub enum Ease {
     InOut,
 }
 
+/// Animate a color.
 pub struct AnimColor {
     origin: Color,
     destination: Color,
@@ -228,6 +229,7 @@ impl AnimatedValue for AnimColor {
     }
 }
 
+/// Animate a numeric value.
 pub struct AnimNum {
     origin: f32,
     destination: f32,
@@ -534,20 +536,29 @@ impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
 
 /// Animate your elements easily.
 ///
-/// ## Usage
+/// [`use_animation`] takes an callback to initialize the animated values and related configuration.
 ///
-/// With a simple animation:
+/// To animate a group of values at once you can just return a tuple of them.
+/// Currently supports animating numeric values (e.g width, padding, rotation, offsets) or also colors, you need specify the duration,
+/// and optionally an ease function or what type of easing you want as well.
 ///
-/// ```rust,no_run
+/// # Example
+///
+/// Here is an example that animates a value from `0.0` to `100.0` in `50` milliseconds.
+///
+/// ```rust, no_run
 /// # use freya::prelude::*;
+/// fn main() {
+///     launch(app);
+/// }
+///
 /// fn app() -> Element {
-///     let animation = use_animation(|ctx| ctx.with(AnimNum::new(0., 100.).time(50)));
+///     let animation = use_animation(|ctx| {
+///         ctx.auto_start(true);
+///         ctx.with(AnimNum::new(0., 100.).time(50))
+///     });
 ///
 ///     let width = animation.get().read().as_f32();
-///
-///     use_hook(move || {
-///         animation.start();
-///     });
 ///
 ///     rsx!(
 ///         rect {
@@ -559,12 +570,13 @@ impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
 /// }
 /// ```
 ///
-/// Grouping various animations.
+/// You are not limited to just one animation per call, you can have as many as you want.
 ///
 /// ```rust,no_run
 /// # use freya::prelude::*;
 /// fn app() -> Element {
 ///     let animation = use_animation(|ctx| {
+///         ctx.auto_start(true);
 ///         (
 ///             ctx.with(AnimNum::new(0., 100.).time(50)),
 ///             ctx.with(AnimColor::new("red", "blue").time(50))
@@ -573,9 +585,30 @@ impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
 ///
 ///     let (width, color) = animation.get();
 ///
-///     use_hook(move || {
-///         animation.start();
+///     rsx!(
+///         rect {
+///             width: "{width.read().as_f32()}",
+///             height: "100%",
+///             background: "{color.read().as_string()}"
+///         }
+///     )
+/// }
+/// ```
+///
+/// You can also tweak what to do once the animation has finished with [`Context::on_finish`].
+///
+/// ```rust,no_run
+/// # use freya::prelude::*;
+/// fn app() -> Element {
+///     let animation = use_animation(|ctx| {
+///         ctx.on_finish(OnFinish::Restart);
+///         (
+///             ctx.with(AnimNum::new(0., 100.).time(50)),
+///             ctx.with(AnimColor::new("red", "blue").time(50))
+///         )
 ///     });
+///
+///     let (width, color) = animation.get();
 ///
 ///     rsx!(
 ///         rect {

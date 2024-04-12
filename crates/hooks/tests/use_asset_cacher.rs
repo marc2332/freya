@@ -1,9 +1,6 @@
+use freya::prelude::*;
+use freya_testing::prelude::*;
 use std::time::Duration;
-
-use dioxus::prelude::*;
-use freya::prelude::{use_asset_cacher, AssetConfiguration, Button, MouseButton};
-use freya_core::prelude::PlatformEvent;
-use freya_testing::{launch_test, EventName};
 use tokio::time::sleep;
 
 #[tokio::test]

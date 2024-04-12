@@ -14,7 +14,7 @@ use crate::{
     manage_key_event, Axis, ScrollBar, ScrollThumb, SCROLL_SPEED_MULTIPLIER,
 };
 
-/// [`VirtualScrollView`] component properties.
+/// Properties for the [`VirtualScrollView`] component.
 #[derive(Props, Clone)]
 pub struct VirtualScrollViewProps<
     Builder: 'static + Clone + Fn(usize, &Option<BuilderArgs>) -> Element,
@@ -83,9 +83,10 @@ fn get_render_range(
     render_index_start as usize..(render_index_end as usize)
 }
 
-/// One-directional scrollable area that dynamically builds and renders items based in their size and current available size in the screen,
+/// One-direction scrollable area that dynamically builds and renders items based in their size and current available size,
 /// this is intended for apps using large sets of data that need good performance.
-/// Examples: text editors, chats, etc.
+///
+/// Use cases: text editors, chats, etc.
 ///
 /// # Example
 ///
@@ -416,7 +417,7 @@ pub fn VirtualScrollView<
 #[cfg(test)]
 mod test {
     use freya::prelude::*;
-    use freya_testing::*;
+    use freya_testing::prelude::*;
 
     #[tokio::test]
     pub async fn virtual_scroll_view_wheel() {

@@ -12,9 +12,10 @@ use tokio::time::{interval, timeout};
 use torin::geometry::{Area, Size2D};
 use winit::window::CursorIcon;
 
+use crate::config::TestingConfig;
 use crate::test_node::TestNode;
 use crate::test_utils::TestUtils;
-use crate::{TestingConfig, SCALE_FACTOR};
+use crate::SCALE_FACTOR;
 
 /// Manages the lifecycle of your tests.
 pub struct TestingHandler {
