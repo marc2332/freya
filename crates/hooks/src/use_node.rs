@@ -56,7 +56,7 @@ pub fn use_node_signal() -> (AttributeValue, Signal<NodeReferenceLayout>) {
 mod test {
     use crate::use_node;
     use freya::prelude::*;
-    use freya_testing::{launch_test_with_config, TestingConfig};
+    use freya_testing::prelude::*;
 
     #[tokio::test]
     pub async fn track_size() {

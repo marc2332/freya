@@ -20,7 +20,7 @@ fn TableArrow(order_direction: OrderDirection) -> Element {
     })
 }
 
-/// [`TableHead`] component properties.
+/// Properties for the [`TableHead`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct TableHeadProps {
     /// The content of this table head.
@@ -35,7 +35,7 @@ pub fn TableHead(TableHeadProps { children }: TableHeadProps) -> Element {
     )
 }
 
-/// The body of a [`Table`].
+/// Properties for the [`TableBody`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct TableBodyProps {
     /// The content of this table body.
@@ -50,7 +50,7 @@ pub fn TableBody(TableBodyProps { children }: TableBodyProps) -> Element {
     )
 }
 
-/// [`TableRow`] component properties.
+/// Properties for the [`TableRow`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct TableRowProps {
     /// Theme override.
@@ -103,6 +103,7 @@ pub fn TableRow(
     )
 }
 
+/// Sorting direction for items in [`Table`].
 #[derive(Clone, Copy, PartialEq, Debug, Default)]
 pub enum OrderDirection {
     /// Alternatively: descending.
@@ -112,7 +113,7 @@ pub enum OrderDirection {
     Down,
 }
 
-/// [`TableCell`] component properties.
+/// Properties for the [`TableCell`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct TableCellProps {
     /// The content of this cell.
@@ -177,7 +178,7 @@ pub fn TableCell(props: TableCellProps) -> Element {
     )
 }
 
-/// [`Table`] component properties.
+/// Properties for the [`Table`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct TableProps {
     /// Theme override.
@@ -221,6 +222,7 @@ pub fn Table(
     })
 }
 
+#[doc(hidden)]
 #[derive(Clone)]
 pub struct TableConfig {
     columns: usize,

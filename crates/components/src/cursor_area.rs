@@ -3,7 +3,7 @@ use freya_elements::elements as dioxus_elements;
 use freya_hooks::use_platform;
 pub use winit::window::CursorIcon;
 
-/// [`CursorArea`] component properties.
+/// Properties for the [`CursorArea`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct CursorAreaProps {
     /// Cursor icon that will be used when hovering this area.
@@ -66,7 +66,7 @@ pub fn CursorArea(CursorAreaProps { children, icon }: CursorAreaProps) -> Elemen
 #[cfg(test)]
 mod test {
     use freya::prelude::*;
-    use freya_testing::*;
+    use freya_testing::prelude::*;
     use winit::{event::MouseButton, window::CursorIcon};
 
     #[tokio::test]

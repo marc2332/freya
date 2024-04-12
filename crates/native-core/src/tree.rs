@@ -410,6 +410,7 @@ impl<'a> TreeRef for TreeMutView<'a> {
 #[test]
 fn creation() {
     use shipyard::World;
+    #[allow(dead_code)]
     #[derive(Component)]
     struct Num(i32);
 
@@ -434,6 +435,7 @@ fn creation() {
 #[test]
 fn shadow_tree() {
     use shipyard::World;
+    #[allow(dead_code)]
     #[derive(Component)]
     struct Num(i32);
 
@@ -513,6 +515,7 @@ fn shadow_tree() {
 #[test]
 fn insertion() {
     use shipyard::World;
+    #[allow(dead_code)]
     #[derive(Component)]
     struct Num(i32);
 
@@ -546,6 +549,7 @@ fn insertion() {
 #[test]
 fn deletion() {
     use shipyard::World;
+    #[allow(dead_code)]
     #[derive(Component)]
     struct Num(i32);
 

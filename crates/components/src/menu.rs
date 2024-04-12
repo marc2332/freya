@@ -208,6 +208,7 @@ pub fn MenuItem(
     )
 }
 
+/// Create sub menus inside a [`Menu`].
 #[allow(non_snake_case)]
 #[component]
 pub fn SubMenu(
@@ -252,6 +253,7 @@ pub fn SubMenu(
     )
 }
 
+/// Like a button, but for [`Menu`]s.
 #[allow(non_snake_case)]
 #[component]
 pub fn MenuButton(
@@ -275,6 +277,7 @@ pub fn MenuButton(
     )
 }
 
+/// Wraps the body of a [`Menu`].
 #[allow(non_snake_case)]
 #[component]
 pub fn MenuContainer(
@@ -304,7 +307,7 @@ pub fn MenuContainer(
 mod test {
     use dioxus::prelude::use_signal;
     use freya::prelude::*;
-    use freya_testing::*;
+    use freya_testing::prelude::*;
 
     #[tokio::test]
     pub async fn menu() {

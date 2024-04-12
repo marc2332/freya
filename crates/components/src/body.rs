@@ -3,7 +3,7 @@ use freya_elements::elements as dioxus_elements;
 
 use freya_hooks::{use_applied_theme, BodyTheme, BodyThemeWith};
 
-/// [`Body`] component properties.
+/// Properties for the [`Body`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct BodyProps {
     /// Theme override.

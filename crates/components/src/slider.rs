@@ -6,7 +6,7 @@ use freya_hooks::{use_applied_theme, use_focus, use_node, use_platform, SliderTh
 use tracing::info;
 use winit::window::CursorIcon;
 
-/// [`Slider`] component properties.
+/// Properties for the [`Slider`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct SliderProps {
     /// Theme override.
@@ -214,7 +214,7 @@ pub fn Slider(
 mod test {
     use dioxus::prelude::use_signal;
     use freya::prelude::*;
-    use freya_testing::*;
+    use freya_testing::prelude::*;
 
     #[tokio::test]
     pub async fn slider() {

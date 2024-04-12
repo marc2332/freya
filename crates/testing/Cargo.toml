@@ -36,3 +36,4 @@ winit = { workspace = true }
 
 [dev-dependencies]
 dioxus = { workspace = true }
+freya = { workspace = true }

@@ -11,7 +11,7 @@ use crate::{
     manage_key_event, Axis, ScrollBar, ScrollThumb, SCROLL_SPEED_MULTIPLIER,
 };
 
-/// [`ScrollView`] component properties.
+/// Properties for the [`ScrollView`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct ScrollViewProps {
     /// Theme override.
@@ -332,7 +332,7 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
 #[cfg(test)]
 mod test {
     use freya::prelude::*;
-    use freya_testing::*;
+    use freya_testing::prelude::*;
 
     #[tokio::test]
     pub async fn scroll_view_wheel() {

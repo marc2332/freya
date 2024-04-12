@@ -9,7 +9,7 @@ use freya_hooks::{
 use freya_node_state::dynamic_bytes;
 use reqwest::Url;
 
-/// [`NetworkImage`] component properties.
+/// Properties for the [`NetworkImage`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct NetworkImageProps {
     /// Theme override.
@@ -29,8 +29,9 @@ pub struct NetworkImageProps {
 }
 
 /// Image status.
+#[doc(hidden)]
 #[derive(PartialEq)]
-pub enum ImageStatus {
+pub enum ImageState {
     /// Image is being fetched.
     Loading,
 
@@ -60,7 +61,7 @@ pub enum ImageStatus {
 pub fn NetworkImage(props: NetworkImageProps) -> Element {
     let mut asset_cacher = use_asset_cacher();
     let focus = use_focus();
-    let mut status = use_signal(|| ImageStatus::Loading);
+    let mut status = use_signal(|| ImageState::Loading);
     let mut cached_assets = use_signal::<Vec<AssetConfiguration>>(Vec::new);
     let mut assets_tasks = use_signal::<Vec<Task>>(Vec::new);
 
@@ -86,10 +87,10 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
         };
 
         // Loading image
-        status.set(ImageStatus::Loading);
+        status.set(ImageState::Loading);
         if let Some(asset) = asset_cacher.use_asset(&asset_configuration) {
             // Image loaded from cache
-            status.set(ImageStatus::Loaded(asset));
+            status.set(ImageState::Loaded(asset));
             cached_assets.write().push(asset_configuration);
         } else {
             let asset_task = spawn(async move {
@@ -98,11 +99,11 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
                     let asset_signal =
                         asset_cacher.cache(asset_configuration.clone(), asset_bytes, true);
                     // Image loaded
-                    status.set(ImageStatus::Loaded(asset_signal));
+                    status.set(ImageState::Loaded(asset_signal));
                     cached_assets.write().push(asset_configuration);
                 } else if let Err(_err) = asset {
                     // Image errored
-                    status.set(ImageStatus::Errored);
+                    status.set(ImageState::Errored);
                 }
             });
 
@@ -110,7 +111,7 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
         }
     });
 
-    if let ImageStatus::Loaded(bytes) = &*status.read_unchecked() {
+    if let ImageState::Loaded(bytes) = &*status.read_unchecked() {
         let image_data = dynamic_bytes(bytes.read().clone());
         rsx!(image {
             height: "{height}",
@@ -120,7 +121,7 @@ pub fn NetworkImage(props: NetworkImageProps) -> Element {
             role: "image",
             alt
         })
-    } else if *status.read() == ImageStatus::Loading {
+    } else if *status.read() == ImageState::Loading {
         if let Some(loading_element) = &props.loading {
             rsx!({ loading_element })
         } else {
