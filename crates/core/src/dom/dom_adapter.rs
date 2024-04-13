@@ -1,4 +1,4 @@
-use dioxus_native_core::{prelude::NodeType, real_dom::NodeImmutable, tree::TreeRef, NodeId};
+use freya_native_core::{prelude::NodeType, real_dom::NodeImmutable, tree::TreeRef, NodeId};
 use freya_node_state::LayoutState;
 use rustc_hash::FxHashMap;
 use torin::prelude::*;
@@ -24,6 +24,12 @@ impl<'a> DioxusDOMAdapter<'a> {
 impl DOMAdapter<NodeId> for DioxusDOMAdapter<'_> {
     fn get_node(&self, node_id: &NodeId) -> Option<Node> {
         let node = self.rdom.get(*node_id)?;
+        let contains_text = node
+            .node_type()
+            .tag()
+            .map(|t| t.contains_text())
+            .unwrap_or_default();
+
         let mut layout = node
             .get::<LayoutState>()
             .expect("This should exist.")
@@ -52,6 +58,7 @@ impl DOMAdapter<NodeId> for DioxusDOMAdapter<'_> {
             has_layout_references: layout.node_ref.is_some(),
             position: layout.position,
             content: layout.content,
+            contains_text,
         })
     }
 

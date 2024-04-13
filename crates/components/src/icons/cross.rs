@@ -3,14 +3,17 @@ use freya_elements::elements as dioxus_elements;
 
 use freya_hooks::{use_applied_theme, IconTheme, IconThemeWith};
 
+/// Properties for the [`CrossIcon`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct CrossIconProps {
     /// Theme override.
     pub theme: Option<IconThemeWith>,
+    /// Color.
     #[props(into)]
     pub fill: String,
 }
 
+/// Icon component for a Cross.
 #[allow(non_snake_case)]
 pub fn CrossIcon(CrossIconProps { theme, fill }: CrossIconProps) -> Element {
     let IconTheme {

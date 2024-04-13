@@ -212,7 +212,7 @@ pub fn partial_derive_state(_: TokenStream, input: TokenStream) -> TokenStream {
         } else {
             let indexes = (0..node_dependencies.len()).map(syn::Index::from);
             quote! {
-                let node = unsafe { (#(dioxus_native_core::prelude::DependancyView::new(&*raw_node.#indexes),)*) };
+                let node = unsafe { (#(freya_native_core::prelude::DependancyView::new(&*raw_node.#indexes),)*) };
             }
         }
     };
@@ -249,7 +249,7 @@ pub fn partial_derive_state(_: TokenStream, input: TokenStream) -> TokenStream {
         } else {
             let indexes = (0..parent_dependencies.len()).map(syn::Index::from);
             quote! {
-                let parent = unsafe { raw_parent.map(|raw_parent| (#(dioxus_native_core::prelude::DependancyView::new(&*raw_parent.#indexes),)*)) };
+                let parent = unsafe { raw_parent.map(|raw_parent| (#(freya_native_core::prelude::DependancyView::new(&*raw_parent.#indexes),)*)) };
             }
         }
     };
@@ -286,7 +286,7 @@ pub fn partial_derive_state(_: TokenStream, input: TokenStream) -> TokenStream {
         } else {
             let indexes = (0..child_dependencies.len()).map(syn::Index::from);
             quote! {
-                let children = unsafe { raw_children.iter().map(|raw_children| (#(dioxus_native_core::prelude::DependancyView::new(&*raw_children.#indexes),)*)).collect::<Vec<_>>() };
+                let children = unsafe { raw_children.iter().map(|raw_children| (#(freya_native_core::prelude::DependancyView::new(&*raw_children.#indexes),)*)).collect::<Vec<_>>() };
             }
         }
     };
@@ -305,11 +305,11 @@ pub fn partial_derive_state(_: TokenStream, input: TokenStream) -> TokenStream {
     let create_fn = (!has_create_fn).then(|| {
         quote! {
             fn create<'a>(
-                node_view: dioxus_native_core::prelude::NodeView # trait_generics,
+                node_view: freya_native_core::prelude::NodeView # trait_generics,
                 node: <Self::NodeDependencies as Dependancy>::ElementBorrowed<'a>,
                 parent: Option<<Self::ParentDependencies as Dependancy>::ElementBorrowed<'a>>,
                 children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
-                context: &dioxus_native_core::prelude::SendAnyMap,
+                context: &freya_native_core::prelude::SendAnyMap,
             ) -> Self {
                 let mut myself = Self::default();
                 myself.update(node_view, node, parent, children, context);
@@ -325,18 +325,18 @@ pub fn partial_derive_state(_: TokenStream, input: TokenStream) -> TokenStream {
 
             #(#items)*
 
-            fn workload_system(type_id: std::any::TypeId, dependants: std::sync::Arc<dioxus_native_core::prelude::Dependants>, pass_direction: dioxus_native_core::prelude::PassDirection) -> dioxus_native_core::exports::shipyard::WorkloadSystem {
-                use dioxus_native_core::exports::shipyard::{IntoWorkloadSystem, Get, AddComponent};
-                use dioxus_native_core::tree::TreeRef;
-                use dioxus_native_core::prelude::{NodeType, NodeView};
+            fn workload_system(type_id: std::any::TypeId, dependants: std::sync::Arc<freya_native_core::prelude::Dependants>, pass_direction: freya_native_core::prelude::PassDirection) -> freya_native_core::exports::shipyard::WorkloadSystem {
+                use freya_native_core::exports::shipyard::{IntoWorkloadSystem, Get, AddComponent};
+                use freya_native_core::tree::TreeRef;
+                use freya_native_core::prelude::{NodeType, NodeView};
 
                 let node_mask = Self::NODE_MASK.build();
 
-                (move |data: #combined_dependencies_quote, run_view: dioxus_native_core::prelude::RunPassView #trait_generics| {
+                (move |data: #combined_dependencies_quote, run_view: freya_native_core::prelude::RunPassView #trait_generics| {
                     let (#(#split_views,)*) = data;
                     let tree = run_view.tree.clone();
                     let node_types = run_view.node_type.clone();
-                    dioxus_native_core::prelude::run_pass(type_id, dependants.clone(), pass_direction, run_view, |id, context| {
+                    freya_native_core::prelude::run_pass(type_id, dependants.clone(), pass_direction, run_view, |id, context, height| {
                         let node_data: &NodeType<_> = node_types.get(id).unwrap_or_else(|err| panic!("Failed to get node type {:?}", err));
                         if node_data.is_text() {
                             return false;
@@ -353,7 +353,7 @@ pub fn partial_derive_state(_: TokenStream, input: TokenStream) -> TokenStream {
                         #deref_parent_view
                         #deref_child_view
 
-                        let view = NodeView::new(id, node_data, &node_mask);
+                        let view = NodeView::new(id, node_data, &node_mask, height);
                         if let Some(myself) = myself {
                             myself
                                 .update(view, node, parent, children, context)

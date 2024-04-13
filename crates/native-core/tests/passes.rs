@@ -1,6 +1,6 @@
-use dioxus_native_core::prelude::*;
-use dioxus_native_core::{node::NodeType, tags::TagName};
-use dioxus_native_core_macro::partial_derive_state;
+use freya_native_core::prelude::*;
+use freya_native_core::{node::NodeType, tags::TagName};
+use freya_native_core_macro::partial_derive_state;
 use rustc_hash::{FxHashMap, FxHashSet};
 use shipyard::Component;
 

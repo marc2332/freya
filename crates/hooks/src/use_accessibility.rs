@@ -62,9 +62,7 @@ pub fn use_init_accessibility() {
 mod test {
     use freya::prelude::*;
     use freya_core::{accessibility::ACCESSIBILITY_ROOT_ID, events::EventName};
-    use freya_testing::{
-        events::pointer::MouseButton, launch_test_with_config, PlatformEvent, TestingConfig,
-    };
+    use freya_testing::prelude::*;
 
     #[tokio::test]
     pub async fn focus_accessibility() {

@@ -11,6 +11,12 @@ repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
 categories = ["gui", "asynchronous"]
 
+[package.metadata.docs.rs]
+features = ["freya-engine/mocked-engine"]
+
+[features]
+skia-engine = ["freya-engine/skia-engine"]
+
 [dependencies]
 torin = { workspace = true }
 
@@ -19,5 +25,8 @@ dioxus-core = { workspace = true }
 accesskit = { workspace = true }
 accesskit_winit = { workspace = true }
 winit = { workspace = true }
+freya-engine = { workspace = true }
+freya-native-core = { workspace = true }
+rustc-hash= { workspace = true }
 
 uuid = { workspace = true }

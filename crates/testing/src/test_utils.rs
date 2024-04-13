@@ -1,33 +1,19 @@
-use dioxus_native_core::real_dom::NodeImmutable;
-use dioxus_native_core::tree::TreeRef;
-use dioxus_native_core::NodeId;
 use freya_core::prelude::*;
-use freya_dom::prelude::{DioxusDOM, DioxusNode, SafeDOM};
-use std::sync::{Arc, Mutex};
+use freya_native_core::real_dom::NodeImmutable;
+use freya_native_core::tree::TreeRef;
+use freya_native_core::NodeId;
 
 use crate::test_node::TestNode;
 
 #[derive(Clone)]
 pub struct TestUtils {
     pub(crate) sdom: SafeDOM,
-    pub(crate) layers: Arc<Mutex<Layers>>,
-    pub(crate) viewports: Arc<Mutex<Viewports>>,
 }
 
 impl TestUtils {
     /// Get the SafeDOM.
     pub fn sdom(&self) -> &SafeDOM {
         &self.sdom
-    }
-
-    /// Get the Layers.
-    pub fn layers(&self) -> &Arc<Mutex<Layers>> {
-        &self.layers
-    }
-
-    /// Get the Viewports.
-    pub fn viewports(&self) -> &Arc<Mutex<Viewports>> {
-        &self.viewports
     }
 
     /// Get a Node by the given ID

@@ -19,10 +19,10 @@ fn app() -> Element {
                 .function(Function::Sine),
         )
     });
-    let progress = animation.read().get().read().as_f32();
+    let progress = animation.get().read().as_f32();
 
     let set_to_max = move |_| {
-        animation.read().start();
+        animation.start();
     };
 
     let onmoved = move |value: f64| {

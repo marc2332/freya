@@ -1,15 +1,19 @@
-use dioxus_native_core::{attributes::AttributeName, exports::shipyard::Component};
-use dioxus_native_core::{
+use freya_common::ParagraphElements;
+use freya_engine::prelude::*;
+use freya_native_core::{
+    attributes::AttributeName, exports::shipyard::Component, node::OwnedAttributeValue,
+    tags::TagName,
+};
+use freya_native_core::{
     node_ref::NodeView,
     prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State},
     SendAnyMap,
 };
-use dioxus_native_core_macro::partial_derive_state;
-use freya_engine::prelude::*;
+use freya_native_core_macro::partial_derive_state;
 
-use crate::{CursorMode, CustomAttributeValues, Parse};
+use crate::{CursorMode, CursorReference, CustomAttributeValues, Parse};
 
-#[derive(Clone, Debug, PartialEq, Eq, Component)]
+#[derive(Clone, Debug, PartialEq, Component)]
 pub struct CursorSettings {
     pub position: Option<i32>,
     pub color: Color,
@@ -17,6 +21,7 @@ pub struct CursorSettings {
     pub cursor_id: Option<usize>,
     pub highlights: Option<Vec<(usize, usize)>>,
     pub highlight_color: Color,
+    pub cursor_ref: Option<CursorReference>,
 }
 
 impl Default for CursorSettings {
@@ -28,6 +33,7 @@ impl Default for CursorSettings {
             cursor_id: None,
             highlights: None,
             highlight_color: Color::from_rgb(87, 108, 188),
+            cursor_ref: None,
         }
     }
 }
@@ -40,15 +46,17 @@ impl State<CustomAttributeValues> for CursorSettings {
 
     type NodeDependencies = ();
 
-    const NODE_MASK: NodeMaskBuilder<'static> =
-        NodeMaskBuilder::new().with_attrs(AttributeMaskBuilder::Some(&[
+    const NODE_MASK: NodeMaskBuilder<'static> = NodeMaskBuilder::new()
+        .with_attrs(AttributeMaskBuilder::Some(&[
             AttributeName::CursorIndex,
             AttributeName::CursorColor,
             AttributeName::CursorMode,
             AttributeName::CursorId,
             AttributeName::Highlights,
             AttributeName::HighlightColor,
-        ]));
+            AttributeName::CursorReference,
+        ]))
+        .with_tag();
 
     fn update<'a>(
         &mut self,
@@ -56,8 +64,9 @@ impl State<CustomAttributeValues> for CursorSettings {
         _node: <Self::NodeDependencies as Dependancy>::ElementBorrowed<'a>,
         parent: Option<<Self::ParentDependencies as Dependancy>::ElementBorrowed<'a>>,
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
-        _context: &SendAnyMap,
+        context: &SendAnyMap,
     ) -> bool {
+        let paragraphs = context.get::<ParagraphElements>().unwrap();
         let mut cursor = parent.map(|(p,)| p.clone()).unwrap_or_default();
 
         if let Some(attributes) = node_view.attributes() {
@@ -105,11 +114,28 @@ impl State<CustomAttributeValues> for CursorSettings {
                             }
                         }
                     }
+                    AttributeName::CursorReference => {
+                        if let OwnedAttributeValue::Custom(
+                            CustomAttributeValues::CursorReference(reference),
+                        ) = attr.value
+                        {
+                            cursor.cursor_ref = Some(reference.clone());
+                        }
+                    }
                     _ => {}
                 }
             }
         }
         let changed = &cursor != self;
+
+        if changed && CursorMode::Editable == cursor.mode {
+            if let Some((tag, cursor_ref)) = node_view.tag().zip(cursor.cursor_ref.as_ref()) {
+                if *tag == TagName::Paragraph {
+                    paragraphs.insert_paragraph(node_view.node_id(), cursor_ref.text_id)
+                }
+            }
+        }
+
         *self = cursor;
         changed
     }

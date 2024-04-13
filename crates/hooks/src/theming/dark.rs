@@ -53,6 +53,7 @@ pub const DARK_THEME: Theme = Theme {
         thumb_background: cow_borrowed!("rgb(100, 100, 100)"),
         hover_thumb_background: cow_borrowed!("rgb(120, 120, 120)"),
         active_thumb_background: cow_borrowed!("rgb(140, 140, 140)"),
+        size: LIGHT_THEME.scroll_bar.size,
     },
     scroll_view: ScrollViewTheme {
         height: LIGHT_THEME.scroll_view.height,
@@ -138,9 +139,8 @@ pub const DARK_THEME: Theme = Theme {
         },
     },
     sidebar_item: SidebarItemTheme {
-        background: cow_borrowed!("rgb(35, 35, 35)"),
+        background: cow_borrowed!("transparent"),
         hover_background: cow_borrowed!("rgb(45, 45, 45)"),
-        border_fill: cow_borrowed!("rgb(80, 80, 80)"),
         font_theme: FontTheme {
             color: cow_borrowed!("white"),
         },

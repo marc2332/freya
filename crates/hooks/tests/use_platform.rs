@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use freya_hooks::use_platform;
-use freya_testing::{launch_test_with_config, TestingConfig};
+use freya_testing::prelude::*;
 
 #[tokio::test]
 async fn window_size() {

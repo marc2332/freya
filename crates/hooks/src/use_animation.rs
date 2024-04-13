@@ -1,14 +1,14 @@
 use std::time::Duration;
 
-use dioxus_core::prelude::{spawn, Task};
-use dioxus_hooks::{use_memo, use_reactive, Dependency};
+use dioxus_core::prelude::{spawn, use_hook, Task};
+use dioxus_hooks::{use_memo, use_reactive, use_signal, Dependency};
 use dioxus_signals::{Memo, ReadOnlySignal, Readable, Signal, Writable};
 use easer::functions::*;
 use freya_engine::prelude::Color;
 use freya_node_state::Parse;
 use tokio::time::Instant;
 
-use crate::UsePlatform;
+use crate::{use_platform, UsePlatform};
 
 pub fn apply_value(
     origin: f32,
@@ -101,6 +101,7 @@ pub enum Ease {
     InOut,
 }
 
+/// Animate a color.
 pub struct AnimColor {
     origin: Color,
     destination: Color,
@@ -228,6 +229,7 @@ impl AnimatedValue for AnimColor {
     }
 }
 
+/// Animate a numeric value.
 pub struct AnimNum {
     origin: f32,
     destination: f32,
@@ -344,7 +346,7 @@ pub trait AnimatedValue {
 #[derive(Default, PartialEq, Clone)]
 pub struct Context {
     animated_values: Vec<Signal<Box<dyn AnimatedValue>>>,
-    reverse: bool,
+    on_finish: OnFinish,
     auto_start: bool,
 }
 
@@ -359,8 +361,8 @@ impl Context {
         ReadOnlySignal::new(signal)
     }
 
-    pub fn reverse(&mut self, reverse: bool) -> &mut Self {
-        self.reverse = reverse;
+    pub fn on_finish(&mut self, on_finish: OnFinish) -> &mut Self {
+        self.on_finish = on_finish;
         self
     }
 
@@ -386,38 +388,31 @@ impl AnimDirection {
     }
 }
 
-/// Animate your elements. Use [`use_animation`] to use this.
-#[derive(PartialEq)]
-pub struct UseAnimator<Animated> {
-    value: Animated,
-    ctx: Context,
-    platform: UsePlatform,
-    is_running: Signal<bool>,
-    has_run_yet: Signal<bool>,
-    task: Signal<Option<Task>>,
+/// What to do once the animation finishes. By default it is [`Stop`](OnFinish::Stop)
+#[derive(PartialEq, Clone, Copy, Default)]
+pub enum OnFinish {
+    #[default]
+    Stop,
+    Reverse,
+    Restart,
 }
 
-impl<Animated> UseAnimator<Animated> {
-    pub fn new(value: Animated, ctx: Context, platform: UsePlatform) -> Self {
-        let animator = Self {
-            value,
-            ctx,
-            platform,
-            is_running: Signal::default(),
-            task: Signal::default(),
-            has_run_yet: Signal::default(),
-        };
+/// Animate your elements. Use [`use_animation`] to use this.
+#[derive(PartialEq, Clone)]
+pub struct UseAnimator<Animated: PartialEq + Clone + 'static> {
+    pub(crate) value_and_ctx: Memo<(Animated, Context)>,
+    pub(crate) platform: UsePlatform,
+    pub(crate) is_running: Signal<bool>,
+    pub(crate) has_run_yet: Signal<bool>,
+    pub(crate) task: Signal<Option<Task>>,
+}
 
-        if animator.ctx.auto_start {
-            animator.run(AnimDirection::Forward);
-        }
+impl<T: PartialEq + Clone + 'static> Copy for UseAnimator<T> {}
 
-        animator
-    }
-
-    /// Get the containing animated value.
-    pub fn get(&self) -> &Animated {
-        &self.value
+impl<Animated: PartialEq + Clone + 'static> UseAnimator<Animated> {
+    /// Get the animated value.
+    pub fn get(&self) -> Animated {
+        self.value_and_ctx.read().0.clone()
     }
 
     /// Reset the animation to the default state.
@@ -428,7 +423,7 @@ impl<Animated> UseAnimator<Animated> {
             task.cancel();
         }
 
-        for value in &self.ctx.animated_values {
+        for value in &self.value_and_ctx.read().1.animated_values {
             let mut value = *value;
             value.write().prepare(AnimDirection::Forward);
         }
@@ -461,12 +456,13 @@ impl<Animated> UseAnimator<Animated> {
 
     /// Run the animation with a given [`AnimDirection`]
     pub fn run(&self, mut direction: AnimDirection) {
+        let ctx = &self.value_and_ctx.peek().1;
         let platform = self.platform;
         let mut is_running = self.is_running;
         let mut ticker = platform.new_ticker();
-        let mut values = self.ctx.animated_values.clone();
+        let mut values = ctx.animated_values.clone();
         let mut has_run_yet = self.has_run_yet;
-        let reverse = self.ctx.reverse;
+        let on_finish = ctx.on_finish;
         let mut task = self.task;
 
         // Cancel previous animations
@@ -501,16 +497,23 @@ impl<Animated> UseAnimator<Animated> {
                     .iter()
                     .all(|value| value.peek().is_finished(index, direction));
                 if is_finished {
-                    if reverse {
-                        // Restart the animation in the opposite direction
+                    if OnFinish::Reverse == on_finish {
+                        // Toggle direction
                         direction.toggle();
-                        index = 0;
-                        for value in values.iter_mut() {
-                            value.write().prepare(direction);
+                    }
+                    match on_finish {
+                        OnFinish::Restart | OnFinish::Reverse => {
+                            index = 0;
+
+                            // Restart the animation
+                            for value in values.iter_mut() {
+                                value.write().prepare(direction);
+                            }
                         }
-                    } else {
-                        // Stop if all the animations are finished
-                        break;
+                        OnFinish::Stop => {
+                            // Stop if all the animations are finished
+                            break;
+                        }
                     }
                 }
 
@@ -533,21 +536,29 @@ impl<Animated> UseAnimator<Animated> {
 
 /// Animate your elements easily.
 ///
-/// ## Usage
+/// [`use_animation`] takes an callback to initialize the animated values and related configuration.
 ///
-/// With a simple animation:
+/// To animate a group of values at once you can just return a tuple of them.
+/// Currently supports animating numeric values (e.g width, padding, rotation, offsets) or also colors, you need specify the duration,
+/// and optionally an ease function or what type of easing you want as well.
 ///
-/// ```rust,no_run
+/// # Example
+///
+/// Here is an example that animates a value from `0.0` to `100.0` in `50` milliseconds.
+///
+/// ```rust, no_run
 /// # use freya::prelude::*;
+/// fn main() {
+///     launch(app);
+/// }
+///
 /// fn app() -> Element {
-///     let animation = use_animation(|ctx| ctx.with(AnimNum::new(0., 100.).time(50)));
-///
-///     let animations = animation.read();
-///     let width = animations.get().read().as_f32();
-///
-///     use_hook(move || {
-///         animation.read().start();
+///     let animation = use_animation(|ctx| {
+///         ctx.auto_start(true);
+///         ctx.with(AnimNum::new(0., 100.).time(50))
 ///     });
+///
+///     let width = animation.get().read().as_f32();
 ///
 ///     rsx!(
 ///         rect {
@@ -559,24 +570,20 @@ impl<Animated> UseAnimator<Animated> {
 /// }
 /// ```
 ///
-/// Grouping various animations.
+/// You are not limited to just one animation per call, you can have as many as you want.
 ///
 /// ```rust,no_run
 /// # use freya::prelude::*;
 /// fn app() -> Element {
 ///     let animation = use_animation(|ctx| {
+///         ctx.auto_start(true);
 ///         (
 ///             ctx.with(AnimNum::new(0., 100.).time(50)),
 ///             ctx.with(AnimColor::new("red", "blue").time(50))
 ///         )
 ///     });
 ///
-///     let animations = animation.read();
-///     let (width, color) = animations.get();
-///
-///     use_hook(move || {
-///         animation.read().start();
-///     });
+///     let (width, color) = animation.get();
 ///
 ///     rsx!(
 ///         rect {
@@ -588,28 +595,91 @@ impl<Animated> UseAnimator<Animated> {
 /// }
 /// ```
 ///
-pub fn use_animation<Animated: PartialEq + 'static>(
-    run: impl Fn(&mut Context) -> Animated + 'static,
-) -> Memo<UseAnimator<Animated>> {
-    use_memo(move || {
-        let mut ctx = Context::default();
-        let value = run(&mut ctx);
+/// You can also tweak what to do once the animation has finished with [`Context::on_finish`].
+///
+/// ```rust,no_run
+/// # use freya::prelude::*;
+/// fn app() -> Element {
+///     let animation = use_animation(|ctx| {
+///         ctx.on_finish(OnFinish::Restart);
+///         (
+///             ctx.with(AnimNum::new(0., 100.).time(50)),
+///             ctx.with(AnimColor::new("red", "blue").time(50))
+///         )
+///     });
+///
+///     let (width, color) = animation.get();
+///
+///     rsx!(
+///         rect {
+///             width: "{width.read().as_f32()}",
+///             height: "100%",
+///             background: "{color.read().as_string()}"
+///         }
+///     )
+/// }
+/// ```
+///
+pub fn use_animation<Animated: PartialEq + Clone + 'static>(
+    run: impl Fn(&mut Context) -> Animated + Clone + 'static,
+) -> UseAnimator<Animated> {
+    let platform = use_platform();
+    let is_running = use_signal(|| false);
+    let has_run_yet = use_signal(|| false);
+    let task = use_signal(|| None);
 
-        UseAnimator::new(value, ctx, UsePlatform::new())
-    })
+    let value_and_ctx = use_memo(move || {
+        let mut ctx = Context::default();
+        (run(&mut ctx), ctx)
+    });
+
+    let animator = UseAnimator {
+        value_and_ctx,
+        platform,
+        is_running,
+        has_run_yet,
+        task,
+    };
+
+    use_hook(move || {
+        if animator.value_and_ctx.read().1.auto_start {
+            animator.run(AnimDirection::Forward);
+        }
+    });
+
+    animator
 }
 
-pub fn use_animation_with_dependencies<Animated: PartialEq + 'static, D: Dependency>(
+pub fn use_animation_with_dependencies<Animated: PartialEq + Clone + 'static, D: Dependency>(
     deps: D,
     run: impl Fn(&mut Context, D::Out) -> Animated + 'static,
-) -> Memo<UseAnimator<Animated>>
+) -> UseAnimator<Animated>
 where
     D::Out: 'static + Clone,
 {
-    use_memo(use_reactive(deps, move |vals| {
-        let mut ctx = Context::default();
-        let value = run(&mut ctx, vals);
+    let platform = use_platform();
+    let is_running = use_signal(|| false);
+    let has_run_yet = use_signal(|| false);
+    let task = use_signal(|| None);
 
-        UseAnimator::new(value, ctx, UsePlatform::new())
-    }))
+    let value_and_ctx = use_memo(use_reactive(deps, move |vals| {
+        let mut ctx = Context::default();
+        (run(&mut ctx, vals), ctx)
+    }));
+
+    let animator = UseAnimator {
+        value_and_ctx,
+        platform,
+        is_running,
+        has_run_yet,
+        task,
+    };
+
+    use_hook(move || {
+        if animator.value_and_ctx.read().1.auto_start {
+            animator.run(AnimDirection::Forward);
+        }
+    });
+
+    animator
 }

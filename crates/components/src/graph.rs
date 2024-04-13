@@ -22,7 +22,7 @@ impl GraphLine {
     }
 }
 
-/// [`Graph`] component properties.
+/// Properties for the [`Graph`] component.
 #[derive(Debug, Props, PartialEq, Clone)]
 pub struct GraphProps {
     /// Theme override.
@@ -34,10 +34,6 @@ pub struct GraphProps {
 }
 
 /// Graph component.
-///
-/// # Props
-/// See [`GraphProps`].
-///
 #[allow(non_snake_case)]
 pub fn Graph(props: GraphProps) -> Element {
     let platform = use_platform();

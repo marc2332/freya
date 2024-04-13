@@ -15,21 +15,32 @@ pub struct NodeView<'a, V: FromAnyValue = ()> {
     id: NodeId,
     inner: &'a NodeType<V>,
     mask: &'a NodeMask,
+    height: u16,
 }
 
 impl<'a, V: FromAnyValue> NodeView<'a, V> {
     /// Create a new NodeView from a VNode, and mask.
-    pub fn new(id: NodeId, node: &'a NodeType<V>, view: &'a NodeMask) -> Self {
+    pub fn new(id: NodeId, node: &'a NodeType<V>, view: &'a NodeMask, height: u16) -> Self {
         Self {
             inner: node,
             mask: view,
             id,
+            height,
         }
+    }
+
+    pub fn node_type(&self) -> &'a NodeType<V> {
+        self.inner
     }
 
     /// Get the node id of the node
     pub fn node_id(&self) -> NodeId {
         self.id
+    }
+
+    /// Get the node height
+    pub fn height(&self) -> u16 {
+        self.height
     }
 
     /// Get the tag of the node if the tag is enabled in the mask

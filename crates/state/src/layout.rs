@@ -1,6 +1,6 @@
 use std::sync::{Arc, Mutex};
 
-use dioxus_native_core::{
+use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
     node::OwnedAttributeValue,
@@ -8,7 +8,7 @@ use dioxus_native_core::{
     prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State},
     NodeId, SendAnyMap,
 };
-use dioxus_native_core_macro::partial_derive_state;
+use freya_native_core_macro::partial_derive_state;
 use torin::prelude::*;
 
 use crate::{CustomAttributeValues, NodeReference, Parse};
@@ -24,7 +24,6 @@ pub struct LayoutState {
     pub padding: Gaps,
     pub margin: Gaps,
     pub direction: DirectionMode,
-    pub node_id: NodeId,
     pub offset_y: Length,
     pub offset_x: Length,
     pub main_alignment: Alignment,
@@ -32,6 +31,7 @@ pub struct LayoutState {
     pub position: Position,
     pub content: Content,
     pub node_ref: Option<NodeReference>,
+    pub node_id: NodeId,
 }
 
 #[partial_derive_state]
@@ -77,7 +77,10 @@ impl State<CustomAttributeValues> for LayoutState {
         let torin_layout = context.get::<Arc<Mutex<Torin<NodeId>>>>().unwrap();
         let scale_factor = context.get::<f32>().unwrap();
 
-        let mut layout = LayoutState::default();
+        let mut layout = LayoutState {
+            node_id: node_view.node_id(),
+            ..Default::default()
+        };
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
@@ -239,20 +242,7 @@ impl State<CustomAttributeValues> for LayoutState {
             }
         }
 
-        let changed = (layout.width != self.width)
-            || (layout.height != self.height)
-            || (layout.minimum_width != self.minimum_width)
-            || (layout.minimum_height != self.minimum_height)
-            || (layout.maximum_width != self.maximum_width)
-            || (layout.maximum_height != self.maximum_height)
-            || (layout.padding != self.padding)
-            || (node_view.node_id() != self.node_id)
-            || (layout.direction != self.direction)
-            || (layout.offset_x != self.offset_x)
-            || (layout.offset_y != self.offset_y)
-            || (layout.main_alignment != self.main_alignment)
-            || (layout.cross_alignment != self.cross_alignment)
-            || (layout.position != self.position);
+        let changed = layout != *self;
 
         if changed {
             torin_layout.lock().unwrap().invalidate(node_view.node_id());

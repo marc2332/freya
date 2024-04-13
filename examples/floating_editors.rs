@@ -7,7 +7,7 @@ use freya::events::MouseEvent;
 use freya::prelude::*;
 
 fn main() {
-    launch_with_title(app, "Floating Editors")
+    launch_with_props(app, "Floating Editors", (700., 600.))
 }
 
 fn app() -> Element {

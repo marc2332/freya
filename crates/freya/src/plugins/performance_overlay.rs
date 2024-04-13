@@ -2,7 +2,8 @@ use std::time::{Duration, Instant};
 
 use freya_core::plugins::{FreyaPlugin, PluginEvent};
 use freya_engine::prelude::{
-    Color, FontStyle, ParagraphBuilder, ParagraphStyle, Slant, TextShadow, TextStyle, Weight, Width,
+    Color, FontStyle, Paint, PaintStyle, ParagraphBuilder, ParagraphStyle, Rect, Slant, TextShadow,
+    TextStyle, Weight, Width,
 };
 
 #[derive(Default)]
@@ -11,6 +12,10 @@ pub struct PerformanceOverlayPlugin {
     started_render: Option<Instant>,
     started_layout: Option<Instant>,
     finished_layout: Option<Duration>,
+    started_dom_updates: Option<Instant>,
+    finished_dom_updates: Option<Duration>,
+    fps_historic: Vec<usize>,
+    max_fps: usize,
 }
 
 impl FreyaPlugin for PerformanceOverlayPlugin {
@@ -20,15 +25,19 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
             PluginEvent::FinishedLayout(_) => {
                 self.finished_layout = Some(self.started_layout.unwrap().elapsed())
             }
+            PluginEvent::StartedUpdatingDOM => self.started_dom_updates = Some(Instant::now()),
+            PluginEvent::FinishedUpdatingDOM => {
+                self.finished_dom_updates = Some(self.started_dom_updates.unwrap().elapsed())
+            }
             PluginEvent::BeforeRender { .. } => self.started_render = Some(Instant::now()),
             PluginEvent::AfterRender {
                 canvas,
                 font_collection,
                 freya_dom,
-                viewports,
             } => {
                 let started_render = self.started_render.take().unwrap();
                 let finished_layout = self.finished_layout.unwrap();
+                let finished_dom_updates = self.finished_dom_updates.unwrap();
                 let rdom = freya_dom.rdom();
                 let layout = freya_dom.layout();
 
@@ -58,6 +67,11 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                     30.0,
                 );
 
+                self.fps_historic.push(self.frames.len());
+                if self.fps_historic.len() > 70 {
+                    self.fps_historic.remove(0);
+                }
+
                 // Rendering time
                 add_text(
                     &mut paragraph_builder,
@@ -69,6 +83,13 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                 add_text(
                     &mut paragraph_builder,
                     format!("Layout: {}ms \n", finished_layout.as_millis()),
+                    18.0,
+                );
+
+                // DOM updates time
+                add_text(
+                    &mut paragraph_builder,
+                    format!("DOM Updates: {}ms \n", finished_dom_updates.as_millis()),
                     18.0,
                 );
 
@@ -86,16 +107,34 @@ impl FreyaPlugin for PerformanceOverlayPlugin {
                     14.0,
                 );
 
-                // Viewports
-                add_text(
-                    &mut paragraph_builder,
-                    format!("{} Nodes viewports \n", viewports.size()),
-                    14.0,
-                );
-
                 let mut paragraph = paragraph_builder.build();
                 paragraph.layout(f32::MAX);
                 paragraph.paint(canvas, (5.0, 0.0));
+
+                let mut paint = Paint::default();
+                paint.set_anti_alias(true);
+                paint.set_style(PaintStyle::Fill);
+                paint.set_color(Color::from_argb(120, 255, 255, 255));
+
+                self.max_fps = self
+                    .max_fps
+                    .max(self.fps_historic.iter().max().copied().unwrap_or_default());
+                let start_x = 5.0;
+                let start_y = 150.0 + self.max_fps.max(60) as f32;
+
+                canvas.draw_rect(Rect::new(5., 150., 200., start_y), &paint);
+
+                for (i, fps) in self.fps_historic.iter().enumerate() {
+                    let mut paint = Paint::default();
+                    paint.set_anti_alias(true);
+                    paint.set_style(PaintStyle::Fill);
+                    paint.set_color(Color::from_rgb(63, 255, 0));
+                    paint.set_stroke_width(3.0);
+
+                    let x = start_x + (i * 2) as f32;
+                    let y = start_y - *fps as f32 + 2.0;
+                    canvas.draw_circle((x, y), 2.0, &paint);
+                }
             }
             _ => {}
         }

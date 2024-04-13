@@ -55,7 +55,7 @@ fn app() -> Element {
                 }
                 rect {
                     cross_align: "end",
-                    width: "10%%",
+                    width: "100%",
                     height: "50%",
                     rect {
                         main_align: "start",

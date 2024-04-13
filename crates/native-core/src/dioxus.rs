@@ -106,9 +106,10 @@ impl<V: FromAnyValue + Send + Sync> WriteMutations for DioxusNativeCoreMutationW
 
     fn append_children(&mut self, id: ElementId, m: usize) {
         let children = self.state.stack.split_off(self.state.stack.len() - m);
-        let parent = self.state.element_to_node_id(id);
+        let parent_id = self.state.element_to_node_id(id);
+        let mut parent = self.rdom.get_mut(parent_id).unwrap();
         for child in children {
-            self.rdom.get_mut(parent).unwrap().add_child(child);
+            parent.add_child(child);
         }
     }
 

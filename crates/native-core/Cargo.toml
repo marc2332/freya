@@ -1,5 +1,5 @@
 [package]
-name = "dioxus-native-core"
+name = "freya-native-core"
 description = "Native DOM for Freya"
 version = "0.1.0"
 edition = "2021"
@@ -23,6 +23,6 @@ shipyard = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["full"] }
-dioxus-native-core = { workspace = true }
-dioxus-native-core-macro = { workspace = true }
+freya-native-core = { workspace = true }
+freya-native-core-macro = { workspace = true }
 

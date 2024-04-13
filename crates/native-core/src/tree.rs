@@ -305,7 +305,6 @@ impl<'a> TreeMut for TreeMutView<'a> {
                 // Reset the height of the light root's children
                 let height = node.height;
                 for child in node.children.clone() {
-                    println!("child: {:?}", child);
                     set_height(self, child, height + 1);
                 }
 
@@ -411,6 +410,7 @@ impl<'a> TreeRef for TreeMutView<'a> {
 #[test]
 fn creation() {
     use shipyard::World;
+    #[allow(dead_code)]
     #[derive(Component)]
     struct Num(i32);
 
@@ -435,6 +435,7 @@ fn creation() {
 #[test]
 fn shadow_tree() {
     use shipyard::World;
+    #[allow(dead_code)]
     #[derive(Component)]
     struct Num(i32);
 
@@ -514,6 +515,7 @@ fn shadow_tree() {
 #[test]
 fn insertion() {
     use shipyard::World;
+    #[allow(dead_code)]
     #[derive(Component)]
     struct Num(i32);
 
@@ -547,6 +549,7 @@ fn insertion() {
 #[test]
 fn deletion() {
     use shipyard::World;
+    #[allow(dead_code)]
     #[derive(Component)]
     struct Num(i32);
 

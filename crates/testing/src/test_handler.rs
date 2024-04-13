@@ -4,7 +4,6 @@ use std::time::Duration;
 use dioxus_core::VirtualDom;
 use freya_common::EventMessage;
 use freya_core::prelude::*;
-use freya_dom::prelude::SafeDOM;
 use freya_engine::prelude::FontCollection;
 use freya_hooks::PlatformInformation;
 use tokio::sync::broadcast;
@@ -13,9 +12,10 @@ use tokio::time::{interval, timeout};
 use torin::geometry::{Area, Size2D};
 use winit::window::CursorIcon;
 
+use crate::config::TestingConfig;
 use crate::test_node::TestNode;
 use crate::test_utils::TestUtils;
-use crate::{TestingConfig, SCALE_FACTOR};
+use crate::SCALE_FACTOR;
 
 /// Manages the lifecycle of your tests.
 pub struct TestingHandler {
@@ -135,7 +135,7 @@ impl TestingHandler {
         self.utils.sdom().get_mut().layout().reset();
 
         // Measure layout
-        let (layers, viewports) = process_layout(
+        process_layout(
             &self.utils.sdom().get(),
             Area {
                 origin: (0.0, 0.0).into(),
@@ -143,15 +143,12 @@ impl TestingHandler {
             },
             &mut self.font_collection,
             SCALE_FACTOR as f32,
+            &["Fira Sans".to_string()],
         );
-
-        *self.utils.layers().lock().unwrap() = layers;
-        *self.utils.viewports().lock().unwrap() = viewports;
 
         let dom = &self.utils.sdom().get_mut();
 
         process_accessibility(
-            &self.utils.layers().lock().unwrap(),
             &dom.layout(),
             dom.rdom(),
             &mut self.accessibility_manager.lock().unwrap(),
@@ -159,11 +156,9 @@ impl TestingHandler {
 
         process_events(
             dom,
-            &self.utils.layers().lock().unwrap(),
             &mut self.events_queue,
             &self.event_emitter,
             &mut self.nodes_state,
-            &self.utils.viewports().lock().unwrap(),
             SCALE_FACTOR,
         );
     }

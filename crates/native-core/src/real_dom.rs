@@ -238,18 +238,18 @@ impl<V: FromAnyValue + Send + Sync> RealDom<V> {
         NodeMut::new(id, self)
     }
 
-    /// Find all nodes that are listening for an event, sorted by there height in the dom progressing starting at the bottom and progressing up.
-    /// This can be useful to avoid creating duplicate events.
-    pub fn get_listening_sorted(&self, event: &EventName) -> Vec<NodeRef<V>> {
+    pub fn is_node_listening(&self, node_id: &NodeId, event: &EventName) -> bool {
+        self.nodes_listening
+            .get(event)
+            .map(|listeners| listeners.contains(node_id))
+            .unwrap_or_default()
+    }
+
+    pub fn get_listeners(&self, event: &EventName) -> Vec<NodeRef<V>> {
         if let Some(nodes) = self.nodes_listening.get(event) {
-            let mut listening: Vec<_> = nodes
+            nodes
                 .iter()
-                .map(|id| (*id, self.tree_ref().height(*id).unwrap()))
-                .collect();
-            listening.sort_by(|(_, h1), (_, h2)| h1.cmp(h2).reverse());
-            listening
-                .into_iter()
-                .map(|(id, _)| NodeRef { id, dom: self })
+                .map(|id| NodeRef { id: *id, dom: self })
                 .collect()
         } else {
             Vec::new()
@@ -624,8 +624,7 @@ impl<'a, V: FromAnyValue + Send + Sync> NodeMut<'a, V> {
                 .mark_child_changed(parent_id);
         }
         let children_ids = self.child_ids();
-        let children_ids_vec = children_ids.to_vec();
-        for child in children_ids_vec {
+        for child in children_ids {
             self.dom.get_mut(child).unwrap().remove();
         }
         self.dom.tree_mut().remove(id);

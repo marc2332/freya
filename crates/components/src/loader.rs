@@ -1,33 +1,30 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::{use_animation, use_applied_theme, AnimNum, LoaderTheme, LoaderThemeWith};
+use freya_hooks::{
+    use_animation, use_applied_theme, AnimNum, LoaderTheme, LoaderThemeWith, OnFinish,
+};
 
-/// [`Loader`] component properties.
+/// Properties for the [`Loader`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct LoaderProps {
     /// Theme override.
     pub theme: Option<LoaderThemeWith>,
 }
 
-/// `Loader` component.
-///
-/// # Props
-/// See [`LoaderProps`].
-///
 /// # Styling
 /// Inherits the [`LoaderTheme`](freya_hooks::LoaderTheme) theme.
-///
 #[allow(non_snake_case)]
 pub fn Loader(props: LoaderProps) -> Element {
     let theme = use_applied_theme!(&props.theme, loader);
     let anim = use_animation(|ctx| {
         ctx.auto_start(true);
+        ctx.on_finish(OnFinish::Restart);
         ctx.with(AnimNum::new(0.0, 360.0).time(650))
     });
 
     let LoaderTheme { primary_color } = theme;
 
-    let degrees = anim.read().get().read().as_f32();
+    let degrees = anim.get().read().as_f32();
 
     rsx!(svg {
         rotate: "{degrees}deg",

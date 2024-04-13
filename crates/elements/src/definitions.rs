@@ -426,7 +426,7 @@ builder_constructors! {
     /// static RUST_LOGO: &[u8] = include_bytes!("./rust_logo.png");
     ///
     /// fn app() -> Element {
-    ///     let image_data = static_bytes_to_data(RUST_LOGO);
+    ///     let image_data = static_bytes(RUST_LOGO);
     ///     rsx!(
     ///         image {
     ///             image_data: image_data,
@@ -455,7 +455,7 @@ builder_constructors! {
     };
     /// `svg` element let's you display SVG code.
     ///
-    /// You will need to use the [`bytes_to_data`](https://docs.freyaui.dev/freya/prelude/fn.bytes_to_data.html)
+    /// You will need to use the [`dynamic_bytes`](https://docs.freyaui.dev/freya/prelude/fn.dynamic_bytes.html)
     /// to transform the bytes into data the element can recognize.
     ///
     /// ### Example
@@ -465,7 +465,7 @@ builder_constructors! {
     /// static FERRIS: &[u8] = include_bytes!("./ferris.svg");
     ///
     /// fn app() -> Element {
-    ///     let ferris = bytes_to_data(FERRIS);
+    ///     let ferris = dynamic_bytes(FERRIS);
     ///     rsx!(
     ///         svg {
     ///             svg_data: ferris,
@@ -574,6 +574,10 @@ pub mod events {
         onclick
         #[doc = include_str!("_docs/events/globalclick.md")]
         onglobalclick
+        #[doc = include_str!("_docs/events/onmiddleclick.md")]
+        onmiddleclick
+        #[doc = include_str!("_docs/events/onrightclick.md")]
+        onrightclick
         #[doc = include_str!("_docs/events/mousedown.md")]
         onmousedown
         #[doc = include_str!("_docs/events/globalmousedown.md")]
@@ -624,11 +628,24 @@ pub mod events {
         onpointerdown
         #[doc = include_str!("_docs/events/pointerup.md")]
         onpointerup
+        #[doc = include_str!("_docs/events/onglobalpointerup.md")]
+        onglobalpointerup
         #[doc = include_str!("_docs/events/pointerover.md")]
         onpointerover
         #[doc = include_str!("_docs/events/pointerenter.md")]
         onpointerenter
         #[doc = include_str!("_docs/events/pointerleave.md")]
         onpointerleave
+    ];
+
+    impl_event! [
+        FileData;
+
+        #[doc = include_str!("_docs/events/onfiledrop.md")]
+        onfiledrop
+        #[doc = include_str!("_docs/events/onglobalfilehover.md")]
+        onglobalfilehover
+        #[doc = include_str!("_docs/events/onglobalfilehovercancelled.md")]
+        onglobalfilehovercancelled
     ];
 }

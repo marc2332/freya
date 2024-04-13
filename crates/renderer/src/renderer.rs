@@ -1,12 +1,15 @@
-use dioxus_native_core::prelude::ElementNode;
-use dioxus_native_core::real_dom::NodeImmutable;
-use dioxus_native_core::NodeId;
-use dioxus_native_core::{node::NodeType, tags::TagName};
-use freya_core::prelude::*;
-use freya_dom::prelude::DioxusNode;
+use freya_native_core::prelude::ElementNode;
+use freya_native_core::real_dom::NodeImmutable;
+use freya_native_core::NodeId;
+use freya_native_core::{node::NodeType, tags::TagName};
+
+use freya_core::dom::DioxusNode;
 use freya_engine::prelude::*;
-use freya_node_state::{Style, Transform};
-use torin::{geometry::Area, prelude::LayoutNode};
+use freya_node_state::{Style, Transform, ViewportState};
+use torin::{
+    geometry::Area,
+    prelude::{LayoutNode, Torin},
+};
 
 use crate::elements::{render_image, render_label, render_paragraph, render_rect, render_svg};
 
@@ -31,10 +34,11 @@ pub fn render_skia(
     dioxus_node: &DioxusNode,
     font_collection: &mut FontCollection,
     font_manager: &FontMgr,
-    viewports: &Viewports,
     render_wireframe: bool,
     matrices: &mut Vec<(Matrix, Vec<NodeId>)>,
     opacities: &mut Vec<(f32, Vec<NodeId>)>,
+    default_fonts: &[String],
+    layout: &Torin<NodeId>,
 ) {
     let area = layout_node.visible_area();
     let data = &layout_node.data;
@@ -86,21 +90,17 @@ pub fn render_skia(
         }
 
         // Clip all elements with their corresponding viewports
-        if let Some((element_viewport, node_viewports)) = viewports.get(&dioxus_node.id()) {
-            // Only clip the element iself when it's paragraph because
-            // it will render the inner text spans on it's own, so if these spans overflow the paragraph,
-            // It is the paragraph job to make sure they are clipped
-            if *tag == TagName::Paragraph {
-                if let Some(element_viewport) = element_viewport {
-                    clip_viewport(canvas, element_viewport);
-                }
-            }
-            for viewport_id in node_viewports {
-                let viewport = viewports.get(viewport_id).unwrap().0;
-                if let Some(viewport) = viewport {
-                    clip_viewport(canvas, &viewport);
-                }
-            }
+        let node_viewports = dioxus_node.get::<ViewportState>().unwrap();
+        // Only clip the element iself when it's paragraph because
+        // it will render the inner text spans on it's own, so if these spans overflow the paragraph,
+        // It is the paragraph job to make sure they are clipped
+        if !node_viewports.viewports.is_empty() && *tag == TagName::Paragraph {
+            clip_viewport(canvas, &layout_node.visible_area());
+        }
+
+        for viewport_id in &node_viewports.viewports {
+            let viewport = layout.get(*viewport_id).unwrap().visible_area();
+            clip_viewport(canvas, &viewport);
         }
 
         match tag {
@@ -111,7 +111,14 @@ pub fn render_skia(
                 render_label(&area, data, canvas);
             }
             TagName::Paragraph => {
-                render_paragraph(&area, data, dioxus_node, canvas, font_collection);
+                render_paragraph(
+                    &area,
+                    data,
+                    dioxus_node,
+                    canvas,
+                    font_collection,
+                    default_fonts,
+                );
             }
             TagName::Svg => {
                 render_svg(&area, dioxus_node, canvas, font_manager);

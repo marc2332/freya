@@ -1,15 +1,14 @@
 use std::sync::{Arc, Mutex};
 
-use dioxus_native_core::{
+use freya_engine::prelude::*;
+use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
     node_ref::NodeView,
     prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State},
     NodeId, SendAnyMap,
 };
-use dioxus_native_core_macro::partial_derive_state;
-use freya_engine::prelude::*;
-use smallvec::{smallvec, SmallVec};
+use freya_native_core_macro::partial_derive_state;
 use torin::torin::Torin;
 
 use crate::{CustomAttributeValues, ExtSplit, Parse, TextOverflow};
@@ -18,7 +17,7 @@ use crate::{CustomAttributeValues, ExtSplit, Parse, TextOverflow};
 pub struct FontStyleState {
     pub color: Color,
     pub text_shadows: Vec<TextShadow>,
-    pub font_family: SmallVec<[String; 2]>,
+    pub font_family: Vec<String>,
     pub font_size: f32,
     pub font_slant: Slant,
     pub font_weight: Weight,
@@ -39,31 +38,32 @@ impl FontStyleState {
             ..FontStyleState::default()
         }
     }
-}
 
-impl From<&FontStyleState> for TextStyle {
-    fn from(value: &FontStyleState) -> Self {
+    pub fn text_style(&self, default_font_family: &[String]) -> TextStyle {
         let mut text_style = TextStyle::new();
+        let mut font_family = self.font_family.clone();
+
+        font_family.extend_from_slice(default_font_family);
 
         text_style
-            .set_color(value.color)
+            .set_color(self.color)
             .set_font_style(freya_engine::prelude::FontStyle::new(
-                value.font_weight,
-                value.font_width,
-                value.font_slant,
+                self.font_weight,
+                self.font_width,
+                self.font_slant,
             ))
-            .set_font_size(value.font_size)
-            .set_font_families(&value.font_family)
-            .set_word_spacing(value.word_spacing)
-            .set_letter_spacing(value.letter_spacing)
+            .set_font_size(self.font_size)
+            .set_font_families(&font_family)
+            .set_word_spacing(self.word_spacing)
+            .set_letter_spacing(self.letter_spacing)
             .set_height_override(true)
-            .set_height(value.line_height);
+            .set_height(self.line_height);
 
-        for shadow in value.text_shadows.iter() {
+        for shadow in self.text_shadows.iter() {
             text_style.add_shadow(*shadow);
         }
 
-        text_style.set_decoration(&value.decoration);
+        text_style.set_decoration(&self.decoration);
 
         text_style
     }
@@ -74,7 +74,7 @@ impl Default for FontStyleState {
         Self {
             color: Color::BLACK,
             text_shadows: Vec::new(),
-            font_family: smallvec!["Fira Sans".to_string()],
+            font_family: Vec::new(),
             font_size: 16.0,
             font_weight: Weight::NORMAL,
             font_slant: Slant::Upright,
@@ -163,12 +163,10 @@ impl State<CustomAttributeValues> for FontStyleState {
                     AttributeName::FontFamily => {
                         if let Some(value) = attr.value.as_text() {
                             let families = value.split(',');
-                            font_style.font_family = SmallVec::from(
-                                families
-                                    .into_iter()
-                                    .map(|f| f.trim().to_string())
-                                    .collect::<Vec<String>>(),
-                            );
+                            font_style.font_family = families
+                                .into_iter()
+                                .map(|f| f.trim().to_string())
+                                .collect::<Vec<String>>();
                         }
                     }
                     AttributeName::FontSize => {
@@ -272,15 +270,7 @@ impl State<CustomAttributeValues> for FontStyleState {
             }
         }
 
-        let changed_size = self.max_lines != font_style.max_lines
-            || self.line_height != font_style.line_height
-            || self.font_size != font_style.font_size
-            || self.font_family != font_style.font_family
-            || self.font_slant != font_style.font_slant
-            || self.font_weight != font_style.font_weight
-            || self.font_width != font_style.font_width
-            || self.word_spacing != font_style.word_spacing
-            || self.letter_spacing != font_style.letter_spacing;
+        let changed_size = font_style != *self;
 
         if changed_size {
             torin_layout.lock().unwrap().invalidate(node_view.node_id());

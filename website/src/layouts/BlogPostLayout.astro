@@ -9,7 +9,7 @@ const formattedDate = (new Date(frontmatter.date)).toLocaleString().split(',')[0
 
 <Layout title={frontmatter.title}>
     <div class="flex">
-        <article class="sm:w-4/5 px-8 w-full">
+        <article class="sm:w-3/4 px-8 w-full">
             <h1>{frontmatter.title}</h1>
             <i>{formattedDate} - {frontmatter.author}</i>
             <slot />
@@ -50,6 +50,12 @@ const formattedDate = (new Date(frontmatter.date)).toLocaleString().split(',')[0
 
     ul li {
         margin-left: 24px;
+    }
+
+    *:not(pre) > code {
+        background: rgb(65, 65, 65);
+        border-radius: 6px;
+        padding: 2px 4px;
     }
 
     p {
@@ -93,4 +99,5 @@ const formattedDate = (new Date(frontmatter.date)).toLocaleString().split(',')[0
     img {
         margin: 0 auto;
     }
+    
 </style>

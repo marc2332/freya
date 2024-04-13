@@ -55,13 +55,13 @@ pub fn SnackBar(
 
     use_effect(move || {
         if *show.read() {
-            animation.read().start();
-        } else if animation.read().peek_has_run_yet() {
-            animation.read().reverse();
+            animation.start();
+        } else if animation.peek_has_run_yet() {
+            animation.reverse();
         }
     });
 
-    let offset_y = animation.read().get().read().as_f32();
+    let offset_y = animation.get().read().as_f32();
 
     rsx!(
         rect {
@@ -79,6 +79,7 @@ pub fn SnackBar(
     )
 }
 
+#[doc(hidden)]
 #[allow(non_snake_case)]
 #[component]
 pub fn SnackBarBox(children: Element, theme: Option<SnackBarThemeWith>) -> Element {
@@ -104,7 +105,7 @@ mod test {
 
     use dioxus::prelude::use_signal;
     use freya::prelude::*;
-    use freya_testing::*;
+    use freya_testing::prelude::*;
     use tokio::time::sleep;
 
     #[tokio::test]

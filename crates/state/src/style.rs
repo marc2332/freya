@@ -1,6 +1,4 @@
-use std::sync::Arc;
-
-use dioxus_native_core::{
+use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
     node::OwnedAttributeValue,
@@ -8,7 +6,7 @@ use dioxus_native_core::{
     prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State},
     SendAnyMap,
 };
-use dioxus_native_core_macro::partial_derive_state;
+use freya_native_core_macro::partial_derive_state;
 use torin::scaled::Scaled;
 
 use crate::{
@@ -19,7 +17,6 @@ use crate::{
 #[derive(Default, Debug, Clone, PartialEq, Component)]
 pub struct Style {
     pub background: Fill,
-    pub relative_layer: i16,
     pub border: Border,
     pub shadows: Vec<Shadow>,
     pub corner_radius: CornerRadius,
@@ -71,13 +68,6 @@ impl State<CustomAttributeValues> for Style {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(background) = Fill::parse(value) {
                                 style.background = background;
-                            }
-                        }
-                    }
-                    AttributeName::Layer => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(relative_layer) = value.parse::<i16>() {
-                                style.relative_layer = relative_layer;
                             }
                         }
                     }
@@ -145,8 +135,8 @@ impl State<CustomAttributeValues> for Style {
                     }
                     AttributeName::SvgContent => {
                         let text = attr.value.as_text();
-                        style.svg_data = text
-                            .map(|v| AttributesBytes::Dynamic(Arc::new(v.as_bytes().to_owned())));
+                        style.svg_data =
+                            text.map(|v| AttributesBytes::Dynamic(v.as_bytes().to_vec().into()));
                     }
                     AttributeName::Overflow => {
                         if let Some(value) = attr.value.as_text() {

@@ -1,4 +1,4 @@
-use dioxus_native_core::SendAnyMap;
+use freya_native_core::SendAnyMap;
 
 use crate::prelude::*;
 use std::{collections::HashMap, sync::Arc};

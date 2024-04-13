@@ -1,11 +1,13 @@
-use dioxus_native_core::real_dom::NodeImmutable;
-use freya_dom::prelude::DioxusNode;
+use freya_native_core::real_dom::NodeImmutable;
+
 use freya_engine::prelude::*;
 use freya_node_state::{
     Border, CornerRadius, CursorSettings, Fill, FontStyleState, LayoutState, References, Shadow,
     Style, TextOverflow, Transform,
 };
 use torin::{alignment::Alignment, direction::DirectionMode, gaps::Gaps, size::Size};
+
+use crate::dom::DioxusNode;
 
 #[derive(Clone, PartialEq)]
 pub struct NodeState {

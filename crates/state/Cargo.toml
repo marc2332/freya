@@ -22,15 +22,15 @@ freya-common = { workspace = true }
 freya-engine = { workspace = true }
 torin = { workspace = true }
 
-dioxus-native-core-macro = { workspace = true }
-dioxus-native-core = { workspace = true }
+freya-native-core-macro = { workspace = true }
+freya-native-core = { workspace = true }
 dioxus-core = { workspace = true }
 
 tokio = { workspace = true }
 accesskit = { workspace = true }
 shipyard = { workspace = true }
+rustc-hash= { workspace = true }
 
 uuid = { workspace = true }
 bytes = "1.5.0"
-smallvec = { workspace = true }
 serde_json = "1.0.107"

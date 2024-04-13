@@ -8,7 +8,9 @@ mod text_editor;
 mod theming;
 
 mod use_accessibility;
+mod use_activable_route;
 mod use_animation;
+mod use_asset_cacher;
 mod use_canvas;
 mod use_editable;
 mod use_focus;
@@ -26,7 +28,9 @@ pub use text_editor::*;
 pub use theming::*;
 
 pub use use_accessibility::*;
+pub use use_activable_route::*;
 pub use use_animation::*;
+pub use use_asset_cacher::*;
 pub use use_canvas::*;
 pub use use_editable::*;
 pub use use_focus::*;

@@ -310,6 +310,7 @@ define_theme! {
         thumb_background: str,
         hover_thumb_background: str,
         active_thumb_background: str,
+        size: str,
     }
 }
 
@@ -464,7 +465,6 @@ define_theme! {
         %[cows]
         background: str,
         hover_background: str,
-        border_fill: str,
         %[subthemes]
         font_theme: FontTheme,
     }

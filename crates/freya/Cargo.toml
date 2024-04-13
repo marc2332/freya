@@ -32,8 +32,8 @@ freya-common = { workspace = true }
 freya-hooks = { workspace = true }
 freya-core = { workspace = true }
 freya-components = { workspace = true }
-freya-dom = { workspace = true }
 freya-engine = { workspace = true }
+freya-testing = { workspace = true }
 torin = { workspace = true }
 
 dioxus = { workspace = true }
@@ -46,4 +46,3 @@ dioxus-signals = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true, optional = true }
 tracing-subscriber = { workspace = true, optional = true }
-

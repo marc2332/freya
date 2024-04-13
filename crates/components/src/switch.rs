@@ -8,7 +8,7 @@ use freya_hooks::{
 };
 use winit::window::CursorIcon;
 
-/// [`Switch`] component properties.
+/// Properties for the [`Switch`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct SwitchProps {
     /// Theme override.
@@ -29,12 +29,12 @@ pub enum SwitchStatus {
     Hovering,
 }
 
-/// Controlled `Switch` component.
-///
-/// # Props
-/// See [`SwitchProps`].
+/// Display whether a state is `true` or `false`.
+/// Commonly used for enabled/disabled scenarios.
+/// Example: light/dark theme.
 ///
 /// # Styling
+///
 /// Inherits the [`SwitchTheme`](freya_hooks::SwitchTheme) theme.
 ///
 /// # Example
@@ -94,13 +94,10 @@ pub fn Switch(props: SwitchProps) -> Element {
         platform.set_cursor(CursorIcon::Pointer);
     };
 
-    let onclick = {
-        let ontoggled = props.ontoggled.clone();
-        move |e: MouseEvent| {
-            e.stop_propagation();
-            focus.focus();
-            ontoggled.call(());
-        }
+    let onclick = move |e: MouseEvent| {
+        e.stop_propagation();
+        focus.focus();
+        props.ontoggled.call(());
     };
 
     let onkeydown = move |e: KeyboardEvent| {
@@ -112,13 +109,13 @@ pub fn Switch(props: SwitchProps) -> Element {
     let (offset_x, background, circle) = {
         if props.enabled {
             (
-                animation.read().get().read().as_f32(),
+                animation.get().read().as_f32(),
                 theme.enabled_background,
                 theme.enabled_thumb_background,
             )
         } else {
             (
-                animation.read().get().read().as_f32(),
+                animation.get().read().as_f32(),
                 theme.background,
                 theme.thumb_background,
             )
@@ -136,9 +133,9 @@ pub fn Switch(props: SwitchProps) -> Element {
 
     use_effect(use_reactive(&props.enabled, move |enabled| {
         if enabled {
-            animation.read().start();
-        } else if animation.read().peek_has_run_yet() {
-            animation.read().reverse();
+            animation.start();
+        } else if animation.peek_has_run_yet() {
+            animation.reverse();
         }
     }));
 
@@ -178,7 +175,7 @@ pub fn Switch(props: SwitchProps) -> Element {
 mod test {
     use dioxus::prelude::use_signal;
     use freya::prelude::*;
-    use freya_testing::*;
+    use freya_testing::prelude::*;
 
     #[tokio::test]
     pub async fn button() {

@@ -15,8 +15,8 @@
 //! - [Hooks](freya_hooks)
 //! - [Theming](self::_docs::theming)
 //! - [Hot reload](self::_docs::hot_reload)
-//! - [Testing](self::_docs::testing)
-//! - [Animating](self::_docs::animating)
+//! - [Testing](freya_testing)
+//! - [Animating](freya_hooks::use_animation)
 //! - [Devtools](self::_docs::devtools)
 //!
 //! ```rust,no_run
@@ -110,7 +110,7 @@ pub mod prelude {
     pub use freya_elements::elements as dioxus_elements;
     pub use freya_elements::events::*;
     pub use freya_hooks::*;
-    pub use freya_node_state::{bytes_to_data, static_bytes_to_data, CustomAttributeValues};
+    pub use freya_node_state::{dynamic_bytes, static_bytes, CustomAttributeValues};
     pub use freya_renderer::*;
     pub use torin::prelude::*;
 }
