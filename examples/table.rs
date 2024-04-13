@@ -15,16 +15,16 @@ fn main() {
 #[derive(PartialEq, Clone)]
 enum OrderBy {
     Name,
-    OtherName,
-    MoreData,
+    Type,
+    Rank,
 }
 
 impl Display for OrderBy {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             OrderBy::Name => f.write_str("Name"),
-            OrderBy::OtherName => f.write_str("Other Name"),
-            OrderBy::MoreData => f.write_str("More Data"),
+            OrderBy::Type => f.write_str("Type"),
+            OrderBy::Rank => f.write_str("Rank"),
         }
     }
 }
@@ -34,22 +34,25 @@ fn app() -> Element {
     let mut order = use_signal(|| OrderBy::Name);
     let data = use_signal(|| {
         vec![
-            vec!["aaaa".to_string(), "bbbb".to_string(), "111".to_string()],
-            vec!["bbbb".to_string(), "aaaa".to_string(), "333".to_string()],
-            vec!["wwww".to_string(), "777".to_string(), "ccc".to_string()],
-            vec!["dddd".to_string(), "222".to_string(), "111".to_string()],
-            vec!["hhhh".to_string(), "444".to_string(), "aaa".to_string()],
-            vec!["555".to_string(), "ffff".to_string(), "zzzz".to_string()],
-            vec!["llll".to_string(), "999".to_string(), "eeee".to_string()],
-            vec!["abcd".to_string(), "987".to_string(), "wwww".to_string()],
-            vec!["rrrr".to_string(), "333".to_string(), "888".to_string()],
+            vec!["Zeus".to_owned(), "Sky".to_owned(), "01".to_owned()],
+            vec!["Poseidon".to_owned(), "Sea".to_owned(), "03".to_owned()],
+            vec!["Ares".to_owned(), "War".to_owned(), "08".to_owned()],
+            vec!["Aphrodite".to_owned(), "Love".to_owned(), "10".to_owned()],
+            vec!["Hera".to_owned(), "Women".to_owned(), "02".to_owned()],
+            vec!["Demeter".to_owned(), "Harvest".to_owned(), "04".to_owned()],
+            vec!["Athena".to_owned(), "Strategy".to_owned(), "05".to_owned()],
+            vec!["Apollo".to_owned(), "Sun".to_owned(), "06".to_owned()],
+            vec!["Artemis".to_owned(), "Hunt".to_owned(), "07".to_owned()],
+            vec!["Hephaestus".to_owned(), "Fire".to_owned(), "09".to_owned()],
+            vec!["Hermes".to_owned(), "Messenger".to_owned(), "11".to_owned()],
+            vec!["Dionysus".to_owned(), "Wine".to_owned(), "12".to_owned()],
         ]
     });
     let columns = use_hook(|| {
         vec![
             ("Name", OrderBy::Name),
-            ("OtherName", OrderBy::OtherName),
-            ("MoreData", OrderBy::MoreData),
+            ("Type", OrderBy::Type),
+            ("Rank", OrderBy::Rank),
         ]
     });
     let data = data.read();
@@ -57,8 +60,8 @@ fn app() -> Element {
     let filtered_data = {
         let filtered_data = data.iter().sorted_by(|a, b| match *order.read() {
             OrderBy::Name => Ord::cmp(&a[0].to_lowercase(), &b[0].to_lowercase()),
-            OrderBy::OtherName => Ord::cmp(&a[1].to_lowercase(), &b[1].to_lowercase()),
-            OrderBy::MoreData => Ord::cmp(&a[2].to_lowercase(), &b[2].to_lowercase()),
+            OrderBy::Type => Ord::cmp(&a[1].to_lowercase(), &b[1].to_lowercase()),
+            OrderBy::Rank => Ord::cmp(&a[2].to_lowercase(), &b[2].to_lowercase()),
         });
 
         if *order_direction.read() == OrderDirection::Down {
