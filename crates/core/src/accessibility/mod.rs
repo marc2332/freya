@@ -43,8 +43,12 @@ impl NodeAccessibility for DioxusNode<'_> {
         self.children()
             .iter()
             .filter_map(|child| {
-                let node_accessibility = &*child.get::<AccessibilityNodeState>().unwrap();
-                node_accessibility.accessibility_id
+                if child.node_type().is_visible_element() {
+                    let node_accessibility = &*child.get::<AccessibilityNodeState>().unwrap();
+                    node_accessibility.accessibility_id
+                } else {
+                    None
+                }
             })
             .collect::<Vec<AccessibilityId>>()
     }

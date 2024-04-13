@@ -18,7 +18,8 @@ fn app() -> Element {
     let mut focus_c = use_focus();
     let mut focus_d = use_focus();
 
-    let url = Url::from_str("https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/PNG_transparency_demonstration_1.png/420px-PNG_transparency_demonstration_1.png").unwrap();
+    let url =
+        Url::from_str("https://www.rustacean.net/assets/rustacean-orig-noshadow.png").unwrap();
 
     rsx!(
         rect {
@@ -32,12 +33,18 @@ fn app() -> Element {
             },
             label {
                 focus_id: focus_c.attribute(),
-                onclick: move |_| {
+                onclick: move |e| {
+                    e.stop_propagation();
                     focus_c.focus();
                 },
                 "What is this?"
             }
             Button {
+                onclick: |e: Option<MouseEvent>| {
+                    if let Some(e) = e {
+                        e.stop_propagation();
+                    }
+                },
                 label {
                     "Button"
                 }
@@ -57,7 +64,8 @@ fn app() -> Element {
             label {
                 role: "staticText",
                 focus_id: focus_d.attribute(),
-                onclick: move |_| {
+                onclick: move |e| {
+                    e.stop_propagation();
                     focus_d.focus();
                 },
                 color: "white",
@@ -66,7 +74,7 @@ fn app() -> Element {
             NetworkImage {
                 url,
                 theme: theme_with!(NetworkImageTheme {
-                    width: "100".into(),
+                    width: "150".into(),
                     height: "100".into(),
                 }),
                 alt: "This is an image"

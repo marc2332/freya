@@ -264,7 +264,6 @@ where
             main_align: "center",
             cross_align: "center",
             label {
-                text_align: "center",
                 "{selected}"
             }
             ArrowIcon {
