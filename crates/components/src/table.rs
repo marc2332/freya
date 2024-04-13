@@ -151,10 +151,9 @@ pub fn TableCell(props: TableCellProps) -> Element {
             overflow: "clip",
             padding: "{padding}",
             width: "{width}%",
-            main_align: "center",
+            main_align: "end",
             cross_align: "center",
             height: "{height}",
-            text_align: "right",
             direction: "horizontal",
             onclick: move |e| {
                 if let Some(onclick) = &props.onclick {
