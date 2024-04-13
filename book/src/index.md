@@ -65,8 +65,8 @@ Check out the examples in the Freya [repository](https://github.com/marc2332/fre
 - 🖼️ SKSL **Shaders** support
 - 🔄️ Dioxus **Hot-reload** support
 - 📒 Multi-line **text editing** (experimental ⚠️)
-- 🦾 Basic **Accessibility** Support (experimental ⚠️)
-- 🧩 Compatible with Dioxus SDK and other Dioxus renderer-agnostic libraries
+- 🦾 Basic **Accessibility** Support
+- 🧩 Compatible with [Dioxus SDK](https://github.com/DioxusLabs/sdk) and other Dioxus renderer-agnostic libraries
 
 ### Learn More
 

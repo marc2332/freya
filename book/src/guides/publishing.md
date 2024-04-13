@@ -82,5 +82,5 @@ Once installed, run `magick convert your_icon.png icon.ico`.
 
 # Optimizing
 
-The ["Optimizing" chapter](https://dioxuslabs.com/learn/0.4/cookbook/optimizing) in the Dioxus docs applies in Freya too.
+The ["Optimizing" chapter](https://dioxuslabs.com/learn/0.5/cookbook/optimizing) in the Dioxus docs applies in Freya too.
 Note that WebAssembly-related tips are irrelevant.
