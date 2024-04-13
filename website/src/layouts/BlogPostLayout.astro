@@ -9,7 +9,7 @@ const formattedDate = (new Date(frontmatter.date)).toLocaleString().split(',')[0
 
 <Layout title={frontmatter.title}>
     <div class="flex">
-        <article class="sm:w-3/4 px-8 w-full">
+        <article class="sm:w-3/4 sm:px-8 px-2 w-full">
             <h1>{frontmatter.title}</h1>
             <i>{formattedDate} - {frontmatter.author}</i>
             <slot />
