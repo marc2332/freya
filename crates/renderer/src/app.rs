@@ -323,10 +323,11 @@ impl<State: 'static + Clone> App<State> {
 
         self.process_accessibility();
 
+        let fdom = self.sdom.get();
         info!(
             "Processed {} layers and {} group of paragraph elements",
-            self.sdom.get().layers().len_layers(),
-            self.sdom.get().paragraphs().len_paragraphs()
+            fdom.layers().len_layers(),
+            fdom.paragraphs().len_paragraphs()
         );
     }
 
