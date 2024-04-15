@@ -13,10 +13,11 @@
 //! - `orange`
 //! - `transparent`
 //!
-//! #### rgb() / hsl()
+//! #### rgb() / hsl() / Hex
 //!
 //! - With RGB: `rgb(150, 60, 20)`
 //! - With RGB and alpha: `rgb(150, 60, 20, 0.7)`
 //!     - You can also use 0-255 for the alpha: `rgb(150, 60, 20, 70)`
 //! - With HSL: `hsl(28deg, 80%, 50%)`
 //! - With HSL and alpha: `hsl(28deg, 80%, 50%, 25%)`
+//! - With Hex: `#E93323`
