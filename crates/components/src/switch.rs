@@ -131,7 +131,7 @@ pub fn Switch(props: SwitchProps) -> Element {
         "none".to_string()
     };
 
-    use_effect(use_reactive(&props.enabled, move |enabled| {
+    use_memo(use_reactive(&props.enabled, move |enabled| {
         if enabled {
             animation.start();
         } else if animation.peek_has_run_yet() {
