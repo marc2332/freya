@@ -412,6 +412,7 @@ pub trait TextEditor: Sized + Clone + Display {
                             self.remove(start..end);
                             self.get_clipboard().set(text).ok();
                             self.set_cursor_pos(start);
+                            event.insert(TextEvent::TEXT_CHANGED);
                         }
                     }
 
