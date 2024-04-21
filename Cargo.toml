@@ -86,8 +86,3 @@ itertools = "0.11.0"
 [profile.release]
 lto = true
 opt-level = 3
-
-
-[target."cfg(target_os = \"linux\")".dependencies.skia-safe]
-workspace = true
-features = ["gl", "textlayout", "svg", "x11", "wayland"]

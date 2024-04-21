@@ -23,3 +23,7 @@ bitflags = "2.4.0"
 skia-safe = { workspace = true, optional = true }
 glutin = { workspace = true }
 
+
+[target."cfg(target_os = \"linux\")".dependencies.skia-safe]
+workspace = true
+features = ["gl", "textlayout", "svg", "x11", "wayland"]
