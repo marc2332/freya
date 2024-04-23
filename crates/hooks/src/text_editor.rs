@@ -85,7 +85,7 @@ bitflags::bitflags! {
 }
 
 /// Common trait for editable texts
-pub trait TextEditor: Sized + Clone + Display {
+pub trait TextEditor {
     type LinesIterator<'a>: Iterator<Item = Line<'a>>
     where
         Self: 'a;
