@@ -9,8 +9,10 @@ pub enum HistoryChange {
 
 #[derive(Default, Clone)]
 pub struct EditorHistory {
-    changes: Vec<HistoryChange>,
-    current_change: usize,
+    pub changes: Vec<HistoryChange>,
+    pub current_change: usize,
+    // Incremental counter indicating for every change.
+    pub version: usize,
 }
 
 impl EditorHistory {
@@ -25,6 +27,8 @@ impl EditorHistory {
 
         self.changes.push(change);
         self.current_change = self.changes.len();
+
+        self.version += 1;
     }
 
     pub fn current_change(&self) -> usize {
@@ -65,6 +69,7 @@ impl EditorHistory {
                 }
             };
             self.current_change -= 1;
+            self.version += 1;
             Some(idx_end)
         } else {
             None
@@ -93,6 +98,7 @@ impl EditorHistory {
                 }
             };
             self.current_change += 1;
+            self.version += 1;
             Some(idx_end)
         } else {
             None
