@@ -21,6 +21,10 @@ pub enum EventMessage {
     ActionRequestEvent(ActionRequestEvent),
     /// Focus the given accessibility NodeID
     FocusAccessibilityNode(NodeId),
+    /// Focus the next accessibility Node
+    FocusNextAccessibilityNode,
+    /// Focus the previous accessibility Node
+    FocusPrevAccessibilityNode
 }
 
 impl From<ActionRequestEvent> for EventMessage {

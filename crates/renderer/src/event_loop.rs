@@ -11,7 +11,7 @@ use winit::event::{
     TouchPhase, WindowEvent,
 };
 use winit::event_loop::{EventLoop, EventLoopProxy};
-use winit::keyboard::{KeyCode, ModifiersState, PhysicalKey};
+use winit::keyboard::ModifiersState;
 
 use crate::app::App;
 use crate::HoveredNode;
@@ -59,6 +59,14 @@ pub fn run_event_loop<State: Clone>(
             }
             Event::UserEvent(EventMessage::SetCursorIcon(icon)) => {
                 app.window_env.window.set_cursor_icon(icon)
+            }
+            Event::UserEvent(EventMessage::FocusPrevAccessibilityNode) => {
+                app.set_navigation_mode(NavigationMode::Keyboard);
+                app.focus_next_node(AccessibilityFocusDirection::Backward);
+            }
+            Event::UserEvent(EventMessage::FocusNextAccessibilityNode) => {
+                app.set_navigation_mode(NavigationMode::Keyboard);
+                app.focus_next_node(AccessibilityFocusDirection::Forward);
             }
             Event::UserEvent(ev) => {
                 if let EventMessage::UpdateTemplate(template) = ev {
@@ -144,22 +152,6 @@ pub fn run_event_loop<State: Clone>(
                             },
                         ..
                     } => {
-                        if state == ElementState::Pressed
-                            && physical_key == PhysicalKey::Code(KeyCode::Tab)
-                        {
-                            app.set_navigation_mode(NavigationMode::Keyboard);
-
-                            let direction = if modifiers_state.shift_key() {
-                                AccessibilityFocusDirection::Backward
-                            } else {
-                                AccessibilityFocusDirection::Forward
-                            };
-
-                            app.focus_next_node(direction);
-
-                            return;
-                        }
-
                         let name = match state {
                             ElementState::Pressed => EventName::KeyDown,
                             ElementState::Released => EventName::KeyUp,
