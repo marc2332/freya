@@ -230,13 +230,10 @@ pub fn launch_cfg<T: 'static + Clone + Send>(app: AppComponent, config: LaunchCo
 use dioxus_core::VirtualDom;
 #[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
 fn with_accessibility(app: AppComponent) -> VirtualDom {
-    use dioxus::prelude::{Modifiers, Props, Readable, Writable};
+    use dioxus::prelude::Props;
     use dioxus_core::fc_to_builder;
     use dioxus_core_macro::rsx;
-    use freya_common::EventMessage;
-    use freya_elements::elements as dioxus_elements;
-    use freya_elements::events::{Key, KeyboardEvent};
-    use freya_hooks::{use_init_accessibility, use_platform};
+    use freya_components::KeyboardNavigator;
 
     #[derive(Props, Clone, PartialEq)]
     struct RootProps {
@@ -245,33 +242,10 @@ fn with_accessibility(app: AppComponent) -> VirtualDom {
 
     #[allow(non_snake_case)]
     fn Root(props: RootProps) -> Element {
-        let mut navigation_mark = use_init_accessibility();
-        let platform = use_platform();
-
         #[allow(non_snake_case)]
         let App = props.app;
 
-        let onkeydown = move |e: KeyboardEvent| {
-            let allowed_to_navigate = navigation_mark.peek().0;
-            if e.key == Key::Tab && allowed_to_navigate {
-                if e.modifiers.contains(Modifiers::SHIFT) {
-                    platform
-                        .send(EventMessage::FocusPrevAccessibilityNode)
-                        .unwrap();
-                } else {
-                    platform
-                        .send(EventMessage::FocusNextAccessibilityNode)
-                        .unwrap();
-                }
-            }
-
-            navigation_mark.write().0 = true;
-        };
-
-        rsx!(rect {
-            width: "100%",
-            height: "100%",
-            onkeydown,
+        rsx!(KeyboardNavigator {
             App {}
         })
     }

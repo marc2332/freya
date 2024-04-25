@@ -73,7 +73,7 @@ mod test {
     #[tokio::test]
     pub async fn focus_accessibility() {
         #[allow(non_snake_case)]
-        fn OherChild() -> Element {
+        fn OtherChild() -> Element {
             let mut focus_manager = use_focus();
 
             rsx!(rect {
@@ -88,8 +88,8 @@ mod test {
                 rect {
                     width: "100%",
                     height: "100%",
-                    OherChild {},
-                    OherChild {}
+                    OtherChild {},
+                    OtherChild {}
                 }
             )
         }

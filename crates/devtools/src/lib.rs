@@ -6,7 +6,7 @@ use freya_core::{
     node::{get_node_state, NodeState},
 };
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::{use_init_accessibility, use_init_theme, use_theme, DARK_THEME};
+use freya_hooks::{use_init_theme, use_theme, DARK_THEME};
 use freya_native_core::node::NodeType;
 use freya_native_core::prelude::ElementNode;
 use freya_native_core::real_dom::NodeImmutable;
@@ -61,33 +61,33 @@ impl PartialEq for AppWithDevtoolsProps {
 
 #[allow(non_snake_case)]
 fn AppWithDevtools(props: AppWithDevtoolsProps) -> Element {
-    use_init_accessibility();
-
     #[allow(non_snake_case)]
     let Root = props.root;
     let mutations_notifier = props.mutations_notifier.clone();
     let hovered_node = props.hovered_node.clone();
 
     rsx!(
-        rect {
-            width: "100%",
-            height: "100%",
-            direction: "horizontal",
+        KeyboardNavigator {
             rect {
-                overflow: "clip",
+                width: "100%",
                 height: "100%",
-                width: "calc(100% - 350)",
-                Root { },
-            }
-            rect {
-                background: "rgb(40, 40, 40)",
-                height: "100%",
-                width: "350",
-                ThemeProvider {
-                    DevTools {
-                        rdom: props.rdom.clone(),
-                        mutations_notifier: mutations_notifier,
-                        hovered_node: hovered_node
+                direction: "horizontal",
+                rect {
+                    overflow: "clip",
+                    height: "100%",
+                    width: "calc(100% - 350)",
+                    Root { },
+                }
+                rect {
+                    background: "rgb(40, 40, 40)",
+                    height: "100%",
+                    width: "350",
+                    ThemeProvider {
+                        DevTools {
+                            rdom: props.rdom.clone(),
+                            mutations_notifier: mutations_notifier,
+                            hovered_node: hovered_node
+                        }
                     }
                 }
             }
