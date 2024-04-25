@@ -19,7 +19,7 @@ use crate::use_platform;
 pub type AccessibilityIdCounter = Rc<RefCell<u64>>;
 
 #[derive(Clone)]
-pub struct NavigationMark(pub bool);
+pub struct NavigationMark(bool);
 
 impl NavigationMark {
     pub fn allowed(&self) -> bool {

@@ -23,7 +23,7 @@ pub fn KeyboardNavigator(children: Element) -> Element {
                     .unwrap();
             }
         } else {
-            navigation_mark.write().0 = true;
+            navigation_mark.write().set_allowed(true)
         }
     };
 
