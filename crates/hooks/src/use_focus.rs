@@ -61,7 +61,7 @@ impl UseFocus {
     /// Prevent navigating the accessible nodes with the keyboard.
     /// You must use this this inside of a `onkeydown` event handler.
     pub fn prevent_navigation(&mut self) {
-        self.navigation_mark.write().0 = false;
+        self.navigation_mark.write().set_allowed(false);
     }
 }
 

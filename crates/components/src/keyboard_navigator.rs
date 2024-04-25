@@ -11,7 +11,7 @@ pub fn KeyboardNavigator(children: Element) -> Element {
     let platform = use_platform();
 
     let onkeydown = move |e: KeyboardEvent| {
-        let allowed_to_navigate = navigation_mark.peek().0;
+        let allowed_to_navigate = navigation_mark.peek().allowed();
         if e.key == Key::Tab && allowed_to_navigate {
             if e.modifiers.contains(Modifiers::SHIFT) {
                 platform

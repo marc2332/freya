@@ -21,6 +21,16 @@ pub type AccessibilityIdCounter = Rc<RefCell<u64>>;
 #[derive(Clone)]
 pub struct NavigationMark(pub bool);
 
+impl NavigationMark {
+    pub fn allowed(&self) -> bool {
+        self.0
+    }
+
+    pub fn set_allowed(&mut self, allowed: bool) {
+        self.0 = allowed;
+    }
+}
+
 /// Sync both the Focus shared state and the platform accessibility focus
 pub fn use_init_accessibility() -> Signal<NavigationMark> {
     let mut focused_id =
