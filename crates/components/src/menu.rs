@@ -373,7 +373,7 @@ mod test {
 
         let start_size = utils.sdom().get().layout().size();
 
-        assert_eq!(utils.sdom().get().layout().size(), 4);
+        assert_eq!(utils.sdom().get().layout().size(), 5);
 
         // Open the Menu
         utils.push_event(PlatformEvent::Mouse {

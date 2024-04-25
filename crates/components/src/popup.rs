@@ -178,7 +178,7 @@ mod test {
         utils.wait_for_update().await;
 
         // Check the popup is closed
-        assert_eq!(utils.sdom().get().layout().size(), 3);
+        assert_eq!(utils.sdom().get().layout().size(), 4);
 
         // Open the popup
         utils.push_event(PlatformEvent::Mouse {
@@ -189,7 +189,7 @@ mod test {
         utils.wait_for_update().await;
 
         // Check the popup is opened
-        assert_eq!(utils.sdom().get().layout().size(), 9);
+        assert_eq!(utils.sdom().get().layout().size(), 10);
 
         utils.push_event(PlatformEvent::Mouse {
             name: EventName::Click,
@@ -199,6 +199,6 @@ mod test {
         utils.wait_for_update().await;
 
         // Check the popup is closed
-        assert_eq!(utils.sdom().get().layout().size(), 3);
+        assert_eq!(utils.sdom().get().layout().size(), 4);
     }
 }
