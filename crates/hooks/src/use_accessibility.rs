@@ -18,14 +18,18 @@ use crate::use_platform;
 
 pub type AccessibilityIdCounter = Rc<RefCell<u64>>;
 
+#[derive(Clone)]
+pub struct NavigationMark(pub bool);
+
 /// Sync both the Focus shared state and the platform accessibility focus
-pub fn use_init_accessibility() {
+pub fn use_init_accessibility() -> Signal<NavigationMark> {
     let mut focused_id =
         use_context_provider::<Signal<AccessibilityId>>(|| Signal::new(ACCESSIBILITY_ROOT_ID));
     let mut navigation_mode =
         use_context_provider::<Signal<NavigationMode>>(|| Signal::new(NavigationMode::NotKeyboard));
     use_context_provider(|| Rc::new(RefCell::new(0u64)));
     let platform = use_platform();
+    let navigation_mark = use_context_provider(|| Signal::new(NavigationMark(true)));
 
     // Tell the renderer the new focused node
     use_effect(move || {
@@ -56,6 +60,8 @@ pub fn use_init_accessibility() {
             }
         });
     });
+
+    navigation_mark
 }
 
 #[cfg(test)]

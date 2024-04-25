@@ -7,7 +7,7 @@ use freya_core::{
 use freya_elements::events::{keyboard::Code, KeyboardEvent};
 use freya_node_state::CustomAttributeValues;
 
-use crate::AccessibilityIdCounter;
+use crate::{AccessibilityIdCounter, NavigationMark};
 
 /// Manage the focus operations of given Node
 #[derive(Clone, Copy)]
@@ -17,6 +17,7 @@ pub struct UseFocus {
     is_focused: Memo<bool>,
     focused_id: Signal<AccessibilityId>,
     navigation_mode: Signal<NavigationMode>,
+    navigation_mark: Signal<NavigationMark>,
 }
 
 impl UseFocus {
@@ -56,6 +57,10 @@ impl UseFocus {
     pub fn validate_keydown(&self, e: KeyboardEvent) -> bool {
         e.data.code == Code::Enter && self.is_selected()
     }
+
+    pub fn prevent_navigation(&mut self) {
+        self.navigation_mark.write().0 = false;
+    }
 }
 
 /// Create a focus manager for a node.
@@ -63,6 +68,7 @@ pub fn use_focus() -> UseFocus {
     let accessibility_id_counter = use_context::<AccessibilityIdCounter>();
     let focused_id = use_context::<Signal<AccessibilityId>>();
     let navigation_mode = use_context::<Signal<NavigationMode>>();
+    let navigation_mark = use_context::<Signal<NavigationMark>>();
 
     let id = use_hook(|| {
         let mut counter = accessibility_id_counter.borrow_mut();
@@ -81,6 +87,7 @@ pub fn use_focus() -> UseFocus {
         is_focused,
         is_selected,
         navigation_mode,
+        navigation_mark,
     })
 }
 #[cfg(test)]
