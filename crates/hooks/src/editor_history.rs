@@ -11,7 +11,7 @@ pub enum HistoryChange {
 pub struct EditorHistory {
     pub changes: Vec<HistoryChange>,
     pub current_change: usize,
-    // Incremental counter indicating for every change.
+    // Incremental counter for every change.
     pub version: usize,
 }
 
