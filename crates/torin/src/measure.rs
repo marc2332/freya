@@ -292,13 +292,15 @@ pub fn measure_inner_nodes<Key: NodeKey>(
 
         // 1. Measure the children
         for child_id in &children {
-            let inner_area = *initial_phase_mode.inner_area();
-
-            let child_data = dom_adapter.get_node(child_id).unwrap();
+            let Some(child_data) = dom_adapter.get_node(&child_id) else {
+                continue;
+            };
 
             if child_data.position.is_absolute() {
                 continue;
             }
+
+            let inner_area = *initial_phase_mode.inner_area();
 
             let (_, child_areas) = measure_node(
                 *child_id,
@@ -357,6 +359,10 @@ pub fn measure_inner_nodes<Key: NodeKey>(
 
     // Final phase: measure the children with all the axis and sizes adjusted
     for child_id in children {
+        let Some(child_data) = dom_adapter.get_node(&child_id) else {
+            continue;
+        };
+
         let mut adapted_available_area = *available_area;
         if parent_node.cross_alignment.is_not_start() {
             let initial_phase_size = initial_phase_sizes.get(&child_id);
@@ -374,8 +380,6 @@ pub fn measure_inner_nodes<Key: NodeKey>(
         }
 
         let inner_area = *mode.inner_area();
-
-        let child_data = dom_adapter.get_node(&child_id).unwrap();
 
         // Final measurement
         let (child_revalidated, child_areas) = measure_node(

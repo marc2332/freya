@@ -30,10 +30,7 @@ impl DOMAdapter<NodeId> for DioxusDOMAdapter<'_> {
             .map(|t| t.contains_text())
             .unwrap_or_default();
 
-        let mut layout = node
-            .get::<LayoutState>()
-            .expect("This should exist.")
-            .clone();
+        let mut layout = node.get::<LayoutState>()?.clone();
 
         // The root node expands by default
         if *node_id == self.rdom.root_id() {
