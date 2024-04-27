@@ -1,7 +1,7 @@
 [package]
 name = "freya-core"
 description = "Internal core funcionatilies for Freya."
-version = "0.1.3"
+version = "0.2.0"
 edition = "2021"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
