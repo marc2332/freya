@@ -1,4 +1,4 @@
-# Environment Setup
+# Setup
 
 Make sure you have [Rust](https://www.rust-lang.org/) and your OS dependencies installed.
 
@@ -27,3 +27,11 @@ Don't hesitate to contribute so other distros can be added here.
 ### MacOS
 
 No setup required. But feel free to add more if we miss something.
+
+## Custom Linkers
+
+The following custom linkers are not supported at the moment:
+
+- `mold`
+
+If there is another one not supported don't hesitate to add it here.

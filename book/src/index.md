@@ -1,54 +1,77 @@
-> ⚠️ Warning: This Book might contain APIs from the latest [git version](https://github.com/marc2332/freya) that might not be available on the stable versions released on crates.io.
-> As a general rule, don't expect everything to be documented here.
+# Overview
 
-# Welcome
+**Freya** is a **work in progress** cross-platform native GUI library for 🦀 Rust, built on top of 🧬 [Dioxus](https://dioxuslabs.com) and using 🎨 [Skia](https://skia.org/) as a graphics library. 
 
-**Freya** is a **work in progress** cross-platform native GUI library for 🦀 Rust, built on top of 🧬 [Dioxus](https://dioxuslabs.com) and 🎨 [Skia](https://skia.org/) as graphics library. 
-
-- [What is Freya?](./what_is_freya.html)
-- [Main differences with Dioxus](./differences_with_dioxus.html)
-- [Environment Setup](./setup.html)
-- [API References](https://docs.rs/freya/latest/freya/)
-- [Discord](https://discord.gg/sYejxCdewG)
 
 <table>
 <tr>
-<td style="border:hidden;">
+<td style="border:hidden; padding: 0;">
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    let mut count = use_state(cx, || 0);
+fn app() -> Element {
+    let mut count = use_signal(|| 0);
 
-    render!(
+    rsx!(
         rect {
-            height: "20%",
+            height: "50%",
             width: "100%",
-            background: "rgb(233, 196, 106)",
-            padding: "12",
-            color: "rgb(20, 33, 61)",
-            label { 
-                font_size: "20", 
-                "Number is: {count}"
+            main_align: "center",
+            cross_align: "center",
+            background: "rgb(0, 119, 182)",
+            color: "white",
+            shadow: "0 4 20 5 rgb(0, 0, 0, 80)",
+            label {
+                font_size: "75",
+                font_weight: "bold",
+                "{count}"
             }
         }
         rect {
-            height: "80%",
+            height: "50%",
             width: "100%",
-            background: "rgb(168, 218, 220)",
-            color: "black",
-            padding: "12",
-            onclick: move |_| count += 1,
-            label { "Click to increase!" }
+            main_align: "center",
+            cross_align: "center",
+            direction: "horizontal",
+            Button {
+                onclick: move |_| count += 1,
+                label { "Increase" }
+            }
+            Button {
+                onclick: move |_| count -= 1,
+                label { "Decrease" }
+            }
         }
     )
 }
 ```
 </td>
-<td style="border:hidden;">
-
-![Freya](./demo.png)
-
+<td style="border:hidden; padding: 0;">
+<video width="400" loop autoplay>
+  <source src="https://freya--feat-website-enhancements.deno.dev/demo.mp4" type="video/mp4" />
+</video>
 </td>
 </table>
 
 Check out the examples in the Freya [repository](https://github.com/marc2332/freya/tree/main/examples) to learn more.
+
+
+### Features
+- ⛏️ Built-in **components** (button, scroll views, switch and more) 
+- 🚇 Built-in **hooks** library (animations, text editing and more)
+- 🔍 Built-in **devtools** panel (experimental ⚠️)
+- 🧰 Built-in **headless testing** runner for components
+- 🎨 **Theming** support (not extensible yet ⚠️)
+- 🛩️ Cross-platform (Windows, Linux, MacOS)
+- 🖼️ SKSL **Shaders** support
+- 🔄️ Dioxus **Hot-reload** support
+- 📒 Multi-line **text editing** (experimental ⚠️)
+- 🦾 Basic **Accessibility** Support
+- 🧩 Compatible with [Dioxus SDK](https://github.com/DioxusLabs/sdk) and other Dioxus renderer-agnostic libraries
+
+### Learn More
+
+- [Setup](./setup.html)
+- [API References](https://docs.rs/freya/latest/freya/)
+- [Main differences with Dioxus](./differences_with_dioxus.html)
+- [Discord](https://discord.gg/sYejxCdewG)
+
