@@ -10,7 +10,6 @@ use freya_hooks::{use_init_theme, use_theme, DARK_THEME};
 use freya_native_core::node::NodeType;
 use freya_native_core::prelude::ElementNode;
 use freya_native_core::real_dom::NodeImmutable;
-use freya_native_core::tree::TreeRef;
 use freya_native_core::NodeId;
 
 use freya_renderer::HoveredNode;
@@ -129,10 +128,13 @@ pub fn DevTools(props: DevToolsProps) -> Element {
     let theme = theme.read();
     let color = &theme.body.color;
 
-    use_effect(move || {
-        let rdom = props.rdom.clone();
-        let mutations_notifier = props.mutations_notifier.clone();
+    use_hook(move || {
         spawn(async move {
+            let DevToolsProps {
+                mutations_notifier,
+                rdom,
+                ..
+            } = props;
             loop {
                 mutations_notifier.notified().await;
 
@@ -141,14 +143,14 @@ pub fn DevTools(props: DevToolsProps) -> Element {
                     let rdom = dom.rdom();
                     let layout = dom.layout();
 
-                    let mut new_children = Vec::with_capacity(layout.results.len());
+                    let mut new_children = Vec::with_capacity(rdom.tree_ref().len());
 
                     let mut root_found = false;
                     let mut devtools_found = false;
 
                     rdom.traverse_depth_first(|node| {
-                        let height = rdom.tree_ref().height(node.id()).unwrap();
-                        if height == 2 {
+                        let height = node.height();
+                        if height == 3 {
                             if !root_found {
                                 root_found = true;
                             } else {
