@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use dioxus_core::{prelude::spawn, use_hook, AttributeValue};
-use dioxus_signals::{Readable, Signal, Writable, ReadOnlySignal};
+use dioxus_signals::{ReadOnlySignal, Readable, Signal, Writable};
 use freya_common::NodeReferenceLayout;
 use freya_node_state::{CustomAttributeValues, NodeReference};
 use tokio::sync::watch::channel;
