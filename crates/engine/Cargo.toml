@@ -1,7 +1,7 @@
 [package]
 name = "freya-engine"
 description = "Abstract Freya's graphics APIs"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
@@ -24,6 +24,6 @@ skia-safe = { workspace = true, optional = true }
 glutin = { workspace = true }
 
 
-[target."cfg(target_os = \"linux\")".dependencies.skia-safe]
+[target."cfg(all(target_os = \"linux\", not(doc)))".dependencies.skia-safe]
 workspace = true
 features = ["gl", "textlayout", "svg", "x11", "wayland"]
