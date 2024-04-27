@@ -24,6 +24,7 @@ skia-safe = { workspace = true, optional = true }
 glutin = { workspace = true }
 
 
-[target."cfg(all(target_os = \"linux\", feature = \"skia-engine\"))".dependencies.skia-safe]
+[target."cfg(target_os = \"linux\")".dependencies.skia-safe]
 workspace = true
+optional = true
 features = ["gl", "textlayout", "svg", "x11", "wayland"]
