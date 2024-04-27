@@ -111,8 +111,4 @@ dioxus = { version = "0.5", features = ["macro", "hooks"], default-features = fa
 - Useful testing APIs
 - Useful and extensible components and hooks
 
-## Status ⌚
-
-You can see the tracking [issue](https://github.com/marc2332/freya/issues/200) to know what features are implemented and which ones are not, yet.
-
 [MIT License](./LICENSE.md)
