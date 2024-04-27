@@ -1,0 +1,18 @@
+---
+const posts = await Astro.glob('../content/blog/*.md');
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Freya - GUI Library for Rust">
+  {posts.map((post) => {
+    const formattedDate = (new Date(post.frontmatter.date)).toLocaleString().split(',')[0];
+    return (
+      <a href={`/posts/${post.frontmatter.slug}`} class="block border bg-custom-dark-gray border-stone-700 my-2 p-8 rounded-lg hover:border-stone-500 transition-colors delay-[10]">
+        <h2 class="m-0">{post.frontmatter.title}</h2>
+        <i class="block mb-4 text-stone-500">{formattedDate} - {post.frontmatter.author}</i>
+        <p>{post.frontmatter.description}</p>
+      </a>
+    )
+  })}
+</Layout>
+

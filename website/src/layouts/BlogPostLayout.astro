@@ -1,0 +1,107 @@
+---
+import Layout from "./Layout.astro";
+import BlogPostTOC  from "../components/BlogPostTOC.astro"
+const { frontmatter, headings  } = Astro.props;
+
+const formattedDate = (new Date(frontmatter.date)).toLocaleString().split(',')[0]
+
+---
+
+<Layout title={frontmatter.title}>
+    <div class="flex">
+        <article class="sm:w-3/4 sm:px-8 px-2 w-full">
+            <h1>{frontmatter.title}</h1>
+            <i>{formattedDate} - {frontmatter.author}</i>
+            <slot />
+        </article>
+        <BlogPostTOC headings={headings}/>
+    </div>
+</Layout>
+
+<style is:global>
+    h1, h2, h3, h4, h5 {
+	    scroll-margin-top: 120px;
+    }
+	.icon.icon-link::before {
+		padding: 2px 10px;
+        content: "#";
+        color: rgb(100, 100, 100);
+	}
+
+    .icon.icon-link:hover::before {
+        color: rgb(150, 150, 150);
+	}
+
+    main {
+        margin-bottom: 50px;
+    }
+
+    pre {
+        padding: 20px;
+        border-radius: 8px;
+    }
+
+    main * :not(span, pre, code) {
+        color: rgb(235, 235, 235);
+        font-family: "Inter", system-ui, sans-serif;
+        line-height: 1.7;
+    }
+
+    ul {
+        list-style: circle;
+    }
+
+    ul li {
+        margin-left: 24px;
+    }
+
+    *:not(pre) > code {
+        background: rgb(65, 65, 65);
+        border-radius: 6px;
+        padding: 2px 4px;
+    }
+
+    p {
+        margin: 16px 0px;
+    }
+
+    h1 {
+        font-size: 38px;
+        margin: 24px 0px;
+        font-weight: bold;
+    }
+
+    h2 {
+        font-size: 30px;
+        margin: 20px 0px;
+        font-weight: bold;
+    }
+
+    h3 {
+        font-size: 26px;
+        margin: 18px 0px;
+        font-weight: bold;
+    }
+
+    h4 {
+        font-size: 22px;
+        margin: 16px 0px;
+        font-weight: bold;
+    }
+
+    h5 {
+        font-size: 18px;
+        margin: 16px 0px;
+        font-weight: bold;
+    }
+
+    article a:not([aria-hidden="true"]) {
+        text-decoration: underline;
+        color: rgb(57, 138, 215);
+    }
+
+    img, video {
+        margin: 0 auto;
+    }
+    
+</style>
