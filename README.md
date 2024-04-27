@@ -87,7 +87,7 @@ Add Freya and Dioxus as dependencies:
 
 ```toml
 freya = "0.2"
-dioxus = { version = "0.4", features = ["macro", "hooks"], default-features = false }
+dioxus = { version = "0.5", features = ["macro", "hooks"], default-features = false }
 ```
 
 ### Features ✨
