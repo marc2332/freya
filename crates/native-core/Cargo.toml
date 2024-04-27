@@ -23,6 +23,5 @@ shipyard = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["full"] }
-freya-native-core = { workspace = true }
-freya-native-core-macro = { workspace = true }
+freya-native-core-macro = { path = "../native-core-macro"}
 
