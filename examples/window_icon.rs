@@ -29,7 +29,6 @@ fn app() -> Element {
             color: "white",
             label {
                 font_size: "35",
-                text_align: "center",
                 "This simply shows how to pass an icon to the Window"
             }
         }

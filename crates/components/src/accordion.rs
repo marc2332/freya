@@ -18,7 +18,7 @@ pub enum AccordionStatus {
     Hovering,
 }
 
-/// [`Accordion`] component properties.
+/// Properties for the [`Accordion`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct AccordionProps {
     /// Theme override.
@@ -29,10 +29,7 @@ pub struct AccordionProps {
     pub summary: Element,
 }
 
-/// `Accordion` component.
-///
-/// # Props
-/// See [`AccordionProps`].
+/// Show other elements under a collapsable box.
 ///
 /// # Styling
 /// Inherits the [`AccordionTheme`](freya_hooks::AccordionTheme)
@@ -111,35 +108,27 @@ pub fn Accordion(props: AccordionProps) -> Element {
     )
 }
 
-/// [`AccordionSummary`] component properties.
+/// Properties for the [`AccordionSummary`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct AccordionSummaryProps {
     /// Inner children for the AccordionSummary.
     children: Element,
 }
 
-/// `AccordionSummary` component.
-///
-/// # Props
-/// See [`AccordionSummaryProps`].
-///
+/// Intended to use as summary for an [`Accordion`].
 #[allow(non_snake_case)]
 pub fn AccordionSummary(props: AccordionSummaryProps) -> Element {
     rsx!({ props.children })
 }
 
-/// [`AccordionBody`] component properties.
+/// Properties for the [`AccordionBody`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct AccordionBodyProps {
     /// Inner children for the AccordionBody.
     children: Element,
 }
 
-/// `AccordionBody` component.
-///
-/// # Props
-/// See [`AccordionBodyProps`].
-///
+/// Intended to wrap the body of an [`Accordion`].
 #[allow(non_snake_case)]
 pub fn AccordionBody(props: AccordionBodyProps) -> Element {
     rsx!(rect {
@@ -154,7 +143,7 @@ mod test {
     use std::time::Duration;
 
     use freya::prelude::*;
-    use freya_testing::{launch_test, EventName, PlatformEvent};
+    use freya_testing::prelude::*;
     use tokio::time::sleep;
     use winit::event::MouseButton;
 

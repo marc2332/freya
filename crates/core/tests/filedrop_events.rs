@@ -1,11 +1,7 @@
-use std::{path::PathBuf, str::FromStr};
-
-use dioxus::prelude::*;
-use freya_core::prelude::*;
-use freya_elements::elements as dioxus_elements;
+use freya::prelude::*;
 use freya_engine::prelude::Color;
-use freya_node_state::Fill;
-use freya_testing::launch_test;
+use freya_testing::prelude::*;
+use std::{path::PathBuf, str::FromStr};
 
 #[tokio::test]
 pub async fn filedrop_events() {

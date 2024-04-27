@@ -1,4 +1,4 @@
-use dioxus_native_core::real_dom::NodeImmutable;
+use freya_native_core::real_dom::NodeImmutable;
 
 use freya_core::dom::DioxusNode;
 use freya_engine::prelude::*;
@@ -11,7 +11,7 @@ pub fn render_image(area: &Area, node_ref: &DioxusNode, canvas: &Canvas) {
     let node_references = node_ref.get::<References>().unwrap();
 
     let draw_img = |bytes: &[u8]| {
-        let pic = Image::from_encoded(unsafe { Data::new_bytes(bytes) });
+        let pic = Image::from_encoded(Data::new_copy(bytes));
         if let Some(pic) = pic {
             let mut paint = Paint::default();
             paint.set_anti_alias(true);

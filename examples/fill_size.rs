@@ -13,8 +13,6 @@ fn app() -> Element {
     rsx!(
         rect {
             height: "50%",
-            min_height: "150",
-            max_height: "300",
             width: "100%",
             background: "rgb(0, 119, 182)",
         }

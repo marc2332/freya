@@ -4,21 +4,15 @@ use freya_hooks::{
     use_animation, use_applied_theme, AnimNum, LoaderTheme, LoaderThemeWith, OnFinish,
 };
 
-/// [`Loader`] component properties.
+/// Properties for the [`Loader`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct LoaderProps {
     /// Theme override.
     pub theme: Option<LoaderThemeWith>,
 }
 
-/// `Loader` component.
-///
-/// # Props
-/// See [`LoaderProps`].
-///
 /// # Styling
 /// Inherits the [`LoaderTheme`](freya_hooks::LoaderTheme) theme.
-///
 #[allow(non_snake_case)]
 pub fn Loader(props: LoaderProps) -> Element {
     let theme = use_applied_theme!(&props.theme, loader);

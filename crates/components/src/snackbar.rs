@@ -79,6 +79,7 @@ pub fn SnackBar(
     )
 }
 
+#[doc(hidden)]
 #[allow(non_snake_case)]
 #[component]
 pub fn SnackBarBox(children: Element, theme: Option<SnackBarThemeWith>) -> Element {
@@ -104,7 +105,7 @@ mod test {
 
     use dioxus::prelude::use_signal;
     use freya::prelude::*;
-    use freya_testing::*;
+    use freya_testing::prelude::*;
     use tokio::time::sleep;
 
     #[tokio::test]

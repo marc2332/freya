@@ -25,7 +25,7 @@ freya-common = { workspace = true }
 freya-engine = { workspace = true }
 torin = { workspace = true }
 
-dioxus-native-core = { workspace = true }
+freya-native-core = { workspace = true }
 dioxus-core = { workspace = true }
 
 tokio = { workspace = true }
@@ -40,4 +40,5 @@ smallvec = { workspace = true }
 
 [dev-dependencies]
 dioxus = { workspace = true }
-freya-testing = { path = "../testing" }
+freya-testing = { workspace = true }
+freya = { workspace = true }

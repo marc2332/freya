@@ -1,9 +1,4 @@
 use dioxus::prelude::*;
-use dioxus_native_core::node::NodeType;
-use dioxus_native_core::prelude::ElementNode;
-use dioxus_native_core::real_dom::NodeImmutable;
-use dioxus_native_core::tree::TreeRef;
-use dioxus_native_core::NodeId;
 use dioxus_router::prelude::*;
 use freya_components::*;
 use freya_core::{
@@ -11,7 +6,11 @@ use freya_core::{
     node::{get_node_state, NodeState},
 };
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::{use_init_accessibility, use_init_theme, use_theme, DARK_THEME};
+use freya_hooks::{use_init_theme, use_theme, DARK_THEME};
+use freya_native_core::node::NodeType;
+use freya_native_core::prelude::ElementNode;
+use freya_native_core::real_dom::NodeImmutable;
+use freya_native_core::NodeId;
 
 use freya_renderer::HoveredNode;
 use std::sync::Arc;
@@ -61,33 +60,33 @@ impl PartialEq for AppWithDevtoolsProps {
 
 #[allow(non_snake_case)]
 fn AppWithDevtools(props: AppWithDevtoolsProps) -> Element {
-    use_init_accessibility();
-
     #[allow(non_snake_case)]
     let Root = props.root;
     let mutations_notifier = props.mutations_notifier.clone();
     let hovered_node = props.hovered_node.clone();
 
     rsx!(
-        rect {
-            width: "100%",
-            height: "100%",
-            direction: "horizontal",
+        KeyboardNavigator {
             rect {
-                overflow: "clip",
+                width: "100%",
                 height: "100%",
-                width: "calc(100% - 350)",
-                Root { },
-            }
-            rect {
-                background: "rgb(40, 40, 40)",
-                height: "100%",
-                width: "350",
-                ThemeProvider {
-                    DevTools {
-                        rdom: props.rdom.clone(),
-                        mutations_notifier: mutations_notifier,
-                        hovered_node: hovered_node
+                direction: "horizontal",
+                rect {
+                    overflow: "clip",
+                    height: "100%",
+                    width: "calc(100% - 350)",
+                    Root { },
+                }
+                rect {
+                    background: "rgb(40, 40, 40)",
+                    height: "100%",
+                    width: "350",
+                    ThemeProvider {
+                        DevTools {
+                            rdom: props.rdom.clone(),
+                            mutations_notifier: mutations_notifier,
+                            hovered_node: hovered_node
+                        }
                     }
                 }
             }
@@ -129,10 +128,13 @@ pub fn DevTools(props: DevToolsProps) -> Element {
     let theme = theme.read();
     let color = &theme.body.color;
 
-    use_effect(move || {
-        let rdom = props.rdom.clone();
-        let mutations_notifier = props.mutations_notifier.clone();
+    use_hook(move || {
         spawn(async move {
+            let DevToolsProps {
+                mutations_notifier,
+                rdom,
+                ..
+            } = props;
             loop {
                 mutations_notifier.notified().await;
 
@@ -141,14 +143,14 @@ pub fn DevTools(props: DevToolsProps) -> Element {
                     let rdom = dom.rdom();
                     let layout = dom.layout();
 
-                    let mut new_children = Vec::with_capacity(layout.results.len());
+                    let mut new_children = Vec::with_capacity(rdom.tree_ref().len());
 
                     let mut root_found = false;
                     let mut devtools_found = false;
 
                     rdom.traverse_depth_first(|node| {
-                        let height = rdom.tree_ref().height(node.id()).unwrap();
-                        if height == 2 {
+                        let height = node.height();
+                        if height == 3 {
                             if !root_found {
                                 root_found = true;
                             } else {

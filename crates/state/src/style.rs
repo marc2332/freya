@@ -1,6 +1,4 @@
-use std::sync::Arc;
-
-use dioxus_native_core::{
+use freya_native_core::{
     attributes::AttributeName,
     exports::shipyard::Component,
     node::OwnedAttributeValue,
@@ -8,7 +6,7 @@ use dioxus_native_core::{
     prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State},
     SendAnyMap,
 };
-use dioxus_native_core_macro::partial_derive_state;
+use freya_native_core_macro::partial_derive_state;
 use torin::scaled::Scaled;
 
 use crate::{
@@ -137,8 +135,8 @@ impl State<CustomAttributeValues> for Style {
                     }
                     AttributeName::SvgContent => {
                         let text = attr.value.as_text();
-                        style.svg_data = text
-                            .map(|v| AttributesBytes::Dynamic(Arc::new(v.as_bytes().to_owned())));
+                        style.svg_data =
+                            text.map(|v| AttributesBytes::Dynamic(v.as_bytes().to_vec().into()));
                     }
                     AttributeName::Overflow => {
                         if let Some(value) = attr.value.as_text() {

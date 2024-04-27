@@ -3,6 +3,7 @@ use freya_elements::elements as dioxus_elements;
 
 use freya_hooks::{use_applied_theme, ScrollBarTheme, ScrollBarThemeWith};
 
+/// Properties for the [`ScrollBar`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct ScrollBarProps {
     /// Theme override.
@@ -19,11 +20,12 @@ pub struct ScrollBarProps {
     pub clicking_scrollbar: bool,
 }
 
-enum ScrollBarStatus {
+enum ScrollBarState {
     Idle,
     Hovering,
 }
 
+/// Scroll bar used for [`crate::ScrollView`] and [`crate::VirtualScrollView`].
 #[allow(non_snake_case)]
 pub fn ScrollBar(
     ScrollBarProps {
@@ -36,16 +38,16 @@ pub fn ScrollBar(
         children,
     }: ScrollBarProps,
 ) -> Element {
-    let mut status = use_signal(|| ScrollBarStatus::Idle);
+    let mut status = use_signal(|| ScrollBarState::Idle);
     let ScrollBarTheme { background, .. } = use_applied_theme!(&theme, scroll_bar);
 
-    let onmouseenter = move |_| status.set(ScrollBarStatus::Hovering);
-    let onmouseleave = move |_| status.set(ScrollBarStatus::Idle);
+    let onmouseenter = move |_| status.set(ScrollBarState::Hovering);
+    let onmouseleave = move |_| status.set(ScrollBarState::Idle);
 
     let background = match *status.read() {
         _ if clicking_scrollbar => background.as_ref(),
-        ScrollBarStatus::Hovering => background.as_ref(),
-        ScrollBarStatus::Idle => "transparent",
+        ScrollBarState::Hovering => background.as_ref(),
+        ScrollBarState::Idle => "transparent",
     };
 
     rsx!(

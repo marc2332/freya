@@ -3,6 +3,7 @@ use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_hooks::{theme_with, use_applied_theme, ButtonThemeWith, PopupTheme, PopupThemeWith};
 
+/// The background of the [`Popup`] component.
 #[allow(non_snake_case)]
 #[component]
 pub fn PopupBackground(children: Element) -> Element {
@@ -20,7 +21,7 @@ pub fn PopupBackground(children: Element) -> Element {
     })
 }
 
-/// `Popup` component.
+/// Floating window intended for quick interactions. Also called `Dialog` in other frameworks.
 ///
 /// # Styling
 /// Inherits the [`PopupTheme`](freya_hooks::PopupTheme) theme.
@@ -115,6 +116,7 @@ pub fn Popup(
     )
 }
 
+/// Optionally use a styled title inside a [`Popup`].
 #[allow(non_snake_case)]
 #[component]
 pub fn PopupTitle(children: Element) -> Element {
@@ -128,6 +130,7 @@ pub fn PopupTitle(children: Element) -> Element {
     )
 }
 
+/// Optionally wrap the content of your [`Popup`] in a styled container.
 #[allow(non_snake_case)]
 #[component]
 pub fn PopupContent(children: Element) -> Element {
@@ -144,7 +147,7 @@ pub fn PopupContent(children: Element) -> Element {
 mod test {
     use dioxus::prelude::use_signal;
     use freya::prelude::*;
-    use freya_testing::*;
+    use freya_testing::prelude::*;
 
     #[tokio::test]
     pub async fn popup() {
@@ -175,7 +178,7 @@ mod test {
         utils.wait_for_update().await;
 
         // Check the popup is closed
-        assert_eq!(utils.sdom().get().layout().size(), 3);
+        assert_eq!(utils.sdom().get().layout().size(), 4);
 
         // Open the popup
         utils.push_event(PlatformEvent::Mouse {
@@ -186,7 +189,7 @@ mod test {
         utils.wait_for_update().await;
 
         // Check the popup is opened
-        assert_eq!(utils.sdom().get().layout().size(), 9);
+        assert_eq!(utils.sdom().get().layout().size(), 10);
 
         utils.push_event(PlatformEvent::Mouse {
             name: EventName::Click,
@@ -196,6 +199,6 @@ mod test {
         utils.wait_for_update().await;
 
         // Check the popup is closed
-        assert_eq!(utils.sdom().get().layout().size(), 3);
+        assert_eq!(utils.sdom().get().layout().size(), 4);
     }
 }

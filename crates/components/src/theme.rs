@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use freya_hooks::{use_init_theme, Theme};
 
-/// [`ThemeProvider`] component properties.
+/// Properties for the [`ThemeProvider`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct ThemeProviderProps {
     /// Theme to provide.
@@ -11,10 +11,6 @@ pub struct ThemeProviderProps {
 }
 
 /// Provides a `Theme` for all its children.
-///
-/// # Props
-/// See [`ThemeProviderProps`]
-///
 #[allow(non_snake_case)]
 pub fn ThemeProvider(props: ThemeProviderProps) -> Element {
     use_init_theme(props.theme.unwrap_or_default());

@@ -5,7 +5,7 @@ use freya::events::pointer::MouseButton;
 use freya::prelude::*;
 use freya_engine::prelude::Color;
 use freya_node_state::{Fill, Parse};
-use freya_testing::*;
+use freya_testing::prelude::*;
 use tokio::time::sleep;
 
 #[tokio::test]

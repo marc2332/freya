@@ -36,7 +36,7 @@ pub enum InputStatus {
     Hovering,
 }
 
-/// [`Input`] component properties.
+/// Properties for the [`Input`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct InputProps {
     /// Theme override.
@@ -50,10 +50,7 @@ pub struct InputProps {
     pub mode: InputMode,
 }
 
-/// `Input` component.
-///
-/// # Props
-/// See [`InputProps`].
+/// Small box to edit text.
 ///
 /// # Styling
 /// Inherits the [`InputTheme`](freya_hooks::InputTheme) theme.
@@ -209,7 +206,7 @@ pub fn Input(
 #[cfg(test)]
 mod test {
     use freya::prelude::*;
-    use freya_testing::*;
+    use freya_testing::prelude::*;
 
     #[tokio::test]
     pub async fn input() {

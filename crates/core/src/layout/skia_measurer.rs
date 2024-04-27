@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
-use dioxus_native_core::{
+use freya_common::{CachedParagraph, NodeReferenceLayout};
+use freya_native_core::{
     prelude::{ElementNode, NodeType, SendAnyMap},
     real_dom::NodeImmutable,
     tags::TagName,
     NodeId,
 };
-use freya_common::{CachedParagraph, NodeReferenceLayout};
 use freya_node_state::{FontStyleState, LayoutState, TextOverflow};
 
 use freya_engine::prelude::*;

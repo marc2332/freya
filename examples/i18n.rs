@@ -3,7 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus_std::{
+use dioxus_sdk::{
     i18n::{use_i18, use_init_i18n, Language},
     translate,
 };

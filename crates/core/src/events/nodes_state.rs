@@ -1,6 +1,6 @@
 #![allow(clippy::type_complexity)]
 
-use dioxus_native_core::NodeId;
+use freya_native_core::NodeId;
 use rustc_hash::FxHashMap;
 
 use crate::{

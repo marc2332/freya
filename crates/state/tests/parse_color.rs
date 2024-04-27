@@ -31,6 +31,12 @@ fn parse_argb_color_f32() {
 }
 
 #[test]
+fn parse_hex_color() {
+    let color = Color::parse("#FFA500");
+    assert_eq!(color, Ok(Color::from_rgb(255, 165, 0)));
+}
+
+#[test]
 fn invalid_colors() {
     let incorrect_name = Color::parse("wow(0, 0, 0)");
     let extra_lparen = Color::parse("rgb((0, 0, 0)");
@@ -42,6 +48,8 @@ fn invalid_colors() {
     let extra_component = Color::parse("rgb(0, 0, 0, 0, 0)");
     let extra_ending_commas = Color::parse("rgb(0, 0, 0, 0,)");
     let bad_unit = Color::parse("hsl(28in, 0.4, 0.25, 50%)");
+    let missing_number_sign = Color::parse("FFA500");
+    let incorrect_hex_length = Color::parse("#FFA0");
 
     assert_eq!(incorrect_name.is_err(), true);
     assert_eq!(extra_lparen.is_err(), true);
@@ -53,4 +61,6 @@ fn invalid_colors() {
     assert_eq!(extra_component.is_err(), true);
     assert_eq!(extra_ending_commas.is_err(), true);
     assert_eq!(bad_unit.is_err(), true);
+    assert_eq!(missing_number_sign.is_err(), true);
+    assert_eq!(incorrect_hex_length.is_err(), true);
 }

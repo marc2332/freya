@@ -1,6 +1,6 @@
 use std::{borrow::Cow, cmp::Ordering, fmt::Display, ops::Range};
 
-use dioxus_std::clipboard::UseClipboard;
+use dioxus_sdk::clipboard::UseClipboard;
 use freya_elements::events::keyboard::{Code, Key, Modifiers};
 
 /// Holds the position of a cursor in a text
@@ -85,7 +85,7 @@ bitflags::bitflags! {
 }
 
 /// Common trait for editable texts
-pub trait TextEditor: Sized + Clone + Display {
+pub trait TextEditor {
     type LinesIterator<'a>: Iterator<Item = Line<'a>>
     where
         Self: 'a;
@@ -412,6 +412,7 @@ pub trait TextEditor: Sized + Clone + Display {
                             self.remove(start..end);
                             self.get_clipboard().set(text).ok();
                             self.set_cursor_pos(start);
+                            event.insert(TextEvent::TEXT_CHANGED);
                         }
                     }
 

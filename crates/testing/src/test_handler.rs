@@ -12,9 +12,10 @@ use tokio::time::{interval, timeout};
 use torin::geometry::{Area, Size2D};
 use winit::window::CursorIcon;
 
+use crate::config::TestingConfig;
 use crate::test_node::TestNode;
 use crate::test_utils::TestUtils;
-use crate::{TestingConfig, SCALE_FACTOR};
+use crate::SCALE_FACTOR;
 
 /// Manages the lifecycle of your tests.
 pub struct TestingHandler {
@@ -26,6 +27,8 @@ pub struct TestingHandler {
     pub(crate) platform_event_receiver: UnboundedReceiver<EventMessage>,
     pub(crate) events_queue: EventsQueue,
     pub(crate) nodes_state: NodesState,
+    pub(crate) focus_sender: FocusSender,
+    pub(crate) focus_receiver: FocusReceiver,
     pub(crate) font_collection: FontCollection,
     pub(crate) accessibility_manager: SharedAccessibilityManager,
     pub(crate) config: TestingConfig,
@@ -53,6 +56,8 @@ impl TestingHandler {
     fn provide_vdom_contexts(&mut self) {
         self.vdom
             .insert_any_root_context(Box::new(self.platform_event_emitter.clone()));
+        self.vdom
+            .insert_any_root_context(Box::new(self.focus_receiver.clone()));
         self.vdom
             .insert_any_root_context(Box::new(Arc::new(self.ticker_sender.subscribe())));
         self.vdom
@@ -92,10 +97,37 @@ impl TestingHandler {
                         }
                     }
                     EventMessage::FocusAccessibilityNode(node_id) => {
-                        self.accessibility_manager
+                        let tree = self
+                            .accessibility_manager
                             .lock()
                             .unwrap()
                             .set_focus_with_update(node_id);
+
+                        if let Some(tree) = tree {
+                            self.focus_sender
+                                .send(tree.focus)
+                                .expect("Failed to focus the Node.");
+                        }
+                    }
+                    EventMessage::FocusNextAccessibilityNode => {
+                        let tree = self
+                            .accessibility_manager
+                            .lock()
+                            .unwrap()
+                            .set_focus_on_next_node(AccessibilityFocusDirection::Forward);
+                        self.focus_sender
+                            .send(tree.focus)
+                            .expect("Failed to focus the Node.");
+                    }
+                    EventMessage::FocusPrevAccessibilityNode => {
+                        let tree = self
+                            .accessibility_manager
+                            .lock()
+                            .unwrap()
+                            .set_focus_on_next_node(AccessibilityFocusDirection::Backward);
+                        self.focus_sender
+                            .send(tree.focus)
+                            .expect("Failed to focus the Node.");
                     }
                     EventMessage::SetCursorIcon(icon) => {
                         self.cursor_icon = icon;
@@ -176,7 +208,10 @@ impl TestingHandler {
             rdom.root_id()
         };
 
-        self.utils.get_node_by_id(root_id)
+        self.utils
+            .get_node_by_id(root_id)
+            // Get get the first element because of `KeyboardNavigator`
+            .get(0)
     }
 
     /// Get the current [AccessibilityId].

@@ -1,24 +1,19 @@
 use std::{cmp::Ordering, fmt::Display, ops::Range};
 
-use dioxus_std::clipboard::UseClipboard;
+use dioxus_sdk::clipboard::UseClipboard;
 use ropey::iter::Lines;
 pub use ropey::Rope;
 
 use crate::{text_editor::*, EditableMode, EditorHistory, HistoryChange};
 
 /// TextEditor implementing a Rope
-#[derive(Clone)]
 pub struct RopeEditor {
-    rope: Rope,
-    cursor: TextCursor,
-    mode: EditableMode,
-
-    /// Selected text range
-    selected: Option<(usize, usize)>,
-
-    clipboard: UseClipboard,
-
-    history: EditorHistory,
+    pub(crate) rope: Rope,
+    pub(crate) cursor: TextCursor,
+    pub(crate) mode: EditableMode,
+    pub(crate) selected: Option<(usize, usize)>,
+    pub(crate) clipboard: UseClipboard,
+    pub(crate) history: EditorHistory,
 }
 
 impl Display for RopeEditor {
@@ -253,7 +248,7 @@ impl TextEditor for RopeEditor {
 
 /// Iterator over text lines.
 pub struct LinesIterator<'a> {
-    lines: Lines<'a>,
+    pub lines: Lines<'a>,
 }
 
 impl<'a> Iterator for LinesIterator<'a> {

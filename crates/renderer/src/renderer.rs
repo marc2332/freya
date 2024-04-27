@@ -1,7 +1,7 @@
-use dioxus_native_core::prelude::ElementNode;
-use dioxus_native_core::real_dom::NodeImmutable;
-use dioxus_native_core::NodeId;
-use dioxus_native_core::{node::NodeType, tags::TagName};
+use freya_native_core::prelude::ElementNode;
+use freya_native_core::real_dom::NodeImmutable;
+use freya_native_core::NodeId;
+use freya_native_core::{node::NodeType, tags::TagName};
 
 use freya_core::dom::DioxusNode;
 use freya_engine::prelude::*;

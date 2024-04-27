@@ -20,10 +20,10 @@
 <td style="border:hidden;">
 
 ```rust, no_run
-fn app(cx: Scope) -> Element {
-    let mut count = use_state(cx, || 0);
+fn app() -> Element {
+    let mut count = use_signal(|| 0);
 
-    render!(
+    rsx!(
         rect {
             height: "20%",
             width: "100%",
@@ -50,7 +50,7 @@ fn app(cx: Scope) -> Element {
 </td>
 <td style="border:hidden;">
 
-![Freya](./demo.png)
+![Freya Demo](https://github.com/marc2332/freya/assets/38158676/f81a95a2-7add-4dbe-9820-3d3b6b42f6e5)
 
 </td>
 </table>
@@ -92,7 +92,7 @@ dioxus = { version = "0.4", features = ["macro", "hooks"], default-features = fa
 - 🔄️ Dioxus **Hot-reload** support
 - 📒 Multi-line **text editing** (experimental ⚠️)
 - 🦾 Basic **Accessibility** Support (experimental ⚠️)
-- 🧩Compatible with dioxus-std and other Dioxus renderer-agnostic libraries
+- 🧩Compatible with dioxus-sdk and other Dioxus renderer-agnostic libraries
 
 ### Goals 😁
 - Performant and low memory usage

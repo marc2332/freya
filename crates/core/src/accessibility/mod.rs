@@ -5,7 +5,7 @@ use crate::{
     dom::{DioxusDOM, DioxusNode},
     types::AccessibilityId,
 };
-use dioxus_native_core::{node::NodeType, real_dom::NodeImmutable, tags::TagName, NodeId};
+use freya_native_core::{node::NodeType, real_dom::NodeImmutable, tags::TagName, NodeId};
 use freya_node_state::AccessibilityNodeState;
 use torin::torin::Torin;
 
@@ -43,8 +43,12 @@ impl NodeAccessibility for DioxusNode<'_> {
         self.children()
             .iter()
             .filter_map(|child| {
-                let node_accessibility = &*child.get::<AccessibilityNodeState>().unwrap();
-                node_accessibility.accessibility_id
+                if child.node_type().is_visible_element() {
+                    let node_accessibility = &*child.get::<AccessibilityNodeState>().unwrap();
+                    node_accessibility.accessibility_id
+                } else {
+                    None
+                }
             })
             .collect::<Vec<AccessibilityId>>()
     }

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use dioxus_core::{prelude::spawn, use_hook, AttributeValue};
-use dioxus_signals::{Readable, Signal, Writable};
+use dioxus_signals::{ReadOnlySignal, Readable, Signal, Writable};
 use freya_common::NodeReferenceLayout;
 use freya_node_state::{CustomAttributeValues, NodeReference};
 use tokio::sync::watch::channel;
@@ -30,7 +30,7 @@ pub fn use_node() -> (AttributeValue, NodeReferenceLayout) {
 }
 
 /// Get a signal to read the latest layout from a Node.
-pub fn use_node_signal() -> (AttributeValue, Signal<NodeReferenceLayout>) {
+pub fn use_node_signal() -> (AttributeValue, ReadOnlySignal<NodeReferenceLayout>) {
     let (tx, signal) = use_hook(|| {
         let (tx, mut rx) = channel::<NodeReferenceLayout>(NodeReferenceLayout::default());
         let mut signal = Signal::new(NodeReferenceLayout::default());
@@ -48,7 +48,7 @@ pub fn use_node_signal() -> (AttributeValue, Signal<NodeReferenceLayout>) {
 
     (
         AttributeValue::any_value(CustomAttributeValues::Reference(NodeReference(tx))),
-        signal,
+        signal.into(),
     )
 }
 
@@ -56,7 +56,7 @@ pub fn use_node_signal() -> (AttributeValue, Signal<NodeReferenceLayout>) {
 mod test {
     use crate::use_node;
     use freya::prelude::*;
-    use freya_testing::{launch_test_with_config, TestingConfig};
+    use freya_testing::prelude::*;
 
     #[tokio::test]
     pub async fn track_size() {

@@ -20,18 +20,14 @@ fn TableArrow(order_direction: OrderDirection) -> Element {
     })
 }
 
-/// [`TableHead`] component properties.
+/// Properties for the [`TableHead`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct TableHeadProps {
     /// The content of this table head.
     pub children: Element,
 }
 
-/// `TableHead` component.
-///
-/// # Props
-/// See [`TableHeadProps`].
-///
+/// The head of a [`Table`]. Use [`TableRow`] inside.
 #[allow(non_snake_case)]
 pub fn TableHead(TableHeadProps { children }: TableHeadProps) -> Element {
     rsx!(
@@ -39,18 +35,14 @@ pub fn TableHead(TableHeadProps { children }: TableHeadProps) -> Element {
     )
 }
 
-/// [`TableBody`] component properties.
+/// Properties for the [`TableBody`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct TableBodyProps {
     /// The content of this table body.
     pub children: Element,
 }
 
-/// `TableBody` component.
-///
-/// # Props
-/// See [`TableBodyProps`].
-///
+/// The body of a [`Table`].
 #[allow(non_snake_case)]
 pub fn TableBody(TableBodyProps { children }: TableBodyProps) -> Element {
     rsx!(
@@ -58,7 +50,7 @@ pub fn TableBody(TableBodyProps { children }: TableBodyProps) -> Element {
     )
 }
 
-/// [`TableRow`] component properties.
+/// Properties for the [`TableRow`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct TableRowProps {
     /// Theme override.
@@ -70,10 +62,7 @@ pub struct TableRowProps {
     alternate_colors: bool,
 }
 
-/// `TableRow` component.
-///
-/// # Props
-/// See [`TableRowProps`].
+/// Table row for [`Table`]. Use [`TableCell`] inside.
 ///
 /// # Styling
 /// Inherits the [`TableTheme`](freya_hooks::TableTheme) theme.
@@ -114,6 +103,7 @@ pub fn TableRow(
     )
 }
 
+/// Sorting direction for items in [`Table`].
 #[derive(Clone, Copy, PartialEq, Debug, Default)]
 pub enum OrderDirection {
     /// Alternatively: descending.
@@ -123,7 +113,7 @@ pub enum OrderDirection {
     Down,
 }
 
-/// [`TableCell`] component properties.
+/// Properties for the [`TableCell`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct TableCellProps {
     /// The content of this cell.
@@ -143,11 +133,7 @@ pub struct TableCellProps {
     pub height: String,
 }
 
-/// `TableCell` component.
-///
-/// # Props
-/// See [`TableCellProps`].
-///
+/// Cell for a [`Table`]. You can place anything inside.
 #[allow(non_snake_case)]
 pub fn TableCell(props: TableCellProps) -> Element {
     let config = consume_context::<TableConfig>();
@@ -165,10 +151,9 @@ pub fn TableCell(props: TableCellProps) -> Element {
             overflow: "clip",
             padding: "{padding}",
             width: "{width}%",
-            main_align: "center",
+            main_align: "end",
             cross_align: "center",
             height: "{height}",
-            text_align: "right",
             direction: "horizontal",
             onclick: move |e| {
                 if let Some(onclick) = &props.onclick {
@@ -192,7 +177,7 @@ pub fn TableCell(props: TableCellProps) -> Element {
     )
 }
 
-/// [`Table`] component properties.
+/// Properties for the [`Table`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct TableProps {
     /// Theme override.
@@ -203,14 +188,10 @@ pub struct TableProps {
     pub children: Element,
 }
 
-/// `Table` component.
-///
-/// # Props
-/// See [`TableProps`].
+/// Table component, composed with [`TableHead`] and [`TableBody`].
 ///
 /// # Styling
 /// Inherits the [`TableTheme`](freya_hooks::TableTheme) theme.
-///
 #[allow(non_snake_case)]
 pub fn Table(
     TableProps {
@@ -240,6 +221,7 @@ pub fn Table(
     })
 }
 
+#[doc(hidden)]
 #[derive(Clone)]
 pub struct TableConfig {
     columns: usize,

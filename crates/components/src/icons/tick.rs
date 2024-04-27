@@ -3,14 +3,17 @@ use freya_elements::elements as dioxus_elements;
 
 use freya_hooks::{use_applied_theme, IconTheme, IconThemeWith};
 
+/// Properties for the [`TickIcon`] component.
 #[derive(Props, Clone, PartialEq)]
 pub struct TickIconProps {
     /// Theme override.
     pub theme: Option<IconThemeWith>,
+    /// Color.
     #[props(into)]
     pub fill: String,
 }
 
+/// Icon component for a Tick.
 #[allow(non_snake_case)]
 pub fn TickIcon(TickIconProps { theme, fill }: TickIconProps) -> Element {
     let IconTheme {

@@ -12,14 +12,14 @@ keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
 categories = ["gui", "caching"]
 
 [features]
-dioxus = ["dep:dioxus-native-core"]
+dioxus = ["dep:freya-native-core"]
 default = ["dioxus"]
 
 [dependencies]
 tracing = { workspace = true }
 euclid = { workspace = true }
 rustc-hash = { workspace = true }
-dioxus-native-core = { workspace = true, optional = true }
+freya-native-core = { workspace = true, optional = true }
 
 [dev-dependencies]
 criterion = "0.5.1"

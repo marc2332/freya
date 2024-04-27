@@ -1,6 +1,6 @@
 use std::{collections::HashMap, sync::Arc};
 
-use dioxus_native_core::prelude::SendAnyMap;
+use freya_native_core::prelude::SendAnyMap;
 use torin::prelude::*;
 
 // Custom measurer, useful to measure certain elements such as text with other libraries

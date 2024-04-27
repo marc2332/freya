@@ -100,7 +100,7 @@ mod test {
 
     use dioxus::prelude::use_signal;
     use freya::prelude::*;
-    use freya_testing::*;
+    use freya_testing::prelude::*;
 
     #[tokio::test]
     pub async fn checkbox() {

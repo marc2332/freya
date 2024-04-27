@@ -29,6 +29,8 @@ impl Parse for Color {
                     parse_hsl(value)
                 } else if value.starts_with("rgb(") {
                     parse_rgb(value)
+                } else if value.starts_with('#') {
+                    parse_hex_color(value)
                 } else {
                     Err(ParseColorError)
                 }
@@ -181,5 +183,16 @@ fn parse_hsl(color: &str) -> Result<Color, ParseColorError> {
         Ok(hsv.to_color((a * 255.0).round() as u8))
     } else {
         Ok(hsv.to_color(255))
+    }
+}
+
+fn parse_hex_color(color: &str) -> Result<Color, ParseColorError> {
+    if color.len() == 7 {
+        let r = u8::from_str_radix(&color[1..3], 16).map_err(|_| ParseColorError)?;
+        let g = u8::from_str_radix(&color[3..5], 16).map_err(|_| ParseColorError)?;
+        let b = u8::from_str_radix(&color[5..7], 16).map_err(|_| ParseColorError)?;
+        Ok(Color::from_rgb(r, g, b))
+    } else {
+        Err(ParseColorError)
     }
 }
