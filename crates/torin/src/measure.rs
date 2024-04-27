@@ -292,7 +292,7 @@ pub fn measure_inner_nodes<Key: NodeKey>(
 
         // 1. Measure the children
         for child_id in &children {
-            let Some(child_data) = dom_adapter.get_node(&child_id) else {
+            let Some(child_data) = dom_adapter.get_node(child_id) else {
                 continue;
             };
 
