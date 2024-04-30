@@ -164,8 +164,8 @@ pub fn PopupContent(children: Element) -> Element {
 mod test {
     use dioxus::prelude::use_signal;
     use freya::prelude::*;
-    use freya_testing::prelude::*;
     use freya_elements::events::keyboard::{Code, Key, Modifiers};
+    use freya_testing::prelude::*;
 
     #[tokio::test]
     pub async fn popup() {
@@ -232,7 +232,7 @@ mod test {
             name: EventName::KeyDown,
             key: Key::ArrowDown,
             code: Code::ArrowDown,
-            modifiers: Modifiers::empty()
+            modifiers: Modifiers::empty(),
         });
         utils.wait_for_update().await;
         // Check the popup is still open
@@ -243,7 +243,7 @@ mod test {
             name: EventName::KeyDown,
             key: Key::Escape,
             code: Code::Escape,
-            modifiers: Modifiers::empty()
+            modifiers: Modifiers::empty(),
         });
         utils.wait_for_update().await;
         // Check the popup is closed
