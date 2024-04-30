@@ -47,7 +47,7 @@ fn app() -> Element {
 </td>
 <td style="border:hidden; padding: 0;">
 <video width="400" loop autoplay>
-  <source src="https://freya--feat-website-enhancements.deno.dev/demo.mp4" type="video/mp4" />
+  <source src="https://freyaui.dev/demo.mp4" type="video/mp4" />
 </video>
 </td>
 </table>
