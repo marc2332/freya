@@ -1,6 +1,6 @@
 use crate::{Button, CrossIcon};
 use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
+use freya_elements::{elements as dioxus_elements, events::KeyboardEvent};
 use freya_hooks::{theme_with, use_applied_theme, ButtonThemeWith, PopupTheme, PopupThemeWith};
 
 /// The background of the [`Popup`] component.
@@ -81,16 +81,20 @@ pub fn Popup(
         height,
     } = use_applied_theme!(&theme, popup);
 
-    let request_to_close = move |_| {
+    let request_to_close = move || {
         if let Some(oncloserequest) = &oncloserequest {
             oncloserequest.call(());
         }
     };
-let onkeydown = move |event: KeyboardEvent| {
-    if close_on_escape_key && event.key == Key::Escape {
-        request_to_close()
-    }
-};
+
+    let onkeydown = move |event: KeyboardEvent| {
+        if close_on_escape_key && event.key == Key::Escape {
+            request_to_close()
+        }
+    };
+
+    let on_close_button_click = move |_| request_to_close();
+
     rsx!(
         PopupBackground {
             rect {
@@ -102,10 +106,6 @@ let onkeydown = move |event: KeyboardEvent| {
                 width: "{width}",
                 height: "{height}",
                 onkeydown,
-                    if close_on_escape_key && event.key == Key::Escape {
-                        request_to_close()
-                    }
-                },
                 if show_close_button {
                     rect {
                         height: "0",
@@ -120,7 +120,7 @@ let onkeydown = move |event: KeyboardEvent| {
                                 corner_radius: "999".into(),
                                 shadow: "none".into()
                             }),
-                            onclick: request_to_close,
+                            onclick: on_close_button_click,
                             CrossIcon {
                                 fill: cross_fill
                              }
