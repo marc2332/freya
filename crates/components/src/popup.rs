@@ -81,12 +81,16 @@ pub fn Popup(
         height,
     } = use_applied_theme!(&theme, popup);
 
-    let request_to_close = move || {
+    let request_to_close = move |_| {
         if let Some(oncloserequest) = &oncloserequest {
             oncloserequest.call(());
         }
     };
-
+let onkeydown = move |event: KeyboardEvent| {
+    if close_on_escape_key && event.key == Key::Escape {
+        request_to_close()
+    }
+};
     rsx!(
         PopupBackground {
             rect {
@@ -97,7 +101,7 @@ pub fn Popup(
                 shadow: "0 4 5 0 rgb(0, 0, 0, 30)",
                 width: "{width}",
                 height: "{height}",
-                onkeydown: move |event| {
+                onkeydown,
                     if close_on_escape_key && event.key == Key::Escape {
                         request_to_close()
                     }
@@ -116,7 +120,7 @@ pub fn Popup(
                                 corner_radius: "999".into(),
                                 shadow: "none".into()
                             }),
-                            onclick: move |_| request_to_close(),
+                            onclick: request_to_close,
                             CrossIcon {
                                 fill: cross_fill
                              }
