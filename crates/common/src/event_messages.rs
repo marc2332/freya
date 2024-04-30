@@ -1,5 +1,4 @@
 use accesskit::NodeId;
-use accesskit_winit::ActionRequestEvent;
 use dioxus_core::Template;
 use uuid::Uuid;
 use winit::window::CursorIcon;
@@ -18,7 +17,7 @@ pub enum EventMessage {
     /// Change the cursor icon
     SetCursorIcon(CursorIcon),
     /// Accessibility action request event
-    ActionRequestEvent(ActionRequestEvent),
+    Accessibility(accesskit_winit::WindowEvent),
     /// Focus the given accessibility NodeID
     FocusAccessibilityNode(NodeId),
     /// Focus the next accessibility Node
@@ -27,8 +26,8 @@ pub enum EventMessage {
     FocusPrevAccessibilityNode,
 }
 
-impl From<ActionRequestEvent> for EventMessage {
-    fn from(value: ActionRequestEvent) -> Self {
-        Self::ActionRequestEvent(value)
+impl From<accesskit_winit::Event> for EventMessage {
+    fn from(value: accesskit_winit::Event) -> Self {
+        Self::Accessibility(value.window_event)
     }
 }

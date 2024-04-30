@@ -17,10 +17,7 @@ use std::ffi::CString;
 use std::num::NonZeroU32;
 
 use winit::dpi::{LogicalSize, PhysicalSize};
-use winit::{
-    event_loop::EventLoop,
-    window::{Window, WindowBuilder},
-};
+use winit::{event_loop::EventLoop, window::Window};
 
 use crate::config::WindowConfig;
 
@@ -49,7 +46,7 @@ impl<T: Clone> Drop for WindowEnv<T> {
 impl<T: Clone> WindowEnv<T> {
     /// Setup the Window and related features
     pub fn new(mut window_config: WindowConfig<T>, event_loop: &EventLoop<EventMessage>) -> Self {
-        let mut window_builder = WindowBuilder::new()
+        let mut window_attributes = Window::default_attributes()
             .with_visible(false)
             .with_title(window_config.title)
             .with_decorations(window_config.decorations)
@@ -64,22 +61,24 @@ impl<T: Clone> WindowEnv<T> {
         set_resource_cache_single_allocation_byte_limit(Some(500000)); // 0.5MB
 
         if let Some(min_size) = window_config.min_width.zip(window_config.min_height) {
-            window_builder = window_builder.with_min_inner_size(LogicalSize::<f64>::from(min_size))
+            window_attributes =
+                window_attributes.with_min_inner_size(LogicalSize::<f64>::from(min_size))
         }
 
         if let Some(max_size) = window_config.max_width.zip(window_config.max_height) {
-            window_builder = window_builder.with_max_inner_size(LogicalSize::<f64>::from(max_size))
+            window_attributes =
+                window_attributes.with_max_inner_size(LogicalSize::<f64>::from(max_size))
         }
 
         if let Some(with_window_builder) = &window_config.window_builder_hook {
-            window_builder = (with_window_builder)(window_builder);
+            window_attributes = (with_window_builder)(window_attributes);
         }
 
         let template = ConfigTemplateBuilder::new()
             .with_alpha_size(8)
             .with_transparency(window_config.transparent);
 
-        let display_builder = DisplayBuilder::new().with_window_builder(Some(window_builder));
+        let display_builder = DisplayBuilder::new().with_window_builder(Some(window_attributes));
         let (window, gl_config) = display_builder
             .build(event_loop, template, |configs| {
                 configs

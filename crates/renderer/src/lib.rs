@@ -6,7 +6,7 @@ use freya_core::dom::SafeDOM;
 use freya_native_core::NodeId;
 use std::sync::{Arc, Mutex};
 use tokio::sync::Notify;
-use winit::event_loop::EventLoopBuilder;
+use winit::event_loop::EventLoop;
 
 pub use config::WindowConfig;
 pub use window::WindowEnv;
@@ -41,7 +41,7 @@ impl DesktopRenderer {
 
         let _guard = rt.enter();
 
-        let event_loop = EventLoopBuilder::<EventMessage>::with_user_event()
+        let event_loop = EventLoop::<EventMessage>::with_user_event()
             .build()
             .expect("Failed to create event loop.");
         let proxy = event_loop.create_proxy();

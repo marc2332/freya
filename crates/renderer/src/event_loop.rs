@@ -1,5 +1,3 @@
-use accesskit::Action;
-use accesskit_winit::ActionRequestEvent;
 use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_elements::events::keyboard::{
@@ -48,17 +46,21 @@ pub fn run_event_loop<State: Clone>(
             Event::UserEvent(EventMessage::RemeasureTextGroup(text_id)) => {
                 app.measure_text_group(&text_id);
             }
-            Event::UserEvent(EventMessage::ActionRequestEvent(ActionRequestEvent {
-                request,
-                ..
-            })) => {
-                if Action::Focus == request.action {
+            Event::UserEvent(EventMessage::Accessibility(
+                accesskit_winit::WindowEvent::ActionRequested(request),
+            )) => {
+                if accesskit::Action::Focus == request.action {
                     app.accessibility
                         .set_accessibility_focus(request.target, &app.window_env.window);
                 }
             }
+            Event::UserEvent(EventMessage::Accessibility(
+                accesskit_winit::WindowEvent::InitialTreeRequested,
+            )) => {
+                app.accessibility.process_initial_tree();
+            }
             Event::UserEvent(EventMessage::SetCursorIcon(icon)) => {
-                app.window_env.window.set_cursor_icon(icon)
+                app.window_env.window.set_cursor(icon)
             }
             Event::UserEvent(EventMessage::FocusPrevAccessibilityNode) => {
                 app.set_navigation_mode(NavigationMode::Keyboard);

@@ -52,13 +52,13 @@ dioxus-sdk = { version = "0.5", features = ["clipboard"]}
 skia-safe = { version = "0.72.0", features = ["gl", "textlayout", "svg"] }
 
 gl = "0.14.0"
-glutin = "0.31.2"
-glutin-winit = "0.4.2"
+glutin = { path = "../glutin/glutin" }
+glutin-winit = { path = "../glutin/glutin-winit" }
 raw-window-handle = "0.5.2"
-winit = "0.29.9"
+winit = "0.30.0"
 tokio = { version = "1.33.0", features = ["sync", "rt-multi-thread", "time", "macros"] }
-accesskit = { version = "0.12.2", features = ["serde"]}
-accesskit_winit = "0.18.0"
+accesskit = { version = "0.14.0", features = ["serde"]}
+accesskit_winit = "0.20.0"
 shipyard = { version = "0.6.2", features = ["proc", "std", "parallel"], default-features = false }
 smallvec = "1.13.1"
 

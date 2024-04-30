@@ -18,6 +18,7 @@ use winit::{
 pub struct AccessKitManager {
     accessibility_manager: SharedAccessibilityManager,
     accessibility_adapter: Adapter,
+    title: String,
 }
 
 impl AccessKitManager {
@@ -26,18 +27,12 @@ impl AccessKitManager {
         let accessibility_manager = AccessibilityManager::new(ACCESSIBILITY_ROOT_ID).wrap();
         let accessibility_adapter = {
             let accessibility_manager = accessibility_manager.clone();
-            Adapter::new(
-                window,
-                move || {
-                    let mut accessibility_manager = accessibility_manager.lock().unwrap();
-                    accessibility_manager.process(ACCESSIBILITY_ROOT_ID, title.as_str())
-                },
-                proxy,
-            )
+            Adapter::with_event_loop_proxy(window, proxy)
         };
         Self {
             accessibility_manager,
             accessibility_adapter,
+            title,
         }
     }
 
@@ -127,6 +122,17 @@ impl AccessKitManager {
         self.update_ime_position(tree.focus, window);
 
         // Update the Adapter
+        self.accessibility_adapter.update_if_active(|| tree);
+    }
+
+    /// Process the initial tree
+    pub fn process_initial_tree(&self) {
+        let tree = self
+            .accessibility_manager
+            .lock()
+            .unwrap()
+            .process(ACCESSIBILITY_ROOT_ID, &self.title);
+
         self.accessibility_adapter.update_if_active(|| tree);
     }
 }
