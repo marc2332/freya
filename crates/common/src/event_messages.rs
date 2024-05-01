@@ -1,4 +1,3 @@
-use accesskit::NodeId;
 use dioxus_core::Template;
 use uuid::Uuid;
 use winit::window::CursorIcon;
@@ -16,10 +15,10 @@ pub enum EventMessage {
     RemeasureTextGroup(Uuid),
     /// Change the cursor icon
     SetCursorIcon(CursorIcon),
-    /// Accessibility action request event
+    /// Accessibility Window Event
     Accessibility(accesskit_winit::WindowEvent),
     /// Focus the given accessibility NodeID
-    FocusAccessibilityNode(NodeId),
+    FocusAccessibilityNode(accesskit::NodeId),
     /// Focus the next accessibility Node
     FocusNextAccessibilityNode,
     /// Focus the previous accessibility Node

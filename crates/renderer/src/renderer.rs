@@ -14,10 +14,13 @@ use gl::{types::*, *};
 use glutin::{
     config::{ConfigTemplateBuilder, GlConfig},
     context::{
-        ContextApi, ContextAttributesBuilder, GlProfile, NotCurrentGlContext, PossiblyCurrentContext
+        ContextApi, ContextAttributesBuilder, GlProfile, NotCurrentGlContext,
+        PossiblyCurrentContext,
     },
     display::{GetGlDisplay, GlDisplay},
-    surface::{GlSurface, Surface as GlutinSurface, SurfaceAttributesBuilder, SwapInterval, WindowSurface},
+    surface::{
+        GlSurface, Surface as GlutinSurface, SurfaceAttributesBuilder, SwapInterval, WindowSurface,
+    },
 };
 use glutin_winit::DisplayBuilder;
 use raw_window_handle::HasRawWindowHandle;
