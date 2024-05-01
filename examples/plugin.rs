@@ -19,11 +19,10 @@ impl FreyaPlugin for DummyPlugin {
 fn main() {
     launch_cfg(
         app,
-        LaunchConfig::<()>::builder()
+        LaunchConfig::<()>::new()
             .with_plugin(DummyPlugin)
             .with_width(250.0)
-            .with_height(200.0)
-            .build(),
+            .with_height(200.0),
     )
 }
 

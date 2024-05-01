@@ -35,8 +35,8 @@ use freya_renderer::{LaunchConfig, WindowConfig};
 pub fn launch(app: AppComponent) {
     launch_cfg(
         app,
-        LaunchConfig {
-            window: WindowConfig::<()> {
+        LaunchConfig::<()> {
+            window_config: WindowConfig {
                 width: 600.0,
                 height: 600.0,
                 decorations: true,
@@ -81,8 +81,8 @@ pub fn launch(app: AppComponent) {
 pub fn launch_with_title(app: AppComponent, title: &'static str) {
     launch_cfg(
         app,
-        LaunchConfig {
-            window: WindowConfig::<()> {
+        LaunchConfig::<()> {
+            window_config: WindowConfig {
                 width: 400.0,
                 height: 300.0,
                 decorations: true,
@@ -125,8 +125,8 @@ pub fn launch_with_title(app: AppComponent, title: &'static str) {
 pub fn launch_with_props(app: AppComponent, title: &'static str, (width, height): (f64, f64)) {
     launch_cfg(
         app,
-        LaunchConfig {
-            window: WindowConfig::<()> {
+        LaunchConfig::<()> {
+            window_config: WindowConfig {
                 width,
                 height,
                 decorations: true,
@@ -179,7 +179,7 @@ pub fn launch_with_props(app: AppComponent, title: &'static str, (width, height)
 ///     )
 /// }
 /// ```
-pub fn launch_cfg<T: 'static + Clone + Send>(app: AppComponent, config: LaunchConfig<T>) {
+pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>) {
     use freya_core::prelude::{FreyaDOM, SafeDOM};
 
     let fdom = FreyaDOM::default();

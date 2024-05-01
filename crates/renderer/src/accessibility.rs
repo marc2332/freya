@@ -25,10 +25,7 @@ impl AccessKitManager {
     pub fn new(window: &Window, proxy: EventLoopProxy<EventMessage>) -> Self {
         let title = window.title();
         let accessibility_manager = AccessibilityManager::new(ACCESSIBILITY_ROOT_ID).wrap();
-        let accessibility_adapter = {
-            let accessibility_manager = accessibility_manager.clone();
-            Adapter::with_event_loop_proxy(window, proxy)
-        };
+        let accessibility_adapter = Adapter::with_event_loop_proxy(window, proxy);
         Self {
             accessibility_manager,
             accessibility_adapter,
@@ -41,7 +38,7 @@ impl AccessKitManager {
     }
 
     /// Focus a new accessibility node
-    pub fn set_accessibility_focus(&self, id: AccessibilityId, window: &Window) {
+    pub fn set_accessibility_focus(&mut self, id: AccessibilityId, window: &Window) {
         let tree = self
             .accessibility_manager
             .lock()
@@ -103,7 +100,7 @@ impl AccessKitManager {
 
     /// Focus the next accessibility node
     pub fn focus_next_node(
-        &self,
+        &mut self,
         direction: AccessibilityFocusDirection,
         focus_sender: &FocusSender,
         window: &Window,
@@ -126,7 +123,7 @@ impl AccessKitManager {
     }
 
     /// Process the initial tree
-    pub fn process_initial_tree(&self) {
+    pub fn process_initial_tree(&mut self) {
         let tree = self
             .accessibility_manager
             .lock()

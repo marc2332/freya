@@ -8,7 +8,7 @@ use freya::prelude::*;
 fn main() {
     launch_cfg(
         app,
-        LaunchConfig::<()>::builder()
+        LaunchConfig::<()>::new()
             .with_height(60.0)
             .with_width(250.0)
             .on_setup(|window| {
@@ -17,8 +17,7 @@ fn main() {
             .on_exit(|window| {
                 println!("Window title was {}", window.title());
             })
-            .with_window_builder(|builder| builder.with_resizable(false))
-            .build(),
+            .with_window_builder(|builder| builder.with_resizable(false)),
     );
 }
 
