@@ -15,7 +15,7 @@ use glutin::{
     config::{ConfigTemplateBuilder, GlConfig},
     context::{
         ContextApi, ContextAttributesBuilder, GlProfile, NotCurrentGlContext,
-        PossiblyCurrentContext, PossiblyCurrentGlContext
+        PossiblyCurrentContext, PossiblyCurrentGlContext,
     },
     display::{GetGlDisplay, GlDisplay},
     surface::{
@@ -101,210 +101,198 @@ pub struct DesktopRenderer<'a, State: Clone + 'static> {
 
 impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, State> {
     fn resumed(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
-        let state = match &mut self.state {
-            WindowState::Created(created) => created,
-            WindowState::NotCreated(_) => {
-                let NotCreatedState {
-                    sdom,
-                    vdom,
-                    mutations_notifier,
-                    mut config,
-                } = mem::take(&mut self.state).not_created_state();
+        if let WindowState::NotCreated(_) = self.state {
+            let NotCreatedState {
+                sdom,
+                vdom,
+                mutations_notifier,
+                mut config,
+            } = mem::take(&mut self.state).not_created_state();
 
-                let mut window_attributes = Window::default_attributes()
-                    .with_visible(false)
-                    .with_title(config.window_config.title)
-                    .with_decorations(config.window_config.decorations)
-                    .with_transparent(config.window_config.transparent)
-                    .with_window_icon(config.window_config.icon.take())
-                    .with_inner_size(LogicalSize::<f64>::new(
-                        config.window_config.width,
-                        config.window_config.height,
-                    ));
+            let mut window_attributes = Window::default_attributes()
+                .with_visible(false)
+                .with_title(config.window_config.title)
+                .with_decorations(config.window_config.decorations)
+                .with_transparent(config.window_config.transparent)
+                .with_window_icon(config.window_config.icon.take())
+                .with_inner_size(LogicalSize::<f64>::new(
+                    config.window_config.width,
+                    config.window_config.height,
+                ));
 
-                set_resource_cache_total_bytes_limit(1000000); // 1MB
-                set_resource_cache_single_allocation_byte_limit(Some(500000)); // 0.5MB
+            set_resource_cache_total_bytes_limit(1000000); // 1MB
+            set_resource_cache_single_allocation_byte_limit(Some(500000)); // 0.5MB
 
-                if let Some(min_size) = config
-                    .window_config
-                    .min_width
-                    .zip(config.window_config.min_height)
-                {
-                    window_attributes =
-                        window_attributes.with_min_inner_size(LogicalSize::<f64>::from(min_size))
-                }
+            if let Some(min_size) = config
+                .window_config
+                .min_width
+                .zip(config.window_config.min_height)
+            {
+                window_attributes =
+                    window_attributes.with_min_inner_size(LogicalSize::<f64>::from(min_size))
+            }
 
-                if let Some(max_size) = config
-                    .window_config
-                    .max_width
-                    .zip(config.window_config.max_height)
-                {
-                    window_attributes =
-                        window_attributes.with_max_inner_size(LogicalSize::<f64>::from(max_size))
-                }
+            if let Some(max_size) = config
+                .window_config
+                .max_width
+                .zip(config.window_config.max_height)
+            {
+                window_attributes =
+                    window_attributes.with_max_inner_size(LogicalSize::<f64>::from(max_size))
+            }
 
-                if let Some(with_window_builder) = &config.window_config.window_builder_hook {
-                    window_attributes = (with_window_builder)(window_attributes);
-                }
+            if let Some(with_window_builder) = &config.window_config.window_builder_hook {
+                window_attributes = (with_window_builder)(window_attributes);
+            }
 
-                let template = ConfigTemplateBuilder::new()
-                    .with_alpha_size(8)
-                    .with_transparency(config.window_config.transparent);
+            let template = ConfigTemplateBuilder::new()
+                .with_alpha_size(8)
+                .with_transparency(config.window_config.transparent);
 
-                let display_builder =
-                    DisplayBuilder::new().with_window_attributes(Some(window_attributes));
-                let (window, gl_config) = display_builder
-                    .build(event_loop, template, |configs| {
-                        configs
-                            .reduce(|accum, config| {
-                                let transparency_check =
-                                    config.supports_transparency().unwrap_or(false)
-                                        & !accum.supports_transparency().unwrap_or(false);
+            let display_builder =
+                DisplayBuilder::new().with_window_attributes(Some(window_attributes));
+            let (window, gl_config) = display_builder
+                .build(event_loop, template, |configs| {
+                    configs
+                        .reduce(|accum, config| {
+                            let transparency_check =
+                                config.supports_transparency().unwrap_or(false)
+                                    & !accum.supports_transparency().unwrap_or(false);
 
-                                if transparency_check || config.num_samples() < accum.num_samples()
-                                {
-                                    config
-                                } else {
-                                    accum
-                                }
-                            })
-                            .unwrap()
-                    })
-                    .unwrap();
-
-                let mut window = window.expect("Could not create window with OpenGL context");
-
-                // Allow IME
-                window.set_ime_allowed(true);
-
-                // Workaround for accesskit
-                window.set_visible(true);
-
-                let raw_window_handle = window.raw_window_handle();
-
-                let context_attributes = ContextAttributesBuilder::new()
-                    .with_profile(GlProfile::Core)
-                    .build(Some(raw_window_handle));
-
-                let fallback_context_attributes = ContextAttributesBuilder::new()
-                    .with_profile(GlProfile::Core)
-                    .with_context_api(ContextApi::Gles(None))
-                    .build(Some(raw_window_handle));
-
-                let not_current_gl_context = unsafe {
-                    gl_config
-                        .display()
-                        .create_context(&gl_config, &context_attributes)
-                        .unwrap_or_else(|_| {
-                            gl_config
-                                .display()
-                                .create_context(&gl_config, &fallback_context_attributes)
-                                .expect("failed to create context")
+                            if transparency_check || config.num_samples() < accum.num_samples() {
+                                config
+                            } else {
+                                accum
+                            }
                         })
-                };
-
-                let (width, height): (u32, u32) = window.inner_size().into();
-
-                let attrs = SurfaceAttributesBuilder::<WindowSurface>::new().build(
-                    raw_window_handle,
-                    NonZeroU32::new(width).unwrap(),
-                    NonZeroU32::new(height).unwrap(),
-                );
-
-                let gl_surface = unsafe {
-                    gl_config
-                        .display()
-                        .create_window_surface(&gl_config, &attrs)
-                        .expect("Could not create gl window surface")
-                };
-
-                let gl_context = not_current_gl_context
-                    .make_current(&gl_surface)
-                    .expect("Could not make GL context current when setting up skia renderer");
-
-                load_with(|s| {
-                    gl_config
-                        .display()
-                        .get_proc_address(CString::new(s).unwrap().as_c_str())
-                });
-                let interface = Interface::new_load_with(|name| {
-                    if name == "eglGetCurrentDisplay" {
-                        return std::ptr::null();
-                    }
-                    gl_config
-                        .display()
-                        .get_proc_address(CString::new(name).unwrap().as_c_str())
+                        .unwrap()
                 })
-                .expect("Could not create interface");
+                .unwrap();
 
-                let mut gr_context = DirectContext::new_gl(interface, None)
-                    .expect("Could not create direct context");
+            let mut window = window.expect("Could not create window with OpenGL context");
 
-                let fb_info = {
-                    let mut fboid: GLint = 0;
-                    unsafe { GetIntegerv(FRAMEBUFFER_BINDING, &mut fboid) };
+            // Allow IME
+            window.set_ime_allowed(true);
 
-                    FramebufferInfo {
-                        fboid: fboid.try_into().unwrap(),
-                        format: Format::RGBA8.into(),
-                        ..Default::default()
-                    }
-                };
+            // Workaround for accesskit
+            window.set_visible(true);
 
-                let num_samples = gl_config.num_samples() as usize;
-                let stencil_size = gl_config.stencil_size() as usize;
+            let raw_window_handle = window.raw_window_handle();
 
-                let mut surface = create_surface(
-                    &mut window,
-                    fb_info,
-                    &mut gr_context,
-                    num_samples,
-                    stencil_size,
-                );
+            let context_attributes = ContextAttributesBuilder::new()
+                .with_profile(GlProfile::Core)
+                .build(Some(raw_window_handle));
 
-                let scale_factor = window.scale_factor() as f32;
-                surface.canvas().scale((scale_factor, scale_factor));
+            let fallback_context_attributes = ContextAttributesBuilder::new()
+                .with_profile(GlProfile::Core)
+                .with_context_api(ContextApi::Gles(None))
+                .build(Some(raw_window_handle));
 
-                let mut app = Application::new(
-                    sdom,
-                    vdom,
-                    &self.proxy,
-                    mutations_notifier,
-                    &window,
-                    &config.embedded_fonts,
-                    config.plugins,
-                    config.default_fonts,
-                );
+            let not_current_gl_context = unsafe {
+                gl_config
+                    .display()
+                    .create_context(&gl_config, &context_attributes)
+                    .unwrap_or_else(|_| {
+                        gl_config
+                            .display()
+                            .create_context(&gl_config, &fallback_context_attributes)
+                            .expect("failed to create context")
+                    })
+            };
 
-                app.init_doms(scale_factor, config.state.clone());
-                app.process_layout(window.inner_size(), scale_factor);
+            let (width, height): (u32, u32) = window.inner_size().into();
 
-                self.state = WindowState::Created(CreatedState {
-                    gr_context,
-                    surface,
-                    gl_surface,
-                    gl_context,
-                    window,
-                    fb_info,
-                    num_samples,
-                    stencil_size,
-                    app,
-                    window_config: config.window_config,
-                });
+            let attrs = SurfaceAttributesBuilder::<WindowSurface>::new().build(
+                raw_window_handle,
+                NonZeroU32::new(width).unwrap(),
+                NonZeroU32::new(height).unwrap(),
+            );
 
-                self.state.created_state()
-            }
-            _ => {
-                panic!("Unexpected.")
-            }
-        };
+            let gl_surface = unsafe {
+                gl_config
+                    .display()
+                    .create_window_surface(&gl_config, &attrs)
+                    .expect("Could not create gl window surface")
+            };
 
-        // Try setting vsync.
-        if let Err(res) = state.gl_surface.set_swap_interval(
-            &state.gl_context,
-            SwapInterval::Wait(NonZeroU32::new(1).unwrap()),
-        ) {
-            eprintln!("Error setting vsync: {res:?}");
+            let gl_context = not_current_gl_context
+                .make_current(&gl_surface)
+                .expect("Could not make GL context current when setting up skia renderer");
+
+            // Try setting vsync.
+            gl_surface
+                .set_swap_interval(&gl_context, SwapInterval::Wait(NonZeroU32::new(1).unwrap()))
+                .ok();
+
+            load_with(|s| {
+                gl_config
+                    .display()
+                    .get_proc_address(CString::new(s).unwrap().as_c_str())
+            });
+            let interface = Interface::new_load_with(|name| {
+                if name == "eglGetCurrentDisplay" {
+                    return std::ptr::null();
+                }
+                gl_config
+                    .display()
+                    .get_proc_address(CString::new(name).unwrap().as_c_str())
+            })
+            .expect("Could not create interface");
+
+            let mut gr_context =
+                DirectContext::new_gl(interface, None).expect("Could not create direct context");
+
+            let fb_info = {
+                let mut fboid: GLint = 0;
+                unsafe { GetIntegerv(FRAMEBUFFER_BINDING, &mut fboid) };
+
+                FramebufferInfo {
+                    fboid: fboid.try_into().unwrap(),
+                    format: Format::RGBA8.into(),
+                    ..Default::default()
+                }
+            };
+
+            let num_samples = gl_config.num_samples() as usize;
+            let stencil_size = gl_config.stencil_size() as usize;
+
+            let mut surface = create_surface(
+                &mut window,
+                fb_info,
+                &mut gr_context,
+                num_samples,
+                stencil_size,
+            );
+
+            let scale_factor = window.scale_factor() as f32;
+            surface.canvas().scale((scale_factor, scale_factor));
+
+            let mut app = Application::new(
+                sdom,
+                vdom,
+                &self.proxy,
+                mutations_notifier,
+                &window,
+                &config.embedded_fonts,
+                config.plugins,
+                config.default_fonts,
+            );
+
+            app.init_doms(scale_factor, config.state.clone());
+            app.process_layout(window.inner_size(), scale_factor);
+
+            self.state = WindowState::Created(CreatedState {
+                gr_context,
+                surface,
+                gl_surface,
+                gl_context,
+                window,
+                fb_info,
+                num_samples,
+                stencil_size,
+                app,
+                window_config: config.window_config,
+            });
         }
     }
 
@@ -575,7 +563,7 @@ impl<T: Clone> Drop for DesktopRenderer<'_, T> {
             ..
         }) = &mut self.state
         {
-            if !gl_context.is_current() && gl_context.make_current(&gl_surface).is_err() {
+            if !gl_context.is_current() && gl_context.make_current(gl_surface).is_err() {
                 gr_context.abandon();
             }
         }
