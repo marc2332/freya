@@ -15,7 +15,7 @@ use glutin::{
     config::{ConfigTemplateBuilder, GlConfig},
     context::{
         ContextApi, ContextAttributesBuilder, GlProfile, NotCurrentGlContext,
-        PossiblyCurrentContext,
+        PossiblyCurrentContext, PossiblyCurrentGlContext,
     },
     display::{GetGlDisplay, GlDisplay},
     surface::{
@@ -568,17 +568,17 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
 
 impl<T: Clone> Drop for DesktopRenderer<'_, T> {
     fn drop(&mut self) {
-        // if let WindowState::Created {
-        //     gl_context,
-        //     gl_surface,
-        //     mut gr_context,
-        //     ..
-        // } = self.state
-        // {
-        //     if !gl_context.is_current() && gl_context.make_current(&gl_surface).is_err() {
-        //         gr_context.abandon();
-        //     }
-        // }
+        if let WindowState::Created(CreatedState {
+            gl_context,
+            gl_surface,
+            mut gr_context,
+            ..
+        }) = mem::take(&mut self.state)
+        {
+            if !gl_context.is_current() && gl_context.make_current(&gl_surface).is_err() {
+                gr_context.abandon();
+            }
+        }
     }
 }
 
