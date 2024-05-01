@@ -19,7 +19,7 @@ use uuid::Uuid;
 use winit::event_loop::EventLoopProxy;
 use winit::{dpi::PhysicalSize, window::Window};
 
-use crate::{accessibility::AccessKitManager, renderer::render_skia, winit_waker::winit_waker};
+use crate::{accessibility::AccessKitManager, render::render_skia, winit_waker::winit_waker};
 use crate::{EmbeddedFonts, HoveredNode};
 
 /// Manages the Application lifecycle
