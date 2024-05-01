@@ -14,16 +14,16 @@ fn app() -> Element {
         rect {
             width: "100%",
             height: "100%",
-            rect {
-                width: "100%",
-                height: "50%",
-                background: "rgb(28, 28, 28)",
-                color: "white",
-                WindowDragArea {
+            WindowDragArea {
+                rect {
+                    width: "100%",
+                    height: "50%",
+                    background: "rgb(28, 28, 28)",
+                    color: "white",
+                    main_align: "center",
                     label {
                         width: "100%",
                         text_align: "center",
-                        margin: "100 0",
                         "Drag Me!"
                     }
                 }
@@ -31,9 +31,9 @@ fn app() -> Element {
             rect {
                 width: "100%",
                 height: "50%",
+                main_align: "center",
                 label {
                     text_align: "center",
-                    margin: "100 0",
                     "Use the top half to drag the window"
                 }
             }
