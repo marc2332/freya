@@ -13,12 +13,12 @@ use freya_engine::prelude::*;
 use gl::{types::*, *};
 use glutin::{
     config::{ConfigTemplateBuilder, GlConfig},
-    context::{ContextApi, ContextAttributesBuilder, PossiblyCurrentContext},
+    context::{
+        ContextApi, ContextAttributesBuilder, GlProfile, NotCurrentGlContext, PossiblyCurrentContext
+    },
     display::{GetGlDisplay, GlDisplay},
-    surface::{Surface as GlutinSurface, SurfaceAttributesBuilder, WindowSurface},
+    surface::{GlSurface, Surface as GlutinSurface, SurfaceAttributesBuilder, SwapInterval, WindowSurface},
 };
-use glutin::{context::GlProfile, surface::GlSurface};
-use glutin::{context::NotCurrentGlContext, surface::SwapInterval};
 use glutin_winit::DisplayBuilder;
 use raw_window_handle::HasRawWindowHandle;
 use std::{ffi::CString, sync::Arc};
@@ -86,7 +86,7 @@ impl<'a, State: Clone + 'a> WindowState<'a, State> {
     }
 }
 
-/// Manager for a Window
+/// Desktop renderer using Skia, Glutin and Winit
 pub struct DesktopRenderer<'a, State: Clone + 'static> {
     pub(crate) proxy: EventLoopProxy<EventMessage>,
     pub(crate) state: WindowState<'a, State>,
