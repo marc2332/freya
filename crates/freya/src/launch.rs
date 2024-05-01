@@ -156,14 +156,13 @@ pub fn launch_with_props(app: AppComponent, title: &'static str, (width, height)
 /// fn main() {
 ///     launch_cfg(
 ///         app,
-///         LaunchConfig::<()>::builder()
+///         LaunchConfig::<()>::new()
 ///             .with_width(500.0)
 ///             .with_height(400.0)
 ///             .with_decorations(true)
 ///             .with_transparency(false)
 ///             .with_title("Freya App")
 ///             .with_background("rgb(150, 100, 200")
-///             .build()
 ///     );
 /// }
 ///
