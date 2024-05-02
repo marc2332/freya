@@ -49,6 +49,10 @@ impl UsePlatform {
         self.send(EventMessage::SetCursorIcon(cursor_icon)).ok();
     }
 
+    pub fn drag_window(&self) {
+        self.send(EventMessage::DragWindow).ok();
+    }
+
     pub fn request_animation_frame(&self) {
         self.send(EventMessage::RequestRerender).ok();
     }

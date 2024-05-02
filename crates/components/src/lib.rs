@@ -33,6 +33,7 @@ mod table;
 mod theme;
 mod tile;
 mod tooltip;
+mod window_drag_area;
 
 pub use accordion::*;
 pub use activable_route::*;
@@ -66,3 +67,4 @@ pub use table::*;
 pub use theme::*;
 pub use tile::*;
 pub use tooltip::*;
+pub use window_drag_area::*;

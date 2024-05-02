@@ -68,6 +68,9 @@ pub fn run_event_loop<State: Clone>(
                 app.set_navigation_mode(NavigationMode::Keyboard);
                 app.focus_next_node(AccessibilityFocusDirection::Forward);
             }
+            Event::UserEvent(EventMessage::DragWindow) => {
+                app.window_env.window.drag_window().ok();
+            }
             Event::UserEvent(ev) => {
                 if let EventMessage::UpdateTemplate(template) = ev {
                     app.vdom_replace_template(template);
