@@ -15,7 +15,7 @@
     "@astrojs/deno": "^5.0.0",
     "@astrojs/rss": "^4.0.1",
     "@astrojs/tailwind": "^5.0.2",
-    "astro": "3.5.3",
+    "astro": "4.7.1",
     "rehype-accessible-emojis": "^0.3.2",
     "rehype-autolink-headings": "^7.1.0",
     "rehype-slug": "^6.0.0",
