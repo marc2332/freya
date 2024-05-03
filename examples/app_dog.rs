@@ -28,7 +28,7 @@ fn app() -> Element {
     use_init_theme(DARK_THEME);
     let mut dog_url = use_signal(|| None);
 
-    let onclick = move |_| {
+    let onpress = move |_| {
         spawn(async move {
             if let Some(url) = fetch_random_dog().await {
                 dog_url.set(Some(url))
@@ -58,7 +58,7 @@ fn app() -> Element {
                 main_align: "center",
                 cross_align: "center",
                 Button {
-                    onclick,
+                    onpress,
                     label {
                         "Fetch random Doggo!"
                     }
