@@ -88,7 +88,7 @@ fn app() -> Element {
             onmoved: onmoved
         }
         Button {
-            onclick: set_to_max,
+            onpress: set_to_max,
             label {
                 "Set to 100%"
             }

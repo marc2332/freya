@@ -47,7 +47,7 @@ fn app() -> Element {
                         color: format!("hsl(0deg, 0%, {}%)", text_brightness).into(),
                     }),
                 }),
-                onclick: move |_| {
+                onpress: move |_| {
                     if *brightness.read() < 100 {
                         brightness += 10;
                     }
@@ -64,7 +64,7 @@ fn app() -> Element {
                         color: format!("hsl(0deg, 0%, {}%)", text_brightness).into(),
                     }),
                 }),
-                onclick: move |_| {
+                onpress: move |_| {
                     if *brightness.read() > 0 {
                         brightness -= 10;
                     }
