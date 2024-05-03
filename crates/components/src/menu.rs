@@ -20,7 +20,7 @@ use winit::window::CursorIcon;
 ///    rsx!(
 ///        Body {
 ///            Button {
-///                onclick: move |_| show_menu.toggle(),
+///                onpress: move |_| show_menu.toggle(),
 ///                label { "Open Menu" }
 ///            },
 ///            if *show_menu.read() {
@@ -317,7 +317,7 @@ mod test {
             rsx!(
                 Body {
                     Button {
-                        onclick: move |_| show_menu.toggle(),
+                        onpress: move |_| show_menu.toggle(),
                         label { "Open Menu" }
                     },
                     if *show_menu.read() {

@@ -21,7 +21,7 @@ fn app() -> Element {
             background: "black",
             color: "white",
             Button {
-                onclick: move |_| {
+                onpress: move |_| {
                     percentage.set(20.0);
                 },
                 label {

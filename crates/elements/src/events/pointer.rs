@@ -22,7 +22,7 @@ pub enum PointerType {
 pub struct PointerData {
     pub screen_coordinates: CursorPoint,
     pub element_coordinates: CursorPoint,
-    pub point_type: PointerType,
+    pub pointer_type: PointerType,
 }
 
 impl PointerData {
@@ -34,7 +34,7 @@ impl PointerData {
         Self {
             screen_coordinates,
             element_coordinates,
-            point_type,
+            pointer_type: point_type,
         }
     }
 }
@@ -52,7 +52,7 @@ impl PointerData {
 
     /// Get the pointer type that triggered this event.
     pub fn get_pointer_type(&self) -> PointerType {
-        self.point_type
+        self.pointer_type
     }
 }
 

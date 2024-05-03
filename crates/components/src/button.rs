@@ -1,9 +1,29 @@
 use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
-use freya_elements::events::{KeyboardEvent, MouseEvent};
+use freya_elements::events::KeyboardEvent;
+use freya_elements::{
+    elements as dioxus_elements,
+    events::{PointerEvent, PointerType},
+};
 
 use freya_hooks::{use_applied_theme, use_focus, use_platform, ButtonTheme, ButtonThemeWith};
-use winit::window::CursorIcon;
+use winit::{
+    event::{MouseButton, TouchPhase},
+    window::CursorIcon,
+};
+
+pub enum PressEvent {
+    Pointer(PointerEvent),
+    Key(KeyboardEvent),
+}
+
+impl PressEvent {
+    pub fn stop_propagation(&self) {
+        match &self {
+            Self::Pointer(ev) => ev.stop_propagation(),
+            Self::Key(ev) => ev.stop_propagation(),
+        }
+    }
+}
 
 /// Properties for the [`Button`] component.
 #[derive(Props, Clone, PartialEq)]
@@ -12,8 +32,8 @@ pub struct ButtonProps {
     pub theme: Option<ButtonThemeWith>,
     /// Inner children for the Button.
     pub children: Element,
-    /// Handler for the `onclick` event.
-    pub onclick: Option<EventHandler<Option<MouseEvent>>>,
+    /// Event handler for when the button is pressed.
+    pub onpress: Option<EventHandler<PressEvent>>,
 }
 
 /// Identifies the current status of the Button.
@@ -38,7 +58,7 @@ pub enum ButtonStatus {
 /// fn app() -> Element {
 ///     rsx!(
 ///         Button {
-///             onclick: |_| println!("clicked"),
+///             onpress: |_| println!("clicked"),
 ///             label {
 ///                 "Click this"
 ///             }
@@ -48,13 +68,18 @@ pub enum ButtonStatus {
 /// ```
 ///
 #[allow(non_snake_case)]
-pub fn Button(props: ButtonProps) -> Element {
+pub fn Button(
+    ButtonProps {
+        onpress,
+        children,
+        theme,
+    }: ButtonProps,
+) -> Element {
     let mut focus = use_focus();
     let mut status = use_signal(ButtonStatus::default);
     let platform = use_platform();
 
     let focus_id = focus.attribute();
-    let click = &props.onclick;
 
     let ButtonTheme {
         background,
@@ -68,14 +93,23 @@ pub fn Button(props: ButtonProps) -> Element {
         height,
         font_theme,
         shadow,
-    } = use_applied_theme!(&props.theme, button);
+    } = use_applied_theme!(&theme, button);
 
-    let onclick = {
-        to_owned![click];
-        move |ev| {
+    let onpointerup = {
+        to_owned![onpress];
+        move |ev: PointerEvent| {
             focus.focus();
-            if let Some(onclick) = &click {
-                onclick.call(Some(ev))
+            if let Some(onpress) = &onpress {
+                let is_valid = match ev.data.pointer_type {
+                    PointerType::Mouse {
+                        trigger_button: Some(MouseButton::Left),
+                    } => true,
+                    PointerType::Touch { phase, .. } => phase == TouchPhase::Ended,
+                    _ => false,
+                };
+                if is_valid {
+                    onpress.call(PressEvent::Pointer(ev))
+                }
             }
         }
     };
@@ -96,10 +130,10 @@ pub fn Button(props: ButtonProps) -> Element {
         status.set(ButtonStatus::default());
     };
 
-    let onkeydown = move |e: KeyboardEvent| {
-        if focus.validate_keydown(e) {
-            if let Some(onclick) = &props.onclick {
-                onclick.call(None)
+    let onkeydown = move |ev: KeyboardEvent| {
+        if focus.validate_keydown(&ev) {
+            if let Some(onpress) = &onpress {
+                onpress.call(PressEvent::Key(ev))
             }
         }
     };
@@ -116,7 +150,7 @@ pub fn Button(props: ButtonProps) -> Element {
 
     rsx!(
         rect {
-            onclick,
+            onpointerup,
             onmouseenter,
             onmouseleave,
             onkeydown,
@@ -136,7 +170,7 @@ pub fn Button(props: ButtonProps) -> Element {
             text_align: "center",
             main_align: "center",
             cross_align: "center",
-            {&props.children}
+            {&children}
         }
     )
 }
@@ -153,7 +187,7 @@ mod test {
 
             rsx!(
                 Button {
-                    onclick: move |_| state.toggle(),
+                    onpress: move |_| state.toggle(),
                     label {
                         "{state}"
                     }
@@ -177,5 +211,17 @@ mod test {
         utils.wait_for_update().await;
 
         assert_eq!(label.get(0).text(), Some("true"));
+
+        utils.push_event(PlatformEvent::Touch {
+            name: EventName::TouchEnd,
+            location: (5.0, 5.0).into(),
+            finger_id: 1,
+            phase: TouchPhase::Ended,
+            force: None,
+        });
+
+        utils.wait_for_update().await;
+
+        assert_eq!(label.get(0).text(), Some("false"));
     }
 }

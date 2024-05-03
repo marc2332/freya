@@ -28,7 +28,7 @@ fn app() -> Element {
                 "{window_size:?}"
             }
             Button {
-                onclick: |_| needs_update(),
+                onpress: |_| needs_update(),
                 label {
                     "Refresh"
                 }

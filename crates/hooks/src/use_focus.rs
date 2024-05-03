@@ -54,7 +54,7 @@ impl UseFocus {
     }
 
     /// Validate keydown event
-    pub fn validate_keydown(&self, e: KeyboardEvent) -> bool {
+    pub fn validate_keydown(&self, e: &KeyboardEvent) -> bool {
         e.data.code == Code::Enter && self.is_selected()
     }
 
