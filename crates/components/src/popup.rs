@@ -1,6 +1,6 @@
 use crate::{Button, CrossIcon};
 use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
+use freya_elements::{elements as dioxus_elements, events::KeyboardEvent};
 use freya_hooks::{theme_with, use_applied_theme, ButtonThemeWith, PopupTheme, PopupThemeWith};
 
 /// The background of the [`Popup`] component.
@@ -69,6 +69,9 @@ pub fn Popup(
     /// Whether to show or no the cross button in the top right corner.
     #[props(default = true)]
     show_close_button: bool,
+    /// Whether to trigger close request handler when the Escape key is pressed.
+    #[props(default = true)]
+    close_on_escape_key: bool,
 ) -> Element {
     let PopupTheme {
         background,
@@ -77,6 +80,21 @@ pub fn Popup(
         width,
         height,
     } = use_applied_theme!(&theme, popup);
+
+    let request_to_close = move || {
+        if let Some(oncloserequest) = &oncloserequest {
+            oncloserequest.call(());
+        }
+    };
+
+    let onkeydown = move |event: KeyboardEvent| {
+        if close_on_escape_key && event.key == Key::Escape {
+            request_to_close()
+        }
+    };
+
+    let on_close_button_click = move |_| request_to_close();
+
     rsx!(
         PopupBackground {
             rect {
@@ -87,6 +105,7 @@ pub fn Popup(
                 shadow: "0 4 5 0 rgb(0, 0, 0, 30)",
                 width: "{width}",
                 height: "{height}",
+                onkeydown,
                 if show_close_button {
                     rect {
                         height: "0",
@@ -101,9 +120,7 @@ pub fn Popup(
                                 corner_radius: "999".into(),
                                 shadow: "none".into()
                             }),
-                            onclick: move |_| if let Some(oncloserequest) = &oncloserequest {
-                                oncloserequest.call(());
-                            },
+                            onclick: on_close_button_click,
                             CrossIcon {
                                 fill: cross_fill
                              }
@@ -147,6 +164,7 @@ pub fn PopupContent(children: Element) -> Element {
 mod test {
     use dioxus::prelude::use_signal;
     use freya::prelude::*;
+    use freya_elements::events::keyboard::{Code, Key, Modifiers};
     use freya_testing::prelude::*;
 
     #[tokio::test]
@@ -198,6 +216,36 @@ mod test {
         });
         utils.wait_for_update().await;
 
+        // Check the popup is closed
+        assert_eq!(utils.sdom().get().layout().size(), 4);
+
+        // Open the popup
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (5.0, 5.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.wait_for_update().await;
+
+        // Send a random keydown event
+        utils.push_event(PlatformEvent::Keyboard {
+            name: EventName::KeyDown,
+            key: Key::ArrowDown,
+            code: Code::ArrowDown,
+            modifiers: Modifiers::empty(),
+        });
+        utils.wait_for_update().await;
+        // Check the popup is still open
+        assert_eq!(utils.sdom().get().layout().size(), 10);
+
+        // Send a ESC keydown event
+        utils.push_event(PlatformEvent::Keyboard {
+            name: EventName::KeyDown,
+            key: Key::Escape,
+            code: Code::Escape,
+            modifiers: Modifiers::empty(),
+        });
+        utils.wait_for_update().await;
         // Check the popup is closed
         assert_eq!(utils.sdom().get().layout().size(), 4);
     }

@@ -185,7 +185,7 @@ impl<'a, T: Clone> LaunchConfig<'a, T> {
         self
     }
 
-    /// Resgiter a default font.
+    /// Regiter a default font.
     pub fn with_default_font(mut self, font_name: &str) -> Self {
         self.default_fonts.push(font_name.to_string());
         self

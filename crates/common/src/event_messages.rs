@@ -23,6 +23,8 @@ pub enum EventMessage {
     FocusNextAccessibilityNode,
     /// Focus the previous accessibility Node
     FocusPrevAccessibilityNode,
+    /// Trigger window dragging
+    DragWindow
 }
 
 impl From<accesskit_winit::Event> for EventMessage {
