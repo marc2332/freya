@@ -18,6 +18,7 @@ use tracing::info;
 use uuid::Uuid;
 use winit::dpi::PhysicalSize;
 use winit::event_loop::{EventLoop, EventLoopProxy};
+use freya_native_core::prelude::NodeImmutableDioxusExt;
 
 use crate::{
     accessibility::AccessKitManager, event_loop::run_event_loop, renderer::render_skia,
@@ -168,14 +169,22 @@ impl<State: 'static + Clone> App<State> {
 
         loop {
             {
+               
                 let fut = async {
                     select! {
                         ev = self.event_receiver.recv() => {
                             if let Some(ev) = ev {
                                 let data = ev.data.any();
-                                self.vdom.handle_event(ev.name.into(), data, ev.element_id, ev.bubbles);
-
-                                self.vdom.process_events();
+                                let fdom = self.sdom.get();
+                                let rdom = fdom.rdom();
+                                let node = rdom.get(ev.node_id);
+                                if let Some(node) = node {
+                                    let element_id = node.mounted_id();
+                                    if let Some(element_id) = element_id {
+                                        self.vdom.handle_event(ev.name.into(), data, element_id, ev.bubbles);
+                                        self.vdom.process_events();
+                                    }
+                                }
                             }
                         },
                         _ = self.vdom.wait_for_work() => {},

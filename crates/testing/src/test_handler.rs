@@ -6,6 +6,7 @@ use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_engine::prelude::FontCollection;
 use freya_hooks::PlatformInformation;
+use freya_native_core::dioxus::NodeImmutableDioxusExt;
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tokio::time::{interval, timeout};
@@ -137,9 +138,19 @@ impl TestingHandler {
             }
 
             if let Ok(ev) = vdom_ev {
-                self.vdom
-                    .handle_event(ev.name.into(), ev.data.any(), ev.element_id, ev.bubbles);
-                self.vdom.process_events();
+                let data = ev.data.any();
+                let fdom = self.utils.sdom().get();
+                let rdom = fdom.rdom();
+                let node = rdom.get(ev.node_id);
+                if let Some(node) = node {
+                    let element_id = node.mounted_id();
+                    if let Some(element_id) = element_id {
+                        println!("{:?} / {:?} / {:?}", ev.name, element_id, ev.bubbles);
+                        self.vdom.handle_event(ev.name.into(), data, element_id, ev.bubbles);
+
+                        self.vdom.process_events();
+                    }
+                }
             }
         }
 
