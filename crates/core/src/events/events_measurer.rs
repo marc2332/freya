@@ -1,4 +1,4 @@
-use freya_native_core::real_dom::NodeImmutable;
+use freya_native_core::{real_dom::NodeImmutable, tree::TreeRef};
 use freya_native_core::NodeId;
 
 use freya_engine::prelude::*;
