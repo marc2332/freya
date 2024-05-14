@@ -3,6 +3,7 @@ use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_engine::prelude::*;
 use freya_hooks::PlatformInformation;
+use freya_native_core::prelude::NodeImmutableDioxusExt;
 use freya_native_core::NodeId;
 use futures_task::Waker;
 use futures_util::FutureExt;
@@ -18,7 +19,6 @@ use tracing::info;
 use uuid::Uuid;
 use winit::dpi::PhysicalSize;
 use winit::event_loop::{EventLoop, EventLoopProxy};
-use freya_native_core::prelude::NodeImmutableDioxusExt;
 
 use crate::{
     accessibility::AccessKitManager, event_loop::run_event_loop, renderer::render_skia,
@@ -169,7 +169,6 @@ impl<State: 'static + Clone> App<State> {
 
         loop {
             {
-               
                 let fut = async {
                     select! {
                         ev = self.event_receiver.recv() => {
