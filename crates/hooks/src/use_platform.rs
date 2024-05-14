@@ -63,6 +63,11 @@ impl UsePlatform {
         }
     }
 
+    /// Closes the whole app.
+    pub fn exit(&self) {
+        self.send(EventMessage::ExitApp).ok();
+    }
+
     /// Read information about the platform.
     ///
     /// **Important**: This will not subscribe to any changes about the information.
