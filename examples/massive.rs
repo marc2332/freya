@@ -17,34 +17,23 @@ fn StatefulSwitch() -> Element {
 }
 
 fn app() -> Element {
-    let cols = 100;
-    let rows = 100;
+    let cols = 30;
+    let rows = 30;
 
     rsx!(
-        rect {
-            width: "100%",
-            height: "100%",
-            padding: "2.5",
+        for row in 0..rows {
             rect {
-                direction: "horizontal",
+                key: "{row}",
                 width: "100%",
-                height: "100%",
-                {(0..cols).map(|col| {
-                    rsx! {
-                        rect {
-                            key: "{col}",
-                            width: "calc(100% / {cols})",
-                            height: "100%",
-                            {(0..rows).map(|row| {
-                                rsx! {
-                                    StatefulSwitch {
-                                        key: "{row}{col}",
-                                    }
-                                }
-                            })}
-                        }
+                height: "{(100.0 / rows as f32)}%",
+                direction: "horizontal",
+                for col in 0..cols {
+                    rect {
+                        width: "{(100.0 / cols as f32)}%",
+                        key: "{row}{col}",
+                        StatefulSwitch { }
                     }
-                })}
+                }
             }
         }
     )
