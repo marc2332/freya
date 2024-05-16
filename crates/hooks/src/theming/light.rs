@@ -35,6 +35,9 @@ pub const LIGHT_THEME: Theme = Theme {
         font_theme: FontTheme {
             color: cow_borrowed!("rgb(10, 10, 10)"),
         },
+        placeholder_font_theme: FontTheme {
+            color: cow_borrowed!("rgb(100, 100, 100)"),
+        },
         border_fill: cow_borrowed!("rgb(210, 210, 210)"),
         width: cow_borrowed!("150"),
         margin: cow_borrowed!("4"),

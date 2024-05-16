@@ -35,6 +35,9 @@ pub const DARK_THEME: Theme = Theme {
         font_theme: FontTheme {
             color: cow_borrowed!("white"),
         },
+        placeholder_font_theme: FontTheme {
+            color: cow_borrowed!("rgb(210, 210, 210)"),
+        },
         border_fill: cow_borrowed!("rgb(80, 80, 80)"),
         width: LIGHT_THEME.input.width,
         margin: LIGHT_THEME.input.margin,
