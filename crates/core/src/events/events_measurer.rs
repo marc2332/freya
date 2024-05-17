@@ -1,6 +1,5 @@
-use freya_native_core::real_dom::NodeImmutable;
 use freya_native_core::NodeId;
-use freya_native_core::{prelude::NodeImmutableDioxusExt, tree::TreeRef};
+use freya_native_core::{real_dom::NodeImmutable, tree::TreeRef};
 
 use freya_engine::prelude::*;
 use freya_node_state::{Fill, Style, ViewportState};
@@ -243,11 +242,8 @@ fn measure_dom_events(
             let layout = fdom.layout();
             let layout_node = layout.get(potential_event.node_id);
             if let Some(layout_node) = layout_node {
-                let node_ref = fdom.rdom().get(potential_event.node_id).unwrap();
-                let element_id = node_ref.mounted_id().unwrap();
                 let event = DomEvent::new(
                     potential_event,
-                    element_id,
                     Some(layout_node.visible_area()),
                     scale_factor,
                 );
@@ -272,14 +268,12 @@ fn emit_global_events_listeners(
         let listeners = fdom.rdom().get_listeners(&event_name);
 
         for listener in listeners {
-            let element_id = listener.mounted_id().unwrap();
             let event = DomEvent::new(
                 PotentialEvent {
                     node_id: listener.id(),
                     layer: None,
                     event: global_event.clone(),
                 },
-                element_id,
                 None,
                 scale_factor,
             );

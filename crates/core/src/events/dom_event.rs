@@ -1,6 +1,5 @@
 use std::{any::Any, rc::Rc};
 
-use dioxus_core::ElementId;
 use freya_elements::{
     elements::PlatformEventData,
     events::{
@@ -19,7 +18,6 @@ use super::event_name::EventName;
 pub struct DomEvent {
     pub name: EventName,
     pub node_id: NodeId,
-    pub element_id: ElementId,
     pub data: DomEventData,
     pub bubbles: bool,
     pub layer: Option<i16>,
@@ -46,7 +44,6 @@ impl DomEvent {
             layer,
             event,
         }: PotentialEvent,
-        element_id: ElementId,
         node_area: Option<Area>,
         scale_factor: f64,
     ) -> Self {
@@ -80,7 +77,6 @@ impl DomEvent {
 
                 Self {
                     node_id,
-                    element_id,
                     name,
                     data: event_data,
                     bubbles,
@@ -89,7 +85,6 @@ impl DomEvent {
             }
             PlatformEvent::Wheel { scroll, .. } => Self {
                 node_id,
-                element_id,
                 name,
                 data: DomEventData::Wheel(WheelData::new(scroll.x, scroll.y)),
                 bubbles,
@@ -102,7 +97,6 @@ impl DomEvent {
                 ..
             } => Self {
                 node_id,
-                element_id,
                 name,
                 data: DomEventData::Keyboard(KeyboardData::new(key.clone(), code, modifiers)),
                 bubbles,
@@ -140,7 +134,6 @@ impl DomEvent {
 
                 Self {
                     node_id,
-                    element_id,
                     name,
                     data: event_data,
                     bubbles,
@@ -154,7 +147,6 @@ impl DomEvent {
 
                 Self {
                     node_id,
-                    element_id,
                     name,
                     data: event_data,
                     bubbles,

@@ -3,6 +3,7 @@ use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_engine::prelude::*;
 use freya_hooks::PlatformInformation;
+use freya_native_core::prelude::NodeImmutableDioxusExt;
 use freya_native_core::NodeId;
 use futures_task::Waker;
 use futures_util::FutureExt;
@@ -173,9 +174,16 @@ impl<State: 'static + Clone> App<State> {
                         ev = self.event_receiver.recv() => {
                             if let Some(ev) = ev {
                                 let data = ev.data.any();
-                                self.vdom.handle_event(ev.name.into(), data, ev.element_id, ev.bubbles);
-
-                                self.vdom.process_events();
+                                let fdom = self.sdom.get();
+                                let rdom = fdom.rdom();
+                                let node = rdom.get(ev.node_id);
+                                if let Some(node) = node {
+                                    let element_id = node.mounted_id();
+                                    if let Some(element_id) = element_id {
+                                        self.vdom.handle_event(ev.name.into(), data, element_id, ev.bubbles);
+                                        self.vdom.process_events();
+                                    }
+                                }
                             }
                         },
                         _ = self.vdom.wait_for_work() => {},
