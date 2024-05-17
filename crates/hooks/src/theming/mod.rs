@@ -278,6 +278,7 @@ define_theme! {
         corner_radius: str,
         %[subthemes]
         font_theme: FontTheme,
+        placeholder_font_theme: FontTheme,
     }
 }
 
