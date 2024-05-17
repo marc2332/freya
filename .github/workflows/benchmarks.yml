@@ -4,6 +4,7 @@ on:
     paths:
       - 'crates/torin/**/*'
       - '.github/workflows/benchmarks.yml'
+      - 'rust-toolchain.toml'
 
 name: Run Benchmarks
 jobs:
