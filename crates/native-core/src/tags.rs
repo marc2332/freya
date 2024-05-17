@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{fmt::Display, str::FromStr};
 
 #[derive(Clone, Copy, PartialEq, Debug, Hash)]
 pub enum TagName {
@@ -41,16 +41,16 @@ impl FromStr for TagName {
     }
 }
 
-impl ToString for TagName {
-    fn to_string(&self) -> String {
+impl Display for TagName {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            TagName::Root => "root".to_string(),
-            TagName::Rect => "rect".to_string(),
-            TagName::Paragraph => "p".to_string(),
-            TagName::Label => "label".to_string(),
-            TagName::Text => "text".to_string(),
-            TagName::Image => "img".to_string(),
-            TagName::Svg => "svg".to_string(),
+            TagName::Root => f.write_str("root"),
+            TagName::Rect => f.write_str("rect"),
+            TagName::Paragraph => f.write_str("p"),
+            TagName::Label => f.write_str("label"),
+            TagName::Text => f.write_str("text"),
+            TagName::Image => f.write_str("img"),
+            TagName::Svg => f.write_str("svg"),
         }
     }
 }

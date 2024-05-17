@@ -27,6 +27,8 @@ pub enum EventMessage {
     FocusPrevAccessibilityNode,
     /// Trigger window dragging
     DragWindow,
+    /// Close the whole app
+    ExitApp,
 }
 
 impl From<ActionRequestEvent> for EventMessage {

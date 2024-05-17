@@ -2,7 +2,7 @@
 
 use crate::{ButtonProps, InputMode, InputProps};
 use dioxus::prelude::*;
-use std::{collections::HashMap, hash::Hash};
+use std::{collections::HashMap, fmt::Display, hash::Hash};
 
 type SubmitCallback<Id> = Box<dyn Fn(&HashMap<Id, String>)>;
 
@@ -16,10 +16,11 @@ pub struct UseForm<Id: Hash + Eq + 'static> {
     onsubmit: Signal<SubmitCallback<Id>>,
 }
 
-impl<Id: Clone + Hash + Eq> UseForm<Id> {
+impl<Id: Clone + Hash + Eq + Display> UseForm<Id> {
     /// Register an Input component
     pub fn input(&self, id: Id) -> InputProps {
         let value = self.data.read().get(&id).cloned().unwrap_or_default();
+        let placeholder = id.to_string();
         let mut data = self.data;
         InputProps {
             onchange: EventHandler::new(move |txt| {
@@ -28,6 +29,7 @@ impl<Id: Clone + Hash + Eq> UseForm<Id> {
             theme: None,
             mode: InputMode::default(),
             value,
+            placeholder: Some(placeholder),
         }
     }
 

@@ -5,7 +5,7 @@ use freya_elements::events::{KeyboardData, MouseEvent};
 use freya_hooks::use_platform;
 use freya_hooks::{
     use_applied_theme, use_editable, use_focus, EditableConfig, EditableEvent, EditableMode,
-    FontTheme, InputTheme, InputThemeWith, TextEditor,
+    InputTheme, InputThemeWith, TextEditor,
 };
 
 use winit::window::CursorIcon;
@@ -41,6 +41,8 @@ pub enum InputStatus {
 pub struct InputProps {
     /// Theme override.
     pub theme: Option<InputThemeWith>,
+    /// Text to show for when there is no value
+    pub placeholder: Option<String>,
     /// Current value of the Input
     pub value: String,
     /// Handler for the `onchange` event.
@@ -82,6 +84,7 @@ pub fn Input(
         value,
         onchange,
         mode,
+        placeholder,
     }: InputProps,
 ) -> Element {
     let platform = use_platform();
@@ -92,15 +95,11 @@ pub fn Input(
     );
     let theme = use_applied_theme!(&theme, input);
     let mut focus = use_focus();
+    let display_placeholder = value.is_empty() && placeholder.is_some() && !focus.is_focused();
 
     if &value != editable.editor().read().rope() {
         editable.editor_mut().write().set(&value);
     }
-
-    let text = match mode {
-        InputMode::Hidden(ch) => ch.to_string().repeat(value.len()),
-        InputMode::Shown => value.clone(),
-    };
 
     use_drop(move || {
         if *status.peek() == InputStatus::Hovering {
@@ -116,7 +115,9 @@ pub fn Input(
     };
 
     let onmousedown = move |e: MouseEvent| {
-        editable.process_event(&EditableEvent::MouseDown(e.data, 0));
+        if !display_placeholder {
+            editable.process_event(&EditableEvent::MouseDown(e.data, 0));
+        }
         focus.focus();
     };
 
@@ -161,9 +162,22 @@ pub fn Input(
         width,
         margin,
         corner_radius,
-        font_theme: FontTheme { color },
+        font_theme,
+        placeholder_font_theme,
         ..
     } = theme;
+
+    let color = if display_placeholder {
+        placeholder_font_theme.color
+    } else {
+        font_theme.color
+    };
+
+    let text = match (mode, placeholder) {
+        (_, Some(placeholder)) if display_placeholder => placeholder,
+        (InputMode::Hidden(ch), _) => ch.to_string().repeat(value.len()),
+        (InputMode::Shown, _) => value,
+    };
 
     rsx!(
         rect {
