@@ -356,6 +356,9 @@ pub fn VirtualScrollView<
         .map(|f| f.0 == Axis::Y)
         .unwrap_or_default();
 
+    let offset_y_min = (-corrected_scrolled_y / items_size).floor() * items_size;
+    let offset_y = -corrected_scrolled_y - offset_y_min;
+
     rsx!(
         rect {
             role: "scrollView",
@@ -377,6 +380,7 @@ pub fn VirtualScrollView<
                     height: "100%",
                     width: "100%",
                     direction: "{user_direction}",
+                    offset_y: "{-offset_y}",
                     reference: node_ref,
                     onwheel: onwheel,
                     {children}
