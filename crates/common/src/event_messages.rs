@@ -3,6 +3,7 @@ use accesskit_winit::ActionRequestEvent;
 use dioxus_core::Template;
 use uuid::Uuid;
 use winit::window::CursorIcon;
+use torin::geometry::Size2D;
 
 /// Custom EventLoop messages
 #[derive(Debug)]
@@ -27,6 +28,8 @@ pub enum EventMessage {
     FocusPrevAccessibilityNode,
     /// Trigger window dragging
     DragWindow,
+    /// Set the window size
+    SetWindowSize(Size2D),
     /// Close the whole app
     ExitApp,
 }

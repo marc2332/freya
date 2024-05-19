@@ -52,6 +52,10 @@ impl UsePlatform {
     pub fn drag_window(&self) {
         self.send(EventMessage::DragWindow).ok();
     }
+    
+    pub fn set_window_size(&self, window_size: Size2D) {
+        self.send(EventMessage::SetWindowSize(window_size)).ok();
+    }
 
     pub fn request_animation_frame(&self) {
         self.send(EventMessage::RequestRerender).ok();
