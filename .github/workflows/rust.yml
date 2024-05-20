@@ -8,6 +8,8 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  # Workaround for <https://github.com/nextest-rs/nextest/issues/1493>.
+  RUSTUP_WINDOWS_PATH_ADD_BIN: 1
 
 jobs:
   build:
