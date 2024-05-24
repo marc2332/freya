@@ -74,6 +74,13 @@ pub fn run_event_loop<State: Clone>(
             Event::UserEvent(EventMessage::DragWindow) => {
                 app.window_env.window.drag_window().ok();
             }
+            Event::UserEvent(EventMessage::MaximizeWindow) => {
+                let window = &app.window_env.window;
+                window.set_maximized(!window.is_maximized());
+            }
+            Event::UserEvent(EventMessage::MinimizeWindow) => {
+                app.window_env.window.set_minimized(true);
+            }
             Event::UserEvent(ev) => {
                 if let EventMessage::UpdateTemplate(template) = ev {
                     app.vdom_replace_template(template);

@@ -27,6 +27,10 @@ pub enum EventMessage {
     FocusPrevAccessibilityNode,
     /// Trigger window dragging
     DragWindow,
+    /// Trigger window maximizing
+    MaximizeWindow,
+    /// Trigger window minimizing
+    MinimizeWindow,
     /// Close the whole app
     ExitApp,
 }
