@@ -31,6 +31,8 @@ pub enum EventMessage {
     MaximizeWindow,
     /// Trigger window minimizing
     MinimizeWindow,
+    /// Trigger window fullscreen
+    FullscreenWindow,
     /// Close the whole app
     ExitApp,
 }

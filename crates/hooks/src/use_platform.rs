@@ -61,6 +61,10 @@ impl UsePlatform {
         self.send(EventMessage::MinimizeWindow).ok();
     }
 
+    pub fn fullscreen_window(&self) {
+        self.send(EventMessage::FullscreenWindow).ok();
+    }
+
     pub fn request_animation_frame(&self) {
         self.send(EventMessage::RequestRerender).ok();
     }
