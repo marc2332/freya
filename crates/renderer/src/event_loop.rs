@@ -12,6 +12,7 @@ use winit::event::{
 };
 use winit::event_loop::{EventLoop, EventLoopProxy};
 use winit::keyboard::ModifiersState;
+use winit::window::Fullscreen;
 
 use crate::app::App;
 use crate::HoveredNode;
@@ -73,6 +74,20 @@ pub fn run_event_loop<State: Clone>(
             }
             Event::UserEvent(EventMessage::DragWindow) => {
                 app.window_env.window.drag_window().ok();
+            }
+            Event::UserEvent(EventMessage::MaximizeWindow) => {
+                let window = &app.window_env.window;
+                window.set_maximized(!window.is_maximized());
+            }
+            Event::UserEvent(EventMessage::MinimizeWindow) => {
+                app.window_env.window.set_minimized(true);
+            }
+            Event::UserEvent(EventMessage::FullscreenWindow) => {
+                let window = &app.window_env.window;
+                match window.fullscreen() {
+                    Some(_) => window.set_fullscreen(None),
+                    None => window.set_fullscreen(Some(Fullscreen::Borderless(None))),
+                }
             }
             Event::UserEvent(ev) => {
                 if let EventMessage::UpdateTemplate(template) = ev {

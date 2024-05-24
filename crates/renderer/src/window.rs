@@ -54,6 +54,7 @@ impl<T: Clone> WindowEnv<T> {
             .with_title(window_config.title)
             .with_decorations(window_config.decorations)
             .with_transparent(window_config.transparent)
+            .with_resizable(window_config.resizable)
             .with_window_icon(window_config.icon.take())
             .with_inner_size(LogicalSize::<f64>::new(
                 window_config.width,

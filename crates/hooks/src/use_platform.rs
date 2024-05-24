@@ -53,6 +53,18 @@ impl UsePlatform {
         self.send(EventMessage::DragWindow).ok();
     }
 
+    pub fn maximize_window(&self) {
+        self.send(EventMessage::MaximizeWindow).ok();
+    }
+
+    pub fn minimize_window(&self) {
+        self.send(EventMessage::MinimizeWindow).ok();
+    }
+
+    pub fn fullscreen_window(&self) {
+        self.send(EventMessage::FullscreenWindow).ok();
+    }
+
     pub fn request_animation_frame(&self) {
         self.send(EventMessage::RequestRerender).ok();
     }

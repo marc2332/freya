@@ -29,6 +29,8 @@ pub struct WindowConfig<T: Clone> {
     pub title: &'static str,
     /// Make the Window transparent or not.
     pub transparent: bool,
+    /// Allow the Window to be resizable or not.
+    pub resizable: bool,
     /// A custom value to consume from your app.
     pub state: Option<T>,
     /// Background color of the Window.
@@ -102,6 +104,7 @@ pub struct LaunchConfigBuilder<'a, T> {
     pub(crate) decorations: bool,
     pub(crate) title: &'static str,
     pub(crate) transparent: bool,
+    pub(crate) resizable: bool,
     pub(crate) state: Option<T>,
     pub(crate) background: Color,
     pub(crate) fonts: Vec<(&'a str, &'a [u8])>,
@@ -125,6 +128,7 @@ impl<T> Default for LaunchConfigBuilder<'_, T> {
             decorations: true,
             title: "Freya app",
             transparent: false,
+            resizable: true,
             state: None,
             background: Color::WHITE,
             fonts: Vec::default(),
@@ -190,6 +194,12 @@ impl<'a, T: Clone> LaunchConfigBuilder<'a, T> {
     /// Make the Window transparent or not.
     pub fn with_transparency(mut self, transparency: bool) -> Self {
         self.transparent = transparency;
+        self
+    }
+
+    /// Make the Window resizable or not.
+    pub fn with_resizable(mut self, resizable: bool) -> Self {
+        self.resizable = resizable;
         self
     }
 
@@ -269,6 +279,7 @@ impl<'a, T: Clone> LaunchConfigBuilder<'a, T> {
                 title: self.title,
                 decorations: self.decorations,
                 transparent: self.transparent,
+                resizable: self.resizable,
                 state: self.state,
                 background: self.background,
                 icon: self.icon,
