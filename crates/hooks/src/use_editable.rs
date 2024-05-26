@@ -4,7 +4,6 @@ use std::{
 };
 
 use dioxus_core::{prelude::spawn, use_hook, AttributeValue};
-use dioxus_hooks::to_owned;
 use dioxus_sdk::clipboard::use_clipboard;
 use dioxus_signals::{Readable, Signal, Writable};
 use freya_common::{CursorLayoutResponse, EventMessage};
@@ -180,53 +179,46 @@ pub fn use_editable(initializer: impl Fn() -> EditableConfig, mode: EditableMode
             cursor_selections: Arc::new(Mutex::new(None)),
         };
 
-        spawn({
-            to_owned![cursor_reference];
-            async move {
-                while let Some(message) = cursor_receiver.recv().await {
-                    match message {
-                        // Update the cursor position calculated by the layout
-                        CursorLayoutResponse::CursorPosition { position, id } => {
-                            let mut text_editor = editor.write();
+        spawn(async move {
+            while let Some(message) = cursor_receiver.recv().await {
+                match message {
+                    // Update the cursor position calculated by the layout
+                    CursorLayoutResponse::CursorPosition { position, id } => {
+                        let mut text_editor = editor.write();
 
-                            let new_cursor_row = match mode {
-                                EditableMode::MultipleLinesSingleEditor => {
-                                    text_editor.char_to_line(position)
-                                }
-                                EditableMode::SingleLineMultipleEditors => id,
-                            };
-
-                            let new_cursor_col = match mode {
-                                EditableMode::MultipleLinesSingleEditor => {
-                                    position - text_editor.line_to_char(new_cursor_row)
-                                }
-                                EditableMode::SingleLineMultipleEditors => position,
-                            };
-
-                            let new_current_line = text_editor.line(new_cursor_row).unwrap();
-
-                            // Use the line length as new column if the clicked column surpases the length
-                            let new_cursor = if new_cursor_col >= new_current_line.len_chars() {
-                                (new_current_line.len_chars(), new_cursor_row)
-                            } else {
-                                (new_cursor_col, new_cursor_row)
-                            };
-
-                            // Only update if it's actually different
-                            if text_editor.cursor().as_tuple() != new_cursor {
-                                text_editor.cursor_mut().set_col(new_cursor.0);
-                                text_editor.cursor_mut().set_row(new_cursor.1);
-                                text_editor.unhighlight();
+                        let new_cursor_row = match mode {
+                            EditableMode::MultipleLinesSingleEditor => {
+                                text_editor.char_to_line(position)
                             }
+                            EditableMode::SingleLineMultipleEditors => id,
+                        };
 
-                            // Remove the current calcutions so the layout engine doesn't try to calculate again
-                            cursor_reference.set_cursor_position(None);
+                        let new_cursor_col = match mode {
+                            EditableMode::MultipleLinesSingleEditor => {
+                                position - text_editor.line_to_char(new_cursor_row)
+                            }
+                            EditableMode::SingleLineMultipleEditors => position,
+                        };
+
+                        let new_current_line = text_editor.line(new_cursor_row).unwrap();
+
+                        // Use the line length as new column if the clicked column surpases the length
+                        let new_cursor = if new_cursor_col >= new_current_line.len_chars() {
+                            (new_current_line.len_chars(), new_cursor_row)
+                        } else {
+                            (new_cursor_col, new_cursor_row)
+                        };
+
+                        // Only update if it's actually different
+                        if text_editor.cursor().as_tuple() != new_cursor {
+                            text_editor.cursor_mut().set_col(new_cursor.0);
+                            text_editor.cursor_mut().set_row(new_cursor.1);
+                            text_editor.unhighlight();
                         }
-                        // Update the text selections calculated by the layout
-                        CursorLayoutResponse::TextSelection { from, to, id } => {
-                            editor.write().highlight_text(from, to, id);
-                            cursor_reference.set_cursor_selections(None);
-                        }
+                    }
+                    // Update the text selections calculated by the layout
+                    CursorLayoutResponse::TextSelection { from, to, id } => {
+                        editor.write().highlight_text(from, to, id);
                     }
                 }
             }
