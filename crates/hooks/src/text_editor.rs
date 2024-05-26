@@ -141,6 +141,11 @@ pub trait TextEditor {
         self.cursor().col()
     }
 
+    /// Get the visible cursor position
+    fn visible_cursor_col(&self) -> usize {
+        self.char_to_utf16_cu(self.cursor_col())
+    }
+
     /// Move the cursor 1 line down
     fn cursor_down(&mut self) {
         let new_row = self.cursor_row() + 1;

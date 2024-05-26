@@ -72,7 +72,6 @@ impl TextEditor for RopeEditor {
         let text = self.rope.slice(range.clone()).to_string();
         self.history.push_change(HistoryChange::Remove {
             idx: range.start,
-            end_idx: range.end,
             text,
         });
         self.rope.remove(range)
@@ -150,7 +149,7 @@ impl TextEditor for RopeEditor {
             if (editor_id > selected_from_row && editor_id < selected_to_row)
                 || (editor_id < selected_from_row && editor_id > selected_to_row)
             {
-                let len = self.line(editor_id).unwrap().utf16_len_chars();
+                let len = self.line(editor_id).unwrap().len_chars();
                 return Some((0, len));
             }
 

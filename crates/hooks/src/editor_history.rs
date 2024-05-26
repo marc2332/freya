@@ -2,19 +2,9 @@ use ropey::Rope;
 
 #[derive(Clone)]
 pub enum HistoryChange {
-    InsertChar {
-        idx: usize,
-        char: char,
-    },
-    InsertText {
-        idx: usize,
-        text: String,
-    },
-    Remove {
-        idx: usize,
-        end_idx: usize,
-        text: String,
-    },
+    InsertChar { idx: usize, char: char },
+    InsertText { idx: usize, text: String },
+    Remove { idx: usize, text: String },
 }
 
 #[derive(Default, Clone)]
@@ -65,9 +55,9 @@ impl EditorHistory {
         let last_change = self.changes.get(self.current_change - 1);
         if let Some(last_change) = last_change {
             let idx_end = match last_change {
-                HistoryChange::Remove { idx, text, end_idx } => {
+                HistoryChange::Remove { idx, text } => {
                     rope.insert(*idx, text);
-                    *end_idx
+                    idx + text.len()
                 }
                 HistoryChange::InsertChar { idx, char: ch } => {
                     rope.remove(*idx..*idx + ch.len_utf8());
@@ -94,8 +84,8 @@ impl EditorHistory {
         let next_change = self.changes.get(self.current_change);
         if let Some(next_change) = next_change {
             let idx_end = match next_change {
-                HistoryChange::Remove { idx, end_idx, .. } => {
-                    rope.remove(*idx..*end_idx);
+                HistoryChange::Remove { idx, text } => {
+                    rope.remove(*idx..idx + text.len());
                     *idx
                 }
                 HistoryChange::InsertChar { idx, char: ch } => {

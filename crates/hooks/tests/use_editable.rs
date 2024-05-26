@@ -432,7 +432,7 @@ pub async fn highlights_single_line_mulitple_editors() {
 
                     // Only show the cursor in the active line
                     let character_index = if is_line_selected {
-                        editable.editor().read().cursor_col().to_string()
+                        editable.editor().read().visible_cursor_col().to_string()
                     } else {
                         "none".to_string()
                     };
