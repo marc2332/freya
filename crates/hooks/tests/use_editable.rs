@@ -12,7 +12,7 @@ pub async fn multiple_lines_single_editor() {
         let cursor_attr = editable.cursor_attr();
         let editor = editable.editor().read();
         let cursor = editor.cursor();
-        let cursor_pos = editor.cursor_pos();
+        let cursor_pos = editor.visible_cursor_pos();
 
         let onmousedown = move |e: MouseEvent| {
             editable.process_event(&EditableEvent::MouseDown(e.data, 0));
@@ -317,7 +317,7 @@ pub async fn highlight_multiple_lines_single_editor() {
         );
         let editor = editable.editor().read();
         let cursor = editor.cursor();
-        let cursor_pos = editor.cursor_pos();
+        let cursor_pos = editor.visible_cursor_pos();
         let cursor_reference = editable.cursor_attr();
         let highlights = editable.highlights_attr(0);
 

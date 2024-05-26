@@ -56,6 +56,11 @@ pub struct Line<'a> {
 impl Line<'_> {
     /// Get the length of the line
     pub fn len_chars(&self) -> usize {
+        self.text.len()
+    }
+
+    /// Get the length of the line
+    pub fn utf16_len_chars(&self) -> usize {
         self.text.encode_utf16().count()
     }
 
@@ -110,6 +115,10 @@ pub trait TextEditor {
     /// Get the first char from the given line
     fn line_to_char(&self, line_idx: usize) -> usize;
 
+    fn utf16_cu_to_char(&self, utf16_cu_idx: usize) -> usize;
+
+    fn char_to_utf16_cu(&self, idx: usize) -> usize;
+
     /// Get a line from the text
     fn line(&self, line_idx: usize) -> Option<Line<'_>>;
 
@@ -160,6 +169,12 @@ pub trait TextEditor {
     fn cursor_pos(&self) -> usize {
         let line_begining = self.line_to_char(self.cursor_row());
         line_begining + self.cursor_col()
+    }
+
+    /// Get the cursor position
+    fn visible_cursor_pos(&self) -> usize {
+        let line_begining = self.char_to_utf16_cu(self.line_to_char(self.cursor_row()));
+        line_begining + self.char_to_utf16_cu(self.cursor_col())
     }
 
     /// Set the cursor position

@@ -55,14 +55,12 @@ impl TextEditor for RopeEditor {
     }
 
     fn insert_char(&mut self, char: char, idx: usize) {
-        let idx = self.rope.utf16_cu_to_char(idx);
         self.history
             .push_change(HistoryChange::InsertChar { idx, char });
         self.rope.insert_char(idx, char);
     }
 
     fn insert(&mut self, text: &str, idx: usize) {
-        let idx = self.rope.utf16_cu_to_char(idx);
         self.history.push_change(HistoryChange::InsertText {
             idx,
             text: text.to_owned(),
@@ -71,25 +69,29 @@ impl TextEditor for RopeEditor {
     }
 
     fn remove(&mut self, range: Range<usize>) {
-        let utf_8_range =
-            self.rope.utf16_cu_to_char(range.start)..self.rope.utf16_cu_to_char(range.end);
-        let text = self.rope.slice(utf_8_range.clone()).to_string();
+        let text = self.rope.slice(range.clone()).to_string();
         self.history.push_change(HistoryChange::Remove {
-            idx: utf_8_range.start,
-            end_idx: utf_8_range.end,
+            idx: range.start,
+            end_idx: range.end,
             text,
         });
-        self.rope.remove(utf_8_range)
+        self.rope.remove(range)
     }
 
     fn char_to_line(&self, char_idx: usize) -> usize {
-        let utf_8_char = self.rope.utf16_cu_to_char(char_idx);
-        self.rope.char_to_line(utf_8_char)
+        self.rope.char_to_line(char_idx)
     }
 
     fn line_to_char(&self, line_idx: usize) -> usize {
-        let utf_8_char = self.rope.line_to_char(line_idx);
-        self.rope.char_to_utf16_cu(utf_8_char)
+        self.rope.line_to_char(line_idx)
+    }
+
+    fn utf16_cu_to_char(&self, utf16_cu_idx: usize) -> usize {
+        self.rope.utf16_cu_to_char(utf16_cu_idx)
+    }
+
+    fn char_to_utf16_cu(&self, idx: usize) -> usize {
+        self.rope.char_to_utf16_cu(idx)
     }
 
     fn line(&self, line_idx: usize) -> Option<Line<'_>> {
@@ -148,20 +150,22 @@ impl TextEditor for RopeEditor {
             if (editor_id > selected_from_row && editor_id < selected_to_row)
                 || (editor_id < selected_from_row && editor_id > selected_to_row)
             {
-                let len = self.line(editor_id).unwrap().len_chars();
+                let len = self.line(editor_id).unwrap().utf16_len_chars();
                 return Some((0, len));
             }
 
-            match selected_from_row.cmp(&selected_to_row) {
+            let highlights = match selected_from_row.cmp(&selected_to_row) {
                 // Selection direction is from bottom -> top
                 Ordering::Greater => {
                     if selected_from_row == editor_id {
                         // Starting line
-                        return Some((0, selected_from_col_idx));
+                        Some((0, selected_from_col_idx))
                     } else if selected_to_row == editor_id {
                         // Ending line
                         let len = self.line(selected_to_row).unwrap().len_chars();
-                        return Some((selected_to_col_idx, len));
+                        Some((selected_to_col_idx, len))
+                    } else {
+                        None
                     }
                 }
                 // Selection direction is from top -> bottom
@@ -169,26 +173,27 @@ impl TextEditor for RopeEditor {
                     if selected_from_row == editor_id {
                         // Starting line
                         let len = self.line(selected_from_row).unwrap().len_chars();
-                        return Some((selected_from_col_idx, len));
+                        Some((selected_from_col_idx, len))
                     } else if selected_to_row == editor_id {
                         // Ending line
-                        return Some((0, selected_to_col_idx));
+                        Some((0, selected_to_col_idx))
+                    } else {
+                        None
                     }
                 }
-                Ordering::Equal => {
+                Ordering::Equal if selected_from_row == editor_id => {
                     // Starting and endline line are the same
-                    if selected_from_row == editor_id {
-                        return Some((
-                            selected_from - editor_row_idx,
-                            selected_to - editor_row_idx,
-                        ));
-                    }
+                    Some((selected_from - editor_row_idx, selected_to - editor_row_idx))
                 }
-            }
+                _ => None,
+            };
 
-            None
+            highlights.map(|(from, to)| (self.char_to_utf16_cu(from), self.char_to_utf16_cu(to)))
         } else {
-            Some((selected_from, selected_to))
+            Some((
+                self.char_to_utf16_cu(selected_from),
+                self.char_to_utf16_cu(selected_to),
+            ))
         }
     }
 
@@ -227,11 +232,6 @@ impl TextEditor for RopeEditor {
 
     fn get_selected_text(&self) -> Option<String> {
         let (start, end) = self.get_selection()?;
-
-        let (start, end) = (
-            self.rope.utf16_cu_to_char(start),
-            self.rope.utf16_cu_to_char(end),
-        );
 
         Some(self.rope().get_slice(start..end)?.to_string())
     }
