@@ -450,21 +450,17 @@ pub trait TextEditor {
 
                     _ => {
                         if let Ok(ch) = character.parse::<char>() {
-                            // https://github.com/marc2332/freya/issues/461
-                            if true {
-                                // Inserts a character
-                                let char_idx =
-                                    self.line_to_char(self.cursor_row()) + self.cursor_col();
-                                self.insert(character, char_idx);
-                                self.cursor_right();
+                            // Inserts a character
+                            let char_idx = self.line_to_char(self.cursor_row()) + self.cursor_col();
+                            self.insert_char(ch, char_idx);
+                            self.cursor_right();
 
-                                event.insert(TextEvent::TEXT_CHANGED);
-                            }
-                        } else if character.is_ascii() {
+                            event.insert(TextEvent::TEXT_CHANGED);
+                        } else {
                             // Inserts a text
                             let char_idx = self.line_to_char(self.cursor_row()) + self.cursor_col();
                             self.insert(character, char_idx);
-                            self.set_cursor_pos(char_idx + character.len());
+                            self.set_cursor_pos(char_idx + character.encode_utf16().count());
 
                             event.insert(TextEvent::TEXT_CHANGED);
                         }

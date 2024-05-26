@@ -55,28 +55,31 @@ impl TextEditor for RopeEditor {
     }
 
     fn insert_char(&mut self, char: char, idx: usize) {
+        let idx = self.rope.utf16_cu_to_char(idx);
         self.history
             .push_change(HistoryChange::InsertChar { idx, char });
-        let utf_8_char = self.rope.utf16_cu_to_char(idx);
-        self.rope.insert_char(utf_8_char, char);
+        self.rope.insert_char(idx, char);
     }
 
     fn insert(&mut self, text: &str, idx: usize) {
+        let idx = self.rope.utf16_cu_to_char(idx);
         self.history.push_change(HistoryChange::InsertText {
             idx,
             text: text.to_owned(),
         });
-        let utf_8_char = self.rope.utf16_cu_to_char(idx);
-        self.rope.insert(utf_8_char, text);
+        self.rope.insert(idx, text);
     }
 
     fn remove(&mut self, range: Range<usize>) {
-        let text = self.rope.slice(range.clone()).to_string();
+        let utf_8_range =
+            self.rope.utf16_cu_to_char(range.start)..self.rope.utf16_cu_to_char(range.end);
+        let text = self.rope.slice(utf_8_range.clone()).to_string();
         self.history.push_change(HistoryChange::Remove {
-            idx: range.start,
+            idx: utf_8_range.start,
+            end_idx: utf_8_range.end,
             text,
         });
-        self.rope.remove(range)
+        self.rope.remove(utf_8_range)
     }
 
     fn char_to_line(&self, char_idx: usize) -> usize {
@@ -85,7 +88,8 @@ impl TextEditor for RopeEditor {
     }
 
     fn line_to_char(&self, line_idx: usize) -> usize {
-        self.rope.line_to_char(line_idx)
+        let utf_8_char = self.rope.line_to_char(line_idx);
+        self.rope.char_to_utf16_cu(utf_8_char)
     }
 
     fn line(&self, line_idx: usize) -> Option<Line<'_>> {
@@ -223,6 +227,11 @@ impl TextEditor for RopeEditor {
 
     fn get_selected_text(&self) -> Option<String> {
         let (start, end) = self.get_selection()?;
+
+        let (start, end) = (
+            self.rope.utf16_cu_to_char(start),
+            self.rope.utf16_cu_to_char(end),
+        );
 
         Some(self.rope().get_slice(start..end)?.to_string())
     }
