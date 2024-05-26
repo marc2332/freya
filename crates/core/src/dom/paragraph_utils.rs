@@ -71,11 +71,11 @@ fn get_cursor_reference(
     let cursor_ref = cursor_settings.cursor_ref.clone()?;
     let cursor_id = cursor_settings.cursor_id?;
 
-    let current_cursor_id = { *cursor_ref.cursor_id.lock().unwrap().as_ref()? };
-    let cursor_selections = cursor_ref.cursor_selections.lock().unwrap().take();
-    let cursor_position = cursor_ref.cursor_position.lock().unwrap().take();
+    let current_cursor_id = *cursor_ref.cursor_id.lock().unwrap().as_ref()?;
 
     if current_cursor_id == cursor_id {
+        let cursor_selections = cursor_ref.cursor_selections.lock().unwrap().take();
+        let cursor_position = cursor_ref.cursor_position.lock().unwrap().take();
         Some((cursor_ref, cursor_id, cursor_position, cursor_selections))
     } else {
         None
