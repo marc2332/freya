@@ -57,7 +57,8 @@ impl TextEditor for RopeEditor {
     fn insert_char(&mut self, char: char, idx: usize) {
         self.history
             .push_change(HistoryChange::InsertChar { idx, char });
-        self.rope.insert_char(idx, char);
+        let utf_8_char = self.rope.utf16_cu_to_char(idx);
+        self.rope.insert_char(utf_8_char, char);
     }
 
     fn insert(&mut self, text: &str, idx: usize) {
@@ -65,7 +66,8 @@ impl TextEditor for RopeEditor {
             idx,
             text: text.to_owned(),
         });
-        self.rope.insert(idx, text);
+        let utf_8_char = self.rope.utf16_cu_to_char(idx);
+        self.rope.insert(utf_8_char, text);
     }
 
     fn remove(&mut self, range: Range<usize>) {
@@ -78,7 +80,8 @@ impl TextEditor for RopeEditor {
     }
 
     fn char_to_line(&self, char_idx: usize) -> usize {
-        self.rope.char_to_line(char_idx)
+        let utf_8_char = self.rope.utf16_cu_to_char(char_idx);
+        self.rope.char_to_line(utf_8_char)
     }
 
     fn line_to_char(&self, line_idx: usize) -> usize {

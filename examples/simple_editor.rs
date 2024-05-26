@@ -12,7 +12,7 @@ fn main() {
 fn app() -> Element {
     let mut editable = use_editable(
         || {
-            EditableConfig::new("Hello Rustaceans Abcdefg12345 Hello Rustaceans Abcdefg12345 Hello Rustaceans Abcdefg12345\n".repeat(25).trim().to_string())
+            EditableConfig::new("你好世界 👋| Hello World! 🙍‍♂️| Hola Mundo! 🚀| Hola Món! 🦀\n".repeat(3).trim().to_string())
         },
         EditableMode::MultipleLinesSingleEditor,
     );

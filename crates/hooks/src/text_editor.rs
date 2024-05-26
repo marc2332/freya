@@ -56,7 +56,7 @@ pub struct Line<'a> {
 impl Line<'_> {
     /// Get the length of the line
     pub fn len_chars(&self) -> usize {
-        self.text.chars().filter(|c| c != &'\r').count()
+        self.text.encode_utf16().count()
     }
 
     /// Get the text of the line
@@ -451,7 +451,7 @@ pub trait TextEditor {
                     _ => {
                         if let Ok(ch) = character.parse::<char>() {
                             // https://github.com/marc2332/freya/issues/461
-                            if !ch.is_ascii_control() && ch.len_utf8() <= 2 {
+                            if true {
                                 // Inserts a character
                                 let char_idx =
                                     self.line_to_char(self.cursor_row()) + self.cursor_col();
