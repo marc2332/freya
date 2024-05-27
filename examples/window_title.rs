@@ -15,9 +15,7 @@ fn app() -> Element {
 
     let onclick = move |_| {
         let new_title = text.read().clone();
-        platform.with_window(move |window| {
-            window.set_title(&new_title);
-        });
+        platform.set_title(new_title);
     };
 
     rsx!(
