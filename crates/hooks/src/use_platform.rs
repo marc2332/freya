@@ -83,11 +83,21 @@ impl UsePlatform {
         });
     }
 
-    pub fn fullscreen_window(&self) {
+    pub fn toggle_fullscreen_window(&self) {
         self.with_window(|window| {
             match window.fullscreen() {
                 Some(_) => window.set_fullscreen(None),
                 None => window.set_fullscreen(Some(Fullscreen::Borderless(None))),
+            }
+        });
+    }
+    
+    pub fn set_fullscreen_window(&self, fullscreen: bool) {
+        self.with_window(move |window| {
+            if fullscreen {
+                window.set_fullscreen(Some(Fullscreen::Borderless(None)))
+            } else {
+                window.set_fullscreen(None)
             }
         });
     }
