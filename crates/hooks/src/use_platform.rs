@@ -71,7 +71,13 @@ impl UsePlatform {
         });
     }
 
-    pub fn maximize_window(&self) {
+    pub fn set_maximize_window(&self, maximize: bool) {
+        self.with_window(move |window| {
+           window.set_maximized(maximize);
+        });
+    }
+    
+    pub fn toggle_maximize_window(&self) {
         self.with_window(|window| {
            window.set_maximized(!window.is_maximized());
         });
