@@ -10,6 +10,7 @@ use winit::{
     event_loop::EventLoopProxy,
     window::{CursorIcon, Window},
 };
+use winit::window::Fullscreen;
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct UsePlatform {
@@ -67,6 +68,27 @@ impl UsePlatform {
     pub fn drag_window(&self) {
         self.with_window(|window| {
             window.drag_window().ok();
+        });
+    }
+
+    pub fn maximize_window(&self) {
+        self.with_window(|window| {
+           window.set_maximized(!window.is_maximized());
+        });
+    }
+
+    pub fn minimize_window(&self) {
+        self.with_window(|window| {
+            window.set_minimized(true);
+        });
+    }
+
+    pub fn fullscreen_window(&self) {
+        self.with_window(|window| {
+            match window.fullscreen() {
+                Some(_) => window.set_fullscreen(None),
+                None => window.set_fullscreen(Some(Fullscreen::Borderless(None))),
+            }
         });
     }
 
