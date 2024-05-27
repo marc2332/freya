@@ -77,9 +77,15 @@ impl UsePlatform {
         });
     }
 
-    pub fn minimize_window(&self) {
+    pub fn set_minimize_window(&self, minimize: bool) {
+        self.with_window(move |window| {
+            window.set_minimized(minimize);
+        });
+    }
+    
+    pub fn toggle_minimize_window(&self) {
         self.with_window(|window| {
-            window.set_minimized(true);
+            window.set_minimized(!window.is_minimized());
         });
     }
 
