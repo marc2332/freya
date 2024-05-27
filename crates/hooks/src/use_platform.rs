@@ -5,7 +5,11 @@ use dioxus_signals::{Readable, Signal};
 use freya_common::EventMessage;
 use tokio::sync::{broadcast, mpsc::UnboundedSender};
 use torin::geometry::Size2D;
-use winit::{dpi::PhysicalSize, event_loop::EventLoopProxy, window::CursorIcon};
+use winit::{
+    dpi::PhysicalSize,
+    event_loop::EventLoopProxy,
+    window::{CursorIcon, Window},
+};
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct UsePlatform {
@@ -49,8 +53,21 @@ impl UsePlatform {
         self.send(EventMessage::SetCursorIcon(cursor_icon)).ok();
     }
 
+    pub fn set_title(&self, title: impl Into<String>) {
+        let title = title.into();
+        self.with_window(move |window| {
+            window.set_title(&title);
+        });
+    }
+
+    pub fn with_window(&self, cb: impl FnOnce(&Window) + 'static + Send + Sync) {
+        self.send(EventMessage::WithWindow(Box::new(cb))).ok();
+    }
+
     pub fn drag_window(&self) {
-        self.send(EventMessage::DragWindow).ok();
+        self.with_window(|window| {
+            window.drag_window().ok();
+        });
     }
 
     pub fn request_animation_frame(&self) {
