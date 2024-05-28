@@ -7,11 +7,7 @@ use dioxus_core::{
 use dioxus_hooks::{use_context_provider, use_effect};
 use dioxus_signals::{Readable, Signal, Writable};
 use freya_common::EventMessage;
-use freya_core::{
-    navigation_mode::{NavigationMode, NavigatorState},
-    prelude::NativePlatformReceiver,
-    types::PreferredTheme,
-};
+use freya_core::prelude::{NativePlatformReceiver, NavigationMode, PreferredTheme};
 
 use freya_core::{accessibility::ACCESSIBILITY_ROOT_ID, types::AccessibilityId};
 
@@ -40,11 +36,11 @@ pub struct UsePlatformEvents {
 /// Keep some native features (focused element, preferred theme, etc) on sync between the platform and the components
 pub fn use_init_native_platform() -> UsePlatformEvents {
     let mut preferred_theme =
-        use_context_provider::<Signal<PreferredTheme>>(|| Signal::new(PreferredTheme::Light));
+        use_context_provider::<Signal<PreferredTheme>>(|| Signal::new(PreferredTheme::default()));
     let mut focused_id =
         use_context_provider::<Signal<AccessibilityId>>(|| Signal::new(ACCESSIBILITY_ROOT_ID));
     let mut navigation_mode =
-        use_context_provider::<Signal<NavigationMode>>(|| Signal::new(NavigationMode::NotKeyboard));
+        use_context_provider::<Signal<NavigationMode>>(|| Signal::new(NavigationMode::default()));
     use_context_provider(|| Rc::new(RefCell::new(0u64)));
     let platform = use_platform();
     let navigation_mark = use_context_provider(|| Signal::new(NavigationMark(true)));
@@ -58,12 +54,12 @@ pub fn use_init_native_platform() -> UsePlatformEvents {
 
     use_hook(|| {
         let mut platform_receiver = consume_context::<NativePlatformReceiver>();
-        let navigation_state = consume_context::<NavigatorState>();
 
         // Sync the initial states
         let state = platform_receiver.borrow();
         *focused_id.write() = state.focused_id;
         *preferred_theme.write() = state.preferred_theme;
+        *navigation_mode.write() = state.navigation_mode;
         drop(state);
 
         // Listen for any changes during the execution of the app
@@ -77,14 +73,10 @@ pub fn use_init_native_platform() -> UsePlatformEvents {
                 if *preferred_theme.peek() != state.preferred_theme {
                     *preferred_theme.write() = state.preferred_theme;
                 }
-            }
-        });
 
-        // Listen for navigation mode changes
-        spawn(async move {
-            let mut getter = navigation_state.getter();
-            while getter.changed().await.is_ok() {
-                *navigation_mode.write() = *getter.borrow();
+                if *navigation_mode.peek() != state.navigation_mode {
+                    *navigation_mode.write() = state.navigation_mode;
+                }
             }
         });
     });

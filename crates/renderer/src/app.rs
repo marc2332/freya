@@ -1,6 +1,6 @@
 use dioxus_core::{Template, VirtualDom};
 use freya_common::EventMessage;
-use freya_core::{prelude::*, types::NativePlatformState};
+use freya_core::prelude::*;
 use freya_engine::prelude::*;
 use freya_hooks::PlatformInformation;
 use freya_native_core::prelude::NodeImmutableDioxusExt;
@@ -45,7 +45,6 @@ pub struct App<State: 'static + Clone> {
     pub(crate) font_mgr: FontMgr,
     pub(crate) ticker_sender: broadcast::Sender<()>,
     pub(crate) plugins: PluginsManager,
-    pub(crate) navigator_state: NavigatorState,
     pub(crate) measure_layout_on_next_render: bool,
     pub(crate) platform_information: Arc<Mutex<PlatformInformation>>,
     pub(crate) default_fonts: Vec<String>,
@@ -89,6 +88,7 @@ impl<State: 'static + Clone> App<State> {
                 .theme()
                 .map(|theme| theme.into())
                 .unwrap_or_default(),
+            navigation_mode: NavigationMode::default(),
         });
 
         plugins.send(PluginEvent::WindowCreated(&window_env.window));
@@ -115,7 +115,6 @@ impl<State: 'static + Clone> App<State> {
             font_mgr,
             ticker_sender: broadcast::channel(5).0,
             plugins,
-            navigator_state: NavigatorState::new(NavigationMode::NotKeyboard),
             measure_layout_on_next_render: false,
             platform_information,
             default_fonts,
@@ -133,8 +132,6 @@ impl<State: 'static + Clone> App<State> {
             .insert_any_root_context(Box::new(self.platform_receiver.clone()));
         self.vdom
             .insert_any_root_context(Box::new(Arc::new(self.ticker_sender.subscribe())));
-        self.vdom
-            .insert_any_root_context(Box::new(self.navigator_state.clone()));
         self.vdom
             .insert_any_root_context(Box::new(self.platform_information.clone()));
     }
@@ -304,8 +301,10 @@ impl<State: 'static + Clone> App<State> {
     }
 
     /// Update the [NavigationMode].
-    pub fn set_navigation_mode(&mut self, mode: NavigationMode) {
-        self.navigator_state.set(mode);
+    pub fn set_navigation_mode(&mut self, navigation_mode: NavigationMode) {
+        self.platform_sender.send_modify(|state| {
+            state.navigation_mode = navigation_mode;
+        })
     }
 
     /// Measure the layout

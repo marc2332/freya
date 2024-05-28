@@ -34,7 +34,6 @@ pub struct TestingHandler {
     pub(crate) accessibility_manager: SharedAccessibilityManager,
     pub(crate) config: TestingConfig,
     pub(crate) ticker_sender: broadcast::Sender<()>,
-    pub(crate) navigation_state: NavigatorState,
     pub(crate) platform_information: Arc<Mutex<PlatformInformation>>,
     pub(crate) cursor_icon: CursorIcon,
 }
@@ -61,8 +60,6 @@ impl TestingHandler {
             .insert_any_root_context(Box::new(self.platform_receiver.clone()));
         self.vdom
             .insert_any_root_context(Box::new(Arc::new(self.ticker_sender.subscribe())));
-        self.vdom
-            .insert_any_root_context(Box::new(self.navigation_state.clone()));
         self.vdom
             .insert_any_root_context(Box::new(self.platform_information.clone()));
     }
