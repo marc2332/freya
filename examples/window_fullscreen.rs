@@ -10,7 +10,6 @@ fn main() {
 }
 
 fn app() -> Element {
-
     let platform = use_platform();
 
     rsx!(
