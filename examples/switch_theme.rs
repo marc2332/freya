@@ -4,6 +4,7 @@
 )]
 
 use freya::prelude::*;
+use freya_core::types::PreferredTheme;
 
 fn main() {
     launch(app);
@@ -28,10 +29,19 @@ fn TheOtherSwitch() -> Element {
 }
 
 fn app() -> Element {
-    use_init_default_theme();
+    let mut current_theme = use_init_default_theme();
+    let preferred_theme = use_preferred_theme();
     let mut enabled = use_signal(|| true);
 
     let is_enabled = if *enabled.read() { "Yes" } else { "No" };
+
+    use_memo(move || {
+        let theme = match preferred_theme() {
+            PreferredTheme::Dark => DARK_THEME,
+            PreferredTheme::Light => LIGHT_THEME,
+        };
+        current_theme.set(theme);
+    });
 
     rsx!(
         Body {

@@ -1,6 +1,6 @@
 use crate::{
-    events::{DomEvent, PlatformEvent},
-    prelude::{EventName, PotentialEvent},
+    events::DomEvent,
+    prelude::{EventName, PlatformEvent, PotentialEvent},
 };
 pub use accesskit::NodeId as AccessibilityId;
 use rustc_hash::FxHashMap;
@@ -8,11 +8,35 @@ use smallvec::SmallVec;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tokio::sync::watch;
 
-/// Send focus updates to the Accessibility provider.
-pub type FocusSender = watch::Sender<AccessibilityId>;
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum PreferredTheme {
+    #[default]
+    /// Use the light variant.
+    Light,
 
-/// Receive updates by the platform of the focused elements
-pub type FocusReceiver = watch::Receiver<AccessibilityId>;
+    /// Use the dark variant.
+    Dark,
+}
+
+impl From<winit::window::Theme> for PreferredTheme {
+    fn from(value: winit::window::Theme) -> Self {
+        match value {
+            winit::window::Theme::Light => Self::Light,
+            winit::window::Theme::Dark => Self::Dark,
+        }
+    }
+}
+
+pub struct NativePlatformState {
+    pub focused_id: AccessibilityId,
+    pub preferred_theme: PreferredTheme,
+}
+
+/// Send focus updates to the platform
+pub type NativePlatformSender = watch::Sender<NativePlatformState>;
+
+/// Receive updates by the platform
+pub type NativePlatformReceiver = watch::Receiver<NativePlatformState>;
 
 /// Emit events to the VirtualDOM
 pub type EventEmitter = UnboundedSender<DomEvent>;

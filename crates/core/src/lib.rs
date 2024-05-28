@@ -22,7 +22,7 @@ pub mod prelude {
     pub use crate::types::EventEmitter;
     pub use crate::types::EventReceiver;
     pub use crate::types::EventsQueue;
-    pub use crate::types::FocusReceiver;
-    pub use crate::types::FocusSender;
+    pub use crate::types::NativePlatformReceiver;
+    pub use crate::types::NativePlatformSender;
     pub use crate::types::PotentialEvents;
 }

@@ -1,7 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
 
 use dioxus_core::{
-    prelude::{consume_context, spawn, try_consume_context},
+    prelude::{consume_context, spawn},
     use_hook,
 };
 use dioxus_hooks::{use_context_provider, use_effect};
@@ -9,7 +9,8 @@ use dioxus_signals::{Readable, Signal, Writable};
 use freya_common::EventMessage;
 use freya_core::{
     navigation_mode::{NavigationMode, NavigatorState},
-    types::FocusReceiver,
+    prelude::NativePlatformReceiver,
+    types::PreferredTheme,
 };
 
 use freya_core::{accessibility::ACCESSIBILITY_ROOT_ID, types::AccessibilityId};
@@ -31,8 +32,15 @@ impl NavigationMark {
     }
 }
 
-/// Sync both the Focus shared state and the platform accessibility focus
-pub fn use_init_accessibility() -> Signal<NavigationMark> {
+#[derive(Clone, Copy)]
+pub struct UsePlatformEvents {
+    pub navigation_mark: Signal<NavigationMark>,
+}
+
+/// Keep some native features (focused element, preferred theme, etc) on sync between the platform and the components
+pub fn use_init_native_platform() -> UsePlatformEvents {
+    let mut preferred_theme =
+        use_context_provider::<Signal<PreferredTheme>>(|| Signal::new(PreferredTheme::Light));
     let mut focused_id =
         use_context_provider::<Signal<AccessibilityId>>(|| Signal::new(ACCESSIBILITY_ROOT_ID));
     let mut navigation_mode =
@@ -49,15 +57,25 @@ pub fn use_init_accessibility() -> Signal<NavigationMark> {
     });
 
     use_hook(|| {
-        let focus_id_listener = try_consume_context::<FocusReceiver>();
+        let mut platform_receiver = consume_context::<NativePlatformReceiver>();
         let navigation_state = consume_context::<NavigatorState>();
 
-        // Listen for focus changes
+        // Sync the initial states
+        let state = platform_receiver.borrow();
+        *focused_id.write() = state.focused_id;
+        *preferred_theme.write() = state.preferred_theme;
+        drop(state);
+
+        // Listen for any changes during the execution of the app
         spawn(async move {
-            let focus_id_listener = focus_id_listener.clone();
-            if let Some(mut focus_id_listener) = focus_id_listener {
-                while focus_id_listener.changed().await.is_ok() {
-                    *focused_id.write() = *focus_id_listener.borrow();
+            while platform_receiver.changed().await.is_ok() {
+                let state = platform_receiver.borrow();
+                if *focused_id.peek() != state.focused_id {
+                    *focused_id.write() = state.focused_id;
+                }
+
+                if *preferred_theme.peek() != state.preferred_theme {
+                    *preferred_theme.write() = state.preferred_theme;
                 }
             }
         });
@@ -71,7 +89,7 @@ pub fn use_init_accessibility() -> Signal<NavigationMark> {
         });
     });
 
-    navigation_mark
+    UsePlatformEvents { navigation_mark }
 }
 
 #[cfg(test)]

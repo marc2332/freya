@@ -2,16 +2,16 @@ use dioxus::prelude::*;
 use freya_common::EventMessage;
 use freya_elements::elements as dioxus_elements;
 use freya_elements::events::KeyboardEvent;
-use freya_hooks::{use_init_accessibility, use_platform};
+use freya_hooks::{use_init_native_platform, use_platform};
 
 #[allow(non_snake_case)]
 #[component]
-pub fn KeyboardNavigator(children: Element) -> Element {
-    let mut navigation_mark = use_init_accessibility();
+pub fn NativeContainer(children: Element) -> Element {
+    let mut native_platform = use_init_native_platform();
     let platform = use_platform();
 
     let onkeydown = move |e: KeyboardEvent| {
-        let allowed_to_navigate = navigation_mark.peek().allowed();
+        let allowed_to_navigate = native_platform.navigation_mark.peek().allowed();
         if e.key == Key::Tab && allowed_to_navigate {
             if e.modifiers.contains(Modifiers::SHIFT) {
                 platform
@@ -23,7 +23,7 @@ pub fn KeyboardNavigator(children: Element) -> Element {
                     .unwrap();
             }
         } else {
-            navigation_mark.write().set_allowed(true)
+            native_platform.navigation_mark.write().set_allowed(true)
         }
     };
 

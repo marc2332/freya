@@ -1,6 +1,6 @@
 use dioxus_core::{Template, VirtualDom};
 use freya_common::EventMessage;
-use freya_core::prelude::*;
+use freya_core::{prelude::*, types::NativePlatformState};
 use freya_engine::prelude::*;
 use freya_hooks::PlatformInformation;
 use freya_native_core::prelude::NodeImmutableDioxusExt;
@@ -38,8 +38,8 @@ pub struct App<State: 'static + Clone> {
     pub(crate) event_receiver: EventReceiver,
     pub(crate) window_env: WindowEnv<State>,
     pub(crate) nodes_state: NodesState,
-    pub(crate) focus_sender: FocusSender,
-    pub(crate) focus_receiver: FocusReceiver,
+    pub(crate) platform_sender: NativePlatformSender,
+    pub(crate) platform_receiver: NativePlatformReceiver,
     pub(crate) accessibility: AccessKitManager,
     pub(crate) font_collection: FontCollection,
     pub(crate) font_mgr: FontMgr,
@@ -82,7 +82,14 @@ impl<State: 'static + Clone> App<State> {
         font_collection.set_dynamic_font_manager(font_mgr.clone());
 
         let (event_emitter, event_receiver) = mpsc::unbounded_channel::<DomEvent>();
-        let (focus_sender, focus_receiver) = watch::channel(ACCESSIBILITY_ROOT_ID);
+        let (platform_sender, platform_receiver) = watch::channel(NativePlatformState {
+            focused_id: ACCESSIBILITY_ROOT_ID,
+            preferred_theme: window_env
+                .window
+                .theme()
+                .map(|theme| theme.into())
+                .unwrap_or_default(),
+        });
 
         plugins.send(PluginEvent::WindowCreated(&window_env.window));
 
@@ -102,8 +109,8 @@ impl<State: 'static + Clone> App<State> {
             window_env,
             nodes_state: NodesState::default(),
             accessibility,
-            focus_sender,
-            focus_receiver,
+            platform_sender,
+            platform_receiver,
             font_collection,
             font_mgr,
             ticker_sender: broadcast::channel(5).0,
@@ -123,7 +130,7 @@ impl<State: 'static + Clone> App<State> {
         self.vdom
             .insert_any_root_context(Box::new(self.proxy.clone()));
         self.vdom
-            .insert_any_root_context(Box::new(self.focus_receiver.clone()));
+            .insert_any_root_context(Box::new(self.platform_receiver.clone()));
         self.vdom
             .insert_any_root_context(Box::new(Arc::new(self.ticker_sender.subscribe())));
         self.vdom
@@ -284,8 +291,11 @@ impl<State: 'static + Clone> App<State> {
     }
 
     pub fn focus_next_node(&self, direction: AccessibilityFocusDirection) {
-        self.accessibility
-            .focus_next_node(direction, &self.focus_sender, &self.window_env.window)
+        self.accessibility.focus_next_node(
+            direction,
+            &self.platform_sender,
+            &self.window_env.window,
+        )
     }
 
     /// Notify components subscribed to event loop ticks.

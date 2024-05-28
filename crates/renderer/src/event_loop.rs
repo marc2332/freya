@@ -89,6 +89,11 @@ pub fn run_event_loop<State: Clone>(
                 app.accessibility
                     .process_accessibility_event(&event, &app.window_env.window);
                 match event {
+                    WindowEvent::ThemeChanged(theme) => {
+                        app.platform_sender.send_modify(|state| {
+                            state.preferred_theme = theme.into();
+                        });
+                    }
                     WindowEvent::CloseRequested => event_loop.exit(),
                     WindowEvent::Ime(Ime::Commit(text)) => {
                         app.send_event(PlatformEvent::Keyboard {

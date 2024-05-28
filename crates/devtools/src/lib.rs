@@ -66,7 +66,7 @@ fn AppWithDevtools(props: AppWithDevtoolsProps) -> Element {
     let hovered_node = props.hovered_node.clone();
 
     rsx!(
-        KeyboardNavigator {
+        NativeContainer {
             rect {
                 width: "100%",
                 height: "100%",

@@ -9,8 +9,8 @@ pub fn use_init_theme(theme: Theme) {
 }
 
 /// Provide the default [`Theme`].
-pub fn use_init_default_theme() {
-    use_context_provider(|| Signal::new(Theme::default()));
+pub fn use_init_default_theme() -> Signal<Theme> {
+    use_context_provider(|| Signal::new(Theme::default()))
 }
 
 /// Subscribe to [`Theme`] changes.
