@@ -137,18 +137,21 @@ impl TestingHandler {
                 }
             }
 
-            if let Ok(ev) = vdom_ev {
-                let data = ev.data.any();
-                let fdom = self.utils.sdom().get();
-                let rdom = fdom.rdom();
-                let node = rdom.get(ev.node_id);
-                if let Some(node) = node {
-                    let element_id = node.mounted_id();
-                    if let Some(element_id) = element_id {
-                        self.vdom
-                            .handle_event(ev.name.into(), data, element_id, ev.bubbles);
+            if let Ok(events) = vdom_ev {
+                for event in events {
+                    let name = event.name.into();
+                    let data = event.data.any();
+                    let fdom = self.utils.sdom().get();
+                    let rdom = fdom.rdom();
+                    let node = rdom.get(event.node_id);
+                    if let Some(node) = node {
+                        let element_id = node.mounted_id();
+                        if let Some(element_id) = element_id {
+                            self.vdom
+                                .handle_event(name, data, element_id, event.bubbles);
 
-                        self.vdom.process_events();
+                            self.vdom.process_events();
+                        }
                     }
                 }
             }

@@ -29,7 +29,7 @@ pub fn launch_test_with_config(root: AppComponent, config: TestingConfig) -> Tes
     let fdom = FreyaDOM::default();
     let sdom = SafeDOM::new(fdom);
 
-    let (event_emitter, event_receiver) = unbounded_channel::<DomEvent>();
+    let (event_emitter, event_receiver) = unbounded_channel();
     let (platform_event_emitter, platform_event_receiver) = unbounded_channel::<EventMessage>();
     let (focus_sender, focus_receiver) = watch::channel(ACCESSIBILITY_ROOT_ID);
     let mut font_collection = FontCollection::new();
