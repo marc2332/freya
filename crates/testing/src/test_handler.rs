@@ -145,7 +145,6 @@ impl TestingHandler {
                 if let Some(node) = node {
                     let element_id = node.mounted_id();
                     if let Some(element_id) = element_id {
-                        println!("{:?} / {:?} / {:?}", ev.name, element_id, ev.bubbles);
                         self.vdom
                             .handle_event(ev.name.into(), data, element_id, ev.bubbles);
 
