@@ -4,7 +4,6 @@
 )]
 
 use freya::prelude::*;
-use freya_core::types::PreferredTheme;
 
 fn main() {
     launch(app);
