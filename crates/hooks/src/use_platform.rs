@@ -5,6 +5,7 @@ use dioxus_signals::{Readable, Signal};
 use freya_common::EventMessage;
 use tokio::sync::{broadcast, mpsc::UnboundedSender};
 use torin::geometry::Size2D;
+use winit::window::Fullscreen;
 use winit::{
     dpi::PhysicalSize,
     event_loop::EventLoopProxy,
@@ -67,6 +68,47 @@ impl UsePlatform {
     pub fn drag_window(&self) {
         self.with_window(|window| {
             window.drag_window().ok();
+        });
+    }
+
+    pub fn set_maximize_window(&self, maximize: bool) {
+        self.with_window(move |window| {
+            window.set_maximized(maximize);
+        });
+    }
+
+    pub fn toggle_maximize_window(&self) {
+        self.with_window(|window| {
+            window.set_maximized(!window.is_maximized());
+        });
+    }
+
+    pub fn set_minimize_window(&self, minimize: bool) {
+        self.with_window(move |window| {
+            window.set_minimized(minimize);
+        });
+    }
+
+    pub fn toggle_minimize_window(&self) {
+        self.with_window(|window| {
+            window.set_minimized(window.is_minimized().map(|v| !v).unwrap_or_default());
+        });
+    }
+
+    pub fn toggle_fullscreen_window(&self) {
+        self.with_window(|window| match window.fullscreen() {
+            Some(_) => window.set_fullscreen(None),
+            None => window.set_fullscreen(Some(Fullscreen::Borderless(None))),
+        });
+    }
+
+    pub fn set_fullscreen_window(&self, fullscreen: bool) {
+        self.with_window(move |window| {
+            if fullscreen {
+                window.set_fullscreen(Some(Fullscreen::Borderless(None)))
+            } else {
+                window.set_fullscreen(None)
+            }
         });
     }
 
