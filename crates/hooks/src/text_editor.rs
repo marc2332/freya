@@ -480,7 +480,7 @@ pub trait TextEditor {
                             // Inserts a text
                             let char_idx = self.line_to_char(self.cursor_row()) + self.cursor_col();
                             self.insert(character, char_idx);
-                            self.set_cursor_pos(char_idx + character.encode_utf16().count());
+                            self.set_cursor_pos(char_idx + character.chars().count());
 
                             event.insert(TextEvent::TEXT_CHANGED);
                         }
