@@ -133,6 +133,9 @@ impl TestingHandler {
                     EventMessage::SetCursorIcon(icon) => {
                         self.cursor_icon = icon;
                     }
+                    EventMessage::SetWindowSize(size) => {
+                        self.config.size = size;
+                    }
                     _ => {}
                 }
             }
