@@ -3,7 +3,6 @@ name = "freya-installer-example"
 version = "0.1.0"
 edition = "2021"
 build = "build.rs"
-release = false
 
 [dependencies]
 freya = { workspace = true }
