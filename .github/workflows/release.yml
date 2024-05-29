@@ -20,6 +20,10 @@ jobs:
           fetch-depth: 0
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+      - name: Install linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt update && sudo apt install build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev
       - name: Run release-plz
         uses: MarcoIeni/release-plz-action@v0.5
         env:

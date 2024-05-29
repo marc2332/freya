@@ -33,7 +33,7 @@ jobs:
     - name: Check examples
       run: cargo check --examples
     - name: Lint
-      run: cargo clippy
+      run: cargo clippy --workspace -- -D warnings
     - name: Run Linux tests
       if: runner.os == 'Linux'
       run: |
@@ -58,7 +58,3 @@ jobs:
     - name: Make sure the mocked Skia bindings are on sync
       if: runner.os == 'Linux'
       run: cargo build --package freya --features mocked-engine-development --no-default-features
-
-    - name: clippy
-      if: runner.os == 'Linux'
-      run: cargo clippy --workspace -- -D warnings
