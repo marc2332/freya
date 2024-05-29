@@ -9,18 +9,24 @@ fn main() {
     launch(app);
 }
 
+fn get_theme(preferred_theme: PreferredTheme) -> Theme {
+    match preferred_theme {
+        PreferredTheme::Dark => DARK_THEME,
+        PreferredTheme::Light => LIGHT_THEME,
+    }
+}
+
 fn app() -> Element {
-    let mut current_theme = use_init_default_theme();
     let preferred_theme = use_preferred_theme();
+    let mut current_theme = use_init_theme(|| get_theme(*preferred_theme.peek()));
 
     let is_dark = current_theme.read().name == "dark";
 
     use_memo(move || {
-        let theme = match preferred_theme() {
-            PreferredTheme::Dark => DARK_THEME,
-            PreferredTheme::Light => LIGHT_THEME,
-        };
-        current_theme.set(theme);
+        let theme = get_theme(preferred_theme());
+        if theme != current_theme() {
+            current_theme.set(theme);
+        }
     });
 
     rsx!(

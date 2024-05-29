@@ -1,15 +1,13 @@
 use std::{cell::RefCell, rc::Rc};
 
 use dioxus_core::{
-    prelude::{consume_context, spawn},
+    prelude::{consume_context, provide_context, spawn},
     use_hook,
 };
 use dioxus_hooks::{use_context_provider, use_effect};
 use dioxus_signals::{Readable, Signal, Writable};
 use freya_common::EventMessage;
-use freya_core::prelude::{NativePlatformReceiver, NavigationMode, PreferredTheme};
-
-use freya_core::{accessibility::ACCESSIBILITY_ROOT_ID, types::AccessibilityId};
+use freya_core::prelude::NativePlatformReceiver;
 
 use crate::use_platform;
 
@@ -35,32 +33,24 @@ pub struct UsePlatformEvents {
 
 /// Keep some native features (focused element, preferred theme, etc) on sync between the platform and the components
 pub fn use_init_native_platform() -> UsePlatformEvents {
-    let mut preferred_theme =
-        use_context_provider::<Signal<PreferredTheme>>(|| Signal::new(PreferredTheme::default()));
-    let mut focused_id =
-        use_context_provider::<Signal<AccessibilityId>>(|| Signal::new(ACCESSIBILITY_ROOT_ID));
-    let mut navigation_mode =
-        use_context_provider::<Signal<NavigationMode>>(|| Signal::new(NavigationMode::default()));
+    // Init the Accessibility Node ID generator
     use_context_provider(|| Rc::new(RefCell::new(0u64)));
-    let platform = use_platform();
+
+    // Init the NavigationMark signal
     let navigation_mark = use_context_provider(|| Signal::new(NavigationMark(true)));
 
-    // Tell the renderer the new focused node
-    use_effect(move || {
-        platform
-            .send(EventMessage::FocusAccessibilityNode(*focused_id.read()))
-            .unwrap();
-    });
+    let platform = use_platform();
 
-    use_hook(|| {
+    // Init the signals with platform values
+    let focused_id = use_hook(|| {
         let mut platform_receiver = consume_context::<NativePlatformReceiver>();
+        let platform_state = platform_receiver.borrow();
 
-        // Sync the initial states
-        let state = platform_receiver.borrow();
-        *focused_id.write() = state.focused_id;
-        *preferred_theme.write() = state.preferred_theme;
-        *navigation_mode.write() = state.navigation_mode;
-        drop(state);
+        let mut preferred_theme = Signal::new(platform_state.preferred_theme);
+        let mut focused_id = Signal::new(platform_state.focused_id);
+        let mut navigation_mode = Signal::new(platform_state.navigation_mode);
+
+        drop(platform_state);
 
         // Listen for any changes during the execution of the app
         spawn(async move {
@@ -79,6 +69,17 @@ pub fn use_init_native_platform() -> UsePlatformEvents {
                 }
             }
         });
+
+        provide_context(preferred_theme);
+        provide_context(navigation_mode);
+        provide_context(focused_id)
+    });
+
+    // Tell the renderer the new focused node
+    use_effect(move || {
+        platform
+            .send(EventMessage::FocusAccessibilityNode(*focused_id.read()))
+            .unwrap();
     });
 
     UsePlatformEvents { navigation_mark }
