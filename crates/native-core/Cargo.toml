@@ -10,6 +10,7 @@ homepage = "https://freyaui.dev/"
 repository = "https://github.com/marc2332/freya"
 keywords = ["gui", "ui", "desktop", "skia", "dioxus"]
 categories = ["gui"]
+release = true
 
 [dependencies]
 dioxus-core = { workspace = true}

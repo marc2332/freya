@@ -4,6 +4,7 @@ version = "0.0.0"
 edition = "2021"
 
 [workspace]
+release = false
 members = ["crates/renderer", "crates/state", "crates/freya", "crates/elements", "crates/components", "crates/hooks", "crates/common", "crates/core", "crates/testing", "crates/devtools", "crates/torin", "crates/engine", "./examples/installer",  "crates/native-core",  "crates/native-core-macro"]
 
 [features]
