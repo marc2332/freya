@@ -6,8 +6,6 @@ use freya_common::EventMessage;
 use freya_components::NativeContainer;
 use freya_core::prelude::*;
 use freya_engine::prelude::*;
-use freya_hooks::PlatformInformation;
-use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc::unbounded_channel;
 use tokio::sync::{broadcast, watch};
 use winit::window::CursorIcon;
@@ -35,6 +33,7 @@ pub fn launch_test_with_config(root: AppComponent, config: TestingConfig) -> Tes
         focused_id: ACCESSIBILITY_ROOT_ID,
         preferred_theme: PreferredTheme::default(),
         navigation_mode: NavigationMode::default(),
+        information: PlatformInformation::new(config.size),
     });
     let mut font_collection = FontCollection::new();
     font_collection.set_dynamic_font_manager(FontMgr::default());
@@ -52,7 +51,6 @@ pub fn launch_test_with_config(root: AppComponent, config: TestingConfig) -> Tes
         platform_event_receiver,
         accessibility_manager: AccessibilityManager::new(ACCESSIBILITY_ROOT_ID).wrap(),
         ticker_sender: broadcast::channel(5).0,
-        platform_information: Arc::new(Mutex::new(PlatformInformation::new(config.size))),
         cursor_icon: CursorIcon::default(),
         platform_sender,
         platform_receiver,

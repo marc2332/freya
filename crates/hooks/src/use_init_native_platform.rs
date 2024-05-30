@@ -39,8 +39,6 @@ pub fn use_init_native_platform() -> UsePlatformEvents {
     // Init the NavigationMark signal
     let navigation_mark = use_context_provider(|| Signal::new(NavigationMark(true)));
 
-    let platform = use_platform();
-
     // Init the signals with platform values
     let focused_id = use_hook(|| {
         let mut platform_receiver = consume_context::<NativePlatformReceiver>();
@@ -49,6 +47,7 @@ pub fn use_init_native_platform() -> UsePlatformEvents {
         let mut preferred_theme = Signal::new(platform_state.preferred_theme);
         let mut focused_id = Signal::new(platform_state.focused_id);
         let mut navigation_mode = Signal::new(platform_state.navigation_mode);
+        let mut information = Signal::new(platform_state.information);
 
         drop(platform_state);
 
@@ -67,13 +66,20 @@ pub fn use_init_native_platform() -> UsePlatformEvents {
                 if *navigation_mode.peek() != state.navigation_mode {
                     *navigation_mode.write() = state.navigation_mode;
                 }
+
+                if *information.peek() != state.information {
+                    *information.write() = state.information;
+                }
             }
         });
 
         provide_context(preferred_theme);
         provide_context(navigation_mode);
+        provide_context(information);
         provide_context(focused_id)
     });
+
+    let platform = use_platform();
 
     // Tell the renderer the new focused node
     use_effect(move || {
