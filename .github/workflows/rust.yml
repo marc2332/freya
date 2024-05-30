@@ -33,7 +33,7 @@ jobs:
     - name: Check examples
       run: cargo check --examples
     - name: Lint
-      run: cargo clippy
+      run: cargo clippy --workspace -- -D warnings
     - name: Run Linux tests
       if: runner.os == 'Linux'
       run: |
