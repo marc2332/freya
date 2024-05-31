@@ -1,5 +1,4 @@
 use dioxus::prelude::*;
-use freya_common::EventMessage;
 use freya_elements::elements as dioxus_elements;
 use freya_engine::prelude::*;
 
@@ -40,7 +39,7 @@ pub fn Graph(props: GraphProps) -> Element {
     let GraphTheme { width, height } = use_applied_theme!(&props.theme, graph);
 
     use_effect(use_reactive(&props, move |_| {
-        platform.send(EventMessage::RequestRerender).ok();
+        platform.request_animation_frame();
     }));
 
     let canvas = use_canvas(&props, |state| {

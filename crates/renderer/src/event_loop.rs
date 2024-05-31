@@ -63,6 +63,9 @@ pub fn run_event_loop<State: Clone>(
             Event::UserEvent(EventMessage::SetCursorIcon(icon)) => {
                 app.window_env.window.set_cursor_icon(icon)
             }
+            Event::UserEvent(EventMessage::WithWindow(use_window)) => {
+                (use_window)(&app.window_env.window)
+            }
             Event::UserEvent(EventMessage::FocusPrevAccessibilityNode) => {
                 app.set_navigation_mode(NavigationMode::Keyboard);
                 app.focus_next_node(AccessibilityFocusDirection::Backward);
@@ -70,9 +73,6 @@ pub fn run_event_loop<State: Clone>(
             Event::UserEvent(EventMessage::FocusNextAccessibilityNode) => {
                 app.set_navigation_mode(NavigationMode::Keyboard);
                 app.focus_next_node(AccessibilityFocusDirection::Forward);
-            }
-            Event::UserEvent(EventMessage::DragWindow) => {
-                app.window_env.window.drag_window().ok();
             }
             Event::UserEvent(ev) => {
                 if let EventMessage::UpdateTemplate(template) = ev {
