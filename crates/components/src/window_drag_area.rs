@@ -1,6 +1,7 @@
 use dioxus::prelude::*;
 use freya_elements::{elements as dioxus_elements, events::MouseEvent};
 use freya_hooks::use_platform;
+use winit::event::MouseButton;
 
 /// Allow dragging the window when the cursor drag this component with a left mouse click.
 ///
@@ -30,8 +31,10 @@ pub fn WindowDragArea(
     let platform = use_platform();
 
     let onmousedown = move |e: MouseEvent| {
-        e.stop_propagation();
-        platform.drag_window();
+        if let Some(MouseButton::Left) = e.trigger_button {
+            e.stop_propagation();
+            platform.drag_window();
+        }
     };
 
     rsx!(

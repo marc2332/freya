@@ -63,11 +63,6 @@ impl Line<'_> {
     pub fn utf16_len_chars(&self) -> usize {
         self.text.encode_utf16().count()
     }
-
-    /// Get the text of the line
-    fn as_str(&self) -> &str {
-        &self.text
-    }
 }
 
 impl Display for Line<'_> {
