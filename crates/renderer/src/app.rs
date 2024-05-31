@@ -271,7 +271,7 @@ impl<State: 'static + Clone> App<State> {
         self.sdom.get().layout().reset();
         self.window_env.resize(size);
         self.platform_sender.send_modify(|state| {
-            state.information =  PlatformInformation::from_winit(&self.window_env.window);
+            state.information = PlatformInformation::from_winit(&self.window_env.window);
         })
     }
 

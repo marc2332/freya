@@ -48,15 +48,13 @@ pub struct PlatformInformation {
 }
 
 impl PlatformInformation {
-    pub fn from_winit(
-        winit: &Window
-    ) -> Self {
+    pub fn from_winit(winit: &Window) -> Self {
         let window_size = winit.inner_size();
         Self {
             viewport_size: Size2D::new(window_size.width as f32, window_size.height as f32),
             is_minimized: winit.is_minimized().unwrap_or_default(),
             is_maximized: winit.is_maximized(),
-            is_fullscreen: winit.fullscreen().is_some()
+            is_fullscreen: winit.fullscreen().is_some(),
         }
     }
 

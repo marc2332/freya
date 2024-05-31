@@ -4,6 +4,7 @@
 )]
 
 use freya::prelude::*;
+use freya_core::prelude::PlatformInformation;
 
 fn main() {
     launch(app);
@@ -11,6 +12,12 @@ fn main() {
 
 fn app() -> Element {
     let platform = use_platform();
+    let PlatformInformation {
+        is_fullscreen,
+        is_minimized,
+        is_maximized,
+        ..
+    } = *use_platform_information().read();
 
     rsx!(
         rect {
@@ -20,15 +27,21 @@ fn app() -> Element {
             cross_align: "center",
             direction: "horizontal",
             Button {
-                onclick: move |_| platform.toggle_maximize_window(),
+                onclick: move |_| platform.toggle_fullscreen_window(),
                 label {
-                    "Maximize"
+                    "Fullscreen ({is_fullscreen})"
                 }
             }
             Button {
                 onclick: move |_| platform.toggle_minimize_window(),
                 label {
-                    "Minimize"
+                    "Minimize ({is_minimized})"
+                }
+            }
+            Button {
+                onclick: move |_| platform.toggle_maximize_window(),
+                label {
+                    "Maximize ({is_maximized})"
                 }
             }
         }
