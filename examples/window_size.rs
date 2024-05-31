@@ -11,7 +11,7 @@ fn main() {
 }
 
 fn app() -> Element {
-    let PlatformInformation { viewport_size } = *use_platform_information().read();
+    let PlatformInformation { viewport_size, .. } = *use_platform_information().read();
 
     rsx!(
         rect {
