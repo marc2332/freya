@@ -4,7 +4,7 @@ use dioxus_core::{
     prelude::{consume_context, provide_context, spawn},
     use_hook,
 };
-use dioxus_hooks::{use_context_provider, use_effect};
+use dioxus_hooks::{use_context_provider, use_memo};
 use dioxus_signals::{Readable, Signal, Writable};
 use freya_common::EventMessage;
 use freya_core::prelude::NativePlatformReceiver;
@@ -40,49 +40,38 @@ pub fn use_init_native_platform() -> UsePlatformEvents {
     let navigation_mark = use_context_provider(|| Signal::new(NavigationMark(true)));
 
     // Init the signals with platform values
-    let focused_id = use_hook(|| {
+    let platform_state_signal = use_hook(|| {
         let mut platform_receiver = consume_context::<NativePlatformReceiver>();
-        let platform_state = platform_receiver.borrow();
 
-        let mut preferred_theme = Signal::new(platform_state.preferred_theme);
-        let mut focused_id = Signal::new(platform_state.focused_id);
-        let mut navigation_mode = Signal::new(platform_state.navigation_mode);
-        let mut information = Signal::new(platform_state.information);
-
-        drop(platform_state);
+        let mut platform_state_signal = Signal::new(platform_receiver.borrow().clone());
 
         // Listen for any changes during the execution of the app
         spawn(async move {
             while platform_receiver.changed().await.is_ok() {
                 let state = platform_receiver.borrow();
-                if *focused_id.peek() != state.focused_id {
-                    *focused_id.write() = state.focused_id;
-                }
-
-                if *preferred_theme.peek() != state.preferred_theme {
-                    *preferred_theme.write() = state.preferred_theme;
-                }
-
-                if *navigation_mode.peek() != state.navigation_mode {
-                    *navigation_mode.write() = state.navigation_mode;
-                }
-
-                if *information.peek() != state.information {
-                    *information.write() = state.information;
-                }
+                platform_state_signal.set(state.clone());
             }
         });
-
-        provide_context(preferred_theme);
-        provide_context(navigation_mode);
-        provide_context(information);
-        provide_context(focused_id)
+        platform_state_signal
     });
+
+    let preferred_theme = use_memo(move || platform_state_signal.read().preferred_theme);
+
+    let navigation_mode = use_memo(move || platform_state_signal.read().navigation_mode);
+
+    let information = use_memo(move || platform_state_signal.read().information);
+
+    let focused_id = use_memo(move || platform_state_signal.read().focused_id);
 
     let platform = use_platform();
 
     // Tell the renderer the new focused node
-    use_effect(move || {
+    use_hook(|| {
+        provide_context(preferred_theme);
+        provide_context(navigation_mode);
+        provide_context(information);
+        provide_context(focused_id);
+
         platform
             .send(EventMessage::FocusAccessibilityNode(*focused_id.read()))
             .unwrap();

@@ -3,6 +3,7 @@ use torin::prelude::Size2D;
 use winit::dpi::PhysicalSize;
 
 /// State consumed by components and updated by the platform.
+#[derive(Clone)]
 pub struct NativePlatformState {
     pub focused_id: AccessibilityId,
     pub preferred_theme: PreferredTheme,

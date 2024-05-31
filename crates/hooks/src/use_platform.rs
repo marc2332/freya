@@ -3,7 +3,6 @@ use std::sync::Arc;
 use dioxus_core::prelude::{consume_context, try_consume_context, use_hook};
 use dioxus_signals::{Readable, Signal};
 use freya_common::EventMessage;
-use freya_core::prelude::PlatformInformation;
 use tokio::sync::{broadcast, mpsc::UnboundedSender};
 use winit::{event_loop::EventLoopProxy, window::CursorIcon};
 
@@ -12,7 +11,6 @@ pub struct UsePlatform {
     ticker: Signal<Arc<broadcast::Receiver<()>>>,
     event_loop_proxy: Signal<Option<EventLoopProxy<EventMessage>>>,
     platform_emitter: Signal<Option<UnboundedSender<EventMessage>>>,
-    platform_information: Signal<PlatformInformation>,
 }
 
 #[derive(PartialEq, Eq, Debug)]
@@ -28,7 +26,6 @@ impl UsePlatform {
             event_loop_proxy: Signal::new(try_consume_context::<EventLoopProxy<EventMessage>>()),
             platform_emitter: Signal::new(try_consume_context::<UnboundedSender<EventMessage>>()),
             ticker: Signal::new(consume_context::<Arc<broadcast::Receiver<()>>>()),
-            platform_information: consume_context::<Signal<PlatformInformation>>(),
         }
     }
 
@@ -66,11 +63,6 @@ impl UsePlatform {
     /// Closes the whole app.
     pub fn exit(&self) {
         self.send(EventMessage::ExitApp).ok();
-    }
-
-    /// Get the information about the platform.
-    pub fn info(&self) -> Signal<PlatformInformation> {
-        self.platform_information
     }
 }
 
