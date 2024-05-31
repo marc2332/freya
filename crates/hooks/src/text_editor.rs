@@ -353,10 +353,17 @@ pub trait TextEditor {
                 }
             }
             Key::Backspace => {
+                let char_idx = self.line_to_char(self.cursor_row()) + self.cursor_col();
                 let selection = self.get_selection();
+
                 if let Some((start, end)) = selection {
                     self.remove(start..end);
                     self.set_cursor_pos(start);
+                    event.insert(TextEvent::TEXT_CHANGED);
+                } else if char_idx > 0 {
+                    // Remove the character to the left if there is any
+                    self.remove(char_idx - 1..char_idx);
+                    self.set_cursor_pos(char_idx - 1);
                     event.insert(TextEvent::TEXT_CHANGED);
                 }
             }
