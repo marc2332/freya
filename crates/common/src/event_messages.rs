@@ -2,10 +2,9 @@ use accesskit::NodeId;
 use accesskit_winit::ActionRequestEvent;
 use dioxus_core::Template;
 use uuid::Uuid;
-use winit::window::CursorIcon;
+use winit::window::{CursorIcon, Window};
 
 /// Custom EventLoop messages
-#[derive(Debug)]
 pub enum EventMessage {
     /// Update the given template
     UpdateTemplate(Template),
@@ -25,10 +24,10 @@ pub enum EventMessage {
     FocusNextAccessibilityNode,
     /// Focus the previous accessibility Node
     FocusPrevAccessibilityNode,
-    /// Trigger window dragging
-    DragWindow,
     /// Close the whole app
     ExitApp,
+    /// Callback to access the Window.
+    WithWindow(Box<dyn FnOnce(&Window) + Send + Sync>),
 }
 
 impl From<ActionRequestEvent> for EventMessage {
