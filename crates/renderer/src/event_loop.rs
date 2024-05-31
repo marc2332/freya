@@ -1,5 +1,6 @@
 use accesskit::Action;
 use accesskit_winit::ActionRequestEvent;
+use winit::dpi::LogicalSize;
 use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_elements::events::keyboard::{
@@ -73,6 +74,9 @@ pub fn run_event_loop<State: Clone>(
             }
             Event::UserEvent(EventMessage::DragWindow) => {
                 app.window_env.window.drag_window().ok();
+            }
+            Event::UserEvent(EventMessage::SetWindowSize(window_size)) => {
+                let _ = app.window_env.window.request_inner_size(LogicalSize::new(window_size.width, window_size.height));
             }
             Event::UserEvent(ev) => {
                 if let EventMessage::UpdateTemplate(template) = ev {
