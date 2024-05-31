@@ -4,12 +4,9 @@ use dioxus_core::prelude::{consume_context, try_consume_context, use_hook};
 use dioxus_signals::{Readable, Signal};
 use freya_common::EventMessage;
 use tokio::sync::{broadcast, mpsc::UnboundedSender};
-use torin::geometry::Size2D;
-use winit::window::Fullscreen;
 use winit::{
-    dpi::PhysicalSize,
     event_loop::EventLoopProxy,
-    window::{CursorIcon, Window},
+    window::{CursorIcon, Fullscreen, Window},
 };
 
 #[derive(Clone, Copy, PartialEq)]
