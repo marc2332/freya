@@ -188,25 +188,35 @@ pub trait TextEditor {
         self.cursor_mut().move_to(row, col)
     }
 
-    // Check if has any highlight at all
-    fn has_any_highlight(&self) -> bool;
+    // Check if has any selection at all
+    fn has_any_selection(&self) -> bool;
 
-    // Return the highlighted text from a given editor Id
-    fn highlights(&self, editor_id: usize) -> Option<(usize, usize)>;
+    // Return the selected text
+    fn get_selection(&self) -> Option<(usize, usize)>;
 
-    // Cancel highlight
-    fn unhighlight(&mut self);
+    // Return the visible selected text from a given editor Id
+    fn get_visible_selection(&self, editor_id: usize) -> Option<(usize, usize)>;
 
-    // Highlight some text
-    fn highlight_text(&mut self, from: usize, to: usize, editor_id: usize);
+    // Remove the selection
+    fn clear_selection(&mut self);
 
-    fn move_highlight_to_cursor(&mut self);
+    // Select some text
+    fn set_selection(&mut self, selected: (usize, usize));
+
+    // Measure a new text selection
+    fn measure_new_selection(&self, from: usize, to: usize, editor_id: usize) -> (usize, usize);
+
+    // Measure a new cursor
+    fn measure_new_cursor(&self, to: usize, editor_id: usize) -> TextCursor;
+
+    // Update the selection with a new cursor
+    fn expand_selection_to_cursor(&mut self);
 
     fn get_clipboard(&mut self) -> &mut UseClipboard;
 
     // Process a Keyboard event
     fn process_key(&mut self, key: &Key, code: &Code, modifiers: &Modifiers) -> TextEvent {
-        let mut event = if self.has_any_highlight() {
+        let mut event = if self.has_any_selection() {
             TextEvent::SELECTION_CHANGED
         } else {
             TextEvent::empty()
@@ -228,7 +238,7 @@ pub trait TextEditor {
             Key::ArrowDown => {
                 if modifiers.contains(Modifiers::SHIFT) {
                     event.remove(TextEvent::SELECTION_CHANGED);
-                    self.move_highlight_to_cursor();
+                    self.expand_selection_to_cursor();
                 }
 
                 let last_line = self.len_lines() - 1;
@@ -261,13 +271,13 @@ pub trait TextEditor {
                 }
 
                 if modifiers.contains(Modifiers::SHIFT) {
-                    self.move_highlight_to_cursor();
+                    self.expand_selection_to_cursor();
                 }
             }
             Key::ArrowLeft => {
                 if modifiers.contains(Modifiers::SHIFT) {
                     event.remove(TextEvent::SELECTION_CHANGED);
-                    self.move_highlight_to_cursor();
+                    self.expand_selection_to_cursor();
                 }
 
                 // Go one character to the left
@@ -294,13 +304,13 @@ pub trait TextEditor {
                 }
 
                 if modifiers.contains(Modifiers::SHIFT) {
-                    self.move_highlight_to_cursor();
+                    self.expand_selection_to_cursor();
                 }
             }
             Key::ArrowRight => {
                 if modifiers.contains(Modifiers::SHIFT) {
                     event.remove(TextEvent::SELECTION_CHANGED);
-                    self.move_highlight_to_cursor();
+                    self.expand_selection_to_cursor();
                 }
 
                 let current_line = self.line(self.cursor_row()).unwrap();
@@ -321,13 +331,13 @@ pub trait TextEditor {
                 }
 
                 if modifiers.contains(Modifiers::SHIFT) {
-                    self.move_highlight_to_cursor();
+                    self.expand_selection_to_cursor();
                 }
             }
             Key::ArrowUp => {
                 if modifiers.contains(Modifiers::SHIFT) {
                     event.remove(TextEvent::SELECTION_CHANGED);
-                    self.move_highlight_to_cursor();
+                    self.expand_selection_to_cursor();
                 }
 
                 // Go one line up if there is any
@@ -352,12 +362,12 @@ pub trait TextEditor {
                 }
 
                 if modifiers.contains(Modifiers::SHIFT) {
-                    self.move_highlight_to_cursor();
+                    self.expand_selection_to_cursor();
                 }
             }
             Key::Backspace => {
                 let char_idx = self.line_to_char(self.cursor_row()) + self.cursor_col();
-                let selection = self.get_selection();
+                let selection = self.get_selection_range();
 
                 if let Some((start, end)) = selection {
                     self.remove(start..end);
@@ -372,7 +382,7 @@ pub trait TextEditor {
             }
             Key::Delete => {
                 let char_idx = self.line_to_char(self.cursor_row()) + self.cursor_col();
-                let selection = self.get_selection();
+                let selection = self.get_selection_range();
 
                 if let Some((start, end)) = selection {
                     self.remove(start..end);
@@ -422,7 +432,7 @@ pub trait TextEditor {
 
                     // Cut selected text
                     Code::KeyX if meta_or_ctrl => {
-                        let selection = self.get_selection();
+                        let selection = self.get_selection_range();
                         if let Some((start, end)) = selection {
                             let text = self.get_selected_text().unwrap();
                             self.remove(start..end);
@@ -487,7 +497,7 @@ pub trait TextEditor {
         }
 
         if event.contains(TextEvent::SELECTION_CHANGED) {
-            self.unhighlight();
+            self.clear_selection();
         }
 
         event
@@ -499,5 +509,5 @@ pub trait TextEditor {
 
     fn redo(&mut self) -> Option<usize>;
 
-    fn get_selection(&self) -> Option<(usize, usize)>;
+    fn get_selection_range(&self) -> Option<(usize, usize)>;
 }

@@ -48,8 +48,8 @@ pub fn run_event_loop<State: Clone>(
             Event::UserEvent(EventMessage::RequestRerender) => {
                 app.window_env.window.request_redraw();
             }
-            Event::UserEvent(EventMessage::RemeasureTextGroup(text_id)) => {
-                app.measure_text_group(&text_id);
+            Event::UserEvent(EventMessage::RemeasureTextGroup(text_measurement)) => {
+                app.measure_text_group(text_measurement);
             }
             Event::UserEvent(EventMessage::ActionRequestEvent(ActionRequestEvent {
                 request,

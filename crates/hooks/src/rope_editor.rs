@@ -115,7 +115,7 @@ impl TextEditor for RopeEditor {
         &mut self.cursor
     }
 
-    fn move_highlight_to_cursor(&mut self) {
+    fn expand_selection_to_cursor(&mut self) {
         let pos = self.cursor_pos();
         if let Some(selected) = self.selected.as_mut() {
             selected.1 = pos;
@@ -128,11 +128,15 @@ impl TextEditor for RopeEditor {
         &mut self.clipboard
     }
 
-    fn has_any_highlight(&self) -> bool {
+    fn has_any_selection(&self) -> bool {
         self.selected.is_some()
     }
 
-    fn highlights(&self, editor_id: usize) -> Option<(usize, usize)> {
+    fn get_selection(&self) -> Option<(usize, usize)> {
+        self.selected
+    }
+
+    fn get_visible_selection(&self, editor_id: usize) -> Option<(usize, usize)> {
         let (selected_from, selected_to) = self.selected?;
 
         if self.mode == EditableMode::SingleLineMultipleEditors {
@@ -208,38 +212,47 @@ impl TextEditor for RopeEditor {
         }
     }
 
-    fn unhighlight(&mut self) {
+    fn clear_selection(&mut self) {
         self.selected = None;
     }
 
-    fn highlight_text(&mut self, from: usize, to: usize, editor_id: usize) {
+    fn measure_new_selection(&self, from: usize, to: usize, editor_id: usize) -> (usize, usize) {
         if self.mode == EditableMode::SingleLineMultipleEditors {
             let row_idx = self.line_to_char(editor_id);
-            if self.selected.is_none() {
-                self.selected = Some((row_idx + from, row_idx + to));
+            if let Some((start, _)) = self.selected {
+                (start, row_idx + to)
             } else {
-                self.selected.as_mut().unwrap().1 = row_idx + to;
+                (row_idx + from, row_idx + to)
             }
-        } else if self.selected.is_none() {
-            self.selected = Some((from, to));
+        } else if let Some((start, _)) = self.selected {
+            (start, to)
         } else {
-            self.selected.as_mut().unwrap().1 = to;
-        }
-
-        if self.mode == EditableMode::SingleLineMultipleEditors {
-            self.cursor_mut().move_to(editor_id, to);
-        } else {
-            self.set_cursor_pos(to);
+            (from, to)
         }
     }
 
+    fn measure_new_cursor(&self, to: usize, editor_id: usize) -> TextCursor {
+        if self.mode == EditableMode::SingleLineMultipleEditors {
+            TextCursor::new(editor_id, to)
+        } else {
+            let row = self.char_to_line(to);
+            let row_idx = self.line_to_char(row);
+            let col = to - row_idx;
+            TextCursor::new(row, col)
+        }
+    }
+
+    fn set_selection(&mut self, selected: (usize, usize)) {
+        self.selected = Some(selected);
+    }
+
     fn get_selected_text(&self) -> Option<String> {
-        let (start, end) = self.get_selection()?;
+        let (start, end) = self.get_selection_range()?;
 
         Some(self.rope().get_slice(start..end)?.to_string())
     }
 
-    fn get_selection(&self) -> Option<(usize, usize)> {
+    fn get_selection_range(&self) -> Option<(usize, usize)> {
         let (start, end) = self.selected?;
 
         // Use left-to-right selection
