@@ -801,7 +801,7 @@ pub async fn backspace_remove() {
     let root = utils.root().get(0);
     let cursor = root.get(1).get(0);
     #[cfg(not(target_os = "linux"))]
-    assert_eq!(cursor.text(), Some("0:2"));
+    assert_eq!(cursor.text(), Some("0:5"));
 
     #[cfg(target_os = "linux")]
     assert_eq!(cursor.text(), Some("0:4"));
@@ -823,7 +823,7 @@ pub async fn backspace_remove() {
     #[cfg(not(target_os = "linux"))]
     {
         assert_eq!(content.text(), Some("Hello🦀 Rustaceans\nHello Rustaceans"));
-        assert_eq!(cursor.text(), Some("0:3"));
+        assert_eq!(cursor.text(), Some("0:6"));
     }
 
     #[cfg(target_os = "linux")]
@@ -849,12 +849,12 @@ pub async fn backspace_remove() {
     #[cfg(not(target_os = "linux"))]
     {
         assert_eq!(content.text(), Some("Hello Rustaceans\nHello Rustaceans"));
-        assert_eq!(cursor.text(), Some("0:3"));
+        assert_eq!(cursor.text(), Some("0:5"));
     }
 
     #[cfg(target_os = "linux")]
     {
         assert_eq!(content.text(), Some("Hello Rustaceans\nHello Rustaceans"));
-        assert_eq!(cursor.text(), Some("0:5"));
+        assert_eq!(cursor.text(), Some("0:4"));
     }
 }
