@@ -1,6 +1,5 @@
 pub use skia_safe::{
     font_style::{Slant, Weight, Width},
-    surfaces::raster_n32_premul,
     gpu::{
         backend_render_targets,
         gl::{Format, FramebufferInfo, Interface},
@@ -14,6 +13,7 @@ pub use skia_safe::{
     path::ArcSize,
     rrect::Corner,
     runtime_effect::Uniform,
+    surfaces::raster_n32_premul,
     svg,
     textlayout::{
         paragraph::GlyphClusterInfo, Decoration, FontCollection, FontFeature, LineMetrics,

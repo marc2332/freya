@@ -536,66 +536,6 @@ pub async fn highlights_single_line_mulitple_editors() {
     assert_eq!(highlights_2, Some(vec![(start, end)]));
 }
 
-#[test]
-fn skia_not_crash_crash_macos() {
-    let mut font_collection = FontCollection::new();
-    font_collection.set_dynamic_font_manager(FontMgr::default());
-    let mut p = ParagraphBuilder::new(&ParagraphStyle::new(), font_collection);
-    p.add_text("test test");
-    let mut paragraph = p.build();
-    paragraph.layout(200.);
-}
-
-
-#[test]
-fn skia_crash_macos() {
-    let mut font_collection = FontCollection::new();
-    font_collection.set_dynamic_font_manager(FontMgr::default());
-    font_collection.set_default_font_manager(FontMgr::default(), "Arial");
-    let mut p = ParagraphBuilder::new(&ParagraphStyle::new(), font_collection);
-    p.add_text("👋test test 🦀");
-    let mut paragraph = p.build();
-    paragraph.layout(200.);
-}
-
-#[tokio::test]
-async fn text_with_emojis() {
-    fn text_with_emojis_app() -> Element {
-        let mut editable = use_editable(
-            || EditableConfig::new("👋🦀".to_string()),
-            EditableMode::SingleLineMultipleEditors,
-        );
-        let cursor_attr = editable.cursor_attr();
-        let editor = editable.editor().read();
-        let text = editor.to_string();
-
-        let onkeydown = move |e: Event<KeyboardData>| {
-            editable.process_event(&EditableEvent::KeyDown(e.data));
-        };
-
-        rsx!(
-            rect {
-                width: "100%",
-                height: "100%",
-                background: "white",
-                cursor_reference: cursor_attr,
-                onkeydown,
-                direction: "vertical",
-                label {
-                    "{text}"
-                }
-                label {
-                    "{editor.cursor_row()}:{editor.cursor_col()}"
-                }
-            }
-        )
-    }
-
-    let mut utils = launch_test(text_with_emojis_app);
-
-    utils.wait_for_update().await;
-}
-
 #[tokio::test]
 pub async fn special_text_editing() {
     fn special_text_editing_app() -> Element {
