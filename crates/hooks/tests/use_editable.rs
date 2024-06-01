@@ -728,3 +728,133 @@ pub async fn special_text_editing() {
     // Because there is not a line above the first one, the cursor will be moved to the begining
     assert_eq!(cursor.text(), Some("0:0"));
 }
+
+#[tokio::test]
+pub async fn backspace_remove() {
+    fn backspace_remove_app() -> Element {
+        let mut editable = use_editable(
+            || EditableConfig::new("Hello Rustaceans\nHello Rustaceans".to_string()),
+            EditableMode::MultipleLinesSingleEditor,
+        );
+        let cursor_attr = editable.cursor_attr();
+        let editor = editable.editor().read();
+        let cursor = editor.cursor();
+        let cursor_pos = editor.visible_cursor_pos();
+
+        let onmousedown = move |e: MouseEvent| {
+            editable.process_event(&EditableEvent::MouseDown(e.data, 0));
+        };
+
+        let onkeydown = move |e: Event<KeyboardData>| {
+            editable.process_event(&EditableEvent::KeyDown(e.data));
+        };
+
+        rsx!(
+            rect {
+                width: "100%",
+                height: "100%",
+                background: "white",
+                cursor_reference: cursor_attr,
+                onmousedown,
+                paragraph {
+                    height: "50%",
+                    width: "100%",
+                    cursor_id: "0",
+                    cursor_index: "{cursor_pos}",
+                    cursor_color: "black",
+                    cursor_mode: "editable",
+                    onkeydown,
+                    text {
+                        color: "black",
+                        "{editor}"
+                    }
+                }
+                label {
+                    color: "black",
+                    height: "50%",
+                    "{cursor.row()}:{cursor.col()}"
+                }
+            }
+        )
+    }
+
+    let mut utils = launch_test(backspace_remove_app);
+
+    // Initial state
+    let root = utils.root().get(0);
+    let cursor = root.get(1).get(0);
+    let content = root.get(0).get(0).get(0);
+    assert_eq!(cursor.text(), Some("0:0"));
+    assert_eq!(content.text(), Some("Hello Rustaceans\nHello Rustaceans"));
+
+    // Move cursor
+    utils.push_event(PlatformEvent::Mouse {
+        name: EventName::MouseDown,
+        cursor: (35.0, 3.0).into(),
+        button: Some(MouseButton::Left),
+    });
+
+    utils.wait_for_update().await;
+    utils.wait_for_update().await;
+
+    // Cursor has been moved
+    let root = utils.root().get(0);
+    let cursor = root.get(1).get(0);
+    #[cfg(not(target_os = "linux"))]
+    assert_eq!(cursor.text(), Some("0:5"));
+
+    #[cfg(target_os = "linux")]
+    assert_eq!(cursor.text(), Some("0:4"));
+
+    // Insert text
+    utils.push_event(PlatformEvent::Keyboard {
+        name: EventName::KeyDown,
+        key: Key::Character("🦀".to_string()),
+        code: Code::Unidentified,
+        modifiers: Modifiers::empty(),
+    });
+
+    utils.wait_for_update().await;
+    utils.wait_for_update().await;
+
+    // Text and cursor have changed
+    let cursor = root.get(1).get(0);
+    let content = root.get(0).get(0).get(0);
+    #[cfg(not(target_os = "linux"))]
+    {
+        assert_eq!(content.text(), Some("Hello🦀 Rustaceans\nHello Rustaceans"));
+        assert_eq!(cursor.text(), Some("0:6"));
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        assert_eq!(content.text(), Some("Hell🦀o Rustaceans\nHello Rustaceans"));
+        assert_eq!(cursor.text(), Some("0:5"));
+    }
+
+    // Remove text
+    utils.push_event(PlatformEvent::Keyboard {
+        name: EventName::KeyDown,
+        key: Key::Backspace,
+        code: Code::Unidentified,
+        modifiers: Modifiers::empty(),
+    });
+
+    utils.wait_for_update().await;
+    utils.wait_for_update().await;
+
+    // Text and cursor have changed
+    let cursor = root.get(1).get(0);
+    let content = root.get(0).get(0).get(0);
+    #[cfg(not(target_os = "linux"))]
+    {
+        assert_eq!(content.text(), Some("Hello Rustaceans\nHello Rustaceans"));
+        assert_eq!(cursor.text(), Some("0:5"));
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        assert_eq!(content.text(), Some("Hello Rustaceans\nHello Rustaceans"));
+        assert_eq!(cursor.text(), Some("0:4"));
+    }
+}

@@ -63,11 +63,6 @@ impl Line<'_> {
     pub fn utf16_len_chars(&self) -> usize {
         self.text.encode_utf16().count()
     }
-
-    /// Get the text of the line
-    fn as_str(&self) -> &str {
-        &self.text
-    }
 }
 
 impl Display for Line<'_> {
@@ -358,33 +353,17 @@ pub trait TextEditor {
                 }
             }
             Key::Backspace => {
-                if self.cursor_col() > 0 {
-                    // Remove the character to the left if there is any
-                    let char_idx = self.line_to_char(self.cursor_row()) + self.cursor_col();
-                    self.remove(char_idx - 1..char_idx);
+                let char_idx = self.line_to_char(self.cursor_row()) + self.cursor_col();
+                let selection = self.get_selection();
 
-                    self.cursor_left();
-
+                if let Some((start, end)) = selection {
+                    self.remove(start..end);
+                    self.set_cursor_pos(start);
                     event.insert(TextEvent::TEXT_CHANGED);
-                } else if self.cursor_row() > 0 {
-                    // Moves the whole current line to the end of the line above.
-                    let prev_line_len = self.line(self.cursor_row() - 1).unwrap().len_chars();
-                    let current_line = self.line(self.cursor_row()).clone();
-
-                    if let Some(current_line) = current_line {
-                        let current_line_len = current_line.len_chars();
-                        let prev_char_idx =
-                            self.line_to_char(self.cursor_row() - 1) + prev_line_len - 1;
-                        let char_idx = self.line_to_char(self.cursor_row()) + current_line_len - 1;
-
-                        let line = current_line.as_str().to_string();
-                        self.insert(&line, prev_char_idx);
-                        self.remove(char_idx..(char_idx + current_line_len) + 1);
-                    }
-
-                    self.cursor_up();
-                    self.cursor_mut().set_col(prev_line_len - 1);
-
+                } else if char_idx > 0 {
+                    // Remove the character to the left if there is any
+                    self.remove(char_idx - 1..char_idx);
+                    self.set_cursor_pos(char_idx - 1);
                     event.insert(TextEvent::TEXT_CHANGED);
                 }
             }
