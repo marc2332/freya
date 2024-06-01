@@ -189,6 +189,12 @@ fn Editor() -> Element {
         }
     };
 
+    let onkeyup = move |e: KeyboardEvent| {
+        if focus_manager.is_focused() {
+            editable.process_event(&EditableEvent::KeyUp(e.data));
+        }
+    };
+
     rsx!(
         rect {
             onclick,
@@ -260,6 +266,7 @@ fn Editor() -> Element {
                 height: "calc(100% - 80)",
                 padding: "5",
                 onkeydown,
+                onkeyup,
                 cursor_reference: cursor_attr,
                 direction: "horizontal",
                 rect {
