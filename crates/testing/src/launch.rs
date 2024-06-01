@@ -33,7 +33,7 @@ pub fn launch_test_with_config(root: AppComponent, config: TestingConfig) -> Tes
         focused_id: ACCESSIBILITY_ROOT_ID,
         preferred_theme: PreferredTheme::default(),
         navigation_mode: NavigationMode::default(),
-        information: PlatformInformation::new(config.size),
+        information: PlatformInformation::new(config.size, false, false, false),
     });
     let mut font_collection = FontCollection::new();
     let font_mgr = FontMgr::default();
