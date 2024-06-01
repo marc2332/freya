@@ -120,6 +120,9 @@ pub trait TextEditor {
     /// Total of lines
     fn len_lines(&self) -> usize;
 
+    /// Total of chars
+    fn len_chars(&self) -> usize;
+
     /// Get a readable cursor
     fn cursor(&self) -> &TextCursor;
 
@@ -364,6 +367,20 @@ pub trait TextEditor {
                     // Remove the character to the left if there is any
                     self.remove(char_idx - 1..char_idx);
                     self.set_cursor_pos(char_idx - 1);
+                    event.insert(TextEvent::TEXT_CHANGED);
+                }
+            }
+            Key::Delete => {
+                let char_idx = self.line_to_char(self.cursor_row()) + self.cursor_col();
+                let selection = self.get_selection();
+
+                if let Some((start, end)) = selection {
+                    self.remove(start..end);
+                    self.set_cursor_pos(start);
+                    event.insert(TextEvent::TEXT_CHANGED);
+                } else if char_idx < self.len_chars() {
+                    // Remove the character to the right if there is any
+                    self.remove(char_idx..char_idx + 1);
                     event.insert(TextEvent::TEXT_CHANGED);
                 }
             }
