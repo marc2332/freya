@@ -1,5 +1,6 @@
 use crate::{use_editable, EditableMode, TextEditor};
 use freya::prelude::*;
+use freya_engine::prelude::{FontCollection, FontMgr, ParagraphBuilder, ParagraphStyle};
 use freya_testing::prelude::*;
 
 #[tokio::test]
@@ -533,6 +534,14 @@ pub async fn highlights_single_line_mulitple_editors() {
     let end = 10;
 
     assert_eq!(highlights_2, Some(vec![(start, end)]));
+}
+
+#[test]
+fn skia_crash_macos() {
+    let mut font_collection = FontCollection::new();
+    font_collection.set_dynamic_font_manager(FontMgr::default());
+    let mut p = ParagraphBuilder::new(&ParagraphStyle::new(), font_collection);
+    p.add_text("👋test test 🦀");
 }
 
 #[tokio::test]
