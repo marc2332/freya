@@ -215,7 +215,7 @@ impl FreyaDOM {
                 let node = rdom.get(*node_id);
                 let layout_node = layout.get(*node_id);
                 if let Some((node, layout_node)) = node.zip(layout_node) {
-                    measure_paragraph(&node, layout_node, true, scale_factor);
+                    measure_paragraph(&node, layout_node, scale_factor);
                 }
             }
         }
@@ -232,7 +232,7 @@ impl FreyaDOM {
                 let layout_node = layout.get(*node_id);
 
                 if let Some((node, layout_node)) = node.zip(layout_node) {
-                    measure_paragraph(&node, layout_node, true, scale_factor);
+                    measure_paragraph(&node, layout_node, scale_factor);
                 }
             }
         }
