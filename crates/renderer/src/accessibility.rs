@@ -46,13 +46,23 @@ impl AccessKitManager {
     }
 
     /// Focus a new accessibility node
-    pub fn set_accessibility_focus(&self, id: AccessibilityId, window: &Window) {
+    pub fn focus_node(
+        &self,
+        id: AccessibilityId,
+        platform_sender: &NativePlatformSender,
+        window: &Window,
+    ) {
         let tree = self
             .accessibility_manager
             .lock()
             .unwrap()
             .set_focus_with_update(id);
         if let Some(tree) = tree {
+            // Notify the components
+            platform_sender.send_modify(|state| {
+                state.focused_id = tree.focus;
+            });
+
             // Update the IME Cursor area
             self.update_ime_position(tree.focus, window);
 
@@ -119,6 +129,7 @@ impl AccessKitManager {
             .unwrap()
             .set_focus_on_next_node(direction);
 
+        // Notify the components
         platform_sender.send_modify(|state| {
             state.focused_id = tree.focus;
         });

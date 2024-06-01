@@ -3,7 +3,7 @@ use torin::prelude::Size2D;
 use winit::window::Window;
 
 /// State consumed by components and updated by the platform.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct NativePlatformState {
     pub focused_id: AccessibilityId,
     pub preferred_theme: PreferredTheme,
@@ -30,7 +30,7 @@ impl From<winit::window::Theme> for PreferredTheme {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Clone, Copy, PartialEq, Eq, Default, Debug)]
 pub enum NavigationMode {
     #[default]
     NotKeyboard,

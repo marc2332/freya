@@ -281,6 +281,11 @@ impl<State: 'static + Clone> App<State> {
         self.sdom.get().measure_paragraphs(text_id, scale_factor);
     }
 
+    pub fn focus_node(&self, node_id: AccessibilityId) {
+        self.accessibility
+            .focus_node(node_id, &self.platform_sender, &self.window_env.window)
+    }
+
     pub fn focus_next_node(&self, direction: AccessibilityFocusDirection) {
         self.accessibility.focus_next_node(
             direction,
