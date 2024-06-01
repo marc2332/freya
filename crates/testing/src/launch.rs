@@ -36,7 +36,9 @@ pub fn launch_test_with_config(root: AppComponent, config: TestingConfig) -> Tes
         information: PlatformInformation::new(config.size),
     });
     let mut font_collection = FontCollection::new();
-    font_collection.set_dynamic_font_manager(FontMgr::default());
+    let font_mgr = FontMgr::default();
+    font_collection.set_dynamic_font_manager(font_mgr.clone());
+    font_collection.set_default_font_manager(font_mgr, "Fira Sans");
 
     let mut handler = TestingHandler {
         vdom,

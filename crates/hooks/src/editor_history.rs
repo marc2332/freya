@@ -57,10 +57,10 @@ impl EditorHistory {
             let idx_end = match last_change {
                 HistoryChange::Remove { idx, text } => {
                     rope.insert(*idx, text);
-                    idx + text.len()
+                    idx + text.chars().count()
                 }
-                HistoryChange::InsertChar { idx, .. } => {
-                    rope.remove(*idx..*idx + 1);
+                HistoryChange::InsertChar { idx, char: ch } => {
+                    rope.remove(*idx..*idx + ch.len_utf8());
                     *idx
                 }
                 HistoryChange::InsertText { idx, text } => {
@@ -85,7 +85,7 @@ impl EditorHistory {
         if let Some(next_change) = next_change {
             let idx_end = match next_change {
                 HistoryChange::Remove { idx, text } => {
-                    rope.remove(*idx..idx + text.len());
+                    rope.remove(*idx..idx + text.chars().count());
                     *idx
                 }
                 HistoryChange::InsertChar { idx, char: ch } => {
@@ -94,7 +94,7 @@ impl EditorHistory {
                 }
                 HistoryChange::InsertText { idx, text, .. } => {
                     rope.insert(*idx, text);
-                    idx + text.len()
+                    idx + text.chars().count()
                 }
             };
             self.current_change += 1;
