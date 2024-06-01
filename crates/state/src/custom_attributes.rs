@@ -12,7 +12,7 @@ use freya_engine::prelude::*;
 use freya_native_core::node::FromAnyValue;
 use tokio::sync::mpsc::UnboundedSender;
 use tokio::sync::watch;
-use torin::geometry::{Area, CursorPoint};
+use torin::geometry::Area;
 use uuid::Uuid;
 
 /// Image Reference
@@ -71,25 +71,7 @@ impl Debug for CanvasReference {
 #[derive(Clone, Debug)]
 pub struct CursorReference {
     pub text_id: Uuid,
-    #[allow(clippy::type_complexity)]
-    pub cursor_selections: Arc<Mutex<Option<(CursorPoint, CursorPoint)>>>,
-    pub cursor_position: Arc<Mutex<Option<CursorPoint>>>,
     pub cursor_sender: UnboundedSender<CursorLayoutResponse>,
-    pub cursor_id: Arc<Mutex<Option<usize>>>,
-}
-
-impl CursorReference {
-    pub fn set_cursor_selections(&self, cursor_selections: Option<(CursorPoint, CursorPoint)>) {
-        *self.cursor_selections.lock().unwrap() = cursor_selections;
-    }
-
-    pub fn set_cursor_position(&self, cursor_position: Option<CursorPoint>) {
-        *self.cursor_position.lock().unwrap() = cursor_position;
-    }
-
-    pub fn set_id(&self, id: Option<usize>) {
-        *self.cursor_id.lock().unwrap() = id;
-    }
 }
 
 impl PartialEq for CursorReference {

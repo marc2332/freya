@@ -1,12 +1,9 @@
-use std::{
-    rc::Rc,
-    sync::{Arc, Mutex},
-};
+use std::rc::Rc;
 
 use dioxus_core::{prelude::spawn, use_hook, AttributeValue};
 use dioxus_sdk::clipboard::use_clipboard;
 use dioxus_signals::{Readable, Signal, Writable};
-use freya_common::{CursorLayoutResponse, EventMessage};
+use freya_common::{CursorLayoutResponse, EventMessage, TextGroupMeasurement};
 use freya_elements::events::{Code, KeyboardData, MouseData};
 use freya_node_state::{CursorReference, CustomAttributeValues};
 use tokio::sync::mpsc::unbounded_channel;
@@ -126,7 +123,7 @@ impl UseEditable {
         AttributeValue::any_value(CustomAttributeValues::TextHighlights(
             self.editor
                 .read()
-                .highlights(editor_id)
+                .get_visible_selection(editor_id)
                 .map(|v| vec![v])
                 .unwrap_or_default(),
         ))
@@ -134,29 +131,23 @@ impl UseEditable {
 
     /// Process a [`EditableEvent`] event.
     pub fn process_event(&mut self, edit_event: &EditableEvent) {
-        match edit_event {
+        let res = match edit_event {
             EditableEvent::MouseDown(e, id) => {
                 let coords = e.get_element_coordinates();
+
                 self.dragging.write().set_cursor_coords(coords);
+                self.editor.write().clear_selection();
 
-                self.cursor_reference.peek().set_id(Some(*id));
-                self.cursor_reference
-                    .peek()
-                    .set_cursor_position(Some(coords));
-
-                self.editor.write().unhighlight();
+                Some((*id, Some(coords), None))
             }
             EditableEvent::MouseOver(e, id) => {
-                self.dragging.with(|dragging| {
-                    if let Some(src) = dragging.get_cursor_coords() {
-                        let new_dist = e.get_element_coordinates();
+                if let Some(src) = self.dragging.peek().get_cursor_coords() {
+                    let new_dist = e.get_element_coordinates();
 
-                        self.cursor_reference.peek().set_id(Some(*id));
-                        self.cursor_reference
-                            .peek()
-                            .set_cursor_selections(Some((src, new_dist)));
-                    }
-                });
+                    Some((*id, None, Some((src, new_dist))))
+                } else {
+                    None
+                }
             }
             EditableEvent::Click => {
                 let selection = &mut *self.dragging.write();
@@ -168,6 +159,7 @@ impl UseEditable {
                         *selection = TextDragging::None;
                     }
                 }
+                None
             }
             EditableEvent::KeyDown(e) => {
                 if e.code == Code::ShiftLeft {
@@ -197,6 +189,8 @@ impl UseEditable {
                 if event.contains(TextEvent::TEXT_CHANGED) {
                     *self.dragging.write() = TextDragging::None;
                 }
+
+                None
             }
             EditableEvent::KeyUp(e) => {
                 if e.code == Code::ShiftLeft {
@@ -208,15 +202,22 @@ impl UseEditable {
                 } else {
                     *self.dragging.write() = TextDragging::None;
                 }
-            }
-        }
 
-        if self.dragging.peek().has_cursor_coords() {
-            self.platform
-                .send(EventMessage::RemeasureTextGroup(
-                    self.cursor_reference.peek().text_id,
-                ))
-                .unwrap()
+                None
+            }
+        };
+
+        if let Some((cursor_id, cursor_position, cursor_selection)) = res {
+            if self.dragging.peek().has_cursor_coords() {
+                self.platform
+                    .send(EventMessage::RemeasureTextGroup(TextGroupMeasurement {
+                        text_id: self.cursor_reference.peek().text_id,
+                        cursor_id,
+                        cursor_position,
+                        cursor_selection,
+                    }))
+                    .unwrap()
+            }
         }
     }
 }
@@ -263,9 +264,6 @@ pub fn use_editable(initializer: impl Fn() -> EditableConfig, mode: EditableMode
         let cursor_reference = CursorReference {
             text_id,
             cursor_sender,
-            cursor_position: Arc::new(Mutex::new(None)),
-            cursor_id: Arc::new(Mutex::new(None)),
-            cursor_selections: Arc::new(Mutex::new(None)),
         };
 
         spawn(async move {
@@ -307,27 +305,53 @@ pub fn use_editable(initializer: impl Fn() -> EditableConfig, mode: EditableMode
                             (new_cursor_col, new_cursor_row)
                         };
 
-                        // Only update if it's actually different
+                        // Only update and clear the selection if the cursor has changed
                         if text_editor.cursor().as_tuple() != new_cursor {
-                            text_editor.cursor_mut().set_col(new_cursor.0);
-                            text_editor.cursor_mut().set_row(new_cursor.1);
+                            if let TextDragging::FromCursorToPoint { cursor: from, .. } = dragging()
+                            {
+                                let to = text_editor.cursor_pos();
 
-                            if let TextDragging::FromCursorToPoint { cursor, .. } = dragging() {
-                                let new_pos = text_editor.cursor_pos();
-                                text_editor.highlight_text(cursor, new_pos, id);
+                                let maybe_new_cursor = text_editor.measure_new_cursor(to, id);
+                                let maybe_new_selection =
+                                    text_editor.measure_new_selection(from, to, id);
+
+                                text_editor.set_selection(maybe_new_selection);
+                                *text_editor.cursor_mut() = maybe_new_cursor;
                             } else {
-                                text_editor.unhighlight();
+                                text_editor.cursor_mut().set_col(new_cursor.0);
+                                text_editor.cursor_mut().set_row(new_cursor.1);
+                                text_editor.clear_selection();
                             }
                         }
                     }
                     // Update the text selections calculated by the layout
                     CursorLayoutResponse::TextSelection { from, to, id } => {
-                        let mut text_editor = editor.write();
+                        let current_cursor = editor.peek().cursor().clone();
+                        let current_selection = editor.peek().get_selection();
+
+                        let maybe_new_cursor = editor.peek().measure_new_cursor(to, id);
                         let (from, to) = (
-                            text_editor.utf16_cu_to_char(from),
-                            text_editor.utf16_cu_to_char(to),
+                            editor.peek().utf16_cu_to_char(from),
+                            editor.peek().utf16_cu_to_char(to),
                         );
-                        text_editor.highlight_text(from, to, id);
+                        let maybe_new_selection = editor.peek().measure_new_selection(from, to, id);
+
+                        // Update the text selection if it has changed
+                        if let Some(current_selection) = current_selection {
+                            if current_selection != maybe_new_selection {
+                                let mut text_editor = editor.write();
+                                text_editor.set_selection(maybe_new_selection);
+                            }
+                        } else {
+                            let mut text_editor = editor.write();
+                            text_editor.set_selection(maybe_new_selection);
+                        }
+
+                        // Update the cursor if it has changed
+                        if current_cursor != maybe_new_cursor {
+                            let mut text_editor = editor.write();
+                            *text_editor.cursor_mut() = maybe_new_cursor;
+                        }
                     }
                 }
             }

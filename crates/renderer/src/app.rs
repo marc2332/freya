@@ -1,5 +1,5 @@
 use dioxus_core::{Template, VirtualDom};
-use freya_common::EventMessage;
+use freya_common::{EventMessage, TextGroupMeasurement};
 use freya_core::prelude::*;
 use freya_engine::prelude::*;
 use freya_native_core::prelude::NodeImmutableDioxusExt;
@@ -15,7 +15,6 @@ use tokio::{
 };
 use torin::geometry::{Area, Size2D};
 use tracing::info;
-use uuid::Uuid;
 use winit::dpi::PhysicalSize;
 use winit::event_loop::{EventLoop, EventLoopProxy};
 
@@ -276,9 +275,11 @@ impl<State: 'static + Clone> App<State> {
     }
 
     /// Measure the a text group given it's ID.
-    pub fn measure_text_group(&self, text_id: &Uuid) {
+    pub fn measure_text_group(&self, text_measurement: TextGroupMeasurement) {
         let scale_factor = self.window_env.window.scale_factor() as f32;
-        self.sdom.get().measure_paragraphs(text_id, scale_factor);
+        self.sdom
+            .get()
+            .measure_paragraphs(text_measurement, scale_factor);
     }
 
     pub fn focus_node(&self, node_id: AccessibilityId) {
