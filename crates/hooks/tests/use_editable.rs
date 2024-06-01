@@ -730,8 +730,8 @@ pub async fn special_text_editing() {
 }
 
 #[tokio::test]
-pub async fn special_text_editing() {
-    fn special_text_editing_app() -> Element {
+pub async fn backspace_remove() {
+    fn backspace_remove_app() -> Element {
         let mut editable = use_editable(
             || EditableConfig::new("Hello Rustaceans\nHello Rustaceans".to_string()),
             EditableMode::MultipleLinesSingleEditor,
@@ -778,7 +778,7 @@ pub async fn special_text_editing() {
         )
     }
 
-    let mut utils = launch_test(special_text_editing_app);
+    let mut utils = launch_test(backspace_remove_app);
 
     // Initial state
     let root = utils.root().get(0);

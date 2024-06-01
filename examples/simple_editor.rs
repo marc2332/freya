@@ -6,7 +6,7 @@
 use freya::prelude::*;
 
 fn main() {
-    launch(app);
+    launch_with_props(app, "Simple editor", (900.0, 650.0));
 }
 
 fn app() -> Element {
