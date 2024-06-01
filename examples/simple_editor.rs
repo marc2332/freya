@@ -12,7 +12,12 @@ fn main() {
 fn app() -> Element {
     let mut editable = use_editable(
         || {
-            EditableConfig::new("Hello Rustaceans Abcdefg12345 Hello Rustaceans Abcdefg12345 Hello Rustaceans Abcdefg12345\n".repeat(25).trim().to_string())
+            EditableConfig::new(
+                "你好世界 👋| Hello World! 🙍‍♂️| Hola Mundo! 🚀| Hola Món! 🦀\n"
+                    .repeat(15)
+                    .trim()
+                    .to_string(),
+            )
         },
         EditableMode::MultipleLinesSingleEditor,
     );
@@ -21,7 +26,7 @@ fn app() -> Element {
     let highlights = editable.highlights_attr(0);
     let editor = editable.editor().read();
     let cursor = editor.cursor();
-    let cursor_char = editor.cursor_pos();
+    let cursor_char = editor.visible_cursor_pos();
 
     let onmousedown = move |e: MouseEvent| {
         editable.process_event(&EditableEvent::MouseDown(e.data, 0));

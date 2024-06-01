@@ -59,6 +59,11 @@ impl Line<'_> {
         self.text.chars().filter(|c| c != &'\r').count()
     }
 
+    /// Get the length of the line
+    pub fn utf16_len_chars(&self) -> usize {
+        self.text.encode_utf16().count()
+    }
+
     /// Get the text of the line
     fn as_str(&self) -> &str {
         &self.text
@@ -110,6 +115,10 @@ pub trait TextEditor {
     /// Get the first char from the given line
     fn line_to_char(&self, line_idx: usize) -> usize;
 
+    fn utf16_cu_to_char(&self, utf16_cu_idx: usize) -> usize;
+
+    fn char_to_utf16_cu(&self, idx: usize) -> usize;
+
     /// Get a line from the text
     fn line(&self, line_idx: usize) -> Option<Line<'_>>;
 
@@ -130,6 +139,11 @@ pub trait TextEditor {
     /// Get the cursor column
     fn cursor_col(&self) -> usize {
         self.cursor().col()
+    }
+
+    /// Get the visible cursor position
+    fn visible_cursor_col(&self) -> usize {
+        self.char_to_utf16_cu(self.cursor_col())
     }
 
     /// Move the cursor 1 line down
@@ -160,6 +174,12 @@ pub trait TextEditor {
     fn cursor_pos(&self) -> usize {
         let line_begining = self.line_to_char(self.cursor_row());
         line_begining + self.cursor_col()
+    }
+
+    /// Get the cursor position
+    fn visible_cursor_pos(&self) -> usize {
+        let line_begining = self.char_to_utf16_cu(self.line_to_char(self.cursor_row()));
+        line_begining + self.char_to_utf16_cu(self.cursor_col())
     }
 
     /// Set the cursor position
@@ -450,21 +470,17 @@ pub trait TextEditor {
 
                     _ => {
                         if let Ok(ch) = character.parse::<char>() {
-                            // https://github.com/marc2332/freya/issues/461
-                            if !ch.is_ascii_control() && ch.len_utf8() <= 2 {
-                                // Inserts a character
-                                let char_idx =
-                                    self.line_to_char(self.cursor_row()) + self.cursor_col();
-                                self.insert(character, char_idx);
-                                self.cursor_right();
+                            // Inserts a character
+                            let char_idx = self.line_to_char(self.cursor_row()) + self.cursor_col();
+                            self.insert_char(ch, char_idx);
+                            self.cursor_right();
 
-                                event.insert(TextEvent::TEXT_CHANGED);
-                            }
-                        } else if character.is_ascii() {
+                            event.insert(TextEvent::TEXT_CHANGED);
+                        } else {
                             // Inserts a text
                             let char_idx = self.line_to_char(self.cursor_row()) + self.cursor_col();
                             self.insert(character, char_idx);
-                            self.set_cursor_pos(char_idx + character.len());
+                            self.set_cursor_pos(char_idx + character.chars().count());
 
                             event.insert(TextEvent::TEXT_CHANGED);
                         }

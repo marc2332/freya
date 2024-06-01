@@ -188,23 +188,32 @@ pub fn use_editable(initializer: impl Fn() -> EditableConfig, mode: EditableMode
 
                         let new_cursor_row = match mode {
                             EditableMode::MultipleLinesSingleEditor => {
-                                text_editor.char_to_line(position)
+                                text_editor.char_to_line(text_editor.utf16_cu_to_char(position))
                             }
                             EditableMode::SingleLineMultipleEditors => id,
                         };
 
                         let new_cursor_col = match mode {
-                            EditableMode::MultipleLinesSingleEditor => {
-                                position - text_editor.line_to_char(new_cursor_row)
+                            EditableMode::MultipleLinesSingleEditor => text_editor
+                                .utf16_cu_to_char(
+                                    position
+                                        - text_editor.char_to_utf16_cu(
+                                            text_editor.line_to_char(new_cursor_row),
+                                        ),
+                                ),
+                            EditableMode::SingleLineMultipleEditors => {
+                                text_editor.utf16_cu_to_char(position)
                             }
-                            EditableMode::SingleLineMultipleEditors => position,
                         };
 
                         let new_current_line = text_editor.line(new_cursor_row).unwrap();
 
                         // Use the line length as new column if the clicked column surpases the length
-                        let new_cursor = if new_cursor_col >= new_current_line.len_chars() {
-                            (new_current_line.len_chars(), new_cursor_row)
+                        let new_cursor = if new_cursor_col >= new_current_line.utf16_len_chars() {
+                            (
+                                text_editor.utf16_cu_to_char(new_current_line.utf16_len_chars()),
+                                new_cursor_row,
+                            )
                         } else {
                             (new_cursor_col, new_cursor_row)
                         };
@@ -218,7 +227,12 @@ pub fn use_editable(initializer: impl Fn() -> EditableConfig, mode: EditableMode
                     }
                     // Update the text selections calculated by the layout
                     CursorLayoutResponse::TextSelection { from, to, id } => {
-                        editor.write().highlight_text(from, to, id);
+                        let mut text_editor = editor.write();
+                        let (from, to) = (
+                            text_editor.utf16_cu_to_char(from),
+                            text_editor.utf16_cu_to_char(to),
+                        );
+                        text_editor.highlight_text(from, to, id);
                     }
                 }
             }

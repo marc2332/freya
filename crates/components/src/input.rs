@@ -152,7 +152,7 @@ pub fn Input(
     let (background, cursor_char) = if focus.is_focused() {
         (
             theme.hover_background,
-            editable.editor().read().cursor_pos().to_string(),
+            editable.editor().read().visible_cursor_pos().to_string(),
         )
     } else {
         (theme.background, "none".to_string())

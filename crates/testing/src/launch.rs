@@ -33,7 +33,9 @@ pub fn launch_test_with_config(root: AppComponent, config: TestingConfig) -> Tes
     let (platform_event_emitter, platform_event_receiver) = unbounded_channel::<EventMessage>();
     let (focus_sender, focus_receiver) = watch::channel(ACCESSIBILITY_ROOT_ID);
     let mut font_collection = FontCollection::new();
-    font_collection.set_dynamic_font_manager(FontMgr::default());
+    let font_mgr = FontMgr::default();
+    font_collection.set_dynamic_font_manager(font_mgr.clone());
+    font_collection.set_default_font_manager(font_mgr, "Fira Sans");
 
     let mut handler = TestingHandler {
         vdom,
