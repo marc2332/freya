@@ -4,13 +4,13 @@ use dioxus_hooks::{use_context, use_context_provider};
 use dioxus_signals::{Readable, Signal};
 
 /// Provide a custom [`Theme`].
-pub fn use_init_theme(theme: Theme) {
-    use_context_provider(|| Signal::new(theme));
+pub fn use_init_theme(theme_cb: impl FnOnce() -> Theme) -> Signal<Theme> {
+    use_context_provider(|| Signal::new(theme_cb()))
 }
 
 /// Provide the default [`Theme`].
-pub fn use_init_default_theme() {
-    use_context_provider(|| Signal::new(Theme::default()));
+pub fn use_init_default_theme() -> Signal<Theme> {
+    use_context_provider(|| Signal::new(Theme::default()))
 }
 
 /// Subscribe to [`Theme`] changes.

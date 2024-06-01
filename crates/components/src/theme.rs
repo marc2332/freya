@@ -13,7 +13,7 @@ pub struct ThemeProviderProps {
 /// Provides a `Theme` for all its children.
 #[allow(non_snake_case)]
 pub fn ThemeProvider(props: ThemeProviderProps) -> Element {
-    use_init_theme(props.theme.unwrap_or_default());
+    use_init_theme(|| props.theme.unwrap_or_default());
 
     rsx!({ props.children })
 }

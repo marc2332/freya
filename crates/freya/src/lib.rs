@@ -107,6 +107,7 @@ pub mod prelude {
     pub use crate::launch::*;
     pub use crate::plugins::*;
     pub use freya_components::*;
+    pub use freya_core::prelude::PreferredTheme;
     pub use freya_elements::elements as dioxus_elements;
     pub use freya_elements::events::*;
     pub use freya_hooks::*;
