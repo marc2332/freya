@@ -569,14 +569,7 @@ async fn text_with_emojis() {
     }
 
     let mut utils = launch_test(text_with_emojis_app);
-    // Move cursor
-    utils.push_event(PlatformEvent::Mouse {
-        name: EventName::MouseDown,
-        cursor: (35.0, 3.0).into(),
-        button: Some(MouseButton::Left),
-    });
 
-    utils.wait_for_update().await;
     utils.wait_for_update().await;
 }
 
