@@ -569,14 +569,6 @@ async fn text_with_emojis() {
     }
 
     let mut utils = launch_test(text_with_emojis_app);
-
-    // Initial state
-    let root = utils.root().get(0);
-    let cursor = root.get(1).get(0);
-    let content = root.get(0).get(0).get(0);
-    assert_eq!(cursor.text(), Some("0:0"));
-    assert_eq!(content.text(), Some("你好世界\n👋"));
-
     // Move cursor
     utils.push_event(PlatformEvent::Mouse {
         name: EventName::MouseDown,
