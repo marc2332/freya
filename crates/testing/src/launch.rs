@@ -34,6 +34,7 @@ pub fn launch_test_with_config(root: AppComponent, config: TestingConfig) -> Tes
     let (focus_sender, focus_receiver) = watch::channel(ACCESSIBILITY_ROOT_ID);
     let mut font_collection = FontCollection::new();
     font_collection.set_dynamic_font_manager(FontMgr::default());
+    font_collection.set_default_font_manager(FontMgr::default(), "Arial");
 
     let mut handler = TestingHandler {
         vdom,
