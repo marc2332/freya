@@ -1,6 +1,6 @@
 use crate::{
-    events::{DomEvent, PlatformEvent},
-    prelude::{EventName, PotentialEvent},
+    events::DomEvent,
+    prelude::{EventName, NativePlatformState, PlatformEvent, PotentialEvent},
 };
 pub use accesskit::NodeId as AccessibilityId;
 use rustc_hash::FxHashMap;
@@ -8,11 +8,11 @@ use smallvec::SmallVec;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tokio::sync::watch;
 
-/// Send focus updates to the Accessibility provider.
-pub type FocusSender = watch::Sender<AccessibilityId>;
+/// Send platform updates from the platform
+pub type NativePlatformSender = watch::Sender<NativePlatformState>;
 
-/// Receive updates by the platform of the focused elements
-pub type FocusReceiver = watch::Receiver<AccessibilityId>;
+/// Receive updates by the platform
+pub type NativePlatformReceiver = watch::Receiver<NativePlatformState>;
 
 /// Emit events to the VirtualDOM
 pub type EventEmitter = UnboundedSender<Vec<DomEvent>>;

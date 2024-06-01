@@ -5,7 +5,7 @@ use freya_core::{
         AccessibilityFocusDirection, AccessibilityManager, SharedAccessibilityManager,
         ACCESSIBILITY_ROOT_ID,
     },
-    types::{AccessibilityId, FocusSender},
+    types::{AccessibilityId, NativePlatformSender},
 };
 use winit::{
     dpi::{LogicalPosition, LogicalSize},
@@ -110,7 +110,7 @@ impl AccessKitManager {
     pub fn focus_next_node(
         &self,
         direction: AccessibilityFocusDirection,
-        focus_sender: &FocusSender,
+        platform_sender: &NativePlatformSender,
         window: &Window,
     ) {
         let tree = self
@@ -119,9 +119,9 @@ impl AccessKitManager {
             .unwrap()
             .set_focus_on_next_node(direction);
 
-        focus_sender
-            .send(tree.focus)
-            .expect("Failed to focus the Node.");
+        platform_sender.send_modify(|state| {
+            state.focused_id = tree.focus;
+        });
 
         // Update the IME Cursor area
         self.update_ime_position(tree.focus, window);

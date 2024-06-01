@@ -11,7 +11,7 @@ fn main() {
 }
 
 fn app() -> Element {
-    use_init_theme(DARK_THEME);
+    use_init_theme(|| DARK_THEME);
     let mut hovering = use_signal(|| false);
     let mut canvas_pos = use_signal(|| (0.0f64, 0.0f64));
     let mut nodes = use_signal(|| vec![(0.0f64, 0.0f64)]);
@@ -189,6 +189,12 @@ fn Editor() -> Element {
         }
     };
 
+    let onkeyup = move |e: KeyboardEvent| {
+        if focus_manager.is_focused() {
+            editable.process_event(&EditableEvent::KeyUp(e.data));
+        }
+    };
+
     rsx!(
         rect {
             onclick,
@@ -260,6 +266,7 @@ fn Editor() -> Element {
                 height: "calc(100% - 80)",
                 padding: "5",
                 onkeydown,
+                onkeyup,
                 cursor_reference: cursor_attr,
                 direction: "horizontal",
                 rect {

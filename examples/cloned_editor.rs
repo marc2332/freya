@@ -15,7 +15,7 @@ fn main() {
 }
 
 fn app() -> Element {
-    use_init_theme(DARK_THEME);
+    use_init_theme(|| DARK_THEME);
     rsx!(Body {})
 }
 
@@ -67,7 +67,7 @@ fn Body() -> Element {
 
                     // Only show the cursor in the active line
                     let character_index = if is_line_selected {
-                        editor.cursor_col().to_string()
+                        editor.visible_cursor_col().to_string()
                     } else {
                         "none".to_string()
                     };
@@ -144,7 +144,7 @@ fn Body() -> Element {
 
                     // Only show the cursor in the active line
                     let character_index = if is_line_selected {
-                        editor.cursor_col().to_string()
+                        editor.visible_cursor_col().to_string()
                     } else {
                         "none".to_string()
                     };

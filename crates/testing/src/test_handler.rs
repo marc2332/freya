@@ -1,11 +1,10 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::time::Duration;
 
 use dioxus_core::VirtualDom;
 use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_engine::prelude::FontCollection;
-use freya_hooks::PlatformInformation;
 use freya_native_core::dioxus::NodeImmutableDioxusExt;
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
@@ -28,14 +27,12 @@ pub struct TestingHandler {
     pub(crate) platform_event_receiver: UnboundedReceiver<EventMessage>,
     pub(crate) events_queue: EventsQueue,
     pub(crate) nodes_state: NodesState,
-    pub(crate) focus_sender: FocusSender,
-    pub(crate) focus_receiver: FocusReceiver,
+    pub(crate) platform_sender: NativePlatformSender,
+    pub(crate) platform_receiver: NativePlatformReceiver,
     pub(crate) font_collection: FontCollection,
     pub(crate) accessibility_manager: SharedAccessibilityManager,
     pub(crate) config: TestingConfig,
     pub(crate) ticker_sender: broadcast::Sender<()>,
-    pub(crate) navigation_state: NavigatorState,
-    pub(crate) platform_information: Arc<Mutex<PlatformInformation>>,
     pub(crate) cursor_icon: CursorIcon,
 }
 
@@ -58,13 +55,9 @@ impl TestingHandler {
         self.vdom
             .insert_any_root_context(Box::new(self.platform_event_emitter.clone()));
         self.vdom
-            .insert_any_root_context(Box::new(self.focus_receiver.clone()));
+            .insert_any_root_context(Box::new(self.platform_receiver.clone()));
         self.vdom
             .insert_any_root_context(Box::new(Arc::new(self.ticker_sender.subscribe())));
-        self.vdom
-            .insert_any_root_context(Box::new(self.navigation_state.clone()));
-        self.vdom
-            .insert_any_root_context(Box::new(self.platform_information.clone()));
     }
 
     /// Wait and apply new changes
@@ -105,9 +98,9 @@ impl TestingHandler {
                             .set_focus_with_update(node_id);
 
                         if let Some(tree) = tree {
-                            self.focus_sender
-                                .send(tree.focus)
-                                .expect("Failed to focus the Node.");
+                            self.platform_sender.send_modify(|state| {
+                                state.focused_id = tree.focus;
+                            });
                         }
                     }
                     EventMessage::FocusNextAccessibilityNode => {
@@ -116,9 +109,9 @@ impl TestingHandler {
                             .lock()
                             .unwrap()
                             .set_focus_on_next_node(AccessibilityFocusDirection::Forward);
-                        self.focus_sender
-                            .send(tree.focus)
-                            .expect("Failed to focus the Node.");
+                        self.platform_sender.send_modify(|state| {
+                            state.focused_id = tree.focus;
+                        });
                     }
                     EventMessage::FocusPrevAccessibilityNode => {
                         let tree = self
@@ -126,9 +119,9 @@ impl TestingHandler {
                             .lock()
                             .unwrap()
                             .set_focus_on_next_node(AccessibilityFocusDirection::Backward);
-                        self.focus_sender
-                            .send(tree.focus)
-                            .expect("Failed to focus the Node.");
+                        self.platform_sender.send_modify(|state| {
+                            state.focused_id = tree.focus;
+                        });
                     }
                     EventMessage::SetCursorIcon(icon) => {
                         self.cursor_icon = icon;
@@ -236,7 +229,9 @@ impl TestingHandler {
     /// Resize the simulated canvas.
     pub fn resize(&mut self, size: Size2D) {
         self.config.size = size;
-        self.platform_information.lock().unwrap().window_size = size;
+        self.platform_sender.send_modify(|state| {
+            state.information.viewport_size = size;
+        })
     }
 
     /// Get the current [CursorIcon].

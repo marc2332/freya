@@ -85,14 +85,26 @@ impl TextEditor for RopeEditor {
         self.rope.line_to_char(line_idx)
     }
 
+    fn utf16_cu_to_char(&self, utf16_cu_idx: usize) -> usize {
+        self.rope.utf16_cu_to_char(utf16_cu_idx)
+    }
+
+    fn char_to_utf16_cu(&self, idx: usize) -> usize {
+        self.rope.char_to_utf16_cu(idx)
+    }
+
     fn line(&self, line_idx: usize) -> Option<Line<'_>> {
         let line = self.rope.get_line(line_idx);
 
         line.map(|line| Line { text: line.into() })
     }
 
-    fn len_lines<'a>(&self) -> usize {
+    fn len_lines(&self) -> usize {
         self.rope.len_lines()
+    }
+
+    fn len_chars(&self) -> usize {
+        self.rope.len_chars()
     }
 
     fn cursor(&self) -> &TextCursor {
@@ -145,16 +157,18 @@ impl TextEditor for RopeEditor {
                 return Some((0, len));
             }
 
-            match selected_from_row.cmp(&selected_to_row) {
+            let highlights = match selected_from_row.cmp(&selected_to_row) {
                 // Selection direction is from bottom -> top
                 Ordering::Greater => {
                     if selected_from_row == editor_id {
                         // Starting line
-                        return Some((0, selected_from_col_idx));
+                        Some((0, selected_from_col_idx))
                     } else if selected_to_row == editor_id {
                         // Ending line
                         let len = self.line(selected_to_row).unwrap().len_chars();
-                        return Some((selected_to_col_idx, len));
+                        Some((selected_to_col_idx, len))
+                    } else {
+                        None
                     }
                 }
                 // Selection direction is from top -> bottom
@@ -162,26 +176,27 @@ impl TextEditor for RopeEditor {
                     if selected_from_row == editor_id {
                         // Starting line
                         let len = self.line(selected_from_row).unwrap().len_chars();
-                        return Some((selected_from_col_idx, len));
+                        Some((selected_from_col_idx, len))
                     } else if selected_to_row == editor_id {
                         // Ending line
-                        return Some((0, selected_to_col_idx));
+                        Some((0, selected_to_col_idx))
+                    } else {
+                        None
                     }
                 }
-                Ordering::Equal => {
+                Ordering::Equal if selected_from_row == editor_id => {
                     // Starting and endline line are the same
-                    if selected_from_row == editor_id {
-                        return Some((
-                            selected_from - editor_row_idx,
-                            selected_to - editor_row_idx,
-                        ));
-                    }
+                    Some((selected_from - editor_row_idx, selected_to - editor_row_idx))
                 }
-            }
+                _ => None,
+            };
 
-            None
+            highlights.map(|(from, to)| (self.char_to_utf16_cu(from), self.char_to_utf16_cu(to)))
         } else {
-            Some((selected_from, selected_to))
+            Some((
+                self.char_to_utf16_cu(selected_from),
+                self.char_to_utf16_cu(selected_to),
+            ))
         }
     }
 

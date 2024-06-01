@@ -114,6 +114,12 @@ pub fn Input(
         }
     };
 
+    let onkeyup = move |e: Event<KeyboardData>| {
+        if focus.is_focused() {
+            editable.process_event(&EditableEvent::KeyUp(e.data));
+        }
+    };
+
     let onmousedown = move |e: MouseEvent| {
         if !display_placeholder {
             editable.process_event(&EditableEvent::MouseDown(e.data, 0));
@@ -152,7 +158,7 @@ pub fn Input(
     let (background, cursor_char) = if focus.is_focused() {
         (
             theme.hover_background,
-            editable.editor().read().cursor_pos().to_string(),
+            editable.editor().read().visible_cursor_pos().to_string(),
         )
     } else {
         (theme.background, "none".to_string())
@@ -197,6 +203,7 @@ pub fn Input(
             paragraph {
                 margin: "8 12",
                 onkeydown,
+                onkeyup,
                 onglobalclick,
                 onmouseenter,
                 onmouseleave,
