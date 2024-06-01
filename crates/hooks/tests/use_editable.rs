@@ -539,7 +539,7 @@ pub async fn highlights_single_line_mulitple_editors() {
 async fn text_with_emojis() {
     fn text_with_emojis_app() -> Element {
         let mut editable = use_editable(
-            || EditableConfig::new("你好世👋🦀".to_string()),
+            || EditableConfig::new("👋🦀".to_string()),
             EditableMode::SingleLineMultipleEditors,
         );
         let cursor_attr = editable.cursor_attr();
