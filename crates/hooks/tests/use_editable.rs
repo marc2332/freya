@@ -536,6 +536,42 @@ pub async fn highlights_single_line_mulitple_editors() {
 }
 
 #[tokio::test]
+async fn text_with_emojis() {
+    fn use_editable_app() -> Element {
+        let mut editable = use_editable(
+            || EditableConfig::new("👋🦀".to_string()),
+            EditableMode::SingleLineMultipleEditors,
+        );
+        let cursor_attr = editable.cursor_attr();
+        let editor = editable.editor().read();
+        let text = editor.to_string();
+
+        let onkeydown = move |e: Event<KeyboardData>| {
+            editable.process_event(&EditableEvent::KeyDown(e.data));
+        };
+
+        rsx!(
+            rect {
+                width: "100%",
+                height: "100%",
+                background: "white",
+                cursor_reference: cursor_attr,
+                onkeydown,
+                direction: "vertical",
+                label {
+                    "{text}"
+                }
+                label {
+                    "{editor.cursor_row()}:{editor.cursor_col()}"
+                }
+            }
+        )
+    }
+
+    launch_test(use_editable_app);
+}
+
+#[tokio::test]
 pub async fn special_text_editing() {
     fn special_text_editing_app() -> Element {
         let mut editable = use_editable(
@@ -727,78 +763,4 @@ pub async fn special_text_editing() {
     let cursor = root.get(1).get(0);
     // Because there is not a line above the first one, the cursor will be moved to the begining
     assert_eq!(cursor.text(), Some("0:0"));
-}
-
-#[tokio::test]
-async fn text_with_emojis() {
-    fn use_editable_app() -> Element {
-        let mut editable = use_editable(
-            || EditableConfig::new("👋🦀".to_string()),
-            EditableMode::SingleLineMultipleEditors,
-        );
-        let cursor_attr = editable.cursor_attr();
-        let editor = editable.editor().read();
-
-        let onkeydown = move |e: Event<KeyboardData>| {
-            editable.process_event(&EditableEvent::KeyDown(e.data));
-        };
-
-        rsx!(
-            rect {
-                width: "100%",
-                height: "100%",
-                background: "white",
-                cursor_reference: cursor_attr,
-                onkeydown,
-                direction: "vertical",
-                {editor.lines().enumerate().map(move |(i, line)| {
-
-                    let highlights = editable.highlights_attr(i);
-
-                    let is_line_selected = editable.editor().read().cursor_row() == i;
-
-                    // Only show the cursor in the active line
-                    let character_index = if is_line_selected {
-                        editable.editor().read().visible_cursor_col().to_string()
-                    } else {
-                        "none".to_string()
-                    };
-
-                    let onmouseover = move |e: MouseEvent| {
-                        editable.process_event(&EditableEvent::MouseOver(e.data, i));
-                    };
-
-                    let onmousedown = move |e: MouseEvent| {
-                        editable.process_event(&EditableEvent::MouseDown(e.data, i));
-                    };
-
-                    rsx!(
-                        paragraph {
-                            width: "100%",
-                            height: "30",
-                            max_lines: "1",
-                            cursor_id: "{i}",
-                            cursor_index: "{character_index}",
-                            cursor_color: "black",
-                            cursor_mode: "editable",
-                            onmouseover,
-                            onmousedown,
-                            highlights,
-                            text {
-                                color: "black",
-                                "{line}"
-                            }
-                        }
-                    )
-                })},
-                label {
-                    color: "black",
-                    height: "50%",
-                    "{editor.cursor_row()}:{editor.cursor_col()}"
-                }
-            }
-        )
-    }
-
-    launch_test(use_editable_app);
 }
