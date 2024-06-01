@@ -174,7 +174,7 @@ fn Editor() -> Element {
     let font_weight = if *is_bold.read() { "bold" } else { "normal" };
 
     use_hook(|| {
-        focus_manager.focus();
+        focus_manager.queue_focus();
     });
 
     let onclick = move |_: MouseEvent| {
@@ -195,9 +195,12 @@ fn Editor() -> Element {
         }
     };
 
+    let focus_id = focus_manager.attribute();
+
     rsx!(
         rect {
             onclick,
+            focus_id,
             width: "100%",
             height: "100%",
             rect {
