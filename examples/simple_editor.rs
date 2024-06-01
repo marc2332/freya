@@ -44,6 +44,10 @@ fn app() -> Element {
         editable.process_event(&EditableEvent::KeyDown(e.data));
     };
 
+    let onkeyup = move |e: KeyboardEvent| {
+        editable.process_event(&EditableEvent::KeyUp(e.data));
+    };
+
     rsx!(
         rect {
             width: "100%",
@@ -66,6 +70,7 @@ fn app() -> Element {
                     onmouseover,
                     onmousedown,
                     onkeydown,
+                    onkeyup,
                     text {
                         "{editable.editor()}"
                     }

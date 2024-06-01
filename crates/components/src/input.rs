@@ -114,6 +114,12 @@ pub fn Input(
         }
     };
 
+    let onkeyup = move |e: Event<KeyboardData>| {
+        if focus.is_focused() {
+            editable.process_event(&EditableEvent::KeyUp(e.data));
+        }
+    };
+
     let onmousedown = move |e: MouseEvent| {
         if !display_placeholder {
             editable.process_event(&EditableEvent::MouseDown(e.data, 0));
@@ -197,6 +203,7 @@ pub fn Input(
             paragraph {
                 margin: "8 12",
                 onkeydown,
+                onkeyup,
                 onglobalclick,
                 onmouseenter,
                 onmouseleave,
