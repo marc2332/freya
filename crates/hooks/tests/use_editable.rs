@@ -542,7 +542,8 @@ fn skia_not_crash_crash_macos() {
     font_collection.set_dynamic_font_manager(FontMgr::default());
     let mut p = ParagraphBuilder::new(&ParagraphStyle::new(), font_collection);
     p.add_text("test test");
-    let paragraph = p.build();
+    let mut paragraph = p.build();
+    paragraph.layout(200.);
 }
 
 
@@ -552,7 +553,8 @@ fn skia_crash_macos() {
     font_collection.set_dynamic_font_manager(FontMgr::default());
     let mut p = ParagraphBuilder::new(&ParagraphStyle::new(), font_collection);
     p.add_text("👋test test 🦀");
-    let paragraph = p.build();
+    let mut paragraph = p.build();
+    paragraph.layout(200.);
 }
 
 #[tokio::test]
