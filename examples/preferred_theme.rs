@@ -24,7 +24,7 @@ fn app() -> Element {
 
     use_memo(move || {
         let theme = get_theme(preferred_theme());
-        if theme != current_theme() {
+        if theme != *current_theme.peek() {
             current_theme.set(theme);
         }
     });

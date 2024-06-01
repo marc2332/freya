@@ -2,13 +2,12 @@ use dioxus_core::{Template, VirtualDom};
 use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_engine::prelude::*;
-use freya_hooks::PlatformInformation;
 use freya_native_core::prelude::NodeImmutableDioxusExt;
 use freya_native_core::NodeId;
 use futures_task::Waker;
 use futures_util::FutureExt;
 use pin_utils::pin_mut;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use tokio::sync::broadcast;
 use tokio::{
     select,
@@ -46,7 +45,6 @@ pub struct App<State: 'static + Clone> {
     pub(crate) ticker_sender: broadcast::Sender<()>,
     pub(crate) plugins: PluginsManager,
     pub(crate) measure_layout_on_next_render: bool,
-    pub(crate) platform_information: Arc<Mutex<PlatformInformation>>,
     pub(crate) default_fonts: Vec<String>,
 }
 
@@ -89,13 +87,10 @@ impl<State: 'static + Clone> App<State> {
                 .map(|theme| theme.into())
                 .unwrap_or_default(),
             navigation_mode: NavigationMode::default(),
+            information: PlatformInformation::from_winit(window_env.window.inner_size()),
         });
 
         plugins.send(PluginEvent::WindowCreated(&window_env.window));
-
-        let platform_information = Arc::new(Mutex::new(PlatformInformation::from_winit(
-            window_env.window.inner_size(),
-        )));
 
         Self {
             sdom,
@@ -116,7 +111,6 @@ impl<State: 'static + Clone> App<State> {
             ticker_sender: broadcast::channel(5).0,
             plugins,
             measure_layout_on_next_render: false,
-            platform_information,
             default_fonts,
         }
     }
@@ -132,8 +126,6 @@ impl<State: 'static + Clone> App<State> {
             .insert_any_root_context(Box::new(self.platform_receiver.clone()));
         self.vdom
             .insert_any_root_context(Box::new(Arc::new(self.ticker_sender.subscribe())));
-        self.vdom
-            .insert_any_root_context(Box::new(self.platform_information.clone()));
     }
 
     /// Make the first build of the VirtualDOM and sync it with the RealDOM.
@@ -278,7 +270,9 @@ impl<State: 'static + Clone> App<State> {
         self.measure_layout_on_next_render = true;
         self.sdom.get().layout().reset();
         self.window_env.resize(size);
-        *self.platform_information.lock().unwrap() = PlatformInformation::from_winit(size);
+        self.platform_sender.send_modify(|state| {
+            state.information = PlatformInformation::from_winit(size);
+        })
     }
 
     /// Measure the a text group given it's ID.

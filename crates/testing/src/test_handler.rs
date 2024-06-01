@@ -1,11 +1,10 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::time::Duration;
 
 use dioxus_core::VirtualDom;
 use freya_common::EventMessage;
 use freya_core::prelude::*;
 use freya_engine::prelude::FontCollection;
-use freya_hooks::PlatformInformation;
 use freya_native_core::dioxus::NodeImmutableDioxusExt;
 use tokio::sync::broadcast;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
@@ -34,7 +33,6 @@ pub struct TestingHandler {
     pub(crate) accessibility_manager: SharedAccessibilityManager,
     pub(crate) config: TestingConfig,
     pub(crate) ticker_sender: broadcast::Sender<()>,
-    pub(crate) platform_information: Arc<Mutex<PlatformInformation>>,
     pub(crate) cursor_icon: CursorIcon,
 }
 
@@ -60,8 +58,6 @@ impl TestingHandler {
             .insert_any_root_context(Box::new(self.platform_receiver.clone()));
         self.vdom
             .insert_any_root_context(Box::new(Arc::new(self.ticker_sender.subscribe())));
-        self.vdom
-            .insert_any_root_context(Box::new(self.platform_information.clone()));
     }
 
     /// Wait and apply new changes
@@ -230,7 +226,9 @@ impl TestingHandler {
     /// Resize the simulated canvas.
     pub fn resize(&mut self, size: Size2D) {
         self.config.size = size;
-        self.platform_information.lock().unwrap().window_size = size;
+        self.platform_sender.send_modify(|state| {
+            state.information.viewport_size = size;
+        })
     }
 
     /// Get the current [CursorIcon].
