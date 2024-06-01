@@ -269,6 +269,8 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
         .map(|f| f.0 == Axis::Y)
         .unwrap_or_default();
 
+    let focus_id = focus.attribute();
+
     rsx!(
         rect {
             role: "scrollView",
@@ -280,6 +282,7 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
             onglobalmouseover: onmouseover,
             onkeydown,
             onkeyup,
+            focus_id,
             rect {
                 direction: "vertical",
                 width: "{container_width}",
