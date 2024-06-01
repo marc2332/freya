@@ -568,7 +568,24 @@ async fn text_with_emojis() {
         )
     }
 
-    launch_test(use_editable_app);
+    let mut utils = launch_test(special_text_editing_app);
+
+    // Initial state
+    let root = utils.root().get(0);
+    let cursor = root.get(1).get(0);
+    let content = root.get(0).get(0).get(0);
+    assert_eq!(cursor.text(), Some("0:0"));
+    assert_eq!(content.text(), Some("你好世界\n👋"));
+
+    // Move cursor
+    utils.push_event(PlatformEvent::Mouse {
+        name: EventName::MouseDown,
+        cursor: (35.0, 3.0).into(),
+        button: Some(MouseButton::Left),
+    });
+
+    utils.wait_for_update().await;
+    utils.wait_for_update().await;
 }
 
 #[tokio::test]
