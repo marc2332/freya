@@ -305,19 +305,23 @@ pub fn use_editable(initializer: impl Fn() -> EditableConfig, mode: EditableMode
                             (new_cursor_col, new_cursor_row)
                         };
 
-                        if let TextDragging::FromCursorToPoint { cursor: from, .. } = dragging() {
-                            let to = text_editor.cursor_pos();
+                        // Only update and clear the selection if the cursor has changed
+                        if text_editor.cursor().as_tuple() != new_cursor {
+                            if let TextDragging::FromCursorToPoint { cursor: from, .. } = dragging()
+                            {
+                                let to = text_editor.cursor_pos();
 
-                            let maybe_new_cursor = text_editor.measure_new_cursor(to, id);
-                            let maybe_new_selection =
-                                text_editor.measure_new_selection(from, to, id);
+                                let maybe_new_cursor = text_editor.measure_new_cursor(to, id);
+                                let maybe_new_selection =
+                                    text_editor.measure_new_selection(from, to, id);
 
-                            text_editor.set_selection(maybe_new_selection);
-                            *text_editor.cursor_mut() = maybe_new_cursor;
-                        } else {
-                            text_editor.cursor_mut().set_col(new_cursor.0);
-                            text_editor.cursor_mut().set_row(new_cursor.1);
-                            text_editor.clear_selection();
+                                text_editor.set_selection(maybe_new_selection);
+                                *text_editor.cursor_mut() = maybe_new_cursor;
+                            } else {
+                                text_editor.cursor_mut().set_col(new_cursor.0);
+                                text_editor.cursor_mut().set_row(new_cursor.1);
+                                text_editor.clear_selection();
+                            }
                         }
                     }
                     // Update the text selections calculated by the layout
