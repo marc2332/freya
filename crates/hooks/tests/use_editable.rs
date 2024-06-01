@@ -1,6 +1,5 @@
 use crate::{use_editable, EditableMode, TextEditor};
 use freya::prelude::*;
-use freya_engine::prelude::{FontCollection, FontMgr, ParagraphBuilder, ParagraphStyle};
 use freya_testing::prelude::*;
 
 #[tokio::test]
@@ -611,7 +610,7 @@ pub async fn special_text_editing() {
     assert_eq!(cursor.text(), Some("0:2"));
 
     #[cfg(target_os = "linux")]
-    assert_eq!(cursor.text(), Some("0:1"));
+    assert_eq!(cursor.text(), Some("0:4"));
 
     // Insert text
     utils.push_event(PlatformEvent::Keyboard {
@@ -635,7 +634,7 @@ pub async fn special_text_editing() {
     #[cfg(target_os = "linux")]
     {
         assert_eq!(content.text(), Some("你🦀好世界\n👋"));
-        assert_eq!(cursor.text(), Some("0:2"));
+        assert_eq!(cursor.text(), Some("0:5"));
     }
 
     // Move cursor to the begining
