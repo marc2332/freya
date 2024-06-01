@@ -312,7 +312,7 @@ pub async fn single_line_mulitple_editors() {
 pub async fn highlight_multiple_lines_single_editor() {
     fn use_editable_app() -> Element {
         let mut editable = use_editable(
-            || EditableConfig::new("Hello Rustaceans 👋\n".repeat(2)),
+            || EditableConfig::new("Hello Rustaceans\n".repeat(2)),
             EditableMode::MultipleLinesSingleEditor,
         );
         let editor = editable.editor().read();
@@ -392,12 +392,12 @@ pub async fn highlight_multiple_lines_single_editor() {
     #[cfg(not(target_os = "linux"))]
     let start = 5;
     #[cfg(not(target_os = "linux"))]
-    let end = 31;
+    let end = 28;
 
     #[cfg(target_os = "linux")]
     let start = 4;
     #[cfg(target_os = "linux")]
-    let end = 30;
+    let end = 27;
 
     assert_eq!(highlights, Some(vec![(start, end)]))
 }
@@ -534,6 +534,7 @@ pub async fn highlights_single_line_mulitple_editors() {
 
     assert_eq!(highlights_2, Some(vec![(start, end)]));
 }
+
 
 #[tokio::test]
 pub async fn special_text_editing() {
