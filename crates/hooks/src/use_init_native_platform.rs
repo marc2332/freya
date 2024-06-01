@@ -4,13 +4,9 @@ use dioxus_core::{
     prelude::{consume_context, provide_context, spawn},
     use_hook,
 };
-use dioxus_hooks::{use_context_provider, use_effect};
+use dioxus_hooks::use_context_provider;
 use dioxus_signals::{Readable, Signal, Writable};
-use freya_common::EventMessage;
 use freya_core::prelude::NativePlatformReceiver;
-
-use crate::use_platform;
-
 pub type AccessibilityIdCounter = Rc<RefCell<u64>>;
 
 #[derive(Clone)]
@@ -40,7 +36,7 @@ pub fn use_init_native_platform() -> UsePlatformEvents {
     let navigation_mark = use_context_provider(|| Signal::new(NavigationMark(true)));
 
     // Init the signals with platform values
-    let focused_id = use_hook(|| {
+    use_hook(|| {
         let mut platform_receiver = consume_context::<NativePlatformReceiver>();
         let platform_state = platform_receiver.borrow();
 
@@ -76,16 +72,7 @@ pub fn use_init_native_platform() -> UsePlatformEvents {
         provide_context(preferred_theme);
         provide_context(navigation_mode);
         provide_context(information);
-        provide_context(focused_id)
-    });
-
-    let platform = use_platform();
-
-    // Tell the renderer the new focused node
-    use_effect(move || {
-        platform
-            .send(EventMessage::FocusAccessibilityNode(*focused_id.read()))
-            .unwrap();
+        provide_context(focused_id);
     });
 
     UsePlatformEvents { navigation_mark }

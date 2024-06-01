@@ -1,8 +1,16 @@
 use accesskit::NodeId;
 use accesskit_winit::ActionRequestEvent;
 use dioxus_core::Template;
+use torin::prelude::CursorPoint;
 use uuid::Uuid;
 use winit::window::{CursorIcon, Window};
+
+pub struct TextGroupMeasurement {
+    pub text_id: Uuid,
+    pub cursor_id: usize,
+    pub cursor_position: Option<CursorPoint>,
+    pub cursor_selection: Option<(CursorPoint, CursorPoint)>,
+}
 
 /// Custom EventLoop messages
 pub enum EventMessage {
@@ -13,7 +21,7 @@ pub enum EventMessage {
     /// Request a rerender
     RequestRerender,
     /// Remeasure a text elements group
-    RemeasureTextGroup(Uuid),
+    RemeasureTextGroup(TextGroupMeasurement),
     /// Change the cursor icon
     SetCursorIcon(CursorIcon),
     /// Accessibility action request event

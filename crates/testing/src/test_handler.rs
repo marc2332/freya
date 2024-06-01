@@ -2,7 +2,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use dioxus_core::VirtualDom;
-use freya_common::EventMessage;
+use freya_common::{EventMessage, TextGroupMeasurement};
 use freya_core::prelude::*;
 use freya_engine::prelude::FontCollection;
 use freya_native_core::dioxus::NodeImmutableDioxusExt;
@@ -126,6 +126,9 @@ impl TestingHandler {
                     EventMessage::SetCursorIcon(icon) => {
                         self.cursor_icon = icon;
                     }
+                    EventMessage::RemeasureTextGroup(text_measurement) => {
+                        self.measure_text_group(text_measurement);
+                    }
                     _ => {}
                 }
             }
@@ -199,6 +202,12 @@ impl TestingHandler {
             &mut self.nodes_state,
             SCALE_FACTOR,
         );
+    }
+
+    fn measure_text_group(&self, text_measurement: TextGroupMeasurement) {
+        let sdom = self.utils.sdom();
+        sdom.get()
+            .measure_paragraphs(text_measurement, SCALE_FACTOR as f32);
     }
 
     /// Push an event to the events queue

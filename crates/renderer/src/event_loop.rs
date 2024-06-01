@@ -41,23 +41,21 @@ pub fn run_event_loop<State: Clone>(
             Event::UserEvent(EventMessage::ExitApp) => {
                 event_loop.exit();
             }
-            Event::UserEvent(EventMessage::FocusAccessibilityNode(id)) => {
-                app.accessibility
-                    .set_accessibility_focus(id, &app.window_env.window);
+            Event::UserEvent(EventMessage::FocusAccessibilityNode(node_id)) => {
+                app.focus_node(node_id);
             }
             Event::UserEvent(EventMessage::RequestRerender) => {
                 app.window_env.window.request_redraw();
             }
-            Event::UserEvent(EventMessage::RemeasureTextGroup(text_id)) => {
-                app.measure_text_group(&text_id);
+            Event::UserEvent(EventMessage::RemeasureTextGroup(text_measurement)) => {
+                app.measure_text_group(text_measurement);
             }
             Event::UserEvent(EventMessage::ActionRequestEvent(ActionRequestEvent {
                 request,
                 ..
             })) => {
                 if Action::Focus == request.action {
-                    app.accessibility
-                        .set_accessibility_focus(request.target, &app.window_env.window);
+                    app.focus_node(request.target);
                 }
             }
             Event::UserEvent(EventMessage::SetCursorIcon(icon)) => {
