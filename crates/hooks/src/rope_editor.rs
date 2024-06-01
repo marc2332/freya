@@ -99,8 +99,12 @@ impl TextEditor for RopeEditor {
         line.map(|line| Line { text: line.into() })
     }
 
-    fn len_lines<'a>(&self) -> usize {
+    fn len_lines(&self) -> usize {
         self.rope.len_lines()
+    }
+
+    fn len_chars(&self) -> usize {
+        self.rope.len_chars()
     }
 
     fn cursor(&self) -> &TextCursor {
