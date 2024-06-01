@@ -1,6 +1,6 @@
 use crate::{use_editable, EditableMode, TextEditor};
 use freya::prelude::*;
-use freya_engine::prelude::{FontCollection, FontMgr, ParagraphBuilder, ParagraphStyle};
+use freya_engine::prelude::{Color, FontCollection, FontMgr, Paint, ParagraphBuilder, ParagraphStyle};
 use freya_testing::prelude::*;
 
 #[tokio::test]
@@ -542,6 +542,14 @@ fn skia_crash_macos() {
     font_collection.set_dynamic_font_manager(FontMgr::default());
     let mut p = ParagraphBuilder::new(&ParagraphStyle::new(), font_collection);
     p.add_text("👋test test 🦀");
+    let mut paragraph = p.build();
+    paragraph.layout(200.);
+    let mut surface = freya_engine::prelude::raster_n32_premul((200, 200)).expect("surface");
+    let mut paint = Paint::default();
+    paint.set_color(Color::BLACK);
+    paint.set_anti_alias(true);
+    paint.set_stroke_width(1.0);
+    surface.canvas().clear(Color::WHITE);
 }
 
 #[tokio::test]
