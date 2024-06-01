@@ -75,7 +75,6 @@ fn MyComponent(name: String, age: u8) -> Element {
 
 You can as well have a separate Struct for the props:
 ```rs, no_run
-
 struct MyComponentProps {
     name: String,
     age: u8
@@ -98,28 +97,31 @@ Dioxus built-in state management uses **Signals**, and they are usually created 
 ```rs, no_run
 fn MyComponent() -> Element {
     // `use_signal` takes a callback that initializes the state
+    // No matter how many times the component re runs, 
+    // the initialization callback will only run once at the first component run
     let mut state = use_signal(|| 0); 
 
     // Because signals are copy, we can move them into closures
     let onclick = move |_| {
-        // Signals provide some shortcuts for certain types
+        // Signals provide some mutation shortcuts for certain types
         state += 1;
         // But we could do as well
         *state.write() += 1;
     };
 
-    // You can subscribe to a signal, by calling it (`signal()`), 
-    // calling the `signal.read()` method, or just embedding it into the RSX.
+    // You subscribe to a signal by calling it (`signal()`), 
+    // calling the `read()` method, or just embedding it into the RSX.
     // Everytime the signal is mutated the component function will rerun
-    // because it has been subscribed, and thus producing a 
-    // new Element with the updated counter.
+    // because it has been subscribed, this will end up producing a 
+    // new `Element` with the updated counter.
     println!("{}", state());
+    println!("{}", state.read());
 
     rsx!(
-        label {
+        label { 
             onclick,
-            "State is {value}"
-        }
+            "State is {state}"
+         }
     )
 }
 ```
