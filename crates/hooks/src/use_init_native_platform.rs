@@ -55,7 +55,6 @@ pub fn use_init_native_platform() -> UsePlatformEvents {
         spawn(async move {
             while platform_receiver.changed().await.is_ok() {
                 let state = platform_receiver.borrow();
-
                 if *focused_id.peek() != state.focused_id {
                     *focused_id.write() = state.focused_id;
                 }

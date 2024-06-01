@@ -13,6 +13,7 @@ pub use skia_safe::{
     path::ArcSize,
     rrect::Corner,
     runtime_effect::Uniform,
+    surfaces::raster_n32_premul,
     svg,
     textlayout::{
         paragraph::GlyphClusterInfo, Decoration, FontCollection, FontFeature, LineMetrics,
