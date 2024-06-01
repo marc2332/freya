@@ -312,7 +312,7 @@ pub async fn single_line_mulitple_editors() {
 pub async fn highlight_multiple_lines_single_editor() {
     fn use_editable_app() -> Element {
         let mut editable = use_editable(
-            || EditableConfig::new("Hello Rustaceans\n".repeat(2)),
+            || EditableConfig::new("Hello Rustaceans 👋\n".repeat(2)),
             EditableMode::MultipleLinesSingleEditor,
         );
         let editor = editable.editor().read();
@@ -392,12 +392,12 @@ pub async fn highlight_multiple_lines_single_editor() {
     #[cfg(not(target_os = "linux"))]
     let start = 5;
     #[cfg(not(target_os = "linux"))]
-    let end = 28;
+    let end = 31;
 
     #[cfg(target_os = "linux")]
     let start = 4;
     #[cfg(target_os = "linux")]
-    let end = 27;
+    let end = 30;
 
     assert_eq!(highlights, Some(vec![(start, end)]))
 }
@@ -533,4 +533,198 @@ pub async fn highlights_single_line_mulitple_editors() {
     let end = 10;
 
     assert_eq!(highlights_2, Some(vec![(start, end)]));
+}
+
+#[tokio::test]
+pub async fn special_text_editing() {
+    fn special_text_editing_app() -> Element {
+        let mut editable = use_editable(
+            || EditableConfig::new("你好世界\n👋".to_string()),
+            EditableMode::MultipleLinesSingleEditor,
+        );
+        let cursor_attr = editable.cursor_attr();
+        let editor = editable.editor().read();
+        let cursor = editor.cursor();
+        let cursor_pos = editor.visible_cursor_pos();
+
+        let onmousedown = move |e: MouseEvent| {
+            editable.process_event(&EditableEvent::MouseDown(e.data, 0));
+        };
+
+        let onkeydown = move |e: Event<KeyboardData>| {
+            editable.process_event(&EditableEvent::KeyDown(e.data));
+        };
+
+        rsx!(
+            rect {
+                width: "100%",
+                height: "100%",
+                background: "white",
+                cursor_reference: cursor_attr,
+                onmousedown,
+                paragraph {
+                    height: "50%",
+                    width: "100%",
+                    cursor_id: "0",
+                    cursor_index: "{cursor_pos}",
+                    cursor_color: "black",
+                    cursor_mode: "editable",
+                    onkeydown,
+                    text {
+                        color: "black",
+                        "{editor}"
+                    }
+                }
+                label {
+                    color: "black",
+                    height: "50%",
+                    "{cursor.row()}:{cursor.col()}"
+                }
+            }
+        )
+    }
+
+    let mut utils = launch_test(special_text_editing_app);
+
+    // Initial state
+    let root = utils.root().get(0);
+    let cursor = root.get(1).get(0);
+    let content = root.get(0).get(0).get(0);
+    assert_eq!(cursor.text(), Some("0:0"));
+    assert_eq!(content.text(), Some("你好世界\n👋"));
+
+    // Move cursor
+    utils.push_event(PlatformEvent::Mouse {
+        name: EventName::MouseDown,
+        cursor: (35.0, 3.0).into(),
+        button: Some(MouseButton::Left),
+    });
+
+    utils.wait_for_update().await;
+    utils.wait_for_update().await;
+
+    // Cursor has been moved
+    let root = utils.root().get(0);
+    let cursor = root.get(1).get(0);
+    #[cfg(not(target_os = "linux"))]
+    assert_eq!(cursor.text(), Some("0:2"));
+
+    #[cfg(target_os = "linux")]
+    assert_eq!(cursor.text(), Some("0:1"));
+
+    // Insert text
+    utils.push_event(PlatformEvent::Keyboard {
+        name: EventName::KeyDown,
+        key: Key::Character("🦀".to_string()),
+        code: Code::Unidentified,
+        modifiers: Modifiers::empty(),
+    });
+
+    utils.wait_for_update().await;
+
+    // Text and cursor have changed
+    let cursor = root.get(1).get(0);
+    let content = root.get(0).get(0).get(0);
+    #[cfg(not(target_os = "linux"))]
+    {
+        assert_eq!(content.text(), Some("你好🦀世界\n👋"));
+        assert_eq!(cursor.text(), Some("0:3"));
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        assert_eq!(content.text(), Some("你🦀好世界\n👋"));
+        assert_eq!(cursor.text(), Some("0:2"));
+    }
+
+    // Move cursor to the begining
+    utils.push_event(PlatformEvent::Mouse {
+        name: EventName::MouseDown,
+        cursor: (3.0, 3.0).into(),
+        button: Some(MouseButton::Left),
+    });
+    utils.wait_for_update().await;
+    utils.wait_for_update().await;
+    let cursor = root.get(1).get(0);
+    assert_eq!(cursor.text(), Some("0:0"));
+
+    // Move cursor with arrow down
+    utils.push_event(PlatformEvent::Keyboard {
+        name: EventName::KeyDown,
+        code: Code::ArrowDown,
+        key: Key::ArrowDown,
+        modifiers: Modifiers::default(),
+    });
+    utils.wait_for_update().await;
+    let cursor = root.get(1).get(0);
+    assert_eq!(cursor.text(), Some("1:0"));
+
+    // Move cursor with arrow right
+    utils.push_event(PlatformEvent::Keyboard {
+        name: EventName::KeyDown,
+        code: Code::ArrowRight,
+        key: Key::ArrowRight,
+        modifiers: Modifiers::default(),
+    });
+    utils.wait_for_update().await;
+    let cursor = root.get(1).get(0);
+    assert_eq!(cursor.text(), Some("1:1"));
+
+    // Move cursor with arrow up
+    utils.push_event(PlatformEvent::Keyboard {
+        name: EventName::KeyDown,
+        code: Code::ArrowUp,
+        key: Key::ArrowUp,
+        modifiers: Modifiers::default(),
+    });
+    utils.wait_for_update().await;
+    let cursor = root.get(1).get(0);
+    assert_eq!(cursor.text(), Some("0:1"));
+
+    // Move cursor with arrow left
+    utils.push_event(PlatformEvent::Keyboard {
+        name: EventName::KeyDown,
+        code: Code::ArrowLeft,
+        key: Key::ArrowLeft,
+        modifiers: Modifiers::default(),
+    });
+    utils.wait_for_update().await;
+    let cursor = root.get(1).get(0);
+    assert_eq!(cursor.text(), Some("0:0"));
+
+    // Move cursor with arrow down, twice
+    utils.push_event(PlatformEvent::Keyboard {
+        name: EventName::KeyDown,
+        code: Code::ArrowDown,
+        key: Key::ArrowDown,
+        modifiers: Modifiers::default(),
+    });
+    utils.push_event(PlatformEvent::Keyboard {
+        name: EventName::KeyDown,
+        code: Code::ArrowDown,
+        key: Key::ArrowDown,
+        modifiers: Modifiers::default(),
+    });
+    utils.wait_for_update().await;
+    let cursor = root.get(1).get(0);
+    // Because there is not a third line, the cursor will be moved to the max right
+    assert_eq!(cursor.text(), Some("1:1"));
+
+    // Move cursor with arrow up, twice
+    utils.push_event(PlatformEvent::Keyboard {
+        name: EventName::KeyDown,
+        code: Code::ArrowUp,
+        key: Key::ArrowUp,
+        modifiers: Modifiers::default(),
+    });
+    utils.push_event(PlatformEvent::Keyboard {
+        name: EventName::KeyDown,
+        code: Code::ArrowUp,
+        key: Key::ArrowUp,
+        modifiers: Modifiers::default(),
+    });
+    utils.wait_for_update().await;
+    let cursor = root.get(1).get(0);
+    // Because there is not a line above the first one, the cursor will be moved to the begining
+    assert_eq!(cursor.text(), Some("0:0"));
 }
