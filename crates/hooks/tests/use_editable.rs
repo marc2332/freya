@@ -537,7 +537,7 @@ pub async fn highlights_single_line_mulitple_editors() {
 
 #[tokio::test]
 async fn text_with_emojis() {
-    fn use_editable_app() -> Element {
+    fn text_with_emojis_app() -> Element {
         let mut editable = use_editable(
             || EditableConfig::new("你好世👋🦀".to_string()),
             EditableMode::SingleLineMultipleEditors,
@@ -568,7 +568,7 @@ async fn text_with_emojis() {
         )
     }
 
-    let mut utils = launch_test(special_text_editing_app);
+    let mut utils = launch_test(text_with_emojis_app);
 
     // Initial state
     let root = utils.root().get(0);
