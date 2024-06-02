@@ -357,10 +357,9 @@ pub trait TextEditor {
             }
             Key::Enter => {
                 // Breaks the line
-                let char_idx = self.line_to_char(self.cursor_row()) + self.cursor_col();
-                self.insert_char('\n', char_idx);
-                self.cursor_down();
-                // self.cursor_mut().set_col(0);
+                let cursor_pos = self.cursor_pos();
+                self.insert_char('\n', cursor_pos);
+                self.cursor_right();
 
                 event.insert(TextEvent::TEXT_CHANGED);
             }
@@ -375,8 +374,8 @@ pub trait TextEditor {
                     Code::Delete => {}
                     Code::Space => {
                         // Simply adds an space
-                        let char_idx = self.line_to_char(self.cursor_row()) + self.cursor_col();
-                        self.insert_char(' ', char_idx);
+                        let cursor_pos = self.cursor_pos();
+                        self.insert_char(' ', cursor_pos);
                         self.cursor_right();
 
                         event.insert(TextEvent::TEXT_CHANGED);
@@ -445,16 +444,16 @@ pub trait TextEditor {
                     _ => {
                         if let Ok(ch) = character.parse::<char>() {
                             // Inserts a character
-                            let char_idx = self.line_to_char(self.cursor_row()) + self.cursor_col();
-                            self.insert_char(ch, char_idx);
+                            let cursor_pos = self.cursor_pos();
+                            self.insert_char(ch, cursor_pos);
                             self.cursor_right();
 
                             event.insert(TextEvent::TEXT_CHANGED);
                         } else {
                             // Inserts a text
-                            let char_idx = self.line_to_char(self.cursor_row()) + self.cursor_col();
-                            self.insert(character, char_idx);
-                            self.set_cursor_pos(char_idx + character.chars().count());
+                            let cursor_pos = self.cursor_pos();
+                            self.insert(character, cursor_pos);
+                            self.set_cursor_pos(cursor_pos + character.chars().count());
 
                             event.insert(TextEvent::TEXT_CHANGED);
                         }
