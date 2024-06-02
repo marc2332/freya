@@ -78,7 +78,7 @@ impl<State: 'static + Clone> App<State> {
         font_collection.set_default_font_manager(def_mgr, "Fira Sans");
         font_collection.set_dynamic_font_manager(font_mgr.clone());
 
-        let (event_emitter, event_receiver) = mpsc::unbounded_channel::<DomEvent>();
+        let (event_emitter, event_receiver) = mpsc::unbounded_channel();
         let (platform_sender, platform_receiver) = watch::channel(NativePlatformState {
             focused_id: ACCESSIBILITY_ROOT_ID,
             preferred_theme: window_env
@@ -169,16 +169,19 @@ impl<State: 'static + Clone> App<State> {
                 let fut = async {
                     select! {
                         ev = self.event_receiver.recv() => {
-                            if let Some(ev) = ev {
-                                let data = ev.data.any();
-                                let fdom = self.sdom.get();
-                                let rdom = fdom.rdom();
-                                let node = rdom.get(ev.node_id);
-                                if let Some(node) = node {
-                                    let element_id = node.mounted_id();
-                                    if let Some(element_id) = element_id {
-                                        self.vdom.handle_event(ev.name.into(), data, element_id, ev.bubbles);
-                                        self.vdom.process_events();
+                            if let Some(events) = ev {
+                                for event in events {
+                                    let name = event.name.into();
+                                    let data = event.data.any();
+                                    let fdom = self.sdom.get();
+                                    let rdom = fdom.rdom();
+                                    let node = rdom.get(event.node_id);
+                                    if let Some(node) = node {
+                                        let element_id = node.mounted_id();
+                                        if let Some(element_id) = element_id {
+                                            self.vdom.handle_event(name, data, element_id, event.bubbles);
+                                            self.vdom.process_events();
+                                        }
                                     }
                                 }
                             }
