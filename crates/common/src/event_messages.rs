@@ -28,6 +28,8 @@ pub enum EventMessage {
     ActionRequestEvent(ActionRequestEvent),
     /// Focus the given accessibility NodeID
     FocusAccessibilityNode(NodeId),
+    /// Queue a focus the given accessibility NodeID
+    QueueFocusAccessibilityNode(NodeId),
     /// Focus the next accessibility Node
     FocusNextAccessibilityNode,
     /// Focus the previous accessibility Node
