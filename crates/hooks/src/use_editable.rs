@@ -307,19 +307,15 @@ pub fn use_editable(initializer: impl Fn() -> EditableConfig, mode: EditableMode
 
                         // Only update and clear the selection if the cursor has changed
                         if text_editor.cursor().as_tuple() != new_cursor {
+                            text_editor.cursor_mut().set_col(new_cursor.0);
+                            text_editor.cursor_mut().set_row(new_cursor.1);
                             if let TextDragging::FromCursorToPoint { cursor: from, .. } = dragging()
                             {
                                 let to = text_editor.cursor_pos();
-
-                                let maybe_new_cursor = text_editor.measure_new_cursor(to, id);
                                 let maybe_new_selection =
                                     text_editor.measure_new_selection(from, to, id);
-
                                 text_editor.set_selection(maybe_new_selection);
-                                *text_editor.cursor_mut() = maybe_new_cursor;
                             } else {
-                                text_editor.cursor_mut().set_col(new_cursor.0);
-                                text_editor.cursor_mut().set_row(new_cursor.1);
                                 text_editor.clear_selection();
                             }
                         }
@@ -329,11 +325,11 @@ pub fn use_editable(initializer: impl Fn() -> EditableConfig, mode: EditableMode
                         let current_cursor = editor.peek().cursor().clone();
                         let current_selection = editor.peek().get_selection();
 
-                        let maybe_new_cursor = editor.peek().measure_new_cursor(to, id);
                         let (from, to) = (
                             editor.peek().utf16_cu_to_char(from),
                             editor.peek().utf16_cu_to_char(to),
                         );
+                        let maybe_new_cursor = editor.peek().measure_new_cursor(to, id);
                         let maybe_new_selection = editor.peek().measure_new_selection(from, to, id);
 
                         // Update the text selection if it has changed

@@ -45,6 +45,7 @@ pub struct App<State: 'static + Clone> {
     pub(crate) plugins: PluginsManager,
     pub(crate) measure_layout_on_next_render: bool,
     pub(crate) default_fonts: Vec<String>,
+    pub(crate) queued_focus_node: Option<AccessibilityId>,
 }
 
 impl<State: 'static + Clone> App<State> {
@@ -111,6 +112,7 @@ impl<State: 'static + Clone> App<State> {
             plugins,
             measure_layout_on_next_render: false,
             default_fonts,
+            queued_focus_node: None,
         }
     }
 
@@ -232,6 +234,10 @@ impl<State: 'static + Clone> App<State> {
             rdom,
             &mut self.accessibility.accessibility_manager().lock().unwrap(),
         );
+
+        if let Some(node_id) = self.queued_focus_node.take() {
+            self.focus_node(node_id)
+        }
     }
 
     /// Send an event
@@ -288,6 +294,10 @@ impl<State: 'static + Clone> App<State> {
     pub fn focus_node(&self, node_id: AccessibilityId) {
         self.accessibility
             .focus_node(node_id, &self.platform_sender, &self.window_env.window)
+    }
+
+    pub fn queue_focus_node(&mut self, node_id: AccessibilityId) {
+        self.queued_focus_node = Some(node_id);
     }
 
     pub fn focus_next_node(&self, direction: AccessibilityFocusDirection) {
