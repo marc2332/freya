@@ -1191,12 +1191,18 @@ pub async fn highlight_all_text() {
 
     let root = utils.root().get(0);
 
+    #[cfg(target_os = "macos")]
+    let modifiers = Modifiers::META;
+
+    #[cfg(not((target_os = "macos")))]
+    let modifiers = Modifiers::CONTROL;
+
     // Select all text
     utils.push_event(PlatformEvent::Keyboard {
         name: EventName::KeyDown,
         key: Key::Character("a".to_string()),
         code: Code::KeyA,
-        modifiers: Modifiers::CONTROL,
+        modifiers,
     });
     utils.wait_for_update().await;
     utils.wait_for_update().await;
