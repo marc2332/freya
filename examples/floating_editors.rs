@@ -155,7 +155,7 @@ fn Editor() -> Element {
     );
     let cursor_attr = editable.cursor_attr();
     let editor = editable.editor().read();
-    let cursor = editor.cursor().clone();
+    let (cursor_row, cursor_col) = editor.cursor_row_and_col();
 
     let mut font_size_percentage = use_signal(|| 15.0);
     let mut line_height_percentage = use_signal(|| 0.0);
@@ -280,11 +280,11 @@ fn Editor() -> Element {
                         scroll_with_arrows: false,
                         {
                             editor.lines().map(move |l| {
-                                let is_line_selected = cursor.row() == line_index;
+                                let is_line_selected = cursor_row == line_index;
 
                                 // Only show the cursor in the active line
                                 let character_index = if is_line_selected {
-                                    cursor.col().to_string()
+                                    cursor_col.to_string()
                                 } else {
                                     "none".to_string()
                                 };

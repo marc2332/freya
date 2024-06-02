@@ -11,7 +11,6 @@ pub async fn multiple_lines_single_editor() {
         );
         let cursor_attr = editable.cursor_attr();
         let editor = editable.editor().read();
-        let cursor = editor.cursor();
         let cursor_pos = editor.visible_cursor_pos();
 
         let onmousedown = move |e: MouseEvent| {
@@ -45,7 +44,7 @@ pub async fn multiple_lines_single_editor() {
                 label {
                     color: "black",
                     height: "50%",
-                    "{cursor.row()}:{cursor.col()}"
+                    "{editor.cursor_row()}:{editor.cursor_col()}"
                 }
             }
         )
@@ -316,7 +315,6 @@ pub async fn highlight_multiple_lines_single_editor() {
             EditableMode::MultipleLinesSingleEditor,
         );
         let editor = editable.editor().read();
-        let cursor = editor.cursor();
         let cursor_pos = editor.visible_cursor_pos();
         let cursor_reference = editable.cursor_attr();
         let highlights = editable.highlights_attr(0);
@@ -358,7 +356,7 @@ pub async fn highlight_multiple_lines_single_editor() {
                 label {
                     color: "black",
                     height: "50%",
-                    "{cursor.row()}:{cursor.col()}"
+                    "{editor.cursor_row()}:{editor.cursor_col()}"
                 }
             }
         )
@@ -544,7 +542,6 @@ pub async fn special_text_editing() {
         );
         let cursor_attr = editable.cursor_attr();
         let editor = editable.editor().read();
-        let cursor = editor.cursor();
         let cursor_pos = editor.visible_cursor_pos();
 
         let onmousedown = move |e: MouseEvent| {
@@ -578,7 +575,7 @@ pub async fn special_text_editing() {
                 label {
                     color: "black",
                     height: "50%",
-                    "{cursor.row()}:{cursor.col()}"
+                    "{editor.cursor_row()}:{editor.cursor_col()}"
                 }
             }
         )
@@ -738,7 +735,6 @@ pub async fn backspace_remove() {
         );
         let cursor_attr = editable.cursor_attr();
         let editor = editable.editor().read();
-        let cursor = editor.cursor();
         let cursor_pos = editor.visible_cursor_pos();
 
         let onmousedown = move |e: MouseEvent| {
@@ -772,7 +768,7 @@ pub async fn backspace_remove() {
                 label {
                     color: "black",
                     height: "50%",
-                    "{cursor.row()}:{cursor.col()}"
+                    "{editor.cursor_row()}:{editor.cursor_col()}"
                 }
             }
         )
@@ -867,7 +863,6 @@ pub async fn highlight_shift_click_multiple_lines_single_editor() {
             EditableMode::MultipleLinesSingleEditor,
         );
         let editor = editable.editor().read();
-        let cursor = editor.cursor();
         let cursor_pos = editor.visible_cursor_pos();
         let cursor_reference = editable.cursor_attr();
         let highlights = editable.highlights_attr(0);
@@ -914,7 +909,7 @@ pub async fn highlight_shift_click_multiple_lines_single_editor() {
                 label {
                     color: "black",
                     height: "50%",
-                    "{cursor.row()}:{cursor.col()}"
+                    "{editor.cursor_row()}:{editor.cursor_col()}"
                 }
             }
         )
@@ -1134,7 +1129,6 @@ pub async fn highlight_all_text() {
             EditableMode::MultipleLinesSingleEditor,
         );
         let editor = editable.editor().read();
-        let cursor = editor.cursor();
         let cursor_pos = editor.visible_cursor_pos();
         let cursor_reference = editable.cursor_attr();
         let highlights = editable.highlights_attr(0);
@@ -1181,7 +1175,7 @@ pub async fn highlight_all_text() {
                 label {
                     color: "black",
                     height: "50%",
-                    "{cursor.row()}:{cursor.col()}"
+                    "{editor.cursor_row()}:{editor.cursor_col()}"
                 }
             }
         )
