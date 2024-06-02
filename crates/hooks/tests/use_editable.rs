@@ -1125,3 +1125,86 @@ pub async fn highlights_shift_click_single_line_mulitple_editors() {
 
     assert_eq!(highlights_2, Some(vec![(start, end)]));
 }
+
+#[tokio::test]
+pub async fn highlight_all_text() {
+    fn use_editable_app() -> Element {
+        let mut editable = use_editable(
+            || EditableConfig::new("Hello Rustaceans\n".repeat(2)),
+            EditableMode::MultipleLinesSingleEditor,
+        );
+        let editor = editable.editor().read();
+        let cursor = editor.cursor();
+        let cursor_pos = editor.visible_cursor_pos();
+        let cursor_reference = editable.cursor_attr();
+        let highlights = editable.highlights_attr(0);
+
+        let onmousedown = move |e: MouseEvent| {
+            editable.process_event(&EditableEvent::MouseDown(e.data, 0));
+        };
+
+        let onmouseover = move |e: MouseEvent| {
+            editable.process_event(&EditableEvent::MouseOver(e.data, 0));
+        };
+
+        let onkeydown = move |e: Event<KeyboardData>| {
+            editable.process_event(&EditableEvent::KeyDown(e.data));
+        };
+
+        let onclick = move |_: MouseEvent| {
+            editable.process_event(&EditableEvent::Click);
+        };
+
+        rsx!(
+            rect {
+                width: "100%",
+                height: "100%",
+                background: "white",
+                cursor_reference,
+                paragraph {
+                    height: "50%",
+                    width: "100%",
+                    cursor_id: "0",
+                    cursor_index: "{cursor_pos}",
+                    cursor_color: "black",
+                    cursor_mode: "editable",
+                    highlights,
+                    onkeydown,
+                    onclick,
+                    onmousedown,
+                    onmouseover,
+                    text {
+                        color: "black",
+                        "{editor}"
+                    }
+                }
+                label {
+                    color: "black",
+                    height: "50%",
+                    "{cursor.row()}:{cursor.col()}"
+                }
+            }
+        )
+    }
+
+    let mut utils = launch_test(use_editable_app);
+
+    let root = utils.root().get(0);
+
+    // Select all text
+    utils.push_event(PlatformEvent::Keyboard {
+        name: EventName::KeyDown,
+        key: Key::Character("a".to_string()),
+        code: Code::KeyA,
+        modifiers: Modifiers::CONTROL,
+    });
+    utils.wait_for_update().await;
+    utils.wait_for_update().await;
+
+    let highlights = root.child(0).unwrap().state().cursor.highlights.clone();
+
+    let start = 0;
+    let end = 34;
+
+    assert_eq!(highlights, Some(vec![(start, end)]))
+}
