@@ -40,11 +40,6 @@ impl Line<'_> {
     pub fn len_chars(&self) -> usize {
         self.text.chars().filter(|c| c != &'\r').count()
     }
-
-    /// Get the length of the line
-    pub fn utf16_len_chars(&self) -> usize {
-        self.text.encode_utf16().count()
-    }
 }
 
 impl Display for Line<'_> {
@@ -145,7 +140,9 @@ pub trait TextEditor {
                 // One line below
                 let new_row = old_row + 1;
                 let new_row_char = self.line_to_char(new_row);
-                self.cursor_mut().set(new_row_char + old_col);
+                let new_row_len = self.line(new_row).unwrap().len_chars();
+                let new_col = old_col.min(new_row_len - 1);
+                self.cursor_mut().set(new_row_char + new_col);
 
                 true
             }
@@ -177,7 +174,9 @@ pub trait TextEditor {
             } else {
                 let new_row = old_row - 1;
                 let new_row_char = self.line_to_char(new_row);
-                self.cursor_mut().set(new_row_char + old_col);
+                let new_row_len = self.line(new_row).unwrap().len_chars();
+                let new_col = old_col.min(new_row_len - 1);
+                self.cursor_mut().set(new_row_char + new_col);
             }
 
             true
