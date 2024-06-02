@@ -233,12 +233,11 @@ impl TextEditor for RopeEditor {
 
     fn measure_new_cursor(&self, to: usize, editor_id: usize) -> TextCursor {
         if self.mode == EditableMode::SingleLineMultipleEditors {
-            TextCursor::new(editor_id, to)
+            let row_char = self.line_to_char(editor_id);
+            let pos = row_char + to;
+            TextCursor::new(pos)
         } else {
-            let row = self.char_to_line(to);
-            let row_idx = self.line_to_char(row);
-            let col = to - row_idx;
-            TextCursor::new(row, col)
+            TextCursor::new(to)
         }
     }
 

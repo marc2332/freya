@@ -25,7 +25,6 @@ fn app() -> Element {
     let cursor_reference = editable.cursor_attr();
     let highlights = editable.highlights_attr(0);
     let editor = editable.editor().read();
-    let cursor = editor.cursor();
     let cursor_char = editor.visible_cursor_pos();
 
     let onmousedown = move |e: MouseEvent| {
@@ -79,7 +78,7 @@ fn app() -> Element {
             label {
                 color: "black",
                 height: "30",
-                "{cursor.col()}:{cursor.row()}"
+                "{editor.cursor_row()}:{editor.cursor_col()}"
             }
         }
     )

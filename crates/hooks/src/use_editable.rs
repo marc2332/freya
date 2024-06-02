@@ -237,9 +237,9 @@ impl EditableConfig {
         }
     }
 
-    /// Specify a custom initial cursor positions.
-    pub fn with_cursor(mut self, (row, col): (usize, usize)) -> Self {
-        self.cursor = TextCursor::new(row, col);
+    /// Specify a custom initial cursor position.
+    pub fn with_cursor(mut self, pos: usize) -> Self {
+        self.cursor = TextCursor::new(pos);
         self
     }
 }
@@ -272,43 +272,12 @@ pub fn use_editable(initializer: impl Fn() -> EditableConfig, mode: EditableMode
                     // Update the cursor position calculated by the layout
                     CursorLayoutResponse::CursorPosition { position, id } => {
                         let mut text_editor = editor.write();
-
-                        let new_cursor_row = match mode {
-                            EditableMode::MultipleLinesSingleEditor => {
-                                text_editor.char_to_line(text_editor.utf16_cu_to_char(position))
-                            }
-                            EditableMode::SingleLineMultipleEditors => id,
-                        };
-
-                        let new_cursor_col = match mode {
-                            EditableMode::MultipleLinesSingleEditor => text_editor
-                                .utf16_cu_to_char(
-                                    position
-                                        - text_editor.char_to_utf16_cu(
-                                            text_editor.line_to_char(new_cursor_row),
-                                        ),
-                                ),
-                            EditableMode::SingleLineMultipleEditors => {
-                                text_editor.utf16_cu_to_char(position)
-                            }
-                        };
-
-                        let new_current_line = text_editor.line(new_cursor_row).unwrap();
-
-                        // Use the line length as new column if the clicked column surpases the length
-                        let new_cursor = if new_cursor_col >= new_current_line.utf16_len_chars() {
-                            (
-                                text_editor.utf16_cu_to_char(new_current_line.utf16_len_chars()),
-                                new_cursor_row,
-                            )
-                        } else {
-                            (new_cursor_col, new_cursor_row)
-                        };
+                        let new_cursor = text_editor
+                            .measure_new_cursor(text_editor.utf16_cu_to_char(position), id);
 
                         // Only update and clear the selection if the cursor has changed
-                        if text_editor.cursor().as_tuple() != new_cursor {
-                            text_editor.cursor_mut().set_col(new_cursor.0);
-                            text_editor.cursor_mut().set_row(new_cursor.1);
+                        if *text_editor.cursor() != new_cursor {
+                            *text_editor.cursor_mut() = new_cursor;
                             if let TextDragging::FromCursorToPoint { cursor: from, .. } = dragging()
                             {
                                 let to = text_editor.cursor_pos();
