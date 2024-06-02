@@ -421,6 +421,13 @@ pub trait TextEditor {
                         event.insert(TextEvent::TEXT_CHANGED);
                     }
 
+                    // Select all text
+                    Code::KeyA if meta_or_ctrl => {
+                        let len = self.len_chars();
+                        self.set_selection((0, len));
+                        event.remove(TextEvent::SELECTION_CHANGED);
+                    }
+
                     // Copy selected text
                     Code::KeyC if meta_or_ctrl => {
                         let selected = self.get_selected_text();
