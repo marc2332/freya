@@ -34,11 +34,11 @@ fn app() -> Element {
             cross_align: "center",
             direction: "horizontal",
             Button {
-                onpress: move |_| count += 1,
+                onclick: move |_| count += 1,
                 label { "Increase" }
             }
             Button {
-                onpress: move |_| count -= 1,
+                onclick: move |_| count -= 1,
                 label { "Decrease" }
             }
         }

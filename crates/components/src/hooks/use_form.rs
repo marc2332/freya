@@ -43,6 +43,7 @@ impl<Id: Clone + Hash + Eq + Display> UseForm<Id> {
                 (submit.peek())(&data.read());
             })),
             children: None,
+            onclick: None,
         }
     }
 }

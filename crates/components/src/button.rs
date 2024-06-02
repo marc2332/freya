@@ -34,6 +34,8 @@ pub struct ButtonProps {
     pub children: Element,
     /// Event handler for when the button is pressed.
     pub onpress: Option<EventHandler<PressEvent>>,
+    /// Event handler for when the button is clicked. Not recommended, use `onpress` instead.
+    pub onclick: Option<EventHandler<()>>,
 }
 
 /// Identifies the current status of the Button.
@@ -73,6 +75,7 @@ pub fn Button(
         onpress,
         children,
         theme,
+        onclick,
     }: ButtonProps,
 ) -> Element {
     let mut focus = use_focus();
@@ -96,7 +99,7 @@ pub fn Button(
     } = use_applied_theme!(&theme, button);
 
     let onpointerup = {
-        to_owned![onpress];
+        to_owned![onpress, onclick];
         move |ev: PointerEvent| {
             focus.focus();
             if let Some(onpress) = &onpress {
@@ -109,6 +112,14 @@ pub fn Button(
                 };
                 if is_valid {
                     onpress.call(PressEvent::Pointer(ev))
+                }
+            } else if let Some(onclick) = onclick {
+                if let PointerType::Mouse {
+                    trigger_button: Some(MouseButton::Left),
+                    ..
+                } = ev.data.pointer_type
+                {
+                    onclick.call(())
                 }
             }
         }
