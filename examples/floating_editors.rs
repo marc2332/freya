@@ -11,7 +11,7 @@ fn main() {
 }
 
 fn app() -> Element {
-    use_init_theme(DARK_THEME);
+    use_init_theme(|| DARK_THEME);
     let mut hovering = use_signal(|| false);
     let mut canvas_pos = use_signal(|| (0.0f64, 0.0f64));
     let mut nodes = use_signal(|| vec![(0.0f64, 0.0f64)]);
@@ -174,7 +174,7 @@ fn Editor() -> Element {
     let font_weight = if *is_bold.read() { "bold" } else { "normal" };
 
     use_hook(|| {
-        focus_manager.focus();
+        focus_manager.queue_focus();
     });
 
     let onclick = move |_: MouseEvent| {
@@ -189,9 +189,18 @@ fn Editor() -> Element {
         }
     };
 
+    let onkeyup = move |e: KeyboardEvent| {
+        if focus_manager.is_focused() {
+            editable.process_event(&EditableEvent::KeyUp(e.data));
+        }
+    };
+
+    let focus_id = focus_manager.attribute();
+
     rsx!(
         rect {
             onclick,
+            focus_id,
             width: "100%",
             height: "100%",
             rect {
@@ -260,6 +269,7 @@ fn Editor() -> Element {
                 height: "calc(100% - 80)",
                 padding: "5",
                 onkeydown,
+                onkeyup,
                 cursor_reference: cursor_attr,
                 direction: "horizontal",
                 rect {

@@ -41,27 +41,31 @@ pub fn run_event_loop<State: Clone>(
             Event::UserEvent(EventMessage::ExitApp) => {
                 event_loop.exit();
             }
-            Event::UserEvent(EventMessage::FocusAccessibilityNode(id)) => {
-                app.accessibility
-                    .set_accessibility_focus(id, &app.window_env.window);
+            Event::UserEvent(EventMessage::FocusAccessibilityNode(node_id)) => {
+                app.focus_node(node_id);
+            }
+            Event::UserEvent(EventMessage::QueueFocusAccessibilityNode(node_id)) => {
+                app.queue_focus_node(node_id);
             }
             Event::UserEvent(EventMessage::RequestRerender) => {
                 app.window_env.window.request_redraw();
             }
-            Event::UserEvent(EventMessage::RemeasureTextGroup(text_id)) => {
-                app.measure_text_group(&text_id);
+            Event::UserEvent(EventMessage::RemeasureTextGroup(text_measurement)) => {
+                app.measure_text_group(text_measurement);
             }
             Event::UserEvent(EventMessage::ActionRequestEvent(ActionRequestEvent {
                 request,
                 ..
             })) => {
                 if Action::Focus == request.action {
-                    app.accessibility
-                        .set_accessibility_focus(request.target, &app.window_env.window);
+                    app.focus_node(request.target);
                 }
             }
             Event::UserEvent(EventMessage::SetCursorIcon(icon)) => {
                 app.window_env.window.set_cursor_icon(icon)
+            }
+            Event::UserEvent(EventMessage::WithWindow(use_window)) => {
+                (use_window)(&app.window_env.window)
             }
             Event::UserEvent(EventMessage::FocusPrevAccessibilityNode) => {
                 app.set_navigation_mode(NavigationMode::Keyboard);
@@ -70,9 +74,6 @@ pub fn run_event_loop<State: Clone>(
             Event::UserEvent(EventMessage::FocusNextAccessibilityNode) => {
                 app.set_navigation_mode(NavigationMode::Keyboard);
                 app.focus_next_node(AccessibilityFocusDirection::Forward);
-            }
-            Event::UserEvent(EventMessage::DragWindow) => {
-                app.window_env.window.drag_window().ok();
             }
             Event::UserEvent(ev) => {
                 if let EventMessage::UpdateTemplate(template) = ev {
@@ -89,6 +90,11 @@ pub fn run_event_loop<State: Clone>(
                 app.accessibility
                     .process_accessibility_event(&event, &app.window_env.window);
                 match event {
+                    WindowEvent::ThemeChanged(theme) => {
+                        app.platform_sender.send_modify(|state| {
+                            state.preferred_theme = theme.into();
+                        });
+                    }
                     WindowEvent::CloseRequested => event_loop.exit(),
                     WindowEvent::Ime(Ime::Commit(text)) => {
                         app.send_event(PlatformEvent::Keyboard {

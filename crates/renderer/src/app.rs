@@ -1,13 +1,13 @@
 use dioxus_core::{Template, VirtualDom};
-use freya_common::EventMessage;
+use freya_common::{EventMessage, TextGroupMeasurement};
 use freya_core::prelude::*;
 use freya_engine::prelude::*;
-use freya_hooks::PlatformInformation;
+use freya_native_core::prelude::NodeImmutableDioxusExt;
 use freya_native_core::NodeId;
 use futures_task::Waker;
 use futures_util::FutureExt;
 use pin_utils::pin_mut;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use tokio::sync::broadcast;
 use tokio::{
     select,
@@ -15,7 +15,6 @@ use tokio::{
 };
 use torin::geometry::{Area, Size2D};
 use tracing::info;
-use uuid::Uuid;
 use winit::dpi::PhysicalSize;
 use winit::event_loop::{EventLoop, EventLoopProxy};
 
@@ -37,17 +36,16 @@ pub struct App<State: 'static + Clone> {
     pub(crate) event_receiver: EventReceiver,
     pub(crate) window_env: WindowEnv<State>,
     pub(crate) nodes_state: NodesState,
-    pub(crate) focus_sender: FocusSender,
-    pub(crate) focus_receiver: FocusReceiver,
+    pub(crate) platform_sender: NativePlatformSender,
+    pub(crate) platform_receiver: NativePlatformReceiver,
     pub(crate) accessibility: AccessKitManager,
     pub(crate) font_collection: FontCollection,
     pub(crate) font_mgr: FontMgr,
     pub(crate) ticker_sender: broadcast::Sender<()>,
     pub(crate) plugins: PluginsManager,
-    pub(crate) navigator_state: NavigatorState,
     pub(crate) measure_layout_on_next_render: bool,
-    pub(crate) platform_information: Arc<Mutex<PlatformInformation>>,
     pub(crate) default_fonts: Vec<String>,
+    pub(crate) queued_focus_node: Option<AccessibilityId>,
 }
 
 impl<State: 'static + Clone> App<State> {
@@ -81,13 +79,18 @@ impl<State: 'static + Clone> App<State> {
         font_collection.set_dynamic_font_manager(font_mgr.clone());
 
         let (event_emitter, event_receiver) = mpsc::unbounded_channel::<DomEvent>();
-        let (focus_sender, focus_receiver) = watch::channel(ACCESSIBILITY_ROOT_ID);
+        let (platform_sender, platform_receiver) = watch::channel(NativePlatformState {
+            focused_id: ACCESSIBILITY_ROOT_ID,
+            preferred_theme: window_env
+                .window
+                .theme()
+                .map(|theme| theme.into())
+                .unwrap_or_default(),
+            navigation_mode: NavigationMode::default(),
+            information: PlatformInformation::from_winit(&window_env.window),
+        });
 
         plugins.send(PluginEvent::WindowCreated(&window_env.window));
-
-        let platform_information = Arc::new(Mutex::new(PlatformInformation::from_winit(
-            window_env.window.inner_size(),
-        )));
 
         Self {
             sdom,
@@ -101,16 +104,15 @@ impl<State: 'static + Clone> App<State> {
             window_env,
             nodes_state: NodesState::default(),
             accessibility,
-            focus_sender,
-            focus_receiver,
+            platform_sender,
+            platform_receiver,
             font_collection,
             font_mgr,
             ticker_sender: broadcast::channel(5).0,
             plugins,
-            navigator_state: NavigatorState::new(NavigationMode::NotKeyboard),
             measure_layout_on_next_render: false,
-            platform_information,
             default_fonts,
+            queued_focus_node: None,
         }
     }
 
@@ -122,13 +124,9 @@ impl<State: 'static + Clone> App<State> {
         self.vdom
             .insert_any_root_context(Box::new(self.proxy.clone()));
         self.vdom
-            .insert_any_root_context(Box::new(self.focus_receiver.clone()));
+            .insert_any_root_context(Box::new(self.platform_receiver.clone()));
         self.vdom
             .insert_any_root_context(Box::new(Arc::new(self.ticker_sender.subscribe())));
-        self.vdom
-            .insert_any_root_context(Box::new(self.navigator_state.clone()));
-        self.vdom
-            .insert_any_root_context(Box::new(self.platform_information.clone()));
     }
 
     /// Make the first build of the VirtualDOM and sync it with the RealDOM.
@@ -173,9 +171,16 @@ impl<State: 'static + Clone> App<State> {
                         ev = self.event_receiver.recv() => {
                             if let Some(ev) = ev {
                                 let data = ev.data.any();
-                                self.vdom.handle_event(ev.name.into(), data, ev.element_id, ev.bubbles);
-
-                                self.vdom.process_events();
+                                let fdom = self.sdom.get();
+                                let rdom = fdom.rdom();
+                                let node = rdom.get(ev.node_id);
+                                if let Some(node) = node {
+                                    let element_id = node.mounted_id();
+                                    if let Some(element_id) = element_id {
+                                        self.vdom.handle_event(ev.name.into(), data, element_id, ev.bubbles);
+                                        self.vdom.process_events();
+                                    }
+                                }
                             }
                         },
                         _ = self.vdom.wait_for_work() => {},
@@ -226,6 +231,10 @@ impl<State: 'static + Clone> App<State> {
             rdom,
             &mut self.accessibility.accessibility_manager().lock().unwrap(),
         );
+
+        if let Some(node_id) = self.queued_focus_node.take() {
+            self.focus_node(node_id)
+        }
     }
 
     /// Send an event
@@ -266,18 +275,34 @@ impl<State: 'static + Clone> App<State> {
         self.measure_layout_on_next_render = true;
         self.sdom.get().layout().reset();
         self.window_env.resize(size);
-        *self.platform_information.lock().unwrap() = PlatformInformation::from_winit(size);
+        self.platform_sender.send_modify(|state| {
+            state.information = PlatformInformation::from_winit(&self.window_env.window);
+        })
     }
 
     /// Measure the a text group given it's ID.
-    pub fn measure_text_group(&self, text_id: &Uuid) {
+    pub fn measure_text_group(&self, text_measurement: TextGroupMeasurement) {
         let scale_factor = self.window_env.window.scale_factor() as f32;
-        self.sdom.get().measure_paragraphs(text_id, scale_factor);
+        self.sdom
+            .get()
+            .measure_paragraphs(text_measurement, scale_factor);
+    }
+
+    pub fn focus_node(&self, node_id: AccessibilityId) {
+        self.accessibility
+            .focus_node(node_id, &self.platform_sender, &self.window_env.window)
+    }
+
+    pub fn queue_focus_node(&mut self, node_id: AccessibilityId) {
+        self.queued_focus_node = Some(node_id);
     }
 
     pub fn focus_next_node(&self, direction: AccessibilityFocusDirection) {
-        self.accessibility
-            .focus_next_node(direction, &self.focus_sender, &self.window_env.window)
+        self.accessibility.focus_next_node(
+            direction,
+            &self.platform_sender,
+            &self.window_env.window,
+        )
     }
 
     /// Notify components subscribed to event loop ticks.
@@ -286,8 +311,10 @@ impl<State: 'static + Clone> App<State> {
     }
 
     /// Update the [NavigationMode].
-    pub fn set_navigation_mode(&mut self, mode: NavigationMode) {
-        self.navigator_state.set(mode);
+    pub fn set_navigation_mode(&mut self, navigation_mode: NavigationMode) {
+        self.platform_sender.send_modify(|state| {
+            state.navigation_mode = navigation_mode;
+        })
     }
 
     /// Measure the layout

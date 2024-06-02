@@ -1,21 +1,12 @@
 use std::{cell::RefCell, rc::Rc};
 
 use dioxus_core::{
-    prelude::{consume_context, spawn, try_consume_context},
+    prelude::{consume_context, provide_context, spawn},
     use_hook,
 };
-use dioxus_hooks::{use_context_provider, use_effect};
+use dioxus_hooks::use_context_provider;
 use dioxus_signals::{Readable, Signal, Writable};
-use freya_common::EventMessage;
-use freya_core::{
-    navigation_mode::{NavigationMode, NavigatorState},
-    types::FocusReceiver,
-};
-
-use freya_core::{accessibility::ACCESSIBILITY_ROOT_ID, types::AccessibilityId};
-
-use crate::use_platform;
-
+use freya_core::prelude::NativePlatformReceiver;
 pub type AccessibilityIdCounter = Rc<RefCell<u64>>;
 
 #[derive(Clone)]
@@ -31,47 +22,60 @@ impl NavigationMark {
     }
 }
 
-/// Sync both the Focus shared state and the platform accessibility focus
-pub fn use_init_accessibility() -> Signal<NavigationMark> {
-    let mut focused_id =
-        use_context_provider::<Signal<AccessibilityId>>(|| Signal::new(ACCESSIBILITY_ROOT_ID));
-    let mut navigation_mode =
-        use_context_provider::<Signal<NavigationMode>>(|| Signal::new(NavigationMode::NotKeyboard));
+#[derive(Clone, Copy)]
+pub struct UsePlatformEvents {
+    pub navigation_mark: Signal<NavigationMark>,
+}
+
+/// Keep some native features (focused element, preferred theme, etc) on sync between the platform and the components
+pub fn use_init_native_platform() -> UsePlatformEvents {
+    // Init the Accessibility Node ID generator
     use_context_provider(|| Rc::new(RefCell::new(0u64)));
-    let platform = use_platform();
+
+    // Init the NavigationMark signal
     let navigation_mark = use_context_provider(|| Signal::new(NavigationMark(true)));
 
-    // Tell the renderer the new focused node
-    use_effect(move || {
-        platform
-            .send(EventMessage::FocusAccessibilityNode(*focused_id.read()))
-            .unwrap();
-    });
-
+    // Init the signals with platform values
     use_hook(|| {
-        let focus_id_listener = try_consume_context::<FocusReceiver>();
-        let navigation_state = consume_context::<NavigatorState>();
+        let mut platform_receiver = consume_context::<NativePlatformReceiver>();
+        let platform_state = platform_receiver.borrow();
 
-        // Listen for focus changes
+        let mut preferred_theme = Signal::new(platform_state.preferred_theme);
+        let mut focused_id = Signal::new(platform_state.focused_id);
+        let mut navigation_mode = Signal::new(platform_state.navigation_mode);
+        let mut information = Signal::new(platform_state.information);
+
+        drop(platform_state);
+
+        // Listen for any changes during the execution of the app
         spawn(async move {
-            let focus_id_listener = focus_id_listener.clone();
-            if let Some(mut focus_id_listener) = focus_id_listener {
-                while focus_id_listener.changed().await.is_ok() {
-                    *focused_id.write() = *focus_id_listener.borrow();
+            while platform_receiver.changed().await.is_ok() {
+                let state = platform_receiver.borrow();
+                if *focused_id.peek() != state.focused_id {
+                    *focused_id.write() = state.focused_id;
+                }
+
+                if *preferred_theme.peek() != state.preferred_theme {
+                    *preferred_theme.write() = state.preferred_theme;
+                }
+
+                if *navigation_mode.peek() != state.navigation_mode {
+                    *navigation_mode.write() = state.navigation_mode;
+                }
+
+                if *information.peek() != state.information {
+                    *information.write() = state.information;
                 }
             }
         });
 
-        // Listen for navigation mode changes
-        spawn(async move {
-            let mut getter = navigation_state.getter();
-            while getter.changed().await.is_ok() {
-                *navigation_mode.write() = *getter.borrow();
-            }
-        });
+        provide_context(preferred_theme);
+        provide_context(navigation_mode);
+        provide_context(information);
+        provide_context(focused_id);
     });
 
-    navigation_mark
+    UsePlatformEvents { navigation_mark }
 }
 
 #[cfg(test)]

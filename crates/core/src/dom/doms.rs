@@ -7,7 +7,7 @@ use freya_native_core::{
     NodeId, SendAnyMap,
 };
 
-use freya_common::{Layers, ParagraphElements};
+use freya_common::{Layers, ParagraphElements, TextGroupMeasurement};
 use freya_node_state::{
     AccessibilityNodeState, CursorSettings, CustomAttributeValues, FontStyleState, LayerState,
     LayoutState, References, Style, Transform, ViewportState,
@@ -15,7 +15,6 @@ use freya_node_state::{
 use std::sync::MutexGuard;
 use torin::prelude::*;
 use tracing::info;
-use uuid::Uuid;
 
 use super::{mutations_writer::MutationsWriter, paragraph_utils::measure_paragraph};
 
@@ -207,24 +206,10 @@ impl FreyaDOM {
         &mut self.dioxus_integration_state
     }
 
-    pub fn measure_all_paragraphs(&self, scale_factor: f32) {
-        let layout = self.layout();
-        let rdom = self.rdom();
-        for group in self.paragraphs.paragraphs().values() {
-            for node_id in group {
-                let node = rdom.get(*node_id);
-                let layout_node = layout.get(*node_id);
-                if let Some((node, layout_node)) = node.zip(layout_node) {
-                    measure_paragraph(&node, layout_node, true, scale_factor);
-                }
-            }
-        }
-    }
-
     /// Measure all the paragraphs registered under the given TextId
-    pub fn measure_paragraphs(&self, text_id: &Uuid, scale_factor: f32) {
+    pub fn measure_paragraphs(&self, text_measurement: TextGroupMeasurement, scale_factor: f32) {
         let paragraphs = self.paragraphs.paragraphs();
-        let group = paragraphs.get(text_id);
+        let group = paragraphs.get(&text_measurement.text_id);
         let layout = self.layout();
         if let Some(group) = group {
             for node_id in group {
@@ -232,7 +217,7 @@ impl FreyaDOM {
                 let layout_node = layout.get(*node_id);
 
                 if let Some((node, layout_node)) = node.zip(layout_node) {
-                    measure_paragraph(&node, layout_node, true, scale_factor);
+                    measure_paragraph(&node, layout_node, &text_measurement, scale_factor);
                 }
             }
         }

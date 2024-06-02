@@ -233,7 +233,7 @@ fn with_accessibility(app: AppComponent) -> VirtualDom {
     use dioxus::prelude::Props;
     use dioxus_core::fc_to_builder;
     use dioxus_core_macro::rsx;
-    use freya_components::KeyboardNavigator;
+    use freya_components::NativeContainer;
 
     #[derive(Props, Clone, PartialEq)]
     struct RootProps {
@@ -245,7 +245,7 @@ fn with_accessibility(app: AppComponent) -> VirtualDom {
         #[allow(non_snake_case)]
         let App = props.app;
 
-        rsx!(KeyboardNavigator {
+        rsx!(NativeContainer {
             App {}
         })
     }

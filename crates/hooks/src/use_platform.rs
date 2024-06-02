@@ -1,18 +1,19 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use dioxus_core::prelude::{consume_context, try_consume_context, use_hook};
 use dioxus_signals::{Readable, Signal};
 use freya_common::EventMessage;
 use tokio::sync::{broadcast, mpsc::UnboundedSender};
-use torin::geometry::Size2D;
-use winit::{dpi::PhysicalSize, event_loop::EventLoopProxy, window::CursorIcon};
+use winit::{
+    event_loop::EventLoopProxy,
+    window::{CursorIcon, Fullscreen, Window},
+};
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct UsePlatform {
     ticker: Signal<Arc<broadcast::Receiver<()>>>,
     event_loop_proxy: Signal<Option<EventLoopProxy<EventMessage>>>,
     platform_emitter: Signal<Option<UnboundedSender<EventMessage>>>,
-    platform_information: Signal<Arc<Mutex<PlatformInformation>>>,
 }
 
 #[derive(PartialEq, Eq, Debug)]
@@ -28,7 +29,6 @@ impl UsePlatform {
             event_loop_proxy: Signal::new(try_consume_context::<EventLoopProxy<EventMessage>>()),
             platform_emitter: Signal::new(try_consume_context::<UnboundedSender<EventMessage>>()),
             ticker: Signal::new(consume_context::<Arc<broadcast::Receiver<()>>>()),
-            platform_information: Signal::new(consume_context::<Arc<Mutex<PlatformInformation>>>()),
         }
     }
 
@@ -49,8 +49,62 @@ impl UsePlatform {
         self.send(EventMessage::SetCursorIcon(cursor_icon)).ok();
     }
 
+    pub fn set_title(&self, title: impl Into<String>) {
+        let title = title.into();
+        self.with_window(move |window| {
+            window.set_title(&title);
+        });
+    }
+
+    pub fn with_window(&self, cb: impl FnOnce(&Window) + 'static + Send + Sync) {
+        self.send(EventMessage::WithWindow(Box::new(cb))).ok();
+    }
+
     pub fn drag_window(&self) {
-        self.send(EventMessage::DragWindow).ok();
+        self.with_window(|window| {
+            window.drag_window().ok();
+        });
+    }
+
+    pub fn set_maximize_window(&self, maximize: bool) {
+        self.with_window(move |window| {
+            window.set_maximized(maximize);
+        });
+    }
+
+    pub fn toggle_maximize_window(&self) {
+        self.with_window(|window| {
+            window.set_maximized(!window.is_maximized());
+        });
+    }
+
+    pub fn set_minimize_window(&self, minimize: bool) {
+        self.with_window(move |window| {
+            window.set_minimized(minimize);
+        });
+    }
+
+    pub fn toggle_minimize_window(&self) {
+        self.with_window(|window| {
+            window.set_minimized(window.is_minimized().map(|v| !v).unwrap_or_default());
+        });
+    }
+
+    pub fn toggle_fullscreen_window(&self) {
+        self.with_window(|window| match window.fullscreen() {
+            Some(_) => window.set_fullscreen(None),
+            None => window.set_fullscreen(Some(Fullscreen::Borderless(None))),
+        });
+    }
+
+    pub fn set_fullscreen_window(&self, fullscreen: bool) {
+        self.with_window(move |window| {
+            if fullscreen {
+                window.set_fullscreen(Some(Fullscreen::Borderless(None)))
+            } else {
+                window.set_fullscreen(None)
+            }
+        });
     }
 
     pub fn request_animation_frame(&self) {
@@ -67,13 +121,6 @@ impl UsePlatform {
     pub fn exit(&self) {
         self.send(EventMessage::ExitApp).ok();
     }
-
-    /// Read information about the platform.
-    ///
-    /// **Important**: This will not subscribe to any changes about the information.
-    pub fn info(&self) -> PlatformInformation {
-        self.platform_information.read().lock().unwrap().clone()
-    }
 }
 
 /// Get access to information and features of the platform.
@@ -88,23 +135,5 @@ pub struct Ticker {
 impl Ticker {
     pub async fn tick(&mut self) {
         self.inner.recv().await.ok();
-    }
-}
-
-/// Information about the platform.
-#[derive(Clone)]
-pub struct PlatformInformation {
-    pub window_size: Size2D,
-}
-
-impl PlatformInformation {
-    pub fn from_winit(physical_size: PhysicalSize<u32>) -> Self {
-        Self {
-            window_size: Size2D::new(physical_size.width as f32, physical_size.height as f32),
-        }
-    }
-
-    pub fn new(window_size: Size2D) -> Self {
-        Self { window_size }
     }
 }

@@ -1,13 +1,14 @@
 use dioxus_core::{use_hook, AttributeValue};
 use dioxus_hooks::{use_context, use_memo};
 use dioxus_signals::{Memo, Readable, Signal, Writable};
+use freya_common::EventMessage;
 use freya_core::{
-    accessibility::ACCESSIBILITY_ROOT_ID, navigation_mode::NavigationMode, types::AccessibilityId,
+    accessibility::ACCESSIBILITY_ROOT_ID, platform_state::NavigationMode, types::AccessibilityId,
 };
 use freya_elements::events::{keyboard::Code, KeyboardEvent};
 use freya_node_state::CustomAttributeValues;
 
-use crate::{AccessibilityIdCounter, NavigationMark};
+use crate::{use_platform, AccessibilityIdCounter, NavigationMark, UsePlatform};
 
 /// Manage the focus operations of given Node
 #[derive(Clone, Copy)]
@@ -15,16 +16,27 @@ pub struct UseFocus {
     id: AccessibilityId,
     is_selected: Memo<bool>,
     is_focused: Memo<bool>,
-    focused_id: Signal<AccessibilityId>,
     navigation_mode: Signal<NavigationMode>,
     navigation_mark: Signal<NavigationMark>,
+    platform: UsePlatform,
 }
 
 impl UseFocus {
     /// Focus this node
     pub fn focus(&mut self) {
         if !*self.is_focused.peek() {
-            *self.focused_id.write() = self.id
+            self.platform
+                .send(EventMessage::FocusAccessibilityNode(self.id))
+                .ok();
+        }
+    }
+
+    /// Queue a focus to this node
+    pub fn queue_focus(&mut self) {
+        if !*self.is_focused.peek() {
+            self.platform
+                .send(EventMessage::QueueFocusAccessibilityNode(self.id))
+                .ok();
         }
     }
 
@@ -50,7 +62,9 @@ impl UseFocus {
 
     /// Unfocus the currently focused node.
     pub fn unfocus(&mut self) {
-        *self.focused_id.write() = ACCESSIBILITY_ROOT_ID;
+        self.platform
+            .send(EventMessage::FocusAccessibilityNode(ACCESSIBILITY_ROOT_ID))
+            .ok();
     }
 
     /// Validate keydown event
@@ -71,6 +85,7 @@ pub fn use_focus() -> UseFocus {
     let focused_id = use_context::<Signal<AccessibilityId>>();
     let navigation_mode = use_context::<Signal<NavigationMode>>();
     let navigation_mark = use_context::<Signal<NavigationMark>>();
+    let platform = use_platform();
 
     let id = use_hook(|| {
         let mut counter = accessibility_id_counter.borrow_mut();
@@ -85,10 +100,10 @@ pub fn use_focus() -> UseFocus {
 
     use_hook(move || UseFocus {
         id,
-        focused_id,
         is_focused,
         is_selected,
         navigation_mode,
         navigation_mark,
+        platform,
     })
 }

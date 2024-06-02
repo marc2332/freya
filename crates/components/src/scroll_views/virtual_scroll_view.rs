@@ -359,6 +359,8 @@ pub fn VirtualScrollView<
     let offset_y_min = (-corrected_scrolled_y / items_size).floor() * items_size;
     let offset_y = -corrected_scrolled_y - offset_y_min;
 
+    let focus_id = focus.attribute();
+
     rsx!(
         rect {
             role: "scrollView",
@@ -370,6 +372,7 @@ pub fn VirtualScrollView<
             onglobalmouseover: onmouseover,
             onkeydown,
             onkeyup,
+            focus_id,
             rect {
                 direction: "vertical",
                 width: "{container_width}",
@@ -511,6 +514,7 @@ mod test {
         let mut utils = launch_test(virtual_scroll_view_scrollar_app);
         let root = utils.root();
 
+        utils.wait_for_update().await;
         utils.wait_for_update().await;
         utils.wait_for_update().await;
 

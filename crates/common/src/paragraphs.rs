@@ -1,11 +1,11 @@
 use freya_native_core::NodeId;
-use rustc_hash::FxHashMap;
+use rustc_hash::{FxHashMap, FxHashSet};
 use std::sync::{Arc, Mutex, MutexGuard};
 use uuid::Uuid;
 
 #[derive(Default, Clone)]
 pub struct ParagraphElements {
-    pub paragraphs: Arc<Mutex<FxHashMap<Uuid, Vec<NodeId>>>>,
+    pub paragraphs: Arc<Mutex<FxHashMap<Uuid, FxHashSet<NodeId>>>>,
 }
 
 impl ParagraphElements {
@@ -13,10 +13,10 @@ impl ParagraphElements {
         let mut paragraphs = self.paragraphs.lock().unwrap();
         let text_group = paragraphs.entry(text_id).or_default();
 
-        text_group.push(node_id);
+        text_group.insert(node_id);
     }
 
-    pub fn paragraphs(&self) -> MutexGuard<FxHashMap<Uuid, Vec<NodeId>>> {
+    pub fn paragraphs(&self) -> MutexGuard<FxHashMap<Uuid, FxHashSet<NodeId>>> {
         self.paragraphs.lock().unwrap()
     }
 

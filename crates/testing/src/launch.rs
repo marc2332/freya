@@ -3,11 +3,9 @@ use dioxus_core::Element;
 use dioxus_core::VirtualDom;
 use dioxus_core_macro::rsx;
 use freya_common::EventMessage;
-use freya_components::KeyboardNavigator;
+use freya_components::NativeContainer;
 use freya_core::prelude::*;
 use freya_engine::prelude::*;
-use freya_hooks::PlatformInformation;
-use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc::unbounded_channel;
 use tokio::sync::{broadcast, watch};
 use winit::window::CursorIcon;
@@ -31,9 +29,16 @@ pub fn launch_test_with_config(root: AppComponent, config: TestingConfig) -> Tes
 
     let (event_emitter, event_receiver) = unbounded_channel::<DomEvent>();
     let (platform_event_emitter, platform_event_receiver) = unbounded_channel::<EventMessage>();
-    let (focus_sender, focus_receiver) = watch::channel(ACCESSIBILITY_ROOT_ID);
+    let (platform_sender, platform_receiver) = watch::channel(NativePlatformState {
+        focused_id: ACCESSIBILITY_ROOT_ID,
+        preferred_theme: PreferredTheme::default(),
+        navigation_mode: NavigationMode::default(),
+        information: PlatformInformation::new(config.size, false, false, false),
+    });
     let mut font_collection = FontCollection::new();
-    font_collection.set_dynamic_font_manager(FontMgr::default());
+    let font_mgr = FontMgr::default();
+    font_collection.set_dynamic_font_manager(font_mgr.clone());
+    font_collection.set_default_font_manager(font_mgr, "Fira Sans");
 
     let mut handler = TestingHandler {
         vdom,
@@ -48,11 +53,9 @@ pub fn launch_test_with_config(root: AppComponent, config: TestingConfig) -> Tes
         platform_event_receiver,
         accessibility_manager: AccessibilityManager::new(ACCESSIBILITY_ROOT_ID).wrap(),
         ticker_sender: broadcast::channel(5).0,
-        navigation_state: NavigatorState::new(NavigationMode::NotKeyboard),
-        platform_information: Arc::new(Mutex::new(PlatformInformation::new(config.size))),
         cursor_icon: CursorIcon::default(),
-        focus_sender,
-        focus_receiver,
+        platform_sender,
+        platform_receiver,
     };
 
     handler.init_dom();
@@ -71,7 +74,7 @@ fn with_accessibility(app: AppComponent) -> VirtualDom {
         #[allow(non_snake_case)]
         let App = props.app;
 
-        rsx!(KeyboardNavigator {
+        rsx!(NativeContainer {
             App {}
         })
     }
