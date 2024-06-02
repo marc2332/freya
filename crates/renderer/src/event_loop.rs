@@ -44,6 +44,9 @@ pub fn run_event_loop<State: Clone>(
             Event::UserEvent(EventMessage::FocusAccessibilityNode(node_id)) => {
                 app.focus_node(node_id);
             }
+            Event::UserEvent(EventMessage::QueueFocusAccessibilityNode(node_id)) => {
+                app.queue_focus_node(node_id);
+            }
             Event::UserEvent(EventMessage::RequestRerender) => {
                 app.window_env.window.request_redraw();
             }
