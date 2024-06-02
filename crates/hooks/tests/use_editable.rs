@@ -1194,7 +1194,7 @@ pub async fn highlight_all_text() {
     #[cfg(target_os = "macos")]
     let modifiers = Modifiers::META;
 
-    #[cfg(not((target_os = "macos")))]
+    #[cfg(not(target_os = "macos"))]
     let modifiers = Modifiers::CONTROL;
 
     // Select all text
