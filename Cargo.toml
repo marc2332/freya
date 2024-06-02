@@ -25,13 +25,13 @@ hot-reload = ["freya/hot-reload"]
 [workspace.dependencies]
 freya = { path = "crates/freya", version = "0.2" }
 freya-devtools = { path = "crates/devtools", version = "0.2" }
-freya-node-state = { path = "crates/state", version = "0.2" }
+freya-node-state = { path = "crates/state", version = "0.3" }
 freya-renderer = { path = "crates/renderer", version = "0.2" }
 freya-elements = { path = "crates/elements", version = "0.2" }
-freya-common = { path = "crates/common", version = "0.2" }
-freya-hooks = { path = "crates/hooks", version = "0.2" }
-freya-core = { path = "crates/core", version = "0.2" }
-freya-components = { path = "crates/components", version = "0.2" }
+freya-common = { path = "crates/common", version = "0.3" }
+freya-hooks = { path = "crates/hooks", version = "0.3" }
+freya-core = { path = "crates/core", version = "0.3" }
+freya-components = { path = "crates/components", version = "0.3" }
 freya-testing = { path = "crates/testing", version = "0.2" }
 freya-engine = { path = "crates/engine", version = "0.2" }
 torin = { path = "crates/torin", version = "0.2" }
