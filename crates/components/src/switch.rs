@@ -101,7 +101,7 @@ pub fn Switch(props: SwitchProps) -> Element {
     };
 
     let onkeydown = move |e: KeyboardEvent| {
-        if focus.validate_keydown(e) {
+        if focus.validate_keydown(&e) {
             props.ontoggled.call(());
         }
     };

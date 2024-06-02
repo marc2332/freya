@@ -39,7 +39,7 @@ impl<Id: Clone + Hash + Eq + Display> UseForm<Id> {
         let data = self.data;
         ButtonProps {
             theme: None,
-            onclick: Some(EventHandler::new(move |_| {
+            onpress: Some(EventHandler::new(move |_| {
                 (submit.peek())(&data.read());
             })),
             children: None,

@@ -37,7 +37,7 @@ fn app() -> Element {
                     }
                 },
                 Button {
-                    onclick: move |_| is_hidden.toggle(),
+                    onpress: move |_| is_hidden.toggle(),
                     label {
                         if *is_hidden.read() {
                             "Show password"

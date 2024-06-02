@@ -79,13 +79,13 @@
 //! fn Component() -> Element {
 //!     let mut theme = use_theme();
 //!
-//!     let onclick = move |_| {
+//!     let onpress = move |_| {
 //!         *theme.write() = LIGHT_THEME;
 //!     };
 //!
 //!     rsx!(
 //!         Button {
-//!             onclick,
+//!             onpress,
 //!             label {
 //!                 "Use Light theme"
 //!             }

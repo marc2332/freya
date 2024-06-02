@@ -134,7 +134,7 @@ fn app() -> Element {
                     theme: theme_with!(ButtonTheme {
                         margin: "0 20".into(),
                     }),
-                    onclick: create_node,
+                    onpress: create_node,
                     label {
                         "New Editor"
                     }

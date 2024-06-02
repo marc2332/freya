@@ -13,7 +13,7 @@ fn app() -> Element {
     let mut text = use_signal(String::new);
     let platform = use_platform();
 
-    let onclick = move |_| {
+    let onpress = move |_| {
         let new_title = text.read().clone();
         platform.set_title(new_title);
     };
@@ -26,7 +26,7 @@ fn app() -> Element {
             }
         },
         Button {
-            onclick,
+            onpress,
             label {
                 "Update title"
             }
