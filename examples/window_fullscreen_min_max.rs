@@ -27,19 +27,19 @@ fn app() -> Element {
             cross_align: "center",
             direction: "horizontal",
             Button {
-                onclick: move |_| platform.toggle_fullscreen_window(),
+                onpress: move |_| platform.toggle_fullscreen_window(),
                 label {
                     "Fullscreen ({is_fullscreen})"
                 }
             }
             Button {
-                onclick: move |_| platform.toggle_minimize_window(),
+                onpress: move |_| platform.toggle_minimize_window(),
                 label {
                     "Minimize ({is_minimized})"
                 }
             }
             Button {
-                onclick: move |_| platform.toggle_maximize_window(),
+                onpress: move |_| platform.toggle_maximize_window(),
                 label {
                     "Maximize ({is_maximized})"
                 }
