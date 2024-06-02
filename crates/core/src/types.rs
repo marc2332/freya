@@ -15,10 +15,10 @@ pub type NativePlatformSender = watch::Sender<NativePlatformState>;
 pub type NativePlatformReceiver = watch::Receiver<NativePlatformState>;
 
 /// Emit events to the VirtualDOM
-pub type EventEmitter = UnboundedSender<DomEvent>;
+pub type EventEmitter = UnboundedSender<Vec<DomEvent>>;
 
 /// Receive events to be emitted to the VirtualDOM
-pub type EventReceiver = UnboundedReceiver<DomEvent>;
+pub type EventReceiver = UnboundedReceiver<Vec<DomEvent>>;
 
 /// Queued list of events to be processed by Freya.
 pub type EventsQueue = SmallVec<[PlatformEvent; 2]>;
