@@ -41,12 +41,17 @@ fn Body() -> Element {
         editable.process_event(&EditableEvent::KeyDown(e.data));
     };
 
+    let onkeyup = move |e: KeyboardEvent| {
+        editable.process_event(&EditableEvent::KeyUp(e.data));
+    };
+
     rsx!(
         rect {
             width: "100%",
             height: "100%",
             padding: "10",
             onkeydown,
+            onkeyup,
             cursor_reference,
             direction: "horizontal",
             onglobalclick: onclick,

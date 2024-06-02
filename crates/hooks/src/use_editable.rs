@@ -312,9 +312,7 @@ pub fn use_editable(initializer: impl Fn() -> EditableConfig, mode: EditableMode
                             if let TextDragging::FromCursorToPoint { cursor: from, .. } = dragging()
                             {
                                 let to = text_editor.cursor_pos();
-                                let maybe_new_selection =
-                                    text_editor.measure_new_selection(from, to, id);
-                                text_editor.set_selection(maybe_new_selection);
+                                text_editor.set_selection((from, to));
                             } else {
                                 text_editor.clear_selection();
                             }
