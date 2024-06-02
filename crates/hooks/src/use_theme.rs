@@ -34,10 +34,10 @@ pub fn use_get_theme() -> Theme {
 ///
 /// # Examples
 ///
-/// ```rust,ignore
-/// use freya_hooks::{ButtonTheme, ButtonThemeWith};
+/// ```rust
+/// use freya::prelude::*;
 ///
-/// #[derive(Props)]
+/// #[derive(Props, PartialEq, Clone)]
 /// pub struct ButtonProps {
 ///     /// Theme override.
 ///     pub theme: Option<ButtonThemeWith>,
@@ -52,6 +52,8 @@ pub fn use_get_theme() -> Theme {
 ///         ..
 ///     } = use_applied_theme!(&props.theme, button);
 ///     // ...
+///
+///     # None
 /// }
 /// ```
 #[macro_export]
