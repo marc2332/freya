@@ -5,14 +5,27 @@ use freya_elements::events::keyboard::{Code, Key, Modifiers};
 
 /// Holds the position of a cursor in a text
 #[derive(Clone, Default, PartialEq, Debug)]
-pub struct TextCursor {
-    pos: usize,
-}
+pub struct TextCursor(usize);
 
 impl TextCursor {
-    /// Construct a new [TextCursor] given a row and a column
+    /// Construct a new [TextCursor]
     pub fn new(pos: usize) -> Self {
-        Self { pos }
+        Self(pos)
+    }
+
+    /// Get the position
+    pub fn pos(&self) -> usize {
+        self.0
+    }
+
+    /// Set the position
+    pub fn set(&mut self, pos: usize) {
+        self.0 = pos;
+    }
+
+    /// Write the position
+    pub fn write(&mut self) -> &mut usize {
+        &mut self.0
     }
 }
 
@@ -100,18 +113,17 @@ pub trait TextEditor {
 
     /// Get the cursor row
     fn cursor_row(&self) -> usize {
-        let pos = self.cursor().pos;
+        let pos = self.cursor_pos();
         self.char_to_line(pos)
     }
 
     /// Get the cursor column
     fn cursor_col(&self) -> usize {
-        let pos = self.cursor().pos;
+        let pos = self.cursor_pos();
         let line = self.char_to_line(pos);
         let line_char = self.line_to_char(line);
         pos - line_char
     }
-
 
     /// Get the cursor row and col
     fn cursor_row_and_col(&self) -> (usize, usize) {
@@ -133,13 +145,14 @@ pub trait TextEditor {
                 // One line below
                 let new_row = old_row + 1;
                 let new_row_char = self.line_to_char(new_row);
-                self.cursor_mut().pos = new_row_char + old_col;
+                self.cursor_mut().set(new_row_char + old_col);
 
                 true
             }
             Ordering::Equal => {
+                let end = self.len_chars();
                 // Reached max
-                self.cursor_mut().pos = self.len_chars();
+                self.cursor_mut().set(end);
 
                 true
             }
@@ -160,11 +173,11 @@ pub trait TextEditor {
         if pos > 0 {
             // Reached max
             if old_row == 0 {
-                self.cursor_mut().pos = 0;
+                self.cursor_mut().set(0);
             } else {
                 let new_row = old_row - 1;
                 let new_row_char = self.line_to_char(new_row);
-                self.cursor_mut().pos = new_row_char + old_col;
+                self.cursor_mut().set(new_row_char + old_col);
             }
 
             true
@@ -176,7 +189,7 @@ pub trait TextEditor {
     /// Move the cursor 1 char to the right
     fn cursor_right(&mut self) -> bool {
         if self.cursor_pos() < self.len_chars() {
-            self.cursor_mut().pos += 1;
+            *self.cursor_mut().write() += 1;
 
             true
         } else {
@@ -187,7 +200,7 @@ pub trait TextEditor {
     /// Move the cursor 1 char to the left
     fn cursor_left(&mut self) -> bool {
         if self.cursor_pos() > 0 {
-            self.cursor_mut().pos -= 1;
+            *self.cursor_mut().write() -= 1;
 
             true
         } else {
@@ -197,7 +210,7 @@ pub trait TextEditor {
 
     /// Get the cursor position
     fn cursor_pos(&self) -> usize {
-        self.cursor().pos
+        self.cursor().pos()
     }
 
     /// Get the cursor position
@@ -207,7 +220,7 @@ pub trait TextEditor {
 
     /// Set the cursor position
     fn set_cursor_pos(&mut self, pos: usize) {
-        self.cursor_mut().pos = pos;
+        self.cursor_mut().set(pos);
     }
 
     // Check if has any selection at all
