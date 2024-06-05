@@ -11,12 +11,13 @@ use crate::{
         BorderProperty, ColorProperty, LinearGradientProperty, Property, ShadowProperty,
         TextShadowProperty,
     },
-    NodeInspectorBar,
+    NodeIdSerializer, NodeInspectorBar,
 };
 
 #[allow(non_snake_case)]
 #[component]
-pub fn NodeInspectorStyle(node_id: NodeId) -> Element {
+pub fn NodeInspectorStyle(node_id: String) -> Element {
+    let node_id = NodeId::deserialize(&node_id);
     let node = use_selected_node(&node_id);
 
     if let Some(node) = node {
