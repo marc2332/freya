@@ -195,9 +195,7 @@ pub fn DevTools(props: DevToolsProps) -> Element {
             width: "fill",
             height: "fill",
             color: "{color}",
-            Router::<Route> {
-                config: || RouterConfig::default().initial_route(Route::DOMInspector { })
-            }
+            Router::<Route> { }
         }
     )
 }
