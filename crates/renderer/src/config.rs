@@ -1,6 +1,9 @@
 use std::{io::Cursor, sync::Arc};
 
-use freya_core::plugins::{FreyaPlugin, PluginsManager};
+use freya_core::{
+    plugins::{FreyaPlugin, PluginsManager},
+    style::default_fonts,
+};
 use freya_engine::prelude::Color;
 use freya_node_state::Parse;
 use image::io::Reader;
@@ -63,7 +66,7 @@ impl<'a, T: Clone> Default for LaunchConfig<'a, T> {
             window: Default::default(),
             embedded_fonts: Default::default(),
             plugins: Default::default(),
-            default_fonts: vec!["Fira Sans".to_string()],
+            default_fonts: default_fonts(),
         }
     }
 }
@@ -133,7 +136,7 @@ impl<T> Default for LaunchConfigBuilder<'_, T> {
             on_exit: None,
             plugins: PluginsManager::default(),
             window_builder_hook: None,
-            default_fonts: vec!["Fira Sans".to_string()],
+            default_fonts: default_fonts().to_vec(),
         }
     }
 }

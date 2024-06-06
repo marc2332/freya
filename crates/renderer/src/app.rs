@@ -75,7 +75,7 @@ impl<State: 'static + Clone> App<State> {
         }
 
         let font_mgr: FontMgr = provider.into();
-        font_collection.set_default_font_manager(def_mgr, "Fira Sans");
+        font_collection.set_default_font_manager(def_mgr, None);
         font_collection.set_dynamic_font_manager(font_mgr.clone());
 
         let (event_emitter, event_receiver) = mpsc::unbounded_channel();

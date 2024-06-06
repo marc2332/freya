@@ -6,6 +6,7 @@ pub mod node;
 pub mod platform_state;
 pub mod plugins;
 pub mod render;
+pub mod style;
 pub mod types;
 
 pub mod prelude {
@@ -17,5 +18,6 @@ pub mod prelude {
     pub use crate::platform_state::*;
     pub use crate::plugins::*;
     pub use crate::render::*;
+    pub use crate::style::*;
     pub use crate::types::*;
 }
