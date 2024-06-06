@@ -386,18 +386,7 @@ pub async fn highlight_multiple_lines_single_editor() {
     utils.wait_for_update().await;
 
     let highlights = root.child(0).unwrap().state().cursor.highlights.clone();
-
-    #[cfg(not(target_os = "linux"))]
-    let start = 5;
-    #[cfg(not(target_os = "linux"))]
-    let end = 28;
-
-    #[cfg(target_os = "linux")]
-    let start = 4;
-    #[cfg(target_os = "linux")]
-    let end = 27;
-
-    assert_eq!(highlights, Some(vec![(start, end)]))
+    assert_eq!(highlights, Some(vec![(5, 28)]))
 }
 
 #[tokio::test]
@@ -796,11 +785,7 @@ pub async fn backspace_remove() {
     // Cursor has been moved
     let root = utils.root().get(0);
     let cursor = root.get(1).get(0);
-    #[cfg(not(target_os = "linux"))]
     assert_eq!(cursor.text(), Some("0:5"));
-
-    #[cfg(target_os = "linux")]
-    assert_eq!(cursor.text(), Some("0:4"));
 
     // Insert text
     utils.push_event(PlatformEvent::Keyboard {
@@ -1094,31 +1079,11 @@ pub async fn highlights_shift_click_single_line_mulitple_editors() {
 
     let highlights_1 = root.child(0).unwrap().state().cursor.highlights.clone();
 
-    #[cfg(not(target_os = "linux"))]
-    let start = 5;
-    #[cfg(not(target_os = "linux"))]
-    let end = 17;
-
-    #[cfg(target_os = "linux")]
-    let start = 4;
-    #[cfg(target_os = "linux")]
-    let end = 17;
-
-    assert_eq!(highlights_1, Some(vec![(start, end)]));
+    assert_eq!(highlights_1, Some(vec![(5, 17)]));
 
     let highlights_2 = root.child(1).unwrap().state().cursor.highlights.clone();
 
-    #[cfg(not(target_os = "linux"))]
-    let start = 0;
-    #[cfg(not(target_os = "linux"))]
-    let end = 11;
-
-    #[cfg(target_os = "linux")]
-    let start = 0;
-    #[cfg(target_os = "linux")]
-    let end = 10;
-
-    assert_eq!(highlights_2, Some(vec![(start, end)]));
+    assert_eq!(highlights_2, Some(vec![(0, 11)]));
 }
 
 #[tokio::test]
