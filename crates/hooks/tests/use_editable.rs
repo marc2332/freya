@@ -72,11 +72,7 @@ pub async fn multiple_lines_single_editor() {
     // Cursor has been moved
     let root = utils.root().get(0);
     let cursor = root.get(1).get(0);
-    #[cfg(not(target_os = "linux"))]
     assert_eq!(cursor.text(), Some("0:5"));
-
-    #[cfg(target_os = "linux")]
-    assert_eq!(cursor.text(), Some("0:4"));
 
     // Insert text
     utils.push_event(PlatformEvent::Keyboard {
@@ -91,17 +87,8 @@ pub async fn multiple_lines_single_editor() {
     // Text and cursor have changed
     let cursor = root.get(1).get(0);
     let content = root.get(0).get(0).get(0);
-    #[cfg(not(target_os = "linux"))]
-    {
-        assert_eq!(content.text(), Some("Hello! Rustaceans\nHello Rustaceans"));
-        assert_eq!(cursor.text(), Some("0:6"));
-    }
-
-    #[cfg(target_os = "linux")]
-    {
-        assert_eq!(content.text(), Some("Hell!o Rustaceans\nHello Rustaceans"));
-        assert_eq!(cursor.text(), Some("0:5"));
-    }
+    assert_eq!(content.text(), Some("Hello! Rustaceans\nHello Rustaceans"));
+    assert_eq!(cursor.text(), Some("0:6"));
 
     // Move cursor to the begining
     utils.push_event(PlatformEvent::Mouse {
@@ -270,11 +257,7 @@ pub async fn single_line_mulitple_editors() {
     // Cursor has been moved
     let root = utils.root().get(0);
     let cursor = root.get(2).get(0);
-    #[cfg(not(target_os = "linux"))]
     assert_eq!(cursor.text(), Some("0:5"));
-
-    #[cfg(target_os = "linux")]
-    assert_eq!(cursor.text(), Some("0:4"));
 
     // Insert text
     utils.push_event(PlatformEvent::Keyboard {
@@ -290,17 +273,8 @@ pub async fn single_line_mulitple_editors() {
     let cursor = root.get(2).get(0);
     let content = root.get(0).get(0).get(0);
 
-    #[cfg(not(target_os = "linux"))]
-    {
-        assert_eq!(content.text(), Some("Hello! Rustaceans\n"));
-        assert_eq!(cursor.text(), Some("0:6"));
-    }
-
-    #[cfg(target_os = "linux")]
-    {
-        assert_eq!(content.text(), Some("Hell!o Rustaceans\n"));
-        assert_eq!(cursor.text(), Some("0:5"));
-    }
+    assert_eq!(content.text(), Some("Hello! Rustaceans\n"));
+    assert_eq!(cursor.text(), Some("0:6"));
 
     // Second line
     let content = root.get(1).get(0).get(0);
@@ -494,32 +468,10 @@ pub async fn highlights_single_line_mulitple_editors() {
     utils.wait_for_update().await;
 
     let highlights_1 = root.child(0).unwrap().state().cursor.highlights.clone();
-
-    #[cfg(not(target_os = "linux"))]
-    let start = 5;
-    #[cfg(not(target_os = "linux"))]
-    let end = 17;
-
-    #[cfg(target_os = "linux")]
-    let start = 4;
-    #[cfg(target_os = "linux")]
-    let end = 17;
-
-    assert_eq!(highlights_1, Some(vec![(start, end)]));
+    assert_eq!(highlights_1, Some(vec![(5, 17)]));
 
     let highlights_2 = root.child(1).unwrap().state().cursor.highlights.clone();
-
-    #[cfg(not(target_os = "linux"))]
-    let start = 0;
-    #[cfg(not(target_os = "linux"))]
-    let end = 11;
-
-    #[cfg(target_os = "linux")]
-    let start = 0;
-    #[cfg(target_os = "linux")]
-    let end = 10;
-
-    assert_eq!(highlights_2, Some(vec![(start, end)]));
+    assert_eq!(highlights_2, Some(vec![(0, 11)]));
 }
 
 #[tokio::test]
@@ -592,11 +544,7 @@ pub async fn special_text_editing() {
     // Cursor has been moved
     let root = utils.root().get(0);
     let cursor = root.get(1).get(0);
-    #[cfg(not(target_os = "linux"))]
     assert_eq!(cursor.text(), Some("0:2"));
-
-    #[cfg(target_os = "linux")]
-    assert_eq!(cursor.text(), Some("0:4"));
 
     // Insert text
     utils.push_event(PlatformEvent::Keyboard {
@@ -611,17 +559,8 @@ pub async fn special_text_editing() {
     // Text and cursor have changed
     let cursor = root.get(1).get(0);
     let content = root.get(0).get(0).get(0);
-    #[cfg(not(target_os = "linux"))]
-    {
-        assert_eq!(content.text(), Some("你好🦀世界\n👋"));
-        assert_eq!(cursor.text(), Some("0:3"));
-    }
-
-    #[cfg(target_os = "linux")]
-    {
-        assert_eq!(content.text(), Some("你好世界🦀\n👋"));
-        assert_eq!(cursor.text(), Some("0:5"));
-    }
+    assert_eq!(content.text(), Some("你好🦀世界\n👋"));
+    assert_eq!(cursor.text(), Some("0:3"));
 
     // Move cursor to the begining
     utils.push_event(PlatformEvent::Mouse {
@@ -801,17 +740,8 @@ pub async fn backspace_remove() {
     // Text and cursor have changed
     let cursor = root.get(1).get(0);
     let content = root.get(0).get(0).get(0);
-    #[cfg(not(target_os = "linux"))]
-    {
-        assert_eq!(content.text(), Some("Hello🦀 Rustaceans\nHello Rustaceans"));
-        assert_eq!(cursor.text(), Some("0:6"));
-    }
-
-    #[cfg(target_os = "linux")]
-    {
-        assert_eq!(content.text(), Some("Hell🦀o Rustaceans\nHello Rustaceans"));
-        assert_eq!(cursor.text(), Some("0:5"));
-    }
+    assert_eq!(content.text(), Some("Hello🦀 Rustaceans\nHello Rustaceans"));
+    assert_eq!(cursor.text(), Some("0:6"));
 
     // Remove text
     utils.push_event(PlatformEvent::Keyboard {
@@ -827,17 +757,8 @@ pub async fn backspace_remove() {
     // Text and cursor have changed
     let cursor = root.get(1).get(0);
     let content = root.get(0).get(0).get(0);
-    #[cfg(not(target_os = "linux"))]
-    {
-        assert_eq!(content.text(), Some("Hello Rustaceans\nHello Rustaceans"));
-        assert_eq!(cursor.text(), Some("0:5"));
-    }
-
-    #[cfg(target_os = "linux")]
-    {
-        assert_eq!(content.text(), Some("Hello Rustaceans\nHello Rustaceans"));
-        assert_eq!(cursor.text(), Some("0:4"));
-    }
+    assert_eq!(content.text(), Some("Hello Rustaceans\nHello Rustaceans"));
+    assert_eq!(cursor.text(), Some("0:5"));
 }
 
 #[tokio::test]
@@ -945,18 +866,7 @@ pub async fn highlight_shift_click_multiple_lines_single_editor() {
     utils.wait_for_update().await;
 
     let highlights = root.child(0).unwrap().state().cursor.highlights.clone();
-
-    #[cfg(not(target_os = "linux"))]
-    let start = 5;
-    #[cfg(not(target_os = "linux"))]
-    let end = 28;
-
-    #[cfg(target_os = "linux")]
-    let start = 4;
-    #[cfg(target_os = "linux")]
-    let end = 27;
-
-    assert_eq!(highlights, Some(vec![(start, end)]))
+    assert_eq!(highlights, Some(vec![(5, 28)]))
 }
 
 #[tokio::test]
