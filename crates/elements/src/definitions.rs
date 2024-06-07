@@ -229,6 +229,8 @@ builder_constructors! {
         opacity: String,
         #[doc = include_str!("_docs/attributes/content.md")]
         content: String,
+        #[doc = include_str!("_docs/attributes/line_height.md")]
+        line_height: String,
 
         name: String,
         focusable: String,
