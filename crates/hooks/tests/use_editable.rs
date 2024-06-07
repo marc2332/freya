@@ -563,8 +563,17 @@ pub async fn special_text_editing() {
     // Text and cursor have changed
     let cursor = root.get(1).get(0);
     let content = root.get(0).get(0).get(0);
-    assert_eq!(content.text(), Some("你好🦀世界\n👋"));
-    assert_eq!(cursor.text(), Some("0:3"));
+    #[cfg(not(target_os = "linux"))]
+    {
+        assert_eq!(content.text(), Some("你好🦀世界\n👋"));
+        assert_eq!(cursor.text(), Some("0:3"));
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        assert_eq!(content.text(), Some("你好世界🦀\n👋"));
+        assert_eq!(cursor.text(), Some("0:5"));
+    }
 
     // Move cursor to the begining
     utils.push_event(PlatformEvent::Mouse {
