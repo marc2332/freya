@@ -544,7 +544,11 @@ pub async fn special_text_editing() {
     // Cursor has been moved
     let root = utils.root().get(0);
     let cursor = root.get(1).get(0);
+    #[cfg(not(target_os = "linux"))]
     assert_eq!(cursor.text(), Some("0:2"));
+
+    #[cfg(target_os = "linux")]
+    assert_eq!(cursor.text(), Some("0:4"));
 
     // Insert text
     utils.push_event(PlatformEvent::Keyboard {
