@@ -29,6 +29,7 @@ pub enum Route {
 
 #[allow(non_snake_case)]
 fn AppSidebar() -> Element {
+    
     rsx!(
         NativeRouter {
             Sidebar {
@@ -37,6 +38,7 @@ fn AppSidebar() -> Element {
                         to: Route::Home,
                         ActivableRoute {
                             route: Route::Home,
+                            exact: true,
                             SidebarItem {
                                 label {
                                     "Go to Hey ! 👋"
