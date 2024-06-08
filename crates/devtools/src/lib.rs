@@ -130,36 +130,21 @@ pub fn DevtoolsBar() -> Element {
     )
 }
 
-#[allow(non_snake_case)]
-#[component]
-pub fn NodeInspectorBar(node_id: NodeId) -> Element {
-    rsx!(
-        TabsBar {
-            TabButton {
-                to: Route::NodeInspectorStyle { node_id: node_id.serialize() },
-                label: "Style"
-            }
-            TabButton {
-                to: Route::NodeInspectorLayout { node_id: node_id.serialize() },
-                label: "Layout"
-            }
-        }
-    )
-}
-
 #[derive(Routable, Clone, PartialEq)]
 #[rustfmt::skip]
 pub enum Route {
     #[layout(DevtoolsBar)]
         #[nest("/")]
-            #[layout(DOMInspectorLayout)]
+            #[layout(LayoutForDOMInspector)]
                 #[route("/")]
                 DOMInspector  {},
                 #[nest("/node/:node_id")]
-                    #[route("/style")]
-                    NodeInspectorStyle { node_id: String },
-                    #[route("/layout")]
-                    NodeInspectorLayout { node_id: String },
+                    #[layout(LayoutForNodeInspector)]
+                        #[route("/style")]
+                        NodeInspectorStyle { node_id: String },
+                        #[route("/layout")]
+                        NodeInspectorLayout { node_id: String },
+                    #[end_layout]
                 #[end_nest]
             #[end_layout]
         #[end_nest]
@@ -191,7 +176,30 @@ fn PageNotFound() -> Element {
 
 #[allow(non_snake_case)]
 #[component]
-fn DOMInspectorLayout() -> Element {
+fn LayoutForNodeInspector(node_id: String) -> Element {
+    rsx!(
+        rect {
+            overflow: "clip",
+            width: "100%",
+            height: "50%",
+            TabsBar {
+                TabButton {
+                    to: Route::NodeInspectorStyle { node_id: node_id.clone() },
+                    label: "Style"
+                }
+                TabButton {
+                    to: Route::NodeInspectorLayout { node_id: node_id },
+                    label: "Layout"
+                }
+            }
+            Outlet::<Route> {}
+        }
+    )
+}
+
+#[allow(non_snake_case)]
+#[component]
+fn LayoutForDOMInspector() -> Element {
     let route = use_route::<Route>();
     let platform = use_platform();
     let mut radio = use_radio(DevtoolsChannel::Global);
