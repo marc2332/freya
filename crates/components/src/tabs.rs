@@ -1,9 +1,7 @@
-use crate::ScrollView;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_hooks::{
-    theme_with, use_applied_theme, use_focus, use_platform, ScrollViewThemeWith, TabTheme,
-    TabThemeWith,
+    use_activable_route, use_applied_theme, use_focus, use_platform, TabTheme, TabThemeWith,
 };
 use winit::window::CursorIcon;
 
@@ -11,11 +9,8 @@ use winit::window::CursorIcon;
 #[component]
 pub fn TabsBar(children: Element) -> Element {
     rsx!(
-        ScrollView {
+        rect {
             direction: "horizontal",
-            theme: theme_with!(ScrollViewTheme {
-                height : "auto".into(),
-            }),
             {children}
         }
     )
@@ -37,6 +32,7 @@ pub fn Tab(children: Element, theme: Option<TabThemeWith>) -> Element {
     let focus = use_focus();
     let mut status = use_signal(TabStatus::default);
     let platform = use_platform();
+    let is_active = use_activable_route();
 
     let focus_id = focus.attribute();
 
@@ -46,12 +42,9 @@ pub fn Tab(children: Element, theme: Option<TabThemeWith>) -> Element {
         border_fill,
         focus_border_fill,
         padding,
-        margin,
-        corner_radius,
         width,
         height,
         font_theme,
-        shadow,
     } = use_applied_theme!(&theme, tab);
 
     use_drop(move || {
@@ -74,10 +67,10 @@ pub fn Tab(children: Element, theme: Option<TabThemeWith>) -> Element {
         TabStatus::Hovering => hover_background,
         TabStatus::Idle => background,
     };
-    let border = if focus.is_selected() {
-        format!("2 solid {focus_border_fill}")
+    let border = if focus.is_selected() || is_active {
+        focus_border_fill
     } else {
-        format!("1 solid {border_fill}")
+        border_fill
     };
 
     rsx!(
@@ -87,20 +80,24 @@ pub fn Tab(children: Element, theme: Option<TabThemeWith>) -> Element {
             focus_id,
             width: "{width}",
             height: "{height}",
-            padding: "{padding}",
-            margin: "{margin}",
             focusable: "true",
             overflow: "clip",
             role: "tab",
             color: "{font_theme.color}",
-            shadow: "{shadow}",
-            border: "{border}",
-            corner_radius: "{corner_radius}",
             background: "{background}",
             text_align: "center",
-            main_align: "center",
-            cross_align: "center",
-            {children}
+            content: "fit",
+            rect {
+                padding: "{padding}",
+                main_align: "center",
+                cross_align: "center",
+                {children},
+            }
+            rect {
+                height: "2",
+                width: "fill-min",
+                background: "{border}"
+            }
         }
     )
 }

@@ -189,12 +189,9 @@ pub const DARK_THEME: Theme = Theme {
         font_theme: FontTheme {
             color: cow_borrowed!("white"),
         },
-        border_fill: cow_borrowed!("rgb(80, 80, 80)"),
+        border_fill: cow_borrowed!("none"),
         focus_border_fill: cow_borrowed!("rgb(110, 110, 110)"),
-        shadow: cow_borrowed!("0 4 5 0 rgb(0, 0, 0, 0.1)"),
         padding: LIGHT_THEME.button.padding,
-        margin: LIGHT_THEME.button.margin,
-        corner_radius: LIGHT_THEME.button.corner_radius,
         width: LIGHT_THEME.button.width,
         height: LIGHT_THEME.button.height,
     },
