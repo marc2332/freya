@@ -1,25 +1,18 @@
 use dioxus::prelude::*;
+use dioxus_radio::prelude::*;
 use dioxus_router::prelude::*;
 use freya_components::*;
-use freya_core::{
-    dom::SafeDOM,
-    node::{get_node_state, NodeState},
-};
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::{use_init_theme, use_theme, DARK_THEME};
-use freya_native_core::node::NodeType;
-use freya_native_core::prelude::ElementNode;
-use freya_native_core::real_dom::NodeImmutable;
+use freya_hooks::{use_init_theme, use_platform, DARK_THEME};
 use freya_native_core::NodeId;
 
-use freya_renderer::HoveredNode;
-use std::sync::Arc;
-use tokio::sync::Notify;
-use torin::prelude::LayoutNode;
+use freya_renderer::{devtools::DevtoolsReceiver, HoveredNode};
+use state::{DevtoolsChannel, DevtoolsState};
 
 mod hooks;
 mod node;
 mod property;
+mod state;
 mod tab;
 mod tabs;
 
@@ -28,17 +21,15 @@ use tabs::{layout::*, style::*, tree::*};
 
 /// Run the [`VirtualDom`] with a sidepanel where the devtools are located.
 pub fn with_devtools(
-    rdom: SafeDOM,
     root: fn() -> Element,
-    mutations_notifier: Arc<Notify>,
+    devtools_receiver: DevtoolsReceiver,
     hovered_node: HoveredNode,
 ) -> VirtualDom {
     VirtualDom::new_with_props(
         AppWithDevtools,
         AppWithDevtoolsProps {
             root,
-            rdom,
-            mutations_notifier,
+            devtools_receiver,
             hovered_node,
         },
     )
@@ -47,8 +38,7 @@ pub fn with_devtools(
 #[derive(Props, Clone)]
 struct AppWithDevtoolsProps {
     root: fn() -> Element,
-    rdom: SafeDOM,
-    mutations_notifier: Arc<Notify>,
+    devtools_receiver: DevtoolsReceiver,
     hovered_node: HoveredNode,
 }
 
@@ -62,8 +52,8 @@ impl PartialEq for AppWithDevtoolsProps {
 fn AppWithDevtools(props: AppWithDevtoolsProps) -> Element {
     #[allow(non_snake_case)]
     let Root = props.root;
-    let mutations_notifier = props.mutations_notifier.clone();
-    let hovered_node = props.hovered_node.clone();
+    let devtools_receiver = props.devtools_receiver;
+    let hovered_node = props.hovered_node;
 
     rsx!(
         NativeContainer {
@@ -83,9 +73,8 @@ fn AppWithDevtools(props: AppWithDevtoolsProps) -> Element {
                     width: "350",
                     ThemeProvider {
                         DevTools {
-                            rdom: props.rdom.clone(),
-                            mutations_notifier: mutations_notifier,
-                            hovered_node: hovered_node
+                            devtools_receiver,
+                            hovered_node
                         }
                     }
                 }
@@ -94,21 +83,9 @@ fn AppWithDevtools(props: AppWithDevtoolsProps) -> Element {
     )
 }
 
-#[derive(Clone, PartialEq)]
-pub struct TreeNode {
-    tag: String,
-    id: NodeId,
-    height: u16,
-    #[allow(dead_code)]
-    text: Option<String>,
-    state: NodeState,
-    layout_node: LayoutNode,
-}
-
 #[derive(Props, Clone)]
 pub struct DevToolsProps {
-    rdom: SafeDOM,
-    mutations_notifier: Arc<Notify>,
+    devtools_receiver: DevtoolsReceiver,
     hovered_node: HoveredNode,
 }
 
@@ -120,75 +97,14 @@ impl PartialEq for DevToolsProps {
 
 #[allow(non_snake_case)]
 pub fn DevTools(props: DevToolsProps) -> Element {
-    let mut children = use_context_provider(|| Signal::new(Vec::<TreeNode>::new()));
-    use_context_provider::<Signal<HoveredNode>>(|| Signal::new(props.hovered_node.clone()));
-    use_init_theme(|| DARK_THEME);
-    let theme = use_theme();
+    let theme = use_init_theme(|| DARK_THEME);
+    use_init_radio_station::<DevtoolsState, DevtoolsChannel>(|| DevtoolsState {
+        hovered_node: props.hovered_node.clone(),
+        devtools_receiver: props.devtools_receiver.clone(),
+    });
 
     let theme = theme.read();
     let color = &theme.body.color;
-
-    use_hook(move || {
-        spawn(async move {
-            let DevToolsProps {
-                mutations_notifier,
-                rdom,
-                ..
-            } = props;
-            loop {
-                mutations_notifier.notified().await;
-
-                let dom = rdom.try_get();
-                if let Some(dom) = dom {
-                    let rdom = dom.rdom();
-                    let layout = dom.layout();
-
-                    let mut new_children = Vec::with_capacity(rdom.tree_ref().len());
-
-                    let mut root_found = false;
-                    let mut devtools_found = false;
-
-                    rdom.traverse_depth_first(|node| {
-                        let height = node.height();
-                        if height == 3 {
-                            if !root_found {
-                                root_found = true;
-                            } else {
-                                devtools_found = true;
-                            }
-                        }
-
-                        if !devtools_found && root_found {
-                            let layout_node = layout.get(node.id());
-                            if let Some(layout_node) = layout_node {
-                                let (text, tag) = match &*node.node_type() {
-                                    NodeType::Text(text) => {
-                                        (Some(text.to_string()), "text".to_string())
-                                    }
-                                    NodeType::Element(ElementNode { tag, .. }) => {
-                                        (None, tag.to_string())
-                                    }
-                                    NodeType::Placeholder => (None, "placeholder".to_string()),
-                                };
-
-                                let state = get_node_state(&node);
-
-                                new_children.push(TreeNode {
-                                    height,
-                                    id: node.id(),
-                                    tag,
-                                    text,
-                                    state,
-                                    layout_node: layout_node.clone(),
-                                });
-                            }
-                        }
-                    });
-                    *children.write() = new_children;
-                }
-            }
-        });
-    });
 
     rsx!(
         rect {
@@ -252,6 +168,17 @@ pub enum Route {
     PageNotFound { },
 }
 
+impl Route {
+    pub fn get_node_id(&self) -> Option<NodeId> {
+        match self {
+            Self::NodeInspectorStyle { node_id } | Self::NodeInspectorLayout { node_id } => {
+                Some(NodeId::deserialize(node_id))
+            }
+            _ => None,
+        }
+    }
+}
+
 #[allow(non_snake_case)]
 #[component]
 fn PageNotFound() -> Element {
@@ -265,13 +192,29 @@ fn PageNotFound() -> Element {
 #[allow(non_snake_case)]
 #[component]
 fn DOMInspectorLayout() -> Element {
-    let hovered_node = use_context::<Signal<HoveredNode>>();
     let route = use_route::<Route>();
+    let platform = use_platform();
+    let mut radio = use_radio(DevtoolsChannel::Global);
+    use_hook(move || {
+        spawn(async move {
+            let mut devtools_receiver = {
+                let radio = radio.read();
+                radio.devtools_receiver.clone()
+            };
+            loop {
+                devtools_receiver
+                    .changed()
+                    .await
+                    .expect("Failed while waiting for DOM changes.");
 
-    let is_expanded_vertical = matches!(
-        route,
-        Route::NodeInspectorStyle { .. } | Route::NodeInspectorLayout { .. }
-    );
+                radio.write_channel(DevtoolsChannel::UpdatedDOM);
+            }
+        });
+    });
+
+    let selected_node_id = route.get_node_id();
+
+    let is_expanded_vertical = selected_node_id.is_some();
 
     let height = if is_expanded_vertical {
         "calc(50% - 35)"
@@ -282,9 +225,11 @@ fn DOMInspectorLayout() -> Element {
     rsx!(
         NodesTree {
             height,
-            onselected: move |node: TreeNode| {
-                if let Some(hovered_node) = &hovered_node.read().as_ref() {
-                    hovered_node.lock().unwrap().replace(node.id);
+            selected_node_id,
+            onselected: move |node_id: NodeId| {
+                if let Some(hovered_node) = &radio.read().hovered_node.as_ref() {
+                    hovered_node.lock().unwrap().replace(node_id);
+                    platform.request_animation_frame();
                 }
             }
         }

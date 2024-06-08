@@ -198,23 +198,18 @@ pub fn launch_cfg<T: 'static + Clone + Send>(app: AppComponent, config: LaunchCo
             .expect("Setting default subscriber failed");
     }
 
-    let (vdom, mutations_notifier, hovered_node) = {
+    let (vdom, devtools, hovered_node) = {
         #[cfg(feature = "devtools")]
         #[cfg(debug_assertions)]
         {
             use freya_devtools::with_devtools;
+            use freya_renderer::devtools::Devtools;
             use std::sync::{Arc, Mutex};
-            use tokio::sync::Notify;
 
             let hovered_node = Some(Arc::new(Mutex::new(None)));
-            let mutations_notifier = Arc::new(Notify::new());
-            let vdom = with_devtools(
-                sdom.clone(),
-                app,
-                mutations_notifier.clone(),
-                hovered_node.clone(),
-            );
-            (vdom, Some(mutations_notifier), hovered_node)
+            let (devtools, devtools_receiver) = Devtools::new();
+            let vdom = with_devtools(app, devtools_receiver.clone(), hovered_node.clone());
+            (vdom, Some(devtools), hovered_node)
         }
 
         #[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
@@ -223,7 +218,7 @@ pub fn launch_cfg<T: 'static + Clone + Send>(app: AppComponent, config: LaunchCo
             (vdom, None, None)
         }
     };
-    DesktopRenderer::launch(vdom, sdom, config, mutations_notifier, hovered_node);
+    DesktopRenderer::launch(vdom, sdom, config, devtools, hovered_node);
 }
 
 #[cfg(any(not(feature = "devtools"), not(debug_assertions)))]

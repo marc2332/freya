@@ -1,11 +1,11 @@
 use app::App;
 pub use config::*;
+use devtools::Devtools;
 use dioxus_core::VirtualDom;
 use freya_common::EventMessage;
 use freya_core::dom::SafeDOM;
 use freya_native_core::NodeId;
 use std::sync::{Arc, Mutex};
-use tokio::sync::Notify;
 use winit::event_loop::EventLoopBuilder;
 
 pub use config::WindowConfig;
@@ -14,6 +14,7 @@ pub use window::WindowEnv;
 mod accessibility;
 mod app;
 mod config;
+pub mod devtools;
 mod elements;
 mod event_loop;
 mod renderer;
@@ -31,7 +32,7 @@ impl DesktopRenderer {
         vdom: VirtualDom,
         sdom: SafeDOM,
         config: LaunchConfig<T>,
-        mutations_notifier: Option<Arc<Notify>>,
+        devtools: Option<Devtools>,
         hovered_node: HoveredNode,
     ) {
         let rt = tokio::runtime::Builder::new_multi_thread()
@@ -66,7 +67,7 @@ impl DesktopRenderer {
             sdom,
             vdom,
             &proxy,
-            mutations_notifier,
+            devtools,
             window_env,
             config.embedded_fonts,
             config.plugins,
