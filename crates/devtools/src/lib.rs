@@ -188,7 +188,7 @@ fn LayoutForNodeInspector(node_id: String) -> Element {
                     label: "Style"
                 }
                 TabButton {
-                    to: Route::NodeInspectorLayout { node_id: node_id },
+                    to: Route::NodeInspectorLayout { node_id },
                     label: "Layout"
                 }
             }
