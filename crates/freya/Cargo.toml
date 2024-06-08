@@ -32,7 +32,6 @@ freya-common = { workspace = true }
 freya-hooks = { workspace = true }
 freya-core = { workspace = true }
 freya-components = { workspace = true }
-freya-engine = { workspace = true }
 freya-testing = { workspace = true }
 torin = { workspace = true }
 
