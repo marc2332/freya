@@ -100,7 +100,7 @@ pub fn Tab(children: Element, theme: Option<TabThemeWith>) -> Element {
             text_align: "center",
             main_align: "center",
             cross_align: "center",
-            {&children}
+            {children}
         }
     )
 }
