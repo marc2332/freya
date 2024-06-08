@@ -197,10 +197,7 @@ fn DOMInspectorLayout() -> Element {
     let mut radio = use_radio(DevtoolsChannel::Global);
     use_hook(move || {
         spawn(async move {
-            let mut devtools_receiver = {
-                let radio = radio.read();
-                radio.devtools_receiver.clone()
-            };
+            let mut devtools_receiver = radio.read().devtools_receiver.clone();
             loop {
                 devtools_receiver
                     .changed()

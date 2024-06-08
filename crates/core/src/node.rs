@@ -9,7 +9,7 @@ use torin::{alignment::Alignment, direction::DirectionMode, gaps::Gaps, size::Si
 
 use crate::dom::DioxusNode;
 
-#[derive(Clone, PartialEq, Default)]
+#[derive(Clone, PartialEq)]
 pub struct NodeState {
     pub cursor: CursorSettings,
     pub font_style: FontStyleState,
