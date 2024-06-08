@@ -362,6 +362,15 @@ pub trait TextEditor {
 
                 event.insert(TextEvent::TEXT_CHANGED);
             }
+            Key::Tab => {
+                // Inserts a tab
+                let text = " ".repeat(self.get_identation());
+                let cursor_pos = self.cursor_pos();
+                self.insert(&text, cursor_pos);
+                self.set_cursor_pos(cursor_pos + text.chars().count());
+
+                event.insert(TextEvent::TEXT_CHANGED);
+            }
             Key::Character(character) => {
                 let meta_or_ctrl = if cfg!(target_os = "macos") {
                     modifiers.meta()
@@ -476,4 +485,6 @@ pub trait TextEditor {
     fn redo(&mut self) -> Option<usize>;
 
     fn get_selection_range(&self) -> Option<(usize, usize)>;
+
+    fn get_identation(&self) -> usize;
 }

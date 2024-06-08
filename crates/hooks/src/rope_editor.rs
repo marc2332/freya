@@ -10,6 +10,7 @@ use crate::{text_editor::*, EditableMode, EditorHistory, HistoryChange};
 pub struct RopeEditor {
     pub(crate) rope: Rope,
     pub(crate) cursor: TextCursor,
+    pub(crate) identation: usize,
     pub(crate) mode: EditableMode,
     pub(crate) selected: Option<(usize, usize)>,
     pub(crate) clipboard: UseClipboard,
@@ -27,6 +28,7 @@ impl RopeEditor {
     pub fn new(
         text: String,
         cursor: TextCursor,
+        identation: usize,
         mode: EditableMode,
         clipboard: UseClipboard,
         history: EditorHistory,
@@ -34,6 +36,7 @@ impl RopeEditor {
         Self {
             rope: Rope::from_str(&text),
             cursor,
+            identation,
             selected: None,
             mode,
             clipboard,
@@ -270,6 +273,10 @@ impl TextEditor for RopeEditor {
 
     fn redo(&mut self) -> Option<usize> {
         self.history.redo(&mut self.rope)
+    }
+
+    fn get_identation(&self) -> usize {
+        self.identation
     }
 }
 
