@@ -111,3 +111,109 @@ pub struct FlatItem<I> {
     pub depth: usize,
     pub root_id: I,
 }
+
+#[cfg(test)]
+mod test {
+    use crate::FlatItem;
+
+    #[test]
+    fn tree() {
+        use std::{path::PathBuf, str::FromStr};
+
+        use crate::{ExpandableItemState, TreeItem};
+
+        let mut tree = TreeItem::Expandable {
+            id: PathBuf::from_str("/").unwrap(),
+            value: (),
+            state: ExpandableItemState::Open(vec![
+                TreeItem::Expandable {
+                    id: PathBuf::from_str("/1").unwrap(),
+                    value: (),
+                    state: ExpandableItemState::Open(vec![
+                        TreeItem::Standalone {
+                            id: PathBuf::from_str("/1/1").unwrap(),
+                            value: (),
+                        },
+                        TreeItem::Standalone {
+                            id: PathBuf::from_str("/1/2").unwrap(),
+                            value: (),
+                        },
+                    ]),
+                },
+                TreeItem::Expandable {
+                    id: PathBuf::from_str("/2").unwrap(),
+                    value: (),
+                    state: ExpandableItemState::Closed,
+                },
+                TreeItem::Standalone {
+                    id: PathBuf::from_str("/3").unwrap(),
+                    value: (),
+                },
+            ]),
+        };
+
+        tree.set_state(
+            &PathBuf::from_str("/1").unwrap(),
+            &ExpandableItemState::Closed,
+        );
+        tree.set_state(
+            &PathBuf::from_str("/2").unwrap(),
+            &ExpandableItemState::Open(vec![TreeItem::Expandable {
+                id: PathBuf::from_str("/2/1").unwrap(),
+                value: (),
+                state: ExpandableItemState::Open(vec![]),
+            }]),
+        );
+        tree.set_state(
+            &PathBuf::from_str("/2/1").unwrap(),
+            &ExpandableItemState::Closed,
+        );
+        tree.set_state(
+            &PathBuf::from_str("/3").unwrap(),
+            &ExpandableItemState::Closed,
+        );
+
+        let flat_items = tree.flat(0, &PathBuf::from_str("/").unwrap());
+
+        assert_eq!(
+            flat_items,
+            vec![
+                FlatItem {
+                    id: PathBuf::from_str("/").unwrap(),
+                    is_open: true,
+                    is_standalone: false,
+                    depth: 0,
+                    root_id: PathBuf::from_str("/").unwrap(),
+                },
+                FlatItem {
+                    id: PathBuf::from_str("/1").unwrap(),
+                    is_open: false,
+                    is_standalone: false,
+                    depth: 1,
+                    root_id: PathBuf::from_str("/").unwrap(),
+                },
+                FlatItem {
+                    id: PathBuf::from_str("/2").unwrap(),
+                    is_open: true,
+                    is_standalone: false,
+                    depth: 1,
+                    root_id: PathBuf::from_str("/").unwrap(),
+                },
+                FlatItem {
+                    id: PathBuf::from_str("/2/1").unwrap(),
+                    is_open: false,
+                    is_standalone: false,
+                    depth: 2,
+                    root_id: PathBuf::from_str("/").unwrap(),
+                },
+                FlatItem {
+                    id: PathBuf::from_str("/3").unwrap(),
+                    is_open: false,
+                    is_standalone: true,
+                    depth: 1,
+                    root_id: PathBuf::from_str("/").unwrap(),
+                },
+            ]
+        )
+    }
+}
