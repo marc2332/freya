@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use dioxus_router::prelude::use_navigator;
-use freya_elements::elements as dioxus_elements;
+use freya_elements as dioxus_elements;
 use freya_elements::events::{MouseButton, PointerEvent, PointerType};
 
 /// Provides native functionalities for a dioxus-router.

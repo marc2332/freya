@@ -1,7 +1,7 @@
 use std::{any::Any, rc::Rc};
 
 use freya_elements::{
-    elements::PlatformEventData,
+    events::PlatformEventData,
     events::{
         pointer::PointerType, FileData, KeyboardData, MouseData, PointerData, TouchData, WheelData,
     },

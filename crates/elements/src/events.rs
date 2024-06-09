@@ -18,3 +18,5 @@ pub type MouseEvent = Event<MouseData>;
 pub type WheelEvent = Event<WheelData>;
 pub type TouchEvent = Event<TouchData>;
 pub type PointerEvent = Event<PointerData>;
+
+pub use crate::definitions::events::*;

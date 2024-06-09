@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use crate::icons::ArrowIcon;
 use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
+use freya_elements as dioxus_elements;
 use freya_elements::events::keyboard::Key;
 use freya_elements::events::{KeyboardEvent, MouseEvent};
 

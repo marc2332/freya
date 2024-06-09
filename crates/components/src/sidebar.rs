@@ -1,6 +1,6 @@
 use crate::{ButtonStatus, ScrollView};
 use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
+use freya_elements as dioxus_elements;
 use freya_hooks::{
     theme_with, use_activable_route, use_applied_theme, use_platform, ScrollViewThemeWith,
     SidebarItemTheme, SidebarItemThemeWith, SidebarTheme, SidebarThemeWith,
