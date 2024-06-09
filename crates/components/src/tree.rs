@@ -36,7 +36,11 @@ pub enum TreeItem<I, V> {
     },
 }
 
-impl<I, V> TreeItem<I, V> {
+impl<I, V> TreeItem<I, V>
+where
+    I: ItemPath + Clone,
+    V: Clone + PartialEq,
+{
     /// Get the ID of the item, e.g its path.
     pub fn id(&self) -> &I {
         match self {
@@ -46,11 +50,7 @@ impl<I, V> TreeItem<I, V> {
     }
 
     /// Update the state of the given Expandable Item, e.g to open with more items or to simply close.
-    pub fn set_state(&mut self, item_id: &I, item_state: &ExpandableItemState<I, V>)
-    where
-        I: ItemPath + Clone,
-        V: Clone,
-    {
+    pub fn set_state(&mut self, item_id: &I, item_state: &ExpandableItemState<I, V>) {
         if let TreeItem::Expandable { id, state, .. } = self {
             if id == item_id {
                 *state = item_state.clone();
@@ -66,11 +66,7 @@ impl<I, V> TreeItem<I, V> {
 
     /// Turn all the inner items and this item itself into a flat list.
     /// This can be useful for virtualization.
-    pub fn flat(&self, depth: usize, root_id: &I) -> Vec<FlatItem<I>>
-    where
-        I: ItemPath + Clone,
-        V: Clone + PartialEq,
-    {
+    pub fn flat(&self, depth: usize, root_id: &I) -> Vec<FlatItem<I>> {
         let mut flat_items = vec![self.clone().into_flat(depth, root_id.clone())];
         if let TreeItem::Expandable {
             state: ExpandableItemState::Open(items),
@@ -85,11 +81,7 @@ impl<I, V> TreeItem<I, V> {
         flat_items
     }
 
-    fn into_flat(self, depth: usize, root_id: I) -> FlatItem<I>
-    where
-        I: ItemPath + Clone,
-        V: Clone + PartialEq,
-    {
+    fn into_flat(self, depth: usize, root_id: I) -> FlatItem<I> {
         match self {
             TreeItem::Standalone { id, .. } => FlatItem {
                 id,
