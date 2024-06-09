@@ -5,7 +5,7 @@ use freya_core::{
     dom::SafeDOM,
     node::{get_node_state, NodeState},
 };
-use freya_elements::elements as dioxus_elements;
+use freya_elements as dioxus_elements;
 use freya_hooks::{use_init_theme, use_theme, DARK_THEME};
 use freya_native_core::node::NodeType;
 use freya_native_core::prelude::ElementNode;

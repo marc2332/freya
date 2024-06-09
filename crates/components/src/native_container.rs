@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use freya_common::EventMessage;
-use freya_elements::elements as dioxus_elements;
+use freya_elements as dioxus_elements;
 use freya_elements::events::KeyboardEvent;
 use freya_hooks::{use_init_native_platform, use_platform};
 

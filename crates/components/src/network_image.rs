@@ -1,7 +1,7 @@
 use crate::Loader;
 use bytes::Bytes;
 use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
+use freya_elements as dioxus_elements;
 use freya_hooks::{
     use_applied_theme, use_asset_cacher, use_focus, AssetAge, AssetConfiguration,
     NetworkImageTheme, NetworkImageThemeWith,
