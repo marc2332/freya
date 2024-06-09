@@ -88,8 +88,13 @@ fn app() -> Element {
                             .iter_mut()
                             .find(|tree_item| tree_item.id() == &item.root_id)
                             .unwrap();
-                        let items = read_folder_as_items(&item.id).await.unwrap_or_default();
-                        expandable_item.set_state(&item.id, &ExpandableItemState::Open(items));
+                        if item.is_open {
+                            expandable_item.set_state(&item.id, &ExpandableItemState::Closed);
+                        } else {
+                            let items = read_folder_as_items(&item.id).await.unwrap_or_default();
+                            expandable_item.set_state(&item.id, &ExpandableItemState::Open(items));
+                        }
+                       
                     });
                 }
             };
