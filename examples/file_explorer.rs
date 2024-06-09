@@ -94,7 +94,6 @@ fn app() -> Element {
                             let items = read_folder_as_items(&item.id).await.unwrap_or_default();
                             expandable_item.set_state(&item.id, &ExpandableItemState::Open(items));
                         }
-                       
                     });
                 }
             };
