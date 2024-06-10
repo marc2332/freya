@@ -37,6 +37,7 @@ fn AppSidebar() -> Element {
                         to: Route::Home,
                         ActivableRoute {
                             route: Route::Home,
+                            exact: true,
                             SidebarItem {
                                 label {
                                     "Go to Hey ! 👋"
