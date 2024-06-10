@@ -4,11 +4,12 @@ use freya_elements::elements as dioxus_elements;
 use freya_hooks::{theme_with, ScrollViewThemeWith};
 use freya_native_core::NodeId;
 
-use crate::{hooks::use_selected_node, NodeInspectorBar};
+use crate::{hooks::use_selected_node, NodeIdSerializer, NodeInspectorBar};
 
 #[allow(non_snake_case)]
 #[component]
-pub fn NodeInspectorLayout(node_id: NodeId) -> Element {
+pub fn NodeInspectorLayout(node_id: String) -> Element {
+    let node_id = NodeId::deserialize(&node_id);
     let node = use_selected_node(&node_id);
 
     if let Some(node) = node {

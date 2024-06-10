@@ -1,6 +1,6 @@
 use crate::{node::NodeElement, NodeIdSerializer, Route, TreeNode};
 use dioxus::prelude::*;
-use dioxus_router::prelude::use_navigator;
+use dioxus_router::prelude::{router, use_navigator};
 use freya_components::*;
 use freya_hooks::{theme_with, ScrollViewThemeWith};
 use freya_native_core::NodeId;
@@ -12,7 +12,7 @@ pub fn NodesTree(
     selected_node_id: Option<NodeId>,
     onselected: EventHandler<TreeNode>,
 ) -> Element {
-    let router = use_navigator();
+    let navigator = use_navigator();
     let nodes = use_context::<Signal<Vec<TreeNode>>>();
 
     rsx!(VirtualScrollView {
@@ -34,7 +34,14 @@ pub fn NodesTree(
                     is_selected: Some(node.id) == selected_node_id.flatten(),
                     onselected: move |node: TreeNode| {
                         onselected.call(node.clone());
-                        router.replace(Route::TreeStyleTab { node_id: node.id.serialize() });
+                        match router().current() {
+                            Route::NodeInspectorLayout { .. } => {
+                                navigator.replace(Route::NodeInspectorLayout { node_id: node.id.serialize() });
+                            }
+                            _ => {
+                                navigator.replace(Route::NodeInspectorStyle { node_id: node.id.serialize() });
+                            }
+                        }
                     },
                     node: node
                 }

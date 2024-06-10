@@ -40,6 +40,7 @@ pub fn NodeElement(
         }
     };
     let margin_left = (node.height * 10) as f32 + 16.5;
+    let id = node.id.index();
 
     rsx!(
         rect {
@@ -55,7 +56,7 @@ pub fn NodeElement(
             label {
                 font_size: "14",
                 color,
-                "{node.tag} #{node.id:?}"
+                "{node.tag} ({id})"
             }
         }
     )

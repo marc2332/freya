@@ -192,8 +192,8 @@ pub fn DevTools(props: DevToolsProps) -> Element {
 
     rsx!(
         rect {
-            width: "100%",
-            height: "100%",
+            width: "fill",
+            height: "fill",
             color: "{color}",
             Router::<Route> { }
         }
@@ -206,7 +206,7 @@ pub fn DevtoolsBar() -> Element {
     rsx!(
         TabsBar {
             TabButton {
-                to: Route::TreeElementsTab { },
+                to: Route::DOMInspector { },
                 label: "Elements"
             }
         }
@@ -220,11 +220,11 @@ pub fn NodeInspectorBar(node_id: NodeId) -> Element {
     rsx!(
         TabsBar {
             TabButton {
-                to: Route::TreeStyleTab { node_id: node_id.serialize() },
+                to: Route::NodeInspectorStyle { node_id: node_id.serialize() },
                 label: "Style"
             }
             TabButton {
-                to: Route::TreeLayoutTab { node_id: node_id.serialize() },
+                to: Route::NodeInspectorLayout { node_id: node_id.serialize() },
                 label: "Layout"
             }
         }
@@ -235,14 +235,18 @@ pub fn NodeInspectorBar(node_id: NodeId) -> Element {
 #[rustfmt::skip]
 pub enum Route {
     #[layout(DevtoolsBar)]
-        #[route("/")]
-        TreeElementsTab  {},
-
-        #[route("/elements/:node_id/style")]
-        TreeStyleTab { node_id: String },
-
-        #[route("/elements/:node_id/layout")]
-        TreeLayoutTab { node_id: String },
+        #[nest("/")]
+            #[layout(DOMInspectorLayout)]
+                #[route("/")]
+                DOMInspector  {},
+                #[nest("/node/:node_id")]
+                    #[route("/style")]
+                    NodeInspectorStyle { node_id: String },
+                    #[route("/layout")]
+                    NodeInspectorLayout { node_id: String },
+                #[end_nest]
+            #[end_layout]
+        #[end_nest]
     #[end_layout]
     #[route("/..route")]
     PageNotFound { },
@@ -260,64 +264,38 @@ fn PageNotFound() -> Element {
 
 #[allow(non_snake_case)]
 #[component]
-fn TreeElementsTab() -> Element {
+fn DOMInspectorLayout() -> Element {
     let hovered_node = use_context::<Signal<HoveredNode>>();
+    let route = use_route::<Route>();
 
-    rsx!(NodesTree {
-        height: "calc(100% - 35)",
-        onselected: move |node: TreeNode| {
-            if let Some(hovered_node) = &hovered_node.read().as_ref() {
-                hovered_node.lock().unwrap().replace(node.id);
-            }
-        }
-    })
-}
+    let is_expanded_vertical = matches!(
+        route,
+        Route::NodeInspectorStyle { .. } | Route::NodeInspectorLayout { .. }
+    );
 
-#[derive(Props, Clone, PartialEq)]
-struct TreeTabProps {
-    node_id: String,
-}
-
-#[allow(non_snake_case)]
-fn TreeStyleTab(props: TreeTabProps) -> Element {
-    let hovered_node = use_context::<Signal<HoveredNode>>();
-    let node_id = NodeId::deserialize(&props.node_id);
+    let height = if is_expanded_vertical {
+        "calc(50% - 35)"
+    } else {
+        "fill"
+    };
 
     rsx!(
         NodesTree {
-            height: "calc(50% - 35)",
-            selected_node_id: node_id,
+            height,
             onselected: move |node: TreeNode| {
                 if let Some(hovered_node) = &hovered_node.read().as_ref() {
                     hovered_node.lock().unwrap().replace(node.id);
                 }
             }
         }
-        NodeInspectorStyle {
-            node_id: node_id
-        }
+        Outlet::<Route> {}
     )
 }
 
 #[allow(non_snake_case)]
-fn TreeLayoutTab(props: TreeTabProps) -> Element {
-    let hovered_node = use_context::<Signal<HoveredNode>>();
-    let node_id = NodeId::deserialize(&props.node_id);
-
-    rsx!(
-        NodesTree {
-            height: "calc(50% - 35)",
-            selected_node_id: node_id,
-            onselected: move |node: TreeNode| {
-                if let Some(hovered_node) = &hovered_node.read().as_ref() {
-                    hovered_node.lock().unwrap().replace(node.id);
-                }
-            }
-        }
-        NodeInspectorLayout {
-            node_id: node_id
-        }
-    )
+#[component]
+fn DOMInspector() -> Element {
+    None
 }
 
 pub trait NodeIdSerializer {
