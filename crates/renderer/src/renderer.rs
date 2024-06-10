@@ -34,9 +34,10 @@ use winit::{
         ElementState, Ime, KeyEvent, MouseButton, MouseScrollDelta, StartCause, Touch, TouchPhase,
         WindowEvent,
     },
-    event_loop::{window::Window, EventLoop, EventLoopProxy},
+    event_loop::{EventLoop, EventLoopProxy},
     keyboard::ModifiersState,
     raw_window_handle::HasWindowHandle,
+    window::Window,
 };
 
 use crate::{
