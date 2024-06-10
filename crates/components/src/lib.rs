@@ -34,6 +34,7 @@ mod tabs;
 mod theme;
 mod tile;
 mod tooltip;
+mod tree;
 mod window_drag_area;
 
 pub use accordion::*;
@@ -69,4 +70,5 @@ pub use tabs::*;
 pub use theme::*;
 pub use tile::*;
 pub use tooltip::*;
+pub use tree::*;
 pub use window_drag_area::*;
