@@ -1,5 +1,3 @@
-use accesskit::NodeId;
-use accesskit_winit::ActionRequestEvent;
 use dioxus_core::Template;
 use torin::prelude::CursorPoint;
 use uuid::Uuid;
@@ -24,12 +22,12 @@ pub enum EventMessage {
     RemeasureTextGroup(TextGroupMeasurement),
     /// Change the cursor icon
     SetCursorIcon(CursorIcon),
-    /// Accessibility action request event
-    ActionRequestEvent(ActionRequestEvent),
+    /// Accessibility Window Event
+    Accessibility(accesskit_winit::WindowEvent),
     /// Focus the given accessibility NodeID
-    FocusAccessibilityNode(NodeId),
+    FocusAccessibilityNode(accesskit::NodeId),
     /// Queue a focus the given accessibility NodeID
-    QueueFocusAccessibilityNode(NodeId),
+    QueueFocusAccessibilityNode(accesskit::NodeId),
     /// Focus the next accessibility Node
     FocusNextAccessibilityNode,
     /// Focus the previous accessibility Node
@@ -40,8 +38,8 @@ pub enum EventMessage {
     WithWindow(Box<dyn FnOnce(&Window) + Send + Sync>),
 }
 
-impl From<ActionRequestEvent> for EventMessage {
-    fn from(value: ActionRequestEvent) -> Self {
-        Self::ActionRequestEvent(value)
+impl From<accesskit_winit::Event> for EventMessage {
+    fn from(value: accesskit_winit::Event) -> Self {
+        Self::Accessibility(value.window_event)
     }
 }

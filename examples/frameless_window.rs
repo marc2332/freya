@@ -8,13 +8,12 @@ use freya::prelude::*;
 fn main() {
     launch_cfg(
         app,
-        LaunchConfig::<()>::builder()
+        LaunchConfig::<()>::new()
             .with_width(400.0)
             .with_height(200.0)
             .with_decorations(false)
             .with_transparency(true)
-            .with_title("Floating window")
-            .build(),
+            .with_title("Floating window"),
     );
 }
 

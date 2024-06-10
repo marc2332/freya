@@ -1229,7 +1229,7 @@ pub async fn replace_text() {
             editable.process_event(&EditableEvent::KeyDown(e.data));
         };
 
-        let onclick = move |e: MouseEvent| {
+        let onclick = move |_: MouseEvent| {
             editable.process_event(&EditableEvent::Click);
         };
 

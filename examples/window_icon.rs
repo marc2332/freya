@@ -10,11 +10,10 @@ const ICON: &[u8] = include_bytes!("./freya_icon.png");
 fn main() {
     launch_cfg(
         app,
-        LaunchConfig::<()>::builder()
+        LaunchConfig::<()>::new()
             .with_width(400.)
             .with_height(300.)
-            .with_icon(LaunchConfig::load_icon(ICON))
-            .build(),
+            .with_icon(LaunchConfig::load_icon(ICON)),
     )
 }
 
