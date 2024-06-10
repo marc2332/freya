@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use dioxus_radio::prelude::*;
-use dioxus_router::prelude::*;
+use dioxus_router::prelude::{use_route, Outlet, Routable, Router};
 use freya_components::*;
 use freya_elements::elements as dioxus_elements;
 use freya_hooks::{use_init_theme, use_platform, DARK_THEME};
@@ -13,10 +13,8 @@ mod hooks;
 mod node;
 mod property;
 mod state;
-mod tab;
 mod tabs;
 
-use tab::*;
 use tabs::{layout::*, style::*, tree::*};
 
 /// Run the [`VirtualDom`] with a sidepanel where the devtools are located.
@@ -121,9 +119,16 @@ pub fn DevTools(props: DevToolsProps) -> Element {
 pub fn DevtoolsBar() -> Element {
     rsx!(
         TabsBar {
-            TabButton {
+            Link {
                 to: Route::DOMInspector { },
-                label: "Elements"
+                ActivableRoute {
+                    route: Route::DOMInspector { },
+                    Tab {
+                        label {
+                            "Elements"
+                        }
+                    }
+                }
             }
         }
         Outlet::<Route> {}
@@ -183,13 +188,27 @@ fn LayoutForNodeInspector(node_id: String) -> Element {
             width: "100%",
             height: "50%",
             TabsBar {
-                TabButton {
+                Link {
                     to: Route::NodeInspectorStyle { node_id: node_id.clone() },
-                    label: "Style"
+                    ActivableRoute {
+                        route: Route::NodeInspectorStyle { node_id: node_id.clone() },
+                        Tab {
+                            label {
+                                "Style"
+                            }
+                        }
+                    }
                 }
-                TabButton {
-                    to: Route::NodeInspectorLayout { node_id },
-                    label: "Layout"
+                Link {
+                    to: Route::NodeInspectorLayout { node_id: node_id.clone() },
+                    ActivableRoute {
+                        route: Route::NodeInspectorLayout { node_id },
+                        Tab {
+                            label {
+                                "Layout"
+                            }
+                        }
+                    }
                 }
             }
             Outlet::<Route> {}
