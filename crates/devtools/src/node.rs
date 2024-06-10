@@ -1,22 +1,21 @@
 use dioxus::prelude::*;
 use freya_components::ButtonStatus;
 use freya_elements::elements as dioxus_elements;
+use freya_native_core::prelude::NodeId;
 
-use crate::TreeNode;
+use crate::hooks::use_node_info;
 
 #[allow(non_snake_case)]
 #[component]
 pub fn NodeElement(
-    node: TreeNode,
+    node_id: NodeId,
     is_selected: bool,
-    onselected: EventHandler<TreeNode>,
+    onselected: EventHandler<NodeId>,
 ) -> Element {
     let mut status = use_signal(ButtonStatus::default);
+    let node = use_node_info(node_id)?;
 
-    let onmousedown = {
-        to_owned![node];
-        move |_| onselected.call(node.clone())
-    };
+    let onmousedown = move |_| onselected.call(node_id);
 
     let onmouseenter = move |_| {
         status.set(ButtonStatus::Hovering);
@@ -40,7 +39,7 @@ pub fn NodeElement(
         }
     };
     let margin_left = (node.height * 10) as f32 + 16.5;
-    let id = node.id.index();
+    let id = node_id.index();
 
     rsx!(
         rect {

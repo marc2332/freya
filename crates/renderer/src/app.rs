@@ -11,7 +11,7 @@ use std::sync::Arc;
 use tokio::sync::broadcast;
 use tokio::{
     select,
-    sync::{mpsc, watch, Notify},
+    sync::{mpsc, watch},
 };
 use torin::geometry::{Area, Size2D};
 use tracing::info;
@@ -19,8 +19,8 @@ use winit::dpi::PhysicalSize;
 use winit::event_loop::{EventLoop, EventLoopProxy};
 
 use crate::{
-    accessibility::AccessKitManager, event_loop::run_event_loop, renderer::render_skia,
-    winit_waker::winit_waker,
+    accessibility::AccessKitManager, devtools::Devtools, event_loop::run_event_loop,
+    renderer::render_skia, winit_waker::winit_waker,
 };
 use crate::{EmbeddedFonts, HoveredNode, WindowEnv};
 
@@ -31,7 +31,7 @@ pub struct App<State: 'static + Clone> {
     pub(crate) events: EventsQueue,
     pub(crate) vdom_waker: Waker,
     pub(crate) proxy: EventLoopProxy<EventMessage>,
-    pub(crate) mutations_notifier: Option<Arc<Notify>>,
+    pub(crate) devtools: Option<Devtools>,
     pub(crate) event_emitter: EventEmitter,
     pub(crate) event_receiver: EventReceiver,
     pub(crate) window_env: WindowEnv<State>,
@@ -54,7 +54,7 @@ impl<State: 'static + Clone> App<State> {
         sdom: SafeDOM,
         vdom: VirtualDom,
         proxy: &EventLoopProxy<EventMessage>,
-        mutations_notifier: Option<Arc<Notify>>,
+        devtools: Option<Devtools>,
         window_env: WindowEnv<State>,
         fonts_config: EmbeddedFonts,
         mut plugins: PluginsManager,
@@ -98,7 +98,7 @@ impl<State: 'static + Clone> App<State> {
             events: EventsQueue::new(),
             vdom_waker: winit_waker(proxy),
             proxy: proxy.clone(),
-            mutations_notifier,
+            devtools,
             event_emitter,
             event_receiver,
             window_env,
@@ -151,8 +151,8 @@ impl<State: 'static + Clone> App<State> {
         self.plugins.send(PluginEvent::FinishedUpdatingDOM);
 
         if repaint {
-            if let Some(mutations_notifier) = &self.mutations_notifier {
-                mutations_notifier.notify_one();
+            if let Some(devtools) = &self.devtools {
+                devtools.update(&self.sdom.get());
             }
         }
 
@@ -347,8 +347,8 @@ impl<State: 'static + Clone> App<State> {
                 .send(PluginEvent::FinishedLayout(&fdom.layout()));
         }
 
-        if let Some(mutations_notifier) = &self.mutations_notifier {
-            mutations_notifier.notify_one();
+        if let Some(devtools) = &self.devtools {
+            devtools.update(&self.sdom.get())
         }
 
         self.process_accessibility();
