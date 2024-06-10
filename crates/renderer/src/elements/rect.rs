@@ -4,6 +4,7 @@ use freya_core::dom::DioxusNode;
 use freya_engine::prelude::*;
 use freya_node_state::{BorderAlignment, BorderStyle, Fill, References, ShadowPosition, Style};
 use torin::prelude::Area;
+use torin::scaled::Scaled;
 
 /// Render a `rect` element
 pub fn render_rect(
@@ -11,6 +12,7 @@ pub fn render_rect(
     node_ref: &DioxusNode,
     canvas: &Canvas,
     font_collection: &mut FontCollection,
+    scale_factor: f32,
 ) {
     let node_style = &*node_ref.get::<Style>().unwrap();
 
@@ -32,7 +34,9 @@ pub fn render_rect(
         }
     }
 
-    let radius = node_style.corner_radius;
+    let mut radius = node_style.corner_radius;
+    radius.scale(scale_factor);
+
     let rounded_rect = RRect::new_rect_radii(
         Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
         &[
@@ -43,9 +47,9 @@ pub fn render_rect(
         ],
     );
 
-    if node_style.corner_radius.smoothing > 0.0 {
+    if radius.smoothing > 0.0 {
         path.add_path(
-            &node_style.corner_radius.smoothed_path(rounded_rect),
+            &radius.smoothed_path(rounded_rect),
             (area.min_x(), area.min_y()),
             None,
         );
@@ -56,8 +60,9 @@ pub fn render_rect(
     canvas.draw_path(&path, &paint);
 
     // Shadows
-    for shadow in node_style.shadows.iter() {
+    for mut shadow in node_style.shadows.clone().into_iter() {
         if shadow.fill != Fill::Color(Color::TRANSPARENT) {
+            shadow.scale(scale_factor);
             let mut shadow_paint = paint.clone();
             let mut shadow_path = Path::new();
 
@@ -95,7 +100,7 @@ pub fn render_rect(
             }
 
             // Add either the RRect or smoothed path based on whether smoothing is used.
-            if node_style.corner_radius.smoothing > 0.0 {
+            if radius.smoothing > 0.0 {
                 shadow_path.add_path(
                     &node_style
                         .corner_radius
@@ -127,6 +132,9 @@ pub fn render_rect(
 
     // Borders
     if node_style.border.width > 0.0 && node_style.border.style != BorderStyle::None {
+        let mut border_with = node_style.border.width;
+        border_with *= scale_factor;
+
         // Create a new paint and path
         let mut border_paint = paint.clone();
         let mut border_path = Path::new();
@@ -142,11 +150,11 @@ pub fn render_rect(
                 border_paint.set_shader(gradient.into_shader(area));
             }
         }
-        border_paint.set_stroke_width(node_style.border.width);
+        border_paint.set_stroke_width(border_with);
 
         // Skia draws strokes centered on the edge of the path. This means that half of the stroke is inside the path, and half outside.
         // For Inner and Outer borders, we need to grow or shrink the stroke path by half the border width.
-        let outset = Point::new(node_style.border.width / 2.0, node_style.border.width / 2.0)
+        let outset = Point::new(border_with / 2.0, border_with / 2.0)
             * match node_style.border.alignment {
                 BorderAlignment::Center => 0.0,
                 BorderAlignment::Inner => -1.0,
@@ -154,7 +162,7 @@ pub fn render_rect(
             };
 
         // Add either the RRect or smoothed path based on whether smoothing is used.
-        if node_style.corner_radius.smoothing > 0.0 {
+        if radius.smoothing > 0.0 {
             border_path.add_path(
                 &node_style
                     .corner_radius

@@ -1,6 +1,9 @@
 use std::ops::Deref;
 
-use crate::prelude::{Area, Point2D, Size2D};
+use crate::{
+    prelude::{Area, Point2D, Size2D},
+    scaled::Scaled,
+};
 
 #[derive(Default, PartialEq, Clone, Debug)]
 pub struct AbsolutePosition {
@@ -117,6 +120,25 @@ impl Position {
                     x
                 };
                 Point2D::new(x, y)
+            }
+        }
+    }
+}
+
+impl Scaled for Position {
+    fn scale(&mut self, scale_factor: f32) {
+        if let Self::Absolute(absolute_postion) = self {
+            if let Some(top) = &mut absolute_postion.top {
+                *top *= scale_factor;
+            }
+            if let Some(right) = &mut absolute_postion.right {
+                *right *= scale_factor;
+            }
+            if let Some(bottom) = &mut absolute_postion.bottom {
+                *bottom *= scale_factor;
+            }
+            if let Some(left) = &mut absolute_postion.left {
+                *left *= scale_factor;
             }
         }
     }

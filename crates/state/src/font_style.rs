@@ -32,14 +32,7 @@ pub struct FontStyleState {
 }
 
 impl FontStyleState {
-    fn default_with_scale_factor(scale_factor: f32) -> Self {
-        Self {
-            font_size: 16.0 * scale_factor,
-            ..FontStyleState::default()
-        }
-    }
-
-    pub fn text_style(&self, default_font_family: &[String]) -> TextStyle {
+    pub fn text_style(&self, default_font_family: &[String], scale_factor: f32) -> TextStyle {
         let mut text_style = TextStyle::new();
         let mut font_family = self.font_family.clone();
 
@@ -52,15 +45,15 @@ impl FontStyleState {
                 self.font_width,
                 self.font_slant,
             ))
-            .set_font_size(self.font_size)
+            .set_font_size(self.font_size * scale_factor)
             .set_font_families(&font_family)
             .set_word_spacing(self.word_spacing)
             .set_letter_spacing(self.letter_spacing)
             .set_height_override(true)
             .set_height(self.line_height);
 
-        for shadow in self.text_shadows.iter() {
-            text_style.add_shadow(*shadow);
+        for text_shadow in self.text_shadows.iter() {
+            text_style.add_shadow(*text_shadow);
         }
 
         text_style.set_decoration(&self.decoration);
@@ -130,11 +123,8 @@ impl State<CustomAttributeValues> for FontStyleState {
         context: &SendAnyMap,
     ) -> bool {
         let torin_layout = context.get::<Arc<Mutex<Torin<NodeId>>>>().unwrap();
-        let scale_factor = context.get::<f32>().unwrap();
 
-        let mut font_style = parent
-            .map(|(v,)| v.clone())
-            .unwrap_or_else(|| FontStyleState::default_with_scale_factor(*scale_factor));
+        let mut font_style = parent.map(|(v,)| v.clone()).unwrap_or_default();
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
@@ -150,13 +140,7 @@ impl State<CustomAttributeValues> for FontStyleState {
                         if let Some(value) = attr.value.as_text() {
                             font_style.text_shadows = value
                                 .split_excluding_group(',', '(', ')')
-                                .map(|chunk| {
-                                    let mut shadow = TextShadow::parse(chunk).unwrap_or_default();
-                                    shadow.offset *= *scale_factor;
-                                    shadow.blur_sigma *= *scale_factor as f64;
-
-                                    shadow
-                                })
+                                .map(|chunk| TextShadow::parse(chunk).unwrap_or_default())
                                 .collect();
                         }
                     }
@@ -172,7 +156,7 @@ impl State<CustomAttributeValues> for FontStyleState {
                     AttributeName::FontSize => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(font_size) = value.parse::<f32>() {
-                                font_style.font_size = font_size * scale_factor;
+                                font_style.font_size = font_size;
                             }
                         }
                     }
