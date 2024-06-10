@@ -61,7 +61,7 @@ impl State for Size {
         }
         // if the node contains a width or height attribute it overrides the other size
         for a in node_view.attributes().into_iter().flatten() {
-            match &*a.attribute {
+            match a.attribute {
                 AttributeName::Width => width = a.value.as_float().unwrap(),
                 AttributeName::Height => height = a.value.as_float().unwrap(),
                 // because Size only depends on the width and height, no other attributes will be passed to the member

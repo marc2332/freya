@@ -13,9 +13,9 @@ fn main() {
 
 #[derive(PartialEq, Eq, Hash)]
 enum Choice {
-    FirstChoice,
-    SecondChoice,
-    ThirdChoice,
+    First,
+    Second,
+    Third,
 }
 
 fn app() -> Element {
@@ -24,45 +24,45 @@ fn app() -> Element {
     rsx!(
         Tile {
             onselect: move |_| {
-                if selected.read().contains(&Choice::FirstChoice) {
-                    selected.write().remove(&Choice::FirstChoice);
+                if selected.read().contains(&Choice::First) {
+                    selected.write().remove(&Choice::First);
                 } else {
-                    selected.write().insert(Choice::FirstChoice);
+                    selected.write().insert(Choice::First);
                 }
             },
             leading: rsx!(
                 Checkbox {
-                    selected: selected.read().contains(&Choice::FirstChoice),
+                    selected: selected.read().contains(&Choice::First),
                 },
             ),
             label { "First choice" }
         }
         Tile {
             onselect: move |_| {
-                if selected.read().contains(&Choice::SecondChoice) {
-                    selected.write().remove(&Choice::SecondChoice);
+                if selected.read().contains(&Choice::Second) {
+                    selected.write().remove(&Choice::Second);
                 } else {
-                    selected.write().insert(Choice::SecondChoice);
+                    selected.write().insert(Choice::Second);
                 }
             },
             leading: rsx!(
                 Checkbox {
-                    selected: selected.read().contains(&Choice::SecondChoice),
+                    selected: selected.read().contains(&Choice::Second),
                 },
             ),
             label { "Second choice" }
         }
         Tile {
             onselect: move |_| {
-                if selected.read().contains(&Choice::ThirdChoice) {
-                    selected.write().remove(&Choice::ThirdChoice);
+                if selected.read().contains(&Choice::Third) {
+                    selected.write().remove(&Choice::Third);
                 } else {
-                    selected.write().insert(Choice::ThirdChoice);
+                    selected.write().insert(Choice::Third);
                 }
             },
             leading: rsx!(
                 Checkbox {
-                    selected: selected.read().contains(&Choice::ThirdChoice),
+                    selected: selected.read().contains(&Choice::Third),
                 },
             ),
             label { "Third choice" }

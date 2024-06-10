@@ -57,7 +57,7 @@ impl DOMAdapter<usize> for TestingDOM {
     }
 
     fn parent_of(&self, node_id: &usize) -> Option<usize> {
-        self.mapper.get(node_id).map(|c| c.0).flatten()
+        self.mapper.get(node_id).and_then(|c| c.0)
     }
 
     fn height(&self, node_id: &usize) -> Option<u16> {
@@ -296,7 +296,6 @@ fn criterion_benchmark(c: &mut Criterion) {
 
                         let nodes = (0..=wide - 1)
                             .map(|i| i + ((level + 1) * 100) + (root * 10))
-                            .into_iter()
                             .collect::<Vec<usize>>();
                         for (i, id) in nodes.iter().enumerate() {
                             if level == depth / 2 && i == nodes.len() / 2 {

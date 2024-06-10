@@ -51,16 +51,16 @@ fn invalid_colors() {
     let missing_number_sign = Color::parse("FFA500");
     let incorrect_hex_length = Color::parse("#FFA0");
 
-    assert_eq!(incorrect_name.is_err(), true);
-    assert_eq!(extra_lparen.is_err(), true);
-    assert_eq!(extra_rparen.is_err(), true);
-    assert_eq!(missing_lparen.is_err(), true);
-    assert_eq!(missing_rparen.is_err(), true);
-    assert_eq!(missing_commas.is_err(), true);
-    assert_eq!(extra_commas.is_err(), true);
-    assert_eq!(extra_component.is_err(), true);
-    assert_eq!(extra_ending_commas.is_err(), true);
-    assert_eq!(bad_unit.is_err(), true);
-    assert_eq!(missing_number_sign.is_err(), true);
-    assert_eq!(incorrect_hex_length.is_err(), true);
+    assert!(incorrect_name.is_err());
+    assert!(extra_lparen.is_err());
+    assert!(extra_rparen.is_err());
+    assert!(missing_lparen.is_err());
+    assert!(missing_rparen.is_err());
+    assert!(missing_commas.is_err());
+    assert!(extra_commas.is_err());
+    assert!(extra_component.is_err());
+    assert!(extra_ending_commas.is_err());
+    assert!(bad_unit.is_err());
+    assert!(missing_number_sign.is_err());
+    assert!(incorrect_hex_length.is_err());
 }
