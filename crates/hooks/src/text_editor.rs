@@ -364,7 +364,7 @@ pub trait TextEditor {
             }
             Key::Tab => {
                 // Inserts a tab
-                let text = " ".repeat(self.get_identation());
+                let text = " ".repeat(self.get_identation().into());
                 let cursor_pos = self.cursor_pos();
                 self.insert(&text, cursor_pos);
                 self.set_cursor_pos(cursor_pos + text.chars().count());
@@ -486,5 +486,5 @@ pub trait TextEditor {
 
     fn get_selection_range(&self) -> Option<(usize, usize)>;
 
-    fn get_identation(&self) -> usize;
+    fn get_identation(&self) -> u8;
 }

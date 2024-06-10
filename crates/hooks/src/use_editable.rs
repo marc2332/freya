@@ -235,7 +235,7 @@ impl UseEditable {
 pub struct EditableConfig {
     pub(crate) content: String,
     pub(crate) cursor: TextCursor,
-    pub(crate) identation: usize,
+    pub(crate) identation: u8,
     pub(crate) allow_tabs: bool,
 }
 
@@ -257,7 +257,7 @@ impl EditableConfig {
     }
 
     /// Specify a custom identation
-    pub fn with_identation(mut self, identation: usize) -> Self {
+    pub fn with_identation(mut self, identation: u8) -> Self {
         self.identation = identation;
         self
     }
