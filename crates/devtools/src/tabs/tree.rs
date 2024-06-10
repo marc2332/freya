@@ -32,14 +32,15 @@ pub fn NodesTree(
             .iter()
             .enumerate()
             .filter_map(|(i, node)| {
-                let node_is_allowed = i == 0
-                    || node
-                        .parent_id
-                        .map(|id| allowed_nodes.contains(&id) && radio.devtools_tree.contains(&id))
-                        .unwrap_or(true);
-                if node_is_allowed {
+                let parent_is_open = node
+                    .parent_id
+                    .map(|id| allowed_nodes.contains(&id) && radio.devtools_tree.contains(&id))
+                    .unwrap_or(true);
+                let is_root = i == 0;
+                if parent_is_open || is_root {
                     allowed_nodes.insert(node.id);
-                    let is_open = (node.children_len != 0).then_some(radio.devtools_tree.contains(&node.id));
+                    let is_open =
+                        (node.children_len != 0).then_some(radio.devtools_tree.contains(&node.id));
                     Some(NodeTreeItem {
                         is_open,
                         node_id: node.id,

@@ -16,7 +16,7 @@ pub fn ActivableRoute<T: Clone + PartialEq + Routable + 'static>(
         ActivableRouteContext(Signal::new(is_active))
     });
 
-    if *ctx.0.read() != is_active {
+    if *ctx.0.peek() != is_active {
         *ctx.0.write() = is_active;
     }
 

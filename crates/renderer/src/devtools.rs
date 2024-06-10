@@ -46,7 +46,11 @@ impl Devtools {
                     new_nodes.push(NodeInfo {
                         id: node.id(),
                         parent_id: node.parent_id(),
-                        children_len: node.children().iter().filter(|node| layout.get(node.id()).is_some()).count(),
+                        children_len: node
+                            .children()
+                            .iter()
+                            .filter(|node| layout.get(node.id()).is_some())
+                            .count(),
                         tag: *node_type.tag().unwrap(),
                         height: node.height(),
                         state: get_node_state(&node),

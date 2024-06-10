@@ -101,7 +101,7 @@ pub fn DevTools(props: DevToolsProps) -> Element {
     use_init_radio_station::<DevtoolsState, DevtoolsChannel>(|| DevtoolsState {
         hovered_node: props.hovered_node.clone(),
         devtools_receiver: props.devtools_receiver.clone(),
-        devtools_tree: HashSet::default()
+        devtools_tree: HashSet::default(),
     });
 
     let theme = theme.read();

@@ -18,6 +18,7 @@ fn app() -> Element {
                     .trim()
                     .to_string(),
             )
+            .with_allow_tabs(true)
         },
         EditableMode::MultipleLinesSingleEditor,
     );

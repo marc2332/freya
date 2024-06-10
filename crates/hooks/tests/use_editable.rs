@@ -1208,3 +1208,150 @@ pub async fn highlight_all_text() {
 
     assert_eq!(highlights, Some(vec![(start, end)]))
 }
+
+#[tokio::test]
+pub async fn replace_text() {
+    fn replace_text_app() -> Element {
+        let mut editable = use_editable(
+            || EditableConfig::new("Hello Rustaceans\nHello Rustaceans".to_string()),
+            EditableMode::MultipleLinesSingleEditor,
+        );
+        let cursor_attr = editable.cursor_attr();
+        let editor = editable.editor().read();
+        let cursor_pos = editor.visible_cursor_pos();
+        let highlights = editable.highlights_attr(0);
+
+        let onmousedown = move |e: MouseEvent| {
+            editable.process_event(&EditableEvent::MouseDown(e.data, 0));
+        };
+
+        let onkeydown = move |e: Event<KeyboardData>| {
+            editable.process_event(&EditableEvent::KeyDown(e.data));
+        };
+
+        let onclick = move |e: MouseEvent| {
+            editable.process_event(&EditableEvent::Click);
+        };
+
+        rsx!(
+            rect {
+                width: "100%",
+                height: "100%",
+                background: "white",
+                cursor_reference: cursor_attr,
+                onmousedown,
+                onclick,
+                paragraph {
+                    height: "50%",
+                    width: "100%",
+                    cursor_id: "0",
+                    cursor_index: "{cursor_pos}",
+                    cursor_color: "black",
+                    cursor_mode: "editable",
+                    onkeydown,
+                    highlights,
+                    text {
+                        color: "black",
+                        "{editor}"
+                    }
+                }
+                label {
+                    color: "black",
+                    height: "50%",
+                    "{editor.cursor_row()}:{editor.cursor_col()}"
+                }
+            }
+        )
+    }
+
+    let mut utils = launch_test(replace_text_app);
+
+    // Initial state
+    let root = utils.root().get(0);
+    let cursor = root.get(1).get(0);
+    let content = root.get(0).get(0).get(0);
+    assert_eq!(cursor.text(), Some("0:0"));
+    assert_eq!(content.text(), Some("Hello Rustaceans\nHello Rustaceans"));
+
+    // Move cursor
+    utils.push_event(PlatformEvent::Mouse {
+        name: EventName::MouseDown,
+        cursor: (35.0, 3.0).into(),
+        button: Some(MouseButton::Left),
+    });
+
+    utils.wait_for_update().await;
+    utils.wait_for_update().await;
+
+    // Cursor has been moved
+    let root = utils.root().get(0);
+    let cursor = root.get(1).get(0);
+    #[cfg(not(target_os = "linux"))]
+    assert_eq!(cursor.text(), Some("0:5"));
+
+    #[cfg(target_os = "linux")]
+    assert_eq!(cursor.text(), Some("0:4"));
+
+    // Click cursor
+    utils.push_event(PlatformEvent::Mouse {
+        name: EventName::MouseDown,
+        cursor: (35.0, 3.0).into(),
+        button: Some(MouseButton::Left),
+    });
+    utils.wait_for_update().await;
+    utils.push_event(PlatformEvent::Mouse {
+        name: EventName::Click,
+        cursor: (35.0, 3.0).into(),
+        button: Some(MouseButton::Left),
+    });
+    utils.wait_for_update().await;
+
+    // Press shift
+    utils.push_event(PlatformEvent::Keyboard {
+        name: EventName::KeyDown,
+        key: Key::Shift,
+        code: Code::ShiftLeft,
+        modifiers: Modifiers::default(),
+    });
+    utils.wait_for_update().await;
+
+    // Move cursor
+    utils.push_event(PlatformEvent::Mouse {
+        name: EventName::MouseDown,
+        cursor: (80.0, 3.0).into(),
+        button: Some(MouseButton::Left),
+    });
+    utils.wait_for_update().await;
+    utils.push_event(PlatformEvent::Mouse {
+        name: EventName::Click,
+        cursor: (80.0, 3.0).into(),
+        button: Some(MouseButton::Left),
+    });
+    utils.wait_for_update().await;
+
+    // Insert text
+    utils.push_event(PlatformEvent::Keyboard {
+        name: EventName::KeyDown,
+        key: Key::Character("🦀".to_string()),
+        code: Code::Unidentified,
+        modifiers: Modifiers::empty(),
+    });
+
+    utils.wait_for_update().await;
+    utils.wait_for_update().await;
+
+    // Text and cursor have changed
+    let cursor = root.get(1).get(0);
+    let content = root.get(0).get(0).get(0);
+    #[cfg(not(target_os = "linux"))]
+    {
+        assert_eq!(content.text(), Some("Hello🦀ceans\nHello Rustaceans"));
+        assert_eq!(cursor.text(), Some("0:6"));
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        assert_eq!(content.text(), Some("Hell🦀aceans\nHello Rustaceans"));
+        assert_eq!(cursor.text(), Some("0:5"));
+    }
+}
