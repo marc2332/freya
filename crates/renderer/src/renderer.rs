@@ -341,7 +341,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                 app.set_navigation_mode(NavigationMode::Keyboard);
                 app.focus_next_node(AccessibilityFocusDirection::Forward, window);
             }
-            EventMessage::WithWindow(use_window) => (use_window)(&window),
+            EventMessage::WithWindow(use_window) => (use_window)(window),
             EventMessage::QueueFocusAccessibilityNode(node_id) => {
                 app.queue_focus_node(node_id);
             }
@@ -534,7 +534,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
 
                 window.request_redraw();
 
-                app.resize(&window);
+                app.resize(window);
             }
             WindowEvent::DroppedFile(file_path) => {
                 self.dropped_file_path = Some(file_path);

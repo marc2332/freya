@@ -270,7 +270,7 @@ impl Application {
         self.measure_layout_on_next_render = true;
         self.sdom.get().layout().reset();
         self.platform_sender.send_modify(|state| {
-            state.information = PlatformInformation::from_winit(&window);
+            state.information = PlatformInformation::from_winit(window);
         })
     }
 
@@ -283,7 +283,7 @@ impl Application {
 
     pub fn focus_node(&mut self, node_id: AccessibilityId, window: &Window) {
         self.accessibility
-            .focus_node(node_id, &self.platform_sender, &window)
+            .focus_node(node_id, &self.platform_sender, window)
     }
 
     pub fn queue_focus_node(&mut self, node_id: AccessibilityId) {
@@ -292,7 +292,7 @@ impl Application {
 
     pub fn focus_next_node(&mut self, direction: AccessibilityFocusDirection, window: &Window) {
         self.accessibility
-            .focus_next_node(direction, &self.platform_sender, &window)
+            .focus_next_node(direction, &self.platform_sender, window)
     }
 
     /// Notify components subscribed to event loop ticks.
