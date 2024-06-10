@@ -45,6 +45,12 @@ impl Devtools {
                     let node_type = node.node_type();
                     new_nodes.push(NodeInfo {
                         id: node.id(),
+                        parent_id: node.parent_id(),
+                        children_len: node
+                            .children()
+                            .iter()
+                            .filter(|node| layout.get(node.id()).is_some())
+                            .count(),
                         tag: *node_type.tag().unwrap(),
                         height: node.height(),
                         state: get_node_state(&node),
@@ -63,6 +69,8 @@ impl Devtools {
 #[derive(Clone, PartialEq)]
 pub struct NodeInfo {
     pub id: NodeId,
+    pub parent_id: Option<NodeId>,
+    pub children_len: usize,
     pub tag: TagName,
     pub height: u16,
     pub state: NodeState,

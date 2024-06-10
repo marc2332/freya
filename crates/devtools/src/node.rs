@@ -1,6 +1,7 @@
 use dioxus::prelude::*;
-use freya_components::ButtonStatus;
+use freya_components::{ArrowIcon, ButtonStatus};
 use freya_elements::elements as dioxus_elements;
+use freya_elements::events::MouseEvent;
 use freya_native_core::prelude::NodeId;
 
 use crate::hooks::use_node_info;
@@ -10,12 +11,21 @@ use crate::hooks::use_node_info;
 pub fn NodeElement(
     node_id: NodeId,
     is_selected: bool,
-    onselected: EventHandler<NodeId>,
+    is_open: Option<bool>,
+    onselected: EventHandler<()>,
+    onarrow: EventHandler<()>,
 ) -> Element {
     let mut status = use_signal(ButtonStatus::default);
     let node = use_node_info(node_id)?;
 
-    let onmousedown = move |_| onselected.call(node_id);
+    let onmousedown = move |_| onselected.call(());
+
+    let onarrowmousedown = move |e: MouseEvent| {
+        if is_open.is_some() {
+            onarrow.call(());
+            e.stop_propagation();
+        }
+    };
 
     let onmouseenter = move |_| {
         status.set(ButtonStatus::Hovering);
@@ -25,18 +35,10 @@ pub fn NodeElement(
         status.set(ButtonStatus::default());
     };
 
-    let background = if is_selected {
-        "rgb(100, 100, 100)"
-    } else {
-        "transparent"
-    };
-    let color = if is_selected {
-        "white"
-    } else {
-        match *status.read() {
-            ButtonStatus::Idle => "white",
-            ButtonStatus::Hovering => "rgb(150, 150, 150)",
-        }
+    let background = match *status.read() {
+        _ if is_selected => "rgb(100, 100, 100)",
+        ButtonStatus::Idle => "transparent",
+        ButtonStatus::Hovering => "rgb(80, 80, 80)",
     };
     let margin_left = (node.height * 10) as f32 + 16.5;
     let id = node_id.index();
@@ -52,9 +54,30 @@ pub fn NodeElement(
             onmousedown,
             onmouseenter,
             onmouseleave,
+            direction: "horizontal",
+            cross_align: "center",
+            rect {
+                onmousedown: onarrowmousedown,
+                margin: "0 8 0 0",
+                if let Some(is_open) = is_open {
+                    {
+                        let arrow_degree = if is_open {
+                            0
+                        } else {
+                            270
+                        };
+                        rsx!(
+                            ArrowIcon {
+                                fill: "white",
+                                rotate: "{arrow_degree}"
+                            }
+                        )
+                    }
+                }
+            }
             label {
                 font_size: "14",
-                color,
+                color: "white",
                 "{node.tag} ({id})"
             }
         }
