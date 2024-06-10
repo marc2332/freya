@@ -46,13 +46,13 @@ async fn asset_cacher() {
                 "size {cacher.size()}"
             }
             Button {
-                onclick: move |_| consumers += 1 ,
+                onpress: move |_| consumers += 1 ,
                 label {
                     "add"
                 }
             }
             Button {
-                onclick: move |_| consumers -= 1 ,
+                onpress: move |_| consumers -= 1 ,
                 label {
                     "remove"
                 }

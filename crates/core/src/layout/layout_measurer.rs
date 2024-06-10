@@ -24,6 +24,4 @@ pub fn process_layout(
         fdom.layout()
             .measure(root_id, area, &mut Some(skia_measurer), &mut dom_adapter);
     }
-
-    fdom.measure_all_paragraphs(scale_factor);
 }

@@ -10,7 +10,7 @@ fn main() {
 }
 
 fn app() -> Element {
-    use_init_theme(DARK_THEME);
+    use_init_theme(|| DARK_THEME);
     let mut show_popup = use_signal(|| false);
 
     rsx!(
@@ -33,7 +33,7 @@ fn app() -> Element {
                 }
             }
             Button {
-                onclick: move |_| show_popup.set(true),
+                onpress: move |_| show_popup.set(true),
                 label {
                     "Open"
                 }

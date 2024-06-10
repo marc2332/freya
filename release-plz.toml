@@ -1,0 +1,59 @@
+[workspace]
+release = false
+release_always = false
+
+[[package]]
+name = "freya"
+release = true
+
+[[package]]
+name = "freya-hooks"
+release = true
+
+[[package]]
+name = "freya-components"
+release = true
+
+[[package]]
+name = "freya-common"
+release = true
+
+[[package]]
+name = "freya-core"
+release = true
+
+[[package]]
+name = "freya-node-state"
+release = true
+
+[[package]]
+name = "freya-renderer"
+release = true
+
+[[package]]
+name = "freya-testing"
+release = true
+
+[[package]]
+name = "freya-elements"
+release = true
+
+[[package]]
+name = "freya-native-core"
+release = true
+
+[[package]]
+name = "freya-native-core-macro"
+release = true
+
+[[package]]
+name = "torin"
+release = true
+
+[[package]]
+name = "freya-engine"
+release = true
+
+[[package]]
+name = "freya-devtools"
+release = true

@@ -10,7 +10,7 @@ fn main() {
 }
 
 fn app() -> Element {
-    use_init_theme(DARK_THEME);
+    use_init_theme(|| DARK_THEME);
     let mut percentage = use_signal(|| 20.0);
     let font_size = percentage + 20.0;
 
@@ -21,7 +21,7 @@ fn app() -> Element {
             background: "black",
             color: "white",
             Button {
-                onclick: move |_| {
+                onpress: move |_| {
                     percentage.set(20.0);
                 },
                 label {

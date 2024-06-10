@@ -15,6 +15,15 @@ enum FormEntry {
     Description,
 }
 
+impl std::fmt::Display for FormEntry {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Description => f.write_str("Description"),
+            Self::Name => f.write_str("Name"),
+        }
+    }
+}
+
 fn app() -> Element {
     let form = use_form(|data| {
         println!("Submitting: {data:?}");

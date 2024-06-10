@@ -4,15 +4,14 @@
 )]
 
 use freya::prelude::*;
+use freya_core::prelude::PlatformInformation;
 
 fn main() {
     launch_with_props(app, "Counter", (400.0, 350.0));
 }
 
 fn app() -> Element {
-    let platform = use_platform();
-
-    let PlatformInformation { window_size } = platform.info();
+    let PlatformInformation { viewport_size, .. } = *use_platform_information().read();
 
     rsx!(
         rect {
@@ -25,13 +24,7 @@ fn app() -> Element {
             label {
                 font_size: "25",
                 font_weight: "bold",
-                "{window_size:?}"
-            }
-            Button {
-                onclick: |_| needs_update(),
-                label {
-                    "Refresh"
-                }
+                "{viewport_size:?}"
             }
         }
     )

@@ -1,6 +1,5 @@
-use freya_native_core::real_dom::NodeImmutable;
 use freya_native_core::NodeId;
-use freya_native_core::{prelude::NodeImmutableDioxusExt, tree::TreeRef};
+use freya_native_core::{real_dom::NodeImmutable, tree::TreeRef};
 
 use freya_engine::prelude::*;
 use freya_node_state::{Fill, Style, ViewportState};
@@ -41,19 +40,17 @@ pub fn process_events(
     to_emit_dom_events.extend(to_emit_dom_collateral_events);
     to_emit_dom_events.sort_unstable();
 
-    // 7. Emit the DOM events
-    for event in to_emit_dom_events {
-        event_emitter.send(event).unwrap();
-    }
-
-    // 8. Emit the global events
-    emit_global_events_listeners(
+    // 7. Emit the global events
+    measure_global_events_listeners(
         global_events,
         colateral_global_events,
         dom,
-        event_emitter,
+        &mut to_emit_dom_events,
         scale_factor,
     );
+
+    // 8. Emit all the vents
+    event_emitter.send(to_emit_dom_events).unwrap();
 
     // 9. Clear the events queue
     events.clear();
@@ -243,11 +240,8 @@ fn measure_dom_events(
             let layout = fdom.layout();
             let layout_node = layout.get(potential_event.node_id);
             if let Some(layout_node) = layout_node {
-                let node_ref = fdom.rdom().get(potential_event.node_id).unwrap();
-                let element_id = node_ref.mounted_id().unwrap();
                 let event = DomEvent::new(
                     potential_event,
-                    element_id,
                     Some(layout_node.visible_area()),
                     scale_factor,
                 );
@@ -260,11 +254,11 @@ fn measure_dom_events(
 }
 
 /// Emit global events
-fn emit_global_events_listeners(
+fn measure_global_events_listeners(
     global_events: Vec<PlatformEvent>,
     global_colateral_events: Vec<DomEvent>,
     fdom: &FreyaDOM,
-    event_emitter: &EventEmitter,
+    to_emit_dom_events: &mut Vec<DomEvent>,
     scale_factor: f64,
 ) {
     for global_event in global_events {
@@ -272,21 +266,18 @@ fn emit_global_events_listeners(
         let listeners = fdom.rdom().get_listeners(&event_name);
 
         for listener in listeners {
-            let element_id = listener.mounted_id().unwrap();
             let event = DomEvent::new(
                 PotentialEvent {
                     node_id: listener.id(),
                     layer: None,
                     event: global_event.clone(),
                 },
-                element_id,
                 None,
                 scale_factor,
             );
-            event_emitter.send(event).unwrap();
+            to_emit_dom_events.push(event)
         }
     }
-    for colateral_global_event in global_colateral_events {
-        event_emitter.send(colateral_global_event).unwrap();
-    }
+
+    to_emit_dom_events.extend(global_colateral_events);
 }

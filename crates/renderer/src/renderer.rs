@@ -4,7 +4,7 @@ use freya_core::{
     accessibility::AccessibilityFocusDirection,
     dom::SafeDOM,
     events::{EventName, PlatformEvent},
-    navigation_mode::NavigationMode,
+    prelude::NavigationMode,
 };
 use freya_elements::events::{
     map_winit_key, map_winit_modifiers, map_winit_physical_key, Code, Key,
@@ -23,10 +23,8 @@ use glutin::{
     },
 };
 use glutin_winit::DisplayBuilder;
-use raw_window_handle::HasRawWindowHandle;
-use std::{ffi::CString, sync::Arc};
+use std::ffi::CString;
 use std::{mem, num::NonZeroU32, path::PathBuf};
-use tokio::sync::Notify;
 use torin::geometry::CursorPoint;
 
 use winit::{
@@ -38,17 +36,20 @@ use winit::{
     },
     event_loop::EventLoopProxy,
     keyboard::ModifiersState,
+    raw_window_handle::HasWindowHandle,
 };
 use winit::{event_loop::EventLoop, window::Window};
 
-use crate::{app::Application, config::WindowConfig, HoveredNode, LaunchConfig};
+use crate::{
+    app::Application, config::WindowConfig, devtools::Devtools, HoveredNode, LaunchConfig,
+};
 
 const WHEEL_SPEED_MODIFIER: f32 = 53.0;
 
 pub struct NotCreatedState<'a, State: Clone + 'static> {
     pub(crate) sdom: SafeDOM,
     pub(crate) vdom: VirtualDom,
-    pub(crate) mutations_notifier: Option<Arc<Notify>>,
+    pub(crate) devtools: Option<Devtools>,
     pub(crate) config: LaunchConfig<'a, State>,
 }
 
@@ -105,7 +106,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
             let NotCreatedState {
                 sdom,
                 vdom,
-                mutations_notifier,
+                devtools,
                 mut config,
             } = mem::take(&mut self.state).not_created_state();
 
@@ -177,16 +178,16 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
             // Workaround for accesskit
             window.set_visible(true);
 
-            let raw_window_handle = window.raw_window_handle();
+            let window_handle = window.window_handle().unwrap();
 
             let context_attributes = ContextAttributesBuilder::new()
                 .with_profile(GlProfile::Core)
-                .build(Some(raw_window_handle));
+                .build(Some(window_handle.as_raw()));
 
             let fallback_context_attributes = ContextAttributesBuilder::new()
                 .with_profile(GlProfile::Core)
                 .with_context_api(ContextApi::Gles(None))
-                .build(Some(raw_window_handle));
+                .build(Some(window_handle.as_raw()));
 
             let not_current_gl_context = unsafe {
                 gl_config
@@ -203,7 +204,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
             let (width, height): (u32, u32) = window.inner_size().into();
 
             let attrs = SurfaceAttributesBuilder::<WindowSurface>::new().build(
-                raw_window_handle,
+                window_handle.as_raw(),
                 NonZeroU32::new(width).unwrap(),
                 NonZeroU32::new(height).unwrap(),
             );
@@ -271,9 +272,9 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                 sdom,
                 vdom,
                 &self.proxy,
-                mutations_notifier,
+                devtools,
                 &window,
-                &config.embedded_fonts,
+                config.embedded_fonts,
                 config.plugins,
                 config.default_fonts,
             );
@@ -302,7 +303,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
         cause: winit::event::StartCause,
     ) {
         if cause == StartCause::Init {
-            self.proxy.send_event(EventMessage::PollVDOM).unwrap();
+            self.proxy.send_event(EventMessage::PollVDOM).ok();
         }
     }
 
@@ -315,18 +316,17 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
         let CreatedState { window, app, .. } = self.state.created_state();
         match event {
             EventMessage::FocusAccessibilityNode(id) => {
-                app.accessibility.set_accessibility_focus(id, window);
+                app.focus_node(id, window);
             }
             EventMessage::RequestRerender => {
                 window.request_redraw();
             }
             EventMessage::RemeasureTextGroup(text_id) => {
-                app.measure_text_group(&text_id, scale_factor);
+                app.measure_text_group(text_id, scale_factor);
             }
             EventMessage::Accessibility(accesskit_winit::WindowEvent::ActionRequested(request)) => {
                 if accesskit::Action::Focus == request.action {
-                    app.accessibility
-                        .set_accessibility_focus(request.target, window);
+                    app.focus_node(request.target, window);
                 }
             }
             EventMessage::Accessibility(accesskit_winit::WindowEvent::InitialTreeRequested) => {
@@ -340,6 +340,10 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
             EventMessage::FocusNextAccessibilityNode => {
                 app.set_navigation_mode(NavigationMode::Keyboard);
                 app.focus_next_node(AccessibilityFocusDirection::Forward, window);
+            }
+            EventMessage::WithWindow(use_window) => (use_window)(&window),
+            EventMessage::QueueFocusAccessibilityNode(node_id) => {
+                app.queue_focus_node(node_id);
             }
             ev => {
                 if let EventMessage::UpdateTemplate(template) = ev {
@@ -378,6 +382,11 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
         app.accessibility
             .process_accessibility_event(&event, window);
         match event {
+            WindowEvent::ThemeChanged(theme) => {
+                app.platform_sender.send_modify(|state| {
+                    state.preferred_theme = theme.into();
+                });
+            }
             WindowEvent::CloseRequested => event_loop.exit(),
             WindowEvent::Ime(Ime::Commit(text)) => {
                 self.send_event(PlatformEvent::Keyboard {
@@ -390,6 +399,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
             WindowEvent::RedrawRequested => {
                 if app.measure_layout_on_next_render {
                     app.process_layout(window.inner_size(), scale_factor);
+                    app.process_accessibility(window);
 
                     app.measure_layout_on_next_render = false;
                 }
@@ -524,9 +534,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
 
                 window.request_redraw();
 
-                app.resize(size);
-
-                app.resize(size);
+                app.resize(&window);
             }
             WindowEvent::DroppedFile(file_path) => {
                 self.dropped_file_path = Some(file_path);
@@ -576,7 +584,7 @@ impl<'a, State: Clone + 'static> DesktopRenderer<'a, State> {
         vdom: VirtualDom,
         sdom: SafeDOM,
         config: LaunchConfig<State>,
-        mutations_notifier: Option<Arc<Notify>>,
+        devtools: Option<Devtools>,
         hovered_node: HoveredNode,
     ) {
         let rt = tokio::runtime::Builder::new_multi_thread()
@@ -606,7 +614,7 @@ impl<'a, State: Clone + 'static> DesktopRenderer<'a, State> {
         }
 
         let mut desktop_renderer =
-            DesktopRenderer::new(vdom, sdom, config, mutations_notifier, hovered_node, proxy);
+            DesktopRenderer::new(vdom, sdom, config, devtools, hovered_node, proxy);
 
         event_loop.run_app(&mut desktop_renderer).unwrap();
     }
@@ -615,14 +623,14 @@ impl<'a, State: Clone + 'static> DesktopRenderer<'a, State> {
         vdom: VirtualDom,
         sdom: SafeDOM,
         config: LaunchConfig<'a, State>,
-        mutations_notifier: Option<Arc<Notify>>,
+        devtools: Option<Devtools>,
         hovered_node: HoveredNode,
         proxy: EventLoopProxy<EventMessage>,
     ) -> Self {
         DesktopRenderer {
             state: WindowState::NotCreated(NotCreatedState {
                 sdom,
-                mutations_notifier,
+                devtools,
                 vdom,
                 config,
             }),

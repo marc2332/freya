@@ -197,23 +197,18 @@ pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>
             .expect("Setting default subscriber failed");
     }
 
-    let (vdom, mutations_notifier, hovered_node) = {
+    let (vdom, devtools, hovered_node) = {
         #[cfg(feature = "devtools")]
         #[cfg(debug_assertions)]
         {
             use freya_devtools::with_devtools;
+            use freya_renderer::devtools::Devtools;
             use std::sync::{Arc, Mutex};
-            use tokio::sync::Notify;
 
             let hovered_node = Some(Arc::new(Mutex::new(None)));
-            let mutations_notifier = Arc::new(Notify::new());
-            let vdom = with_devtools(
-                sdom.clone(),
-                app,
-                mutations_notifier.clone(),
-                hovered_node.clone(),
-            );
-            (vdom, Some(mutations_notifier), hovered_node)
+            let (devtools, devtools_receiver) = Devtools::new();
+            let vdom = with_devtools(app, devtools_receiver.clone(), hovered_node.clone());
+            (vdom, Some(devtools), hovered_node)
         }
 
         #[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
@@ -222,7 +217,7 @@ pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>
             (vdom, None, None)
         }
     };
-    DesktopRenderer::launch(vdom, sdom, config, mutations_notifier, hovered_node);
+    DesktopRenderer::launch(vdom, sdom, config, devtools, hovered_node);
 }
 
 #[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
@@ -232,7 +227,7 @@ fn with_accessibility(app: AppComponent) -> VirtualDom {
     use dioxus::prelude::Props;
     use dioxus_core::fc_to_builder;
     use dioxus_core_macro::rsx;
-    use freya_components::KeyboardNavigator;
+    use freya_components::NativeContainer;
 
     #[derive(Props, Clone, PartialEq)]
     struct RootProps {
@@ -244,7 +239,7 @@ fn with_accessibility(app: AppComponent) -> VirtualDom {
         #[allow(non_snake_case)]
         let App = props.app;
 
-        rsx!(KeyboardNavigator {
+        rsx!(NativeContainer {
             App {}
         })
     }

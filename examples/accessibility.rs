@@ -40,10 +40,8 @@ fn app() -> Element {
                 "What is this?"
             }
             Button {
-                onclick: |e: Option<MouseEvent>| {
-                    if let Some(e) = e {
-                        e.stop_propagation();
-                    }
+                onpress: |e: PressEvent | {
+                    e.stop_propagation();
                 },
                 label {
                     "Button"

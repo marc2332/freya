@@ -8,6 +8,7 @@ pub use renderer::DesktopRenderer;
 mod accessibility;
 mod app;
 mod config;
+pub mod devtools;
 mod elements;
 mod render;
 mod renderer;

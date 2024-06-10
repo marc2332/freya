@@ -21,7 +21,7 @@ use freya_hooks::{
 ///             height: "100%",
 ///             width: "100%",
 ///             Button {
-///                 onclick: move |_| show.toggle(),
+///                 onpress: move |_| show.toggle(),
 ///                 label { "Open" }
 ///             }
 ///             SnackBar {
@@ -118,7 +118,7 @@ mod test {
                     height: "100%",
                     width: "100%",
                     Button {
-                        onclick: move |_|  show.toggle(),
+                        onpress: move |_|  show.toggle(),
                         label { "Open" }
                     }
                     SnackBar {

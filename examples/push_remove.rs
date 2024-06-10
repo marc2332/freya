@@ -24,13 +24,13 @@ fn app() -> Element {
 
     rsx!(
         Button {
-            onclick: add,
+            onpress: add,
             label {
                 "Add"
             }
         }
         Button {
-            onclick: remove,
+            onpress: remove,
             label {
                 "Remove"
             }

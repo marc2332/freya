@@ -1,8 +1,8 @@
 # Differences with Dioxus
 
-**Freya** uses some of the core packages of Dioxus, but not all of them.
+**Freya** is built on top of the core crates from Dioxus, this means that you will effectively be creating Dioxus components, using RSX and hooks. But, you will **not** be using HTML, CSS, JS or any Web tech at all.
 
-These are the main differences between Freya and the official Dioxus renderers for Desktop (WebView and Blitz):
+Here you can find a list of the main differences between Freya and the official Dioxus renderers for Desktop (WebView and Blitz):
 
 | Category                             | Freya            | Dioxus Renderers                |
 |--------------------------------------|------------------|---------------------------------|

@@ -38,7 +38,7 @@ pub enum DropdownItemStatus {
 /// # Styling
 /// Inherits the [`DropdownItemTheme`](freya_hooks::DropdownItemTheme) theme.
 #[allow(non_snake_case)]
-pub fn DropdownItem<T: Clone>(
+pub fn DropdownItem<T>(
     DropdownItemProps {
         theme,
         children,
@@ -47,7 +47,7 @@ pub fn DropdownItem<T: Clone>(
     }: DropdownItemProps<T>,
 ) -> Element
 where
-    T: PartialEq + 'static,
+    T: Clone + PartialEq + 'static,
 {
     let selected = use_context::<Signal<T>>();
     let theme = use_applied_theme!(&theme, dropdown_item);

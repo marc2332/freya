@@ -10,7 +10,7 @@ fn main() {
 }
 
 fn app() -> Element {
-    use_init_theme(DARK_THEME);
+    use_init_theme(|| DARK_THEME);
     let mut show_menu = use_signal(|| false);
 
     rsx!(
@@ -19,7 +19,7 @@ fn app() -> Element {
                 padding: "20".into()
             }),
             Button {
-                onclick: move |_| show_menu.toggle(),
+                onpress: move |_| show_menu.toggle(),
                 label { "Open Menu" }
             },
             if *show_menu.read() {

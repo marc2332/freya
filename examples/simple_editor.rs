@@ -6,13 +6,19 @@
 use freya::prelude::*;
 
 fn main() {
-    launch(app);
+    launch_with_props(app, "Simple editor", (900.0, 650.0));
 }
 
 fn app() -> Element {
     let mut editable = use_editable(
         || {
-            EditableConfig::new("Hello Rustaceans Abcdefg12345 Hello Rustaceans Abcdefg12345 Hello Rustaceans Abcdefg12345\n".repeat(25).trim().to_string())
+            EditableConfig::new(
+                "你好世界 👋| Hello World! 🙍‍♂️| Hola Mundo! 🚀| Hola Món! 🦀\n"
+                    .repeat(15)
+                    .trim()
+                    .to_string(),
+            )
+            .with_allow_tabs(true)
         },
         EditableMode::MultipleLinesSingleEditor,
     );
@@ -20,8 +26,7 @@ fn app() -> Element {
     let cursor_reference = editable.cursor_attr();
     let highlights = editable.highlights_attr(0);
     let editor = editable.editor().read();
-    let cursor = editor.cursor();
-    let cursor_char = editor.cursor_pos();
+    let cursor_char = editor.visible_cursor_pos();
 
     let onmousedown = move |e: MouseEvent| {
         editable.process_event(&EditableEvent::MouseDown(e.data, 0));
@@ -37,6 +42,10 @@ fn app() -> Element {
 
     let onkeydown = move |e: KeyboardEvent| {
         editable.process_event(&EditableEvent::KeyDown(e.data));
+    };
+
+    let onkeyup = move |e: KeyboardEvent| {
+        editable.process_event(&EditableEvent::KeyUp(e.data));
     };
 
     rsx!(
@@ -61,6 +70,7 @@ fn app() -> Element {
                     onmouseover,
                     onmousedown,
                     onkeydown,
+                    onkeyup,
                     text {
                         "{editable.editor()}"
                     }
@@ -69,7 +79,7 @@ fn app() -> Element {
             label {
                 color: "black",
                 height: "30",
-                "{cursor.col()}:{cursor.row()}"
+                "{editor.cursor_row()}:{editor.cursor_col()}"
             }
         }
     )

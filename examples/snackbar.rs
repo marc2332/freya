@@ -29,7 +29,7 @@ fn app() -> Element {
             cross_align: "center",
             direction: "horizontal",
             Button {
-                onclick: move |_| {
+                onpress: move |_| {
                     show.toggle();
                     if *show.read() {
                         animation.start();

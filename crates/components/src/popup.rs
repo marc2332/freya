@@ -49,7 +49,7 @@ pub fn PopupBackground(children: Element) -> Element {
 ///              }
 ///          }
 ///          Button {
-///              onclick: move |_| show_popup.set(true),
+///              onpress: move |_| show_popup.set(true),
 ///              label {
 ///                  "Open"
 ///              }
@@ -93,7 +93,7 @@ pub fn Popup(
         }
     };
 
-    let on_close_button_click = move |_| request_to_close();
+    let onpress = move |_| request_to_close();
 
     rsx!(
         PopupBackground {
@@ -120,7 +120,7 @@ pub fn Popup(
                                 corner_radius: "999".into(),
                                 shadow: "none".into()
                             }),
-                            onclick: on_close_button_click,
+                            onpress,
                             CrossIcon {
                                 fill: cross_fill
                              }
@@ -184,7 +184,7 @@ mod test {
                     }
                 }
                 Button {
-                    onclick: move |_| show_popup.set(true),
+                    onpress: move |_| show_popup.set(true),
                     label {
                         "Open"
                     }
