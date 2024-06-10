@@ -34,11 +34,10 @@ use winit::{
         ElementState, Ime, KeyEvent, MouseButton, MouseScrollDelta, StartCause, Touch, TouchPhase,
         WindowEvent,
     },
-    event_loop::EventLoopProxy,
+    event_loop::{window::Window, EventLoop, EventLoopProxy},
     keyboard::ModifiersState,
     raw_window_handle::HasWindowHandle,
 };
-use winit::{event_loop::EventLoop, window::Window};
 
 use crate::{
     app::Application, config::WindowConfig, devtools::Devtools, HoveredNode, LaunchConfig,
