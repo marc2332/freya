@@ -450,6 +450,14 @@ pub trait TextEditor {
                     }
 
                     _ => {
+                        // Remove selected text
+                        let selection = self.get_selection_range();
+                        if let Some((start, end)) = selection {
+                            self.remove(start..end);
+                            self.set_cursor_pos(start);
+                            event.insert(TextEvent::TEXT_CHANGED);
+                        }
+
                         if let Ok(ch) = character.parse::<char>() {
                             // Inserts a character
                             let cursor_pos = self.cursor_pos();
