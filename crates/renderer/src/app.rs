@@ -268,6 +268,7 @@ impl Application {
     /// Resize the Window
     pub fn resize(&mut self, window: &Window) {
         self.measure_layout_on_next_render = true;
+        self.sdom.get().layout().reset();
         self.platform_sender.send_modify(|state| {
             state.information = PlatformInformation::from_winit(&window);
         })
