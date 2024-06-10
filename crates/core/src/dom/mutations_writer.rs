@@ -13,12 +13,14 @@ pub struct MutationsWriter<'a> {
     pub layout: &'a mut Torin<NodeId>,
     pub layers: &'a Layers,
     pub paragraphs: &'a ParagraphElements,
+    pub scale_factor: f32,
 }
 
 impl<'a> MutationsWriter<'a> {
     pub fn remove(&mut self, id: ElementId) {
         let node_id = self.native_writer.state.element_to_node_id(id);
-        let mut dom_adapter = DioxusDOMAdapter::new_with_cache(self.native_writer.rdom);
+        let mut dom_adapter =
+            DioxusDOMAdapter::new_with_cache(self.native_writer.rdom, self.scale_factor);
 
         // Remove from layout
         self.layout.remove(node_id, &mut dom_adapter, true);

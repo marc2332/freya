@@ -75,7 +75,6 @@ impl State<CustomAttributeValues> for LayoutState {
         context: &SendAnyMap,
     ) -> bool {
         let torin_layout = context.get::<Arc<Mutex<Torin<NodeId>>>>().unwrap();
-        let scale_factor = context.get::<f32>().unwrap();
 
         let mut layout = LayoutState {
             node_id: node_view.node_id(),
@@ -87,64 +86,56 @@ impl State<CustomAttributeValues> for LayoutState {
                 match attr.attribute {
                     AttributeName::Width => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(mut width) = Size::parse(value) {
-                                width.scale(*scale_factor);
+                            if let Ok(width) = Size::parse(value) {
                                 layout.width = width;
                             }
                         }
                     }
                     AttributeName::Height => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(mut height) = Size::parse(value) {
-                                height.scale(*scale_factor);
+                            if let Ok(height) = Size::parse(value) {
                                 layout.height = height;
                             }
                         }
                     }
                     AttributeName::MinHeight => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(mut min_height) = Size::parse(value) {
-                                min_height.scale(*scale_factor);
+                            if let Ok(min_height) = Size::parse(value) {
                                 layout.minimum_height = min_height;
                             }
                         }
                     }
                     AttributeName::MinWidth => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(mut min_width) = Size::parse(value) {
-                                min_width.scale(*scale_factor);
+                            if let Ok(min_width) = Size::parse(value) {
                                 layout.minimum_width = min_width;
                             }
                         }
                     }
                     AttributeName::MaxHeight => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(mut max_height) = Size::parse(value) {
-                                max_height.scale(*scale_factor);
+                            if let Ok(max_height) = Size::parse(value) {
                                 layout.maximum_height = max_height;
                             }
                         }
                     }
                     AttributeName::MaxWidth => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(mut max_width) = Size::parse(value) {
-                                max_width.scale(*scale_factor);
+                            if let Ok(max_width) = Size::parse(value) {
                                 layout.maximum_width = max_width;
                             }
                         }
                     }
                     AttributeName::Padding => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(mut padding) = Gaps::parse(value) {
-                                padding.scale(*scale_factor);
+                            if let Ok(padding) = Gaps::parse(value) {
                                 layout.padding = padding;
                             }
                         }
                     }
                     AttributeName::Margin => {
                         if let Some(value) = attr.value.as_text() {
-                            if let Ok(mut margin) = Gaps::parse(value) {
-                                margin.scale(*scale_factor);
+                            if let Ok(margin) = Gaps::parse(value) {
                                 layout.margin = margin;
                             }
                         }
@@ -160,14 +151,14 @@ impl State<CustomAttributeValues> for LayoutState {
                     AttributeName::OffsetY => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(scroll) = value.parse::<f32>() {
-                                layout.offset_y = Length::new(scroll * scale_factor);
+                                layout.offset_y = Length::new(scroll);
                             }
                         }
                     }
                     AttributeName::OffsetX => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(scroll) = value.parse::<f32>() {
-                                layout.offset_x = Length::new(scroll * scale_factor);
+                                layout.offset_x = Length::new(scroll);
                             }
                         }
                     }
@@ -197,28 +188,28 @@ impl State<CustomAttributeValues> for LayoutState {
                     AttributeName::PositionTop => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(top) = value.parse::<f32>() {
-                                layout.position.set_top(top * scale_factor);
+                                layout.position.set_top(top);
                             }
                         }
                     }
                     AttributeName::PositionRight => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(right) = value.parse::<f32>() {
-                                layout.position.set_right(right * scale_factor);
+                                layout.position.set_right(right);
                             }
                         }
                     }
                     AttributeName::PositionBottom => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(bottom) = value.parse::<f32>() {
-                                layout.position.set_bottom(bottom * scale_factor);
+                                layout.position.set_bottom(bottom);
                             }
                         }
                     }
                     AttributeName::PositionLeft => {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(left) = value.parse::<f32>() {
-                                layout.position.set_left(left * scale_factor);
+                                layout.position.set_left(left);
                             }
                         }
                     }

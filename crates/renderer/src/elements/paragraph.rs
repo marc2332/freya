@@ -16,6 +16,7 @@ pub fn render_paragraph(
     canvas: &Canvas,
     font_collection: &mut FontCollection,
     default_fonts: &[String],
+    scale_factor: f32,
 ) {
     let (x, y) = area.origin.to_tuple();
     let node_cursor_settings = &*dioxus_node.get::<CursorSettings>().unwrap();
@@ -37,6 +38,7 @@ pub fn render_paragraph(
             font_collection,
             true,
             default_fonts,
+            scale_factor,
         );
         paint(&paragraph);
     } else {

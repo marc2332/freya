@@ -253,7 +253,7 @@ impl Application {
             freya_dom: &self.sdom.get(),
         });
 
-        self.start_render(hovered_node, canvas);
+        self.start_render(hovered_node, canvas, window.scale_factor() as f32);
 
         self.accessibility
             .render_accessibility(window.title().as_str());
@@ -345,7 +345,7 @@ impl Application {
     }
 
     /// Start rendering the RealDOM to Window
-    pub fn start_render(&mut self, hovered_node: &HoveredNode, canvas: &Canvas) {
+    pub fn start_render(&mut self, hovered_node: &HoveredNode, canvas: &Canvas, scale_factor: f32) {
         let fdom = self.sdom.get();
 
         let mut matrices: Vec<(Matrix, Vec<NodeId>)> = Vec::default();
@@ -376,6 +376,7 @@ impl Application {
                         &mut opacities,
                         &self.default_fonts,
                         layout,
+                        scale_factor,
                     );
                 }
             },

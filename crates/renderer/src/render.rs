@@ -39,6 +39,7 @@ pub fn render_skia(
     opacities: &mut Vec<(f32, Vec<NodeId>)>,
     default_fonts: &[String],
     layout: &Torin<NodeId>,
+    scale_factor: f32,
 ) {
     let area = layout_node.visible_area();
     let data = &layout_node.data;
@@ -105,7 +106,7 @@ pub fn render_skia(
 
         match tag {
             TagName::Rect => {
-                render_rect(&area, dioxus_node, canvas, font_collection);
+                render_rect(&area, dioxus_node, canvas, font_collection, scale_factor);
             }
             TagName::Label => {
                 render_label(&area, data, canvas);
@@ -118,6 +119,7 @@ pub fn render_skia(
                     canvas,
                     font_collection,
                     default_fonts,
+                    scale_factor,
                 );
             }
             TagName::Svg => {
