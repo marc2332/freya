@@ -1,7 +1,12 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_hooks::{
-    use_activable_route, use_applied_theme, use_focus, use_platform, TabTheme, TabThemeWith,
+    use_activable_route,
+    use_applied_theme,
+    use_focus,
+    use_platform,
+    TabTheme,
+    TabThemeWith,
 };
 use winit::window::CursorIcon;
 

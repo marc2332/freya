@@ -48,19 +48,16 @@
 //! - `devtools`: enables a side panel to inspect your App tree, styles and computed layout.
 //! - `use_camera`: enables the `use_camera` hook.
 //! - `log`: enables internal logs.
-//!
 
 /// Freya docs.
 #[cfg(doc)]
 pub mod _docs;
 
-#[cfg(doc)]
-pub use freya_elements::_docs as elements_docs;
-
 /// Dioxus library.
 pub use dioxus;
-
 pub use dioxus_core;
+#[cfg(doc)]
+pub use freya_elements::_docs as elements_docs;
 
 /// Launch your app.
 pub mod launch;
@@ -80,11 +77,10 @@ pub mod common {
     pub use freya_common::*;
 }
 
-/// Events data.
-pub use freya_elements::events;
-
 /// Elements, attributes and events definitions.
 pub use freya_elements::elements;
+/// Events data.
+pub use freya_elements::events;
 
 /// Hot reload configuration.
 pub mod hotreload {
@@ -97,21 +93,37 @@ pub mod plugins;
 
 /// Useful imports.
 pub mod prelude {
-    pub use dioxus_core;
-    pub use dioxus_core::prelude::*;
+    pub use dioxus_core::{
+        prelude::*,
+        {
+            self,
+        },
+    };
     pub use dioxus_core_macro::*;
     pub use dioxus_hooks::*;
-    pub use dioxus_hot_reload::{self, hot_reload_init, Config};
+    pub use dioxus_hot_reload::{
+        self,
+        hot_reload_init,
+        Config,
+    };
     pub use dioxus_signals::*;
-
-    pub use crate::launch::*;
-    pub use crate::plugins::*;
     pub use freya_components::*;
     pub use freya_core::prelude::PreferredTheme;
-    pub use freya_elements::elements as dioxus_elements;
-    pub use freya_elements::events::*;
+    pub use freya_elements::{
+        elements as dioxus_elements,
+        events::*,
+    };
     pub use freya_hooks::*;
-    pub use freya_node_state::{dynamic_bytes, static_bytes, CustomAttributeValues};
+    pub use freya_node_state::{
+        dynamic_bytes,
+        static_bytes,
+        CustomAttributeValues,
+    };
     pub use freya_renderer::*;
     pub use torin::prelude::*;
+
+    pub use crate::{
+        launch::*,
+        plugins::*,
+    };
 }

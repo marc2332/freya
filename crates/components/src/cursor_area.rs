@@ -32,7 +32,6 @@ pub struct CursorAreaProps {
 ///     )
 /// }
 /// ```
-///
 #[allow(non_snake_case)]
 pub fn CursorArea(CursorAreaProps { children, icon }: CursorAreaProps) -> Element {
     let platform = use_platform();
@@ -67,7 +66,10 @@ pub fn CursorArea(CursorAreaProps { children, icon }: CursorAreaProps) -> Elemen
 mod test {
     use freya::prelude::*;
     use freya_testing::prelude::*;
-    use winit::{event::MouseButton, window::CursorIcon};
+    use winit::{
+        event::MouseButton,
+        window::CursorIcon,
+    };
 
     #[tokio::test]
     pub async fn cursor_area() {

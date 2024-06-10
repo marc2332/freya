@@ -1,8 +1,12 @@
-use crate::Parse;
+use std::{
+    f32::consts::SQRT_2,
+    fmt,
+};
+
 use freya_engine::prelude::*;
-use std::f32::consts::SQRT_2;
-use std::fmt;
 use torin::scaled::Scaled;
+
+use crate::Parse;
 
 #[derive(PartialEq, Clone, Debug, Default, Copy)]
 pub struct CornerRadius {

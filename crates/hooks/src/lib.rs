@@ -28,10 +28,11 @@ pub use rope_editor::*;
 pub use shader_uniforms::*;
 pub use text_editor::*;
 pub use theming::*;
-
 pub use use_activable_route::*;
 pub use use_animation::*;
 pub use use_asset_cacher::*;
+#[cfg(feature = "use_camera")]
+pub use use_camera::*;
 pub use use_canvas::*;
 pub use use_editable::*;
 pub use use_focus::*;
@@ -41,6 +42,3 @@ pub use use_platform::*;
 pub use use_platform_information::*;
 pub use use_preferred_theme::*;
 pub use use_theme::*;
-
-#[cfg(feature = "use_camera")]
-pub use use_camera::*;

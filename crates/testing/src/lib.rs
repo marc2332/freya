@@ -162,11 +162,14 @@ pub mod test_utils;
 const SCALE_FACTOR: f64 = 1.0;
 
 pub mod prelude {
-    pub use crate::config::*;
-    pub use crate::launch::*;
-    pub use crate::test_handler::*;
-    pub use crate::test_node::*;
-    pub use crate::test_utils::*;
     pub use freya_core::prelude::*;
     pub use freya_node_state::*;
+
+    pub use crate::{
+        config::*,
+        launch::*,
+        test_handler::*,
+        test_node::*,
+        test_utils::*,
+    };
 }

@@ -1,10 +1,20 @@
-use std::{io::Cursor, sync::Arc};
+use std::{
+    io::Cursor,
+    sync::Arc,
+};
 
-use freya_core::plugins::{FreyaPlugin, PluginsManager};
+use freya_core::plugins::{
+    FreyaPlugin,
+    PluginsManager,
+};
 use freya_engine::prelude::Color;
 use freya_node_state::Parse;
 use image::io::Reader;
-use winit::window::{Icon, Window, WindowAttributes};
+use winit::window::{
+    Icon,
+    Window,
+    WindowAttributes,
+};
 
 pub type WindowBuilderHook = Box<dyn Fn(WindowAttributes) -> WindowAttributes>;
 pub type EmbeddedFonts<'a> = Vec<(&'a str, &'a [u8])>;

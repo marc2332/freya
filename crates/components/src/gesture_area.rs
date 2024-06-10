@@ -1,9 +1,16 @@
-use std::collections::VecDeque;
-use std::time::Instant;
+use std::{
+    collections::VecDeque,
+    time::Instant,
+};
 
 use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
-use freya_elements::events::{touch::TouchPhase, TouchEvent};
+use freya_elements::{
+    elements as dioxus_elements,
+    events::{
+        touch::TouchPhase,
+        TouchEvent,
+    },
+};
 use futures_util::StreamExt;
 
 /// Distance between the first tap and the second tap in [`Gesture::DoubleTap`] gesture.
@@ -55,7 +62,6 @@ type EventsQueue = VecDeque<(Instant, TouchEvent)>;
 ///    )
 /// }
 /// ```
-///
 #[allow(non_snake_case)]
 pub fn GestureArea(props: GestureAreaProps) -> Element {
     let event_emitter = use_coroutine(

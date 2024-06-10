@@ -1,5 +1,9 @@
 use freya_engine::prelude::*;
-use freya_node_state::{GradientStop, LinearGradient, Parse};
+use freya_node_state::{
+    GradientStop,
+    LinearGradient,
+    Parse,
+};
 
 #[test]
 fn parse_basic_gradient() {

@@ -3,7 +3,10 @@
     windows_subsystem = "windows"
 )]
 
-use freya::{hotreload::FreyaCtx, prelude::*};
+use freya::{
+    hotreload::FreyaCtx,
+    prelude::*,
+};
 
 fn main() {
     dioxus_hot_reload::hot_reload_init!(Config::<FreyaCtx>::default());

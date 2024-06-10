@@ -5,7 +5,10 @@ use crate::{
     direction::DirectionMode,
     gaps::Gaps,
     geometry::Length,
-    prelude::{Content, Position},
+    prelude::{
+        Content,
+        Position,
+    },
     scaled::Scaled,
     size::Size,
 };

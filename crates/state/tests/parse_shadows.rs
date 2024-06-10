@@ -1,5 +1,12 @@
 use freya_engine::prelude::*;
-use freya_node_state::{Fill, GradientStop, LinearGradient, Parse, Shadow, ShadowPosition};
+use freya_node_state::{
+    Fill,
+    GradientStop,
+    LinearGradient,
+    Parse,
+    Shadow,
+    ShadowPosition,
+};
 
 #[test]
 fn parse_big_shadow() {

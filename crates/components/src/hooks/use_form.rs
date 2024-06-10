@@ -1,8 +1,18 @@
 // This hook is in freya-components instead of freya-hooks because it uses some component props.
 
-use crate::{ButtonProps, InputMode, InputProps};
+use std::{
+    collections::HashMap,
+    fmt::Display,
+    hash::Hash,
+};
+
 use dioxus::prelude::*;
-use std::{collections::HashMap, fmt::Display, hash::Hash};
+
+use crate::{
+    ButtonProps,
+    InputMode,
+    InputProps,
+};
 
 type SubmitCallback<Id> = Box<dyn Fn(&HashMap<Id, String>)>;
 

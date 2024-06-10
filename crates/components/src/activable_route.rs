@@ -1,5 +1,8 @@
 use dioxus::prelude::*;
-use dioxus_router::{hooks::use_route, prelude::Routable};
+use dioxus_router::{
+    hooks::use_route,
+    prelude::Routable,
+};
 use freya_hooks::ActivableRouteContext;
 
 /// Provide a context to the inner components so they can know whether the passed route is the current router in the Router or not.

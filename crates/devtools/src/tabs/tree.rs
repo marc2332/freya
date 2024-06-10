@@ -1,12 +1,24 @@
 use std::collections::HashSet;
 
-use crate::{node::NodeElement, state::DevtoolsChannel, NodeIdSerializer, Route};
 use dioxus::prelude::*;
 use dioxus_radio::prelude::use_radio;
-use dioxus_router::prelude::{router, use_navigator};
+use dioxus_router::prelude::{
+    router,
+    use_navigator,
+};
 use freya_components::*;
-use freya_hooks::{theme_with, ScrollViewThemeWith};
+use freya_hooks::{
+    theme_with,
+    ScrollViewThemeWith,
+};
 use freya_native_core::NodeId;
+
+use crate::{
+    node::NodeElement,
+    state::DevtoolsChannel,
+    NodeIdSerializer,
+    Route,
+};
 
 #[derive(Clone, PartialEq)]
 struct NodeTreeItem {

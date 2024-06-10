@@ -1,13 +1,24 @@
 use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
-use freya_elements::events::keyboard::Key;
-use freya_elements::events::{KeyboardData, MouseEvent};
-use freya_hooks::use_platform;
-use freya_hooks::{
-    use_applied_theme, use_editable, use_focus, EditableConfig, EditableEvent, EditableMode,
-    InputTheme, InputThemeWith, TextEditor,
+use freya_elements::{
+    elements as dioxus_elements,
+    events::{
+        keyboard::Key,
+        KeyboardData,
+        MouseEvent,
+    },
 };
-
+use freya_hooks::{
+    use_applied_theme,
+    use_editable,
+    use_focus,
+    use_platform,
+    EditableConfig,
+    EditableEvent,
+    EditableMode,
+    InputTheme,
+    InputThemeWith,
+    TextEditor,
+};
 use winit::window::CursorIcon;
 
 /// Enum to declare is [`Input`] hidden.

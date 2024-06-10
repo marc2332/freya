@@ -3,12 +3,17 @@
     windows_subsystem = "windows"
 )]
 
+use std::str::FromStr;
+
 use dioxus_sdk::{
-    i18n::{use_i18, use_init_i18n, Language},
+    i18n::{
+        use_i18,
+        use_init_i18n,
+        Language,
+    },
     translate,
 };
 use freya::prelude::*;
-use std::str::FromStr;
 
 fn main() {
     launch_with_props(app, "freya + i18n", (300.0, 200.0));

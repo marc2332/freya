@@ -1,13 +1,19 @@
-use crate::Loader;
 use bytes::Bytes;
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
 use freya_hooks::{
-    use_applied_theme, use_asset_cacher, use_focus, AssetAge, AssetConfiguration,
-    NetworkImageTheme, NetworkImageThemeWith,
+    use_applied_theme,
+    use_asset_cacher,
+    use_focus,
+    AssetAge,
+    AssetConfiguration,
+    NetworkImageTheme,
+    NetworkImageThemeWith,
 };
 use freya_node_state::dynamic_bytes;
 use reqwest::Url;
+
+use crate::Loader;
 
 /// Properties for the [`NetworkImage`] component.
 #[derive(Props, Clone, PartialEq)]
@@ -45,7 +51,7 @@ pub enum ImageState {
 /// Image component that automatically fetches and caches remote (HTTP) images.
 ///
 /// # Example
-///  
+///
 /// ```rust,no_run
 /// # use reqwest::Url;
 /// # use freya::prelude::*;
@@ -56,7 +62,6 @@ pub enum ImageState {
 ///         }
 ///     )
 /// }
-///
 #[allow(non_snake_case)]
 pub fn NetworkImage(props: NetworkImageProps) -> Element {
     let mut asset_cacher = use_asset_cacher();

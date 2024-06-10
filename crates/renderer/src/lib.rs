@@ -1,8 +1,13 @@
-pub use config::*;
-use freya_native_core::NodeId;
-use std::sync::{Arc, Mutex};
+use std::sync::{
+    Arc,
+    Mutex,
+};
 
-pub use config::WindowConfig;
+pub use config::{
+    WindowConfig,
+    *,
+};
+use freya_native_core::NodeId;
 pub use renderer::DesktopRenderer;
 
 mod accessibility;

@@ -1,6 +1,14 @@
+pub use keyboard_types::{
+    Code,
+    Key,
+    Modifiers,
+};
+use winit::keyboard::{
+    self,
+    NamedKey,
+};
+
 use crate::definitions::PlatformEventData;
-pub use keyboard_types::{Code, Key, Modifiers};
-use winit::keyboard::{self, NamedKey};
 
 // Return the equivalent of Winit `ModifiersState` in keyboard_types
 pub fn map_winit_modifiers(modifiers: keyboard::ModifiersState) -> Modifiers {

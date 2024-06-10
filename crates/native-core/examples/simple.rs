@@ -1,7 +1,9 @@
-use freya_native_core::exports::shipyard::Component;
-use freya_native_core::node_ref::*;
-use freya_native_core::prelude::*;
-use freya_native_core::real_dom::NodeTypeMut;
+use freya_native_core::{
+    exports::shipyard::Component,
+    node_ref::*,
+    prelude::*,
+    real_dom::NodeTypeMut,
+};
 use freya_native_core_macro::partial_derive_state;
 
 struct FontSize(f64);

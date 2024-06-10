@@ -1,5 +1,7 @@
-use crate::cow_borrowed;
-use crate::theming::*;
+use crate::{
+    cow_borrowed,
+    theming::*,
+};
 
 pub const LIGHT_THEME: Theme = Theme {
     name: "light",

@@ -1,7 +1,11 @@
+use std::{
+    path::PathBuf,
+    str::FromStr,
+};
+
 use freya::prelude::*;
 use freya_engine::prelude::Color;
 use freya_testing::prelude::*;
-use std::{path::PathBuf, str::FromStr};
 
 #[tokio::test]
 pub async fn filedrop_events() {

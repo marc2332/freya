@@ -1,6 +1,12 @@
-use crate::{DisplayColor, LinearGradient, Parse};
-use freya_engine::prelude::Color;
 use std::fmt;
+
+use freya_engine::prelude::Color;
+
+use crate::{
+    DisplayColor,
+    LinearGradient,
+    Parse,
+};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Fill {

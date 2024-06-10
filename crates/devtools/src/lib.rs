@@ -2,14 +2,28 @@ use std::collections::HashSet;
 
 use dioxus::prelude::*;
 use dioxus_radio::prelude::*;
-use dioxus_router::prelude::{use_route, Outlet, Routable, Router};
+use dioxus_router::prelude::{
+    use_route,
+    Outlet,
+    Routable,
+    Router,
+};
 use freya_components::*;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::{use_init_theme, use_platform, DARK_THEME};
+use freya_hooks::{
+    use_init_theme,
+    use_platform,
+    DARK_THEME,
+};
 use freya_native_core::NodeId;
-
-use freya_renderer::{devtools::DevtoolsReceiver, HoveredNode};
-use state::{DevtoolsChannel, DevtoolsState};
+use freya_renderer::{
+    devtools::DevtoolsReceiver,
+    HoveredNode,
+};
+use state::{
+    DevtoolsChannel,
+    DevtoolsState,
+};
 
 mod hooks;
 mod node;
@@ -17,7 +31,11 @@ mod property;
 mod state;
 mod tabs;
 
-use tabs::{layout::*, style::*, tree::*};
+use tabs::{
+    layout::*,
+    style::*,
+    tree::*,
+};
 
 /// Run the [`VirtualDom`] with a sidepanel where the devtools are located.
 pub fn with_devtools(

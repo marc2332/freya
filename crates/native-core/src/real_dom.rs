@@ -1,28 +1,66 @@
 //! A Dom that can sync with the VirtualDom mutations intended for use in lazy renderers.
 
-use rustc_hash::{FxHashMap, FxHashSet};
-use shipyard::error::GetStorage;
-use shipyard::track::Untracked;
-use shipyard::{Component, Get, IntoBorrow, ScheduledWorkload, Unique, View, ViewMut, Workload};
-use shipyard::{SystemModificator, World};
-use std::any::TypeId;
-use std::ops::{Deref, DerefMut};
-use std::sync::Arc;
+use std::{
+    any::TypeId,
+    ops::{
+        Deref,
+        DerefMut,
+    },
+    sync::Arc,
+};
 
-use crate::passes::{Dependant, DirtyNodeStates, PassDirection, TypeErasedState};
-use crate::prelude::AttributeMaskBuilder;
-use crate::prelude::AttributeName;
-use crate::tree::{TreeMut, TreeMutView, TreeRef, TreeRefView};
-use crate::NodeId;
+use rustc_hash::{
+    FxHashMap,
+    FxHashSet,
+};
+use shipyard::{
+    error::GetStorage,
+    track::Untracked,
+    Component,
+    Get,
+    IntoBorrow,
+    ScheduledWorkload,
+    SystemModificator,
+    Unique,
+    View,
+    ViewMut,
+    Workload,
+    World,
+};
+
 use crate::{
     events::EventName,
-    node::{ElementNode, FromAnyValue, NodeType, OwnedAttributeValue},
-};
-use crate::{
-    node_ref::{NodeMask, NodeMaskBuilder},
+    node::{
+        ElementNode,
+        FromAnyValue,
+        NodeType,
+        OwnedAttributeValue,
+    },
+    node_ref::{
+        NodeMask,
+        NodeMaskBuilder,
+    },
+    passes::{
+        Dependant,
+        DirtyNodeStates,
+        PassDirection,
+        TypeErasedState,
+    },
+    prelude::{
+        AttributeMaskBuilder,
+        AttributeName,
+    },
     tags::TagName,
+    tree::{
+        TreeMut,
+        TreeMutView,
+        TreeRef,
+        TreeRefView,
+    },
+    FxDashSet,
+    NodeId,
+    SendAnyMap,
 };
-use crate::{FxDashSet, SendAnyMap};
 
 /// The context passes can receive when they are executed
 #[derive(Unique)]

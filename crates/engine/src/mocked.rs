@@ -1328,7 +1328,11 @@ pub enum BlurStyle {
 }
 
 pub mod svg {
-    use super::{Canvas, FontMgr, Size};
+    use super::{
+        Canvas,
+        FontMgr,
+        Size,
+    };
 
     pub struct Dom;
 
@@ -1396,7 +1400,10 @@ pub enum ColorType {
 
 pub struct SurfaceProps;
 
-use std::ops::{Deref, DerefMut};
+use std::ops::{
+    Deref,
+    DerefMut,
+};
 
 pub struct RecordingContext;
 

@@ -34,6 +34,8 @@ jobs:
       run: cargo check --examples
     - name: Lint
       run: cargo clippy --workspace -- -D warnings
+    - name: Format
+      run: cargo +nightly fmt --all --check -- --error-on-unformatted --unstable-features
     - name: Run Linux tests
       if: runner.os == 'Linux'
       run: |
