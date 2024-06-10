@@ -10,9 +10,9 @@ use tokio::sync::mpsc::unbounded_channel;
 use tokio::sync::{broadcast, watch};
 use winit::window::CursorIcon;
 
-use crate::config::TestingConfig;
 use crate::test_handler::TestingHandler;
 use crate::test_utils::TestUtils;
+use crate::{config::TestingConfig, SCALE_FACTOR};
 
 /// Run a Component in a headless testing environment.
 ///
@@ -34,6 +34,7 @@ pub fn launch_test_with_config(root: AppComponent, config: TestingConfig) -> Tes
         preferred_theme: PreferredTheme::default(),
         navigation_mode: NavigationMode::default(),
         information: PlatformInformation::new(config.size, false, false, false),
+        scale_factor: SCALE_FACTOR as f32,
     });
     let mut font_collection = FontCollection::new();
     let font_mgr = FontMgr::default();
