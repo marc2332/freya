@@ -81,6 +81,7 @@ impl Application {
             preferred_theme: window.theme().map(|theme| theme.into()).unwrap_or_default(),
             navigation_mode: NavigationMode::default(),
             information: PlatformInformation::from_winit(window),
+            scale_factor: window.scale_factor() as f32,
         });
 
         plugins.send(PluginEvent::WindowCreated(window));

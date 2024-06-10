@@ -43,7 +43,7 @@ pub fn Graph(props: GraphProps) -> Element {
     }));
 
     let canvas = use_canvas(&props, |state| {
-        Box::new(move |canvas, font_collection, region| {
+        Box::new(move |canvas, font_collection, region, _| {
             canvas.translate((region.min_x(), region.min_y()));
 
             let mut paragraph_style = ParagraphStyle::default();

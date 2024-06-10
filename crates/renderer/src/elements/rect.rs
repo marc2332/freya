@@ -180,6 +180,6 @@ pub fn render_rect(
     let references = node_ref.get::<References>().unwrap();
 
     if let Some(canvas_ref) = &references.canvas_ref {
-        (canvas_ref.runner)(canvas, font_collection, area);
+        (canvas_ref.runner)(canvas, font_collection, area, scale_factor);
     }
 }

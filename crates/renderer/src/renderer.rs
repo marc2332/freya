@@ -397,6 +397,12 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                 });
             }
             WindowEvent::RedrawRequested => {
+                app.platform_sender.send_if_modified(|state| {
+                    let scale_factor_is_different = state.scale_factor == scale_factor;
+                    state.scale_factor = scale_factor;
+                    scale_factor_is_different
+                });
+
                 if app.measure_layout_on_next_render {
                     app.process_layout(window.inner_size(), scale_factor);
                     app.process_accessibility(window);
