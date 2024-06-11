@@ -41,8 +41,11 @@ pub enum TabStatus {
 ///
 /// ```no_run
 /// # use freya::prelude::*;
+/// # use dioxus_router::prelude::Routable;
 /// # #[allow(non_snake_case)]
 /// # fn PageNotFound() -> Element { None }
+/// # #[allow(non_snake_case)]
+/// # fn Settings() -> Element { None }
 /// # #[derive(Routable, Clone, PartialEq)]
 /// # #[rustfmt::skip]
 /// # pub enum Route {
@@ -53,7 +56,7 @@ pub enum TabStatus {
 /// # }
 /// fn app() -> Element {
 ///     rsx!(
-///         TabsBar {
+///         Tabsbar {
 ///             Tab {
 ///                 label {
 ///                     "Home"
