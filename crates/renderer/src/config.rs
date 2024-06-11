@@ -4,7 +4,10 @@ use std::{
 };
 
 use freya_core::{
-    plugins::{FreyaPlugin, PluginsManager},
+    plugins::{
+        FreyaPlugin,
+        PluginsManager,
+    },
     style::default_fonts,
 };
 use freya_engine::prelude::Color;
