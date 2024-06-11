@@ -40,21 +40,51 @@ impl UseCanvas {
 }
 
 /// Register a rendering hook to gain access to the Canvas.
+/// Reactivity managed through signals.
 ///
 /// ## Usage
 /// ```rust,no_run
 /// # use freya::prelude::*;
 /// fn app() -> Element {
-///     let canvas = use_canvas((), |_| {
-///         Box::new(|canvas, font_collection, area, scale_factor| {
+///     let value = use_signal(|| 0);
+///
+///     let canvas = use_canvas(|| {
+///         let curr = value();
+///         Box::new(move |canvas, font_collection, area, scale_factor| {
 ///             // Draw using the canvas !
+///             // use `curr`
 ///         })
 ///     });
 ///
 ///     rsx!(Canvas { canvas })
 /// }
 /// ```
-pub fn use_canvas<D: Dependency>(
+pub fn use_canvas(renderer_cb: impl Fn() -> Box<CanvasRunner> + 'static) -> UseCanvas {
+    let runner = use_memo(move || UseCanvasRunner(Arc::new(renderer_cb())));
+
+    UseCanvas { runner }
+}
+
+/// Register a rendering hook to gain access to the Canvas.
+/// Reactivity managed with manual dependencies.
+///
+/// ## Usage
+/// ```rust,no_run
+/// # use freya::prelude::*;
+/// fn app() -> Element {
+///     let value = use_signal(|| 0);
+///
+///     let canvas = use_canvas_with_deps(&value(), |curr| {
+///         Box::new(move |canvas, font_collection, area, scale_factor| {
+///             // Draw using the canvas !
+///             // use `curr`
+///         })
+///     });
+///
+///     rsx!(Canvas { canvas })
+/// }
+/// ```
+pub fn use_canvas_with_deps<D: Dependency>(
     dependencies: D,
     renderer_cb: impl Fn(D::Out) -> Box<CanvasRunner> + 'static,
 ) -> UseCanvas
