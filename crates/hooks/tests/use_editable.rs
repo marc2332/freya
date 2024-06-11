@@ -1020,10 +1020,10 @@ pub async fn highlights_shift_click_single_line_mulitple_editors() {
     let highlights_2 = root.child(1).unwrap().state().cursor.highlights.clone();
 
     #[cfg(not(target_os = "macos"))]
-    assert_eq!(highlights, Some(vec![(0, 11)]));
+    assert_eq!(highlights_2, Some(vec![(0, 11)]));
 
     #[cfg(target_os = "macos")]
-    assert_eq!(highlights, Some(vec![(0, 10)]));
+    assert_eq!(highlights_2, Some(vec![(0, 10)]));
 }
 
 #[tokio::test]
