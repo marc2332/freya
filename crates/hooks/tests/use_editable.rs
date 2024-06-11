@@ -1258,7 +1258,13 @@ pub async fn replace_text() {
         assert_eq!(cursor.text(), Some("0:6"));
     }
 
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(target_os = "macos")]
+    {
+        assert_eq!(content.text(), Some("Hello🦀aceans\nHello Rustaceans"));
+        assert_eq!(cursor.text(), Some("0:6"));
+    }
+
+    #[cfg(target_os = "linux")]
     {
         assert_eq!(content.text(), Some("Hell🦀aceans\nHello Rustaceans"));
         assert_eq!(cursor.text(), Some("0:5"));
