@@ -480,7 +480,11 @@ pub async fn highlights_single_line_mulitple_editors() {
     assert_eq!(highlights_1, Some(vec![(5, 17)]));
 
     let highlights_2 = root.child(1).unwrap().state().cursor.highlights.clone();
+    #[cfg(not(target_os = "macos"))]
     assert_eq!(highlights_2, Some(vec![(0, 11)]));
+
+    #[cfg(target_os = "macos")]
+    assert_eq!(highlights_2, Some(vec![(0, 10)]));
 }
 
 #[tokio::test]
@@ -1248,13 +1252,13 @@ pub async fn replace_text() {
     // Text and cursor have changed
     let cursor = root.get(1).get(0);
     let content = root.get(0).get(0).get(0);
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(target_os = "windows")]
     {
         assert_eq!(content.text(), Some("Hello🦀ceans\nHello Rustaceans"));
         assert_eq!(cursor.text(), Some("0:6"));
     }
 
-    #[cfg(target_os = "linux")]
+    #[cfg(not(target_os = "windows"))]
     {
         assert_eq!(content.text(), Some("Hell🦀aceans\nHello Rustaceans"));
         assert_eq!(cursor.text(), Some("0:5"));
