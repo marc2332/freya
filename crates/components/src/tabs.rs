@@ -10,9 +10,10 @@ use freya_hooks::{
 };
 use winit::window::CursorIcon;
 
+/// Horizontal container for Tabs. Use in combination with [`Tab`]
 #[allow(non_snake_case)]
 #[component]
-pub fn TabsBar(children: Element) -> Element {
+pub fn Tabsbar(children: Element) -> Element {
     rsx!(
         rect {
             direction: "horizontal",
@@ -27,10 +28,49 @@ pub enum TabStatus {
     /// Default state.
     #[default]
     Idle,
-    /// Mouse is hovering the button.
+    /// Mouse is hovering the Tab.
     Hovering,
 }
 
+///  Clickable Tab. Usually used in combination with [`Tabsbar`], [`Link`] and [`ActivableRoute`].
+///
+/// # Styling
+/// Inherits the [`TabTheme`](freya_hooks::TabTheme) theme.
+///
+/// # Example
+///
+/// ```no_run
+/// # use freya::prelude::*;
+/// # #[allow(non_snake_case)]
+/// # fn PageNotFound() -> Element { None }
+/// # #[derive(Routable, Clone, PartialEq)]
+/// # #[rustfmt::skip]
+/// # pub enum Route {
+/// #     #[route("/settings")]
+/// #     Settings,
+/// #     #[route("/..route")]
+/// #     PageNotFound { },
+/// # }
+/// fn app() -> Element {
+///     rsx!(
+///         TabsBar {
+///             Tab {
+///                 label {
+///                     "Home"
+///                 }
+///             }
+///             Link {
+///                 to: Route::Settings,
+///                 Tab {
+///                     label {
+///                         "Go to Settings"
+///                     }
+///                 }
+///             }
+///         }
+///     )
+/// }
+/// ```
 #[allow(non_snake_case)]
 #[component]
 pub fn Tab(children: Element, theme: Option<TabThemeWith>) -> Element {

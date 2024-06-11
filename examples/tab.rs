@@ -37,7 +37,7 @@ pub enum Route {
 fn AppSidebar() -> Element {
     rsx!(
         NativeRouter {
-            TabsBar {
+            Tabsbar {
                 Link {
                     to: Route::Home,
                     ActivableRoute {

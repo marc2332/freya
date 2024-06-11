@@ -139,7 +139,7 @@ pub fn DevTools(props: DevToolsProps) -> Element {
 #[allow(non_snake_case)]
 pub fn DevtoolsBar() -> Element {
     rsx!(
-        TabsBar {
+        Tabsbar {
             Link {
                 to: Route::DOMInspector { },
                 ActivableRoute {
@@ -208,7 +208,7 @@ fn LayoutForNodeInspector(node_id: String) -> Element {
             overflow: "clip",
             width: "100%",
             height: "50%",
-            TabsBar {
+            Tabsbar {
                 Link {
                     to: Route::NodeInspectorStyle { node_id: node_id.clone() },
                     ActivableRoute {
