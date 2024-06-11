@@ -1,12 +1,35 @@
-use std::sync::{Arc, Mutex};
+use std::sync::{
+    Arc,
+    Mutex,
+};
+
+use dioxus_core::{
+    prelude::spawn,
+    use_hook,
+    AttributeValue,
+};
+use dioxus_hooks::use_signal;
+use dioxus_signals::{
+    Signal,
+    Writable,
+};
+use freya_node_state::{
+    CustomAttributeValues,
+    ImageReference,
+};
+pub use nokhwa::utils::{
+    CameraIndex,
+    RequestedFormatType,
+    Resolution,
+};
+use nokhwa::{
+    pixel_format::RgbFormat,
+    utils::RequestedFormat,
+    Camera,
+    NokhwaError,
+};
 
 use crate::use_platform;
-use dioxus_core::{prelude::spawn, use_hook, AttributeValue};
-use dioxus_hooks::use_signal;
-use dioxus_signals::{Signal, Writable};
-use freya_node_state::{CustomAttributeValues, ImageReference};
-pub use nokhwa::utils::{CameraIndex, RequestedFormatType, Resolution};
-use nokhwa::{pixel_format::RgbFormat, utils::RequestedFormat, Camera, NokhwaError};
 
 /// Configuration for a camera
 pub struct CameraSettings {
@@ -16,7 +39,7 @@ pub struct CameraSettings {
 }
 
 impl CameraSettings {
-    /// Specify a camera index   
+    /// Specify a camera index
     pub fn with_camera_index(mut self, camera_index: CameraIndex) -> Self {
         self.camera_index = camera_index;
         self

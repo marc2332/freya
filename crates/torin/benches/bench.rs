@@ -1,7 +1,15 @@
-use criterion::{criterion_group, criterion_main, Criterion};
+use std::{
+    collections::HashMap,
+    fmt::Display,
+    sync::Arc,
+};
+
+use criterion::{
+    criterion_group,
+    criterion_main,
+    Criterion,
+};
 use freya_native_core::SendAnyMap;
-use std::fmt::Display;
-use std::{collections::HashMap, sync::Arc};
 use torin::prelude::*;
 
 struct TestingMeasurer;
@@ -57,7 +65,7 @@ impl DOMAdapter<usize> for TestingDOM {
     }
 
     fn parent_of(&self, node_id: &usize) -> Option<usize> {
-        self.mapper.get(node_id).map(|c| c.0).flatten()
+        self.mapper.get(node_id).and_then(|c| c.0)
     }
 
     fn height(&self, node_id: &usize) -> Option<u16> {
@@ -296,7 +304,6 @@ fn criterion_benchmark(c: &mut Criterion) {
 
                         let nodes = (0..=wide - 1)
                             .map(|i| i + ((level + 1) * 100) + (root * 10))
-                            .into_iter()
                             .collect::<Vec<usize>>();
                         for (i, id) in nodes.iter().enumerate() {
                             if level == depth / 2 && i == nodes.len() / 2 {

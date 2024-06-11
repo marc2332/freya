@@ -1,6 +1,7 @@
+use std::time::Duration;
+
 use freya::prelude::*;
 use freya_testing::prelude::*;
-use std::time::Duration;
 use tokio::time::sleep;
 
 #[tokio::test]

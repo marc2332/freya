@@ -1,5 +1,6 @@
-use crate::Parse;
 use torin::gaps::Gaps;
+
+use crate::Parse;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct ParseGapError;

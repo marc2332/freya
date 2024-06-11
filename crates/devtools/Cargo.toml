@@ -26,6 +26,7 @@ freya-core = { workspace = true, features = ["shared"] }
 freya-components = { workspace = true }
 freya-engine = { workspace = true }
 torin = { workspace = true }
+dioxus-radio = "0.2"
 
 dioxus = { workspace = true }
 freya-native-core = { workspace = true }

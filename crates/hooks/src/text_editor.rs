@@ -1,7 +1,16 @@
-use std::{borrow::Cow, cmp::Ordering, fmt::Display, ops::Range};
+use std::{
+    borrow::Cow,
+    cmp::Ordering,
+    fmt::Display,
+    ops::Range,
+};
 
 use dioxus_sdk::clipboard::UseClipboard;
-use freya_elements::events::keyboard::{Code, Key, Modifiers};
+use freya_elements::events::keyboard::{
+    Code,
+    Key,
+    Modifiers,
+};
 
 /// Holds the position of a cursor in a text
 #[derive(Clone, Default, PartialEq, Debug)]
@@ -362,6 +371,15 @@ pub trait TextEditor {
 
                 event.insert(TextEvent::TEXT_CHANGED);
             }
+            Key::Tab => {
+                // Inserts a tab
+                let text = " ".repeat(self.get_identation().into());
+                let cursor_pos = self.cursor_pos();
+                self.insert(&text, cursor_pos);
+                self.set_cursor_pos(cursor_pos + text.chars().count());
+
+                event.insert(TextEvent::TEXT_CHANGED);
+            }
             Key::Character(character) => {
                 let meta_or_ctrl = if cfg!(target_os = "macos") {
                     modifiers.meta()
@@ -441,6 +459,14 @@ pub trait TextEditor {
                     }
 
                     _ => {
+                        // Remove selected text
+                        let selection = self.get_selection_range();
+                        if let Some((start, end)) = selection {
+                            self.remove(start..end);
+                            self.set_cursor_pos(start);
+                            event.insert(TextEvent::TEXT_CHANGED);
+                        }
+
                         if let Ok(ch) = character.parse::<char>() {
                             // Inserts a character
                             let cursor_pos = self.cursor_pos();
@@ -476,4 +502,6 @@ pub trait TextEditor {
     fn redo(&mut self) -> Option<usize>;
 
     fn get_selection_range(&self) -> Option<(usize, usize)>;
+
+    fn get_identation(&self) -> u8;
 }

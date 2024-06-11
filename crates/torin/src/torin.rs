@@ -1,15 +1,34 @@
-use std::{collections::HashMap, mem};
+use std::{
+    collections::HashMap,
+    mem,
+};
 
 pub use euclid::Rect;
-use rustc_hash::{FxHashMap, FxHashSet};
+use rustc_hash::{
+    FxHashMap,
+    FxHashSet,
+};
 use tracing::info;
 
 use crate::{
     custom_measurer::LayoutMeasurer,
-    dom_adapter::{DOMAdapter, LayoutNode, NodeKey},
-    geometry::{Area, Size2D},
-    measure::{measure_node, Phase},
-    prelude::{AreaModel, Gaps},
+    dom_adapter::{
+        DOMAdapter,
+        LayoutNode,
+        NodeKey,
+    },
+    geometry::{
+        Area,
+        Size2D,
+    },
+    measure::{
+        measure_node,
+        Phase,
+    },
+    prelude::{
+        AreaModel,
+        Gaps,
+    },
 };
 
 pub struct LayoutMetadata {

@@ -1,8 +1,17 @@
-use crate::icons::ArrowIcon;
 use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
-use freya_elements::events::MouseEvent;
-use freya_hooks::{use_applied_theme, use_get_theme, FontTheme, TableTheme, TableThemeWith};
+use freya_elements::{
+    elements as dioxus_elements,
+    events::MouseEvent,
+};
+use freya_hooks::{
+    use_applied_theme,
+    use_get_theme,
+    FontTheme,
+    TableTheme,
+    TableThemeWith,
+};
+
+use crate::icons::ArrowIcon;
 
 #[allow(non_snake_case)]
 #[component]
@@ -66,7 +75,6 @@ pub struct TableRowProps {
 ///
 /// # Styling
 /// Inherits the [`TableTheme`](freya_hooks::TableTheme) theme.
-///
 #[allow(non_snake_case)]
 pub fn TableRow(
     TableRowProps {

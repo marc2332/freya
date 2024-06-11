@@ -2,8 +2,11 @@ use std::ops::Deref;
 
 pub use euclid::Rect;
 
-use crate::scaled::Scaled;
-use crate::{geometry::Length, measure::Phase};
+use crate::{
+    geometry::Length,
+    measure::Phase,
+    scaled::Scaled,
+};
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum Size {

@@ -1,5 +1,6 @@
-use crate::Parse;
 use std::fmt;
+
+use crate::Parse;
 
 #[derive(Clone, Debug, PartialEq, Eq, Default)]
 pub enum OverflowMode {

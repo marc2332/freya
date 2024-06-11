@@ -1,5 +1,7 @@
-use crate::cow_borrowed;
-use crate::theming::*;
+use crate::{
+    cow_borrowed,
+    theming::*,
+};
 
 pub const DARK_THEME: Theme = Theme {
     name: "dark",
@@ -182,5 +184,17 @@ pub const DARK_THEME: Theme = Theme {
         cross_fill: cow_borrowed!("rgb(150, 150, 150)"),
         width: LIGHT_THEME.popup.width,
         height: LIGHT_THEME.popup.height,
+    },
+    tab: TabTheme {
+        background: cow_borrowed!("rgb(35, 35, 35)"),
+        hover_background: cow_borrowed!("rgb(45, 45, 45)"),
+        font_theme: FontTheme {
+            color: cow_borrowed!("white"),
+        },
+        border_fill: cow_borrowed!("none"),
+        focus_border_fill: cow_borrowed!("rgb(110, 110, 110)"),
+        padding: LIGHT_THEME.button.padding,
+        width: LIGHT_THEME.button.width,
+        height: LIGHT_THEME.button.height,
     },
 };

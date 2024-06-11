@@ -1,5 +1,6 @@
-use freya_engine::prelude::RuntimeEffect;
 use std::collections::HashMap;
+
+use freya_engine::prelude::RuntimeEffect;
 
 /// Pass uniform values to a Shader.
 #[derive(Default)]

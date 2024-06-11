@@ -6,7 +6,7 @@ use winit::event::TouchPhase;
 #[tokio::test]
 pub async fn pointer_events_from_mouse() {
     fn pointer_events_app() -> Element {
-        let mut state = use_signal(|| vec![]);
+        let mut state = use_signal(std::vec::Vec::new);
 
         let onpointerdown = move |_| state.push("down".to_string());
 
@@ -114,7 +114,7 @@ pub async fn pointer_events_from_mouse() {
 #[tokio::test]
 pub async fn pointer_events_from_touch() {
     fn pointer_events_app() -> Element {
-        let mut state = use_signal(|| vec![]);
+        let mut state = use_signal(std::vec::Vec::new);
 
         let onpointerdown = move |_| state.push("down".to_string());
 

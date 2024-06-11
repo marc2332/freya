@@ -123,7 +123,7 @@ impl Board {
                 };
 
                 for (top, mid, bot) in lines {
-                    let line = vec![
+                    let line = [
                         self.get_player(top.0, top.1),
                         self.get_player(mid.0, mid.1),
                         self.get_player(bot.0, bot.1),

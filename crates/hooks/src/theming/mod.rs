@@ -1,15 +1,14 @@
 mod dark;
 mod light;
 
-pub use dark::*;
-pub use light::*;
-
 #[doc(hidden)]
 pub use ::core::default::Default;
 #[doc(hidden)]
 pub use ::paste::paste;
 #[doc(hidden)]
 pub use ::std::borrow::Cow;
+pub use dark::*;
+pub use light::*;
 
 /// Alias for `Cow::Borrowed`, because that's used a million times so shortening it is nice.
 /// Makes the code more readable.
@@ -540,6 +539,22 @@ define_theme! {
     }
 }
 
+define_theme! {
+    %[component]
+    pub Tab {
+        %[cows]
+        background: str,
+        hover_background: str,
+        border_fill: str,
+        focus_border_fill: str,
+        width: str,
+        height: str,
+        padding: str,
+        %[subthemes]
+        font_theme: FontTheme,
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Theme {
     pub name: &'static str,
@@ -571,6 +586,7 @@ pub struct Theme {
     pub menu_container: MenuContainerTheme,
     pub snackbar: SnackBarTheme,
     pub popup: PopupTheme,
+    pub tab: TabTheme,
 }
 
 impl Default for Theme {

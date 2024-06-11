@@ -1,17 +1,42 @@
 use std::rc::Rc;
 
-use dioxus_core::{prelude::spawn, use_hook, AttributeValue};
+use dioxus_core::{
+    prelude::spawn,
+    use_hook,
+    AttributeValue,
+};
 use dioxus_sdk::clipboard::use_clipboard;
-use dioxus_signals::{Readable, Signal, Writable};
-use freya_common::{CursorLayoutResponse, EventMessage, TextGroupMeasurement};
-use freya_elements::events::{Code, KeyboardData, MouseData};
-use freya_node_state::{CursorReference, CustomAttributeValues};
+use dioxus_signals::{
+    Readable,
+    Signal,
+    Writable,
+};
+use freya_common::{
+    CursorLayoutResponse,
+    EventMessage,
+    TextGroupMeasurement,
+};
+use freya_elements::events::{
+    Code,
+    KeyboardData,
+    MouseData,
+};
+use freya_node_state::{
+    CursorReference,
+    CustomAttributeValues,
+};
 use tokio::sync::mpsc::unbounded_channel;
 use torin::geometry::CursorPoint;
 use uuid::Uuid;
 
 use crate::{
-    use_platform, EditorHistory, RopeEditor, TextCursor, TextEditor, TextEvent, UsePlatform,
+    use_platform,
+    EditorHistory,
+    RopeEditor,
+    TextCursor,
+    TextEditor,
+    TextEvent,
+    UsePlatform,
 };
 
 /// Events emitted to the [`UseEditable`].
@@ -98,6 +123,7 @@ pub struct UseEditable {
     pub(crate) cursor_reference: Signal<CursorReference>,
     pub(crate) dragging: Signal<TextDragging>,
     pub(crate) platform: UsePlatform,
+    pub(crate) allow_tabs: bool,
 }
 
 impl UseEditable {
@@ -162,32 +188,40 @@ impl UseEditable {
                 None
             }
             EditableEvent::KeyDown(e) => {
-                if e.code == Code::ShiftLeft {
-                    let dragging = &mut *self.dragging.write();
-                    match dragging {
-                        TextDragging::FromCursorToPoint {
-                            shift: shift_pressed,
-                            ..
-                        } => {
-                            *shift_pressed = true;
-                        }
-                        TextDragging::None => {
-                            *dragging = TextDragging::FromCursorToPoint {
-                                shift: true,
-                                clicked: false,
-                                cursor: self.editor.peek().cursor_pos(),
-                                dist: None,
+                match e.code {
+                    // Handle dragging
+                    Code::ShiftLeft => {
+                        let dragging = &mut *self.dragging.write();
+                        match dragging {
+                            TextDragging::FromCursorToPoint {
+                                shift: shift_pressed,
+                                ..
+                            } => {
+                                *shift_pressed = true;
                             }
+                            TextDragging::None => {
+                                *dragging = TextDragging::FromCursorToPoint {
+                                    shift: true,
+                                    clicked: false,
+                                    cursor: self.editor.peek().cursor_pos(),
+                                    dist: None,
+                                }
+                            }
+                            _ => {}
                         }
-                        _ => {}
                     }
-                }
-                let event = self
-                    .editor
-                    .write()
-                    .process_key(&e.key, &e.code, &e.modifiers);
-                if event.contains(TextEvent::TEXT_CHANGED) {
-                    *self.dragging.write() = TextDragging::None;
+                    // Do not write Tabs
+                    Code::Tab if !self.allow_tabs => {}
+                    // Handle editing
+                    _ => {
+                        let event = self
+                            .editor
+                            .write()
+                            .process_key(&e.key, &e.code, &e.modifiers);
+                        if event.contains(TextEvent::TEXT_CHANGED) {
+                            *self.dragging.write() = TextDragging::None;
+                        }
+                    }
                 }
 
                 None
@@ -226,6 +260,8 @@ impl UseEditable {
 pub struct EditableConfig {
     pub(crate) content: String,
     pub(crate) cursor: TextCursor,
+    pub(crate) identation: u8,
+    pub(crate) allow_tabs: bool,
 }
 
 impl EditableConfig {
@@ -234,12 +270,26 @@ impl EditableConfig {
         Self {
             content,
             cursor: TextCursor::default(),
+            identation: 4,
+            allow_tabs: false,
         }
     }
 
     /// Specify a custom initial cursor position.
     pub fn with_cursor(mut self, pos: usize) -> Self {
         self.cursor = TextCursor::new(pos);
+        self
+    }
+
+    /// Specify a custom identation
+    pub fn with_identation(mut self, identation: u8) -> Self {
+        self.identation = identation;
+        self
+    }
+
+    /// Specify whether you want to allow tabs to be inserted
+    pub fn with_allow_tabs(mut self, allow_tabs: bool) -> Self {
+        self.allow_tabs = allow_tabs;
         self
     }
 }
@@ -255,6 +305,7 @@ pub fn use_editable(initializer: impl Fn() -> EditableConfig, mode: EditableMode
         let mut editor = Signal::new(RopeEditor::new(
             config.content,
             config.cursor,
+            config.identation,
             mode,
             clipboard,
             EditorHistory::new(),
@@ -325,6 +376,7 @@ pub fn use_editable(initializer: impl Fn() -> EditableConfig, mode: EditableMode
             cursor_reference: Signal::new(cursor_reference.clone()),
             dragging,
             platform,
+            allow_tabs: config.allow_tabs,
         }
     })
 }

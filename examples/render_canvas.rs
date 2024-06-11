@@ -3,8 +3,16 @@
     windows_subsystem = "windows"
 )]
 
-use freya::{common::EventMessage, prelude::*};
-use skia_safe::{Color, Font, FontStyle, Paint};
+use freya::{
+    common::EventMessage,
+    prelude::*,
+};
+use skia_safe::{
+    Color,
+    Font,
+    FontStyle,
+    Paint,
+};
 
 fn main() {
     launch(app);
@@ -19,7 +27,7 @@ fn app() -> Element {
     });
 
     let canvas = use_canvas(&*state.read(), |state| {
-        Box::new(move |canvas, font_collection, region| {
+        Box::new(move |canvas, font_collection, region, _| {
             canvas.translate((region.min_x(), region.min_y()));
 
             let mut text_paint = Paint::default();

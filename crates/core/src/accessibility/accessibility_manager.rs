@@ -1,11 +1,25 @@
-use crate::{accessibility::*, dom::DioxusNode};
-use accesskit::{
-    Action, DefaultActionVerb, Node, NodeBuilder, NodeClassSet, Rect, Role, Tree, TreeUpdate,
+use std::sync::{
+    Arc,
+    Mutex,
 };
 
+use accesskit::{
+    Action,
+    DefaultActionVerb,
+    Node,
+    NodeBuilder,
+    Rect,
+    Role,
+    Tree,
+    TreeUpdate,
+};
 use freya_node_state::AccessibilityNodeState;
-use std::sync::{Arc, Mutex};
 use torin::prelude::LayoutNode;
+
+use crate::{
+    accessibility::*,
+    dom::DioxusNode,
+};
 
 pub type SharedAccessibilityManager = Arc<Mutex<AccessibilityManager>>;
 
@@ -15,8 +29,6 @@ pub const ACCESSIBILITY_ROOT_ID: AccessibilityId = AccessibilityId(0);
 pub struct AccessibilityManager {
     /// Accessibility Nodes
     pub nodes: Vec<(AccessibilityId, Node)>,
-    /// Accessibility tree
-    pub node_classes: NodeClassSet,
     /// Current focused Accessibility Node.
     pub focused_id: AccessibilityId,
 }
@@ -25,7 +37,6 @@ impl AccessibilityManager {
     pub fn new(focused_id: AccessibilityId) -> Self {
         Self {
             focused_id,
-            node_classes: NodeClassSet::default(),
             nodes: Vec::default(),
         }
     }
@@ -95,7 +106,7 @@ impl AccessibilityManager {
         }
 
         // Insert the node into the Tree
-        let node = builder.build(&mut self.node_classes);
+        let node = builder.build();
         self.push_node(accessibility_id, node);
     }
 
@@ -127,7 +138,7 @@ impl AccessibilityManager {
                 .collect::<Vec<AccessibilityId>>(),
         );
 
-        builder.build(&mut self.node_classes)
+        builder.build()
     }
 
     /// Process the Nodes accessibility Tree

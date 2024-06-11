@@ -1,16 +1,27 @@
 use std::fmt::Display;
 
-use crate::icons::ArrowIcon;
 use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
-use freya_elements::events::keyboard::Key;
-use freya_elements::events::{KeyboardEvent, MouseEvent};
-
+use freya_elements::{
+    elements as dioxus_elements,
+    events::{
+        keyboard::Key,
+        KeyboardEvent,
+        MouseEvent,
+    },
+};
 use freya_hooks::{
-    theme_with, use_applied_theme, use_focus, use_platform, DropdownItemThemeWith, DropdownTheme,
-    DropdownThemeWith, IconThemeWith,
+    theme_with,
+    use_applied_theme,
+    use_focus,
+    use_platform,
+    DropdownItemThemeWith,
+    DropdownTheme,
+    DropdownThemeWith,
+    IconThemeWith,
 };
 use winit::window::CursorIcon;
+
+use crate::icons::ArrowIcon;
 
 /// Properties for the [`DropdownItem`] component.
 #[derive(Props, Clone, PartialEq)]

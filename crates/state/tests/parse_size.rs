@@ -1,6 +1,11 @@
 use freya_node_state::Parse;
-use torin::geometry::Length;
-use torin::size::{DynamicCalculation, Size};
+use torin::{
+    geometry::Length,
+    size::{
+        DynamicCalculation,
+        Size,
+    },
+};
 
 #[test]
 fn parse_pixel_size() {

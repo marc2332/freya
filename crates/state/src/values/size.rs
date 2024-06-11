@@ -1,5 +1,10 @@
-use torin::geometry::Length;
-use torin::size::{DynamicCalculation, Size};
+use torin::{
+    geometry::Length,
+    size::{
+        DynamicCalculation,
+        Size,
+    },
+};
 
 use crate::Parse;
 

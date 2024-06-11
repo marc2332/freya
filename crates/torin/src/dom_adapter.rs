@@ -4,9 +4,15 @@ pub use euclid::Rect;
 use freya_native_core::SendAnyMap;
 
 use crate::{
-    geometry::{Area, Size2D},
+    geometry::{
+        Area,
+        Size2D,
+    },
     node::Node,
-    prelude::{AreaModel, Gaps},
+    prelude::{
+        AreaModel,
+        Gaps,
+    },
 };
 
 /// Cached layout results of a Node

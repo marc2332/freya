@@ -1,3 +1,3 @@
-mod use_selected_node;
+mod use_node_info;
 
-pub use use_selected_node::*;
+pub use use_node_info::*;

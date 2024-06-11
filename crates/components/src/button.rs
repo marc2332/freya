@@ -1,13 +1,24 @@
 use dioxus::prelude::*;
-use freya_elements::events::KeyboardEvent;
 use freya_elements::{
     elements as dioxus_elements,
-    events::{PointerEvent, PointerType},
+    events::{
+        KeyboardEvent,
+        PointerEvent,
+        PointerType,
+    },
 };
-
-use freya_hooks::{use_applied_theme, use_focus, use_platform, ButtonTheme, ButtonThemeWith};
+use freya_hooks::{
+    use_applied_theme,
+    use_focus,
+    use_platform,
+    ButtonTheme,
+    ButtonThemeWith,
+};
 use winit::{
-    event::{MouseButton, TouchPhase},
+    event::{
+        MouseButton,
+        TouchPhase,
+    },
     window::CursorIcon,
 };
 
@@ -68,7 +79,6 @@ pub enum ButtonStatus {
 ///     )
 /// }
 /// ```
-///
 #[allow(non_snake_case)]
 pub fn Button(
     ButtonProps {

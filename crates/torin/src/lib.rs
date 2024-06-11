@@ -11,14 +11,16 @@ pub mod values;
 pub use values::*;
 
 pub mod prelude {
-    pub use crate::custom_measurer::*;
-    pub use crate::dom_adapter::*;
-    pub use crate::gaps::*;
-    pub use crate::geometry::*;
-    pub use crate::node::*;
-    pub use crate::scaled::*;
-    pub use crate::torin::*;
-    pub use crate::values::prelude::*;
+    pub use crate::{
+        custom_measurer::*,
+        dom_adapter::*,
+        gaps::*,
+        geometry::*,
+        node::*,
+        scaled::*,
+        torin::*,
+        values::prelude::*,
+    };
 }
 
 pub mod test_utils;

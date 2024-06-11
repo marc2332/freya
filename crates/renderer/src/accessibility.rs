@@ -2,13 +2,21 @@ use accesskit_winit::Adapter;
 use freya_common::EventMessage;
 use freya_core::{
     prelude::{
-        AccessibilityFocusDirection, AccessibilityManager, SharedAccessibilityManager,
+        AccessibilityFocusDirection,
+        AccessibilityManager,
+        SharedAccessibilityManager,
         ACCESSIBILITY_ROOT_ID,
     },
-    types::{AccessibilityId, NativePlatformSender},
+    types::{
+        AccessibilityId,
+        NativePlatformSender,
+    },
 };
 use winit::{
-    dpi::{LogicalPosition, LogicalSize},
+    dpi::{
+        LogicalPosition,
+        LogicalSize,
+    },
     event::WindowEvent,
     event_loop::EventLoopProxy,
     window::Window,
@@ -18,26 +26,18 @@ use winit::{
 pub struct AccessKitManager {
     accessibility_manager: SharedAccessibilityManager,
     accessibility_adapter: Adapter,
+    title: String,
 }
 
 impl AccessKitManager {
     pub fn new(window: &Window, proxy: EventLoopProxy<EventMessage>) -> Self {
         let title = window.title();
         let accessibility_manager = AccessibilityManager::new(ACCESSIBILITY_ROOT_ID).wrap();
-        let accessibility_adapter = {
-            let accessibility_manager = accessibility_manager.clone();
-            Adapter::new(
-                window,
-                move || {
-                    let mut accessibility_manager = accessibility_manager.lock().unwrap();
-                    accessibility_manager.process(ACCESSIBILITY_ROOT_ID, title.as_str())
-                },
-                proxy,
-            )
-        };
+        let accessibility_adapter = Adapter::with_event_loop_proxy(window, proxy);
         Self {
             accessibility_manager,
             accessibility_adapter,
+            title,
         }
     }
 
@@ -47,7 +47,7 @@ impl AccessKitManager {
 
     /// Focus a new accessibility node
     pub fn focus_node(
-        &self,
+        &mut self,
         id: AccessibilityId,
         platform_sender: &NativePlatformSender,
         window: &Window,
@@ -118,7 +118,7 @@ impl AccessKitManager {
 
     /// Focus the next accessibility node
     pub fn focus_next_node(
-        &self,
+        &mut self,
         direction: AccessibilityFocusDirection,
         platform_sender: &NativePlatformSender,
         window: &Window,
@@ -138,6 +138,17 @@ impl AccessKitManager {
         self.update_ime_position(tree.focus, window);
 
         // Update the Adapter
+        self.accessibility_adapter.update_if_active(|| tree);
+    }
+
+    /// Process the initial tree
+    pub fn process_initial_tree(&mut self) {
+        let tree = self
+            .accessibility_manager
+            .lock()
+            .unwrap()
+            .process(ACCESSIBILITY_ROOT_ID, &self.title);
+
         self.accessibility_adapter.update_if_active(|| tree);
     }
 }

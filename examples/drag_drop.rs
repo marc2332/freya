@@ -30,12 +30,12 @@ fn app() -> Element {
                 width: "100%",
                 height: "100%",
                 Column {
-                    data: data.clone(),
+                    data: data,
                     direction: SwapDirection::RightToLeft,
                     column: data.read().0.clone()
                 }
                 Column {
-                    data: data.clone(),
+                    data: data,
                     direction: SwapDirection::LeftToRight,
                     column: data.read().1.clone()
                 }

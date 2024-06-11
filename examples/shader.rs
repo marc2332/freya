@@ -4,12 +4,21 @@
 )]
 
 use std::{
-    sync::{Arc, Mutex},
+    sync::{
+        Arc,
+        Mutex,
+    },
     time::Instant,
 };
 
 use freya::prelude::*;
-use skia_safe::{Color, Data, Paint, Rect, RuntimeEffect};
+use skia_safe::{
+    Color,
+    Data,
+    Paint,
+    Rect,
+    RuntimeEffect,
+};
 
 fn main() {
     launch(app);
@@ -21,12 +30,12 @@ const SHADER: &str = "
 
  vec4 main(vec2 cords) {
      vec2 U = cords / 55.;
-    
+
      float t = .8* u_time;
      float r = ceil(U.x + t) + ceil(U.y + t);
      float v = mod(r, 4.) > 1. ? U.x : U.y;
      float b = step(fract(v+.2), .5);
-    
+
      vec4 C = vec4(.9*b, 0. + abs(sin(t) * 0.5), .6-b, 1.);
      return C;
  }
@@ -51,7 +60,7 @@ fn app() -> Element {
         let shader_wrapper = Arc::new(Mutex::new(ShaderWrapper(shader)));
         let instant = Instant::now();
 
-        Box::new(move |canvas, _, region| {
+        Box::new(move |canvas, _, region, _| {
             let shader = shader_wrapper.lock().unwrap();
 
             let mut builder = UniformsBuilder::default();

@@ -1,6 +1,8 @@
-use crate::Parse;
-use freya_engine::prelude::*;
 use std::fmt;
+
+use freya_engine::prelude::*;
+
+use crate::Parse;
 
 pub trait DisplayColor {
     fn fmt_rgb(&self, f: &mut fmt::Formatter) -> fmt::Result;

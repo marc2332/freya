@@ -1,7 +1,9 @@
-use freya_native_core::exports::shipyard::Component;
-use freya_native_core::node_ref::*;
-use freya_native_core::prelude::*;
-use freya_native_core::real_dom::NodeTypeMut;
+use freya_native_core::{
+    exports::shipyard::Component,
+    node_ref::*,
+    prelude::*,
+    real_dom::NodeTypeMut,
+};
 use freya_native_core_macro::partial_derive_state;
 
 struct FontSize(f64);
@@ -61,7 +63,7 @@ impl State for Size {
         }
         // if the node contains a width or height attribute it overrides the other size
         for a in node_view.attributes().into_iter().flatten() {
-            match &*a.attribute {
+            match a.attribute {
                 AttributeName::Width => width = a.value.as_float().unwrap(),
                 AttributeName::Height => height = a.value.as_float().unwrap(),
                 // because Size only depends on the width and height, no other attributes will be passed to the member

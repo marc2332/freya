@@ -11,38 +11,38 @@ fn main() {
 
 #[derive(PartialEq)]
 enum Choice {
-    FirstChoice,
-    SecondChoice,
-    ThirdChoice,
+    First,
+    Second,
+    Third,
 }
 
 fn app() -> Element {
-    let mut selected = use_signal(|| Choice::FirstChoice);
+    let mut selected = use_signal(|| Choice::First);
 
     rsx!(
         Tile {
-            onselect: move |_| selected.set(Choice::FirstChoice),
+            onselect: move |_| selected.set(Choice::First),
             leading: rsx!(
                 Radio {
-                    selected: *selected.read() == Choice::FirstChoice,
+                    selected: *selected.read() == Choice::First,
                 },
             ),
             label { "First choice" }
         }
         Tile {
-            onselect: move |_| selected.set(Choice::SecondChoice),
+            onselect: move |_| selected.set(Choice::Second),
             leading: rsx!(
                 Radio {
-                    selected: *selected.read() == Choice::SecondChoice,
+                    selected: *selected.read() == Choice::Second,
                 },
             ),
             label { "Second choice" }
         }
         Tile {
-            onselect: move |_| selected.set(Choice::ThirdChoice),
+            onselect: move |_| selected.set(Choice::Third),
             leading: rsx!(
                 Radio {
-                    selected: *selected.read() == Choice::ThirdChoice,
+                    selected: *selected.read() == Choice::Third,
                 },
             ),
             label { "Third choice" }

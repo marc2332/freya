@@ -3,7 +3,11 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus_router::prelude::{Outlet, Routable, Router};
+use dioxus_router::prelude::{
+    Outlet,
+    Routable,
+    Router,
+};
 use freya::prelude::*;
 
 fn main() {
@@ -37,6 +41,7 @@ fn AppSidebar() -> Element {
                         to: Route::Home,
                         ActivableRoute {
                             route: Route::Home,
+                            exact: true,
                             SidebarItem {
                                 label {
                                     "Go to Hey ! 👋"

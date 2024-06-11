@@ -10,11 +10,10 @@ static SANSITA_SWASHED: &[u8] = include_bytes!("./SansitaSwashed-Regular.ttf");
 fn main() {
     launch_cfg(
         app,
-        LaunchConfig::<()>::builder()
+        LaunchConfig::<()>::new()
             .with_width(200.0)
             .with_height(200.0)
-            .with_font("Sansita Swashed", SANSITA_SWASHED)
-            .build(),
+            .with_font("Sansita Swashed", SANSITA_SWASHED),
     );
 }
 

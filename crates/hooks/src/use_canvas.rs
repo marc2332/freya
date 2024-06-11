@@ -1,9 +1,20 @@
 use std::sync::Arc;
 
 use dioxus_core::AttributeValue;
-use dioxus_hooks::{use_memo, use_reactive, Dependency};
-use dioxus_signals::{Memo, Readable};
-use freya_node_state::{CanvasReference, CanvasRunner, CustomAttributeValues};
+use dioxus_hooks::{
+    use_memo,
+    use_reactive,
+    Dependency,
+};
+use dioxus_signals::{
+    Memo,
+    Readable,
+};
+use freya_node_state::{
+    CanvasReference,
+    CanvasRunner,
+    CustomAttributeValues,
+};
 
 /// Holds a rendering hook callback that allows to render to the Canvas.
 #[derive(PartialEq, Clone)]
@@ -35,16 +46,12 @@ impl UseCanvas {
 /// # use freya::prelude::*;
 /// fn app() -> Element {
 ///     let canvas = use_canvas((), |_| {
-///         Box::new(|canvas, font_collection, area| {
+///         Box::new(|canvas, font_collection, area, scale_factor| {
 ///             // Draw using the canvas !
 ///         })
 ///     });
 ///
-///     rsx!(
-///         Canvas {
-///             canvas
-///         }
-///     )
+///     rsx!(Canvas { canvas })
 /// }
 /// ```
 pub fn use_canvas<D: Dependency>(

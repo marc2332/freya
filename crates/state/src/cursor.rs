@@ -1,17 +1,27 @@
 use freya_common::ParagraphElements;
 use freya_engine::prelude::*;
 use freya_native_core::{
-    attributes::AttributeName, exports::shipyard::Component, node::OwnedAttributeValue,
-    tags::TagName,
-};
-use freya_native_core::{
+    attributes::AttributeName,
+    exports::shipyard::Component,
+    node::OwnedAttributeValue,
     node_ref::NodeView,
-    prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State},
+    prelude::{
+        AttributeMaskBuilder,
+        Dependancy,
+        NodeMaskBuilder,
+        State,
+    },
+    tags::TagName,
     SendAnyMap,
 };
 use freya_native_core_macro::partial_derive_state;
 
-use crate::{CursorMode, CursorReference, CustomAttributeValues, Parse};
+use crate::{
+    CursorMode,
+    CursorReference,
+    CustomAttributeValues,
+    Parse,
+};
 
 #[derive(Clone, Debug, PartialEq, Component)]
 pub struct CursorSettings {

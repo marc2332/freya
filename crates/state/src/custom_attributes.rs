@@ -1,17 +1,28 @@
-use std::any::Any;
-use std::fmt::Debug;
-use std::fmt::Display;
-use std::sync::Arc;
-use std::sync::Mutex;
+use std::{
+    any::Any,
+    fmt::{
+        Debug,
+        Display,
+    },
+    sync::{
+        Arc,
+        Mutex,
+    },
+};
 
 use accesskit::NodeId as AccessibilityId;
 use bytes::Bytes;
 use dioxus_core::AttributeValue;
-use freya_common::{CursorLayoutResponse, NodeReferenceLayout};
+use freya_common::{
+    CursorLayoutResponse,
+    NodeReferenceLayout,
+};
 use freya_engine::prelude::*;
 use freya_native_core::node::FromAnyValue;
-use tokio::sync::mpsc::UnboundedSender;
-use tokio::sync::watch;
+use tokio::sync::{
+    mpsc::UnboundedSender,
+    watch,
+};
 use torin::geometry::Area;
 use uuid::Uuid;
 
@@ -47,7 +58,7 @@ impl Display for NodeReference {
     }
 }
 
-pub type CanvasRunner = dyn Fn(&Canvas, &mut FontCollection, Area) + Sync + Send + 'static;
+pub type CanvasRunner = dyn Fn(&Canvas, &mut FontCollection, Area, f32) + Sync + Send + 'static;
 
 /// Canvas Reference
 #[derive(Clone)]

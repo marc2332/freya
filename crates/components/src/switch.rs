@@ -1,9 +1,19 @@
 use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
-use freya_elements::events::{KeyboardEvent, MouseEvent};
-
+use freya_elements::{
+    elements as dioxus_elements,
+    events::{
+        KeyboardEvent,
+        MouseEvent,
+    },
+};
 use freya_hooks::{
-    use_animation, use_applied_theme, use_focus, use_platform, AnimNum, Ease, Function,
+    use_animation,
+    use_applied_theme,
+    use_focus,
+    use_platform,
+    AnimNum,
+    Ease,
+    Function,
     SwitchThemeWith,
 };
 use winit::window::CursorIcon;
@@ -44,17 +54,14 @@ pub enum SwitchStatus {
 /// fn app() -> Element {
 ///     let mut enabled = use_signal(|| false);
 ///
-///     rsx!(
-///         Switch {
-///             enabled: *enabled.read(),
-///             ontoggled: move |_| {
-///                 enabled.toggle();
-///             }
+///     rsx!(Switch {
+///         enabled: *enabled.read(),
+///         ontoggled: move |_| {
+///             enabled.toggle();
 ///         }
-///     )
+///     })
 /// }
 /// ```
-///
 #[allow(non_snake_case)]
 pub fn Switch(props: SwitchProps) -> Element {
     let animation = use_animation(|ctx| {

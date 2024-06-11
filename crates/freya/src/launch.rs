@@ -1,6 +1,9 @@
 use dioxus_core::Element;
-use freya_renderer::DesktopRenderer;
-use freya_renderer::{LaunchConfig, WindowConfig};
+use freya_renderer::{
+    DesktopRenderer,
+    LaunchConfig,
+    WindowConfig,
+};
 
 /// Launch a new window with the default config.
 ///
@@ -35,8 +38,8 @@ use freya_renderer::{LaunchConfig, WindowConfig};
 pub fn launch(app: AppComponent) {
     launch_cfg(
         app,
-        LaunchConfig {
-            window: WindowConfig::<()> {
+        LaunchConfig::<()> {
+            window_config: WindowConfig {
                 width: 600.0,
                 height: 600.0,
                 decorations: true,
@@ -81,8 +84,8 @@ pub fn launch(app: AppComponent) {
 pub fn launch_with_title(app: AppComponent, title: &'static str) {
     launch_cfg(
         app,
-        LaunchConfig {
-            window: WindowConfig::<()> {
+        LaunchConfig::<()> {
+            window_config: WindowConfig {
                 width: 400.0,
                 height: 300.0,
                 decorations: true,
@@ -125,8 +128,8 @@ pub fn launch_with_title(app: AppComponent, title: &'static str) {
 pub fn launch_with_props(app: AppComponent, title: &'static str, (width, height): (f64, f64)) {
     launch_cfg(
         app,
-        LaunchConfig {
-            window: WindowConfig::<()> {
+        LaunchConfig::<()> {
+            window_config: WindowConfig {
                 width,
                 height,
                 decorations: true,
@@ -156,14 +159,13 @@ pub fn launch_with_props(app: AppComponent, title: &'static str, (width, height)
 /// fn main() {
 ///     launch_cfg(
 ///         app,
-///         LaunchConfig::<()>::builder()
+///         LaunchConfig::<()>::new()
 ///             .with_width(500.0)
 ///             .with_height(400.0)
 ///             .with_decorations(true)
 ///             .with_transparency(false)
 ///             .with_title("Freya App")
 ///             .with_background("rgb(150, 100, 200")
-///             .build()
 ///     );
 /// }
 ///
@@ -179,8 +181,11 @@ pub fn launch_with_props(app: AppComponent, title: &'static str, (width, height)
 ///     )
 /// }
 /// ```
-pub fn launch_cfg<T: 'static + Clone + Send>(app: AppComponent, config: LaunchConfig<T>) {
-    use freya_core::prelude::{FreyaDOM, SafeDOM};
+pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>) {
+    use freya_core::prelude::{
+        FreyaDOM,
+        SafeDOM,
+    };
 
     let fdom = FreyaDOM::default();
     let sdom = SafeDOM::new(fdom);
@@ -198,23 +203,22 @@ pub fn launch_cfg<T: 'static + Clone + Send>(app: AppComponent, config: LaunchCo
             .expect("Setting default subscriber failed");
     }
 
-    let (vdom, mutations_notifier, hovered_node) = {
+    let (vdom, devtools, hovered_node) = {
         #[cfg(feature = "devtools")]
         #[cfg(debug_assertions)]
         {
+            use std::sync::{
+                Arc,
+                Mutex,
+            };
+
             use freya_devtools::with_devtools;
-            use std::sync::{Arc, Mutex};
-            use tokio::sync::Notify;
+            use freya_renderer::devtools::Devtools;
 
             let hovered_node = Some(Arc::new(Mutex::new(None)));
-            let mutations_notifier = Arc::new(Notify::new());
-            let vdom = with_devtools(
-                sdom.clone(),
-                app,
-                mutations_notifier.clone(),
-                hovered_node.clone(),
-            );
-            (vdom, Some(mutations_notifier), hovered_node)
+            let (devtools, devtools_receiver) = Devtools::new();
+            let vdom = with_devtools(app, devtools_receiver.clone(), hovered_node.clone());
+            (vdom, Some(devtools), hovered_node)
         }
 
         #[cfg(any(not(feature = "devtools"), not(debug_assertions)))]
@@ -223,7 +227,7 @@ pub fn launch_cfg<T: 'static + Clone + Send>(app: AppComponent, config: LaunchCo
             (vdom, None, None)
         }
     };
-    DesktopRenderer::launch(vdom, sdom, config, mutations_notifier, hovered_node);
+    DesktopRenderer::launch(vdom, sdom, config, devtools, hovered_node);
 }
 
 #[cfg(any(not(feature = "devtools"), not(debug_assertions)))]

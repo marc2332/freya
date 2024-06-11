@@ -1,6 +1,10 @@
-use crate::{dom::*, layout::*};
 use freya_engine::prelude::*;
 use torin::geometry::Area;
+
+use crate::{
+    dom::*,
+    layout::*,
+};
 
 /// Process the layout of the DOM
 pub fn process_layout(
@@ -12,7 +16,7 @@ pub fn process_layout(
 ) {
     {
         let rdom = fdom.rdom();
-        let mut dom_adapter = DioxusDOMAdapter::new_with_cache(rdom);
+        let mut dom_adapter = DioxusDOMAdapter::new_with_cache(rdom, scale_factor);
         let skia_measurer = SkiaMeasurer::new(rdom, font_collection, default_fonts, scale_factor);
 
         // Finds the best Node from where to start measuring

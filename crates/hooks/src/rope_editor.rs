@@ -1,15 +1,25 @@
-use std::{cmp::Ordering, fmt::Display, ops::Range};
+use std::{
+    cmp::Ordering,
+    fmt::Display,
+    ops::Range,
+};
 
 use dioxus_sdk::clipboard::UseClipboard;
 use ropey::iter::Lines;
 pub use ropey::Rope;
 
-use crate::{text_editor::*, EditableMode, EditorHistory, HistoryChange};
+use crate::{
+    text_editor::*,
+    EditableMode,
+    EditorHistory,
+    HistoryChange,
+};
 
 /// TextEditor implementing a Rope
 pub struct RopeEditor {
     pub(crate) rope: Rope,
     pub(crate) cursor: TextCursor,
+    pub(crate) identation: u8,
     pub(crate) mode: EditableMode,
     pub(crate) selected: Option<(usize, usize)>,
     pub(crate) clipboard: UseClipboard,
@@ -27,6 +37,7 @@ impl RopeEditor {
     pub fn new(
         text: String,
         cursor: TextCursor,
+        identation: u8,
         mode: EditableMode,
         clipboard: UseClipboard,
         history: EditorHistory,
@@ -34,6 +45,7 @@ impl RopeEditor {
         Self {
             rope: Rope::from_str(&text),
             cursor,
+            identation,
             selected: None,
             mode,
             clipboard,
@@ -270,6 +282,10 @@ impl TextEditor for RopeEditor {
 
     fn redo(&mut self) -> Option<usize> {
         self.history.redo(&mut self.rope)
+    }
+
+    fn get_identation(&self) -> u8 {
+        self.identation
     }
 }
 

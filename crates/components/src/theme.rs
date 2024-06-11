@@ -1,5 +1,8 @@
 use dioxus::prelude::*;
-use freya_hooks::{use_init_theme, Theme};
+use freya_hooks::{
+    use_init_theme,
+    Theme,
+};
 
 /// Properties for the [`ThemeProvider`] component.
 #[derive(Props, Clone, PartialEq)]

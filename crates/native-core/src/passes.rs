@@ -1,18 +1,50 @@
-use parking_lot::RwLock;
-use rustc_hash::{FxHashMap, FxHashSet};
-use shipyard::{Borrow, BorrowInfo, Component, Unique, UniqueView, View, WorkloadSystem};
-use std::any::{Any, TypeId};
-use std::collections::BTreeMap;
-use std::marker::PhantomData;
-use std::ops::Deref;
-use std::sync::Arc;
+use std::{
+    any::{
+        Any,
+        TypeId,
+    },
+    collections::BTreeMap,
+    marker::PhantomData,
+    ops::Deref,
+    sync::Arc,
+};
 
-use crate::node::{FromAnyValue, NodeType};
-use crate::node_ref::{NodeMaskBuilder, NodeView};
-use crate::real_dom::{DirtyNodesResult, SendAnyMapWrapper};
-use crate::tree::{TreeRef, TreeRefView};
-use crate::SendAnyMap;
-use crate::{NodeId, NodeMask};
+use parking_lot::RwLock;
+use rustc_hash::{
+    FxHashMap,
+    FxHashSet,
+};
+use shipyard::{
+    Borrow,
+    BorrowInfo,
+    Component,
+    Unique,
+    UniqueView,
+    View,
+    WorkloadSystem,
+};
+
+use crate::{
+    node::{
+        FromAnyValue,
+        NodeType,
+    },
+    node_ref::{
+        NodeMaskBuilder,
+        NodeView,
+    },
+    real_dom::{
+        DirtyNodesResult,
+        SendAnyMapWrapper,
+    },
+    tree::{
+        TreeRef,
+        TreeRefView,
+    },
+    NodeId,
+    NodeMask,
+    SendAnyMap,
+};
 
 #[derive(Default)]
 struct DirtyNodes {

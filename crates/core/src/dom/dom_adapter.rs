@@ -1,4 +1,9 @@
-use freya_native_core::{prelude::NodeType, real_dom::NodeImmutable, tree::TreeRef, NodeId};
+use freya_native_core::{
+    prelude::NodeType,
+    real_dom::NodeImmutable,
+    tree::TreeRef,
+    NodeId,
+};
 use freya_node_state::LayoutState;
 use rustc_hash::FxHashMap;
 use torin::prelude::*;
@@ -8,14 +13,15 @@ use crate::dom::DioxusDOM;
 /// RealDOM adapter for Torin.
 pub struct DioxusDOMAdapter<'a> {
     pub rdom: &'a DioxusDOM,
-
+    pub scale_factor: f32,
     valid_nodes_cache: Option<FxHashMap<NodeId, bool>>,
 }
 
 impl<'a> DioxusDOMAdapter<'a> {
-    pub fn new_with_cache(rdom: &'a DioxusDOM) -> Self {
+    pub fn new_with_cache(rdom: &'a DioxusDOM, scale_factor: f32) -> Self {
         Self {
             rdom,
+            scale_factor,
             valid_nodes_cache: Some(FxHashMap::default()),
         }
     }
@@ -38,7 +44,7 @@ impl DOMAdapter<NodeId> for DioxusDOMAdapter<'_> {
             layout.height = Size::Percentage(Length::new(100.0));
         }
 
-        Some(Node {
+        let mut node = Node {
             width: layout.width,
             height: layout.height,
             minimum_width: layout.minimum_width,
@@ -56,7 +62,11 @@ impl DOMAdapter<NodeId> for DioxusDOMAdapter<'_> {
             position: layout.position,
             content: layout.content,
             contains_text,
-        })
+        };
+
+        node.scale(self.scale_factor);
+
+        Some(node)
     }
 
     fn height(&self, node_id: &NodeId) -> Option<u16> {

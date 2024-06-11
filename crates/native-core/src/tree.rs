@@ -1,8 +1,16 @@
 //! A tree of nodes intigated with shipyard
 
-use crate::NodeId;
-use shipyard::{Component, EntitiesViewMut, Get, View, ViewMut};
 use std::fmt::Debug;
+
+use shipyard::{
+    Component,
+    EntitiesViewMut,
+    Get,
+    View,
+    ViewMut,
+};
+
+use crate::NodeId;
 
 /// A shadow tree reference inside of a tree. This tree is isolated from the main tree.
 #[derive(PartialEq, Eq, Clone, Debug, Component)]

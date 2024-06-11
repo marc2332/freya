@@ -1,10 +1,15 @@
 use std::sync::Arc;
 
 use freya_common::CachedParagraph;
-use freya_core::{dom::DioxusNode, layout::create_paragraph};
-use freya_native_core::{real_dom::NodeImmutable, SendAnyMap};
-
+use freya_core::{
+    dom::DioxusNode,
+    layout::create_paragraph,
+};
 use freya_engine::prelude::*;
+use freya_native_core::{
+    real_dom::NodeImmutable,
+    SendAnyMap,
+};
 use freya_node_state::CursorSettings;
 use torin::geometry::Area;
 
@@ -16,6 +21,7 @@ pub fn render_paragraph(
     canvas: &Canvas,
     font_collection: &mut FontCollection,
     default_fonts: &[String],
+    scale_factor: f32,
 ) {
     let (x, y) = area.origin.to_tuple();
     let node_cursor_settings = &*dioxus_node.get::<CursorSettings>().unwrap();
@@ -37,6 +43,7 @@ pub fn render_paragraph(
             font_collection,
             true,
             default_fonts,
+            scale_factor,
         );
         paint(&paragraph);
     } else {

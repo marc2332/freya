@@ -1,4 +1,7 @@
-use freya_node_state::{CornerRadius, Parse};
+use freya_node_state::{
+    CornerRadius,
+    Parse,
+};
 
 #[test]
 fn parse_basic_corner_radius() {
@@ -48,8 +51,8 @@ fn invalid_radius() {
     let bad_unit = CornerRadius::parse("4deg 3");
     let incorrect_separator = CornerRadius::parse("4, 3, 2, 1");
 
-    assert_eq!(extra_value.is_err(), true);
-    assert_eq!(bad_value_count.is_err(), true);
-    assert_eq!(bad_unit.is_err(), true);
-    assert_eq!(incorrect_separator.is_err(), true);
+    assert!(extra_value.is_err());
+    assert!(bad_value_count.is_err());
+    assert!(bad_unit.is_err());
+    assert!(incorrect_separator.is_err());
 }

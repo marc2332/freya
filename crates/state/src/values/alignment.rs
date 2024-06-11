@@ -1,5 +1,6 @@
-use crate::Parse;
 use torin::alignment::Alignment;
+
+use crate::Parse;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct ParseAlignmentError;

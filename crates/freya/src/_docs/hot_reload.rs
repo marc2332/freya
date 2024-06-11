@@ -7,8 +7,10 @@
 //! Before launching your app, you need to initialize the hot-reload context:
 //!
 //! ```rust, no_run
-//! use freya::prelude::*;
-//! use freya::hotreload::FreyaCtx;
+//! use freya::{
+//!     hotreload::FreyaCtx,
+//!     prelude::*,
+//! };
 //!
 //! fn main() {
 //!     dioxus_hot_reload::hot_reload_init!(Config::<FreyaCtx>::default());

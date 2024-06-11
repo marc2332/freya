@@ -2,7 +2,6 @@
 //!
 //! - [Elements](crate::elements#structs)
 //! - [Events](crate::elements#functions)
-//!
 
 pub mod _docs;
 

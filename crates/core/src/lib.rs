@@ -10,14 +10,16 @@ pub mod style;
 pub mod types;
 
 pub mod prelude {
-    pub use crate::accessibility::*;
-    pub use crate::dom::*;
-    pub use crate::events::*;
-    pub use crate::layout::*;
-    pub use crate::node::*;
-    pub use crate::platform_state::*;
-    pub use crate::plugins::*;
-    pub use crate::render::*;
-    pub use crate::style::*;
-    pub use crate::types::*;
+    pub use crate::{
+        accessibility::*,
+        dom::*,
+        events::*,
+        layout::*,
+        node::*,
+        platform_state::*,
+        plugins::*,
+        render::*,
+        style::*,
+        types::*,
+    };
 }

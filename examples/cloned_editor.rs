@@ -1,16 +1,17 @@
-use freya::events::MouseEvent;
-use freya::prelude::*;
+use freya::{
+    events::MouseEvent,
+    prelude::*,
+};
 
 fn main() {
     launch_cfg(
         app,
-        LaunchConfig::<()>::builder()
+        LaunchConfig::<()>::new()
             .with_width(900.0)
             .with_height(500.0)
             .with_decorations(true)
             .with_transparency(false)
-            .with_title("Editor")
-            .build(),
+            .with_title("Editor"),
     );
 }
 

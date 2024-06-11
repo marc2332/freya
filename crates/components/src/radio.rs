@@ -1,6 +1,10 @@
 use dioxus::prelude::*;
 use freya_elements::elements as dioxus_elements;
-use freya_hooks::{use_applied_theme, RadioTheme, RadioThemeWith};
+use freya_hooks::{
+    use_applied_theme,
+    RadioTheme,
+    RadioThemeWith,
+};
 
 /// Controlled `Radio` component.
 ///
@@ -13,27 +17,27 @@ use freya_hooks::{use_applied_theme, RadioTheme, RadioThemeWith};
 /// # use freya::prelude::*;
 /// #[derive(PartialEq)]
 /// enum Choice {
-///     FirstChoice,
-///     SecondChoice,
+///     First,
+///     Second,
 /// }
 ///
 /// fn app() -> Element {
-///     let mut selected = use_signal(|| Choice::FirstChoice);
+///     let mut selected = use_signal(|| Choice::First);
 ///     rsx!(
 ///         Tile {
-///             onselect: move |_| selected.set(Choice::FirstChoice),
+///             onselect: move |_| selected.set(Choice::First),
 ///             leading: rsx!(
 ///                 Radio {
-///                     selected: *selected.read() == Choice::FirstChoice,
+///                     selected: *selected.read() == Choice::First,
 ///                 },
 ///             ),
 ///             label { "First choice" }
 ///         }
 ///         Tile {
-///             onselect: move |_| selected.set(Choice::SecondChoice),
+///             onselect: move |_| selected.set(Choice::Second),
 ///             leading: rsx!(
 ///                 Radio {
-///                     selected: *selected.read() == Choice::SecondChoice,
+///                     selected: *selected.read() == Choice::Second,
 ///                 },
 ///             ),
 ///             label { "Second choice" }
@@ -41,7 +45,6 @@ use freya_hooks::{use_applied_theme, RadioTheme, RadioThemeWith};
 ///     )
 /// }
 /// ```
-///
 #[allow(non_snake_case)]
 #[component]
 pub fn Radio(
@@ -91,38 +94,38 @@ mod test {
     pub async fn radio() {
         #[derive(PartialEq)]
         enum Choice {
-            FirstChoice,
-            SecondChoice,
-            ThirdChoice,
+            First,
+            Second,
+            Third,
         }
 
         fn radio_app() -> Element {
-            let mut selected = use_signal(|| Choice::FirstChoice);
+            let mut selected = use_signal(|| Choice::First);
 
             rsx!(
                 Tile {
-                    onselect: move |_| selected.set(Choice::FirstChoice),
+                    onselect: move |_| selected.set(Choice::First),
                     leading: rsx!(
                         Radio {
-                            selected: *selected.read() == Choice::FirstChoice,
+                            selected: *selected.read() == Choice::First,
                         },
                     ),
                     label { "First choice" }
                 }
                 Tile {
-                    onselect: move |_| selected.set(Choice::SecondChoice),
+                    onselect: move |_| selected.set(Choice::Second),
                     leading: rsx!(
                         Radio {
-                            selected: *selected.read() == Choice::SecondChoice,
+                            selected: *selected.read() == Choice::Second,
                         },
                     ),
                     label { "Second choice" }
                 }
                 Tile {
-                    onselect: move |_| selected.set(Choice::ThirdChoice),
+                    onselect: move |_| selected.set(Choice::Third),
                     leading: rsx!(
                         Radio {
-                            selected: *selected.read() == Choice::ThirdChoice,
+                            selected: *selected.read() == Choice::Third,
                         },
                     ),
                     label { "Third choice" }

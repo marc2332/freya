@@ -52,13 +52,13 @@ dioxus-sdk = { version = "0.5", features = ["clipboard"]}
 skia-safe = { version = "0.72.0", features = ["gl", "textlayout", "svg"] }
 
 gl = "0.14.0"
-glutin = "0.31.2"
-glutin-winit = "0.4.2"
+glutin = "0.32.0"
+glutin-winit = "0.5.0"
 raw-window-handle = "0.5.2"
-winit = "0.29.9"
+winit = "0.30.0"
 tokio = { version = "1.33.0", features = ["sync", "rt-multi-thread", "time", "macros"] }
-accesskit = { version = "0.12.2", features = ["serde"]}
-accesskit_winit = "0.18.0"
+accesskit = { version = "0.14.0", features = ["serde"]}
+accesskit_winit = "0.20.0"
 shipyard = { version = "0.6.2", features = ["proc", "std", "parallel"], default-features = false }
 smallvec = "1.13.1"
 
@@ -72,7 +72,7 @@ rustc-hash = "1.1.0"
 
 [dev-dependencies]
 skia-safe = { workspace = true }
-tokio = { workspace = true }
+tokio = { workspace = true, features = ["fs"]}
 dioxus = { workspace = true }
 freya = { workspace = true }
 freya-core = { workspace = true }
@@ -82,6 +82,7 @@ dioxus-sdk = { version = "0.5", features = ["i18n"] }
 rand = "0.8.5"
 dioxus-router = { workspace = true }
 itertools = "0.11.0"
+home = "0.5.9"
 
 [profile.release]
 lto = true

@@ -23,12 +23,10 @@
 //! ```rust, no_run
 //! # use freya::prelude::*;
 //! fn app() -> Element {
-//!     rsx!(
-//!         rect {
-//!             width: "50",
-//!             height: "33"
-//!         }
-//!     )
+//!     rsx!(rect {
+//!         width: "50",
+//!         height: "33"
+//!     })
 //! }
 //! ```
 //!
@@ -38,12 +36,10 @@
 //! ```rust, no_run
 //! # use freya::prelude::*;
 //! fn app() -> Element {
-//!     rsx!(
-//!         rect {
-//!             width: "50%", // Half the parent
-//!             height: "75%" // 3/4 the parent
-//!         }
-//!     )
+//!     rsx!(rect {
+//!         width: "50%",  // Half the parent
+//!         height: "75%"  // 3/4 the parent
+//!     })
 //! }
 //! ```
 //!
@@ -54,12 +50,10 @@
 //! ```rust, no_run
 //! # use freya::prelude::*;
 //! fn app() -> Element {
-//!     rsx!(
-//!         rect {
-//!             width: "calc(33% - 60 + 15%)", // (1/3 of the parent minus 60) plus 15% of parent
-//!             height: "calc(100% - 10)" // 100% of the parent minus 10
-//!         }
-//!     )
+//!     rsx!(rect {
+//!         width: "calc(33% - 60 + 15%)", // (1/3 of the parent minus 60) plus 15% of parent
+//!         height: "calc(100% - 10)"      // 100% of the parent minus 10
+//!     })
 //! }
 //! ```
 //!

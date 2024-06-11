@@ -1,8 +1,12 @@
 use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
-use freya_elements::events::MouseEvent;
-
-use freya_hooks::{use_applied_theme, ScrollBarThemeWith};
+use freya_elements::{
+    elements as dioxus_elements,
+    events::MouseEvent,
+};
+use freya_hooks::{
+    use_applied_theme,
+    ScrollBarThemeWith,
+};
 
 /// Properties for the [`ScrollThumb`] component.
 #[derive(Props, Clone, PartialEq)]

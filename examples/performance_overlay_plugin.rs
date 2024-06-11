@@ -8,12 +8,11 @@ use freya::prelude::*;
 fn main() {
     launch_cfg(
         app,
-        LaunchConfig::<()>::builder()
+        LaunchConfig::<()>::new()
             .with_title("Performance Overlay Plugin")
             .with_width(700.)
             .with_height(500.)
-            .with_plugin(PerformanceOverlayPlugin::default())
-            .build(),
+            .with_plugin(PerformanceOverlayPlugin::default()),
     )
 }
 

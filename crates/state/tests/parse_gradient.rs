@@ -1,5 +1,9 @@
 use freya_engine::prelude::*;
-use freya_node_state::{GradientStop, LinearGradient, Parse};
+use freya_node_state::{
+    GradientStop,
+    LinearGradient,
+    Parse,
+};
 
 #[test]
 fn parse_basic_gradient() {
@@ -76,15 +80,15 @@ fn invalid_gradients() {
     let missing_color = LinearGradient::parse("linear-gradient(45deg, 0%, blue 100%)");
     let missing_offset = LinearGradient::parse("linear-gradient(45deg, red, blue 100%)");
 
-    assert_eq!(incorrect_name.is_err(), true);
-    assert_eq!(extra_lparen.is_err(), true);
-    assert_eq!(extra_rparen.is_err(), true);
-    assert_eq!(missing_rparen.is_err(), true);
-    assert_eq!(missing_commas.is_err(), true);
-    assert_eq!(extra_commas.is_err(), true);
-    assert_eq!(extra_stop_component.is_err(), true);
-    assert_eq!(bad_angle_unit.is_err(), true);
-    assert_eq!(bad_offset_unit.is_err(), true);
-    assert_eq!(missing_color.is_err(), true);
-    assert_eq!(missing_offset.is_err(), true);
+    assert!(incorrect_name.is_err());
+    assert!(extra_lparen.is_err());
+    assert!(extra_rparen.is_err());
+    assert!(missing_rparen.is_err());
+    assert!(missing_commas.is_err());
+    assert!(extra_commas.is_err());
+    assert!(extra_stop_component.is_err());
+    assert!(bad_angle_unit.is_err());
+    assert!(bad_offset_unit.is_err());
+    assert!(missing_color.is_err());
+    assert!(missing_offset.is_err());
 }

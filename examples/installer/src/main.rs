@@ -10,12 +10,11 @@ const ICON: &[u8] = include_bytes!("../assets/icon.png");
 fn main() {
     launch_cfg(
         app,
-        LaunchConfig::<()>::builder()
+        LaunchConfig::<()>::new()
             .with_title("Freya & cargo-packager")
             .with_width(400.)
             .with_height(300.)
-            .with_icon(LaunchConfig::load_icon(ICON))
-            .build(),
+            .with_icon(LaunchConfig::load_icon(ICON)),
     )
 }
 

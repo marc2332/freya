@@ -1,18 +1,26 @@
-use dioxus_core::fc_to_builder;
-use dioxus_core::Element;
-use dioxus_core::VirtualDom;
+use dioxus_core::{
+    fc_to_builder,
+    Element,
+    VirtualDom,
+};
 use dioxus_core_macro::rsx;
 use freya_common::EventMessage;
 use freya_components::NativeContainer;
 use freya_core::prelude::*;
 use freya_engine::prelude::*;
-use tokio::sync::mpsc::unbounded_channel;
-use tokio::sync::{broadcast, watch};
+use tokio::sync::{
+    broadcast,
+    mpsc::unbounded_channel,
+    watch,
+};
 use winit::window::CursorIcon;
 
-use crate::config::TestingConfig;
-use crate::test_handler::TestingHandler;
-use crate::test_utils::TestUtils;
+use crate::{
+    config::TestingConfig,
+    test_handler::TestingHandler,
+    test_utils::TestUtils,
+    SCALE_FACTOR,
+};
 
 /// Run a Component in a headless testing environment.
 ///
@@ -34,6 +42,7 @@ pub fn launch_test_with_config(root: AppComponent, config: TestingConfig) -> Tes
         preferred_theme: PreferredTheme::default(),
         navigation_mode: NavigationMode::default(),
         information: PlatformInformation::new(config.size, false, false, false),
+        scale_factor: SCALE_FACTOR as f32,
     });
     let mut font_collection = FontCollection::new();
     let font_mgr = FontMgr::default();

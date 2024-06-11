@@ -1,13 +1,29 @@
+use std::{
+    collections::{
+        HashMap,
+        HashSet,
+    },
+    time::Duration,
+};
+
 use bytes::Bytes;
 use dioxus_core::{
-    prelude::{current_scope_id, provide_root_context, spawn, try_consume_context, ScopeId, Task},
+    prelude::{
+        current_scope_id,
+        spawn,
+        ScopeId,
+        Task,
+    },
     Runtime,
 };
-use dioxus_signals::Signal;
-use dioxus_signals::{Readable, Writable};
-use std::{
-    collections::{HashMap, HashSet},
-    time::Duration,
+use dioxus_hooks::{
+    use_context,
+    use_context_provider,
+};
+use dioxus_signals::{
+    Readable,
+    Signal,
+    Writable,
 };
 use tokio::time::sleep;
 
@@ -74,7 +90,9 @@ impl AssetCacher {
         }
 
         // Insert the asset into the cache
-        let asset_bytes = Signal::new(asset_bytes);
+        let value = ScopeId::ROOT.in_runtime(|| asset_bytes);
+        let asset_bytes = Signal::new_in_scope(value, ScopeId::ROOT);
+
         self.registry.write().insert(
             asset_config.clone(),
             AssetState {
@@ -182,8 +200,12 @@ impl AssetCacher {
 ///
 /// This is a "low level" hook, so you probably won't need it.
 pub fn use_asset_cacher() -> AssetCacher {
-    match try_consume_context() {
-        Some(asset_cacher) => asset_cacher,
-        None => provide_root_context(AssetCacher::default()),
-    }
+    use_context()
+}
+
+/// Initialize the global caching system for assets.
+///
+/// This is a "low level" hook, so you probably won't need it.
+pub fn use_init_asset_cacher() {
+    use_context_provider(AssetCacher::default);
 }

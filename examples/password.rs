@@ -10,7 +10,7 @@ fn main() {
 }
 
 fn app() -> Element {
-    let mut password = use_signal(|| String::new());
+    let mut password = use_signal(String::new);
     let mut is_hidden = use_signal(|| true);
 
     rsx!(
