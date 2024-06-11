@@ -1,9 +1,21 @@
 use std::sync::Arc;
 
-use dioxus_core::{prelude::spawn, use_hook, AttributeValue};
-use dioxus_signals::{ReadOnlySignal, Readable, Signal, Writable};
+use dioxus_core::{
+    prelude::spawn,
+    use_hook,
+    AttributeValue,
+};
+use dioxus_signals::{
+    ReadOnlySignal,
+    Readable,
+    Signal,
+    Writable,
+};
 use freya_common::NodeReferenceLayout;
-use freya_node_state::{CustomAttributeValues, NodeReference};
+use freya_node_state::{
+    CustomAttributeValues,
+    NodeReference,
+};
 use tokio::sync::watch::channel;
 
 /// Subscribe to a Node layout changes.
@@ -54,9 +66,10 @@ pub fn use_node_signal() -> (AttributeValue, ReadOnlySignal<NodeReferenceLayout>
 
 #[cfg(test)]
 mod test {
-    use crate::use_node;
     use freya::prelude::*;
     use freya_testing::prelude::*;
+
+    use crate::use_node;
 
     #[tokio::test]
     pub async fn track_size() {

@@ -1,12 +1,23 @@
-use crate::{
-    events::DomEvent,
-    prelude::{EventName, NativePlatformState, PlatformEvent, PotentialEvent},
-};
 pub use accesskit::NodeId as AccessibilityId;
 use rustc_hash::FxHashMap;
 use smallvec::SmallVec;
-use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
-use tokio::sync::watch;
+use tokio::sync::{
+    mpsc::{
+        UnboundedReceiver,
+        UnboundedSender,
+    },
+    watch,
+};
+
+use crate::{
+    events::DomEvent,
+    prelude::{
+        EventName,
+        NativePlatformState,
+        PlatformEvent,
+        PotentialEvent,
+    },
+};
 
 /// Send platform updates from the platform
 pub type NativePlatformSender = watch::Sender<NativePlatformState>;

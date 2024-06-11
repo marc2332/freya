@@ -1,10 +1,15 @@
 use std::sync::Arc;
 
 use freya_common::CachedParagraph;
-use freya_core::{dom::DioxusNode, layout::create_paragraph};
-use freya_native_core::{real_dom::NodeImmutable, SendAnyMap};
-
+use freya_core::{
+    dom::DioxusNode,
+    layout::create_paragraph,
+};
 use freya_engine::prelude::*;
+use freya_native_core::{
+    real_dom::NodeImmutable,
+    SendAnyMap,
+};
 use freya_node_state::CursorSettings;
 use torin::geometry::Area;
 

@@ -1,6 +1,14 @@
+use std::sync::{
+    Arc,
+    Mutex,
+    MutexGuard,
+};
+
 use freya_native_core::NodeId;
-use rustc_hash::{FxHashMap, FxHashSet};
-use std::sync::{Arc, Mutex, MutexGuard};
+use rustc_hash::{
+    FxHashMap,
+    FxHashSet,
+};
 use uuid::Uuid;
 
 #[derive(Default, Clone)]

@@ -1,14 +1,29 @@
+use std::{
+    collections::{
+        HashMap,
+        HashSet,
+    },
+    time::Duration,
+};
+
 use bytes::Bytes;
 use dioxus_core::{
-    prelude::{current_scope_id, spawn, ScopeId, Task},
+    prelude::{
+        current_scope_id,
+        spawn,
+        ScopeId,
+        Task,
+    },
     Runtime,
 };
-use dioxus_hooks::{use_context, use_context_provider};
-use dioxus_signals::Signal;
-use dioxus_signals::{Readable, Writable};
-use std::{
-    collections::{HashMap, HashSet},
-    time::Duration,
+use dioxus_hooks::{
+    use_context,
+    use_context_provider,
+};
+use dioxus_signals::{
+    Readable,
+    Signal,
+    Writable,
 };
 use tokio::time::sleep;
 

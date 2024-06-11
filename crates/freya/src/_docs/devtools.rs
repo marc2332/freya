@@ -8,4 +8,3 @@
 //! [dependencies]
 //! freya = { .., features = ["devtools"] }
 //! ```
-//!

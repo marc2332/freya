@@ -1,10 +1,16 @@
 use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
-use freya_elements::events::MouseEvent;
-
+use freya_elements::{
+    elements as dioxus_elements,
+    events::MouseEvent,
+};
 use freya_hooks::{
-    use_animation_with_dependencies, use_applied_theme, use_node, use_platform, AccordionTheme,
-    AccordionThemeWith, AnimNum,
+    use_animation_with_dependencies,
+    use_applied_theme,
+    use_node,
+    use_platform,
+    AccordionTheme,
+    AccordionThemeWith,
+    AnimNum,
 };
 use winit::window::CursorIcon;
 
@@ -33,7 +39,6 @@ pub struct AccordionProps {
 ///
 /// # Styling
 /// Inherits the [`AccordionTheme`](freya_hooks::AccordionTheme)
-///
 #[allow(non_snake_case)]
 pub fn Accordion(props: AccordionProps) -> Element {
     let theme = use_applied_theme!(&props.theme, accordion);

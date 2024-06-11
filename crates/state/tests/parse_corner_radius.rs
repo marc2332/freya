@@ -1,4 +1,7 @@
-use freya_node_state::{CornerRadius, Parse};
+use freya_node_state::{
+    CornerRadius,
+    Parse,
+};
 
 #[test]
 fn parse_basic_corner_radius() {

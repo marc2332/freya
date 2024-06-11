@@ -1,7 +1,15 @@
-use criterion::{criterion_group, criterion_main, Criterion};
+use std::{
+    collections::HashMap,
+    fmt::Display,
+    sync::Arc,
+};
+
+use criterion::{
+    criterion_group,
+    criterion_main,
+    Criterion,
+};
 use freya_native_core::SendAnyMap;
-use std::fmt::Display;
-use std::{collections::HashMap, sync::Arc};
 use torin::prelude::*;
 
 struct TestingMeasurer;

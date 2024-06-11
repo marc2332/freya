@@ -1,9 +1,12 @@
-use freya_native_core::real_dom::NodeImmutable;
-
-use freya_common::{CachedParagraph, CursorLayoutResponse, TextGroupMeasurement};
-use freya_node_state::CursorSettings;
 use std::ops::Mul;
 
+use freya_common::{
+    CachedParagraph,
+    CursorLayoutResponse,
+    TextGroupMeasurement,
+};
+use freya_native_core::real_dom::NodeImmutable;
+use freya_node_state::CursorSettings;
 use torin::prelude::*;
 
 use crate::dom::DioxusNode;

@@ -1,47 +1,89 @@
+use std::{
+    ffi::CString,
+    mem,
+    num::NonZeroU32,
+    path::PathBuf,
+};
+
 use dioxus_core::VirtualDom;
 use freya_common::EventMessage;
 use freya_core::{
     accessibility::AccessibilityFocusDirection,
     dom::SafeDOM,
-    events::{EventName, PlatformEvent},
+    events::{
+        EventName,
+        PlatformEvent,
+    },
     prelude::NavigationMode,
 };
 use freya_elements::events::{
-    map_winit_key, map_winit_modifiers, map_winit_physical_key, Code, Key,
+    map_winit_key,
+    map_winit_modifiers,
+    map_winit_physical_key,
+    Code,
+    Key,
 };
 use freya_engine::prelude::*;
-use gl::{types::*, *};
+use gl::{
+    types::*,
+    *,
+};
 use glutin::{
-    config::{ConfigTemplateBuilder, GlConfig},
-    context::{
-        ContextApi, ContextAttributesBuilder, GlProfile, NotCurrentGlContext,
-        PossiblyCurrentContext, PossiblyCurrentGlContext,
+    config::{
+        ConfigTemplateBuilder,
+        GlConfig,
     },
-    display::{GetGlDisplay, GlDisplay},
+    context::{
+        ContextApi,
+        ContextAttributesBuilder,
+        GlProfile,
+        NotCurrentGlContext,
+        PossiblyCurrentContext,
+        PossiblyCurrentGlContext,
+    },
+    display::{
+        GetGlDisplay,
+        GlDisplay,
+    },
     surface::{
-        GlSurface, Surface as GlutinSurface, SurfaceAttributesBuilder, SwapInterval, WindowSurface,
+        GlSurface,
+        Surface as GlutinSurface,
+        SurfaceAttributesBuilder,
+        SwapInterval,
+        WindowSurface,
     },
 };
 use glutin_winit::DisplayBuilder;
-use std::ffi::CString;
-use std::{mem, num::NonZeroU32, path::PathBuf};
 use torin::geometry::CursorPoint;
-
 use winit::{
     application::ApplicationHandler,
     dpi::LogicalSize,
     event::{
-        ElementState, Ime, KeyEvent, MouseButton, MouseScrollDelta, StartCause, Touch, TouchPhase,
+        ElementState,
+        Ime,
+        KeyEvent,
+        MouseButton,
+        MouseScrollDelta,
+        StartCause,
+        Touch,
+        TouchPhase,
         WindowEvent,
     },
-    event_loop::{EventLoop, EventLoopProxy},
+    event_loop::{
+        EventLoop,
+        EventLoopProxy,
+    },
     keyboard::ModifiersState,
     raw_window_handle::HasWindowHandle,
     window::Window,
 };
 
 use crate::{
-    app::Application, config::WindowConfig, devtools::Devtools, HoveredNode, LaunchConfig,
+    app::Application,
+    config::WindowConfig,
+    devtools::Devtools,
+    HoveredNode,
+    LaunchConfig,
 };
 
 const WHEEL_SPEED_MODIFIER: f32 = 53.0;

@@ -1,17 +1,32 @@
-use freya_native_core::prelude::ElementNode;
-use freya_native_core::real_dom::NodeImmutable;
-use freya_native_core::NodeId;
-use freya_native_core::{node::NodeType, tags::TagName};
-
 use freya_core::dom::DioxusNode;
 use freya_engine::prelude::*;
-use freya_node_state::{Style, Transform, ViewportState};
+use freya_native_core::{
+    node::NodeType,
+    prelude::ElementNode,
+    real_dom::NodeImmutable,
+    tags::TagName,
+    NodeId,
+};
+use freya_node_state::{
+    Style,
+    Transform,
+    ViewportState,
+};
 use torin::{
     geometry::Area,
-    prelude::{LayoutNode, Torin},
+    prelude::{
+        LayoutNode,
+        Torin,
+    },
 };
 
-use crate::elements::{render_image, render_label, render_paragraph, render_rect, render_svg};
+use crate::elements::{
+    render_image,
+    render_label,
+    render_paragraph,
+    render_rect,
+    render_svg,
+};
 
 fn clip_viewport(canvas: &Canvas, viewport: &Area) {
     canvas.clip_rect(

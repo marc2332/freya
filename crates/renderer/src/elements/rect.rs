@@ -1,10 +1,18 @@
-use freya_native_core::real_dom::NodeImmutable;
-
 use freya_core::dom::DioxusNode;
 use freya_engine::prelude::*;
-use freya_node_state::{BorderAlignment, BorderStyle, Fill, References, ShadowPosition, Style};
-use torin::prelude::Area;
-use torin::scaled::Scaled;
+use freya_native_core::real_dom::NodeImmutable;
+use freya_node_state::{
+    BorderAlignment,
+    BorderStyle,
+    Fill,
+    References,
+    ShadowPosition,
+    Style,
+};
+use torin::{
+    prelude::Area,
+    scaled::Scaled,
+};
 
 /// Render a `rect` element
 pub fn render_rect(

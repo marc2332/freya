@@ -1,5 +1,6 @@
-use crate::Parse;
 use torin::position::Position;
+
+use crate::Parse;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct ParsePositionError;

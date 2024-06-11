@@ -1,5 +1,8 @@
 use torin::geometry::CursorPoint;
-pub use winit::event::{Force, TouchPhase};
+pub use winit::event::{
+    Force,
+    TouchPhase,
+};
 
 use crate::definitions::PlatformEventData;
 

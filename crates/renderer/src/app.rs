@@ -1,28 +1,49 @@
-use dioxus_core::{Template, VirtualDom};
-use freya_common::{EventMessage, TextGroupMeasurement};
+use std::sync::Arc;
+
+use dioxus_core::{
+    Template,
+    VirtualDom,
+};
+use freya_common::{
+    EventMessage,
+    TextGroupMeasurement,
+};
 use freya_core::prelude::*;
 use freya_engine::prelude::*;
-use freya_native_core::prelude::NodeImmutableDioxusExt;
-use freya_native_core::NodeId;
+use freya_native_core::{
+    prelude::NodeImmutableDioxusExt,
+    NodeId,
+};
 use futures_task::Waker;
 use futures_util::FutureExt;
 use pin_utils::pin_mut;
-use std::sync::Arc;
-use tokio::sync::broadcast;
 use tokio::{
     select,
-    sync::{mpsc, watch},
+    sync::{
+        broadcast,
+        mpsc,
+        watch,
+    },
 };
-use torin::geometry::{Area, Size2D};
+use torin::geometry::{
+    Area,
+    Size2D,
+};
 use tracing::info;
-use winit::event_loop::EventLoopProxy;
-use winit::{dpi::PhysicalSize, window::Window};
+use winit::{
+    dpi::PhysicalSize,
+    event_loop::EventLoopProxy,
+    window::Window,
+};
 
 use crate::{
-    accessibility::AccessKitManager, devtools::Devtools, render::render_skia,
+    accessibility::AccessKitManager,
+    devtools::Devtools,
+    render::render_skia,
     winit_waker::winit_waker,
+    EmbeddedFonts,
+    HoveredNode,
 };
-use crate::{EmbeddedFonts, HoveredNode};
 
 /// Manages the Application lifecycle
 pub struct Application {

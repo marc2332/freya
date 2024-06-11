@@ -1,7 +1,8 @@
-use crate::state::DevtoolsChannel;
 use dioxus_radio::prelude::use_radio;
 use freya_native_core::prelude::NodeId;
 use freya_renderer::devtools::NodeInfo;
+
+use crate::state::DevtoolsChannel;
 
 pub fn use_node_info(node_id: NodeId) -> Option<NodeInfo> {
     let radio = use_radio(DevtoolsChannel::UpdatedDOM);

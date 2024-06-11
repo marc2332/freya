@@ -1,7 +1,13 @@
-use freya_native_core::prelude::SendAnyMap;
 use std::sync::Arc;
 
-use crate::{dom_adapter::NodeKey, geometry::Size2D, node::Node, prelude::LayoutNode};
+use freya_native_core::prelude::SendAnyMap;
+
+use crate::{
+    dom_adapter::NodeKey,
+    geometry::Size2D,
+    node::Node,
+    prelude::LayoutNode,
+};
 
 pub trait LayoutMeasurer<Key: NodeKey> {
     fn measure(

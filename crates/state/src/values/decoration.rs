@@ -1,5 +1,6 @@
-use crate::Parse;
 use freya_engine::prelude::*;
+
+use crate::Parse;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct ParseTextDecorationError;

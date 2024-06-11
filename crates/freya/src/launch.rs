@@ -1,6 +1,9 @@
 use dioxus_core::Element;
-use freya_renderer::DesktopRenderer;
-use freya_renderer::{LaunchConfig, WindowConfig};
+use freya_renderer::{
+    DesktopRenderer,
+    LaunchConfig,
+    WindowConfig,
+};
 
 /// Launch a new window with the default config.
 ///
@@ -179,7 +182,10 @@ pub fn launch_with_props(app: AppComponent, title: &'static str, (width, height)
 /// }
 /// ```
 pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>) {
-    use freya_core::prelude::{FreyaDOM, SafeDOM};
+    use freya_core::prelude::{
+        FreyaDOM,
+        SafeDOM,
+    };
 
     let fdom = FreyaDOM::default();
     let sdom = SafeDOM::new(fdom);
@@ -201,9 +207,13 @@ pub fn launch_cfg<T: 'static + Clone>(app: AppComponent, config: LaunchConfig<T>
         #[cfg(feature = "devtools")]
         #[cfg(debug_assertions)]
         {
+            use std::sync::{
+                Arc,
+                Mutex,
+            };
+
             use freya_devtools::with_devtools;
             use freya_renderer::devtools::Devtools;
-            use std::sync::{Arc, Mutex};
 
             let hovered_node = Some(Arc::new(Mutex::new(None)));
             let (devtools, devtools_receiver) = Devtools::new();

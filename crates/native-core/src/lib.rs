@@ -1,5 +1,7 @@
-use std::any::Any;
-use std::hash::BuildHasherDefault;
+use std::{
+    any::Any,
+    hash::BuildHasherDefault,
+};
 
 use node_ref::NodeMask;
 use rustc_hash::FxHasher;
@@ -27,16 +29,40 @@ pub mod exports {
 
 /// A prelude of commonly used items
 pub mod prelude {
-    pub use crate::attributes::*;
-    pub use crate::dioxus::*;
-    pub use crate::events::*;
-    pub use crate::node::{ElementNode, FromAnyValue, NodeType, OwnedAttributeView};
-    pub use crate::node_ref::{AttributeMaskBuilder, NodeMaskBuilder, NodeView};
-    pub use crate::passes::{run_pass, PassDirection, RunPassView, TypeErasedState};
-    pub use crate::passes::{Dependancy, DependancyView, Dependants, State};
-    pub use crate::real_dom::{NodeImmutable, NodeMut, NodeRef, RealDom};
-    pub use crate::NodeId;
-    pub use crate::SendAnyMap;
+    pub use crate::{
+        attributes::*,
+        dioxus::*,
+        events::*,
+        node::{
+            ElementNode,
+            FromAnyValue,
+            NodeType,
+            OwnedAttributeView,
+        },
+        node_ref::{
+            AttributeMaskBuilder,
+            NodeMaskBuilder,
+            NodeView,
+        },
+        passes::{
+            run_pass,
+            Dependancy,
+            DependancyView,
+            Dependants,
+            PassDirection,
+            RunPassView,
+            State,
+            TypeErasedState,
+        },
+        real_dom::{
+            NodeImmutable,
+            NodeMut,
+            NodeRef,
+            RealDom,
+        },
+        NodeId,
+        SendAnyMap,
+    };
 }
 
 /// A map that can be sent between threads

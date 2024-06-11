@@ -1,15 +1,14 @@
 mod dark;
 mod light;
 
-pub use dark::*;
-pub use light::*;
-
 #[doc(hidden)]
 pub use ::core::default::Default;
 #[doc(hidden)]
 pub use ::paste::paste;
 #[doc(hidden)]
 pub use ::std::borrow::Cow;
+pub use dark::*;
+pub use light::*;
 
 /// Alias for `Cow::Borrowed`, because that's used a million times so shortening it is nice.
 /// Makes the code more readable.

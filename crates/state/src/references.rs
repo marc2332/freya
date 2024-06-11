@@ -3,12 +3,21 @@ use freya_native_core::{
     exports::shipyard::Component,
     node::OwnedAttributeValue,
     node_ref::NodeView,
-    prelude::{AttributeMaskBuilder, Dependancy, NodeMaskBuilder, State},
+    prelude::{
+        AttributeMaskBuilder,
+        Dependancy,
+        NodeMaskBuilder,
+        State,
+    },
     SendAnyMap,
 };
 use freya_native_core_macro::partial_derive_state;
 
-use crate::{CanvasReference, CustomAttributeValues, ImageReference};
+use crate::{
+    CanvasReference,
+    CustomAttributeValues,
+    ImageReference,
+};
 
 #[derive(Default, PartialEq, Clone, Debug, Component)]
 pub struct References {

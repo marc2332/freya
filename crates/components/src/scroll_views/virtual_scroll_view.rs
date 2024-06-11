@@ -1,17 +1,37 @@
 #![allow(clippy::type_complexity)]
 
-use dioxus::prelude::*;
-use freya_elements::elements as dioxus_elements;
-use freya_elements::events::{keyboard::Key, KeyboardEvent, MouseEvent, WheelEvent};
-use freya_hooks::{
-    use_applied_theme, use_focus, use_node, ScrollBarThemeWith, ScrollViewThemeWith,
-};
 use std::ops::Range;
 
+use dioxus::prelude::*;
+use freya_elements::{
+    elements as dioxus_elements,
+    events::{
+        keyboard::Key,
+        KeyboardEvent,
+        MouseEvent,
+        WheelEvent,
+    },
+};
+use freya_hooks::{
+    use_applied_theme,
+    use_focus,
+    use_node,
+    ScrollBarThemeWith,
+    ScrollViewThemeWith,
+};
+
 use crate::{
-    get_container_size, get_corrected_scroll_position, get_scroll_position_from_cursor,
-    get_scroll_position_from_wheel, get_scrollbar_pos_and_size, is_scrollbar_visible,
-    manage_key_event, Axis, ScrollBar, ScrollThumb, SCROLL_SPEED_MULTIPLIER,
+    get_container_size,
+    get_corrected_scroll_position,
+    get_scroll_position_from_cursor,
+    get_scroll_position_from_wheel,
+    get_scrollbar_pos_and_size,
+    is_scrollbar_visible,
+    manage_key_event,
+    Axis,
+    ScrollBar,
+    ScrollThumb,
+    SCROLL_SPEED_MULTIPLIER,
 };
 
 /// Properties for the [`VirtualScrollView`] component.
@@ -94,23 +114,21 @@ fn get_render_range(
 /// # use freya::prelude::*;
 /// # use std::rc::Rc;
 /// fn app() -> Element {
-///     rsx!(
-///         VirtualScrollView {
-///             show_scrollbar: true,
-///             length: 5,
-///             item_size: 80.0,
-///             direction: "vertical",
-///             builder: move |i, _other_args: &Option<()>| {
-///                 rsx! {
-///                     label {
-///                         key: "{i}",
-///                         height: "80",
-///                         "Number {i}"
-///                     }
+///     rsx!(VirtualScrollView {
+///         show_scrollbar: true,
+///         length: 5,
+///         item_size: 80.0,
+///         direction: "vertical",
+///         builder: move |i, _other_args: &Option<()>| {
+///             rsx! {
+///                 label {
+///                     key: "{i}",
+///                     height: "80",
+///                     "Number {i}"
 ///                 }
 ///             }
 ///         }
-///     )
+///     })
 /// }
 /// ```
 #[allow(non_snake_case)]
