@@ -48,7 +48,7 @@ impl UseCanvas {
 /// fn app() -> Element {
 ///     let value = use_signal(|| 0);
 ///
-///     let canvas = use_canvas(|| {
+///     let canvas = use_canvas(move || {
 ///         let curr = value();
 ///         Box::new(move |canvas, font_collection, area, scale_factor| {
 ///             // Draw using the canvas !
