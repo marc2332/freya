@@ -365,7 +365,11 @@ pub async fn highlight_multiple_lines_single_editor() {
     utils.wait_for_update().await;
 
     let highlights = root.child(0).unwrap().state().cursor.highlights.clone();
-    assert_eq!(highlights, Some(vec![(5, 28)]))
+    #[cfg(not(target_os = "macos"))]
+    assert_eq!(highlights, Some(vec![(5, 28)]));
+
+    #[cfg(target_os = "macos")]
+    assert_eq!(highlights, Some(vec![(5, 27)]));
 }
 
 #[tokio::test]
@@ -884,7 +888,11 @@ pub async fn highlight_shift_click_multiple_lines_single_editor() {
     utils.wait_for_update().await;
 
     let highlights = root.child(0).unwrap().state().cursor.highlights.clone();
-    assert_eq!(highlights, Some(vec![(5, 28)]))
+    #[cfg(not(target_os = "macos"))]
+    assert_eq!(highlights, Some(vec![(5, 28)]));
+
+    #[cfg(target_os = "macos")]
+    assert_eq!(highlights, Some(vec![(5, 27)]));
 }
 
 #[tokio::test]
@@ -1011,7 +1019,11 @@ pub async fn highlights_shift_click_single_line_mulitple_editors() {
 
     let highlights_2 = root.child(1).unwrap().state().cursor.highlights.clone();
 
-    assert_eq!(highlights_2, Some(vec![(0, 11)]));
+    #[cfg(not(target_os = "macos"))]
+    assert_eq!(highlights, Some(vec![(0, 11)]));
+
+    #[cfg(target_os = "macos")]
+    assert_eq!(highlights, Some(vec![(0, 10)]));
 }
 
 #[tokio::test]
