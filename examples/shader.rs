@@ -55,7 +55,7 @@ fn app() -> Element {
         });
     });
 
-    let canvas = use_canvas((), |_| {
+    let canvas = use_canvas(|| {
         let shader = RuntimeEffect::make_for_shader(SHADER, None).unwrap();
         let shader_wrapper = Arc::new(Mutex::new(ShaderWrapper(shader)));
         let instant = Instant::now();
