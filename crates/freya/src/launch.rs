@@ -165,7 +165,7 @@ pub fn launch_with_props(app: AppComponent, title: &'static str, (width, height)
 ///             .with_decorations(true)
 ///             .with_transparency(false)
 ///             .with_title("Freya App")
-///             .with_background("rgb(150, 100, 200")
+///             .with_background("rgb(150, 100, 200)")
 ///     );
 /// }
 ///
