@@ -225,8 +225,8 @@ impl<'a, T: Clone> LaunchConfig<'a, T> {
         self
     }
 
-    /// Register a Window Builder hook.
-    pub fn with_window_builder(
+    /// Register a Window Attributes hook.
+    pub fn with_window_attributes(
         mut self,
         window_builder_hook: impl Fn(WindowAttributes) -> WindowAttributes + 'static,
     ) -> Self {

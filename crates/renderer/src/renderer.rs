@@ -153,7 +153,6 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
             } = mem::take(&mut self.state).not_created_state();
 
             let mut window_attributes = Window::default_attributes()
-                .with_visible(false)
                 .with_title(config.window_config.title)
                 .with_decorations(config.window_config.decorations)
                 .with_transparent(config.window_config.transparent)
@@ -184,8 +183,8 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                     window_attributes.with_max_inner_size(LogicalSize::<f64>::from(max_size))
             }
 
-            if let Some(with_window_builder) = &config.window_config.window_builder_hook {
-                window_attributes = (with_window_builder)(window_attributes);
+            if let Some(with_window_attributes) = &config.window_config.window_builder_hook {
+                window_attributes = (with_window_attributes)(window_attributes);
             }
 
             let template = ConfigTemplateBuilder::new()
@@ -216,9 +215,6 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
 
             // Allow IME
             window.set_ime_allowed(true);
-
-            // Workaround for accesskit
-            window.set_visible(true);
 
             let window_handle = window.window_handle().unwrap();
 
@@ -336,6 +332,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                 app,
                 window_config: config.window_config,
             });
+            self.run_on_setup();
         }
     }
 
