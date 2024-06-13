@@ -13,14 +13,14 @@ use_camera = ["freya/use_camera"]
 hot-reload = ["freya/hot-reload"]
 
 [patch.crates-io]
-# dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "7beacdf9c76ae5412d3c2bcd55f7c5d87f486a0f" }
-# dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev = "7beacdf9c76ae5412d3c2bcd55f7c5d87f486a0f" }
-# dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "7beacdf9c76ae5412d3c2bcd55f7c5d87f486a0f" }
-# dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev = "7beacdf9c76ae5412d3c2bcd55f7c5d87f486a0f" }
-# dioxus-signals = { git = "https://github.com/DioxusLabs/dioxus", rev = "7beacdf9c76ae5412d3c2bcd55f7c5d87f486a0f" }
-# dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev = "7beacdf9c76ae5412d3c2bcd55f7c5d87f486a0f" }
-# dioxus-hot-reload = { git = "https://github.com/DioxusLabs/dioxus", rev = "7beacdf9c76ae5412d3c2bcd55f7c5d87f486a0f" }
-# dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev = "7beacdf9c76ae5412d3c2bcd55f7c5d87f486a0f" }
+dioxus = { git = "https://github.com/DioxusLabs/dioxus", rev = "e2002d6ea42f5844a3832ab7f038620ecf977a1c" }
+dioxus-rsx = { git = "https://github.com/DioxusLabs/dioxus", rev = "e2002d6ea42f5844a3832ab7f038620ecf977a1c" }
+dioxus-core-macro = { git = "https://github.com/DioxusLabs/dioxus", rev = "e2002d6ea42f5844a3832ab7f038620ecf977a1c" }
+dioxus-hooks = { git = "https://github.com/DioxusLabs/dioxus", rev = "e2002d6ea42f5844a3832ab7f038620ecf977a1c" }
+dioxus-signals = { git = "https://github.com/DioxusLabs/dioxus", rev = "e2002d6ea42f5844a3832ab7f038620ecf977a1c" }
+dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev = "e2002d6ea42f5844a3832ab7f038620ecf977a1c" }
+dioxus-hot-reload = { git = "https://github.com/DioxusLabs/dioxus", rev = "e2002d6ea42f5844a3832ab7f038620ecf977a1c" }
+dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev = "e2002d6ea42f5844a3832ab7f038620ecf977a1c" }
 
 [workspace.dependencies]
 freya = { path = "crates/freya", version = "0.2" }
