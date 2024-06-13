@@ -21,6 +21,7 @@ dioxus-signals = { git = "https://github.com/DioxusLabs/dioxus", rev = "e2002d6e
 dioxus-core = { git = "https://github.com/DioxusLabs/dioxus", rev = "e2002d6ea42f5844a3832ab7f038620ecf977a1c" }
 dioxus-hot-reload = { git = "https://github.com/DioxusLabs/dioxus", rev = "e2002d6ea42f5844a3832ab7f038620ecf977a1c" }
 dioxus-router = { git = "https://github.com/DioxusLabs/dioxus", rev = "e2002d6ea42f5844a3832ab7f038620ecf977a1c" }
+dioxus-lib = { git = "https://github.com/DioxusLabs/dioxus", rev = "e2002d6ea42f5844a3832ab7f038620ecf977a1c" }
 generational-box = { git = "https://github.com/DioxusLabs/dioxus", rev = "e2002d6ea42f5844a3832ab7f038620ecf977a1c" }
 
 [workspace.dependencies]
