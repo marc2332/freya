@@ -4,6 +4,7 @@ use freya_common::CachedParagraph;
 use freya_core::{
     dom::DioxusNode,
     layout::create_paragraph,
+    prelude::align_main_align_paragraph,
 };
 use freya_engine::prelude::*;
 use freya_native_core::{
@@ -23,10 +24,11 @@ pub fn render_paragraph(
     default_fonts: &[String],
     scale_factor: f32,
 ) {
-    let (x, y) = area.origin.to_tuple();
     let node_cursor_settings = &*dioxus_node.get::<CursorSettings>().unwrap();
 
     let paint = |paragraph: &Paragraph| {
+        let (x, y) = align_main_align_paragraph(dioxus_node, area, paragraph).to_tuple();
+
         // Draw the highlights if specified
         draw_cursor_highlights(area, paragraph, canvas, dioxus_node);
 
@@ -58,6 +60,7 @@ fn draw_cursor_highlights(
     canvas: &Canvas,
     dioxus_node: &DioxusNode,
 ) -> Option<()> {
+    let (x, y) = align_main_align_paragraph(dioxus_node, area, paragraph).to_tuple();
     let node_cursor_settings = &*dioxus_node.get::<CursorSettings>().unwrap();
 
     let highlights = node_cursor_settings.highlights.as_ref()?;
@@ -77,8 +80,8 @@ fn draw_cursor_highlights(
             RectWidthStyle::Tight,
         );
         for cursor_rect in cursor_rects {
-            let x = area.min_x() + cursor_rect.rect.left;
-            let y = area.min_y() + cursor_rect.rect.top;
+            let x = x + cursor_rect.rect.left;
+            let y = y + cursor_rect.rect.top;
 
             let x2 = x + (cursor_rect.rect.right - cursor_rect.rect.left);
             let y2 = y + (cursor_rect.rect.bottom - cursor_rect.rect.top);
@@ -101,6 +104,7 @@ fn draw_cursor(
     canvas: &Canvas,
     dioxus_node: &DioxusNode,
 ) -> Option<()> {
+    let (x, y) = align_main_align_paragraph(dioxus_node, area, paragraph).to_tuple();
     let node_cursor_settings = &*dioxus_node.get::<CursorSettings>().unwrap();
 
     let cursor = node_cursor_settings.position?;
@@ -114,8 +118,8 @@ fn draw_cursor(
     );
     let cursor_rect = cursor_rects.first()?;
 
-    let x = area.min_x() + cursor_rect.rect.left;
-    let y = area.min_y() + cursor_rect.rect.top;
+    let x = x + cursor_rect.rect.left;
+    let y = y + cursor_rect.rect.top;
 
     let x2 = x + 1.0;
     let y2 = y + (cursor_rect.rect.bottom - cursor_rect.rect.top);

@@ -124,7 +124,7 @@ pub fn render_skia(
                 render_rect(&area, dioxus_node, canvas, font_collection, scale_factor);
             }
             TagName::Label => {
-                render_label(&area, data, canvas);
+                render_label(&area, data, dioxus_node, canvas);
             }
             TagName::Paragraph => {
                 render_paragraph(
