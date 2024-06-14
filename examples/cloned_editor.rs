@@ -138,7 +138,7 @@ fn Body() -> Element {
                     width: "50%".into(),
                 }),
                 length: editor.len_lines(),
-                item_size: 100.0,
+                item_size: 60.0,
                 scroll_with_arrows: false,
                 cache_elements: false,
                 builder: move |line_index, _: &Option<()>| {
@@ -175,7 +175,7 @@ fn Body() -> Element {
                         rect {
                             key: "{line_index}",
                             width: "100%",
-                            height: "100",
+                            height: "60",
                             direction: "horizontal",
                             background: "{line_background}",
                             label {
