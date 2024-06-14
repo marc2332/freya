@@ -122,7 +122,7 @@ fn Body() -> Element {
                                 cursor_id: "{line_index}",
                                 onmousedown,
                                 onmouseover,
-                                highlights: highlights,
+                                highlights,
                                 text {
                                     color: "rgb(240, 240, 240)",
                                     font_size: "15",
@@ -198,7 +198,8 @@ fn Body() -> Element {
                                 cursor_id: "{line_index}",
                                 onmousedown,
                                 onmouseover,
-                                highlights: highlights,
+                                highlights,
+                                highlight_mode: "expanded",
                                 text {
                                     color: "rgb(240, 240, 240)",
                                     font_size: "15",

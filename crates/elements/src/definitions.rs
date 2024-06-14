@@ -386,6 +386,7 @@ builder_constructors! {
         focus_id: AccessibilityId,
         highlights: String,
         highlight_color: String,
+        highlight_mode: String,
     };
     /// `text` element is simply a text span used for the `paragraph` element.
     text {

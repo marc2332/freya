@@ -18,7 +18,8 @@ pub fn render_label(
 ) {
     let paragraph = &data.as_ref().unwrap().get::<CachedParagraph>().unwrap().0;
 
-    let (x, y) = align_main_align_paragraph(dioxus_node, area, paragraph).to_tuple();
+    let x = area.min_x();
+    let y = align_main_align_paragraph(dioxus_node, area, paragraph);
 
     paragraph.paint(canvas, (x, y));
 }

@@ -20,6 +20,7 @@ use crate::{
     CursorMode,
     CursorReference,
     CustomAttributeValues,
+    HighlightMode,
     Parse,
 };
 
@@ -31,6 +32,7 @@ pub struct CursorSettings {
     pub cursor_id: Option<usize>,
     pub highlights: Option<Vec<(usize, usize)>>,
     pub highlight_color: Color,
+    pub highlight_mode: HighlightMode,
     pub cursor_ref: Option<CursorReference>,
 }
 
@@ -43,6 +45,7 @@ impl Default for CursorSettings {
             cursor_id: None,
             highlights: None,
             highlight_color: Color::from_rgb(87, 108, 188),
+            highlight_mode: HighlightMode::default(),
             cursor_ref: None,
         }
     }
@@ -64,6 +67,7 @@ impl State<CustomAttributeValues> for CursorSettings {
             AttributeName::CursorId,
             AttributeName::Highlights,
             AttributeName::HighlightColor,
+            AttributeName::HighlightMode,
             AttributeName::CursorReference,
         ]))
         .with_tag();
@@ -121,6 +125,13 @@ impl State<CustomAttributeValues> for CursorSettings {
                         if let Some(value) = attr.value.as_text() {
                             if let Ok(highlight_color) = Color::parse(value) {
                                 cursor.highlight_color = highlight_color;
+                            }
+                        }
+                    }
+                    AttributeName::HighlightMode => {
+                        if let Some(value) = attr.value.as_text() {
+                            if let Ok(highlight_mode) = HighlightMode::parse(value) {
+                                cursor.highlight_mode = highlight_mode;
                             }
                         }
                     }
