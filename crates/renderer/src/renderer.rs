@@ -106,6 +106,7 @@ pub struct CreatedState {
     pub(crate) num_samples: usize,
     pub(crate) stencil_size: usize,
     pub(crate) app: Application,
+    pub(crate) is_window_focused: bool,
 }
 
 #[derive(Default)]
@@ -331,6 +332,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                 stencil_size,
                 app,
                 window_config: config.window_config,
+                is_window_focused: false,
             });
             self.run_on_setup();
         }
@@ -416,6 +418,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
             fb_info,
             num_samples,
             stencil_size,
+            is_window_focused,
             ..
         } = self.state.created_state();
         app.accessibility
@@ -506,6 +509,10 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                     },
                 ..
             } => {
+                if !*is_window_focused {
+                    return;
+                }
+
                 let name = match state {
                     ElementState::Pressed => EventName::KeyDown,
                     ElementState::Released => EventName::KeyUp,
@@ -597,6 +604,9 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                     file_path: None,
                     cursor: self.cursor_pos,
                 });
+            }
+            WindowEvent::Focused(is_focused) => {
+                *is_window_focused = is_focused;
             }
             _ => {}
         }
