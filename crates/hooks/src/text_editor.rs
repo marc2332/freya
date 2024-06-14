@@ -150,7 +150,7 @@ pub trait TextEditor {
                 let new_row = old_row + 1;
                 let new_row_char = self.line_to_char(new_row);
                 let new_row_len = self.line(new_row).unwrap().len_chars();
-                let new_col = old_col.min(new_row_len - 1);
+                let new_col = old_col.min(new_row_len.max(1) - 1);
                 self.cursor_mut().set(new_row_char + new_col);
 
                 true
@@ -184,7 +184,7 @@ pub trait TextEditor {
                 let new_row = old_row - 1;
                 let new_row_char = self.line_to_char(new_row);
                 let new_row_len = self.line(new_row).unwrap().len_chars();
-                let new_col = old_col.min(new_row_len - 1);
+                let new_col = old_col.min(new_row_len.max(1) - 1);
                 self.cursor_mut().set(new_row_char + new_col);
             }
 
