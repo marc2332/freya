@@ -37,10 +37,8 @@ use freya_node_state::{
 use torin::prelude::*;
 use tracing::info;
 
-use super::{
-    mutations_writer::MutationsWriter,
-    paragraph_utils::measure_paragraph,
-};
+use super::mutations_writer::MutationsWriter;
+use crate::prelude::measure_paragraph;
 
 pub type DioxusDOM = RealDom<CustomAttributeValues>;
 pub type DioxusNode<'a> = NodeRef<'a, CustomAttributeValues>;

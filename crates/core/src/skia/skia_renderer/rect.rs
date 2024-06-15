@@ -1,4 +1,3 @@
-use freya_core::dom::DioxusNode;
 use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
 use freya_node_state::{
@@ -13,6 +12,8 @@ use torin::{
     prelude::Area,
     scaled::Scaled,
 };
+
+use crate::dom::DioxusNode;
 
 /// Render a `rect` element
 pub fn render_rect(
