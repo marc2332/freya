@@ -1,14 +1,6 @@
 use std::sync::Arc;
 
 use freya_common::CachedParagraph;
-use freya_core::{
-    dom::DioxusNode,
-    layout::create_paragraph,
-    prelude::{
-        align_highlights_and_cursor_paragraph,
-        align_main_align_paragraph,
-    },
-};
 use freya_engine::prelude::*;
 use freya_native_core::{
     real_dom::NodeImmutable,
@@ -16,6 +8,15 @@ use freya_native_core::{
 };
 use freya_node_state::CursorSettings;
 use torin::geometry::Area;
+
+use crate::{
+    dom::DioxusNode,
+    prelude::{
+        align_highlights_and_cursor_paragraph,
+        align_main_align_paragraph,
+    },
+    skia::create_paragraph,
+};
 
 /// Render a `paragraph` element
 pub fn render_paragraph(

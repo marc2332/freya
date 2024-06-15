@@ -1,8 +1,9 @@
-use freya_core::dom::DioxusNode;
 use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
 use freya_node_state::Style;
 use torin::geometry::Area;
+
+use crate::dom::DioxusNode;
 
 /// Render a `svg` element
 pub fn render_svg(area: &Area, node_ref: &DioxusNode, canvas: &Canvas, font_manager: &FontMgr) {

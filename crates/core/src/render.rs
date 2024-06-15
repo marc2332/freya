@@ -1,4 +1,3 @@
-use freya_engine::prelude::*;
 use freya_native_core::{
     real_dom::NodeImmutable,
     NodeId,
@@ -15,8 +14,7 @@ use crate::dom::FreyaDOM;
 /// Call the render function for the nodes that should be rendered.
 pub fn process_render(
     fdom: &FreyaDOM,
-    font_collection: &mut FontCollection,
-    mut render_fn: impl FnMut(&FreyaDOM, &NodeId, &LayoutNode, &mut FontCollection, &Torin<NodeId>),
+    mut render_fn: impl FnMut(&FreyaDOM, &NodeId, &LayoutNode, &Torin<NodeId>),
 ) {
     let layout = fdom.layout();
     let rdom = fdom.rdom();
@@ -40,7 +38,7 @@ pub fn process_render(
                 }
 
                 // Render the element
-                render_fn(fdom, node_id, layout_node, font_collection, &layout)
+                render_fn(fdom, node_id, layout_node, &layout)
             }
         }
     }
