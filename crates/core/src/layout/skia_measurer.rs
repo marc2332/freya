@@ -225,6 +225,21 @@ pub fn align_cursor_paragraph(
     }
 }
 
+/// Align relatively the main alignment of a paragraph
+pub fn relative_align_main_align_paragraph(
+    node: &DioxusNode,
+    area: &Area,
+    paragraph: &Paragraph,
+) -> f32 {
+    let layout = node.get::<LayoutState>().unwrap();
+
+    match layout.main_alignment {
+        Alignment::Start => 0.,
+        Alignment::Center => (area.height() / 2.0) - (paragraph.height() / 2.0),
+        Alignment::End => area.height() - paragraph.height(),
+    }
+}
+
 /// Compose a new SkParagraph
 pub fn create_paragraph(
     node: &DioxusNode,
