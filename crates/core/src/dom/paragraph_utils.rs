@@ -11,7 +11,7 @@ use torin::prelude::*;
 
 use crate::{
     dom::DioxusNode,
-    layout::relative_align_main_align_paragraph,
+    layout::align_main_align_paragraph,
 };
 
 pub fn measure_paragraph(
@@ -36,7 +36,7 @@ pub fn measure_paragraph(
         return;
     }
 
-    let y = relative_align_main_align_paragraph(node, &layout_node.area, paragraph);
+    let y = align_main_align_paragraph(node, &layout_node.area, paragraph);
 
     if let Some(cursor_reference) = &cursor_settings.cursor_ref {
         if let Some(cursor_position) = text_measurement.cursor_position {

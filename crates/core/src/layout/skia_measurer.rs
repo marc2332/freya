@@ -158,79 +158,39 @@ pub fn create_label(
     paragraph
 }
 
+/// Align the Y axis of the highlights and cursor of a paragraph
+pub fn align_highlights_and_cursor_paragraph(
+    node: &DioxusNode,
+    area: &Area,
+    paragraph: &Paragraph,
+    cursor_rect: &TextBox,
+    width: Option<f32>,
+) -> (Point2D, Point2D) {
+    let cursor_settings = node.get::<CursorSettings>().unwrap();
+
+    let x = area.min_x() + cursor_rect.rect.left;
+    let x2 = x + width.unwrap_or(cursor_rect.rect.right - cursor_rect.rect.left);
+
+    match cursor_settings.highlight_mode {
+        HighlightMode::Fit => {
+            let y = area.min_y()
+                + align_main_align_paragraph(node, area, paragraph)
+                + cursor_rect.rect.top;
+            let y2 = y + (cursor_rect.rect.bottom - cursor_rect.rect.top);
+
+            (Point2D::new(x, y), Point2D::new(x2, y2))
+        }
+        HighlightMode::Expanded => {
+            let y = area.min_y();
+            let y2 = area.max_y();
+
+            (Point2D::new(x, y), Point2D::new(x2, y2))
+        }
+    }
+}
+
 /// Align the main alignment of a paragraph
 pub fn align_main_align_paragraph(node: &DioxusNode, area: &Area, paragraph: &Paragraph) -> f32 {
-    let layout = node.get::<LayoutState>().unwrap();
-
-    match layout.main_alignment {
-        Alignment::Start => area.origin.y,
-        Alignment::Center => area.min_y() + (area.height() / 2.0) - (paragraph.height() / 2.0),
-        Alignment::End => area.max_y() - paragraph.height(),
-    }
-}
-
-/// Align the highlights of a paragraph
-pub fn align_highlights_paragraph(
-    node: &DioxusNode,
-    area: &Area,
-    paragraph: &Paragraph,
-    cursor_rect: &TextBox,
-) -> (Point2D, Point2D) {
-    let cursor_settings = node.get::<CursorSettings>().unwrap();
-
-    let x = area.min_x() + cursor_rect.rect.left;
-    let x2 = x + (cursor_rect.rect.right - cursor_rect.rect.left);
-
-    match cursor_settings.highlight_mode {
-        HighlightMode::Fit => {
-            let y = align_main_align_paragraph(node, area, paragraph) + cursor_rect.rect.top;
-            let y2 = y + (cursor_rect.rect.bottom - cursor_rect.rect.top);
-
-            (Point2D::new(x, y), Point2D::new(x2, y2))
-        }
-        HighlightMode::Expanded => {
-            let y = area.min_y();
-            let y2 = area.max_y();
-
-            (Point2D::new(x, y), Point2D::new(x2, y2))
-        }
-    }
-}
-
-/// Align the highlights of a paragraph
-pub fn align_cursor_paragraph(
-    node: &DioxusNode,
-    area: &Area,
-    paragraph: &Paragraph,
-    cursor_rect: &TextBox,
-) -> (Point2D, Point2D) {
-    let cursor_settings = node.get::<CursorSettings>().unwrap();
-
-    let x = area.min_x() + cursor_rect.rect.left;
-    let x2 = x + 1.0;
-
-    match cursor_settings.highlight_mode {
-        HighlightMode::Fit => {
-            let y = align_main_align_paragraph(node, area, paragraph) + cursor_rect.rect.top;
-            let y2 = y + (cursor_rect.rect.bottom - cursor_rect.rect.top);
-
-            (Point2D::new(x, y), Point2D::new(x2, y2))
-        }
-        HighlightMode::Expanded => {
-            let y = area.min_y();
-            let y2 = area.max_y();
-
-            (Point2D::new(x, y), Point2D::new(x2, y2))
-        }
-    }
-}
-
-/// Align relatively the main alignment of a paragraph
-pub fn relative_align_main_align_paragraph(
-    node: &DioxusNode,
-    area: &Area,
-    paragraph: &Paragraph,
-) -> f32 {
     let layout = node.get::<LayoutState>().unwrap();
 
     match layout.main_alignment {

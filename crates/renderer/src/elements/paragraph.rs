@@ -5,8 +5,7 @@ use freya_core::{
     dom::DioxusNode,
     layout::create_paragraph,
     prelude::{
-        align_cursor_paragraph,
-        align_highlights_paragraph,
+        align_highlights_and_cursor_paragraph,
         align_main_align_paragraph,
     },
 };
@@ -32,7 +31,7 @@ pub fn render_paragraph(
 
     let paint = |paragraph: &Paragraph| {
         let x = area.min_x();
-        let y = align_main_align_paragraph(dioxus_node, area, paragraph);
+        let y = area.min_y() + align_main_align_paragraph(dioxus_node, area, paragraph);
 
         // Draw the highlights if specified
         draw_cursor_highlights(area, paragraph, canvas, dioxus_node);
@@ -84,8 +83,13 @@ fn draw_cursor_highlights(
             RectWidthStyle::Tight,
         );
         for cursor_rect in cursor_rects {
-            let (start, end) =
-                align_highlights_paragraph(dioxus_node, area, paragraph, &cursor_rect);
+            let (start, end) = align_highlights_and_cursor_paragraph(
+                dioxus_node,
+                area,
+                paragraph,
+                &cursor_rect,
+                None,
+            );
 
             let mut paint = Paint::default();
             paint.set_anti_alias(true);
@@ -118,7 +122,8 @@ fn draw_cursor(
     );
     let cursor_rect = cursor_rects.first()?;
 
-    let (start, end) = align_cursor_paragraph(dioxus_node, area, paragraph, cursor_rect);
+    let (start, end) =
+        align_highlights_and_cursor_paragraph(dioxus_node, area, paragraph, cursor_rect, Some(1.0));
 
     let mut paint = Paint::default();
     paint.set_anti_alias(true);
