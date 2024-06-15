@@ -6,7 +6,7 @@ use freya_native_core::{
     real_dom::NodeImmutable,
     SendAnyMap,
 };
-use freya_node_state::CursorSettings;
+use freya_node_state::CursorState;
 use torin::geometry::Area;
 
 use crate::{
@@ -28,7 +28,7 @@ pub fn render_paragraph(
     default_fonts: &[String],
     scale_factor: f32,
 ) {
-    let node_cursor_settings = &*dioxus_node.get::<CursorSettings>().unwrap();
+    let node_cursor_state = &*dioxus_node.get::<CursorState>().unwrap();
 
     let paint = |paragraph: &Paragraph| {
         let x = area.min_x();
@@ -43,7 +43,7 @@ pub fn render_paragraph(
         paragraph.paint(canvas, (x, y));
     };
 
-    if node_cursor_settings.position.is_some() {
+    if node_cursor_state.position.is_some() {
         let paragraph = create_paragraph(
             dioxus_node,
             &area.size,
@@ -65,10 +65,10 @@ fn draw_cursor_highlights(
     canvas: &Canvas,
     dioxus_node: &DioxusNode,
 ) -> Option<()> {
-    let node_cursor_settings = &*dioxus_node.get::<CursorSettings>().unwrap();
+    let node_cursor_state = &*dioxus_node.get::<CursorState>().unwrap();
 
-    let highlights = node_cursor_settings.highlights.as_ref()?;
-    let highlight_color = node_cursor_settings.highlight_color;
+    let highlights = node_cursor_state.highlights.as_ref()?;
+    let highlight_color = node_cursor_state.highlight_color;
 
     for (from, to) in highlights.iter() {
         let (from, to) = {
@@ -110,10 +110,10 @@ fn draw_cursor(
     canvas: &Canvas,
     dioxus_node: &DioxusNode,
 ) -> Option<()> {
-    let node_cursor_settings = &*dioxus_node.get::<CursorSettings>().unwrap();
+    let node_cursor_state = &*dioxus_node.get::<CursorState>().unwrap();
 
-    let cursor = node_cursor_settings.position?;
-    let cursor_color = node_cursor_settings.color;
+    let cursor = node_cursor_state.position?;
+    let cursor_color = node_cursor_state.color;
     let cursor_position = cursor as usize;
 
     let cursor_rects = paragraph.get_rects_for_range(

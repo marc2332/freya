@@ -7,8 +7,8 @@ use freya_native_core::{
     NodeId,
 };
 use freya_node_state::{
-    Style,
-    Transform,
+    StyleState,
+    TransformState,
     ViewportState,
 };
 use torin::{
@@ -67,8 +67,8 @@ impl SkiaRenderer<'_> {
         if let NodeType::Element(ElementNode { tag, .. }) = node_type {
             self.canvas.save();
 
-            let node_transform = &*dioxus_node.get::<Transform>().unwrap();
-            let node_style = &*dioxus_node.get::<Style>().unwrap();
+            let node_transform = &*dioxus_node.get::<TransformState>().unwrap();
+            let node_style = &*dioxus_node.get::<StyleState>().unwrap();
 
             // Pass rotate effect to children
             if let Some(rotate_degs) = node_transform.rotate_degs {

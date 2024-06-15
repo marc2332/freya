@@ -6,7 +6,7 @@ use freya_common::{
     TextGroupMeasurement,
 };
 use freya_native_core::prelude::NodeImmutable;
-use freya_node_state::CursorSettings;
+use freya_node_state::CursorState;
 use torin::prelude::{
     CursorPoint,
     LayoutNode,
@@ -32,17 +32,17 @@ pub fn measure_paragraph(
         .unwrap()
         .0;
 
-    let cursor_settings = node.get::<CursorSettings>().unwrap();
+    let cursor_state = node.get::<CursorState>().unwrap();
 
     let scale_factors = scale_factor as f64;
 
-    if cursor_settings.cursor_id != Some(text_measurement.cursor_id) {
+    if cursor_state.cursor_id != Some(text_measurement.cursor_id) {
         return;
     }
 
     let y = align_main_align_paragraph(node, &layout_node.area, paragraph);
 
-    if let Some(cursor_reference) = &cursor_settings.cursor_ref {
+    if let Some(cursor_reference) = &cursor_state.cursor_ref {
         if let Some(cursor_position) = text_measurement.cursor_position {
             let position = CursorPoint::new(cursor_position.x, cursor_position.y - y as f64);
 

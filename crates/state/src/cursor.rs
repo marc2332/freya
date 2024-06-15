@@ -25,7 +25,7 @@ use crate::{
 };
 
 #[derive(Clone, Debug, PartialEq, Component)]
-pub struct CursorSettings {
+pub struct CursorState {
     pub position: Option<i32>,
     pub color: Color,
     pub mode: CursorMode,
@@ -36,7 +36,7 @@ pub struct CursorSettings {
     pub cursor_ref: Option<CursorReference>,
 }
 
-impl Default for CursorSettings {
+impl Default for CursorState {
     fn default() -> Self {
         Self {
             position: None,
@@ -52,7 +52,7 @@ impl Default for CursorSettings {
 }
 
 #[partial_derive_state]
-impl State<CustomAttributeValues> for CursorSettings {
+impl State<CustomAttributeValues> for CursorState {
     type ParentDependencies = (Self,);
 
     type ChildDependencies = ();

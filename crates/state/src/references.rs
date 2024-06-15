@@ -20,13 +20,13 @@ use crate::{
 };
 
 #[derive(Default, PartialEq, Clone, Debug, Component)]
-pub struct References {
+pub struct ReferencesState {
     pub image_ref: Option<ImageReference>,
     pub canvas_ref: Option<CanvasReference>,
 }
 
 #[partial_derive_state]
-impl State<CustomAttributeValues> for References {
+impl State<CustomAttributeValues> for ReferencesState {
     type ParentDependencies = ();
 
     type ChildDependencies = ();
@@ -48,7 +48,7 @@ impl State<CustomAttributeValues> for References {
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
         _context: &SendAnyMap,
     ) -> bool {
-        let mut references = References::default();
+        let mut references = ReferencesState::default();
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {

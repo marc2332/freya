@@ -6,7 +6,7 @@ use freya_native_core::{
 };
 use freya_node_state::{
     Fill,
-    Style,
+    StyleState,
     ViewportState,
 };
 use itertools::sorted;
@@ -232,7 +232,7 @@ fn measure_dom_events(
                     }
                 }
 
-                let Style { background, .. } = &*node.get::<Style>().unwrap();
+                let StyleState { background, .. } = &*node.get::<StyleState>().unwrap();
 
                 if background != &Fill::Color(Color::TRANSPARENT)
                     && !event.get_name().does_go_through_solid()

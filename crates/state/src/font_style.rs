@@ -54,7 +54,7 @@ impl FontStyleState {
 
         text_style
             .set_color(self.color)
-            .set_font_style(freya_engine::prelude::FontStyle::new(
+            .set_font_style(FontStyle::new(
                 self.font_weight,
                 self.font_width,
                 self.font_slant,

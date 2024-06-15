@@ -6,7 +6,7 @@ use freya_native_core::{
 };
 use freya_node_state::{
     CustomAttributeValues,
-    Style,
+    StyleState,
     ViewportState,
 };
 use torin::{
@@ -68,14 +68,14 @@ impl TestNode {
     }
 
     /// Get the Node style
-    pub fn style(&self) -> Style {
+    pub fn style(&self) -> StyleState {
         self.utils
             .sdom
             .get()
             .rdom()
             .get(self.node_id)
             .unwrap()
-            .get::<Style>()
+            .get::<StyleState>()
             .unwrap()
             .clone()
     }
