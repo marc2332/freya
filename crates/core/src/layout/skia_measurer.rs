@@ -21,9 +21,12 @@ use freya_node_state::{
     TextOverflow,
 };
 use torin::prelude::{
+    Alignment,
+    Area,
     LayoutMeasurer,
     LayoutNode,
     Node,
+    Point2D,
     Size2D,
 };
 
@@ -151,6 +154,39 @@ pub fn create_label(
     let mut paragraph = paragraph_builder.build();
     paragraph.layout(area_size.width + 1.0);
     paragraph
+}
+
+/// Align the main alignment of a paragraph
+pub fn align_main_align_paragraph(
+    node: &DioxusNode,
+    area: &Area,
+    paragraph: &Paragraph,
+) -> Point2D {
+    let layout = node.get::<LayoutState>().unwrap();
+
+    match layout.main_alignment {
+        Alignment::Start => area.origin,
+        Alignment::Center => Point2D::new(
+            area.min_x(),
+            area.min_y() + (area.height() / 2.0) - (paragraph.height() / 2.0),
+        ),
+        Alignment::End => Point2D::new(area.min_x(), area.max_y() - paragraph.height()),
+    }
+}
+
+/// Align relatively the main alignment of a paragraph
+pub fn relative_align_main_align_paragraph(
+    node: &DioxusNode,
+    area: &Area,
+    paragraph: &Paragraph,
+) -> f32 {
+    let layout = node.get::<LayoutState>().unwrap();
+
+    match layout.main_alignment {
+        Alignment::Start => 0.,
+        Alignment::Center => (area.height() / 2.0) - (paragraph.height() / 2.0),
+        Alignment::End => area.height() - paragraph.height(),
+    }
 }
 
 /// Compose a new SkParagraph

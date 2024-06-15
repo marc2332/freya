@@ -9,7 +9,10 @@ use freya_native_core::real_dom::NodeImmutable;
 use freya_node_state::CursorSettings;
 use torin::prelude::*;
 
-use crate::dom::DioxusNode;
+use crate::{
+    dom::DioxusNode,
+    layout::relative_align_main_align_paragraph,
+};
 
 pub fn measure_paragraph(
     node: &DioxusNode,
@@ -33,12 +36,15 @@ pub fn measure_paragraph(
         return;
     }
 
+    let y = relative_align_main_align_paragraph(node, &layout_node.area, paragraph);
+
     if let Some(cursor_reference) = &cursor_settings.cursor_ref {
         if let Some(cursor_position) = text_measurement.cursor_position {
+            let position = CursorPoint::new(cursor_position.x, cursor_position.y - y as f64);
+
             // Calculate the new cursor position
-            let char_position = paragraph.get_glyph_position_at_coordinate(
-                cursor_position.mul(scale_factors).to_i32().to_tuple(),
-            );
+            let char_position = paragraph
+                .get_glyph_position_at_coordinate(position.mul(scale_factors).to_i32().to_tuple());
 
             // Notify the cursor reference listener
             cursor_reference
@@ -51,12 +57,17 @@ pub fn measure_paragraph(
         }
 
         if let Some((origin, dist)) = text_measurement.cursor_selection {
+            let origin_position = CursorPoint::new(origin.x, origin.y - y as f64);
+            let dist_position = CursorPoint::new(dist.x, dist.y - y as f64);
+
             // Calculate the start of the highlighting
-            let origin_char = paragraph
-                .get_glyph_position_at_coordinate(origin.mul(scale_factors).to_i32().to_tuple());
+            let origin_char = paragraph.get_glyph_position_at_coordinate(
+                origin_position.mul(scale_factors).to_i32().to_tuple(),
+            );
             // Calculate the end of the highlighting
-            let dist_char = paragraph
-                .get_glyph_position_at_coordinate(dist.mul(scale_factors).to_i32().to_tuple());
+            let dist_char = paragraph.get_glyph_position_at_coordinate(
+                dist_position.mul(scale_factors).to_i32().to_tuple(),
+            );
 
             cursor_reference
                 .cursor_sender

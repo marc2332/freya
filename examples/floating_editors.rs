@@ -325,19 +325,19 @@ fn Editor() -> Element {
                                         direction: "horizontal",
                                         background: "{line_background}",
                                         corner_radius: "7",
-                                        rect {
-                                            width: "{font_size}",
+                                        label {
+                                            width: "{font_size * 2.0}",
                                             height: "100%",
                                             main_align: "center",
-                                            direction: "horizontal",
-                                            label {
-                                                font_size: "{font_size}",
-                                                color: "rgb(200, 200, 200)",
-                                                "{line_index} "
-                                            }
+                                            text_align: "center",
+                                            font_size: "{font_size}",
+                                            color: "rgb(200, 200, 200)",
+                                            "{line_index} "
                                         }
                                         paragraph {
+                                            height: "100%",
                                             width: "100%",
+                                            main_align: "center",
                                             cursor_index: "{character_index}",
                                             cursor_color: "white",
                                             max_lines: "1",
