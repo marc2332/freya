@@ -15,6 +15,7 @@ mod app;
 mod config;
 pub mod devtools;
 mod renderer;
+mod window_state;
 mod winit_waker;
 
 pub type HoveredNode = Option<Arc<Mutex<Option<NodeId>>>>;
