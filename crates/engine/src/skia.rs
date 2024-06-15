@@ -6,6 +6,7 @@ pub use skia_safe::{
     },
     gpu::{
         backend_render_targets,
+        direct_contexts,
         gl::{
             Format,
             FramebufferInfo,
