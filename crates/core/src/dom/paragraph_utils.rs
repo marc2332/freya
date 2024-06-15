@@ -35,10 +35,8 @@ pub fn measure_paragraph(
     if cursor_settings.cursor_id != Some(text_measurement.cursor_id) {
         return;
     }
-    println!("{layout_node:?}");
-    let y = relative_align_main_align_paragraph(node, &layout_node.area, paragraph);
 
-    println!("{y}");
+    let y = relative_align_main_align_paragraph(node, &layout_node.area, paragraph);
 
     if let Some(cursor_reference) = &cursor_settings.cursor_ref {
         if let Some(cursor_position) = text_measurement.cursor_position {
