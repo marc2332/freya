@@ -1418,7 +1418,7 @@ pub enum SurfaceOrigin {
 #[derive(Debug)]
 pub struct ContextOptions;
 
-mod direct_contexts {
+pub mod direct_contexts {
     use super::{
         ContextOptions,
         DirectContext,
