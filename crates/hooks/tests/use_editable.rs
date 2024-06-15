@@ -514,12 +514,12 @@ pub async fn highlights_single_line_mulitple_editors() {
     #[cfg(not(target_os = "linux"))]
     let start = 5;
     #[cfg(not(target_os = "linux"))]
-    let end = 17;
+    let end = 16;
 
     #[cfg(target_os = "linux")]
     let start = 4;
     #[cfg(target_os = "linux")]
-    let end = 17;
+    let end = 16;
 
     assert_eq!(highlights_1, Some(vec![(start, end)]));
 
@@ -1102,12 +1102,12 @@ pub async fn highlights_shift_click_single_line_mulitple_editors() {
     #[cfg(not(target_os = "linux"))]
     let start = 5;
     #[cfg(not(target_os = "linux"))]
-    let end = 17;
+    let end = 16;
 
     #[cfg(target_os = "linux")]
     let start = 4;
     #[cfg(target_os = "linux")]
-    let end = 17;
+    let end = 16;
 
     assert_eq!(highlights_1, Some(vec![(start, end)]));
 
