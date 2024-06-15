@@ -109,6 +109,7 @@ impl<'a, State: Clone + 'a> WindowState<'a, State> {
         };
 
         let mut window_attributes = Window::default_attributes()
+            .with_visible(false)
             .with_title(config.window_config.title)
             .with_decorations(config.window_config.decorations)
             .with_transparent(config.window_config.transparent)
@@ -169,6 +170,9 @@ impl<'a, State: Clone + 'a> WindowState<'a, State> {
 
         // Allow IME
         window.set_ime_allowed(true);
+
+        // Mak the window visible once built
+        window.set_visible(true);
 
         let window_handle = window.window_handle().unwrap();
 
