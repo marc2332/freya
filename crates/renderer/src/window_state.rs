@@ -237,7 +237,7 @@ impl<'a, State: Clone + 'a> WindowState<'a, State> {
         .expect("Could not create interface");
 
         let mut gr_context =
-            DirectContext::new_gl(interface, None).expect("Could not create direct context");
+            direct_contexts::make_gl(interface, None).expect("Could not create direct context");
 
         let fb_info = {
             let mut fboid: GLint = 0;
