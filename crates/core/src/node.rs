@@ -3,15 +3,15 @@ use freya_native_core::real_dom::NodeImmutable;
 use freya_node_state::{
     Border,
     CornerRadius,
-    CursorSettings,
+    CursorState,
     Fill,
     FontStyleState,
     LayoutState,
-    References,
+    ReferencesState,
     Shadow,
-    Style,
+    StyleState,
     TextOverflow,
-    Transform,
+    TransformState,
 };
 use torin::{
     alignment::Alignment,
@@ -24,17 +24,17 @@ use crate::dom::DioxusNode;
 
 #[derive(Clone, PartialEq)]
 pub struct NodeState {
-    pub cursor: CursorSettings,
+    pub cursor: CursorState,
     pub font_style: FontStyleState,
-    pub references: References,
+    pub references: ReferencesState,
     pub size: LayoutState,
-    pub style: Style,
-    pub transform: Transform,
+    pub style: StyleState,
+    pub transform: TransformState,
 }
 
 pub fn get_node_state(node: &DioxusNode) -> NodeState {
     let cursor = node
-        .get::<CursorSettings>()
+        .get::<CursorState>()
         .as_deref()
         .cloned()
         .unwrap_or_default();
@@ -44,7 +44,7 @@ pub fn get_node_state(node: &DioxusNode) -> NodeState {
         .cloned()
         .unwrap_or_default();
     let references = node
-        .get::<References>()
+        .get::<ReferencesState>()
         .as_deref()
         .cloned()
         .unwrap_or_default();
@@ -53,9 +53,13 @@ pub fn get_node_state(node: &DioxusNode) -> NodeState {
         .as_deref()
         .cloned()
         .unwrap_or_default();
-    let style = node.get::<Style>().as_deref().cloned().unwrap_or_default();
+    let style = node
+        .get::<StyleState>()
+        .as_deref()
+        .cloned()
+        .unwrap_or_default();
     let transform = node
-        .get::<Transform>()
+        .get::<TransformState>()
         .as_deref()
         .cloned()
         .unwrap_or_default();

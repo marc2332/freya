@@ -16,7 +16,7 @@ use freya_native_core::{
     NodeId,
 };
 use freya_node_state::{
-    CursorSettings,
+    CursorState,
     FontStyleState,
     HighlightMode,
     LayoutState,
@@ -166,12 +166,12 @@ pub fn align_highlights_and_cursor_paragraph(
     cursor_rect: &TextBox,
     width: Option<f32>,
 ) -> (Point2D, Point2D) {
-    let cursor_settings = node.get::<CursorSettings>().unwrap();
+    let cursor_state = node.get::<CursorState>().unwrap();
 
     let x = area.min_x() + cursor_rect.rect.left;
     let x2 = x + width.unwrap_or(cursor_rect.rect.right - cursor_rect.rect.left);
 
-    match cursor_settings.highlight_mode {
+    match cursor_state.highlight_mode {
         HighlightMode::Fit => {
             let y = area.min_y()
                 + align_main_align_paragraph(node, area, paragraph)

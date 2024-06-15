@@ -4,9 +4,9 @@ use freya_node_state::{
     BorderAlignment,
     BorderStyle,
     Fill,
-    References,
+    ReferencesState,
     ShadowPosition,
-    Style,
+    StyleState,
 };
 use torin::{
     prelude::Area,
@@ -23,7 +23,7 @@ pub fn render_rect(
     font_collection: &mut FontCollection,
     scale_factor: f32,
 ) {
-    let node_style = &*node_ref.get::<Style>().unwrap();
+    let node_style = &*node_ref.get::<StyleState>().unwrap();
 
     let mut paint = Paint::default();
     let mut path = Path::new();
@@ -186,7 +186,7 @@ pub fn render_rect(
         canvas.draw_path(&border_path, &border_paint);
     }
 
-    let references = node_ref.get::<References>().unwrap();
+    let references = node_ref.get::<ReferencesState>().unwrap();
 
     if let Some(canvas_ref) = &references.canvas_ref {
         (canvas_ref.runner)(canvas, font_collection, area, scale_factor);
