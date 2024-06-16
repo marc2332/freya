@@ -171,7 +171,8 @@ impl<'a, State: Clone + 'static> DesktopRenderer<'a, State> {
 impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, State> {
     fn resumed(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
         if !self.state.has_been_created() {
-            self.state.create(event_loop, &self.event_loop_proxy)
+            self.state.create(event_loop, &self.event_loop_proxy);
+            self.run_on_setup();
         }
     }
 
