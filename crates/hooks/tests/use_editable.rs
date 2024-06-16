@@ -1195,11 +1195,7 @@ pub async fn replace_text() {
     // Cursor has been moved
     let root = utils.root().get(0);
     let cursor = root.get(1).get(0);
-    #[cfg(not(target_os = "linux"))]
     assert_eq!(cursor.text(), Some("0:5"));
-
-    #[cfg(target_os = "linux")]
-    assert_eq!(cursor.text(), Some("0:4"));
 
     // Click cursor
     utils.push_event(PlatformEvent::Mouse {
