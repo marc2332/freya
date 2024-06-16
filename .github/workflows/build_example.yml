@@ -1,0 +1,48 @@
+name: Build example
+
+on:
+  workflow_dispatch:
+    inputs:
+      os:
+        description: "OS"
+        required: true
+        type: choice
+        options:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+      example_name:
+        description: "Example name"
+        required: true
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    if: ${{ always() }}
+    strategy:
+      matrix:
+        os: ["${{ inputs.os }}"]
+      fail-fast: true
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Set up cargo cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: "8"
+
+      - name: Install linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt update && sudo apt install build-essential libssl-dev pkg-config libglib2.0-dev libgtk-3-dev
+
+      - name: Build example
+        run: cargo build --example ${{inputs.example_name}} --release
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          path: target/release/examples/*
