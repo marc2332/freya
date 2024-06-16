@@ -70,6 +70,104 @@ pub struct DesktopRenderer<'a, State: Clone + 'static> {
     pub(crate) dropped_file_path: Option<PathBuf>,
 }
 
+impl<'a, State: Clone + 'static> DesktopRenderer<'a, State> {
+    /// Run the Desktop Renderer.
+    pub fn launch(
+        vdom: VirtualDom,
+        sdom: SafeDOM,
+        config: LaunchConfig<State>,
+        devtools: Option<Devtools>,
+        hovered_node: HoveredNode,
+    ) {
+        let rt = tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+
+        let _guard = rt.enter();
+
+        let event_loop = EventLoop::<EventMessage>::with_user_event()
+            .build()
+            .expect("Failed to create event loop.");
+        let proxy = event_loop.create_proxy();
+
+        // Hotreload support for Dioxus
+        #[cfg(feature = "hot-reload")]
+        {
+            use std::process::exit;
+            let proxy = proxy.clone();
+            dioxus_hot_reload::connect(move |msg| match msg {
+                dioxus_hot_reload::HotReloadMsg::UpdateTemplate(template) => {
+                    let _ = proxy.send_event(EventMessage::UpdateTemplate(template));
+                }
+                dioxus_hot_reload::HotReloadMsg::Shutdown => exit(0),
+                dioxus_hot_reload::HotReloadMsg::UpdateAsset(_) => {}
+            });
+        }
+
+        let mut desktop_renderer =
+            DesktopRenderer::new(vdom, sdom, config, devtools, hovered_node, proxy);
+
+        event_loop.run_app(&mut desktop_renderer).unwrap();
+    }
+
+    pub fn new(
+        vdom: VirtualDom,
+        sdom: SafeDOM,
+        config: LaunchConfig<'a, State>,
+        devtools: Option<Devtools>,
+        hovered_node: HoveredNode,
+        proxy: EventLoopProxy<EventMessage>,
+    ) -> Self {
+        DesktopRenderer {
+            state: WindowState::NotCreated(NotCreatedState {
+                sdom,
+                devtools,
+                vdom,
+                config,
+            }),
+            hovered_node,
+            event_loop_proxy: proxy,
+            cursor_pos: CursorPoint::default(),
+            modifiers_state: ModifiersState::default(),
+            dropped_file_path: None,
+        }
+    }
+
+    // Send and process an event
+    fn send_event(&mut self, event: PlatformEvent) {
+        let scale_factor = self.scale_factor();
+        self.state
+            .created_state()
+            .app
+            .send_event(event, scale_factor);
+    }
+
+    /// Get the current scale factor of the Window
+    fn scale_factor(&self) -> f32 {
+        match &self.state {
+            WindowState::Created(CreatedState { window, .. }) => window.scale_factor() as f32,
+            _ => 0.0,
+        }
+    }
+
+    /// Run the `on_setup` callback that was passed to the launch function
+    pub fn run_on_setup(&mut self) {
+        let state = self.state.created_state();
+        if let Some(on_setup) = &state.window_config.on_setup {
+            (on_setup)(&mut state.window)
+        }
+    }
+
+    /// Run the `on_exit` callback that was passed to the launch function
+    pub fn run_on_exit(&mut self) {
+        let state = self.state.created_state();
+        if let Some(on_exit) = &state.window_config.on_exit {
+            (on_exit)(&mut state.window)
+        }
+    }
+}
+
 impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, State> {
     fn resumed(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
         if !self.state.has_been_created() {
@@ -370,102 +468,6 @@ impl<T: Clone> Drop for DesktopRenderer<'_, T> {
             if !gl_context.is_current() && gl_context.make_current(gl_surface).is_err() {
                 gr_context.abandon();
             }
-        }
-    }
-}
-
-impl<'a, State: Clone + 'static> DesktopRenderer<'a, State> {
-    /// Run the Desktop Renderer.
-    pub fn launch(
-        vdom: VirtualDom,
-        sdom: SafeDOM,
-        config: LaunchConfig<State>,
-        devtools: Option<Devtools>,
-        hovered_node: HoveredNode,
-    ) {
-        let rt = tokio::runtime::Builder::new_multi_thread()
-            .enable_all()
-            .build()
-            .unwrap();
-
-        let _guard = rt.enter();
-
-        let event_loop = EventLoop::<EventMessage>::with_user_event()
-            .build()
-            .expect("Failed to create event loop.");
-        let proxy = event_loop.create_proxy();
-
-        // Hotreload support for Dioxus
-        #[cfg(feature = "hot-reload")]
-        {
-            use std::process::exit;
-            let proxy = proxy.clone();
-            dioxus_hot_reload::connect(move |msg| match msg {
-                dioxus_hot_reload::HotReloadMsg::UpdateTemplate(template) => {
-                    let _ = proxy.send_event(EventMessage::UpdateTemplate(template));
-                }
-                dioxus_hot_reload::HotReloadMsg::Shutdown => exit(0),
-                dioxus_hot_reload::HotReloadMsg::UpdateAsset(_) => {}
-            });
-        }
-
-        let mut desktop_renderer =
-            DesktopRenderer::new(vdom, sdom, config, devtools, hovered_node, proxy);
-
-        event_loop.run_app(&mut desktop_renderer).unwrap();
-    }
-
-    pub fn new(
-        vdom: VirtualDom,
-        sdom: SafeDOM,
-        config: LaunchConfig<'a, State>,
-        devtools: Option<Devtools>,
-        hovered_node: HoveredNode,
-        proxy: EventLoopProxy<EventMessage>,
-    ) -> Self {
-        DesktopRenderer {
-            state: WindowState::NotCreated(NotCreatedState {
-                sdom,
-                devtools,
-                vdom,
-                config,
-            }),
-            hovered_node,
-            event_loop_proxy: proxy,
-            cursor_pos: CursorPoint::default(),
-            modifiers_state: ModifiersState::default(),
-            dropped_file_path: None,
-        }
-    }
-
-    fn send_event(&mut self, event: PlatformEvent) {
-        let scale_factor = self.scale_factor();
-        self.state
-            .created_state()
-            .app
-            .send_event(event, scale_factor);
-    }
-
-    fn scale_factor(&self) -> f32 {
-        match &self.state {
-            WindowState::Created(CreatedState { window, .. }) => window.scale_factor() as f32,
-            _ => 0.0,
-        }
-    }
-
-    /// Run the `on_setup` callback that was passed to the launch function
-    pub fn run_on_setup(&mut self) {
-        let state = self.state.created_state();
-        if let Some(on_setup) = &state.window_config.on_setup {
-            (on_setup)(&mut state.window)
-        }
-    }
-
-    /// Run the `on_exit` callback that was passed to the launch function
-    pub fn run_on_exit(&mut self) {
-        let state = self.state.created_state();
-        if let Some(on_exit) = &state.window_config.on_exit {
-            (on_exit)(&mut state.window)
         }
     }
 }
