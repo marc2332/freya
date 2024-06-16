@@ -43,6 +43,6 @@ jobs:
         run: cargo build --example ${{inputs.example_name}} --release
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           path: target/release/examples/*
