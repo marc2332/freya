@@ -24,23 +24,21 @@ use freya_native_core::{
 };
 use freya_node_state::{
     AccessibilityNodeState,
-    CursorSettings,
+    CursorState,
     CustomAttributeValues,
     FontStyleState,
     LayerState,
     LayoutState,
-    References,
-    Style,
-    Transform,
+    ReferencesState,
+    StyleState,
+    TransformState,
     ViewportState,
 };
 use torin::prelude::*;
 use tracing::info;
 
-use super::{
-    mutations_writer::MutationsWriter,
-    paragraph_utils::measure_paragraph,
-};
+use super::mutations_writer::MutationsWriter;
+use crate::prelude::measure_paragraph;
 
 pub type DioxusDOM = RealDom<CustomAttributeValues>;
 pub type DioxusNode<'a> = NodeRef<'a, CustomAttributeValues>;
@@ -126,12 +124,12 @@ pub struct FreyaDOM {
 impl Default for FreyaDOM {
     fn default() -> Self {
         let mut rdom = RealDom::<CustomAttributeValues>::new([
-            CursorSettings::to_type_erased(),
+            CursorState::to_type_erased(),
             FontStyleState::to_type_erased(),
-            References::to_type_erased(),
+            ReferencesState::to_type_erased(),
             LayoutState::to_type_erased(),
-            Style::to_type_erased(),
-            Transform::to_type_erased(),
+            StyleState::to_type_erased(),
+            TransformState::to_type_erased(),
             AccessibilityNodeState::to_type_erased(),
             ViewportState::to_type_erased(),
             LayerState::to_type_erased(),

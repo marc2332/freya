@@ -27,7 +27,7 @@ use crate::{
 };
 
 #[derive(Default, Debug, Clone, PartialEq, Component)]
-pub struct Style {
+pub struct StyleState {
     pub background: Fill,
     pub border: Border,
     pub shadows: Vec<Shadow>,
@@ -39,7 +39,7 @@ pub struct Style {
 }
 
 #[partial_derive_state]
-impl State<CustomAttributeValues> for Style {
+impl State<CustomAttributeValues> for StyleState {
     type ParentDependencies = (Self,);
 
     type ChildDependencies = ();
@@ -70,7 +70,7 @@ impl State<CustomAttributeValues> for Style {
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
         _context: &SendAnyMap,
     ) -> bool {
-        let mut style = Style::default();
+        let mut style = StyleState::default();
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {

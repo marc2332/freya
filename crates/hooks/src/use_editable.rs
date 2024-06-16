@@ -117,7 +117,7 @@ impl TextDragging {
 }
 
 /// Manage an editable content.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub struct UseEditable {
     pub(crate) editor: Signal<RopeEditor>,
     pub(crate) cursor_reference: Signal<CursorReference>,

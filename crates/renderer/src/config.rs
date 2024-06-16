@@ -50,8 +50,8 @@ pub struct WindowConfig {
     pub on_setup: Option<WindowCallback>,
     /// Exit callback.
     pub on_exit: Option<WindowCallback>,
-    /// Hook function called with the Window Builder.
-    pub window_builder_hook: Option<WindowBuilderHook>,
+    /// Hook function called with the Window Attributes.
+    pub window_attributes_hook: Option<WindowBuilderHook>,
 }
 
 impl Default for WindowConfig {
@@ -70,7 +70,7 @@ impl Default for WindowConfig {
             icon: None,
             on_setup: None,
             on_exit: None,
-            window_builder_hook: None,
+            window_attributes_hook: None,
         }
     }
 }
@@ -228,12 +228,12 @@ impl<'a, T: Clone> LaunchConfig<'a, T> {
         self
     }
 
-    /// Register a Window Builder hook.
-    pub fn with_window_builder(
+    /// Register a Window Attributes hook.
+    pub fn with_window_attributes(
         mut self,
-        window_builder_hook: impl Fn(WindowAttributes) -> WindowAttributes + 'static,
+        window_attributes_hook: impl Fn(WindowAttributes) -> WindowAttributes + 'static,
     ) -> Self {
-        self.window_config.window_builder_hook = Some(Box::new(window_builder_hook));
+        self.window_config.window_attributes_hook = Some(Box::new(window_attributes_hook));
         self
     }
 }

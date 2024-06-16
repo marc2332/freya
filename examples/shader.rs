@@ -4,10 +4,7 @@
 )]
 
 use std::{
-    sync::{
-        Arc,
-        Mutex,
-    },
+    sync::Arc,
     time::Instant,
 };
 
@@ -55,14 +52,12 @@ fn app() -> Element {
         });
     });
 
-    let canvas = use_canvas((), |_| {
+    let canvas = use_canvas(|| {
         let shader = RuntimeEffect::make_for_shader(SHADER, None).unwrap();
-        let shader_wrapper = Arc::new(Mutex::new(ShaderWrapper(shader)));
+        let shader_wrapper = Arc::new(ShaderWrapper(shader));
         let instant = Instant::now();
 
         Box::new(move |canvas, _, region, _| {
-            let shader = shader_wrapper.lock().unwrap();
-
             let mut builder = UniformsBuilder::default();
             builder.set(
                 "u_resolution",
@@ -73,9 +68,9 @@ fn app() -> Element {
                 UniformValue::Float(instant.elapsed().as_secs_f32()),
             );
 
-            let uniforms = Data::new_copy(&builder.build(&shader.0));
+            let uniforms = Data::new_copy(&builder.build(&shader_wrapper.0));
 
-            let shader = shader.0.make_shader(uniforms, &[], None).unwrap();
+            let shader = shader_wrapper.0.make_shader(uniforms, &[], None).unwrap();
 
             let mut paint = Paint::default();
             paint.set_anti_alias(true);
@@ -86,8 +81,8 @@ fn app() -> Element {
                 Rect::new(
                     region.min_x(),
                     region.min_y(),
-                    region.width(),
-                    region.height(),
+                    region.max_x(),
+                    region.max_y(),
                 ),
                 &paint,
             );

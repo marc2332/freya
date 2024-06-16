@@ -477,7 +477,7 @@ pub async fn highlights_single_line_mulitple_editors() {
     utils.wait_for_update().await;
 
     let highlights_1 = root.child(0).unwrap().state().cursor.highlights.clone();
-    assert_eq!(highlights_1, Some(vec![(5, 17)]));
+    assert_eq!(highlights_1, Some(vec![(5, 16)]));
 
     let highlights_2 = root.child(1).unwrap().state().cursor.highlights.clone();
     #[cfg(not(target_os = "macos"))]
@@ -1019,7 +1019,7 @@ pub async fn highlights_shift_click_single_line_mulitple_editors() {
 
     let highlights_1 = root.child(0).unwrap().state().cursor.highlights.clone();
 
-    assert_eq!(highlights_1, Some(vec![(5, 17)]));
+    assert_eq!(highlights_1, Some(vec![(5, 16)]));
 
     let highlights_2 = root.child(1).unwrap().state().cursor.highlights.clone();
 

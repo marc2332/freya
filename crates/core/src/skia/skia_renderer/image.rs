@@ -1,16 +1,17 @@
-use freya_core::dom::DioxusNode;
 use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
 use freya_node_state::{
-    References,
-    Style,
+    ReferencesState,
+    StyleState,
 };
 use torin::geometry::Area;
 
+use crate::dom::DioxusNode;
+
 /// Render an `image` element
 pub fn render_image(area: &Area, node_ref: &DioxusNode, canvas: &Canvas) {
-    let node_style = node_ref.get::<Style>().unwrap();
-    let node_references = node_ref.get::<References>().unwrap();
+    let node_style = node_ref.get::<StyleState>().unwrap();
+    let node_references = node_ref.get::<ReferencesState>().unwrap();
 
     let draw_img = |bytes: &[u8]| {
         let pic = Image::from_encoded(Data::new_copy(bytes));

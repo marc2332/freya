@@ -26,7 +26,8 @@ fn app() -> Element {
         platform.send(EventMessage::RequestRerender).unwrap();
     });
 
-    let canvas = use_canvas(&*state.read(), |state| {
+    let canvas = use_canvas(move || {
+        let state = state.read().clone();
         Box::new(move |canvas, font_collection, region, _| {
             canvas.translate((region.min_x(), region.min_y()));
 

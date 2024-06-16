@@ -1418,6 +1418,20 @@ pub enum SurfaceOrigin {
 #[derive(Debug)]
 pub struct ContextOptions;
 
+pub mod direct_contexts {
+    use super::{
+        ContextOptions,
+        DirectContext,
+        Interface,
+    };
+    pub fn make_gl<'a>(
+        _interface: impl Into<Option<Interface>>,
+        _options: impl Into<Option<&'a ContextOptions>>,
+    ) -> Option<DirectContext> {
+        unimplemented!("This is mocked")
+    }
+}
+
 pub struct DirectContext;
 
 impl From<DirectContext> for RecordingContext {
@@ -1441,13 +1455,6 @@ impl DerefMut for DirectContext {
 }
 
 impl DirectContext {
-    pub fn new_gl<'a>(
-        _interface: impl Into<Option<Interface>>,
-        _options: impl Into<Option<&'a ContextOptions>>,
-    ) -> Option<DirectContext> {
-        unimplemented!("This is mocked")
-    }
-
     pub fn flush_and_submit(&self) {
         unimplemented!("This is mocked")
     }

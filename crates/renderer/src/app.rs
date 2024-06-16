@@ -39,7 +39,6 @@ use winit::{
 use crate::{
     accessibility::AccessKitManager,
     devtools::Devtools,
-    render::render_skia,
     winit_waker::winit_waker,
     EmbeddedFonts,
     HoveredNode,
@@ -370,38 +369,32 @@ impl Application {
     pub fn start_render(&mut self, hovered_node: &HoveredNode, canvas: &Canvas, scale_factor: f32) {
         let fdom = self.sdom.get();
 
-        let mut matrices: Vec<(Matrix, Vec<NodeId>)> = Vec::default();
-        let mut opacities: Vec<(f32, Vec<NodeId>)> = Vec::default();
+        let matrices: Vec<(Matrix, Vec<NodeId>)> = Vec::default();
+        let opacities: Vec<(f32, Vec<NodeId>)> = Vec::default();
 
-        process_render(
-            &fdom,
-            &mut self.font_collection,
-            |fdom, node_id, area, font_collection, layout| {
-                let render_wireframe = if let Some(hovered_node) = &hovered_node {
-                    hovered_node
-                        .lock()
-                        .unwrap()
-                        .map(|id| id == *node_id)
-                        .unwrap_or_default()
-                } else {
-                    false
-                };
-                if let Some(dioxus_node) = fdom.rdom().get(*node_id) {
-                    render_skia(
-                        canvas,
-                        area,
-                        &dioxus_node,
-                        font_collection,
-                        &self.font_mgr,
-                        render_wireframe,
-                        &mut matrices,
-                        &mut opacities,
-                        &self.default_fonts,
-                        layout,
-                        scale_factor,
-                    );
-                }
-            },
-        );
+        let mut skia_renderer = SkiaRenderer {
+            canvas,
+            font_collection: &mut self.font_collection,
+            font_manager: &self.font_mgr,
+            matrices,
+            opacities,
+            default_fonts: &self.default_fonts,
+            scale_factor,
+        };
+
+        process_render(&fdom, |fdom, node_id, layout_node, layout| {
+            let render_wireframe = if let Some(hovered_node) = &hovered_node {
+                hovered_node
+                    .lock()
+                    .unwrap()
+                    .map(|id| id == *node_id)
+                    .unwrap_or_default()
+            } else {
+                false
+            };
+            if let Some(dioxus_node) = fdom.rdom().get(*node_id) {
+                skia_renderer.render(layout_node, &dioxus_node, render_wireframe, layout);
+            }
+        });
     }
 }

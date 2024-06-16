@@ -43,7 +43,7 @@ tracing = { workspace = true }
 futures-task ={ workspace = true }
 futures-util = { workspace = true }
 
-itertools = "0.11.0"
+itertools = "0.13.0"
 uuid = { workspace = true }
-image = "0.24.7"
+image = "0.25.0"
 pin-utils = "0.1.0"

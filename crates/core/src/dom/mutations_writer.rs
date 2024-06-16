@@ -13,7 +13,7 @@ use freya_native_core::{
     NodeId,
 };
 use freya_node_state::{
-    CursorSettings,
+    CursorState,
     CustomAttributeValues,
     LayerState,
 };
@@ -63,8 +63,8 @@ impl<'a> MutationsWriter<'a> {
                     .remove_node_from_layer(node_id, layer_state.layer);
 
                 // Remove from paragraph elements
-                let cursor_settings = node.get::<CursorSettings>().unwrap();
-                if let Some(cursor_ref) = cursor_settings.cursor_ref.as_ref() {
+                let cursor_state = node.get::<CursorState>().unwrap();
+                if let Some(cursor_ref) = cursor_state.cursor_ref.as_ref() {
                     self.paragraphs
                         .remove_paragraph(node_id, &cursor_ref.text_id);
                 }
