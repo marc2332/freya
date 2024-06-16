@@ -62,6 +62,7 @@ pub use skia_safe::{
     ColorSpace,
     ColorType,
     Data,
+    EncodedImageFormat,
     FilterMode,
     FontArguments,
     FontMgr,

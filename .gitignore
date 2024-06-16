@@ -1,3 +1,5 @@
 target
 Cargo.lock
 .idea
+snapshot_before.png
+snapshot_after.png
