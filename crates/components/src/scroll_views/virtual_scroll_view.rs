@@ -91,7 +91,7 @@ fn get_render_range(
     item_length: f32,
 ) -> Range<usize> {
     let render_index_start = (-scroll_position) / item_size;
-    let potentially_visible_length = viewport_size / item_size;
+    let potentially_visible_length = (viewport_size / item_size) + 1.0;
     let remaining_length = item_length - render_index_start;
 
     let render_index_end = if remaining_length <= potentially_visible_length {
