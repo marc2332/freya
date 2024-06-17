@@ -7,6 +7,7 @@ pub mod platform_state;
 pub mod plugins;
 pub mod render;
 pub mod skia;
+pub mod style;
 pub mod types;
 
 pub mod prelude {
@@ -20,6 +21,7 @@ pub mod prelude {
         plugins::*,
         render::*,
         skia::*,
+        style::*,
         types::*,
     };
 }

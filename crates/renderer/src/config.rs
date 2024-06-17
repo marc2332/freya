@@ -3,9 +3,12 @@ use std::{
     sync::Arc,
 };
 
-use freya_core::plugins::{
-    FreyaPlugin,
-    PluginsManager,
+use freya_core::{
+    plugins::{
+        FreyaPlugin,
+        PluginsManager,
+    },
+    style::default_fonts,
 };
 use freya_engine::prelude::Color;
 use freya_node_state::Parse;
@@ -88,7 +91,7 @@ impl<'a, T: Clone> Default for LaunchConfig<'a, T> {
             window_config: Default::default(),
             embedded_fonts: Default::default(),
             plugins: Default::default(),
-            default_fonts: vec!["Fira Sans".to_string()],
+            default_fonts: default_fonts(),
         }
     }
 }
