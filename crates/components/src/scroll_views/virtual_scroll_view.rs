@@ -473,10 +473,10 @@ mod test {
         utils.wait_for_update().await;
 
         let content = root.get(0).get(0).get(0);
-        assert_eq!(content.children_ids().len(), 10);
+        assert_eq!(content.children_ids().len(), 11);
 
-        // Check that visible items are from indexes 0 to 10, because 500 / 50 = 10.
-        for (n, i) in (0..10).enumerate() {
+        // Check that visible items are from indexes 0 to 11, because 500 / 50 = 10 + 1 (for smooth scrolling) = 11.
+        for (n, i) in (0..11).enumerate() {
             let child = content.get(n);
             assert_eq!(
                 child.get(0).text(),
@@ -494,11 +494,11 @@ mod test {
         utils.wait_for_update().await;
 
         let content = root.get(0).get(0).get(0);
-        assert_eq!(content.children_ids().len(), 10);
+        assert_eq!(content.children_ids().len(), 11);
 
         // It has scrolled 300 pixels, which equals to 6 items since because 300 / 50 = 6
-        // So we must start checking from 6 to +10, 16 in this case because 6 + 10 = 16
-        for (n, i) in (6..16).enumerate() {
+        // So we must start checking from 6 to +10, 16 in this case because 6 + 10 = 16 + 1 (for smooths scrolling) = 17.
+        for (n, i) in (6..17).enumerate() {
             let child = content.get(n);
             assert_eq!(
                 child.get(0).text(),
@@ -537,10 +537,10 @@ mod test {
         utils.wait_for_update().await;
 
         let content = root.get(0).get(0).get(0);
-        assert_eq!(content.children_ids().len(), 10);
+        assert_eq!(content.children_ids().len(), 11);
 
-        // Check that visible items are from indexes 0 to 10, because 500 / 50 = 10.
-        for (n, i) in (0..10).enumerate() {
+        // Check that visible items are from indexes 0 to 10, because 500 / 50 = 10 + 1 (for smooth scrolling) = 11.
+        for (n, i) in (0..11).enumerate() {
             let child = content.get(n);
             assert_eq!(
                 child.get(0).text(),
@@ -574,10 +574,10 @@ mod test {
         utils.wait_for_update().await;
 
         let content = root.get(0).get(0).get(0);
-        assert_eq!(content.children_ids().len(), 10);
+        assert_eq!(content.children_ids().len(), 11);
 
         // It has dragged the scrollbar 300 pixels
-        for (n, i) in (18..28).enumerate() {
+        for (n, i) in (18..29).enumerate() {
             let child = content.get(n);
             assert_eq!(
                 child.get(0).text(),
@@ -586,7 +586,7 @@ mod test {
         }
 
         // Scroll up with arrows
-        for _ in 0..10 {
+        for _ in 0..11 {
             utils.push_event(PlatformEvent::Keyboard {
                 name: EventName::KeyDown,
                 key: Key::ArrowUp,
@@ -597,9 +597,9 @@ mod test {
         }
 
         let content = root.get(0).get(0).get(0);
-        assert_eq!(content.children_ids().len(), 10);
+        assert_eq!(content.children_ids().len(), 11);
 
-        for (n, i) in (0..10).enumerate() {
+        for (n, i) in (0..11).enumerate() {
             let child = content.get(n);
             assert_eq!(
                 child.get(0).text(),
