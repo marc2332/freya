@@ -188,7 +188,7 @@ pub async fn multiple_lines_single_editor() {
 }
 
 #[tokio::test]
-pub async fn single_line_mulitple_editors() {
+pub async fn single_line_multiple_editors() {
     fn use_editable_app() -> Element {
         let mut editable = use_editable(
             || EditableConfig::new("Hello Rustaceans\nHello World".to_string()),
@@ -373,7 +373,7 @@ pub async fn highlight_multiple_lines_single_editor() {
 }
 
 #[tokio::test]
-pub async fn highlights_single_line_mulitple_editors() {
+pub async fn highlights_single_line_multiple_editors() {
     fn use_editable_app() -> Element {
         let mut editable = use_editable(
             || EditableConfig::new("Hello Rustaceans\n".repeat(2)),
@@ -900,7 +900,7 @@ pub async fn highlight_shift_click_multiple_lines_single_editor() {
 }
 
 #[tokio::test]
-pub async fn highlights_shift_click_single_line_mulitple_editors() {
+pub async fn highlights_shift_click_single_line_multiple_editors() {
     fn use_editable_app() -> Element {
         let mut editable = use_editable(
             || EditableConfig::new("Hello Rustaceans\n".repeat(2)),
@@ -1000,6 +1000,7 @@ pub async fn highlights_shift_click_single_line_mulitple_editors() {
         code: Code::ShiftLeft,
         modifiers: Modifiers::default(),
     });
+    utils.wait_for_update().await;
 
     // Click cursor
     utils.push_event(PlatformEvent::Mouse {
