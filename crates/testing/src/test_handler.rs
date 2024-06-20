@@ -157,10 +157,8 @@ impl TestingHandler {
                 let fdom = self.utils.sdom().get();
                 let rdom = fdom.rdom();
                 for event in events {
-                    if let Some(element_id) = rdom
-                        .get(event.node_id)
-                        .map(|node| node.mounted_id())
-                        .flatten()
+                    if let Some(element_id) =
+                        rdom.get(event.node_id).and_then(|node| node.mounted_id())
                     {
                         let name = event.name.into();
                         let data = event.data.any();
