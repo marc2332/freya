@@ -7,42 +7,62 @@ use freya_common::{
     ParagraphElements,
 };
 use freya_native_core::{
-    dioxus::DioxusNativeCoreMutationWriter,
-    prelude::NodeImmutable,
+    prelude::{
+        DioxusState,
+        NodeImmutable,
+    },
     tree::TreeRef,
     NodeId,
 };
 use freya_node_state::{
     CursorState,
-    CustomAttributeValues,
     LayerState,
 };
+use rustc_hash::FxHashMap;
 use torin::torin::Torin;
 
-use crate::prelude::DioxusDOMAdapter;
+use crate::prelude::{
+    DioxusDOM,
+    DioxusDOMAdapter,
+    DioxusDOMAdapterCache,
+};
+
+macro_rules! create_mutation_writer {
+    ($self:ident) => {
+        $self
+            .dioxus_integration_state
+            .create_mutation_writer(&mut $self.rdom)
+    };
+}
 
 pub struct MutationsWriter<'a> {
-    pub native_writer: DioxusNativeCoreMutationWriter<'a, CustomAttributeValues>,
+    pub dioxus_integration_state: &'a mut DioxusState,
     pub layout: &'a mut Torin<NodeId>,
     pub layers: &'a Layers,
     pub paragraphs: &'a ParagraphElements,
+    pub dioxus_dom_adapter_cache: &'a mut FxHashMap<NodeId, bool>,
     pub scale_factor: f32,
+    pub rdom: &'a mut DioxusDOM,
 }
 
 impl<'a> MutationsWriter<'a> {
     pub fn remove(&mut self, id: ElementId) {
-        let node_id = self.native_writer.state.element_to_node_id(id);
-        let mut dom_adapter =
-            DioxusDOMAdapter::new_with_cache(self.native_writer.rdom, self.scale_factor);
+        let node_id = self.dioxus_integration_state.element_to_node_id(id);
+
+        let mut dom_adapter = DioxusDOMAdapter::new_with_cache(
+            self.rdom,
+            self.scale_factor,
+            DioxusDOMAdapterCache::Controlled(self.dioxus_dom_adapter_cache),
+        );
 
         // Remove from layout
         self.layout.remove(node_id, &mut dom_adapter, true);
 
         // Remove from layers and paragraph elements
         let mut stack = vec![node_id];
-        let tree = self.native_writer.rdom.tree_ref();
+        let tree = self.rdom.tree_ref();
         while let Some(node_id) = stack.pop() {
-            if let Some(node) = self.native_writer.rdom.get(node_id) {
+            if let Some(node) = self.rdom.get(node_id) {
                 if !node.node_type().is_visible_element() {
                     continue;
                 }
@@ -75,31 +95,38 @@ impl<'a> MutationsWriter<'a> {
 
 impl<'a> WriteMutations for MutationsWriter<'a> {
     fn register_template(&mut self, template: dioxus_core::prelude::Template) {
-        self.native_writer.register_template(template);
+        let mut native_writer = create_mutation_writer!(self);
+        native_writer.register_template(template);
     }
 
     fn append_children(&mut self, id: dioxus_core::ElementId, m: usize) {
-        self.native_writer.append_children(id, m);
+        let mut native_writer = create_mutation_writer!(self);
+        native_writer.append_children(id, m);
     }
 
     fn assign_node_id(&mut self, path: &'static [u8], id: dioxus_core::ElementId) {
-        self.native_writer.assign_node_id(path, id);
+        let mut native_writer = create_mutation_writer!(self);
+        native_writer.assign_node_id(path, id);
     }
 
     fn create_placeholder(&mut self, id: dioxus_core::ElementId) {
-        self.native_writer.create_placeholder(id);
+        let mut native_writer = create_mutation_writer!(self);
+        native_writer.create_placeholder(id);
     }
 
     fn create_text_node(&mut self, value: &str, id: dioxus_core::ElementId) {
-        self.native_writer.create_text_node(value, id);
+        let mut native_writer = create_mutation_writer!(self);
+        native_writer.create_text_node(value, id);
     }
 
     fn hydrate_text_node(&mut self, path: &'static [u8], value: &str, id: dioxus_core::ElementId) {
-        self.native_writer.hydrate_text_node(path, value, id);
+        let mut native_writer = create_mutation_writer!(self);
+        native_writer.hydrate_text_node(path, value, id);
     }
 
     fn load_template(&mut self, name: &'static str, index: usize, id: dioxus_core::ElementId) {
-        self.native_writer.load_template(name, index, id);
+        let mut native_writer = create_mutation_writer!(self);
+        native_writer.load_template(name, index, id);
     }
 
     fn replace_node_with(&mut self, id: dioxus_core::ElementId, m: usize) {
@@ -107,19 +134,24 @@ impl<'a> WriteMutations for MutationsWriter<'a> {
             self.remove(id);
         }
 
-        self.native_writer.replace_node_with(id, m);
+        let mut native_writer = create_mutation_writer!(self);
+
+        native_writer.replace_node_with(id, m);
     }
 
     fn replace_placeholder_with_nodes(&mut self, path: &'static [u8], m: usize) {
-        self.native_writer.replace_placeholder_with_nodes(path, m);
+        let mut native_writer = create_mutation_writer!(self);
+        native_writer.replace_placeholder_with_nodes(path, m);
     }
 
     fn insert_nodes_after(&mut self, id: dioxus_core::ElementId, m: usize) {
-        self.native_writer.insert_nodes_after(id, m);
+        let mut native_writer = create_mutation_writer!(self);
+        native_writer.insert_nodes_after(id, m);
     }
 
     fn insert_nodes_before(&mut self, id: dioxus_core::ElementId, m: usize) {
-        self.native_writer.insert_nodes_before(id, m);
+        let mut native_writer = create_mutation_writer!(self);
+        native_writer.insert_nodes_before(id, m);
     }
 
     fn set_attribute(
@@ -129,29 +161,33 @@ impl<'a> WriteMutations for MutationsWriter<'a> {
         value: &dioxus_core::AttributeValue,
         id: dioxus_core::ElementId,
     ) {
-        self.native_writer.set_attribute(name, ns, value, id);
+        let mut native_writer = create_mutation_writer!(self);
+        native_writer.set_attribute(name, ns, value, id);
     }
 
     fn set_node_text(&mut self, value: &str, id: dioxus_core::ElementId) {
-        self.layout
-            .invalidate(self.native_writer.state.element_to_node_id(id));
-        self.native_writer.set_node_text(value, id);
+        let mut native_writer = create_mutation_writer!(self);
+        native_writer.set_node_text(value, id);
     }
 
     fn create_event_listener(&mut self, name: &'static str, id: dioxus_core::ElementId) {
-        self.native_writer.create_event_listener(name, id);
+        let mut native_writer = create_mutation_writer!(self);
+        native_writer.create_event_listener(name, id);
     }
 
     fn remove_event_listener(&mut self, name: &'static str, id: dioxus_core::ElementId) {
-        self.native_writer.remove_event_listener(name, id);
+        let mut native_writer = create_mutation_writer!(self);
+        native_writer.remove_event_listener(name, id);
     }
 
     fn remove_node(&mut self, id: dioxus_core::ElementId) {
         self.remove(id);
-        self.native_writer.remove_node(id);
+        let mut native_writer = create_mutation_writer!(self);
+        native_writer.remove_node(id);
     }
 
     fn push_root(&mut self, id: dioxus_core::ElementId) {
-        self.native_writer.push_root(id);
+        let mut native_writer = create_mutation_writer!(self);
+        native_writer.push_root(id);
     }
 }
