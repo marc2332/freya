@@ -144,9 +144,9 @@ impl<'a, State: Clone + 'static> DesktopRenderer<'a, State> {
     }
 
     /// Get the current scale factor of the Window
-    fn scale_factor(&self) -> f32 {
+    fn scale_factor(&self) -> f64 {
         match &self.state {
-            WindowState::Created(CreatedState { window, .. }) => window.scale_factor() as f32,
+            WindowState::Created(CreatedState { window, .. }) => window.scale_factor(),
             _ => 0.0,
         }
     }

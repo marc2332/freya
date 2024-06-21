@@ -176,13 +176,13 @@ impl UseEditable {
                 }
             }
             EditableEvent::Click => {
-                let selection = &mut *self.dragging.write();
-                match selection {
+                let dragging = &mut *self.dragging.write();
+                match dragging {
                     TextDragging::FromCursorToPoint { shift, clicked, .. } if *shift => {
                         *clicked = false;
                     }
                     _ => {
-                        *selection = TextDragging::None;
+                        *dragging = TextDragging::None;
                     }
                 }
                 None
@@ -329,10 +329,11 @@ pub fn use_editable(initializer: impl Fn() -> EditableConfig, mode: EditableMode
                         // Only update and clear the selection if the cursor has changed
                         if *text_editor.cursor() != new_cursor {
                             *text_editor.cursor_mut() = new_cursor;
-                            if let TextDragging::FromCursorToPoint { cursor: from, .. } = dragging()
+                            if let TextDragging::FromCursorToPoint { cursor: from, .. } =
+                                &*dragging.read()
                             {
                                 let to = text_editor.cursor_pos();
-                                text_editor.set_selection((from, to));
+                                text_editor.set_selection((*from, to));
                             } else {
                                 text_editor.clear_selection();
                             }

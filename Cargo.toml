@@ -68,7 +68,7 @@ futures-util = "0.3.30"
 futures-task = "0.3.30"
 tracing = "0.1"
 tracing-subscriber = "0.3.17"
-rustc-hash = "1.1.0"
+rustc-hash = "2.0.0"
 
 [dev-dependencies]
 skia-safe = { workspace = true }
@@ -76,6 +76,7 @@ tokio = { workspace = true, features = ["fs"]}
 dioxus = { workspace = true }
 freya = { workspace = true }
 freya-core = { workspace = true }
+freya-testing = { workspace = true }
 reqwest = { version = "0.12.0", features = ["json"] }
 serde = "1.0.189"
 dioxus-sdk = { version = "0.5", features = ["i18n"] }
