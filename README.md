@@ -72,7 +72,7 @@ Thanks to my sponsors for supporting this project! 😄
 
 ### Want to try it? 🤔
 
-⚠️ First, see [Environment setup](https://book.freyaui.dev/setup.html).
+⚠️ First, see [Setup guide](https://book.freyaui.dev/setup.html).
 
 Clone this repo and run:
 
@@ -110,5 +110,11 @@ dioxus = { version = "0.5", features = ["macro", "hooks"], default-features = fa
 - Decent Accessibility support 
 - Useful testing APIs
 - Useful and extensible built-in components and hooks
+
+## 🤠 Other Projects
+
+[Valin](https://github.com/marc2332/valin) ⚒️ is a Work-In-Progress cross-platform code editor, made with Freya 🦀 and Rust, by me.
+
+![Valin](https://github.com/marc2332/valin/raw/main/demo.png)
 
 [MIT License](./LICENSE.md)
