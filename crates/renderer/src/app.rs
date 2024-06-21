@@ -15,7 +15,7 @@ use freya_native_core::{
     NodeId,
 };
 use futures_task::Waker;
-use futures_util::FutureExt;
+use futures_util::Future;
 use pin_utils::pin_mut;
 use tokio::{
     select,
@@ -152,8 +152,8 @@ impl Application {
         self.plugins.send(PluginEvent::FinishedUpdatingDOM);
     }
 
-    /// Update the DOM with the mutations from the VirtualDOM.
-    pub fn apply_vdom_changes(&mut self, scale_factor: f32) -> (bool, bool) {
+    /// Update the RealDOM, layout and others with the latest changes from the VirtualDOM
+    pub fn render_mutations(&mut self, scale_factor: f32) -> (bool, bool) {
         self.plugins.send(PluginEvent::StartedUpdatingDOM);
 
         let (repaint, relayout) = self
@@ -174,52 +174,48 @@ impl Application {
 
     /// Poll the VirtualDOM for any new change
     pub fn poll_vdom(&mut self, window: &Window) {
-        let waker = &self.vdom_waker.clone();
-        let mut cx = std::task::Context::from_waker(waker);
+        let mut cx = std::task::Context::from_waker(&self.vdom_waker);
 
-        loop {
-            {
-                let fut = async {
-                    select! {
-                        ev = self.event_receiver.recv() => {
-                            if let Some(events) = ev {
-                                for event in events {
-                                    let name = event.name.into();
-                                    let data = event.data.any();
-                                    let fdom = self.sdom.get();
-                                    let rdom = fdom.rdom();
-                                    let node = rdom.get(event.node_id);
-                                    if let Some(node) = node {
-                                        let element_id = node.mounted_id();
-                                        if let Some(element_id) = element_id {
-                                            self.vdom.handle_event(name, data, element_id, event.bubbles);
-                                            self.vdom.process_events();
-                                        }
-                                    }
-                                }
+        {
+            let fut = async {
+                select! {
+                    Some(events) = self.event_receiver.recv() => {
+                        let fdom = self.sdom.get();
+                        let rdom = fdom.rdom();
+                        for event in events {
+                            if let Some(element_id) = rdom
+                                .get(event.node_id)
+                                .and_then(|node| node.mounted_id())
+                            {
+                                let name = event.name.into();
+                                let data = event.data.any();
+                                self.vdom
+                                    .handle_event(name, data, element_id, event.bubbles);
+                                self.vdom.process_events();
                             }
-                        },
-                        _ = self.vdom.wait_for_work() => {},
-                    }
-                };
-                pin_mut!(fut);
-
-                match fut.poll_unpin(&mut cx) {
-                    std::task::Poll::Ready(_) => {}
-                    std::task::Poll::Pending => break,
+                        }
+                    },
+                    _ = self.vdom.wait_for_work() => {},
                 }
-            }
+            };
+            pin_mut!(fut);
 
-            let (must_repaint, must_relayout) =
-                self.apply_vdom_changes(window.scale_factor() as f32);
-
-            if must_relayout {
-                self.measure_layout_on_next_render = true;
+            match fut.poll(&mut cx) {
+                std::task::Poll::Ready(_) => {
+                    self.proxy.send_event(EventMessage::PollVDOM).ok();
+                }
+                std::task::Poll::Pending => return,
             }
+        }
 
-            if must_relayout || must_repaint {
-                window.request_redraw();
-            }
+        let (must_repaint, must_relayout) = self.render_mutations(window.scale_factor() as f32);
+
+        if must_relayout {
+            self.measure_layout_on_next_render = true;
+        }
+
+        if must_relayout || must_repaint {
+            window.request_redraw();
         }
     }
 
