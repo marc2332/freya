@@ -261,10 +261,8 @@ impl<'a, State: Clone + 'a> WindowState<'a, State> {
             stencil_size,
         );
 
-        let scale_factor = window.scale_factor();
-        surface
-            .canvas()
-            .scale((scale_factor as f32, scale_factor as f32));
+        let scale_factor = window.scale_factor() as f32;
+        surface.canvas().scale((scale_factor, scale_factor));
 
         let mut app = Application::new(
             sdom,
@@ -277,7 +275,7 @@ impl<'a, State: Clone + 'a> WindowState<'a, State> {
             config.default_fonts,
         );
 
-        app.init_doms(scale_factor as f32, config.state.clone());
+        app.init_doms(scale_factor, config.state.clone());
         app.process_layout(window.inner_size(), scale_factor);
 
         *self = WindowState::Created(CreatedState {

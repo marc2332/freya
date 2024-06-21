@@ -22,7 +22,7 @@ pub fn measure_paragraph(
     node: &DioxusNode,
     layout_node: &LayoutNode,
     text_measurement: &TextGroupMeasurement,
-    scale_factor: f64,
+    scale_factor: f32,
 ) {
     let paragraph = &layout_node
         .data
@@ -33,6 +33,8 @@ pub fn measure_paragraph(
         .0;
 
     let cursor_state = node.get::<CursorState>().unwrap();
+
+    let scale_factors = scale_factor as f64;
 
     if cursor_state.cursor_id != Some(text_measurement.cursor_id) {
         return;
@@ -46,7 +48,7 @@ pub fn measure_paragraph(
 
             // Calculate the new cursor position
             let char_position = paragraph
-                .get_glyph_position_at_coordinate(position.mul(scale_factor).to_i32().to_tuple());
+                .get_glyph_position_at_coordinate(position.mul(scale_factors).to_i32().to_tuple());
 
             // Notify the cursor reference listener
             cursor_reference
@@ -64,11 +66,11 @@ pub fn measure_paragraph(
 
             // Calculate the start of the highlighting
             let origin_char = paragraph.get_glyph_position_at_coordinate(
-                origin_position.mul(scale_factor).to_i32().to_tuple(),
+                origin_position.mul(scale_factors).to_i32().to_tuple(),
             );
             // Calculate the end of the highlighting
             let dist_char = paragraph.get_glyph_position_at_coordinate(
-                dist_position.mul(scale_factor).to_i32().to_tuple(),
+                dist_position.mul(scale_factors).to_i32().to_tuple(),
             );
 
             cursor_reference

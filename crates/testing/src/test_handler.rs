@@ -210,20 +210,20 @@ impl TestingHandler {
                 size,
             },
             &mut self.font_collection,
-            SCALE_FACTOR,
+            SCALE_FACTOR as f32,
             &default_fonts(),
         );
 
-        let fdom = &self.utils.sdom().get_mut();
+        let dom = &self.utils.sdom().get_mut();
 
         process_accessibility(
-            &fdom.layout(),
-            fdom.rdom(),
+            &dom.layout(),
+            dom.rdom(),
             &mut self.accessibility_manager.lock().unwrap(),
         );
 
         process_events(
-            fdom,
+            dom,
             &mut self.events_queue,
             &self.event_emitter,
             &mut self.nodes_state,
@@ -234,7 +234,7 @@ impl TestingHandler {
     fn measure_text_group(&self, text_measurement: TextGroupMeasurement) {
         let sdom = self.utils.sdom();
         sdom.get()
-            .measure_paragraphs(text_measurement, SCALE_FACTOR);
+            .measure_paragraphs(text_measurement, SCALE_FACTOR as f32);
     }
 
     /// Push an event to the events queue

@@ -101,7 +101,7 @@ impl Application {
             preferred_theme: window.theme().map(|theme| theme.into()).unwrap_or_default(),
             navigation_mode: NavigationMode::default(),
             information: PlatformInformation::from_winit(window),
-            scale_factor: window.scale_factor(),
+            scale_factor: window.scale_factor() as f32,
         });
 
         plugins.send(PluginEvent::WindowCreated(window));
@@ -220,13 +220,13 @@ impl Application {
     }
 
     /// Process the events queue
-    pub fn process_events(&mut self, scale_factor: f64) {
+    pub fn process_events(&mut self, scale_factor: f32) {
         process_events(
             &self.sdom.get(),
             &mut self.events,
             &self.event_emitter,
             &mut self.nodes_state,
-            scale_factor,
+            scale_factor as f64,
         )
     }
 
@@ -252,7 +252,7 @@ impl Application {
     }
 
     /// Send an event
-    pub fn send_event(&mut self, event: PlatformEvent, scale_factor: f64) {
+    pub fn send_event(&mut self, event: PlatformEvent, scale_factor: f32) {
         self.events.push(event);
         self.process_events(scale_factor);
     }
@@ -292,7 +292,7 @@ impl Application {
     }
 
     /// Measure the a text group given it's ID.
-    pub fn measure_text_group(&self, text_measurement: TextGroupMeasurement, scale_factor: f64) {
+    pub fn measure_text_group(&self, text_measurement: TextGroupMeasurement, scale_factor: f32) {
         self.sdom
             .get()
             .measure_paragraphs(text_measurement, scale_factor);
@@ -325,7 +325,7 @@ impl Application {
     }
 
     /// Measure the layout
-    pub fn process_layout(&mut self, inner_size: PhysicalSize<u32>, scale_factor: f64) {
+    pub fn process_layout(&mut self, inner_size: PhysicalSize<u32>, scale_factor: f32) {
         self.accessibility.clear_accessibility();
 
         {
