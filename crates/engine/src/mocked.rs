@@ -1574,3 +1574,20 @@ pub fn set_resource_cache_total_bytes_limit(new_limit: usize) -> usize {
 pub fn set_resource_cache_single_allocation_byte_limit(new_limit: Option<usize>) -> Option<usize> {
     unimplemented!("This is mocked")
 }
+
+pub enum EncodedImageFormat {
+    BMP = 0,
+    GIF = 1,
+    ICO = 2,
+    JPEG = 3,
+    PNG = 4,
+    WBMP = 5,
+    WEBP = 6,
+    PKM = 7,
+    KTX = 8,
+    ASTC = 9,
+    DNG = 10,
+    HEIF = 11,
+    AVIF = 12,
+    JPEGXL = 13,
+}

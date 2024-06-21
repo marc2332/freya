@@ -47,13 +47,14 @@ pub fn launch_test_with_config(root: AppComponent, config: TestingConfig) -> Tes
     let mut font_collection = FontCollection::new();
     let font_mgr = FontMgr::default();
     font_collection.set_dynamic_font_manager(font_mgr.clone());
-    font_collection.set_default_font_manager(font_mgr, None);
+    font_collection.set_default_font_manager(font_mgr.clone(), None);
 
     let mut handler = TestingHandler {
         vdom,
         events_queue: EventsQueue::new(),
         nodes_state: NodesState::default(),
         font_collection,
+        font_mgr,
         event_emitter,
         event_receiver,
         utils: TestUtils { sdom },
