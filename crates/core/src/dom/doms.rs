@@ -34,7 +34,6 @@ use freya_node_state::{
     TransformState,
     ViewportState,
 };
-use rustc_hash::FxHashMap;
 use torin::prelude::*;
 use tracing::info;
 
@@ -163,12 +162,12 @@ impl FreyaDOM {
     pub fn init_dom(&mut self, vdom: &mut VirtualDom, scale_factor: f32) {
         // Build the RealDOM
         vdom.rebuild(&mut MutationsWriter {
-            dioxus_integration_state: &mut self.dioxus_integration_state,
+            native_writer: self
+                .dioxus_integration_state
+                .create_mutation_writer(&mut self.rdom),
             layout: &mut self.torin.lock().unwrap(),
             layers: &self.layers,
             paragraphs: &self.paragraphs,
-            rdom: &mut self.rdom,
-            dioxus_dom_adapter_cache: &mut FxHashMap::default(),
             scale_factor,
         });
 
@@ -184,12 +183,12 @@ impl FreyaDOM {
     pub fn render_mutations(&mut self, vdom: &mut VirtualDom, scale_factor: f32) -> (bool, bool) {
         // Update the RealDOM
         vdom.render_immediate(&mut MutationsWriter {
-            dioxus_integration_state: &mut self.dioxus_integration_state,
+            native_writer: self
+                .dioxus_integration_state
+                .create_mutation_writer(&mut self.rdom),
             layout: &mut self.torin.lock().unwrap(),
             layers: &self.layers,
             paragraphs: &self.paragraphs,
-            rdom: &mut self.rdom,
-            dioxus_dom_adapter_cache: &mut FxHashMap::default(),
             scale_factor,
         });
 

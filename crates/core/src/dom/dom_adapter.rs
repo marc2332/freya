@@ -10,36 +10,11 @@ use torin::prelude::*;
 
 use crate::dom::DioxusDOM;
 
-pub enum DioxusDOMAdapterCache<'a> {
-    Controlled(&'a mut FxHashMap<NodeId, bool>),
-    Provided(FxHashMap<NodeId, bool>),
-}
-
-impl DioxusDOMAdapterCache<'_> {
-    fn is_valid(&self, node_id: NodeId) -> Option<bool> {
-        let map = match self {
-            Self::Controlled(map) => map,
-            Self::Provided(map) => map,
-        };
-
-        map.get(&node_id).copied()
-    }
-
-    fn insert(&mut self, node_id: NodeId, is_valid: bool) {
-        let map = match self {
-            Self::Controlled(map) => map,
-            Self::Provided(map) => map,
-        };
-
-        map.insert(node_id, is_valid);
-    }
-}
-
 /// RealDOM adapter for Torin.
 pub struct DioxusDOMAdapter<'a> {
     pub rdom: &'a DioxusDOM,
     pub scale_factor: f32,
-    cache: DioxusDOMAdapterCache<'a>,
+    cache: FxHashMap<NodeId, bool>,
 }
 
 impl<'a> DioxusDOMAdapter<'a> {
@@ -47,19 +22,7 @@ impl<'a> DioxusDOMAdapter<'a> {
         Self {
             rdom,
             scale_factor,
-            cache: DioxusDOMAdapterCache::Provided(FxHashMap::default()),
-        }
-    }
-
-    pub fn new_with_cache(
-        rdom: &'a mut DioxusDOM,
-        scale_factor: f32,
-        cache: DioxusDOMAdapterCache<'a>,
-    ) -> Self {
-        Self {
-            rdom,
-            scale_factor,
-            cache,
+            cache: FxHashMap::default(),
         }
     }
 }
@@ -130,10 +93,10 @@ impl DOMAdapter<NodeId> for DioxusDOMAdapter<'_> {
 }
 
 /// Check is the given Node is valid or not, this means not being a placeholder or an unconnected Node.
-fn is_node_valid(rdom: &DioxusDOM, cache: &mut DioxusDOMAdapterCache, node_id: &NodeId) -> bool {
+fn is_node_valid(rdom: &DioxusDOM, cache: &mut FxHashMap<NodeId, bool>, node_id: &NodeId) -> bool {
     // Check if Node was valid from cache
-    if let Some(is_valid) = cache.is_valid(*node_id) {
-        return is_valid;
+    if let Some(is_valid) = cache.get(node_id) {
+        return *is_valid;
     }
 
     let node = rdom.get(*node_id);
