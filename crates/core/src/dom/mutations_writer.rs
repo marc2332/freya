@@ -134,6 +134,8 @@ impl<'a> WriteMutations for MutationsWriter<'a> {
     }
 
     fn set_node_text(&mut self, value: &str, id: dioxus_core::ElementId) {
+        self.layout
+            .invalidate(self.native_writer.state.element_to_node_id(id));
         self.native_writer.set_node_text(value, id);
     }
 
