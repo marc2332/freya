@@ -25,7 +25,7 @@ pub const LIGHT_THEME: Theme = Theme {
         border_fill: cow_borrowed!("rgb(210, 210, 210)"),
         focus_border_fill: cow_borrowed!("rgb(180, 180, 180)"),
         shadow: cow_borrowed!("0 4 5 0 rgb(0, 0, 0, 0.1)"),
-        padding: cow_borrowed!("10 16"),
+        padding: cow_borrowed!("8 12"),
         margin: cow_borrowed!("4"),
         corner_radius: cow_borrowed!("8"),
         width: cow_borrowed!("auto"),

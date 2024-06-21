@@ -191,7 +191,7 @@ pub fn Button(
             text_align: "center",
             main_align: "center",
             cross_align: "center",
-            line_height: "1",
+            line_height: "1.1",
             {&children}
         }
     )
