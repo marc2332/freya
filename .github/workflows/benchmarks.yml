@@ -5,6 +5,7 @@ on:
       - 'crates/torin/**/*'
       - '.github/workflows/benchmarks.yml'
       - 'rust-toolchain.toml'
+      - 'Cargo.toml'
 
 name: Run Benchmarks
 jobs:
