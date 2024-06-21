@@ -111,7 +111,7 @@ dioxus = { version = "0.5", features = ["macro", "hooks"], default-features = fa
 - Useful testing APIs
 - Useful and extensible built-in components and hooks
 
-## 🤠 Other Projects
+### 🤠 Projects
 
 [Valin](https://github.com/marc2332/valin) ⚒️ is a Work-In-Progress cross-platform code editor, made with Freya 🦀 and Rust, by me.
 
