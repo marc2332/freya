@@ -3,9 +3,12 @@ use std::{
     sync::Arc,
 };
 
-use freya_core::plugins::{
-    FreyaPlugin,
-    PluginsManager,
+use freya_core::{
+    plugins::{
+        FreyaPlugin,
+        PluginsManager,
+    },
+    style::default_fonts,
 };
 use freya_engine::prelude::Color;
 use freya_node_state::Parse;
@@ -47,8 +50,8 @@ pub struct WindowConfig {
     pub on_setup: Option<WindowCallback>,
     /// Exit callback.
     pub on_exit: Option<WindowCallback>,
-    /// Hook function called with the Window Builder.
-    pub window_builder_hook: Option<WindowBuilderHook>,
+    /// Hook function called with the Window Attributes.
+    pub window_attributes_hook: Option<WindowBuilderHook>,
 }
 
 impl Default for WindowConfig {
@@ -67,7 +70,7 @@ impl Default for WindowConfig {
             icon: None,
             on_setup: None,
             on_exit: None,
-            window_builder_hook: None,
+            window_attributes_hook: None,
         }
     }
 }
@@ -88,7 +91,7 @@ impl<'a, T: Clone> Default for LaunchConfig<'a, T> {
             window_config: Default::default(),
             embedded_fonts: Default::default(),
             plugins: Default::default(),
-            default_fonts: vec!["Fira Sans".to_string()],
+            default_fonts: default_fonts(),
         }
     }
 }
@@ -228,9 +231,9 @@ impl<'a, T: Clone> LaunchConfig<'a, T> {
     /// Register a Window Attributes hook.
     pub fn with_window_attributes(
         mut self,
-        window_builder_hook: impl Fn(WindowAttributes) -> WindowAttributes + 'static,
+        window_attributes_hook: impl Fn(WindowAttributes) -> WindowAttributes + 'static,
     ) -> Self {
-        self.window_config.window_builder_hook = Some(Box::new(window_builder_hook));
+        self.window_config.window_attributes_hook = Some(Box::new(window_attributes_hook));
         self
     }
 }

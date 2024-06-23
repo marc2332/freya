@@ -228,6 +228,8 @@ builder_constructors! {
         opacity: String,
         #[doc = include_str!("_docs/attributes/content.md")]
         content: String,
+        #[doc = include_str!("_docs/attributes/line_height.md")]
+        line_height: String,
 
         name: String,
         focusable: String,
@@ -263,6 +265,8 @@ builder_constructors! {
         #[doc = include_str!("_docs/attributes/width_height.md")]
         height: String,
         width: String,
+        #[doc = include_str!("_docs/attributes/main_align_cross_align.md")]
+        main_align: String,
         #[doc = include_str!("_docs/attributes/font_size.md")]
         font_size: String,
         #[doc = include_str!("_docs/attributes/font_family.md")]
@@ -336,9 +340,10 @@ builder_constructors! {
         #[doc = include_str!("_docs/attributes/max_width_max_height.md")]
         max_height: String,
         max_width: String,
+        #[doc = include_str!("_docs/attributes/main_align_cross_align.md")]
+        main_align: String,
         #[doc = include_str!("_docs/attributes/text_align.md")]
         text_align: String,
-        direction: String,
         #[doc = include_str!("_docs/attributes/rotate.md")]
         rotate: String,
         #[doc = include_str!("_docs/attributes/font_size.md")]
@@ -383,6 +388,7 @@ builder_constructors! {
         focus_id: AccessibilityId,
         highlights: String,
         highlight_color: String,
+        highlight_mode: String,
     };
     /// `text` element is simply a text span used for the `paragraph` element.
     text {

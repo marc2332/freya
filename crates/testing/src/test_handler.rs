@@ -1,4 +1,7 @@
 use std::{
+    fs::File,
+    io::Write,
+    path::PathBuf,
     sync::Arc,
     time::Duration,
 };
@@ -9,7 +12,13 @@ use freya_common::{
     TextGroupMeasurement,
 };
 use freya_core::prelude::*;
-use freya_engine::prelude::FontCollection;
+use freya_engine::prelude::{
+    raster_n32_premul,
+    Color,
+    EncodedImageFormat,
+    FontCollection,
+    FontMgr,
+};
 use freya_native_core::dioxus::NodeImmutableDioxusExt;
 use tokio::{
     sync::{
@@ -50,6 +59,7 @@ pub struct TestingHandler {
     pub(crate) platform_sender: NativePlatformSender,
     pub(crate) platform_receiver: NativePlatformReceiver,
     pub(crate) font_collection: FontCollection,
+    pub(crate) font_mgr: FontMgr,
     pub(crate) accessibility_manager: SharedAccessibilityManager,
     pub(crate) config: TestingConfig,
     pub(crate) ticker_sender: broadcast::Sender<()>,
@@ -93,9 +103,9 @@ impl TestingHandler {
         // Handle platform and VDOM events
         loop {
             let platform_ev = self.platform_event_receiver.try_recv();
-            let vdom_ev = self.event_receiver.try_recv();
+            let vdom_events = self.event_receiver.try_recv();
 
-            if vdom_ev.is_err() && platform_ev.is_err() {
+            if vdom_events.is_err() && platform_ev.is_err() {
                 break;
             }
 
@@ -153,21 +163,18 @@ impl TestingHandler {
                 }
             }
 
-            if let Ok(events) = vdom_ev {
+            if let Ok(events) = vdom_events {
+                let fdom = self.utils.sdom().get();
+                let rdom = fdom.rdom();
                 for event in events {
-                    let name = event.name.into();
-                    let data = event.data.any();
-                    let fdom = self.utils.sdom().get();
-                    let rdom = fdom.rdom();
-                    let node = rdom.get(event.node_id);
-                    if let Some(node) = node {
-                        let element_id = node.mounted_id();
-                        if let Some(element_id) = element_id {
-                            self.vdom
-                                .handle_event(name, data, element_id, event.bubbles);
-
-                            self.vdom.process_events();
-                        }
+                    if let Some(element_id) =
+                        rdom.get(event.node_id).and_then(|node| node.mounted_id())
+                    {
+                        let name = event.name.into();
+                        let data = event.data.any();
+                        self.vdom
+                            .handle_event(name, data, element_id, event.bubbles);
+                        self.vdom.process_events();
                     }
                 }
             }
@@ -203,20 +210,20 @@ impl TestingHandler {
                 size,
             },
             &mut self.font_collection,
-            SCALE_FACTOR as f32,
-            &["Fira Sans".to_string()],
+            SCALE_FACTOR,
+            &default_fonts(),
         );
 
-        let dom = &self.utils.sdom().get_mut();
+        let fdom = &self.utils.sdom().get_mut();
 
         process_accessibility(
-            &dom.layout(),
-            dom.rdom(),
+            &fdom.layout(),
+            fdom.rdom(),
             &mut self.accessibility_manager.lock().unwrap(),
         );
 
         process_events(
-            dom,
+            fdom,
             &mut self.events_queue,
             &self.event_emitter,
             &mut self.nodes_state,
@@ -227,7 +234,7 @@ impl TestingHandler {
     fn measure_text_group(&self, text_measurement: TextGroupMeasurement) {
         let sdom = self.utils.sdom();
         sdom.get()
-            .measure_paragraphs(text_measurement, SCALE_FACTOR as f32);
+            .measure_paragraphs(text_measurement, SCALE_FACTOR);
     }
 
     /// Push an event to the events queue
@@ -271,5 +278,48 @@ impl TestingHandler {
     /// Get the [SafeDOM]
     pub fn sdom(&self) -> &SafeDOM {
         self.utils.sdom()
+    }
+
+    /// Render the app into a canvas and save it into a file.
+    pub fn save_snapshot(&mut self, snapshot_path: impl Into<PathBuf>) {
+        let fdom = self.utils.sdom.get();
+        let (width, height) = self.config.size.to_i32().to_tuple();
+
+        // Create the canvas
+        let mut surface =
+            raster_n32_premul((width, height)).expect("Failed to create the surface.");
+        surface.canvas().clear(Color::WHITE);
+
+        let mut skia_renderer = SkiaRenderer {
+            canvas: surface.canvas(),
+            font_collection: &mut self.font_collection,
+            font_manager: &self.font_mgr,
+            matrices: Vec::default(),
+            opacities: Vec::default(),
+            default_fonts: &["Fira Sans".to_string()],
+            scale_factor: SCALE_FACTOR as f32,
+        };
+
+        // Render to the canvas
+        process_render(&fdom, |fdom, node_id, layout_node, layout| {
+            if let Some(dioxus_node) = fdom.rdom().get(*node_id) {
+                skia_renderer.render(layout_node, &dioxus_node, false, layout);
+            }
+        });
+
+        // Capture snapshot
+        let image = surface.image_snapshot();
+        let mut context = surface.direct_context();
+        let snapshot_data = image
+            .encode(context.as_mut(), EncodedImageFormat::PNG, None)
+            .expect("Failed to encode the snapshot.");
+
+        // Save snapshot
+        let mut snapshot_file =
+            File::create(snapshot_path.into()).expect("Failed to create the snapshot file.");
+        let snapshot_bytes = snapshot_data.as_bytes();
+        snapshot_file
+            .write_all(snapshot_bytes)
+            .expect("Failed to save the snapshot file.");
     }
 }

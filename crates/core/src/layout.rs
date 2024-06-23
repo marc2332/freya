@@ -3,7 +3,7 @@ use torin::geometry::Area;
 
 use crate::{
     dom::*,
-    layout::*,
+    skia::SkiaMeasurer,
 };
 
 /// Process the layout of the DOM
@@ -11,13 +11,14 @@ pub fn process_layout(
     fdom: &FreyaDOM,
     area: Area,
     font_collection: &mut FontCollection,
-    scale_factor: f32,
+    scale_factor: f64,
     default_fonts: &[String],
 ) {
     {
         let rdom = fdom.rdom();
-        let mut dom_adapter = DioxusDOMAdapter::new_with_cache(rdom, scale_factor);
-        let skia_measurer = SkiaMeasurer::new(rdom, font_collection, default_fonts, scale_factor);
+        let mut dom_adapter = DioxusDOMAdapter::new(rdom, scale_factor as f32);
+        let skia_measurer =
+            SkiaMeasurer::new(rdom, font_collection, default_fonts, scale_factor as f32);
 
         // Finds the best Node from where to start measuring
         fdom.layout().find_best_root(&mut dom_adapter);

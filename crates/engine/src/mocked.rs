@@ -1418,6 +1418,20 @@ pub enum SurfaceOrigin {
 #[derive(Debug)]
 pub struct ContextOptions;
 
+pub mod direct_contexts {
+    use super::{
+        ContextOptions,
+        DirectContext,
+        Interface,
+    };
+    pub fn make_gl<'a>(
+        _interface: impl Into<Option<Interface>>,
+        _options: impl Into<Option<&'a ContextOptions>>,
+    ) -> Option<DirectContext> {
+        unimplemented!("This is mocked")
+    }
+}
+
 pub struct DirectContext;
 
 impl From<DirectContext> for RecordingContext {
@@ -1441,13 +1455,6 @@ impl DerefMut for DirectContext {
 }
 
 impl DirectContext {
-    pub fn new_gl<'a>(
-        _interface: impl Into<Option<Interface>>,
-        _options: impl Into<Option<&'a ContextOptions>>,
-    ) -> Option<DirectContext> {
-        unimplemented!("This is mocked")
-    }
-
     pub fn flush_and_submit(&self) {
         unimplemented!("This is mocked")
     }
@@ -1566,4 +1573,21 @@ pub fn set_resource_cache_total_bytes_limit(new_limit: usize) -> usize {
 
 pub fn set_resource_cache_single_allocation_byte_limit(new_limit: Option<usize>) -> Option<usize> {
     unimplemented!("This is mocked")
+}
+
+pub enum EncodedImageFormat {
+    BMP = 0,
+    GIF = 1,
+    ICO = 2,
+    JPEG = 3,
+    PNG = 4,
+    WBMP = 5,
+    WEBP = 6,
+    PKM = 7,
+    KTX = 8,
+    ASTC = 9,
+    DNG = 10,
+    HEIF = 11,
+    AVIF = 12,
+    JPEGXL = 13,
 }

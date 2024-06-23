@@ -6,6 +6,7 @@ pub use skia_safe::{
     },
     gpu::{
         backend_render_targets,
+        direct_contexts,
         gl::{
             Format,
             FramebufferInfo,
@@ -61,6 +62,7 @@ pub use skia_safe::{
     ColorSpace,
     ColorType,
     Data,
+    EncodedImageFormat,
     FilterMode,
     FontArguments,
     FontMgr,

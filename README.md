@@ -8,9 +8,9 @@
 
 [Website](https://freyaui.dev) | [Nightly Docs](https://docs.freyaui.dev/freya) | [Stable Docs](https://docs.rs/freya/latest/freya) | [Book](https://book.freyaui.dev) | [Discord](https://discord.gg/sYejxCdewG)
 
-**Freya** is a native GUI library for Rust powered by 🧬 [Dioxus](https://dioxuslabs.com) and 🎨 [Skia](https://skia.org/). 
+**Freya** is a cross-paltform GUI library for Rust powered by 🧬 [Dioxus](https://dioxuslabs.com) and 🎨 [Skia](https://skia.org/). 
 
-⚠️ It's currently work in progress and not usable for production, but you can already play with it! You can join the [Discord](https://discord.gg/sYejxCdewG) server if you have any question or issue. 
+⚠️ It's currently work in progress, but you can already play with it! You can join the [Discord](https://discord.gg/sYejxCdewG) server if you have any question or issue. 
 
 <br/>
 <br/>
@@ -72,7 +72,7 @@ Thanks to my sponsors for supporting this project! 😄
 
 ### Want to try it? 🤔
 
-⚠️ First, see [Environment setup](https://book.freyaui.dev/setup.html).
+⚠️ First, see [Setup guide](https://book.freyaui.dev/setup.html).
 
 Clone this repo and run:
 
@@ -93,13 +93,13 @@ dioxus = { version = "0.5", features = ["macro", "hooks"], default-features = fa
 ### Features ✨
 - ⛏️ Built-in **components** (button, scroll views, switch and more) 
 - 🚇 Built-in **hooks** library (animations, text editing and more)
-- 🔍 Built-in **devtools** panel (experimental ⚠️)
-- 🧰 Built-in **headless testing** runner for components
+- 🔍 Built-in **devtools** panel
+- 🧰 Built-in **headless runner** to test UI
 - 🎨 **Theming** support (not extensible yet ⚠️)
-- 🛩️ Cross-platform (Windows, Linux, MacOS)
+- 🛩️ **Cross-platform** (Windows, Linux, MacOS)
 - 🖼️ SKSL **Shaders** support
 - 🔄️ Dioxus **Hot-reload** support
-- 📒 Multi-line **text editing** (experimental ⚠️)
+- 📒 Multi-line **text editing**
 - 🦾 Basic **Accessibility** Support (experimental ⚠️)
 - 🧩Compatible with dioxus-sdk and other Dioxus renderer-agnostic libraries
 
@@ -109,6 +109,12 @@ dioxus = { version = "0.5", features = ["macro", "hooks"], default-features = fa
 - Cross-platform support
 - Decent Accessibility support 
 - Useful testing APIs
-- Useful and extensible components and hooks
+- Useful and extensible built-in components and hooks
+
+### 🤠 Projects
+
+[Valin](https://github.com/marc2332/valin) ⚒️ is a Work-In-Progress cross-platform code editor, made with Freya 🦀 and Rust, by me.
+
+![Valin](https://github.com/marc2332/valin/raw/main/demo.png)
 
 [MIT License](./LICENSE.md)

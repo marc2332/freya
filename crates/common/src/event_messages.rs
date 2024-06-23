@@ -17,7 +17,7 @@ pub struct TextGroupMeasurement {
 pub enum EventMessage {
     /// Update the given template
     UpdateTemplate(Template),
-    /// Pull the VirtualDOM
+    /// Poll the VirtualDOM
     PollVDOM,
     /// Request a rerender
     RequestRerender,

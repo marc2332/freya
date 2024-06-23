@@ -35,7 +35,7 @@ accesskit = { workspace = true }
 rustc-hash = { workspace = true }
 tracing = { workspace = true }
 uuid = { workspace = true }
-itertools = "0.11.0"
+itertools = "0.13.0"
 smallvec = { workspace = true }
 
 [dev-dependencies]
