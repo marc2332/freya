@@ -188,11 +188,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
         }
     }
 
-    fn user_event(
-        &mut self,
-        _event_loop: &winit::event_loop::ActiveEventLoop,
-        event: EventMessage,
-    ) {
+    fn user_event(&mut self, event_loop: &winit::event_loop::ActiveEventLoop, event: EventMessage) {
         let scale_factor = self.scale_factor();
         let CreatedState { window, app, .. } = self.state.created_state();
         match event {
@@ -226,6 +222,7 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
             EventMessage::QueueFocusAccessibilityNode(node_id) => {
                 app.queue_focus_node(node_id);
             }
+            EventMessage::ExitApp => event_loop.exit(),
             ev => {
                 if let EventMessage::UpdateTemplate(template) = ev {
                     app.vdom_replace_template(template);
