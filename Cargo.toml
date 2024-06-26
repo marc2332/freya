@@ -84,6 +84,7 @@ rand = "0.8.5"
 dioxus-router = { workspace = true }
 itertools = "0.13.0"
 home = "0.5.9"
+dioxus-query = "0.5.1"
 
 [profile.release]
 lto = true
