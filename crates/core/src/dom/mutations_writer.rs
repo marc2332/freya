@@ -49,13 +49,12 @@ impl<'a> MutationsWriter<'a> {
                 }
 
                 let layer_state = node.get::<LayerState>();
-                let does_node_have_state = layer_state.is_some();
 
                 // There might exist Nodes in the RealDOM with no states yet,
                 // this is mainly due to nodes being created in the same run as when this function (remove) is being called,
                 // like nodes created by loaded templates.
                 // In this case we can safely skip these nodes.
-                if !does_node_have_state {
+                if layer_state.is_none() {
                     continue;
                 }
 
