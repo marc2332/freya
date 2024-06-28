@@ -3,7 +3,11 @@
     windows_subsystem = "windows"
 )]
 
-use dioxus_router::prelude::{use_route, Outlet, Routable, Router};
+use dioxus_router::prelude::{
+    Outlet,
+    Routable,
+    Router,
+};
 use freya::prelude::*;
 
 fn main() {
@@ -29,72 +33,17 @@ pub enum Route {
     PageNotFound { },
 }
 
-#[derive(Clone)]
-enum AnimatedRouterContext<R: Routable + PartialEq + Clone> {
-    FromTo(R, R),
-    In(R),
-}
-
-impl<R: Routable + PartialEq + Clone> AnimatedRouterContext<R> {
-    pub fn target_route(&self) -> &R {
-        match self {
-            Self::FromTo(_, to) => to,
-            Self::In(to) => to,
-        }
-    }
-
-    pub fn set_target_route(&mut self, to: R) {
-        match self {
-            Self::FromTo(old_from, old_to) => {
-                *old_from = old_to.clone(); 
-                *old_to = to
-            },
-            Self::In(old_to) => *self = Self::FromTo(old_to.clone(), to),
-        }
-    }
-
-    pub fn settle(&mut self) {
-        match self {
-            Self::FromTo(_, to) => *self = Self::In(to.clone()),
-            _ => {}
-        }
-    }
-}
-
-#[derive(Props, Clone, PartialEq)]
-struct AnimatedRouterProps {
-    children: Element,
-}
-
-fn AnimatedRouter<R: Routable + PartialEq + Clone>(
-    AnimatedRouterProps { children }: AnimatedRouterProps,
-) -> Element {
-    let route = use_route::<R>();
-    let mut prev_route = use_signal(|| AnimatedRouterContext::In(route.clone()));
-    use_context_provider(move || prev_route);
-
-    if prev_route.peek().target_route() != &route {
-        prev_route.write().set_target_route(route);
-    }
-
-    rsx!({ children })
-}
-
 #[component]
 fn FromRouteToCurrent(from: Element, upwards: bool) -> Element {
     let mut animated_router = use_context::<Signal<AnimatedRouterContext<Route>>>();
-    let (attr, node_size) = use_node();
+    let (reference, node_size) = use_node();
     let animations = use_animation_with_dependencies(&upwards, move |ctx, _| {
-        let (start, end) = if upwards {
-            (1., 0.)
-        } else {
-            (0., 1.)
-        };
+        let (start, end) = if upwards { (1., 0.) } else { (0., 1.) };
         ctx.with(
             AnimNum::new(start, end)
                 .time(500)
-                .ease(Ease::Out)
-                .function(Function::Expo),
+                .ease(Ease::InOut)
+                .function(Function::Circ),
         )
     });
 
@@ -104,7 +53,7 @@ fn FromRouteToCurrent(from: Element, upwards: bool) -> Element {
         }
     });
 
-    use_memo(use_reactive(&upwards, move |_| {
+    use_memo(use_reactive((&upwards, &from), move |_| {
         animations.run(AnimDirection::Forward)
     }));
 
@@ -114,36 +63,31 @@ fn FromRouteToCurrent(from: Element, upwards: bool) -> Element {
 
     let offset = height - (offset * height);
 
-    let (top, bottom) = if upwards {
-        (from, rsx!(
-            Outlet::<Route> { }
-        )) 
-    } else {
-        (rsx!(
-            Outlet::<Route> { }
-        ), from)
-    };
+    let to = rsx!(Outlet::<Route> {});
+
+    let (top, bottom) = if upwards { (from, to) } else { (to, from) };
 
     rsx!(
         rect {
-            reference: attr,
+            reference,
             height: "fill",
             width: "fill",
             offset_y: "-{offset}",
-            rect {
-                height: "100%",
-                width: "100%",
-                main_align: "center",
-                cross_align: "center",
-                {top}
-            }
-            rect {
-                height: "100%",
-                width: "100%",
-                main_align: "center",
-                cross_align: "center",
-                {bottom}
-            }
+            Expand { {top} }
+            Expand { {bottom} }
+        }
+    )
+}
+
+#[component]
+fn Expand(children: Element) -> Element {
+    rsx!(
+        rect {
+            height: "100%",
+            width: "100%",
+            main_align: "center",
+            cross_align: "center",
+            {children}
         }
     )
 }
@@ -152,69 +96,26 @@ fn FromRouteToCurrent(from: Element, upwards: bool) -> Element {
 fn AnimatedOutlet(children: Element) -> Element {
     let animated_router = use_context::<Signal<AnimatedRouterContext<Route>>>();
 
-    match animated_router() {
-        AnimatedRouterContext::FromTo(Route::Home, Route::Wow) => {
-            rsx!(FromRouteToCurrent {
-                upwards: true,
-                from: rsx!(
-                    Home {}
-                ) 
-            })
-        }
-        AnimatedRouterContext::FromTo(Route::Wow, Route::Home) => {
-            rsx!(FromRouteToCurrent {
-                upwards: false,
-                from: rsx!(
-                    Wow {}
-                ) 
-            })
-        }
-        AnimatedRouterContext::FromTo(Route::Wow, Route::Crab) => {
-            rsx!(FromRouteToCurrent {
-                upwards: true,
-                from: rsx!(
-                    Wow {}
-                ) 
-            })
-        }
-        AnimatedRouterContext::FromTo(Route::Home, Route::Crab) => {
-            rsx!(FromRouteToCurrent {
-                upwards: true,
-                from: rsx!(
-                    Home {}
-                ) 
-            })
-        }
-        AnimatedRouterContext::FromTo(Route::Crab, Route::Home) => {
-            rsx!(FromRouteToCurrent {
-                upwards: false,
-                from: rsx!(
-                    Crab {}
-                ) 
-            })
-        }
-        AnimatedRouterContext::FromTo(Route::Crab, Route::Wow) => {
-            rsx!(FromRouteToCurrent {
-                upwards: false,
-                from: rsx!(
-                    Crab {}
-                ) 
-            })
-        }
-        _ => {
-            rsx!(
-                rect {
-                    main_align: "center",
-                    cross_align: "center",
-                    width: "fill",
-                    height: "fill",
-                    Outlet::<Route> {}
-                }
-            )
-        },
+    let from_route = match animated_router() {
+        AnimatedRouterContext::FromTo(Route::Home, Route::Wow) => Some((rsx!(Home {}), true)),
+        AnimatedRouterContext::FromTo(Route::Home, Route::Crab) => Some((rsx!(Home {}), true)),
+        AnimatedRouterContext::FromTo(Route::Wow, Route::Home) => Some((rsx!(Wow {}), false)),
+        AnimatedRouterContext::FromTo(Route::Wow, Route::Crab) => Some((rsx!(Wow {}), true)),
+        AnimatedRouterContext::FromTo(Route::Crab, Route::Home) => Some((rsx!(Crab {}), false)),
+        AnimatedRouterContext::FromTo(Route::Crab, Route::Wow) => Some((rsx!(Crab {}), false)),
+        _ => None,
+    };
+
+    if let Some((from, upwards)) = from_route {
+        rsx!(FromRouteToCurrent { upwards, from })
+    } else {
+        rsx!(
+            Expand {
+                Outlet::<Route> {}
+            }
+        )
     }
 }
-
 
 #[allow(non_snake_case)]
 fn AppSidebar() -> Element {
@@ -293,7 +194,6 @@ fn Wow() -> Element {
     )
 }
 
-
 #[allow(non_snake_case)]
 #[component]
 fn Crab() -> Element {
@@ -303,7 +203,6 @@ fn Crab() -> Element {
         }
     )
 }
-
 
 #[allow(non_snake_case)]
 #[component]
