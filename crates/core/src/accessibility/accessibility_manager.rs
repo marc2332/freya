@@ -76,6 +76,7 @@ impl AccessibilityManager {
             builder.set_value(alt.to_owned());
         } else if let Some(value) = dioxus_node.get_inner_texts() {
             builder.set_value(value);
+            builder.set_role(Role::Label);
         }
 
         // Set name
