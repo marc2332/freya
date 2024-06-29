@@ -197,4 +197,14 @@ pub const LIGHT_THEME: Theme = Theme {
         width: cow_borrowed!("auto"),
         height: cow_borrowed!("auto"),
     },
+    bottom_tab: BottomTabTheme {
+        background: cow_borrowed!("transparent"),
+        hover_background: cow_borrowed!("rgb(230, 230, 230)"),
+        font_theme: FontTheme {
+            color: cow_borrowed!("rgb(10, 10, 10)"),
+        },
+        padding: cow_borrowed!("8 10"),
+        width: cow_borrowed!("auto"),
+        height: cow_borrowed!("auto"),
+    },
 };

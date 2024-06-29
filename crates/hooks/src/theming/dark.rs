@@ -197,4 +197,14 @@ pub const DARK_THEME: Theme = Theme {
         width: LIGHT_THEME.button.width,
         height: LIGHT_THEME.button.height,
     },
+    bottom_tab: BottomTabTheme {
+        background: cow_borrowed!("transparent"),
+        hover_background: cow_borrowed!("rgb(45, 45, 45)"),
+        font_theme: FontTheme {
+            color: cow_borrowed!("white"),
+        },
+        padding: LIGHT_THEME.button.padding,
+        width: LIGHT_THEME.button.width,
+        height: LIGHT_THEME.button.height,
+    },
 };

@@ -183,7 +183,7 @@ fn BottomTab<R: Routable + PartialEq>(
             ActivableRoute {
                 route,
                 exact,
-                Tab {
+                freya::components::BottomTab {
                     label {
                         main_align: "center",
                         {children}

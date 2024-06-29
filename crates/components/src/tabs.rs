@@ -5,6 +5,8 @@ use freya_hooks::{
     use_applied_theme,
     use_focus,
     use_platform,
+    BottomTabTheme,
+    BottomTabThemeWith,
     TabTheme,
     TabThemeWith,
 };
@@ -146,6 +148,112 @@ pub fn Tab(children: Element, theme: Option<TabThemeWith>) -> Element {
                 width: "fill-min",
                 background: "{border}"
             }
+        }
+    )
+}
+
+///  Clickable BottomTab. Same thing as Tab but designed to be placed in the bottom of your app,
+///  usually used in combination with [`Tabsbar`], [`Link`] and [`ActivableRoute`].
+///
+/// # Styling
+/// Inherits the [`BottomTabTheme`](freya_hooks::BottomTabTheme) theme.
+///
+/// # Example
+///
+/// ```no_run
+/// # use freya::prelude::*;
+/// # use dioxus_router::prelude::Routable;
+/// # #[allow(non_snake_case)]
+/// # fn PageNotFound() -> Element { None }
+/// # #[allow(non_snake_case)]
+/// # fn Settings() -> Element { None }
+/// # #[derive(Routable, Clone, PartialEq)]
+/// # #[rustfmt::skip]
+/// # pub enum Route {
+/// #     #[route("/settings")]
+/// #     Settings,
+/// #     #[route("/..route")]
+/// #     PageNotFound { },
+/// # }
+/// fn app() -> Element {
+///     rsx!(
+///         Tabsbar {
+///             BottomTab {
+///                 label {
+///                     "Home"
+///                 }
+///             }
+///             Link {
+///                 to: Route::Settings,
+///                 BottomTab {
+///                     label {
+///                         "Go to Settings"
+///                     }
+///                 }
+///             }
+///         }
+///     )
+/// }
+/// ```
+#[allow(non_snake_case)]
+#[component]
+pub fn BottomTab(children: Element, theme: Option<BottomTabThemeWith>) -> Element {
+    let focus = use_focus();
+    let mut status = use_signal(TabStatus::default);
+    let platform = use_platform();
+    let is_active = use_activable_route();
+
+    let focus_id = focus.attribute();
+
+    let BottomTabTheme {
+        background,
+        hover_background,
+        padding,
+        width,
+        height,
+        font_theme,
+    } = use_applied_theme!(&theme, bottom_tab);
+
+    use_drop(move || {
+        if *status.read() == TabStatus::Hovering {
+            platform.set_cursor(CursorIcon::default());
+        }
+    });
+
+    let onmouseenter = move |_| {
+        platform.set_cursor(CursorIcon::Pointer);
+        status.set(TabStatus::Hovering);
+    };
+
+    let onmouseleave = move |_| {
+        platform.set_cursor(CursorIcon::default());
+        status.set(TabStatus::default());
+    };
+
+    let background = match *status.read() {
+        _ if focus.is_selected() || is_active => hover_background,
+        TabStatus::Hovering => hover_background,
+        TabStatus::Idle => background,
+    };
+    rsx!(
+        rect {
+            onmouseenter,
+            onmouseleave,
+            focus_id,
+            width: "{width}",
+            height: "{height}",
+            focusable: "true",
+            overflow: "clip",
+            role: "tab",
+            color: "{font_theme.color}",
+            background: "{background}",
+            text_align: "center",
+            padding: "{padding}",
+            main_align: "center",
+            cross_align: "center",
+            corner_radius: "99",
+            margin: "2 4",
+            {children},
         }
     )
 }
