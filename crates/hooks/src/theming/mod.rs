@@ -555,6 +555,20 @@ define_theme! {
     }
 }
 
+define_theme! {
+    %[component]
+    pub BottomTab {
+        %[cows]
+        background: str,
+        hover_background: str,
+        width: str,
+        height: str,
+        padding: str,
+        %[subthemes]
+        font_theme: FontTheme,
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Theme {
     pub name: &'static str,
@@ -587,6 +601,7 @@ pub struct Theme {
     pub snackbar: SnackBarTheme,
     pub popup: PopupTheme,
     pub tab: TabTheme,
+    pub bottom_tab: BottomTabTheme,
 }
 
 impl Default for Theme {
