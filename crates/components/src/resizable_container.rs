@@ -16,6 +16,7 @@ enum ResizableItem {
 }
 
 impl ResizableItem {
+    /// Get the size of the [ResizableItem::Panel]. Will panic if called in a [ResizableItem::Handle].
     fn size(&self) -> f32 {
         match self {
             Self::Panel(size) => *size,
@@ -23,7 +24,8 @@ impl ResizableItem {
         }
     }
 
-    fn write_size(&mut self) -> Option<&mut f32> {
+    /// Try to write a size of a [ResizableItem::Panel]. Will return [None] if called in a [ResizableItem::Handle].
+    fn try_write_size(&mut self) -> Option<&mut f32> {
         match self {
             Self::Panel(old_size) => Some(old_size),
             Self::Handle => None,
@@ -37,10 +39,39 @@ struct ResizableContext {
     pub direction: String,
 }
 
+/// Resizable container, used in combination with [ResizablePanel] and [ResizableHandle].
+///
+/// Example:
+///
+/// ```no_run
+/// # use freya::prelude::*;
+/// fn app() -> Element {
+///     rsx!(
+///         ResizableContainer {
+///             ResizablePanel {
+///                 initial_size: 50.0,
+///                 label {
+///                     "Panel 1"
+///                 }
+///             }
+///             ResizableHandle { }
+///             ResizablePanel {
+///                 initial_size: 50.0,
+///                 label {
+///                     "Panel 2"
+///                 }
+///             }
+///         }
+///     )
+/// }
+/// ```
 #[component]
 pub fn ResizableContainer(
-    #[props(default = "vertical".to_string())] direction: String,
-
+    /// Direction of the container, `vertical`/`horizontal`.
+    /// Default to `vertical`.
+    #[props(default = "vertical".to_string())]
+    direction: String,
+    /// Inner children for the [ResizableContainer].
     children: Element,
 ) -> Element {
     let (node_reference, size) = use_node_signal();
@@ -64,10 +95,13 @@ pub fn ResizableContainer(
     )
 }
 
+/// Resizable panel to be used in combination with [ResizableContainer] and [ResizableHandle].
 #[component]
 pub fn ResizablePanel(
-    #[props(default = 10.)] initial_size: f32, // TODO: Automatically assign the remaining space in the last element with unspecified size?
-
+    /// Initial size of the Panel. Value should be between `0..100`. Default to `10`.
+    #[props(default = 10.)]
+    initial_size: f32, // TODO: Automatically assign the remaining space in the last element with unspecified size?
+    /// Inner children for the [ResizablePanel].
     children: Element,
 ) -> Element {
     let mut registry = use_context::<Signal<ResizableContext>>();
@@ -105,12 +139,13 @@ pub enum HandleStatus {
     /// Default state.
     #[default]
     Idle,
-    /// Mouse is hovering the slider.
+    /// Mouse is hovering the handle.
     Hovering,
 }
 
+/// Resizable panel to be used in combination with [ResizableContainer] and [ResizablePanel].
 #[component]
-pub fn ResizableHandle(#[props(default = "fill")] initial_size: Option<String>) -> Element {
+pub fn ResizableHandle() -> Element {
     let (node_reference, size) = use_node_signal();
     let mut clicking = use_signal(|| false);
     let mut status = use_signal(HandleStatus::default);
@@ -171,7 +206,7 @@ pub fn ResizableHandle(#[props(default = "fill")] initial_size: Option<String>) 
                     let mut prev_panel: Option<Option<&mut ResizableItem>> =
                         Some(registry.registry.get_mut(prev_index));
                     while let Some(Some(ref mut panel)) = prev_panel.take() {
-                        if let Some(size) = panel.write_size() {
+                        if let Some(size) = panel.try_write_size() {
                             *size = (*size + displacement_per).clamp(0., 100.);
 
                             if *size <= 0. && prev_index > 0 {
@@ -190,7 +225,7 @@ pub fn ResizableHandle(#[props(default = "fill")] initial_size: Option<String>) 
                     let mut next_panel: Option<Option<&mut ResizableItem>> =
                         Some(registry.registry.get_mut(next_index));
                     while let Some(Some(ref mut panel)) = next_panel.take() {
-                        if let Some(size) = panel.write_size() {
+                        if let Some(size) = panel.try_write_size() {
                             *size = (*size - displacement_per).clamp(0., 100.);
 
                             if *size <= 0. && next_index > 0 {
@@ -230,7 +265,7 @@ pub fn ResizableHandle(#[props(default = "fill")] initial_size: Option<String>) 
         reference: node_reference,
         width: "{width}",
         height: "{height}",
-        background: "rgb(0, 99, 162)",
+        background: "rgb(200, 200, 200)", // TODO: Support theming
         onmousedown,
         onglobalclick: onclick,
         onmouseenter,
