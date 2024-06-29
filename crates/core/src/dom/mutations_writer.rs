@@ -49,15 +49,15 @@ impl<'a> MutationsWriter<'a> {
                 }
 
                 let layer_state = node.get::<LayerState>();
-                let does_node_have_state = layer_state.is_some();
+                let cursor_state = node.get::<CursorState>();
 
-                // There might exist Nodes in the RealDOM with no states yet,
-                // this is mainly due to nodes being created in the same run as when this function (remove) is being called,
-                // like nodes created by loaded templates.
-                // In this case we can safely skip these nodes.
-                if !does_node_have_state {
+                let Some((layer_state, cursor_state)) = layer_state.zip(cursor_state) else {
+                    // There might exist Nodes in the RealDOM with no states yet,
+                    // this is mainly due to nodes being created in the same run as when this function (remove) is being called,
+                    // like nodes created by loaded templates.
+                    // In this case we can safely skip these nodes.
                     continue;
-                }
+                };
 
                 let traverse_children = node
                     .node_type()
@@ -70,12 +70,10 @@ impl<'a> MutationsWriter<'a> {
                 }
 
                 // Remove from layers
-                let layer_state = node.get::<LayerState>().unwrap();
                 self.layers
                     .remove_node_from_layer(node_id, layer_state.layer);
 
                 // Remove from paragraph elements
-                let cursor_state = node.get::<CursorState>().unwrap();
                 if let Some(cursor_ref) = cursor_state.cursor_ref.as_ref() {
                     self.paragraphs
                         .remove_paragraph(node_id, &cursor_ref.text_id);
