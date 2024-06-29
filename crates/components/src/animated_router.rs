@@ -5,12 +5,12 @@ use dioxus_router::prelude::{
 };
 
 #[derive(Clone)]
-pub enum AnimatedRouterContext<R: Routable + PartialEq + Clone> {
+pub enum AnimatedRouterContext<R: Routable + PartialEq> {
     FromTo(R, R),
     In(R),
 }
 
-impl<R: Routable + PartialEq + Clone> AnimatedRouterContext<R> {
+impl<R: Routable + PartialEq> AnimatedRouterContext<R> {
     pub fn target_route(&self) -> &R {
         match self {
             Self::FromTo(_, to) => to,
@@ -53,4 +53,8 @@ pub fn AnimatedRouter<R: Routable + PartialEq + Clone>(
     }
 
     rsx!({ children })
+}
+
+pub fn use_animated_router<Route: Routable + PartialEq>() -> Signal<AnimatedRouterContext<Route>> {
+    use_context()
 }

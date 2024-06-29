@@ -35,9 +35,9 @@ pub enum Route {
 
 #[component]
 fn FromRouteToCurrent(from: Element, upwards: bool) -> Element {
-    let mut animated_router = use_context::<Signal<AnimatedRouterContext<Route>>>();
+    let mut animated_router = use_animated_router::<Route>();
     let (reference, node_size) = use_node();
-    let animations = use_animation_with_dependencies(&upwards, move |ctx, _| {
+    let animations = use_animation_with_dependencies(&upwards, move |ctx, upwards| {
         let (start, end) = if upwards { (1., 0.) } else { (0., 1.) };
         ctx.with(
             AnimNum::new(start, end)
@@ -47,24 +47,23 @@ fn FromRouteToCurrent(from: Element, upwards: bool) -> Element {
         )
     });
 
+    // Only render the destination route once the animation has finished
     use_memo(move || {
         if !animations.is_running() && animations.has_run_yet() {
             animated_router.write().settle();
         }
     });
 
+    // Run the animation when any prop changes
     use_memo(use_reactive((&upwards, &from), move |_| {
         animations.run(AnimDirection::Forward)
     }));
 
     let offset = animations.get().read().as_f32();
-
     let height = node_size.area.height();
 
     let offset = height - (offset * height);
-
     let to = rsx!(Outlet::<Route> {});
-
     let (top, bottom) = if upwards { (from, to) } else { (to, from) };
 
     rsx!(
@@ -156,12 +155,6 @@ fn AppSidebar() -> Element {
                                         "Go to Crab! 🦀"
                                     }
                                 },
-                            }
-                        },
-                        SidebarItem {
-                            onclick: |_| println!("Hello!"),
-                            label {
-                                "Print Hello! 👀"
                             }
                         },
                     ),
