@@ -66,6 +66,7 @@ pub struct DesktopRenderer<'a, State: Clone + 'static> {
     pub(crate) state: WindowState<'a, State>,
     pub(crate) hovered_node: HoveredNode,
     pub(crate) cursor_pos: CursorPoint,
+    pub(crate) mouse_state: ElementState,
     pub(crate) modifiers_state: ModifiersState,
     pub(crate) dropped_file_path: Option<PathBuf>,
 }
@@ -129,6 +130,7 @@ impl<'a, State: Clone + 'static> DesktopRenderer<'a, State> {
             hovered_node,
             event_loop_proxy: proxy,
             cursor_pos: CursorPoint::default(),
+            mouse_state: ElementState::Released,
             modifiers_state: ModifiersState::default(),
             dropped_file_path: None,
         }
@@ -298,6 +300,8 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
             WindowEvent::MouseInput { state, button, .. } => {
                 app.set_navigation_mode(NavigationMode::NotKeyboard);
 
+                self.mouse_state = state;
+
                 let name = match state {
                     ElementState::Pressed => EventName::MouseDown,
                     ElementState::Released => match button {
@@ -362,13 +366,15 @@ impl<'a, State: Clone> ApplicationHandler<EventMessage> for DesktopRenderer<'a, 
                 })
             }
             WindowEvent::CursorLeft { .. } => {
-                self.cursor_pos = CursorPoint::new(-1.0, -1.0);
+                if self.mouse_state == ElementState::Released {
+                    self.cursor_pos = CursorPoint::new(-1.0, -1.0);
 
-                self.send_event(PlatformEvent::Mouse {
-                    name: EventName::MouseOver,
-                    cursor: self.cursor_pos,
-                    button: None,
-                });
+                    self.send_event(PlatformEvent::Mouse {
+                        name: EventName::MouseOver,
+                        cursor: self.cursor_pos,
+                        button: None,
+                    });
+                }
             }
             WindowEvent::CursorMoved { position, .. } => {
                 self.cursor_pos = CursorPoint::from((position.x, position.y));
