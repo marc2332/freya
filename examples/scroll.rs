@@ -12,38 +12,39 @@ fn main() {
 fn app() -> Element {
     rsx!(
         rect {
-            height: "100%",
-            width: "100%",
-            padding: "50",
-            background: "white",
-            color: "white",
+            height: "fill",
+            width: "fill",
             ScrollView {
-                show_scrollbar: true,
-                rect {
-                    border: "15 solid rgb(214, 40, 40)",
-                    height: "200",
-                    width: "400",
-                    background: "rgb(27, 38, 59)",
-                    padding: "30",
-                    label { "Scroll support :)" }
-                }
-                rect {
-                    border: "15 solid rgb(214, 40, 40)",
-                    height: "200",
-                    width: "400",
-                    background: "rgb(27, 38, 59)",
-                    padding: "30",
-                    label { "Scroll support :-)" }
-                }
-                rect {
-                    border: "15 solid rgb(214, 40, 40)",
-                    height: "200",
-                    width: "400",
-                    background: "rgb(27, 38, 59)",
-                    padding: "30",
-                    label {  "Scroll support >:D" }
-                }
+                theme: theme_with!(ScrollViewTheme {
+                    height: "50%".into(),
+                }),
+                Card {}
+                Card {}
+                Card {}
             }
+            ScrollView {
+                direction: "horizontal",
+                theme: theme_with!(ScrollViewTheme {
+                    height: "50%".into(),
+                }),
+                Card {},
+                Card {},
+                Card {}
+            }
+        }
+    )
+}
+
+#[component]
+fn Card() -> Element {
+    rsx!(
+        rect {
+            border: "15 solid rgb(43,106,208)",
+            height: "220",
+            width: "420",
+            background: "white",
+            padding: "25",
+            label {  "Scroll..." }
         }
     )
 }
