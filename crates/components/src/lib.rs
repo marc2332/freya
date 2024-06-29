@@ -3,6 +3,7 @@
 
 mod accordion;
 mod activable_route;
+mod animated_router;
 mod body;
 mod button;
 mod canvas;
@@ -39,6 +40,7 @@ mod window_drag_area;
 
 pub use accordion::*;
 pub use activable_route::*;
+pub use animated_router::*;
 pub use body::*;
 pub use button::*;
 pub use canvas::*;
