@@ -663,16 +663,6 @@ pub fn use_animation<Animated: PartialEq + Clone + 'static>(
     animator
 }
 
-fn use_custom_animation(origin: &'static str, target: &'static str) -> UseAnimator<ReadAnimatedValue> {
-    use_animation(|ctx| {
-        ctx.with(
-            AnimColor::new(origin, target)
-                .time(100)
-                .ease(Ease::Out)
-        )
-    })
-}
-
 pub fn use_animation_with_dependencies<Animated: PartialEq + Clone + 'static, D: Dependency>(
     deps: D,
     run: impl Fn(&mut Context, D::Out) -> Animated + 'static,
