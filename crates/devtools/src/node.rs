@@ -45,13 +45,14 @@ pub fn NodeElement(
         ButtonStatus::Idle => "transparent",
         ButtonStatus::Hovering => "rgb(80, 80, 80)",
     };
-    let margin_left = (node.height * 10) as f32 + 16.5;
+
+    let margin_left = (node.height * 10) as f32 - 20.;
     let id = node_id.index();
 
     rsx!(
         rect {
             corner_radius: "7",
-            padding: "5",
+            padding: "5 5 5 0",
             background,
             width: "100%",
             height: "27",
