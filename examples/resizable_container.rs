@@ -1,0 +1,79 @@
+#![cfg_attr(
+    all(not(debug_assertions), target_os = "windows"),
+    windows_subsystem = "windows"
+)]
+
+use freya::prelude::*;
+
+fn main() {
+    launch_with_props(app, "Resizable Container", (700.0, 450.0));
+}
+
+fn app() -> Element {
+    let mut count = use_signal(|| 0);
+
+    let header = rsx!(
+        rect {
+            height: "fill",
+            width: "fill",
+            main_align: "center",
+            cross_align: "center",
+            background: "rgb(0, 119, 182)",
+            color: "white",
+            shadow: "0 4 20 5 rgb(0, 0, 0, 80)",
+            label {
+                font_size: "75",
+                font_weight: "bold",
+                "{count}"
+            }
+        }
+    );
+
+    let content = rsx!(
+        rect {
+            height: "fill",
+            width: "fill",
+            main_align: "center",
+            cross_align: "center",
+            direction: "horizontal",
+            Button {
+                onclick: move |_| count += 1,
+                label { "Increase" }
+            }
+            Button {
+                onclick: move |_| count -= 1,
+                label { "Decrease" }
+            }
+        }
+    );
+
+    rsx!(
+        ResizableContainer {
+            ResizablePanel {
+                initial_size: 50.,
+                {header}
+            }
+            ResizableHandle { }
+            ResizablePanel {
+                initial_size: 50.,
+                ResizableContainer {
+                    direction: "horizontal",
+                    ResizablePanel {
+                        initial_size: 33.,
+                        {&content}
+                    }
+                    ResizableHandle { }
+                    ResizablePanel {
+                        initial_size: 33.,
+                        {&content}
+                    }
+                    ResizableHandle { }
+                    ResizablePanel {
+                        initial_size: 33.,
+                        {&content}
+                    }
+                }
+            }
+        }
+    )
+}
