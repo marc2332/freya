@@ -361,6 +361,8 @@ pub trait AnimatedValue {
     fn advance(&mut self, index: i32, direction: AnimDirection);
 }
 
+pub type ReadAnimatedValue = ReadOnlySignal<Box<dyn AnimatedValue>>;
+
 #[derive(Default, PartialEq, Clone)]
 pub struct Context {
     animated_values: Vec<Signal<Box<dyn AnimatedValue>>>,
@@ -369,10 +371,7 @@ pub struct Context {
 }
 
 impl Context {
-    pub fn with(
-        &mut self,
-        animated_value: impl AnimatedValue + 'static,
-    ) -> ReadOnlySignal<Box<dyn AnimatedValue>> {
+    pub fn with(&mut self, animated_value: impl AnimatedValue + 'static) -> ReadAnimatedValue {
         let val: Box<dyn AnimatedValue> = Box::new(animated_value);
         let signal = Signal::new(val);
         self.animated_values.push(signal);
