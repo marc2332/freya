@@ -197,7 +197,7 @@ pub fn ResizableHandle(
                 let coordinates = e.get_screen_coordinates();
                 let mut registry = registry.write();
 
-                let mut displacement_per = match registry.direction.as_str() {
+                let displacement_per = match registry.direction.as_str() {
                     "horizontal" => {
                         let displacement = coordinates.x as f32 - size.peek().area.min_x();
                         100. / container_size.read().area.width() * displacement
