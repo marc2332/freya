@@ -116,7 +116,8 @@ impl AccessibilityManager {
         self.focused_id = new_focus_id;
 
         // Only focus the element if it exists
-        let node_focused_exists = self.nodes.iter().any(|node| node.0 == new_focus_id);
+        let node_focused_exists = new_focus_id == ACCESSIBILITY_ROOT_ID
+            || self.nodes.iter().any(|node| node.0 == new_focus_id);
         if node_focused_exists {
             Some(TreeUpdate {
                 nodes: Vec::new(),
