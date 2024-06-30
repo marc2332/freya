@@ -11,8 +11,7 @@ fn main() {
     launch_cfg(
         app,
         LaunchConfig::<()>::new()
-            .with_width(200.0)
-            .with_height(200.0)
+            .with_size(200.0, 200.)
             .with_font("Sansita Swashed", SANSITA_SWASHED),
     );
 }

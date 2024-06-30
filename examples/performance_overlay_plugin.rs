@@ -10,8 +10,7 @@ fn main() {
         app,
         LaunchConfig::<()>::new()
             .with_title("Performance Overlay Plugin")
-            .with_width(700.)
-            .with_height(500.)
+            .with_size(700., 500.)
             .with_plugin(PerformanceOverlayPlugin::default()),
     )
 }

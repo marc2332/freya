@@ -24,18 +24,12 @@ pub type EmbeddedFonts<'a> = Vec<(&'a str, &'a [u8])>;
 
 /// Configuration for a Window.
 pub struct WindowConfig {
-    /// Width of the Window.
-    pub width: f64,
-    /// Height of the window.
-    pub height: f64,
-    /// Minimum width of the Window.
-    pub min_width: Option<f64>,
-    /// Minimum height of the window.
-    pub min_height: Option<f64>,
-    /// Maximum width of the Window.
-    pub max_width: Option<f64>,
-    /// Maximum height of the window.
-    pub max_height: Option<f64>,
+    /// Size of the Window.
+    pub size: (f64, f64),
+    /// Minimum size of the Window.
+    pub min_size: Option<(f64, f64)>,
+    /// Maximum size of the Window.
+    pub max_size: Option<(f64, f64)>,
     /// Enable Window decorations.
     pub decorations: bool,
     /// Title for the Window.
@@ -57,12 +51,9 @@ pub struct WindowConfig {
 impl Default for WindowConfig {
     fn default() -> Self {
         Self {
-            width: 600.0,
-            height: 600.0,
-            min_width: None,
-            min_height: None,
-            max_height: None,
-            max_width: None,
+            size: (600.0, 600.0),
+            min_size: None,
+            max_size: None,
             decorations: true,
             title: "Freya app",
             transparent: false,
@@ -120,39 +111,21 @@ impl LaunchConfig<'_, ()> {
 pub type WindowCallback = Arc<Box<fn(&mut Window)>>;
 
 impl<'a, T: Clone> LaunchConfig<'a, T> {
-    /// Specify a Window width.
-    pub fn with_width(mut self, width: f64) -> Self {
-        self.window_config.width = width;
+    /// Specify a Window size.
+    pub fn with_size(mut self, width: f64, height: f64) -> Self {
+        self.window_config.size = (width, height);
         self
     }
 
-    /// Specify a Window height.
-    pub fn with_height(mut self, height: f64) -> Self {
-        self.window_config.height = height;
+    /// Specify a minimum Window size.
+    pub fn with_min_size(mut self, min_width: f64, min_height: f64) -> Self {
+        self.window_config.min_size = Some((min_width, min_height));
         self
     }
 
-    /// Specify a minimum Window width.
-    pub fn with_min_width(mut self, min_width: f64) -> Self {
-        self.window_config.min_width = Some(min_width);
-        self
-    }
-
-    /// Specify a minimum Window height.
-    pub fn with_min_height(mut self, min_height: f64) -> Self {
-        self.window_config.min_height = Some(min_height);
-        self
-    }
-
-    /// Specify a maximum Window width.
-    pub fn with_max_width(mut self, max_width: f64) -> Self {
-        self.window_config.max_width = Some(max_width);
-        self
-    }
-
-    /// Specify a maximum Window height.
-    pub fn with_max_height(mut self, max_height: f64) -> Self {
-        self.window_config.max_height = Some(max_height);
+    /// Specify a maximum Window size.
+    pub fn with_max_size(mut self, max_width: f64, max_height: f64) -> Self {
+        self.window_config.max_size = Some((max_width, max_height));
         self
     }
 

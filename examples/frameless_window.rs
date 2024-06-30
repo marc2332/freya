@@ -9,8 +9,7 @@ fn main() {
     launch_cfg(
         app,
         LaunchConfig::<()>::new()
-            .with_width(400.0)
-            .with_height(200.0)
+            .with_size(400.0, 600.0)
             .with_decorations(false)
             .with_transparency(true)
             .with_title("Floating window"),
