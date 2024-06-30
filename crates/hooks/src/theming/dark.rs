@@ -207,4 +207,8 @@ pub const DARK_THEME: Theme = Theme {
         width: LIGHT_THEME.button.width,
         height: LIGHT_THEME.button.height,
     },
+    resizable_handle: ResizableHandleTheme {
+        background: cow_borrowed!("rgb(100, 100, 100)"),
+        hover_background: cow_borrowed!("rgb(130, 130, 130)"),
+    },
 };
