@@ -120,7 +120,6 @@ pub fn ResizablePanel(
     let registry = registry.read();
 
     let size = registry.registry[index].size();
-
     let (width, height) = match registry.direction.as_str() {
         "horizontal" => (format!("{size}%"), "fill".to_owned()),
         _ => ("fill".to_owned(), format!("{size}%")),
@@ -196,58 +195,89 @@ pub fn ResizableHandle(
         move |e: MouseEvent| {
             if *clicking.peek() {
                 let coordinates = e.get_screen_coordinates();
-                let size = size.peek();
+                let mut registry = registry.write();
 
-                // The width of the handle is 4, so when dragging it we want the cursor to be in center of it, for this we can simply move the handle with an offset of the half the width, so 2.
-                const HANDLE_CENTER: f32 = 2.;
-
-                let displacement_per = match registry.read().direction.as_str() {
+                let mut displacement_per = match registry.direction.as_str() {
                     "horizontal" => {
-                        let displacement = coordinates.x as f32 - size.area.min_x() - HANDLE_CENTER;
+                        let displacement = coordinates.x as f32 - size.peek().area.min_x();
                         100. / container_size.read().area.width() * displacement
                     }
                     _ => {
-                        let displacement = coordinates.y as f32 - size.area.min_y() - HANDLE_CENTER;
+                        let displacement = coordinates.y as f32 - size.peek().area.min_y();
                         100. / container_size.read().area.height() * displacement
                     }
                 };
 
-                let mut registry = registry.write();
+                if displacement_per > 0. {
+                    // Resizing to the right
 
-                {
-                    let mut prev_index = index - 1;
-                    let mut prev_panel: Option<Option<&mut ResizableItem>> =
-                        Some(registry.registry.get_mut(prev_index));
-                    while let Some(Some(ref mut panel)) = prev_panel.take() {
-                        if let Some(size) = panel.try_write_size() {
-                            *size = (*size + displacement_per).clamp(0., 100.);
+                    let mut available_per = displacement_per;
+                    let mut acc_per = 0.0;
 
-                            if *size <= 0. && prev_index > 0 {
-                                prev_index -= 1;
-                                prev_panel = Some(registry.registry.get_mut(prev_index));
+                    // Resize panels to the right
+                    for next_item in &mut registry.registry[index..].iter_mut() {
+                        if let Some(size) = next_item.try_write_size() {
+                            let old_size = *size;
+                            let new_size = (*size - available_per).clamp(0., 100.);
+
+                            *size = new_size;
+                            available_per = displacement_per - new_size - old_size;
+                            acc_per -= new_size - old_size;
+
+                            // Stop carrying panels to the right as they still have size
+                            if old_size > 0. {
+                                break;
                             }
-                        } else {
-                            prev_index -= 1;
-                            prev_panel = Some(registry.registry.get_mut(prev_index));
                         }
                     }
-                }
 
-                {
-                    let mut next_index = index + 1;
-                    let mut next_panel: Option<Option<&mut ResizableItem>> =
-                        Some(registry.registry.get_mut(next_index));
-                    while let Some(Some(ref mut panel)) = next_panel.take() {
-                        if let Some(size) = panel.try_write_size() {
-                            *size = (*size - displacement_per).clamp(0., 100.);
+                    // Resize panels to the left
+                    for prev_item in &mut registry.registry[0..index].iter_mut().rev() {
+                        if let Some(size) = prev_item.try_write_size() {
+                            let old_size = *size;
+                            let new_size = (*size + acc_per).clamp(0., 100.);
 
-                            if *size <= 0. && next_index > 0 {
-                                next_index += 1;
-                                next_panel = Some(registry.registry.get_mut(next_index));
+                            *size = new_size;
+
+                            // Stop carrying panels to the left as they still have size
+                            if old_size > 0. {
+                                break;
                             }
-                        } else {
-                            next_index += 1;
-                            next_panel = Some(registry.registry.get_mut(next_index));
+                        }
+                    }
+                } else {
+                    // Resizing to the left
+                    let mut available_per = displacement_per;
+                    let mut acc_per = 0.0;
+                    // Resize panels to the left
+                    for prev_item in &mut registry.registry[0..index].iter_mut().rev() {
+                        if let Some(size) = prev_item.try_write_size() {
+                            let old_size = *size;
+                            let new_size = (*size + available_per).clamp(0., 100.);
+
+                            *size = new_size;
+                            available_per = displacement_per - new_size - old_size;
+                            acc_per += new_size - old_size;
+
+                            // Stop carrying panels to the left as they still have size
+                            if old_size > 0. {
+                                break;
+                            }
+                        }
+                    }
+
+                    // Resize panels to the right
+                    for next_item in &mut registry.registry[index..].iter_mut() {
+                        if let Some(size) = next_item.try_write_size() {
+                            let old_size = *size;
+                            let new_size = (*size - acc_per).clamp(0., 100.);
+
+                            *size = new_size;
+
+                            // Stop carrying panels to the right as they still have size
+                            if old_size > 0. {
+                                break;
+                            }
                         }
                     }
                 }
@@ -293,4 +323,137 @@ pub fn ResizableHandle(
         onglobalmouseover: onmouseover,
         onmouseleave,
     })
+}
+
+#[cfg(test)]
+mod test {
+    use freya::prelude::*;
+    use freya_testing::prelude::*;
+
+    #[tokio::test]
+    pub async fn resizable_container() {
+        fn resizable_container_app() -> Element {
+            rsx!(
+                ResizableContainer {
+                    ResizablePanel {
+                        initial_size: 50.,
+                        label {
+                            "Panel 0"
+                        }
+                    }
+                    ResizableHandle { }
+                    ResizablePanel { // Panel 1
+                        initial_size: 50.,
+                        ResizableContainer {
+                            direction: "horizontal",
+                            ResizablePanel {
+                                initial_size: 33.33,
+                                label {
+                                    "Panel 2"
+                                }
+                            }
+                            ResizableHandle { }
+                            ResizablePanel {
+                                initial_size: 33.33,
+                                label {
+                                    "Panel 3"
+                                }
+                            }
+                            ResizableHandle { }
+                            ResizablePanel {
+                                initial_size: 33.33,
+                                label {
+                                    "Panel 4"
+                                }
+                            }
+                        }
+                    }
+                }
+            )
+        }
+
+        let mut utils = launch_test(resizable_container_app);
+        utils.wait_for_update().await;
+        let root = utils.root();
+
+        let container = root.get(0);
+        let panel_0 = container.get(0);
+        let panel_1 = container.get(2);
+        let panel_2 = panel_1.get(0).get(0);
+        let panel_3 = panel_1.get(0).get(2);
+        let panel_4 = panel_1.get(0).get(4);
+
+        assert_eq!(panel_0.layout().unwrap().area.height().round(), 250.0);
+        assert_eq!(panel_1.layout().unwrap().area.height().round(), 250.0);
+        assert_eq!(panel_2.layout().unwrap().area.width().round(), 167.0);
+        assert_eq!(panel_3.layout().unwrap().area.width().round(), 167.0);
+        assert_eq!(panel_4.layout().unwrap().area.width().round(), 167.0);
+
+        // Vertical
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseDown,
+            cursor: (100.0, 250.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseOver,
+            cursor: (100.0, 200.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (0.0, 0.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.wait_for_update().await;
+
+        assert_eq!(panel_0.layout().unwrap().area.height().round(), 200.0); // 250 - 50
+        assert_eq!(panel_1.layout().unwrap().area.height().round(), 300.0);
+
+        // Horizontal
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseDown,
+            cursor: (167.0, 300.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseOver,
+            cursor: (185.0, 300.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::Click,
+            cursor: (0.0, 0.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+        utils.wait_for_update().await;
+
+        assert_eq!(panel_2.layout().unwrap().area.width().round(), 185.0); // 165 + 20
+        assert_eq!(panel_3.layout().unwrap().area.width().round(), 148.0);
+
+        // Horizontal but pushing two handles
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseDown,
+            cursor: (341.0, 300.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseOver,
+            cursor: (25.0, 300.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.wait_for_update().await;
+        utils.push_event(PlatformEvent::Mouse {
+            name: EventName::MouseOver,
+            cursor: (25.0, 300.0).into(),
+            button: Some(MouseButton::Left),
+        });
+        utils.wait_for_update().await;
+
+        assert_eq!(panel_2.layout().unwrap().area.width().round(), 21.0);
+        assert_eq!(panel_3.layout().unwrap().area.width().round(), 0.0);
+        assert_eq!(panel_4.layout().unwrap().area.width().round(), 479.0);
+    }
 }
