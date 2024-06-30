@@ -4,7 +4,24 @@ version = "0.0.0"
 edition = "2021"
 
 [workspace]
-members = ["crates/renderer", "crates/state", "crates/freya", "crates/elements", "crates/components", "crates/hooks", "crates/common", "crates/core", "crates/testing", "crates/devtools", "crates/torin", "crates/engine", "./examples/installer",  "crates/native-core",  "crates/native-core-macro"]
+members = [
+    "crates/renderer",
+    "crates/state",
+    "crates/freya",
+    "crates/elements",
+    "crates/components",
+    "crates/hooks",
+    "crates/common",
+    "crates/core",
+    "crates/testing",
+    "crates/devtools",
+    "crates/torin",
+    "crates/engine",
+    "./examples/installer",
+    "./examples/all-components",
+    "crates/native-core",
+    "crates/native-core-macro",
+]
 
 [features]
 log = ["freya/log"]
@@ -39,15 +56,21 @@ torin = { path = "crates/torin", version = "0.2" }
 freya-native-core-macro = { path = "crates/native-core-macro", version = "0.2" }
 freya-native-core = { path = "crates/native-core", version = "0.2" }
 
-dioxus = { version = "0.5", default-features = false, features = ["macro", "signals", "hooks"]}
+dioxus = { version = "0.5", default-features = false, features = [
+    "macro",
+    "signals",
+    "hooks",
+] }
 dioxus-rsx = { version = "0.5", features = ["hot_reload"] }
 dioxus-core-macro = { version = "0.5" }
 dioxus-hooks = { version = "0.5" }
 dioxus-signals = { version = "0.5" }
 dioxus-core = { version = "0.5" }
-dioxus-hot-reload = { version = "0.5", features = ["file_watcher"], default-features = false }
+dioxus-hot-reload = { version = "0.5", features = [
+    "file_watcher",
+], default-features = false }
 dioxus-router = { version = "0.5", default-features = false }
-dioxus-sdk = { version = "0.5", features = ["clipboard"]}
+dioxus-sdk = { version = "0.5", features = ["clipboard"] }
 
 skia-safe = { version = "0.75.0", features = ["gl", "textlayout", "svg"] }
 
@@ -56,14 +79,23 @@ glutin = "0.32.0"
 glutin-winit = "0.5.0"
 raw-window-handle = "0.6.0"
 winit = "0.30.0"
-tokio = { version = "1.33.0", features = ["sync", "rt-multi-thread", "time", "macros"] }
-accesskit = { version = "0.16.0", features = ["serde"]}
+tokio = { version = "1.33.0", features = [
+    "sync",
+    "rt-multi-thread",
+    "time",
+    "macros",
+] }
+accesskit = { version = "0.16.0", features = ["serde"] }
 accesskit_winit = "0.22.0"
-shipyard = { version = "0.6.2", features = ["proc", "std", "parallel"], default-features = false }
+shipyard = { version = "0.6.2", features = [
+    "proc",
+    "std",
+    "parallel",
+], default-features = false }
 smallvec = "1.13.1"
 
 euclid = "0.22.9"
-uuid = { version = "1.4.1", features = ["v4"]}
+uuid = { version = "1.4.1", features = ["v4"] }
 futures-util = "0.3.30"
 futures-task = "0.3.30"
 tracing = "0.1"
@@ -72,7 +104,7 @@ rustc-hash = "2.0.0"
 
 [dev-dependencies]
 skia-safe = { workspace = true }
-tokio = { workspace = true, features = ["fs"]}
+tokio = { workspace = true, features = ["fs"] }
 dioxus = { workspace = true }
 freya = { workspace = true }
 freya-core = { workspace = true }

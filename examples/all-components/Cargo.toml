@@ -1,0 +1,11 @@
+[package]
+name = "freya-design-system-example"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+freya = { workspace = true }
+dioxus = { workspace = true }
+dioxus-router = { workspace = true }
+strum = { version = "0.26", features = ["derive"] }
+itertools = "0.13.0"
