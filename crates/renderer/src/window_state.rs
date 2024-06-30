@@ -114,30 +114,18 @@ impl<'a, State: Clone + 'a> WindowState<'a, State> {
             .with_decorations(config.window_config.decorations)
             .with_transparent(config.window_config.transparent)
             .with_window_icon(config.window_config.icon.take())
-            .with_inner_size(LogicalSize::<f64>::new(
-                config.window_config.width,
-                config.window_config.height,
-            ));
+            .with_inner_size(LogicalSize::<f64>::from(config.window_config.size));
 
         set_resource_cache_total_bytes_limit(1000000); // 1MB
         set_resource_cache_single_allocation_byte_limit(Some(500000)); // 0.5MB
 
-        if let Some(min_size) = config
-            .window_config
-            .min_width
-            .zip(config.window_config.min_height)
-        {
-            window_attributes =
-                window_attributes.with_min_inner_size(LogicalSize::<f64>::from(min_size))
+        if let Some((min_width, min_height)) = config.window_config.min_size {
+            window_attributes = window_attributes
+                .with_min_inner_size(LogicalSize::<f64>::new(min_width, min_height));
         }
-
-        if let Some(max_size) = config
-            .window_config
-            .max_width
-            .zip(config.window_config.max_height)
-        {
-            window_attributes =
-                window_attributes.with_max_inner_size(LogicalSize::<f64>::from(max_size))
+        if let Some((max_width, max_height)) = config.window_config.max_size {
+            window_attributes = window_attributes
+                .with_max_inner_size(LogicalSize::<f64>::new(max_width, max_height));
         }
 
         if let Some(with_window_attributes) = &config.window_config.window_attributes_hook {
