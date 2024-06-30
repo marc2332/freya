@@ -5,8 +5,11 @@ use freya_elements::{
     events::MouseEvent,
 };
 use freya_hooks::{
+    use_applied_theme,
     use_node_signal,
     use_platform,
+    ResizableHandleTheme,
+    ResizableHandleThemeWith,
 };
 use winit::window::CursorIcon;
 
@@ -145,7 +148,14 @@ pub enum HandleStatus {
 
 /// Resizable panel to be used in combination with [ResizableContainer] and [ResizablePanel].
 #[component]
-pub fn ResizableHandle() -> Element {
+pub fn ResizableHandle(
+    /// Theme override.
+    theme: Option<ResizableHandleThemeWith>,
+) -> Element {
+    let ResizableHandleTheme {
+        background,
+        hover_background,
+    } = use_applied_theme!(&theme, resizable_handle);
     let (node_reference, size) = use_node_signal();
     let mut clicking = use_signal(|| false);
     let mut status = use_signal(HandleStatus::default);
@@ -188,13 +198,16 @@ pub fn ResizableHandle() -> Element {
                 let coordinates = e.get_screen_coordinates();
                 let size = size.peek();
 
+                // The width of the handle is 4, so when dragging it we want the cursor to be in center of it, for this we can simply move the handle with an offset of the half the width, so 2.
+                const HANDLE_CENTER: f32 = 2.;
+
                 let displacement_per = match registry.read().direction.as_str() {
                     "horizontal" => {
-                        let displacement = coordinates.x as f32 - size.area.min_x();
+                        let displacement = coordinates.x as f32 - size.area.min_x() - HANDLE_CENTER;
                         100. / container_size.read().area.width() * displacement
                     }
                     _ => {
-                        let displacement = coordinates.y as f32 - size.area.min_y();
+                        let displacement = coordinates.y as f32 - size.area.min_y() - HANDLE_CENTER;
                         100. / container_size.read().area.height() * displacement
                     }
                 };
@@ -250,9 +263,11 @@ pub fn ResizableHandle() -> Element {
     };
 
     let onclick = move |_: MouseEvent| {
-        clicking.set(false);
-        if *status.peek() != HandleStatus::Hovering {
-            platform.set_cursor(CursorIcon::default());
+        if *clicking.peek() {
+            if *status.peek() != HandleStatus::Hovering {
+                platform.set_cursor(CursorIcon::default());
+            }
+            clicking.set(false);
         }
     };
 
@@ -261,11 +276,17 @@ pub fn ResizableHandle() -> Element {
         _ => ("fill", "4"),
     };
 
+    let background = match status() {
+        _ if clicking() => hover_background,
+        HandleStatus::Hovering => hover_background,
+        HandleStatus::Idle => background,
+    };
+
     rsx!(rect {
         reference: node_reference,
         width: "{width}",
         height: "{height}",
-        background: "rgb(200, 200, 200)", // TODO: Support theming
+        background: "{background}",
         onmousedown,
         onglobalclick: onclick,
         onmouseenter,
