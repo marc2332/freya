@@ -109,7 +109,11 @@ impl ParseAttribute for FontStyleState {
         match attr.attribute {
             AttributeName::Color => {
                 if let Some(value) = attr.value.as_text() {
-                    self.color = Color::parse(value)?;
+                    // Make an exception for the "inherit" as in this case we don't want to pass
+                    //  a color at all but use the inherited one.
+                    if value != "inherit" {
+                        self.color = Color::parse(value)?;
+                    }
                 }
             }
             AttributeName::TextShadow => {

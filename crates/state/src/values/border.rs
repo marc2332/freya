@@ -63,6 +63,10 @@ impl fmt::Display for BorderStyle {
 
 impl Parse for Border {
     fn parse(value: &str) -> Result<Self, ParseError> {
+        if value == "none" {
+            return Ok(Self::default());
+        }
+
         let mut border_values = value.split_ascii_whitespace();
 
         Ok(Border {

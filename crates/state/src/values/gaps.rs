@@ -9,6 +9,10 @@ impl Parse for Gaps {
     fn parse(value: &str) -> Result<Self, ParseError> {
         let mut paddings = Gaps::default();
 
+        if value == "none" {
+            return Ok(paddings);
+        }
+
         let mut values = value.split_ascii_whitespace();
 
         match values.clone().count() {
