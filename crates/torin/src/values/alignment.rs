@@ -4,6 +4,9 @@ pub enum Alignment {
     Start,
     Center,
     End,
+    SpaceBetween,
+    SpaceEvenly,
+    SpaceAround,
 }
 
 impl Alignment {
@@ -16,6 +19,9 @@ impl Alignment {
             Alignment::Start => "start".to_string(),
             Alignment::Center => "center".to_string(),
             Alignment::End => "end".to_string(),
+            Alignment::SpaceBetween => "space-between".to_string(),
+            Alignment::SpaceEvenly => "space-evenly".to_string(),
+            Alignment::SpaceAround => "space-around".to_string(),
         }
     }
 }

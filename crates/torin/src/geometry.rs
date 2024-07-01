@@ -27,6 +27,17 @@ pub trait AreaModel {
         direction: &DirectionMode,
         alignment_direction: AlignmentDirection,
     );
+
+    fn align_position(
+        &mut self,
+        initial_available_area: &Area,
+        contents_area: &Size2D,
+        alignment: &Alignment,
+        direction: &DirectionMode,
+        alignment_direction: AlignmentDirection,
+        children_len: usize,
+        child_n: usize,
+    );
 }
 
 impl AreaModel for Area {
@@ -85,6 +96,68 @@ impl AreaModel for Area {
             },
         }
     }
+
+    fn align_position(
+        &mut self,
+        initial_available_area: &Area,
+        inner_sizes: &Size2D,
+        alignment: &Alignment,
+        direction: &DirectionMode,
+        alignment_direction: AlignmentDirection,
+        children_len: usize,
+        child_n: usize,
+    ) {
+        let axis = get_align_axis(direction, alignment_direction);
+
+        match axis {
+            AlignAxis::Height => match alignment {
+                Alignment::SpaceBetween if child_n > 0 => {
+                    let all_gaps_sizes = initial_available_area.height() - inner_sizes.height;
+                    let gap_size = all_gaps_sizes / (children_len - 1) as f32;
+                    self.origin.y += gap_size;
+                }
+                Alignment::SpaceEvenly => {
+                    let all_gaps_sizes = initial_available_area.height() - inner_sizes.height;
+                    let gap_size = all_gaps_sizes / (children_len + 1) as f32;
+                    self.origin.y += gap_size;
+                }
+                Alignment::SpaceAround => {
+                    let all_gaps_sizes = initial_available_area.height() - inner_sizes.height;
+                    let one_gap_size = all_gaps_sizes / children_len as f32;
+                    let gap_size = if child_n == 0 || child_n == children_len {
+                        one_gap_size / 2.
+                    } else {
+                        one_gap_size
+                    };
+                    self.origin.y += gap_size;
+                }
+                _ => {}
+            },
+            AlignAxis::Width => match alignment {
+                Alignment::SpaceBetween if child_n > 0 => {
+                    let all_gaps_sizes = initial_available_area.width() - inner_sizes.width;
+                    let gap_size = all_gaps_sizes / (children_len - 1) as f32;
+                    self.origin.x += gap_size;
+                }
+                Alignment::SpaceEvenly => {
+                    let all_gaps_sizes = initial_available_area.width() - inner_sizes.width;
+                    let gap_size = all_gaps_sizes / (children_len + 1) as f32;
+                    self.origin.x += gap_size;
+                }
+                Alignment::SpaceAround => {
+                    let all_gaps_sizes = initial_available_area.width() - inner_sizes.width;
+                    let one_gap_size = all_gaps_sizes / children_len as f32;
+                    let gap_size = if child_n == 0 || child_n == children_len {
+                        one_gap_size / 2.
+                    } else {
+                        one_gap_size
+                    };
+                    self.origin.x += gap_size;
+                }
+                _ => {}
+            },
+        }
+    }
 }
 
 pub fn get_align_axis(
@@ -108,6 +181,7 @@ pub enum AlignmentDirection {
     Cross,
 }
 
+#[derive(Debug)]
 pub enum AlignAxis {
     Height,
     Width,
