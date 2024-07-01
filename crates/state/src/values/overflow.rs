@@ -1,6 +1,9 @@
 use std::fmt;
 
-use crate::Parse;
+use crate::{
+    Parse,
+    ParseError,
+};
 
 #[derive(Clone, Debug, PartialEq, Eq, Default)]
 pub enum OverflowMode {
@@ -9,13 +12,8 @@ pub enum OverflowMode {
     Clip,
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub struct ParseOverflowError;
-
 impl Parse for OverflowMode {
-    type Err = ();
-
-    fn parse(value: &str) -> Result<Self, Self::Err> {
+    fn parse(value: &str) -> Result<Self, ParseError> {
         Ok(match value {
             "clip" => OverflowMode::Clip,
             _ => OverflowMode::None,

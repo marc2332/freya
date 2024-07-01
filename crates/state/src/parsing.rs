@@ -1,10 +1,38 @@
 use std::str::CharIndices;
 
+use freya_native_core::prelude::OwnedAttributeView;
+
+use crate::CustomAttributeValues;
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct ParseError;
+
 // FromStr but we own it so we can impl it on torin and skia_safe types.
 pub trait Parse: Sized {
-    type Err;
+    fn parse(value: &str) -> Result<Self, ParseError>;
+}
 
-    fn parse(value: &str) -> Result<Self, Self::Err>;
+pub trait ParseAttribute: Sized {
+    fn parse_attribute(
+        &mut self,
+        attr: OwnedAttributeView<CustomAttributeValues>,
+    ) -> Result<(), ParseError>;
+
+    fn parse_safe(&mut self, attr: OwnedAttributeView<CustomAttributeValues>) {
+        #[cfg(debug_assertions)]
+        {
+            let error_attr = attr.clone();
+            if self.parse_attribute(attr).is_err() {
+                panic!(
+                    "Failed to parse attribute '{:?}' with value '{:?}'",
+                    error_attr.attribute, error_attr.value
+                );
+            }
+        }
+
+        #[cfg(not(debug_assertions))]
+        self.parse_attribute(attr).ok()
+    }
 }
 
 pub trait ExtSplit {

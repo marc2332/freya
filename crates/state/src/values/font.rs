@@ -1,14 +1,12 @@
 use freya_engine::prelude::*;
 
-use crate::Parse;
-
-#[derive(Debug, PartialEq, Eq)]
-pub struct ParseTextAlignError;
+use crate::{
+    Parse,
+    ParseError,
+};
 
 impl Parse for TextAlign {
-    type Err = ParseTextAlignError;
-
-    fn parse(value: &str) -> Result<Self, Self::Err> {
+    fn parse(value: &str) -> Result<Self, ParseError> {
         Ok(match value {
             "center" => TextAlign::Center,
             "justify" => TextAlign::Justify,
@@ -21,13 +19,8 @@ impl Parse for TextAlign {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub struct ParseSlantError;
-
 impl Parse for Slant {
-    type Err = ParseSlantError;
-
-    fn parse(value: &str) -> Result<Self, Self::Err> {
+    fn parse(value: &str) -> Result<Self, ParseError> {
         Ok(match value {
             "upright" => Slant::Upright,
             "italic" => Slant::Italic,
@@ -37,13 +30,8 @@ impl Parse for Slant {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub struct ParseWidthError;
-
 impl Parse for Width {
-    type Err = ParseWidthError;
-
-    fn parse(value: &str) -> Result<Self, Self::Err> {
+    fn parse(value: &str) -> Result<Self, ParseError> {
         Ok(match value {
             "ultra-condensed" => Width::ULTRA_CONDENSED,
             "extra-condensed" => Width::EXTRA_CONDENSED,
@@ -59,18 +47,13 @@ impl Parse for Width {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub struct ParseWeightError;
-
 impl Parse for Weight {
-    type Err = ParseWeightError;
-
     // NOTES:
     // This is mostly taken from the OpenType specification (https://learn.microsoft.com/en-us/typography/opentype/spec/os2#usweightclass)
     // CSS has one deviation from this spec, which uses the value "950" for extra_black.
     // skia_safe also has an "invisible" weight smaller than the thin weight, which could fall under CSS's interpretation of OpenType's
     // version. In this case it would be font_weight: "50".
-    fn parse(value: &str) -> Result<Self, Self::Err> {
+    fn parse(value: &str) -> Result<Self, ParseError> {
         Ok(match value {
             "invisible" => Weight::INVISIBLE,
             "thin" => Weight::THIN,
@@ -125,13 +108,8 @@ impl TextOverflow {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub struct ParseTextOverflowError;
-
 impl Parse for TextOverflow {
-    type Err = ParseTextOverflowError;
-
-    fn parse(value: &str) -> Result<Self, Self::Err> {
+    fn parse(value: &str) -> Result<Self, ParseError> {
         Ok(match value {
             "ellipsis" => TextOverflow::Ellipsis,
             "clip" => TextOverflow::Clip,

@@ -1,14 +1,12 @@
 use torin::alignment::Alignment;
 
-use crate::Parse;
-
-#[derive(Debug, PartialEq, Eq)]
-pub struct ParseAlignmentError;
+use crate::{
+    Parse,
+    ParseError,
+};
 
 impl Parse for Alignment {
-    type Err = ParseAlignmentError;
-
-    fn parse(value: &str) -> Result<Self, Self::Err> {
+    fn parse(value: &str) -> Result<Self, ParseError> {
         Ok(match value {
             "center" => Alignment::Center,
             "end" => Alignment::End,

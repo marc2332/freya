@@ -12,11 +12,41 @@ use freya_native_core::{
 };
 use freya_native_core_macro::partial_derive_state;
 
-use crate::CustomAttributeValues;
+use crate::{
+    CustomAttributeValues,
+    ParseAttribute,
+    ParseError,
+};
 
 #[derive(Default, Clone, Debug, Component, PartialEq)]
 pub struct TransformState {
     pub rotate_degs: Option<f32>,
+}
+
+impl ParseAttribute for TransformState {
+    fn parse_attribute(
+        &mut self,
+        attr: freya_native_core::prelude::OwnedAttributeView<CustomAttributeValues>,
+    ) -> Result<(), crate::ParseError> {
+        #[allow(clippy::single_match)]
+        match attr.attribute {
+            AttributeName::Rotate => {
+                if let Some(value) = attr.value.as_text() {
+                    if value.ends_with("deg") {
+                        self.rotate_degs = Some(
+                            value
+                                .replacen("deg", "", 1)
+                                .parse::<f32>()
+                                .map_err(|_| ParseError)?,
+                        )
+                    }
+                }
+            }
+            _ => {}
+        }
+
+        Ok(())
+    }
 }
 
 #[partial_derive_state]
@@ -38,28 +68,16 @@ impl State<CustomAttributeValues> for TransformState {
         _children: Vec<<Self::ChildDependencies as Dependancy>::ElementBorrowed<'a>>,
         _context: &SendAnyMap,
     ) -> bool {
-        let mut rotate_degs = None;
+        let mut transform_state = TransformState::default();
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
-                #[allow(clippy::single_match)]
-                match attr.attribute {
-                    AttributeName::Rotate => {
-                        if let Some(value) = attr.value.as_text() {
-                            if value.ends_with("deg") {
-                                if let Ok(degs) = value.replacen("deg", "", 1).parse::<f32>() {
-                                    rotate_degs = Some(degs)
-                                }
-                            }
-                        }
-                    }
-                    _ => {}
-                }
+                transform_state.parse_safe(attr);
             }
         }
 
-        let changed = rotate_degs != self.rotate_degs;
-        *self = Self { rotate_degs };
+        let changed = transform_state != *self;
+        *self = transform_state;
         changed
     }
 }
