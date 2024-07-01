@@ -2,7 +2,6 @@ pub use euclid::Rect;
 use rustc_hash::FxHashMap;
 
 use crate::{
-    alignment::Alignment,
     custom_measurer::LayoutMeasurer,
     dom_adapter::{
         DOMAdapter,
@@ -336,10 +335,7 @@ pub fn measure_inner_nodes<Key: NodeKey>(
                 &child_data,
             );
 
-            if parent_node.cross_alignment.is_not_start()
-                || parent_node.main_alignment == Alignment::SpaceBetween
-                || parent_node.main_alignment == Alignment::SpaceEvenly
-                || parent_node.main_alignment == Alignment::SpaceAround
+            if parent_node.cross_alignment.is_not_start() || parent_node.main_alignment.is_spaced()
             {
                 initial_phase_sizes.insert(*child_id, child_areas.area.size);
             }
@@ -383,10 +379,7 @@ pub fn measure_inner_nodes<Key: NodeKey>(
 
         let mut adapted_available_area = *available_area;
 
-        if parent_node.main_alignment == Alignment::SpaceBetween
-            || parent_node.main_alignment == Alignment::SpaceEvenly
-            || parent_node.main_alignment == Alignment::SpaceAround
-        {
+        if parent_node.main_alignment.is_spaced() {
             // Align the Main axis if necessary
             adapted_available_area.align_position(
                 &initial_available_area,
