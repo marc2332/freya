@@ -1,7 +1,7 @@
 [package]
 name = "freya-node-state"
 description = "Internal Node states for Dioxus RealDOM elements used in Freya."
-version = "0.2.1"
+version = "0.3.0"
 edition = "2021"
 license = "MIT"
 authors = ["Marc Espín <mespinsanz@gmail.com>"]
