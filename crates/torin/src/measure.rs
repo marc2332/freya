@@ -193,7 +193,6 @@ pub fn measure_node<Key: NodeKey>(
             // Create an area containing the available space inside the inner area
             let mut available_area = inner_area;
 
-            // Adjust the available area with the node offsets (mainly used by scrollviews)
             available_area.move_with_offsets(&node.offset_x, &node.offset_y);
 
             let mut measurement_mode = MeasureMode::ParentIsNotCached {
@@ -290,6 +289,7 @@ pub fn measure_inner_nodes<Key: NodeKey>(
     let children = dom_adapter.children_of(parent_node_id);
 
     let mut initial_phase_sizes = FxHashMap::default();
+    let mut initial_phase_inner_sizes = *inner_sizes;
 
     // Initial phase: Measure the size and position of the children if the parent has a
     // non-start cross alignment, non-start main aligment of a fit-content.
@@ -299,7 +299,6 @@ pub fn measure_inner_nodes<Key: NodeKey>(
     {
         let mut initial_phase_mode = mode.to_owned();
         let mut initial_phase_mode = initial_phase_mode.to_mut();
-        let mut initial_phase_inner_sizes = *inner_sizes;
         let mut initial_phase_available_area = *available_area;
 
         // 1. Measure the children
@@ -336,7 +335,8 @@ pub fn measure_inner_nodes<Key: NodeKey>(
                 &child_data,
             );
 
-            if parent_node.cross_alignment.is_not_start() {
+            if parent_node.cross_alignment.is_not_start() || parent_node.main_alignment.is_spaced()
+            {
                 initial_phase_sizes.insert(*child_id, child_areas.area.size);
             }
         }
@@ -369,18 +369,34 @@ pub fn measure_inner_nodes<Key: NodeKey>(
         }
     }
 
+    let initial_available_area = *available_area;
+
     // Final phase: measure the children with all the axis and sizes adjusted
-    for child_id in children {
+    for (child_n, child_id) in children.into_iter().enumerate() {
         let Some(child_data) = dom_adapter.get_node(&child_id) else {
             continue;
         };
 
         let mut adapted_available_area = *available_area;
+
+        if parent_node.main_alignment.is_spaced() {
+            // Align the Main axis if necessary
+            adapted_available_area.align_position(
+                &initial_available_area,
+                &initial_phase_inner_sizes,
+                &parent_node.main_alignment,
+                &parent_node.direction,
+                AlignmentDirection::Main,
+                initial_phase_sizes.len(),
+                child_n,
+            );
+        }
+
         if parent_node.cross_alignment.is_not_start() {
             let initial_phase_size = initial_phase_sizes.get(&child_id);
 
             if let Some(initial_phase_size) = initial_phase_size {
-                // 1. Align the Cross axis if necessary
+                // Align the Cross axis if necessary
                 adapted_available_area.align_content(
                     available_area,
                     initial_phase_size,

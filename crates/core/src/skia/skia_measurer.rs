@@ -197,6 +197,9 @@ pub fn align_main_align_paragraph(node: &DioxusNode, area: &Area, paragraph: &Pa
         Alignment::Start => 0.,
         Alignment::Center => (area.height() / 2.0) - (paragraph.height() / 2.0),
         Alignment::End => area.height() - paragraph.height(),
+        Alignment::SpaceBetween => 0.,
+        Alignment::SpaceEvenly => 0.,
+        Alignment::SpaceAround => 0.,
     }
 }
 
