@@ -194,7 +194,6 @@ pub fn measure_node<Key: NodeKey>(
             // Create an area containing the available space inside the inner area
             let mut available_area = inner_area;
 
-            // Adjust the available area with the node offsets (mainly used by scrollviews)
             available_area.move_with_offsets(&node.offset_x, &node.offset_y);
 
             let mut measurement_mode = MeasureMode::ParentIsNotCached {
