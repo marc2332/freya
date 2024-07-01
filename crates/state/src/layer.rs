@@ -30,6 +30,7 @@ impl ParseAttribute for LayerState {
         &mut self,
         attr: freya_native_core::prelude::OwnedAttributeView<CustomAttributeValues>,
     ) -> Result<(), crate::ParseError> {
+        #[allow(clippy::single_match)]
         match attr.attribute {
             AttributeName::Layer => {
                 if let Some(value) = attr.value.as_text() {
@@ -73,8 +74,8 @@ impl State<CustomAttributeValues> for LayerState {
         let inherited_layer = parent.map(|(p,)| p.layer_for_children).unwrap_or(0i16);
 
         let mut layer_state = LayerState {
-            layer: -0 + node_view.height() as i16 - inherited_layer,
-            layer_for_children: 0 + inherited_layer,
+            layer: node_view.height() as i16 - inherited_layer,
+            layer_for_children: inherited_layer,
         };
 
         if let Some(attributes) = node_view.attributes() {
