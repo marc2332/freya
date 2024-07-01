@@ -21,10 +21,7 @@ pub fn DsGui(children: Element) -> Element {
             rect {
                 height: "80%",
                 width: "100%",
-                ThemeProvider {
-                    theme: theme_signal()
-                    {children}
-                }
+                {children}
             }
             rect{
                 height: "20%",
