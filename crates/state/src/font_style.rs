@@ -24,6 +24,7 @@ use crate::{
     CustomAttributeValues,
     ExtSplit,
     Parse,
+    ParseAttribute,
     TextOverflow,
 };
 
@@ -100,6 +101,137 @@ impl Default for FontStyleState {
     }
 }
 
+impl ParseAttribute for FontStyleState {
+    fn parse_attribute(
+        &mut self,
+        attr: freya_native_core::prelude::OwnedAttributeView<CustomAttributeValues>,
+    ) -> Result<(), crate::ParseError> {
+        match attr.attribute {
+            AttributeName::Color => {
+                if let Some(value) = attr.value.as_text() {
+                    self.color = Color::parse(value)?;
+                }
+            }
+            AttributeName::TextShadow => {
+                if let Some(value) = attr.value.as_text() {
+                    self.text_shadows = value
+                        .split_excluding_group(',', '(', ')')
+                        .map(|chunk| TextShadow::parse(chunk).unwrap_or_default())
+                        .collect();
+                }
+            }
+            AttributeName::FontFamily => {
+                if let Some(value) = attr.value.as_text() {
+                    let families = value.split(',');
+                    self.font_family = families
+                        .into_iter()
+                        .map(|f| f.trim().to_string())
+                        .collect::<Vec<String>>();
+                }
+            }
+            AttributeName::FontSize => {
+                if let Some(value) = attr.value.as_text() {
+                    if let Ok(font_size) = value.parse::<f32>() {
+                        self.font_size = font_size;
+                    }
+                }
+            }
+            AttributeName::LineHeight => {
+                if let Some(value) = attr.value.as_text() {
+                    if let Ok(line_height) = value.parse() {
+                        self.line_height = line_height;
+                    }
+                }
+            }
+            AttributeName::TextAlign => {
+                if let Some(value) = attr.value.as_text() {
+                    if let Ok(text_align) = TextAlign::parse(value) {
+                        self.text_align = text_align;
+                    }
+                }
+            }
+            AttributeName::MaxLines => {
+                if let Some(value) = attr.value.as_text() {
+                    if let Ok(max_lines) = value.parse() {
+                        self.max_lines = Some(max_lines);
+                    }
+                }
+            }
+            AttributeName::TextOverflow => {
+                let value = attr.value.as_text();
+                if let Some(value) = value {
+                    if let Ok(text_overflow) = TextOverflow::parse(value) {
+                        self.text_overflow = text_overflow;
+                    }
+                }
+            }
+            AttributeName::FontStyle => {
+                if let Some(value) = attr.value.as_text() {
+                    if let Ok(font_slant) = Slant::parse(value) {
+                        self.font_slant = font_slant;
+                    }
+                }
+            }
+            AttributeName::FontWeight => {
+                if let Some(value) = attr.value.as_text() {
+                    if let Ok(font_weight) = Weight::parse(value) {
+                        self.font_weight = font_weight;
+                    }
+                }
+            }
+            AttributeName::FontWidth => {
+                if let Some(value) = attr.value.as_text() {
+                    if let Ok(font_width) = Width::parse(value) {
+                        self.font_width = font_width;
+                    }
+                }
+            }
+            AttributeName::Decoration => {
+                if let Some(value) = attr.value.as_text() {
+                    if let Ok(decoration) = TextDecoration::parse(value) {
+                        self.decoration.ty = decoration;
+                    }
+                }
+            }
+            AttributeName::DecorationStyle => {
+                if let Some(value) = attr.value.as_text() {
+                    if let Ok(style) = TextDecorationStyle::parse(value) {
+                        self.decoration.style = style;
+                    }
+                }
+            }
+            AttributeName::DecorationColor => {
+                if let Some(value) = attr.value.as_text() {
+                    if let Ok(new_decoration_color) = Color::parse(value) {
+                        self.decoration.color = new_decoration_color;
+                    }
+                } else {
+                    self.decoration.color = self.color;
+                }
+            }
+            AttributeName::WordSpacing => {
+                let value = attr.value.as_text();
+                if let Some(value) = value {
+                    if let Ok(word_spacing) = value.parse() {
+                        self.word_spacing = word_spacing;
+                    }
+                }
+            }
+            AttributeName::LetterSpacing => {
+                let value = attr.value.as_text();
+                if let Some(value) = value {
+                    if let Ok(letter_spacing) = value.parse() {
+                        self.letter_spacing = letter_spacing;
+                    }
+                }
+            }
+            _ => {}
+        }
+
+        Ok(())
+    }
+}
+
 #[partial_derive_state]
 impl State<CustomAttributeValues> for FontStyleState {
     type ParentDependencies = (Self,);
@@ -142,129 +274,7 @@ impl State<CustomAttributeValues> for FontStyleState {
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
-                match attr.attribute {
-                    AttributeName::Color => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(new_color) = Color::parse(value) {
-                                font_style.color = new_color;
-                            }
-                        }
-                    }
-                    AttributeName::TextShadow => {
-                        if let Some(value) = attr.value.as_text() {
-                            font_style.text_shadows = value
-                                .split_excluding_group(',', '(', ')')
-                                .map(|chunk| TextShadow::parse(chunk).unwrap_or_default())
-                                .collect();
-                        }
-                    }
-                    AttributeName::FontFamily => {
-                        if let Some(value) = attr.value.as_text() {
-                            let families = value.split(',');
-                            font_style.font_family = families
-                                .into_iter()
-                                .map(|f| f.trim().to_string())
-                                .collect::<Vec<String>>();
-                        }
-                    }
-                    AttributeName::FontSize => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(font_size) = value.parse::<f32>() {
-                                font_style.font_size = font_size;
-                            }
-                        }
-                    }
-                    AttributeName::LineHeight => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(line_height) = value.parse() {
-                                font_style.line_height = line_height;
-                            }
-                        }
-                    }
-                    AttributeName::TextAlign => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(text_align) = TextAlign::parse(value) {
-                                font_style.text_align = text_align;
-                            }
-                        }
-                    }
-                    AttributeName::MaxLines => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(max_lines) = value.parse() {
-                                font_style.max_lines = Some(max_lines);
-                            }
-                        }
-                    }
-                    AttributeName::TextOverflow => {
-                        let value = attr.value.as_text();
-                        if let Some(value) = value {
-                            if let Ok(text_overflow) = TextOverflow::parse(value) {
-                                font_style.text_overflow = text_overflow;
-                            }
-                        }
-                    }
-                    AttributeName::FontStyle => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(font_slant) = Slant::parse(value) {
-                                font_style.font_slant = font_slant;
-                            }
-                        }
-                    }
-                    AttributeName::FontWeight => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(font_weight) = Weight::parse(value) {
-                                font_style.font_weight = font_weight;
-                            }
-                        }
-                    }
-                    AttributeName::FontWidth => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(font_width) = Width::parse(value) {
-                                font_style.font_width = font_width;
-                            }
-                        }
-                    }
-                    AttributeName::Decoration => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(decoration) = TextDecoration::parse(value) {
-                                font_style.decoration.ty = decoration;
-                            }
-                        }
-                    }
-                    AttributeName::DecorationStyle => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(style) = TextDecorationStyle::parse(value) {
-                                font_style.decoration.style = style;
-                            }
-                        }
-                    }
-                    AttributeName::DecorationColor => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(new_decoration_color) = Color::parse(value) {
-                                font_style.decoration.color = new_decoration_color;
-                            }
-                        } else {
-                            font_style.decoration.color = font_style.color;
-                        }
-                    }
-                    AttributeName::WordSpacing => {
-                        let value = attr.value.as_text();
-                        if let Some(value) = value {
-                            if let Ok(word_spacing) = value.parse() {
-                                font_style.word_spacing = word_spacing;
-                            }
-                        }
-                    }
-                    AttributeName::LetterSpacing => {
-                        let value = attr.value.as_text();
-                        if let Some(value) = value {
-                            if let Ok(letter_spacing) = value.parse() {
-                                font_style.letter_spacing = letter_spacing;
-                            }
-                        }
-                    }
-                    _ => {}
-                }
+                font_style.parse_safe(attr);
             }
         }
 

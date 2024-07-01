@@ -1,6 +1,9 @@
 use std::fmt;
 
-use crate::Parse;
+use crate::{
+    Parse,
+    ParseError,
+};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum CursorMode {
@@ -8,13 +11,8 @@ pub enum CursorMode {
     Editable,
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub struct ParseCursorError;
-
 impl Parse for CursorMode {
-    type Err = ParseCursorError;
-
-    fn parse(value: &str) -> Result<Self, Self::Err> {
+    fn parse(value: &str) -> Result<Self, ParseError> {
         Ok(match value {
             "editable" => CursorMode::Editable,
             _ => CursorMode::None,

@@ -6,15 +6,13 @@ use torin::{
     },
 };
 
-use crate::Parse;
-
-#[derive(Debug, PartialEq, Eq)]
-pub struct ParseSizeError;
+use crate::{
+    Parse,
+    ParseError,
+};
 
 impl Parse for Size {
-    type Err = ParseSizeError;
-
-    fn parse(value: &str) -> Result<Self, Self::Err> {
+    fn parse(value: &str) -> Result<Self, ParseError> {
         if value == "auto" {
             Ok(Size::Inner)
         } else if value == "fill" {
@@ -28,38 +26,38 @@ impl Parse for Size {
                 value
                     .replace('%', "")
                     .parse::<f32>()
-                    .map_err(|_| ParseSizeError)?,
+                    .map_err(|_| ParseError)?,
             )))
         } else if value.contains('v') {
             Ok(Size::RootPercentage(Length::new(
                 value
                     .replace('v', "")
                     .parse::<f32>()
-                    .map_err(|_| ParseSizeError)?,
+                    .map_err(|_| ParseError)?,
             )))
         } else {
             Ok(Size::Pixels(Length::new(
-                value.parse::<f32>().map_err(|_| ParseSizeError)?,
+                value.parse::<f32>().map_err(|_| ParseError)?,
             )))
         }
     }
 }
 
-pub fn parse_calc(mut value: &str) -> Result<Vec<DynamicCalculation>, ParseSizeError> {
+pub fn parse_calc(mut value: &str) -> Result<Vec<DynamicCalculation>, ParseError> {
     let mut calcs = Vec::new();
 
     value = value
         .strip_prefix("calc(")
-        .ok_or(ParseSizeError)?
+        .ok_or(ParseError)?
         .strip_suffix(')')
-        .ok_or(ParseSizeError)?;
+        .ok_or(ParseError)?;
 
     let values = value.split_whitespace();
 
     for val in values {
         if val.contains('%') {
             calcs.push(DynamicCalculation::Percentage(
-                val.replace('%', "").parse().map_err(|_| ParseSizeError)?,
+                val.replace('%', "").parse().map_err(|_| ParseError)?,
             ));
         } else if val == "+" {
             calcs.push(DynamicCalculation::Add);
@@ -71,7 +69,7 @@ pub fn parse_calc(mut value: &str) -> Result<Vec<DynamicCalculation>, ParseSizeE
             calcs.push(DynamicCalculation::Mul);
         } else {
             calcs.push(DynamicCalculation::Pixels(
-                val.parse::<f32>().map_err(|_| ParseSizeError)?,
+                val.parse::<f32>().map_err(|_| ParseError)?,
             ));
         }
     }

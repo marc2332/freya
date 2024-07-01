@@ -5,6 +5,7 @@ use torin::scaled::Scaled;
 use crate::{
     Fill,
     Parse,
+    ParseError,
 };
 
 #[derive(Default, Clone, Copy, Debug, PartialEq)]
@@ -30,13 +31,8 @@ pub enum BorderAlignment {
     Center,
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub struct ParseBorderAlignmentError;
-
 impl Parse for BorderAlignment {
-    type Err = ParseBorderAlignmentError;
-
-    fn parse(value: &str) -> Result<Self, Self::Err> {
+    fn parse(value: &str) -> Result<Self, ParseError> {
         Ok(match value {
             "inner" => BorderAlignment::Inner,
             "outer" => BorderAlignment::Outer,
@@ -65,27 +61,22 @@ impl fmt::Display for BorderStyle {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub struct ParseBorderError;
-
 impl Parse for Border {
-    type Err = ParseBorderError;
-
-    fn parse(value: &str) -> Result<Self, Self::Err> {
+    fn parse(value: &str) -> Result<Self, ParseError> {
         let mut border_values = value.split_ascii_whitespace();
 
         Ok(Border {
             width: border_values
                 .next()
-                .ok_or(ParseBorderError)?
+                .ok_or(ParseError)?
                 .parse::<f32>()
-                .map_err(|_| ParseBorderError)?,
-            style: match border_values.next().ok_or(ParseBorderError)? {
+                .map_err(|_| ParseError)?,
+            style: match border_values.next().ok_or(ParseError)? {
                 "solid" => BorderStyle::Solid,
                 _ => BorderStyle::None,
             },
             fill: Fill::parse(&border_values.collect::<Vec<&str>>().join(" "))
-                .map_err(|_| ParseBorderError)?,
+                .map_err(|_| ParseError)?,
             alignment: BorderAlignment::default(),
         })
     }
