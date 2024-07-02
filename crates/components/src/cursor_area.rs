@@ -37,7 +37,7 @@ pub fn CursorArea(CursorAreaProps { children, icon }: CursorAreaProps) -> Elemen
     let platform = use_platform();
     let mut is_hovering = use_signal(|| false);
 
-    let onmouseover = move |_| {
+    let onmousemove = move |_| {
         *is_hovering.write() = true;
         platform.set_cursor(icon);
     };
@@ -55,7 +55,7 @@ pub fn CursorArea(CursorAreaProps { children, icon }: CursorAreaProps) -> Elemen
 
     rsx!(
         rect {
-            onmouseover,
+            onmousemove,
             onmouseleave,
             {children}
         }
@@ -98,7 +98,7 @@ mod test {
         assert_eq!(utils.cursor_icon(), CursorIcon::default());
 
         utils.push_event(PlatformEvent::Mouse {
-            name: EventName::MouseOver,
+            name: EventName::MouseMove,
             cursor: (100., 100.).into(),
             button: Some(MouseButton::Left),
         });
@@ -109,7 +109,7 @@ mod test {
         assert_eq!(utils.cursor_icon(), CursorIcon::Progress);
 
         utils.push_event(PlatformEvent::Mouse {
-            name: EventName::MouseOver,
+            name: EventName::MouseMove,
             cursor: (100., 300.).into(),
             button: Some(MouseButton::Left),
         });
@@ -120,7 +120,7 @@ mod test {
         assert_eq!(utils.cursor_icon(), CursorIcon::Pointer);
 
         utils.push_event(PlatformEvent::Mouse {
-            name: EventName::MouseOver,
+            name: EventName::MouseMove,
             cursor: (-1., -1.).into(),
             button: Some(MouseButton::Left),
         });

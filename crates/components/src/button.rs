@@ -3,6 +3,7 @@ use freya_elements::{
     elements as dioxus_elements,
     events::{
         KeyboardEvent,
+        MouseEvent,
         PointerEvent,
         PointerType,
     },
@@ -112,6 +113,7 @@ pub fn Button(
         to_owned![onpress, onclick];
         move |ev: PointerEvent| {
             focus.focus();
+            ev.stop_propagation();
             if let Some(onpress) = &onpress {
                 let is_valid = match ev.data.pointer_type {
                     PointerType::Mouse {
@@ -141,12 +143,13 @@ pub fn Button(
         }
     });
 
-    let onmouseenter = move |_| {
+    let onmouseover = move |e: MouseEvent| {
+        e.stop_propagation();
         platform.set_cursor(CursorIcon::Pointer);
         status.set(ButtonStatus::Hovering);
     };
 
-    let onmouseleave = move |_| {
+    let onmouseout = move |_| {
         platform.set_cursor(CursorIcon::default());
         status.set(ButtonStatus::default());
     };
@@ -172,8 +175,8 @@ pub fn Button(
     rsx!(
         rect {
             onpointerup,
-            onmouseenter,
-            onmouseleave,
+            onmouseover,
+            onmouseout,
             onkeydown,
             focus_id,
             width: "{width}",

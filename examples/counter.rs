@@ -35,7 +35,10 @@ fn app() -> Element {
             direction: "horizontal",
             Button {
                 onclick: move |_| count += 1,
-                label { "Increase" }
+                Button {
+                    onclick: move |_| count += 1,
+                    label { "Increase" }
+                }
             }
             Button {
                 onclick: move |_| count -= 1,

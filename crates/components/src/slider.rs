@@ -118,7 +118,7 @@ pub fn Slider(
         platform.set_cursor(CursorIcon::Pointer);
     };
 
-    let onmouseover = {
+    let onmousemove = {
         to_owned![onmoved];
         move |e: MouseEvent| {
             e.stop_propagation();
@@ -177,7 +177,7 @@ pub fn Slider(
             onglobalclick: onclick,
             focus_id,
             onmouseenter,
-            onglobalmouseover: onmouseover,
+            onglobalmousemove: onmousemove,
             onmouseleave,
             onwheel: onwheel,
             main_align: "center",
@@ -252,7 +252,7 @@ mod test {
         assert_eq!(label.get(0).text(), Some("50"));
 
         utils.push_event(PlatformEvent::Mouse {
-            name: EventName::MouseOver,
+            name: EventName::MouseMove,
             cursor: (250.0, 7.0).into(),
             button: Some(MouseButton::Left),
         });
@@ -262,7 +262,7 @@ mod test {
             button: Some(MouseButton::Left),
         });
         utils.push_event(PlatformEvent::Mouse {
-            name: EventName::MouseOver,
+            name: EventName::MouseMove,
             cursor: (500.0, 7.0).into(),
             button: Some(MouseButton::Left),
         });

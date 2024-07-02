@@ -18,6 +18,8 @@ use crate::{
 #[derive(Clone)]
 struct NodeMetadata {
     layer: Option<i16>,
+    enter: bool,
+    over: bool,
 }
 
 /// [`NodesState`] stores the nodes states given incoming events.
@@ -39,27 +41,44 @@ impl NodesState {
         let recent_mouse_movement_event = any_recent_mouse_movement(events);
 
         self.hovered_nodes.retain(|node_id, metadata| {
-            let no_recent_mouse_movement_on_me =
-                has_node_been_hovered_recently(events_to_emit, node_id);
+            let recent_hover_on_me = has_node_been_hovered_recently(events_to_emit, node_id);
 
-            if no_recent_mouse_movement_on_me {
+            if !recent_hover_on_me {
                 if let Some(PlatformEvent::Mouse { cursor, button, .. }) =
                     recent_mouse_movement_event
                 {
-                    let events = potential_events.entry(EventName::MouseLeave).or_default();
-                    // Emit a MouseLeave event as the cursor was moved outside the Node bounds
-                    events.push(PotentialEvent {
-                        node_id: *node_id,
-                        layer: metadata.layer,
-                        event: PlatformEvent::Mouse {
-                            name: EventName::MouseLeave,
-                            cursor,
-                            button,
-                        },
-                    });
+                    if metadata.enter {
+                        let events = potential_events.entry(EventName::MouseLeave).or_default();
+                        // Emit a MouseLeave event as the cursor was moved outside the Node bounds
+                        events.push(PotentialEvent {
+                            node_id: *node_id,
+                            layer: metadata.layer,
+                            event: PlatformEvent::Mouse {
+                                name: EventName::MouseLeave,
+                                cursor,
+                                button,
+                            },
+                        });
+                        metadata.enter = false;
+                    }
+
+                    if metadata.over {
+                        let events = potential_events.entry(EventName::MouseOut).or_default();
+                        // Emit a MouseOut event as the cursor was moved outside the Node visible bounds
+                        events.push(PotentialEvent {
+                            node_id: *node_id,
+                            layer: metadata.layer,
+                            event: PlatformEvent::Mouse {
+                                name: EventName::MouseOut,
+                                cursor,
+                                button,
+                            },
+                        });
+                        metadata.over = false;
+                    }
 
                     // Remove the node from the list of hovered nodes as now, the cursor has left
-                    return false;
+                    return !(metadata.over && metadata.enter);
                 }
             }
             true
@@ -67,38 +86,47 @@ impl NodesState {
 
         // We clone this here so events emitted in the same batch that mark an node
         // as hovered will not affect the other events
-        let hovered_nodes = self.hovered_nodes.clone();
+        let mut hovered_nodes = self.hovered_nodes.clone();
 
         // Emit new colateral events
         for event in events_to_emit {
             if event.name.can_change_hover_state() {
-                let is_hovered = hovered_nodes.contains_key(&event.node_id);
+                let hovered_node =
+                    hovered_nodes
+                        .entry(event.node_id)
+                        .or_insert_with(|| NodeMetadata {
+                            layer: event.layer,
+                            enter: false,
+                            over: false,
+                        });
 
-                // Mark the Node as hovered if it wasn't already
-                if !is_hovered {
-                    self.hovered_nodes
-                        .insert(event.node_id, NodeMetadata { layer: event.layer });
-                }
-
-                if event.name.is_enter() {
-                    // If the Node was already hovered, we don't need to emit an `enter` event again.
-                    if is_hovered {
-                        continue;
+                match event.name {
+                    EventName::MouseMove
+                    | EventName::MouseEnter
+                    | EventName::PointerMove
+                    | EventName::PointerEnter => {
+                        if !hovered_node.enter {
+                            hovered_node.enter = true;
+                        } else if event.name.is_enter() {
+                            continue; // If the Node was already hovered, we don't need to emit an `enter` event again.
+                        }
                     }
+                    EventName::MouseOver => {
+                        if !hovered_node.over {
+                            hovered_node.over = true;
+                        } else if event.name.is_over() {
+                            continue; // If the Node was already hovered, we don't need to emit an `over` event again.
+                        }
+                    }
+                    _ => {}
                 }
             }
 
             new_events_to_emit.push(event.clone());
         }
 
-        // Update the internal states of nodes given the events
-        // e.g `mouseover` will mark the node as hovered.
-        for event in events_to_emit {
-            if event.name.was_cursor_moved() && !self.hovered_nodes.contains_key(&event.node_id) {
-                self.hovered_nodes
-                    .insert(event.node_id, NodeMetadata { layer: event.layer });
-            }
-        }
+        // Sync the new hovered events
+        self.hovered_nodes = hovered_nodes;
 
         // Order the events by their Nodes layer
         for events in potential_events.values_mut() {
@@ -121,10 +149,10 @@ fn has_node_been_hovered_recently(events_to_emit: &[DomEvent], node_id: &NodeId)
         .iter()
         .find_map(|event| {
             if event.name.was_cursor_moved() && &event.node_id == node_id {
-                Some(false)
+                Some(true)
             } else {
                 None
             }
         })
-        .unwrap_or(true)
+        .unwrap_or(false)
 }

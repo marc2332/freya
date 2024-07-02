@@ -12,7 +12,7 @@ pub async fn pointer_events_from_mouse() {
 
         let onpointerup = move |_| state.push("up".to_string());
 
-        let onpointerover = move |_| state.push("over".to_string());
+        let onpointermove = move |_| state.push("over".to_string());
 
         let onpointerenter = move |_| state.push("enter".to_string());
 
@@ -30,7 +30,7 @@ pub async fn pointer_events_from_mouse() {
                     width: "100%",
                     onpointerdown,
                     onpointerup,
-                    onpointerover,
+                    onpointermove,
                     onpointerenter,
                     onpointerleave,
                     onglobalpointerup,
@@ -48,9 +48,9 @@ pub async fn pointer_events_from_mouse() {
 
     assert_eq!(label.get(0).text(), Some("[]"));
 
-    // Moving the mouse for the first time will cause `mouseenter` and `mouseover` events
+    // Moving the mouse for the first time will cause `mouseenter` and `mousemove` events
     utils.push_event(PlatformEvent::Mouse {
-        name: EventName::MouseOver,
+        name: EventName::MouseMove,
         cursor: CursorPoint::new(100.0, 100.0),
         button: Some(MouseButton::Left),
     });
@@ -83,7 +83,7 @@ pub async fn pointer_events_from_mouse() {
     );
 
     utils.push_event(PlatformEvent::Mouse {
-        name: EventName::MouseOver,
+        name: EventName::MouseMove,
         cursor: CursorPoint::new(0.0, 0.0),
         button: Some(MouseButton::Left),
     });
@@ -120,7 +120,7 @@ pub async fn pointer_events_from_touch() {
 
         let onpointerup = move |_| state.push("up".to_string());
 
-        let onpointerover = move |_| state.push("over".to_string());
+        let onpointermove = move |_| state.push("over".to_string());
 
         let onpointerenter = move |_| state.push("enter".to_string());
 
@@ -134,7 +134,7 @@ pub async fn pointer_events_from_touch() {
                     width: "100%",
                     onpointerdown: onpointerdown,
                     onpointerup: onpointerup,
-                    onpointerover: onpointerover,
+                    onpointermove: onpointermove,
                     onpointerenter: onpointerenter,
                     label { "{state:?}" }
                 }

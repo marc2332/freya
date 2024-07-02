@@ -9,13 +9,15 @@ pub enum EventName {
     RightClick,
 
     MouseDown,
-    MouseOver,
+    MouseMove,
     MouseEnter,
     MouseLeave,
+    MouseOver,
+    MouseOut,
 
     Wheel,
 
-    PointerOver,
+    PointerMove,
     PointerDown,
     PointerEnter,
     PointerLeave,
@@ -32,7 +34,7 @@ pub enum EventName {
     GlobalClick,
     GlobalPointerUp,
     GlobalMouseDown,
-    GlobalMouseOver,
+    GlobalMouseMove,
     GlobalFileHover,
     GlobalFileHoverCancelled,
 
@@ -48,11 +50,13 @@ impl FromStr for EventName {
             "rightclick" => Ok(EventName::RightClick),
             "middleclick" => Ok(EventName::MiddleClick),
             "mousedown" => Ok(EventName::MouseDown),
-            "mouseover" => Ok(EventName::MouseOver),
+            "mousemove" => Ok(EventName::MouseMove),
             "mouseenter" => Ok(EventName::MouseEnter),
             "mouseleave" => Ok(EventName::MouseLeave),
+            "mouseover" => Ok(EventName::MouseOver),
+            "mouseout" => Ok(EventName::MouseOut),
             "wheel" => Ok(EventName::Wheel),
-            "pointerover" => Ok(EventName::PointerOver),
+            "pointermove" => Ok(EventName::PointerMove),
             "pointerdown" => Ok(EventName::PointerDown),
             "pointerenter" => Ok(EventName::PointerEnter),
             "pointerleave" => Ok(EventName::PointerLeave),
@@ -66,7 +70,7 @@ impl FromStr for EventName {
             "globalclick" => Ok(EventName::GlobalClick),
             "globalpointerup" => Ok(EventName::GlobalPointerUp),
             "globalmousedown" => Ok(EventName::GlobalMouseDown),
-            "globalmouseover" => Ok(EventName::GlobalMouseOver),
+            "globalmousemove" => Ok(EventName::GlobalMouseMove),
             "filedrop" => Ok(EventName::FileDrop),
             "globalfilehover" => Ok(EventName::GlobalFileHover),
             "globalfilehovercancelled" => Ok(EventName::GlobalFileHoverCancelled),
@@ -82,11 +86,13 @@ impl From<EventName> for &str {
             EventName::MiddleClick => "middleclick",
             EventName::RightClick => "rightclick",
             EventName::MouseDown => "mousedown",
-            EventName::MouseOver => "mouseover",
+            EventName::MouseMove => "mousemove",
             EventName::MouseEnter => "mouseenter",
             EventName::MouseLeave => "mouseleave",
+            EventName::MouseOver => "mouseover",
+            EventName::MouseOut => "mouseout",
             EventName::Wheel => "wheel",
-            EventName::PointerOver => "pointerover",
+            EventName::PointerMove => "pointermove",
             EventName::PointerDown => "pointerdown",
             EventName::PointerEnter => "pointerenter",
             EventName::PointerLeave => "pointerleave",
@@ -100,7 +106,7 @@ impl From<EventName> for &str {
             EventName::GlobalClick => "globalclick",
             EventName::GlobalPointerUp => "globalpointerup",
             EventName::GlobalMouseDown => "globalmousedown",
-            EventName::GlobalMouseOver => "globalmouseover",
+            EventName::GlobalMouseMove => "globalmousemove",
             EventName::FileDrop => "filedrop",
             EventName::GlobalFileHover => "globalfilehover",
             EventName::GlobalFileHoverCancelled => "globalfilehovercancelled",
@@ -120,7 +126,7 @@ impl Ord for EventName {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         match self {
             // Always prioritize leave events before anything else
-            Self::MouseLeave | Self::PointerLeave => {
+            Self::MouseLeave | Self::MouseOut | Self::PointerLeave => {
                 if self == other {
                     std::cmp::Ordering::Equal
                 } else {
@@ -139,7 +145,7 @@ impl EventName {
             Self::Click => Some(Self::GlobalClick),
             Self::PointerUp => Some(Self::GlobalPointerUp),
             Self::MouseDown => Some(Self::GlobalMouseDown),
-            Self::MouseOver => Some(Self::GlobalMouseOver),
+            Self::MouseMove => Some(Self::GlobalMouseMove),
             Self::GlobalFileHover => Some(Self::GlobalFileHover),
             Self::GlobalFileHoverCancelled => Some(Self::GlobalFileHoverCancelled),
             _ => None,
@@ -147,7 +153,7 @@ impl EventName {
     }
 
     /// Some events might cause other events, like for example:
-    /// A `mouseover` might also trigger a `mouseenter`
+    /// A `mousemove` might also trigger a `mouseenter`
     /// A `mousedown` or a `touchdown` might also trigger a `pointerdown`
     pub fn get_collateral_events(&self) -> SmallVec<[Self; 4]> {
         let mut events = SmallVec::new();
@@ -155,9 +161,12 @@ impl EventName {
         events.push(*self);
 
         match self {
-            Self::MouseOver | Self::TouchMove => {
-                events.extend([Self::MouseEnter, Self::PointerEnter, Self::PointerOver])
-            }
+            Self::MouseMove | Self::TouchMove => events.extend([
+                Self::MouseEnter,
+                Self::MouseOver,
+                Self::PointerEnter,
+                Self::PointerMove,
+            ]),
             Self::MouseDown | Self::TouchStart => events.push(Self::PointerDown),
             Self::Click | Self::MiddleClick | Self::RightClick | Self::TouchEnd => {
                 events.push(Self::PointerUp)
@@ -170,9 +179,14 @@ impl EventName {
         events
     }
 
-    /// Check if the event means that the pointer (e.g. cursor) just entered a Node
+    /// Check if the event means that the pointer (e.g. cursor) just entered a Node area
     pub fn is_enter(&self) -> bool {
         matches!(&self, Self::MouseEnter | Self::PointerEnter)
+    }
+
+    /// Check if the event means that the pointer (e.g. cursor) just entered a Node visible area
+    pub fn is_over(&self) -> bool {
+        matches!(&self, Self::MouseOver)
     }
 
     /// Check if it's one of the Pointer variants
@@ -181,7 +195,7 @@ impl EventName {
             &self,
             Self::PointerEnter
                 | Self::PointerLeave
-                | Self::PointerOver
+                | Self::PointerMove
                 | Self::PointerDown
                 | Self::PointerUp
                 | Self::GlobalPointerUp
@@ -192,24 +206,21 @@ impl EventName {
     pub fn was_cursor_moved(&self) -> bool {
         matches!(
             &self,
-            Self::MouseOver | Self::MouseEnter | Self::PointerEnter | Self::PointerOver
+            Self::MouseMove
+                | Self::MouseEnter
+                | Self::MouseOver
+                | Self::PointerEnter
+                | Self::PointerMove
         )
     }
 
     // Bubble all events except:
     // - Keyboard events
-    // - Mouse movements events
+    // - Mouse movements
     pub fn does_bubble(&self) -> bool {
         !matches!(
             self,
-            Self::KeyDown
-                | Self::KeyUp
-                | Self::MouseLeave
-                | Self::PointerLeave
-                | Self::MouseEnter
-                | Self::PointerEnter
-                | Self::MouseOver
-                | Self::PointerOver
+            Self::KeyDown | Self::KeyUp | Self::MouseEnter | Self::PointerEnter
         )
     }
 
@@ -222,7 +233,11 @@ impl EventName {
     pub fn can_change_hover_state(&self) -> bool {
         matches!(
             self,
-            Self::MouseOver | Self::MouseEnter | Self::PointerOver | Self::PointerEnter
+            Self::MouseMove
+                | Self::MouseEnter
+                | Self::MouseOver
+                | Self::PointerMove
+                | Self::PointerEnter
         )
     }
 }

@@ -52,7 +52,7 @@ fn Area() -> Element {
             width: "100%",
             background: "blue",
             padding: "5",
-            onmouseover: cursor_moved,
+            onmousemove: cursor_moved,
             onclick: cursor_clicked,
             label {
                 "Mouse is at [x: {cursor_pos_over.read().0}, y: {cursor_pos_over.read().1}] ",

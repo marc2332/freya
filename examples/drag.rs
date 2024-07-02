@@ -13,7 +13,7 @@ fn app() -> Element {
     let mut positions = use_signal(|| (0.0f64, 0.0f64));
     let mut clicking = use_signal::<Option<CursorPoint>>(|| None);
 
-    let onglobalmouseover = move |e: MouseEvent| {
+    let onglobalmousemove = move |e: MouseEvent| {
         if let Some(clicked) = *clicking.read() {
             let coordinates = e.get_screen_coordinates();
             positions.set((coordinates.x - clicked.x, coordinates.y - clicked.y));
@@ -42,7 +42,7 @@ fn app() -> Element {
                 corner_radius: "16",
                 shadow: "0 0 35 10 rgb(255, 255, 255, 0.4)",
                 onglobalclick,
-                onglobalmouseover,
+                onglobalmousemove,
                 onmousedown,
                 main_align: "center",
                 cross_align: "center",

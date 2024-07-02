@@ -428,7 +428,7 @@ mod test {
 
         // Open the SubMenu
         utils.push_event(PlatformEvent::Mouse {
-            name: EventName::MouseOver,
+            name: EventName::MouseMove,
             cursor: (15.0, 130.0).into(),
             button: Some(MouseButton::Left),
         });
@@ -456,7 +456,7 @@ mod test {
 
         // Stop showing the submenu
         utils.push_event(PlatformEvent::Mouse {
-            name: EventName::MouseOver,
+            name: EventName::MouseMove,
             cursor: (15.0, 90.0).into(),
             button: Some(MouseButton::Left),
         });

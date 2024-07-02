@@ -35,7 +35,7 @@ pub fn process_events(
     // 3. Get what events can be actually emitted based on what elements are listening
     let dom_events = measure_dom_events(potential_events, dom, scale_factor);
 
-    // 4. Filter the dom events and get potential collateral events, e.g. mouseover -> mouseenter
+    // 4. Filter the dom events and get potential collateral events, e.g. mousemove -> mouseenter
     let (potential_collateral_events, mut to_emit_dom_events) =
         nodes_state.process_events(&dom_events, events);
 
@@ -195,7 +195,7 @@ fn measure_dom_events(
         let mut valid_events: Vec<PotentialEvent> = Vec::new();
 
         // Iterate over the collateral events (including the source)
-        'event: for collateral_event in collateral_events {
+        'collateral_event: for collateral_event in collateral_events {
             let mut child_node: Option<NodeId> = None;
 
             // Iterate over the event nodes
@@ -227,7 +227,7 @@ fn measure_dom_events(
 
                         // Stack events that do not bubble up
                         if event.get_name().does_bubble() {
-                            continue 'event;
+                            continue 'collateral_event;
                         }
                     }
                 }

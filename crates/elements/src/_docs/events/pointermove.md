@@ -1,4 +1,4 @@
-The `pointerover` event fires when the user hovers/touches over an element.
+The `pointermove` event fires when is hovering/touching over an element.
 Unlike [`onpointerenter`](crate::elements::onpointerenter), this fires even if the user was already hovering over
 the element. For that reason, it's less efficient.
 
@@ -14,7 +14,7 @@ fn app() -> Element {
             width: "100",
             height: "100",
             background: "red",
-            onpointerover: |_| println!("Hovering or touching!")
+            onpointermove: |_| println!("Hovering or touching!")
         }
     )
 }

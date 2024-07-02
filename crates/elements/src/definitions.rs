@@ -587,14 +587,17 @@ pub mod events {
         onmousedown
         #[doc = include_str!("_docs/events/globalmousedown.md")]
         onglobalmousedown
-        #[doc = include_str!("_docs/events/mouseover.md")]
-        onmouseover
-        #[doc = include_str!("_docs/events/globalmouseover.md")]
-        onglobalmouseover
+        #[doc = include_str!("_docs/events/mousemove.md")]
+        onmousemove
+        #[doc = include_str!("_docs/events/globalmousemove.md")]
+        onglobalmousemove
         #[doc = include_str!("_docs/events/mouseleave.md")]
         onmouseleave
         #[doc = include_str!("_docs/events/mouseenter.md")]
         onmouseenter
+
+        onmouseover
+        onmouseout
     ];
 
     impl_event! [
@@ -635,8 +638,8 @@ pub mod events {
         onpointerup
         #[doc = include_str!("_docs/events/onglobalpointerup.md")]
         onglobalpointerup
-        #[doc = include_str!("_docs/events/pointerover.md")]
-        onpointerover
+        #[doc = include_str!("_docs/events/pointermove.md")]
+        onpointermove
         #[doc = include_str!("_docs/events/pointerenter.md")]
         onpointerenter
         #[doc = include_str!("_docs/events/pointerleave.md")]

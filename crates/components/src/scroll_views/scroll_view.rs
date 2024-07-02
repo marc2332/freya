@@ -163,7 +163,7 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
     };
 
     // Drag the scrollbars
-    let onmouseover = move |e: MouseEvent| {
+    let onmousemove = move |e: MouseEvent| {
         let clicking_scrollbar = clicking_scrollbar.peek();
 
         if let Some((Axis::Y, y)) = *clicking_scrollbar {
@@ -297,7 +297,7 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
             width: "{user_container_width}",
             height: "{user_container_height}",
             onglobalclick: onclick,
-            onglobalmouseover: onmouseover,
+            onglobalmousemove: onmousemove,
             onkeydown,
             onkeyup,
             focus_id,
@@ -447,7 +447,7 @@ mod test {
 
         // Simulate the user dragging the scrollbar
         utils.push_event(PlatformEvent::Mouse {
-            name: EventName::MouseOver,
+            name: EventName::MouseMove,
             cursor: (490., 20.).into(),
             button: Some(MouseButton::Left),
         });
@@ -457,7 +457,7 @@ mod test {
             button: Some(MouseButton::Left),
         });
         utils.push_event(PlatformEvent::Mouse {
-            name: EventName::MouseOver,
+            name: EventName::MouseMove,
             cursor: (490., 320.).into(),
             button: Some(MouseButton::Left),
         });
