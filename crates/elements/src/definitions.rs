@@ -595,8 +595,9 @@ pub mod events {
         onmouseleave
         #[doc = include_str!("_docs/events/mouseenter.md")]
         onmouseenter
-
+        #[doc = include_str!("_docs/events/mouseover.md")]
         onmouseover
+        #[doc = include_str!("_docs/events/mouseout.md")]
         onmouseout
     ];
 

@@ -1,4 +1,4 @@
-The `mouseenter` event fires when the user starts hovering an element. Usually used in combination of [`mouseleave`](crate::elements::onmouseleave).
+The `mouseover` event fires when the user starts hovering an element. Usually used in combination of [`mouseleave`](crate::elements::onmouseleave).
 
 Event Data: [`MouseData`](crate::events::MouseData)
 
@@ -12,7 +12,7 @@ fn app() -> Element {
             width: "100",
             height: "100",
             background: "red",
-            onmouseenter: |_| println!("Started hovering!")
+            onmouseover: |_| println!("Started hovering!")
         }
     )
 }

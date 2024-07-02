@@ -1,6 +1,6 @@
-The `mousemove` event fires when the user moves the mouse over an element.
-Unlike [`onmousemove`](crate::elements::onmousemove), this fires even if the user was already hovering over
-the element. For that reason, it's less efficient.
+The `mousemove` event fires when the user moves the mouse over an element or any of its children.
+Unlike [`mouseenter`](crate::elements::onmouseenter), this fires even if the user was already hovering over
+the element.
 
 Event Data: [`MouseData`](crate::events::MouseData)
 
