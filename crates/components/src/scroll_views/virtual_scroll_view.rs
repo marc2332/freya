@@ -157,6 +157,8 @@ pub fn VirtualScrollView<
     let items_size = props.item_size;
     let scroll_with_arrows = props.scroll_with_arrows;
 
+    let direction_is_vertical = user_direction == "vertical";
+
     let inner_size = items_size + (items_size * items_length as f32);
 
     let vertical_scrollbar_is_visible = user_direction != "horizontal"
@@ -188,22 +190,10 @@ pub fn VirtualScrollView<
 
         let wheel_movement = e.get_delta_y() as f32 * speed_multiplier;
 
-        if *clicking_shift.peek() {
-            let scroll_position_x = get_scroll_position_from_wheel(
-                wheel_movement,
-                inner_size,
-                size.area.width(),
-                corrected_scrolled_x,
-            );
+        let scroll_vertically_or_not = (direction_is_vertical && !*clicking_shift.peek())
+            || !direction_is_vertical && *clicking_shift.peek();
 
-            // Only scroll when there is still area to scroll
-            if *scrolled_x.peek() != scroll_position_x {
-                e.stop_propagation();
-                *scrolled_x.write() = scroll_position_x;
-            } else {
-                return;
-            }
-        } else {
+        if scroll_vertically_or_not {
             let scroll_position_y = get_scroll_position_from_wheel(
                 wheel_movement,
                 inner_size,
@@ -215,6 +205,21 @@ pub fn VirtualScrollView<
             if *scrolled_y.peek() != scroll_position_y {
                 e.stop_propagation();
                 *scrolled_y.write() = scroll_position_y;
+            } else {
+                return;
+            }
+        } else {
+            let scroll_position_x = get_scroll_position_from_wheel(
+                wheel_movement,
+                inner_size,
+                size.area.width(),
+                corrected_scrolled_x,
+            );
+
+            // Only scroll when there is still area to scroll
+            if *scrolled_x.peek() != scroll_position_x {
+                e.stop_propagation();
+                *scrolled_x.write() = scroll_position_x;
             } else {
                 return;
             }
