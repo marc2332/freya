@@ -11,7 +11,6 @@ log = ["freya/log"]
 devtools = ["freya/devtools"]
 use_camera = ["freya/use_camera"]
 hot-reload = ["freya/hot-reload"]
-skia = ["freya/skia"]
 custom-tokio-rt = ["freya/custom-tokio-rt"]
 
 [patch.crates-io]
