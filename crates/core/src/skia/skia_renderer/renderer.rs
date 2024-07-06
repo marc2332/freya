@@ -66,7 +66,7 @@ impl SkiaRenderer<'_> {
         let data = &layout_node.data;
         let node_type = &*dioxus_node.node_type();
         if let NodeType::Element(ElementNode { tag, .. }) = node_type {
-            let initial_layer = self.canvas.save();
+            let layer_count = self.canvas.save();
 
             let node_transform = &*dioxus_node.get::<TransformState>().unwrap();
             let node_style = &*dioxus_node.get::<StyleState>().unwrap();
@@ -167,7 +167,7 @@ impl SkiaRenderer<'_> {
                 wireframe::render_wireframe(self.canvas, &area);
             }
 
-            self.canvas.restore_to_count(initial_layer);
+            self.canvas.restore_to_count(layer_count);
         }
     }
 }
