@@ -1,24 +1,40 @@
 use freya_engine::prelude::*;
 use freya_native_core::real_dom::NodeImmutable;
 use freya_node_state::StyleState;
-use torin::geometry::Area;
+use torin::prelude::LayoutNode;
 
-use crate::dom::DioxusNode;
+use crate::{
+    dom::DioxusNode,
+    prelude::ElementRenderer,
+};
 
-/// Render a `svg` element
-pub fn render_svg(area: &Area, node_ref: &DioxusNode, canvas: &Canvas, font_manager: &FontMgr) {
-    let node_style = &*node_ref.get::<StyleState>().unwrap();
+pub struct SvgElement;
 
-    let x = area.min_x();
-    let y = area.min_y();
-    if let Some(svg_data) = &node_style.svg_data {
-        let svg_dom = svg::Dom::from_bytes(svg_data.as_slice(), font_manager);
-        if let Ok(mut svg_dom) = svg_dom {
-            canvas.save();
-            canvas.translate((x, y));
-            svg_dom.set_container_size((area.width() as i32, area.height() as i32));
-            svg_dom.render(canvas);
-            canvas.restore();
+impl ElementRenderer for SvgElement {
+    fn render(
+        self: Box<Self>,
+        layout_node: &LayoutNode,
+        node_ref: &DioxusNode,
+        canvas: &Canvas,
+        _font_collection: &mut FontCollection,
+        font_manager: &FontMgr,
+        _default_fonts: &[String],
+        _scale_factor: f32,
+    ) {
+        let area = layout_node.visible_area();
+        let node_style = &*node_ref.get::<StyleState>().unwrap();
+
+        let x = area.min_x();
+        let y = area.min_y();
+        if let Some(svg_data) = &node_style.svg_data {
+            let svg_dom = svg::Dom::from_bytes(svg_data.as_slice(), font_manager);
+            if let Ok(mut svg_dom) = svg_dom {
+                canvas.save();
+                canvas.translate((x, y));
+                svg_dom.set_container_size((area.width() as i32, area.height() as i32));
+                svg_dom.render(canvas);
+                canvas.restore();
+            }
         }
     }
 }

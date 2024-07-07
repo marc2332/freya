@@ -4,36 +4,51 @@ use freya_node_state::{
     ReferencesState,
     StyleState,
 };
-use torin::geometry::Area;
 
-use crate::dom::DioxusNode;
+use crate::{
+    dom::DioxusNode,
+    prelude::ElementRenderer,
+};
 
-/// Render an `image` element
-pub fn render_image(area: &Area, node_ref: &DioxusNode, canvas: &Canvas) {
-    let node_style = node_ref.get::<StyleState>().unwrap();
-    let node_references = node_ref.get::<ReferencesState>().unwrap();
+pub struct ImageElement;
 
-    let draw_img = |bytes: &[u8]| {
-        let pic = Image::from_encoded(Data::new_copy(bytes));
-        if let Some(pic) = pic {
-            let mut paint = Paint::default();
-            paint.set_anti_alias(true);
-            canvas.draw_image_nine(
-                pic,
-                IRect::new(0, 0, 0, 0),
-                Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
-                FilterMode::Last,
-                Some(&paint),
-            );
+impl ElementRenderer for ImageElement {
+    fn render(
+        self: Box<Self>,
+        layout_node: &torin::prelude::LayoutNode,
+        node_ref: &DioxusNode,
+        canvas: &Canvas,
+        _font_collection: &mut FontCollection,
+        _font_manager: &FontMgr,
+        _default_fonts: &[String],
+        _scale_factor: f32,
+    ) {
+        let area = layout_node.visible_area();
+        let node_style = node_ref.get::<StyleState>().unwrap();
+        let node_references = node_ref.get::<ReferencesState>().unwrap();
+
+        let draw_img = |bytes: &[u8]| {
+            let pic = Image::from_encoded(Data::new_copy(bytes));
+            if let Some(pic) = pic {
+                let mut paint = Paint::default();
+                paint.set_anti_alias(true);
+                canvas.draw_image_nine(
+                    pic,
+                    IRect::new(0, 0, 0, 0),
+                    Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
+                    FilterMode::Last,
+                    Some(&paint),
+                );
+            }
+        };
+
+        if let Some(image_ref) = &node_references.image_ref {
+            let image_data = image_ref.0.lock().unwrap();
+            if let Some(image_data) = image_data.as_ref() {
+                draw_img(image_data)
+            }
+        } else if let Some(image_data) = &node_style.image_data {
+            draw_img(image_data.as_slice())
         }
-    };
-
-    if let Some(image_ref) = &node_references.image_ref {
-        let image_data = image_ref.0.lock().unwrap();
-        if let Some(image_data) = image_data.as_ref() {
-            draw_img(image_data)
-        }
-    } else if let Some(image_data) = &node_style.image_data {
-        draw_img(image_data.as_slice())
     }
 }
