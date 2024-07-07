@@ -1,15 +1,15 @@
 use freya_common::CachedParagraph;
 use freya_engine::prelude::*;
 
+use super::utils::ElementUtils;
 use crate::prelude::{
     align_main_align_paragraph,
     DioxusNode,
-    ElementRenderer,
 };
 
 pub struct LabelElement;
 
-impl ElementRenderer for LabelElement {
+impl ElementUtils for LabelElement {
     fn render(
         self: Box<Self>,
         layout_node: &torin::prelude::LayoutNode,

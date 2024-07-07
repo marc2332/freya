@@ -4,19 +4,19 @@ use freya_native_core::real_dom::NodeImmutable;
 use freya_node_state::CursorState;
 use torin::geometry::Area;
 
+use super::utils::ElementUtils;
 use crate::{
     dom::DioxusNode,
     prelude::{
         align_highlights_and_cursor_paragraph,
         align_main_align_paragraph,
-        ElementRenderer,
     },
     skia::create_paragraph,
 };
 
 pub struct ParagraphElement;
 
-impl ElementRenderer for ParagraphElement {
+impl ElementUtils for ParagraphElement {
     fn render(
         self: Box<Self>,
         layout_node: &torin::prelude::LayoutNode,

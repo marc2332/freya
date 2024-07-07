@@ -9,18 +9,55 @@ use freya_node_state::{
     StyleState,
 };
 use torin::{
-    prelude::LayoutNode,
+    prelude::{
+        CursorPoint,
+        LayoutNode,
+    },
     scaled::Scaled,
 };
 
-use crate::{
-    dom::DioxusNode,
-    prelude::ElementRenderer,
-};
+use super::utils::ElementUtils;
+use crate::dom::DioxusNode;
 
 pub struct RectElement;
 
-impl ElementRenderer for RectElement {
+impl RectElement {
+    fn get_rounded_rect(
+        &self,
+        layout_node: &LayoutNode,
+        node_ref: &DioxusNode,
+        scale_factor: f32,
+    ) -> RRect {
+        let area = layout_node.visible_area().to_f32();
+        let node_style = &*node_ref.get::<StyleState>().unwrap();
+        let mut radius = node_style.corner_radius;
+        radius.scale(scale_factor);
+
+        RRect::new_rect_radii(
+            Rect::new(area.min_x(), area.min_y(), area.max_x(), area.max_y()),
+            &[
+                (radius.top_left, radius.top_left).into(),
+                (radius.top_right, radius.top_right).into(),
+                (radius.bottom_right, radius.bottom_right).into(),
+                (radius.bottom_left, radius.bottom_left).into(),
+            ],
+        )
+    }
+}
+
+impl ElementUtils for RectElement {
+    fn is_point_inside_area(
+        &self,
+        point: &CursorPoint,
+        node_ref: &DioxusNode,
+        layout_node: &LayoutNode,
+        scale_factor: f32,
+    ) -> bool {
+        let rounded_rect = self.get_rounded_rect(layout_node, node_ref, scale_factor);
+        let point = point.to_f32();
+        rounded_rect.contains(Rect::new(point.x, point.y, point.x + 1., point.y + 1.))
+    }
+
     fn clip(
         &self,
         layout_node: &LayoutNode,
@@ -28,25 +65,7 @@ impl ElementRenderer for RectElement {
         canvas: &Canvas,
         scale_factor: f32,
     ) {
-        let visible_area = layout_node.visible_area().to_f32();
-        let node_style = &*node_ref.get::<StyleState>().unwrap();
-        let mut radius = node_style.corner_radius;
-        radius.scale(scale_factor);
-
-        let rounded_rect = RRect::new_rect_radii(
-            Rect::new(
-                visible_area.min_x(),
-                visible_area.min_y(),
-                visible_area.max_x(),
-                visible_area.max_y(),
-            ),
-            &[
-                (radius.top_left, radius.top_left).into(),
-                (radius.top_right, radius.top_right).into(),
-                (radius.bottom_right, radius.bottom_right).into(),
-                (radius.bottom_left, radius.bottom_left).into(),
-            ],
-        );
+        let rounded_rect = self.get_rounded_rect(layout_node, node_ref, scale_factor);
 
         canvas.clip_rrect(rounded_rect, ClipOp::Intersect, true);
     }

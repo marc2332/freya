@@ -5,14 +5,12 @@ use freya_node_state::{
     StyleState,
 };
 
-use crate::{
-    dom::DioxusNode,
-    prelude::ElementRenderer,
-};
+use super::utils::ElementUtils;
+use crate::dom::DioxusNode;
 
 pub struct ImageElement;
 
-impl ElementRenderer for ImageElement {
+impl ElementUtils for ImageElement {
     fn render(
         self: Box<Self>,
         layout_node: &torin::prelude::LayoutNode,

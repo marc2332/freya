@@ -3,14 +3,12 @@ use freya_native_core::real_dom::NodeImmutable;
 use freya_node_state::StyleState;
 use torin::prelude::LayoutNode;
 
-use crate::{
-    dom::DioxusNode,
-    prelude::ElementRenderer,
-};
+use super::utils::ElementUtils;
+use crate::dom::DioxusNode;
 
 pub struct SvgElement;
 
-impl ElementRenderer for SvgElement {
+impl ElementUtils for SvgElement {
     fn render(
         self: Box<Self>,
         layout_node: &LayoutNode,

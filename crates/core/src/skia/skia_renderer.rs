@@ -16,41 +16,12 @@ use torin::prelude::{
     Torin,
 };
 
-use super::{
-    image::ImageElement,
-    label::LabelElement,
-    paragraph::ParagraphElement,
-    rect::RectElement,
-    svg::SvgElement,
-    wireframe,
-};
+use super::wireframe_renderer;
 use crate::{
     dom::DioxusNode,
+    elements::ElementUtilsResolver,
     prelude::DioxusDOM,
 };
-
-pub trait ElementRenderer {
-    fn clip(
-        &self,
-        _layout_node: &LayoutNode,
-        _node_ref: &DioxusNode,
-        _canvas: &Canvas,
-        _scale_factor: f32,
-    ) {
-    }
-
-    #[allow(clippy::too_many_arguments)]
-    fn render(
-        self: Box<Self>,
-        layout_node: &LayoutNode,
-        node_ref: &DioxusNode,
-        canvas: &Canvas,
-        font_collection: &mut FontCollection,
-        font_manager: &FontMgr,
-        default_fonts: &[String],
-        scale_factor: f32,
-    );
-}
 
 pub struct SkiaRenderer<'a> {
     pub canvas: &'a Canvas,
@@ -75,18 +46,7 @@ impl SkiaRenderer<'_> {
         let area = layout_node.visible_area();
         let node_type = &*node_ref.node_type();
         if let NodeType::Element(ElementNode { tag, .. }) = node_type {
-            let get_renderer_by_tag = |tag: &TagName| -> Option<Box<dyn ElementRenderer>> {
-                match tag {
-                    TagName::Rect => Some(Box::new(RectElement)),
-                    TagName::Svg => Some(Box::new(SvgElement)),
-                    TagName::Paragraph => Some(Box::new(ParagraphElement)),
-                    TagName::Image => Some(Box::new(ImageElement)),
-                    TagName::Label => Some(Box::new(LabelElement)),
-                    _ => None,
-                }
-            };
-
-            let Some(element_renderer) = get_renderer_by_tag(tag) else {
+            let Some(element_utils) = tag.utils() else {
                 return;
             };
 
@@ -141,23 +101,20 @@ impl SkiaRenderer<'_> {
             // it will render the inner text spans on it's own, so if these spans overflow the paragraph,
             // It is the paragraph job to make sure they are clipped
             if !node_viewports.viewports.is_empty() && *tag == TagName::Paragraph {
-                element_renderer.clip(layout_node, node_ref, self.canvas, self.scale_factor);
+                element_utils.clip(layout_node, node_ref, self.canvas, self.scale_factor);
             }
 
             for node_id in &node_viewports.viewports {
                 let node_ref = rdom.get(*node_id).unwrap();
                 let node_type = node_ref.node_type();
-                let Some(tag) = node_type.tag() else {
+                let Some(element_utils) = node_type.tag().and_then(|tag| tag.utils()) else {
                     continue;
                 };
                 let layout_node = layout.get(*node_id).unwrap();
-                let Some(element_renderer) = get_renderer_by_tag(tag) else {
-                    continue;
-                };
-                element_renderer.clip(layout_node, &node_ref, self.canvas, self.scale_factor);
+                element_utils.clip(layout_node, &node_ref, self.canvas, self.scale_factor);
             }
 
-            element_renderer.render(
+            element_utils.render(
                 layout_node,
                 node_ref,
                 self.canvas,
@@ -168,7 +125,7 @@ impl SkiaRenderer<'_> {
             );
 
             if render_wireframe {
-                wireframe::render_wireframe(self.canvas, &area);
+                wireframe_renderer::render_wireframe(self.canvas, &area);
             }
 
             self.canvas.restore();
