@@ -16,6 +16,7 @@ use freya_hooks::{
     ScrollViewThemeWith,
 };
 
+use super::use_scroll_controller::ScrollController;
 use crate::{
     get_container_size,
     get_corrected_scroll_position,
@@ -24,6 +25,11 @@ use crate::{
     get_scrollbar_pos_and_size,
     is_scrollbar_visible,
     manage_key_event,
+    scroll_views::use_scroll_controller::{
+        use_scroll_controller,
+        ScrollConfig,
+        ScrollPosition,
+    },
     Axis,
     ScrollBar,
     ScrollThumb,
@@ -48,6 +54,8 @@ pub struct ScrollViewProps {
     /// Enable scrolling with arrow keys.
     #[props(default = true, into)]
     pub scroll_with_arrows: bool,
+
+    pub scroll_controller: Option<ScrollController>,
 }
 
 /// Scrollable area with bidirectional support and scrollbars.
@@ -78,9 +86,16 @@ pub fn ScrollView(props: ScrollViewProps) -> Element {
     let mut clicking_scrollbar = use_signal::<Option<(Axis, f64)>>(|| None);
     let mut clicking_shift = use_signal(|| false);
     let mut clicking_alt = use_signal(|| false);
-    let mut scrolled_y = use_signal(|| 0);
-    let mut scrolled_x = use_signal(|| 0);
+    let mut scroll_controller = props.scroll_controller.unwrap_or_else(|| {
+        use_scroll_controller(|| ScrollConfig {
+            direction: props.direction.clone(),
+            initial: ScrollPosition::default(),
+        })
+    });
+    let (mut scrolled_x, mut scrolled_y) = scroll_controller.into();
     let (node_ref, size) = use_node();
+    scroll_controller.apply_container_size(&size);
+
     let mut focus = use_focus();
     let theme = use_applied_theme!(&props.theme, scroll_view);
     let scrollbar_theme = use_applied_theme!(&props.scrollbar_theme, scroll_bar);

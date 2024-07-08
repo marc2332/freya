@@ -1,6 +1,7 @@
 mod scroll_bar;
 mod scroll_thumb;
 mod scroll_view;
+mod use_scroll_controller;
 mod virtual_scroll_view;
 
 use freya_elements::events::{
@@ -10,6 +11,7 @@ use freya_elements::events::{
 pub use scroll_bar::*;
 pub use scroll_thumb::*;
 pub use scroll_view::*;
+pub use use_scroll_controller::*;
 pub use virtual_scroll_view::*;
 
 // Holding alt while scrolling makes it 5x faster (VSCode behavior).
