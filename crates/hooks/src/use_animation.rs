@@ -179,10 +179,11 @@ impl AnimatedValue for AnimColor {
 
     fn as_string(&self) -> String {
         format!(
-            "rgb({}, {}, {})",
+            "rgb({}, {}, {}, {})",
             self.value.r(),
             self.value.g(),
-            self.value.b()
+            self.value.b(),
+            self.value.a()
         )
     }
 
