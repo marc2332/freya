@@ -212,7 +212,7 @@ mod test {
 
         utils.push_event(PlatformEvent::Mouse {
             name: EventName::Click,
-            cursor: (5.0, 5.0).into(),
+            cursor: (15.0, 15.0).into(),
             button: Some(MouseButton::Left),
         });
 
@@ -223,7 +223,7 @@ mod test {
 
         utils.push_event(PlatformEvent::Mouse {
             name: EventName::Click,
-            cursor: (5.0, 5.0).into(),
+            cursor: (15.0, 15.0).into(),
             button: Some(MouseButton::Left),
         });
 
