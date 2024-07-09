@@ -23,6 +23,8 @@ use crate::{
     Fill,
     OverflowMode,
     Parse,
+    ParseAttribute,
+    ParseError,
     Shadow,
 };
 
@@ -36,6 +38,89 @@ pub struct StyleState {
     pub svg_data: Option<AttributesBytes>,
     pub overflow: OverflowMode,
     pub opacity: Option<f32>,
+}
+
+impl ParseAttribute for StyleState {
+    fn parse_attribute(
+        &mut self,
+        attr: freya_native_core::prelude::OwnedAttributeView<CustomAttributeValues>,
+    ) -> Result<(), crate::ParseError> {
+        match attr.attribute {
+            AttributeName::Background => {
+                if let Some(value) = attr.value.as_text() {
+                    self.background = Fill::parse(value)?;
+                }
+            }
+            AttributeName::Border => {
+                if let Some(value) = attr.value.as_text() {
+                    let mut border = Border::parse(value)?;
+                    border.alignment = self.border.alignment;
+                    self.border = border;
+                }
+            }
+            AttributeName::BorderAlign => {
+                if let Some(value) = attr.value.as_text() {
+                    self.border.alignment = BorderAlignment::parse(value)?;
+                }
+            }
+            AttributeName::Shadow => {
+                if let Some(value) = attr.value.as_text() {
+                    self.shadows = value
+                        .split_excluding_group(',', '(', ')')
+                        .map(|chunk| Shadow::parse(chunk).unwrap_or_default())
+                        .collect();
+                }
+            }
+            AttributeName::CornerRadius => {
+                if let Some(value) = attr.value.as_text() {
+                    let mut radius = CornerRadius::parse(value)?;
+                    radius.smoothing = self.corner_radius.smoothing;
+                    self.corner_radius = radius;
+                }
+            }
+            AttributeName::CornerSmoothing => {
+                if let Some(value) = attr.value.as_text() {
+                    if value.ends_with('%') {
+                        let smoothing = value
+                            .replacen('%', "", 1)
+                            .parse::<f32>()
+                            .map_err(|_| ParseError)?;
+                        self.corner_radius.smoothing = (smoothing / 100.0).clamp(0.0, 1.0);
+                    }
+                }
+            }
+            AttributeName::ImageData => {
+                if let OwnedAttributeValue::Custom(CustomAttributeValues::Bytes(bytes)) = attr.value
+                {
+                    self.image_data = Some(bytes.clone());
+                }
+            }
+            AttributeName::SvgData => {
+                if let OwnedAttributeValue::Custom(CustomAttributeValues::Bytes(bytes)) = attr.value
+                {
+                    self.svg_data = Some(bytes.clone());
+                }
+            }
+            AttributeName::SvgContent => {
+                let text = attr.value.as_text();
+                self.svg_data =
+                    text.map(|v| AttributesBytes::Dynamic(v.as_bytes().to_vec().into()));
+            }
+            AttributeName::Overflow => {
+                if let Some(value) = attr.value.as_text() {
+                    self.overflow = OverflowMode::parse(value)?;
+                }
+            }
+            AttributeName::Opacity => {
+                if let Some(value) = attr.value.as_text() {
+                    self.opacity = Some(value.parse::<f32>().map_err(|_| ParseError)?);
+                }
+            }
+            _ => {}
+        }
+
+        Ok(())
+    }
 }
 
 #[partial_derive_state]
@@ -74,91 +159,7 @@ impl State<CustomAttributeValues> for StyleState {
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
-                match attr.attribute {
-                    AttributeName::Background => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(background) = Fill::parse(value) {
-                                style.background = background;
-                            }
-                        }
-                    }
-                    AttributeName::Border => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(mut border) = Border::parse(value) {
-                                border.alignment = style.border.alignment;
-
-                                style.border = border;
-                            }
-                        }
-                    }
-                    AttributeName::BorderAlign => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(alignment) = BorderAlignment::parse(value) {
-                                style.border.alignment = alignment;
-                            }
-                        }
-                    }
-                    AttributeName::Shadow => {
-                        if let Some(value) = attr.value.as_text() {
-                            style.shadows = value
-                                .split_excluding_group(',', '(', ')')
-                                .map(|chunk| Shadow::parse(chunk).unwrap_or_default())
-                                .collect();
-                        }
-                    }
-                    AttributeName::CornerRadius => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(mut radius) = CornerRadius::parse(value) {
-                                radius.smoothing = style.corner_radius.smoothing;
-                                style.corner_radius = radius;
-                            }
-                        }
-                    }
-                    AttributeName::CornerSmoothing => {
-                        if let Some(value) = attr.value.as_text() {
-                            if value.ends_with('%') {
-                                if let Ok(smoothing) = value.replacen('%', "", 1).parse::<f32>() {
-                                    style.corner_radius.smoothing =
-                                        (smoothing / 100.0).clamp(0.0, 1.0);
-                                }
-                            }
-                        }
-                    }
-                    AttributeName::ImageData => {
-                        if let OwnedAttributeValue::Custom(CustomAttributeValues::Bytes(bytes)) =
-                            attr.value
-                        {
-                            style.image_data = Some(bytes.clone());
-                        }
-                    }
-                    AttributeName::SvgData => {
-                        if let OwnedAttributeValue::Custom(CustomAttributeValues::Bytes(bytes)) =
-                            attr.value
-                        {
-                            style.svg_data = Some(bytes.clone());
-                        }
-                    }
-                    AttributeName::SvgContent => {
-                        let text = attr.value.as_text();
-                        style.svg_data =
-                            text.map(|v| AttributesBytes::Dynamic(v.as_bytes().to_vec().into()));
-                    }
-                    AttributeName::Overflow => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(overflow) = OverflowMode::parse(value) {
-                                style.overflow = overflow;
-                            }
-                        }
-                    }
-                    AttributeName::Opacity => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(opacity) = value.parse::<f32>() {
-                                style.opacity = Some(opacity);
-                            }
-                        }
-                    }
-                    _ => {}
-                }
+                style.parse_safe(attr)
             }
         }
 
