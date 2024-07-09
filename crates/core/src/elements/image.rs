@@ -12,7 +12,7 @@ pub struct ImageElement;
 
 impl ElementUtils for ImageElement {
     fn render(
-        self: Box<Self>,
+        self,
         layout_node: &torin::prelude::LayoutNode,
         node_ref: &DioxusNode,
         canvas: &Canvas,

@@ -71,7 +71,7 @@ impl ElementUtils for RectElement {
     }
 
     fn render(
-        self: Box<Self>,
+        self,
         layout_node: &LayoutNode,
         node_ref: &DioxusNode,
         canvas: &Canvas,

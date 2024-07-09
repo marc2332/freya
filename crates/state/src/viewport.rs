@@ -17,6 +17,8 @@ use crate::{
     CustomAttributeValues,
     OverflowMode,
     Parse,
+    ParseAttribute,
+    ParseError,
 };
 
 #[derive(Default, PartialEq, Clone, Debug, Component)]
@@ -24,6 +26,25 @@ pub struct ViewportState {
     pub viewports: Vec<NodeId>,
     pub node_id: NodeId,
     pub overflow: OverflowMode,
+}
+
+impl ParseAttribute for ViewportState {
+    fn parse_attribute(
+        &mut self,
+        attr: freya_native_core::prelude::OwnedAttributeView<CustomAttributeValues>,
+    ) -> Result<(), crate::ParseError> {
+        #[allow(clippy::single_match)]
+        match attr.attribute {
+            AttributeName::Overflow => {
+                if let Some(value) = attr.value.as_text() {
+                    self.overflow = OverflowMode::parse(value).map_err(|_| ParseError)?;
+                }
+            }
+            _ => {}
+        }
+
+        Ok(())
+    }
 }
 
 #[partial_derive_state]
@@ -57,17 +78,7 @@ impl State<CustomAttributeValues> for ViewportState {
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
-                #[allow(clippy::single_match)]
-                match attr.attribute {
-                    AttributeName::Overflow => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(overflow) = OverflowMode::parse(value) {
-                                viewports_state.overflow = overflow;
-                            }
-                        }
-                    }
-                    _ => {}
-                }
+                viewports_state.parse_safe(attr)
             }
         }
 

@@ -19,7 +19,10 @@ use torin::prelude::{
 use super::wireframe_renderer;
 use crate::{
     dom::DioxusNode,
-    elements::ElementUtilsResolver,
+    elements::{
+        ElementUtils,
+        ElementUtilsResolver,
+    },
     prelude::DioxusDOM,
 };
 

@@ -1,4 +1,7 @@
-use crate::Parse;
+use crate::{
+    Parse,
+    ParseError,
+};
 
 #[derive(Default, Clone, Debug, PartialEq)]
 pub enum HighlightMode {
@@ -9,13 +12,8 @@ pub enum HighlightMode {
     Expanded,
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub struct HighlightModeError;
-
 impl Parse for HighlightMode {
-    type Err = HighlightModeError;
-
-    fn parse(value: &str) -> Result<Self, Self::Err> {
+    fn parse(value: &str) -> Result<Self, ParseError> {
         match value {
             "expanded" => Ok(HighlightMode::Expanded),
             _ => Ok(HighlightMode::Fit),
