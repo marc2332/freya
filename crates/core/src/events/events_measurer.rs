@@ -16,7 +16,10 @@ pub use crate::events::{
     NodesState,
     PlatformEvent,
 };
-use crate::prelude::*;
+use crate::{
+    elements::ElementUtilsResolver,
+    prelude::*,
+};
 
 /// Process the events and emit them to the VirtualDOM
 pub fn process_events(
@@ -30,7 +33,7 @@ pub fn process_events(
     let global_events = measure_global_events(events);
 
     // 2. Get potential events that could be emitted based on the elements layout and viewports
-    let potential_events = measure_potential_event_listeners(events, dom);
+    let potential_events = measure_potential_event_listeners(events, dom, scale_factor);
 
     // 3. Get what events can be actually emitted based on what elements are listening
     let dom_events = measure_dom_events(potential_events, dom, scale_factor);
@@ -95,7 +98,11 @@ pub fn measure_global_events(events: &EventsQueue) -> Vec<PlatformEvent> {
 }
 
 /// Measure what potential event listeners could be triggered
-pub fn measure_potential_event_listeners(events: &EventsQueue, fdom: &FreyaDOM) -> PotentialEvents {
+pub fn measure_potential_event_listeners(
+    events: &EventsQueue,
+    fdom: &FreyaDOM,
+    scale_factor: f64,
+) -> PotentialEvents {
     let mut potential_events = PotentialEvents::default();
 
     let layout = fdom.layout();
@@ -124,7 +131,18 @@ pub fn measure_potential_event_listeners(events: &EventsQueue, fdom: &FreyaDOM) 
                             _ => None,
                         };
                         if let Some((name, cursor)) = data {
-                            let cursor_is_inside = layout_node.area.contains(cursor.to_f32());
+                            let node = rdom.get(*node_id).unwrap();
+                            let node_type = node.node_type();
+                            let Some(element_utils) = node_type.tag().and_then(|tag| tag.utils())
+                            else {
+                                continue;
+                            };
+                            let cursor_is_inside = element_utils.is_point_inside_area(
+                                cursor,
+                                &node,
+                                layout_node,
+                                scale_factor as f32,
+                            );
 
                             // Make sure the cursor is inside the node area
                             if cursor_is_inside {
@@ -132,9 +150,21 @@ pub fn measure_potential_event_listeners(events: &EventsQueue, fdom: &FreyaDOM) 
                                 let node_viewports = node.get::<ViewportState>().unwrap();
 
                                 // Make sure the cursor is inside all the applicable viewports from the element
-                                for viewport_id in &node_viewports.viewports {
-                                    let viewport = layout.get(*viewport_id).unwrap().visible_area();
-                                    if !viewport.contains(cursor.to_f32()) {
+                                for node_id in &node_viewports.viewports {
+                                    let node_ref = rdom.get(*node_id).unwrap();
+                                    let node_type = node_ref.node_type();
+                                    let Some(element_utils) =
+                                        node_type.tag().and_then(|tag| tag.utils())
+                                    else {
+                                        continue;
+                                    };
+                                    let layout_node = layout.get(*node_id).unwrap();
+                                    if !element_utils.is_point_inside_area(
+                                        cursor,
+                                        &node_ref,
+                                        layout_node,
+                                        scale_factor as f32,
+                                    ) {
                                         continue 'events;
                                     }
                                 }

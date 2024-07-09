@@ -40,7 +40,7 @@ pub fn Sidebar(
             direction: "horizontal",
             rect {
                 overflow: "clip",
-                width: "170",
+                width: "180",
                 height: "100%",
                 background: "{background}",
                 color: "{font_theme.color}",

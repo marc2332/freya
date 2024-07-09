@@ -185,8 +185,8 @@ mod test {
     use freya_testing::prelude::*;
 
     #[tokio::test]
-    pub async fn button() {
-        fn button_app() -> Element {
+    pub async fn switch() {
+        fn switch_app() -> Element {
             let mut enabled = use_signal(|| false);
 
             rsx!(
@@ -202,7 +202,7 @@ mod test {
             )
         }
 
-        let mut utils = launch_test(button_app);
+        let mut utils = launch_test(switch_app);
         let root = utils.root();
         let label = root.get(1);
         utils.wait_for_update().await;
@@ -212,7 +212,7 @@ mod test {
 
         utils.push_event(PlatformEvent::Mouse {
             name: EventName::Click,
-            cursor: (5.0, 5.0).into(),
+            cursor: (15.0, 15.0).into(),
             button: Some(MouseButton::Left),
         });
 
@@ -223,7 +223,7 @@ mod test {
 
         utils.push_event(PlatformEvent::Mouse {
             name: EventName::Click,
-            cursor: (5.0, 5.0).into(),
+            cursor: (15.0, 15.0).into(),
             button: Some(MouseButton::Left),
         });
 

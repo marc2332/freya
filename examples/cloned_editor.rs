@@ -7,8 +7,7 @@ fn main() {
     launch_cfg(
         app,
         LaunchConfig::<()>::new()
-            .with_width(900.0)
-            .with_height(500.0)
+            .with_size(900.0, 500.0)
             .with_decorations(true)
             .with_transparency(false)
             .with_title("Editor"),
@@ -82,7 +81,7 @@ fn Body() -> Element {
                     let line_background = if is_line_selected {
                         "rgb(37, 37, 37)"
                     } else {
-                        ""
+                        "none"
                     };
 
                     let onmousedown = move |e: MouseEvent| {
@@ -158,7 +157,7 @@ fn Body() -> Element {
                     let line_background = if is_line_selected {
                         "rgb(37, 37, 37)"
                     } else {
-                        ""
+                        "none"
                     };
 
                     let onmousedown = move |e: MouseEvent| {

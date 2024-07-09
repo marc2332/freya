@@ -13,12 +13,37 @@ use freya_native_core::{
 };
 use freya_native_core_macro::partial_derive_state;
 
-use crate::CustomAttributeValues;
+use crate::{
+    CustomAttributeValues,
+    ParseAttribute,
+    ParseError,
+};
 
 #[derive(Default, PartialEq, Clone, Debug, Component)]
 pub struct LayerState {
     pub layer: i16,
     pub layer_for_children: i16,
+}
+
+impl ParseAttribute for LayerState {
+    fn parse_attribute(
+        &mut self,
+        attr: freya_native_core::prelude::OwnedAttributeView<CustomAttributeValues>,
+    ) -> Result<(), crate::ParseError> {
+        #[allow(clippy::single_match)]
+        match attr.attribute {
+            AttributeName::Layer => {
+                if let Some(value) = attr.value.as_text() {
+                    let layer = value.parse::<i16>().map_err(|_| ParseError)?;
+                    self.layer -= layer;
+                    self.layer_for_children += layer;
+                }
+            }
+            _ => {}
+        }
+
+        Ok(())
+    }
 }
 
 #[partial_derive_state]
@@ -48,28 +73,16 @@ impl State<CustomAttributeValues> for LayerState {
         let layers = context.get::<Layers>().unwrap();
         let inherited_layer = parent.map(|(p,)| p.layer_for_children).unwrap_or(0i16);
 
-        let mut provided_layer = 0;
+        let mut layer_state = LayerState {
+            layer: node_view.height() as i16 - inherited_layer,
+            layer_for_children: inherited_layer,
+        };
 
         if let Some(attributes) = node_view.attributes() {
             for attr in attributes {
-                #[allow(clippy::single_match)]
-                match attr.attribute {
-                    AttributeName::Layer => {
-                        if let Some(value) = attr.value.as_text() {
-                            if let Ok(relative_layer) = value.parse::<i16>() {
-                                provided_layer = relative_layer;
-                            }
-                        }
-                    }
-                    _ => {}
-                }
+                layer_state.parse_safe(attr);
             }
         }
-
-        let layer_state = LayerState {
-            layer: -provided_layer + node_view.height() as i16 - inherited_layer,
-            layer_for_children: provided_layer + inherited_layer,
-        };
 
         let changed = &layer_state != self;
 
